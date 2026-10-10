@@ -1,0 +1,86 @@
+# Compat layer — Ka0s Drop Watcher
+
+`core/Compat.lua` is the only file that names a version-variant, deprecated or optional client API
+(compat; design spec §4). Feature modules call `NS.Compat.X`; `luacheck` declares those client
+globals for this one file only, and `test_compat`'s last case fails if any other shipped file names
+one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
+and is read inside functions only.
+
+**Twenty-three shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `23`). The three
+secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
+by assignment and not counted: their contract and their library-absent bodies are LibKa0s
+`docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not wired, and
+`test_surface_parity` lists them as unwired on purpose.
+
+## The rules every shim keeps
+
+- Client globals are read **bare, at call time**, never captured at load, so a late namespace
+  still wins and a suite can remove any rung.
+- A value that may be secret meets nothing but `IsSecret` (or `type()`) before it is compared,
+  matched, concatenated or formatted.
+- Enum values are resolved by **name** (`Enum.TooltipDataLineType.TradeTimeRemaining`), never by
+  number.
+- A missing API never raises; each shim answers its documented absent value, listed below.
+- Third-party code (Pawn) runs under `pcall`. Blizzard calls do not, so a client defect raises
+  where it happens instead of reading as silence.
+
+## The shims
+
+| Group | Shim | Ladder | Absent answer |
+|---|---|---|---|
+| Chat | `ChatSender()` | `C_ChatInfo.SendChatMessage` → the deprecated `SendChatMessage` global. Returns the function; the caller runs it under `pcall` (spec §9.2) | `nil` |
+| Patterns | `FormatToPattern(fmt)` | none: a Lua pattern from a printf-style GlobalString (`%s` → text capture, `%d` → digit capture, `%1$s` read as `%s`, every magic character escaped) | n/a (pure) |
+| Duration | `DecodeDuration(text)` | the localized `INT_SPELL_DURATION_DAYS/HOURS/MIN/SEC` and `TIME_UNIT_DELIMITER` globals; see below | `nil` |
+| | `ParseTradeTimeRemaining(text)` | the `BIND_TRADE_TIME_REMAINING` pattern, then `DecodeDuration` on its capture | `nil` |
+| Tooltip | `ReadTooltipLine(data, typeName, parse)` | the lines of `typeName` (an `Enum.TooltipDataLineType` member) when the enum has it; every line, first non-nil `parse` wins, when it does not | `nil` |
+| | `TradeTimeRemaining(bag, slot)` | `C_TooltipInfo.GetBagItem` → the `TradeTimeRemaining` line → `ParseTradeTimeRemaining`; seconds | `nil` |
+| | `InventoryItemLevel(unit, slot)` | `C_TooltipInfo.GetInventoryItem` → the `ItemLevel` line: its numeric `itemLevel` field, else the `ITEM_LEVEL` pattern | `nil` |
+| | `GetItemUpgradeInfo(link)` | `C_Item.GetItemUpgradeInfo` (copied, plain fields only, `source = "api"`) → `C_TooltipInfo.GetHyperlink`'s `ItemUpgradeLevel` line read with `ITEM_UPGRADE_TOOLTIP_FORMAT_STRING` (`source = "tooltip"`, no `trackStringID`) | `nil` |
+| Restrictions | `InChatMessagingLockdown()` | `C_ChatInfo.InChatMessagingLockdown`; a secret answer reads as locked | `false` |
+| | `RestrictionTypes()` | `Enum.AddOnRestrictionType` | `{}` |
+| | `IsRestrictionStateActive(state)` | anything but `Enum.AddOnRestrictionState.Inactive` (0 without the enum) is active, so `Activating` counts; a secret state is active | `false` for nil |
+| | `IsRestrictionActive(rtype)` | `C_RestrictedActions.IsAddOnRestrictionActive` → `GetAddOnRestrictionState` through `IsRestrictionStateActive` | `false` |
+| Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
+| | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
+| | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
+| Pawn | `PawnIsReady()` | the `PawnIsInitialized` global flag (a function spelling is called) | `false` |
+| | `PawnItemData(link)` | `PawnGetItemData`; nil while the item is not cached | `nil` |
+| | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
+| | `PawnScaleForSpec(classID, specID)` | `PawnFindScaleForSpec` | `nil` |
+| | `PawnItemValue(link, scale)` | `PawnGetSingleValueFromItem(PawnGetItemData(link), scale)`, a number | `nil` |
+| Trade | `PickupBagItem(bag, slot)` | `C_Container.PickupContainerItem` → the deprecated `PickupContainerItem` global | `false` |
+| | `DropItemOnUnit(unit)` | `DropItemOnUnit` | `false` |
+| | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
+
+The trade actions return `true` when they called the client. They guard nothing: the range, combat
+and restriction checks are the trade helper's (DW-29), which calls them only from a click.
+
+## The duration decoder
+
+The client writes a remaining time as unit terms joined by `TIME_UNIT_DELIMITER`, each term formatted
+from an `INT_SPELL_DURATION_<UNIT>` global (`"%d |4hour:hrs;"`, `"%d min"` and `"%d sec"` in enUS).
+`DecodeDuration` reads the text back with the same globals:
+
+1. Each unit's template is expanded into every spelling of its `|4…;` plural grammar (two forms in
+   enUS and deDE, three in ruRU), and each spelling becomes an anchored pattern through
+   `FormatToPattern`.
+2. The spellings are tried longest first, so `hrs` is never cut short by a shorter spelling that is
+   its prefix.
+3. The decoder walks the text from the left: one term anchored at the cursor, then one optional
+   delimiter, until the text is used up. Splitting on the delimiter instead would break, because an
+   enUS term (`2 hrs`) contains the delimiter itself.
+4. Anything left over makes the whole text unreadable (`nil`), never a partial guess.
+
+The globals are read on every call, so a locale rewrite takes effect at once. The idea is the one
+the brainstorm research credits to RCLootCouncil; the code is written here and copies none of
+theirs. `test_compat` drives it in enUS, in a deDE shape and in a ruRU shape with a `", "`
+delimiter.
+
+## Who calls what
+
+The callers land in M2: Restrictions (DW-21) reads the restriction shims, ItemFacts (DW-23) reads
+the bind helpers and `GetItemUpgradeInfo`, the loot parser (DW-25) builds its patterns with
+`FormatToPattern`, Inspect (DW-26) reads `InventoryItemLevel`, TradeTimer (DW-28) reads
+`TradeTimeRemaining` and `GetBagItemGUID`, the trade helper (DW-29) the trade actions, the
+messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.

@@ -53,6 +53,7 @@ Kit.setSurfaceSource{
     ["LibKa0s-Schema-1.0"]    = surfaceMock.LibStub("LibKa0s-Schema-1.0", true),
     ["LibKa0s-Pool-1.0"]      = surfaceMock.LibStub("LibKa0s-Pool-1.0", true),
     ["LibKa0s-Item-1.0"]      = surfaceMock.LibStub("LibKa0s-Item-1.0", true),
+    ["LibKa0s-Compat-1.0"]    = surfaceMock.LibStub("LibKa0s-Compat-1.0", true),
 }
 
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
@@ -65,6 +66,9 @@ _G.DW_TEST = Kit.expose{
     root        = root,
     LibStub     = surfaceMock.LibStub,
     KIT_VERSION = Kit.VERSION,
+    -- The kit's secret-value simulator (tests/_kit/secrets.lua), which Kit.expose leaves out.
+    secret      = Kit.secret,
+    isSecret    = Kit.isSecret,
 }
 
 -- The diagnostics-dump contract's consumer facts (debug-logging-§14): the kit's cases run through
@@ -95,6 +99,7 @@ Kit.run{
         "test_schema",
         "test_slash",
         "test_window",
+        "test_compat",
         "test_constants",
         "test_class_data",
         "test_evaluate",

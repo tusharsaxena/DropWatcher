@@ -20,6 +20,12 @@
 --                  the base's __context.instanceType / __context.inInstance (IsInInstance reads them)
 --   challengeModeActive  C_ChallengeMode.IsChallengeModeActive()'s answer
 --   unknownDifficulties  ids GetDifficultyInfo answers nil for (a retired or renumbered difficulty)
+--   tooltips       C_TooltipInfo's answers: .bag["bag:slot"], .inventory["unit:slot"], .hyperlink[link]
+--   chatSent       every C_ChatInfo.SendChatMessage call; chatLockdown is InChatMessagingLockdown()
+--   restrictionStates  C_RestrictedActions' state per Enum.AddOnRestrictionType value (absent = 0)
+--   upgradeInfo, accountBound, accountBoundUE  C_Item's answers per link; bagGUIDs["bag:slot"]
+--   tradeCalls     PickupContainerItem / DropItemOnUnit / InitiateTrade calls, in order
+--   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 
 local base = dofile("tests/_kit/mock_base.lua")
 
@@ -59,6 +65,82 @@ local function decorateGeometry(M, f)
     f.SetAlpha = function(self, a) self.__alpha = a; return self end
     f.GetAlpha = function(self) return self.__alpha or 1 end
     return f
+end
+
+-- The enUS GlobalStrings core/Compat.lua builds its patterns from. A case that models another
+-- client language overwrites them on the mock after the load (Compat reads them at call time).
+local GLOBAL_STRINGS = {
+    BIND_TRADE_TIME_REMAINING = "You may trade this item with players that were also eligible to "
+        .. "loot this item for the next %s.",
+    INT_SPELL_DURATION_HOURS = "%d |4hour:hrs;",
+    INT_SPELL_DURATION_MIN = "%d min",
+    INT_SPELL_DURATION_SEC = "%d sec",
+    TIME_UNIT_DELIMITER = " ",
+    ITEM_LEVEL = "Item Level %d",
+    ITEM_UPGRADE_TOOLTIP_FORMAT_STRING = "Upgrade Level: %s %d/%d",
+}
+
+-- What core/Compat.lua reaches, as controllable fakes. Enum values are this mock's own numbers;
+-- the addon resolves every member by NAME, so a case that deletes a member models a client that
+-- renamed it.
+local function installCompatSurface(M)
+    for k, v in pairs(GLOBAL_STRINGS) do M[k] = v end
+
+    M.Enum = {
+        TooltipDataLineType = { ItemBinding = 20, ItemUpgradeLevel = 32, TradeTimeRemaining = 36,
+            ItemLevel = 41 },
+        AddOnRestrictionType = { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3, Map = 4,
+            Chat = 5 },
+        AddOnRestrictionState = { Inactive = 0, Activating = 1, Active = 2 },
+    }
+
+    -- C_TooltipInfo: the data a getter answers, keyed "bag:slot", "unit:slot" and by link.
+    M.tooltips = { bag = {}, inventory = {}, hyperlink = {} }
+    M.C_TooltipInfo = {
+        GetBagItem = function(bag, slot) return M.tooltips.bag[bag .. ":" .. slot] end,
+        GetInventoryItem = function(unit, slot) return M.tooltips.inventory[unit .. ":" .. slot] end,
+        GetHyperlink = function(link) return M.tooltips.hyperlink[link] end,
+    }
+
+    -- C_ChatInfo: every SendChatMessage call is recorded in M.chatSent; chatLockdown is
+    -- InChatMessagingLockdown's answer.
+    M.chatSent, M.chatLockdown = {}, false
+    M.C_ChatInfo = {
+        SendChatMessage = function(text, chatType, languageID, target)
+            M.chatSent[#M.chatSent + 1] = { text = text, chatType = chatType, languageID = languageID,
+                target = target }
+        end,
+        InChatMessagingLockdown = function() return M.chatLockdown end,
+    }
+
+    -- C_RestrictedActions: restrictionStates[type] is the state; absent means Inactive.
+    M.restrictionStates = {}
+    M.C_RestrictedActions = {
+        GetAddOnRestrictionState = function(rtype) return M.restrictionStates[rtype] or 0 end,
+        IsAddOnRestrictionActive = function(rtype) return (M.restrictionStates[rtype] or 0) ~= 0 end,
+    }
+
+    -- C_Item: upgradeInfo[link], accountBound[link], accountBoundUE[link], bagGUIDs["bag:slot"].
+    M.upgradeInfo, M.accountBound, M.accountBoundUE, M.bagGUIDs = {}, {}, {}, {}
+    M.C_Item = {
+        GetItemUpgradeInfo = function(link) return M.upgradeInfo[link] end,
+        IsItemBindToAccount = function(link) return M.accountBound[link] == true end,
+        IsItemBindToAccountUntilEquip = function(link) return M.accountBoundUE[link] == true end,
+        DoesItemExist = function(loc) return M.bagGUIDs[loc.bag .. ":" .. loc.slot] ~= nil end,
+        GetItemGUID = function(loc) return M.bagGUIDs[loc.bag .. ":" .. loc.slot] end,
+    }
+    M.ItemLocation = {
+        CreateFromBagAndSlot = function(_, bag, slot) return { bag = bag, slot = slot } end,
+    }
+
+    -- The trade actions, recorded in order as { name, ... }.
+    M.tradeCalls = {}
+    local function recorder(name)
+        return function(...) M.tradeCalls[#M.tradeCalls + 1] = { name, ... } end
+    end
+    M.C_Container = { PickupContainerItem = recorder("PickupContainerItem") }
+    M.DropItemOnUnit = recorder("DropItemOnUnit")
+    M.InitiateTrade = recorder("InitiateTrade")
 end
 
 local function build()
@@ -108,6 +190,8 @@ local function build()
     }
 
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end
+
+    installCompatSurface(M)
 
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)

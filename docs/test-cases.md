@@ -21,7 +21,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_surface_parity.lua (16)
+### test_surface_parity.lua (18)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -39,6 +39,8 @@ Total.
 - parity: the Perf stub carries every Perf member the addon reaches
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
+- parity: the Compat seam carries every library member it wires
+- parity: the Compat seam publishes the same members on both load paths
 
 ### test_setup.lua (17)
 
@@ -109,6 +111,45 @@ Total.
 - window: turning test mode off closes the window only when test mode opened it
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
+
+### test_compat.lua (36)
+
+- compat: the secret guards are the library's members on a live load
+- compat: the guards answer the library's answers under the same fixture, on both load paths
+- compat: with canaccessvalue present the degraded CanAccess asks it
+- compat: ChatSender prefers C_ChatInfo.SendChatMessage
+- compat: ChatSender falls back to the global, then to nil
+- compat: FormatToPattern captures %s and %d and escapes every magic character
+- compat: DecodeDuration reads every enUS unit and their sums
+- compat: DecodeDuration refuses anything that is not wholly a duration
+- compat: DecodeDuration never touches a secret
+- compat: DecodeDuration reads the client's own language (deDE, with a two-form plural)
+- compat: DecodeDuration reads a three-form plural and a multi-character delimiter
+- compat: DecodeDuration answers nil when the client has no duration globals
+- compat: ParseTradeTimeRemaining reads the whole trade line and nothing else
+- compat: TradeTimeRemaining reads the TradeTimeRemaining line of a bag item
+- compat: with the line type known, only lines of that type are read
+- compat: without the enum member the reader falls back to the localized text
+- compat: the tooltip reader skips a secret line and survives a malformed answer
+- compat: InventoryItemLevel prefers the line's number, then its text
+- compat: GetItemUpgradeInfo takes the API's table, plain fields only
+- compat: GetItemUpgradeInfo falls back to the ItemUpgradeLevel tooltip line
+- compat: GetItemUpgradeInfo answers nil with no track, no API and a secret answer
+- compat: InChatMessagingLockdown reads the client, a secret as locked, absent as open
+- compat: IsRestrictionActive asks the client, falling back to the state
+- compat: IsRestrictionStateActive reads the state by the enum's Inactive
+- compat: RestrictionTypes is the enum, or an empty table
+- compat: the account-bind helpers read C_Item and answer false without it
+- compat: a secret bind answer reads as not bound
+- compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slot or no API
+- compat: without Pawn every reader answers nil and nothing raises
+- compat: Pawn loaded but not initialized is not ready
+- compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached
+- compat: an error inside Pawn reads as not ready, never as this addon's error
+- compat: a function-spelled PawnIsInitialized is called
+- compat: PickupBagItem prefers C_Container, then the global, then reports false
+- compat: DropItemOnUnit and InitiateTrade call through, and report false when absent
+- compat: no other shipped file names a seam-only client API in code
 
 ### test_constants.lua (12)
 
@@ -367,12 +408,13 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 10 |
-| test_surface_parity.lua | 16 |
+| test_surface_parity.lua | 18 |
 | test_setup.lua | 17 |
 | test_database.lua | 4 |
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
+| test_compat.lua | 36 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -389,4 +431,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **287** |
+| **Total** | **325** |

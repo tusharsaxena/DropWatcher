@@ -37,6 +37,18 @@ files["tests/"] = {
   },
 }
 
+-- The client APIs only core/Compat.lua may name (compat): declared for that file alone, so a
+-- feature module that reaches for one directly fails lint.
+files["core/Compat.lua"] = {
+  read_globals = {
+    "Enum", "issecretvalue", "canaccessvalue",
+    "C_ChatInfo", "SendChatMessage", "C_TooltipInfo", "C_RestrictedActions", "C_Container",
+    "ItemLocation", "PickupContainerItem", "DropItemOnUnit", "InitiateTrade",
+    "PawnIsInitialized", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnFindScaleForSpec",
+    "PawnGetSingleValueFromItem",
+  },
+}
+
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;
 -- neither body reads the receiver.
 files["settings/Slash.lua"] = {

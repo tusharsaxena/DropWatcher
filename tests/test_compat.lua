@@ -1,0 +1,466 @@
+-- tests/test_compat.lua — core/Compat.lua, the one seam over version-variant client APIs (compat,
+-- design spec §4): the secret guards on both load paths, the chat sender's ladder, the localized
+-- duration decoder behind the trade timer (spec §7.4) in three client languages, the tooltip line
+-- reader and its three readers, the restriction APIs, the bind helpers, the Pawn seam (spec §5.4)
+-- and the trade actions. Every shim is also driven with its API absent, where it must answer its
+-- documented absent value and never raise.
+
+local T = _G.DW_TEST
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+
+local function fresh(opts)
+    local NS, _, m = T.newAddon(opts)
+    return NS.Compat, m
+end
+
+local function installSecrets(m)
+    m.issecretvalue = function(v) return T.isSecret(v) end
+end
+
+-- A C_TooltipInfo answer: each line is { type, leftText } (type nil for an untyped line).
+local function tooltip(lines)
+    local data = { lines = {} }
+    for i, l in ipairs(lines) do data.lines[i] = { type = l[1], leftText = l[2], itemLevel = l[3] } end
+    return data
+end
+
+local TRADE_LINE = "You may trade this item with players that were also eligible to loot this item "
+    .. "for the next 1 hour 59 min."
+
+-- ---------------------------------------------------------------------------------------------
+-- Secret guards
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: the secret guards are the library's members on a live load", function()
+    local Compat = fresh()
+    local lib = T.LibStub("LibKa0s-Compat-1.0", true)
+    assertTrue(lib ~= nil, "the library is vendored")
+    -- The live load's own LibStub answers a different table per instance; compare behavior.
+    for _, name in ipairs({ "IsSecret", "CanAccess", "IsSafeKey" }) do
+        assertEqual(type(Compat[name]), "function", name)
+    end
+    assertFalse(Compat.IsSecret(5))
+    assertTrue(Compat.CanAccess(5))
+    assertTrue(Compat.IsSafeKey(5))
+    assertFalse(Compat.IsSafeKey(nil))
+end)
+
+test("compat: the guards answer the library's answers under the same fixture, on both load paths", function()
+    local live, ml = fresh()
+    local degraded, md = fresh{ skip = T.loadAddon.libFiles }
+    installSecrets(ml); installSecrets(md)
+    local values = { 5, "x", false, T.secret(7), T.secret("name") }
+    for i, v in ipairs(values) do
+        for _, name in ipairs({ "IsSecret", "CanAccess", "IsSafeKey" }) do
+            assertEqual(degraded[name](v), live[name](v), name .. " on value " .. i)
+        end
+    end
+    assertEqual(degraded.IsSafeKey(nil), live.IsSafeKey(nil))
+    -- red under: a degraded IsSecret that answers false (the stub the library forbids for a guard)
+    assertTrue(degraded.IsSecret(T.secret(1)))
+    assertFalse(degraded.CanAccess(T.secret(1)))
+end)
+
+test("compat: with canaccessvalue present the degraded CanAccess asks it", function()
+    local Compat, m = fresh{ skip = T.loadAddon.libFiles }
+    m.canaccessvalue = function() return false end
+    assertFalse(Compat.CanAccess(5))
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Chat sender
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: ChatSender prefers C_ChatInfo.SendChatMessage", function()
+    local Compat, m = fresh()
+    m.SendChatMessage = function() error("the deprecated global was called") end
+    Compat.ChatSender()("hi", "WHISPER", nil, "Seta-Silvermoon")
+    assertEqual(#m.chatSent, 1)
+    assertEqual(m.chatSent[1].target, "Seta-Silvermoon")
+    assertEqual(m.chatSent[1].chatType, "WHISPER")
+end)
+
+test("compat: ChatSender falls back to the global, then to nil", function()
+    local Compat, m = fresh()
+    local sent
+    m.C_ChatInfo = { InChatMessagingLockdown = function() return false end }
+    m.SendChatMessage = function(text) sent = text end
+    Compat.ChatSender()("hello")
+    assertEqual(sent, "hello")
+    m.SendChatMessage = nil
+    assertNil(Compat.ChatSender())
+    m.C_ChatInfo = nil
+    assertNil(Compat.ChatSender())
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Pattern building and the duration decoder
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: FormatToPattern captures %s and %d and escapes every magic character", function()
+    local Compat = fresh()
+    local p = Compat.FormatToPattern("%s receives loot: %s.")
+    local who, what = ("Seta receives loot: [Ring]."):match("^" .. p .. "$")
+    assertEqual(who, "Seta"); assertEqual(what, "[Ring]")
+    assertNil(("Seta receives loot: [Ring]x"):match("^" .. p .. "$"), "the dot is literal")
+    local a, b = ("x 3 (y) 4"):match(Compat.FormatToPattern("%1$s %2$d (y) %d"))
+    assertEqual(a, "x"); assertEqual(b, "3")
+    assertTrue(("50% [a]+?"):find(Compat.FormatToPattern("50% [a]+?")) ~= nil, "magic is literal")
+end)
+
+test("compat: DecodeDuration reads every enUS unit and their sums", function()
+    local Compat = fresh()
+    assertEqual(Compat.DecodeDuration("1 hour 59 min"), 7140)
+    assertEqual(Compat.DecodeDuration("2 hrs"), 7200)
+    assertEqual(Compat.DecodeDuration("1 hour"), 3600)
+    assertEqual(Compat.DecodeDuration("45 min"), 2700)
+    assertEqual(Compat.DecodeDuration("30 sec"), 30)
+    assertEqual(Compat.DecodeDuration("  1 min 5 sec "), 65, "surrounding space is trimmed")
+end)
+
+test("compat: DecodeDuration refuses anything that is not wholly a duration", function()
+    local Compat = fresh()
+    assertNil(Compat.DecodeDuration("soon"))
+    assertNil(Compat.DecodeDuration("1 hour banana"))
+    assertNil(Compat.DecodeDuration(""))
+    assertNil(Compat.DecodeDuration(nil))
+    assertNil(Compat.DecodeDuration(42))
+end)
+
+test("compat: DecodeDuration never touches a secret", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    -- red under: a decoder that matches before asking IsSecret (indexing the wrapper raises)
+    assertNil(Compat.DecodeDuration(T.secret("1 hour")))
+end)
+
+test("compat: DecodeDuration reads the client's own language (deDE, with a two-form plural)", function()
+    local Compat, m = fresh()
+    m.INT_SPELL_DURATION_HOURS = "%d |4Stunde:Stunden;"
+    m.INT_SPELL_DURATION_MIN = "%d Min."
+    m.INT_SPELL_DURATION_SEC = "%d Sek."
+    assertEqual(Compat.DecodeDuration("1 Stunde 59 Min."), 7140)
+    assertEqual(Compat.DecodeDuration("2 Stunden"), 7200)
+    assertNil(Compat.DecodeDuration("1 hour"), "the enUS words no longer read")
+end)
+
+test("compat: DecodeDuration reads a three-form plural and a multi-character delimiter", function()
+    local Compat, m = fresh()
+    m.INT_SPELL_DURATION_HOURS = "%d |4час:часа:часов;"
+    m.INT_SPELL_DURATION_MIN = "%d мин."
+    m.TIME_UNIT_DELIMITER = ", "
+    assertEqual(Compat.DecodeDuration("5 часов"), 18000)
+    assertEqual(Compat.DecodeDuration("1 час, 2 мин."), 3720)
+    assertEqual(Compat.DecodeDuration("3 часа"), 10800)
+end)
+
+test("compat: DecodeDuration answers nil when the client has no duration globals", function()
+    local Compat, m = fresh()
+    m.INT_SPELL_DURATION_HOURS, m.INT_SPELL_DURATION_MIN, m.INT_SPELL_DURATION_SEC = nil, nil, nil
+    m.TIME_UNIT_DELIMITER = nil
+    assertNil(Compat.DecodeDuration("1 hour"))
+end)
+
+test("compat: ParseTradeTimeRemaining reads the whole trade line and nothing else", function()
+    local Compat, m = fresh()
+    assertEqual(Compat.ParseTradeTimeRemaining(TRADE_LINE), 7140)
+    assertNil(Compat.ParseTradeTimeRemaining("Binds when picked up"))
+    assertNil(Compat.ParseTradeTimeRemaining(TRADE_LINE .. " extra"))
+    m.BIND_TRADE_TIME_REMAINING = nil
+    assertNil(Compat.ParseTradeTimeRemaining(TRADE_LINE), "no global, no guess")
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- The tooltip line reader and its readers
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: TradeTimeRemaining reads the TradeTimeRemaining line of a bag item", function()
+    local Compat, m = fresh()
+    local TT = m.Enum.TooltipDataLineType
+    m.tooltips.bag["0:3"] = tooltip{ { 29, "Ring of Testing" }, { TT.ItemBinding, "Soulbound" },
+        { TT.TradeTimeRemaining, TRADE_LINE } }
+    assertEqual(Compat.TradeTimeRemaining(0, 3), 7140)
+    assertNil(Compat.TradeTimeRemaining(0, 4), "no tooltip")
+end)
+
+test("compat: with the line type known, only lines of that type are read", function()
+    local Compat, m = fresh()
+    -- red under: a reader that ignores the type and parses every line
+    m.tooltips.bag["0:1"] = tooltip{ { 7, TRADE_LINE } }
+    assertNil(Compat.TradeTimeRemaining(0, 1))
+end)
+
+test("compat: without the enum member the reader falls back to the localized text", function()
+    local Compat, m = fresh()
+    m.Enum.TooltipDataLineType.TradeTimeRemaining = nil
+    m.tooltips.bag["1:2"] = tooltip{ { 29, "Ring of Testing" }, { 99, TRADE_LINE } }
+    assertEqual(Compat.TradeTimeRemaining(1, 2), 7140)
+    m.Enum = nil
+    assertEqual(Compat.TradeTimeRemaining(1, 2), 7140, "no Enum at all")
+end)
+
+test("compat: the tooltip reader skips a secret line and survives a malformed answer", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    local TT = m.Enum.TooltipDataLineType
+    m.tooltips.bag["0:5"] = tooltip{ { TT.TradeTimeRemaining, T.secret(TRADE_LINE) } }
+    assertNil(Compat.TradeTimeRemaining(0, 5))
+    m.tooltips.bag["0:6"] = { lines = { "not a table", { type = T.secret(36), leftText = "x" } } }
+    assertNil(Compat.TradeTimeRemaining(0, 6))
+    m.tooltips.bag["0:7"] = { lines = "nope" }
+    assertNil(Compat.TradeTimeRemaining(0, 7))
+    m.C_TooltipInfo = nil
+    assertNil(Compat.TradeTimeRemaining(0, 3), "no C_TooltipInfo")
+end)
+
+test("compat: InventoryItemLevel prefers the line's number, then its text", function()
+    local Compat, m = fresh()
+    local TT = m.Enum.TooltipDataLineType
+    m.tooltips.inventory["party1:1"] = tooltip{ { TT.ItemLevel, "Item Level 639", 640 } }
+    assertEqual(Compat.InventoryItemLevel("party1", 1), 640)
+    m.tooltips.inventory["party1:2"] = tooltip{ { 29, "Item Level Necklace" },
+        { TT.ItemLevel, "Item Level 626" } }
+    assertEqual(Compat.InventoryItemLevel("party1", 2), 626)
+    assertNil(Compat.InventoryItemLevel("party1", 3))
+    m.ITEM_LEVEL = nil
+    assertNil(Compat.InventoryItemLevel("party1", 2), "no number on the line and no global")
+end)
+
+test("compat: GetItemUpgradeInfo takes the API's table, plain fields only", function()
+    local Compat, m = fresh()
+    local link = "|cnIQ4:|Hitem:1::::::::|h[Ring]|h|r"
+    m.upgradeInfo[link] = { currentLevel = 2, maxLevel = 6, maxItemLevel = 645, trackString = "Hero",
+        trackStringID = 975 }
+    local info = Compat.GetItemUpgradeInfo(link)
+    assertEqual(info.trackString, "Hero"); assertEqual(info.trackStringID, 975)
+    assertEqual(info.currentLevel, 2); assertEqual(info.maxLevel, 6)
+    assertEqual(info.maxItemLevel, 645); assertEqual(info.source, "api")
+    assertTrue(info ~= m.upgradeInfo[link], "a copy, not the client's table")
+end)
+
+test("compat: GetItemUpgradeInfo falls back to the ItemUpgradeLevel tooltip line", function()
+    local Compat, m = fresh()
+    local TT = m.Enum.TooltipDataLineType
+    local link = "|cnIQ4:|Hitem:2::::::::|h[Cloak]|h|r"
+    m.tooltips.hyperlink[link] = tooltip{ { TT.ItemUpgradeLevel, "Upgrade Level: Champion 3/6" } }
+    local info = Compat.GetItemUpgradeInfo(link)
+    assertEqual(info.trackString, "Champion"); assertEqual(info.currentLevel, 3)
+    assertEqual(info.maxLevel, 6); assertEqual(info.source, "tooltip")
+    assertNil(info.trackStringID)
+    m.C_Item.GetItemUpgradeInfo = nil
+    assertEqual(Compat.GetItemUpgradeInfo(link).trackString, "Champion", "the API absent")
+end)
+
+test("compat: GetItemUpgradeInfo answers nil with no track, no API and a secret answer", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    assertNil(Compat.GetItemUpgradeInfo("|Hitem:3|h[Plain]|h"))
+    assertNil(Compat.GetItemUpgradeInfo(nil))
+    assertNil(Compat.GetItemUpgradeInfo(T.secret("link")))
+    m.upgradeInfo.x = T.secret({ trackString = "Hero" })
+    assertNil(Compat.GetItemUpgradeInfo("x"))
+    m.C_Item, m.C_TooltipInfo = nil, nil
+    assertNil(Compat.GetItemUpgradeInfo("x"))
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Restrictions
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: InChatMessagingLockdown reads the client, a secret as locked, absent as open", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    assertFalse(Compat.InChatMessagingLockdown())
+    m.chatLockdown = true
+    assertTrue(Compat.InChatMessagingLockdown())
+    m.chatLockdown = T.secret(false)
+    assertTrue(Compat.InChatMessagingLockdown(), "a secret answer is the cautious one")
+    m.C_ChatInfo = nil
+    assertFalse(Compat.InChatMessagingLockdown())
+end)
+
+test("compat: IsRestrictionActive asks the client, falling back to the state", function()
+    local Compat, m = fresh()
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    assertFalse(Compat.IsRestrictionActive(RT.Encounter))
+    m.restrictionStates[RT.Encounter] = RS.Active
+    assertTrue(Compat.IsRestrictionActive(RT.Encounter))
+    m.C_RestrictedActions.IsAddOnRestrictionActive = nil
+    m.restrictionStates[RT.Encounter] = RS.Activating
+    assertTrue(Compat.IsRestrictionActive(RT.Encounter), "the state rung; Activating counts")
+    m.restrictionStates[RT.Encounter] = RS.Inactive
+    assertFalse(Compat.IsRestrictionActive(RT.Encounter))
+    assertFalse(Compat.IsRestrictionActive(nil))
+    m.C_RestrictedActions = nil
+    assertFalse(Compat.IsRestrictionActive(RT.Encounter), "no API, no restriction")
+end)
+
+test("compat: IsRestrictionStateActive reads the state by the enum's Inactive", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    assertFalse(Compat.IsRestrictionStateActive(0))
+    assertTrue(Compat.IsRestrictionStateActive(1))
+    assertTrue(Compat.IsRestrictionStateActive(2))
+    assertTrue(Compat.IsRestrictionStateActive(T.secret(0)), "a secret reads as active")
+    assertFalse(Compat.IsRestrictionStateActive(nil))
+    m.Enum.AddOnRestrictionState.Inactive = 7
+    assertFalse(Compat.IsRestrictionStateActive(7), "resolved by name, not by number")
+    assertTrue(Compat.IsRestrictionStateActive(0))
+end)
+
+test("compat: RestrictionTypes is the enum, or an empty table", function()
+    local Compat, m = fresh()
+    assertEqual(Compat.RestrictionTypes().Encounter, 1)
+    m.Enum = nil
+    assertNil(next(Compat.RestrictionTypes()))
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Bind helpers
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: the account-bind helpers read C_Item and answer false without it", function()
+    local Compat, m = fresh()
+    m.accountBound.a, m.accountBoundUE.b = true, true
+    assertTrue(Compat.IsItemBindToAccount("a")); assertFalse(Compat.IsItemBindToAccount("b"))
+    assertTrue(Compat.IsItemBindToAccountUntilEquip("b"))
+    assertFalse(Compat.IsItemBindToAccountUntilEquip("a"))
+    assertFalse(Compat.IsItemBindToAccount(nil))
+    m.C_Item = nil
+    assertFalse(Compat.IsItemBindToAccount("a")); assertFalse(Compat.IsItemBindToAccountUntilEquip("b"))
+end)
+
+test("compat: a secret bind answer reads as not bound", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    m.C_Item.IsItemBindToAccount = function() return T.secret(true) end
+    assertFalse(Compat.IsItemBindToAccount("a"))
+end)
+
+test("compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slot or no API", function()
+    local Compat, m = fresh()
+    m.bagGUIDs["0:1"] = "Item-1-0-ABC"
+    assertEqual(Compat.GetBagItemGUID(0, 1), "Item-1-0-ABC")
+    assertNil(Compat.GetBagItemGUID(0, 2))
+    m.ItemLocation = nil
+    assertNil(Compat.GetBagItemGUID(0, 1))
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- The Pawn seam
+-- ---------------------------------------------------------------------------------------------
+
+-- A Pawn fake: data for every link but "uncached", one 12% upgrade, a scale and a value.
+local function installPawn(m)
+    m.PawnIsInitialized = true
+    m.PawnGetItemData = function(link) if link ~= "uncached" then return { link = link } end end
+    m.PawnIsItemAnUpgrade = function(data)
+        if data.link == "up" then return { { ScaleName = "S", PercentUpgrade = 0.12 } } end
+        return nil
+    end
+    m.PawnFindScaleForSpec = function(classID, specID) return classID .. ":" .. specID end
+    m.PawnGetSingleValueFromItem = function(data, scale) return scale == "S" and #data.link or nil end
+end
+
+test("compat: without Pawn every reader answers nil and nothing raises", function()
+    local Compat = fresh()
+    assertFalse(Compat.PawnIsReady())
+    assertNil(Compat.PawnItemData("up"))
+    assertNil(Compat.PawnUpgradeInfo("up"))
+    assertNil(Compat.PawnScaleForSpec(1, 71))
+    assertNil(Compat.PawnItemValue("up", "S"))
+end)
+
+test("compat: Pawn loaded but not initialized is not ready", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    m.PawnIsInitialized = false
+    -- red under: a seam that calls Pawn without asking PawnIsInitialized
+    m.PawnGetItemData = function() error("called before Pawn initialized") end
+    assertFalse(Compat.PawnIsReady())
+    assertNil(Compat.PawnUpgradeInfo("up"))
+end)
+
+test("compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    assertTrue(Compat.PawnIsReady())
+    assertEqual(Compat.PawnUpgradeInfo("up")[1].PercentUpgrade, 0.12)
+    assertNil(next(Compat.PawnUpgradeInfo("same")), "not an upgrade is an empty list")
+    assertNil(Compat.PawnUpgradeInfo("uncached"), "uncached is pending")
+    assertEqual(Compat.PawnScaleForSpec(1, 71), "1:71")
+    assertEqual(Compat.PawnItemValue("abc", "S"), 3)
+    assertNil(Compat.PawnItemValue("abc", "Other"))
+    assertNil(Compat.PawnItemValue("abc", nil))
+    assertNil(Compat.PawnItemValue("uncached", "S"))
+end)
+
+test("compat: an error inside Pawn reads as not ready, never as this addon's error", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    m.PawnIsItemAnUpgrade = function() error("Pawn broke") end
+    m.PawnFindScaleForSpec = function() error("Pawn broke") end
+    assertNil(next(Compat.PawnUpgradeInfo("up")))
+    assertNil(Compat.PawnScaleForSpec(1, 71))
+end)
+
+test("compat: a function-spelled PawnIsInitialized is called", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    m.PawnIsInitialized = function() return true end
+    assertTrue(Compat.PawnIsReady())
+    m.PawnIsInitialized = function() error("boom") end
+    assertFalse(Compat.PawnIsReady())
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Trade actions
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: PickupBagItem prefers C_Container, then the global, then reports false", function()
+    local Compat, m = fresh()
+    assertTrue(Compat.PickupBagItem(0, 3))
+    assertEqual(m.tradeCalls[1][1], "PickupContainerItem")
+    assertEqual(m.tradeCalls[1][3], 3)
+    m.C_Container = nil
+    local legacy
+    m.PickupContainerItem = function(bag, slot) legacy = bag .. ":" .. slot end
+    assertTrue(Compat.PickupBagItem(1, 2))
+    assertEqual(legacy, "1:2")
+    m.PickupContainerItem = nil
+    assertFalse(Compat.PickupBagItem(1, 2))
+end)
+
+test("compat: DropItemOnUnit and InitiateTrade call through, and report false when absent", function()
+    local Compat, m = fresh()
+    assertTrue(Compat.DropItemOnUnit("party1"))
+    assertTrue(Compat.InitiateTrade("party2"))
+    assertEqual(m.tradeCalls[1][1], "DropItemOnUnit"); assertEqual(m.tradeCalls[1][2], "party1")
+    assertEqual(m.tradeCalls[2][1], "InitiateTrade"); assertEqual(m.tradeCalls[2][2], "party2")
+    m.DropItemOnUnit, m.InitiateTrade = nil, nil
+    assertFalse(Compat.DropItemOnUnit("party1"))
+    assertFalse(Compat.InitiateTrade("party1"))
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- The seam is the only caller
+-- ---------------------------------------------------------------------------------------------
+
+local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown", "C_RestrictedActions",
+    "GetItemUpgradeInfo", "IsItemBindToAccount", "GetItemGUID", "DropItemOnUnit", "PickupContainerItem",
+    "InitiateTrade", "Pawn%u%a+", "issecretvalue", "canaccessvalue" }
+
+test("compat: no other shipped file names a seam-only client API in code", function()
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        if rel ~= "core/Compat.lua" then
+            local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
+            local src = fh:read("*a"); fh:close()
+            local code = src:gsub("%-%-[^\r\n]*", "")
+            for _, api in ipairs(SEAM_ONLY) do
+                -- red under: a feature module calling C_TooltipInfo.GetBagItem directly
+                assertNil(code:find("[^%w_.]" .. api), rel .. " names " .. api .. " outside core/Compat.lua")
+            end
+        end
+    end
+end)

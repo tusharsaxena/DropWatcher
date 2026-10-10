@@ -28,6 +28,20 @@ Add `KEY = "Ka0s_DropWatcher_Event"` to the catalog in `core/Bus.lua`, with its 
 comment. Receivers take their own target, `NS.Bus:NewTarget()`, and use `NS.MSG.KEY`, never the
 literal.
 
+## Add a Compat shim
+
+A version-variant, deprecated or optional client API is called from `core/Compat.lua` only.
+
+1. Add `function Compat.Name(...)` there: read the client global bare, at call time; ask
+   `Compat.IsSecret` before comparing or matching anything the client hands back; answer a
+   documented absent value (nil, false or `{}`) when the API is missing.
+2. Declare the client global in `.luacheckrc` under `files["core/Compat.lua"]`, never globally, and
+   add its name to `SEAM_ONLY` in `tests/test_compat.lua`.
+3. Add a controllable fake to `tests/wow_mock.lua` and cases to `tests/test_compat.lua`, the API
+   absent among them.
+4. Add the row to [`compat-layer.md`](compat-layer.md) (and its shim count), and a row to
+   [`midnight-quirks.md`](midnight-quirks.md) when the shim works around a client change.
+
 ## Add a perf bucket
 
 Declare `{ key = "..." }` in `core/PerfSetup.lua` and bracket the hot path with the gated form

@@ -151,3 +151,17 @@ test("parity: the Media seam publishes the same NS members on both paths", funct
     -- Members from: grep -nE '^\s*function NS\.[A-Za-z_]+|^\s*NS\.[A-Za-z_]+\s*=' core/MediaSetup.lua
     assertSeamParity("core/MediaSetup.lua", "MediaFont", "Media seam (NS members)")
 end)
+
+-- The six spell and spec readers of LibKa0s-Compat-1.0 that core/Compat.lua does not wire: nothing
+-- here reads a spell, and `grep -rnE "Compat\.(GetSpell|GetSpecialization)" core modules settings`
+-- finds no call site.
+local COMPAT_READERS_UNWIRED = { "GetSpellInfo", "GetSpellName", "GetSpellTexture", "GetSpellCooldown",
+    "GetSpecialization", "GetSpecializationInfo" }
+
+test("parity: the Compat seam carries every library member it wires", function()
+    T.assertSurfaceParity(degraded.Compat, "LibKa0s-Compat-1.0", COMPAT_READERS_UNWIRED)
+end)
+
+test("parity: the Compat seam publishes the same members on both load paths", function()
+    T.assertSurfaceParity(live.Compat, degraded.Compat, "NS.Compat")
+end)

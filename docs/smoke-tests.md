@@ -18,6 +18,7 @@ passed.
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
 | STATE-1..3 | State | Enable/disable, lock, test mode |
+| COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (lands with DW-20) |
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
@@ -89,6 +90,29 @@ is disabled — enable it with /dw enable`; the minimap menu grays every entry b
 each ticking the state it shows and toggling it. Result:
 
 **STATE-3.** *Reserved — DW-34 (test mode populates every drop state).*
+
+## Compat
+
+The seam's decisions are headless-tested (`test_compat`), on the mock's idea of the client. These
+checks confirm the client facts behind them, with `/dump` in the chat box; nothing in them needs the
+addon's window. Record what the client printed on each `Result:` line.
+
+**COMPAT-1. Enum names.** `/dump Enum.TooltipDataLineType.TradeTimeRemaining,
+Enum.TooltipDataLineType.ItemLevel, Enum.TooltipDataLineType.ItemUpgradeLevel` → three numbers;
+`/dump Enum.AddOnRestrictionState` → a table with `Inactive`, `Activating` and `Active`;
+`/dump C_RestrictedActions.IsAddOnRestrictionActive ~= nil` → `true`. A nil anywhere is the
+failure: name the member that is missing. Result:
+
+**COMPAT-2. The tooltip lines.** Loot a tradeable BoP item in a dungeon and note its bag and slot,
+then `/dump C_TooltipInfo.GetBagItem(<bag>, <slot>)` → one line whose `type` is the
+`TradeTimeRemaining` number from COMPAT-1 and whose `leftText` is the trade sentence ending in a
+duration such as `1 hour 59 min`. Then `/dump C_TooltipInfo.GetInventoryItem("player", 1)` → an
+`ItemLevel` line; record whether it carries a numeric `itemLevel` field. And
+`/dump C_Item.GetItemUpgradeInfo(GetInventoryItemLink("player", 1))` → a table with
+`trackString`, `currentLevel` and `maxLevel` for a tracked helm. Result:
+
+**COMPAT-3. Pawn.** With Pawn installed and loaded, `/dump type(PawnIsInitialized), PawnIsInitialized`
+→ `boolean`, `true`. Without Pawn → `nil`. Result:
 
 ## Combat
 
@@ -218,8 +242,10 @@ leaving it, back to `Quality: Rare+`. `Use global` restores the global mode. Res
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
-code: nothing. It reads no localized `_G` string, parses no tooltip line, keys nothing off a display
-string, and writes no header another tool parses; its own strings are English through `NS.L`, which
+code: nothing yet. `core/Compat.lua` holds the localized readers (the trade-time sentence and its
+duration, the `ITEM_LEVEL` and upgrade-level lines), headless-tested in enUS, deDE and ruRU shapes,
+but no feature calls them until M2's edge items land. Nothing else reads a localized `_G` string,
+parses a tooltip line, keys anything off a display string, or writes a header another tool parses; its own strings are English through `NS.L`, which
 answers the key itself on any client. The checks that will carry locale risk arrive with the feed
 (design spec §15): the `LOOT_ITEM*` GlobalString patterns, the trade-timer duration decode, and track
 names taken from the API rather than parsed. Until then, on a deDE or frFR client: `/reload`, open
@@ -235,3 +261,4 @@ client's INSTALL and SLASH checks are sufficient. The section is re-armed by the
 | ID | Origin | Why it is owed |
 |---|---|---|
 | INSTALL-1..3, SLASH-1..3, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-3, DIAG-1..2, DEGRADED-1, LOC-1 | DW-02, the scaffold | No client pass recorded yet |
+| COMPAT-1..3 | DW-20, the compat seam | No client pass recorded yet |

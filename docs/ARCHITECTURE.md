@@ -11,12 +11,13 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker and LibDBIcon are vendored under `libs/`, and so is the whole
-LibKa0s v1.71.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.71.0 payload, of which fourteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
 |---|---|---|
 | Core | `core/CoreSetup.lua` | the `[DW]` printer, secret-safe stringifier, SafeRegister family, the skin, the close mark, the resize grip |
+| Compat | `core/Compat.lua` | the secret guards (`IsSecret`, `CanAccess`, `IsSafeKey`); the file is also the addon's own compat seam |
 | Media | `core/MediaSetup.lua` | the icon catalog and the monospace face |
 | Env | `core/EnvSetup.lua` | the addon's own TOC metadata and version |
 | Pool | `core/PoolSetup.lua` | the row pool (for the drop tables) |
@@ -30,7 +31,7 @@ lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
 
-`LibKa0s-Compat-1.0` and the Widgets majors are vendored and not wired yet. Each setup file holds a
+The Widgets majors are vendored and not wired yet. Each setup file holds a
 descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live
 surface.
 
@@ -40,7 +41,8 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 ## Module Map
 
 Every file, its kind and its TOC position is in [`module-map.md`](module-map.md). In short: `core/`
-holds the identity, ten of the setup files, the game-data tables (`Constants.lua` and
+holds the identity, ten of the setup files, the compat seam (`Compat.lua`: the only caller of
+version-variant, deprecated and optional client APIs, see [`compat-layer.md`](compat-layer.md)), the game-data tables (`Constants.lua` and
 `ClassData.lua`, data plus pure lookups), the session state, the addon object and its lifecycle,
 and the migration runner; `defaults/` the default values; `modules/` the verdict kernel
 (`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the minimum-quality gate
@@ -126,9 +128,11 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 The window is a plain `Frame`, never secure, so showing, hiding and moving it are allowed in combat
 and nothing defers. Settings writes touch no protected frame. Opening the settings panel is refused
 in combat by the options library, which also locks a page shown in combat; the addon adds no lock of
-its own and never closes Blizzard's settings window (options-ui-§2). The planned trade helper's
-`PickupContainerItem` / `DropItemOnUnit` and the planned whispers are click-driven and are guarded
-for combat and restriction state by their own items (design spec §4, §9).
+its own and never closes Blizzard's settings window (options-ui-§2). The trade actions
+(`PickupContainerItem`, `DropItemOnUnit`, `InitiateTrade`) and the chat sender are wrapped in
+`core/Compat.lua` and guard nothing themselves: the planned trade helper (DW-29) and messaging edge
+(DW-2A) call them only from a click, and check combat, range and restriction state first (design
+spec §4, §9).
 
 ## Known Limitations
 
@@ -182,6 +186,11 @@ for combat and restriction state by their own items (design spec §4, §9).
   with `messages.oneAsk` off; a failed one may be retried, and a canceled one leaves the registry,
   so its button is ready again. Nothing sends yet: the edge (DW-2A) wires the restriction check,
   the send and the flush timer, and the `messages.*` settings have no row until DW-40.
+- The compat seam (`core/Compat.lua`) has no caller yet; the M2 edge items wire it. Three of its
+  readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the
+  shape of the trade-time and item-level tooltip lines (whether the `ItemLevel` line carries a
+  numeric field), and that `PawnIsInitialized` is a boolean flag. A secret chat-lockdown or
+  restriction answer reads as locked, a secret bind answer as not bound ([`midnight-quirks.md`](midnight-quirks.md)).
 - The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
   mock does not model; PROFILE-1 is its in-game check.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate
@@ -213,8 +222,8 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `slash-dispatch.md` | Present | 20 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
-| `midnight-quirks.md` | Not applicable | The addon carries no client-version workaround of its own |
-| `compat-layer.md` | Not applicable | No `core/Compat.lua` ships: the addon makes no deprecated or version-variant client call outside LibKa0s's majors yet (compat's applicability condition); DW-20 adds the file |
+| `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 23 addon-specific shims (three or more) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 
 ### Verification and record (documentation-§3)
@@ -237,7 +246,9 @@ None.
 The single home for a ratified deviation from the Ka0s WoW Addon Standard (documentation-§3). A
 deviation not in this table is not ratified.
 
-None.
+| Rule | What differs | Why | Decided | Re-check trigger |
+|---|---|---|---|---|
+| library-stack-§7, anti-pattern #47 | The chat sender (`Compat.ChatSender`) and the tooltip line reader with its duration decoder (`Compat.ReadTooltipLine`, `DecodeDuration`) are written in this addon, not taken from LibKa0s | No LibKa0s major carries them, and MultiMeters' `ChatSender` is the only other copy; the promotion bars (two consumers with the same semantics) are not met yet. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a major carrying either shape, or a second Ka0s addon needs the reader or the decoder |
 
 ### Files over the 1500-line cap
 

@@ -20,7 +20,11 @@ without it).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
-libraries, and the main window's geometry).
+libraries, the main window's geometry, and the client APIs `core/Compat.lua` wraps: the tooltip
+data, the chat sender and lockdown, the restriction state, `C_Item`'s upgrade, bind and GUID
+answers, the trade actions, the enums it resolves by name and the enUS GlobalStrings it parses).
+Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
+mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
 Suites reach the harness as `local T = _G.DW_TEST` and build instances with the three factories,
 each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env, mock)`:
@@ -35,7 +39,10 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
 `test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
-`test_database`, `test_schema`, `test_slash`, `test_window`, `test_constants` and `test_class_data`
+`test_database`, `test_schema`, `test_slash`, `test_window`, `test_compat` (the compat seam: the
+secret guards on both load paths, the localized duration decoder in three client languages, the
+tooltip line reader and each shim's fallback with its API absent), `test_constants` and
+`test_class_data`
 (the game-data tables and their lookups), `test_evaluate` (the verdict kernel, table-driven over
 every slot plan and every equippability path, plus nil and garbage inputs), `test_quality_gate`
 (the minimum-quality gate: each mode, the floor, empty slots, ties, both overrides),
