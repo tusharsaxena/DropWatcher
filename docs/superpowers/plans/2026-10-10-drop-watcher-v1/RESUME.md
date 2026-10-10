@@ -1,0 +1,67 @@
+# Resuming the Drop Watcher v1 build
+
+## 1. Find out where the run stands
+
+```sh
+bash docs/superpowers/plans/2026-10-10-drop-watcher-v1/resume-state.sh -v
+```
+
+Run this from `../DropWatcher`. Its last line names the milestone and items to continue with. It reads only
+git, so nothing a crashed session left behind can mislead it.
+
+## 2. Clean up an interrupted item
+
+```sh
+cd /mnt/d/Profile/Users/Tushar/Documents/GIT/DropWatcher
+git status --short
+git branch --show-current
+```
+
+The branch should be `feat/2026-10-10-drop-watcher-v1`.
+
+If the tree is dirty, read the diff before doing anything:
+
+| What the diff is | What to do |
+|---|---|
+| Matches the next unlanded item | Finish it: tests, gate, then commit as `DW-NN: …` |
+| Not understood | `git stash push -m "dw-resume <date>"` and note it in the log below |
+
+**Never** `reset --hard` or `checkout .` work that has not been read.
+
+Then run the gate before continuing:
+
+```sh
+lua tests/run.lua && luacheck .
+```
+
+## 3. Relaunch
+
+Hand the next run:
+- the spec
+- the plan
+- this file
+- the `RESUME at` line
+
+Milestones run in order M0 → M6. Items inside a milestone follow `items.tsv` order and dependencies.
+
+## 4. Milestone checkpoint
+
+1. Gate green, run by the orchestrator itself.
+2. The reviewer's notes are attached: `git notes --ref=ka0s-review show HEAD`.
+3. Append a row to `checkpoints.tsv` with the date, the milestone and the evidence: test totals, luacheck,
+   the HEAD of each repo touched.
+4. Push the branch and its notes:
+
+   ```sh
+   git push -u origin feat/2026-10-10-drop-watcher-v1
+   git push origin refs/notes/ka0s-review
+   ```
+
+   Push `../Ka0sAddonsCommonTasks` and `../WowAddonStandards` too whenever they changed.
+
+**After M6, stop.** The merge waits for the owner's go-ahead. Once the owner approves, `/dev-copilot:finalize`
+merges `--no-ff`, pushes, and deletes the run branches. It then cleans up the run's stashes and worktrees.
+
+## Log
+
+Record anything unusual here: stashes, exceptions or reruns.

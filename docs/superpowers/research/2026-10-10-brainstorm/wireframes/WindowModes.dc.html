@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drop Watcher window modes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.wf{font-family:'IBM Plex Sans',sans-serif;color:#1F1F1F}
+.mono{font-family:'IBM Plex Mono',monospace}
+.win{background:#FFFFFF;border:1.5px solid #1F1F1F;box-shadow:6px 6px 0 #D4D4D0}
+.ph{background:#D9D9D5;border:1px solid #9C9C97;box-sizing:border-box}
+.btn{font:500 12px 'IBM Plex Sans',sans-serif;border:1px solid #1F1F1F;background:#FFFFFF;color:#1F1F1F;padding:3px 10px;border-radius:2px;white-space:nowrap}
+.btnfill{background:#1F1F1F;color:#FFFFFF}
+.chip{font:500 11px 'IBM Plex Mono',monospace;border:1px solid #6B6B66;padding:1px 6px;border-radius:2px;white-space:nowrap}
+.tb{height:34px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#ECECE8;border-bottom:1px solid #1F1F1F}
+.title{font-weight:600;font-size:14px;color:#7A5A00}
+.cell{display:flex;flex-direction:column;gap:12px}
+.lbl{font:600 12px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:#1D4ED8}
+.cap{font-size:13px;line-height:1.45;color:#2B2B28}
+.ccols{display:grid;grid-template-columns:minmax(0,1fr) 40px 96px 50px 70px;column-gap:8px;align-items:center}
+</style>
+</helmet>
+<div class="wf" style="width: 1440px; height: 900px; box-sizing: border-box; background: #F4F4F2; padding: 44px 48px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 36px 44px">
+  <div class="cell">
+    <div class="lbl">A · Minimised</div>
+    <div class="win" style="width: 380px">
+      <div class="tb" style="border-bottom: none"><div class="ph" style="width: 18px; height: 18px"></div><span class="title">Ka0s Drop Watcher</span><span class="chip" style="border-color: #1F1F1F; font-weight: 600">3 new</span><div style="flex: 1"></div><span class="btn">+</span><span class="btn">×</span></div>
+    </div>
+    <div class="cap">The – button collapses the window to its title bar, and the position is kept. A counter shows the interesting drops that arrived since you minimised it. Click + or double-click the bar to expand it.</div>
+  </div>
+  <div class="cell">
+    <div class="lbl">B · Compact preset</div>
+    <div class="win" style="width: 400px">
+      <div class="tb"><span class="title">Ka0s Drop Watcher</span><div style="flex: 1"></div><span class="btn">–</span><span class="btn">×</span></div>
+      <div class="ccols mono" style="font-size: 10px; font-weight: 600; padding: 6px 10px; border-bottom: 1px solid #1F1F1F; color: #4A4A46"><div>ITEM / LOOTER</div><div>ILVL</div><div>THEIR EQ</div><div>ME</div><div></div></div>
+      <sc-for list="{{compact}}" as="r" hint-placeholder-count="3">
+        <div class="ccols" style="padding: 0 10px; height: 32px; border-bottom: 1px solid #E4E4E0; font-size: 12px">
+          <div style="display: flex; gap: 6px; align-items: center; min-width: 0"><div class="ph" style="width: 20px; height: 20px; flex: none"></div><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.looter}}</span></div>
+          <div class="mono">{{r.ilvl}}</div>
+          <div style="display: flex; gap: 3px"><div class="ph" style="width: 18px; height: 18px"></div><sc-if value="{{r.two}}" hint-placeholder-val="{{false}}"><div class="ph" style="width: 18px; height: 18px"></div></sc-if></div>
+          <div class="mono">{{r.me}}</div>
+          <div style="display: flex; gap: 4px; justify-content: flex-end; align-items: center"><span class="btn btnfill" style="padding: 2px 7px">Ask</span><span>×</span></div>
+        </div>
+      </sc-for>
+    </div>
+    <div class="cap">The DoYouNeedThat density: one line per drop with icon, ilvl, looter, their gear and Ask. Switch it in Settings › Window, or with /dw compact. Everything else is still on hover and in the detail card.</div>
+  </div>
+  <div class="cell">
+    <div class="lbl">C · Toast (opt-in)</div>
+    <div class="win" style="width: 380px; padding: 10px 12px; display: flex; gap: 10px; align-items: center">
+      <div class="ph" style="width: 36px; height: 36px; border-width: 2px; border-color: #6B6B66; flex: none"></div>
+      <div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0"><span style="font-size: 11px; font-weight: 600; color: #7A5A00">BIG UPGRADE FOR YOU</span><b style="font-size: 13px">[Crown] · looted by Séta</b><span class="mono" style="font-size: 11px; color: #4A4A46">+19 ▲ · Likely tradeable</span></div>
+      <div style="display: flex; flex-direction: column; gap: 4px"><span class="btn btnfill">Ask</span><span class="btn">×</span></div>
+    </div>
+    <div class="cap">Off by default. Fires only above a gain threshold, or for a wishlist item later. Shows one at a time and never during combat unless you opt in. The position can be changed in test mode.</div>
+  </div>
+  <div class="cell">
+    <div class="lbl">D · Empty state</div>
+    <div class="win" style="width: 400px; height: 200px; display: flex; flex-direction: column">
+      <div class="tb"><span class="title">Ka0s Drop Watcher</span><div style="flex: 1"></div><span class="btn">×</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; text-align: center">
+        <b style="font-size: 14px">No drops yet</b>
+        <span style="font-size: 12px; color: #4A4A46">Loot your group receives appears here, grouped by boss.</span>
+        <div style="display: flex; gap: 8px"><span class="btn">Preview with test data</span><span class="btn">Scan group</span></div>
+      </div>
+    </div>
+    <div class="cap">The window never shows a blank table. The footer still shows inspect and parser health, so it is clear the addon is listening.</div>
+  </div>
+  <div class="cell">
+    <div class="lbl">E · Test mode</div>
+    <div class="win" style="width: 400px">
+      <div class="tb"><span class="title">Ka0s Drop Watcher</span><span class="chip" style="border-style: dashed; border-color: #1F1F1F">TEST MODE</span><div style="flex: 1"></div><span class="btn">×</span></div>
+      <div class="mono" style="font-size: 11px; padding: 8px 10px; background: #EEF3FF; border-bottom: 1px solid #1D4ED8; color: #1F1F1F">Placeholder drops in every state. Nothing is whispered. Ends on combat.</div>
+      <div style="padding: 8px 10px; display: flex; flex-direction: column; gap: 6px">
+        <div class="ph" style="height: 18px"></div><div class="ph" style="height: 18px"></div><div class="ph" style="height: 18px; width: 70%"></div>
+      </div>
+    </div>
+    <div class="cap">A session-only checkbox in Master controls, also on the launcher menu and /dw test. It shows every verdict, trade and ask state so the layout and position can be checked anywhere.</div>
+  </div>
+  <div class="cell">
+    <div class="lbl">F · Launcher (minimap or broker)</div>
+    <div style="display: flex; gap: 14px; align-items: flex-start">
+      <div class="ph" style="width: 32px; height: 32px; border-radius: 50%; flex: none"></div>
+      <div class="win" style="width: 210px; padding: 6px 0; display: flex; flex-direction: column">
+        <div class="mono" style="font-size: 11px; color: #7A5A00; padding: 4px 12px; font-weight: 600">Ka0s Drop Watcher</div>
+        <div style="font-size: 13px; padding: 5px 12px">✓ Enabled</div>
+        <div style="font-size: 13px; padding: 5px 12px">   Locked</div>
+        <div style="font-size: 13px; padding: 5px 12px">   Test mode</div>
+        <div style="font-size: 13px; padding: 5px 12px">✓ Show window</div>
+      </div>
+    </div>
+    <div class="cap">The standard Ka0s launcher. Left-click opens Settings. Right-click opens this menu: Enabled, Locked, Test mode and Show window. The tooltip is drawn by LibKa0s.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      compact: [
+        { looter: 'Séta', ilvl: '311', two: false, me: '+19' },
+        { looter: 'Littlewolfe', ilvl: '298', two: true, me: '+4' },
+        { looter: 'Uniquerogue', ilvl: '305', two: true, me: '+9' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

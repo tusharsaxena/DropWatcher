@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drop Watcher states sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.wf{font-family:'IBM Plex Sans',sans-serif;color:#1F1F1F}
+.mono{font-family:'IBM Plex Mono',monospace}
+.card{background:#FFFFFF;border:1.5px solid #1F1F1F;box-shadow:6px 6px 0 #D4D4D0;padding:18px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box}
+.lbl{font:600 12px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:#4A4A46}
+.chip{font:500 12px 'IBM Plex Mono',monospace;border:1px solid #1F1F1F;padding:2px 8px;border-radius:2px;white-space:nowrap;background:#FFFFFF}
+.btn{font:500 12px 'IBM Plex Sans',sans-serif;border:1px solid #1F1F1F;background:#FFFFFF;color:#1F1F1F;padding:3px 10px;border-radius:2px;white-space:nowrap}
+.line{display:grid;grid-template-columns:150px minmax(0,1fr);column-gap:14px;align-items:start;font-size:13px;line-height:1.45}
+.tip{border:1px solid #1F1F1F;background:#2B2B28;color:#F4F4F2;font-size:12px;line-height:1.4;padding:6px 9px;border-radius:2px}
+.muted{color:#5E5E5A}
+</style>
+</helmet>
+<div class="wf" style="width: 1440px; height: 900px; box-sizing: border-box; background: #F4F4F2; padding: 48px; display: flex; flex-direction: column; gap: 20px">
+  <div style="display: flex; align-items: baseline; gap: 16px">
+    <div style="font-weight: 600; font-size: 22px">States and reasons</div>
+    <div class="muted" style="font-size: 14px">Every chip and button in the window takes one of these states. Each state has a hover reason, and nothing is ever left blank.</div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; flex: 1">
+    <div class="card">
+      <div class="lbl">Verdict: Me and Them columns</div>
+      <sc-for list="{{verdicts}}" as="v" hint-placeholder-count="6">
+        <div class="line"><div><span class="chip" style="font-weight: 600">{{v.chip}}</span></div><div>{{v.text}}</div></div>
+      </sc-for>
+      <div class="muted" style="font-size: 12px">The Them column inverts emphasis: the looter's downgrade is good news for you.</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Trade estimate: hover reasons</div>
+      <sc-for list="{{trades}}" as="t" hint-placeholder-count="4">
+        <div class="line"><div><span class="chip" style="{{t.style}}">{{t.chip}}</span></div><div class="tip">{{t.tip}}</div></div>
+      </sc-for>
+      <div class="muted" style="font-size: 12px">Your own drops show an exact countdown read from the item (04). Another player's drop can only be estimated.</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Inspect freshness: Their eq column</div>
+      <sc-for list="{{inspects}}" as="i" hint-placeholder-count="6">
+        <div class="line"><div style="display: flex; align-items: center; gap: 6px"><div style="width: 20px; height: 20px; background: #D9D9D5; border: 1px {{i.border}} #6B6B66"></div><span class="mono" style="font-size: 11px">{{i.badge}}</span></div><div>{{i.text}}</div></div>
+      </sc-for>
+    </div>
+    <div class="card">
+      <div class="lbl">Ask button: lifecycle</div>
+      <sc-for list="{{asks}}" as="a" hint-placeholder-count="6">
+        <div class="line"><div><span class="btn" style="{{a.style}}">{{a.label}}</span></div><div>{{a.text}}</div></div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      verdicts: [
+        { chip: '+19 ▲  UPGRADE', text: 'Higher ilvl. With scoring on: higher ilvl and a higher score.' },
+        { chip: '+0 ≈  SIDEGRADE', text: 'Within the sidegrade band, or ilvl and score disagree (e.g. −3 ilvl, +1.1% Pawn).' },
+        { chip: '−13 ▽  DOWNGRADE', text: 'Lower ilvl and no score gain.' },
+        { chip: "CAN'T USE", text: "Wrong armour type, weapon type or primary stat for the spec, e.g. plate for a leather wearer, or a shield for a non-shield spec." },
+        { chip: "DOESN'T WANT", text: 'Usable, but excluded by your own preferences, e.g. a 1H for a 2H-only build.' },
+        { chip: '?  UNKNOWN', text: 'No inspect yet, no spec, or a protected value. The hover says which.' }
+      ],
+      trades: [
+        { chip: 'YES', style: 'font-weight: 600', tip: 'Bind on equip: anyone can be traded this.' },
+        { chip: 'LIKELY', style: '', tip: 'BoP personal loot. 311 is not an upgrade over the 324 helm Séta owns. Inspected 40s ago.' },
+        { chip: 'UNKNOWN', style: 'border-style: dashed', tip: "Couldn't inspect Uniquerogue (out of range). Will retry when in range." },
+        { chip: 'NO', style: 'color: #8A8A85; border-color: #8A8A85', tip: "Bonus roll loot can't be traded. (Others: warbound, an upgrade for the looter, 2 h window passed.)" }
+      ],
+      inspects: [
+        { badge: '40s', border: 'solid', text: 'Fresh: inspected less than 2 minutes ago.' },
+        { badge: '6m', border: 'solid', text: 'Cached: older data, still used. Retried in the background.' },
+        { badge: '…', border: 'dashed', text: 'Pending: in the queue, one inspect at a time.' },
+        { badge: 'range', border: 'dashed', text: 'Out of inspect range: waits up to 25s, then shows Unknown.' },
+        { badge: 'combat', border: 'dashed', text: 'Parked during combat and resumed when combat ends.' },
+        { badge: '!', border: 'dotted', text: 'Failed: the reason is in the tooltip, with a Retry in the detail card.' }
+      ],
+      asks: [
+        { label: 'Ask', style: 'background: #1F1F1F; color: #FFFFFF', text: 'Ready. One click whispers your template, or opens it for editing first if set.' },
+        { label: 'Queued ⏱', style: '', text: 'Encounter or key in progress. Sends automatically when it ends. Click to cancel.' },
+        { label: 'Asked ✓', style: 'color: #5E5E5A', text: 'Sent. One ask per item per looter, so this cannot be resent by accident.' },
+        { label: 'Retry ↻', style: 'border-style: dashed', text: 'The send failed (blocked or throttled). The hover shows why.' },
+        { label: '—', style: 'color: #8A8A85; border-color: #8A8A85', text: 'Not offered: trade state is No, or the item is not useful to you.' },
+        { label: 'Traded ✓', style: 'color: #5E5E5A', text: 'You received the item in a trade, and the row is marked done.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

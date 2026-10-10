@@ -1,0 +1,40 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-00	M0	Ka0sAddonsCommonTasks	Brainstorm bundle and approved wireframes committed		S		research
+DW-01	M0	DropWatcher	Import research, wireframes, v1 design spec and checkpointed plan	DW-00	S		all
+DW-02	M0	DropWatcher	Scaffold born compliant via NEW_ADDON.md: Ace3 skeleton, LibKa0s v1.71.0 + tests/_kit, setup files, docs set, first automated-test bundle	DW-01	L	INSTALL-1..3	§4 §12 §13
+DW-03	M0	WowAddonStandards	Add Ka0s Drop Watcher row to standards/ADDONS.md	DW-02	S		§12.4
+DW-10	M1	DropWatcher	Constants + ClassData: slot plans, quality ids, difficulty ids, trade rules, class armor/weapon/shield/offhand tables incl. Devourer DH	DW-02	M		§4 §5.2
+DW-11	M1	DropWatcher	Evaluate kernel (pure) with exhaustive test_evaluate	DW-10	L		§5
+DW-12	M1	DropWatcher	QualityGate: fixed / dynamicSlot / dynamicCharacter + floor + upgrade override, test_quality_gate	DW-11	M	QUAL-1..4	§6.2
+DW-13	M1	DropWatcher	Situations classifier + module (events, per-situation track/autoOpen/quality), test_situations	DW-10	M	SIT-1..5	§6.1
+DW-14	M1	DropWatcher	TradeRules estimator (pure) + owner override, test_trade_rules	DW-10	M	TRADE-1..4	§7.1-§7.3
+DW-15	M1	DropWatcher	Messaging core (pure): templates, tokens, length, one-ask guard, queue state machine, test_messaging	DW-10	M		§9.1-§9.2
+DW-20	M2	DropWatcher	Compat seams: ChatSender, tooltip line reader, GetItemUpgradeInfo, restriction APIs, bind helpers, Pawn seam, DropItemOnUnit, duration decoder	DW-02	M	LOC-1	§4 §7.4
+DW-21	M2	DropWatcher	Restrictions module + RestrictionChanged	DW-20	S	COMBAT-2	§4
+DW-22	M2	DropWatcher	Roster module	DW-20	S		§4
+DW-23	M2	DropWatcher	ItemFacts (cached, LoadItem retry, track, stats, specs, warbound, unique, transmog-known)	DW-20	M	FEED-5	§4
+DW-24	M2	DropWatcher	Gear snapshot (equipped + best owned per slot) + GearChanged	DW-23	M		§4 §6.2
+DW-25	M2	DropWatcher	LootParser (GlobalString patterns, rebuild, secret guards), test_loot_parser	DW-20	M	FEED-1 COMBAT-1	§4
+DW-26	M2	DropWatcher	Inspect broker (queue, spacing, range/identity timeouts, foreign hook, combat park, cache, warm-up), test_inspect	DW-22 DW-23	L	INSPECT-1..4	§8
+DW-27	M2	DropWatcher	LootFeed orchestrator (3 sources, dedupe, encounter grouping, gates, evaluations, trade estimates), test_feed	DW-11 DW-12 DW-13 DW-14 DW-24 DW-25 DW-26	L	FEED-2..6	§3 §6
+DW-28	M2	DropWatcher	TradeTimer (own items, line type + decoder fallback, ticker, expiry warning), test_trade_timer	DW-20 DW-27	M	TRADE-5	§7.4
+DW-29	M2	DropWatcher	TradeHelper (bag slot by GUID, DropItemOnUnit, InitiateTrade, guards)	DW-20	S	TRADE-6	§4
+DW-2A	M2	DropWatcher	Messaging edge: send via ChatSender in pcall, flush on restriction lift / ENCOUNTER_END, cancel on leave, chat confirmation	DW-15 DW-21	M	ASK-1..4	§9.2-§9.3
+DW-30	M3	DropWatcher	Window shell: skin, title bar, restriction badge, scan, tabs, filter bar, footer, minimise, resize, position, UISpecialFrames	DW-27	L	FEED-1	§11.1
+DW-31	M3	DropWatcher	Group drops table: pooled rows, encounter headers, columns, item buttons, verdict glyphs/colors, tooltips, sort/filter, compact preset	DW-30	L	FEED-2..4	§11.1-§11.2
+DW-32	M3	DropWatcher	Detail card (inline expand) with both comparisons, trade box, actions	DW-31	M	FEED-3	§11.3
+DW-33	M3	DropWatcher	My drops tab + Offer panel + Post my tradeables	DW-31 DW-28 DW-29 DW-2A	L	ASK-5..7 TRADE-5..6	§11.4
+DW-34	M3	DropWatcher	Test mode data + empty state + test banner	DW-31	M	STATE-3	§11.6
+DW-40	M4	DropWatcher	Schema, defaults (profile/global), migration runner entries for every setting in spec §12.1	DW-02	M		§12.1
+DW-41	M4	DropWatcher	Options pages: Landing, General (Master controls + When to show), Feed, Comparison, Trade, Messages, Window, Profiles	DW-40	L	PANEL-1..6 SIT-1 QUAL-1	§12.2
+DW-42	M4	DropWatcher	Slash verbs (show hide toggle test scan clear history mine compact situation offer add) + slash-dispatch.md	DW-40	M	SLASH-1..5	§12.3
+DW-43	M4	DropWatcher	Launcher menu, Diagnostics sections, Perf buckets, debug tags	DW-41	M	DIAG-1..3	§12.4 §13
+DW-50	M5	DropWatcher	Scoring adapters (Pawn, Weights + import, None) + sidegrade integration, test_scoring	DW-27	M	SCORE-1..2	§5.4
+DW-51	M5	DropWatcher	History (capped DB.global, outcomes, trade-completion) + History tab, test_history	DW-27 DW-31	M	HIST-1..2	§10
+DW-52	M5	DropWatcher	Toast (opt-in)	DW-31	S	TOAST-1	§11.5
+DW-53	M5	DropWatcher	Transmog-known flag (CanIMogIt optional / C_TransmogCollection)	DW-23	S		§4
+DW-54	M5	DropWatcher	Auto-ask (opt-in, delayed after encounter end, cancel rules, one-time notice)	DW-2A	S	ASK-8	§9.4
+DW-60	M6	DropWatcher	Docs sync: README (de-AI pass), ARCHITECTURE hub + Documentation map + deviations, Tier 1, Tier 2 (debug, slash-dispatch, midnight-quirks, compat-layer, message-bus?, profiles), smoke-tests incl. LOC	DW-43 DW-54	M		§14 §15
+DW-61	M6	DropWatcher	Automated-test bundle (four suites) + offline perf scenarios + CCN<=15 + file cap	DW-60	M		§15
+DW-62	M6	DropWatcher	Independent review + standards audit; fix findings	DW-61	L		all
+DW-63	M6	DropWatcher	File later-tier GitHub issues (DropWatcher) + LibKa0s promotion + WAS chat-sending proposal, throttled	DW-62	S		§14
