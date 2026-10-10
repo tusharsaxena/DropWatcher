@@ -105,6 +105,11 @@ test("perf: every declared bucket is reached by a real bracket", function()
     NS.Perf.on = true
     NS.ShowWindow()          -- builds the window and runs its repaint pass (window.refresh)
     m.__fire("CHAT_MSG_LOOT", "You receive loot: |Hitem:1|h[x]|h.")    -- one line parsed (parse)
+    -- one member's slots read on the fast path (inspect.read)
+    m.setGroup({ { guid = "Player-1-0000000A", name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
+    NS.Roster.Refresh("test")
+    NS.Inspect.Request("Player-1-0000000A")
+    m.advance(0)
     NS.Perf.on, NS.Perf.Note = false, real
     for key, reached in pairs(declared) do
         assertTrue(reached, "bucket " .. key .. " declared but never reached")

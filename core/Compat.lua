@@ -15,6 +15,8 @@ local _, NS = ...
 --     (LibKa0s-Compat-1.0's GetSpecialization and GetSpecializationInfo);
 --   * the bind helpers (C_Item's account binds, the bag item's GUID);
 --   * the inventory and bag readers (GetInventoryItemLink, C_Container's slot count and link);
+--   * the inspect calls (CanInspect, CheckInteractDistance, NotifyInspect and its hook,
+--     ClearInspectPlayer, GetInspectSpecialization, the inventory item id, InspectFrame);
 --   * the item readers behind the item facts (info, effective level, stats, specs, uniqueness,
 --     transmog, the class restriction line);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
@@ -436,6 +438,86 @@ function Compat.BagItemLink(bag, slot)
     local fn = containerApi("GetContainerItemLink", GetContainerItemLink)
     if not fn then return nil end
     return plainString(fn(bag, slot))
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- Inspecting another player (the inspect broker, design spec §8)
+-- ---------------------------------------------------------------------------------------------
+
+--- The item id `unit` wears in inventory slot `slot`, or nil (an empty slot, data the client does
+--- not hold, a secret answer, or no API). An id with no link is an incomplete read.
+--- @return number|nil
+function Compat.InventoryItemID(unit, slot)
+    if not GetInventoryItemID then return nil end
+    return plainNumber(GetInventoryItemID(unit, slot))
+end
+
+--- True when the client allows inspecting `unit` now (CanInspect). False for a secret answer or no
+--- API.
+--- @return boolean
+function Compat.CanInspectUnit(unit)
+    if not CanInspect then return false end
+    local v = CanInspect(unit)
+    if Compat.IsSecret(v) then return false end
+    return v == true or v == 1
+end
+
+--- True when `unit` is within inspect range (CheckInteractDistance, index 1). A secret answer is
+--- out of range; with no API the range is not known and the inspect is let through (its own
+--- timeout answers).
+--- @return boolean
+function Compat.InInspectRange(unit)
+    if not CheckInteractDistance then return true end
+    local v = CheckInteractDistance(unit, 1)
+    if Compat.IsSecret(v) then return false end
+    return v == true or v == 1
+end
+
+--- Ask the client to inspect `unit` (NotifyInspect). True when it was called.
+--- @return boolean
+function Compat.NotifyInspect(unit)
+    if not NotifyInspect then return false end
+    NotifyInspect(unit)
+    return true
+end
+
+--- Release the client's inspect target (ClearInspectPlayer). True when it was called.
+--- @return boolean
+function Compat.ClearInspectPlayer()
+    if not ClearInspectPlayer then return false end
+    ClearInspectPlayer()
+    return true
+end
+
+--- The inspected unit's specialization id (GetInspectSpecialization), or nil: 0 (not known), a
+--- secret answer or no API.
+--- @return number|nil
+function Compat.InspectSpecID(unit)
+    if not GetInspectSpecialization then return nil end
+    local id = plainNumber(GetInspectSpecialization(unit))
+    if not id or id <= 0 then return nil end
+    return id
+end
+
+--- True when Blizzard's inspect window is open (the player is inspecting someone).
+--- @return boolean
+function Compat.IsInspectFrameShown()
+    local frame = InspectFrame
+    if not (frame and frame.IsShown) then return false end
+    local v = frame:IsShown()
+    if Compat.IsSecret(v) then return false end
+    return v == true
+end
+
+--- Run `fn(unit)` after every NotifyInspect call, anyone's (hooksecurefunc: the hook can never be
+--- removed, so the caller guards its own state). `unit` is passed as the client gave it and may
+--- be secret. True when the hook was installed.
+--- @param fn function
+--- @return boolean
+function Compat.HookNotifyInspect(fn)
+    if not (hooksecurefunc and NotifyInspect) then return false end
+    hooksecurefunc("NotifyInspect", fn)
+    return true
 end
 
 -- ---------------------------------------------------------------------------------------------

@@ -21,7 +21,9 @@ launcher, the debug console and the diagnostics report, the performance harness,
 latch, the message catalog, and the situation classifier (it knows where the player is; nothing
 consumes it yet). The verdict kernel, the quality gate, the trade estimator and the messaging
 core exist as pure modules that nothing calls yet. The loot parser reads every loot line in chat
-and counts it in the diagnostics report, but hands nothing to a feed yet. The feed that wires them in, inspection, asking and the
+and counts it in the diagnostics report, but hands nothing to a feed yet. The inspect broker reads
+the group's gear and specs, warming up on a roster change inside a tracked situation, and shows
+them in the diagnostics report; nothing judges against them yet. The feed that wires them in, asking and the
 situation settings arrive with the plan's later items
 ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
 

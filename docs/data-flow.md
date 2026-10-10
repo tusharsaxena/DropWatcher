@@ -127,6 +127,31 @@ CHAT_MSG_LOOT (text, ..., guid) ─> LootParser.Parse   [Perf bucket `parse`]
 
 The counters are kept for the session, across a stand-down; the stand-down unregisters the event.
 
+## Today: inspecting a member
+
+```
+Inspect.Request(guid, priority) ─> entry still good (fresh or cached, not stale, < 600s)? ─> answer it
+  else queue it (looter 1 < offer 2 < warm-up 3, then arrival); a queued job may be raised
+Pump (one timer; nothing in flight, not parked, 2.0s since the last NotifyInspect, inspect window shut)
+  first job whose gates pass:
+    no online unit for the GUID ──── 10s ─> failed (identity)
+    CanInspect false or out of range ── 25s ─> outOfRange   (no attempt used)
+  every link readable already ─> read now, `cached`            [Perf bucket `inspect.read`]
+  else NotifyInspect(unit), 2.5s timeout ─> re-queue once, then failed (timeout)
+INSPECT_READY(guid), the job's or any member's ─> 0.15s ─> read slots 1-17   [`inspect.read`]
+  incomplete slot ─> retry 0.3s apart, three times, then keep it (reason incomplete)
+  ─> entry { status fresh, gear (link + tooltip ilvl per slot), specID, gen+1 } ─> Roster.SetSpec
+  ─> ClearInspectPlayer (ours only) ─> the items' facts loaded ─> InspectDone(guid)
+NotifyInspect by anyone else (hook) ─> spacing reset; the job in flight re-queued, free
+PLAYER_REGEN_DISABLED ─> parked (the job in flight ends or times out); ENABLED ─> resumes
+UNIT_INVENTORY_CHANGED(group unit), 5s after the read ─> stale, re-queued as warm-up
+GROUP_ROSTER_UPDATE, or PLAYER_ENTERING_WORLD inside an instance ─> 2s ─> Scan, when tracked and idle
+Inspect.Candidate(guid) ─> { classFile (roster), specID, hand flags, gear (facts at the read level) }
+```
+
+The state is memory only (`State.inspect`) and is dropped by the stand-down, which also cancels
+every timer and clears an inspect the broker started.
+
 ## The design's loot pipeline (spec §3)
 
 ```
@@ -135,6 +160,9 @@ The counters are kept for the session, across a stand-down; the stand-down unreg
  LOOT_HISTORY  ─┘                     │    └─> History
    Situations ──gate──────────────────┤
    QualityGate ──gate─────────────────┼─> ItemFacts ─> Evaluate ─> verdicts
+                                      │     Roster ─┐      ▲
+                                      │     Inspect ┴─> candidate gear/spec
+                                      │     Gear (me) ┘
                                       ├─> TradeRules ─> trade estimate
                                       └─> TradeTimer (own bag items)
  Restrictions ──> Messaging queue ──> Compat.ChatSender (pcall)

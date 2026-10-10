@@ -33,6 +33,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `situation` | the situation classified now and the last one announced, its track, auto-open and quality settings, and the classifier inputs read live |
 | `restrictions` | the four answers now (reason, can send chat, can inspect, can trade), every reason in effect (the Map type included) and the answers last announced |
 | `roster` | the group as last read (stored state, so the report never triggers a read): the member count, then per member the Name-Realm, unit token, classFile, online state, specID and whether it is the player |
+| `inspect` | the inspect broker (stored state): the queue's length, the GUID in flight, whether it is parked and the spacing left, then per member asked about the status, reason, spec, slots read, age and whether it is stale |
 | `gear` | your gear snapshot as last read (stored state, so the report never triggers a read): your class, spec, hand flags and the items still loading, then per slot the worn item level and quality (or `empty`, `loading`) and the best owned level when it is not the worn item |
 | `feed` | what the loot parser has read since login (stored state): the lines turned into loot (`hits`), ignored, rejected (upgrade and crafting echoes) and secret, and the last loot seen with its age, kind and looter. The feed (DW-27) adds its drop counts here |
 | `registration` | the declared feature events (each once), whether they are registered, the events the client refused |
@@ -52,6 +53,7 @@ item given up after its loads, and the item facts cache emptied at its cap), `GE
 change of your gear snapshot, with your spec, the items still loading and the cause), `PARSE` (the
 loot patterns built, with how many globals were usable; one line per loot line read, with the kind,
 the link, the quantity, the looter and its GUID; one per line skipped as rejected, secret or not an
-item; and a sink that raised). The
+item; and a sink that raised), `INSPECT` (one line per inspect job when it ends, with the member, the
+status and its reason, the spec and the slots read, and one per scan with how many were queued). The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 The design's other feature tags (spec §13) arrive with their modules.

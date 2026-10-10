@@ -17,11 +17,12 @@ state uses, and the window's show decision refuses at its source while the latch
 | Bucket | Bracketed in | What one note is |
 |---|---|---|
 | `parse` | `modules/LootParser.lua` `LootParser.Parse` | one `CHAT_MSG_LOOT` line read |
+| `inspect.read` | `modules/Inspect.lua` `readSlots` | one read of a member's 17 slots (the fast path, or after `INSPECT_READY`) |
 | `window.refresh` | `modules/Window.lua` `Window.Refresh` | one repaint pass of the window |
 
 Every bracket is the gated form (performance-§2): one upvalue read, one field read and one boolean
 test when capture is off. The feature items add the design's other buckets (`feed.add`,
-`evaluate`, `inspect.read`, `tradeTimer.scan`, `quality.gate`; design spec §13) together with the
+`evaluate`, `tradeTimer.scan`, `quality.gate`; design spec §13) together with the
 bracket that reaches each one, and `tests/test_setup.lua` fails if a declared bucket is never
 reached.
 

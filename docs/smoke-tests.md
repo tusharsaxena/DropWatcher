@@ -26,7 +26,7 @@ passed.
 | ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
 | ITEM-1..2 | Item facts | The item readers' shapes and the track ids (lands with DW-23) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
-| INSPECT-1..4 | Inspect | The inspect broker (lands with DW-26) |
+| INSPECT-1..4 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
 | ASK-1..8 | Ask | Asking, offering, queueing under restriction, auto-ask (lands with DW-2A, DW-33, DW-54) |
 | SIT-1..5 | Situations | Where the addon is active (lands with DW-13) |
@@ -239,7 +239,39 @@ after login, any slot still `loading` turns into its level without another actio
 
 ## Inspect
 
-Reserved for DW-26: INSPECT-1..4, including INSPECT-4 (is the tooltip item level still needed?).
+The queue, its timeouts, the hook and the cache are headless-tested on a mocked clock
+(`test_inspect`); these checks confirm what the client really does. Until `/dw scan` (DW-42) the
+warm-up starts every inspect: be in a party inside a dungeon (a tracked situation). Each reads the
+`inspect` lines of `/dw diagnostics`, with `/dw debug on` for the `[INSPECT]` lines (one per job).
+
+**INSPECT-1. Warm-up and spacing.** In a dungeon with four others, all near you, `/dw debug on`
+then `/reload` → about two seconds after the load, one `[INSPECT]` line per member, never two
+within two seconds of each other, each `fresh` (or `cached`) with `spec=` that member's spec id and
+`slots=` the number of items they wear (16 or so). `/dw diagnostics` then shows `queued=0
+inFlight=none` and one `inspect:` line per member, `status=fresh` with the same spec. Record a
+member whose spec or slot count is wrong. Result:
+
+**INSPECT-2. The waits and the cache.** With one member far away (another zone, or across the
+dungeon) during the warm-up → that member's line reads `outOfRange (range)` about 25 seconds later,
+and the others are not held up behind it. Have a near member swap one item → within a few seconds
+one new `[INSPECT]` line for them (stale, re-queued), and no further line for them after it: the
+inspect's own arrival must not set off another (the five-second echo guard). Record a loop of lines
+for one member, or a `fresh ... (incomplete)` line (a slot that never completed). Result:
+
+**INSPECT-3. Courtesy and combat.** During a warm-up, right-click a member → Inspect, and keep
+Blizzard's inspect window open → no `[INSPECT]` line while it is open, and its contents are not
+blanked under you (the broker clears only its own inspect); close it → the queue moves on within a
+second or two. Start a pull while members are still queued → no `[INSPECT]` line until the combat
+ends, then the rest follow. With another inspect addon loaded (Details!, an item-level addon), the
+two take turns: no `failed (timeout)` lines in a quiet group. Result:
+
+**INSPECT-4. The inspected item level, and the fast path.** After INSPECT-1, for one member
+compare `/dump C_TooltipInfo.GetInventoryItem("party1", 1)` (its `ItemLevel` line) with
+`/dump C_Item.GetDetailedItemLevelInfo(GetInventoryItemLink("party1", 1))`. Record whether they
+differ, in normal content and in scaled content (timewalking): if they never do, the tooltip read
+is not needed. Then `/reload` again in the same group → members whose data the client still holds
+show `cached` (no inspect sent); record whether a `cached` line ever carries a wrong spec or a
+missing slot. Result:
 
 ## Trade
 
@@ -356,3 +388,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | ITEM-1..2 | DW-23, the item facts | No client pass recorded yet |
 | GEAR-1..2 | DW-24, the gear snapshot | No client pass recorded yet |
 | FEED-1, COMBAT-1, LOC-1 | DW-25, the loot parser (LOC-1 re-armed: its sign-off without the client no longer holds) | No client pass recorded yet |
+| INSPECT-1..4 | DW-26, the inspect broker | No client pass recorded yet |

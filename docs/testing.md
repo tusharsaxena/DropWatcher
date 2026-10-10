@@ -70,6 +70,13 @@ multiple, bonus roll and pushed; same-realm, cross-realm, hyperlinked, colored a
 the upgrade and crafting echoes rejected; non-receipt lines and non-item links ignored; secret text,
 a secret GUID and secret, empty or absent globals; globals rewritten at runtime and rebuilt; a deDE
 client and positional arguments; the event's sinks, counters and twelfth argument; and the
+stand-down), `test_inspect` (the inspect broker on the mock's clock, `advance(seconds)`: one inspect
+in flight, the 2s spacing, the priority order and a raised job, the ready timeout and its one retry,
+the range and identity waits, `CanInspect` false and an offline member, incomplete and nameless
+links retried and kept, the tooltip level, the fast path, a foreign inspect before and after the
+data arrived, anyone's `INSPECT_READY` read, the combat park, the open inspect window, the TTL, the
+invalidation and its echo guard, the roster prune, the warm-up and `Scan`, the candidate judged by
+the verdict kernel, `InspectDone` after the items load, one debug line per job, secrets, and the
 stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,

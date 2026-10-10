@@ -125,6 +125,13 @@ modules\Gear.lua
 # NS.Perf (core\PerfSetup.lua, above) as a load-time upvalue. NS.Compat and NS.Roster are read at
 # call time; the feed (DW-27) adds its sink at load.
 modules\LootParser.lua
+# Conventional: publishes NS.Inspect, the inspect broker; appends its rows to NS.FEATURE_EVENTS
+# (GROUP_ROSTER_UPDATE and PLAYER_ENTERING_WORLD after modules\Roster.lua's and
+# modules\Situations.lua's, so the roster is fresh; both PLAYER_REGEN edges after
+# core\DropWatcher.lua's) and NS.STAND_DOWN and its handlers to NS.addon at load, hooks
+# NotifyInspect through NS.Compat at load, and takes NS.Perf as a load-time upvalue. NS.Roster,
+# NS.ItemFacts, NS.Restrictions and NS.Situations (above) are read at call time.
+modules\Inspect.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

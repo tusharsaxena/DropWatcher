@@ -36,6 +36,19 @@
 --   units          the group's unit tokens: units[token] = { guid, name, realm, class, classFile,
 --                  connected }; "player" is read from the base's __context unless set. setGroup()
 --                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer
+--   inspect        the inspect surface (modules/Inspect.lua): inspect.notified lists every
+--                  NotifyInspect(unit) call as { unit, at }; inspect.cleared counts ClearInspectPlayer;
+--                  inspect.cannot[unit] = true makes CanInspect false; inspect.far[unit] = true makes
+--                  CheckInteractDistance false; inspect.specs[unit] is GetInspectSpecialization's
+--                  answer (0 when unset); inventoryIDs[unit][slot] is GetInventoryItemID's answer
+--                  where no link is worn (an incomplete read); InspectFrame is nil until a case sets
+--                  one. hooksecurefunc(name, fn) and hooksecurefunc(table, name, fn) really hook
+--   advance        advance(seconds): the mocked clock. Moves GetTime() forward and runs every
+--                  queued timer that falls due on the way, in due order, each at its own due time,
+--                  through the kit's own __fireTimers (so a taken-back entry is skipped by its rule)
+--                  (C_Timer entries are stamped with their due time when queued; AceTimer's carry
+--                  `ends`); entries queued while it runs are honored too. __fireTimers still runs a
+--                  whole pass regardless of the clock
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -319,6 +332,83 @@ local function installUnits(M)
     end
 end
 
+-- The inspect surface (modules/Inspect.lua): every call recorded, every answer settable.
+local function installInspect(M)
+    M.inspect = { notified = {}, cleared = 0, cannot = {}, far = {}, specs = {} }
+    M.inventoryIDs = {}
+    M.NotifyInspect = function(unit)
+        M.inspect.notified[#M.inspect.notified + 1] = { unit = unit, at = M.GetTime() }
+    end
+    M.ClearInspectPlayer = function() M.inspect.cleared = M.inspect.cleared + 1 end
+    M.CanInspect = function(unit) return M.UnitExists(unit) and not M.inspect.cannot[unit] end
+    M.CheckInteractDistance = function(unit) return not M.inspect.far[unit] end
+    M.GetInspectSpecialization = function(unit) return M.inspect.specs[unit] or 0 end
+    M.GetInventoryItemID = function(unit, slot)
+        local link = M.GetInventoryItemLink(unit, slot)
+        if link then return tonumber(link:match("item:(%d+)")) end
+        local ids = M.inventoryIDs[unit]
+        return ids and ids[slot]
+    end
+    -- A real hook: the original runs first, then the hook, with the same arguments.
+    M.hooksecurefunc = function(a, b, c)
+        local tbl, name, fn = M, a, b
+        if type(a) == "table" then tbl, name, fn = a, b, c end
+        local orig = tbl[name]
+        if type(orig) ~= "function" then return end
+        tbl[name] = function(...)
+            orig(...)
+            fn(...)
+        end
+    end
+end
+
+-- The mocked clock. C_Timer's two fakes are wrapped IN PLACE (a library that took the table at load
+-- still reaches the wrappers) so each queue entry carries its due time.
+local function dueOf(t)
+    if t.due then return t.due end
+    if t.timer and t.timer.ends then return t.timer.ends end
+    return 0
+end
+
+local function earliestDue(M, limit)
+    local best, at
+    for i, t in ipairs(M.__timers) do
+        local due = dueOf(t)
+        if due <= limit + 1e-9 and (not best or due < at) then best, at = i, due end
+    end
+    return best, at
+end
+
+local function installClock(M)
+    local after, newTimer = M.C_Timer.After, M.C_Timer.NewTimer
+    M.C_Timer.After = function(delay, fn)
+        after(delay, fn)
+        M.__timers[#M.__timers].due = M.__now + (delay or 0)
+    end
+    M.C_Timer.NewTimer = function(delay, fn)
+        local t = newTimer(delay, fn)
+        t.due = M.__now + (delay or 0)
+        return t
+    end
+    function M.advance(seconds)
+        local target = M.__now + seconds
+        while true do
+            local i, due = earliestDue(M, target)
+            if not i then break end
+            local rest = M.__timers
+            local t = table.remove(rest, i)
+            if due > M.__now then M.__now = due end
+            -- Run through the kit's own pass, so its rule for a taken-back entry is the one applied;
+            -- whatever the entry queues lands back on the remaining queue.
+            M.__timers = setmetatable({ t }, getmetatable(rest))
+            M.__fireTimers()
+            for _, queued in ipairs(M.__timers) do rest[#rest + 1] = queued end
+            M.__timers = rest
+        end
+        M.__now = target
+    end
+end
+
 local function build()
     local M = base()
     M._G = M
@@ -369,6 +459,8 @@ local function build()
 
     installCompatSurface(M)
     installUnits(M)
+    installInspect(M)
+    installClock(M)
 
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)

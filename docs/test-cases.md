@@ -112,7 +112,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_compat.lua (51)
+### test_compat.lua (53)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -164,6 +164,8 @@ Total.
 - compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library
 - compat: InventoryItemLink reads the worn link, nil when empty, secret or absent
 - compat: the bag readers prefer C_Container, then the globals, then answer empty
+- compat: the inspect gates answer plain booleans; a secret answer or no API is the safe side
+- compat: the inspect calls, the spec, the item id, the inspect window and the hook
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_constants.lua (12)
@@ -435,6 +437,37 @@ Total.
 - loot parser: the event's twelfth argument is the GUID it uses
 - loot parser: stood down, CHAT_MSG_LOOT reaches nothing; the counters survive
 
+### test_inspect.lua (28)
+
+- inspect: a request sends one NotifyInspect, and the ready read stores gear and spec
+- inspect: a slot's level comes from its tooltip, else from the link
+- inspect: one in flight at a time, spaced SPACING seconds apart
+- inspect: looters first, then offer candidates, then warm-up; a later ask can raise a job
+- inspect: no INSPECT_READY in 2.5s retries once, then the job fails with a timeout
+- inspect: out of range waits without using an attempt, then sends once in range
+- inspect: 25s out of range ends the job as outOfRange; CanInspect false waits the same way
+- inspect: a GUID with no unit fails after 10s; an offline member waits the same way
+- inspect: an incomplete link is read again, 0.3s apart, and completes when it arrives
+- inspect: still incomplete after three retries, the read is kept and says so
+- inspect: every link already readable completes at once, cached, with no inspect
+- inspect: a foreign inspect re-queues the job in flight, free, and resets the spacing
+- inspect: a foreign inspect after the data arrived lets the read finish, and clears nothing
+- inspect: anyone's INSPECT_READY for a group member is read, completing its queued job
+- inspect: combat parks the queue, the job in flight still finishes, and its end resumes
+- inspect: the queue waits while the inspect window is open
+- inspect: with the old data still held, a request completes on the fast path
+- inspect: a read is good for 600s; after that a request inspects again
+- inspect: UNIT_INVENTORY_CHANGED marks a group member stale and re-queues it
+- inspect: the roster event drops the entries of members who left
+- inspect: 2s after a roster update in a tracked situation, the idle queue warms up
+- inspect: entering an instance warms up too; untracked or busy, nothing is queued
+- inspect: Scan queues every other member that has no good read
+- inspect: the candidate carries the roster's class, the read spec and the hand flags
+- inspect: InspectDone waits for the read's items to load
+- inspect: one debug line per job
+- inspect: secret GUIDs, units and specs are never used
+- inspect: the stand-down clears this broker's inspect, every timer and the state
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -447,7 +480,7 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (9)
+### test_diagnostics.lua (10)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -458,6 +491,7 @@ Total.
 - diagnostics: the roster section lists the stored members without reading the client
 - diagnostics: the gear section lists the stored slots without reading the client
 - diagnostics: the feed section counts the parser's lines and names the last loot
+- diagnostics: the inspect section shows the queue and each member's entry
 
 ### test_vendor_sync.lua (3)
 
@@ -538,7 +572,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_compat.lua | 51 |
+| test_compat.lua | 53 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -551,8 +585,9 @@ Total.
 | test_item_facts.lua | 18 |
 | test_gear.lua | 17 |
 | test_loot_parser.lua | 27 |
+| test_inspect.lua | 28 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 9 |
+| test_diagnostics.lua | 10 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -560,4 +595,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **434** |
+| **Total** | **465** |

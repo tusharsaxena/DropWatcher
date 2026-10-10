@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Thirty-six shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `36`). The three
+**Forty-four shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `44`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -47,6 +47,14 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | Inventory | `InventoryItemLink(unit, slot)` | `GetInventoryItemLink`; a secret answer is nil | `nil` |
 | | `BagSlotCount(bag)` | `C_Container.GetContainerNumSlots` → the deprecated `GetContainerNumSlots` global | `0` |
 | | `BagItemLink(bag, slot)` | `C_Container.GetContainerItemLink` → the deprecated `GetContainerItemLink` global; a secret answer is nil | `nil` |
+| Inspect | `InventoryItemID(unit, slot)` | `GetInventoryItemID`; a secret answer is nil. An id with no link is an incomplete inspect read | `nil` |
+| | `CanInspectUnit(unit)` | `CanInspect`; a secret answer cannot allow an inspect | `false` |
+| | `InInspectRange(unit)` | `CheckInteractDistance(unit, 1)`; a secret answer is out of range | `true` (the range is not known; the inspect's own timeout answers) |
+| | `NotifyInspect(unit)` | `NotifyInspect`; `true` when called | `false` |
+| | `ClearInspectPlayer()` | `ClearInspectPlayer`; `true` when called | `false` |
+| | `InspectSpecID(unit)` | `GetInspectSpecialization`; 0 (not known) and a secret answer are nil | `nil` |
+| | `IsInspectFrameShown()` | `InspectFrame:IsShown()`; a secret answer is not shown | `false` |
+| | `HookNotifyInspect(fn)` | `hooksecurefunc("NotifyInspect", fn)`: anyone's call reaches `fn`, after the client's own; the hook can never be removed. `true` when installed | `false` |
 | Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
 | | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
@@ -97,6 +105,6 @@ The callers land in M2: Restrictions (DW-21) reads the restriction shims, the ro
 `NormalizedRealm`, ItemFacts (DW-23) reads
 the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (DW-24) reads
 `PlayerSpecID`, the inventory and bag readers and `InventoryItemLevel`, the loot parser (DW-25) builds its patterns with
-`FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, Inspect (DW-26) reads `InventoryItemLevel`, TradeTimer (DW-28) reads
+`FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, the inspect broker (DW-26) the inspect shims, `InventoryItemLink` and `InventoryItemLevel`, TradeTimer (DW-28) reads
 `TradeTimeRemaining` and `GetBagItemGUID`, the trade helper (DW-29) the trade actions, the
 messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.

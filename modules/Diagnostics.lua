@@ -96,6 +96,24 @@ local function roster(out)
     end
 end
 
+-- The inspect broker (design spec §8, §13): the queue's length, the job in flight, whether it is
+-- parked and the spacing left, then one line per entry with its status, reason, spec, slots read
+-- and age. Stored state only.
+local function inspect(out)
+    local s = NS.State.inspect
+    if not s then return out:add(TAG, "inspect: nothing asked yet") end
+    local q = NS.Inspect.QueueState()
+    out:add(TAG, "inspect: queued=%s inFlight=%s parked=%s spacingLeft=%s", q.queued,
+        q.inFlight or "none", q.parked, ("%.1f"):format(q.spacingLeft))
+    local r = NS.State.roster
+    for guid, e in pairs(s.entries) do
+        local m = r and r.byGUID[guid]
+        out:add(TAG, "inspect: %s status=%s reason=%s spec=%s slots=%s age=%ss stale=%s",
+            m and m.fullName or guid, e.status, e.reason or "none", e.specID or "unknown", e.worn or 0,
+            e.at and math.floor(GetTime() - e.at) or "never", e.stale == true)
+    end
+end
+
 -- Inventory slot id -> its C.SLOT name, for the gear lines.
 local function slotNames()
     local names = {}
@@ -166,6 +184,7 @@ function NS.Diagnostics.Sections()
         { "situation",    situation },
         { "restrictions", restrictions },
         { "roster",       roster },
+        { "inspect",      inspect },
         { "gear",         gear },
         { "feed",         feed },
         { "registration", registration },

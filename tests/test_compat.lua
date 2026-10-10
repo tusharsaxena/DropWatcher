@@ -3,7 +3,7 @@
 -- duration decoder behind the trade timer (spec §7.4) in three client languages, the tooltip line
 -- reader and its three readers, the restriction APIs, the bind helpers, the item readers, the Pawn
 -- seam (spec §5.4) and the trade actions. Every shim is also driven with its API absent, where it
--- must answer its documented absent value and never raise.
+-- must answer its documented absent value and never raise, the inspect calls (spec §8) included.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -652,6 +652,55 @@ test("compat: the bag readers prefer C_Container, then the globals, then answer 
     assertEqual(Compat.BagSlotCount(1), 0); assertNil(Compat.BagItemLink(1, 3))
 end)
 
+test("compat: the inspect gates answer plain booleans; a secret answer or no API is the safe side", function()
+    local Compat, m = fresh()
+    m.setGroup({ { guid = "Player-1-0000000A", name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
+    assertTrue(Compat.CanInspectUnit("party1")); assertFalse(Compat.CanInspectUnit("party4"))
+    assertTrue(Compat.InInspectRange("party1"))
+    m.inspect.far.party1 = true
+    assertFalse(Compat.InInspectRange("party1"))
+    installSecrets(m)
+    m.CanInspect = function() return T.secret(true) end
+    m.CheckInteractDistance = function() return T.secret(true) end
+    assertFalse(Compat.CanInspectUnit("party1"), "a secret answer cannot allow an inspect")
+    assertFalse(Compat.InInspectRange("party1"), "a secret answer is out of range")
+    m.CanInspect, m.CheckInteractDistance = nil, nil
+    assertFalse(Compat.CanInspectUnit("party1"))
+    assertTrue(Compat.InInspectRange("party1"), "no range API: the inspect's own timeout answers")
+end)
+
+test("compat: the inspect calls, the spec, the item id, the inspect window and the hook", function()
+    local Compat, m = fresh()
+    assertTrue(Compat.NotifyInspect("party1"))
+    assertEqual(m.inspect.notified[1].unit, "party1")
+    assertTrue(Compat.ClearInspectPlayer()); assertEqual(m.inspect.cleared, 1)
+    assertNil(Compat.InspectSpecID("party1"), "0 is not known")
+    m.inspect.specs.party1 = 71
+    assertEqual(Compat.InspectSpecID("party1"), 71)
+    m.inventory.party1 = { [1] = "|Hitem:5::|h[Helm]|h" }
+    m.inventoryIDs.party1 = { [5] = 6 }
+    assertEqual(Compat.InventoryItemID("party1", 1), 5); assertEqual(Compat.InventoryItemID("party1", 5), 6)
+    assertNil(Compat.InventoryItemID("party1", 2))
+    assertFalse(Compat.IsInspectFrameShown())
+    m.InspectFrame = m.__stubFrame():Show()
+    assertTrue(Compat.IsInspectFrameShown())
+    local seen = {}
+    assertTrue(Compat.HookNotifyInspect(function(unit) seen[#seen + 1] = unit end))
+    m.NotifyInspect("target")
+    assertEqual(seen[#seen], "target", "anyone's call reaches the hook")
+    installSecrets(m)
+    m.inspect.specs.party1 = T.secret(71)
+    assertNil(Compat.InspectSpecID("party1"))
+    m.GetInventoryItemID = function() return T.secret(5) end
+    assertNil(Compat.InventoryItemID("party1", 1))
+    m.NotifyInspect, m.ClearInspectPlayer, m.GetInspectSpecialization, m.GetInventoryItemID = nil, nil, nil, nil
+    m.InspectFrame = nil
+    assertFalse(Compat.NotifyInspect("party1")); assertFalse(Compat.ClearInspectPlayer())
+    assertNil(Compat.InspectSpecID("party1")); assertNil(Compat.InventoryItemID("party1", 1))
+    assertFalse(Compat.IsInspectFrameShown())
+    assertFalse(Compat.HookNotifyInspect(function() end), "nothing to hook")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
@@ -661,7 +710,9 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "InitiateTrade", "Pawn%u%a+", "issecretvalue", "canaccessvalue", "GetNormalizedRealmName",
     "GetRealmName", "GetItemInfo%f[^%w_]", "GetDetailedItemLevelInfo", "GetItemStats", "GetItemSpecInfo",
     "GetItemUniqueness", "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_%u+", "GetSpecialization",
-    "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink", "C_Container" }
+    "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink", "C_Container",
+    "NotifyInspect", "ClearInspectPlayer", "GetInspectSpecialization", "CheckInteractDistance",
+    "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

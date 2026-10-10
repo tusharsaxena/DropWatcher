@@ -51,6 +51,8 @@ files["core/Compat.lua"] = {
     "GetItemInfo", "GetDetailedItemLevelInfo", "GetItemStats", "GetItemSpecInfo", "GetItemUniqueness",
     "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_MALE", "LOCALIZED_CLASS_NAMES_FEMALE",
     "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink",
+    "GetInventoryItemID", "CanInspect", "CheckInteractDistance", "NotifyInspect", "ClearInspectPlayer",
+    "GetInspectSpecialization", "InspectFrame", "hooksecurefunc",
   },
 }
 

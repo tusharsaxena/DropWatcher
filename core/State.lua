@@ -47,3 +47,8 @@ State.gear = nil
 -- rejected, secret, lastAt, lastKind, lastLooter }, created on the first line and kept across a
 -- stand-down.
 State.lootParser = nil
+
+-- The inspect broker (modules/Inspect.lua, design spec §8): { entries = { [guid] = entry }, queue,
+-- seq, inFlight, lastNotifyAt, parked }, created on first use and dropped while stood down. Memory
+-- only, as the spec asks.
+State.inspect = nil

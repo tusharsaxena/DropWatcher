@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,gear,feed,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,inspect,gear,feed,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -109,4 +109,17 @@ test("diagnostics: the feed section counts the parser's lines and names the last
     local text = report(NS)
     assertTrue(text:find("feed: parser hits=1 ignored=1 rejected=1 secret=0", 1, true) ~= nil, text)
     assertTrue(text:find("feed: last loot 12s ago (chat, bonus) by Testchar-Testrealm", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the inspect section shows the queue and each member's entry", function()
+    local NS, _, m = T.enableAddon()
+    assertTrue(report(NS):find("inspect: nothing asked yet", 1, true) ~= nil)
+    m.setGroup({ { guid = "Player-1-0000000A", name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
+    NS.Roster.Refresh("test")
+    NS.Inspect.Request("Player-1-0000000A")
+    m.advance(0)
+    m.advance(3)
+    local text = report(NS)
+    assertTrue(text:find("inspect: queued=0 inFlight=Player-1-0000000A parked=false", 1, true) ~= nil, text)
+    assertTrue(text:find("inspect: Brakk-Testrealm status=pending reason=none spec=unknown slots=0", 1, true) ~= nil, text)
 end)

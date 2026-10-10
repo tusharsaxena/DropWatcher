@@ -19,6 +19,7 @@ local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 -- bucket is never left unreached.
 local BUCKETS = {
     { key = "parse" },            -- modules/LootParser.lua Parse: one CHAT_MSG_LOOT line
+    { key = "inspect.read" },     -- modules/Inspect.lua readSlots: one read of a unit's 17 slots
     { key = "window.refresh" },   -- modules/Window.lua Refresh: one window repaint pass
 }
 
