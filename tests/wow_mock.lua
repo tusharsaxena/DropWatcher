@@ -46,6 +46,7 @@
 --                  answer (0 when unset); inventoryIDs[unit][slot] is GetInventoryItemID's answer
 --                  where no link is worn (an incomplete read); InspectFrame is nil until a case sets
 --                  one. hooksecurefunc(name, fn) and hooksecurefunc(table, name, fn) really hook
+--   C_Timer.NewTicker  a repeating ticker on the same queue and clock (modules/TradeTimer.lua)
 --   advance        advance(seconds): the mocked clock. Moves GetTime() forward and runs every
 --                  queued timer that falls due on the way, in due order, each at its own due time,
 --                  through the kit's own __fireTimers (so a taken-back entry is skipped by its rule)
@@ -392,6 +393,34 @@ local function installClock(M)
         local t = newTimer(delay, fn)
         t.due = M.__now + (delay or 0)
         return t
+    end
+    -- A repeating ticker: the handle is its own queue entry, queued again after each run (with the
+    -- handle as the callback's argument, as the client passes it) until canceled or its
+    -- `iterations` are spent. Cancel takes it off the queue, so M.__timers() stops counting it
+    -- live; `ticker` marks it, `stopped` records the cancel.
+    M.C_Timer.NewTicker = function(period, fn, iterations)
+        local h = { delay = period, remaining = iterations, ticker = true, stopped = false }
+        h.Cancel = function()
+            h.stopped = true
+            for i = #M.__timers, 1, -1 do
+                if M.__timers[i] == h then table.remove(M.__timers, i) end
+            end
+        end
+        local function queue()
+            h.due = M.__now + period
+            M.__timers[#M.__timers + 1] = h
+        end
+        h.fn = function()
+            if h.stopped then return end
+            fn(h)
+            if h.remaining then
+                h.remaining = h.remaining - 1
+                if h.remaining <= 0 then h.stopped = true end
+            end
+            if not h.stopped then queue() end
+        end
+        queue()
+        return h
     end
     function M.advance(seconds)
         local target = M.__now + seconds

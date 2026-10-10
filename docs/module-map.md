@@ -14,7 +14,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 5 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
 | 6 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry, the gold; the item, quality, slot, bag, difficulty and situation ids, the slot plans, the trade rules |
 | 7 | `core/ClassData.lua` | data | `NS.ClassData`: class armor types, weapon proficiencies, every Retail spec (Devourer included) with its primary stat and dual-wield, Titan's Grip, shield and off-hand flags, and the pure lookups over them |
-| 8 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs, the restriction tracker's hints, combat edge and last announced answers, the roster as last read, the item facts cache, the gear snapshot, the loot parser's counters, the inspect broker's entries and queue, the feed's drops, groups, dedupe window and encounter context |
+| 8 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs, the restriction tracker's hints, combat edge and last announced answers, the roster as last read, the item facts cache, the gear snapshot, the loot parser's counters, the inspect broker's entries and queue, the feed's drops, groups, dedupe window and encounter context, the trade timer's entries |
 | 9 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
 | 10 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (rows, from the feature items) |
 | 11 | `core/ItemSetup.lua` | setup | LibKa0s-Item: `NS.Item` (link parsing and the item load, read by `modules/ItemFacts.lua`) |
@@ -38,14 +38,15 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 29 | `modules/LootParser.lua` | edge | `NS.LootParser`: a `CHAT_MSG_LOOT` line turned into the looter (resolved through the roster), the item link, the quantity and the kind (loot, bonus roll or pushed), with patterns compiled from the client's `LOOT_ITEM*` GlobalStrings and rebuilt when another addon rewrites them; the upgrade and crafting echoes rejected, secret lines counted and dropped; each receipt handed to the feed's sink |
 | 30 | `modules/Inspect.lua` | edge | `NS.Inspect`: the inspect broker of design spec §8, another member's worn gear (links and tooltip levels) and spec read through one spaced `NotifyInspect` at a time, a priority queue (looters, Offer-panel candidates, warm-up), the range, identity and ready timeouts, the incomplete-link retries, the fast path, the foreign-inspect hook, opportunistic reads, the combat park, the 600s cache invalidated on `UNIT_INVENTORY_CHANGED`, the warm-up and `Scan`; the candidate table the verdict kernel takes for a member; sends `InspectDone` |
 | 31 | `modules/LootFeed.lua` | orchestrator | `NS.LootFeed`: the feed of design spec §3 and §6, each drop taken from `CHAT_MSG_LOOT` (the parser's sink), `ENCOUNTER_LOOT_RECEIVED` and `C_LootHistory`, the reports of one drop merged, drops grouped by encounter or keystone run, the situation gate, the filters and the quality gate before any inspect, the verdicts for you and for the looter, the trade estimate, your own drops' candidates, the score retry, `Add` for `/dw add` and test mode; sends `DropAdded` and `DropUpdated` |
-| 32 | `modules/Window.lua` | UI | the main window's shell and its show decision |
-| 33 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 34 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 35 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 36 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 37 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 38 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 39 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 32 | `modules/TradeTimer.lua` | edge | `NS.TradeTimer`: the exact trade countdown of design spec §7.4 on your own drops, each one's bag item matched by link then item id and read for its `TradeTimeRemaining` line (or the localized sentence, decoded) on `BAG_UPDATE_DELAYED`, `LOOT_CLOSED` and your own `DropAdded`, at most one scan per 2s; expiries keyed by item GUID; one shared ticker (1s with the window shown, 60s hidden, off with nothing live); the warning once per item at `trade.warnAt`; sends `TradeTimerTick` and `TradeTimerExpiring` |
+| 33 | `modules/Window.lua` | UI | the main window's shell and its show decision; tells visibility listeners (the trade timer) on every show and hide |
+| 34 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 35 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 36 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 37 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 38 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 39 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 40 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.

@@ -198,6 +198,19 @@ local function feed(out)
     qualityLine(out)
 end
 
+-- The trade timer's entries (design spec §7.4, §13): the live and expired counts, the scans and
+-- the ticker's period, then one line per entry. Stored state only.
+local function trade(out)
+    local st = NS.TradeTimer.Stats()
+    if not st then return out:add(TAG, "trade: no scan yet") end
+    out:add(TAG, "trade: timers live=%s expired=%s scans=%s ticker=%s", st.live, st.expired, st.scans,
+        st.period and (st.period .. "s") or "off")
+    for guid, e in pairs(NS.TradeTimer.Entries()) do
+        out:add(TAG, "trade: drop %s %s left=%ss expired=%s warned=%s guid=%s", e.dropID, e.link,
+            math.floor(NS.TradeTimer.Remaining(e)), e.expired, e.warned, guid)
+    end
+end
+
 local function registration(out)
     local names = NS.FeatureEventNames and NS.FeatureEventNames() or {}
     out:joined(TAG, "feature events (declared)", names)
@@ -228,6 +241,7 @@ function NS.Diagnostics.Sections()
         { "inspect",      inspect },
         { "gear",         gear },
         { "feed",         feed },
+        { "trade",        trade },
         { "registration", registration },
         { "integrations", integrations },
     }

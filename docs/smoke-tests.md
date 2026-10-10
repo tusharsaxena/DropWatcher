@@ -322,7 +322,8 @@ missing slot. Result:
 The estimator's decision is headless-tested (`test_trade_rules`); TRADE-1..4 confirm it against the
 game's own trade rules. They run once the feed (DW-27, DW-31) shows trade chips and Settings › Trade
 (DW-40) lists the rules. Read each chip's tooltip, and the `TRADE` debug lines with `/dw debug on`.
-TRADE-5 (the own-item timer, DW-28) and TRADE-6 (the trade helper, DW-29) land with those items.
+TRADE-5 (the own-item timer, DW-28) is below; TRADE-6 (the trade helper, DW-29) lands with that
+item.
 
 **TRADE-1. Binds.** A BoE drop shows `Yes` (BoE) whatever the looter's gear. A warbound or
 account-bound drop and a bonus-roll drop show `No` with that reason. A drop in a follower dungeon or
@@ -346,6 +347,23 @@ the reset restores `personal`. Result:
 who carries a higher one in their bags: record whether the game lets them trade the drop. The
 estimator compares equipped gear only (an inspect sees nothing else); if the game counts the bags,
 record it so the `Likely` chip's tooltip can say so. Result:
+
+**TRADE-5. Your own item's trade timer.** The scan, the matching, the decoder, the ticker and the
+warning are headless-tested (`test_trade_timer`); this check confirms the client's side. In a
+dungeon, loot a BoP item that is not an upgrade for you (its tooltip says "You may trade this item
+with players that were also eligible to loot this item for the next …"). With `/dw debug on`, a
+`[TRADE]` line reads `scan (…): 1 own drops, 1 live timers` within about two seconds of the loot,
+and `/dw diagnostics` shows `trade: timers live=1` and a `trade: drop … left=…s` line whose seconds
+match the tooltip's time to the minute. Move the item to another bag slot → the same line, the same
+`guid`. With the window closed `ticker=60s`; `/dw show` → `ticker=1s`; close it again → `60s`. For
+the warning, wait until ten minutes are left (or, once DW-40 adds the row, `/dw set trade.warnAt
+7200` and loot the item) → one chat line `[item]: 10 min left to trade it.` (or the minutes left),
+once only, with no second line after a bag move or `/dw disable` then `/dw enable` (a `/reload`
+forgets the warning, and warns again once).
+Loot an upgrade you equip or an item with no trade line → `expired=true`, no countdown. The failure
+looks like no `trade:` line for a tradeable item (the tooltip line or its sentence did not read:
+record the tooltip text as shown), a time that drifts from the tooltip's, or a repeated warning.
+Result:
 
 ## Ask
 
@@ -434,3 +452,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | FEED-1, COMBAT-1, LOC-1 | DW-25, the loot parser (LOC-1 re-armed: its sign-off without the client no longer holds) | No client pass recorded yet |
 | INSPECT-1..4 | DW-26, the inspect broker | No client pass recorded yet |
 | FEED-2..6 | DW-27, the feed | No client pass recorded yet |
+| TRADE-5 | DW-28, the trade timer | No client pass recorded yet |

@@ -509,6 +509,24 @@ Total.
 - secrets: a secret link, name or encounter id is never used
 - stand-down: timers and pending loads are dropped, the drops kept
 
+### test_trade_timer.lua (15)
+
+- read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
+- read: only the line of that type is read while the client names the type
+- decoder: without the line type, the localized sentence is decoded with the client's globals
+- read: no timer line (bound, or the window gone) means no: expired, never live
+- match: by exact link first, then by item id; each drop takes one item
+- match: an item that is none of your drops, and another member's drop, are not timed
+- match: test drops are never timed
+- match: an item that left the bags drops its entry; a moved one keeps it
+- scan: BAG_UPDATE_DELAYED, LOOT_CLOSED and your DropAdded ask for it; once per 2 seconds
+- ticker: slow while the window is hidden, fast while it is shown, off when nothing is live
+- ticker: a second live item shares the one ticker
+- warn: once per item at the threshold, with TradeTimerExpiring and one chat line
+- warn: an item first read below the threshold warns at once; warnAt 0 turns it off
+- secrets: a secret bag link, GUID or tooltip text is never used
+- stand-down: the ticker and the scan stop, the entries are kept; the stand-up scans again
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -521,7 +539,7 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (11)
+### test_diagnostics.lua (12)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -533,6 +551,7 @@ Total.
 - diagnostics: the gear section lists the stored slots without reading the client
 - diagnostics: the feed section counts the parser's lines and names the last loot
 - diagnostics: the feed section counts the drops, the hidden ones and the context
+- diagnostics: the trade section shows the timers, the ticker and each entry
 - diagnostics: the inspect section shows the queue and each member's entry
 
 ### test_vendor_sync.lua (3)
@@ -629,8 +648,9 @@ Total.
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 28 |
 | test_feed.lua | 36 |
+| test_trade_timer.lua | 15 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 11 |
+| test_diagnostics.lua | 12 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -638,4 +658,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **504** |
+| **Total** | **520** |

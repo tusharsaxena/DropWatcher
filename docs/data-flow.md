@@ -18,7 +18,9 @@ combat condition fails) → hidden; the player opened it → shown. Turning test
 window and remembers that it did, and turning it off closes the window again only in that case, so
 Close, Toggle and Escape always win over test mode. It runs on every open and close, on test mode,
 on both combat edges (`PLAYER_REGEN_DISABLED` / `_ENABLED`, which pass the edge itself rather than
-re-reading `UnitAffectingCombat`), on the stand-down and stand-up, and on a profile change.
+re-reading `UnitAffectingCombat`), on the stand-down and stand-up, and on a profile change. The
+frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibilityListener` listener
+(today the trade timer, which paces its ticker by the window); the window calls no engine module.
 
 ## Today: enable and disable
 
@@ -188,6 +190,28 @@ ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the group
 
 The stand-down unregisters the events and the bus receivers, cancels the score timer, and drops the
 dedupe window, the context and any drop still loading; the recorded drops are kept for the session.
+
+## Your own drops' trade timer (DW-28, spec §7.4)
+
+```
+BAG_UPDATE_DELAYED / LOOT_CLOSED / DropAdded(id) for your own drop
+  ─> TradeTimer.Schedule (one scan per 2s; the asks inside share it)
+  ─> TradeTimer.Scan: your own live drops (never test drops)
+      ─> each bag item matched to a drop: the exact link first, then the item id; one item per drop
+      ─> NS.Compat.TradeTimeRemaining(bag, slot): the TradeTimeRemaining line, or the
+         BIND_TRADE_TIME_REMAINING sentence decoded with the duration globals
+      ─> State.tradeTimer.timers[itemGUID] = { dropID, expiresAt | expired, warned }
+      ─> an item that left the bags drops its entry
+  ─> warn: remaining <= trade.warnAt (600s), once per item
+         ─> TradeTimerExpiring(dropID, guid, remaining) and one chat line
+  ─> TradeTimerTick
+  ─> the shared ticker retuned: 1s while the window is shown, 60s while it is hidden, off with
+     nothing live; each tick expires, warns and sends TradeTimerTick
+Window OnShow / OnHide (NS.Window.AddVisibilityListener) ─> the ticker retuned
+```
+
+The stand-down cancels the ticker and the pending scan and keeps the entries (their warned flags
+with them); the stand-up scans again.
 
 ## The design's loot pipeline (spec §3)
 

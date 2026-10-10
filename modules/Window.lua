@@ -24,6 +24,11 @@ local Perf   = NS.Perf
 
 local frame   -- built on the first show
 local openedByTestMode = false   -- test mode, not the player, opened the window
+local visibilityListeners = {}   -- fn(shown), told on every OnShow and OnHide of the frame
+
+local function notifyVisibility(shown)
+    for _, fn in ipairs(visibilityListeners) do fn(shown) end
+end
 
 local function profile()
     local db = NS.addon and NS.addon.db
@@ -148,7 +153,11 @@ local function build()
     -- Escape closes it (standalone-windows); the frame is named, so the name is what the list holds.
     if type(UISpecialFrames) == "table" then tinsert(UISpecialFrames, K.NAME) end
     -- Hidden by Escape or the client's own close path: the player closed it.
-    f:SetScript("OnHide", function() NS.State.windowOpen = false end)
+    f:SetScript("OnHide", function()
+        NS.State.windowOpen = false
+        notifyVisibility(false)
+    end)
+    f:SetScript("OnShow", function() notifyVisibility(true) end)
     return f
 end
 
@@ -220,6 +229,15 @@ end
 
 function Window.Toggle()
     if Window.IsShown() then Window.Close() else Window.Open() end
+end
+
+--- Be told `fn(shown)` whenever the frame is shown or hidden, by any path (the ladder, Escape, the
+--- close mark). The window calls no engine module; an engine module that paces itself by the
+--- window (the trade timer's ticker) registers here instead. Listeners are never removed: each
+--- checks the stand-down latch itself.
+--- @param fn function
+function Window.AddVisibilityListener(fn)
+    visibilityListeners[#visibilityListeners + 1] = fn
 end
 
 --- @return boolean

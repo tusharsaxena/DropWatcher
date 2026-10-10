@@ -63,6 +63,9 @@ L["Encounter"] = "Encounter"
 L["Encounter %s"] = "Encounter %s"
 L["Open world"] = "Open world"
 
+-- The trade timer's warning (modules/TradeTimer.lua)
+L["%s: %d min left to trade it."] = "%s: %d min left to trade it."
+
 -- Settings panel, window and chat acknowledgments
 L["Debug console"] = "Debug console"
 L["Diagnostic report written to the debug console: %d lines. Use Copy to share it."] =

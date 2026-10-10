@@ -11,13 +11,14 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 local PINNED = {
     "ADDON_RESTRICTION_STATE_CHANGED", "BAG_UPDATE_DELAYED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START",
     "CHAT_MSG_LOOT", "ENCOUNTER_END", "ENCOUNTER_LOOT_RECEIVED", "ENCOUNTER_START",
-    "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_HISTORY_UPDATE_DROP", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
+    "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_UPDATE_DROP", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
     "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_SPECIALIZATION_CHANGED",
     "TRANSMOG_COLLECTION_UPDATED", "UNIT_INVENTORY_CHANGED", "ZONE_CHANGED_NEW_AREA",
 }
 
 -- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down).
-local PINNED_MESSAGES = { "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_InspectDone" }
+local PINNED_MESSAGES = { "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_InspectDone" }
 
 -- What is registered, every kind, or one kind ("event", "message").
 local function registered(m, kind)

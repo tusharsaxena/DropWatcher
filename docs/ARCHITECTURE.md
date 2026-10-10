@@ -68,8 +68,12 @@ takes for that member), the feed (`LootFeed.lua`: the orchestrator that takes ea
 the encounter loot event and the loot history, merges the reports of one drop, groups drops by
 encounter or keystone run, applies the situation gate, the filters and the quality gate before any
 inspect, judges each drop for you and for its looter, estimates its trade, judges every member for
-your own drops, and sends `DropAdded` and `DropUpdated`), the messaging core (`Messaging.lua`, pure: a
-template and its tokens in, the text and the ask's next state out; it sends nothing), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
+your own drops, and sends `DropAdded` and `DropUpdated`), the trade timer (`TradeTimer.lua`: the
+exact trade countdown on your own drops, each one's bag item read for its trade-time tooltip line at
+most once per 2 seconds, keyed by item GUID, on one shared ticker that runs every second while the
+window is shown, every minute while it is hidden and not at all with nothing live, with a warning
+once per item at `trade.warnAt`; it sends `TradeTimerTick` and `TradeTimerExpiring`), the messaging core (`Messaging.lua`, pure: a
+template and its tokens in, the text and the ask's next state out; it sends nothing), the window (which tells visibility listeners, the trade timer's ticker, on every show and hide) and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
@@ -95,24 +99,25 @@ named sender each (design spec §3). With LibKa0s-Bus present the table is the s
 so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` /
 `NS.StandUp` take every tracked registration down and replay it.
 
-Six messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
-`INSPECT_DONE`, `DROP_ADDED` and `DROP_UPDATED`; the feed (`modules/LootFeed.lua`) is the first
-receiver, of `INSPECT_DONE` and `GEAR_CHANGED`, each on its own tracked target. Every other sender module below is **planned**: it
+Eight messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
+`INSPECT_DONE`, `DROP_ADDED`, `DROP_UPDATED`, `TRADE_TIMER_TICK` and `TRADE_TIMER_EXPIRING`; the feed
+(`modules/LootFeed.lua`) receives `INSPECT_DONE` and `GEAR_CHANGED`, and the trade timer
+(`modules/TradeTimer.lua`) `DROP_ADDED`, each on its own tracked target. Every other sender module below is **planned**: it
 does not exist until the item named in its row lands. The payloads and consumers are the design
 intent. The item that first sends a message confirms its payload here, and each item that subscribes
 adds itself as a consumer.
 
 | `NS.MSG` key | Wire suffix | Sender (planned, item) | Payload | Consumers |
 |---|---|---|---|---|
-| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`) | Window feed tabs (DW-30), Toast (DW-52), History (DW-51) |
+| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`) | TradeTimer (since DW-28): your own live drop asks for a bag scan; Window feed tabs (DW-30), Toast (DW-52), History (DW-51) |
 | `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved) or `score` (a pending score retried). Never for a test drop | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (sent since DW-26) | `guid`. Sent once per job when it ends: after a read (`fresh` or `cached`), once the read items' facts have loaded or been given up on; at once for `outOfRange` and `failed`. `NS.Inspect.Get(guid)` says which | LootFeed (since DW-27): re-judges the drops that looter received and your own drops' candidate of that GUID |
 | `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (since DW-27): re-judges you on every drop; the quality gate's dynamic threshold reads the snapshot at the next drop |
 | `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (DW-2A): flush the queue; Window restriction badge (DW-30) |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | Window (DW-30): auto-open and the footer. LootFeed reads `NS.Situations.Current()` at each receipt for its gate and subscribes to nothing |
 | `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Messaging.lua` (DW-2A) | `dropId`, `state` | Window feed tabs (DW-30), detail card (DW-32) |
-| `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (DW-28) | none | My drops tab (DW-33), detail card (DW-32) |
-| `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (DW-28) | `dropId` | My drops tab (DW-33): bold row; chat warning |
+| `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (sent since DW-28) | none. Sent on every tick of the shared ticker (each second while the window is shown, each minute while it is hidden, never with nothing live) and after a scan that found your own drops or dropped the last entries; `NS.TradeTimer.ForDrop(dropId)` and `Remaining(entry)` are the countdown | My drops tab (DW-33), detail card (DW-32) |
+| `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (sent since DW-28) | `dropId`, `itemGUID`, `remaining` (seconds). Sent once per item, when its remaining time first falls to `trade.warnAt` (600s) or less; the module prints the chat warning itself, and the entry's `warned` is set | My drops tab (DW-33): bold row |
 | `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (DW-51) | none | History tab (DW-51) |
 
 ## Slash Commands
@@ -144,7 +149,7 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |
-| `BAG_UPDATE_DELAYED` | `DW.OnGearEvent` | the same (a better item may have entered or left the bags) |
+| `BAG_UPDATE_DELAYED` | `DW.OnGearEvent`, then `DW.OnTradeTimerEvent` (through `DW:OnSharedFeatureEvent`) | the same (a better item may have entered or left the bags); then asks for the trade timer's scan of your own drops' bag items, at most one per 2 seconds (`modules/TradeTimer.lua`) |
 | `PLAYER_SPECIALIZATION_CHANGED` | `DW.OnGearSpecEvent` | the same, for your own unit only (another member's spec change is ignored) |
 | `CHAT_MSG_LOOT` | `DW.OnChatMsgLoot` | parses the line (`modules/LootParser.lua`), counts it, and hands a receipt to every sink the feed adds (DW-27) |
 | `INSPECT_READY` | `DW.OnInspectReadyEvent` | reads the inspected member's slots and spec after 0.15s, for the job in flight or any other group member (`modules/Inspect.lua`); sends `InspectDone` when the job ends |
@@ -152,6 +157,7 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `ENCOUNTER_START` | `DW.OnFeedEncounterStart` | the encounter in progress, which names the group of the drops that follow (`modules/LootFeed.lua`) |
 | `ENCOUNTER_END` | `DW.OnFeedEncounterEnd` | a kill keeps the encounter's group open 120 seconds for its loot; a wipe closes it |
 | `ENCOUNTER_LOOT_RECEIVED` | `DW.OnFeedEncounterLoot` | a drop reported by the encounter, with its encounter id; merged with the chat line of the same drop |
+| `LOOT_CLOSED` | `DW.OnTradeTimerEvent` | asks for the trade timer's scan: the items just looted are in the bags (`modules/TradeTimer.lua`) |
 | `LOOT_HISTORY_UPDATE_DROP` | `DW.OnFeedLootHistory` | a group-loot drop, taken once it has a winner (`C_LootHistory` through `core/Compat.lua`); merged with the other reports |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
@@ -307,6 +313,19 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   (DW-40) the feed reads `profile.feed`, `profile.comparison` and `profile.trade` when present and
   `C.FEED_DEFAULT` otherwise. `/dw add` and test mode reach it through `NS.LootFeed.Add` once their
   verbs land (DW-42, DW-34).
+- The trade timer (`modules/TradeTimer.lua`) settles seven cases the design leaves open. A bag item
+  is matched to one of your drops by its exact link first and its item id second, each drop taking
+  one item, so two copies of one drop each keep their own timer; test drops are never timed. A
+  matched item whose tooltip has no trade-time line is `no expired` at once, so an item whose
+  tooltip has not loaded yet reads as expired until the next scan (a later bag event) reads the
+  line. The tooltip shows whole minutes, so a re-read within a minute of the stored expiry keeps
+  it and the countdown does not jump at each scan. An item that leaves the bags (traded, sold, equipped) drops its entry. The ticker runs
+  only while an entry is live: each second while the window is shown, each minute while it is
+  hidden, so the warning may come up to a minute late with the window closed. An item first read
+  with less than `trade.warnAt` left warns at once; `trade.warnAt` 0 turns the warning off, and
+  until its settings row lands (DW-40) it is read from `profile.trade.warnAt` when stored and
+  `C.TRADE_WARN_AT` (600) otherwise. The stand-down keeps the entries, warned flags included, so
+  enabling again never repeats a warning.
 - The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
   edge items wire the rest. Three of its
   readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the

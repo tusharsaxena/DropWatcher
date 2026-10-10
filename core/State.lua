@@ -58,3 +58,8 @@ State.inspect = nil
 -- history, merged, hidden }, created on the first receipt. The stand-down drops the dedupe window
 -- and the context and keeps the drops for the session.
 State.feed = nil
+
+-- The trade timer (modules/TradeTimer.lua, design spec §7.4): { timers = { [itemGUID] = entry },
+-- scans, lastScanAt }, created on the first scan and kept across a stand-down (the warned flags
+-- with it); the stand-up scans again.
+State.tradeTimer = nil

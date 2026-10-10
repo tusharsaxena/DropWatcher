@@ -114,6 +114,8 @@ test("perf: every declared bucket is reached by a real bracket", function()
     local ring = m.addItem("|cnIQ4:|Hitem:2001::::::::90:::::|h[Band]|h|r", { name = "Band", quality = 4,
         ilvl = 600, equipLoc = "INVTYPE_FINGER", classID = 4, subClassID = 0, bindType = 1, stats = {} })
     NS.LootFeed.Add(ring)
+    -- one scan of your own drops' bag items (tradeTimer.scan)
+    NS.TradeTimer.Scan("test")
     NS.Perf.on, NS.Perf.Note = false, real
     for key, reached in pairs(declared) do
         assertTrue(reached, "bucket " .. key .. " declared but never reached")

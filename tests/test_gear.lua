@@ -234,7 +234,8 @@ test("gear: the gear events share one throttled rebuild, which announces a chang
     assertTrue(G.IsScheduled())
     assertEqual(seen.n, 0, "nothing before the timer")
     assertEqual(G.Snapshot().equipped[SLOT.HEAD], false, "the stored snapshot until then")
-    assertEqual(m.__fireTimers(), 1, "one rebuild")
+    -- two timers: the one rebuild, and modules/TradeTimer.lua's scan on BAG_UPDATE_DELAYED
+    assertEqual(m.__fireTimers(), 2, "one rebuild")
     assertFalse(G.IsScheduled())
     assertEqual(seen.n, 1)
     assertEqual(G.Snapshot().equipped[SLOT.HEAD].ilvl, 600)

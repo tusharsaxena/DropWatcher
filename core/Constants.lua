@@ -288,6 +288,7 @@ C.TRADE_ACCOUNT_BIND = {
 }
 
 C.TRADE_WINDOW = 7200   -- seconds a tradeable drop stays tradeable
+C.TRADE_WARN_AT = 600   -- trade.warnAt's default: seconds left when your own item's timer warns (spec §7.4)
 
 -- The rule names in Settings › Trade's display order, and the rule an unknown situation takes.
 C.TRADE_RULE_NAMES = { "personal", "group", "legacy" }

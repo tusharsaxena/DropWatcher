@@ -22,7 +22,9 @@ library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
 libraries, the main window's geometry, and the client APIs `core/Compat.lua` wraps: the tooltip
 data, the chat sender and lockdown, the restriction state, `C_Item`'s upgrade, bind and GUID
-answers, the trade actions, the enums it resolves by name and the enUS GlobalStrings it parses).
+answers, the trade actions, the enums it resolves by name and the enUS GlobalStrings it parses),
+and a mocked clock: `advance(seconds)` runs the kit's timer queue in due order, and
+`C_Timer.NewTicker` is a repeating ticker on the same queue (its handle carries `ticker`).
 Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
 mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
@@ -88,7 +90,15 @@ settings and a situation's mode; the pure filters row by row and the relative it
 still loading and one that never loads; your own drop with its trade by your verdict and every
 member a candidate, no inspects for an untradeable one, pushed items; `GearChanged`; the score
 retry and its limit; `Add`, the test feed and `Clear`; the cap; secret payloads; and the
-stand-down),
+stand-down), `test_trade_timer` (your own drops' trade timer: the `TradeTimeRemaining` line read
+by its type and keyed by item GUID, a line of another type ignored, the localized sentence decoded
+from deDE-shaped globals without the line type, no line read as `no expired`; the match by exact
+link then item id, one item per drop, a stranger's item, a member's drop and a test drop untimed,
+a moved item kept and a removed one dropped; the three scan triggers sharing one throttled scan;
+the ticker slow while the window is hidden, fast while it is shown and off with nothing live, one
+ticker for every item; the warning once per item at the threshold with its message and chat line,
+at once below it, off at 0; secret links, GUIDs and lines; and the stand-down keeping the warned
+flags),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

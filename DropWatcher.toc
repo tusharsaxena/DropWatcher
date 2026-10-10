@@ -138,6 +138,12 @@ modules\Inspect.lua
 # registers its InspectDone and GearChanged receivers on a NS.Bus target at load; takes NS.Perf as a
 # load-time upvalue. Every module above is read at call time.
 modules\LootFeed.lua
+# Conventional: publishes NS.TradeTimer, the own-item trade countdown; appends its rows to
+# NS.FEATURE_EVENTS (BAG_UPDATE_DELAYED after modules\Gear.lua's) and NS.STAND_DOWN / NS.STAND_UP
+# and its handler to NS.addon at load, registers its DropAdded receiver on a NS.Bus target at load,
+# and takes NS.Perf as a load-time upvalue. NS.LootFeed (above) and NS.Window (below) are read at
+# call time.
+modules\TradeTimer.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

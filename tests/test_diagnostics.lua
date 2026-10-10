@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,inspect,gear,feed,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,inspect,gear,feed,trade,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -133,6 +133,22 @@ test("diagnostics: the feed section counts the drops, the hidden ones and the co
     NS.addon.db.profile.feed = { quality = { mode = "dynamicSlot" } }
     text = report(NS)
     assertTrue(text:find("feed: quality mode=dynamicSlot thresholds HEAD=2", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the trade section shows the timers, the ticker and each entry", function()
+    local NS, _, m = T.enableAddon()
+    assertTrue(report(NS):find("trade: no scan yet", 1, true) ~= nil)
+    local band = m.addItem("|cnIQ4:|Hitem:2001::::::::90:::::|h[Band]|h|r", { name = "Band", quality = 4,
+        ilvl = 1, equipLoc = "INVTYPE_FINGER", classID = 4, subClassID = 0, bindType = 1, stats = {} })
+    local id = NS.LootFeed.Add(band)
+    m.bags[0] = { size = 1, band }
+    m.bagGUIDs["0:1"] = "Item-1-0001"
+    m.tooltips.bag["0:1"] = { lines = { { type = 36, leftText = m.BIND_TRADE_TIME_REMAINING:format("1 hour") } } }
+    m.advance(0)
+    local text = report(NS)
+    assertTrue(text:find("trade: timers live=1 expired=0 scans=1 ticker=60s", 1, true) ~= nil, text)
+    assertTrue(text:find("trade: drop " .. id .. " ", 1, true) ~= nil, text)
+    assertTrue(text:find("left=3600s expired=false warned=false guid=Item-1-0001", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the inspect section shows the queue and each member's entry", function()

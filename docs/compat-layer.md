@@ -108,6 +108,6 @@ The callers land in M2: Restrictions (DW-21) reads the restriction shims, the ro
 the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (DW-24) reads
 `PlayerSpecID`, the inventory and bag readers and `InventoryItemLevel`, the loot parser (DW-25) builds its patterns with
 `FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, the inspect broker (DW-26) the inspect shims, `InventoryItemLink` and `InventoryItemLevel`, the feed (DW-27)
-`LootHistoryDrop`, `ChallengeMapName` and the secret guards on every event payload, TradeTimer (DW-28) reads
-`TradeTimeRemaining` and `GetBagItemGUID`, the trade helper (DW-29) the trade actions, the
+`LootHistoryDrop`, `ChallengeMapName` and the secret guards on every event payload, TradeTimer (DW-28, landed) reads
+`TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount` and `BagItemLink`, the trade helper (DW-29) the trade actions, the
 messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.
