@@ -1,0 +1,23 @@
+M2 independent review (DW-20..DW-2A, 6c96336..6e09bc7), feat/2026-10-10-drop-watcher-v1
+
+Reviewers (3, read-only):
+1. Spec conformance (spec 3, 4, 6, 7.4, 8, 9.2-9.3): gate green (559 pass / 0 fail / 1 skip; luacheck 0/0 in 74 files). Gate order, inspect queue, parser, ask queue and restriction answers match the spec. Findings: 1 high (empty inspect read stored as fresh), 3 medium (BoE own drops marked expired; trade-time text fallback unreachable when line-type enum exists; drop trade estimates never pass the trade window), 2 low.
+2. Standards compliance: gate green, all 13 commits carry trailers, no smoke marked passed. FEATURE_EVENTS, stand-down, Compat seam, secret guards, Perf buckets and docs all in place. Findings: 3 medium (dead fallback rungs; three modules bypass core/Bus.lua; Asks TOC line unannotated), 4 low.
+3. Client API / runtime: no critical or high. Event payloads and API return orders verified. Unverifiable in-game: Enum.TooltipDataLineType member names, Pawn API names, Enum.AddOnRestrictionType.Chat. Findings: medium (inspect broker accepts bad reads; cached fast path trusts empty hidden slots; item-facts cache wiped whole; gear rebuild in combat), plus low.
+
+Fix pass: 11 high/medium findings, 11 fixed, 0 rejected, in 8 commits:
+ff64860 (text fallback + dead rungs removed), 635728f (empty/stale inspect reads rejected, hidden-slot fast-path check), 0e171d5 (BoE permanent), 66a7bdb (trade re-estimate sweep + FoldTimer), 7f89624 (NS.Bus.tracked seam), 3938248 (TOC comments), c5f5e6d (LRU-quarter cache eviction, ItemEquipLoc), 0c12c75 (combat-deferred gear rebuild, gear.rebuild Perf bucket).
+Note: removal of bare C_Item fallbacks rests on reasoning, not checked in a 12.x client.
+Gate after fixes: lua tests/run.lua 575 pass / 0 fail / 1 skip; luacheck 0 warnings / 0 errors in 74 files; no authored .lua over 1500 lines.
+
+Low findings recorded, not fixed (9):
+- Compat.GetItemUniqueness passes a link to GetItemUniquenessByID, unprotected.
+- Restrictions: secret state sets a sticky hint; asks may never flush.
+- DW:OnSharedFeatureEvent: one raising handler skips the rest.
+- Inspect send: notifying flag not reset if NotifyInspect raises.
+- Asks: LE_PARTY_CATEGORY_INSTANCE falls back to hard-coded 2.
+- TOC comment on core\Compat.lua misstates its load dependency.
+- Inspect: foreign INSPECT_READY triggers full reads in combat, no UnitGUID recheck.
+- TradeTimer: item with no trade line yet at scan time marked expired.
+- LootFeed: merge updating looter GUID leaves rec.isMine stale.
+In-client smoke checks remain owed to the owner.
