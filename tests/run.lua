@@ -97,6 +97,7 @@ Kit.run{
         "test_window",
         "test_constants",
         "test_class_data",
+        "test_evaluate",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

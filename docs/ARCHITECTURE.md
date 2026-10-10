@@ -42,7 +42,8 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 Every file, its kind and its TOC position is in [`module-map.md`](module-map.md). In short: `core/`
 holds the identity, ten of the setup files, the game-data tables (`Constants.lua` and
 `ClassData.lua`, data plus pure lookups), the session state, the addon object and its lifecycle,
-and the migration runner; `defaults/` the default values; `modules/` the window and the diagnostics
+and the migration runner; `defaults/` the default values; `modules/` the verdict kernel
+(`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the window and the diagnostics
 sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -126,6 +127,12 @@ for combat and restriction state by their own items (design spec §4, §9).
   client's trait-tree data) is recorded as an Intellect dual wielder that takes no held off hand,
   which is unconfirmed in game (FEED-7). Difficulty ids are confirmed with `GetDifficultyInfo`
   before the situation classifier trusts them (design spec §6.1).
+- The verdict kernel (`modules/Evaluate.lua`) reads a few cases the design leaves open as
+  follows. With the spec unknown, an item whose primary stat suits only some of the class's specs
+  is `unknown`, not `ok`. When the ilvl is inside the sidegrade band and the score is not (or the
+  reverse), the one outside decides. The track delta orders tracks by a numeric `tier` from
+  ItemFacts and falls back to the enUS track names, so a localized name with no tier leaves it
+  unset. Wands are main-hand weapons for everyone; bows, guns and crossbows are two-handers.
 - The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
   mock does not model; PROFILE-1 is its in-game check.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate

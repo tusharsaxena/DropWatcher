@@ -103,6 +103,12 @@ C.QUALITY = fromEnum(Enum.ItemQuality, {
 C.QUALITY_MODES = { "fixed", "dynamicSlot", "dynamicCharacter" }
 C.QUALITY_DEFAULT = { FIXED = C.QUALITY.RARE, FLOOR = C.QUALITY.UNCOMMON }
 
+-- Upgrade tracks in ascending order (design spec §5.2, step 3). The evaluation kernel compares a
+-- track's numeric `tier` first; ItemFacts fills it from the track's string id where the client has
+-- one. These enUS names are the fallback for a track that carries only its name, so a localized
+-- name that matches none of them leaves the track delta unset rather than guessed.
+C.TRACK_TIER = { Explorer = 1, Adventurer = 2, Veteran = 3, Champion = 4, Hero = 5, Myth = 6 }
+
 -- ---------------------------------------------------------------------------------------------
 -- Inventory slots and slot plans (design spec §5.2)
 -- ---------------------------------------------------------------------------------------------

@@ -70,6 +70,13 @@ test("constants: the quality defaults are Rare fixed and an Uncommon floor (spec
     assertEqual(c.QUALITY_MODES[3], "dynamicCharacter")
 end)
 
+test("constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)", function()
+    local c = C()
+    local order = { "Explorer", "Adventurer", "Veteran", "Champion", "Hero", "Myth" }
+    for i, name in ipairs(order) do assertEqual(c.TRACK_TIER[name], i, name) end
+    assertEqual(#keysOf(c.TRACK_TIER), #order)
+end)
+
 test("constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use", function()
     local c = C()
     assertEqual(c.SLOT.HEAD, 1)

@@ -192,6 +192,17 @@ function CD.PrimaryStat(classFile, specID)
     return bySpecOrClass(classFile, specID, "stat")
 end
 
+--- Whether the candidate dual wields: the spec's flag, or the class's when every spec shares it;
+--- nil when it depends on the spec.
+function CD.DualWieldFor(classFile, specID)
+    return bySpecOrClass(classFile, specID, "dualWield")
+end
+
+--- Whether the candidate has Titan's Grip, the same way as DualWieldFor.
+function CD.TitanGripFor(classFile, specID)
+    return bySpecOrClass(classFile, specID, "titanGrip")
+end
+
 --- Whether shields are this candidate's loot: true, false, or nil when it depends on the spec.
 function CD.CanUseShield(classFile, specID)
     return bySpecOrClass(classFile, specID, "shield")

@@ -110,11 +110,12 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_constants.lua (10)
+### test_constants.lua (11)
 
 - constants: without Enum the item ids fall back to the documented literals
 - constants: with Enum present the ids are read from it, not from the literals
 - constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
+- constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
 - constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use
 - constants: every slot plan has a known kind and real slot ids
 - constants: the slot plan maps each equip location to the spec §5.2 kind
@@ -123,12 +124,13 @@ Total.
 - constants: every difficulty id maps to a situation kind the classifier knows
 - constants: the trade rules are the spec §7.2 table, and every situation has a rule
 
-### test_class_data.lua (11)
+### test_class_data.lua (12)
 
 - classdata: thirteen classes with their client classIDs, each with an armor type
 - classdata: every spec row is well-formed and its class lists it
 - classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder
 - classdata: dual wield and Titan's Grip are the right specs
+- classdata: dual wield and Titan's Grip by spec, or by class when every spec agrees
 - classdata: shields go to Protection, Holy, Elemental and Restoration Shaman only
 - classdata: held off hands go to the caster and healer specs
 - classdata: a spec of another class is not trusted over the class
@@ -136,6 +138,40 @@ Total.
 - classdata: weapon proficiencies by class
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
+
+### test_evaluate.lua (31)
+
+- evaluate: every equip location in SLOT_PLAN compares against its slot
+- evaluate: an equip location with no plan is unknown (not gear)
+- evaluate: pair compares against the lower of the two slots
+- evaluate: an empty slot is an upgrade with the emptySlot reason
+- evaluate: a slot that is not known is unknown, never an upgrade
+- evaluate: a one-hander compares against the main hand only, unless the candidate dual wields
+- evaluate: a dual wielder holding a two-hander compares a one-hander against the two-hander
+- evaluate: a two-hander compares against the average of both hands
+- evaluate: Titan's Grip compares a two-hander as a pair over both hands
+- evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot
+- evaluate: ranged weapons are two-handers for hunters and main hand for wand users
+- evaluate: a unique-equipped drop compares against the item holding its category
+- evaluate: compareOwned takes the better of equipped and owned per slot
+- evaluate: a known spec is judged by the item's own spec list
+- evaluate: spec unknown falls back to ClassData for armor, jewelry, shields and off hands
+- evaluate: a known spec with no item spec list uses the spec's own class data
+- evaluate: the primary stat decides when every spec agrees, and is ambiguous otherwise
+- evaluate: an unknown class cannot be judged
+- evaluate: tier tokens are judged by their class list
+- evaluate: a class-restricted item refuses other classes
+- evaluate: an undesired subclass is doesntWant, but only when the item is usable
+- evaluate: the sidegrade band splits upgrade, sidegrade and downgrade
+- evaluate: the score decides with the ilvl when they agree, and sidegrades when they disagree
+- evaluate: the scorer is optional, may be pending, and may fail without harm
+- evaluate: a two-hander's score baseline is the average of both hands' scores
+- evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison
+- evaluate: the track delta orders tracks by tier, then rank
+- evaluate: the output carries every field of spec 5.2 step 5
+- evaluate: nil and garbage inputs never throw and answer unknown with a reason
+- evaluate: garbage inside the tables never throws
+- evaluate: an internal failure is caught and reported as unknown
 
 ### test_disabled.lua (9)
 
@@ -235,8 +271,9 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_constants.lua | 10 |
-| test_class_data.lua | 11 |
+| test_constants.lua | 11 |
+| test_class_data.lua | 12 |
+| test_evaluate.lua | 31 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 4 |
 | test_vendor_sync.lua | 3 |
@@ -246,4 +283,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **164** |
+| **Total** | **197** |

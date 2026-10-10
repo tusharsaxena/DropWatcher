@@ -25,14 +25,15 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 16 | `core/Database.lua` | data | the schemaVersion migration runner |
 | 17 | `core/LauncherSetup.lua` | setup | LibKa0s-Launcher: the one LDB object, registered twice |
 | 18 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
-| 19 | `modules/Window.lua` | UI | the main window's shell and its show decision |
-| 20 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 21 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 22 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 23 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 24 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 25 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 26 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 19 | `modules/Evaluate.lua` | kernel (pure) | `NS.Evaluate`: the verdict kernel of design spec §5, equippability, the slot plans, the deltas and the verdict; no WoW call |
+| 20 | `modules/Window.lua` | UI | the main window's shell and its show decision |
+| 21 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 22 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 23 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 24 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 25 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 26 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 27 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.

@@ -80,6 +80,9 @@ core\LauncherSetup.lua
 defaults\Profile.lua
 
 # Modules
+# Conventional: publishes NS.Evaluate, the pure verdict kernel; read by the feature modules at call
+# time only, and itself reads NS.Constants and NS.ClassData (core\, above) at load.
+modules\Evaluate.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua
