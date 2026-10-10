@@ -119,10 +119,13 @@ function NS.HideWindow() if NS.Window then NS.Window.Close() end end
 function NS.ToggleWindow() if NS.Window then NS.Window.Toggle() end end
 function NS.IsWindowShown() return NS.Window ~= nil and NS.Window.IsShown() end
 
--- Combat ends test mode (preview-mode), and both combat edges re-run the window's show decision
--- (General visibility can depend on combat). Feature events, so both are down while stood down.
+-- Combat ends test mode (preview-mode), both combat edges re-run the window's show decision
+-- (General visibility can depend on combat) and both hand the edge to the restriction tracker
+-- (modules/Restrictions.lua, design spec §4), which loads below and is read at call time. Feature
+-- events, so both are down while stood down.
 function DW.OnCombatStart()
     NS.Debug("State", "combat started")
+    if NS.Restrictions then NS.Restrictions.OnCombatEdge(true) end
     if NS.State.testMode then
         NS.SetTestMode(false)
         NS.Print(NS.L["Test mode ended: you entered combat."])
@@ -133,6 +136,7 @@ end
 
 function DW.OnCombatEnd()
     NS.Debug("State", "combat ended")
+    if NS.Restrictions then NS.Restrictions.OnCombatEdge(false) end
     if NS.Window then NS.Window.UpdateVisibility(false) end
 end
 

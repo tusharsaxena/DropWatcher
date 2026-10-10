@@ -333,11 +333,13 @@ end
 
 --- True when a restriction STATE (the second payload of ADDON_RESTRICTION_STATE_CHANGED, or
 --- GetAddOnRestrictionState's answer) is anything but Inactive: Activating counts, because the
---- event fires just before the restriction bites. A secret state reads as active; a missing or
---- non-numeric one as inactive.
+--- event fires just before the restriction bites. The event has been seen carrying a boolean
+--- instead (docs/midnight-quirks.md), which answers itself. A secret state reads as active; a
+--- missing or otherwise unreadable one as inactive.
 --- @return boolean
 function Compat.IsRestrictionStateActive(state)
     if Compat.IsSecret(state) then return true end
+    if type(state) == "boolean" then return state end
     local n = plainNumber(state)
     if n == nil then return false end
     local enum = Enum and Enum.AddOnRestrictionState

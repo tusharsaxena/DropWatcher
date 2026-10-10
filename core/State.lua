@@ -21,3 +21,11 @@ State.windowOpen = false
 -- design spec §6.1). Nil until the first re-evaluation event, and again while stood down.
 State.situation = nil
 State.situationInputs = nil
+
+-- The restriction tracker's memory (modules/Restrictions.lua, design spec §4): the per-type hints
+-- ADDON_RESTRICTION_STATE_CHANGED gave ({ [type value] = true }), the last PLAYER_REGEN edge (true
+-- fighting, false not, nil before the first) and the answers last announced. All dropped while
+-- stood down.
+State.restrictionHints = nil
+State.combatEdge = nil
+State.restrictionSignature = nil

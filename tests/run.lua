@@ -107,6 +107,7 @@ Kit.run{
         "test_situations",
         "test_trade_rules",
         "test_messaging",
+        "test_restrictions",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

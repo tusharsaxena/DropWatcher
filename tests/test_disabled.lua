@@ -9,7 +9,7 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 
 -- The game events the addon owns today, pinned as literals (sorted).
 local PINNED = {
-    "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START", "GROUP_ROSTER_UPDATE",
+    "ADDON_RESTRICTION_STATE_CHANGED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START", "GROUP_ROSTER_UPDATE",
     "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_REGEN_DISABLED",
     "PLAYER_REGEN_ENABLED", "ZONE_CHANGED_NEW_AREA",
 }

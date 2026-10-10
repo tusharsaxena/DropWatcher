@@ -14,7 +14,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 5 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
 | 6 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry, the gold; the item, quality, slot, difficulty and situation ids, the slot plans, the trade rules |
 | 7 | `core/ClassData.lua` | data | `NS.ClassData`: class armor types, weapon proficiencies, every Retail spec (Devourer included) with its primary stat and dual-wield, Titan's Grip, shield and off-hand flags, and the pure lookups over them |
-| 8 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs |
+| 8 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs, the restriction tracker's hints, combat edge and last announced answers |
 | 9 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
 | 10 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (rows, from the feature items) |
 | 11 | `core/ItemSetup.lua` | setup | LibKa0s-Item: `NS.Item` (item facts, from the feature items) |
@@ -31,14 +31,15 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 22 | `modules/Situations.lua` | classifier + edge | `NS.Situations`: the situation classifier of design spec §6.1 (pure `Classify` and `Resolve`), the edge that reads the client on six events and sends `SituationChanged`, and the per-situation track, auto-open and quality answers |
 | 23 | `modules/TradeRules.lua` | kernel (pure) | `NS.TradeRules`: the trade estimator of design spec §7.1-§7.3, the bind checks, the rule per situation with the owner's override map, the trade window and the looter's item level; no WoW call |
 | 24 | `modules/Messaging.lua` | kernel (pure) | `NS.Messaging`: the messaging core of design spec §9.1-§9.2, the templates and their tokens, the length check, the one-ask guard and the send queue's states; it sends nothing and makes no WoW call |
-| 25 | `modules/Window.lua` | UI | the main window's shell and its show decision |
-| 26 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 27 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 28 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 29 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 30 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 31 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 32 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 25 | `modules/Restrictions.lua` | edge | `NS.Restrictions`: the restriction tracker of design spec §4, `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason` from `ADDON_RESTRICTION_STATE_CHANGED`, the chat lockdown and the combat edges; sends `RestrictionChanged` |
+| 26 | `modules/Window.lua` | UI | the main window's shell and its show decision |
+| 27 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 28 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 29 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 30 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 31 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 32 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 33 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.

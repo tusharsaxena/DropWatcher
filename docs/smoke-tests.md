@@ -118,7 +118,14 @@ duration such as `1 hour 59 min`. Then `/dump C_TooltipInfo.GetInventoryItem("pl
 
 **COMBAT-1.** *Reserved — DW-25: is `CHAT_MSG_LOOT` readable mid-encounter (design spec §15)?*
 
-**COMBAT-2.** *Reserved — DW-21: the restriction badge and the queued asks under an encounter.*
+**COMBAT-2. What the restrictions stop.** `/dw debug on`, then pull a boss in a normal dungeon →
+the console shows a `RES` line naming `encounter` and `canSendChat` false at the pull, and one back
+to `none` when the boss dies; `/dw diagnostics` mid-fight → `restrictions: reason=encounter
+canSendChat=false canInspect=false canTrade=false`. Outside any encounter but in combat →
+`reason=combat canSendChat=true`. Record which `active` reasons the report lists in a dungeon out of
+combat (the design expects `map` alone), and in a Mythic+ key between pulls (is `challengeMode`
+there, and does `/dump C_ChatInfo.InChatMessagingLockdown()` say true?). The badge and the queued
+asks are DW-30's and DW-2A's to add to this check. Result:
 
 **COMBAT-3. Combat ends test mode.** Turn test mode on, pull a training dummy → test mode ends with
 the chat line `Test mode ended: you entered combat.`; `/dw test` in combat is refused. With General
@@ -262,3 +269,4 @@ client's INSTALL and SLASH checks are sufficient. The section is re-armed by the
 |---|---|---|
 | INSTALL-1..3, SLASH-1..3, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-3, DIAG-1..2, DEGRADED-1, LOC-1 | DW-02, the scaffold | No client pass recorded yet |
 | COMPAT-1..3 | DW-20, the compat seam | No client pass recorded yet |
+| COMBAT-2 | DW-21, the restriction tracker | No client pass recorded yet |

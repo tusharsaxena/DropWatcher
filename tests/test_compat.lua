@@ -309,6 +309,15 @@ test("compat: IsRestrictionStateActive reads the state by the enum's Inactive", 
     assertTrue(Compat.IsRestrictionStateActive(0))
 end)
 
+test("compat: IsRestrictionStateActive takes the event's boolean payload as it is", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    assertTrue(Compat.IsRestrictionStateActive(true))
+    assertFalse(Compat.IsRestrictionStateActive(false))
+    assertTrue(Compat.IsRestrictionStateActive(T.secret(false)), "a secret boolean reads as active")
+    assertFalse(Compat.IsRestrictionStateActive("Active"), "an unreadable state is inactive")
+end)
+
 test("compat: RestrictionTypes is the enum, or an empty table", function()
     local Compat, m = fresh()
     assertEqual(Compat.RestrictionTypes().Encounter, 1)

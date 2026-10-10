@@ -39,7 +39,7 @@ by assignment and not counted: their contract and their library-absent bodies ar
 | | `GetItemUpgradeInfo(link)` | `C_Item.GetItemUpgradeInfo` (copied, plain fields only, `source = "api"`) → `C_TooltipInfo.GetHyperlink`'s `ItemUpgradeLevel` line read with `ITEM_UPGRADE_TOOLTIP_FORMAT_STRING` (`source = "tooltip"`, no `trackStringID`) | `nil` |
 | Restrictions | `InChatMessagingLockdown()` | `C_ChatInfo.InChatMessagingLockdown`; a secret answer reads as locked | `false` |
 | | `RestrictionTypes()` | `Enum.AddOnRestrictionType` | `{}` |
-| | `IsRestrictionStateActive(state)` | anything but `Enum.AddOnRestrictionState.Inactive` (0 without the enum) is active, so `Activating` counts; a secret state is active | `false` for nil |
+| | `IsRestrictionStateActive(state)` | anything but `Enum.AddOnRestrictionState.Inactive` (0 without the enum) is active, so `Activating` counts; a boolean (the event's other payload shape) answers itself; a secret state is active | `false` for nil |
 | | `IsRestrictionActive(rtype)` | `C_RestrictedActions.IsAddOnRestrictionActive` → `GetAddOnRestrictionState` through `IsRestrictionStateActive` | `false` |
 | Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |

@@ -51,7 +51,10 @@ and their spec defaults, the six re-evaluation events and the stand-down), `test
 trade estimator: every row of the Estimate table in order, the trade window, the rule per situation
 and the owner's override map), `test_messaging` (the messaging core: token expansion, the length
 limit, the one-ask guard, queueing under restriction, the flush order, cancel and a failed send's
-retry), `test_diagnostics`. Kit suites,
+retry), `test_restrictions` (the restriction tracker: each restriction type's reason and what it
+blocks, the priority order, the chat lockdown, the combat edges ahead of the client's flag, the
+event's numeric, boolean and secret payloads, `RestrictionChanged` and the stand-down),
+`test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
 

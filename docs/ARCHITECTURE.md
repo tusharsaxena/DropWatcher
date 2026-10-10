@@ -50,7 +50,9 @@ and the migration runner; `defaults/` the default values; `modules/` the verdict
 out), the situation classifier (`Situations.lua`: a pure classifier over the client's instance,
 difficulty and group inputs, and the edge that reads them on six events), the trade estimator
 (`TradeRules.lua`, pure: a drop's bind facts, the looter's verdict and the situation's rule in, a
-yes, likely, unknown or no estimate out), the messaging core (`Messaging.lua`, pure: a
+yes, likely, unknown or no estimate out), the restriction tracker (`Restrictions.lua`: whether a
+chat message, an inspect or a trade is allowed now, and the reason, from the restriction event, the
+chat lockdown and the combat edges), the messaging core (`Messaging.lua`, pure: a
 template and its tokens in, the text and the ask's next state out; it sends nothing), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -77,7 +79,7 @@ named sender each (design spec §3). With LibKa0s-Bus present the table is the s
 so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` /
 `NS.StandUp` take every tracked registration down and replay it.
 
-One message is sent today, `SITUATION_CHANGED`. Every other sender module below is **planned**: it
+Two messages are sent today, `SITUATION_CHANGED` and `RESTRICTION_CHANGED`. Every other sender module below is **planned**: it
 does not exist until the item named in its row lands. The payloads and consumers are the design
 intent. The item that first sends a message confirms its payload here, and each item that subscribes
 adds itself as a consumer.
@@ -88,7 +90,7 @@ adds itself as a consumer.
 | `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (DW-27) | `dropId` | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (DW-26) | `guid` | LootFeed (DW-27): re-evaluate that candidate's drops |
 | `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (DW-24) | none | LootFeed (DW-27): re-evaluate; QualityGate's dynamic threshold (DW-12) |
-| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (DW-21) | `reason` (string, or nil when lifted) | Messaging edge (DW-2A): flush the queue; Window restriction badge (DW-30) |
+| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (DW-2A): flush the queue; Window restriction badge (DW-30) |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | LootFeed (DW-27): the situation gate; Window (DW-30): auto-open and the footer |
 | `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Messaging.lua` (DW-2A) | `dropId`, `state` | Window feed tabs (DW-30), detail card (DW-32) |
 | `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (DW-28) | none | My drops tab (DW-33), detail card (DW-32) |
@@ -110,8 +112,9 @@ so `OnEnable` and the stand-up register exactly that list and the stand-down unr
 
 | Event | Handler | Why |
 |---|---|---|
-| `PLAYER_REGEN_DISABLED` | `DW.OnCombatStart` | ends test mode; re-runs the window's show decision |
-| `PLAYER_REGEN_ENABLED` | `DW.OnCombatEnd` | re-runs the window's show decision |
+| `PLAYER_REGEN_DISABLED` | `DW.OnCombatStart` | ends test mode; re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua` |
+| `PLAYER_REGEN_ENABLED` | `DW.OnCombatEnd` | re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua` |
+| `ADDON_RESTRICTION_STATE_CHANGED` | `DW.OnRestrictionEvent` | records the type's state as a hint and re-reads the restrictions (`modules/Restrictions.lua`); sends `RestrictionChanged` on a change |
 | `PLAYER_ENTERING_WORLD` | `DW.OnSituationEvent` | re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change |
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSituationEvent` | the same |
 | `CHALLENGE_MODE_START` | `DW.OnSituationEvent` | the same (a keystone started) |
@@ -186,7 +189,16 @@ spec §4, §9).
   with `messages.oneAsk` off; a failed one may be retried, and a canceled one leaves the registry,
   so its button is ready again. Nothing sends yet: the edge (DW-2A) wires the restriction check,
   the send and the flush timer, and the `messages.*` settings have no row until DW-40.
-- The compat seam (`core/Compat.lua`) has no caller yet; the M2 edge items wire it. Three of its
+- The restriction tracker (`modules/Restrictions.lua`) reads four cases the design leaves open.
+  Chat is stopped by the Encounter, ChallengeMode, PvPMatch and Chat restriction types and by the
+  chat lockdown; combat alone stops inspects and trades, not chat; the Map type, active for the
+  whole of a dungeon, stops nothing; a type the client adds later is reported under its enum name
+  and stops nothing. A type counts as active while the event's last word on it or the client's own
+  answer says so, so a lift counts only once both agree. The badge's reason is the first in effect
+  of encounter, challengeMode, pvpMatch, chat, chatLockdown, combat. Which types really stop a
+  whisper is COMBAT-2.
+- The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
+  edge items wire the rest. Three of its
   readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the
   shape of the trade-time and item-level tooltip lines (whether the `ItemLevel` line carries a
   numeric field), and that `PawnIsInitialized` is a boolean flag. A secret chat-lockdown or
@@ -249,6 +261,7 @@ deviation not in this table is not ratified.
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
 | library-stack-§7, anti-pattern #47 | The chat sender (`Compat.ChatSender`) and the tooltip line reader with its duration decoder (`Compat.ReadTooltipLine`, `DecodeDuration`) are written in this addon, not taken from LibKa0s | No LibKa0s major carries them, and MultiMeters' `ChatSender` is the only other copy; the promotion bars (two consumers with the same semantics) are not met yet. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a major carrying either shape, or a second Ka0s addon needs the reader or the decoder |
+| library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
 
 ### Files over the 1500-line cap
 

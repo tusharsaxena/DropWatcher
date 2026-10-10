@@ -100,6 +100,11 @@ modules\TradeRules.lua
 # the send queue); read by the messaging edge at call time only, and itself reads NS.Constants
 # (core\, above) at load.
 modules\Messaging.lua
+# Conventional: publishes NS.Restrictions, the restriction tracker; appends its row to
+# NS.FEATURE_EVENTS, NS.STAND_DOWN and NS.STAND_UP and its handler to NS.addon
+# (core\DropWatcher.lua, above) at load, and reads NS.State at load. core\DropWatcher.lua's combat
+# edges and the feature modules read it at call time.
+modules\Restrictions.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

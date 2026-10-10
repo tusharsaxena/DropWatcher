@@ -70,6 +70,20 @@ local function situation(out)
         i.isFollowerDungeon, i.inGroup, i.inRaid, i.isPvP)
 end
 
+-- What the restrictions allow now, every reason in effect (sorted, the Map type included) and
+-- what was last announced (design spec §4, §13). Read live: the tracker only reads.
+local function restrictions(out)
+    local Rs = NS.Restrictions
+    local snap = Rs.Snapshot()
+    out:add(TAG, "restrictions: reason=%s canSendChat=%s canInspect=%s canTrade=%s",
+        snap.reason or "none", snap.canSendChat, snap.canInspect, snap.canTrade)
+    local active = {}
+    for reason in pairs(Rs.ActiveSet()) do active[#active + 1] = reason end
+    table.sort(active)
+    out:joined(TAG, "restrictions: active", active)
+    out:add(TAG, "restrictions: last announced %s", NS.State.restrictionSignature or "none")
+end
+
 local function registration(out)
     local names = {}
     for i, row in ipairs(NS.FEATURE_EVENTS or {}) do names[i] = row[1] end
@@ -96,6 +110,7 @@ function NS.Diagnostics.Sections()
         { "settings",     settings },
         { "window",       window },
         { "situation",    situation },
+        { "restrictions", restrictions },
         { "registration", registration },
         { "integrations", integrations },
     }

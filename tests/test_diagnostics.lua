@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,situation,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -53,4 +53,16 @@ test("diagnostics: a non-default setting is listed, and `enabled` always is", fu
     local text = report(NS)
     assertTrue(text:find("scale", 1, true) ~= nil and text:find("1.5", 1, true) ~= nil)
     assertTrue(text:find("enabled", 1, true) ~= nil)
+end)
+
+test("diagnostics: the restrictions section names the answers, the reasons and the last announced", function()
+    local NS, _, m = T.enableAddon()
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    m.restrictionStates[RT.Map] = RS.Active
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Active)
+    local text = report(NS)
+    assertTrue(text:find("restrictions: reason=encounter canSendChat=false canInspect=true canTrade=true", 1, true) ~= nil, text)
+    assertTrue(text:find("restrictions: active", 1, true) ~= nil)
+    assertTrue(text:find("encounter, map", 1, true) ~= nil or text:find("encounter,map", 1, true) ~= nil, text)
+    assertTrue(text:find("restrictions: last announced encounter|false|true|true", 1, true) ~= nil, text)
 end)
