@@ -173,6 +173,33 @@ Total.
 - evaluate: garbage inside the tables never throws
 - evaluate: an internal failure is caught and reported as unknown
 
+### test_quality_gate.lua (24)
+
+- quality gate: fixed passes at or above the threshold and hides below it
+- quality gate: fixed defaults to Rare, and the floor does not apply to it
+- quality gate: no mode or an unknown mode is the default fixed mode
+- quality gate: dynamicSlot uses the baseline slot's equipped quality
+- quality gate: dynamicSlot is floored, Uncommon by default
+- quality gate: dynamicSlot with an empty or unread baseline slot uses the floor
+- quality gate: dynamicSlot without a baseline slot takes the lower of the plan's slots
+- quality gate: gear entries may be item facts carrying a quality
+- quality gate: dynamicCharacter uses the most common equipped quality
+- quality gate: dynamicCharacter ties go to the lower quality
+- quality gate: dynamicCharacter ignores shirt, tabard and empty slots
+- quality gate: dynamicCharacter is floored, and with no gear uses the floor
+- quality gate: the upgrade override shows a below-threshold upgrade for me, on by default
+- quality gate: the override needs an upgrade verdict, nothing less
+- quality gate: a drop at the threshold passes on quality, not on the override
+- quality gate: the override applies in the dynamic modes too
+- quality gate: a situation's quality setting overrides the global mode
+- quality gate: absent, global or unknown situation quality falls back to the global mode
+- quality gate: the resolved situation mode decides the drop
+- quality gate: Threshold answers the threshold and where it came from
+- quality gate: the filter bar label for each mode
+- quality gate: every quality id has a display name
+- quality gate: an unknown drop quality passes, so the feed never hides what it cannot read
+- quality gate: nil and garbage inputs never throw
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -274,6 +301,7 @@ Total.
 | test_constants.lua | 11 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 31 |
+| test_quality_gate.lua | 24 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 4 |
 | test_vendor_sync.lua | 3 |
@@ -283,4 +311,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **197** |
+| **Total** | **221** |

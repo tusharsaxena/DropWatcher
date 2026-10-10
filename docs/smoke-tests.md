@@ -144,7 +144,25 @@ Reserved for DW-13: SIT-1..5.
 
 ## Quality
 
-Reserved for DW-12: QUAL-1..4.
+The gate's decision is headless-tested (`test_quality_gate`); these checks confirm it on real loot.
+They run once the feed (DW-27, DW-31) and the Feed › Quality settings (DW-40) land.
+
+**QUAL-1. Fixed.** Feed › Quality mode `Fixed` at Rare, upgrade override off. In a dungeon, an
+Uncommon drop for another player is not listed and a Rare or Epic one is; the filter bar reads
+`Quality: Rare+`. With `/dw debug on`, the hidden drop's debug line names the threshold. Result:
+
+**QUAL-2. Upgrade override.** Same settings with the upgrade override on: an Uncommon drop that is an
+upgrade for you (an empty or low slot) is listed; one that is not an upgrade stays hidden. Result:
+
+**QUAL-3. Dynamic per slot and whole character.** Mode `Dynamic per slot`: a Rare drop for a slot where
+you wear Epic is hidden, and a Rare ring is shown when your lower ring is Rare; the filter bar reads
+`Quality: Match slot`. Mode `Dynamic whole character`: the filter bar reads
+`Quality: Match gear (<quality>+)` with the most common quality you wear (shirt and tabard not
+counted), and the diagnostics report shows the same threshold. Result:
+
+**QUAL-4. Per-situation override.** Global mode `Fixed`, and General › When to show sets the dungeon's
+`Quality` to `Dynamic per slot`. Entering a dungeon switches the filter bar to `Quality: Match slot`;
+leaving it, back to `Quality: Rare+`. `Use global` restores the global mode. Result:
 
 ## Non-English client
 

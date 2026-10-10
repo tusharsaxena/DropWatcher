@@ -83,6 +83,9 @@ defaults\Profile.lua
 # Conventional: publishes NS.Evaluate, the pure verdict kernel; read by the feature modules at call
 # time only, and itself reads NS.Constants and NS.ClassData (core\, above) at load.
 modules\Evaluate.lua
+# Conventional: publishes NS.QualityGate, the pure minimum-quality gate; read by the feed at call
+# time only, and itself reads NS.Constants (core\, above) and NS.L (locales\, above) at load.
+modules\QualityGate.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

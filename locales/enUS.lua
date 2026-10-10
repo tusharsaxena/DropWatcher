@@ -44,6 +44,20 @@ L["Turn test mode on or off (placeholder drops; combat ends it)"] = "Turn test m
 L["Unlock the window so it can be moved and resized"] = "Unlock the window so it can be moved and resized"
 L["Write the diagnostics report to the debug console"] = "Write the diagnostics report to the debug console"
 
+-- Minimum quality (modules/QualityGate.lua): the quality names and the filter bar label
+L["Artifact"] = "Artifact"
+L["Common"] = "Common"
+L["Epic"] = "Epic"
+L["Heirloom"] = "Heirloom"
+L["Legendary"] = "Legendary"
+L["Poor"] = "Poor"
+L["Quality: %s+"] = "Quality: %s+"
+L["Quality: Match gear"] = "Quality: Match gear"
+L["Quality: Match gear (%s+)"] = "Quality: Match gear (%s+)"
+L["Quality: Match slot"] = "Quality: Match slot"
+L["Rare"] = "Rare"
+L["Uncommon"] = "Uncommon"
+
 -- Settings panel, window and chat acknowledgments
 L["Debug console"] = "Debug console"
 L["Diagnostic report written to the debug console: %d lines. Use Copy to share it."] =

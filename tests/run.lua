@@ -98,6 +98,7 @@ Kit.run{
         "test_constants",
         "test_class_data",
         "test_evaluate",
+        "test_quality_gate",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

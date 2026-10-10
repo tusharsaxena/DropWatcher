@@ -43,7 +43,9 @@ Every file, its kind and its TOC position is in [`module-map.md`](module-map.md)
 holds the identity, ten of the setup files, the game-data tables (`Constants.lua` and
 `ClassData.lua`, data plus pure lookups), the session state, the addon object and its lifecycle,
 and the migration runner; `defaults/` the default values; `modules/` the verdict kernel
-(`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the window and the diagnostics
+(`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the minimum-quality gate
+(`QualityGate.lua`, pure: a drop's quality, the mode and the equipped qualities in, pass or hide
+out), the window and the diagnostics
 sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -133,6 +135,11 @@ for combat and restriction state by their own items (design spec §4, §9).
   reverse), the one outside decides. The track delta orders tracks by a numeric `tier` from
   ItemFacts and falls back to the enUS track names, so a localized name with no tier leaves it
   unset. Wands are main-hand weapons for everyone; bows, guns and crossbows are two-handers.
+- The minimum-quality gate (`modules/QualityGate.lua`) reads three cases the design leaves open.
+  A drop whose quality cannot be read passes (`qualityUnknown`), so the feed never hides what it
+  could not judge. With no baseline slot yet, `Dynamic per slot` takes the lowest quality across
+  the drop's slot plan, and the floor when any of those slots is empty. A per-situation `quality`
+  that names no mode (absent, `global` or unknown) means the global mode.
 - The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
   mock does not model; PROFILE-1 is its in-game check.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate
