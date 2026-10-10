@@ -64,12 +64,26 @@ write into the table the launcher hands it. No structural registry exists yet.
 ## Message Bus
 
 `core/Bus.lua` declares the catalog once, `NS.MSG`, as `Ka0s_DropWatcher_<Event>` wire names with one
-named sender each: `DropAdded`, `DropUpdated`, `InspectDone`, `GearChanged`, `RestrictionChanged`,
-`SituationChanged`, `AskStateChanged`, `TradeTimerTick`, `TradeTimerExpiring`, `HistoryChanged`
-(design spec §3). With LibKa0s-Bus present the table is the strict `Catalog` copy, so a mistyped key
-raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` / `NS.StandUp` take every
-tracked registration down and replay it. No message is sent yet: the senders are the feature
-modules.
+named sender each (design spec §3). With LibKa0s-Bus present the table is the strict `Catalog` copy,
+so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` /
+`NS.StandUp` take every tracked registration down and replay it.
+
+No message is sent yet. Every sender module below is **planned**: it does not exist until the item
+named in its row lands. The payloads and consumers are the design intent. The item that first sends
+a message confirms its payload here, and each item that subscribes adds itself as a consumer.
+
+| `NS.MSG` key | Wire suffix | Sender (planned, item) | Payload | Consumers |
+|---|---|---|---|---|
+| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (DW-27) | `dropId` | Window feed tabs (DW-30), Toast (DW-52), History (DW-51) |
+| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (DW-27) | `dropId` | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
+| `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (DW-26) | `guid` | LootFeed (DW-27): re-evaluate that candidate's drops |
+| `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (DW-24) | none | LootFeed (DW-27): re-evaluate; QualityGate's dynamic threshold (DW-12) |
+| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (DW-21) | `reason` (string, or nil when lifted) | Messaging edge (DW-2A): flush the queue; Window restriction badge (DW-30) |
+| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (DW-13) | `situationKey` | LootFeed (DW-27): the situation gate; Window (DW-30): auto-open |
+| `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Messaging.lua` (DW-2A) | `dropId`, `state` | Window feed tabs (DW-30), detail card (DW-32) |
+| `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (DW-28) | none | My drops tab (DW-33), detail card (DW-32) |
+| `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (DW-28) | `dropId` | My drops tab (DW-33): bold row; chat warning |
+| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (DW-51) | none | History tab (DW-51) |
 
 ## Slash Commands
 

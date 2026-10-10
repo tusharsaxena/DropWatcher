@@ -13,7 +13,8 @@ local addonName, NS = ...
 
 local lib = LibStub and LibStub("LibKa0s-Bus-1.0", true)
 
--- The catalog of design spec §3. Each line names its one sender.
+-- The catalog of design spec §3. Each line names its one sender; every sender is PLANNED and lands
+-- with its feature item. Payloads and consumers: docs/ARCHITECTURE.md -> Message Bus.
 local MSG = {
     DROP_ADDED           = "Ka0s_DropWatcher_DropAdded",           -- modules/LootFeed.lua
     DROP_UPDATED         = "Ka0s_DropWatcher_DropUpdated",         -- modules/LootFeed.lua
