@@ -477,7 +477,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (36)
+### test_feed.lua (40)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -510,6 +510,10 @@ Total.
 - own: an item pushed to you (a quest reward, a purchase) is not a drop
 - update: GearChanged re-judges you on every drop
 - update: a pending score is retried on one shared timer, five times at most
+- trade: a group drop past its rule's window turns no expired on the sweep
+- trade: your own drop takes the timer's exact read: yes with expiresAt, then no expired
+- trade: your own drop the rule called no, with a live timer, asks for its candidates then
+- trade: a BoE own drop keeps the bind's answer; the timer folds nothing in
 - add: injects a drop past the situation gate; a stranger is judged without an inspect
 - add: the test feed skips every gate and every inspect, and stays apart
 - cap: the oldest drop goes first, and an emptied group with it
@@ -699,7 +703,7 @@ Total.
 | test_gear.lua | 17 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
-| test_feed.lua | 36 |
+| test_feed.lua | 40 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 21 |
@@ -712,4 +716,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **566** |
+| **Total** | **570** |

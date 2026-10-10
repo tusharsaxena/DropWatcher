@@ -18,7 +18,8 @@ local PINNED = {
 
 -- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_GearChanged",
-    "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_RestrictionChanged" }
+    "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_RestrictionChanged",
+    "Ka0s_DropWatcher_TradeTimerTick" }
 
 -- What is registered, every kind, or one kind ("event", "message").
 local function registered(m, kind)

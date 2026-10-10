@@ -555,6 +555,92 @@ test("update: a pending score is retried on one shared timer, five times at most
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- The trade over time: the window sweep and your own drops' timer
+-- ---------------------------------------------------------------------------------------------
+
+-- Your own item `id` in bag 0, slot 1, with `duration` left on its trade-time line (nil: none).
+local function carry(m, id, duration)
+    m.bags[0] = { size = 1, link(id) }
+    m.bagGUIDs["0:1"] = "Item-1-0001"
+    local lineType = m.Enum.TooltipDataLineType.TradeTimeRemaining
+    m.tooltips.bag["0:1"] = { lines = duration
+        and { { type = lineType, leftText = m.BIND_TRADE_TIME_REMAINING:format(duration) } } or {} }
+end
+
+local function has(list, value)
+    for _, v in ipairs(list) do
+        if v == value then return true end
+    end
+    return false
+end
+
+test("trade: a group drop past its rule's window turns no expired on the sweep", function()
+    local NS, m, LF = party()
+    local seen = listen(NS)
+    m.addItem(link(300), ring(620))
+    brakkLoots(m, 300)
+    brakkWears(m, 630)
+    m.advance(0)
+    local rec = only(LF)
+    assertEqual(rec.trade.state, "likely")
+    m.advance(7200 - LF.TRADE_SWEEP)
+    assertEqual(rec.trade.state, "likely", "inside the window")
+    assertFalse(has(seen.updated, rec.id .. ":trade"), "an unchanged estimate sends nothing")
+    m.advance(LF.TRADE_SWEEP * 2)
+    -- red under: an estimate made once, at the drop, and never again
+    assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "expired")
+    assertEqual(seen.updated[#seen.updated], rec.id .. ":trade")
+    local n = #seen.updated
+    m.advance(LF.TRADE_SWEEP * 4)
+    assertEqual(#seen.updated, n, "nothing left to sweep")
+end)
+
+test("trade: your own drop takes the timer's exact read: yes with expiresAt, then no expired", function()
+    local NS, m, LF = party()
+    local seen = listen(NS)
+    m.addItem(link(300), ring(590))
+    carry(m, 300, "1 hour")
+    chat(m, "You receive loot: " .. link(300) .. ".")
+    local rec = only(LF)
+    assertEqual(rec.trade.basis, "inspect", "the rule's estimate until the timer has read the item")
+    m.advance(0)    -- the trade timer's scan, then its tick
+    -- red under: an own drop that never folds in the trade timer
+    assertEqual(rec.trade.state, "yes"); assertEqual(rec.trade.basis, "timer")
+    assertEqual(rec.trade.reasonKey, "timer")
+    assertEqual(rec.trade.expiresAt, NS.TradeTimer.ForDrop(rec.id).expiresAt)
+    assertTrue(has(seen.updated, rec.id .. ":trade"))
+    m.advance(3600 + 60)
+    assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "expired")
+    assertEqual(rec.trade.basis, "timer")
+end)
+
+test("trade: your own drop the rule called no, with a live timer, asks for its candidates then", function()
+    local NS, m, LF = party()
+    m.addItem(link(300), ring(620))
+    carry(m, 300, "2 hrs")
+    chat(m, "You receive loot: " .. link(300) .. ".")
+    local rec = only(LF)
+    assertEqual(rec.trade.state, "no")
+    assertNil(NS.Inspect.Get(BRAKK), "no candidate inspect while it cannot trade")
+    m.advance(0)
+    assertEqual(rec.trade.state, "yes")
+    -- red under: the candidates' inspects gated on the rule's first estimate only
+    assertTrue(NS.Inspect.Get(BRAKK) ~= nil, "Brakk's inspect asked for")
+    assertEqual(rec.candidates[BRAKK].status, "checking")
+end)
+
+test("trade: a BoE own drop keeps the bind's answer; the timer folds nothing in", function()
+    local _, m, LF = party()
+    m.addItem(link(300), ring(590, { bindType = 2 }))
+    carry(m, 300, nil)
+    chat(m, "You receive loot: " .. link(300) .. ".")
+    m.advance(0)
+    local rec = only(LF)
+    assertEqual(rec.trade.state, "yes"); assertEqual(rec.trade.reasonKey, "boe")
+    assertEqual(rec.trade.basis, "bind")
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- Add, the test feed, Clear and the cap
 -- ---------------------------------------------------------------------------------------------
 

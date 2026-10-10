@@ -50,6 +50,14 @@ local _, NS = ...
 -- DropAdded(id). Updates re-judge the verdicts and the trade only: a drop once shown stays shown.
 -- Test drops are never updated.
 --
+-- THE TRADE OVER TIME. The estimate is made again at read time's pace: one shared ticker, every
+-- TRADE_SWEEP seconds while a live drop's trade is not `no`, re-estimates every drop (so a drop past
+-- its rule's window turns `no expired`), and each TradeTimerTick re-estimates your own drops. Your
+-- own drop's estimate folds in the trade timer's exact read (spec §7.1's `timer` basis): `yes` with
+-- `expiresAt` while its countdown is live, `no expired` once the timer saw it gone; a BoE entry (no
+-- window) and the bind checks keep the rule's answer. A changed estimate sends DropUpdated(id,
+-- `trade`); your own drop moving off `no` asks for its candidates' inspects then.
+--
 -- Each feed (live and test) keeps MAX_DROPS drops, the oldest dropped first. Stood down, the
 -- timers and the pending loads are dropped with the dedupe window and the encounter context; the
 -- drops recorded so far are kept for the session, and the stand-up's GearChanged re-judges them.
@@ -68,6 +76,7 @@ LF.LOOT_GRACE = 120
 LF.MAX_DROPS = 200
 LF.SCORE_RETRY = 1
 LF.SCORE_TRIES = 5
+LF.TRADE_SWEEP = 30
 
 local timers = {}
 
@@ -365,7 +374,28 @@ local function estimate(rec, looterEval, cfg, insp)
             ctx.inspectReason = insp.reason or insp.status
         end
     end
-    rec.trade = NS.TradeRules.Estimate(facts, looterEval, ctx)
+    rec.trade = LF.FoldTimer(rec, NS.TradeRules.Estimate(facts, looterEval, ctx))
+end
+
+--- Your own drop's estimate with the trade timer's exact read folded in (spec §7.1): `yes`
+--- (`timer`, with `expiresAt` and the seconds left) while its countdown is live, `no expired`
+--- (`timer`) once the timer read its window as gone. The rule's estimate stands for anyone else's
+--- drop, a test drop, a bind answer (warbound, bonus roll, BoE), a drop no bag item has matched,
+--- and a BoE entry, which has no window.
+--- @param rec table the drop
+--- @param est table NS.TradeRules.Estimate's answer
+--- @return table
+function LF.FoldTimer(rec, est)
+    local TT = NS.TradeTimer
+    if not (rec.isMine and not rec.test and TT and est.basis ~= "bind") then return est end
+    local e = TT.ForDrop(rec.id)
+    if not e or e.permanent then return est end
+    if e.expired then
+        return { state = "no", reasonKey = "expired", basis = "timer", args = {}, rule = est.rule }
+    end
+    if not e.expiresAt then return est end
+    return { state = "yes", reasonKey = "timer", basis = "timer", args = { TT.Remaining(e) },
+        expiresAt = e.expiresAt, rule = est.rule }
 end
 
 -- One other member, judged for your own drop.
@@ -458,6 +488,68 @@ retryScores = function()
     if again then armScoreRetry() end
 end
 
+-- ── the trade over time ─────────────────────────────────────────────────────────────────────
+
+local function sameTrade(a, b)
+    return a ~= nil and a.state == b.state and a.reasonKey == b.reasonKey and a.basis == b.basis
+        and a.expiresAt == b.expiresAt
+end
+
+-- One drop's trade made again; true when it moved. Your own drop moving off `no` asks for its
+-- candidates' inspects (they were skipped while it could not trade).
+local function reestimate(rec, cfg)
+    local old = rec.trade
+    if rec.isMine then estimate(rec, rec.me, cfg, nil) else estimate(rec, rec.them, cfg, rec.inspect) end
+    if sameTrade(old, rec.trade) then return false end
+    if rec.isMine and old and old.state == "no" and rec.trade.state ~= "no" then
+        judgeCandidates(rec, cfg, true)
+    end
+    return true
+end
+
+local function mayChange(rec)
+    return not rec.test and rec.trade ~= nil and (rec.isMine or rec.trade.state ~= "no")
+end
+
+--- Re-estimate the live drops' trade (your own only, with `mineOnly`), sending DropUpdated(id,
+--- `trade`) for each that moved. Answers how many moved.
+--- @param mineOnly boolean|nil
+--- @return number
+function LF.SweepTrade(mineOnly)
+    if stoodDown() then return 0 end
+    local cfg, n = LF.Config(), 0
+    for _, rec in ipairs(store().live.drops) do
+        if mayChange(rec) and (rec.isMine or not mineOnly) and reestimate(rec, cfg) then
+            n = n + 1
+            send(NS.MSG.DROP_UPDATED, rec.id, "trade")
+        end
+    end
+    return n
+end
+
+-- Whether any live drop's trade may still move (a group drop not yet `no`).
+local function sweepWanted()
+    for _, rec in ipairs(store().live.drops) do
+        if mayChange(rec) and not rec.isMine then return true end
+    end
+    return false
+end
+
+local function stopSweep()
+    if timers.sweep then timers.sweep:Cancel() end
+    timers.sweep = nil
+end
+
+--- Start the shared trade sweep when a live drop needs it and none runs; it stops itself once
+--- every group drop's trade is `no`.
+function LF.ArmTradeSweep()
+    if timers.sweep or stoodDown() or not sweepWanted() then return end
+    timers.sweep = C_Timer.NewTicker(LF.TRADE_SWEEP, function()
+        LF.SweepTrade(false)
+        if not sweepWanted() then stopSweep() end
+    end)
+end
+
 -- ── the records ─────────────────────────────────────────────────────────────────────────────
 
 local function feedOf(rec)
@@ -490,6 +582,7 @@ local function add(rec)
     feed.byId[rec.id] = rec
     while #feed.drops > LF.MAX_DROPS do removeOldest(feed) end
     notePending(rec)
+    if not rec.test then LF.ArmTradeSweep() end
     NS.Debug(TAG, "drop %s: %s by %s (%s) in %s: me=%s them=%s trade=%s", rec.id, rec.link,
         tostring(rec.looter.name), rec.source, g.label, verdictOf(rec.me), verdictOf(rec.them),
         tostring(rec.trade and rec.trade.state))
@@ -825,12 +918,14 @@ local function listen()
     if not target then return end
     target:RegisterMessage(NS.MSG.INSPECT_DONE, function(_, guid) LF.OnInspectDone(guid) end)
     target:RegisterMessage(NS.MSG.GEAR_CHANGED, function() LF.OnGearChanged() end)
+    target:RegisterMessage(NS.MSG.TRADE_TIMER_TICK, function() LF.SweepTrade(true) end)
 end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     generation = generation + 1
     if timers.score then timers.score:Cancel() end
+    stopSweep()
     timers = {}
     local s = State.feed
     if s then s.recent, s.ctx = {}, {} end
@@ -838,4 +933,5 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
     if not TRACKED then listen() end
+    LF.ArmTradeSweep()
 end

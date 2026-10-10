@@ -110,7 +110,7 @@ so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.Sta
 
 Nine messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
 `INSPECT_DONE`, `DROP_ADDED`, `DROP_UPDATED`, `TRADE_TIMER_TICK`, `TRADE_TIMER_EXPIRING` and
-`ASK_STATE_CHANGED`; the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE` and `GEAR_CHANGED`,
+`ASK_STATE_CHANGED`; the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE`, `GEAR_CHANGED` and `TRADE_TIMER_TICK`,
 the trade timer (`modules/TradeTimer.lua`) `DROP_ADDED`, and the messaging edge (`modules/Asks.lua`)
 `RESTRICTION_CHANGED`, each on its own tracked target. Every other sender module below is **planned**: it
 does not exist until the item named in its row lands. The payloads and consumers are the design
@@ -120,13 +120,13 @@ adds itself as a consumer.
 | `NS.MSG` key | Wire suffix | Sender (planned, item) | Payload | Consumers |
 |---|---|---|---|---|
 | `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`) | TradeTimer (since DW-28): your own live drop asks for a bag scan; Window feed tabs (DW-30), Toast (DW-52), History (DW-51) |
-| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved) or `score` (a pending score retried). Never for a test drop | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
+| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved), `score` (a pending score retried) or `trade` (the trade estimate moved on the sweep or the trade timer: a drop past its window, your own drop's exact timer). Never for a test drop | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (sent since DW-26) | `guid`. Sent once per job when it ends: after a read (`fresh` or `cached`), once the read items' facts have loaded or been given up on; at once for `outOfRange` and `failed`. `NS.Inspect.Get(guid)` says which | LootFeed (since DW-27): re-judges the drops that looter received and your own drops' candidate of that GUID |
 | `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (since DW-27): re-judges you on every drop; the quality gate's dynamic threshold reads the snapshot at the next drop |
 | `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (since DW-2A, `modules/Asks.lua`): `canSendChat` true starts a flush of the queued asks; Window restriction badge (DW-30) |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | Window (DW-30): auto-open and the footer. LootFeed reads `NS.Situations.Current()` at each receipt for its gate and subscribes to nothing |
 | `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Asks.lua` (sent since DW-2A) | `dropId`, `state` (`queued`, `sent`, `failed`, or `ready` after a cancel), `kind` (`ask`, `offer` or `announce`), `target` (the Name-Realm, or `group` for an announce), `reason` (a failure's reason, or `canceled` / `left` after a cancel). Sent on every move of one ask; `NS.Asks.StateOf(kind, target, dropId)` reads it back | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33), History (DW-51): the `asked` outcome |
-| `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (sent since DW-28) | none. Sent on every tick of the shared ticker (each second while the window is shown, each minute while it is hidden, never with nothing live) and after a scan that found your own drops or dropped the last entries; `NS.TradeTimer.ForDrop(dropId)` and `Remaining(entry)` are the countdown | My drops tab (DW-33), detail card (DW-32) |
+| `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (sent since DW-28) | none. Sent on every tick of the shared ticker (each second while the window is shown, each minute while it is hidden, never with nothing live) and after a scan that found your own drops or dropped the last entries; `NS.TradeTimer.ForDrop(dropId)` and `Remaining(entry)` are the countdown | LootFeed (since the DW-27 review): re-estimates your own drops' trade with the timer folded in; My drops tab (DW-33), detail card (DW-32) |
 | `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (sent since DW-28) | `dropId`, `itemGUID`, `remaining` (seconds). Sent once per item, when its remaining time first falls to `trade.warnAt` (600s) or less; the module prints the chat warning itself, and the entry's `warned` is set | My drops tab (DW-33): bold row |
 | `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (DW-51) | none | History tab (DW-51) |
 
@@ -329,7 +329,7 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   (DW-27) asks for looters and the Offer panel (DW-33) for its candidates; `Scan` has no slash verb
   or button until DW-42 and DW-30. Whether the fast path, the spec read and the tooltip level hold
   for an inspected unit in game is INSPECT-1..4.
-- The feed (`modules/LootFeed.lua`) settles nine cases the design leaves open. Reports of one drop
+- The feed (`modules/LootFeed.lua`) settles ten cases the design leaves open. Reports of one drop
   merge for 120 seconds (`NS.LootFeed.DEDUPE_WINDOW`) when the item id and the looter match (the
   GUID, or the name without its realm when a source has no GUID) and the source has not reported
   it already, so two copies from one source stay two drops. An encounter's group stays open 120
@@ -339,7 +339,13 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   containers, purchases) are not drops; a member's are. The relative minimum item level is measured
   against your average equipped level. A drop once shown stays shown: updates re-judge its verdicts
   and its trade, never its gates. Your own drop's candidates are inspected (at the Offer panel's
-  priority) only while its trade estimate is not `no`. A pending score is retried five times, one
+  priority) only while its trade estimate is not `no`, and asked for when it moves off `no`. The
+  trade estimate is made again over time: one shared ticker every 30 seconds
+  (`NS.LootFeed.TRADE_SWEEP`), alive while a group drop's trade is not `no`, turns a drop past its
+  rule's window `no expired`, and each `TradeTimerTick` re-estimates your own drops, whose estimate
+  folds in the trade timer (`LootFeed.FoldTimer`: `yes` with the `timer` basis and `expiresAt`
+  while the countdown is live, `no expired` once it is gone; a bind answer and a BoE entry keep the
+  rule's). A moved estimate sends `DropUpdated(id, "trade")`. A pending score is retried five times, one
   second apart, on one shared timer, and a drop that used them up keeps its answer. Each feed keeps
   200 drops (`MAX_DROPS`), the oldest dropped first; the stand-down keeps the drops and drops the
   dedupe window, the encounter context and any item still loading. Until the settings rows land

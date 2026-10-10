@@ -337,8 +337,10 @@ a PvP reward shows `No` (legacy). Result:
 whose equipped item in that slot is at or above the drop's item level shows `Likely` with both item
 levels; one above their equipped item shows `No` (an upgrade for them); before the looter is
 inspected the chip shows `Unknown` with the inspect state. Confirm one `Likely` by asking for the
-item and seeing the trade succeed. More than two hours after the drop, the chip shows `No` (expired).
-Result:
+item and seeing the trade succeed. More than two hours after the drop, the chip shows `No` (expired)
+within half a minute, with no other event needed (the sweep). For your own BoP drop that is not an
+upgrade, the chip shows `Yes` with the timer's countdown once the bag scan has read it, and `No`
+(expired) once the countdown ends. Result:
 
 **TRADE-3. The raid rule.** In a Normal or Heroic raid, find a BoP drop the game lets its looter
 trade although it is an item-level upgrade for them, or one it refuses although it is not. Record
