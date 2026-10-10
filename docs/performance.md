@@ -22,11 +22,12 @@ state uses, and the window's show decision refuses at its source while the latch
 | `evaluate` | `modules/LootFeed.lua` `evaluate` | one verdict for one candidate (you, the looter, or a member for your own drop) |
 | `quality.gate` | `modules/LootFeed.lua` `qualityGate` | one minimum-quality decision |
 | `tradeTimer.scan` | `modules/TradeTimer.lua` `TradeTimer.Scan` | one read of your own drops' bag items and their trade-time lines (at most one per 2 seconds) |
+| `gear.rebuild` | `modules/Gear.lua` `Gear.Refresh` | one read of your worn and bag items into the gear snapshot (deferred out of combat for bag events; a bag-only rebuild reads no worn tooltip) |
 | `window.refresh` | `modules/Window.lua` `Window.Refresh` | one repaint pass of the window |
 
 Every bracket is the gated form (performance-§2): one upvalue read, one field read and one boolean
-test when capture is off. Every bucket of design spec §13 is declared, each with the bracket that
-reaches it, and `tests/test_setup.lua` fails if a declared bucket is never reached.
+test when capture is off. Every bucket of design spec §13 is declared, plus `gear.rebuild` (added by the M2 review:
+the rebuild runs on frequent bag events), each with the bracket that reaches it, and `tests/test_setup.lua` fails if a declared bucket is never reached.
 
 ## Offline scenarios
 

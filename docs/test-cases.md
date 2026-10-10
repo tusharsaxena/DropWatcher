@@ -394,7 +394,7 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_gear.lua (18)
+### test_gear.lua (20)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
 - gear: the candidate carries the class, the spec and the hand flags from ClassData
@@ -410,6 +410,8 @@ Total.
 - gear: a tier token and a secret bag link are not owned gear
 - gear: the candidate judges a drop against the worn item, and against the bags with compareOwned
 - gear: the gear events share one throttled rebuild, which announces a change once
+- gear: a bag event in combat arms nothing; the combat's end rebuilds once
+- gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again
 - gear: the player's spec change rebuilds; another unit's does not
 - gear: the first lazy read announces nothing
 - gear: an item still loading leaves its slot unknown, and its arrival rebuilds
@@ -703,7 +705,7 @@ Total.
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 18 |
-| test_gear.lua | 18 |
+| test_gear.lua | 20 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
 | test_feed.lua | 40 |
@@ -719,4 +721,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **573** |
+| **Total** | **575** |

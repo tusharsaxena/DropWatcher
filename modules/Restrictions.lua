@@ -101,6 +101,12 @@ function R.CanInspect()
     return not R.ActiveSet().combat
 end
 
+--- True while the player is fighting: the PLAYER_REGEN edge, else (before one) the client's flag.
+--- @return boolean
+function R.InCombat()
+    return inCombat()
+end
+
 --- True when a trade may be opened now (spec §4: the trade helper guards combat).
 --- @return boolean
 function R.CanTrade()

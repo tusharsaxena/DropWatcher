@@ -279,7 +279,9 @@ differs from the tooltip. Result:
 the event that started it (`PLAYER_EQUIPMENT_CHANGED` or `BAG_UPDATE_DELAYED`); swapping several in
 a burst still writes one line. Change your
 specialization → a `[GEAR]` line with the new spec, naming `PLAYER_SPECIALIZATION_CHANGED`. Right
-after login, any slot still `loading` turns into its level without another action. Result:
+after login, any slot still `loading` turns into its level without another action. In combat, use a
+potion or loot an item → no `[GEAR]` line until the fight ends, then at most one, naming
+`afterCombat` (when the bags changed what you own). Result:
 
 ## Inspect
 

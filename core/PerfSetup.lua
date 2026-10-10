@@ -24,6 +24,7 @@ local BUCKETS = {
     { key = "evaluate" },         -- modules/LootFeed.lua evaluate: one verdict for one candidate
     { key = "quality.gate" },     -- modules/LootFeed.lua qualityGate: one minimum-quality decision
     { key = "tradeTimer.scan" },  -- modules/TradeTimer.lua Scan: one read of your own drops' bag items
+    { key = "gear.rebuild" },     -- modules/Gear.lua Refresh: one read of your worn and bag items
     { key = "window.refresh" },   -- modules/Window.lua Refresh: one window repaint pass
 }
 

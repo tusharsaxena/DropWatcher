@@ -257,6 +257,68 @@ test("gear: the gear events share one throttled rebuild, which announces a chang
     assertEqual(seen.n, 1, "a rebuild that changed nothing is silent")
 end)
 
+-- Counts the worn-slot tooltip reads (the per-slot current level).
+local function countTooltipReads(m)
+    local seen = { n = 0 }
+    local real = m.C_TooltipInfo.GetInventoryItem
+    m.C_TooltipInfo.GetInventoryItem = function(...)
+        seen.n = seen.n + 1
+        return real(...)
+    end
+    return seen
+end
+
+test("gear: a bag event in combat arms nothing; the combat's end rebuilds once", function()
+    local NS, m, G = enabled(function(m) wear(m, SLOT.HEAD, 3001, leather("INVTYPE_HEAD", 600)) end)
+    G.Snapshot()
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    m.__fire("BAG_UPDATE_DELAYED")
+    -- red under: a rebuild armed by every bag event, in combat too
+    assertFalse(G.IsScheduled(), "deferred while fighting")
+    carry(m, 0, 1, 3101, leather("INVTYPE_HEAD", 640))
+    m.inCombat = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    assertTrue(G.IsScheduled(), "the combat's end arms the rebuild")
+    m.advance(G.THROTTLE)
+    assertEqual(G.Snapshot().owned[SLOT.HEAD].link, link(3101))
+    m.__fire("PLAYER_REGEN_DISABLED"); m.__fire("PLAYER_REGEN_ENABLED")
+    assertFalse(G.IsScheduled(), "a fight with no bag event rebuilds nothing")
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    m.__fire("PLAYER_EQUIPMENT_CHANGED", SLOT.MAINHAND, false)
+    assertTrue(G.IsScheduled(), "a weapon swap in combat still rebuilds")
+    assertTrue(NS ~= nil)
+end)
+
+test("gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again", function()
+    local _, m, G = enabled(function(m)
+        wear(m, SLOT.HEAD, 3001, leather("INVTYPE_HEAD", 600))
+        wear(m, SLOT.CHEST, 3002, leather("INVTYPE_CHEST", 620))
+    end)
+    G.Refresh("test")
+    local reads = countTooltipReads(m)
+    carry(m, 0, 1, 3101, leather("INVTYPE_HEAD", 640))
+    m.__fire("BAG_UPDATE_DELAYED")
+    m.advance(G.THROTTLE)
+    -- red under: every bag rebuild reading each worn slot's tooltip again
+    assertEqual(reads.n, 0, "no worn tooltip read for a bag change")
+    assertEqual(G.Snapshot().owned[SLOT.HEAD].link, link(3101))
+    assertEqual(G.Snapshot().equipped[SLOT.CHEST].ilvl, 620)
+    wear(m, SLOT.HEAD, 3003, leather("INVTYPE_HEAD", 650))
+    m.__fire("BAG_UPDATE_DELAYED")
+    m.__fire("PLAYER_EQUIPMENT_CHANGED", SLOT.HEAD, true)
+    m.advance(G.THROTTLE)
+    assertTrue(reads.n > 0, "an equipment change sharing the rebuild reads every slot")
+    assertEqual(G.Snapshot().equipped[SLOT.HEAD].link, link(3003))
+    local n = reads.n
+    m.inventory.player[SLOT.CHEST] = nil
+    m.__fire("BAG_UPDATE_DELAYED")
+    m.advance(G.THROTTLE)
+    assertEqual(G.Snapshot().equipped[SLOT.CHEST], false, "a moved link is read even then")
+    assertEqual(reads.n, n)
+end)
+
 test("gear: the player's spec change rebuilds; another unit's does not", function()
     local NS, m, G = enabled()
     G.Snapshot()

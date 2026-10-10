@@ -44,6 +44,7 @@ local G = NS.Gear
 local C = NS.Constants
 local CD = NS.ClassData
 local State = NS.State
+local Perf = NS.Perf
 
 local TAG = "GEAR"
 
@@ -58,6 +59,11 @@ table.sort(SLOTS)
 G.SLOTS = SLOTS
 
 local timer
+local pendingFull = false     -- a cause other than a bag event shares the armed rebuild
+local deferredBags = false    -- a bag event came in combat; the combat's end rebuilds
+
+-- The causes that move only your bags: their rebuild keeps the worn slots whose link stayed.
+local BAG_ONLY = { BAG_UPDATE_DELAYED = true, afterCombat = true }
 
 -- ── reading the client ──────────────────────────────────────────────────────────────────────
 
@@ -81,9 +87,12 @@ local function factsOf(link, waiting)
     return facts
 end
 
--- A worn slot: its entry, false when empty, nil while its item loads.
-local function wornEntry(slot, waiting)
+-- A worn slot: its entry, false when empty, nil while its item loads. With `prev` (the last
+-- snapshot's equipped, on a bag-only rebuild) a slot whose link has not moved is kept as read.
+local function wornEntry(slot, waiting, prev)
     local link = NS.Compat.InventoryItemLink("player", slot)
+    local kept = prev and prev[slot]
+    if kept ~= nil and ((kept == false and not link) or (kept and kept.link == link)) then return kept end
     if not link then return false end
     local facts = factsOf(link, waiting)
     if not facts then return nil end
@@ -93,10 +102,10 @@ local function wornEntry(slot, waiting)
     return e
 end
 
-local function readEquipped(waiting)
+local function readEquipped(waiting, prev)
     local equipped = {}
     for _, slot in ipairs(SLOTS) do
-        local e = wornEntry(slot, waiting)
+        local e = wornEntry(slot, waiting, prev)
         if e ~= nil then equipped[slot] = e end
     end
     return equipped
@@ -220,12 +229,14 @@ local function signature(snap)
     return table.concat(parts, ";")
 end
 
---- A fresh snapshot read from the client, unstored.
+--- A fresh snapshot read from the client, unstored. With `prevEquipped` (a bag-only rebuild) each
+--- worn slot whose link has not moved is kept as that table holds it.
+--- @param prevEquipped table|nil
 --- @return table
-function G.Read()
+function G.Read(prevEquipped)
     local waiting = { n = 0 }
     local snap = readIdentity()
-    snap.equipped = readEquipped(waiting)
+    snap.equipped = readEquipped(waiting, prevEquipped)
     -- The identity fields are the candidate Equippability needs; the snapshot is that table.
     snap.owned = readOwned(snap.equipped, readBags(snap, waiting), snap)
     snap.loading = waiting.n
@@ -233,13 +244,18 @@ function G.Read()
     return snap
 end
 
---- Re-read the snapshot now. Sends GearChanged when it moved, unless `quiet`.
---- @param cause string|nil the event (or `standUp`, `lazy`, `itemLoaded`) that asked
+--- Re-read the snapshot now. Sends GearChanged when it moved, unless `quiet`. With `bagsOnly`
+--- the worn slots whose link stayed are kept from the last snapshot.
+--- @param cause string|nil the event (or `standUp`, `lazy`, `itemLoaded`, `afterCombat`) that asked
 --- @param quiet boolean|nil
+--- @param bagsOnly boolean|nil
 --- @return boolean changed
-function G.Refresh(cause, quiet)
+function G.Refresh(cause, quiet, bagsOnly)
     local prev = State.gear
-    local snap = G.Read()
+    local t0 = Perf.on and debugprofilestop()
+    deferredBags = false
+    local snap = G.Read(bagsOnly and prev and prev.equipped or nil)
+    if t0 then Perf.Note("gear.rebuild", debugprofilestop() - t0) end
     State.gear = snap
     local changed = not prev or prev.signature ~= snap.signature
     if not changed then return false end
@@ -251,11 +267,31 @@ end
 --- Arm the rebuild timer, unless it is armed already or the addon is stood down.
 --- @param cause string|nil
 function G.Schedule(cause)
-    if timer or (NS.IsStoodDown and NS.IsStoodDown()) then return end
+    if NS.IsStoodDown and NS.IsStoodDown() then return end
+    if not BAG_ONLY[cause] then pendingFull = true end
+    if timer then return end
     timer = C_Timer.NewTimer(G.THROTTLE, function()
         timer = nil
-        G.Refresh(cause)
+        local bagsOnly = not pendingFull
+        pendingFull = false
+        G.Refresh(cause, nil, bagsOnly)
     end)
+end
+
+--- A gear event: BAG_UPDATE_DELAYED in combat is noted for the combat's end; anything else arms
+--- the rebuild.
+--- @param event string
+function G.OnEvent(event)
+    if event == "BAG_UPDATE_DELAYED" and NS.Restrictions.InCombat() then
+        deferredBags = true
+        return
+    end
+    G.Schedule(event)
+end
+
+--- The PLAYER_REGEN_ENABLED edge: a bag event that came in combat rebuilds now.
+function G.OnCombatEnd()
+    if deferredBags then G.Schedule("afterCombat") end
 end
 
 --- Whether a rebuild is armed.
@@ -304,9 +340,16 @@ end
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_EQUIPMENT_CHANGED", "OnGearEvent" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "BAG_UPDATE_DELAYED", "OnGearEvent" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_SPECIALIZATION_CHANGED", "OnGearSpecEvent" }
+-- Shared (core/DropWatcher.lua's dispatcher): this row comes after core/DropWatcher.lua's, which
+-- hands the edge to the restriction tracker first, so InCombat already reads false.
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnGearRegenEvent" }
 
 function NS.addon.OnGearEvent(_, event)
-    G.Schedule(event)
+    G.OnEvent(event)
+end
+
+function NS.addon.OnGearRegenEvent()
+    G.OnCombatEnd()
 end
 
 -- Fires for any group member's unit; only yours moves the snapshot. A secret unit is assumed to
@@ -317,7 +360,7 @@ end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if timer then timer:Cancel() end
-    timer = nil
+    timer, pendingFull, deferredBags = nil, false, false
     State.gear = nil
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function() G.Refresh("standUp") end

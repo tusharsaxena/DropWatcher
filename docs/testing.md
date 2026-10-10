@@ -66,7 +66,8 @@ stand-down), `test_gear` (the gear snapshot: each worn slot at its current level
 slots, the candidate's class, spec and hand flags, the per-slot qualities, the owned best per slot
 with pairs, dual wield, held off hands and Titan's Grip, tier tokens and secret links left out, the
 candidate judged by the verdict kernel with and without the bags, the throttled rebuild and
-`GearChanged`, the spec event, the quiet first read, an item still loading, and the stand-down),
+`GearChanged`, a bag event in combat deferred to its end, a bag-only rebuild keeping the worn slots,
+bag items with no slot plan never asked of the item facts, the spec event, the quiet first read, an item still loading, and the stand-down),
 `test_loot_parser` (the loot parser: every `LOOT_ITEM*` variant, self and third person, single and
 multiple, bonus roll and pushed; same-realm, cross-realm, hyperlinked, colored and unknown looters;
 the upgrade and crafting echoes rejected; non-receipt lines and non-item links ignored; secret text,
