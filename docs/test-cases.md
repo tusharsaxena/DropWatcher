@@ -67,9 +67,11 @@ Total.
 - database: every step up to the target exists
 - database: the profile defaults carry every Master controls value, and no debug flag
 
-### test_schema.lua (9)
+### test_schema.lua (11)
 
 - schema: every row validates against the defaults
+- schema: a stored row whose path has no default is counted, not passed vacuously
+- schema: the Minimap button row's backing key resolves against the global defaults
 - schema: the Master controls rows are the canonical set, in the canonical order
 - schema: an unknown path is refused and stores nothing
 - schema: the Minimap button row inverts onto LibDBIcon's own hide, with no shown key
@@ -92,7 +94,7 @@ Total.
 - slash: `reset` with no path explains itself rather than resetting everything
 - slash: degraded, the host verbs still work and the CLI names the missing library
 
-### test_window.lua (9)
+### test_window.lua (13)
 
 - window: built lazily, on the first show, and not before
 - window: Escape closes it (UISpecialFrames) and it wears the shared close mark
@@ -103,6 +105,37 @@ Total.
 - window: resizable from the corner grip, with the design's minimum size
 - window: test mode shows the banner and hides the empty-state text
 - window: combat ends test mode, and test mode cannot start in combat
+- window: with test mode on, Close and Toggle still change what is shown
+- window: turning test mode off closes the window only when test mode opened it
+- window: the combat edge decides, even while the player's combat flag lags it
+- window: a resize saves the anchor with the size, so a settings repaint does not move it
+
+### test_constants.lua (10)
+
+- constants: without Enum the item ids fall back to the documented literals
+- constants: with Enum present the ids are read from it, not from the literals
+- constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
+- constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use
+- constants: every slot plan has a known kind and real slot ids
+- constants: the slot plan maps each equip location to the spec §5.2 kind
+- constants: universal and armor-typed equip locations partition the armor plans
+- constants: every situation key is listed once, in order, with the spec §6.1 defaults
+- constants: every difficulty id maps to a situation kind the classifier knows
+- constants: the trade rules are the spec §7.2 table, and every situation has a rule
+
+### test_class_data.lua (11)
+
+- classdata: thirteen classes with their client classIDs, each with an armor type
+- classdata: every spec row is well-formed and its class lists it
+- classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder
+- classdata: dual wield and Titan's Grip are the right specs
+- classdata: shields go to Protection, Holy, Elemental and Restoration Shaman only
+- classdata: held off hands go to the caster and healer specs
+- classdata: a spec of another class is not trusted over the class
+- classdata: armor type is exact, and an unknown class or subclass cannot tell
+- classdata: weapon proficiencies by class
+- classdata: primary stat is the spec's, or the class's when every spec shares one
+- classdata: lookups never throw on junk input
 
 ### test_disabled.lua (9)
 
@@ -199,9 +232,11 @@ Total.
 | test_surface_parity.lua | 16 |
 | test_setup.lua | 17 |
 | test_database.lua | 4 |
-| test_schema.lua | 9 |
+| test_schema.lua | 11 |
 | test_slash.lua | 10 |
-| test_window.lua | 9 |
+| test_window.lua | 13 |
+| test_constants.lua | 10 |
+| test_class_data.lua | 11 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 4 |
 | test_vendor_sync.lua | 3 |
@@ -211,4 +246,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **137** |
+| **Total** | **164** |

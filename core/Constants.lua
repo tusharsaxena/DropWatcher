@@ -1,8 +1,8 @@
 local _, NS = ...
--- core/Constants.lua — fixed values the addon reads: fonts, window geometry, colors.
+-- core/Constants.lua — fixed values the addon reads: fonts, window geometry, colors, game ids.
 --
--- Data only. The slot plans, quality ids, difficulty ids, trade rules and template defaults of the
--- design spec (§4) are added here by the feature items that read them.
+-- Data only: the item, quality, slot, difficulty and situation ids, the slot plans and the trade
+-- rules (design spec §4, §5.2, §6.1, §6.2, §7.2). The class and spec tables are core/ClassData.lua.
 
 NS.Constants = NS.Constants or {}
 local C = NS.Constants
@@ -27,3 +27,233 @@ C.WINDOW = {
 
 -- The gold of the title, the active tab and the test-mode banner (design spec §2).
 C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
+
+-- ---------------------------------------------------------------------------------------------
+-- Item ids (design spec §5.2). Read from the client's Enum tables when present; each literal beside
+-- its member is the documented 12.x value, used when Enum (or that member) is absent: the headless
+-- harness, or a client that renamed the member. Never compare against a localized type name
+-- (anti-pattern #37).
+-- ---------------------------------------------------------------------------------------------
+
+local Enum = _G.Enum or {}
+
+-- Copies `spec` ({ KEY = { "EnumMember", literal } }) into { KEY = id }, reading `enumTable`.
+local function fromEnum(enumTable, spec)
+    local out = {}
+    enumTable = enumTable or {}
+    for key, pair in pairs(spec) do
+        local v = enumTable[pair[1]]
+        out[key] = type(v) == "number" and v or pair[2]
+    end
+    return out
+end
+
+-- Enum.ItemClass.
+C.ITEM_CLASS = fromEnum(Enum.ItemClass, {
+    CONSUMABLE    = { "Consumable", 0 },
+    WEAPON        = { "Weapon", 2 },
+    ARMOR         = { "Armor", 4 },
+    MISCELLANEOUS = { "Miscellaneous", 15 },
+})
+
+-- Enum.ItemArmorSubclass. GENERIC is jewelry, trinkets and held off hands; COSMETIC is never gear.
+C.ARMOR_SUBCLASS = fromEnum(Enum.ItemArmorSubclass, {
+    GENERIC  = { "Generic", 0 },
+    CLOTH    = { "Cloth", 1 },
+    LEATHER  = { "Leather", 2 },
+    MAIL     = { "Mail", 3 },
+    PLATE    = { "Plate", 4 },
+    COSMETIC = { "Cosmetic", 5 },
+    SHIELD   = { "Shield", 6 },
+})
+
+-- Enum.ItemWeaponSubclass.
+C.WEAPON_SUBCLASS = fromEnum(Enum.ItemWeaponSubclass, {
+    AXE_1H    = { "Axe1H", 0 },
+    AXE_2H    = { "Axe2H", 1 },
+    BOWS      = { "Bows", 2 },
+    GUNS      = { "Guns", 3 },
+    MACE_1H   = { "Mace1H", 4 },
+    MACE_2H   = { "Mace2H", 5 },
+    POLEARM   = { "Polearm", 6 },
+    SWORD_1H  = { "Sword1H", 7 },
+    SWORD_2H  = { "Sword2H", 8 },
+    WARGLAIVE = { "Warglaive", 9 },
+    STAFF     = { "Staff", 10 },
+    FIST      = { "Unarmed", 13 },
+    GENERIC   = { "Generic", 14 },
+    DAGGER    = { "Dagger", 15 },
+    CROSSBOW  = { "Crossbow", 18 },
+    WAND      = { "Wand", 19 },
+})
+
+-- Enum.ItemQuality.
+C.QUALITY = fromEnum(Enum.ItemQuality, {
+    POOR      = { "Poor", 0 },
+    COMMON    = { "Common", 1 },
+    UNCOMMON  = { "Uncommon", 2 },
+    RARE      = { "Rare", 3 },
+    EPIC      = { "Epic", 4 },
+    LEGENDARY = { "Legendary", 5 },
+    ARTIFACT  = { "Artifact", 6 },
+    HEIRLOOM  = { "Heirloom", 7 },
+})
+
+-- Minimum quality (design spec §6.2): the modes in display order, and the two defaults.
+C.QUALITY_MODES = { "fixed", "dynamicSlot", "dynamicCharacter" }
+C.QUALITY_DEFAULT = { FIXED = C.QUALITY.RARE, FLOOR = C.QUALITY.UNCOMMON }
+
+-- ---------------------------------------------------------------------------------------------
+-- Inventory slots and slot plans (design spec §5.2)
+-- ---------------------------------------------------------------------------------------------
+
+-- The client's inventory slot ids (the INVSLOT_* FrameXML constants). Slot 18, the old ranged
+-- slot, is unused on Retail: bows, guns, crossbows and wands are main-hand items.
+C.SLOT = {
+    HEAD = 1, NECK = 2, SHOULDER = 3, SHIRT = 4, CHEST = 5, WAIST = 6, LEGS = 7, FEET = 8,
+    WRIST = 9, HANDS = 10, FINGER1 = 11, FINGER2 = 12, TRINKET1 = 13, TRINKET2 = 14, BACK = 15,
+    MAINHAND = 16, OFFHAND = 17, TABARD = 19,
+}
+local S = C.SLOT
+
+-- The comparison kinds the evaluation kernel knows. `unique` is applied on top of a plan when the
+-- drop carries a unique-equipped category; no equip location maps to it directly.
+C.SLOT_KIND = {
+    single = true, pair = true, weapon1H = true, weapon2H = true, offhand = true, ranged = true,
+    unique = true,
+}
+
+-- equipLoc -> { kind, slots }. An equip location absent here (shirt, tabard, bag, ammo,
+-- non-equippable) is not gear the feed compares.
+C.SLOT_PLAN = {
+    INVTYPE_HEAD           = { kind = "single", slots = { S.HEAD } },
+    INVTYPE_NECK           = { kind = "single", slots = { S.NECK } },
+    INVTYPE_SHOULDER       = { kind = "single", slots = { S.SHOULDER } },
+    INVTYPE_CHEST          = { kind = "single", slots = { S.CHEST } },
+    INVTYPE_ROBE           = { kind = "single", slots = { S.CHEST } },
+    INVTYPE_WAIST          = { kind = "single", slots = { S.WAIST } },
+    INVTYPE_LEGS           = { kind = "single", slots = { S.LEGS } },
+    INVTYPE_FEET           = { kind = "single", slots = { S.FEET } },
+    INVTYPE_WRIST          = { kind = "single", slots = { S.WRIST } },
+    INVTYPE_HAND           = { kind = "single", slots = { S.HANDS } },
+    INVTYPE_CLOAK          = { kind = "single", slots = { S.BACK } },
+    INVTYPE_FINGER         = { kind = "pair",   slots = { S.FINGER1, S.FINGER2 } },
+    INVTYPE_TRINKET        = { kind = "pair",   slots = { S.TRINKET1, S.TRINKET2 } },
+    -- A one-hander goes in either hand: main hand only, unless the candidate dual wields.
+    INVTYPE_WEAPON         = { kind = "weapon1H", slots = { S.MAINHAND, S.OFFHAND } },
+    -- A main-hand-only weapon can go nowhere else.
+    INVTYPE_WEAPONMAINHAND = { kind = "single", slots = { S.MAINHAND } },
+    -- Off-hand-only weapons, shields and held off hands share the "vs a 2H" rule.
+    INVTYPE_WEAPONOFFHAND  = { kind = "offhand", slots = { S.OFFHAND } },
+    INVTYPE_SHIELD         = { kind = "offhand", slots = { S.OFFHAND } },
+    INVTYPE_HOLDABLE       = { kind = "offhand", slots = { S.OFFHAND } },
+    INVTYPE_2HWEAPON       = { kind = "weapon2H", slots = { S.MAINHAND, S.OFFHAND } },
+    -- Bows, guns and crossbows (RANGED) and wands (RANGEDRIGHT) fill both hands.
+    INVTYPE_RANGED         = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
+    INVTYPE_RANGEDRIGHT    = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
+}
+
+-- Equip locations any class can use whatever their armor subclass (cloaks are cloth for everyone).
+C.UNIVERSAL_EQUIPLOC = {
+    INVTYPE_NECK = true, INVTYPE_FINGER = true, INVTYPE_TRINKET = true, INVTYPE_CLOAK = true,
+}
+
+-- Equip locations whose armor subclass must match the class's armor type.
+C.ARMOR_TYPED_EQUIPLOC = {
+    INVTYPE_HEAD = true, INVTYPE_SHOULDER = true, INVTYPE_CHEST = true, INVTYPE_ROBE = true,
+    INVTYPE_WAIST = true, INVTYPE_LEGS = true, INVTYPE_FEET = true, INVTYPE_WRIST = true,
+    INVTYPE_HAND = true,
+}
+
+-- Slots the dynamic whole-character quality mode ignores (design spec §6.2).
+C.QUALITY_IGNORED_SLOT = { [S.SHIRT] = true, [S.TABARD] = true }
+
+-- ---------------------------------------------------------------------------------------------
+-- Situations and difficulties (design spec §6.1)
+-- ---------------------------------------------------------------------------------------------
+
+-- Every situation key in display order, with its default `track` and `autoOpen`.
+C.SITUATIONS = {
+    { key = "mythicPlus",      track = true,  autoOpen = true },
+    { key = "dungeon",         track = true,  autoOpen = true },
+    { key = "followerDungeon", track = false, autoOpen = false },
+    { key = "raidLFR",         track = true,  autoOpen = false },
+    { key = "raid",            track = true,  autoOpen = true },
+    { key = "delve",           track = false, autoOpen = false },
+    { key = "scenario",        track = false, autoOpen = false },
+    { key = "pvp",             track = false, autoOpen = false },
+    { key = "openWorldGroup",  track = false, autoOpen = false },
+    { key = "solo",            track = false, autoOpen = false },
+}
+C.SITUATION = {}
+for _, s in ipairs(C.SITUATIONS) do C.SITUATION[s.key] = s end
+
+-- Difficulty ids (the DifficultyID column GetInstanceInfo and GetDifficultyInfo answer). The
+-- classifier reads them through DIFFICULTY_KIND only; core/Compat.lua confirms an id with
+-- GetDifficultyInfo before trusting it, so a retired or renumbered id degrades to the
+-- instanceType fallback instead of misclassifying.
+C.DIFFICULTY = {
+    NORMAL_DUNGEON      = 1,
+    HEROIC_DUNGEON      = 2,
+    RAID_10_NORMAL      = 3,
+    RAID_25_NORMAL      = 4,
+    RAID_10_HEROIC      = 5,
+    RAID_25_HEROIC      = 6,
+    LFR_LEGACY          = 7,
+    MYTHIC_KEYSTONE     = 8,
+    RAID_40             = 9,
+    NORMAL_RAID         = 14,
+    HEROIC_RAID         = 15,
+    MYTHIC_RAID         = 16,
+    LFR                 = 17,
+    MYTHIC_DUNGEON      = 23,
+    TIMEWALKING_DUNGEON = 24,
+    TIMEWALKING_RAID    = 33,
+    LFR_TIMEWALKING     = 151,
+    FOLLOWER_DUNGEON    = 205,
+    DELVE               = 208,
+}
+local D = C.DIFFICULTY
+
+-- difficultyID -> the situation it implies. Ids not listed here fall back to instanceType.
+C.DIFFICULTY_KIND = {
+    [D.MYTHIC_KEYSTONE]     = "mythicPlus",
+    [D.NORMAL_DUNGEON]      = "dungeon",
+    [D.HEROIC_DUNGEON]      = "dungeon",
+    [D.MYTHIC_DUNGEON]      = "dungeon",
+    [D.TIMEWALKING_DUNGEON] = "dungeon",
+    [D.FOLLOWER_DUNGEON]    = "followerDungeon",
+    [D.LFR_LEGACY]          = "raidLFR",
+    [D.LFR]                 = "raidLFR",
+    [D.LFR_TIMEWALKING]     = "raidLFR",
+    [D.RAID_10_NORMAL]      = "raid",
+    [D.RAID_25_NORMAL]      = "raid",
+    [D.RAID_10_HEROIC]      = "raid",
+    [D.RAID_25_HEROIC]      = "raid",
+    [D.RAID_40]             = "raid",
+    [D.NORMAL_RAID]         = "raid",
+    [D.HEROIC_RAID]         = "raid",
+    [D.MYTHIC_RAID]         = "raid",
+    [D.TIMEWALKING_RAID]    = "raid",
+    [D.DELVE]               = "delve",
+}
+
+-- ---------------------------------------------------------------------------------------------
+-- Trade rules (design spec §7.2). modules/TradeRules.lua reads them; Settings › Trade overrides
+-- CONTENT_RULE per situation, and a reset restores these.
+-- ---------------------------------------------------------------------------------------------
+
+C.TRADE_WINDOW = 7200   -- seconds a tradeable drop stays tradeable
+
+C.TRADE_RULES = {
+    personal = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "notUpgradeForLooter" },
+    group    = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "none" },
+    legacy   = { tradeable = false },
+}
+
+-- situation -> rule. `raid` is the conservative `personal` until smoke check TRADE-3 confirms it.
+C.CONTENT_RULE = {
+    mythicPlus = "personal", dungeon = "personal", followerDungeon = "legacy", raid = "personal",
+    raidLFR = "personal", delve = "personal", scenario = "personal", openWorldGroup = "personal",
+    solo = "personal", pvp = "legacy",
+}

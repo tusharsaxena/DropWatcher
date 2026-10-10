@@ -35,7 +35,8 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
 `test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
-`test_database`, `test_schema`, `test_slash`, `test_window`, `test_diagnostics`. Kit suites,
+`test_database`, `test_schema`, `test_slash`, `test_window`, `test_constants` and `test_class_data`
+(the game-data tables and their lookups), `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
 

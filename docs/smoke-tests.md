@@ -21,7 +21,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..6 | Feed | The group drops feed (lands with DW-25, DW-27, DW-30, DW-31) |
+| FEED-1..7 | Feed | The group drops feed (lands with DW-11, DW-25, DW-27, DW-30, DW-31) |
 | INSPECT-1..4 | Inspect | The inspect broker (lands with DW-26) |
 | TRADE-1..6 | Trade | Trade estimates, the raid rule, timers, the trade helper (lands with DW-14, DW-28, DW-29) |
 | ASK-1..8 | Ask | Asking, offering, queueing under restriction, auto-ask (lands with DW-2A, DW-33, DW-54) |
@@ -120,7 +120,9 @@ Result:
 
 Checks land with the feed items; reserved here so the IDs the plan and the design name stay stable:
 FEED-1 (the parser on real loot, DW-25), FEED-2..4 (the table, DW-31), FEED-5 (`GetItemUpgradeInfo`
-on a link that is not yours, DW-23), FEED-6 (`ENCOUNTER_LOOT_RECEIVED` for the M+ chest, DW-27).
+on a link that is not yours, DW-23), FEED-6 (`ENCOUNTER_LOOT_RECEIVED` for the M+ chest, DW-27),
+FEED-7 (a Devourer Demon Hunter looter before inspect: a warglaive or one-hander reads as usable and
+a held off hand as not, matching the item's own spec list; the class data of DW-10, judged by DW-11).
 
 ## Inspect
 

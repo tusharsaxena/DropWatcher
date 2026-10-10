@@ -11,27 +11,28 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[DW]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip |
 | 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
-| 5 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry, the gold |
-| 6 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice |
-| 7 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
-| 8 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (rows, from the feature items) |
-| 9 | `core/ItemSetup.lua` | setup | LibKa0s-Item: `NS.Item` (item facts, from the feature items) |
-| 10 | `core/Bus.lua` | setup | LibKa0s-Bus: `NS.MSG` (the strict catalog) and `NS.Bus` (tracked receivers) |
-| 11 | `core/LifecycleSetup.lua` | setup | LibKa0s-Lifecycle: the stand-down latch, `NS.IsStoodDown` |
-| 12 | `core/PerfSetup.lua` | setup | LibKa0s-Perf: `NS.Perf`, the declared buckets |
-| 13 | `core/DebugLogSetup.lua` | setup | LibKa0s-DebugLog: the console, `NS.Debug` and its gates, the diagnostics descriptor |
-| 14 | `core/DropWatcher.lua` | lifecycle | AceAddon registration, `NS.StandDown` / `NS.StandUp`, the shared host handlers, profile callbacks |
-| 15 | `core/Database.lua` | data | the schemaVersion migration runner |
-| 16 | `core/LauncherSetup.lua` | setup | LibKa0s-Launcher: the one LDB object, registered twice |
-| 17 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
-| 18 | `modules/Window.lua` | UI | the main window's shell and its show decision |
-| 19 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 20 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 21 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 22 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 23 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 24 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 25 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 5 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry, the gold; the item, quality, slot, difficulty and situation ids, the slot plans, the trade rules |
+| 6 | `core/ClassData.lua` | data | `NS.ClassData`: class armor types, weapon proficiencies, every Retail spec (Devourer included) with its primary stat and dual-wield, Titan's Grip, shield and off-hand flags, and the pure lookups over them |
+| 7 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice |
+| 8 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
+| 9 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (rows, from the feature items) |
+| 10 | `core/ItemSetup.lua` | setup | LibKa0s-Item: `NS.Item` (item facts, from the feature items) |
+| 11 | `core/Bus.lua` | setup | LibKa0s-Bus: `NS.MSG` (the strict catalog) and `NS.Bus` (tracked receivers) |
+| 12 | `core/LifecycleSetup.lua` | setup | LibKa0s-Lifecycle: the stand-down latch, `NS.IsStoodDown` |
+| 13 | `core/PerfSetup.lua` | setup | LibKa0s-Perf: `NS.Perf`, the declared buckets |
+| 14 | `core/DebugLogSetup.lua` | setup | LibKa0s-DebugLog: the console, `NS.Debug` and its gates, the diagnostics descriptor |
+| 15 | `core/DropWatcher.lua` | lifecycle | AceAddon registration, `NS.StandDown` / `NS.StandUp`, the shared host handlers, profile callbacks |
+| 16 | `core/Database.lua` | data | the schemaVersion migration runner |
+| 17 | `core/LauncherSetup.lua` | setup | LibKa0s-Launcher: the one LDB object, registered twice |
+| 18 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
+| 19 | `modules/Window.lua` | UI | the main window's shell and its show decision |
+| 20 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 21 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 22 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 23 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 24 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 25 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 26 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.

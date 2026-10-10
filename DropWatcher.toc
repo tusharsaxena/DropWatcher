@@ -43,8 +43,11 @@ core\Namespace.lua
 core\CoreSetup.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
-# Conventional: data only, apart from FONT_MONO, resolved from the seam above.
+# LOAD-BEARING: publishes the NS.Constants id tables, which core\ClassData.lua reads at load; FONT_MONO
+# is resolved from the seam above.
 core\Constants.lua
+# Conventional: data plus pure lookups (NS.ClassData), read by the feature modules at call time.
+core\ClassData.lua
 # Conventional: session-only state (NS.State), read by everything below at call time.
 core\State.lua
 # Conventional: NS.Meta / NS.Version are read inside functions only.
