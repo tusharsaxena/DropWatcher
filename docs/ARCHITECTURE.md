@@ -288,7 +288,9 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   until the tier-token follow-up (spec §14). An item unique on its own takes `item:<itemID>` as
   its category. `warbound` is set for warbound and for warbound-until-equipped items alike, with
   `warboundUntilEquip` telling them apart. Rings, necks and trinkets carry no `transmogKnown`.
-  The cache holds 512 links and is emptied whole when it would pass that; an item that has not
+  The cache holds 512 links; when it would pass that, the least recently used quarter is dropped
+  (`NS.ItemFacts.EVICT_SHARE`; a hit or a store marks a link used), so the gear read on every
+  judgment stays and old drops go; an item that has not
   loaded after five `LoadItem` calls (about two seconds) is given up, with nil to every waiter, and
   the next request starts afresh. The bonus-roll flag is the loot line's, so the drop record (DW-27)
   carries it, not the cached facts. Whether `GetItemUpgradeInfo` answers for another player's link

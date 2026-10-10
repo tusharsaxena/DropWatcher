@@ -187,6 +187,19 @@ test("gear: with Titan's Grip a two-hander can fill the off hand too", function(
     assertEqual(s.owned[SLOT.OFFHAND].ilvl, 630)
 end)
 
+test("gear: a bag item with no slot plan (a reagent, a potion) is never asked of the item facts", function()
+    local NS, m, G = enabled(function(m)
+        carry(m, 0, 1, 3201, def("", 1, 7, 0, { name = "Reagent", loadsNeeded = 1 }))
+        carry(m, 0, 2, 3202, leather("INVTYPE_HEAD", 640))
+    end)
+    G.Refresh("test")
+    -- red under: every bag link requested, filling the facts cache with reagents
+    local cached = NS.ItemFacts.Counts()
+    assertEqual(cached, 1, "the helm alone")
+    assertEqual(#m.loadRequests, 0, "no load asked for the reagent")
+    assertEqual(G.Snapshot().owned[SLOT.HEAD].link, link(3202))
+end)
+
 test("gear: a tier token and a secret bag link are not owned gear", function()
     local NS, m, G = enabled(function(m)
         carry(m, 0, 1, 3010, def("", 700, 15, 0))

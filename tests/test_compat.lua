@@ -418,6 +418,20 @@ test("compat: a secret item answer is never copied", function()
     assertNil(Compat.GetItemInfo(T.secret(RING)), "a secret link")
 end)
 
+test("compat: ItemEquipLoc reads the instant info with no cache; nil when secret or absent", function()
+    local Compat, m = fresh()
+    seedRing(m, { loadsNeeded = 1 })
+    assertNil(Compat.GetItemInfo(RING), "uncached")
+    assertEqual(Compat.ItemEquipLoc(RING), "INVTYPE_FINGER", "the instant read needs no cache")
+    assertNil(Compat.ItemEquipLoc("|Hitem:999::|h[Nope]|h"))
+    installSecrets(m)
+    assertNil(Compat.ItemEquipLoc(T.secret(RING)))
+    m.C_Item.GetItemInfoInstant = function() return 1, "", "", T.secret("INVTYPE_FINGER") end
+    assertNil(Compat.ItemEquipLoc(RING), "a secret answer")
+    m.C_Item.GetItemInfoInstant = nil
+    assertNil(Compat.ItemEquipLoc(RING))
+end)
+
 test("compat: GetDetailedItemLevel reads the effective level, nil without the API", function()
     local Compat, m = fresh()
     seedRing(m)

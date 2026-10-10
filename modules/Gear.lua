@@ -20,7 +20,9 @@ local _, NS = ...
 -- class when every spec agrees, else nil), `gear` = equipped and `owned`. `prefs` is left for the
 -- feed to add from the settings (DW-40).
 --
--- OWNED. Every worn item and every bag item you can equip (Evaluate.Equippability "ok" for you; a
+-- OWNED. A bag item is first read for its equip location (NS.Compat.ItemEquipLoc, no item cache
+-- needed), and only one with a slot plan is requested from the item facts, so reagents and
+-- consumables never fill the facts cache. Every worn item and every bag item you can equip (Evaluate.Equippability "ok" for you; a
 -- tier token, or an item with no slot plan, is not gear) is placed by its slot plan: a single-slot
 -- item in its slot; a ring or trinket in either of its pair; a one-hander in the main hand, and in
 -- the off hand too for a dual wielder; a two-hander or ranged weapon in the main hand, and in the
@@ -122,12 +124,20 @@ local function wearable(facts, who)
     return NS.Evaluate.Equippability(facts, who) == "ok"
 end
 
+-- Whether a bag link may be gear, by its equip location (no item cache needed): one with no slot
+-- plan (a reagent, a consumable, a tier token) is never requested from the item facts. An answer
+-- the client does not give lets the link through, to be judged on its facts.
+local function mayBeGear(link)
+    local equipLoc = NS.Compat.ItemEquipLoc(link)
+    return equipLoc == nil or C.SLOT_PLAN[equipLoc] ~= nil
+end
+
 local function readBags(who, waiting)
     local items = {}
     for _, bag in ipairs(C.BAG_IDS) do
         for bagSlot = 1, NS.Compat.BagSlotCount(bag) do
             local link = NS.Compat.BagItemLink(bag, bagSlot)
-            local facts = link and factsOf(link, waiting)
+            local facts = link and mayBeGear(link) and factsOf(link, waiting)
             if facts and wearable(facts, who) then
                 local e = copy(facts)
                 e.bag, e.bagSlot = bag, bagSlot

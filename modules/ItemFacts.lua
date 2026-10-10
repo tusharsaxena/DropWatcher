@@ -31,8 +31,10 @@ local _, NS = ...
 -- to load the item through LibKa0s-Item-1.0's LoadItem; its callback is the retry: it reads again
 -- and, still uncached, asks again, up to MAX_LOAD_TRIES, then gives up. Every caller waiting on
 -- one link shares one load and is called back once, with the facts or with nil. The cache holds
--- at most CACHE_CAP links and is emptied whole when it would pass that (a session sees a few
--- hundred links at most). Learning an appearance re-reads `transmogKnown` on the cached facts.
+-- at most CACHE_CAP links; when it would pass that, the least recently used EVICT_SHARE of it is
+-- dropped (a hit or a store marks a link used), so a raid's inspected gear and your own, read on
+-- every judgment, stay while old drops and bag clutter go. Learning an appearance re-reads
+-- `transmogKnown` on the cached facts.
 -- Stood down, the cache and every load are dropped, and a load that answers late is ignored.
 --
 -- The tables answered are the cache's own: read them, never write them.
@@ -49,6 +51,7 @@ local TAG = "ITEM"
 
 IF.MAX_LOAD_TRIES = 5
 IF.CACHE_CAP = 512
+IF.EVICT_SHARE = 0.25
 
 -- Equip locations without an appearance to collect.
 local NO_APPEARANCE = { INVTYPE_NECK = true, INVTYPE_FINGER = true, INVTYPE_TRINKET = true }
@@ -59,7 +62,7 @@ local generation = 0
 local function store()
     local s = State.itemFacts
     if not s then
-        s = { cache = {}, count = 0, loads = {} }
+        s = { cache = {}, used = {}, tick = 0, count = 0, loads = {}, evicted = 0 }
         State.itemFacts = s
     end
     return s
@@ -142,14 +145,30 @@ end
 
 -- ── the cache ───────────────────────────────────────────────────────────────────────────────
 
+local function touch(s, link)
+    s.tick = s.tick + 1
+    s.used[link] = s.tick
+end
+
+-- Drop the least recently used EVICT_SHARE of the cache (at least one link).
+local function evict(s)
+    local links = {}
+    for link in pairs(s.cache) do links[#links + 1] = link end
+    table.sort(links, function(a, b) return s.used[a] < s.used[b] end)
+    local n = math.max(1, math.floor(#links * IF.EVICT_SHARE))
+    for i = 1, n do
+        s.cache[links[i]], s.used[links[i]] = nil, nil
+    end
+    s.count, s.evicted = s.count - n, s.evicted + n
+    NS.Debug(TAG, "item facts: cache full at %d, %d least recently used dropped", IF.CACHE_CAP, n)
+end
+
 local function remember(link, facts)
     local s = store()
-    if s.count >= IF.CACHE_CAP then
-        s.cache, s.count = {}, 0
-        NS.Debug(TAG, "item facts: cache full at %d, emptied", IF.CACHE_CAP)
-    end
+    if s.count >= IF.CACHE_CAP then evict(s) end
     s.cache[link] = facts
     s.count = s.count + 1
+    touch(s, link)
     return facts
 end
 
@@ -159,8 +178,12 @@ end
 --- @return table|nil
 function IF.Get(link)
     if not validLink(link) then return nil end
-    local hit = store().cache[link]
-    if hit then return hit end
+    local s = store()
+    local hit = s.cache[link]
+    if hit then
+        touch(s, link)
+        return hit
+    end
     local facts = IF.Read(link)
     if not facts then return nil end
     return remember(link, facts)
@@ -228,9 +251,9 @@ end
 function IF.Invalidate(link)
     local s = store()
     if link == nil then
-        s.cache, s.count = {}, 0
+        s.cache, s.used, s.count = {}, {}, 0
     elseif validLink(link) and s.cache[link] then
-        s.cache[link] = nil
+        s.cache[link], s.used[link] = nil, nil
         s.count = s.count - 1
     end
 end

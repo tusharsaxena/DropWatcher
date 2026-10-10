@@ -50,7 +50,7 @@ reset), `Profile`, `Init` (the session summary and the optional integrations, he
 turned on), `Migrate`, `SIT` (one line per situation change, with the event that caused it), `RES` (one line per change
 of what the restrictions allow, with the event that caused it), `ROSTER` (one line per change of the
 group's members, tokens, names or online states, with the member count and the cause), `ITEM` (an
-item given up after its loads, and the item facts cache emptied at its cap), `GEAR` (one line per
+item given up after its loads, and the least recently used quarter of the item facts cache dropped at its cap), `GEAR` (one line per
 change of your gear snapshot, with your spec, the items still loading and the cause), `PARSE` (the
 loot patterns built, with how many globals were usable; one line per loot line read, with the kind,
 the link, the quantity, the looter and its GUID; one per line skipped as rejected, secret or not an

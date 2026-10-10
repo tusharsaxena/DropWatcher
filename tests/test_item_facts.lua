@@ -160,15 +160,24 @@ test("item facts: Get caches by link until invalidated", function()
     assertEqual(IF.Counts(), 0)
 end)
 
-test("item facts: the cache is emptied whole when it would pass its cap", function()
-    local _, _, IF = enabled(function(m)
-        m.addItem(RING, ring()); m.addItem(CHEST, chest()); m.addItem(TOKEN, ring({ name = "Other" }))
+test("item facts: at its cap the cache drops its least recently used quarter, never the whole", function()
+    local links = {}
+    for i = 1, 9 do links[i] = ("|cnIQ4:|Hitem:%d::::::::90:::::|h[Band %d]|h|r"):format(5000 + i, i) end
+    local _, m, IF = enabled(function(m)
+        for _, l in ipairs(links) do m.addItem(l, ring()) end
     end)
-    IF.CACHE_CAP = 2
-    IF.Get(RING); IF.Get(CHEST)
-    assertEqual(IF.Counts(), 2)
-    IF.Get(TOKEN)
-    assertEqual(IF.Counts(), 1, "emptied, then the new link")
+    local cap = IF.CACHE_CAP
+    IF.CACHE_CAP = 8
+    for i = 1, 8 do IF.Get(links[i]) end
+    IF.Get(links[1]); IF.Get(links[2])    -- used again: now the most recent
+    m.items[links[3]].name = "changed"    -- a re-read would see it
+    IF.Get(links[9])
+    -- red under: a cache emptied whole at its cap
+    assertEqual(IF.Counts(), 7, "two of eight dropped, then the new link")
+    assertEqual(IF.Get(links[1]).name, "Band", "a recently used link stays")
+    assertEqual(IF.Get(links[5]).name, "Band")
+    assertEqual(IF.Get(links[3]).name, "changed", "the least recently used went, and is read again")
+    IF.CACHE_CAP = cap
 end)
 
 test("item facts: garbage links answer nil and never raise", function()

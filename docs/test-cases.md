@@ -113,7 +113,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_compat.lua (58)
+### test_compat.lua (59)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -148,6 +148,7 @@ Total.
 - compat: GetItemInfo copies the cached fields, nil while uncached or without a link
 - compat: GetItemInfo answers nil without C_Item.GetItemInfo; the dead global is never read
 - compat: a secret item answer is never copied
+- compat: ItemEquipLoc reads the instant info with no cache; nil when secret or absent
 - compat: GetDetailedItemLevel reads the effective level, nil without the API
 - compat: GetItemStats copies every key, unknown ones too, and is empty without an answer
 - compat: GetItemSpecs is a set, nil for an empty list or no API
@@ -383,7 +384,7 @@ Total.
 - item facts: the quality falls back to the link's color
 - item facts: the facts feed the verdict kernel
 - item facts: Get caches by link until invalidated
-- item facts: the cache is emptied whole when it would pass its cap
+- item facts: at its cap the cache drops its least recently used quarter, never the whole
 - item facts: garbage links answer nil and never raise
 - item facts: learning an appearance re-reads the flag on the cached facts
 - item facts: Request answers a cached item at once and never calls back
@@ -393,7 +394,7 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_gear.lua (17)
+### test_gear.lua (18)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
 - gear: the candidate carries the class, the spec and the hand flags from ClassData
@@ -405,6 +406,7 @@ Total.
 - gear: a dual wielder's one-handers fill both hands, each once
 - gear: a one-hander fills the main hand only for a spec that does not dual wield
 - gear: with Titan's Grip a two-hander can fill the off hand too
+- gear: a bag item with no slot plan (a reagent, a potion) is never asked of the item facts
 - gear: a tier token and a secret bag link are not owned gear
 - gear: the candidate judges a drop against the worn item, and against the bags with compareOwned
 - gear: the gear events share one throttled rebuild, which announces a change once
@@ -690,7 +692,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_compat.lua | 58 |
+| test_compat.lua | 59 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -701,7 +703,7 @@ Total.
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 18 |
-| test_gear.lua | 17 |
+| test_gear.lua | 18 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
 | test_feed.lua | 40 |
@@ -717,4 +719,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **571** |
+| **Total** | **573** |

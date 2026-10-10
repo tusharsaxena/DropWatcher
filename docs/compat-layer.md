@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Forty-six shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `46`). The three
+**Fifty shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `50`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -67,6 +67,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
 | Items | `CanRequestItemLoad()` | `C_Item.RequestLoadItemDataByID` and `C_Timer.After` both present (LibKa0s-Item-1.0's `LoadItem` is inert without either) | `false` |
 | | `GetItemInfo(link)` | `C_Item.GetItemInfo`; copies `{ name, quality, itemLevel, equipLoc, classID, subClassID, bindType, setID }`, plain fields only. A nil or secret name means uncached | `nil` |
+| | `ItemEquipLoc(link)` | `C_Item.GetItemInfoInstant`'s fourth return, the `INVTYPE_*` equip location (`""` for an item you cannot wear); needs no item cache, so the gear snapshot skips bag items with no slot plan before asking for their facts | `nil` |
 | | `GetDetailedItemLevel(link)` | `C_Item.GetDetailedItemLevelInfo`; the effective level | `nil` |
 | | `GetItemStats(link)` | `C_Item.GetItemStats`; every plain string key with a plain number, unknown keys included | `{}` |
 | | `GetItemSpecs(link)` | `C_Item.GetItemSpecInfo`; the list as a set `{ [specID] = true }`, nil for an empty list | `nil` |

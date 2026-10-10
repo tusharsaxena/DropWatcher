@@ -165,6 +165,12 @@ local function installItemCache(M)
         return d.name, link, d.quality, d.ilvl, 1, "", "", 1, d.equipLoc or "", 0, 0, d.classID,
             d.subClassID, d.bindType or 0, 0, d.setID, false
     end
+    -- Needs no cache, as in the client: any added item answers its id, equip slot and classes.
+    item.GetItemInfoInstant = function(link)
+        local d = M.items[link]
+        if not d then return nil end
+        return d.itemID, "", "", d.equipLoc or "", 0, d.classID, d.subClassID
+    end
     item.GetDetailedItemLevelInfo = function(link)
         local d = cachedItem(M, link)
         if d then return d.effectiveIlvl or d.ilvl, false, d.ilvl end

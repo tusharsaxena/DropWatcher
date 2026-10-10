@@ -624,6 +624,18 @@ local function itemApi(name)
     return item and item[name] or nil
 end
 
+--- The equip location of an item link (`INVTYPE_*`, "" for an item you cannot wear) from
+--- C_Item.GetItemInfoInstant, which needs no item cache. Nil for a secret or missing link, an
+--- answer the client does not give, or no API.
+--- @param link string
+--- @return string|nil
+function Compat.ItemEquipLoc(link)
+    local fn = itemApi("GetItemInfoInstant")
+    if not (fn and plainString(link)) then return nil end
+    local _, _, _, equipLoc = fn(link)
+    return plainString(equipLoc)
+end
+
 --- True when the client can be asked to load an item (C_Item.RequestLoadItemDataByID) and can
 --- call back later (C_Timer.After): LibKa0s-Item-1.0's LoadItem is inert without either.
 --- @return boolean
