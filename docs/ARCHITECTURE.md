@@ -46,8 +46,9 @@ and the migration runner; `defaults/` the default values; `modules/` the verdict
 (`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the minimum-quality gate
 (`QualityGate.lua`, pure: a drop's quality, the mode and the equipped qualities in, pass or hide
 out), the situation classifier (`Situations.lua`: a pure classifier over the client's instance,
-difficulty and group inputs, and the edge that reads them on six events), the window and the
-diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
+difficulty and group inputs, and the edge that reads them on six events), the trade estimator
+(`TradeRules.lua`, pure: a drop's bind facts, the looter's verdict and the situation's rule in, a
+yes, likely, unknown or no estimate out), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
@@ -155,6 +156,16 @@ for combat and restriction state by their own items (design spec §4, §9).
   could not judge. With no baseline slot yet, `Dynamic per slot` takes the lowest quality across
   the drop's slot plan, and the floor when any of those slots is empty. A per-situation `quality`
   that names no mode (absent, `global` or unknown) means the global mode.
+- The trade estimator (`modules/TradeRules.lua`) reads four cases the design leaves open. The
+  looter check compares item levels (the evaluation's `ilvlDelta`), not the scored verdict, because
+  the game's rule is item level; an equal item level is not an upgrade, a drop the looter cannot use
+  is still judged on item level, and an empty slot on the looter is an upgrade for them. The trade
+  window's expiry is checked after the bind and legacy checks and before the looter check, so a
+  drop past its window is `no expired` whatever the looter's gear; a BoE never expires. BoE means
+  `OnEquip` or `OnUse`, and the account binds count as warbound. An unknown situation takes the
+  `personal` rule. The rule is item level against the looter's equipped gear only; whether the
+  game also counts their bags is TRADE-4. The raid rule is `personal` until TRADE-3 confirms it, and
+  the `trade.rules.<situation>` overrides have no row until DW-40.
 - The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
   mock does not model; PROFILE-1 is its in-game check.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate

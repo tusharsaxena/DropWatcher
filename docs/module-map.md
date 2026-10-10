@@ -28,14 +28,15 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 19 | `modules/Evaluate.lua` | kernel (pure) | `NS.Evaluate`: the verdict kernel of design spec §5, equippability, the slot plans, the deltas and the verdict; no WoW call |
 | 20 | `modules/QualityGate.lua` | kernel (pure) | `NS.QualityGate`: the minimum-quality gate of design spec §6.2, the three modes, the floor, the upgrade override, the per-situation mode and the filter bar label; no WoW call |
 | 21 | `modules/Situations.lua` | classifier + edge | `NS.Situations`: the situation classifier of design spec §6.1 (pure `Classify` and `Resolve`), the edge that reads the client on six events and sends `SituationChanged`, and the per-situation track, auto-open and quality answers |
-| 22 | `modules/Window.lua` | UI | the main window's shell and its show decision |
-| 23 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 24 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 25 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 26 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 27 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 28 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 29 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 22 | `modules/TradeRules.lua` | kernel (pure) | `NS.TradeRules`: the trade estimator of design spec §7.1-§7.3, the bind checks, the rule per situation with the owner's override map, the trade window and the looter's item level; no WoW call |
+| 23 | `modules/Window.lua` | UI | the main window's shell and its show decision |
+| 24 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 25 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 26 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 27 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 28 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 29 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 30 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.

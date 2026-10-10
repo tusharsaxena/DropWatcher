@@ -23,7 +23,7 @@ passed.
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | FEED-1..7 | Feed | The group drops feed (lands with DW-11, DW-25, DW-27, DW-30, DW-31) |
 | INSPECT-1..4 | Inspect | The inspect broker (lands with DW-26) |
-| TRADE-1..6 | Trade | Trade estimates, the raid rule, timers, the trade helper (lands with DW-14, DW-28, DW-29) |
+| TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
 | ASK-1..8 | Ask | Asking, offering, queueing under restriction, auto-ask (lands with DW-2A, DW-33, DW-54) |
 | SIT-1..5 | Situations | Where the addon is active (lands with DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (lands with DW-12) |
@@ -130,8 +130,33 @@ Reserved for DW-26: INSPECT-1..4, including INSPECT-4 (is the tooltip item level
 
 ## Trade
 
-Reserved for DW-14, DW-28 and DW-29: TRADE-1..6, including TRADE-3 (the raid rule, confirmed in game
-before release) and TRADE-4 (equipped versus owned for the trade rule).
+The estimator's decision is headless-tested (`test_trade_rules`); TRADE-1..4 confirm it against the
+game's own trade rules. They run once the feed (DW-27, DW-31) shows trade chips and Settings › Trade
+(DW-40) lists the rules. Read each chip's tooltip, and the `TRADE` debug lines with `/dw debug on`.
+TRADE-5 (the own-item timer, DW-28) and TRADE-6 (the trade helper, DW-29) land with those items.
+
+**TRADE-1. Binds.** A BoE drop shows `Yes` (BoE) whatever the looter's gear. A warbound or
+account-bound drop and a bonus-roll drop show `No` with that reason. A drop in a follower dungeon or
+a PvP reward shows `No` (legacy). Result:
+
+**TRADE-2. The looter's item level.** In a dungeon or a key, a BoP drop for an inspected looter
+whose equipped item in that slot is at or above the drop's item level shows `Likely` with both item
+levels; one above their equipped item shows `No` (an upgrade for them); before the looter is
+inspected the chip shows `Unknown` with the inspect state. Confirm one `Likely` by asking for the
+item and seeing the trade succeed. More than two hours after the drop, the chip shows `No` (expired).
+Result:
+
+**TRADE-3. The raid rule.** In a Normal or Heroic raid, find a BoP drop the game lets its looter
+trade although it is an item-level upgrade for them, or one it refuses although it is not. Record
+which rule the game applied: if raid loot is tradeable whatever the item level, the raid's default
+rule changes from `personal` to `group` before release (design spec §7.2). Confirm too that
+Settings › Trade's raid override to `group` turns the raid chips to `Likely` (group loot), and that
+the reset restores `personal`. Result:
+
+**TRADE-4. Equipped versus owned.** A looter whose equipped item is below the drop's item level but
+who carries a higher one in their bags: record whether the game lets them trade the drop. The
+estimator compares equipped gear only (an inspect sees nothing else); if the game counts the bags,
+record it so the `Likely` chip's tooltip can say so. Result:
 
 ## Ask
 

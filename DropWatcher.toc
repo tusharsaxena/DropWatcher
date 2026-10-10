@@ -90,6 +90,9 @@ modules\QualityGate.lua
 # to NS.FEATURE_EVENTS, NS.STAND_DOWN and NS.STAND_UP and its handler to NS.addon
 # (core\DropWatcher.lua, above) at load, and reads NS.Constants, NS.State and NS.MSG at load.
 modules\Situations.lua
+# Conventional: publishes NS.TradeRules, the pure trade estimator; read by the feed at call time
+# only, and itself reads NS.Constants (core\, above) at call time.
+modules\TradeRules.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

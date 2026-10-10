@@ -110,7 +110,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_constants.lua (11)
+### test_constants.lua (12)
 
 - constants: without Enum the item ids fall back to the documented literals
 - constants: with Enum present the ids are read from it, not from the literals
@@ -123,6 +123,7 @@ Total.
 - constants: every situation key is listed once, in order, with the spec §6.1 defaults
 - constants: every difficulty id maps to a situation kind the classifier knows
 - constants: the trade rules are the spec §7.2 table, and every situation has a rule
+- constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
 
 ### test_class_data.lua (12)
 
@@ -216,6 +217,33 @@ Total.
 - situations: Current classifies live before the first event, without a message
 - situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
 - situations: stood down, the events are gone; the stand-up announces where the player is
+
+### test_trade_rules.lua (24)
+
+- trade rules: a warbound or account-bound drop is no warbound
+- trade rules: a bonus roll is no bonusRoll, and warbound wins over it
+- trade rules: a BoE or BoU drop is yes boe, in any situation and past the window
+- trade rules: the legacy rule is no legacy (follower dungeons and PvP)
+- trade rules: the group rule (ilvlRule none) is likely groupLoot without inspect
+- trade rules: personal, the looter's evaluation known and not an upgrade, is likely notUpgrade
+- trade rules: personal, an upgrade for the looter, is no upgradeForLooter
+- trade rules: the item level decides, not the scored verdict (the game's rule is ilvl)
+- trade rules: an empty slot on the looter is an upgrade for them
+- trade rules: the looter unknown is unknown noInspect, carrying the inspect reason
+- trade rules: an estimate has no expiresAt; only the own-item timer sets one
+- trade rules: past the rule's window the drop is no expired
+- trade rules: at exactly the window the drop has not expired
+- trade rules: with no clock or no drop time there is no expiry check
+- trade rules: binds and legacy are decided before the window
+- trade rules: each situation's default rule is CONTENT_RULE, raid conservatively personal
+- trade rules: the override map replaces a situation's rule
+- trade rules: an override naming no rule, or equal to the default, is not an override
+- trade rules: an unknown or missing situation takes the default personal rule
+- trade rules: Rules lists every situation in order with its rule, default and override flag
+- trade rules: Reset clears the override map in place, restoring the defaults
+- trade rules: IsRule knows the three rule names and nothing else
+- trade rules: nil and garbage inputs never throw
+- trade rules: bad facts are unknown badFacts
 
 ### test_disabled.lua (9)
 
@@ -316,11 +344,12 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_constants.lua | 11 |
+| test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 31 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
+| test_trade_rules.lua | 24 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 5 |
 | test_vendor_sync.lua | 3 |
@@ -330,4 +359,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **236** |
+| **Total** | **261** |

@@ -27,6 +27,11 @@ Exactly two (savedvariables-§4):
 no row yet (DW-40 adds them): until one is stored, each situation takes its design spec §6.1 default
 from `C.SITUATIONS`, and `quality` means the global mode.
 
+`trade.rules.<situation>` is the owner's override of a situation's trade rule (`personal`, `group`
+or `legacy`), read by `modules/TradeRules.lua` as its `ctx.rules` map; it has no row yet (DW-40 adds
+Settings › Trade). An absent, unknown or default-equal value means the design spec §7.2 default
+from `C.CONTENT_RULE`, and the reset empties the map.
+
 `window.*` is geometry only a drag or a resize sets: no row addresses it, and its one owner is
 `modules/Window.lua` (`savePoint`, `saveSize`, `Window.ResetPosition`), as `docs/ARCHITECTURE.md` →
 Settings Schema names (architecture-§5).

@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/Constants.lua — fixed values the addon reads: fonts, window geometry, colors, game ids.
 --
--- Data only: the item, quality, slot, difficulty and situation ids, the slot plans and the trade
+-- Data only: the item, quality, bind, slot, difficulty and situation ids, the slot plans and the trade
 -- rules (design spec §4, §5.2, §6.1, §6.2, §7.2). The class and spec tables are core/ClassData.lua.
 
 NS.Constants = NS.Constants or {}
@@ -249,7 +249,29 @@ C.DIFFICULTY_KIND = {
 -- CONTENT_RULE per situation, and a reset restores these.
 -- ---------------------------------------------------------------------------------------------
 
+-- Enum.ItemBind. ItemFacts reports a drop's bindType; TradeRules reads it through the two sets below.
+C.BIND = fromEnum(Enum.ItemBind, {
+    NONE                     = { "None", 0 },
+    ON_ACQUIRE               = { "OnAcquire", 1 },
+    ON_EQUIP                 = { "OnEquip", 2 },
+    ON_USE                   = { "OnUse", 3 },
+    QUEST                    = { "Quest", 4 },
+    TO_WOW_ACCOUNT           = { "ToWoWAccount", 7 },
+    TO_BNET_ACCOUNT          = { "ToBnetAccount", 8 },
+    TO_BNET_ACCOUNT_EQUIPPED = { "ToBnetAccountUntilEquipped", 9 },
+})
+-- Binds that leave a fresh drop free to trade (`yes boe`), and binds to the account (`no warbound`).
+C.TRADE_BOE_BIND = { [C.BIND.ON_EQUIP] = true, [C.BIND.ON_USE] = true }
+C.TRADE_ACCOUNT_BIND = {
+    [C.BIND.TO_WOW_ACCOUNT] = true, [C.BIND.TO_BNET_ACCOUNT] = true,
+    [C.BIND.TO_BNET_ACCOUNT_EQUIPPED] = true,
+}
+
 C.TRADE_WINDOW = 7200   -- seconds a tradeable drop stays tradeable
+
+-- The rule names in Settings › Trade's display order, and the rule an unknown situation takes.
+C.TRADE_RULE_NAMES = { "personal", "group", "legacy" }
+C.TRADE_RULE_DEFAULT = "personal"
 
 C.TRADE_RULES = {
     personal = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "notUpgradeForLooter" },

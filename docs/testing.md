@@ -40,7 +40,9 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 every slot plan and every equippability path, plus nil and garbage inputs), `test_quality_gate`
 (the minimum-quality gate: each mode, the floor, empty slots, ties, both overrides),
 `test_situations` (the situation classifier's truth table for every key, the per-situation settings
-and their spec defaults, the six re-evaluation events and the stand-down), `test_diagnostics`. Kit suites,
+and their spec defaults, the six re-evaluation events and the stand-down), `test_trade_rules` (the
+trade estimator: every row of the Estimate table in order, the trade window, the rule per situation
+and the owner's override map), `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
 
