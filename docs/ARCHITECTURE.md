@@ -56,7 +56,8 @@ composers are hollow (options-ui-§1 route (a)). Shape, defaults and migrations:
 
 **State written outside the seam** (architecture-§5): `profile.window.point`, `.width` and `.height`
 are geometry only a drag or a resize sets. Their one owner is `modules/Window.lua`, and its writers
-are `savePoint` (title-bar drag stop), `saveSize` (the resize grip's release) and
+are `savePoint` (title-bar drag stop and the resize grip's release), `saveSize` (the resize grip's
+release, saved together with the point) and
 `Window.ResetPosition` (the Reset position button). `global.minimap.minimapPos` is LibDBIcon's own
 write into the table the launcher hands it. No structural registry exists yet.
 

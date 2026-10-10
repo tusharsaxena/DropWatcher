@@ -10,7 +10,10 @@ local _, NS = ...
 -- THE SHOW DECISION is one ladder, read in UpdateVisibility, and nothing else shows the frame:
 --   0. stood down (the latch, which the perf harness's suspend also holds) -> hidden
 --   1. General visibility `never`, or the combat condition not met       -> hidden
---   2. the player opened it this session, or test mode is on              -> shown
+--   2. the player opened it this session (turning test mode on opens it)   -> shown
+-- Test mode never pins the window open: Close, Toggle and Escape always win. Turning test mode on
+-- opens a closed window and remembers that it did; turning it off closes the window again only
+-- when test mode was what opened it.
 -- Geometry (profile.window) is written here and nowhere else: by a drag, a resize and Reset position.
 
 NS.Window = NS.Window or {}
@@ -20,6 +23,7 @@ local L      = NS.L
 local Perf   = NS.Perf
 
 local frame   -- built on the first show
+local openedByTestMode = false   -- test mode, not the player, opened the window
 
 local function profile()
     local db = NS.addon and NS.addon.db
@@ -134,7 +138,12 @@ local function build()
         minWidth     = K.MIN_WIDTH,
         minHeight    = K.MIN_HEIGHT,
         canResize    = function() return not isLocked() end,
-        onResizeStop = saveSize,
+        -- The anchor is saved with the size: sizing from the corner moves the frame's anchor, and a
+        -- later ApplySettings re-anchors the stored size at the stored point.
+        onResizeStop = function(width, height)
+            saveSize(width, height)
+            savePoint()
+        end,
     })
     -- Escape closes it (standalone-windows); the frame is named, so the name is what the list holds.
     if type(UISpecialFrames) == "table" then tinsert(UISpecialFrames, K.NAME) end
@@ -149,26 +158,30 @@ end
 
 -- ── the show decision ───────────────────────────────────────────────────────────────────────
 
-local function combatAllows()
+-- `inCombat` is the combat edge when a PLAYER_REGEN handler runs the decision
+-- (events-frames-taint-§2); off an edge it is nil and the player's flag is read.
+local function combatAllows(inCombat)
     local v = setting("visibility") or "always"
     if v == "never" then return false end
     if v == "always" then return true end
-    local inCombat = UnitAffectingCombat("player") and true or false
+    if inCombat == nil then inCombat = UnitAffectingCombat("player") and true or false end
     if v == "inCombat" then return inCombat end
     return not inCombat
 end
 
 --- Whether the window should be on screen now, by the ladder above.
+--- @param inCombat boolean|nil the combat edge, when a PLAYER_REGEN handler asks
 --- @return boolean
-function Window.ShouldShow()
+function Window.ShouldShow(inCombat)
     if NS.IsStoodDown() then return false end
-    if not combatAllows() then return false end
-    return NS.State.windowOpen == true or NS.State.testMode == true
+    if not combatAllows(inCombat) then return false end
+    return NS.State.windowOpen == true
 end
 
 --- Apply the show decision. Builds the frame only when it is about to be shown.
-function Window.UpdateVisibility()
-    local want = Window.ShouldShow()
+--- @param inCombat boolean|nil the combat edge, when a PLAYER_REGEN handler asks
+function Window.UpdateVisibility(inCombat)
+    local want = Window.ShouldShow(inCombat)
     if want then
         ensureFrame()
         Window.Refresh()
@@ -195,11 +208,13 @@ end
 
 function Window.Open()
     NS.State.windowOpen = true
+    openedByTestMode = false
     Window.UpdateVisibility()
 end
 
 function Window.Close()
     NS.State.windowOpen = false
+    openedByTestMode = false
     Window.UpdateVisibility()
 end
 
@@ -212,8 +227,17 @@ function Window.IsShown()
     return frame ~= nil and frame:IsShown() == true
 end
 
---- Test mode turned on or off (core/DropWatcher.lua NS.SetTestMode): show or repaint.
-function Window.OnTestModeChanged()
+--- Test mode turned on or off (core/DropWatcher.lua NS.SetTestMode). On opens a closed window;
+--- off closes it again only when test mode was what opened it.
+--- @param on boolean
+function Window.OnTestModeChanged(on)
+    if on and NS.State.windowOpen ~= true then
+        NS.State.windowOpen = true
+        openedByTestMode = true
+    elseif not on and openedByTestMode then
+        NS.State.windowOpen = false
+        openedByTestMode = false
+    end
     Window.UpdateVisibility()
     Window.Refresh()
 end

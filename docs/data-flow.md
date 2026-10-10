@@ -14,9 +14,11 @@ launcher entry ─┘                                                   │     
 ## Today: the window's show decision
 
 `Window.UpdateVisibility` reads one ladder: stood down → hidden; `visibility` says no (never, or the
-combat condition fails) → hidden; the player opened it or test mode is on → shown. It runs on every
-open and close, on test mode, on both combat edges (`PLAYER_REGEN_DISABLED` / `_ENABLED`), on the
-stand-down and stand-up, and on a profile change.
+combat condition fails) → hidden; the player opened it → shown. Turning test mode on opens a closed
+window and remembers that it did, and turning it off closes the window again only in that case, so
+Close, Toggle and Escape always win over test mode. It runs on every open and close, on test mode,
+on both combat edges (`PLAYER_REGEN_DISABLED` / `_ENABLED`, which pass the edge itself rather than
+re-reading `UnitAffectingCombat`), on the stand-down and stand-up, and on a profile change.
 
 ## Today: enable and disable
 

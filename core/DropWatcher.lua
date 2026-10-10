@@ -127,12 +127,13 @@ function DW.OnCombatStart()
         NS.SetTestMode(false)
         NS.Print(NS.L["Test mode ended: you entered combat."])
     end
-    if NS.Window then NS.Window.UpdateVisibility() end
+    -- The edge itself decides (events-frames-taint-§2): the player's flag can lag it.
+    if NS.Window then NS.Window.UpdateVisibility(true) end
 end
 
 function DW.OnCombatEnd()
     NS.Debug("State", "combat ended")
-    if NS.Window then NS.Window.UpdateVisibility() end
+    if NS.Window then NS.Window.UpdateVisibility(false) end
 end
 
 -- ── profiles ────────────────────────────────────────────────────────────────────────────────
