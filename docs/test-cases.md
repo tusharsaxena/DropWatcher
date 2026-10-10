@@ -112,7 +112,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_compat.lua (37)
+### test_compat.lua (38)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -150,6 +150,7 @@ Total.
 - compat: a function-spelled PawnIsInitialized is called
 - compat: PickupBagItem prefers C_Container, then the global, then reports false
 - compat: DropItemOnUnit and InitiateTrade call through, and report false when absent
+- compat: NormalizedRealm reads the normalized realm, then the plain one stripped
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_constants.lua (12)
@@ -334,6 +335,22 @@ Total.
 - restrictions: Refresh announces a lift no event reported
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
 
+### test_roster.lua (13)
+
+- roster: solo, the player alone, read lazily
+- roster: a party, in unit order, keyed by GUID, with realm, class and online
+- roster: a raid reads raid1..N, the player among them
+- roster: Resolve by GUID, by Name-Realm and by a bare same-realm name, without case
+- roster: a bare name two members share is settled by classFile, else unresolved
+- roster: a bare name prefers the member on the player's own realm
+- roster: GROUP_ROSTER_UPDATE re-reads the group; the specID survives
+- roster: the event fans out to the situation edge and the roster both
+- roster: a miss re-reads the client once, so a name still Unknown at the event resolves
+- roster: secret answers never raise; a secret GUID drops the unit, a secret name hides it
+- roster: garbage queries answer nil
+- roster: NormalizeRealm drops spaces and hyphens
+- roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -346,7 +363,7 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (6)
+### test_diagnostics.lua (7)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -354,6 +371,7 @@ Total.
 - diagnostics: it runs while stood down and says so, without acting
 - diagnostics: a non-default setting is listed, and `enabled` always is
 - diagnostics: the restrictions section names the answers, the reasons and the last announced
+- diagnostics: the roster section lists the stored members without reading the client
 
 ### test_vendor_sync.lua (3)
 
@@ -434,7 +452,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_compat.lua | 37 |
+| test_compat.lua | 38 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -443,8 +461,9 @@ Total.
 | test_trade_rules.lua | 24 |
 | test_messaging.lua | 24 |
 | test_restrictions.lua | 15 |
+| test_roster.lua | 13 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 6 |
+| test_diagnostics.lua | 7 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -452,4 +471,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **342** |
+| **Total** | **357** |

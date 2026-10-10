@@ -84,9 +84,20 @@ local function restrictions(out)
     out:add(TAG, "restrictions: last announced %s", NS.State.restrictionSignature or "none")
 end
 
+-- The group as the roster last read it (design spec §4): stored state only, so the report never
+-- triggers the roster's lazy read. One line per member.
+local function roster(out)
+    local r = NS.State.roster
+    if not r then return out:add(TAG, "roster: not read yet") end
+    out:add(TAG, "roster: %s members", #r.list)
+    for _, m in ipairs(r.list) do
+        out:add(TAG, "roster: %s unit=%s class=%s online=%s spec=%s player=%s", m.fullName or "?",
+            m.unit, m.classFile or "?", m.online, m.specID or "unknown", m.isPlayer)
+    end
+end
+
 local function registration(out)
-    local names = {}
-    for i, row in ipairs(NS.FEATURE_EVENTS or {}) do names[i] = row[1] end
+    local names = NS.FeatureEventNames and NS.FeatureEventNames() or {}
     out:joined(TAG, "feature events (declared)", names)
     -- Stood down, the latch has unregistered them; the declared list is printed either way.
     out:add(TAG, "feature events registered=%s", not stoodDown())
@@ -111,6 +122,7 @@ function NS.Diagnostics.Sections()
         { "window",       window },
         { "situation",    situation },
         { "restrictions", restrictions },
+        { "roster",       roster },
         { "registration", registration },
         { "integrations", integrations },
     }

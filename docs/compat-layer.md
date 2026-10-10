@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Twenty-three shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `23`). The three
+**Twenty-four shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `24`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not wired, and
@@ -41,6 +41,7 @@ by assignment and not counted: their contract and their library-absent bodies ar
 | | `RestrictionTypes()` | `Enum.AddOnRestrictionType` | `{}` |
 | | `IsRestrictionStateActive(state)` | anything but `Enum.AddOnRestrictionState.Inactive` (0 without the enum) is active, so `Activating` counts; a boolean (the event's other payload shape) answers itself; a secret state is active | `false` for nil |
 | | `IsRestrictionActive(rtype)` | `C_RestrictedActions.IsAddOnRestrictionActive` → `GetAddOnRestrictionState` through `IsRestrictionStateActive` | `false` |
+| Identity | `NormalizedRealm()` | `GetNormalizedRealmName` (nil early in the login) → `GetRealmName` with spaces and hyphens dropped; a secret answer is skipped | `nil` |
 | Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
 | | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
@@ -79,7 +80,8 @@ delimiter.
 
 ## Who calls what
 
-The callers land in M2: Restrictions (DW-21) reads the restriction shims, ItemFacts (DW-23) reads
+The callers land in M2: Restrictions (DW-21) reads the restriction shims, the roster (DW-22)
+`NormalizedRealm`, ItemFacts (DW-23) reads
 the bind helpers and `GetItemUpgradeInfo`, the loot parser (DW-25) builds its patterns with
 `FormatToPattern`, Inspect (DW-26) reads `InventoryItemLevel`, TradeTimer (DW-28) reads
 `TradeTimeRemaining` and `GetBagItemGUID`, the trade helper (DW-29) the trade actions, the

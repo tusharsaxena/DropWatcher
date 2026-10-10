@@ -29,3 +29,7 @@ State.situationInputs = nil
 State.restrictionHints = nil
 State.combatEdge = nil
 State.restrictionSignature = nil
+
+-- The group as modules/Roster.lua last read it (design spec §4): { byGUID, list, signature }, nil
+-- until the first read and again while stood down.
+State.roster = nil

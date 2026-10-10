@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -65,4 +65,15 @@ test("diagnostics: the restrictions section names the answers, the reasons and t
     assertTrue(text:find("restrictions: active", 1, true) ~= nil)
     assertTrue(text:find("encounter, map", 1, true) ~= nil or text:find("encounter,map", 1, true) ~= nil, text)
     assertTrue(text:find("restrictions: last announced encounter|false|true|true", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the roster section lists the stored members without reading the client", function()
+    local NS, _, m = T.enableAddon()
+    NS.State.roster = nil
+    assertTrue(report(NS):find("roster: not read yet", 1, true) ~= nil)
+    m.setGroup({ { guid = "Player-1-0000000A", name = "Brakk", classFile = "WARRIOR", connected = false } })
+    m.__fire("GROUP_ROSTER_UPDATE")
+    local text = report(NS)
+    assertTrue(text:find("roster: 2 members", 1, true) ~= nil, text)
+    assertTrue(text:find("roster: Brakk-Testrealm unit=party1 class=WARRIOR online=false spec=unknown player=false", 1, true) ~= nil, text)
 end)

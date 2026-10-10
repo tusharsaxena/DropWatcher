@@ -52,7 +52,9 @@ difficulty and group inputs, and the edge that reads them on six events), the tr
 (`TradeRules.lua`, pure: a drop's bind facts, the looter's verdict and the situation's rule in, a
 yes, likely, unknown or no estimate out), the restriction tracker (`Restrictions.lua`: whether a
 chat message, an inspect or a trade is allowed now, and the reason, from the restriction event, the
-chat lockdown and the combat edges), the messaging core (`Messaging.lua`, pure: a
+chat lockdown and the combat edges), the roster (`Roster.lua`: the group's members by GUID with
+their Name-Realm, unit token, classFile, specID and online state, and the resolver from a name or a
+GUID to a member), the messaging core (`Messaging.lua`, pure: a
 template and its tokens in, the text and the ask's next state out; it sends nothing), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -108,7 +110,10 @@ controls row and its launcher entry (`core/DropWatcher.lua`).
 ## Event Subscriptions
 
 Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.SafeRegisterEvent`,
-so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it.
+so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. Two
+modules may declare the same event: AceEvent keeps one handler per event, so such an event is
+registered once, on `DW:OnSharedFeatureEvent`, which calls each declared handler in row order (the
+TOC order of the modules). `NS.FeatureEventNames()` is the declared list with each event once.
 
 | Event | Handler | Why |
 |---|---|---|
@@ -119,7 +124,7 @@ so `OnEnable` and the stand-up register exactly that list and the stand-down unr
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSituationEvent` | the same |
 | `CHALLENGE_MODE_START` | `DW.OnSituationEvent` | the same (a keystone started) |
 | `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent` | the same (a keystone ended) |
-| `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent` | the same (solo and open-world group turn on it) |
+| `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent`, then `DW.OnRosterEvent` (through `DW:OnSharedFeatureEvent`) | the same (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
@@ -197,6 +202,16 @@ spec §4, §9).
   answer says so, so a lift counts only once both agree. The badge's reason is the first in effect
   of encounter, challengeMode, pvpMatch, chat, chatLockdown, combat. Which types really stop a
   whisper is COMBAT-2.
+- The roster (`modules/Roster.lua`) reads five cases the design leaves open. A bare name is the
+  player's own realm's when that settles it, because chat names a same-realm player without a
+  realm; the classFile narrows a same-name tie first; a tie neither settles resolves to nothing.
+  Names and realms compare without case, and realms with spaces and hyphens dropped on both sides.
+  A unit with a secret or missing GUID is left out, a secret name leaves the member reachable by
+  GUID only, the client's `Unknown` placeholder counts as no name, and a secret online flag reads
+  as online. A failed resolve re-reads the client once. In a raid the player's token is its
+  `raidN`, with `isPlayer` set. The specID is written by the inspect broker (DW-26) through
+  `SetSpec` and kept across re-reads while the GUID stays. Whether chat's realm spelling matches
+  the normalized one is ROSTER-1.
 - The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
   edge items wire the rest. Three of its
   readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the

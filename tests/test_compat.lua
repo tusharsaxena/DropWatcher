@@ -452,13 +452,27 @@ test("compat: DropItemOnUnit and InitiateTrade call through, and report false wh
     assertFalse(Compat.InitiateTrade("party1"))
 end)
 
+test("compat: NormalizedRealm reads the normalized realm, then the plain one stripped", function()
+    local Compat, m = fresh()
+    assertEqual(Compat.NormalizedRealm(), "Testrealm")
+    m.normalizedRealm = nil
+    m.__context.realm = "Azjol-Nerub Area"
+    assertEqual(Compat.NormalizedRealm(), "AzjolNerubArea", "nil early in the login: the plain name, stripped")
+    installSecrets(m)
+    m.normalizedRealm = T.secret("Secret")
+    assertEqual(Compat.NormalizedRealm(), "AzjolNerubArea", "a secret answer is skipped")
+    m.GetNormalizedRealmName, m.GetRealmName = nil, nil
+    assertNil(Compat.NormalizedRealm())
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
 
 local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown", "C_RestrictedActions",
     "GetItemUpgradeInfo", "IsItemBindToAccount", "GetItemGUID", "DropItemOnUnit", "PickupContainerItem",
-    "InitiateTrade", "Pawn%u%a+", "issecretvalue", "canaccessvalue" }
+    "InitiateTrade", "Pawn%u%a+", "issecretvalue", "canaccessvalue", "GetNormalizedRealmName",
+    "GetRealmName" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

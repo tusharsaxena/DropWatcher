@@ -108,6 +108,7 @@ Kit.run{
         "test_trade_rules",
         "test_messaging",
         "test_restrictions",
+        "test_roster",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

@@ -11,6 +11,7 @@ local _, NS = ...
 --     of an equipped item, and the upgrade track;
 --   * the localized duration decoder behind the trade timer (spec §7.4);
 --   * the restriction APIs (C_RestrictedActions, C_ChatInfo.InChatMessagingLockdown);
+--   * the player's normalized realm (GetNormalizedRealmName, then GetRealmName);
 --   * the bind helpers (C_Item's account binds, the bag item's GUID);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
 --   * the trade actions (PickupContainerItem, DropItemOnUnit, InitiateTrade).
@@ -362,6 +363,23 @@ function Compat.IsRestrictionActive(rtype)
         return Compat.IsRestrictionStateActive(ra.GetAddOnRestrictionState(rtype))
     end
     return false
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- Identity
+-- ---------------------------------------------------------------------------------------------
+
+--- The player's realm as chat and unit names spell it: GetNormalizedRealmName (spaces and hyphens
+--- dropped), which answers nil early in the login, then GetRealmName with the same characters
+--- dropped. Nil when neither answers a plain, non-empty string.
+--- @return string|nil
+function Compat.NormalizedRealm()
+    local realm = GetNormalizedRealmName and plainString(GetNormalizedRealmName())
+    if realm and realm ~= "" then return realm end
+    realm = GetRealmName and plainString(GetRealmName())
+    realm = realm and realm:gsub("[%s%-]", "")
+    if realm and realm ~= "" then return realm end
+    return nil
 end
 
 -- ---------------------------------------------------------------------------------------------

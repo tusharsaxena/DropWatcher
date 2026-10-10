@@ -105,6 +105,12 @@ modules\Messaging.lua
 # (core\DropWatcher.lua, above) at load, and reads NS.State at load. core\DropWatcher.lua's combat
 # edges and the feature modules read it at call time.
 modules\Restrictions.lua
+# Conventional: publishes NS.Roster, the group's members and the name resolver; appends its row to
+# NS.FEATURE_EVENTS (GROUP_ROSTER_UPDATE, shared with modules\Situations.lua above, so its handler
+# runs second), NS.STAND_DOWN and NS.STAND_UP and its handler to NS.addon (core\DropWatcher.lua,
+# above) at load, and reads NS.State at load. A module declaring the event below it hears it after
+# the roster is fresh.
+modules\Roster.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

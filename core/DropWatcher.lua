@@ -15,7 +15,8 @@ NS.addon = DW
 -- NS.Util.print, and the two names must be the same function object (architecture-§2).
 NS.Print = NS.Util.print
 
--- Every game event this addon owns, as { event, handlerMethodName } pairs.
+-- Every game event this addon owns, as { event, handlerMethodName } pairs. Two rows may name the
+-- same event; registerFeatureEvents (below) fans it out to both handlers.
 NS.FEATURE_EVENTS = NS.FEATURE_EVENTS or {}
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_DISABLED", "OnCombatStart" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED",  "OnCombatEnd" }
@@ -24,9 +25,50 @@ NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED",  "OnCombat
 NS.STAND_DOWN = NS.STAND_DOWN or {}
 NS.STAND_UP   = NS.STAND_UP or {}
 
-local function registerFeatureEvents(self)
+--- The declared feature events, each once, in the order of their first row.
+--- @return table names
+function NS.FeatureEventNames()
+    local names, seen = {}, {}
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        NS.SafeRegisterEvent(self, row[1], row[2], NS.rejectedEvents)
+        if not seen[row[1]] then
+            seen[row[1]] = true
+            names[#names + 1] = row[1]
+        end
+    end
+    return names
+end
+
+-- The handler method names declared for each event, in row order.
+local function handlersByEvent()
+    local by = {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        by[row[1]] = by[row[1]] or {}
+        local list = by[row[1]]
+        list[#list + 1] = row[2]
+    end
+    return by
+end
+
+-- AceEvent keeps one handler per event per object, so an event two modules declare
+-- (GROUP_ROSTER_UPDATE: the situation edge and the roster) is registered once, on this dispatcher,
+-- which calls every declared handler in row order. Built at each registration.
+local sharedHandlers = {}
+
+function DW:OnSharedFeatureEvent(event, ...)
+    for _, method in ipairs(sharedHandlers[event] or {}) do self[method](self, event, ...) end
+end
+
+local function registerFeatureEvents(self)
+    local by = handlersByEvent()
+    sharedHandlers = {}
+    for _, event in ipairs(NS.FeatureEventNames()) do
+        local list = by[event]
+        local method = list[1]
+        if #list > 1 then
+            sharedHandlers[event] = list
+            method = "OnSharedFeatureEvent"
+        end
+        NS.SafeRegisterEvent(self, event, method, NS.rejectedEvents)
     end
 end
 
@@ -45,7 +87,7 @@ end
 --- unregistered, test mode ended, and every module's teardown run. The chat command, the
 --- dispatcher, the settings category, the launcher and AceDB's callbacks are setup and stay up.
 function NS.StandDown()
-    for _, row in ipairs(NS.FEATURE_EVENTS) do DW:UnregisterEvent(row[1]) end
+    for _, event in ipairs(NS.FeatureEventNames()) do DW:UnregisterEvent(event) end
     NS.Bus:StandDown()
     NS.State.testMode = false
     runAll(NS.STAND_DOWN)

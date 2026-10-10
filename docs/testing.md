@@ -53,7 +53,10 @@ and the owner's override map), `test_messaging` (the messaging core: token expan
 limit, the one-ask guard, queueing under restriction, the flush order, cancel and a failed send's
 retry), `test_restrictions` (the restriction tracker: each restriction type's reason and what it
 blocks, the priority order, the chat lockdown, the combat edges ahead of the client's flag, the
-event's numeric, boolean and secret payloads, `RestrictionChanged` and the stand-down),
+event's numeric, boolean and secret payloads, `RestrictionChanged` and the stand-down), `test_roster` (the roster: solo, party and raid
+tokens, the realm normalization, resolving by GUID, Name-Realm and bare name, the same-name tie
+settled by classFile and by the player's realm, the re-read on a miss, the shared
+`GROUP_ROSTER_UPDATE`, secret unit answers and the stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

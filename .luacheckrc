@@ -25,6 +25,7 @@ read_globals = {
   "InCombatLockdown", "UnitAffectingCombat", "debugprofilestop", "tinsert",
   "Settings", "StaticPopup_Show", "YES", "NO",
   "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
+  "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected", "UNKNOWNOBJECT",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The
@@ -45,7 +46,7 @@ files["core/Compat.lua"] = {
     "C_ChatInfo", "SendChatMessage", "C_TooltipInfo", "C_RestrictedActions", "C_Container",
     "ItemLocation", "PickupContainerItem", "DropItemOnUnit", "InitiateTrade",
     "PawnIsInitialized", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnFindScaleForSpec",
-    "PawnGetSingleValueFromItem",
+    "PawnGetSingleValueFromItem", "GetNormalizedRealmName", "GetRealmName",
   },
 }
 

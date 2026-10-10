@@ -43,6 +43,27 @@ six events (PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA, CHALLENGE_MODE_START,
 `profile.situations.<key>`, falling back to the spec defaults. The stand-down clears the key; the
 stand-up re-reads the client and announces where the player is.
 
+## Today: the roster
+
+```
+GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent ─> DW.OnSituationEvent (above), then
+  └─> DW.OnRosterEvent ─> Roster.Refresh
+        ├─> tokens: raid1..N, or player + party1..N-1, or player alone
+        ├─> per token: UnitGUID (secret or missing: skipped), UnitName (secret or Unknown: no
+        │              name), UnitClass, UnitIsConnected; same-realm realm from
+        │              Compat.NormalizedRealm
+        └─> NS.State.roster = { byGUID, list }, each member's specID carried over
+
+Roster.Resolve(GUID | "Name-Realm" | "Name", classFile?)
+  ├─> GUID hit, else name (+ realm) match without case, realms normalized
+  ├─> a tie: classFile narrows, then (bare name) the player's own realm
+  └─> a miss: Refresh once, then try again; still none or still a tie: nil
+```
+
+The roster sends no message: a module that needs the fresh group declares `GROUP_ROSTER_UPDATE`
+below `modules/Roster.lua` in the TOC and hears it after the roster's handler. The stand-down drops
+the roster; the stand-up re-reads it.
+
 ## The design's loot pipeline (spec §3)
 
 ```

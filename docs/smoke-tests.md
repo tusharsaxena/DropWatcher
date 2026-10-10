@@ -23,6 +23,7 @@ passed.
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | FEED-1..7 | Feed | The group drops feed (lands with DW-11, DW-25, DW-27, DW-30, DW-31) |
+| ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
 | INSPECT-1..4 | Inspect | The inspect broker (lands with DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
 | ASK-1..8 | Ask | Asking, offering, queueing under restriction, auto-ask (lands with DW-2A, DW-33, DW-54) |
@@ -155,6 +156,23 @@ on a link that is not yours, DW-23), FEED-6 (`ENCOUNTER_LOOT_RECEIVED` for the M
 FEED-7 (a Devourer Demon Hunter looter before inspect: a warglaive or one-hander reads as usable and
 a held off hand as not, matching the item's own spec list; the class data of DW-10, judged by DW-11).
 
+## Roster
+
+The resolver's rules are headless-tested (`test_roster`); these checks confirm the client's spelling
+of names and realms. Each reads the `roster` lines of `/dw diagnostics`, with `/dw debug on` for the
+`[ROSTER]` change lines.
+
+**ROSTER-1. Names and realms.** In a party with at least one player from another realm, ideally one
+whose realm has a space or a hyphen (`Area 52`, `Azjol-Nerub`) → one `roster:` line per member,
+the same-realm ones as `Name-<YourRealm>` and the cross-realm ones as `Name-<Realm>` with no space
+or hyphen, each with the right `unit=party1..4` and `class=`. Then compare each cross-realm name
+against how a loot line in chat spells it: the same `Name-Realm`, realm spelled the same way.
+Record any member whose realm differs. Result:
+
+**ROSTER-2. Raid and online state.** In a raid (or a converted party) → `unit=raid1..N`, your own
+line carrying `player=true`. Have a member log out → after the next `[ROSTER]` line their
+`online=false`. Leave the group → `roster: 1 members` with you alone at `unit=player`. Result:
+
 ## Inspect
 
 Reserved for DW-26: INSPECT-1..4, including INSPECT-4 (is the tooltip item level still needed?).
@@ -270,3 +288,4 @@ client's INSTALL and SLASH checks are sufficient. The section is re-armed by the
 | INSTALL-1..3, SLASH-1..3, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-3, DIAG-1..2, DEGRADED-1, LOC-1 | DW-02, the scaffold | No client pass recorded yet |
 | COMPAT-1..3 | DW-20, the compat seam | No client pass recorded yet |
 | COMBAT-2 | DW-21, the restriction tracker | No client pass recorded yet |
+| ROSTER-1..2 | DW-22, the roster | No client pass recorded yet |

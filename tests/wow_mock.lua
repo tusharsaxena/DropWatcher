@@ -25,6 +25,9 @@
 --   restrictionStates  C_RestrictedActions' state per Enum.AddOnRestrictionType value (absent = 0)
 --   upgradeInfo, accountBound, accountBoundUE  C_Item's answers per link; bagGUIDs["bag:slot"]
 --   tradeCalls     PickupContainerItem / DropItemOnUnit / InitiateTrade calls, in order
+--   units          the group's unit tokens: units[token] = { guid, name, realm, class, classFile,
+--                  connected }; "player" is read from the base's __context unless set. setGroup()
+--                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 
 local base = dofile("tests/_kit/mock_base.lua")
@@ -143,6 +146,60 @@ local function installCompatSurface(M)
     M.InitiateTrade = recorder("InitiateTrade")
 end
 
+-- The group's units (modules/Roster.lua). The player's row is the base's __context, read live, so
+-- the perf context and the roster agree; any other token answers only when units[token] is set.
+local PLAYER_GUID = "Player-1-00000001"
+
+local function installUnits(M)
+    M.units = {}
+    M.normalizedRealm = "Testrealm"
+    local function row(unit)
+        local r = M.units[unit]
+        if r or unit ~= "player" then return r end
+        local c = M.__context
+        return { guid = PLAYER_GUID, name = c.name, class = c.class, classFile = c.classToken,
+            connected = true }
+    end
+    local baseExists = M.UnitExists
+    M.UnitExists = function(unit) return row(unit) ~= nil or baseExists(unit) end
+    M.UnitGUID = function(unit)
+        local r = row(unit)
+        return r and r.guid
+    end
+    M.UnitName = function(unit)
+        local r = row(unit)
+        if r then return r.name, r.realm end
+    end
+    M.UnitClass = function(unit)
+        local r = row(unit)
+        if r then return r.class, r.classFile end
+    end
+    M.UnitIsConnected = function(unit)
+        local r = row(unit)
+        return r ~= nil and r.connected ~= false
+    end
+    M.GetNormalizedRealmName = function() return M.normalizedRealm end
+    M.UNKNOWNOBJECT = "Unknown"
+
+    --- Seed a group: `others` are the rows besides the player, in unit order. A party gives the
+    --- player "player" and the others party1..; a raid gives raid1 to the player, then the others.
+    function M.setGroup(others, raid)
+        M.units = {}
+        local first = 1
+        if raid then
+            M.units.raid1 = row("player")
+            first = 2
+        end
+        for i, r in ipairs(others) do
+            local token = raid and ("raid" .. (i + first - 1)) or ("party" .. i)
+            M.units[token] = r
+        end
+        M.__context.inGroup = #others > 0
+        M.__context.inRaid = raid and true or false
+        M.__context.groupSize = #others > 0 and #others + 1 or 0
+    end
+end
+
 local function build()
     local M = base()
     M._G = M
@@ -192,6 +249,7 @@ local function build()
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end
 
     installCompatSurface(M)
+    installUnits(M)
 
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)

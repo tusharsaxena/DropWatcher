@@ -21,9 +21,15 @@ local function registered(m)
     return table.concat(out, ",")
 end
 
+-- Each declared event once: two rows may share one (core/DropWatcher.lua fans it out).
 local function declared(NS)
-    local out = {}
-    for _, row in ipairs(NS.FEATURE_EVENTS) do out[#out + 1] = row[1] end
+    local out, seen = {}, {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        if not seen[row[1]] then
+            seen[row[1]] = true
+            out[#out + 1] = row[1]
+        end
+    end
     table.sort(out)
     return table.concat(out, ",")
 end
