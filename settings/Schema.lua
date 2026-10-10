@@ -135,11 +135,37 @@ Settings.ConsumeResetCount = S.ConsumeResetCount
 
 local VALID_TYPES = { bool = true, number = true, string = true }
 
---- Validate every row; returns the error count. The `schema error` lines are developer diagnostics
---- for a malformed row, not player-facing text, so they stay literal (not through NS.L).
+-- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
+-- path: answering nil makes the library skip the resolution check for it (the session rows, and
+-- the Minimap button row, whose backing key is resolved explicitly below). Every other row's path
+-- must resolve against the profile defaults tree (architecture-§5).
+local function defaultsRootFor(profileDefaults)
+    return function(_, row)
+        if row and type(row.get) == "function" and type(row.set) == "function" then return nil end
+        return profileDefaults, 1
+    end
+end
+
+-- The Minimap button row's backing key is LibDBIcon's `hide` in the GLOBAL defaults (launcher-§3).
+local function minimapBackingMissing(defaults)
+    local mm = defaults.global and defaults.global.minimap
+    if type(mm) == "table" and mm.hide ~= nil then return 0 end
+    pout("|cffff0000schema error|r: " .. MINIMAP_PATH .. ": backing key `global.minimap.hide` "
+        .. "does not resolve against the defaults")
+    return 1
+end
+
+--- Validate every row; returns the error count plus the paths that do not resolve against the
+--- defaults. The `schema error` lines are developer diagnostics for a malformed row, not
+--- player-facing text, so they stay literal (not through NS.L).
 --- @return number
 function Helpers.ValidateSchema()
-    local errors = S.Validate{ types = VALID_TYPES }
+    local defaults = Settings.BuildDefaults()
+    local errors, _, missing = S.Validate{
+        types        = VALID_TYPES,
+        defaultsRoot = defaultsRootFor(defaults.profile),
+    }
+    errors = errors + (missing or 0) + minimapBackingMissing(defaults)
     for i, def in ipairs(Schema) do
         if type(def) == "table" and type(def.label) ~= "string" then
             pout("|cffff0000schema error|r: row #" .. i .. " (" .. tostring(def.path or "<no path>")

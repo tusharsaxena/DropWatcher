@@ -11,6 +11,25 @@ test("schema: every row validates against the defaults", function()
     assertEqual(NS.addon.Settings.Helpers.ValidateSchema(), 0)
 end)
 
+test("schema: a stored row whose path has no default is counted, not passed vacuously", function()
+    local NS = T.bootAddon()
+    local rows = NS.addon.Settings.Schema
+    rows[#rows + 1] = { path = "nope.noDefault", type = "bool", label = "No default" }
+    local count = NS.addon.Settings.Helpers.ValidateSchema()
+    rows[#rows] = nil
+    assertTrue(count > 0, "the unresolved path is reported")
+end)
+
+test("schema: the Minimap button row's backing key resolves against the global defaults", function()
+    local NS = T.bootAddon()
+    local mm = NS.C.GLOBAL_DEFAULTS.minimap
+    local saved = mm.hide
+    mm.hide = nil
+    local count = NS.addon.Settings.Helpers.ValidateSchema()
+    mm.hide = saved
+    assertEqual(count, 1)
+end)
+
 test("schema: the Master controls rows are the canonical set, in the canonical order", function()
     local NS = T.newAddon()
     local paths = {}
