@@ -36,6 +36,12 @@ lua tests/run.lua && luacheck .
 
 ## 3. Relaunch
 
+**The exact procedure is in `orchestration/README.md`.** That folder holds the milestone workflow script
+`dw-milestone.workflow.js`, every milestone's args in `milestones.json`, and `checkpoint.sh`, so a fresh
+session can resume from the repository alone.
+
+In short:
+
 Hand the next run:
 - the spec
 - the plan
@@ -65,3 +71,6 @@ merges `--no-ff`, pushes, and deletes the run branches. It then cleans up the ru
 ## Log
 
 Record anything unusual here: stashes, exceptions or reruns.
+
+- **2026-10-10:** M0 was launched twice. The first launch was stopped within a minute because its review base was wrong, and it left no commits and a clean tree.
+- **2026-10-11:** the orchestration files were committed to `orchestration/` while M2 was running, as an owner request. M2 was launched with exactly the `milestones.json` M2 args. The workflow run ids are wf_9b95c354-c8a (M0), wf_c73336da-006 (M1) and wf_c4583449-d63 (M2); they are only usable for a same-session resume.

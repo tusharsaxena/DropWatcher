@@ -1,0 +1,64 @@
+{
+  "_readme": "Workflow args per milestone for orchestration/dw-milestone.workflow.js. Relaunch a milestone with Workflow({scriptPath: <this folder>/dw-milestone.workflow.js, args: <milestones.json[M] with items filtered to the ids resume-state.sh still lists>}). 'base' is the commit the milestone's review diffs from (the previous checkpoint commit). M0 and M1 are complete; their args are kept short for the record.",
+  "M0": { "milestone": "M0", "status": "complete", "base": "e281205", "items": [ {"id": "DW-02", "title": "Scaffold born compliant via NEW_ADDON.md"}, {"id": "DW-03", "title": "Add Ka0s Drop Watcher row to standards/ADDONS.md in ../WowAddonStandards"} ] },
+  "M1": { "milestone": "M1", "status": "complete", "base": "8654455", "items": [ {"id": "DW-10"}, {"id": "DW-11"}, {"id": "DW-12"}, {"id": "DW-13"}, {"id": "DW-14"}, {"id": "DW-15"} ] },
+  "M2": {
+    "milestone": "M2", "base": "6c96336",
+    "extra": "M1 landed the pure kernels: NS.Constants, NS.ClassData, NS.Evaluate (Evaluate(facts,candidate,opts); prefs key '<classID>:<subClassID>'; facts.track.tier numeric from trackStringID else C.TRACK_TIER by enUS name; scorer(facts,candidate) may return 'pending'), NS.QualityGate, NS.Situations (classifier + edge), NS.TradeRules, NS.Messaging (pure state machine). Read their headers before using them; do not change their contracts without updating their tests and docs. M2 builds the EDGE modules that call WoW APIs: every version-variant/deprecated API goes through core/Compat.lua (created in DW-20, optionally routing secret checks through LibKa0s-Compat-1.0 via a setup/seam consistent with the scaffold's setup-file pattern). Every possibly-secret payload is guarded (IsSecret/CanAccess) before compare/concat/format. Events through the scaffold's feature-event registration so disable tears them down (test_disabled must stay green). Declare Perf buckets (spec §13) only together with a real bracket. Add docs/midnight-quirks.md and docs/compat-layer.md when their Tier 2 triggers fire. The mock: extend tests/wow_mock.lua (C_TooltipInfo, C_Item, NotifyInspect/INSPECT_READY, C_ChallengeMode, C_RestrictedActions, C_ChatInfo, GetInstanceInfo, timers) with controllable fakes.",
+    "items": [
+      {"id": "DW-20", "title": "Compat seams: ChatSender, tooltip line reader, GetItemUpgradeInfo, restriction APIs, bind helpers, Pawn seam, DropItemOnUnit, trade-duration decoder", "notes": "Spec §4 core/Compat.lua row, §7.4 decoder (re-implement from the idea, do not copy RCLootCouncil code), Pawn seam per brainstorm 02_PLATFORM_CONSTRAINTS §5 (guard PawnIsInitialized). MultiMeters core/Compat.lua:754-770 is the ChatSender precedent. Tests for the decoder (localized globals mocked) and each shim's fallback."},
+      {"id": "DW-21", "title": "Restrictions module + RestrictionChanged", "notes": "Spec §4. ADDON_RESTRICTION_STATE_CHANGED, InChatMessagingLockdown, combat edges. CanSendChat/CanInspect/CanTrade/ActiveReason. Smoke COMBAT-2."},
+      {"id": "DW-22", "title": "Roster module", "notes": "Spec §4. GROUP_ROSTER_UPDATE; members by GUID with Name-Realm, unit, classFile, online; resolve by name (with/without realm) or GUID; ambiguous same-name resolved by classFile."},
+      {"id": "DW-23", "title": "ItemFacts (cached, LoadItem retry, track, stats, specs, warbound, unique, transmog-known)", "notes": "Spec §4/§5.1 facts shape. Use LibKa0s-Item-1.0 LoadItem (callback means retry). Track from Compat GetItemUpgradeInfo (tier from trackStringID; fallback tooltip ItemUpgradeLevel line type). Stats from C_Item.GetItemStats (unknown keys tolerated). specs from C_Item.GetItemSpecInfo. Tier tokens: classes list. Cache by link."},
+      {"id": "DW-24", "title": "Gear snapshot (equipped + best owned per slot) + GearChanged", "notes": "Spec §4, §6.2 inputs (per-slot qualities). PLAYER_EQUIPMENT_CHANGED, BAG_UPDATE_DELAYED throttled. Your candidate table for Evaluate including specID (GetSpecialization/GetSpecializationInfo), dualWield/titanGrip from ClassData."},
+      {"id": "DW-25", "title": "LootParser (GlobalString patterns, rebuild, secret guards), test_loot_parser", "notes": "Spec §4 row + §15 test list. Precedent: ../LootHistory/core/Util.lua:197 (self-loot only; this must handle other looters, cross-realm, multiples, bonus roll, pushed; reject CHANGED_OWN_ITEM echoes and crafting). Smoke FEED-1, COMBAT-1, LOC-1 updates."},
+      {"id": "DW-26", "title": "Inspect broker, test_inspect", "notes": "Spec §8 exactly, with a mocked clock in tests. Priority queue (looters > offer candidates > warm-up). Smoke INSPECT-1..4."},
+      {"id": "DW-27", "title": "LootFeed orchestrator, test_feed", "notes": "Spec §3, §6 gate order (situation -> quality (verdict for me) -> inspect request -> looter verdict + trade estimate), dedupe across CHAT_MSG_LOOT / ENCOUNTER_LOOT_RECEIVED / C_LootHistory, encounter/run grouping (ENCOUNTER_START/END, CHALLENGE_MODE_*), own drops vs group drops, candidates evaluation for own drops, DropAdded/DropUpdated. Expose an Add(link, looter) entry used later by /dw add and TestMode. Smoke FEED-2..6."},
+      {"id": "DW-28", "title": "TradeTimer (own items), test_trade_timer", "notes": "Spec §7.4. Shared ticker lifecycle; TradeTimerTick/TradeTimerExpiring. Smoke TRADE-5."},
+      {"id": "DW-29", "title": "TradeHelper", "notes": "Spec §4: bag slot by GUID (C_Item.GetItemGUID / C_Container), PickupContainerItem + Compat DropItemOnUnit; InitiateTrade; refuse in combat/out of range with reason. Smoke TRADE-6."},
+      {"id": "DW-2A", "title": "Messaging edge: send via ChatSender in pcall, flush on restriction lift / ENCOUNTER_END / CHALLENGE_MODE_COMPLETED, cancel on looter leave, chat confirmation", "notes": "Spec §9.2-§9.3; uses the DW-15 pure state machine. AskStateChanged. Test mode routes sends to print. Smoke ASK-1..4."}
+    ]
+  },
+  "M3": {
+    "milestone": "M3", "base": "<M2 checkpoint commit>",
+    "extra": "M3 builds the UI on top of the M2 engine. The approved wireframes are the visual spec: docs/superpowers/research/2026-10-10-brainstorm/wireframes/*.png (open them with the Read tool) and the boards named in spec §11. Ka0s styling with ../LootHistory's window as the chrome reference (modules/Browser.lua EnsureFrame: 30px title bar, 26px tab strip gold active label + underline, filter bar, footer). Extend modules/Window.lua (the scaffold's shell) rather than replacing it; split UI into the files named in spec §4 so none passes ~1000 lines. Rows pooled via LibKa0s-Pool-1.0; icons from the LibKa0s Media catalog (a missing icon is a LibKa0s issue, never drawn locally); close via NS.MakeCloseButton. UI listens to the bus only. Every cell has a reason tooltip; nothing blank. Text via NS.L. Tests: build the window headless under the mock and assert structure/state transitions; TestMode populates every state.",
+    "items": [
+      {"id": "DW-30", "title": "Window shell: skin, title bar, restriction badge, scan, tabs, filter bar, footer, minimise, resize, position, UISpecialFrames", "notes": "Spec §11.1; wireframe boards 01, 06."},
+      {"id": "DW-31", "title": "Group drops table: pooled rows, encounter headers, columns, item buttons, verdict glyphs/colors, tooltips, sort/filter, compact preset", "notes": "Spec §11.1-§11.2; boards 01, 03, 06 (compact)."},
+      {"id": "DW-32", "title": "Detail card (inline expand) with both comparisons, trade box, actions", "notes": "Spec §11.3; board 02."},
+      {"id": "DW-33", "title": "My drops tab + Offer panel + Post my tradeables", "notes": "Spec §11.4; board 04; uses TradeTimer, TradeHelper, Messaging edge."},
+      {"id": "DW-34", "title": "Test mode data + empty state + test banner", "notes": "Spec §11.6; boards 03 (every state) and 06 (empty, test mode). Sends routed to print."}
+    ]
+  },
+  "M4": {
+    "milestone": "M4", "base": "<M3 checkpoint commit>",
+    "extra": "M4 wires settings, slash and diagnostics. Keep the scaffold's root Master-controls paths (enabled, visibility, scale, alpha, locked, ...). Add every row of spec §12.1 to the schema with defaults in defaults/ (never 'or' defaults), migrations via the runner, and the Options pages of §12.2 built with LibKa0s-Options composers (RenderTabbedSchema, one tab per group). Replace kernels' temporary spec defaults with schema reads. Board 07/08 are the wireframes for General and Messages.",
+    "items": [
+      {"id": "DW-40", "title": "Schema, defaults (profile/global), migration runner entries for every setting in spec §12.1", "notes": "Includes situations.<key>.{track,autoOpen,quality}, feed.quality.{mode,fixed,floor,upgradeOverride}, prefs keyed '<classID>:<subClassID>'."},
+      {"id": "DW-41", "title": "Options pages: Landing, General (Master controls + When to show), Feed, Comparison, Trade, Messages, Window, Profiles", "notes": "Spec §12.2. When-to-show grid: if no grid composer exists, one row group per situation and file a LibKa0s issue later (DW-63). Messages page: token chips, editors with live counters and preview."},
+      {"id": "DW-42", "title": "Slash verbs (show hide toggle test scan clear history mine compact situation offer add) + slash-dispatch.md", "notes": "Spec §12.3."},
+      {"id": "DW-43", "title": "Launcher menu, Diagnostics sections, Perf buckets, debug tags", "notes": "Spec §12.4, §13. Diagnostics contract suite must stay green."}
+    ]
+  },
+  "M5": {
+    "milestone": "M5", "base": "<M4 checkpoint commit>",
+    "extra": "M5 adds the v1 features on the finished MVP. Pawn is an OptionalDep reached only through the Compat seam; CanIMogIt likewise. Everything new is opt-in where spec says so.",
+    "items": [
+      {"id": "DW-50", "title": "Scoring adapters (Pawn, Weights + import, None) + sidegrade integration, test_scoring", "notes": "Spec §5.4."},
+      {"id": "DW-51", "title": "History (capped DB.global, outcomes, trade-completion) + History tab, test_history", "notes": "Spec §10."},
+      {"id": "DW-52", "title": "Toast (opt-in)", "notes": "Spec §11.5; board 06."},
+      {"id": "DW-53", "title": "Transmog-known flag (CanIMogIt optional / C_TransmogCollection)", "notes": "Spec §4 ItemFacts transmog-known; show as a chip in the detail card and an optional 'for transmog' ask template."},
+      {"id": "DW-54", "title": "Auto-ask (opt-in, delayed after encounter end, cancel rules, one-time notice)", "notes": "Spec §9.4."}
+    ]
+  },
+  "M6": {
+    "milestone": "M6", "base": "<M5 checkpoint commit>",
+    "extra": "M6 is release readiness. No version bump, no tag. In-game smoke checks stay owed for the owner.",
+    "items": [
+      {"id": "DW-60", "title": "Docs sync: README (de-AI pass), ARCHITECTURE hub + Documentation map + deviations, Tier 1, Tier 2, smoke-tests incl. LOC", "notes": "Run /dev-copilot:sync-docs style checks by hand; README Reporting-a-bug text verbatim from documentation-§1; Documented deviations per spec §14."},
+      {"id": "DW-61", "title": "Automated-test bundle (four suites) + offline perf scenarios + CCN<=15 + file cap", "notes": "~/.claude/dev-copilot/bin/ka0s-bounded tests/_kit/run-automated-tests.sh; refactor anything above CCN 15."},
+      {"id": "DW-62", "title": "Independent review + standards audit; fix findings", "notes": "Use the dev-copilot:review and dev-copilot:wow-standards-audit agent types; commit their bundles; fix critical/high/medium."},
+      {"id": "DW-63", "title": "File later-tier GitHub issues (DropWatcher) + LibKa0s promotion + WAS chat-sending proposal, throttled", "notes": "Spec §14 list; >=20s between GitHub writes; labels state:triaged + severity per the issue-* conventions."}
+    ]
+  }
+}
