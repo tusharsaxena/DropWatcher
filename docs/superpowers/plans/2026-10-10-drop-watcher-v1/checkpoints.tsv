@@ -1,2 +1,3 @@
 when	checkpoint	evidence
 2026-10-10	M0 Foundation COMPLETE (DW-00..03), reviewed (5 medium+ fixed)	DropWatcher 8654455: 143 passed/0 failed/1 skipped, luacheck 0/0 in 39 files, first automated bundle 20261010-232937 green (max CCN 10); WowAddonStandards c1f1cdc (v2.78.3, check-standard ok); Ka0sAddonsCommonTasks 928cdff
+2026-10-11	M1 pure kernels COMPLETE (DW-10..15), reviewed (4 medium+ fixed, 10 low noted)	DropWatcher 6c96336: 287 passed, 0 failed, 1 skipped, 288 total; Total: 0 warnings / 0 errors in 52 files
