@@ -217,6 +217,27 @@ local function trade(out)
     end
 end
 
+-- The messaging edge (design spec §9.2, §13): the one-ask registry by state, the sends, failures,
+-- refusals and flushes, each template's length, then one line per queued ask. Stored state only.
+local function messaging(out)
+    local A, M = NS.Asks, NS.Messaging
+    local st = A.Stats()
+    out:add(TAG, "messaging: asks=%s queued=%s sent=%s failed=%s ready=%s", st.asks, st.queued, st.sent,
+        st.failed, st.ready)
+    out:add(TAG, "messaging: sends=%s failures=%s refusals=%s flushes=%s flushing=%s", st.sends,
+        st.failures, st.refusals, st.flushes, st.flushing)
+    local cfg = A.Settings()
+    local lengths = {}
+    for i, kind in ipairs(NS.Constants.MESSAGE_KINDS) do
+        lengths[i] = kind .. "=" .. #M.Template(kind, cfg.templates)
+    end
+    out:joined(TAG, "messaging: template lengths", lengths)
+    out:add(TAG, "messaging: oneAsk=%s announceChannel=%s", cfg.oneAsk, cfg.announceChannel)
+    for _, a in ipairs(A.Queued()) do
+        out:add(TAG, "messaging: queued %s to %s, drop %s", a.kind, a.target, a.dropID)
+    end
+end
+
 local function registration(out)
     local names = NS.FeatureEventNames and NS.FeatureEventNames() or {}
     out:joined(TAG, "feature events (declared)", names)
@@ -248,6 +269,7 @@ function NS.Diagnostics.Sections()
         { "gear",         gear },
         { "feed",         feed },
         { "trade",        trade },
+        { "messaging",    messaging },
         { "registration", registration },
         { "integrations", integrations },
     }

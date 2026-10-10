@@ -147,6 +147,7 @@ modules\TradeTimer.lua
 # Conventional: publishes NS.TradeHelper, the click-driven trade actions; builds its reason texts
 # from NS.L at load. NS.Restrictions, NS.Roster and NS.TradeTimer (above) are read at call time.
 modules\TradeHelper.lua
+modules\Asks.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

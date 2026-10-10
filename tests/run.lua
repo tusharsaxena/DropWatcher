@@ -116,6 +116,7 @@ Kit.run{
         "test_feed",
         "test_trade_timer",
         "test_trade_helper",
+        "test_asks",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

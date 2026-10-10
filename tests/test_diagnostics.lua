@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,inspect,gear,feed,trade,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,inspect,gear,feed,trade,messaging,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -162,4 +162,18 @@ test("diagnostics: the inspect section shows the queue and each member's entry",
     local text = report(NS)
     assertTrue(text:find("inspect: queued=0 inFlight=Player-1-0000000A parked=false", 1, true) ~= nil, text)
     assertTrue(text:find("inspect: Brakk-Testrealm status=pending reason=none spec=unknown slots=0", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the messaging section counts the registry, the sends and lists each queued ask", function()
+    local NS, _, m = T.enableAddon()
+    local text = report(NS)
+    assertTrue(text:find("messaging: asks=0 queued=0 sent=0 failed=0 ready=0", 1, true) ~= nil, text)
+    assertTrue(text:find("messaging: template lengths ask=", 1, true) ~= nil, text)
+    m.setGroup({ { guid = "Player-1-0000000A", name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
+    NS.Roster.Refresh("test")
+    m.chatLockdown = true
+    NS.Asks.Request("ask", "Brakk", 7)
+    text = report(NS)
+    assertTrue(text:find("messaging: asks=1 queued=1", 1, true) ~= nil, text)
+    assertTrue(text:find("messaging: queued ask to Brakk-Testrealm, drop 7", 1, true) ~= nil, text)
 end)

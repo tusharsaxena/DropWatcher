@@ -547,6 +547,30 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
+### test_asks.lua (21)
+
+- send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
+- send: every token comes from the drop: item, ilvl, slot, track and both gains
+- send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again
+- send: an edited text over 255 bytes is refused tooLong and nothing is sent
+- send: a stranger, yourself, an offline member and a missing target are refused
+- send: an offer whispers the candidate, named in {player}
+- fail: a raising sender fails with its message, prints nothing, and may be retried
+- fail: a secret or empty error reads as error; no sender at all is noApi
+- fail: the deprecated global sender is the fallback
+- announce: auto picks INSTANCE_CHAT, then RAID, then PARTY, and never SAY or YELL
+- announce: outside a group it fails noChannel
+- queue: under a restriction the ask is queued, and the lift sends it at once
+- flush: one send every 1.5 seconds, first in first out
+- flush: a restriction back mid-flush stops it; the rest wait for the next trigger
+- flush: ENCOUNTER_END and CHALLENGE_MODE_COMPLETED re-read a lockdown that lifted silently
+- flush: a trigger with nothing queued, or while chat is still restricted, sends nothing
+- cancel: pressing a queued ask cancels it; the lift sends nothing and the button is ready
+- cancel: an ask queued to a looter who leaves is dropped; others stay
+- cancel: a queued announce is dropped once you leave the group
+- test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
+- stand-down: a request is refused, the flush timer is canceled and the queue is dropped
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -559,7 +583,7 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (12)
+### test_diagnostics.lua (13)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -573,6 +597,7 @@ Total.
 - diagnostics: the feed section counts the drops, the hidden ones and the context
 - diagnostics: the trade section shows the timers, the ticker and each entry
 - diagnostics: the inspect section shows the queue and each member's entry
+- diagnostics: the messaging section counts the registry, the sends and lists each queued ask
 
 ### test_vendor_sync.lua (3)
 
@@ -670,8 +695,9 @@ Total.
 | test_feed.lua | 36 |
 | test_trade_timer.lua | 15 |
 | test_trade_helper.lua | 15 |
+| test_asks.lua | 21 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 12 |
+| test_diagnostics.lua | 13 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -679,4 +705,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **537** |
+| **Total** | **559** |

@@ -32,10 +32,12 @@ or `legacy`), read by `modules/TradeRules.lua` as its `ctx.rules` map; it has no
 Settings › Trade). An absent, unknown or default-equal value means the design spec §7.2 default
 from `C.CONTENT_RULE`, and the reset empties the map.
 
-`messages.templates.<kind>` (`ask`, `offer`, `announce`) and `messages.oneAsk` are read by
-`modules/Messaging.lua` through the edge's `opts` (DW-2A); they have no row yet (DW-40 adds
+`messages.templates.<kind>` (`ask`, `offer`, `announce`), `messages.oneAsk` and
+`messages.announceChannel` are read by the messaging edge (`modules/Asks.lua`, `NS.Asks.Settings`),
+which hands the first two to `modules/Messaging.lua` as its `opts`; they have no row yet (DW-40 adds
 Settings › Messages). An absent or empty template means the design spec §9.1 default from
-`C.MESSAGE_TEMPLATES`, and an absent `oneAsk` means on.
+`C.MESSAGE_TEMPLATES`, an absent `oneAsk` means on, and an absent or unknown `announceChannel`
+(anything but `INSTANCE_CHAT`, `RAID` or `PARTY`) means `auto`.
 
 `window.*` is geometry only a drag or a resize sets: no row addresses it, and its one owner is
 `modules/Window.lua` (`savePoint`, `saveSize`, `Window.ResetPosition`), as `docs/ARCHITECTURE.md` →

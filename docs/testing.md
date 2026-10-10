@@ -103,7 +103,15 @@ the member named by GUID, name or Name-Realm; a moved item found by a walk of th
 slot first, a secret GUID refused; not in the bags, expired, a busy cursor left alone, no drop API
 putting the pickup back; `CanGive` touching nothing; combat refused before the range is read; a
 stranger, yourself, an offline member and one out of range; the stand-down; every reason's tooltip
-line; `Open` and its missing API; the diagnostics line),
+line; `Open` and its missing API; the diagnostics line), `test_asks` (the messaging edge: a
+whisper to the looter's Name-Realm with the template expanded from the drop's tokens and one
+confirmation line; the one-ask guard and `messages.oneAsk`; an edited text over 255 bytes; a
+stranger, yourself, an offline member and a missing or secret target refused; an offer to a
+candidate; a raising sender failed with its message and retried, a secret error, no sender, the
+deprecated global fallback; the announce channel; queueing under a restriction and the flush on
+the lift, `ENCOUNTER_END` and `CHALLENGE_MODE_COMPLETED`, one send every 1.5 seconds first in first
+out, stopped by a lockdown mid-flush; cancel by a second press and when the looter leaves, and a
+queued announce once out of a group; test mode printing instead of sending; the stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

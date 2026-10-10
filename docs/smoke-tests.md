@@ -28,7 +28,7 @@ passed.
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
 | INSPECT-1..4 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
-| ASK-1..8 | Ask | Asking, offering, queueing under restriction, auto-ask (lands with DW-2A, DW-33, DW-54) |
+| ASK-1..8 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); the buttons and auto-ask (ASK-5..8, DW-33, DW-54) |
 | SIT-1..5 | Situations | Where the addon is active (lands with DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (lands with DW-12) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
@@ -135,8 +135,8 @@ to `none` when the boss dies; `/dw diagnostics` mid-fight → `restrictions: rea
 canSendChat=false canInspect=false canTrade=false`. Outside any encounter but in combat →
 `reason=combat canSendChat=true`. Record which `active` reasons the report lists in a dungeon out of
 combat (the design expects `map` alone), and in a Mythic+ key between pulls (is `challengeMode`
-there, and does `/dump C_ChatInfo.InChatMessagingLockdown()` say true?). The badge and the queued
-asks are DW-30's and DW-2A's to add to this check. Result:
+there, and does `/dump C_ChatInfo.InChatMessagingLockdown()` say true?). The badge is DW-30's to add
+to this check; the queued asks are ASK-2. Result:
 
 **COMBAT-3. Combat ends test mode.** Turn test mode on, pull a training dummy → test mode ends with
 the chat line `Test mode ended: you entered combat.`; `/dw test` in combat is refused. With General
@@ -382,9 +382,51 @@ action failed" message, or an item left on the cursor. Result:
 ## Ask
 
 The messaging core's decisions (token expansion, the length limit, the one-ask guard, the queue's
-order and cancel) are headless-tested (`test_messaging`); nothing sends until the edge lands.
-Reserved for DW-2A, DW-33 and DW-54: ASK-1..8, including ASK-4 (does a whisper from a click work
-during an encounter?).
+order and cancel) are headless-tested (`test_messaging`), and the edge's send, queue, flush, cancel
+and test-mode routing too (`test_asks`); these checks confirm the client's side. The row buttons
+arrive with DW-33 (ASK-5..7) and auto-ask with DW-54 (ASK-8); until then each check drives the edge
+from the chat box, with a drop already in the feed (`/dw diagnostics` names the drops; `/dw debug on`
+shows the `[MSG]` lines):
+
+```
+/run local DW = LibStub("AceAddon-3.0"):GetAddon("DropWatcher"); local d = DW.LootFeed.Drops()[1]; print(d.id, d.looter.name, DW.Asks.Request("ask", d.looter.name, d.id))
+```
+
+Use a friend who knows the test is coming: every check whispers them.
+
+**ASK-1. A whisper and its confirmation.** In a group, out of combat and outside any encounter, with
+a drop the friend looted: run the line above → the friend receives "Hi <name>, if you don't need
+[item], could I have it? It'd be +N for me. No worries if not!" with the item link intact, the chat
+frame shows your own outgoing whisper, and the addon prints one line `Whispered <name>: [item]`;
+the print reads `sent`. Run it again → `refused alreadyAsked`, and nothing is whispered. Swap
+`"ask"` for `"announce"` (the target is ignored) → "[item] is up for grabs, whisper me." in party
+chat (raid chat in a raid, instance chat in a dungeon finder group) and `Announced in <channel>:
+[item]`. The failure looks like a Lua error, no whisper with `sent` printed, a broken link, or a
+`[MSG] send failed` line (record its reason). Result:
+
+**ASK-2. Queued under a restriction, flushed at the kill.** In a dungeon, pull a boss and, during
+the fight, run the line for a drop of an earlier boss → the print reads `queued`, a `[MSG] queued
+... (encounter)` line appears, and nothing is whispered. Kill the boss → within about a second of
+the kill the whisper goes out with its `Whispered` line and a `[MSG] flush (restrictionLifted)` or
+`flush (ENCOUNTER_END)` line. With two or three asks queued (several drops, or two friends), they
+leave about 1.5 seconds apart in the order they were asked. In a Mythic+ key, an ask queued between
+pulls (record whether `challengeMode` holds it) goes out at the end of the key. The failure looks
+like a whisper that never leaves after the kill (`/dw diagnostics` → `messaging: queued ...` still
+listed), all of them at once, or a client "Interface action failed" message. Result:
+
+**ASK-3. Cancel.** Queue an ask during a boss fight as in ASK-2, then run it again with `Press` in
+place of `Request` → the print reads `ready canceled`, `[MSG] canceled ...`, and the kill sends
+nothing. Queue another, then have the friend leave the group before the kill → `[MSG] canceled ...:
+left the group`, and nothing is whispered after the kill. Result:
+
+**ASK-4. A whisper during an encounter.** The design queues every ask while the Encounter
+restriction is active, because the client is expected to block addon chat then. In a boss fight
+(outside a key), run `/run C_ChatInfo.SendChatMessage("test", "WHISPER", nil, "<friend-Realm>")`
+→ record whether the friend receives it, and any error or "Interface action failed" message. If it
+arrives, the queue holds asks longer than it must (design spec §9.2 and COMBAT-2's reasons are
+then revisited). Then, outside combat, turn test mode on (`/dw test`) and run the ASK-1 line with
+`oneAsk` in mind (a drop not asked yet) → `Test mode, not sent: ...` is printed, the print reads
+`sent`, and nobody is whispered. Result:
 
 ## Situations
 
@@ -468,3 +510,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | FEED-2..6 | DW-27, the feed | No client pass recorded yet |
 | TRADE-5 | DW-28, the trade timer | No client pass recorded yet |
 | TRADE-6 | DW-29, the trade helper | No client pass recorded yet |
+| ASK-1..4 | DW-2A, the messaging edge | No client pass recorded yet |

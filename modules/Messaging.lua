@@ -2,8 +2,8 @@ local _, NS = ...
 -- modules/Messaging.lua — the messaging core (design spec §9.1-§9.2): templates, tokens, the
 -- length check, the one-ask guard and the send queue's state machine.
 --
--- PURE. It makes no WoW API call, sends nothing and reads no saved variable: the edge (DW-2A)
--- holds one book (NewBook), passes the restriction answer and the owner's templates in `opts`,
+-- PURE. It makes no WoW API call, sends nothing and reads no saved variable: the edge
+-- (modules/Asks.lua) holds one book (NewBook), passes the restriction answer and the owner's templates in `opts`,
 -- sends what Request or Dequeue hands it, and reports the result with MarkSent or MarkFailed. The
 -- defaults are data in core/Constants.lua (C.MESSAGE_*).
 --

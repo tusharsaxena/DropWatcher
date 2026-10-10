@@ -27,9 +27,11 @@ traded; the diagnostics report counts what it holds. Your own drops' exact trade
 too: each one's bag item is read for its trade-time line, and a chat line warns once when ten
 minutes are left. The trade helper behind the coming Trade and Offer buttons is in too: it hands your
 drop to a member or opens a trade, and refuses with a reason in combat or out of range. Nothing draws the drops yet: the window's
-feed tabs, asking and trading, and the settings that tune the feed arrive with the plan's later
+feed tabs, the ask and trade buttons, and the settings that tune the feed arrive with the plan's later
 items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
-The messaging core exists as a pure module that nothing calls yet.
+The messaging edge behind the coming ask buttons is in: it whispers the looter (or a candidate, or
+announces to the group) with one confirmation line, queues while chat is restricted and sends the
+queue when the restriction lifts or the boss dies, and in test mode prints instead of sending.
 
 ## What it deliberately does not do (v1)
 

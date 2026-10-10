@@ -40,14 +40,15 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 31 | `modules/LootFeed.lua` | orchestrator | `NS.LootFeed`: the feed of design spec §3 and §6, each drop taken from `CHAT_MSG_LOOT` (the parser's sink), `ENCOUNTER_LOOT_RECEIVED` and `C_LootHistory`, the reports of one drop merged, drops grouped by encounter or keystone run, the situation gate, the filters and the quality gate before any inspect, the verdicts for you and for the looter, the trade estimate, your own drops' candidates, the score retry, `Add` for `/dw add` and test mode; sends `DropAdded` and `DropUpdated` |
 | 32 | `modules/TradeTimer.lua` | edge | `NS.TradeTimer`: the exact trade countdown of design spec §7.4 on your own drops, each one's bag item matched by link then item id and read for its `TradeTimeRemaining` line (or the localized sentence, decoded) on `BAG_UPDATE_DELAYED`, `LOOT_CLOSED` and your own `DropAdded`, at most one scan per 2s; expiries keyed by item GUID; one shared ticker (1s with the window shown, 60s hidden, off with nothing live); the warning once per item at `trade.warnAt`; sends `TradeTimerTick` and `TradeTimerExpiring` |
 | 33 | `modules/TradeHelper.lua` | edge | `NS.TradeHelper`: the click-driven trade actions of design spec §4: `Give(dropID, target)` finds your drop's bag item by its GUID (the trade timer's slot first, then a walk of the bags) and hands it over with `PickupContainerItem` and `DropItemOnUnit`; `Open(target)` is `InitiateTrade`; `CanGive` and `CanTradeWith` check without acting. Each refusal is a reason with its tooltip line (`ReasonText`): disabled, combat, not a member, yourself, offline, out of trade range, not in the bags, expired, a busy cursor, no API. No events, no timers, no messages |
-| 34 | `modules/Window.lua` | UI | the main window's shell and its show decision; tells visibility listeners (the trade timer) on every show and hide |
-| 35 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 36 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 37 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 38 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 39 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 40 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 41 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 34 | `modules/Asks.lua` | edge | `NS.Asks`: the messaging edge of design spec §9.2-§9.3 (the pure core is `modules/Messaging.lua`): `Request(kind, target, dropID, opts)` resolves the recipient through the roster, builds the tokens from the drop, runs the core's guard and length check, and sends through `Compat.ChatSender` inside `pcall` with one confirmation line, or queues while chat is restricted; `Flush` on `RestrictionChanged`, `ENCOUNTER_END` and `CHALLENGE_MODE_COMPLETED`, one send every 1.5s; `Press` and `Cancel`, and the asks queued to a member who left canceled on `GROUP_ROSTER_UPDATE`; test mode prints instead of sending; sends `AskStateChanged`
+| 35 | `modules/Window.lua` | UI | the main window's shell and its show decision; tells visibility listeners (the trade timer) on every show and hide |
+| 36 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 37 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 38 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 39 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 40 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 41 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 42 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.

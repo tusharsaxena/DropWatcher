@@ -231,6 +231,37 @@ a click (My drops tab / Offer panel, DW-33)
 Nothing is sent on the bus; the trade itself is the client's. Stood down, every call refuses with
 `stoodDown`.
 
+## Asking, offering and announcing (DW-2A, spec §9.2-§9.3)
+
+```
+a click (row button, Offer panel, DW-33) or auto-ask (DW-54)
+  ─> Asks.Request(kind, target, dropID, opts)       Asks.Press: a queued ask is canceled instead
+      ─> stoodDown: refused disabled
+      ─> recipient: an announce is "group"; a test drop or test mode takes the name as given;
+         else Roster.Resolve ─> notInGroup / self / offline, or the member's Name-Realm
+      ─> tokens from the drop: item, ilvl, slot, track, gain (the looter's, or the candidate's
+         for an offer), mygain (yours); opts.ctx laid over them, opts.text replaces the template
+      ─> Messaging.Request (pure): alreadyAsked / tooLong / badRequest, or queue, or send
+         canSend = test or Restrictions.CanSendChat()
+  queue ─> AskStateChanged(dropID, "queued", kind, target)
+  send  ─> pcall(Compat.ChatSender(), text, "WHISPER", nil, Name-Realm)
+           (announce: INSTANCE_CHAT, else RAID, else PARTY; noChannel outside a group)
+           test: NS.Print("Test mode, not sent: ...") instead
+        ─> Messaging.MarkSent, "Whispered Name: [item]"      or Messaging.MarkFailed(reason)
+        ─> AskStateChanged(dropID, "sent" | "failed", kind, target, reason)
+
+RestrictionChanged(reason, canSendChat = true) ─┐
+ENCOUNTER_END ─> Restrictions.Refresh ──────────┼─> Asks.Flush(trigger)
+CHALLENGE_MODE_COMPLETED ─> Restrictions.Refresh┘     Messaging.ShouldFlush ─> one ask now, then one
+                                                      every 1.5s (C_Timer); stops while chat is
+                                                      restricted again
+GROUP_ROSTER_UPDATE (after the roster re-read) ─> Asks.OnRosterChanged
+  ─> Messaging.CancelTarget for each member who left (and "group" outside a group)
+  ─> AskStateChanged(dropID, "ready", kind, target, "left")
+```
+
+The stand-down cancels the flush timer and drops the queued asks; the sent registry is kept.
+
 ## The design's loot pipeline (spec §3)
 
 ```

@@ -16,7 +16,7 @@ local _, NS = ...
 -- until both agree. The answers are read live on every call, so a caller is never behind the
 -- client; RESTRICTION_CHANGED (reason, canSendChat) is sent when the four answers move, from the
 -- event, both combat edges and the stand-up. A lockdown that lifts with no event of its own is
--- picked up by the next read, and by Refresh, which the messaging edge (DW-2A) calls on
+-- picked up by the next read, and by Refresh, which the messaging edge (modules/Asks.lua) calls on
 -- ENCOUNTER_END and CHALLENGE_MODE_COMPLETED.
 --
 -- Reasons, in the badge's priority order: encounter, challengeMode, pvpMatch, chat (the Chat

@@ -63,6 +63,9 @@ its quality, the threshold, the mode and the reason), `EVAL` (one line per re-ju
 inspect or a gear change, with the number of drops), `TRADE` (one line per trade-timer scan while
 you have own drops, with the cause, the own drops and the live timers; one per warning, with the
 drop, the item and the seconds left; one per trade-helper give or open, with the bag slot and the
-unit, and one per refusal, with its reason). The
+unit, and one per refusal, with its reason), `MSG` (one line per ask, offer or announce sent, queued
+with the restriction that held it, failed with its reason, refused with its reason, or canceled by a
+click or because its looter left; one per flush started, with its trigger and the queue length; one
+when the stand-down drops queued asks). The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 The design's other feature tags (spec §13) arrive with their modules.

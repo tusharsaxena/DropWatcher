@@ -77,7 +77,12 @@ helper (`TradeHelper.lua`: called only from a click, it hands one of your drops 
 item found by GUID and dropped on them, or opens an empty trade, and refuses with a reason in combat,
 out of range, for a stranger, yourself or an offline member, and for an item gone, expired or a busy
 cursor; no events, no timers, no messages), the messaging core (`Messaging.lua`, pure: a
-template and its tokens in, the text and the ask's next state out; it sends nothing), the window (which tells visibility listeners, the trade timer's ticker, on every show and hide) and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
+template and its tokens in, the text and the ask's next state out; it sends nothing), the messaging
+edge (`Asks.lua`: an ask, offer or announce resolved to its recipient, expanded from the drop's
+tokens and sent through `Compat.ChatSender` inside `pcall` with one confirmation line, or queued
+while chat is restricted and flushed one every 1.5 seconds when the restriction lifts, on
+`ENCOUNTER_END` and on `CHALLENGE_MODE_COMPLETED`; a queued ask is canceled by a second click or
+when its looter leaves; test mode prints instead of sending; it sends `AskStateChanged`), the window (which tells visibility listeners, the trade timer's ticker, on every show and hide) and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
@@ -103,10 +108,11 @@ named sender each (design spec §3). With LibKa0s-Bus present the table is the s
 so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` /
 `NS.StandUp` take every tracked registration down and replay it.
 
-Eight messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
-`INSPECT_DONE`, `DROP_ADDED`, `DROP_UPDATED`, `TRADE_TIMER_TICK` and `TRADE_TIMER_EXPIRING`; the feed
-(`modules/LootFeed.lua`) receives `INSPECT_DONE` and `GEAR_CHANGED`, and the trade timer
-(`modules/TradeTimer.lua`) `DROP_ADDED`, each on its own tracked target. Every other sender module below is **planned**: it
+Nine messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
+`INSPECT_DONE`, `DROP_ADDED`, `DROP_UPDATED`, `TRADE_TIMER_TICK`, `TRADE_TIMER_EXPIRING` and
+`ASK_STATE_CHANGED`; the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE` and `GEAR_CHANGED`,
+the trade timer (`modules/TradeTimer.lua`) `DROP_ADDED`, and the messaging edge (`modules/Asks.lua`)
+`RESTRICTION_CHANGED`, each on its own tracked target. Every other sender module below is **planned**: it
 does not exist until the item named in its row lands. The payloads and consumers are the design
 intent. The item that first sends a message confirms its payload here, and each item that subscribes
 adds itself as a consumer.
@@ -117,9 +123,9 @@ adds itself as a consumer.
 | `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved) or `score` (a pending score retried). Never for a test drop | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (sent since DW-26) | `guid`. Sent once per job when it ends: after a read (`fresh` or `cached`), once the read items' facts have loaded or been given up on; at once for `outOfRange` and `failed`. `NS.Inspect.Get(guid)` says which | LootFeed (since DW-27): re-judges the drops that looter received and your own drops' candidate of that GUID |
 | `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (since DW-27): re-judges you on every drop; the quality gate's dynamic threshold reads the snapshot at the next drop |
-| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (DW-2A): flush the queue; Window restriction badge (DW-30) |
+| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (since DW-2A, `modules/Asks.lua`): `canSendChat` true starts a flush of the queued asks; Window restriction badge (DW-30) |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | Window (DW-30): auto-open and the footer. LootFeed reads `NS.Situations.Current()` at each receipt for its gate and subscribes to nothing |
-| `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Messaging.lua` (DW-2A) | `dropId`, `state` | Window feed tabs (DW-30), detail card (DW-32) |
+| `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Asks.lua` (sent since DW-2A) | `dropId`, `state` (`queued`, `sent`, `failed`, or `ready` after a cancel), `kind` (`ask`, `offer` or `announce`), `target` (the Name-Realm, or `group` for an announce), `reason` (a failure's reason, or `canceled` / `left` after a cancel). Sent on every move of one ask; `NS.Asks.StateOf(kind, target, dropId)` reads it back | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33), History (DW-51): the `asked` outcome |
 | `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (sent since DW-28) | none. Sent on every tick of the shared ticker (each second while the window is shown, each minute while it is hidden, never with nothing live) and after a scan that found your own drops or dropped the last entries; `NS.TradeTimer.ForDrop(dropId)` and `Remaining(entry)` are the countdown | My drops tab (DW-33), detail card (DW-32) |
 | `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (sent since DW-28) | `dropId`, `itemGUID`, `remaining` (seconds). Sent once per item, when its remaining time first falls to `trade.warnAt` (600s) or less; the module prints the chat warning itself, and the entry's `warned` is set | My drops tab (DW-33): bold row |
 | `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (DW-51) | none | History tab (DW-51) |
@@ -148,8 +154,8 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `PLAYER_ENTERING_WORLD` | `DW.OnSituationEvent`, then `DW.OnInspectWorldEvent` (through `DW:OnSharedFeatureEvent`) | re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change; then, inside an instance, arms the inspect warm-up (`modules/Inspect.lua`) |
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSituationEvent` | the same |
 | `CHALLENGE_MODE_START` | `DW.OnSituationEvent`, then `DW.OnFeedRunStart` (through `DW:OnSharedFeatureEvent`) | the same (a keystone started); then opens the run's drop group (`modules/LootFeed.lua`) |
-| `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd` (the same) | the same (a keystone ended); then keeps the run's group open 120 seconds for the chest |
-| `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the same (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`) |
+| `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent` (the same) | the same (a keystone ended); then keeps the run's group open 120 seconds for the chest; then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`) |
+| `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the same (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then `DW.OnAskRosterEvent` cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |
@@ -159,7 +165,7 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `INSPECT_READY` | `DW.OnInspectReadyEvent` | reads the inspected member's slots and spec after 0.15s, for the job in flight or any other group member (`modules/Inspect.lua`); sends `InspectDone` when the job ends |
 | `UNIT_INVENTORY_CHANGED` | `DW.OnInspectInventoryEvent` | marks a group member's inspect read stale and re-queues it as a warm-up job (`modules/Inspect.lua`) |
 | `ENCOUNTER_START` | `DW.OnFeedEncounterStart` | the encounter in progress, which names the group of the drops that follow (`modules/LootFeed.lua`) |
-| `ENCOUNTER_END` | `DW.OnFeedEncounterEnd` | a kill keeps the encounter's group open 120 seconds for its loot; a wipe closes it |
+| `ENCOUNTER_END` | `DW.OnFeedEncounterEnd`, then `DW.OnAskFlushEvent` (through `DW:OnSharedFeatureEvent`) | a kill keeps the encounter's group open 120 seconds for its loot; a wipe closes it; then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`) |
 | `ENCOUNTER_LOOT_RECEIVED` | `DW.OnFeedEncounterLoot` | a drop reported by the encounter, with its encounter id; merged with the chat line of the same drop |
 | `LOOT_CLOSED` | `DW.OnTradeTimerEvent` | asks for the trade timer's scan: the items just looted are in the bags (`modules/TradeTimer.lua`) |
 | `LOOT_HISTORY_UPDATE_DROP` | `DW.OnFeedLootHistory` | a group-loot drop, taken once it has a winner (`C_LootHistory` through `core/Compat.lua`); merged with the other reports |
@@ -176,8 +182,11 @@ in combat by the options library, which also locks a page shown in combat; the a
 its own and never closes Blizzard's settings window (options-ui-§2). The trade actions
 (`PickupContainerItem`, `DropItemOnUnit`, `InitiateTrade`) and the chat sender are wrapped in
 `core/Compat.lua` and guard nothing themselves: the trade helper (`modules/TradeHelper.lua`) and the
-planned messaging edge (DW-2A) call them only from a click, and check combat, range and restriction
-state first (design spec §4, §9). The trade helper reads `NS.Restrictions.CanTrade()` before the
+messaging edge (`modules/Asks.lua`) call them only from a click, or for a queued ask from the flush
+timer, and check combat, range and restriction state first (design spec §4, §9). The chat sender
+runs inside `pcall`, so a client refusal is a failed ask, never a Lua error; a whisper and a
+PARTY, RAID or INSTANCE_CHAT message need no hardware event, so the timer may send them, and SAY
+and YELL, which do, are never used. The trade helper reads `NS.Restrictions.CanTrade()` before the
 trade range, because `CheckInteractDistance` is not to be called in combat, and never picks up an
 item while the cursor holds another, so nothing of the player's is swapped away. The inspect broker (`modules/Inspect.lua`) watches `NotifyInspect` through
 `hooksecurefunc` (in `core/Compat.lua`), never by replacing it; it never inspects in combat or while
@@ -188,7 +197,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
 
 - v0.1.0 is the frame of the addon: the feed records and judges drops, but the window is empty
   apart from its test-mode banner until the feed tabs land (DW-30, DW-31), and asking and trading
-  do not exist yet ([`scope.md`](scope.md)).
+  have no buttons until the My drops tab and the Offer panel land (DW-33): the messaging edge and
+  the trade helper are reachable only from code ([`scope.md`](scope.md)).
 - The class tables (`core/ClassData.lua`) are a fallback for a candidate whose spec is not known
   yet; an item's own spec list wins whenever it exists. Devourer Demon Hunter (spec 1480, from the
   client's trait-tree data) is recorded as an Intellect dual wielder that takes no held off hand,
@@ -235,8 +245,20 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   one decimal at most. The length limit counts the raw bytes, so an item link counts whole. An
   ask that is queued, or handed to the sender and not yet reported, is never asked twice, even
   with `messages.oneAsk` off; a failed one may be retried, and a canceled one leaves the registry,
-  so its button is ready again. Nothing sends yet: the edge (DW-2A) wires the restriction check,
-  the send and the flush timer, and the `messages.*` settings have no row until DW-40.
+  so its button is ready again. The `messages.*` settings have no row until DW-40.
+- The messaging edge (`modules/Asks.lua`) reads six cases the design leaves open. Design spec §4
+  puts the core and the edge in one file; they are two, so the core stays pure and its suite needs
+  no client. An ask is refused before the core when its recipient is not in the group, is you, or
+  is offline (`notInGroup`, `self`, `offline`); the registry files a whisper under the member's
+  Name-Realm, and an announce under `group`, one per drop whatever the channel. A raise inside the
+  sender is the failure's reason (a secret or empty one reads `error`); no sender is `noApi`, and an
+  announce outside a group `noChannel`. The first queued ask goes at once when a flush starts and
+  the rest every 1.5 seconds; a restriction back mid-flush stops it until the next trigger. Test
+  mode, and a test drop, print the text instead of sending, mark the ask sent and never queue it.
+  The stand-down drops the queued asks, because no trigger reaches them while down; the sent
+  registry is kept for the session. The `asked` history outcome is written by History (DW-51) from
+  `AskStateChanged`, and the edit-first popup is the Offer panel's (DW-33), which passes the edited
+  text in. Whether a whisper really is blocked during an encounter is ASK-4.
 - The restriction tracker (`modules/Restrictions.lua`) reads four cases the design leaves open.
   Chat is stopped by the Encounter, ChallengeMode, PvPMatch and Chat restriction types and by the
   chat lockdown; combat alone stops inspects and trades, not chat; the Map type, active for the
@@ -405,6 +427,7 @@ deviation not in this table is not ratified.
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
 | library-stack-§7, anti-pattern #47 | The chat sender (`Compat.ChatSender`) and the tooltip line reader with its duration decoder (`Compat.ReadTooltipLine`, `DecodeDuration`) are written in this addon, not taken from LibKa0s | No LibKa0s major carries them, and MultiMeters' `ChatSender` is the only other copy; the promotion bars (two consumers with the same semantics) are not met yet. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a major carrying either shape, or a second Ka0s addon needs the reader or the decoder |
+| (no rule yet) chat sent by an addon | The addon whispers and posts to group chat on the player's behalf: an ask or offer whispered to one member, an announce to INSTANCE_CHAT, RAID or PARTY, each from a click or, when queued under a restriction, from the 1.5-second flush timer (`modules/Asks.lua`) | The standard has no rule for addon-sent chat. The addon holds itself to design spec §9: one send per click, the one-ask guard, the 255-byte limit, the restriction queue, `pcall` around the sender, never SAY or YELL, a confirmation line per send, and test mode printing instead. A WowAddonStandards proposal issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | The standard adopts a rule for addon-sent chat |
 | library-stack-§7, anti-pattern #47 | The loot parser (`modules/LootParser.lua`: the `LOOT_ITEM*` GlobalStrings compiled into patterns for every looter, rebuilt when the globals change, the upgrade and crafting echoes rejected) is written in this addon, not taken from LibKa0s | No LibKa0s major parses loot lines. LootHistory carries the only other parser (`core/Util.lua`), and it reads the player's own loot only, so the semantics differ. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a loot-line major, or LootHistory needs third-person loot |
 | library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
 

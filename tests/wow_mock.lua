@@ -25,6 +25,8 @@
 --   unknownDifficulties  ids GetDifficultyInfo answers nil for (a retired or renumbered difficulty)
 --   tooltips       C_TooltipInfo's answers: .bag["bag:slot"], .inventory["unit:slot"], .hyperlink[link]
 --   chatSent       every C_ChatInfo.SendChatMessage call; chatLockdown is InChatMessagingLockdown()
+--   instanceGroup  IsInGroup(LE_PARTY_CATEGORY_INSTANCE)'s answer (an instance group); IsInGroup()
+--                  with no category stays the base's __context.inGroup
 --   restrictionStates  C_RestrictedActions' state per Enum.AddOnRestrictionType value (absent = 0)
 --   upgradeInfo, accountBound, accountBoundUE  C_Item's answers per link; bagGUIDs["bag:slot"]
 --   items          the item cache C_Item reads: items[link] = { name, quality, ilvl, effectiveIlvl,
@@ -351,6 +353,16 @@ local function installUnits(M)
         M.__context.inGroup = #others > 0
         M.__context.inRaid = raid and true or false
         M.__context.groupSize = #others > 0 and #others + 1 or 0
+    end
+
+    -- IsInGroup(category): LE_PARTY_CATEGORY_INSTANCE answers instanceGroup (an instance group,
+    -- the announce channel's INSTANCE_CHAT); any other category, or none, is the base's answer.
+    M.LE_PARTY_CATEGORY_HOME, M.LE_PARTY_CATEGORY_INSTANCE = 1, 2
+    M.instanceGroup = false
+    local inGroup = M.IsInGroup
+    M.IsInGroup = function(category)
+        if category == M.LE_PARTY_CATEGORY_INSTANCE then return M.instanceGroup == true end
+        return inGroup(category)
     end
 end
 

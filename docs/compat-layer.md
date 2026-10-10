@@ -115,4 +115,5 @@ the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (
 `FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, the inspect broker (DW-26) the inspect shims, `InventoryItemLink` and `InventoryItemLevel`, the feed (DW-27)
 `LootHistoryDrop`, `ChallengeMapName` and the secret guards on every event payload, TradeTimer (DW-28, landed) reads
 `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount` and `BagItemLink`, the trade helper (DW-29, landed) the trade actions, `InTradeRange`, the cursor shims and `GetBagItemGUID`, `BagSlotCount`, the
-messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.
+messaging edge (DW-2A, landed: `modules/Asks.lua`) `ChatSender`, `IsSecret` on the recipient, the
+slot name and a raise's message, and the Pawn scorer (DW-50) the Pawn seam.
