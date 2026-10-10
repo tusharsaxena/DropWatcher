@@ -95,6 +95,20 @@ local function writeThroughRows(d)
     end
     return out
 end
+-- The row's validate, then its normalize, in the seam's order; the normalized value replaces w.value.
+local function checkValue(w)
+    local row = w.row
+    if type(row.validate) == "function" then
+        local ok, why = row.validate(w.value, w.rid)
+        if not ok then return false, why end
+    end
+    if type(row.normalize) == "function" then
+        local out, why = row.normalize(w.value, w.rid)
+        if out == nil then return false, why end
+        w.value = out
+    end
+    return true
+end
 local function addWrites(S, d, resolve)
     local through = writeThroughRows(d)
     local function prepare(path, value, id)
@@ -108,15 +122,8 @@ local function addWrites(S, d, resolve)
             if type(r) == "table" then w.root, w.first = r, f end
             if got ~= nil then w.rid = got end
         end
-        if type(row.validate) == "function" then
-            local ok, why = row.validate(value, w.rid)
-            if not ok then return nil, BRAND .. ": invalid value for " .. path, why end
-        end
-        if type(row.normalize) == "function" then
-            local out, why = row.normalize(value, w.rid)
-            if out == nil then return nil, BRAND .. ": invalid value for " .. path, why end
-            w.value = out
-        end
+        local ok, why = checkValue(w)
+        if not ok then return nil, BRAND .. ": invalid value for " .. path, why end
         if w.stored and not w.root then return nil, BRAND .. ": nowhere to store " .. path end
         return w
     end
@@ -138,15 +145,21 @@ local function addWrites(S, d, resolve)
         if type(d.announce) == "function" then d.announce(w.row, path, w.value, w.rid) end
         return true
     end
-    function S.SetMany(entries, opts)
-        local id = type(opts) == "table" and opts.instanceId or nil
+    -- Phase 1 of a batch: every entry prepared, nothing stored; the first refusal and its index.
+    local function prepareAll(entries, id)
         local ws = {}
         for i, e in ipairs(type(entries) == "table" and entries or {}) do
             if type(e) ~= "table" then e = {} end
             local w, err, why = prepare(e.path, e.value, id)
-            if not w then return false, err, why, i end
+            if not w then return nil, err, why, i end
             ws[i] = w
         end
+        return ws
+    end
+    function S.SetMany(entries, opts)
+        local id = type(opts) == "table" and opts.instanceId or nil
+        local ws, err, why, index = prepareAll(entries, id)
+        if not ws then return false, err, why, index end
         for _, w in ipairs(ws) do store(w) end
         for _, w in ipairs(ws) do react(w) end
         if #ws > 0 and type(d.announce) == "function" then

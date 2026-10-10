@@ -20,14 +20,14 @@ local function read(fn, ...)
     return v
 end
 
+-- The report runs after OnInitialize, so the db exists; a section that raises costs one line
+-- (the library pcalls each section).
 local function identity(out)
-    local db = NS.addon and NS.addon.db
-    local LC = NS.Lifecycle
-    out:add(TAG, "schema stored=%s code=%s", db and db.global and db.global.schemaVersion,
-        NS.SCHEMA_VERSION)
-    out:add(TAG, "profile=%s", db and db.GetCurrentProfile and db:GetCurrentProfile())
-    out:add(TAG, "enabled=%s stoodDown=%s", db and db.profile and db.profile.enabled, stoodDown())
-    out:joined(TAG, "holds", LC and LC.Holds and LC:Holds() or {})
+    local db = NS.addon.db
+    out:add(TAG, "schema stored=%s code=%s", db.global.schemaVersion, NS.SCHEMA_VERSION)
+    out:add(TAG, "profile=%s", db:GetCurrentProfile())
+    out:add(TAG, "enabled=%s stoodDown=%s", db.profile.enabled, stoodDown())
+    out:joined(TAG, "holds", NS.Lifecycle:Holds())
 end
 
 local function settings(out)
@@ -37,17 +37,22 @@ local function settings(out)
         { always = { "enabled" } })
 end
 
+local function profile()
+    local db = NS.addon and NS.addon.db
+    return db and db.profile or {}
+end
+
 -- The window's show decision and its inputs, so "why is the window not showing" is one read.
 local function window(out)
-    local W, State = NS.Window, NS.State
-    local p = NS.addon and NS.addon.db and NS.addon.db.profile
-    out:add(TAG, "window: built=%s shown=%s shouldShow=%s", W and W.Frame() ~= nil,
-        W and read(W.IsShown), W and read(W.ShouldShow))
+    local W, State, p = NS.Window, NS.State, profile()
+    out:add(TAG, "window: built=%s shown=%s shouldShow=%s", W.Frame() ~= nil, read(W.IsShown),
+        read(W.ShouldShow))
     out:add(TAG, "window: open=%s testMode=%s visibility=%s locked=%s", State.windowOpen,
-        State.testMode, p and p.visibility, p and p.locked)
-    local g = p and p.window or {}
-    out:add(TAG, "window: point=%s size=%sx%s", type(g.point) == "table" and table.concat(g.point, ",")
-        or "default", g.width or "default", g.height or "default")
+        State.testMode, p.visibility, p.locked)
+    local g = type(p.window) == "table" and p.window or {}
+    local point = type(g.point) == "table" and g.point or { "default" }
+    out:joined(TAG, "window: point", point)
+    out:add(TAG, "window: size=%sx%s", g.width or "default", g.height or "default")
 end
 
 local function registration(out)

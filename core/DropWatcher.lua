@@ -66,22 +66,31 @@ end
 --- launcher entry and `/dw test`. Refused while stood down and while in combat, which also ends it.
 --- @param on boolean
 --- @return boolean changed
+-- Repaint any open settings page, so a checkbox follows a change another surface made.
+local function refreshPanels()
+    local H = DW.Settings and DW.Settings.Helpers
+    if H and H.RefreshAll then H.RefreshAll() end
+end
+
+-- Why test mode may not turn on now, as the line to print, or nil when it may.
+local function testModeRefusal()
+    if NS.IsStoodDown() then return NS.SlashCommands:DisabledLine() end
+    if InCombatLockdown() then return NS.L["Test mode is not available in combat."] end
+    return nil
+end
+
 function NS.SetTestMode(on)
     on = on and true or false
     if on == NS.State.testMode then return false end
-    if on and NS.IsStoodDown() then
-        NS.Print(NS.SlashCommands:DisabledLine())
-        return false
-    end
-    if on and InCombatLockdown() then
-        NS.Print(NS.L["Test mode is not available in combat."])
+    local refusal = on and testModeRefusal()
+    if refusal then
+        NS.Print(refusal)
         return false
     end
     NS.State.testMode = on
     NS.Debug("State", "test mode %s", on and "on" or "off")
     if NS.Window then NS.Window.OnTestModeChanged(on) end
-    local H = DW.Settings and DW.Settings.Helpers
-    if H and H.RefreshAll then H.RefreshAll() end
+    refreshPanels()
     return true
 end
 
