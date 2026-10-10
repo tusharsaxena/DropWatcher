@@ -185,11 +185,23 @@ test("compat: TradeTimeRemaining reads the TradeTimeRemaining line of a bag item
     assertNil(Compat.TradeTimeRemaining(0, 4), "no tooltip")
 end)
 
-test("compat: with the line type known, only lines of that type are read", function()
+test("compat: with the line type known, a line of that type is read before any other", function()
     local Compat, m = fresh()
-    -- red under: a reader that ignores the type and parses every line
-    m.tooltips.bag["0:1"] = tooltip{ { 7, TRADE_LINE } }
-    assertNil(Compat.TradeTimeRemaining(0, 1))
+    local TT = m.Enum.TooltipDataLineType
+    local OTHER = "You may trade this item with players that were also eligible to loot this item for the next 5 min."
+    -- red under: a reader that takes the first line that parses, whatever its type
+    m.tooltips.bag["0:1"] = tooltip{ { 7, OTHER }, { TT.TradeTimeRemaining, TRADE_LINE } }
+    assertEqual(Compat.TradeTimeRemaining(0, 1), 7140)
+end)
+
+test("compat: the enum member exists but the line carries another type: the text still reads", function()
+    local Compat, m = fresh()
+    assertTrue(m.Enum.TooltipDataLineType.TradeTimeRemaining ~= nil)
+    -- red under: a reader that parses only lines of the wanted type when the enum has it
+    m.tooltips.bag["0:1"] = tooltip{ { 29, "Ring of Testing" }, { 7, TRADE_LINE } }
+    assertEqual(Compat.TradeTimeRemaining(0, 1), 7140)
+    m.tooltips.bag["0:2"] = tooltip{ { 29, "Ring of Testing" }, { 7, "Soulbound" } }
+    assertNil(Compat.TradeTimeRemaining(0, 2), "a foreign line is rejected by the parser")
 end)
 
 test("compat: without the enum member the reader falls back to the localized text", function()
@@ -384,14 +396,11 @@ test("compat: GetItemInfo copies the cached fields, nil while uncached or withou
     assertNil(Compat.GetItemInfo(nil)); assertNil(Compat.GetItemInfo(42))
 end)
 
-test("compat: GetItemInfo falls back to the global, and answers nil with neither", function()
+test("compat: GetItemInfo answers nil without C_Item.GetItemInfo; the dead global is never read", function()
     local Compat, m = fresh()
     seedRing(m)
-    local fn = m.C_Item.GetItemInfo
     m.C_Item.GetItemInfo = nil
-    m.GetItemInfo = fn
-    assertEqual(Compat.GetItemInfo(RING).name, "Ring")
-    m.GetItemInfo = nil
+    m.GetItemInfo = function() error("the removed global was called") end
     assertNil(Compat.GetItemInfo(RING))
 end)
 
@@ -438,7 +447,7 @@ test("compat: GetItemSpecs is a set, nil for an empty list or no API", function(
     assertNil(Compat.GetItemSpecs(RING))
 end)
 
-test("compat: GetItemUniqueness reads the category, the item's own uniqueness, and the global", function()
+test("compat: GetItemUniqueness reads the category and the item's own uniqueness", function()
     local Compat, m = fresh()
     seedRing(m)
     local cat, max = Compat.GetItemUniqueness(RING)
@@ -450,13 +459,7 @@ test("compat: GetItemUniqueness reads the category, the item's own uniqueness, a
     cat, max = Compat.GetItemUniqueness(RING)
     assertNil(cat); assertNil(max)
     m.C_Item.GetItemUniquenessByID = nil
-    m.GetItemUniqueness = function() return 12, 3 end
-    cat, max = Compat.GetItemUniqueness(RING)
-    assertEqual(cat, 12); assertEqual(max, 3)
-    m.GetItemUniqueness = function() return -1, 1 end
-    cat, max = Compat.GetItemUniqueness(RING)
-    assertNil(cat); assertEqual(max, 1)
-    m.GetItemUniqueness = nil
+    m.GetItemUniqueness = function() error("the removed global was called") end
     assertNil((Compat.GetItemUniqueness(RING)))
 end)
 
@@ -570,17 +573,13 @@ end)
 -- Trade actions
 -- ---------------------------------------------------------------------------------------------
 
-test("compat: PickupBagItem prefers C_Container, then the global, then reports false", function()
+test("compat: PickupBagItem calls C_Container, and reports false without it", function()
     local Compat, m = fresh()
     assertTrue(Compat.PickupBagItem(0, 3))
     assertEqual(m.tradeCalls[1][1], "PickupContainerItem")
     assertEqual(m.tradeCalls[1][3], 3)
     m.C_Container = nil
-    local legacy
-    m.PickupContainerItem = function(bag, slot) legacy = bag .. ":" .. slot end
-    assertTrue(Compat.PickupBagItem(1, 2))
-    assertEqual(legacy, "1:2")
-    m.PickupContainerItem = nil
+    m.PickupContainerItem = function() error("the removed global was called") end
     assertFalse(Compat.PickupBagItem(1, 2))
 end)
 
@@ -667,21 +666,18 @@ test("compat: InventoryItemLink reads the worn link, nil when empty, secret or a
     assertNil(Compat.InventoryItemLink("player", 1))
 end)
 
-test("compat: the bag readers prefer C_Container, then the globals, then answer empty", function()
+test("compat: the bag readers call C_Container, guard a secret answer, and answer empty without it", function()
     local Compat, m = fresh()
     m.bags[0] = { size = 2, [1] = "|Hitem:7::|h[Ring]|h" }
     assertEqual(Compat.BagSlotCount(0), 2); assertEqual(Compat.BagSlotCount(3), 0)
     assertEqual(Compat.BagItemLink(0, 1), "|Hitem:7::|h[Ring]|h"); assertNil(Compat.BagItemLink(0, 2))
-    m.C_Container.GetContainerNumSlots, m.C_Container.GetContainerItemLink = nil, nil
-    m.GetContainerNumSlots = function() return 4 end
-    m.GetContainerItemLink = function(bag, slot) return bag .. ":" .. slot end
-    assertEqual(Compat.BagSlotCount(1), 4, "the deprecated global")
-    assertEqual(Compat.BagItemLink(1, 3), "1:3")
     installSecrets(m)
-    m.GetContainerNumSlots = function() return T.secret(4) end
-    m.GetContainerItemLink = function() return T.secret("x") end
+    m.C_Container.GetContainerNumSlots = function() return T.secret(4) end
+    m.C_Container.GetContainerItemLink = function() return T.secret("x") end
     assertEqual(Compat.BagSlotCount(1), 0); assertNil(Compat.BagItemLink(1, 3))
-    m.GetContainerNumSlots, m.GetContainerItemLink = nil, nil
+    m.C_Container.GetContainerNumSlots, m.C_Container.GetContainerItemLink = nil, nil
+    m.GetContainerNumSlots = function() error("the removed global was called") end
+    m.GetContainerItemLink = function() error("the removed global was called") end
     assertEqual(Compat.BagSlotCount(1), 0); assertNil(Compat.BagItemLink(1, 3))
 end)
 

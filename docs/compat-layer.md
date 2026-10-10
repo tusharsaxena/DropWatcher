@@ -23,6 +23,11 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 - Enum values are resolved by **name** (`Enum.TooltipDataLineType.TradeTimeRemaining`), never by
   number.
 - A missing API never raises; each shim answers its documented absent value, listed below.
+- A dead fallback rung is deleted, not shimmed. The bare container globals (`GetContainerNumSlots`,
+  `GetContainerItemLink`, `PickupContainerItem`, removed in 10.0.2) and the bare item globals
+  (`GetItemInfo`, `GetItemStats`, `GetItemSpecInfo`, `GetDetailedItemLevelInfo`,
+  `GetItemUniqueness`, whose `C_Item` spellings every client at this TOC's interface has) are
+  therefore not rungs, and `luacheck` no longer declares them.
 - Third-party code (Pawn) runs under `pcall`. Blizzard calls do not, so a client defect raises
   where it happens instead of reading as silence.
 
@@ -34,7 +39,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | Patterns | `FormatToPattern(fmt)` | none: a Lua pattern from a printf-style GlobalString (`%s` → text capture, `%d` → digit capture, `%1$s` read as `%s`, every magic character escaped). The order a positional string gives its arguments is the caller's to recover; the loot parser does | n/a (pure) |
 | Duration | `DecodeDuration(text)` | the localized `INT_SPELL_DURATION_DAYS/HOURS/MIN/SEC` and `TIME_UNIT_DELIMITER` globals; see below | `nil` |
 | | `ParseTradeTimeRemaining(text)` | the `BIND_TRADE_TIME_REMAINING` pattern, then `DecodeDuration` on its capture | `nil` |
-| Tooltip | `ReadTooltipLine(data, typeName, parse)` | the lines of `typeName` (an `Enum.TooltipDataLineType` member) when the enum has it; every line, first non-nil `parse` wins, when it does not | `nil` |
+| Tooltip | `ReadTooltipLine(data, typeName, parse)` | the lines of `typeName` (an `Enum.TooltipDataLineType` member) first, when the enum has it; then, when none of them answers (the client tagged the line with another type, or has no such member), every line, first non-nil `parse` wins. `parse` rejects foreign lines | `nil` |
 | | `TradeTimeRemaining(bag, slot)` | `C_TooltipInfo.GetBagItem` → the `TradeTimeRemaining` line → `ParseTradeTimeRemaining`; seconds | `nil` |
 | | `InventoryItemLevel(unit, slot)` | `C_TooltipInfo.GetInventoryItem` → the `ItemLevel` line: its numeric `itemLevel` field, else the `ITEM_LEVEL` pattern | `nil` |
 | | `GetItemUpgradeInfo(link)` | `C_Item.GetItemUpgradeInfo` (copied, plain fields only, `source = "api"`) → `C_TooltipInfo.GetHyperlink`'s `ItemUpgradeLevel` line read with `ITEM_UPGRADE_TOOLTIP_FORMAT_STRING` (`source = "tooltip"`, no `trackStringID`) | `nil` |
@@ -45,8 +50,8 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | Identity | `NormalizedRealm()` | `GetNormalizedRealmName` (nil early in the login) → `GetRealmName` with spaces and hyphens dropped; a secret answer is skipped | `nil` |
 | | `PlayerSpecID()` | LibKa0s-Compat-1.0's `GetSpecialization` (the index) then `GetSpecializationInfo(index)`'s first return, each `C_SpecializationInfo` first and the global second; a secret answer is nil. With the library absent its reader stubs answer nil, so no rung is re-implemented here | `nil` |
 | Inventory | `InventoryItemLink(unit, slot)` | `GetInventoryItemLink`; a secret answer is nil | `nil` |
-| | `BagSlotCount(bag)` | `C_Container.GetContainerNumSlots` → the deprecated `GetContainerNumSlots` global | `0` |
-| | `BagItemLink(bag, slot)` | `C_Container.GetContainerItemLink` → the deprecated `GetContainerItemLink` global; a secret answer is nil | `nil` |
+| | `BagSlotCount(bag)` | `C_Container.GetContainerNumSlots`; a secret answer is 0 | `0` |
+| | `BagItemLink(bag, slot)` | `C_Container.GetContainerItemLink`; a secret answer is nil | `nil` |
 | Inspect | `InventoryItemID(unit, slot)` | `GetInventoryItemID`; a secret answer is nil. An id with no link is an incomplete inspect read | `nil` |
 | | `CanInspectUnit(unit)` | `CanInspect`; a secret answer cannot allow an inspect | `false` |
 | | `InInspectRange(unit)` | `CheckInteractDistance(unit, 1)`; a secret answer is out of range | `true` (the range is not known; the inspect's own timeout answers) |
@@ -61,11 +66,11 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
 | | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
 | Items | `CanRequestItemLoad()` | `C_Item.RequestLoadItemDataByID` and `C_Timer.After` both present (LibKa0s-Item-1.0's `LoadItem` is inert without either) | `false` |
-| | `GetItemInfo(link)` | `C_Item.GetItemInfo` → the deprecated `GetItemInfo` global; copies `{ name, quality, itemLevel, equipLoc, classID, subClassID, bindType, setID }`, plain fields only. A nil or secret name means uncached | `nil` |
-| | `GetDetailedItemLevel(link)` | `C_Item.GetDetailedItemLevelInfo` → the global; the effective level | `nil` |
-| | `GetItemStats(link)` | `C_Item.GetItemStats` → the global; every plain string key with a plain number, unknown keys included | `{}` |
-| | `GetItemSpecs(link)` | `C_Item.GetItemSpecInfo` → the global; the list as a set `{ [specID] = true }`, nil for an empty list | `nil` |
-| | `GetItemUniqueness(link)` | `C_Item.GetItemUniquenessByID`'s `(isUnique, name, count, categoryID)` → the `GetItemUniqueness` global's `(family, max)`; answers `(categoryID, max)`, categoryID nil for an item unique on its own | `nil, nil` |
+| | `GetItemInfo(link)` | `C_Item.GetItemInfo`; copies `{ name, quality, itemLevel, equipLoc, classID, subClassID, bindType, setID }`, plain fields only. A nil or secret name means uncached | `nil` |
+| | `GetDetailedItemLevel(link)` | `C_Item.GetDetailedItemLevelInfo`; the effective level | `nil` |
+| | `GetItemStats(link)` | `C_Item.GetItemStats`; every plain string key with a plain number, unknown keys included | `{}` |
+| | `GetItemSpecs(link)` | `C_Item.GetItemSpecInfo`; the list as a set `{ [specID] = true }`, nil for an empty list | `nil` |
+| | `GetItemUniqueness(link)` | `C_Item.GetItemUniquenessByID`'s `(isUnique, name, count, categoryID)`; answers `(categoryID, max)`, categoryID nil for an item unique on its own | `nil, nil` |
 | | `PlayerHasTransmog(link)` | `C_TransmogCollection.PlayerHasTransmogByItemInfo`; a secret answer is nil | `nil` |
 | | `ItemClassRestriction(link)` | `C_TooltipInfo.GetHyperlink`'s `RestrictedRaceClass` line read with `ITEM_CLASSES_ALLOWED`, split on `LIST_DELIMITER`, each name mapped to its classFile through `LOCALIZED_CLASS_NAMES_MALE` and `_FEMALE`; a set | `nil` |
 | Pawn | `PawnIsReady()` | the `PawnIsInitialized` global flag (a function spelling is called) | `false` |
@@ -73,7 +78,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
 | | `PawnScaleForSpec(classID, specID)` | `PawnFindScaleForSpec` | `nil` |
 | | `PawnItemValue(link, scale)` | `PawnGetSingleValueFromItem(PawnGetItemData(link), scale)`, a number | `nil` |
-| Trade | `PickupBagItem(bag, slot)` | `C_Container.PickupContainerItem` → the deprecated `PickupContainerItem` global | `false` |
+| Trade | `PickupBagItem(bag, slot)` | `C_Container.PickupContainerItem` | `false` |
 | | `DropItemOnUnit(unit)` | `DropItemOnUnit` | `false` |
 | | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
 | | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |

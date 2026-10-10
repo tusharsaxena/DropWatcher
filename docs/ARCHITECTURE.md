@@ -180,7 +180,7 @@ The window is a plain `Frame`, never secure, so showing, hiding and moving it ar
 and nothing defers. Settings writes touch no protected frame. Opening the settings panel is refused
 in combat by the options library, which also locks a page shown in combat; the addon adds no lock of
 its own and never closes Blizzard's settings window (options-ui-§2). The trade actions
-(`PickupContainerItem`, `DropItemOnUnit`, `InitiateTrade`) and the chat sender are wrapped in
+(`C_Container.PickupContainerItem`, `DropItemOnUnit`, `InitiateTrade`) and the chat sender are wrapped in
 `core/Compat.lua` and guard nothing themselves: the trade helper (`modules/TradeHelper.lua`) and the
 messaging edge (`modules/Asks.lua`) call them only from a click, or for a queued ask from the flush
 timer, and check combat, range and restriction state first (design spec §4, §9). The chat sender

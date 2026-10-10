@@ -112,7 +112,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_compat.lua (57)
+### test_compat.lua (58)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -128,7 +128,8 @@ Total.
 - compat: DecodeDuration answers nil when the client has no duration globals
 - compat: ParseTradeTimeRemaining reads the whole trade line and nothing else
 - compat: TradeTimeRemaining reads the TradeTimeRemaining line of a bag item
-- compat: with the line type known, only lines of that type are read
+- compat: with the line type known, a line of that type is read before any other
+- compat: the enum member exists but the line carries another type: the text still reads
 - compat: without the enum member the reader falls back to the localized text
 - compat: the tooltip reader skips a secret line and survives a malformed answer
 - compat: InventoryItemLevel prefers the line's number, then its text
@@ -144,12 +145,12 @@ Total.
 - compat: a secret bind answer reads as not bound
 - compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slot or no API
 - compat: GetItemInfo copies the cached fields, nil while uncached or without a link
-- compat: GetItemInfo falls back to the global, and answers nil with neither
+- compat: GetItemInfo answers nil without C_Item.GetItemInfo; the dead global is never read
 - compat: a secret item answer is never copied
 - compat: GetDetailedItemLevel reads the effective level, nil without the API
 - compat: GetItemStats copies every key, unknown ones too, and is empty without an answer
 - compat: GetItemSpecs is a set, nil for an empty list or no API
-- compat: GetItemUniqueness reads the category, the item's own uniqueness, and the global
+- compat: GetItemUniqueness reads the category and the item's own uniqueness
 - compat: PlayerHasTransmog answers the collection, nil when absent or secret
 - compat: ItemClassRestriction reads the classes line by type, else by text
 - compat: CanRequestItemLoad needs the load request and a timer
@@ -158,14 +159,14 @@ Total.
 - compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached
 - compat: an error inside Pawn reads as not ready, never as this addon's error
 - compat: a function-spelled PawnIsInitialized is called
-- compat: PickupBagItem prefers C_Container, then the global, then reports false
+- compat: PickupBagItem calls C_Container, and reports false without it
 - compat: DropItemOnUnit and InitiateTrade call through, and report false when absent
 - compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
 - compat: CursorHasItem and ClearCursor call through, and answer false when absent
 - compat: NormalizedRealm reads the normalized realm, then the plain one stripped
 - compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library
 - compat: InventoryItemLink reads the worn link, nil when empty, secret or absent
-- compat: the bag readers prefer C_Container, then the globals, then answer empty
+- compat: the bag readers call C_Container, guard a secret answer, and answer empty without it
 - compat: the inspect gates answer plain booleans; a secret answer or no API is the safe side
 - compat: the inspect calls, the spec, the item id, the inspect window and the hook
 - compat: LootHistoryDrop answers a won drop's plain fields, else nil
@@ -514,7 +515,7 @@ Total.
 ### test_trade_timer.lua (15)
 
 - read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
-- read: only the line of that type is read while the client names the type
+- read: the sentence on a line of another type is still the timer (the text fallback)
 - decoder: without the line type, the localized sentence is decoded with the client's globals
 - read: no timer line (bound, or the window gone) means no: expired, never live
 - match: by exact link first, then by item id; each drop takes one item
@@ -678,7 +679,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_compat.lua | 57 |
+| test_compat.lua | 58 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -705,4 +706,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **559** |
+| **Total** | **560** |

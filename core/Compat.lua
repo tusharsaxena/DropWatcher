@@ -21,8 +21,8 @@ local _, NS = ...
 --   * the item readers behind the item facts (info, effective level, stats, specs, uniqueness,
 --     transmog, the class restriction line);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
---   * the trade actions (PickupContainerItem, DropItemOnUnit, InitiateTrade) and their trade-range
---     and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor).
+--   * the trade actions (C_Container.PickupContainerItem, DropItemOnUnit, InitiateTrade) and their
+--     trade-range and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor).
 --
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -225,18 +225,9 @@ local function parseLine(line, parse)
     return parse(text, line)
 end
 
---- The parsed value of a tooltip's `typeName` line, or nil. With the line type known, only lines
---- of that type are parsed; without it (a client that renamed or dropped the enum member), every
---- line is offered to `parse` and the first non-nil answer wins, so `parse` must reject foreign
---- lines. `data` is a C_TooltipInfo result.
---- @param data table|nil
---- @param typeName string  an Enum.TooltipDataLineType member name
---- @param parse function   (leftText, line) -> value|nil
---- @return any
-function Compat.ReadTooltipLine(data, typeName, parse)
-    if type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
-    local wanted = lineTypeValue(typeName)
-    for _, line in ipairs(data.lines) do
+-- The first non-nil `parse` answer over the lines whose type is `wanted` (every line when nil).
+local function scanLines(lines, wanted, parse)
+    for _, line in ipairs(lines) do
         local lineType = type(line) == "table" and plainNumber(line.type) or nil
         if wanted == nil or lineType == wanted then
             local value = parseLine(line, parse)
@@ -244,6 +235,24 @@ function Compat.ReadTooltipLine(data, typeName, parse)
         end
     end
     return nil
+end
+
+--- The parsed value of a tooltip's `typeName` line, or nil. With the line type known, the lines of
+--- that type are parsed first; when none of them answers (the client tagged the line with another
+--- type, or has no such enum member), every line is offered to `parse` and the first non-nil answer
+--- wins, so `parse` must reject foreign lines. `data` is a C_TooltipInfo result.
+--- @param data table|nil
+--- @param typeName string  an Enum.TooltipDataLineType member name
+--- @param parse function   (leftText, line) -> value|nil
+--- @return any
+function Compat.ReadTooltipLine(data, typeName, parse)
+    if type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
+    local wanted = lineTypeValue(typeName)
+    if wanted ~= nil then
+        local value = scanLines(data.lines, wanted, parse)
+        if value ~= nil then return value end
+    end
+    return scanLines(data.lines, nil, parse)
 end
 
 -- A C_TooltipInfo getter's answer, or nil when the namespace or the getter is absent.
@@ -417,27 +426,27 @@ function Compat.InventoryItemLink(unit, slot)
     return plainString(GetInventoryItemLink(unit, slot))
 end
 
--- C_Container[name] when present, else the deprecated global `fallback` (a function or nil).
-local function containerApi(name, fallback)
+-- C_Container[name], or nil. The bare container globals were removed in 10.0.2, so no client at
+-- this TOC's interface has a second rung (compat: a dead rung is deleted, not shimmed).
+local function containerApi(name)
     local container = C_Container
-    if container and container[name] then return container[name] end
-    return fallback
+    return container and container[name] or nil
 end
 
---- How many slots bag `bag` has: C_Container.GetContainerNumSlots, else the deprecated global. 0
---- for a missing bag, a secret answer or no API.
+--- How many slots bag `bag` has: C_Container.GetContainerNumSlots. 0 for a missing bag, a secret
+--- answer or no API.
 --- @return number
 function Compat.BagSlotCount(bag)
-    local fn = containerApi("GetContainerNumSlots", GetContainerNumSlots)
+    local fn = containerApi("GetContainerNumSlots")
     if not fn then return 0 end
     return plainNumber(fn(bag)) or 0
 end
 
---- The link of the item in bag `bag`, slot `slot`: C_Container.GetContainerItemLink, else the
---- deprecated global. Nil for an empty slot, a secret answer or no API.
+--- The link of the item in bag `bag`, slot `slot`: C_Container.GetContainerItemLink. Nil for an
+--- empty slot, a secret answer or no API.
 --- @return string|nil
 function Compat.BagItemLink(bag, slot)
-    local fn = containerApi("GetContainerItemLink", GetContainerItemLink)
+    local fn = containerApi("GetContainerItemLink")
     if not fn then return nil end
     return plainString(fn(bag, slot))
 end
@@ -603,15 +612,16 @@ end
 -- Item readers (the item facts, design spec §4 and §5.1)
 -- ---------------------------------------------------------------------------------------------
 --
--- Each item reader takes a link, prefers C_Item's spelling and falls back to the deprecated
--- global, copies plain fields only and answers nil (or false) when the item is not cached yet or
--- the client has neither rung. Caching and the load retry are modules/ItemFacts.lua's.
+-- Each item reader takes a link, calls C_Item's spelling, copies plain fields only and answers nil
+-- (or false) when the item is not cached yet or the client lacks the call. The bare globals these
+-- moved from (GetItemInfo, GetItemStats, ...) are not a second rung: every client at this TOC's
+-- interface has the C_Item spelling, so a global rung could never run (compat: a dead rung is
+-- deleted, not shimmed). Caching and the load retry are modules/ItemFacts.lua's.
 
--- C_Item[name] when present, else the global `fallback` (a function or nil).
-local function itemApi(name, fallback)
+-- C_Item[name], or nil.
+local function itemApi(name)
     local item = C_Item
-    if item and item[name] then return item[name] end
-    return fallback
+    return item and item[name] or nil
 end
 
 --- True when the client can be asked to load an item (C_Item.RequestLoadItemDataByID) and can
@@ -623,12 +633,12 @@ function Compat.CanRequestItemLoad()
 end
 
 --- The cached fields of an item link: `{ name, quality, itemLevel, equipLoc, classID, subClassID,
---- bindType, setID }`, from C_Item.GetItemInfo, else the GetItemInfo global. Nil while the item
+--- bindType, setID }`, from C_Item.GetItemInfo. Nil while the item
 --- is not cached (the name is nil then), and for a secret or missing link.
 --- @param link string
 --- @return table|nil
 function Compat.GetItemInfo(link)
-    local fn = itemApi("GetItemInfo", GetItemInfo)
+    local fn = itemApi("GetItemInfo")
     if not (fn and plainString(link)) then return nil end
     local name, _, quality, itemLevel, _, _, _, _, equipLoc, _, _, classID, subClassID, bindType,
         _, setID = fn(link)
@@ -643,22 +653,22 @@ function Compat.GetItemInfo(link)
 end
 
 --- The effective item level of a link (its upgrades and bonus ids applied), from
---- C_Item.GetDetailedItemLevelInfo, else the global. Nil when neither answers a number.
+--- C_Item.GetDetailedItemLevelInfo. Nil when it answers no number, or is absent.
 --- @param link string
 --- @return number|nil
 function Compat.GetDetailedItemLevel(link)
-    local fn = itemApi("GetDetailedItemLevelInfo", GetDetailedItemLevelInfo)
+    local fn = itemApi("GetDetailedItemLevelInfo")
     if not (fn and plainString(link)) then return nil end
     return plainNumber((fn(link)))
 end
 
 --- The stats of a link as `{ [STAT_KEY] = n }` (keys such as ITEM_MOD_STRENGTH_SHORT), from
---- C_Item.GetItemStats, else the global. A key the addon does not know is copied all the same;
+--- C_Item.GetItemStats. A key the addon does not know is copied all the same;
 --- secret keys and values are skipped. An empty table when the client answers nothing.
 --- @param link string
 --- @return table
 function Compat.GetItemStats(link)
-    local fn = itemApi("GetItemStats", GetItemStats)
+    local fn = itemApi("GetItemStats")
     local out = {}
     if not (fn and plainString(link)) then return out end
     local stats = fn(link)
@@ -669,12 +679,12 @@ function Compat.GetItemStats(link)
     return out
 end
 
---- The specializations an item is for, as a set `{ [specID] = true }`, from C_Item.GetItemSpecInfo,
---- else the global. Nil when the client answers no list or an empty one (the item names no spec).
+--- The specializations an item is for, as a set `{ [specID] = true }`, from C_Item.GetItemSpecInfo.
+--- Nil when the client answers no list or an empty one (the item names no spec).
 --- @param link string
 --- @return table|nil
 function Compat.GetItemSpecs(link)
-    local fn = itemApi("GetItemSpecInfo", GetItemSpecInfo)
+    local fn = itemApi("GetItemSpecInfo")
     if not (fn and plainString(link)) then return nil end
     local list = fn(link)
     if Compat.IsSecret(list) or type(list) ~= "table" then return nil end
@@ -697,25 +707,15 @@ local function uniqueFromApi(fn, link)
     return nil, nil
 end
 
--- The GetItemUniqueness global's (family, maxEquipped); family -1 is the item's own uniqueness.
-local function uniqueFromGlobal(link)
-    local family, max = GetItemUniqueness(link)
-    family, max = plainNumber(family), plainNumber(max)
-    if family and family > 0 then return family, max or 1 end
-    if family == -1 then return nil, max or 1 end
-    return nil, nil
-end
-
 --- How many of this item (or of its unique category) may be equipped at once: `(categoryID,
 --- max)`, with categoryID nil when the item is unique on its own. `(nil, nil)` when it is not
---- unique or the client has neither C_Item.GetItemUniquenessByID nor the global.
+--- unique or the client lacks C_Item.GetItemUniquenessByID.
 --- @param link string
 --- @return number|nil categoryID, number|nil max
 function Compat.GetItemUniqueness(link)
     if not plainString(link) then return nil, nil end
     local item = C_Item
     if item and item.GetItemUniquenessByID then return uniqueFromApi(item.GetItemUniquenessByID, link) end
-    if GetItemUniqueness then return uniqueFromGlobal(link) end
     return nil, nil
 end
 
@@ -838,20 +838,14 @@ end
 -- Trade actions (click-driven; the guards for range and combat are TradeHelper's, DW-29)
 -- ---------------------------------------------------------------------------------------------
 
---- Picks up the item in bag `bag`, slot `slot` onto the cursor. C_Container's spelling first, the
---- deprecated global second. False when the client has neither.
+--- Picks up the item in bag `bag`, slot `slot` onto the cursor (C_Container.PickupContainerItem).
+--- False when the client lacks it.
 --- @return boolean
 function Compat.PickupBagItem(bag, slot)
-    local container = C_Container
-    if container and container.PickupContainerItem then
-        container.PickupContainerItem(bag, slot)
-        return true
-    end
-    if PickupContainerItem then
-        PickupContainerItem(bag, slot)
-        return true
-    end
-    return false
+    local fn = containerApi("PickupContainerItem")
+    if not fn then return false end
+    fn(bag, slot)
+    return true
 end
 
 --- Drops the cursor item on `unit`, which opens a trade with it. False when the API is absent.

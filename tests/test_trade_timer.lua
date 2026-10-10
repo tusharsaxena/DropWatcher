@@ -102,12 +102,13 @@ test("read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by
     assertEqual(TT.Remaining(e), 5400, "one further off is taken")
 end)
 
-test("read: only the line of that type is read while the client names the type", function()
+test("read: the sentence on a line of another type is still the timer (the text fallback)", function()
     local NS, m, TT = setup()
     local id = ownDrop(NS, m, link(300), nil)
-    m.tooltips.bag["0:1"] = tradeLine("2 hrs", 99)    -- the sentence on a line of another type
+    m.tooltips.bag["0:1"] = tradeLine("2 hrs", 99)    -- the client tagged it with another type
     TT.Scan("test")
-    assertTrue(TT.ForDrop(id).expired, "a foreign line type is not the timer")
+    assertFalse(TT.ForDrop(id).expired)
+    assertEqual(TT.Remaining(TT.ForDrop(id)), 7200)
 end)
 
 test("decoder: without the line type, the localized sentence is decoded with the client's globals", function()
