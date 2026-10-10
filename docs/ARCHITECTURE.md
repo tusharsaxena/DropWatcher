@@ -106,7 +106,10 @@ write into the table the launcher hands it. No structural registry exists yet.
 `core/Bus.lua` declares the catalog once, `NS.MSG`, as `Ka0s_DropWatcher_<Event>` wire names with one
 named sender each (design spec §3). With LibKa0s-Bus present the table is the strict `Catalog` copy,
 so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` /
-`NS.StandUp` take every tracked registration down and replay it.
+`NS.StandUp` take every tracked registration down and replay it. Without LibKa0s-Bus the seam degrades to an untracked
+factory, and `NS.Bus.tracked` (the seam's one answer, false there) tells each receiving module to
+unregister and re-register its own receivers in its stand-down and stand-up steps; no module
+resolves the library itself.
 
 Nine messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
 `INSPECT_DONE`, `DROP_ADDED`, `DROP_UPDATED`, `TRADE_TIMER_TICK`, `TRADE_TIMER_EXPIRING` and

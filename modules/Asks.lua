@@ -457,8 +457,8 @@ function NS.addon.OnAskRosterEvent()
 end
 
 -- The RestrictionChanged receiver: tracked, so the stand-down takes it down and the stand-up
--- replays it. Without the bus library it is a bare target, unregistered here instead.
-local TRACKED = LibStub and LibStub("LibKa0s-Bus-1.0", true) ~= nil
+-- replays it. Without the bus library it is a bare target, unregistered here instead
+-- (NS.Bus.tracked, core/Bus.lua's answer, says which).
 local target = NS.Bus:NewTarget()
 
 local function listen()
@@ -483,8 +483,8 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if flushTimer then flushTimer:Cancel() end
     flushTimer = nil
     dropQueued()
-    if target and not TRACKED then target:UnregisterAllMessages() end
+    if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
-    if not TRACKED then listen() end
+    if not NS.Bus.tracked then listen() end
 end

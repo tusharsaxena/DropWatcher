@@ -910,8 +910,8 @@ for _, row in ipairs(EVENTS) do
 end
 
 -- The bus receivers: tracked, so the stand-down takes them down and the stand-up replays them.
--- Without the bus library they are bare targets, unregistered here instead.
-local TRACKED = LibStub and LibStub("LibKa0s-Bus-1.0", true) ~= nil
+-- Without the bus library they are bare targets, unregistered here instead
+-- (NS.Bus.tracked, core/Bus.lua's answer, says which).
 local target = NS.Bus:NewTarget()
 
 local function listen()
@@ -929,9 +929,9 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     timers = {}
     local s = State.feed
     if s then s.recent, s.ctx = {}, {} end
-    if target and not TRACKED then target:UnregisterAllMessages() end
+    if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
-    if not TRACKED then listen() end
+    if not NS.Bus.tracked then listen() end
     LF.ArmTradeSweep()
 end

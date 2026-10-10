@@ -93,6 +93,28 @@ test("bus: a tracked target's registrations come down with the stand-down and ba
     assertTrue(m ~= nil)
 end)
 
+test("bus: the seam answers tracked once; without the library the modules take their receivers down", function()
+    local NS = T.newAddon()
+    assertTrue(NS.Bus.tracked == true, "the library path")
+    local D, _, m = T.enableAddon({ skip = { "libs/LibKa0s/Bus.lua" } })
+    assertTrue(D.Bus.tracked == false, "the degraded stub")
+    local heard = 0
+    local rec = { isMine = true }
+    D.LootFeed.Get = function() return rec end
+    D.TradeTimer.Schedule = function() heard = heard + 1 end
+    D.addon:SendMessage(D.MSG.DROP_ADDED, 1)
+    assertEqual(heard, 1, "the trade timer's bare receiver hears DropAdded")
+    D.addon:OnSlashCommand("disable")
+    D.addon:SendMessage(D.MSG.DROP_ADDED, 1)
+    -- red under: a module that skips its manual unregister on the degraded path
+    assertEqual(heard, 1, "unregistered by the module itself while stood down")
+    D.addon:OnSlashCommand("enable")
+    local before = heard
+    D.addon:SendMessage(D.MSG.DROP_ADDED, 1)
+    assertEqual(heard, before + 1, "registered again on the stand-up")
+    assertTrue(m ~= nil)
+end)
+
 -- ── Perf ────────────────────────────────────────────────────────────────────────────────────
 
 test("perf: every declared bucket is reached by a real bracket", function()

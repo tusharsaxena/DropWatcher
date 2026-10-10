@@ -7,7 +7,10 @@ local addonName, NS = ...
 -- at the call site for a publisher as well as a subscriber.
 --
 -- NS.Bus records what each receiver is registered for, so the stand-down takes every tracked
--- registration down and the stand-up replays what is wanted NOW (slash-commands-§7). A receiver
+-- registration down and the stand-up replays what is wanted NOW (slash-commands-§7).
+-- `NS.Bus.tracked` is this seam's one answer to "is the library present": true on the library
+-- path, false on the degraded stub, where each feature module unregisters and re-registers its
+-- own receivers in its stand-down and stand-up steps. No module resolves the library again. A receiver
 -- takes its own target, `NS.Bus:NewTarget()`, never a shared one: CallbackHandler keys callbacks
 -- by (message, target), and two receivers on one target clobber each other.
 
@@ -35,6 +38,7 @@ if not lib then
     NS.MSG = MSG
     NS.Bus = {
         name      = addonName,
+        tracked   = false,
         NewTarget = function()
             local AceEvent = LibStub and LibStub("AceEvent-3.0", true)
             return AceEvent and AceEvent:Embed({}) or nil
@@ -51,3 +55,4 @@ NS.Bus = lib:New({
     -- Resolved when asked: the latch (core/LifecycleSetup.lua) loads after this file.
     isDown = function() return NS.IsStoodDown ~= nil and NS.IsStoodDown() end,
 })
+NS.Bus.tracked = true
