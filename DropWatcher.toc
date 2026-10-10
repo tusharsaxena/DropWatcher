@@ -135,8 +135,9 @@ modules\Inspect.lua
 # Conventional: publishes NS.LootFeed, the feed orchestrator; adds its sink to NS.LootParser and
 # appends its rows to NS.FEATURE_EVENTS (CHALLENGE_MODE_START and CHALLENGE_MODE_COMPLETED after
 # modules\Situations.lua's, so the situation is fresh) and NS.STAND_DOWN / NS.STAND_UP at load, and
-# registers its InspectDone and GearChanged receivers on a NS.Bus target at load; takes NS.Perf as a
-# load-time upvalue. Every module above is read at call time.
+# registers its InspectDone, GearChanged and TradeTimerTick receivers on a NS.Bus target at load;
+# takes NS.Perf as a load-time upvalue. Every module above, and NS.TradeTimer (below), is read at
+# call time.
 modules\LootFeed.lua
 # Conventional: publishes NS.TradeTimer, the own-item trade countdown; appends its rows to
 # NS.FEATURE_EVENTS (BAG_UPDATE_DELAYED after modules\Gear.lua's) and NS.STAND_DOWN / NS.STAND_UP
@@ -147,6 +148,14 @@ modules\TradeTimer.lua
 # Conventional: publishes NS.TradeHelper, the click-driven trade actions; builds its reason texts
 # from NS.L at load. NS.Restrictions, NS.Roster and NS.TradeTimer (above) are read at call time.
 modules\TradeHelper.lua
+# LOAD-BEARING: publishes NS.Asks, the messaging edge. At load it takes NS.Messaging (above),
+# NS.Constants (C.MESSAGE_FLUSH_INTERVAL), NS.L and NS.State, registers its RestrictionChanged
+# receiver on a NS.Bus target, and appends its rows to NS.FEATURE_EVENTS, NS.STAND_DOWN and
+# NS.STAND_UP and its handlers to NS.addon (core\DropWatcher.lua), all above. Its shared-event rows
+# rely on this position: GROUP_ROSTER_UPDATE after modules\Roster.lua's (the roster is fresh for
+# a left-group cancel), ENCOUNTER_END after modules\LootFeed.lua's, and CHALLENGE_MODE_COMPLETED
+# after modules\Situations.lua's and modules\LootFeed.lua's. NS.Restrictions, NS.Roster and
+# NS.LootFeed (above) are read at call time.
 modules\Asks.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
