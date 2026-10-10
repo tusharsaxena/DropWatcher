@@ -48,7 +48,8 @@ and the migration runner; `defaults/` the default values; `modules/` the verdict
 out), the situation classifier (`Situations.lua`: a pure classifier over the client's instance,
 difficulty and group inputs, and the edge that reads them on six events), the trade estimator
 (`TradeRules.lua`, pure: a drop's bind facts, the looter's verdict and the situation's rule in, a
-yes, likely, unknown or no estimate out), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
+yes, likely, unknown or no estimate out), the messaging core (`Messaging.lua`, pure: a
+template and its tokens in, the text and the ask's next state out; it sends nothing), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
@@ -166,6 +167,14 @@ for combat and restriction state by their own items (design spec §4, §9).
   `personal` rule. The rule is item level against the looter's equipped gear only; whether the
   game also counts their bags is TRADE-4. The raid rule is `personal` until TRADE-3 confirms it, and
   the `trade.rules.<situation>` overrides have no row until DW-40.
+- The messaging core (`modules/Messaging.lua`) reads five cases the design leaves open. A known
+  token with no value reads `?` rather than an empty gap, and the preview lists it as missing;
+  token names are case-sensitive, so `{Player}` is unknown and left as it is. A gain prints with
+  one decimal at most. The length limit counts the raw bytes, so an item link counts whole. An
+  ask that is queued, or handed to the sender and not yet reported, is never asked twice, even
+  with `messages.oneAsk` off; a failed one may be retried, and a canceled one leaves the registry,
+  so its button is ready again. Nothing sends yet: the edge (DW-2A) wires the restriction check,
+  the send and the flush timer, and the `messages.*` settings have no row until DW-40.
 - The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
   mock does not model; PROFILE-1 is its in-game check.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate

@@ -93,6 +93,10 @@ modules\Situations.lua
 # Conventional: publishes NS.TradeRules, the pure trade estimator; read by the feed at call time
 # only, and itself reads NS.Constants (core\, above) at call time.
 modules\TradeRules.lua
+# Conventional: publishes NS.Messaging, the pure messaging core (templates, the one-ask guard and
+# the send queue); read by the messaging edge at call time only, and itself reads NS.Constants
+# (core\, above) at load.
+modules\Messaging.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

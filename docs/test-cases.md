@@ -245,6 +245,33 @@ Total.
 - trade rules: nil and garbage inputs never throw
 - trade rules: bad facts are unknown badFacts
 
+### test_messaging.lua (24)
+
+- messaging: the default templates are the spec §9.1 text, one per kind
+- messaging: Template takes the owner's text, and the default for an empty or absent one
+- messaging: Expand fills every token, and formats the gains as numbers
+- messaging: unknown tokens are left as they are, and reported once each in order
+- messaging: a known token with no value reads as ?, and is reported as missing
+- messaging: a value with pattern characters is inserted literally
+- messaging: Preview gives the text, its length and the too-long flag
+- messaging: a request that can send answers send, with the expanded text, state ready
+- messaging: the owner's template and an edited text override the default
+- messaging: the one-ask guard refuses a repeat once sent, alreadyAsked
+- messaging: with oneAsk off a sent ask can be repeated; an ask in flight never can
+- messaging: a message over 255 characters is refused tooLong, with its length
+- messaging: the guard runs before the length check
+- messaging: a malformed request is refused badRequest
+- messaging: under restriction a request is queued, state queued
+- messaging: a failed send is failed with its reason, and a retry is allowed
+- messaging: MarkSent and MarkFailed act only on an ask that is ready
+- messaging: the flush hands back queued asks first in, first out, each ready to send
+- messaging: the flush triggers are a lift to can-send, ENCOUNTER_END and CHALLENGE_MODE_COMPLETED
+- messaging: cancel drops a queued ask, which the flush then skips
+- messaging: a canceled ask can be asked again
+- messaging: a looter leaving drops every ask queued to them, and only theirs
+- messaging: Counts reports the registry for diagnostics
+- messaging: garbage never throws
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -350,6 +377,7 @@ Total.
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
+| test_messaging.lua | 24 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 5 |
 | test_vendor_sync.lua | 3 |
@@ -359,4 +387,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **261** |
+| **Total** | **285** |

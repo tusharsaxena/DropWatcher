@@ -19,8 +19,8 @@ visibility, test mode), the settings panel's landing page, General page and Prof
 `/dw` command with the reserved verbs and `lock`, `unlock`, `show`, `hide`, `toggle` and `test`, the
 launcher, the debug console and the diagnostics report, the performance harness, the stand-down
 latch, the message catalog, and the situation classifier (it knows where the player is; nothing
-consumes it yet). The verdict kernel, the quality gate and the trade estimator exist as pure
-modules that nothing calls yet. The feed that wires them in, inspection, asking and the
+consumes it yet). The verdict kernel, the quality gate, the trade estimator and the messaging
+core exist as pure modules that nothing calls yet. The feed that wires them in, inspection, asking and the
 situation settings arrive with the plan's later items
 ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
 

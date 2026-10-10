@@ -160,6 +160,8 @@ record it so the `Likely` chip's tooltip can say so. Result:
 
 ## Ask
 
+The messaging core's decisions (token expansion, the length limit, the one-ask guard, the queue's
+order and cancel) are headless-tested (`test_messaging`); nothing sends until the edge lands.
 Reserved for DW-2A, DW-33 and DW-54: ASK-1..8, including ASK-4 (does a whisper from a click work
 during an encounter?).
 

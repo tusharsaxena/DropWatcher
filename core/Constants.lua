@@ -1,8 +1,9 @@
 local _, NS = ...
 -- core/Constants.lua — fixed values the addon reads: fonts, window geometry, colors, game ids.
 --
--- Data only: the item, quality, bind, slot, difficulty and situation ids, the slot plans and the trade
--- rules (design spec §4, §5.2, §6.1, §6.2, §7.2). The class and spec tables are core/ClassData.lua.
+-- Data only: the item, quality, bind, slot, difficulty and situation ids, the slot plans, the trade
+-- rules and the message templates (design spec §4, §5.2, §6.1, §6.2, §7.2, §9.1). The class and
+-- spec tables are core/ClassData.lua.
 
 NS.Constants = NS.Constants or {}
 local C = NS.Constants
@@ -285,3 +286,22 @@ C.CONTENT_RULE = {
     raidLFR = "personal", delve = "personal", scenario = "personal", openWorldGroup = "personal",
     solo = "personal", pvp = "legacy",
 }
+
+-- ---------------------------------------------------------------------------------------------
+-- Messaging (design spec §9.1-§9.2). modules/Messaging.lua reads them; Settings › Messages edits
+-- the templates (`messages.templates.<kind>`), and an empty one falls back to these.
+-- ---------------------------------------------------------------------------------------------
+
+-- The message kinds, in Settings › Messages' display order, and their default templates.
+C.MESSAGE_KINDS = { "ask", "offer", "announce" }
+C.MESSAGE_TEMPLATES = {
+    ask      = "Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!",
+    offer    = "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?",
+    announce = "{item} is up for grabs, whisper me.",
+}
+-- The tokens a template may name, in the token chips' order.
+C.MESSAGE_TOKENS = { "player", "item", "ilvl", "slot", "track", "gain", "mygain" }
+C.MESSAGE_MAX_LEN = 255          -- the chat limit, in bytes of the raw text (a link counts whole)
+C.MESSAGE_FLUSH_INTERVAL = 1.5   -- seconds between two queued sends
+-- What empties the queue once the player can send: the restriction lift and these two events.
+C.MESSAGE_FLUSH_TRIGGERS = { restrictionLifted = true, ENCOUNTER_END = true, CHALLENGE_MODE_COMPLETED = true }

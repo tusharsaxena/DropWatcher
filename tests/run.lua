@@ -101,6 +101,7 @@ Kit.run{
         "test_quality_gate",
         "test_situations",
         "test_trade_rules",
+        "test_messaging",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

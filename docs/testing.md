@@ -42,7 +42,9 @@ every slot plan and every equippability path, plus nil and garbage inputs), `tes
 `test_situations` (the situation classifier's truth table for every key, the per-situation settings
 and their spec defaults, the six re-evaluation events and the stand-down), `test_trade_rules` (the
 trade estimator: every row of the Estimate table in order, the trade window, the rule per situation
-and the owner's override map), `test_diagnostics`. Kit suites,
+and the owner's override map), `test_messaging` (the messaging core: token expansion, the length
+limit, the one-ask guard, queueing under restriction, the flush order, cancel and a failed send's
+retry), `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
 
