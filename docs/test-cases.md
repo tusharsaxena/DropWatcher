@@ -140,7 +140,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (31)
+### test_evaluate.lua (33)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -153,7 +153,9 @@ Total.
 - evaluate: Titan's Grip compares a two-hander as a pair over both hands
 - evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot
 - evaluate: ranged weapons are two-handers for hunters and main hand for wand users
+- evaluate: a gun, crossbow or wand in the main hand is a two-hander for off hands and one-handers
 - evaluate: a unique-equipped drop compares against the item holding its category
+- evaluate: a unique drop whose own slot holds the category replaces that item
 - evaluate: compareOwned takes the better of equipped and owned per slot
 - evaluate: a known spec is judged by the item's own spec list
 - evaluate: spec unknown falls back to ClassData for armor, jewelry, shields and off hands
@@ -164,7 +166,7 @@ Total.
 - evaluate: a class-restricted item refuses other classes
 - evaluate: an undesired subclass is doesntWant, but only when the item is usable
 - evaluate: the sidegrade band splits upgrade, sidegrade and downgrade
-- evaluate: the score decides with the ilvl when they agree, and sidegrades when they disagree
+- evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign
 - evaluate: the scorer is optional, may be pending, and may fail without harm
 - evaluate: a two-hander's score baseline is the average of both hands' scores
 - evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison
@@ -373,7 +375,7 @@ Total.
 | test_window.lua | 13 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
-| test_evaluate.lua | 31 |
+| test_evaluate.lua | 33 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
@@ -387,4 +389,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **285** |
+| **Total** | **287** |

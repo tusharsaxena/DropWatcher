@@ -155,7 +155,7 @@ C.SLOT_PLAN = {
     INVTYPE_SHIELD         = { kind = "offhand", slots = { S.OFFHAND } },
     INVTYPE_HOLDABLE       = { kind = "offhand", slots = { S.OFFHAND } },
     INVTYPE_2HWEAPON       = { kind = "weapon2H", slots = { S.MAINHAND, S.OFFHAND } },
-    -- Bows, guns and crossbows (RANGED) and wands (RANGEDRIGHT) fill both hands.
+    -- Bows (RANGED) and guns, crossbows and wands (RANGEDRIGHT) fill both hands.
     INVTYPE_RANGED         = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
     INVTYPE_RANGEDRIGHT    = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
 }

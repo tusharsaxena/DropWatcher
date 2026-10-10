@@ -148,10 +148,17 @@ for combat and restriction state by their own items (design spec §4, §9).
   The per-situation settings have no rows until DW-40, so each situation takes its spec default.
 - The verdict kernel (`modules/Evaluate.lua`) reads a few cases the design leaves open as
   follows. With the spec unknown, an item whose primary stat suits only some of the class's specs
-  is `unknown`, not `ok`. When the ilvl is inside the sidegrade band and the score is not (or the
-  reverse), the one outside decides. The track delta orders tracks by a numeric `tier` from
-  ItemFacts and falls back to the enUS track names, so a localized name with no tier leaves it
-  unset. Wands are main-hand weapons for everyone; bows, guns and crossbows are two-handers.
+  is `unknown`, not `ok`. With a score, the verdict follows spec §5.2 step 4 to the letter: only
+  an ilvl and a score that agree in sign give that sign, so one inside its band and the other
+  outside is a sidegrade (`scoreDisagrees`); the band is in item levels, so the score's band is 0.
+  A candidate whose class is not known yet is `unknown` (`unknownClass`), even for a
+  class-restricted item. The track delta orders tracks by a numeric `tier` from ItemFacts and
+  falls back to the enUS track names, so a localized name with no tier leaves it unset. Bows
+  (`INVTYPE_RANGED`) and guns, crossbows and wands (`INVTYPE_RANGEDRIGHT`) fill both hands, so the
+  off-hand and one-hander plans compare against them as two-handers; a ranged drop compares like a
+  two-hander for hunters and against the main hand for everyone else. A unique-equipped drop at
+  its category's maximum compares against the lowest holder in its own slots when one of them
+  holds the category, else the lowest holder anywhere.
 - The minimum-quality gate (`modules/QualityGate.lua`) reads three cases the design leaves open.
   A drop whose quality cannot be read passes (`qualityUnknown`), so the feed never hides what it
   could not judge. With no baseline slot yet, `Dynamic per slot` takes the lowest quality across

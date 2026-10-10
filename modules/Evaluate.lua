@@ -149,6 +149,7 @@ local function byClassData(facts, candidate)
 end
 
 local function usable(facts, candidate)
+    if type(candidate.classFile) ~= "string" then return "unknown", "unknownClass" end
     if isTable(facts.classes) and not facts.classes[candidate.classFile] then
         return "cant", "classRestricted"
     end
@@ -203,8 +204,11 @@ local function slotReader(candidate, opts)
     end
 end
 
+-- Two-handers fill both hands: bows (RANGED) and guns, crossbows and wands (RANGEDRIGHT) too.
+local TWO_HAND = { INVTYPE_2HWEAPON = true, INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true }
+
 local function isTwoHand(f)
-    return isTable(f) and (f.equipLoc == "INVTYPE_2HWEAPON" or f.equipLoc == "INVTYPE_RANGED")
+    return isTable(f) and TWO_HAND[f.equipLoc] == true
 end
 
 local function one(f, slot)
@@ -262,6 +266,8 @@ end
 
 -- The unique-equipped redirection: when the candidate already wears `max` items of the drop's
 -- unique category, the drop can only replace one of them, so the lowest of those is the baseline.
+-- When one of the drop's own slots holds the category, the drop goes there (the count stays the
+-- same), so the lowest holder among its own slots is the baseline.
 -- Whether the gear entry in `slot` holds unique category `cat`: its facts, or nil.
 local function holder(slot, v, cat)
     local f = entry(v)
@@ -277,18 +283,27 @@ local function below(f, slot, best, bestSlot)
     return slot < bestSlot
 end
 
-local function uniquePlan(facts, candidate)
+local function asSet(list)
+    local set = {}
+    for _, slot in ipairs(list) do set[slot] = true end
+    return set
+end
+
+local function uniquePlan(facts, candidate, plan)
     local u = facts.unique
     if not isTable(u) or u.cat == nil or not isTable(candidate.gear) then return nil end
-    local best, bestSlot, count = nil, nil, 0
+    local own = asSet(plan.slots)
+    local best, bestSlot, mine, mineSlot, count = nil, nil, nil, nil, 0
     for slot, v in pairs(candidate.gear) do
         local f = holder(slot, v, u.cat)
         if f then
             count = count + 1
             if below(f, slot, best, bestSlot) then best, bestSlot = f, slot end
+            if own[slot] and below(f, slot, mine, mineSlot) then mine, mineSlot = f, slot end
         end
     end
     if count == 0 or count < (num(u.max) or 1) then return nil end
+    if mine then return { slot = mineSlot, items = { mine }, unique = true } end
     return { slot = bestSlot, items = { best }, unique = true }
 end
 
@@ -300,7 +315,7 @@ local function planFor(facts, candidate, opts)
         dualWield = flagOf(candidate, "dualWield", CD.DualWieldFor) == true,
         titanGrip = flagOf(candidate, "titanGrip", CD.TitanGripFor) == true,
     }
-    local base = uniquePlan(facts, candidate) or PLANS[plan.kind](plan.slots, slotReader(candidate, opts), ctx)
+    local base = uniquePlan(facts, candidate, plan) or PLANS[plan.kind](plan.slots, slotReader(candidate, opts), ctx)
     if not base then return nil, "noBaseline" end
     return base
 end
@@ -363,17 +378,16 @@ end
 -- Step 4: the verdict
 -- ---------------------------------------------------------------------------------------------
 
--- ilvl alone, or ilvl and score: agreeing signs decide, opposite signs sidegrade, and when one is
--- within the band the other decides (an equal score never vetoes an ilvl gain, and the reverse).
+-- ilvl alone, or ilvl and score (spec §5.2 step 4): the verdict takes the sign only when the two
+-- agree in sign; when they disagree (one of them within its band counts) it is a sidegrade, as it
+-- is when both are within. The band is in item levels, so the score's band is 0.
 local function decide(out, band)
     local si = sign(out.ilvlDelta, band)
     if out.scoreDelta == nil then return BY_SIGN[si] end
     local ss = sign(out.scoreDelta, 0)
-    if si ~= 0 and ss ~= 0 and si ~= ss then
-        addReason(out.reasons, "scoreDisagrees")
-        return "sidegrade"
-    end
-    return BY_SIGN[si ~= 0 and si or ss]
+    if si == ss then return BY_SIGN[si] end
+    addReason(out.reasons, "scoreDisagrees")
+    return "sidegrade"
 end
 
 local function verdictOf(out, base, band)

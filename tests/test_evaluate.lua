@@ -297,16 +297,48 @@ test("evaluate: ranged weapons are two-handers for hunters and main hand for wan
     local h = who("HUNTER", 253)
     h.gear[S.MAINHAND] = weapon(640, "INVTYPE_RANGED", W.BOWS)
     h.gear[S.OFFHAND] = false
-    local res = E.Evaluate(weapon(650, "INVTYPE_RANGED", W.GUNS), h)
+    -- The client reports guns and crossbows as RANGEDRIGHT, bows as RANGED.
+    local res = E.Evaluate(weapon(650, "INVTYPE_RANGEDRIGHT", W.GUNS), h)
+    assertEqual(res.baselineSlot, S.MAINHAND)
+    assertEqual(res.ilvlDelta, 10)
+    h.gear[S.MAINHAND] = weapon(640, "INVTYPE_RANGEDRIGHT", W.CROSSBOW)
+    res = E.Evaluate(weapon(650, "INVTYPE_RANGED", W.BOWS), h)
     assertEqual(res.baselineSlot, S.MAINHAND)
     assertEqual(res.ilvlDelta, 10)
     h.gear[S.MAINHAND] = false
-    res = E.Evaluate(weapon(650, "INVTYPE_RANGED", W.GUNS), h)
+    res = E.Evaluate(weapon(650, "INVTYPE_RANGEDRIGHT", W.GUNS), h)
     assertTrue(hasReason(res, "emptySlot"))
     local p = who("PRIEST", 258)
     p.gear[S.MAINHAND] = weapon(640, "INVTYPE_WEAPONMAINHAND", W.MACE_1H)
     p.gear[S.OFFHAND] = armor(600, "INVTYPE_HOLDABLE", A.GENERIC)
     res = E.Evaluate(weapon(650, "INVTYPE_RANGEDRIGHT", W.WAND), p)
+    assertEqual(res.baselineSlot, S.MAINHAND)
+    assertEqual(res.ilvlDelta, 10)
+end)
+
+test("evaluate: a gun, crossbow or wand in the main hand is a two-hander for off hands and one-handers", function()
+    local E = load()
+    -- A priest with a wand and an empty off hand: an off hand compares with the wand.
+    local p = who("PRIEST", 258)
+    p.gear[S.MAINHAND] = weapon(640, "INVTYPE_RANGEDRIGHT", W.WAND)
+    p.gear[S.OFFHAND] = false
+    local res = E.Evaluate(armor(630, "INVTYPE_HOLDABLE", A.GENERIC), p)
+    assertEqual(res.verdict, "downgrade")
+    assertEqual(res.baselineSlot, S.MAINHAND)
+    assertTrue(hasReason(res, "vsTwoHand"))
+    assertTrue(not hasReason(res, "emptySlot"))
+    -- A dual-wielding hunter holding a gun: a one-hander compares with the gun.
+    local h = who("HUNTER", 255, { dualWield = true })
+    h.gear[S.MAINHAND] = weapon(640, "INVTYPE_RANGEDRIGHT", W.GUNS)
+    h.gear[S.OFFHAND] = false
+    res = E.Evaluate(weapon(630, "INVTYPE_WEAPON", W.AXE_1H), h)
+    assertEqual(res.baselineSlot, S.MAINHAND)
+    assertTrue(hasReason(res, "vsTwoHand"))
+    -- A two-hander drop against a crossbow compares with the crossbow alone.
+    local w = who("HUNTER", 255)
+    w.gear[S.MAINHAND] = weapon(640, "INVTYPE_RANGEDRIGHT", W.CROSSBOW)
+    w.gear[S.OFFHAND] = false
+    res = E.Evaluate(weapon(650, "INVTYPE_2HWEAPON", W.POLEARM), w)
     assertEqual(res.baselineSlot, S.MAINHAND)
     assertEqual(res.ilvlDelta, 10)
 end)
@@ -343,6 +375,27 @@ test("evaluate: a unique-equipped drop compares against the item holding its cat
     trinketish.unique = { cat = 10 }
     res = E.Evaluate(trinketish, c)
     assertEqual(res.baselineSlot, S.FINGER1)
+end)
+
+test("evaluate: a unique drop whose own slot holds the category replaces that item", function()
+    local E = load()
+    local c = who("MAGE", 64)
+    c.gear[S.FEET] = armor(600, "INVTYPE_FEET", A.CLOTH, { unique = { cat = 3, max = 2 } })
+    c.gear[S.WRIST] = armor(590, "INVTYPE_WRIST", A.CLOTH, { unique = { cat = 3, max = 2 } })
+    local boots = armor(595, "INVTYPE_FEET", A.CLOTH, { unique = { cat = 3, max = 2 } })
+    local res = E.Evaluate(boots, c)
+    assertEqual(res.baselineSlot, S.FEET)
+    assertEqual(res.ilvlDelta, -5)
+    assertEqual(res.verdict, "downgrade")
+    -- A ring: of its own two slots, only the one holding the category can take it.
+    c.gear[S.FINGER1] = armor(580, "INVTYPE_FINGER", A.GENERIC)
+    c.gear[S.FINGER2] = armor(620, "INVTYPE_FINGER", A.GENERIC, { unique = { cat = 3, max = 2 } })
+    c.gear[S.FEET].unique = nil
+    local ring = armor(610, "INVTYPE_FINGER", A.GENERIC, { unique = { cat = 3, max = 2 } })
+    res = E.Evaluate(ring, c)
+    assertEqual(res.baselineSlot, S.FINGER2)
+    assertEqual(res.ilvlDelta, -10)
+    assertTrue(hasReason(res, "uniqueEquipped"))
 end)
 
 test("evaluate: compareOwned takes the better of equipped and owned per slot", function()
@@ -492,6 +545,12 @@ test("evaluate: a class-restricted item refuses other classes", function()
     local ring = armor(650, "INVTYPE_FINGER", A.GENERIC, { classes = { ROGUE = true } })
     assertEqual(E.Evaluate(ring, who("ROGUE", 259)).equip, "ok")
     assertEqual(E.Evaluate(ring, who("MAGE", 64)).equip, "cant")
+    -- A candidate whose class is not known yet is unknown, never cantUse.
+    local res = E.Evaluate(ring, who(nil, nil))
+    assertEqual(res.equip, "unknown")
+    assertEqual(res.verdict, "unknown")
+    assertTrue(hasReason(res, "unknownClass"))
+    assertTrue(not hasReason(res, "classRestricted"))
 end)
 
 test("evaluate: an undesired subclass is doesntWant, but only when the item is usable", function()
@@ -536,7 +595,7 @@ test("evaluate: the sidegrade band splits upgrade, sidegrade and downgrade", fun
     end
 end)
 
-test("evaluate: the score decides with the ilvl when they agree, and sidegrades when they disagree", function()
+test("evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign", function()
     local E = load()
     local c = who("WARRIOR", 71)
     c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE, { score = 100 })
@@ -547,10 +606,11 @@ test("evaluate: the score decides with the ilvl when they agree, and sidegrades 
         { 630, 80, 0, "downgrade" },
         { 650, 80, 0, "sidegrade", true },
         { 630, 120, 0, "sidegrade", true },
-        { 643, 120, 5, "upgrade" },     -- ilvl within the band, the score decides
-        { 643, 80, 5, "downgrade" },
-        { 643, 100, 5, "sidegrade" },   -- both within the band
-        { 650, 100, 0, "upgrade" },     -- an equal score does not veto the ilvl
+        { 643, 120, 5, "sidegrade", true },  -- ilvl within the band, score up: no agreement
+        { 643, 80, 5, "sidegrade", true },
+        { 643, 100, 5, "sidegrade" },        -- both within the band
+        { 650, 100, 0, "sidegrade", true },  -- an equal score does not agree with an ilvl gain
+        { 640, 101, 0, "sidegrade", true },  -- the same ilvl with a better score (spec §5.2 step 4)
     }
     for i, row in ipairs(cases) do
         local drop = armor(row[1], "INVTYPE_HEAD", A.PLATE, { score = row[2] })
@@ -593,7 +653,7 @@ test("evaluate: a two-hander's score baseline is the average of both hands' scor
     local c = who("WARRIOR", 71)
     c.gear[S.MAINHAND] = weapon(640, "INVTYPE_WEAPON", W.SWORD_1H, { score = 100 })
     c.gear[S.OFFHAND] = armor(640, "INVTYPE_SHIELD", A.SHIELD, { score = 60 })
-    local res = E.Evaluate(weapon(640, "INVTYPE_2HWEAPON", W.SWORD_2H, { score = 90 }), c,
+    local res = E.Evaluate(weapon(645, "INVTYPE_2HWEAPON", W.SWORD_2H, { score = 90 }), c,
         { scorer = function(f) return f.score end })
     assertEqual(res.scoreDelta, 10)
     assertEqual(res.verdict, "upgrade")
