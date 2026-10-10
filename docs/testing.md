@@ -20,7 +20,8 @@ without it).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
-libraries, the main window's geometry, and the client APIs `core/Compat.lua` wraps: the tooltip
+libraries, the main window's whole frame tree (each region its own object, with its points, size,
+text, text color, texture and check state recorded), and the client APIs `core/Compat.lua` wraps: the tooltip
 data, the chat sender and lockdown, the restriction state, `C_Item`'s upgrade, bind and GUID
 answers, the trade actions, the enums it resolves by name and the enUS GlobalStrings it parses),
 and a mocked clock: `advance(seconds)` runs the kit's timer queue in due order, and
@@ -41,7 +42,10 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
 `test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
-`test_database`, `test_schema`, `test_slash`, `test_window`, `test_compat` (the compat seam: the
+`test_database`, `test_schema`, `test_slash`, `test_window`, `test_window_shell` (the window's
+chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
+panes, the filter bar's per-tab state, the footer's composer, minimize, auto-open, a tooltip on
+every control, the build without the Widgets library, and the pure row predicates), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader and each shim's fallback with its API absent), `test_constants` and
 `test_class_data`

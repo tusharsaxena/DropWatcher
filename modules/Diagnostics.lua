@@ -53,6 +53,7 @@ local function window(out)
     local point = type(g.point) == "table" and g.point or { "default" }
     out:joined(TAG, "window: point", point)
     out:add(TAG, "window: size=%sx%s", g.width or "default", g.height or "default")
+    out:add(TAG, "window: tab=%s minimized=%s new=%s", read(W.ActiveTab), g.minimized == true, read(W.NewCount))
 end
 
 -- Where the addon thinks the player is, the inputs it read and that situation's settings

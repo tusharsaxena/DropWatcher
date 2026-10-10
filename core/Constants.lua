@@ -14,20 +14,36 @@ C.FONT_MONO_NAME = "JetBrains Mono"
 C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEXT_FONT
     or "Fonts\\FRIZQT__.TTF"
 
--- The main window (design spec §11.1). Sizes are pixels at a 1.0 scale.
+-- The main window (design spec §11.1; board 01's default size). Sizes are pixels at a 1.0 scale.
+-- The chrome follows Ka0s Loot History's: a 30px title bar, a 26px tab strip, the filter bar, the
+-- tab's body and a footer.
 C.WINDOW = {
     NAME        = "DropWatcherWindow",
-    WIDTH       = 760,
-    HEIGHT      = 380,
+    WIDTH       = 940,
+    HEIGHT      = 600,
     MIN_WIDTH   = 520,
     MIN_HEIGHT  = 260,
     TITLE_H     = 30,
+    TAB_H       = 26,
+    TAB_W       = 118,    -- one tab button; the strip's pitch adds TAB_GAP
+    TAB_GAP     = 4,
+    FILTER_H    = 30,
+    BANNER_H    = 22,     -- the test-mode banner, above the tab's body while test mode is on
+    FOOTER_H    = 22,
+    INSET       = 6,      -- the body's side margin
+    CONTROL_H   = 20,     -- a title-bar button, a dropdown, the search box
+    ICON        = 18,     -- a title-bar control's square slot (the close mark's size)
+    LOGO        = 18,
+    DOUBLE_CLICK = 0.4,   -- seconds between two clicks on the title bar that expand a minimized window
+    FOOTER_TICK = 5,      -- seconds between footer repaints while shown ("Last loot 12s ago")
     -- Where a fresh profile, and Reset position, put the window.
     POINT       = { "CENTER", "CENTER", 0, 0 },
 }
 
--- The gold of the title, the active tab and the test-mode banner (design spec §2).
+-- The gold of the title, the active tab and the test-mode banner (design spec §2), and the gray of
+-- an idle tab and the footer's text.
 C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
+C.IDLE = { r = 0.62, g = 0.62, b = 0.64 }
 
 -- ---------------------------------------------------------------------------------------------
 -- Item ids (design spec §5.2). Read from the client's Enum tables when present; each literal beside

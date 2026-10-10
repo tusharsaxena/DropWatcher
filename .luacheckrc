@@ -26,7 +26,7 @@ read_globals = {
   "Settings", "StaticPopup_Show", "YES", "NO",
   "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
   "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected", "UNKNOWNOBJECT",
-  "GetTime", "LE_PARTY_CATEGORY_INSTANCE",
+  "GetTime", "LE_PARTY_CATEGORY_INSTANCE", "GameTooltip",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

@@ -16,10 +16,14 @@ local PINNED = {
     "TRANSMOG_COLLECTION_UPDATED", "UNIT_INVENTORY_CHANGED", "ZONE_CHANGED_NEW_AREA",
 }
 
--- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down).
-local PINNED_MESSAGES = { "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_GearChanged",
-    "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_RestrictionChanged",
-    "Ka0s_DropWatcher_TradeTimerTick" }
+-- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down),
+-- one entry per receiver: a message two modules hear is listed twice (the window, DW-30, hears
+-- DropAdded with the trade timer, InspectDone with the feed and RestrictionChanged with the asks).
+local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_DropAdded",
+    "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
+    "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
+    "Ka0s_DropWatcher_SituationChanged", "Ka0s_DropWatcher_TradeTimerTick" }
 
 -- What is registered, every kind, or one kind ("event", "message").
 local function registered(m, kind)

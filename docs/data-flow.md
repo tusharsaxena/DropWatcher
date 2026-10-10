@@ -22,6 +22,27 @@ re-reading `UnitAffectingCombat`), on the stand-down and stand-up, and on a prof
 frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibilityListener` listener
 (today the trade timer, which paces its ticker by the window); the window calls no engine module.
 
+## Today: what the window repaints on
+
+```
+RestrictionChanged(reason) ─> the badge (`Encounter · n queued`, hidden while reason is nil)
+AskStateChanged ───────────> the badge's queued count (NS.Asks.Queued, read)
+SituationChanged ──────────> auto-open re-armed; "This instance" starts now; footer, Quality label
+DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read)
+                               ├─> the first interesting live drop in an auto-open situation opens it
+                               ├─> minimized: `n new` counts it when it is interesting
+                               └─> shown: tabs (`My drops · n`), filter bar, footer, active body
+DropUpdated ───────────────> shown: the same repaint
+InspectDone ───────────────> shown: the footer's inspect freshness
+footer ticker (5s) ────────> shown and expanded: the footer ("Last loot 12s ago")
+filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
+Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine)
+Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
+```
+
+The tab's body (DW-31, DW-33, DW-51) is handed `Window.TabContext(tab)`: its feed (`test` in test
+mode), its filter state, the controls it honors, `matches(drop)` and `compare(a, b)`.
+
 ## Today: enable and disable
 
 `enabled = false` → `Lifecycle:Set("disabled", true)` → `NS.StandDown`: feature events unregistered,

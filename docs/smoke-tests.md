@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..7 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27) and a Devourer looter (FEED-7, reserved) |
+| FEED-1..9 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, reserved) and the window's shell (FEED-8..9, DW-30) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
 | ITEM-1..2 | Item facts | The item readers' shapes and the track ids (lands with DW-23) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
@@ -135,8 +135,11 @@ to `none` when the boss dies; `/dw diagnostics` mid-fight → `restrictions: rea
 canSendChat=false canInspect=false canTrade=false`. Outside any encounter but in combat →
 `reason=combat canSendChat=true`. Record which `active` reasons the report lists in a dungeon out of
 combat (the design expects `map` alone), and in a Mythic+ key between pulls (is `challengeMode`
-there, and does `/dump C_ChatInfo.InChatMessagingLockdown()` say true?). The badge is DW-30's to add
-to this check; the queued asks are ASK-2. Result:
+there, and does `/dump C_ChatInfo.InChatMessagingLockdown()` say true?). With the window open
+(`/dw show`) through the same pull → the title bar shows the orange lock badge reading `Encounter`
+from the pull until the boss dies, `Combat` while fighting trash, and no badge out of combat; hovering it says which restriction is
+active, and once an ask is queued (ASK-2) it reads `Encounter · 1 queued` and its tooltip lists the
+ask. Result:
 
 **COMBAT-3. Combat ends test mode.** Turn test mode on, pull a training dummy → test mode ends with
 the chat line `Test mode ended: you entered combat.`; `/dw test` in combat is refused. With General
@@ -224,6 +227,29 @@ group, bosses included), and `/etrace` shows one `ENCOUNTER_LOOT_RECEIVED` per c
 the first argument (the encounter id) it carries, and whether the chat line and the event both
 arrive (`also reported by encounter`). Loot two minutes after completion falls back to the
 dungeon's name. Result:
+
+**FEED-8. The window's shell.** `/dw show` on a clean `/reload` → a window about 940 × 600 with the
+Ka0s edge (a hard black line with a gray line inside it), the logo and the gold `Ka0s Drop Watcher`
+title, a `Scan group` button with a people mark, a minimize mark and the close mark; the `Group
+drops` tab gold with a gold underline, `My drops` and `History` gray; the filter bar reads `View:
+Interesting`, `Quality: Rare+`, `Content: This instance`, an unticked `Likely tradeable only` and
+the `Filter looter or item…` box; the footer reads `Inspect: no group`, `No loot seen yet` (or
+`Last loot …`), `Not tracking in Solo · change in settings`, `Pawn: on` or `off`, and `Sort:
+Newest` beside the corner grip. Hover each control → every one shows a tooltip with a reason.
+Click `My drops` → View, Quality and Likely tradeable only gray out (their tooltips say the tab
+does not use them); set Sort to Oldest there, go back to Group drops → Sort reads Newest again.
+Open each dropdown and press Escape → the window and the open menu both close. Drag by the title
+bar and resize from the corner, `/reload` → the same place and size. In a party, `Scan group` →
+the chat line `Inspecting <n> group members, one at a time.`, and within a minute the footer reads
+`Inspect <n>/<n> fresh`. Result:
+
+**FEED-9. Minimize and auto-open.** With the window open, the minimize mark → the window shrinks
+to its title bar where it stood, the mark becomes a plus; `/reload` → it comes back minimized. In a
+Heroic dungeon with the window minimized, let a member loot an upgrade for you → a `1 new` chip
+appears beside the title; a double-click on the title bar expands it and the chip goes. Then close
+the window, leave and enter another dungeon (or zone out and back), and let the first upgrade for
+you drop → the window opens by itself once; close it and the next upgrade leaves it closed. In the
+open world solo nothing opens it. Result:
 
 ## Roster
 

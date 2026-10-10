@@ -99,6 +99,7 @@ Kit.run{
         "test_schema",
         "test_slash",
         "test_window",
+        "test_window_shell",
         "test_compat",
         "test_constants",
         "test_class_data",

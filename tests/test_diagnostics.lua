@@ -25,6 +25,7 @@ test("diagnostics: the report names the schema, the profile, the holds and the w
     assertTrue(text:find("schema stored=1 code=1", 1, true) ~= nil, "identity")
     assertTrue(text:find("profile=", 1, true) ~= nil)
     assertTrue(text:find("window: built=true shown=true shouldShow=true", 1, true) ~= nil, "window")
+    assertTrue(text:find("window: tab=group minimized=false new=0", 1, true) ~= nil, "window tab")
     assertTrue(text:find("PLAYER_REGEN_DISABLED", 1, true) ~= nil, "registration")
 end)
 

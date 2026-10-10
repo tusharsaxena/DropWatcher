@@ -113,6 +113,40 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
+### test_window_shell.lua (31)
+
+- shell: the title bar holds the logo, the gold title, the badge, Scan group, minimize and close
+- shell: the default size is board 01's 940 x 600
+- shell: Escape and every close path close the dropdowns' shared menu too
+- shell: BadgeText names the restriction and counts the queued asks
+- shell: RestrictionChanged shows the badge, AskStateChanged counts the queue, its tooltip lists it
+- shell: Scan group asks the inspect broker through the shared handler, and says what it did
+- shell: Scan group is refused while the addon is disabled
+- shell: three tabs, Group drops active in gold with its underline, the others gray
+- shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused
+- shell: My drops counts your tradeable drops in its label
+- shell: a tab's body is built on its first show, and refreshed with the tab's view
+- shell: a tab with no body says what it will hold, never a blank pane
+- shell: the filter bar holds View, Quality, Content, Likely tradeable only and the search box
+- shell: each tab keeps its own filter state, and grays what it does not use
+- shell: a filter change redraws the active tab with the new state
+- shell: a fresh tab's state is seeded from the profile's feed settings when valid
+- shell: the Quality control shows the mode in force and sets it through the shared handler
+- shell: IsInteresting is an upgrade for you that may still be traded, or your own tradeable drop
+- shell: Matches applies only the controls a tab honors
+- shell: Comparator orders newest, oldest, by item level and by your gain
+- shell: the footer composer says inspect freshness, last loot, the situation and Pawn
+- shell: the live footer reads the client, and its Sort follows the active tab
+- shell: the footer's ticker runs only while the whole window is on screen
+- shell: minimize collapses to the title bar, keeps the size, and counts interesting drops
+- shell: a double-click on the title bar expands a minimized window
+- shell: minimized, the corner grip does not resize and the stored size is kept
+- shell: a minimized window comes back minimized after a settings repaint
+- shell: the first interesting drop in an auto-open situation opens the window, once
+- shell: no auto-open for a test drop, outside an auto-open situation, or with the master off
+- shell: every control on the chrome has a tooltip with a reason
+- shell: without the Widgets library the window builds with no dead dropdown
+
 ### test_compat.lua (59)
 
 - compat: the secret guards are the library's members on a live load
@@ -694,6 +728,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
+| test_window_shell.lua | 31 |
 | test_compat.lua | 59 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
@@ -721,4 +756,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **575** |
+| **Total** | **606** |

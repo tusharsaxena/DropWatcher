@@ -59,6 +59,9 @@ core\EnvSetup.lua
 core\PoolSetup.lua
 # Conventional: NS.Item is read inside functions only.
 core\ItemSetup.lua
+# Conventional: NS.MakeDropdown / NS.CloseMenu are read inside functions only (the window's
+# filter bar and footer, built on the first show).
+core\WidgetsSetup.lua
 # LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
 # takes NS.MSG at load.
 core\Bus.lua
@@ -157,9 +160,19 @@ modules\TradeHelper.lua
 # after modules\Situations.lua's and modules\LootFeed.lua's. NS.Restrictions, NS.Roster and
 # NS.LootFeed (above) are read at call time.
 modules\Asks.lua
-# Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
-# all published above, at load.
+# Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L, NS.Constants,
+# NS.Bus and NS.MSG, and appends its rows to NS.STAND_DOWN / NS.STAND_UP, all published above, at
+# load, and registers its bus receivers (RestrictionChanged, AskStateChanged, SituationChanged,
+# DropAdded, DropUpdated, InspectDone) on its own NS.Bus target. Every engine module above, and
+# NS.WindowFilterBar / NS.WindowFooter (below), are read at call time: the frame is built on the
+# first show.
 modules\Window.lua
+# Conventional: publishes NS.WindowFilterBar (the filter bar, each tab's filter state and the row
+# predicates); reads NS.Constants, NS.L and NS.State at load, and NS.Window (above) at call time.
+modules\WindowFilterBar.lua
+# Conventional: publishes NS.WindowFooter (the footer's composer and reads); reads NS.Constants and
+# NS.L at load, and NS.Window, NS.WindowFilterBar (above) and the engine modules at call time.
+modules\WindowFooter.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

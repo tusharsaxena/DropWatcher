@@ -29,7 +29,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 |---|---|
 | `identity` | schema stored and in code, the profile, `enabled`, whether stood down, the latch's holds |
 | `settings` | every setting that differs from its default, and `enabled` always |
-| `window` | built, shown and the show decision; the player's choice, test mode, visibility, lock; the stored point and size |
+| `window` | built, shown and the show decision; the player's choice, test mode, visibility, lock; the stored point and size; the active tab, whether it is minimized and its `n new` count |
 | `situation` | the situation classified now and the last one announced, its track, auto-open and quality settings, and the classifier inputs read live |
 | `restrictions` | the four answers now (reason, can send chat, can inspect, can trade), every reason in effect (the Map type included) and the answers last announced |
 | `roster` | the group as last read (stored state, so the report never triggers a read): the member count, then per member the Name-Realm, unit token, classFile, online state, specID and whether it is the player |
@@ -66,6 +66,7 @@ drop, the item and the seconds left; one per trade-helper give or open, with the
 unit, and one per refusal, with its reason), `MSG` (one line per ask, offer or announce sent, queued
 with the restriction that held it, failed with its reason, refused with its reason, or canceled by a
 click or because its looter left; one per flush started, with its trigger and the queue length; one
-when the stand-down drops queued asks). The
+when the stand-down drops queued asks), `UI` (one line per tab selected, per filter changed on a
+tab, per minimize and expand, and per auto-open with its situation). The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 The design's other feature tags (spec §13) arrive with their modules.

@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-575%2F575_passing-green)
+![Tests](https://img.shields.io/badge/Tests-606%2F606_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -23,7 +23,16 @@ arrive in the releases that follow, and this page will grow with them.
 Type `/dw show`, or right-click the minimap button and pick **Show window**, to open the window. Drag
 it by its title bar and resize it from the bottom-right corner. Once it sits where you like, lock it
 with `/dw lock` or the **Lock frame** box in the settings, and it stops
-moving. Escape or the close mark puts it away.
+moving. Escape or the close mark puts it away, and the minimize mark folds it down to its title bar,
+where a counter shows how many interesting drops came in meanwhile. Double-click the bar to open it
+back up.
+
+Three tabs sit under the title: **Group drops**, **My drops** (with a count of your drops you can
+still trade) and **History**. The filter bar narrows the current tab, and each tab remembers its own
+filters. The footer is a quick health check: how many group members' gear has been read, when the
+last loot line came in, where the addon thinks you are, and whether Pawn is loaded. **Scan group**
+reads everyone's gear ahead of the loot. During a boss fight or a key, an orange lock badge in the
+title bar says chat is restricted and how many asks are waiting to go out.
 
 Test mode fills the window with placeholder content so you can see it and place it before a real
 drop arrives. `/dw test` turns it on and off, and so does the **Test mode** box. Entering combat ends

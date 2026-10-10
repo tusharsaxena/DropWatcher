@@ -161,6 +161,56 @@ function NS.HideWindow() if NS.Window then NS.Window.Close() end end
 function NS.ToggleWindow() if NS.Window then NS.Window.Toggle() end end
 function NS.IsWindowShown() return NS.Window ~= nil and NS.Window.IsShown() end
 
+--- Inspect every other group member, one at a time (design spec §8): the window's Scan group
+--- button, and `/dw scan` once it lands (DW-42). Refused while stood down.
+--- @return number queued how many members were queued
+function NS.ScanGroup()
+    if NS.IsStoodDown() then
+        NS.Print(NS.SlashCommands:DisabledLine())
+        return 0
+    end
+    local n = NS.Inspect.Scan("scan")
+    if n > 0 then
+        NS.Print(NS.L["Inspecting %d group members, one at a time."]:format(n))
+    else
+        NS.Print(NS.L["Nothing to inspect: every member's gear is already read, or you are not in a group."])
+    end
+    return n
+end
+
+local function isQualityMode(mode)
+    for _, m in ipairs(NS.Constants.QUALITY_MODES) do
+        if m == mode then return true end
+    end
+    return false
+end
+
+-- The profile path the feed reads (NS.LootFeed.Config), written directly until DW-40's row exists.
+local function storeQualityMode(mode)
+    local p = DW.db and DW.db.profile
+    if not p then return false end
+    if type(p.feed) ~= "table" then p.feed = {} end
+    if type(p.feed.quality) ~= "table" then p.feed.quality = {} end
+    p.feed.quality.mode = mode
+    NS.Debug("Set", "feed.quality.mode = %s", mode)
+    return true
+end
+
+--- Set the feed's minimum-quality mode (design spec §6.2): the filter bar's Quality control, and
+--- the settings row that shares the path. Written through the schema seam once that row exists
+--- (DW-40); until then onto the profile path the feed reads. A new mode applies to the drops that
+--- arrive after it.
+--- @param mode string one of NS.Constants.QUALITY_MODES
+--- @return boolean changed
+function NS.SetQualityMode(mode)
+    if not isQualityMode(mode) then return false end
+    local S, path = NS.SchemaRuntime, "feed.quality.mode"
+    if not (S and S.FindRow and S.FindRow(path)) then return storeQualityMode(mode) end
+    local ok, err = S.Set(path, mode)
+    if ok == false then NS.Print(tostring(err)) end
+    return ok ~= false
+end
+
 -- Combat ends test mode (preview-mode), both combat edges re-run the window's show decision
 -- (General visibility can depend on combat) and both hand the edge to the restriction tracker
 -- (modules/Restrictions.lua, design spec §4), which loads below and is read at call time. Feature

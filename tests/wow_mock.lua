@@ -66,9 +66,31 @@ local base = dofile("tests/_kit/mock_base.lua")
 
 local WINDOW_NAME = "DropWatcherWindow"
 
--- The main window's geometry, recorded: the kit's frame answers every unmodeled getter with the
--- frame itself, so "the window went back to where it started" could not fail without this.
+-- The main window and every frame built inside it, recorded (modules/Window.lua and the tabs it
+-- hosts): the kit's frame answers every unmodeled getter with the frame itself, so "the window went
+-- back to where it started" or "the badge reads `Encounter · 2 queued`" could not fail without this.
+-- A frame is decorated when it is the window, or when its parent is decorated (`__dwTree`), so the
+-- whole tree is, and nothing outside it changes.
+
+-- Text, color, texture and check state, recorded on any widget or region of the tree.
+local function decorateText(f)
+    f.SetText = function(self, t) self.__text = t; return self end
+    f.GetText = function(self) return self.__text end
+    f.SetFormattedText = function(self, fmt, ...) self.__text = fmt:format(...); return self end
+    f.SetTextColor = function(self, r, g, b, a) self.__textColor = { r, g, b, a }; return self end
+    f.GetTextColor = function(self)
+        local c = self.__textColor or { 1, 1, 1, 1 }
+        return c[1], c[2], c[3], c[4]
+    end
+    f.SetTexture = function(self, tex) self.__texture = tex; return self end
+    f.GetTexture = function(self) return self.__texture end
+    f.SetChecked = function(self, v) self.__checked = not not v; return self end
+    f.GetChecked = function(self) return self.__checked == true end
+    return f
+end
+
 local function decorateGeometry(M, f)
+    f.__dwTree = true
     -- Regions are objects of their own here: the base answers CreateFontString with the frame
     -- itself, so hiding the banner would hide the window.
     f.__regions = {}
@@ -77,6 +99,10 @@ local function decorateGeometry(M, f)
             local r = M.__stubFrame()
             r.__objType = kind
             self.__regions[#self.__regions + 1] = r
+            decorateText(r)
+            r.__points = {}
+            r.SetPoint = function(s, ...) s.__points[#s.__points + 1] = { ... }; return s end
+            r.ClearAllPoints = function(s) s.__points = {}; return s end
             return r
         end
     end
@@ -93,12 +119,15 @@ local function decorateGeometry(M, f)
         if pt then return pt[1], pt[2], pt[3], pt[4], pt[5] end
     end
     f.SetSize = function(self, w, h) self.__width, self.__height = w, h; return self end
+    f.SetWidth = function(self, w) self.__width = w; return self end
+    f.SetHeight = function(self, h) self.__height = h; return self end
     f.GetWidth = function(self) return self.__width or 0 end
     f.GetHeight = function(self) return self.__height or 0 end
     f.SetScale = function(self, s) self.__scale = s; return self end
     f.GetScale = function(self) return self.__scale or 1 end
     f.SetAlpha = function(self, a) self.__alpha = a; return self end
     f.GetAlpha = function(self) return self.__alpha or 1 end
+    decorateText(f)
     return f
 end
 
@@ -548,7 +577,9 @@ local function build()
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreateFrame(frameType, name, parent, template)
-        if name == WINDOW_NAME then decorateGeometry(M, f) end
+        if name == WINDOW_NAME or (type(parent) == "table" and parent.__dwTree) then
+            decorateGeometry(M, f)
+        end
         return f
     end
 

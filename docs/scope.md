@@ -14,8 +14,10 @@ sound are opt-in.
 
 ## What exists at v0.1.0
 
-The frame the features plug into: the window shell (position, size, lock, scale, alpha, General
-visibility, test mode), the settings panel's landing page, General page and Profiles page, the
+The frame the features plug into: the window shell (the Ka0s-skinned frame with its title bar,
+restriction badge, Scan group button, the Group drops, My drops and History tabs, the filter bar,
+the footer's health line, minimize, position, size, lock, scale, alpha, General visibility, test
+mode and auto-open), the settings panel's landing page, General page and Profiles page, the
 `/dw` command with the reserved verbs and `lock`, `unlock`, `show`, `hide`, `toggle` and `test`, the
 launcher, the debug console and the diagnostics report, the performance harness, the stand-down
 latch, the message catalog, and the situation classifier. The feed wires the engine together: it
@@ -26,8 +28,8 @@ snapshot) and for its looter (over the inspect broker's read), and estimates whe
 traded; the diagnostics report counts what it holds. Your own drops' exact trade countdown runs
 too: each one's bag item is read for its trade-time line, and a chat line warns once when ten
 minutes are left. The trade helper behind the coming Trade and Offer buttons is in too: it hands your
-drop to a member or opens a trade, and refuses with a reason in combat or out of range. Nothing draws the drops yet: the window's
-feed tabs, the ask and trade buttons, and the settings that tune the feed arrive with the plan's later
+drop to a member or opens a trade, and refuses with a reason in combat or out of range. Nothing draws the drops yet: the tabs'
+tables, the ask and trade buttons, and the settings that tune the feed arrive with the plan's later
 items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
 The messaging edge behind the coming ask buttons is in: it whispers the looter (or a candidate, or
 announces to the group) with one confirmation line, queues while chat is restricted and sends the

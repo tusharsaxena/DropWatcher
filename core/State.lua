@@ -17,6 +17,10 @@ State.testMode = false
 -- (modules/Window.lua) combines it with the General visibility setting and the stand-down latch.
 State.windowOpen = false
 
+-- The window's filter bar, one state per tab (modules/WindowFilterBar.lua, design spec §11.1):
+-- { [tab] = { view, content, likelyOnly, search, sort } }, each seeded on the tab's first use.
+State.windowFilters = nil
+
 -- The current situation key and the classifier inputs it came from (modules/Situations.lua,
 -- design spec §6.1). Nil until the first re-evaluation event, and again while stood down.
 State.situation = nil
