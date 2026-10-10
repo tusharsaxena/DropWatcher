@@ -75,7 +75,9 @@ client and positional arguments; the event's sinks, counters and twelfth argumen
 stand-down), `test_inspect` (the inspect broker on the mock's clock, `advance(seconds)`: one inspect
 in flight, the 2s spacing, the priority order and a raised job, the ready timeout and its one retry,
 the range and identity waits, `CanInspect` false and an offline member, incomplete and nameless
-links retried and kept, the tooltip level, the fast path, a foreign inspect before and after the
+links retried and kept, the tooltip level, the fast path and its hidden-slot guard, a read with no
+data (cleared before the read, or a moved unit token) re-queued, failed or dropped and never stored
+as `fresh`, a foreign inspect before and after the
 data arrived, anyone's `INSPECT_READY` read, the combat park, the open inspect window, the TTL, the
 invalidation and its echo guard, the roster prune, the warm-up and `Scan`, the candidate judged by
 the verdict kernel, `InspectDone` after the items load, one debug line per job, secrets, and the

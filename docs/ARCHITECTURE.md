@@ -309,10 +309,15 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   tokens are not expanded in loot patterns; no `LOOT_ITEM*` string is known to carry one in the
   client languages the design names (LOC-1). Whether the line is readable, or arrives secret,
   mid-encounter is COMBAT-1; a secret line is counted and dropped.
-- The inspect broker (`modules/Inspect.lua`) reads eight cases the design leaves open. `fresh` is a
+- The inspect broker (`modules/Inspect.lua`) reads nine cases the design leaves open. `fresh` is a
   read after an `INSPECT_READY` (ours or anyone's) and `cached` one taken at once because the
-  client already held every link (the fast path, which needs at least one worn item and no
-  incomplete slot); both are good for 600 seconds. `READY_ATTEMPTS` is two sends in all, so one
+  client already held every link (the fast path, which needs no incomplete slot and an item in each
+  slot only inspect data shows: neck, both rings and both trinkets, `NS.Inspect.HIDDEN_SLOTS`);
+  both are good for 600 seconds. A read after `INSPECT_READY` that finds no item at all, or whose
+  unit token no longer names the GUID, is no data (the inspect was cleared before the read, by
+  Blizzard's inspect window or another addon): it is retried like an incomplete one, then never
+  stored; the job in flight is re-queued like a timeout (`failed (empty)` once its sends are used),
+  and an unasked read is dropped with the entry left as it was. `READY_ATTEMPTS` is two sends in all, so one
   retry. `CanInspect` answering false waits the range wait, as being out of range does; an
   offline member or a GUID with no unit waits the identity wait. A slot is incomplete when the
   client knows its item id but answers no link, or a nameless one; after three retries the read is

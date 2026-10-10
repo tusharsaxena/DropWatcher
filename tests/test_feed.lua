@@ -48,11 +48,16 @@ local function party(seed)
     return NS, m, NS.LootFeed
 end
 
--- What Brakk wears, as the client holds it once inspected (the fast path reads it at once).
+-- What Brakk wears, as the client holds it once inspected (the fast path reads it at once: the
+-- neck, both rings and both trinkets are held, which only inspect data shows).
 local function brakkWears(m, ilvl)
     m.addItem(link(200), ring(ilvl))
     m.addItem(link(201), ring(ilvl))
-    m.inventory.party1 = { [11] = link(200), [12] = link(201) }
+    m.addItem(link(202), def("INVTYPE_NECK", ilvl))
+    m.addItem(link(203), def("INVTYPE_TRINKET", ilvl))
+    m.addItem(link(204), def("INVTYPE_TRINKET", ilvl))
+    m.inventory.party1 = { [2] = link(202), [11] = link(200), [12] = link(201), [13] = link(203),
+        [14] = link(204) }
 end
 
 -- Every DropAdded and DropUpdated, in order, on a receiver of its own.

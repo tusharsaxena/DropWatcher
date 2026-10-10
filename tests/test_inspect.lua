@@ -48,6 +48,18 @@ local function arrive(m, guid, specID)
     m.inspect.specs[unit] = specID or 71
 end
 
+-- As arrive, plus the slots only inspect data shows (neck, rings, trinkets): what the fast path
+-- needs before it trusts a read made without an inspect.
+local HIDDEN = { [2] = "INVTYPE_NECK", [11] = "INVTYPE_FINGER", [12] = "INVTYPE_FINGER",
+    [13] = "INVTYPE_TRINKET", [14] = "INVTYPE_TRINKET" }
+local function arriveFull(m, guid, specID)
+    arrive(m, guid, specID)
+    for slot, equipLoc in pairs(HIDDEN) do
+        m.addItem(link(4000 + slot), plate(equipLoc, 600, { classID = 4, subClassID = 0 }))
+        m.inventory[UNIT[guid]][slot] = link(4000 + slot)
+    end
+end
+
 local function ready(m, guid)
     m.__fire("INSPECT_READY", guid)
 end
@@ -257,7 +269,7 @@ end)
 -- ---------------------------------------------------------------------------------------------
 
 test("inspect: every link already readable completes at once, cached, with no inspect", function()
-    local NS, m, I = party(function(m) arrive(m, A, 72) end)
+    local NS, m, I = party(function(m) arriveFull(m, A, 72) end)
     local done = listen(NS)
     I.Request(A); I.Request(B)
     m.advance(0)
@@ -316,6 +328,83 @@ test("inspect: anyone's INSPECT_READY for a group member is read, completing its
     assertNil(I.Get(STRANGER), "not a group member: ignored")
 end)
 
+test("inspect: the fast path needs neck, rings and trinkets; visible slots alone send the inspect", function()
+    local _, m, I = party(function(m) arrive(m, A, 72) end)
+    I.Request(A)
+    m.advance(0)
+    -- red under: a fast path that takes any complete read with one worn item
+    assertEqual(I.Get(A).status, "pending", "the hidden slots read empty: not trusted")
+    assertEqual(notifiedUnits(m), "party1")
+    arriveFull(m, A, 72)
+    ready(m, A)
+    m.advance(0.15)
+    assertEqual(I.Get(A).status, "fresh")
+    assertEqual(I.Get(A).gear[11].link, link(4011))
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- A read with no data
+-- ---------------------------------------------------------------------------------------------
+
+test("inspect: an INSPECT_READY whose data is gone by the read is never stored as fresh", function()
+    local NS, m, I = party()
+    local done = listen(NS)
+    I.Request(A)
+    m.advance(0)
+    m.inventory.party1 = {}            -- cleared (ClearInspectPlayer) before the read
+    ready(m, A)
+    m.advance(0.15 + 0.3 * 3)
+    -- red under: a read with no item at all completing as `fresh`
+    assertEqual(I.Get(A).status, "pending", "re-queued like a timeout")
+    assertNil(I.Get(A).gear)
+    assertEqual(#done, 0)
+    m.advance(I.SPACING)
+    assertEqual(notifiedUnits(m), "party1,party1", "the second send")
+    ready(m, A)
+    m.advance(0.15 + 0.3 * 3)
+    assertEqual(I.Get(A).status, "failed"); assertEqual(I.Get(A).reason, "empty")
+    assertEqual(table.concat(done, ","), A, "InspectDone, once, when the job ends")
+end)
+
+test("inspect: the data arriving within the retries is read; a moved unit token is no data", function()
+    local _, m, I = party()
+    I.Request(A)
+    m.advance(0)
+    m.inventory.party1 = {}
+    ready(m, A)
+    m.advance(0.15 + 0.3)
+    arrive(m, A)
+    m.advance(0.3)
+    assertEqual(I.Get(A).status, "fresh", "a later retry found the data")
+    m.advance(I.TTL + 1)
+    I.Request(A)
+    m.inventory.party1 = {}
+    m.advance(0)
+    arrive(m, A)
+    m.units.party1 = nil               -- the token no longer names Brakk
+    ready(m, A)
+    m.advance(0.15 + 0.3 * 3)
+    assertEqual(I.Get(A).gen, 1, "nothing read off the wrong unit")
+    assertEqual(I.Get(A).status, "pending")
+end)
+
+test("inspect: an empty read nobody asked for is dropped, and the entry kept as it was", function()
+    local _, m, I = party()
+    I.Request(B)
+    inspectNow(m, B)
+    local before = I.Get(B)
+    assertEqual(before.status, "fresh"); assertEqual(before.gen, 1)
+    m.advance(I.INVALIDATE_GRACE + 1)
+    m.inventory.party2 = {}            -- another addon's inspect of Lyra, cleared before our read
+    ready(m, B)
+    m.advance(0.15 + 0.3 * 3)
+    assertEqual(I.Get(B).status, "fresh"); assertEqual(I.Get(B).gen, 1)
+    assertEqual(I.Get(B).gear[1].link, link(4001), "the good read stays")
+    ready(m, C)                        -- and one for a member never read
+    m.advance(0.15 + 0.3 * 3)
+    assertNil(I.Get(C), "no entry is made from no data")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Combat and the inspect window
 -- ---------------------------------------------------------------------------------------------
@@ -360,7 +449,10 @@ end)
 test("inspect: with the old data still held, a request completes on the fast path", function()
     local _, m, I = party()
     I.Request(A)
-    inspectNow(m, A)
+    m.advance(0)
+    arriveFull(m, A)
+    ready(m, A)
+    m.advance(0.15)
     m.advance(I.TTL)
     assertEqual(I.Request(A), "pending")
     m.advance(0)
@@ -453,7 +545,7 @@ test("inspect: entering an instance warms up too; untracked or busy, nothing is 
 end)
 
 test("inspect: Scan queues every other member that has no good read", function()
-    local NS, m, I = party(function(m) arrive(m, B) end)
+    local NS, m, I = party(function(m) arriveFull(m, B) end)
     I.Request(B)
     m.advance(0)
     assertEqual(I.Get(B).status, "cached")

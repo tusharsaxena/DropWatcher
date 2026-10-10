@@ -442,7 +442,7 @@ Total.
 - loot parser: the event's twelfth argument is the GUID it uses
 - loot parser: stood down, CHAT_MSG_LOOT reaches nothing; the counters survive
 
-### test_inspect.lua (28)
+### test_inspect.lua (32)
 
 - inspect: a request sends one NotifyInspect, and the ready read stores gear and spec
 - inspect: a slot's level comes from its tooltip, else from the link
@@ -458,6 +458,10 @@ Total.
 - inspect: a foreign inspect re-queues the job in flight, free, and resets the spacing
 - inspect: a foreign inspect after the data arrived lets the read finish, and clears nothing
 - inspect: anyone's INSPECT_READY for a group member is read, completing its queued job
+- inspect: the fast path needs neck, rings and trinkets; visible slots alone send the inspect
+- inspect: an INSPECT_READY whose data is gone by the read is never stored as fresh
+- inspect: the data arriving within the retries is read; a moved unit token is no data
+- inspect: an empty read nobody asked for is dropped, and the entry kept as it was
 - inspect: combat parks the queue, the job in flight still finishes, and its end resumes
 - inspect: the queue waits while the inspect window is open
 - inspect: with the old data still held, a request completes on the fast path
@@ -692,7 +696,7 @@ Total.
 | test_item_facts.lua | 18 |
 | test_gear.lua | 17 |
 | test_loot_parser.lua | 27 |
-| test_inspect.lua | 28 |
+| test_inspect.lua | 32 |
 | test_feed.lua | 36 |
 | test_trade_timer.lua | 15 |
 | test_trade_helper.lua | 15 |
@@ -706,4 +710,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **560** |
+| **Total** | **564** |

@@ -9,7 +9,8 @@ local _, NS = ...
 -- `cached` (read at once without an inspect: the client already held every link, the fast path),
 -- `outOfRange` (the range wait ran out), `combatParked` (queued while the queue is parked for
 -- combat) and `failed` (`reason`: `identity` when the GUID found no unit in time, `timeout` when
--- INSPECT_READY never came). `fresh` and `cached` are good for TTL seconds; `gen` counts the reads.
+-- INSPECT_READY never came, `empty` when every read found no data). `fresh` and `cached` are good
+-- for TTL seconds; `gen` counts the reads.
 -- `gear` holds each slot's link and the level its tooltip showed (an inspected link carries the
 -- unscaled level; the link's own is the fallback), false for an empty slot, absent for a slot the
 -- client never completed. Candidate(guid) turns it into the verdict kernel's candidate.
@@ -27,9 +28,16 @@ local _, NS = ...
 -- READING. On the job's INSPECT_READY the slots 1-17 are read READ_DELAY seconds later; a slot whose
 -- item id is known but whose link is not (or is nameless) is incomplete, and the read is retried up
 -- to LINK_TRIES times, LINK_RETRY seconds apart, then kept as it is (`reason` = `incomplete`).
+-- A read that finds no item at all, or a unit that no longer names the GUID, is NO DATA (the
+-- client's inspect was cleared before the read, by Blizzard's inspect window or another addon): it
+-- is retried the same way, then never stored. The job in flight is then re-queued like a timeout
+-- (`failed`, `empty` once its sends are used up); a read nobody asked for is dropped and the entry
+-- kept as it was.
 -- No INSPECT_READY within READY_TIMEOUT seconds re-queues the job, READY_ATTEMPTS sends in all.
 -- ClearInspectPlayer is called only for an inspect this broker started and nobody took over. If
--- every link reads before any inspect, the job completes at once as `cached`.
+-- every link reads before any inspect, the job completes at once as `cached`: only when the
+-- slots an uninspected unit does not show (neck, rings, trinkets: HIDDEN_SLOTS) each hold an item,
+-- so the client's answer can only come from inspect data it still holds.
 --
 -- COURTESY. NotifyInspect is hooked (core/Compat.lua): a foreign inspect resets the spacing and
 -- re-queues the job in flight unless its data has already arrived, at no cost in attempts. An
@@ -74,6 +82,10 @@ I.WARMUP_DELAY = 2
 I.PRIORITY = { looter = 1, offer = 2, warmup = 3 }
 
 local FIRST_SLOT, LAST_SLOT = 1, 17
+
+--- The slots the client knows only from inspect data (neck, rings, trinkets): the fast path needs
+--- an item in each before it trusts a read made without an inspect.
+I.HIDDEN_SLOTS = { 2, 11, 12, 13, 14 }
 
 -- The broker's timers: the pump, the ready timeout, the warm-up, and one read per GUID.
 local timers = { reads = {} }
@@ -187,17 +199,22 @@ local function endFlight(f)
     if f.ours then NS.Compat.ClearInspectPlayer() end
 end
 
-local function onReadyTimeout()
-    timers.ready = nil
-    local f = store().inFlight
-    if not f then return end
+-- The flight ends without a read: re-queued while sends are left, else `failed` with `reason`.
+local function retryOrFail(f, reason)
     endFlight(f)
     if f.job.attempts < I.READY_ATTEMPTS then
         push(f.job)
     else
-        finish(f.guid, "failed", "timeout")
+        finish(f.guid, "failed", reason)
     end
     schedulePump(0)
+end
+
+local function onReadyTimeout()
+    timers.ready = nil
+    local f = store().inFlight
+    if not f then return end
+    retryOrFail(f, "timeout")
 end
 
 -- ── reading ─────────────────────────────────────────────────────────────────────────────────
@@ -269,9 +286,27 @@ end
 
 local scheduleRead
 
+-- Whether `unit` still names `guid` (the client may have moved the token since the event).
+local function unitNames(unit, guid)
+    local live = UnitGUID(unit)
+    return NS.Compat.IsSafeKey(live) and live == guid
+end
+
+-- A read with nothing in it: the inspect data was gone. The job in flight is retried like a
+-- timeout; a read nobody asked for leaves the entry as it was.
+local function noData(guid)
+    local f = store().inFlight
+    if f and f.guid == guid then return retryOrFail(f, "empty") end
+    NS.Debug(TAG, "inspect %s: no data in the read, dropped", tostring(guid))
+end
+
 local function readAfterReady(guid, unit, tries)
-    local snap = readSlots(unit)
-    if snap.missing > 0 and tries < I.LINK_TRIES then return scheduleRead(guid, unit, tries + 1) end
+    local snap = unitNames(unit, guid) and readSlots(unit) or nil
+    local empty = snap == nil or (snap.worn == 0 and snap.missing == 0)
+    if (empty or snap.missing > 0) and tries < I.LINK_TRIES then
+        return scheduleRead(guid, unit, tries + 1)
+    end
+    if empty then return noData(guid) end
     complete(guid, unit, snap, "fresh")
 end
 
@@ -339,11 +374,21 @@ local function send(job, unit)
     timers.ready = after(I.READY_TIMEOUT, onReadyTimeout)
 end
 
+-- Whether a read made without an inspect can be trusted: complete, and an item in every slot the
+-- client knows only from inspect data (an empty answer there may just be data it never had).
+local function trustedWithoutInspect(snap)
+    if snap.missing > 0 then return false end
+    for _, slot in ipairs(I.HIDDEN_SLOTS) do
+        if not snap.items[slot] then return false end
+    end
+    return true
+end
+
 -- The fast path, else the inspect.
 local function dispatch(job, unit)
     removeJob(job.guid)
     local snap = readSlots(unit)
-    if snap.missing == 0 and snap.worn > 0 then return complete(job.guid, unit, snap, "cached") end
+    if trustedWithoutInspect(snap) then return complete(job.guid, unit, snap, "cached") end
     send(job, unit)
 end
 

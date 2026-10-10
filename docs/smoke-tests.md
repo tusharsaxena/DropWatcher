@@ -315,7 +315,12 @@ compare `/dump C_TooltipInfo.GetInventoryItem("party1", 1)` (its `ItemLevel` lin
 differ, in normal content and in scaled content (timewalking): if they never do, the tooltip read
 is not needed. Then `/reload` again in the same group → members whose data the client still holds
 show `cached` (no inspect sent); record whether a `cached` line ever carries a wrong spec or a
-missing slot. Result:
+missing slot. Then, for a member never inspected this session (one who just joined), `/dump
+GetInventoryItemLink("party1", 2), GetInventoryItemLink("party1", 11)` before any inspect → record
+whether the neck and ring answer nil while the chest (5) answers a link: the fast path refuses a
+read whose neck, rings or trinkets are empty for that reason. Last, during a warm-up, open and close
+Blizzard's inspect window on the member in flight → no `fresh` line with `slots=0` ever; a
+`failed (empty)` line, or a second send, is the expected answer. Result:
 
 ## Trade
 
