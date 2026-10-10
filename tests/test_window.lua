@@ -1,0 +1,104 @@
+-- tests/test_window.lua — the main window's shell: the show decision, geometry, lock and test mode
+-- (standalone-windows, preview-mode, options-ui-§15).
+
+local T = _G.DW_TEST
+local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+
+test("window: built lazily, on the first show, and not before", function()
+    local NS = T.enableAddon()
+    assertTrue(NS.Window.Frame() == nil)
+    NS.ShowWindow()
+    local f = NS.Window.Frame()
+    assertTrue(f ~= nil and f:IsShown())
+    assertEqual(f.__name, "DropWatcherWindow")
+end)
+
+test("window: Escape closes it (UISpecialFrames) and it wears the shared close mark", function()
+    local NS, _, m = T.enableAddon()
+    NS.ShowWindow()
+    local listed = false
+    for _, name in ipairs(m.UISpecialFrames) do if name == "DropWatcherWindow" then listed = true end end
+    assertTrue(listed)
+    assertTrue(NS.Window.Frame().closeButton ~= nil)
+end)
+
+test("window: General visibility `never` keeps it hidden even when opened", function()
+    local NS = T.enableAddon()
+    NS.SchemaRuntime.Set("visibility", "never")
+    NS.ShowWindow()
+    assertFalse(NS.IsWindowShown())
+    NS.SchemaRuntime.Set("visibility", "always")
+    assertTrue(NS.IsWindowShown(), "the player's choice is kept for the next show")
+end)
+
+test("window: `inCombat` shows it only in combat, re-read on both combat edges", function()
+    local NS, _, m = T.enableAddon()
+    NS.SchemaRuntime.Set("visibility", "inCombat")
+    NS.ShowWindow()
+    assertFalse(NS.IsWindowShown())
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    assertTrue(NS.IsWindowShown())
+    m.inCombat = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    assertFalse(NS.IsWindowShown())
+end)
+
+test("window: a drag stores the point, and Reset position forgets it", function()
+    local NS = T.enableAddon()
+    NS.ShowWindow()
+    local f = NS.Window.Frame()
+    f:ClearAllPoints()
+    f:SetPoint("TOPLEFT", nil, "TOPLEFT", 40, -60)
+    f.titleBar:GetScript("OnDragStop")(f.titleBar)
+    local pt = NS.addon.db.profile.window.point
+    assertEqual(table.concat(pt, ","), "TOPLEFT,TOPLEFT,40,-60")
+    NS.Window.ResetPosition()
+    assertTrue(NS.addon.db.profile.window.point == nil)
+    assertEqual(f:GetPoint(1), "CENTER")
+end)
+
+test("window: locked, a drag does not start", function()
+    local NS = T.enableAddon()
+    NS.ShowWindow()
+    local f = NS.Window.Frame()
+    NS.SetLocked(true)
+    f.__userPlaced = false
+    f.titleBar:GetScript("OnDragStart")(f.titleBar)
+    assertFalse(f.__userPlaced, "StartMoving was not called")
+    NS.SetLocked(false)
+    f.titleBar:GetScript("OnDragStart")(f.titleBar)
+    assertTrue(f.__userPlaced)
+end)
+
+test("window: resizable from the corner grip, with the design's minimum size", function()
+    local NS = T.enableAddon()
+    NS.ShowWindow()
+    local f = NS.Window.Frame()
+    assertTrue(f:IsResizable())
+    local minW, minH = f:GetResizeBounds()
+    assertEqual(minW, 520)
+    assertEqual(minH, 260)
+end)
+
+test("window: test mode shows the banner and hides the empty-state text", function()
+    local NS = T.enableAddon()
+    NS.SetTestMode(true)
+    local f = NS.Window.Frame()
+    assertTrue(f.banner:IsShown())
+    assertFalse(f.empty:IsShown())
+    NS.SetTestMode(false)
+    assertFalse(f.banner:IsShown())
+    assertTrue(f.empty:IsShown())
+end)
+
+test("window: combat ends test mode, and test mode cannot start in combat", function()
+    local NS, _, m = T.enableAddon()
+    NS.SetTestMode(true)
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    -- red under: drop the OnCombatStart test-mode branch in core/DropWatcher.lua
+    assertFalse(NS.State.testMode)
+    assertFalse(NS.SetTestMode(true), "refused in combat")
+    assertFalse(NS.State.testMode)
+end)

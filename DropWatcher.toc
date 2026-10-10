@@ -1,0 +1,100 @@
+## Interface: 120100
+## Title: Ka0s Drop Watcher
+## Notes: Watches your group's loot, shows who each drop is an upgrade for and whether it can be traded, and asks for it politely in one click.
+## Author: add1kted2ka0s
+## Version: 0.1.0
+## IconTexture: Interface\AddOns\DropWatcher\media\logos\dropwatcher.logo.128.tga
+## SavedVariables: DropWatcherDB, DropWatcherPerfDB
+## OptionalDeps: Pawn, CanIMogIt, Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0
+## DefaultState: enabled
+## Category-enUS: Group
+## X-License: MIT
+## X-Standard: https://github.com/tusharsaxena/WowAddonStandards
+# X-Curse-Project-ID: not published on CurseForge yet
+
+# Libraries (must load first) -- vendored in libs/, .xml where the lib ships one, else .lua
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+libs\AceAddon-3.0\AceAddon-3.0.xml
+libs\AceEvent-3.0\AceEvent-3.0.xml
+libs\AceTimer-3.0\AceTimer-3.0.xml
+libs\AceConsole-3.0\AceConsole-3.0.xml
+libs\AceDB-3.0\AceDB-3.0.xml
+libs\AceGUI-3.0\AceGUI-3.0.xml
+# LOAD-BEARING: AceConfigDialog-3.0 resolves AceGUI-3.0 with a non-silent LibStub at file load, so
+# AceConfig-3.0.xml sits below AceGUI-3.0.xml. AceDBOptions resolves nothing at load.
+libs\AceConfig-3.0\AceConfig-3.0.xml
+libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+libs\LibSharedMedia-3.0\lib.xml
+# Conventional: LibKa0s-Launcher-1.0 resolves both at Register time; LibDBIcon needs the two above it.
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\lib.xml
+# ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
+libs\LibKa0s\LibKa0s.xml
+
+# Locales
+# LOAD-BEARING: publishes NS.L, which every file below reads at load.
+locales\enUS.lua
+
+# Core -- dependency-correct order (layout-§1)
+# LOAD-BEARING: publishes NS.name, NS.BRAND, NS.PREFIX and NS.SLASH, read at load below.
+core\Namespace.lua
+# LOAD-BEARING: publishes NS.Print / NS.Util.print and NS.LIBKA0S_MISSING, read at load below.
+core\CoreSetup.lua
+# LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
+core\MediaSetup.lua
+# Conventional: data only, apart from FONT_MONO, resolved from the seam above.
+core\Constants.lua
+# Conventional: session-only state (NS.State), read by everything below at call time.
+core\State.lua
+# Conventional: NS.Meta / NS.Version are read inside functions only.
+core\EnvSetup.lua
+# Conventional: NS.Pool is read inside functions only.
+core\PoolSetup.lua
+# Conventional: NS.Item is read inside functions only.
+core\ItemSetup.lua
+# LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
+# takes NS.MSG at load.
+core\Bus.lua
+# LOAD-BEARING relative to core\PerfSetup.lua only, which hands NS.Lifecycle to lib:New at load.
+core\LifecycleSetup.lua
+# LOAD-BEARING: lib:New reads NS.Lifecycle (above) at load, and modules\Window.lua takes
+# `local Perf = NS.Perf` as a load-time upvalue (below).
+core\PerfSetup.lua
+# LOAD-BEARING: the lib:New descriptor reads NS.Constants.FONT_MONO (core\Constants.lua, above) at
+# load; publishes NS.Debug before any call site runs.
+core\DebugLogSetup.lua
+# LOAD-BEARING: promotes NS to the AceAddon object (NS.addon) and reclaims NS.Print; modules\ and
+# settings\ read NS.addon at load.
+core\DropWatcher.lua
+# Conventional: NS:RunMigrations is called from OnInitialize.
+core\Database.lua
+# Conventional: the launcher is built here and registered from OnEnable.
+core\LauncherSetup.lua
+
+# Defaults
+# LOAD-BEARING: publishes NS.C, which settings\Schema.lua and settings\Panel.lua take at load.
+defaults\Profile.lua
+
+# Modules
+# Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
+# all published above, at load.
+modules\Window.lua
+# Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
+modules\Diagnostics.lua
+
+# Settings (last -- depend on everything else being initialized)
+# LOAD-BEARING: publishes Settings.SchemaLib, which settings\Schema.lua calls :New on at file scope.
+settings\SchemaSetup.lua
+# LOAD-BEARING: publishes Settings.Schema and NS.SchemaRuntime; settings\OptionsSetup.lua,
+# settings\Panel.lua and settings\Slash.lua read NS.SchemaRuntime at load.
+settings\Schema.lua
+# LOAD-BEARING: publishes the LibKa0s-Options instance as Settings.Helpers; settings\Panel.lua calls
+# Helpers.MasterControls at file scope.
+settings\OptionsSetup.lua
+# LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
+settings\Panel.lua
+# LOAD-BEARING: captures NS.SchemaRuntime.Get/Set/FindRow/ApplyDefault at load.
+settings\Slash.lua
+# LAST, so its RegisterOptionsPage call queues behind General's (options-ui-§3).
+settings\Profiles.lua

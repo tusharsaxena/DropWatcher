@@ -1,0 +1,43 @@
+-- .luacheckrc — lint config for Ka0s Drop Watcher (lint).
+-- `luacheck .` must report 0 warnings / 0 errors before every commit.
+
+std = "lua51"
+max_line_length = false
+codes = true
+
+-- libs/ is vendored (LibKa0s is linted in its own repo); tests/_kit/ is a byte copy of the
+-- library's testkit/. Under docs/ only the frozen bundle stores are excluded. Everything else under
+-- tests/ is ours and is linted.
+exclude_files = { "libs/", "docs/audits/", "docs/reviews/", "docs/revendor/", "_dev/", "tests/_kit/" }
+
+-- No top-level `ignore`: a blanket suppression reaches every file (lint).
+
+-- The SavedVariables write targets and the one Blizzard table the addon writes to.
+globals = {
+  "DropWatcherDB",       -- AceDB
+  "DropWatcherPerfDB",   -- the diagnostics capture ring (performance-§5)
+  "StaticPopupDialogs",
+}
+
+read_globals = {
+  "_G", "LibStub", "C_AddOns", "C_Item", "C_Timer",
+  "CreateFrame", "UIParent", "UISpecialFrames", "STANDARD_TEXT_FONT", "ITEM_QUALITY_COLORS",
+  "InCombatLockdown", "UnitAffectingCombat", "debugprofilestop", "tinsert",
+  "Settings", "StaticPopup_Show", "YES", "NO",
+}
+
+-- The harness global, declared for tests/ only so no shipped file can reach for it. The
+-- SavedVariables names are cleared by tests/loader.lua before each instance.
+files["tests/"] = {
+  globals = {
+    "_G.DW_TEST",
+    "_G.DropWatcherDB",
+    "_G.DropWatcherPerfDB",
+  },
+}
+
+-- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;
+-- neither body reads the receiver.
+files["settings/Slash.lua"] = {
+  ignore = { "212/self" },
+}

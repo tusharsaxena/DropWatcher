@@ -1,0 +1,18 @@
+local _, NS = ...
+-- core/State.lua — session-only runtime state; reset every /reload and never in SavedVariables.
+
+NS.State = NS.State or {}
+local State = NS.State
+
+-- The debug-logging flag (debug-logging-§5): default off, independent of the console window.
+-- `/dw debug on|off` and the console's own toggle write it through the DebugLog seam.
+State.debug = false
+
+-- Test mode (preview-mode, options-ui-§15): placeholder content, on until turned off, ended by
+-- combat. The Master controls checkbox, the launcher entry and `/dw test` share one handler,
+-- NS.SetTestMode (core/DropWatcher.lua).
+State.testMode = false
+
+-- Whether the player has the main window open this session. The window's own show decision
+-- (modules/Window.lua) combines it with the General visibility setting and the stand-down latch.
+State.windowOpen = false

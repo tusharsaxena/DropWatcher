@@ -1,0 +1,153 @@
+-- tests/test_surface_parity.lua — every degradation stub carries the live surface (testing-§8).
+--
+-- Each case loads the addon with the whole LibKa0s payload ABSENT (the loader skips its files) and
+-- compares the stub against the live surface: by major name where the stub mirrors something
+-- tests/run.lua registered as the live half, key for key (two tables) where it mirrors an instance
+-- or a set of NS members. A member the live module has and the stub lacks is a crash moved to the
+-- one install the stub exists for. Where a member is live-only on purpose, the ignore set names it
+-- with the grep that proves this addon has no call site for it.
+
+local T = _G.DW_TEST
+local test, assertTrue = T.test, T.assertTrue
+
+local NO_LIBKA0S = T.loadAddon.libFiles
+
+local live = T.newAddon()
+local degraded = T.newAddon{ skip = NO_LIBKA0S }
+
+test("parity: the degraded load really is library-absent, and the live one is not", function()
+    -- red under: a loader that ignores `skip` (both arms would be live and every case below vacuous)
+    assertTrue(degraded.DebugLog.Debug ~= nil and live.DebugLog ~= degraded.DebugLog)
+    assertTrue(T.LibStub("LibKa0s-Core-1.0", true) ~= nil, "the live arm has the library")
+    local _, m = T.newAddon{ skip = NO_LIBKA0S }
+    assertTrue(m.LibStub("LibKa0s-Core-1.0", true) == nil, "the degraded arm has none")
+end)
+
+test("parity: the Core seam's namespace surface survives the library's absence", function()
+    T.assertSurfaceParity(live, degraded, "the addon namespace (Core seam)")
+    T.assertSurfaceParity(live.Util, degraded.Util, "NS.Util (Core printer seam)")
+end)
+
+test("parity: the DebugLog stub carries the whole live surface", function()
+    T.assertSurfaceParity(degraded.DebugLog, "LibKa0s-DebugLog-1.0", {
+        -- The two line formatters are the console's own rendering; the stub has no window to render
+        -- into and copies no formatter (debug-logging-§1). `grep -rn "FormatPlain\|FormatColored"
+        -- core modules settings` finds no call site.
+        "FormatPlain", "FormatColored",
+    })
+end)
+
+test("parity: the Slash stub carries the whole live surface", function()
+    T.assertSurfaceParity(degraded.SlashCommands, "LibKa0s-Slash-1.0")
+end)
+
+test("parity: the Slash stub's one library string is the library's, byte for byte", function()
+    -- red under: change one byte of DISABLED_LINE_FORMAT in settings/Slash.lua's stub
+    T.assertLibraryConstant(degraded.SlashCommands.__disabledLineFormat, "LibKa0s-Slash-1.0",
+        "DISABLED_LINE_FORMAT", "settings/Slash.lua stub")
+end)
+
+test("parity: the Options helpers stub carries the whole live surface", function()
+    T.assertSurfaceParity(degraded.addon.Settings.Helpers, "LibKa0s-Options-1.0", {
+        -- Layout constants and the resolved AceGUI: the stub draws nothing, and options-ui-§1
+        -- forbids a host copy of a LAYOUT constant.
+        "PADDING_X", "ROW_VSPACER", "SECTION_HEADING_H", "BUTTON_PAIR_REL",
+        "CHROME_GAP", "TAB_H", "BANNER_H", "AceGUI",
+        -- Reached only from a page body, which the stub never builds (CreateOptionsPanel says the
+        -- panel is unavailable instead).
+        "BuildLandingPage", "RestoreDefaults",
+        -- The composers' value tables and labels, read only inside the live composers.
+        "FONT_FLAGS", "FONT_FLAGS_SORT", "VISIBILITY_VALUES", "VISIBILITY_SORT",
+        "MASTER_GROUP", "CLASS_COLOR_NOTE",
+    })
+end)
+
+test("parity: the Schema host stub's instance carries the whole live instance surface", function()
+    T.assertSurfaceParity(live.SchemaRuntime, degraded.SchemaRuntime, "schema instance vs host stub")
+end)
+
+test("parity: the Schema host stub carries the library's own members", function()
+    T.assertSurfaceParity(degraded.addon.Settings.SchemaLib, "LibKa0s-Schema-1.0", {
+        -- The library's default refusal words; the stub refuses in this addon's own words.
+        "STRINGS",
+    })
+end)
+
+test("parity: the Launcher stub carries the whole live surface", function()
+    T.assertSurfaceParity(degraded.Launcher, "LibKa0s-Launcher-1.0")
+end)
+
+test("parity: the Lifecycle stand-in carries every member of the live latch", function()
+    T.assertSurfaceParity(live.Lifecycle, degraded.Lifecycle, "Lifecycle latch vs host stand-in")
+end)
+
+test("parity: the Bus stand-in carries every member of the live bus", function()
+    T.assertSurfaceParity(live.Bus, degraded.Bus, "Bus instance vs host stand-in")
+end)
+
+test("parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls", function()
+    T.assertSurfaceParity(degraded.Pool, "LibKa0s-Pool-1.0", {
+        -- The keyed family, live-only on purpose: `grep -rnE "Keyed\(" core modules settings`
+        -- returns nothing; every pool here is a plain New/Acquire/ReleaseAll pool.
+        "NewKeyed", "AcquireKeyed", "ReleaseAllKeyed", "CountsKeyed",
+    })
+end)
+
+test("parity: the Item stub carries the whole LibKa0s-Item-1.0 surface", function()
+    T.assertSurfaceParity(degraded.Item, "LibKa0s-Item-1.0")
+end)
+
+-- The Perf members the addon can reach: the gate fields, the bracket sinks, the hold pair and the
+-- slash entry point. The live instance publishes far more (the panel, the record, the run state),
+-- which the stub is not obliged to carry.
+local PERF_MEMBERS = { "on", "suspended", "BUCKET_ORDER", "Note", "Open", "Close", "Suspend",
+    "Resume", "OnCommand" }
+
+test("parity: the Perf stub carries every Perf member the addon reaches", function()
+    local l, d = {}, {}
+    for _, k in ipairs(PERF_MEMBERS) do l[k], d[k] = live.Perf[k], degraded.Perf[k] end
+    T.assertSurfaceParity(l, d, "Perf reached members")
+    -- And the list is honest: every member the addon's own source names on Perf is in it.
+    -- red under: add a `Perf.Reset()` call to modules/Window.lua without adding it above
+    local listed = {}
+    for _, k in ipairs(PERF_MEMBERS) do listed[k] = true end
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
+        local src = fh:read("*a"); fh:close()
+        for member in src:gmatch("[^%w_]Perf[.:]([%a_][%w_]*)") do
+            assertTrue(listed[member], rel .. " reaches Perf." .. member .. ", missing from PERF_MEMBERS")
+        end
+    end
+end)
+
+-- The NS members a seam file publishes, found the way the grep in each case's comment finds them.
+-- Env and Media publish onto NS itself, like Core, so the member list is derived, never re-typed.
+local function seamMembers(path)
+    local fh = assert(io.open(T.root .. "/" .. path, "rb"))
+    local src = fh:read("*a"); fh:close()
+    local found = {}
+    for line in src:gmatch("[^\r\n]+") do
+        local key = line:match("^%s*function NS%.([A-Za-z_][A-Za-z0-9_]*)")
+            or line:match("^%s*NS%.([A-Za-z_][A-Za-z0-9_]*)%s*=")
+        if key then found[key] = true end
+    end
+    return found
+end
+
+local function assertSeamParity(path, known, label)
+    local found = seamMembers(path)
+    assertTrue(found[known], "the derivation found no NS." .. known .. " in " .. path)
+    local l, d = {}, {}
+    for key in pairs(found) do l[key], d[key] = live[key], degraded[key] end
+    T.assertSurfaceParity(l, d, label)
+end
+
+test("parity: the Env seam publishes the same NS members on both paths", function()
+    -- Members from: grep -nE '^\s*function NS\.[A-Za-z_]+|^\s*NS\.[A-Za-z_]+\s*=' core/EnvSetup.lua
+    assertSeamParity("core/EnvSetup.lua", "Version", "Env seam (NS members)")
+end)
+
+test("parity: the Media seam publishes the same NS members on both paths", function()
+    -- Members from: grep -nE '^\s*function NS\.[A-Za-z_]+|^\s*NS\.[A-Za-z_]+\s*=' core/MediaSetup.lua
+    assertSeamParity("core/MediaSetup.lua", "MediaFont", "Media seam (NS members)")
+end)
