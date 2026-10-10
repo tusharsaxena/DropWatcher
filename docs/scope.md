@@ -18,14 +18,15 @@ The frame the features plug into: the window shell (position, size, lock, scale,
 visibility, test mode), the settings panel's landing page, General page and Profiles page, the
 `/dw` command with the reserved verbs and `lock`, `unlock`, `show`, `hide`, `toggle` and `test`, the
 launcher, the debug console and the diagnostics report, the performance harness, the stand-down
-latch, the message catalog, and the situation classifier (it knows where the player is; nothing
-consumes it yet). The verdict kernel, the quality gate, the trade estimator and the messaging
-core exist as pure modules that nothing calls yet. The loot parser reads every loot line in chat
-and counts it in the diagnostics report, but hands nothing to a feed yet. The inspect broker reads
-the group's gear and specs, warming up on a roster change inside a tracked situation, and shows
-them in the diagnostics report; nothing judges against them yet. The feed that wires them in, asking and the
-situation settings arrive with the plan's later items
-([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
+latch, the message catalog, and the situation classifier. The feed wires the engine together: it
+takes each drop from the loot lines in chat, the encounter loot event and the loot history, merges
+the reports of one drop, groups drops by encounter or keystone run, hides what the situation, the
+filters or the quality gate exclude, judges each drop for you (the verdict kernel over your gear
+snapshot) and for its looter (over the inspect broker's read), and estimates whether it can be
+traded; the diagnostics report counts what it holds. Nothing draws the drops yet: the window's
+feed tabs, asking and trading, and the settings that tune the feed arrive with the plan's later
+items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
+The messaging core exists as a pure module that nothing calls yet.
 
 ## What it deliberately does not do (v1)
 

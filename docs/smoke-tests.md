@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..7 | Feed | The group drops feed (lands with DW-11, DW-25, DW-27, DW-30, DW-31) |
+| FEED-1..7 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27) and a Devourer looter (FEED-7, reserved) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
 | ITEM-1..2 | Item facts | The item readers' shapes and the track ids (lands with DW-23) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
@@ -160,12 +160,13 @@ Result:
 
 ## Feed
 
-The parser's patterns, the rebuild and the secret guards are headless-tested (`test_loot_parser`);
-FEED-1 confirms the client's real lines. The other checks land with the feed items; reserved here
-so the IDs the plan and the design name stay stable: FEED-2..4 (the table, DW-31), FEED-5 (`GetItemUpgradeInfo`
-on a link that is not yours, DW-23), FEED-6 (`ENCOUNTER_LOOT_RECEIVED` for the M+ chest, DW-27),
-FEED-7 (a Devourer Demon Hunter looter before inspect: a warglaive or one-hander reads as usable and
-a held off hand as not, matching the item's own spec list; the class data of DW-10, judged by DW-11).
+The parser's patterns, the rebuild and the secret guards are headless-tested (`test_loot_parser`),
+and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
+real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
+and the `feed:` lines of `/dw diagnostics` until the window's feed tabs draw them (DW-30, DW-31; the
+table's own checks take the next free numbers). Reserved: FEED-7 (a Devourer Demon Hunter looter
+before inspect: a warglaive or one-hander reads as usable and a held off hand as not, matching the
+item's own spec list; the class data of DW-10, judged by DW-11).
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
 another realm, and run a dungeon. → For every loot line chat shows, the console shows one `[PARSE]`
@@ -180,6 +181,49 @@ won …`) show nothing. `/dw diagnostics` → `feed: parser hits=<n>` matches th
 `/dump UnitGUID("party1")` for that member: the parser takes it as the GUID of a looter the roster
 cannot place. Record any line chat showed with no `[PARSE]` line, any
 looter shown without a realm, and any quantity wrong. Result:
+
+**FEED-2. One drop per item, whatever reports it.** `/dw debug on`, in a Normal or Heroic dungeon
+with four others, and kill a boss. → Each item chat shows as looted produces one `[FEED] drop <n>:
+<link> by <Name-Realm> (chat) in <boss name>` line (or `(encounter)` when the encounter's report
+came first), and, when the other report arrives, one `[FEED] drop <n>: <link> also reported by
+encounter` line with the same `<n>`: no item gets two `drop` numbers. `/dw diagnostics` →
+`feed: drops group=<members' drops> mine=<yours>` match what chat showed, and `merged=` counts the
+second reports. In a group-loot (Need/Greed) run, each won item also shows `also reported by
+history` once the roll ends, never before. Record any item with two numbers, or a `merged=` of 0
+after a boss whose loot chat showed. Result:
+
+**FEED-3. Groups by encounter and area.** Same dungeon, `/dw debug on`. → Trash loot before the
+first boss reads `in <dungeon name>`; the boss's loot reads `in <boss name>`, including loot that
+arrives up to two minutes after the kill; trash after that reads `in <dungeon name>` again. Wipe on
+a boss once → loot that follows is not filed under the boss. While a boss is up (or within two
+minutes of its kill), `/dw diagnostics` shows `feed: encounter=<boss name>`; afterwards
+`encounter=none`. Record any drop filed under the wrong name. Result:
+
+**FEED-4. The gates, in order, and your own drops.** Same dungeon, Feed quality at its default
+(Rare+). → An Uncommon or lower item a member loots that is not an upgrade for you shows a
+`[QUAL] hidden <link>: quality <q> below 3 (fixed, belowThreshold)` line and **no** `[INSPECT]`
+line for that member right after it; an Epic shows `[FEED] drop`, then an `[INSPECT] inspect
+<Name-Realm>: cached` or `fresh` line within a few seconds (out of combat), then `[EVAL] re-judged
+1 drops after an inspect`. A potion or a reagent shows `[FEED] hidden <link> by <name>: notGear`.
+An item you loot yourself shows `them=-` and a trade state judged by your own verdict (`no` when it
+is an upgrade for you). Then leave the instance and, alone in the open world, loot a few items:
+no `[FEED] drop` line appears outside a tracked situation (`/dw diagnostics` →
+`feed: hidden ... notTracking=<n>` counts any loot seen there). Result:
+
+**FEED-5. The upgrade track on someone else's link.** After FEED-2, shift-click a member's drop
+(a piece with an upgrade track, from the loot window or chat) into `/dump
+C_Item.GetItemUpgradeInfo(<link>)`. → A table with `trackString`, `currentLevel`, `maxLevel` and a
+`trackStringID` answers for a link that is not yours; record the `trackStringID` per track name, so
+`C.TRACK_TIER_BY_STRING_ID` can be filled (ITEM-2). If it answers nil, record that: the feed then
+reads the track from the hyperlink tooltip's `ItemUpgradeLevel` line. Result:
+
+**FEED-6. The Mythic+ chest.** `/dw debug on` and `/etrace` filtered on `ENCOUNTER_LOOT_RECEIVED`,
+then time a keystone. → `/dw diagnostics` during the run shows `feed: run=<keystone dungeon
+name>`. At the chest, each item shows `[FEED] drop <n>: ... in <keystone dungeon name>` (the run's
+group, bosses included), and `/etrace` shows one `ENCOUNTER_LOOT_RECEIVED` per chest item: record
+the first argument (the encounter id) it carries, and whether the chat line and the event both
+arrive (`also reported by encounter`). Loot two minutes after completion falls back to the
+dungeon's name. Result:
 
 ## Roster
 
@@ -389,3 +433,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | GEAR-1..2 | DW-24, the gear snapshot | No client pass recorded yet |
 | FEED-1, COMBAT-1, LOC-1 | DW-25, the loot parser (LOC-1 re-armed: its sign-off without the client no longer holds) | No client pass recorded yet |
 | INSPECT-1..4 | DW-26, the inspect broker | No client pass recorded yet |
+| FEED-2..6 | DW-27, the feed | No client pass recorded yet |

@@ -35,7 +35,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `roster` | the group as last read (stored state, so the report never triggers a read): the member count, then per member the Name-Realm, unit token, classFile, online state, specID and whether it is the player |
 | `inspect` | the inspect broker (stored state): the queue's length, the GUID in flight, whether it is parked and the spacing left, then per member asked about the status, reason, spec, slots read, age and whether it is stale |
 | `gear` | your gear snapshot as last read (stored state, so the report never triggers a read): your class, spec, hand flags and the items still loading, then per slot the worn item level and quality (or `empty`, `loading`) and the best owned level when it is not the worn item |
-| `feed` | what the loot parser has read since login (stored state): the lines turned into loot (`hits`), ignored, rejected (upgrade and crafting echoes) and secret, and the last loot seen with its age, kind and looter. The feed (DW-27) adds its drop counts here |
+| `feed` | what the loot parser has read since login (stored state): the lines turned into loot (`hits`), ignored, rejected (upgrade and crafting echoes) and secret, and the last loot seen with its age, kind and looter; then the feed's drops (Group drops and My drops, the test feed, the groups, the reports merged, the drops still loading), the drops hidden by reason, the encounter and keystone run in progress, and the quality mode in force here with its threshold (one per slot, compact, for the per-slot mode) |
 | `registration` | the declared feature events (each once), whether they are registered, the events the client refused |
 | `integrations` | the launcher's registration and button; whether Pawn and CanIMogIt are loaded |
 
@@ -54,6 +54,11 @@ change of your gear snapshot, with your spec, the items still loading and the ca
 loot patterns built, with how many globals were usable; one line per loot line read, with the kind,
 the link, the quantity, the looter and its GUID; one per line skipped as rejected, secret or not an
 item; and a sink that raised), `INSPECT` (one line per inspect job when it ends, with the member, the
-status and its reason, the spec and the slots read, and one per scan with how many were queued). The
+status and its reason, the spec and the slots read, and one per scan with how many were queued),
+`FEED` (one line per drop added, with its looter, source, group, both verdicts and the trade
+state; one per report merged into a drop; one per drop hidden by the situation or a filter, with
+the reason; one when a feed is cleared), `QUAL` (one line per drop the quality gate hides, with
+its quality, the threshold, the mode and the reason), `EVAL` (one line per re-judging pass after an
+inspect or a gear change, with the number of drops). The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 The design's other feature tags (spec §13) arrive with their modules.

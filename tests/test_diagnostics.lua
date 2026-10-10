@@ -111,6 +111,30 @@ test("diagnostics: the feed section counts the parser's lines and names the last
     assertTrue(text:find("feed: last loot 12s ago (chat, bonus) by Testchar-Testrealm", 1, true) ~= nil, text)
 end)
 
+test("diagnostics: the feed section counts the drops, the hidden ones and the context", function()
+    local NS, _, m = T.enableAddon({ mock = function(m)
+        m.__context.inInstance, m.__context.instanceType = true, "party"
+        m.instance = { name = "The Rookery", difficultyID = 2 }
+    end })
+    assertTrue(report(NS):find("feed: no drop received yet", 1, true) ~= nil)
+    local band = m.addItem("|cnIQ4:|Hitem:2001::::::::90:::::|h[Band]|h|r", { name = "Band", quality = 4,
+        ilvl = 600, equipLoc = "INVTYPE_FINGER", classID = 4, subClassID = 0, bindType = 1, stats = {} })
+    local potion = m.addItem("|cnIQ1:|Hitem:2002::::::::90:::::|h[Potion]|h|r", { name = "Potion",
+        quality = 1, ilvl = 1, equipLoc = "", classID = 0, subClassID = 0, stats = {} })
+    m.__fire("ENCOUNTER_START", 2900, "Speaker Brokk", 2, 5)
+    NS.LootFeed.Add(band)
+    NS.LootFeed.Add(band, "Nobody")
+    NS.LootFeed.Add(potion)
+    local text = report(NS)
+    assertTrue(text:find("feed: drops group=1 mine=1 test=0 groups=1 merged=0 loading=0", 1, true) ~= nil, text)
+    assertTrue(text:find("feed: hidden notGear=1", 1, true) ~= nil, text)
+    assertTrue(text:find("feed: encounter=Speaker Brokk run=none", 1, true) ~= nil, text)
+    assertTrue(text:find("feed: quality mode=fixed threshold=3 (fixed)", 1, true) ~= nil, text)
+    NS.addon.db.profile.feed = { quality = { mode = "dynamicSlot" } }
+    text = report(NS)
+    assertTrue(text:find("feed: quality mode=dynamicSlot thresholds HEAD=2", 1, true) ~= nil, text)
+end)
+
 test("diagnostics: the inspect section shows the queue and each member's entry", function()
     local NS, _, m = T.enableAddon()
     assertTrue(report(NS):find("inspect: nothing asked yet", 1, true) ~= nil)

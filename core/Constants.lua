@@ -104,6 +104,15 @@ C.QUALITY = fromEnum(Enum.ItemQuality, {
 C.QUALITY_MODES = { "fixed", "dynamicSlot", "dynamicCharacter" }
 C.QUALITY_DEFAULT = { FIXED = C.QUALITY.RARE, FLOOR = C.QUALITY.UNCOMMON }
 
+-- The feed's filters and gates (design spec §6.2, §6.3), as modules/LootFeed.lua reads them until
+-- the settings rows of DW-40 store a value: gear only, tier tokens in, no item-level floor
+-- (`minIlvlMode` off, absolute or relative; `relativeIlvl` is how far below your average equipped
+-- level a drop may be), the global quality mode with the upgrade override on.
+C.FEED_DEFAULT = {
+    gearOnly = true, includeTokens = true, minIlvlMode = "off", minIlvl = 0, relativeIlvl = 10,
+    qualityMode = "fixed", upgradeOverride = true,
+}
+
 -- Upgrade tracks in ascending order (design spec §5.2, step 3). The evaluation kernel compares a
 -- track's numeric `tier` first; ItemFacts fills it from the track's string id where the client has
 -- one. These enUS names are the fallback for a track that carries only its name, so a localized

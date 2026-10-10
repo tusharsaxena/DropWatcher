@@ -17,6 +17,7 @@ local _, NS = ...
 --   * the inventory and bag readers (GetInventoryItemLink, C_Container's slot count and link);
 --   * the inspect calls (CanInspect, CheckInteractDistance, NotifyInspect and its hook,
 --     ClearInspectPlayer, GetInspectSpecialization, the inventory item id, InspectFrame);
+--   * the loot sources beside chat (C_LootHistory's won drops, a keystone's map name);
 --   * the item readers behind the item facts (info, effective level, stats, specs, uniqueness,
 --     transmog, the class restriction line);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
@@ -518,6 +519,50 @@ function Compat.HookNotifyInspect(fn)
     if not (hooksecurefunc and NotifyInspect) then return false end
     hooksecurefunc("NotifyInspect", fn)
     return true
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- The loot sources beside chat (the feed, design spec §3)
+-- ---------------------------------------------------------------------------------------------
+
+-- The winner of a C_LootHistory drop, plain fields only, or nil.
+local function lootWinner(w)
+    if Compat.IsSecret(w) or type(w) ~= "table" then return nil end
+    local guid = w.playerGUID
+    if not (Compat.IsSafeKey(guid) and type(guid) == "string") then guid = nil end
+    local isSelf = w.isSelf
+    return { name = plainString(w.playerName), guid = guid, classFile = plainString(w.playerClass),
+        isSelf = not Compat.IsSecret(isSelf) and isSelf == true }
+end
+
+--- A group-loot drop that has a winner, from C_LootHistory.GetSortedInfoForDrop: { link, name,
+--- guid, classFile, isSelf }, every field plain. Nil while nobody has won it (rolls still open, or
+--- everyone passed), for a secret or malformed answer, or with no API.
+--- @param encounterID number
+--- @param lootListID number
+--- @return table|nil
+function Compat.LootHistoryDrop(encounterID, lootListID)
+    local api = C_LootHistory
+    if not (api and api.GetSortedInfoForDrop) then return nil end
+    if not (plainNumber(encounterID) and plainNumber(lootListID)) then return nil end
+    local info = api.GetSortedInfoForDrop(encounterID, lootListID)
+    if Compat.IsSecret(info) or type(info) ~= "table" then return nil end
+    local link, winner = plainString(info.itemHyperlink), lootWinner(info.winner)
+    if not (link and winner) or not (winner.name or winner.guid) then return nil end
+    winner.link = link
+    return winner
+end
+
+--- A keystone dungeon's name from C_ChallengeMode.GetMapUIInfo, or nil (no map, a secret answer,
+--- or no API).
+--- @param mapID number
+--- @return string|nil
+function Compat.ChallengeMapName(mapID)
+    local api = C_ChallengeMode
+    if not (api and api.GetMapUIInfo and plainNumber(mapID)) then return nil end
+    local name = plainString((api.GetMapUIInfo(mapID)))
+    if name == "" then return nil end
+    return name
 end
 
 -- ---------------------------------------------------------------------------------------------

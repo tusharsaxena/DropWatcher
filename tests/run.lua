@@ -113,6 +113,7 @@ Kit.run{
         "test_gear",
         "test_loot_parser",
         "test_inspect",
+        "test_feed",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

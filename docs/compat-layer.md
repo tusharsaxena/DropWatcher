@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Forty-four shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `44`). The three
+**Forty-six shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `46`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -55,6 +55,8 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `InspectSpecID(unit)` | `GetInspectSpecialization`; 0 (not known) and a secret answer are nil | `nil` |
 | | `IsInspectFrameShown()` | `InspectFrame:IsShown()`; a secret answer is not shown | `false` |
 | | `HookNotifyInspect(fn)` | `hooksecurefunc("NotifyInspect", fn)`: anyone's call reaches `fn`, after the client's own; the hook can never be removed. `true` when installed | `false` |
+| Loot sources | `LootHistoryDrop(encounterID, lootListID)` | `C_LootHistory.GetSortedInfoForDrop`: a drop with a winner as `{ link, name, guid, classFile, isSelf }`, every field plain (a secret GUID or flag dropped); nil while nobody has won it, and for a secret or malformed answer | `nil` |
+| | `ChallengeMapName(mapID)` | `C_ChallengeMode.GetMapUIInfo`'s name; an empty or secret answer is nil | `nil` |
 | Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
 | | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
@@ -105,6 +107,7 @@ The callers land in M2: Restrictions (DW-21) reads the restriction shims, the ro
 `NormalizedRealm`, ItemFacts (DW-23) reads
 the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (DW-24) reads
 `PlayerSpecID`, the inventory and bag readers and `InventoryItemLevel`, the loot parser (DW-25) builds its patterns with
-`FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, the inspect broker (DW-26) the inspect shims, `InventoryItemLink` and `InventoryItemLevel`, TradeTimer (DW-28) reads
+`FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, the inspect broker (DW-26) the inspect shims, `InventoryItemLink` and `InventoryItemLevel`, the feed (DW-27)
+`LootHistoryDrop`, `ChallengeMapName` and the secret guards on every event payload, TradeTimer (DW-28) reads
 `TradeTimeRemaining` and `GetBagItemGUID`, the trade helper (DW-29) the trade actions, the
 messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.

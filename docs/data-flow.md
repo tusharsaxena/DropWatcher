@@ -121,7 +121,7 @@ CHAT_MSG_LOOT (text, ..., guid) ─> LootParser.Parse   [Perf bucket `parse`]
     other: bonus, pushed, loot (each *_MULTIPLE first) ─> looter = Roster.Resolve(name),
                                                           else the name and the event's GUID
     no match, or a link that is not an item ─> ignored
-  ─> { looterName, looterGUID, link, qty, kind, isSelf } ─> every sink (the feed, DW-27), pcall'd
+  ─> { looterName, looterGUID, link, qty, kind, isSelf } ─> every sink (the feed), pcall'd
   ─> State.lootParser: hits, ignored, rejected, secret, the last loot seen
 ```
 
@@ -151,6 +151,43 @@ Inspect.Candidate(guid) ─> { classFile (roster), specID, hand flags, gear (fac
 
 The state is memory only (`State.inspect`) and is dropped by the stand-down, which also cancels
 every timer and clears an inspect the broker started.
+
+## Today: the feed
+
+```
+CHAT_MSG_LOOT ─> LootParser sink ─> source `chat` (your own `pushed` lines skipped)
+ENCOUNTER_LOOT_RECEIVED(encounterID, itemID, link, qty, name, classFile) ─> source `encounter`
+LOOT_HISTORY_UPDATE_DROP(encounterID, lootListID) ─> Compat.LootHistoryDrop ─> a winner? once ─> `history`
+LootFeed.Add(link, looter, opts) ─> source `manual` (skips the situation gate; opts.test skips every gate)
+  every payload secret-guarded; the looter resolved through the roster
+LootFeed.Receive   [Perf bucket `feed.add`]
+  same item id + same looter (GUID, else name without realm) within 120s, not yet from this source
+    ─> merged: sources += source, a learned GUID asks for the inspect ─> DropUpdated(id, "source")
+  else a new drop, its group fixed now:
+    keystone run (until 120s after CHALLENGE_MODE_COMPLETED) ─> the run's group
+    else the encounter it names, else the encounter in progress or killed < 120s ago
+    else the area's group (instance name or "Open world")
+  Situations.IsTracking(situation)? no ─> hidden `notTracking` (nothing loaded, no inspect)
+  ItemFacts.Request ─> loading? wait for the load, then go on
+  Filter (heirloom, cosmetic, tokens, gear only, minimum item level) ─> hidden with its reason
+  Evaluate(facts, your candidate)                       [Perf bucket `evaluate`]   ─> drop.me
+  QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`]
+    ─> hidden `quality` (one QUAL debug line), before any inspect
+  someone else's drop: Inspect.Request(looter, looter priority)
+      ─> Evaluate(facts, Inspect.Candidate(looter)) once read ─> drop.them
+      ─> TradeRules.Estimate(bind facts + bonus roll, drop.them, situation rule) ─> drop.trade
+  your own drop:  TradeRules.Estimate(…, drop.me) ─> drop.trade
+      ─> every other member: Evaluate when their read exists, else checking / unavailable
+         (their inspects asked for at offer priority while the trade is not `no`)
+  ─> State.feed.live (200 drops, oldest out) ─> DropAdded(id)
+InspectDone(guid) ─> that looter's drops and your drops' candidate re-judged ─> DropUpdated(id, "inspect")
+GearChanged ─> you re-judged on every drop (and your drops' trade) ─> DropUpdated(id, "gear")
+a scorer answering "pending" ─> one shared 1s timer, five tries per drop ─> DropUpdated(id, "score")
+ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the grouping context
+```
+
+The stand-down unregisters the events and the bus receivers, cancels the score timer, and drops the
+dedupe window, the context and any drop still loading; the recorded drops are kept for the session.
 
 ## The design's loot pipeline (spec §3)
 

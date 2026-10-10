@@ -20,6 +20,9 @@ local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 local BUCKETS = {
     { key = "parse" },            -- modules/LootParser.lua Parse: one CHAT_MSG_LOOT line
     { key = "inspect.read" },     -- modules/Inspect.lua readSlots: one read of a unit's 17 slots
+    { key = "feed.add" },         -- modules/LootFeed.lua Receive: one receipt taken into the feed
+    { key = "evaluate" },         -- modules/LootFeed.lua evaluate: one verdict for one candidate
+    { key = "quality.gate" },     -- modules/LootFeed.lua qualityGate: one minimum-quality decision
     { key = "window.refresh" },   -- modules/Window.lua Refresh: one window repaint pass
 }
 

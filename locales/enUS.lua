@@ -58,6 +58,11 @@ L["Quality: Match slot"] = "Quality: Match slot"
 L["Rare"] = "Rare"
 L["Uncommon"] = "Uncommon"
 
+-- The feed's group labels (modules/LootFeed.lua)
+L["Encounter"] = "Encounter"
+L["Encounter %s"] = "Encounter %s"
+L["Open world"] = "Open world"
+
 -- Settings panel, window and chat acknowledgments
 L["Debug console"] = "Debug console"
 L["Diagnostic report written to the debug console: %d lines. Use Copy to share it."] =

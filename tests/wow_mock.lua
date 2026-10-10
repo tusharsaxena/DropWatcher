@@ -18,7 +18,10 @@
 --   fireEvent      fireEvent(name, ...) dispatches a game event to AceEvent handlers
 --   instance       GetInstanceInfo's name and difficultyID; the instance type and inInstance are
 --                  the base's __context.instanceType / __context.inInstance (IsInInstance reads them)
---   challengeModeActive  C_ChallengeMode.IsChallengeModeActive()'s answer
+--   challengeModeActive  C_ChallengeMode.IsChallengeModeActive()'s answer; challengeMaps[mapID] is
+--                  the keystone dungeon's name C_ChallengeMode.GetMapUIInfo answers
+--   lootHistory    C_LootHistory.GetSortedInfoForDrop's answers, keyed "encounterID:lootListID"
+--                  ({ itemHyperlink, winner = { playerName, playerGUID, playerClass, isSelf } })
 --   unknownDifficulties  ids GetDifficultyInfo answers nil for (a retired or renumbered difficulty)
 --   tooltips       C_TooltipInfo's answers: .bag["bag:slot"], .inventory["unit:slot"], .hyperlink[link]
 --   chatSent       every C_ChatInfo.SendChatMessage call; chatLockdown is InChatMessagingLockdown()
@@ -451,8 +454,18 @@ local function build()
         if type(id) ~= "number" or id <= 0 or M.unknownDifficulties[id] then return nil end
         return "Difficulty " .. id
     end
+    M.challengeMaps = {}
     M.C_ChallengeMode = {
         IsChallengeModeActive = function() return M.challengeModeActive == true end,
+        GetMapUIInfo = function(mapID) return M.challengeMaps[mapID], mapID end,
+    }
+
+    -- C_LootHistory: lootHistory["encounterID:lootListID"] is GetSortedInfoForDrop's answer.
+    M.lootHistory = {}
+    M.C_LootHistory = {
+        GetSortedInfoForDrop = function(encounterID, lootListID)
+            return M.lootHistory[encounterID .. ":" .. lootListID]
+        end,
     }
 
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end

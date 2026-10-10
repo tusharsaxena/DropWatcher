@@ -144,10 +144,9 @@ local function gear(out)
     end
 end
 
--- What the loot parser has read since login (design spec §13's Feed section): the lines it turned
--- into loot, the ones it ignored, rejected (upgrade and crafting echoes) and found secret, and the
--- last loot seen. Stored state only. The feed (DW-27) adds its drop counts here.
-local function feed(out)
+-- What the loot parser has read since login: the lines it turned into loot, the ones it ignored,
+-- rejected (upgrade and crafting echoes) and found secret, and the last loot seen.
+local function parserLines(out)
     local s = NS.State.lootParser
     if not s then return out:add(TAG, "feed: parser has read no loot line yet") end
     out:add(TAG, "feed: parser hits=%s ignored=%s rejected=%s secret=%s", s.hits, s.ignored,
@@ -155,6 +154,48 @@ local function feed(out)
     if not s.lastAt then return out:add(TAG, "feed: no loot seen yet") end
     out:add(TAG, "feed: last loot %ss ago (chat, %s) by %s", math.floor(GetTime() - s.lastAt),
         s.lastKind, s.lastLooter or "?")
+end
+
+-- The feed's drops per tab, its groups, merges and pending loads, the drops hidden by reason, and
+-- the encounter and keystone run in progress.
+local function dropLines(out)
+    local st = NS.LootFeed.Stats()
+    if not st then return out:add(TAG, "feed: no drop received yet") end
+    out:add(TAG, "feed: drops group=%s mine=%s test=%s groups=%s merged=%s loading=%s", st.group,
+        st.mine, st.test, st.groups, st.merged, st.loading)
+    local hidden = {}
+    for reason, n in pairs(st.hidden) do hidden[#hidden + 1] = reason .. "=" .. n end
+    table.sort(hidden)
+    out:joined(TAG, "feed: hidden", hidden)
+    out:add(TAG, "feed: encounter=%s run=%s", st.encounter or "none", st.run or "none")
+end
+
+-- The quality mode in force here and its threshold; for the per-slot mode, each slot's (compact).
+-- The worn qualities come from the stored gear snapshot, so the report never triggers a read.
+local function qualityLine(out)
+    local QG, cfg, g = NS.QualityGate, NS.LootFeed.Config(), NS.State.gear
+    local mode = QG.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride())
+    local worn = {}
+    for slot, e in pairs(g and g.equipped or {}) do worn[slot] = e and e.quality or false end
+    local ctx = { fixed = cfg.fixed, floor = cfg.floor, gear = worn }
+    if mode ~= "dynamicSlot" then
+        return out:add(TAG, "feed: quality mode=%s threshold=%s (%s)", mode, QG.Threshold(mode, ctx))
+    end
+    local names, parts = slotNames(), {}
+    for _, slot in ipairs(NS.Gear.SLOTS) do
+        if not NS.Constants.QUALITY_IGNORED_SLOT[slot] then
+            ctx.baselineSlot = slot
+            parts[#parts + 1] = names[slot] .. "=" .. QG.Threshold(mode, ctx)
+        end
+    end
+    out:joined(TAG, "feed: quality mode=dynamicSlot thresholds", parts)
+end
+
+-- Design spec §13's Feed section. Stored state only, apart from the situation read live.
+local function feed(out)
+    parserLines(out)
+    dropLines(out)
+    qualityLine(out)
 end
 
 local function registration(out)

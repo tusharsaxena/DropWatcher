@@ -52,3 +52,9 @@ State.lootParser = nil
 -- seq, inFlight, lastNotifyAt, parked }, created on first use and dropped while stood down. Memory
 -- only, as the spec asks.
 State.inspect = nil
+
+-- The feed (modules/LootFeed.lua, design spec §3): { seq, live, test (each { drops, byId, groups,
+-- groupByKey }), recent (the dedupe window), ctx (the encounter and the keystone run), names,
+-- history, merged, hidden }, created on the first receipt. The stand-down drops the dedupe window
+-- and the context and keeps the drops for the session.
+State.feed = nil

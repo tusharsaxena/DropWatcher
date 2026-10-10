@@ -112,7 +112,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_compat.lua (53)
+### test_compat.lua (55)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -166,6 +166,8 @@ Total.
 - compat: the bag readers prefer C_Container, then the globals, then answer empty
 - compat: the inspect gates answer plain booleans; a secret answer or no API is the safe side
 - compat: the inspect calls, the spec, the item id, the inspect window and the hook
+- compat: LootHistoryDrop answers a won drop's plain fields, else nil
+- compat: ChallengeMapName answers a keystone dungeon's name, else nil
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_constants.lua (12)
@@ -468,6 +470,45 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
+### test_feed.lua (36)
+
+- feed: a member's loot is added once, judged for you, and asks for the looter's inspect
+- feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
+- feed: an upgrade for the looter cannot be traded under the personal rule
+- feed: a bonus roll is never tradeable
+- dedupe: chat, the encounter loot event and the loot history report one drop
+- dedupe: the encounter event first, chat second, merges the same way
+- dedupe: a looter the roster cannot place is matched by name without the realm
+- dedupe: a GUID learned from a second source asks for the looter's inspect
+- dedupe: two copies from one source are two drops; another looter's copy is its own
+- dedupe: a report after the window is a new drop
+- history: a drop is taken once it has a winner, and only once
+- history: your own won drop is yours
+- groups: trash, a boss kill's loot window, then trash again
+- groups: a wipe opens no loot window
+- groups: loot naming an earlier encounter joins that encounter's group
+- groups: a keystone run gathers every drop, the chest after completion included
+- groups: outside an instance the area is the open world
+- gates: an untracked situation hides the drop before its item is even loaded
+- gates: below the quality threshold a downgrade for you is hidden, and costs no inspect
+- gates: the upgrade override shows an upgrade for you below the threshold
+- gates: the stored quality settings and the situation's override are read
+- gates: the filters run after the situation and before the verdict
+- filter: every rule of spec §6.3 (pure)
+- gates: the relative minimum item level reads your average equipped level
+- load: an uncached item waits for its facts; a second source merges meanwhile
+- load: an item that never loads is shown, judged unknown
+- own: your drop is judged for you, its trade by your verdict, and every member a candidate
+- own: an upgrade for you cannot trade, so no candidate is inspected for it
+- own: an item pushed to you (a quest reward, a purchase) is not a drop
+- update: GearChanged re-judges you on every drop
+- update: a pending score is retried on one shared timer, five times at most
+- add: injects a drop past the situation gate; a stranger is judged without an inspect
+- add: the test feed skips every gate and every inspect, and stays apart
+- cap: the oldest drop goes first, and an emptied group with it
+- secrets: a secret link, name or encounter id is never used
+- stand-down: timers and pending loads are dropped, the drops kept
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -480,7 +521,7 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (10)
+### test_diagnostics.lua (11)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -491,6 +532,7 @@ Total.
 - diagnostics: the roster section lists the stored members without reading the client
 - diagnostics: the gear section lists the stored slots without reading the client
 - diagnostics: the feed section counts the parser's lines and names the last loot
+- diagnostics: the feed section counts the drops, the hidden ones and the context
 - diagnostics: the inspect section shows the queue and each member's entry
 
 ### test_vendor_sync.lua (3)
@@ -572,7 +614,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_compat.lua | 53 |
+| test_compat.lua | 55 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -586,8 +628,9 @@ Total.
 | test_gear.lua | 17 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 28 |
+| test_feed.lua | 36 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 10 |
+| test_diagnostics.lua | 11 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -595,4 +638,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **465** |
+| **Total** | **504** |

@@ -132,6 +132,12 @@ modules\LootParser.lua
 # NotifyInspect through NS.Compat at load, and takes NS.Perf as a load-time upvalue. NS.Roster,
 # NS.ItemFacts, NS.Restrictions and NS.Situations (above) are read at call time.
 modules\Inspect.lua
+# Conventional: publishes NS.LootFeed, the feed orchestrator; adds its sink to NS.LootParser and
+# appends its rows to NS.FEATURE_EVENTS (CHALLENGE_MODE_START and CHALLENGE_MODE_COMPLETED after
+# modules\Situations.lua's, so the situation is fresh) and NS.STAND_DOWN / NS.STAND_UP at load, and
+# registers its InspectDone and GearChanged receivers on a NS.Bus target at load; takes NS.Perf as a
+# load-time upvalue. Every module above is read at call time.
+modules\LootFeed.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

@@ -52,7 +52,7 @@ files["core/Compat.lua"] = {
     "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_MALE", "LOCALIZED_CLASS_NAMES_FEMALE",
     "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink",
     "GetInventoryItemID", "CanInspect", "CheckInteractDistance", "NotifyInspect", "ClearInspectPlayer",
-    "GetInspectSpecialization", "InspectFrame", "hooksecurefunc",
+    "GetInspectSpecialization", "InspectFrame", "hooksecurefunc", "C_LootHistory",
   },
 }
 

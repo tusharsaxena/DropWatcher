@@ -10,15 +10,21 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 -- The game events the addon owns today, pinned as literals (sorted).
 local PINNED = {
     "ADDON_RESTRICTION_STATE_CHANGED", "BAG_UPDATE_DELAYED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START",
-    "CHAT_MSG_LOOT",
-    "GROUP_ROSTER_UPDATE", "INSPECT_READY", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
+    "CHAT_MSG_LOOT", "ENCOUNTER_END", "ENCOUNTER_LOOT_RECEIVED", "ENCOUNTER_START",
+    "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_HISTORY_UPDATE_DROP", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
     "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_SPECIALIZATION_CHANGED",
     "TRANSMOG_COLLECTION_UPDATED", "UNIT_INVENTORY_CHANGED", "ZONE_CHANGED_NEW_AREA",
 }
 
-local function registered(m)
+-- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down).
+local PINNED_MESSAGES = { "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_InspectDone" }
+
+-- What is registered, every kind, or one kind ("event", "message").
+local function registered(m, kind)
     local out = {}
-    for _, r in ipairs(m.__registrations()) do out[#out + 1] = r.event end
+    for _, r in ipairs(m.__registrations()) do
+        if not kind or r.kind == kind then out[#out + 1] = r.event end
+    end
     table.sort(out)
     return table.concat(out, ",")
 end
@@ -45,8 +51,9 @@ local DISABLES = {
 
 test("disabled 1: enabled, the addon registers exactly the events it declares", function()
     local NS, _, m = T.enableAddon()
-    assertEqual(registered(m), declared(NS))
-    assertEqual(registered(m), table.concat(PINNED, ","))
+    assertEqual(registered(m, "event"), declared(NS))
+    assertEqual(registered(m, "event"), table.concat(PINNED, ","))
+    assertEqual(registered(m, "message"), table.concat(PINNED_MESSAGES, ","))
 end)
 
 for _, way in ipairs(DISABLES) do
@@ -114,7 +121,8 @@ test("disabled 6: the stand-up re-registers from current state and the window co
     NS.SchemaRuntime.Set("scale", 1.5)    -- a setting changed while off
     NS.addon:OnSlashCommand("enable")
     assertFalse(NS.IsStoodDown())
-    assertEqual(registered(m), table.concat(PINNED, ","))
+    assertEqual(registered(m, "event"), table.concat(PINNED, ","))
+    assertEqual(registered(m, "message"), table.concat(PINNED_MESSAGES, ","), "the bus receivers replayed")
     assertTrue(NS.IsWindowShown(), "the player's open window is back")
     assertEqual(NS.Window.Frame():GetScale(), 1.5)
 end)

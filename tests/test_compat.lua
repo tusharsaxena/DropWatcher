@@ -3,7 +3,8 @@
 -- duration decoder behind the trade timer (spec §7.4) in three client languages, the tooltip line
 -- reader and its three readers, the restriction APIs, the bind helpers, the item readers, the Pawn
 -- seam (spec §5.4) and the trade actions. Every shim is also driven with its API absent, where it
--- must answer its documented absent value and never raise, the inspect calls (spec §8) included.
+-- must answer its documented absent value and never raise, the inspect calls (spec §8) and the
+-- feed's loot history and keystone map readers included.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -702,6 +703,53 @@ test("compat: the inspect calls, the spec, the item id, the inspect window and t
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- The loot sources beside chat (the feed)
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: LootHistoryDrop answers a won drop's plain fields, else nil", function()
+    local Compat, m = fresh()
+    local LINK = "|Hitem:9::|h[Band]|h"
+    assertNil(Compat.LootHistoryDrop(1, 2), "no answer")
+    m.lootHistory["1:2"] = { itemHyperlink = LINK, winner = { playerName = "Brakk",
+        playerGUID = "Player-1-0000000A", playerClass = "WARRIOR", isSelf = false } }
+    local d = Compat.LootHistoryDrop(1, 2)
+    assertEqual(d.link, LINK); assertEqual(d.name, "Brakk"); assertEqual(d.guid, "Player-1-0000000A")
+    assertEqual(d.classFile, "WARRIOR"); assertFalse(d.isSelf)
+    m.lootHistory["1:2"].winner = {}
+    assertNil(Compat.LootHistoryDrop(1, 2), "rolls still open: nobody won it")
+    m.lootHistory["1:2"].winner = nil
+    assertNil(Compat.LootHistoryDrop(1, 2))
+    assertNil(Compat.LootHistoryDrop("1", 2), "the ids must be numbers")
+    installSecrets(m)
+    m.lootHistory["1:2"] = { itemHyperlink = T.secret(LINK), winner = { playerName = "Brakk" } }
+    assertNil(Compat.LootHistoryDrop(1, 2), "a secret link")
+    m.lootHistory["1:2"] = { itemHyperlink = LINK, winner = { playerName = T.secret("Brakk"),
+        playerGUID = T.secret("Player-1-0000000A"), isSelf = T.secret(true) } }
+    assertNil(Compat.LootHistoryDrop(1, 2), "a winner with nothing plain")
+    m.lootHistory["1:2"].winner.playerName = "Brakk"
+    d = Compat.LootHistoryDrop(1, 2)
+    assertEqual(d.name, "Brakk"); assertNil(d.guid); assertFalse(d.isSelf)
+    m.lootHistory["1:2"] = T.secret({})
+    assertNil(Compat.LootHistoryDrop(1, 2))
+    m.C_LootHistory = nil
+    assertNil(Compat.LootHistoryDrop(1, 2), "no API")
+end)
+
+test("compat: ChallengeMapName answers a keystone dungeon's name, else nil", function()
+    local Compat, m = fresh()
+    m.challengeMaps[505] = "The Rookery"
+    assertEqual(Compat.ChallengeMapName(505), "The Rookery")
+    assertNil(Compat.ChallengeMapName(506)); assertNil(Compat.ChallengeMapName(nil))
+    m.challengeMaps[507] = ""
+    assertNil(Compat.ChallengeMapName(507))
+    installSecrets(m)
+    m.challengeMaps[505] = T.secret("The Rookery")
+    assertNil(Compat.ChallengeMapName(505))
+    m.C_ChallengeMode.GetMapUIInfo = nil
+    assertNil(Compat.ChallengeMapName(505), "no API")
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
 
@@ -712,7 +760,8 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "GetItemUniqueness", "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_%u+", "GetSpecialization",
     "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink", "C_Container",
     "NotifyInspect", "ClearInspectPlayer", "GetInspectSpecialization", "CheckInteractDistance",
-    "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc" }
+    "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
+    "GetMapUIInfo" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

@@ -77,6 +77,17 @@ links retried and kept, the tooltip level, the fast path, a foreign inspect befo
 data arrived, anyone's `INSPECT_READY` read, the combat park, the open inspect window, the TTL, the
 invalidation and its echo guard, the roster prune, the warm-up and `Scan`, the candidate judged by
 the verdict kernel, `InspectDone` after the items load, one debug line per job, secrets, and the
+stand-down), `test_feed` (the feed: a member's drop judged for you, its looter's inspect asked for
+and their verdict and trade arriving with `DropUpdated`; the dedupe across chat, the encounter loot
+event and the loot history in either order, by GUID or by name, a GUID learned from a later source,
+two copies and another looter's copy kept apart, the window's end; the loot history taken once with
+a winner; the grouping by trash, a kill's loot window, a wipe, an earlier encounter's late loot, a
+keystone run with its chest, the open world; the gate order, the situation hiding a drop before its
+item loads and the quality gate before any inspect, the upgrade override, the stored quality
+settings and a situation's mode; the pure filters row by row and the relative item level; an item
+still loading and one that never loads; your own drop with its trade by your verdict and every
+member a candidate, no inspects for an untradeable one, pushed items; `GearChanged`; the score
+retry and its limit; `Add`, the test feed and `Clear`; the cap; secret payloads; and the
 stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,

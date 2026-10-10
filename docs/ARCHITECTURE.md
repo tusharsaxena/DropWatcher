@@ -64,7 +64,11 @@ looter, the item, the quantity and the kind, the upgrade and crafting echoes rej
 broker (`Inspect.lua`: another member's worn gear and spec, read through one spaced `NotifyInspect`
 at a time from a priority queue, with the range, identity and ready timeouts, the courtesy hook on
 anyone's inspect, the combat park and a 600-second cache, and the candidate table the verdict kernel
-takes for that member), the messaging core (`Messaging.lua`, pure: a
+takes for that member), the feed (`LootFeed.lua`: the orchestrator that takes each drop from chat,
+the encounter loot event and the loot history, merges the reports of one drop, groups drops by
+encounter or keystone run, applies the situation gate, the filters and the quality gate before any
+inspect, judges each drop for you and for its looter, estimates its trade, judges every member for
+your own drops, and sends `DropAdded` and `DropUpdated`), the messaging core (`Messaging.lua`, pure: a
 template and its tokens in, the text and the ask's next state out; it sends nothing), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -91,19 +95,21 @@ named sender each (design spec §3). With LibKa0s-Bus present the table is the s
 so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` /
 `NS.StandUp` take every tracked registration down and replay it.
 
-Three messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED` and `GEAR_CHANGED`. Every other sender module below is **planned**: it
+Six messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
+`INSPECT_DONE`, `DROP_ADDED` and `DROP_UPDATED`; the feed (`modules/LootFeed.lua`) is the first
+receiver, of `INSPECT_DONE` and `GEAR_CHANGED`, each on its own tracked target. Every other sender module below is **planned**: it
 does not exist until the item named in its row lands. The payloads and consumers are the design
 intent. The item that first sends a message confirms its payload here, and each item that subscribes
 adds itself as a consumer.
 
 | `NS.MSG` key | Wire suffix | Sender (planned, item) | Payload | Consumers |
 |---|---|---|---|---|
-| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (DW-27) | `dropId` | Window feed tabs (DW-30), Toast (DW-52), History (DW-51) |
-| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (DW-27) | `dropId` | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
-| `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (sent since DW-26) | `guid`. Sent once per job when it ends: after a read (`fresh` or `cached`), once the read items' facts have loaded or been given up on; at once for `outOfRange` and `failed`. `NS.Inspect.Get(guid)` says which | LootFeed (DW-27): re-evaluate that candidate's drops |
-| `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (DW-27): re-evaluate; QualityGate's dynamic threshold (DW-12) |
+| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`) | Window feed tabs (DW-30), Toast (DW-52), History (DW-51) |
+| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved) or `score` (a pending score retried). Never for a test drop | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
+| `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (sent since DW-26) | `guid`. Sent once per job when it ends: after a read (`fresh` or `cached`), once the read items' facts have loaded or been given up on; at once for `outOfRange` and `failed`. `NS.Inspect.Get(guid)` says which | LootFeed (since DW-27): re-judges the drops that looter received and your own drops' candidate of that GUID |
+| `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (since DW-27): re-judges you on every drop; the quality gate's dynamic threshold reads the snapshot at the next drop |
 | `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (DW-2A): flush the queue; Window restriction badge (DW-30) |
-| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | LootFeed (DW-27): the situation gate; Window (DW-30): auto-open and the footer |
+| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | Window (DW-30): auto-open and the footer. LootFeed reads `NS.Situations.Current()` at each receipt for its gate and subscribes to nothing |
 | `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Messaging.lua` (DW-2A) | `dropId`, `state` | Window feed tabs (DW-30), detail card (DW-32) |
 | `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (DW-28) | none | My drops tab (DW-33), detail card (DW-32) |
 | `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (DW-28) | `dropId` | My drops tab (DW-33): bold row; chat warning |
@@ -132,8 +138,8 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `ADDON_RESTRICTION_STATE_CHANGED` | `DW.OnRestrictionEvent` | records the type's state as a hint and re-reads the restrictions (`modules/Restrictions.lua`); sends `RestrictionChanged` on a change |
 | `PLAYER_ENTERING_WORLD` | `DW.OnSituationEvent`, then `DW.OnInspectWorldEvent` (through `DW:OnSharedFeatureEvent`) | re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change; then, inside an instance, arms the inspect warm-up (`modules/Inspect.lua`) |
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSituationEvent` | the same |
-| `CHALLENGE_MODE_START` | `DW.OnSituationEvent` | the same (a keystone started) |
-| `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent` | the same (a keystone ended) |
+| `CHALLENGE_MODE_START` | `DW.OnSituationEvent`, then `DW.OnFeedRunStart` (through `DW:OnSharedFeatureEvent`) | the same (a keystone started); then opens the run's drop group (`modules/LootFeed.lua`) |
+| `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd` (the same) | the same (a keystone ended); then keeps the run's group open 120 seconds for the chest |
 | `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the same (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
@@ -143,6 +149,10 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `CHAT_MSG_LOOT` | `DW.OnChatMsgLoot` | parses the line (`modules/LootParser.lua`), counts it, and hands a receipt to every sink the feed adds (DW-27) |
 | `INSPECT_READY` | `DW.OnInspectReadyEvent` | reads the inspected member's slots and spec after 0.15s, for the job in flight or any other group member (`modules/Inspect.lua`); sends `InspectDone` when the job ends |
 | `UNIT_INVENTORY_CHANGED` | `DW.OnInspectInventoryEvent` | marks a group member's inspect read stale and re-queues it as a warm-up job (`modules/Inspect.lua`) |
+| `ENCOUNTER_START` | `DW.OnFeedEncounterStart` | the encounter in progress, which names the group of the drops that follow (`modules/LootFeed.lua`) |
+| `ENCOUNTER_END` | `DW.OnFeedEncounterEnd` | a kill keeps the encounter's group open 120 seconds for its loot; a wipe closes it |
+| `ENCOUNTER_LOOT_RECEIVED` | `DW.OnFeedEncounterLoot` | a drop reported by the encounter, with its encounter id; merged with the chat line of the same drop |
+| `LOOT_HISTORY_UPDATE_DROP` | `DW.OnFeedLootHistory` | a group-loot drop, taken once it has a winner (`C_LootHistory` through `core/Compat.lua`); merged with the other reports |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -164,8 +174,9 @@ and nobody took over, so another addon's or the player's inspect is never cleare
 
 ## Known Limitations
 
-- v0.1.0 is the frame of the addon: the window is empty apart from its test-mode banner, and none
-  of the loot features exist yet ([`scope.md`](scope.md)).
+- v0.1.0 is the frame of the addon: the feed records and judges drops, but the window is empty
+  apart from its test-mode banner until the feed tabs land (DW-30, DW-31), and asking and trading
+  do not exist yet ([`scope.md`](scope.md)).
 - The class tables (`core/ClassData.lua`) are a fallback for a candidate whose spec is not known
   yet; an item's own spec list wins whenever it exists. Devourer Demon Hunter (spec 1480, from the
   client's trait-tree data) is recorded as an Intellect dual wielder that takes no held off hand,
@@ -279,6 +290,23 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   (DW-27) asks for looters and the Offer panel (DW-33) for its candidates; `Scan` has no slash verb
   or button until DW-42 and DW-30. Whether the fast path, the spec read and the tooltip level hold
   for an inspected unit in game is INSPECT-1..4.
+- The feed (`modules/LootFeed.lua`) settles nine cases the design leaves open. Reports of one drop
+  merge for 120 seconds (`NS.LootFeed.DEDUPE_WINDOW`) when the item id and the looter match (the
+  GUID, or the name without its realm when a source has no GUID) and the source has not reported
+  it already, so two copies from one source stay two drops. An encounter's group stays open 120
+  seconds after a kill (`LOOT_GRACE`) and none after a wipe; a keystone run's group takes every
+  drop until 120 seconds after it completes, the chest included (whether the chest's
+  `ENCOUNTER_LOOT_RECEIVED` names an encounter is FEED-6). Your own `pushed` lines (quest rewards,
+  containers, purchases) are not drops; a member's are. The relative minimum item level is measured
+  against your average equipped level. A drop once shown stays shown: updates re-judge its verdicts
+  and its trade, never its gates. Your own drop's candidates are inspected (at the Offer panel's
+  priority) only while its trade estimate is not `no`. A pending score is retried five times, one
+  second apart, on one shared timer, and a drop that used them up keeps its answer. Each feed keeps
+  200 drops (`MAX_DROPS`), the oldest dropped first; the stand-down keeps the drops and drops the
+  dedupe window, the encounter context and any item still loading. Until the settings rows land
+  (DW-40) the feed reads `profile.feed`, `profile.comparison` and `profile.trade` when present and
+  `C.FEED_DEFAULT` otherwise. `/dw add` and test mode reach it through `NS.LootFeed.Add` once their
+  verbs land (DW-42, DW-34).
 - The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
   edge items wire the rest. Three of its
   readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the
@@ -317,7 +345,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 44 addon-specific shims (three or more) |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 46 addon-specific shims (three or more) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 
 ### Verification and record (documentation-§3)
