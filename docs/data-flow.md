@@ -64,6 +64,27 @@ The roster sends no message: a module that needs the fresh group declares `GROUP
 below `modules/Roster.lua` in the TOC and hears it after the roster's handler. The stand-down drops
 the roster; the stand-up re-reads it.
 
+## Today: the item facts
+
+```
+ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
+  Compat.GetItemInfo (nil: uncached) ─> name, quality (else the link color), base ilvl, equipLoc,
+                                        classID, subClassID, bindType, setID
+  Compat.GetDetailedItemLevel ─> ilvl          Compat.GetItemUpgradeInfo ─> track (+ tier)
+  Compat.GetItemStats ─> stats                 Compat.GetItemSpecs ─> specs
+  Compat.GetItemUniqueness ─> unique           Compat.IsItemBindToAccount* ─> warbound
+  Compat.ItemClassRestriction ─> classes, isTierToken
+  Compat.PlayerHasTransmog ─> transmogKnown
+
+ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per link:
+  NS.Item.LoadItem(id, retry) ─> retry reads again ─> facts: every waiter called back
+                                                  └─> still uncached: LoadItem again, up to 5,
+                                                      then every waiter with nil
+```
+
+`TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts. The stand-down drops the
+cache and the loads; a load that answers after it is ignored.
+
 ## The design's loot pipeline (spec §3)
 
 ```

@@ -110,6 +110,11 @@ C.QUALITY_DEFAULT = { FIXED = C.QUALITY.RARE, FLOOR = C.QUALITY.UNCOMMON }
 -- name that matches none of them leaves the track delta unset rather than guessed.
 C.TRACK_TIER = { Explorer = 1, Adventurer = 2, Veteran = 3, Champion = 4, Hero = 5, Myth = 6 }
 
+-- trackStringID (C_Item.GetItemUpgradeInfo) -> tier, the locale-proof key ItemFacts tries first.
+-- Empty until FEED-5 records the client's ids in game (the research names the field, not its
+-- values); until then every track's tier comes from the enUS names above.
+C.TRACK_TIER_BY_STRING_ID = {}
+
 -- ---------------------------------------------------------------------------------------------
 -- Inventory slots and slot plans (design spec §5.2)
 -- ---------------------------------------------------------------------------------------------

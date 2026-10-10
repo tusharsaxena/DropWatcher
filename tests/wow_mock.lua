@@ -24,6 +24,11 @@
 --   chatSent       every C_ChatInfo.SendChatMessage call; chatLockdown is InChatMessagingLockdown()
 --   restrictionStates  C_RestrictedActions' state per Enum.AddOnRestrictionType value (absent = 0)
 --   upgradeInfo, accountBound, accountBoundUE  C_Item's answers per link; bagGUIDs["bag:slot"]
+--   items          the item cache C_Item reads: items[link] = { name, quality, ilvl, effectiveIlvl,
+--                  equipLoc, classID, subClassID, bindType, setID, stats, specs, unique, transmog,
+--                  loadsNeeded }; addItem(link, def) seeds one. While loadsNeeded > 0 the item is
+--                  uncached (GetItemInfo answers nil) and each RequestLoadItemDataByID of its id
+--                  counts it down on the next timer pass; loadRequests records those ids in order
 --   tradeCalls     PickupContainerItem / DropItemOnUnit / InitiateTrade calls, in order
 --   units          the group's unit tokens: units[token] = { guid, name, realm, class, classFile,
 --                  connected }; "player" is read from the base's __context unless set. setGroup()
@@ -81,7 +86,80 @@ local GLOBAL_STRINGS = {
     TIME_UNIT_DELIMITER = " ",
     ITEM_LEVEL = "Item Level %d",
     ITEM_UPGRADE_TOOLTIP_FORMAT_STRING = "Upgrade Level: %s %d/%d",
+    ITEM_CLASSES_ALLOWED = "Classes: %s",
+    LIST_DELIMITER = ", ",
 }
+
+-- The client's classFile -> localized class name maps, enUS (both genders spell the same here).
+local CLASS_NAMES = {
+    WARRIOR = "Warrior", PALADIN = "Paladin", HUNTER = "Hunter", ROGUE = "Rogue", PRIEST = "Priest",
+    DEATHKNIGHT = "Death Knight", SHAMAN = "Shaman", MAGE = "Mage", WARLOCK = "Warlock",
+    MONK = "Monk", DRUID = "Druid", DEMONHUNTER = "Demon Hunter", EVOKER = "Evoker",
+}
+
+-- The item cache behind C_Item's readers and the transmog collection (modules/ItemFacts.lua).
+-- Each reader answers only for a cached item (loadsNeeded 0 or nil); GetItemInfo's seventeen
+-- returns are the client's order.
+local function cachedItem(M, link)
+    local d = M.items[link]
+    if not d or (d.loadsNeeded or 0) > 0 then return nil end
+    return d
+end
+
+local function installItemCache(M)
+    M.items, M.loadRequests = {}, {}
+    local item = M.C_Item
+    function M.addItem(link, def)
+        def.itemID = tonumber(link:match("item:(%d+)"))
+        M.items[link] = def
+        return link
+    end
+    item.GetItemInfo = function(link)
+        local d = cachedItem(M, link)
+        if not d then return nil end
+        return d.name, link, d.quality, d.ilvl, 1, "", "", 1, d.equipLoc or "", 0, 0, d.classID,
+            d.subClassID, d.bindType or 0, 0, d.setID, false
+    end
+    item.GetDetailedItemLevelInfo = function(link)
+        local d = cachedItem(M, link)
+        if d then return d.effectiveIlvl or d.ilvl, false, d.ilvl end
+    end
+    item.GetItemStats = function(link)
+        local d = cachedItem(M, link)
+        return d and d.stats
+    end
+    item.GetItemSpecInfo = function(link)
+        local d = cachedItem(M, link)
+        return d and d.specs
+    end
+    -- unique = { isUnique, categoryName, categoryCount, categoryID }
+    item.GetItemUniquenessByID = function(link)
+        local d = cachedItem(M, link)
+        if d and d.unique then return d.unique[1], d.unique[2], d.unique[3], d.unique[4] end
+        return false
+    end
+    -- The data arrives later, as in the client: on the next timer pass, ahead of LoadItem's callback.
+    item.RequestLoadItemDataByID = function(id)
+        M.loadRequests[#M.loadRequests + 1] = id
+        M.C_Timer.After(0, function()
+            for _, d in pairs(M.items) do
+                if d.itemID == id and (d.loadsNeeded or 0) > 0 then d.loadsNeeded = d.loadsNeeded - 1 end
+            end
+        end)
+    end
+    M.C_TransmogCollection = {
+        PlayerHasTransmogByItemInfo = function(link)
+            local d = cachedItem(M, link)
+            if d then return d.transmog == true end
+            return false
+        end,
+    }
+    M.LOCALIZED_CLASS_NAMES_MALE, M.LOCALIZED_CLASS_NAMES_FEMALE = {}, {}
+    for classFile, name in pairs(CLASS_NAMES) do
+        M.LOCALIZED_CLASS_NAMES_MALE[classFile] = name
+        M.LOCALIZED_CLASS_NAMES_FEMALE[classFile] = name
+    end
+end
 
 -- What core/Compat.lua reaches, as controllable fakes. Enum values are this mock's own numbers;
 -- the addon resolves every member by NAME, so a case that deletes a member models a client that
@@ -90,8 +168,8 @@ local function installCompatSurface(M)
     for k, v in pairs(GLOBAL_STRINGS) do M[k] = v end
 
     M.Enum = {
-        TooltipDataLineType = { ItemBinding = 20, ItemUpgradeLevel = 32, TradeTimeRemaining = 36,
-            ItemLevel = 41 },
+        TooltipDataLineType = { ItemBinding = 20, RestrictedRaceClass = 21, ItemUpgradeLevel = 32,
+            TradeTimeRemaining = 36, ItemLevel = 41 },
         AddOnRestrictionType = { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3, Map = 4,
             Chat = 5 },
         AddOnRestrictionState = { Inactive = 0, Activating = 1, Active = 2 },
@@ -135,6 +213,7 @@ local function installCompatSurface(M)
     M.ItemLocation = {
         CreateFromBagAndSlot = function(_, bag, slot) return { bag = bag, slot = slot } end,
     }
+    installItemCache(M)
 
     -- The trade actions, recorded in order as { name, ... }.
     M.tradeCalls = {}

@@ -24,6 +24,7 @@ passed.
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | FEED-1..7 | Feed | The group drops feed (lands with DW-11, DW-25, DW-27, DW-30, DW-31) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
+| ITEM-1..2 | Item facts | The item readers' shapes and the track ids (lands with DW-23) |
 | INSPECT-1..4 | Inspect | The inspect broker (lands with DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
 | ASK-1..8 | Ask | Asking, offering, queueing under restriction, auto-ask (lands with DW-2A, DW-33, DW-54) |
@@ -173,6 +174,26 @@ Record any member whose realm differs. Result:
 line carrying `player=true`. Have a member log out → after the next `[ROSTER]` line their
 `online=false`. Leave the group → `roster: 1 members` with you alone at `unit=player`. Result:
 
+## Item facts
+
+The facts and the load are headless-tested (`test_item_facts`); these checks confirm the shapes the
+client answers, which the mock models from the API documentation. Each is a `/dump` on an item link
+(shift-click the item into the chat box after `/dump `).
+
+**ITEM-1. The readers' shapes.** On a unique-equipped ring or trinket →
+`/dump C_Item.GetItemUniquenessByID(link)` answers four values, the last a category id above 0 when
+the item names a category ("Unique-Equipped: <Category> (2)"). On a drop with spec icons →
+`/dump C_Item.GetItemSpecInfo(link)` answers a list of spec ids. On a tier token →
+`/dump C_TooltipInfo.GetHyperlink(link)` holds a line whose `type` equals
+`Enum.TooltipDataLineType.RestrictedRaceClass` and whose `leftText` reads `Classes: ...`. On a piece
+you have collected → `/dump C_TransmogCollection.PlayerHasTransmogByItemInfo(link)` answers `true`.
+Record any reader that answers another shape. Result:
+
+**ITEM-2. The track ids.** On one item of each upgrade track you can find (Adventurer, Veteran,
+Champion, Hero, Myth) → `/dump C_Item.GetItemUpgradeInfo(link)` answers `trackString` and
+`trackStringID`. Record each pair: they fill `C.TRACK_TIER_BY_STRING_ID` so a localized client gets
+a track tier. Result:
+
 ## Inspect
 
 Reserved for DW-26: INSPECT-1..4, including INSPECT-4 (is the tooltip item level still needed?).
@@ -289,3 +310,4 @@ client's INSTALL and SLASH checks are sufficient. The section is re-armed by the
 | COMPAT-1..3 | DW-20, the compat seam | No client pass recorded yet |
 | COMBAT-2 | DW-21, the restriction tracker | No client pass recorded yet |
 | ROSTER-1..2 | DW-22, the roster | No client pass recorded yet |
+| ITEM-1..2 | DW-23, the item facts | No client pass recorded yet |

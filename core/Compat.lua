@@ -13,6 +13,8 @@ local _, NS = ...
 --   * the restriction APIs (C_RestrictedActions, C_ChatInfo.InChatMessagingLockdown);
 --   * the player's normalized realm (GetNormalizedRealmName, then GetRealmName);
 --   * the bind helpers (C_Item's account binds, the bag item's GUID);
+--   * the item readers behind the item facts (info, effective level, stats, specs, uniqueness,
+--     transmog, the class restriction line);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
 --   * the trade actions (PickupContainerItem, DropItemOnUnit, InitiateTrade).
 --
@@ -413,6 +415,181 @@ function Compat.GetBagItemGUID(bag, slot)
     local location = loc:CreateFromBagAndSlot(bag, slot)
     if item.DoesItemExist and not item.DoesItemExist(location) then return nil end
     return plainString(item.GetItemGUID(location))
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- Item readers (the item facts, design spec §4 and §5.1)
+-- ---------------------------------------------------------------------------------------------
+--
+-- Each item reader takes a link, prefers C_Item's spelling and falls back to the deprecated
+-- global, copies plain fields only and answers nil (or false) when the item is not cached yet or
+-- the client has neither rung. Caching and the load retry are modules/ItemFacts.lua's.
+
+-- C_Item[name] when present, else the global `fallback` (a function or nil).
+local function itemApi(name, fallback)
+    local item = C_Item
+    if item and item[name] then return item[name] end
+    return fallback
+end
+
+--- True when the client can be asked to load an item (C_Item.RequestLoadItemDataByID) and can
+--- call back later (C_Timer.After): LibKa0s-Item-1.0's LoadItem is inert without either.
+--- @return boolean
+function Compat.CanRequestItemLoad()
+    local item, timer = C_Item, C_Timer
+    return (item and item.RequestLoadItemDataByID and timer and timer.After) and true or false
+end
+
+--- The cached fields of an item link: `{ name, quality, itemLevel, equipLoc, classID, subClassID,
+--- bindType, setID }`, from C_Item.GetItemInfo, else the GetItemInfo global. Nil while the item
+--- is not cached (the name is nil then), and for a secret or missing link.
+--- @param link string
+--- @return table|nil
+function Compat.GetItemInfo(link)
+    local fn = itemApi("GetItemInfo", GetItemInfo)
+    if not (fn and plainString(link)) then return nil end
+    local name, _, quality, itemLevel, _, _, _, _, equipLoc, _, _, classID, subClassID, bindType,
+        _, setID = fn(link)
+    name = plainString(name)
+    if not name then return nil end
+    return {
+        name = name, quality = plainNumber(quality), itemLevel = plainNumber(itemLevel),
+        equipLoc = plainString(equipLoc), classID = plainNumber(classID),
+        subClassID = plainNumber(subClassID), bindType = plainNumber(bindType),
+        setID = plainNumber(setID),
+    }
+end
+
+--- The effective item level of a link (its upgrades and bonus ids applied), from
+--- C_Item.GetDetailedItemLevelInfo, else the global. Nil when neither answers a number.
+--- @param link string
+--- @return number|nil
+function Compat.GetDetailedItemLevel(link)
+    local fn = itemApi("GetDetailedItemLevelInfo", GetDetailedItemLevelInfo)
+    if not (fn and plainString(link)) then return nil end
+    return plainNumber((fn(link)))
+end
+
+--- The stats of a link as `{ [STAT_KEY] = n }` (keys such as ITEM_MOD_STRENGTH_SHORT), from
+--- C_Item.GetItemStats, else the global. A key the addon does not know is copied all the same;
+--- secret keys and values are skipped. An empty table when the client answers nothing.
+--- @param link string
+--- @return table
+function Compat.GetItemStats(link)
+    local fn = itemApi("GetItemStats", GetItemStats)
+    local out = {}
+    if not (fn and plainString(link)) then return out end
+    local stats = fn(link)
+    if Compat.IsSecret(stats) or type(stats) ~= "table" then return out end
+    for key, value in pairs(stats) do
+        if plainString(key) and plainNumber(value) then out[key] = value end
+    end
+    return out
+end
+
+--- The specializations an item is for, as a set `{ [specID] = true }`, from C_Item.GetItemSpecInfo,
+--- else the global. Nil when the client answers no list or an empty one (the item names no spec).
+--- @param link string
+--- @return table|nil
+function Compat.GetItemSpecs(link)
+    local fn = itemApi("GetItemSpecInfo", GetItemSpecInfo)
+    if not (fn and plainString(link)) then return nil end
+    local list = fn(link)
+    if Compat.IsSecret(list) or type(list) ~= "table" then return nil end
+    local set
+    for _, specID in ipairs(list) do
+        if plainNumber(specID) then
+            set = set or {}
+            set[specID] = true
+        end
+    end
+    return set
+end
+
+-- C_Item.GetItemUniquenessByID's (isUnique, categoryName, categoryCount, categoryID).
+local function uniqueFromApi(fn, link)
+    local isUnique, _, count, catID = fn(link)
+    catID, count = plainNumber(catID), plainNumber(count)
+    if catID and catID > 0 then return catID, count or 1 end
+    if not Compat.IsSecret(isUnique) and isUnique == true then return nil, 1 end
+    return nil, nil
+end
+
+-- The GetItemUniqueness global's (family, maxEquipped); family -1 is the item's own uniqueness.
+local function uniqueFromGlobal(link)
+    local family, max = GetItemUniqueness(link)
+    family, max = plainNumber(family), plainNumber(max)
+    if family and family > 0 then return family, max or 1 end
+    if family == -1 then return nil, max or 1 end
+    return nil, nil
+end
+
+--- How many of this item (or of its unique category) may be equipped at once: `(categoryID,
+--- max)`, with categoryID nil when the item is unique on its own. `(nil, nil)` when it is not
+--- unique or the client has neither C_Item.GetItemUniquenessByID nor the global.
+--- @param link string
+--- @return number|nil categoryID, number|nil max
+function Compat.GetItemUniqueness(link)
+    if not plainString(link) then return nil, nil end
+    local item = C_Item
+    if item and item.GetItemUniquenessByID then return uniqueFromApi(item.GetItemUniquenessByID, link) end
+    if GetItemUniqueness then return uniqueFromGlobal(link) end
+    return nil, nil
+end
+
+--- Whether you have collected this item's appearance: C_TransmogCollection's
+--- PlayerHasTransmogByItemInfo. Nil when the API is absent or the answer is secret.
+--- @param link string
+--- @return boolean|nil
+function Compat.PlayerHasTransmog(link)
+    local tc = C_TransmogCollection
+    if not (tc and tc.PlayerHasTransmogByItemInfo and plainString(link)) then return nil end
+    local known = tc.PlayerHasTransmogByItemInfo(link)
+    if Compat.IsSecret(known) or type(known) ~= "boolean" then return nil end
+    return known
+end
+
+-- Localized class name -> classFile, from the client's LOCALIZED_CLASS_NAMES_MALE and _FEMALE.
+local function classFilesByName()
+    local out = {}
+    for _, map in ipairs({ LOCALIZED_CLASS_NAMES_MALE, LOCALIZED_CLASS_NAMES_FEMALE }) do
+        if type(map) == "table" then
+            for classFile, name in pairs(map) do
+                if plainString(name) and plainString(classFile) then out[name] = classFile end
+            end
+        end
+    end
+    return out
+end
+
+-- The classes on a RestrictedRaceClass line ("Classes: Warrior, Paladin"), as a set of classFiles,
+-- or nil when the line is not that one or names no class the client knows.
+local function parseClasses(text)
+    local fmt = globalString("ITEM_CLASSES_ALLOWED")
+    if not fmt then return nil end
+    local list = text:match("^" .. Compat.FormatToPattern(fmt) .. "$")
+    if not list then return nil end
+    local delim = globalString("LIST_DELIMITER") or ", "
+    local byName, set = classFilesByName(), nil
+    for name in (list .. delim):gmatch("(.-)" .. escapePattern(delim)) do
+        local classFile = byName[name]
+        if classFile then
+            set = set or {}
+            set[classFile] = true
+        end
+    end
+    return set
+end
+
+--- The classes an item is restricted to (a tier token, a class set piece), as a set
+--- `{ [classFile] = true }`, read off the hyperlink tooltip's RestrictedRaceClass line with the
+--- localized ITEM_CLASSES_ALLOWED. Nil when the item names no class.
+--- @param link string
+--- @return table|nil
+function Compat.ItemClassRestriction(link)
+    if not plainString(link) then return nil end
+    return Compat.ReadTooltipLine(tooltipData("GetHyperlink", link), "RestrictedRaceClass",
+        parseClasses)
 end
 
 -- ---------------------------------------------------------------------------------------------

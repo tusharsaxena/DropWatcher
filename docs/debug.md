@@ -45,6 +45,7 @@ timer and registers no event. It reads no chat, no inventory and no other addon'
 reset), `Profile`, `Init` (the session summary and the optional integrations, held until logging is
 turned on), `Migrate`, `SIT` (one line per situation change, with the event that caused it), `RES` (one line per change
 of what the restrictions allow, with the event that caused it), `ROSTER` (one line per change of the
-group's members, tokens, names or online states, with the member count and the cause). The
+group's members, tokens, names or online states, with the member count and the cause), `ITEM` (an
+item given up after its loads, and the item facts cache emptied at its cap). The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 The design's other feature tags (spec §13) arrive with their modules.

@@ -1,9 +1,9 @@
 -- tests/test_compat.lua — core/Compat.lua, the one seam over version-variant client APIs (compat,
 -- design spec §4): the secret guards on both load paths, the chat sender's ladder, the localized
 -- duration decoder behind the trade timer (spec §7.4) in three client languages, the tooltip line
--- reader and its three readers, the restriction APIs, the bind helpers, the Pawn seam (spec §5.4)
--- and the trade actions. Every shim is also driven with its API absent, where it must answer its
--- documented absent value and never raise.
+-- reader and its three readers, the restriction APIs, the bind helpers, the item readers, the Pawn
+-- seam (spec §5.4) and the trade actions. Every shim is also driven with its API absent, where it
+-- must answer its documented absent value and never raise.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -357,6 +357,148 @@ test("compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slo
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- Item readers
+-- ---------------------------------------------------------------------------------------------
+
+local RING = "|cnIQ4:|Hitem:1001::::::::90:::::|h[Ring]|h|r"
+
+local function seedRing(m, extra)
+    local def = { name = "Ring", quality = 4, ilvl = 250, effectiveIlvl = 263, equipLoc = "INVTYPE_FINGER",
+        classID = 4, subClassID = 0, bindType = 1, setID = 7,
+        stats = { ITEM_MOD_CRIT_RATING_SHORT = 100, ITEM_MOD_NEW_THING = 3 }, specs = { 71, 72 },
+        unique = { false, "Cat", 2, 55 } }
+    for k, v in pairs(extra or {}) do def[k] = v end
+    m.addItem(RING, def)
+end
+
+test("compat: GetItemInfo copies the cached fields, nil while uncached or without a link", function()
+    local Compat, m = fresh()
+    seedRing(m, { loadsNeeded = 1 })
+    assertNil(Compat.GetItemInfo(RING), "uncached")
+    m.items[RING].loadsNeeded = 0
+    local info = Compat.GetItemInfo(RING)
+    assertEqual(info.name, "Ring"); assertEqual(info.quality, 4); assertEqual(info.itemLevel, 250)
+    assertEqual(info.equipLoc, "INVTYPE_FINGER"); assertEqual(info.classID, 4)
+    assertEqual(info.subClassID, 0); assertEqual(info.bindType, 1); assertEqual(info.setID, 7)
+    assertNil(Compat.GetItemInfo(nil)); assertNil(Compat.GetItemInfo(42))
+end)
+
+test("compat: GetItemInfo falls back to the global, and answers nil with neither", function()
+    local Compat, m = fresh()
+    seedRing(m)
+    local fn = m.C_Item.GetItemInfo
+    m.C_Item.GetItemInfo = nil
+    m.GetItemInfo = fn
+    assertEqual(Compat.GetItemInfo(RING).name, "Ring")
+    m.GetItemInfo = nil
+    assertNil(Compat.GetItemInfo(RING))
+end)
+
+test("compat: a secret item answer is never copied", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    m.C_Item.GetItemInfo = function() return T.secret("Ring") end
+    assertNil(Compat.GetItemInfo(RING), "a secret name reads as uncached")
+    m.C_Item.GetItemInfo = function() return "Ring", RING, T.secret(4), 250 end
+    local info = Compat.GetItemInfo(RING)
+    assertNil(info.quality); assertEqual(info.itemLevel, 250)
+    m.C_Item.GetItemStats = function() return { ITEM_MOD_STAMINA_SHORT = T.secret(5), ITEM_MOD_HASTE_RATING_SHORT = 7 } end
+    local stats = Compat.GetItemStats(RING)
+    assertNil(stats.ITEM_MOD_STAMINA_SHORT); assertEqual(stats.ITEM_MOD_HASTE_RATING_SHORT, 7)
+    assertNil(Compat.GetItemInfo(T.secret(RING)), "a secret link")
+end)
+
+test("compat: GetDetailedItemLevel reads the effective level, nil without the API", function()
+    local Compat, m = fresh()
+    seedRing(m)
+    assertEqual(Compat.GetDetailedItemLevel(RING), 263)
+    m.C_Item.GetDetailedItemLevelInfo = nil
+    assertNil(Compat.GetDetailedItemLevel(RING))
+end)
+
+test("compat: GetItemStats copies every key, unknown ones too, and is empty without an answer", function()
+    local Compat, m = fresh()
+    seedRing(m)
+    local stats = Compat.GetItemStats(RING)
+    assertEqual(stats.ITEM_MOD_CRIT_RATING_SHORT, 100); assertEqual(stats.ITEM_MOD_NEW_THING, 3)
+    assertEqual(next(Compat.GetItemStats("nope")), nil)
+    m.C_Item.GetItemStats = nil
+    assertEqual(next(Compat.GetItemStats(RING)), nil)
+end)
+
+test("compat: GetItemSpecs is a set, nil for an empty list or no API", function()
+    local Compat, m = fresh()
+    seedRing(m)
+    local specs = Compat.GetItemSpecs(RING)
+    assertTrue(specs[71]); assertTrue(specs[72]); assertNil(specs[73])
+    m.items[RING].specs = {}
+    assertNil(Compat.GetItemSpecs(RING))
+    m.C_Item.GetItemSpecInfo = nil
+    assertNil(Compat.GetItemSpecs(RING))
+end)
+
+test("compat: GetItemUniqueness reads the category, the item's own uniqueness, and the global", function()
+    local Compat, m = fresh()
+    seedRing(m)
+    local cat, max = Compat.GetItemUniqueness(RING)
+    assertEqual(cat, 55); assertEqual(max, 2)
+    m.items[RING].unique = { true, nil, nil, 0 }
+    cat, max = Compat.GetItemUniqueness(RING)
+    assertNil(cat); assertEqual(max, 1)
+    m.items[RING].unique = nil
+    cat, max = Compat.GetItemUniqueness(RING)
+    assertNil(cat); assertNil(max)
+    m.C_Item.GetItemUniquenessByID = nil
+    m.GetItemUniqueness = function() return 12, 3 end
+    cat, max = Compat.GetItemUniqueness(RING)
+    assertEqual(cat, 12); assertEqual(max, 3)
+    m.GetItemUniqueness = function() return -1, 1 end
+    cat, max = Compat.GetItemUniqueness(RING)
+    assertNil(cat); assertEqual(max, 1)
+    m.GetItemUniqueness = nil
+    assertNil((Compat.GetItemUniqueness(RING)))
+end)
+
+test("compat: PlayerHasTransmog answers the collection, nil when absent or secret", function()
+    local Compat, m = fresh()
+    seedRing(m, { transmog = true })
+    assertTrue(Compat.PlayerHasTransmog(RING))
+    m.items[RING].transmog = false
+    assertFalse(Compat.PlayerHasTransmog(RING))
+    installSecrets(m)
+    m.C_TransmogCollection.PlayerHasTransmogByItemInfo = function() return T.secret(true) end
+    assertNil(Compat.PlayerHasTransmog(RING))
+    m.C_TransmogCollection = nil
+    assertNil(Compat.PlayerHasTransmog(RING))
+end)
+
+test("compat: ItemClassRestriction reads the classes line by type, else by text", function()
+    local Compat, m = fresh()
+    m.tooltips.hyperlink[RING] = tooltip({ { 20, "Binds when picked up" },
+        { 21, "Classes: Warrior, Death Knight, Nobody" } })
+    local set = Compat.ItemClassRestriction(RING)
+    assertTrue(set.WARRIOR); assertTrue(set.DEATHKNIGHT); assertNil(set.PALADIN)
+    m.Enum.TooltipDataLineType.RestrictedRaceClass = nil
+    assertTrue(Compat.ItemClassRestriction(RING).DEATHKNIGHT, "the text fallback")
+    m.tooltips.hyperlink[RING] = tooltip({ { nil, "Classes: Nobody" } })
+    assertNil(Compat.ItemClassRestriction(RING), "no known class")
+    m.ITEM_CLASSES_ALLOWED = nil
+    assertNil(Compat.ItemClassRestriction(RING))
+    m.C_TooltipInfo = nil
+    assertNil(Compat.ItemClassRestriction(RING))
+end)
+
+test("compat: CanRequestItemLoad needs the load request and a timer", function()
+    local Compat, m = fresh()
+    assertTrue(Compat.CanRequestItemLoad())
+    m.C_Timer = nil
+    assertFalse(Compat.CanRequestItemLoad())
+    local Compat2, m2 = fresh()
+    m2.C_Item.RequestLoadItemDataByID = nil
+    assertFalse(Compat2.CanRequestItemLoad())
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- The Pawn seam
 -- ---------------------------------------------------------------------------------------------
 
@@ -472,7 +614,8 @@ end)
 local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown", "C_RestrictedActions",
     "GetItemUpgradeInfo", "IsItemBindToAccount", "GetItemGUID", "DropItemOnUnit", "PickupContainerItem",
     "InitiateTrade", "Pawn%u%a+", "issecretvalue", "canaccessvalue", "GetNormalizedRealmName",
-    "GetRealmName" }
+    "GetRealmName", "GetItemInfo%f[^%w_]", "GetDetailedItemLevelInfo", "GetItemStats", "GetItemSpecInfo",
+    "GetItemUniqueness", "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_%u+" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

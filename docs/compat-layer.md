@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Twenty-four shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `24`). The three
+**Thirty-two shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `32`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not wired, and
@@ -45,6 +45,14 @@ by assignment and not counted: their contract and their library-absent bodies ar
 | Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
 | | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
+| Items | `CanRequestItemLoad()` | `C_Item.RequestLoadItemDataByID` and `C_Timer.After` both present (LibKa0s-Item-1.0's `LoadItem` is inert without either) | `false` |
+| | `GetItemInfo(link)` | `C_Item.GetItemInfo` → the deprecated `GetItemInfo` global; copies `{ name, quality, itemLevel, equipLoc, classID, subClassID, bindType, setID }`, plain fields only. A nil or secret name means uncached | `nil` |
+| | `GetDetailedItemLevel(link)` | `C_Item.GetDetailedItemLevelInfo` → the global; the effective level | `nil` |
+| | `GetItemStats(link)` | `C_Item.GetItemStats` → the global; every plain string key with a plain number, unknown keys included | `{}` |
+| | `GetItemSpecs(link)` | `C_Item.GetItemSpecInfo` → the global; the list as a set `{ [specID] = true }`, nil for an empty list | `nil` |
+| | `GetItemUniqueness(link)` | `C_Item.GetItemUniquenessByID`'s `(isUnique, name, count, categoryID)` → the `GetItemUniqueness` global's `(family, max)`; answers `(categoryID, max)`, categoryID nil for an item unique on its own | `nil, nil` |
+| | `PlayerHasTransmog(link)` | `C_TransmogCollection.PlayerHasTransmogByItemInfo`; a secret answer is nil | `nil` |
+| | `ItemClassRestriction(link)` | `C_TooltipInfo.GetHyperlink`'s `RestrictedRaceClass` line read with `ITEM_CLASSES_ALLOWED`, split on `LIST_DELIMITER`, each name mapped to its classFile through `LOCALIZED_CLASS_NAMES_MALE` and `_FEMALE`; a set | `nil` |
 | Pawn | `PawnIsReady()` | the `PawnIsInitialized` global flag (a function spelling is called) | `false` |
 | | `PawnItemData(link)` | `PawnGetItemData`; nil while the item is not cached | `nil` |
 | | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
@@ -82,7 +90,7 @@ delimiter.
 
 The callers land in M2: Restrictions (DW-21) reads the restriction shims, the roster (DW-22)
 `NormalizedRealm`, ItemFacts (DW-23) reads
-the bind helpers and `GetItemUpgradeInfo`, the loot parser (DW-25) builds its patterns with
+the bind helpers, `GetItemUpgradeInfo` and the item readers, the loot parser (DW-25) builds its patterns with
 `FormatToPattern`, Inspect (DW-26) reads `InventoryItemLevel`, TradeTimer (DW-28) reads
 `TradeTimeRemaining` and `GetBagItemGUID`, the trade helper (DW-29) the trade actions, the
 messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.

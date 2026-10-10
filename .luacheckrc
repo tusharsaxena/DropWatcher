@@ -47,6 +47,8 @@ files["core/Compat.lua"] = {
     "ItemLocation", "PickupContainerItem", "DropItemOnUnit", "InitiateTrade",
     "PawnIsInitialized", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnFindScaleForSpec",
     "PawnGetSingleValueFromItem", "GetNormalizedRealmName", "GetRealmName",
+    "GetItemInfo", "GetDetailedItemLevelInfo", "GetItemStats", "GetItemSpecInfo", "GetItemUniqueness",
+    "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_MALE", "LOCALIZED_CLASS_NAMES_FEMALE",
   },
 }
 

@@ -54,7 +54,8 @@ yes, likely, unknown or no estimate out), the restriction tracker (`Restrictions
 chat message, an inspect or a trade is allowed now, and the reason, from the restriction event, the
 chat lockdown and the combat edges), the roster (`Roster.lua`: the group's members by GUID with
 their Name-Realm, unit token, classFile, specID and online state, and the resolver from a name or a
-GUID to a member), the messaging core (`Messaging.lua`, pure: a
+GUID to a member), the item facts (`ItemFacts.lua`: a link turned into the facts the kernel
+reads, cached by link, an uncached item loaded and retried through LibKa0s-Item's `LoadItem`), the messaging core (`Messaging.lua`, pure: a
 template and its tokens in, the text and the ask's next state out; it sends nothing), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -126,6 +127,7 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent` | the same (a keystone ended) |
 | `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent`, then `DW.OnRosterEvent` (through `DW:OnSharedFeatureEvent`) | the same (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
+| `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -212,6 +214,19 @@ spec §4, §9).
   `raidN`, with `isPlayer` set. The specID is written by the inspect broker (DW-26) through
   `SetSpec` and kept across re-reads while the GUID stays. Whether chat's realm spelling matches
   the normalized one is ROSTER-1.
+- The item facts (`modules/ItemFacts.lua`) read six cases the design leaves open. A track's tier
+  comes from its `trackStringID` through `C.TRACK_TIER_BY_STRING_ID`, which stays empty until
+  FEED-5 records the client's ids, so today every tier comes from the enUS track name and a
+  localized client leaves the track delta unset. A tier token is an item that names its classes
+  and has no slot plan; which slot it makes is not read, so its verdict is `unknown` for the slot
+  until the tier-token follow-up (spec §14). An item unique on its own takes `item:<itemID>` as
+  its category. `warbound` is set for warbound and for warbound-until-equipped items alike, with
+  `warboundUntilEquip` telling them apart. Rings, necks and trinkets carry no `transmogKnown`.
+  The cache holds 512 links and is emptied whole when it would pass that; an item that has not
+  loaded after five `LoadItem` calls (about two seconds) is given up, with nil to every waiter, and
+  the next request starts afresh. The bonus-roll flag is the loot line's, so the drop record (DW-27)
+  carries it, not the cached facts. Whether `GetItemUpgradeInfo` answers for another player's link
+  is FEED-5; the item readers' shapes are ITEM-1.
 - The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
   edge items wire the rest. Three of its
   readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the

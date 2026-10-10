@@ -112,7 +112,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_compat.lua (38)
+### test_compat.lua (48)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -143,6 +143,16 @@ Total.
 - compat: the account-bind helpers read C_Item and answer false without it
 - compat: a secret bind answer reads as not bound
 - compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slot or no API
+- compat: GetItemInfo copies the cached fields, nil while uncached or without a link
+- compat: GetItemInfo falls back to the global, and answers nil with neither
+- compat: a secret item answer is never copied
+- compat: GetDetailedItemLevel reads the effective level, nil without the API
+- compat: GetItemStats copies every key, unknown ones too, and is empty without an answer
+- compat: GetItemSpecs is a set, nil for an empty list or no API
+- compat: GetItemUniqueness reads the category, the item's own uniqueness, and the global
+- compat: PlayerHasTransmog answers the collection, nil when absent or secret
+- compat: ItemClassRestriction reads the classes line by type, else by text
+- compat: CanRequestItemLoad needs the load request and a timer
 - compat: without Pawn every reader answers nil and nothing raises
 - compat: Pawn loaded but not initialized is not ready
 - compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached
@@ -351,6 +361,27 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
+### test_item_facts.lua (18)
+
+- item facts: a cached ring reads every field of spec §5.1
+- item facts: a chest reads its appearance, account binds and no specs or track
+- item facts: the track tier, by string id first, then by enUS name, else unset
+- item facts: the track falls back to the tooltip's upgrade line
+- item facts: an item unique on its own takes its item id as the category
+- item facts: a token naming classes is a tier token; class gear carries classes only
+- item facts: the quality falls back to the link's color
+- item facts: the facts feed the verdict kernel
+- item facts: Get caches by link until invalidated
+- item facts: the cache is emptied whole when it would pass its cap
+- item facts: garbage links answer nil and never raise
+- item facts: learning an appearance re-reads the flag on the cached facts
+- item facts: Request answers a cached item at once and never calls back
+- item facts: an uncached item loads, and every waiter is called back once
+- item facts: the callback retries until the item arrives
+- item facts: an item that never arrives is given up after MAX_LOAD_TRIES, with nil
+- item facts: a client that cannot load items answers unavailable
+- item facts: stood down, the cache and the loads are dropped and a late answer is ignored
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -452,7 +483,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_compat.lua | 38 |
+| test_compat.lua | 48 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -462,6 +493,7 @@ Total.
 | test_messaging.lua | 24 |
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
+| test_item_facts.lua | 18 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 7 |
 | test_vendor_sync.lua | 3 |
@@ -471,4 +503,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **357** |
+| **Total** | **385** |

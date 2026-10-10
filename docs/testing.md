@@ -56,7 +56,11 @@ blocks, the priority order, the chat lockdown, the combat edges ahead of the cli
 event's numeric, boolean and secret payloads, `RestrictionChanged` and the stand-down), `test_roster` (the roster: solo, party and raid
 tokens, the realm normalization, resolving by GUID, Name-Realm and bare name, the same-name tie
 settled by classFile and by the player's realm, the re-read on a miss, the shared
-`GROUP_ROSTER_UPDATE`, secret unit answers and the stand-down),
+`GROUP_ROSTER_UPDATE`, secret unit answers and the stand-down), `test_item_facts` (the item facts: every field of a
+cached item, the track tier by string id and by name, the tooltip track, uniqueness, tier tokens and
+class gear, the link-color quality, the facts feeding the verdict kernel, the cache and its cap, the
+appearance event, the load with its retries, the give-up, a client that cannot load, and the
+stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
