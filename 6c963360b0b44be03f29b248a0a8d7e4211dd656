@@ -1,0 +1,24 @@
+M1 independent review (DW-10..DW-15, 74a2899..c4141cb, base 8654455)
+
+Reviewers (3, read-only), all green at review time: lua tests/run.lua 285 passed / 0 failed / 1 skipped; luacheck 0 warnings / 0 errors in 52 files; largest authored file modules/Evaluate.lua 441 lines.
+- R1 (spec conformance, sections 5, 6.1, 6.2, 7.1-7.3, 9.1-9.2): kernels match the spec closely, every entry point that could throw is pcall-guarded, every spec table row is tested. No critical/high. Four findings confirmed by probe: score-vs-band rule, class-restricted with no classFile, trade estimate after an unknown verdict, stuck in-flight ask.
+- R2 (standards compliance): pure modules, TOC load order, events through NS.FEATURE_EVENTS/SafeRegisterEvent, NS.MSG catalog, diagnostics, saved variables and docs all compliant. One real bug in two-hand detection; smaller accuracy problems in TOC comments, code comments and docs.
+- R3 (API/data correctness): Constants fallbacks, difficulty ids, class proficiencies and specIDs correct; Situations edge uses real APIs correctly, no combat taint. No critical/high; 1 medium (unique-equipped redirect), 4 low.
+
+Fixed: 4, rejected: 0. One commit, 6c96336 (not pushed):
+1. Score verdict now follows spec 5.2 step 4: sign only when ilvl and score signs agree, else sidegrade (scoreDisagrees). Behavior change: same-ilvl better-score drop is now a sidegrade; owner may amend spec if the old behavior is preferred.
+2. usable() returns unknown/unknownClass when candidate.classFile is missing (was cantUse).
+3. isTwoHand() covers 2HWEAPON, RANGED and RANGEDRIGHT (guns, crossbows, wands); Constants comment corrected.
+4. uniquePlan prefers the lowest unique-category holder among the drop's own slots.
+Docs: ARCHITECTURE DW-11 deviation, test-cases.md (Total 287), README badge 287/287.
+Gate after fix: 287 passed / 0 failed / 1 skipped; luacheck 0/0 in 52 files; Evaluate.lua 455 lines; tree clean.
+
+Low findings recorded, not fixed:
+- TradeRules looterCheck: any unknown looter verdict reads as noInspect/pending and drops a usable ilvlDelta; contradicts ARCHITECTURE.md.
+- Messaging: a 'send' ask stays 'ready' until MarkSent/MarkFailed, nothing releases it, so a dropped ask locks (kind, target, dropID) for the session; StateOf cannot tell never-asked from in-flight.
+- Evaluate PLANS.offhand / weapon1H treat an unread off hand (nil) as empty, giving vsTwoHand instead of unknown/noBaseline.
+- Constants comment cites core/Compat.lua for the GetDifficultyInfo check; the file does not exist (Situations does it); spec line 267 says the same.
+- TOC: Situations comment claims NS.MSG is read at load (it is read at call time); TradeRules comment claims NS.Constants is read at call time (it is captured at load).
+- TradeRules bindCheck has no answer for bindType NONE (0) or QUEST (4).
+- QualityGate planQuality fallback with no baselineSlot gives emptySlot for a 2H holder; unreachable today.
+- (The two ranged-mapping lows, guns/crossbows as RANGEDRIGHT, were resolved by fix 3; in-client check still owed.)
