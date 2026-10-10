@@ -16,9 +16,9 @@ local function link(id, extra)
     return ("|cnIQ4:|Hitem:%d::::::::90:::::%s|h[Item %d]|h|r"):format(id, extra or "", id)
 end
 
-local function ring(ilvl)
+local function ring(ilvl, bindType)
     return { name = "Item", quality = 4, ilvl = ilvl, equipLoc = "INVTYPE_FINGER", classID = 4,
-        subClassID = 0, bindType = 1, stats = {} }
+        subClassID = 0, bindType = bindType or 1, stats = {} }
 end
 
 -- An enabled instance wearing two 600 rings, so a 590 ring is a downgrade you may trade.
@@ -132,6 +132,20 @@ test("read: no timer line (bound, or the window gone) means no: expired, never l
     assertEqual(TT.Remaining(e), 0)
     assertEqual(TT.LiveCount(), 0)
     assertNil(TT.TickerPeriod(), "nothing live, no ticker")
+end)
+
+test("read: a BoE drop has no timer line and no window: permanent, never expired, never live", function()
+    local NS, m, TT = setup()
+    m.addItem(link(300), ring(590, 2))    -- Enum.ItemBind.OnEquip
+    local id = NS.LootFeed.Add(link(300))
+    carry(m, 1, link(300), "Item-1-0001", nil)
+    m.advance(0)
+    local e = TT.ForDrop(id)
+    -- red under: every matched item without a timer line read as expired
+    assertFalse(e.expired); assertTrue(e.permanent); assertNil(e.expiresAt)
+    assertEqual(TT.LiveCount(), 0); assertNil(TT.TickerPeriod(), "nothing to count down")
+    local st = TT.Stats()
+    assertEqual(st.permanent, 1); assertEqual(st.expired, 0); assertEqual(st.live, 0)
 end)
 
 -- ---------------------------------------------------------------------------------------------

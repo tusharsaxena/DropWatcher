@@ -10,6 +10,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 
 local BRAKK = "Player-1-0000000A"
 local GUID = "Item-1-0001"
+local NS_BIND_ON_EQUIP = 2    -- Enum.ItemBind.OnEquip
 local LINE_TYPE = 36    -- the mock's Enum.TooltipDataLineType.TradeTimeRemaining
 local SENTENCE = "You may trade this item with players that were also eligible to loot this item for the next %s."
 
@@ -17,14 +18,15 @@ local function link(id)
     return ("|cnIQ4:|Hitem:%d::::::::90::::::|h[Item %d]|h|r"):format(id, id)
 end
 
-local function ring(ilvl)
+local function ring(ilvl, bindType)
     return { name = "Item", quality = 4, ilvl = ilvl, equipLoc = "INVTYPE_FINGER", classID = 4,
-        subClassID = 0, bindType = 1, stats = {} }
+        subClassID = 0, bindType = bindType or 1, stats = {} }
 end
 
 -- An enabled instance in a party with Brakk (party1), wearing two 600 rings, carrying one own drop
--- (a 590 ring) in bag 0, slot 2, with `duration` left on its trade window (nil: no timer line).
-local function setup(duration)
+-- (a 590 ring, bind-on-pickup unless `bindType` says otherwise) in bag 0, slot 2, with `duration`
+-- left on its trade window (nil: no timer line).
+local function setup(duration, bindType)
     local NS, _, m = T.enableAddon()
     m.setGroup({ { guid = BRAKK, name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
     NS.Roster.Refresh("test")
@@ -32,7 +34,7 @@ local function setup(duration)
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)
     m.bags[0], m.bags[1] = { size = 4 }, { size = 4 }
     local item = link(300)
-    m.addItem(item, ring(590))
+    m.addItem(item, ring(590, bindType))
     local id = NS.LootFeed.Add(item)
     m.bags[0][2] = item
     m.bagGUIDs["0:2"] = GUID
@@ -105,6 +107,16 @@ test("give: an item whose trade window has passed is expired", function()
     local ok, reason = TH.Give(id, BRAKK)
     assertFalse(ok); assertEqual(reason, "expired")
     assertEqual(#m.tradeCalls, 0)
+end)
+
+test("give: a BoE drop has no trade-time line, and is given all the same", function()
+    local NS, m, TH, id = setup(nil, NS_BIND_ON_EQUIP)
+    -- red under: every matched item without a timer line read as expired
+    assertTrue(NS.TradeTimer.ForDrop(id).permanent)
+    assertTrue((TH.CanGive(id, BRAKK)))
+    local ok, reason = TH.Give(id, BRAKK)
+    assertTrue(ok); assertNil(reason)
+    assertEqual(calls(m), "PickupContainerItem(0,2) DropItemOnUnit(party1)")
 end)
 
 test("give: a busy cursor is never swapped away", function()

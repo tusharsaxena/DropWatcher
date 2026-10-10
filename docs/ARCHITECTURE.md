@@ -346,10 +346,12 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   (DW-40) the feed reads `profile.feed`, `profile.comparison` and `profile.trade` when present and
   `C.FEED_DEFAULT` otherwise. `/dw add` and test mode reach it through `NS.LootFeed.Add` once their
   verbs land (DW-42, DW-34).
-- The trade timer (`modules/TradeTimer.lua`) settles seven cases the design leaves open. A bag item
+- The trade timer (`modules/TradeTimer.lua`) settles eight cases the design leaves open. A bag item
   is matched to one of your drops by its exact link first and its item id second, each drop taking
   one item, so two copies of one drop each keep their own timer; test drops are never timed. A
-  matched item whose tooltip has no trade-time line is `no expired` at once, so an item whose
+  BoE drop (its item facts' bind in `C.TRADE_BOE_BIND`) never carries a trade-time line and has no
+  window: its entry is `permanent`, never expired and never live, and the trade helper gives it. A
+  matched bind-on-pickup item whose tooltip has no trade-time line is `no expired` at once, so an item whose
   tooltip has not loaded yet reads as expired until the next scan (a later bag event) reads the
   line. The tooltip shows whole minutes, so a re-read within a minute of the stored expiry keeps
   it and the countdown does not jump at each scan. An item that leaves the bags (traded, sold, equipped) drops its entry. The ticker runs

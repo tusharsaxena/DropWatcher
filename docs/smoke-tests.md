@@ -364,7 +364,9 @@ the warning, wait until ten minutes are left (or, once DW-40 adds the row, `/dw 
 7200` and loot the item) → one chat line `[item]: 10 min left to trade it.` (or the minutes left),
 once only, with no second line after a bag move or `/dw disable` then `/dw enable` (a `/reload`
 forgets the warning, and warns again once).
-Loot an upgrade you equip or an item with no trade line → `expired=true`, no countdown. The failure
+Loot an upgrade you equip or an item with no trade line → `expired=true`, no countdown. Loot a
+BoE drop → its `trade: drop` line reads `expired=false boe=true`, no countdown, and Give is offered
+for it. The failure
 looks like no `trade:` line for a tradeable item (the tooltip line or its sentence did not read:
 record the tooltip text as shown), a time that drifts from the tooltip's, or a repeated warning.
 Result:

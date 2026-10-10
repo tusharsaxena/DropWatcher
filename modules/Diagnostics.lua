@@ -209,11 +209,11 @@ local function trade(out)
     end
     local st = NS.TradeTimer.Stats()
     if not st then return out:add(TAG, "trade: no scan yet") end
-    out:add(TAG, "trade: timers live=%s expired=%s scans=%s ticker=%s", st.live, st.expired, st.scans,
-        st.period and (st.period .. "s") or "off")
+    out:add(TAG, "trade: timers live=%s expired=%s boe=%s scans=%s ticker=%s", st.live, st.expired,
+        st.permanent, st.scans, st.period and (st.period .. "s") or "off")
     for guid, e in pairs(NS.TradeTimer.Entries()) do
-        out:add(TAG, "trade: drop %s %s left=%ss expired=%s warned=%s guid=%s", e.dropID, e.link,
-            math.floor(NS.TradeTimer.Remaining(e)), e.expired, e.warned, guid)
+        out:add(TAG, "trade: drop %s %s left=%ss expired=%s boe=%s warned=%s guid=%s", e.dropID, e.link,
+            math.floor(NS.TradeTimer.Remaining(e)), e.expired, e.permanent == true, e.warned, guid)
     end
 end
 

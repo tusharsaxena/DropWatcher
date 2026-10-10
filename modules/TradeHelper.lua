@@ -19,7 +19,8 @@ local _, NS = ...
 --   range       the member is outside trade range (NS.Compat.InTradeRange)
 -- and for Give only, after those:
 --   notInBags   no bag item carries the drop's GUID (not yours, never scanned, or gone)
---   expired     the trade timer read the item's window as passed (spec §7.4's `no expired`)
+--   expired     the trade timer read the item's window as passed (spec §7.4's `no expired`); a BoE
+--               drop has no window (its entry is `permanent`) and is never refused for it
 --   cursorBusy  the cursor already holds something, which a pickup would swap away
 --   noApi       the client lacks the call; a pickup already made is put back (ClearCursor)
 --

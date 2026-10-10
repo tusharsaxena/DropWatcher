@@ -516,12 +516,13 @@ Total.
 - secrets: a secret link, name or encounter id is never used
 - stand-down: timers and pending loads are dropped, the drops kept
 
-### test_trade_timer.lua (15)
+### test_trade_timer.lua (16)
 
 - read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
 - read: the sentence on a line of another type is still the timer (the text fallback)
 - decoder: without the line type, the localized sentence is decoded with the client's globals
 - read: no timer line (bound, or the window gone) means no: expired, never live
+- read: a BoE drop has no timer line and no window: permanent, never expired, never live
 - match: by exact link first, then by item id; each drop takes one item
 - match: an item that is none of your drops, and another member's drop, are not timed
 - match: test drops are never timed
@@ -534,7 +535,7 @@ Total.
 - secrets: a secret bag link, GUID or tooltip text is never used
 - stand-down: the ticker and the scan stop, the entries are kept; the stand-up scans again
 
-### test_trade_helper.lua (15)
+### test_trade_helper.lua (16)
 
 - give: the drop's bag item is picked up by GUID and dropped on the member
 - give: the target may be a name or a Name-Realm as well as a GUID
@@ -542,6 +543,7 @@ Total.
 - give: FindBagSlot takes the hinted slot first and refuses a missing or secret GUID
 - give: an item gone from the bags, or a drop never matched, is notInBags
 - give: an item whose trade window has passed is expired
+- give: a BoE drop has no trade-time line, and is given all the same
 - give: a busy cursor is never swapped away
 - give: with no DropItemOnUnit the pickup is put back, and the reason is noApi
 - give: CanGive answers every guard and touches nothing
@@ -698,8 +700,8 @@ Total.
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
 | test_feed.lua | 36 |
-| test_trade_timer.lua | 15 |
-| test_trade_helper.lua | 15 |
+| test_trade_timer.lua | 16 |
+| test_trade_helper.lua | 16 |
 | test_asks.lua | 21 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 13 |
@@ -710,4 +712,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **564** |
+| **Total** | **566** |

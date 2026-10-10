@@ -1,14 +1,16 @@
 local _, NS = ...
 -- modules/TradeTimer.lua — the exact trade countdown on your own drops (design spec §7.4).
 --
---   entry = { guid, dropID, itemID, link, bag, slot, expiresAt | nil, expired, warned }
+--   entry = { guid, dropID, itemID, link, bag, slot, expiresAt | nil, expired, permanent, warned }
 --
 -- One entry per bag item that matches one of your recorded drops, keyed by the item's GUID
 -- (NS.Compat.GetBagItemGUID), so a moved item keeps its timer. `expiresAt` is in GetTime()
--- seconds; `expired` is true once the window has passed, and when the item's tooltip carries no
--- trade-time line at all (a BoP upgrade you cannot trade, or a window already gone): spec §7.4's
--- `no expired`. `warned` is set once the item has warned. Entries are the module's own: read them,
--- never write them.
+-- seconds; `expired` is true once the window has passed, and when the tooltip of a bind-on-pickup
+-- item carries no trade-time line at all (an upgrade you cannot trade, or a window already gone):
+-- spec §7.4's `no expired`. A BoE drop never carries that line and has no window: its entry is
+-- `permanent` (no countdown, never expired, never live). The bind is the drop's item facts'
+-- (`rec.facts.bindType`, C.TRADE_BOE_BIND). `warned` is set once the item has warned. Entries are
+-- the module's own: read them, never write them.
 --
 -- THE SCAN. BAG_UPDATE_DELAYED, LOOT_CLOSED and a DropAdded for one of your own drops each ask for
 -- a scan; scans run at most once per THROTTLE seconds, the asks inside it sharing one. A scan walks
@@ -130,16 +132,19 @@ function TT.TickerPeriod()
     return tickerPeriod
 end
 
---- Diagnostics: { live, expired, scans, lastScanAt, period }, or nil before the first scan.
+--- Diagnostics: { live, expired, permanent, scans, lastScanAt, period }, or nil before the first
+--- scan.
 --- @return table|nil
 function TT.Stats()
     local s = State.tradeTimer
     if not s then return nil end
-    local live, expired = 0, 0
+    local out = { live = 0, expired = 0, permanent = 0, scans = s.scans, lastScanAt = s.lastScanAt,
+        period = tickerPeriod }
     for _, e in pairs(s.timers) do
-        if isLive(e) then live = live + 1 else expired = expired + 1 end
+        local k = isLive(e) and "live" or (e.permanent and "permanent" or "expired")
+        out[k] = out[k] + 1
     end
-    return { live = live, expired = expired, scans = s.scans, lastScanAt = s.lastScanAt, period = tickerPeriod }
+    return out
 end
 
 -- ── the warning and the expiry ──────────────────────────────────────────────────────────────
@@ -275,20 +280,29 @@ local function assign(items, own, timers)
     claimPass(items, claimed, function(it) return own.byItemID[it.itemID] end)
 end
 
+-- Whether a drop is bind-on-equip by its item facts: such an item has no trade window.
+local function isBoE(rec)
+    local f = rec and rec.facts
+    return type(f) == "table" and C.TRADE_BOE_BIND[f.bindType] == true
+end
+
 -- One matched bag item read into its entry.
-local function readEntry(it, timers, t)
+local function readEntry(it, timers, t, rec)
     local e = timers[it.guid]
     if not e or e.dropID ~= it.dropID then
         e = { guid = it.guid, dropID = it.dropID, warned = false }
     end
     e.itemID, e.link, e.bag, e.slot = it.itemID, it.link, it.bag, it.slot
     local left = NS.Compat.TradeTimeRemaining(it.bag, it.slot)
+    e.permanent = false
     if left and left > 0 then
         -- The tooltip shows whole minutes: a re-read within a minute of the stored expiry keeps it,
         -- so the countdown does not jump at every scan.
         local at = t + left
         if not (e.expiresAt and math.abs(at - e.expiresAt) < 60) then e.expiresAt = at end
         e.expired = false
+    elseif isBoE(rec) then
+        e.expiresAt, e.expired, e.permanent = nil, false, true
     else
         e.expiresAt, e.expired = nil, true
     end
@@ -302,7 +316,7 @@ local function scan(cause)
     assign(items, own, s.timers)
     local timers = {}
     for _, it in ipairs(items) do
-        if it.dropID then timers[it.guid] = readEntry(it, s.timers, t) end
+        if it.dropID then timers[it.guid] = readEntry(it, s.timers, t, own.byId[it.dropID]) end
     end
     local had = next(s.timers) ~= nil
     s.timers, s.lastScanAt, s.scans = timers, t, s.scans + 1
