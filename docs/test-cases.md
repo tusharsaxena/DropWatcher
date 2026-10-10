@@ -112,7 +112,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_compat.lua (55)
+### test_compat.lua (57)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -160,6 +160,8 @@ Total.
 - compat: a function-spelled PawnIsInitialized is called
 - compat: PickupBagItem prefers C_Container, then the global, then reports false
 - compat: DropItemOnUnit and InitiateTrade call through, and report false when absent
+- compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
+- compat: CursorHasItem and ClearCursor call through, and answer false when absent
 - compat: NormalizedRealm reads the normalized realm, then the plain one stripped
 - compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library
 - compat: InventoryItemLink reads the worn link, nil when empty, secret or absent
@@ -527,6 +529,24 @@ Total.
 - secrets: a secret bag link, GUID or tooltip text is never used
 - stand-down: the ticker and the scan stop, the entries are kept; the stand-up scans again
 
+### test_trade_helper.lua (15)
+
+- give: the drop's bag item is picked up by GUID and dropped on the member
+- give: the target may be a name or a Name-Realm as well as a GUID
+- give: an item moved since the last scan is found by a walk of the bags
+- give: FindBagSlot takes the hinted slot first and refuses a missing or secret GUID
+- give: an item gone from the bags, or a drop never matched, is notInBags
+- give: an item whose trade window has passed is expired
+- give: a busy cursor is never swapped away
+- give: with no DropItemOnUnit the pickup is put back, and the reason is noApi
+- give: CanGive answers every guard and touches nothing
+- guards: combat refuses before the range is read
+- guards: a stranger, yourself, an offline member and one out of range are refused
+- guards: stood down, nothing is traded
+- guards: every reason has its tooltip line, and none has none
+- open: InitiateTrade with the member's unit; noApi without it
+- diagnostics: the trade section reports the helper's counts once it has been used
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -633,7 +653,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_compat.lua | 55 |
+| test_compat.lua | 57 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -649,6 +669,7 @@ Total.
 | test_inspect.lua | 28 |
 | test_feed.lua | 36 |
 | test_trade_timer.lua | 15 |
+| test_trade_helper.lua | 15 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 12 |
 | test_vendor_sync.lua | 3 |
@@ -658,4 +679,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **520** |
+| **Total** | **537** |

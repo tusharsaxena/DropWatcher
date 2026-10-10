@@ -21,7 +21,8 @@ local _, NS = ...
 --   * the item readers behind the item facts (info, effective level, stats, specs, uniqueness,
 --     transmog, the class restriction line);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
---   * the trade actions (PickupContainerItem, DropItemOnUnit, InitiateTrade).
+--   * the trade actions (PickupContainerItem, DropItemOnUnit, InitiateTrade) and their trade-range
+--     and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor).
 --
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -866,5 +867,34 @@ end
 function Compat.InitiateTrade(unit)
     if not InitiateTrade then return false end
     InitiateTrade(unit)
+    return true
+end
+
+--- True when `unit` is within trade range (CheckInteractDistance, index 2). A secret answer is out
+--- of range; with no API the range is not known and the trade is let through (the client refuses
+--- one that is too far, with its own error). Read out of combat only: the trade helper refuses
+--- combat first.
+--- @return boolean
+function Compat.InTradeRange(unit)
+    if not CheckInteractDistance then return true end
+    local v = CheckInteractDistance(unit, 2)
+    if Compat.IsSecret(v) then return false end
+    return v == true or v == 1
+end
+
+--- True when the cursor holds an item (CursorHasItem). False for a secret answer or no API.
+--- @return boolean
+function Compat.CursorHasItem()
+    if not CursorHasItem then return false end
+    local v = CursorHasItem()
+    if Compat.IsSecret(v) then return false end
+    return v == true or v == 1
+end
+
+--- Puts the cursor's item back where it came from (ClearCursor). False when the API is absent.
+--- @return boolean
+function Compat.ClearCursor()
+    if not ClearCursor then return false end
+    ClearCursor()
     return true
 end

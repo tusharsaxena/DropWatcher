@@ -45,7 +45,7 @@ files["core/Compat.lua"] = {
   read_globals = {
     "Enum", "issecretvalue", "canaccessvalue",
     "C_ChatInfo", "SendChatMessage", "C_TooltipInfo", "C_RestrictedActions", "C_Container",
-    "ItemLocation", "PickupContainerItem", "DropItemOnUnit", "InitiateTrade",
+    "ItemLocation", "PickupContainerItem", "DropItemOnUnit", "InitiateTrade", "CursorHasItem", "ClearCursor",
     "PawnIsInitialized", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnFindScaleForSpec",
     "PawnGetSingleValueFromItem", "GetNormalizedRealmName", "GetRealmName",
     "GetItemInfo", "GetDetailedItemLevelInfo", "GetItemStats", "GetItemSpecInfo", "GetItemUniqueness",

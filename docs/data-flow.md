@@ -213,6 +213,24 @@ Window OnShow / OnHide (NS.Window.AddVisibilityListener) ─> the ticker retuned
 The stand-down cancels the ticker and the pending scan and keeps the entries (their warned flags
 with them); the stand-up scans again.
 
+## Handing your drop over (DW-29, spec §4)
+
+```
+a click (My drops tab / Offer panel, DW-33)
+  ─> TradeHelper.Give(dropID, target)            TradeHelper.Open(target)
+      ─> the guards, in order: stoodDown, combat (Restrictions.CanTrade), noTarget
+         (Roster.Resolve: a GUID, Name-Realm or Name), self, offline, range (Compat.InTradeRange)
+      ─> TradeTimer.ForDrop(dropID): notInBags / expired
+      ─> FindBagSlot(guid): the entry's slot, then every bag (Compat.GetBagItemGUID)
+      ─> cursorBusy (Compat.CursorHasItem)
+      ─> Compat.PickupBagItem ─> Compat.DropItemOnUnit(member.unit)    ─> Compat.InitiateTrade
+         (no drop API: Compat.ClearCursor, noApi)
+  <─ ok, or false and the reason; ReasonText(reason) is the button's tooltip
+```
+
+Nothing is sent on the bus; the trade itself is the client's. Stood down, every call refuses with
+`stoodDown`.
+
 ## The design's loot pipeline (spec §3)
 
 ```
@@ -226,7 +244,7 @@ with them); the stand-up scans again.
                                       │     Gear (me) ┘
                                       ├─> TradeRules ─> trade estimate
                                       └─> TradeTimer (own bag items)
- Restrictions ──> Messaging queue ──> Compat.ChatSender (pcall)
+ Restrictions ──> Messaging queue ──> Compat.ChatSender (pcall)   TradeHelper ──> DropItemOnUnit
 ```
 
 Modules talk over the `NS.MSG` catalog in `core/Bus.lua`, one sender per message; the UI only

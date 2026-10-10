@@ -98,7 +98,12 @@ a moved item kept and a removed one dropped; the three scan triggers sharing one
 the ticker slow while the window is hidden, fast while it is shown and off with nothing live, one
 ticker for every item; the warning once per item at the threshold with its message and chat line,
 at once below it, off at 0; secret links, GUIDs and lines; and the stand-down keeping the warned
-flags),
+flags), `test_trade_helper` (the trade helper: your drop's bag item picked up by GUID and dropped on
+the member named by GUID, name or Name-Realm; a moved item found by a walk of the bags, the hinted
+slot first, a secret GUID refused; not in the bags, expired, a busy cursor left alone, no drop API
+putting the pickup back; `CanGive` touching nothing; combat refused before the range is read; a
+stranger, yourself, an offline member and one out of range; the stand-down; every reason's tooltip
+line; `Open` and its missing API; the diagnostics line),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

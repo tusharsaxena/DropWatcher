@@ -198,9 +198,15 @@ local function feed(out)
     qualityLine(out)
 end
 
--- The trade timer's entries (design spec §7.4, §13): the live and expired counts, the scans and
--- the ticker's period, then one line per entry. Stored state only.
+-- The trade helper's counts (once it has been used), then the trade timer's entries (design spec
+-- §7.4, §13): the live and expired counts, the scans and the ticker's period, then one line per
+-- entry. Stored state only.
 local function trade(out)
+    local th = NS.TradeHelper.Stats()
+    if th then
+        out:add(TAG, "trade helper: gives=%s opens=%s refused=%s last=%s", th.gives, th.opens, th.refused,
+            th.lastReason or "none")
+    end
     local st = NS.TradeTimer.Stats()
     if not st then return out:add(TAG, "trade: no scan yet") end
     out:add(TAG, "trade: timers live=%s expired=%s scans=%s ticker=%s", st.live, st.expired, st.scans,

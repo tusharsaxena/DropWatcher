@@ -36,7 +36,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `inspect` | the inspect broker (stored state): the queue's length, the GUID in flight, whether it is parked and the spacing left, then per member asked about the status, reason, spec, slots read, age and whether it is stale |
 | `gear` | your gear snapshot as last read (stored state, so the report never triggers a read): your class, spec, hand flags and the items still loading, then per slot the worn item level and quality (or `empty`, `loading`) and the best owned level when it is not the worn item |
 | `feed` | what the loot parser has read since login (stored state): the lines turned into loot (`hits`), ignored, rejected (upgrade and crafting echoes) and secret, and the last loot seen with its age, kind and looter; then the feed's drops (Group drops and My drops, the test feed, the groups, the reports merged, the drops still loading), the drops hidden by reason, the encounter and keystone run in progress, and the quality mode in force here with its threshold (one per slot, compact, for the per-slot mode) |
-| `trade` | the trade timer (stored state): the live and expired entries, the scans so far and the ticker's period (`off` with nothing live), then per entry the drop id, the item, the seconds left, whether it has expired or warned, and the item GUID |
+| `trade` | the trade helper's counts once it has been used (`trade helper: gives=… opens=… refused=… last=<reason>`), then the trade timer (stored state): the live and expired entries, the scans so far and the ticker's period (`off` with nothing live), then per entry the drop id, the item, the seconds left, whether it has expired or warned, and the item GUID |
 | `registration` | the declared feature events (each once), whether they are registered, the events the client refused |
 | `integrations` | the launcher's registration and button; whether Pawn and CanIMogIt are loaded |
 
@@ -62,6 +62,7 @@ the reason; one when a feed is cleared), `QUAL` (one line per drop the quality g
 its quality, the threshold, the mode and the reason), `EVAL` (one line per re-judging pass after an
 inspect or a gear change, with the number of drops), `TRADE` (one line per trade-timer scan while
 you have own drops, with the cause, the own drops and the live timers; one per warning, with the
-drop, the item and the seconds left). The
+drop, the item and the seconds left; one per trade-helper give or open, with the bag slot and the
+unit, and one per refusal, with its reason). The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 The design's other feature tags (spec §13) arrive with their modules.

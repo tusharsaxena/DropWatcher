@@ -76,9 +76,14 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | Trade | `PickupBagItem(bag, slot)` | `C_Container.PickupContainerItem` → the deprecated `PickupContainerItem` global | `false` |
 | | `DropItemOnUnit(unit)` | `DropItemOnUnit` | `false` |
 | | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
+| | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |
+| | `CursorHasItem()` | `CursorHasItem`; a secret answer reads as empty | `false` |
+| | `ClearCursor()` | `ClearCursor`, which puts the cursor's item back where it came from | `false` |
 
 The trade actions return `true` when they called the client. They guard nothing: the range, combat
-and restriction checks are the trade helper's (DW-29), which calls them only from a click.
+and restriction checks are the trade helper's (`modules/TradeHelper.lua`), which calls them only
+from a click, and reads `InTradeRange` only once `NS.Restrictions.CanTrade()` has said the player
+is out of combat.
 
 ## The duration decoder
 
@@ -109,5 +114,5 @@ the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (
 `PlayerSpecID`, the inventory and bag readers and `InventoryItemLevel`, the loot parser (DW-25) builds its patterns with
 `FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, the inspect broker (DW-26) the inspect shims, `InventoryItemLink` and `InventoryItemLevel`, the feed (DW-27)
 `LootHistoryDrop`, `ChallengeMapName` and the secret guards on every event payload, TradeTimer (DW-28, landed) reads
-`TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount` and `BagItemLink`, the trade helper (DW-29) the trade actions, the
+`TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount` and `BagItemLink`, the trade helper (DW-29, landed) the trade actions, `InTradeRange`, the cursor shims and `GetBagItemGUID`, `BagSlotCount`, the
 messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.

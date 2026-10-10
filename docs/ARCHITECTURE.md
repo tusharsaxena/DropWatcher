@@ -72,7 +72,11 @@ your own drops, and sends `DropAdded` and `DropUpdated`), the trade timer (`Trad
 exact trade countdown on your own drops, each one's bag item read for its trade-time tooltip line at
 most once per 2 seconds, keyed by item GUID, on one shared ticker that runs every second while the
 window is shown, every minute while it is hidden and not at all with nothing live, with a warning
-once per item at `trade.warnAt`; it sends `TradeTimerTick` and `TradeTimerExpiring`), the messaging core (`Messaging.lua`, pure: a
+once per item at `trade.warnAt`; it sends `TradeTimerTick` and `TradeTimerExpiring`), the trade
+helper (`TradeHelper.lua`: called only from a click, it hands one of your drops to a member, its bag
+item found by GUID and dropped on them, or opens an empty trade, and refuses with a reason in combat,
+out of range, for a stranger, yourself or an offline member, and for an item gone, expired or a busy
+cursor; no events, no timers, no messages), the messaging core (`Messaging.lua`, pure: a
 template and its tokens in, the text and the ask's next state out; it sends nothing), the window (which tells visibility listeners, the trade timer's ticker, on every show and hide) and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -171,9 +175,11 @@ and nothing defers. Settings writes touch no protected frame. Opening the settin
 in combat by the options library, which also locks a page shown in combat; the addon adds no lock of
 its own and never closes Blizzard's settings window (options-ui-§2). The trade actions
 (`PickupContainerItem`, `DropItemOnUnit`, `InitiateTrade`) and the chat sender are wrapped in
-`core/Compat.lua` and guard nothing themselves: the planned trade helper (DW-29) and messaging edge
-(DW-2A) call them only from a click, and check combat, range and restriction state first (design
-spec §4, §9). The inspect broker (`modules/Inspect.lua`) watches `NotifyInspect` through
+`core/Compat.lua` and guard nothing themselves: the trade helper (`modules/TradeHelper.lua`) and the
+planned messaging edge (DW-2A) call them only from a click, and check combat, range and restriction
+state first (design spec §4, §9). The trade helper reads `NS.Restrictions.CanTrade()` before the
+trade range, because `CheckInteractDistance` is not to be called in combat, and never picks up an
+item while the cursor holds another, so nothing of the player's is swapped away. The inspect broker (`modules/Inspect.lua`) watches `NotifyInspect` through
 `hooksecurefunc` (in `core/Compat.lua`), never by replacing it; it never inspects in combat or while
 Blizzard's inspect window is open, and calls `ClearInspectPlayer` only for an inspect it started
 and nobody took over, so another addon's or the player's inspect is never cleared under them.
@@ -326,6 +332,15 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   until its settings row lands (DW-40) it is read from `profile.trade.warnAt` when stored and
   `C.TRADE_WARN_AT` (600) otherwise. The stand-down keeps the entries, warned flags included, so
   enabling again never repeats a warning.
+- The trade helper (`modules/TradeHelper.lua`) settles five cases the design leaves open. The target
+  is a member's GUID, `Name-Realm` or bare name, resolved through the roster, so a stranger is
+  refused (`noTarget`) rather than traded with. The item is found by the trade timer's entry for the
+  drop, so a drop the timer has not matched is `notInBags` and one it read as `no expired` is
+  `expired`, never attempted; the entry's last slot is tried first and a walk of the bags second, so
+  an item moved since the last scan is still found. A busy cursor refuses (`cursorBusy`) instead of
+  being cleared, and a pickup with no `DropItemOnUnit` to follow is put back with `ClearCursor`.
+  `CanGive` and `CanTradeWith` run every guard without acting, for the buttons' disabled state and
+  tooltip (`ReasonText`). Only the calls that act count towards the diagnostics line.
 - The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
   edge items wire the rest. Three of its
   readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the

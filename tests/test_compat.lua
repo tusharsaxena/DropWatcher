@@ -595,6 +595,38 @@ test("compat: DropItemOnUnit and InitiateTrade call through, and report false wh
     assertFalse(Compat.InitiateTrade("party1"))
 end)
 
+test("compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through", function()
+    local Compat, m = fresh()
+    local asked
+    m.CheckInteractDistance = function(unit, index) asked = index; return unit == "party1" end
+    assertTrue(Compat.InTradeRange("party1"))
+    assertEqual(asked, 2, "the trade distance index")
+    assertFalse(Compat.InTradeRange("party2"))
+    m.CheckInteractDistance = function() return 1 end
+    assertTrue(Compat.InTradeRange("party1"), "a numeric true")
+    m.issecretvalue = T.isSecret
+    m.CheckInteractDistance = function() return T.secret(true) end
+    assertFalse(Compat.InTradeRange("party1"))
+    m.CheckInteractDistance = nil
+    assertTrue(Compat.InTradeRange("party1"))
+end)
+
+test("compat: CursorHasItem and ClearCursor call through, and answer false when absent", function()
+    local Compat, m = fresh()
+    assertFalse(Compat.CursorHasItem())
+    m.cursor = "0:1"
+    assertTrue(Compat.CursorHasItem())
+    assertTrue(Compat.ClearCursor())
+    assertFalse(Compat.CursorHasItem())
+    assertEqual(m.cursorCleared, 1)
+    m.issecretvalue = T.isSecret
+    m.CursorHasItem = function() return T.secret(true) end
+    assertFalse(Compat.CursorHasItem(), "a secret answer")
+    m.CursorHasItem, m.ClearCursor = nil, nil
+    assertFalse(Compat.CursorHasItem())
+    assertFalse(Compat.ClearCursor())
+end)
+
 test("compat: NormalizedRealm reads the normalized realm, then the plain one stripped", function()
     local Compat, m = fresh()
     assertEqual(Compat.NormalizedRealm(), "Testrealm")
@@ -761,7 +793,7 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink", "C_Container",
     "NotifyInspect", "ClearInspectPlayer", "GetInspectSpecialization", "CheckInteractDistance",
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
-    "GetMapUIInfo" }
+    "GetMapUIInfo", "CursorHasItem", "ClearCursor" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

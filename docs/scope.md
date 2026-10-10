@@ -25,7 +25,8 @@ filters or the quality gate exclude, judges each drop for you (the verdict kerne
 snapshot) and for its looter (over the inspect broker's read), and estimates whether it can be
 traded; the diagnostics report counts what it holds. Your own drops' exact trade countdown runs
 too: each one's bag item is read for its trade-time line, and a chat line warns once when ten
-minutes are left. Nothing draws the drops yet: the window's
+minutes are left. The trade helper behind the coming Trade and Offer buttons is in too: it hands your
+drop to a member or opens a trade, and refuses with a reason in combat or out of range. Nothing draws the drops yet: the window's
 feed tabs, asking and trading, and the settings that tune the feed arrive with the plan's later
 items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
 The messaging core exists as a pure module that nothing calls yet.

@@ -32,7 +32,10 @@
 --                  loadsNeeded }; addItem(link, def) seeds one. While loadsNeeded > 0 the item is
 --                  uncached (GetItemInfo answers nil) and each RequestLoadItemDataByID of its id
 --                  counts it down on the next timer pass; loadRequests records those ids in order
---   tradeCalls     PickupContainerItem / DropItemOnUnit / InitiateTrade calls, in order
+--   tradeCalls     PickupContainerItem / DropItemOnUnit / InitiateTrade calls, in order; cursor is
+--                  the "bag:slot" a pickup put on the cursor (nil when empty: a drop on a unit or
+--                  ClearCursor empties it, cursorCleared counts ClearCursor), CursorHasItem reads it;
+--                  tradeFar[unit] = true makes CheckInteractDistance(unit, 2) false (trade range)
 --   inventory      GetInventoryItemLink's answers: inventory[unit][slot] = link
 --   bags           C_Container's bags: bags[bag] = { size = n, [slot] = link }; an absent bag has 0 slots
 --   specID         GetSpecializationInfo's first return (the base's 250 by default)
@@ -260,7 +263,18 @@ local function installCompatSurface(M)
     local function recorder(name)
         return function(...) M.tradeCalls[#M.tradeCalls + 1] = { name, ... } end
     end
-    M.C_Container = { PickupContainerItem = recorder("PickupContainerItem") }
+    -- The cursor: a pickup puts "bag:slot" on it, a drop on a unit or ClearCursor takes it off.
+    M.cursor, M.cursorCleared = nil, 0
+    local pickup = recorder("PickupContainerItem")
+    M.C_Container = { PickupContainerItem = function(bag, slot)
+        pickup(bag, slot)
+        M.cursor = bag .. ":" .. slot
+    end }
+    M.CursorHasItem = function() return M.cursor ~= nil end
+    M.ClearCursor = function()
+        M.cursor = nil
+        M.cursorCleared = M.cursorCleared + 1
+    end
 
     -- What the player wears and carries (modules/Gear.lua), and the spec the client answers.
     M.inventory, M.bags = { player = {} }, {}
@@ -278,7 +292,11 @@ local function installCompatSurface(M)
     end
     M.specID = 250
     M.GetSpecializationInfo = function() return M.specID, M.__context.spec end
-    M.DropItemOnUnit = recorder("DropItemOnUnit")
+    local drop = recorder("DropItemOnUnit")
+    M.DropItemOnUnit = function(unit)
+        drop(unit)
+        M.cursor = nil
+    end
     M.InitiateTrade = recorder("InitiateTrade")
 end
 
@@ -345,7 +363,12 @@ local function installInspect(M)
     end
     M.ClearInspectPlayer = function() M.inspect.cleared = M.inspect.cleared + 1 end
     M.CanInspect = function(unit) return M.UnitExists(unit) and not M.inspect.cannot[unit] end
-    M.CheckInteractDistance = function(unit) return not M.inspect.far[unit] end
+    -- Index 1 is the inspect range, index 2 the (shorter) trade range: far for inspect is far for both.
+    M.tradeFar = {}
+    M.CheckInteractDistance = function(unit, index)
+        if index == 2 and M.tradeFar[unit] then return false end
+        return not M.inspect.far[unit]
+    end
     M.GetInspectSpecialization = function(unit) return M.inspect.specs[unit] or 0 end
     M.GetInventoryItemID = function(unit, slot)
         local link = M.GetInventoryItemLink(unit, slot)

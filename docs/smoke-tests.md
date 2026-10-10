@@ -322,8 +322,7 @@ missing slot. Result:
 The estimator's decision is headless-tested (`test_trade_rules`); TRADE-1..4 confirm it against the
 game's own trade rules. They run once the feed (DW-27, DW-31) shows trade chips and Settings › Trade
 (DW-40) lists the rules. Read each chip's tooltip, and the `TRADE` debug lines with `/dw debug on`.
-TRADE-5 (the own-item timer, DW-28) is below; TRADE-6 (the trade helper, DW-29) lands with that
-item.
+TRADE-5 (the own-item timer, DW-28) and TRADE-6 (the trade helper, DW-29) are below.
 
 **TRADE-1. Binds.** A BoE drop shows `Yes` (BoE) whatever the looter's gear. A warbound or
 account-bound drop and a bonus-roll drop show `No` with that reason. A drop in a follower dungeon or
@@ -364,6 +363,21 @@ Loot an upgrade you equip or an item with no trade line → `expired=true`, no c
 looks like no `trade:` line for a tradeable item (the tooltip line or its sentence did not read:
 record the tooltip text as shown), a time that drifts from the tooltip's, or a repeated warning.
 Result:
+
+**TRADE-6. The trade helper.** The guards, the GUID lookup and the call order are headless-tested
+(`test_trade_helper`); this check confirms the client's side, and runs once the My drops tab and the
+Offer panel (DW-33) carry the Trade and Offer buttons. In a dungeon, with a tradeable own drop
+(TRADE-5's `live=1`) and a member standing next to you: click Trade on the drop for that member →
+the trade window opens with the item already in it; cancel it. Move the item to another bag slot
+and click again → the same. Click Open trade (no item) → an empty trade window. Walk out of trade
+range (about 11 yards) → the button is disabled with "That player is out of trade range."; in
+combat → "You cannot trade in combat.", with no error from the client and no Lua error from
+`CheckInteractDistance`. Hold another item on the cursor and click → "Your cursor is holding an
+item.", and the held item stays on the cursor. With `/dw debug on`, each click leaves a `[TRADE]`
+`give:` or `open:` line, or a `refused:` line with its reason; `/dw diagnostics` shows
+`trade helper: gives=… opens=… refused=… last=…`. The failure looks like the trade opening empty
+when an item was meant (the drop did not land), the wrong item handed over, a client "Interface
+action failed" message, or an item left on the cursor. Result:
 
 ## Ask
 
@@ -453,3 +467,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | INSPECT-1..4 | DW-26, the inspect broker | No client pass recorded yet |
 | FEED-2..6 | DW-27, the feed | No client pass recorded yet |
 | TRADE-5 | DW-28, the trade timer | No client pass recorded yet |
+| TRADE-6 | DW-29, the trade helper | No client pass recorded yet |
