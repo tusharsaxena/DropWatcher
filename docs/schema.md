@@ -23,6 +23,10 @@ Exactly two (savedvariables-§4):
 | `window.point` | absent | a drag; Reset position clears it | `{ point, relativePoint, x, y }` |
 | `window.width`, `window.height` | absent | a resize; Reset position clears them | the window's size |
 
+`situations.<key>.track`, `.autoOpen` and `.quality` are read by `modules/Situations.lua` but have
+no row yet (DW-40 adds them): until one is stored, each situation takes its design spec §6.1 default
+from `C.SITUATIONS`, and `quality` means the global mode.
+
 `window.*` is geometry only a drag or a resize sets: no row addresses it, and its one owner is
 `modules/Window.lua` (`savePoint`, `saveSize`, `Window.ResetPosition`), as `docs/ARCHITECTURE.md` →
 Settings Schema names (architecture-§5).
@@ -37,7 +41,9 @@ Settings Schema names (architecture-§5).
 
 ## Session-only (never saved)
 
-`NS.State.debug` (the logging flag), `NS.State.testMode`, `NS.State.windowOpen`. The Debug console
+`NS.State.debug` (the logging flag), `NS.State.testMode`, `NS.State.windowOpen`,
+`NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
+came from; nil while stood down). The Debug console
 and Test mode rows are `sessionOnly` and store through their own closures.
 
 ## Migrations

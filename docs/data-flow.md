@@ -27,6 +27,22 @@ tracked bus registrations taken down, test mode ended, each module's teardown, w
 stand-up re-registers and re-applies the window from current settings. The perf harness's suspend
 takes the same latch's `perf` hold.
 
+## Today: the situation
+
+```
+six events (PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA, CHALLENGE_MODE_START,
+            CHALLENGE_MODE_COMPLETED, GROUP_ROSTER_UPDATE, PLAYER_DIFFICULTY_CHANGED)
+  └─> DW.OnSituationEvent ─> Situations.Refresh
+        ├─> ReadInputs: GetInstanceInfo, IsInInstance, C_ChallengeMode, IsInGroup / IsInRaid,
+        │               GetDifficultyInfo (an unknown id reads as nil)
+        ├─> Classify (pure) ─> key
+        └─> key changed? ─> NS.State.situation ─> SituationChanged (key, previousKey)
+```
+
+`IsTracking`, `ShouldAutoOpen` and `QualityOverride` resolve the current key against
+`profile.situations.<key>`, falling back to the spec defaults. The stand-down clears the key; the
+stand-up re-reads the client and announces where the player is.
+
 ## The design's loot pipeline (spec §3)
 
 ```

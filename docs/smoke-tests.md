@@ -140,7 +140,31 @@ during an encounter?).
 
 ## Situations
 
-Reserved for DW-13: SIT-1..5.
+The classifier's truth table is headless-tested (`test_situations`); these checks confirm that the
+real client's answers land in the right row. Each reads the `situation` lines of `/dw diagnostics`,
+with `/dw debug on` for the `[SIT]` change lines. The settings, the window footer and the
+`/dw situation` verb land with DW-41, DW-30 and DW-42, and their checks join these then.
+
+**SIT-1. Open world.** Alone in a city → `situation: solo`. Invite a friend → a `[SIT] situation
+solo -> openWorldGroup (GROUP_ROSTER_UPDATE)` line, and the report reads `openWorldGroup`. Leave the
+group → back to `solo`. Result:
+
+**SIT-2. Dungeons and Mythic+.** Zone into a Normal or Heroic dungeon and a Mythic 0 → `dungeon`
+with `difficulty=1`, `2` or `23`. Start a keystone → `mythicPlus` (the line names
+`CHALLENGE_MODE_START`, `challengeMode=true`); after the timer ends it stays `mythicPlus` until you
+leave. Result:
+
+**SIT-3. Raids.** Queue for LFR → `raidLFR` (`difficulty=17`). A Normal, Heroic or Mythic raid →
+`raid` (14, 15 or 16). A legacy raid run solo still reads `raid`. Result:
+
+**SIT-4. Follower dungeons, delves, scenarios and PvP.** A follower dungeon → `followerDungeon`
+(`difficulty=205`, `follower=true`). A delve → `delve` (`difficulty=208`, `delve=true`). Any other
+scenario → `scenario`. A battleground or an arena → `pvp`. If a difficulty id reads differently from
+these, record it: the ids live in `core/Constants.lua`. Result:
+
+**SIT-5. Disabled and back.** With `/dw debug on`, `/dw disable` in the open world, zone into a
+dungeon, `/dw enable` → one `[SIT] situation nil -> dungeon (standUp)` line, and no `[SIT]` line while
+disabled. Result:
 
 ## Quality
 

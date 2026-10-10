@@ -16,3 +16,8 @@ State.testMode = false
 -- Whether the player has the main window open this session. The window's own show decision
 -- (modules/Window.lua) combines it with the General visibility setting and the stand-down latch.
 State.windowOpen = false
+
+-- The current situation key and the classifier inputs it came from (modules/Situations.lua,
+-- design spec §6.1). Nil until the first re-evaluation event, and again while stood down.
+State.situation = nil
+State.situationInputs = nil

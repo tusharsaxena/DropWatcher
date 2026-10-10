@@ -200,6 +200,23 @@ Total.
 - quality gate: an unknown drop quality passes, so the feed never hides what it cannot read
 - quality gate: nil and garbage inputs never throw
 
+### test_situations.lua (14)
+
+- situations: the classifier truth table
+- situations: the truth table reaches every situation key
+- situations: garbage inputs classify as solo and never throw
+- situations: with nothing stored, every key takes the spec's track and auto-open
+- situations: a stored row overrides, and a malformed field falls back to the default
+- situations: an unknown key tracks nothing
+- situations: each re-evaluation event classifies and announces a change once
+- situations: an event that changes nothing sends nothing
+- situations: the edge's inputs are what the client says
+- situations: a difficulty the client does not know falls back to the instance type
+- situations: a client with no C_ChallengeMode still classifies
+- situations: Current classifies live before the first event, without a message
+- situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
+- situations: stood down, the events are gone; the stand-up announces where the player is
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -212,10 +229,11 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (4)
+### test_diagnostics.lua (5)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
+- diagnostics: the situation section names the key, its settings and the inputs
 - diagnostics: it runs while stood down and says so, without acting
 - diagnostics: a non-default setting is listed, and `enabled` always is
 
@@ -302,8 +320,9 @@ Total.
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 31 |
 | test_quality_gate.lua | 24 |
+| test_situations.lua | 14 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 4 |
+| test_diagnostics.lua | 5 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -311,4 +330,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **221** |
+| **Total** | **236** |

@@ -99,6 +99,7 @@ Kit.run{
         "test_class_data",
         "test_evaluate",
         "test_quality_gate",
+        "test_situations",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

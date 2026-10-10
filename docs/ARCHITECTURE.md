@@ -45,8 +45,9 @@ holds the identity, ten of the setup files, the game-data tables (`Constants.lua
 and the migration runner; `defaults/` the default values; `modules/` the verdict kernel
 (`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the minimum-quality gate
 (`QualityGate.lua`, pure: a drop's quality, the mode and the equipped qualities in, pass or hide
-out), the window and the diagnostics
-sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
+out), the situation classifier (`Situations.lua`: a pure classifier over the client's instance,
+difficulty and group inputs, and the edge that reads them on six events), the window and the
+diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
@@ -72,9 +73,10 @@ named sender each (design spec §3). With LibKa0s-Bus present the table is the s
 so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` /
 `NS.StandUp` take every tracked registration down and replay it.
 
-No message is sent yet. Every sender module below is **planned**: it does not exist until the item
-named in its row lands. The payloads and consumers are the design intent. The item that first sends
-a message confirms its payload here, and each item that subscribes adds itself as a consumer.
+One message is sent today, `SITUATION_CHANGED`. Every other sender module below is **planned**: it
+does not exist until the item named in its row lands. The payloads and consumers are the design
+intent. The item that first sends a message confirms its payload here, and each item that subscribes
+adds itself as a consumer.
 
 | `NS.MSG` key | Wire suffix | Sender (planned, item) | Payload | Consumers |
 |---|---|---|---|---|
@@ -83,7 +85,7 @@ a message confirms its payload here, and each item that subscribes adds itself a
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (DW-26) | `guid` | LootFeed (DW-27): re-evaluate that candidate's drops |
 | `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (DW-24) | none | LootFeed (DW-27): re-evaluate; QualityGate's dynamic threshold (DW-12) |
 | `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (DW-21) | `reason` (string, or nil when lifted) | Messaging edge (DW-2A): flush the queue; Window restriction badge (DW-30) |
-| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (DW-13) | `situationKey` | LootFeed (DW-27): the situation gate; Window (DW-30): auto-open |
+| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | LootFeed (DW-27): the situation gate; Window (DW-30): auto-open and the footer |
 | `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Messaging.lua` (DW-2A) | `dropId`, `state` | Window feed tabs (DW-30), detail card (DW-32) |
 | `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (DW-28) | none | My drops tab (DW-33), detail card (DW-32) |
 | `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (DW-28) | `dropId` | My drops tab (DW-33): bold row; chat warning |
@@ -106,6 +108,12 @@ so `OnEnable` and the stand-up register exactly that list and the stand-down unr
 |---|---|---|
 | `PLAYER_REGEN_DISABLED` | `DW.OnCombatStart` | ends test mode; re-runs the window's show decision |
 | `PLAYER_REGEN_ENABLED` | `DW.OnCombatEnd` | re-runs the window's show decision |
+| `PLAYER_ENTERING_WORLD` | `DW.OnSituationEvent` | re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change |
+| `ZONE_CHANGED_NEW_AREA` | `DW.OnSituationEvent` | the same |
+| `CHALLENGE_MODE_START` | `DW.OnSituationEvent` | the same (a keystone started) |
+| `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent` | the same (a keystone ended) |
+| `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent` | the same (solo and open-world group turn on it) |
+| `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -127,8 +135,15 @@ for combat and restriction state by their own items (design spec §4, §9).
 - The class tables (`core/ClassData.lua`) are a fallback for a candidate whose spec is not known
   yet; an item's own spec list wins whenever it exists. Devourer Demon Hunter (spec 1480, from the
   client's trait-tree data) is recorded as an Intellect dual wielder that takes no held off hand,
-  which is unconfirmed in game (FEED-7). Difficulty ids are confirmed with `GetDifficultyInfo`
-  before the situation classifier trusts them (design spec §6.1).
+  which is unconfirmed in game (FEED-7).
+- The situation classifier (`modules/Situations.lua`) confirms a difficulty id with
+  `GetDifficultyInfo` before trusting it, so a retired id falls back to the instance type (a party
+  instance reads as `dungeon`). It reads three cases the design leaves open: an instance of a type
+  the design does not name (a housing interior, say) is the open world (`solo` or
+  `openWorldGroup`); the Mythic Keystone difficulty is `mythicPlus` even before
+  `IsChallengeModeActive` turns true; and the delve and follower-dungeon inputs come from the
+  difficulty id. The check lives in the module's edge today; `core/Compat.lua` (DW-20) may take it.
+  The per-situation settings have no rows until DW-40, so each situation takes its spec default.
 - The verdict kernel (`modules/Evaluate.lua`) reads a few cases the design leaves open as
   follows. With the spec unknown, an item whose primary stat suits only some of the class's specs
   is `unknown`, not `ok`. When the ilvl is inside the sidegrade band and the score is not (or the

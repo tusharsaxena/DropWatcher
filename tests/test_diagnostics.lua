@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,window,situation,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -26,6 +26,16 @@ test("diagnostics: the report names the schema, the profile, the holds and the w
     assertTrue(text:find("profile=", 1, true) ~= nil)
     assertTrue(text:find("window: built=true shown=true shouldShow=true", 1, true) ~= nil, "window")
     assertTrue(text:find("PLAYER_REGEN_DISABLED", 1, true) ~= nil, "registration")
+end)
+
+test("diagnostics: the situation section names the key, its settings and the inputs", function()
+    local NS, _, m = T.enableAddon()
+    m.__context.inInstance, m.__context.instanceType = true, "party"
+    m.instance.difficultyID = 2
+    m.__fire("PLAYER_ENTERING_WORLD")
+    local text = report(NS)
+    assertTrue(text:find("situation: dungeon (last announced dungeon) track=true autoOpen=true quality=global", 1, true) ~= nil, text)
+    assertTrue(text:find("situation inputs: inInstance=true type=party difficulty=2 challengeMode=false", 1, true) ~= nil)
 end)
 
 test("diagnostics: it runs while stood down and says so, without acting", function()

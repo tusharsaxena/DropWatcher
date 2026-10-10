@@ -8,7 +8,11 @@ local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
 -- The game events the addon owns today, pinned as literals (sorted).
-local PINNED = { "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" }
+local PINNED = {
+    "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START", "GROUP_ROSTER_UPDATE",
+    "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_REGEN_DISABLED",
+    "PLAYER_REGEN_ENABLED", "ZONE_CHANGED_NEW_AREA",
+}
 
 local function registered(m)
     local out = {}

@@ -24,6 +24,7 @@ read_globals = {
   "CreateFrame", "UIParent", "UISpecialFrames", "STANDARD_TEXT_FONT", "ITEM_QUALITY_COLORS",
   "InCombatLockdown", "UnitAffectingCombat", "debugprofilestop", "tinsert",
   "Settings", "StaticPopup_Show", "YES", "NO",
+  "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

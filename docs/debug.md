@@ -30,6 +30,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `identity` | schema stored and in code, the profile, `enabled`, whether stood down, the latch's holds |
 | `settings` | every setting that differs from its default, and `enabled` always |
 | `window` | built, shown and the show decision; the player's choice, test mode, visibility, lock; the stored point and size |
+| `situation` | the situation classified now and the last one announced, its track, auto-open and quality settings, and the classifier inputs read live |
 | `registration` | the declared feature events, whether they are registered, the events the client refused |
 | `integrations` | the launcher's registration and button; whether Pawn and CanIMogIt are loaded |
 
@@ -40,5 +41,6 @@ timer and registers no event. It reads no chat, no inventory and no other addon'
 
 `State` (test mode, combat edges), `Set` (one line per setting written at the seam, one per bulk
 reset), `Profile`, `Init` (the session summary and the optional integrations, held until logging is
-turned on), `Migrate`. The libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
-The design's feature tags (spec §13) arrive with their modules.
+turned on), `Migrate`, `SIT` (one line per situation change, with the event that caused it). The
+libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
+The design's other feature tags (spec §13) arrive with their modules.

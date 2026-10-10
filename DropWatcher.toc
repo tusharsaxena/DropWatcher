@@ -86,6 +86,10 @@ modules\Evaluate.lua
 # Conventional: publishes NS.QualityGate, the pure minimum-quality gate; read by the feed at call
 # time only, and itself reads NS.Constants (core\, above) and NS.L (locales\, above) at load.
 modules\QualityGate.lua
+# Conventional: publishes NS.Situations, the situation classifier and its edge; appends its rows
+# to NS.FEATURE_EVENTS, NS.STAND_DOWN and NS.STAND_UP and its handler to NS.addon
+# (core\DropWatcher.lua, above) at load, and reads NS.Constants, NS.State and NS.MSG at load.
+modules\Situations.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

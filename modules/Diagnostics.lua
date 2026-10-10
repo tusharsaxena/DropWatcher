@@ -55,6 +55,21 @@ local function window(out)
     out:add(TAG, "window: size=%sx%s", g.width or "default", g.height or "default")
 end
 
+-- Where the addon thinks the player is, the inputs it read and that situation's settings
+-- (design spec §6.1, §13). The inputs are read live: the classifier's edge only reads.
+local function situation(out)
+    local Sit = NS.Situations
+    local i = Sit.ReadInputs()
+    local key = Sit.Classify(i)
+    local s = Sit.Settings(key)
+    out:add(TAG, "situation: %s (last announced %s) track=%s autoOpen=%s quality=%s", key,
+        NS.State.situation or "none", s.track, s.autoOpen, s.quality or "global")
+    out:add(TAG, "situation inputs: inInstance=%s type=%s difficulty=%s challengeMode=%s",
+        i.inInstance, i.instanceType, i.difficultyID or "none", i.isChallengeModeActive)
+    out:add(TAG, "situation inputs: delve=%s follower=%s group=%s raid=%s pvp=%s", i.isDelve,
+        i.isFollowerDungeon, i.inGroup, i.inRaid, i.isPvP)
+end
+
 local function registration(out)
     local names = {}
     for i, row in ipairs(NS.FEATURE_EVENTS or {}) do names[i] = row[1] end
@@ -80,6 +95,7 @@ function NS.Diagnostics.Sections()
         { "identity",     identity },
         { "settings",     settings },
         { "window",       window },
+        { "situation",    situation },
         { "registration", registration },
         { "integrations", integrations },
     }

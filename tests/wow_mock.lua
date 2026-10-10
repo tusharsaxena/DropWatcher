@@ -16,6 +16,10 @@
 --   popupsShown    every StaticPopup_Show(which, ...) call, in order
 --   ldbObjects     LibDataBroker objects by name; minimapButtons LibDBIcon registrations by name
 --   fireEvent      fireEvent(name, ...) dispatches a game event to AceEvent handlers
+--   instance       GetInstanceInfo's name and difficultyID; the instance type and inInstance are
+--                  the base's __context.instanceType / __context.inInstance (IsInInstance reads them)
+--   challengeModeActive  C_ChallengeMode.IsChallengeModeActive()'s answer
+--   unknownDifficulties  ids GetDifficultyInfo answers nil for (a retired or renumbered difficulty)
 
 local base = dofile("tests/_kit/mock_base.lua")
 
@@ -86,6 +90,22 @@ local function build()
     end
 
     M.StaticPopup_Show = function(which, ...) M.popupsShown[#M.popupsShown + 1] = { which, ... } end
+
+    -- Where the player is (modules/Situations.lua). Outside an instance the client answers type
+    -- "none" and difficulty 0; GetDifficultyInfo answers a name for any positive id not retired.
+    M.instance = { name = "Silvermoon City", difficultyID = 0 }
+    M.challengeModeActive = false
+    M.unknownDifficulties = {}
+    M.GetInstanceInfo = function()
+        return M.instance.name, M.__context.instanceType, M.instance.difficultyID
+    end
+    M.GetDifficultyInfo = function(id)
+        if type(id) ~= "number" or id <= 0 or M.unknownDifficulties[id] then return nil end
+        return "Difficulty " .. id
+    end
+    M.C_ChallengeMode = {
+        IsChallengeModeActive = function() return M.challengeModeActive == true end,
+    }
 
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end
 

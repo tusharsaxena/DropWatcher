@@ -18,8 +18,9 @@ The frame the features plug into: the window shell (position, size, lock, scale,
 visibility, test mode), the settings panel's landing page, General page and Profiles page, the
 `/dw` command with the reserved verbs and `lock`, `unlock`, `show`, `hide`, `toggle` and `test`, the
 launcher, the debug console and the diagnostics report, the performance harness, the stand-down
-latch, and the message catalog. The feed, the comparisons, the trade estimate, inspection, asking,
-the situations and the quality gate arrive with the plan's later items
+latch, the message catalog, and the situation classifier (it knows where the player is; nothing
+consumes it yet). The feed, the comparisons, the trade estimate, inspection, asking,
+the situation settings and the quality gate arrive with the plan's later items
 ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
 
 ## What it deliberately does not do (v1)

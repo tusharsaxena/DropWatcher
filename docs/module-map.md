@@ -13,7 +13,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
 | 5 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry, the gold; the item, quality, slot, difficulty and situation ids, the slot plans, the trade rules |
 | 6 | `core/ClassData.lua` | data | `NS.ClassData`: class armor types, weapon proficiencies, every Retail spec (Devourer included) with its primary stat and dual-wield, Titan's Grip, shield and off-hand flags, and the pure lookups over them |
-| 7 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice |
+| 7 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs |
 | 8 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
 | 9 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (rows, from the feature items) |
 | 10 | `core/ItemSetup.lua` | setup | LibKa0s-Item: `NS.Item` (item facts, from the feature items) |
@@ -27,14 +27,15 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 18 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
 | 19 | `modules/Evaluate.lua` | kernel (pure) | `NS.Evaluate`: the verdict kernel of design spec §5, equippability, the slot plans, the deltas and the verdict; no WoW call |
 | 20 | `modules/QualityGate.lua` | kernel (pure) | `NS.QualityGate`: the minimum-quality gate of design spec §6.2, the three modes, the floor, the upgrade override, the per-situation mode and the filter bar label; no WoW call |
-| 21 | `modules/Window.lua` | UI | the main window's shell and its show decision |
-| 22 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 23 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 24 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 25 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 26 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 27 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 28 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 21 | `modules/Situations.lua` | classifier + edge | `NS.Situations`: the situation classifier of design spec §6.1 (pure `Classify` and `Resolve`), the edge that reads the client on six events and sends `SituationChanged`, and the per-situation track, auto-open and quality answers |
+| 22 | `modules/Window.lua` | UI | the main window's shell and its show decision |
+| 23 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 24 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 25 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 26 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 27 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 28 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 29 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.
