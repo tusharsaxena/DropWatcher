@@ -8,16 +8,21 @@
 -- isolated by a full collect on either side with the collector stopped inside it. Timings are
 -- printed for orientation only: compare scenarios within a run, never across runs or machines.
 --
--- The scenarios grow with the hot paths. At the scaffold there is one bracketed pass, the window's
--- repaint, and the two questions it answers are performance-§9's: does the bracket cost nothing
--- with capture off (zero overhead), and is the stood-down show decision free.
+-- The scenarios grow with the hot paths: the window's repaint (the scaffold) and the loot parser's
+-- line (DW-25). The questions are performance-§9's: does each bracket cost nothing with capture off
+-- (zero overhead), and is the stood-down show decision free.
 --
 -- CEILINGS (measured 2026-10-10, Lua 5.1.5). Pinned hard at 0 bytes: the gated bracket and the
 -- stood-down early return must allocate nothing. Raise one only by re-measuring and saying why; a
 -- rise is the finding.
 
-local BYTE_CEILING = { refreshCaptureOff = 0, refreshCaptureOn = 64, showDecisionStoodDown = 0 }
-local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0 }
+-- The parse pair (measured 2026-10-11 at 664 bytes in both) allocates its captures, the loot record
+-- and the roster lookup's lowercased name; its ceiling is that work, and the pair being equal is the
+-- zero-overhead evidence.
+local BYTE_CEILING = { refreshCaptureOff = 0, refreshCaptureOn = 64, showDecisionStoodDown = 0,
+    parseCaptureOff = 700, parseCaptureOn = 700 }
+local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0,
+    parseCaptureOff = 0, parseCaptureOn = 1 }
 
 local N = 1000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
@@ -99,6 +104,19 @@ NS.Perf.on = false
 NS.Lifecycle:Hold(NS.HOLD_PERF)
 measure("showDecisionStoodDown", N, NS.Window.UpdateVisibility)
 NS.Lifecycle:Release(NS.HOLD_PERF)
+
+-- The loot parser on a third-person line (the common case in a group): the bracket notes nothing
+-- with capture off and once with it on; the bytes are the parse's own (its captures and the loot
+-- record), the same in both, so the bracket adds none.
+local LOOT_LINE = "Brakk receives loot: |cnIQ4:|Hitem:2001::::::::90:::::|h[Band]|h|r."
+mock.setGroup({ { guid = "Player-1-0000000A", name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
+NS.Roster.Refresh("perf")
+local function parseOnce() NS.LootParser.Parse(LOOT_LINE) end
+NS.Perf.on = false
+measure("parseCaptureOff", N, parseOnce)
+NS.Perf.on = true
+measure("parseCaptureOn", N, parseOnce)
+NS.Perf.on = false
 NS.Perf.Note = realNote
 
 for _, r in ipairs(results) do

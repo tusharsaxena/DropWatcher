@@ -120,6 +120,11 @@ modules\ItemFacts.lua
 # (core\DropWatcher.lua, above) at load, and reads NS.Constants, NS.ClassData and NS.State at load.
 # NS.Compat, NS.ItemFacts and NS.Evaluate (above) are read at call time.
 modules\Gear.lua
+# Conventional: publishes NS.LootParser, the CHAT_MSG_LOOT reader; appends its row to
+# NS.FEATURE_EVENTS and its handler to NS.addon (core\DropWatcher.lua, above) at load, and takes
+# NS.Perf (core\PerfSetup.lua, above) as a load-time upvalue. NS.Compat and NS.Roster are read at
+# call time; the feed (DW-27) adds its sink at load.
+modules\LootParser.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

@@ -103,7 +103,8 @@ end
 
 --- A Lua pattern from a printf-style GlobalString: `%s` captures text, `%d` captures digits, the
 --- positional forms (`%1$s`) read as their plain spelling and every other character is literal.
---- Pure; exported for the tests and for the loot parser (DW-25).
+--- Pure; exported for the tests and for modules/LootParser.lua, which recovers a positional
+--- string's argument order itself.
 --- @param fmt string
 --- @return string
 function Compat.FormatToPattern(fmt)

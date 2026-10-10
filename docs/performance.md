@@ -16,10 +16,11 @@ state uses, and the window's show decision refuses at its source while the latch
 
 | Bucket | Bracketed in | What one note is |
 |---|---|---|
+| `parse` | `modules/LootParser.lua` `LootParser.Parse` | one `CHAT_MSG_LOOT` line read |
 | `window.refresh` | `modules/Window.lua` `Window.Refresh` | one repaint pass of the window |
 
 Every bracket is the gated form (performance-§2): one upvalue read, one field read and one boolean
-test when capture is off. The feature items add the design's buckets (`parse`, `feed.add`,
+test when capture is off. The feature items add the design's other buckets (`feed.add`,
 `evaluate`, `inspect.read`, `tradeTimer.scan`, `quality.gate`; design spec §13) together with the
 bracket that reaches each one, and `tests/test_setup.lua` fails if a declared bucket is never
 reached.
@@ -34,6 +35,8 @@ notes per iteration, never time:
 | `refreshCaptureOff` | the bracketed repaint with capture off notes nothing and allocates nothing (zero overhead) | 0 bytes, 0 notes |
 | `refreshCaptureOn` | one note per pass with capture on | 64 bytes, 1 note |
 | `showDecisionStoodDown` | the stood-down show decision returns before any work | 0 bytes, 0 notes |
+| `parseCaptureOff` | one third-person loot line parsed, the looter in the group; the bracket notes nothing | 700 bytes (the parse's own captures, record and roster lookup; 664 measured), 0 notes |
+| `parseCaptureOn` | the same with capture on: one note, and the same bytes, so the bracket adds none | 700 bytes, 1 note |
 
 ## In game
 

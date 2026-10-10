@@ -65,6 +65,12 @@ slots, the candidate's class, spec and hand flags, the per-slot qualities, the o
 with pairs, dual wield, held off hands and Titan's Grip, tier tokens and secret links left out, the
 candidate judged by the verdict kernel with and without the bags, the throttled rebuild and
 `GearChanged`, the spec event, the quiet first read, an item still loading, and the stand-down),
+`test_loot_parser` (the loot parser: every `LOOT_ITEM*` variant, self and third person, single and
+multiple, bonus roll and pushed; same-realm, cross-realm, hyperlinked, colored and unknown looters;
+the upgrade and crafting echoes rejected; non-receipt lines and non-item links ignored; secret text,
+a secret GUID and secret, empty or absent globals; globals rewritten at runtime and rebuilt; a deDE
+client and positional arguments; the event's sinks, counters and twelfth argument; and the
+stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

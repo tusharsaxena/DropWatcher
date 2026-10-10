@@ -111,6 +111,7 @@ Kit.run{
         "test_roster",
         "test_item_facts",
         "test_gear",
+        "test_loot_parser",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

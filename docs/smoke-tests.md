@@ -119,7 +119,15 @@ duration such as `1 hour 59 min`. Then `/dump C_TooltipInfo.GetInventoryItem("pl
 
 ## Combat
 
-**COMBAT-1.** *Reserved — DW-25: is `CHAT_MSG_LOOT` readable mid-encounter (design spec §15)?*
+**COMBAT-1. Loot lines mid-encounter.** The question the design leaves open (spec §15): is
+`CHAT_MSG_LOOT` readable during an encounter, or does it arrive secret? `/dw debug on`, then kill a
+boss in a dungeon or raid with personal loot, and have a trash mob drop something mid-pull if one
+will. → each loot line someone receives shows a `[PARSE]` line naming the kind (`loot`, `bonus`
+or `pushed`), the link, the quantity and the looter, the boss's loot included. Then
+`/dw diagnostics` → the `feed: parser hits=… ignored=… rejected=… secret=…` line. Record whether
+`secret` is above 0, and if so whether the secret lines came during the pull (between the pull and
+the kill) or after it: a `[PARSE] loot line skipped: secret` line marks each. A Mythic+ key run
+(trash loot mid-key, the chest at the end) is the second place to record it. Result:
 
 **COMBAT-2. What the restrictions stop.** `/dw debug on`, then pull a boss in a normal dungeon →
 the console shows a `RES` line naming `encounter` and `canSendChat` false at the pull, and one back
@@ -141,7 +149,7 @@ Watcher and the `identity`, `settings`, `window`, `registration` and `integratio
 is on afterwards. `/dw debug diagnostics` writes the same report again below the first. Result:
 
 **DIAG-2. Perf.** `/dw perf` → the step panel opens with its own close mark; run A, B and finish →
-the report lists `window.refresh`. Result:
+the report lists `window.refresh`, and `parse` when a loot line arrived during the run. Result:
 
 ## Degraded
 
@@ -152,11 +160,26 @@ Result:
 
 ## Feed
 
-Checks land with the feed items; reserved here so the IDs the plan and the design name stay stable:
-FEED-1 (the parser on real loot, DW-25), FEED-2..4 (the table, DW-31), FEED-5 (`GetItemUpgradeInfo`
+The parser's patterns, the rebuild and the secret guards are headless-tested (`test_loot_parser`);
+FEED-1 confirms the client's real lines. The other checks land with the feed items; reserved here
+so the IDs the plan and the design name stay stable: FEED-2..4 (the table, DW-31), FEED-5 (`GetItemUpgradeInfo`
 on a link that is not yours, DW-23), FEED-6 (`ENCOUNTER_LOOT_RECEIVED` for the M+ chest, DW-27),
 FEED-7 (a Devourer Demon Hunter looter before inspect: a warglaive or one-hander reads as usable and
 a held off hand as not, matching the item's own spec list; the class data of DW-10, judged by DW-11).
+
+**FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
+another realm, and run a dungeon. → For every loot line chat shows, the console shows one `[PARSE]`
+line: your own loot as `loot <link> x1 by <You>-<YourRealm> (Player-…)`, a stack you loot as `x<n>`
+with the link stopping before the count, a member's loot as `by <Name>-<Realm> (Player-…)` with the
+realm spelled as the `roster:` lines spell it, a bonus roll as `bonus`, an item handed to you by a
+quest or a container as `pushed`. Upgrading an item at the upgrade vendor shows `loot line skipped:
+rejected` and no loot line; so does crafting an item. Roll lines (`… has selected Need for …`, `…
+won …`) show nothing. `/dw diagnostics` → `feed: parser hits=<n>` matches the receipts seen and
+`feed: last loot <s>s ago (chat, <kind>) by <looter>` names the last one. Then `/etrace`, filter on
+`CHAT_MSG_LOOT`, and let a member loot something → the event's twelfth argument equals
+`/dump UnitGUID("party1")` for that member: the parser takes it as the GUID of a looter the roster
+cannot place. Record any line chat showed with no `[PARSE]` line, any
+looter shown without a realm, and any quantity wrong. Result:
 
 ## Roster
 
@@ -308,27 +331,28 @@ leaving it, back to `Quality: Rare+`. `Use global` restores the global mode. Res
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
-code: nothing yet. `core/Compat.lua` holds the localized readers (the trade-time sentence and its
-duration, the `ITEM_LEVEL` and upgrade-level lines), headless-tested in enUS, deDE and ruRU shapes,
-but no feature calls them until M2's edge items land. Nothing else reads a localized `_G` string,
-parses a tooltip line, keys anything off a display string, or writes a header another tool parses; its own strings are English through `NS.L`, which
-answers the key itself on any client. The checks that will carry locale risk arrive with the feed
-(design spec §15): the `LOOT_ITEM*` GlobalString patterns, the trade-timer duration decode, and track
-names taken from the API rather than parsed. Until then, on a deDE or frFR client: `/reload`, open
-the window, run `/dw help` and `/dw diagnostics` → English text throughout, no Lua error, and no
-stray `%s` or `%d` in any line. The failure looks like a raw format token in chat or a missing
-label. **Signed off without the client** while the enumeration above holds: the headless cases
-`test_slash`, `test_window` and `test_diagnostics` cover every line printed today, and the English
-client's INSTALL and SLASH checks are sufficient. The section is re-armed by the first parser item
-(DW-25), whose check replaces this paragraph's "nothing". Result:
+code: the loot lines (`modules/LootParser.lua` reads `CHAT_MSG_LOOT` with patterns built from the
+client's own `LOOT_ITEM*`, `CHANGED_OWN_ITEM`, `LOOT_ITEM_CREATED_SELF*` and `CREATED_ITEM*`
+GlobalStrings, positional `%2$s` arguments in their own order), and the readers in
+`core/Compat.lua` (the trade-time sentence and its duration, the `ITEM_LEVEL` and upgrade-level
+lines, the class restriction line), headless-tested in enUS, deDE and ruRU shapes. Track names come
+from the API, never from parsing (ITEM-2). Its own strings are English through `NS.L`, which answers
+the key itself on any client. On a deDE or frFR client: `/reload`, open the window, run `/dw help`
+and `/dw diagnostics` → English text throughout, no Lua error, and no stray `%s` or `%d` in any
+line. Then repeat FEED-1's loot steps with `/dw debug on` → every loot line chat shows has its
+`[PARSE]` line with the right kind, link, quantity and looter, and `/dw diagnostics` shows
+`ignored` counting only roll lines. The failure looks like a raw format token in chat, a missing
+label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: record
+`/dump LOOT_ITEM, LOOT_ITEM_SELF, LOOT_ITEM_MULTIPLE` and the line as chat shows it). Result:
 
 ## Pending sign-off
 
 | ID | Origin | Why it is owed |
 |---|---|---|
-| INSTALL-1..3, SLASH-1..3, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-3, DIAG-1..2, DEGRADED-1, LOC-1 | DW-02, the scaffold | No client pass recorded yet |
+| INSTALL-1..3, SLASH-1..3, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-3, DIAG-1..2, DEGRADED-1 | DW-02, the scaffold | No client pass recorded yet |
 | COMPAT-1..3 | DW-20, the compat seam | No client pass recorded yet |
 | COMBAT-2 | DW-21, the restriction tracker | No client pass recorded yet |
 | ROSTER-1..2 | DW-22, the roster | No client pass recorded yet |
 | ITEM-1..2 | DW-23, the item facts | No client pass recorded yet |
 | GEAR-1..2 | DW-24, the gear snapshot | No client pass recorded yet |
+| FEED-1, COMBAT-1, LOC-1 | DW-25, the loot parser (LOC-1 re-armed: its sign-off without the client no longer holds) | No client pass recorded yet |

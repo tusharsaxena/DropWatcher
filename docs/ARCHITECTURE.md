@@ -58,7 +58,9 @@ GUID to a member), the item facts (`ItemFacts.lua`: a link turned into the facts
 reads, cached by link, an uncached item loaded and retried through LibKa0s-Item's `LoadItem`), the
 gear snapshot (`Gear.lua`: each slot you wear at its current level and the best item you own per
 slot, bags included, rebuilt behind one throttle on the gear events, and the candidate table the
-verdict kernel takes for you), the messaging core (`Messaging.lua`, pure: a
+verdict kernel takes for you), the loot parser (`LootParser.lua`: a `CHAT_MSG_LOOT` line read with
+the client's own `LOOT_ITEM*` GlobalStrings, rebuilt when another addon rewrites them, into the
+looter, the item, the quantity and the kind, the upgrade and crafting echoes rejected), the messaging core (`Messaging.lua`, pure: a
 template and its tokens in, the text and the ask's next state out; it sends nothing), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -134,6 +136,7 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |
 | `BAG_UPDATE_DELAYED` | `DW.OnGearEvent` | the same (a better item may have entered or left the bags) |
 | `PLAYER_SPECIALIZATION_CHANGED` | `DW.OnGearSpecEvent` | the same, for your own unit only (another member's spec change is ignored) |
+| `CHAT_MSG_LOOT` | `DW.OnChatMsgLoot` | parses the line (`modules/LootParser.lua`), counts it, and hands a receipt to every sink the feed adds (DW-27) |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -243,6 +246,15 @@ spec §4, §9).
   worn item's level is its tooltip's (scaling included), else its link's. A link the client has
   not cached leaves its slot out (unknown, not empty) until it arrives; an item given up on stays
   out until the next gear event. Whether the tooltip level matches the character sheet is GEAR-1.
+- The loot parser (`modules/LootParser.lua`) has no consumer until the feed (DW-27) adds its sink;
+  until then a parsed line shows only as a `PARSE` debug line and in the diagnostics `feed`
+  section. It reads `CHAT_MSG_LOOT` alone: the encounter and loot-history events are the feed's.
+  Roll lines ("selected Need", "won") are not receipts and are ignored, since the item arrives on
+  its own receipt line. A looter the roster cannot place takes the event's twelfth argument as
+  its GUID, which is assumed to be the looter's (FEED-1 confirms it). The `|4` and `|1` grammar
+  tokens are not expanded in loot patterns; no `LOOT_ITEM*` string is known to carry one in the
+  client languages the design names (LOC-1). Whether the line is readable, or arrives secret,
+  mid-encounter is COMBAT-1; a secret line is counted and dropped.
 - The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
   edge items wire the rest. Three of its
   readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the
@@ -307,6 +319,7 @@ deviation not in this table is not ratified.
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
 | library-stack-§7, anti-pattern #47 | The chat sender (`Compat.ChatSender`) and the tooltip line reader with its duration decoder (`Compat.ReadTooltipLine`, `DecodeDuration`) are written in this addon, not taken from LibKa0s | No LibKa0s major carries them, and MultiMeters' `ChatSender` is the only other copy; the promotion bars (two consumers with the same semantics) are not met yet. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a major carrying either shape, or a second Ka0s addon needs the reader or the decoder |
+| library-stack-§7, anti-pattern #47 | The loot parser (`modules/LootParser.lua`: the `LOOT_ITEM*` GlobalStrings compiled into patterns for every looter, rebuilt when the globals change, the upgrade and crafting echoes rejected) is written in this addon, not taken from LibKa0s | No LibKa0s major parses loot lines. LootHistory carries the only other parser (`core/Util.lua`), and it reads the player's own loot only, so the semantics differ. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a loot-line major, or LootHistory needs third-person loot |
 | library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is filed at the end of the v1 run (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
 
 ### Files over the 1500-line cap

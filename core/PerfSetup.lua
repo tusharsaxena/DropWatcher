@@ -18,6 +18,7 @@ local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 -- items add theirs (design spec §13) together with the bracket that reaches them, so a declared
 -- bucket is never left unreached.
 local BUCKETS = {
+    { key = "parse" },            -- modules/LootParser.lua Parse: one CHAT_MSG_LOOT line
     { key = "window.refresh" },   -- modules/Window.lua Refresh: one window repaint pass
 }
 

@@ -37,6 +37,8 @@
 --                  connected }; "player" is read from the base's __context unless set. setGroup()
 --                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
+--                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
+--                  locale or a chat addon rewriting it)
 
 local base = dofile("tests/_kit/mock_base.lua")
 
@@ -91,6 +93,24 @@ local GLOBAL_STRINGS = {
     ITEM_UPGRADE_TOOLTIP_FORMAT_STRING = "Upgrade Level: %s %d/%d",
     ITEM_CLASSES_ALLOWED = "Classes: %s",
     LIST_DELIMITER = ", ",
+    -- The loot lines modules/LootParser.lua reads, and the echoes it rejects.
+    LOOT_ITEM = "%s receives loot: %s.",
+    LOOT_ITEM_MULTIPLE = "%s receives loot: %sx%d.",
+    LOOT_ITEM_SELF = "You receive loot: %s.",
+    LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %sx%d.",
+    LOOT_ITEM_BONUS_ROLL = "%s receives bonus loot: %s.",
+    LOOT_ITEM_BONUS_ROLL_MULTIPLE = "%s receives bonus loot: %sx%d.",
+    LOOT_ITEM_BONUS_ROLL_SELF = "You receive bonus loot: %s.",
+    LOOT_ITEM_BONUS_ROLL_SELF_MULTIPLE = "You receive bonus loot: %sx%d.",
+    LOOT_ITEM_PUSHED = "%s receives item: %s.",
+    LOOT_ITEM_PUSHED_MULTIPLE = "%s receives item: %sx%d.",
+    LOOT_ITEM_PUSHED_SELF = "You receive item: %s.",
+    LOOT_ITEM_PUSHED_SELF_MULTIPLE = "You receive item: %sx%d.",
+    CHANGED_OWN_ITEM = "Changed %s to %s.",
+    LOOT_ITEM_CREATED_SELF = "You create: %s.",
+    LOOT_ITEM_CREATED_SELF_MULTIPLE = "You create: %sx%d.",
+    CREATED_ITEM = "%s creates: %s.",
+    CREATED_ITEM_MULTIPLE = "%s creates: %sx%d.",
 }
 
 -- The client's classFile -> localized class name maps, enUS (both genders spell the same here).

@@ -1,7 +1,8 @@
 # Midnight quirks — Ka0s Drop Watcher
 
 The client-version workarounds this addon carries of its own (documentation-§3, Tier 2). Each one
-lives in `core/Compat.lua` ([`compat-layer.md`](compat-layer.md)) and is pinned by `test_compat`.
+lives in `core/Compat.lua` ([`compat-layer.md`](compat-layer.md)) and is pinned by `test_compat`,
+except the loot line's, which lives in `modules/LootParser.lua` and is pinned by `test_loot_parser`.
 What is still unconfirmed in game is owed as a `COMPAT-*` check in
 [`smoke-tests.md`](smoke-tests.md).
 
@@ -20,4 +21,5 @@ What is still unconfirmed in game is owed as a `COMPAT-*` check in
 | Inspected links carry the unscaled item level | An item link read off an inspected player shows the base level, not the scaled one. | `InventoryItemLevel` reads the tooltip's `ItemLevel` line for the inspected unit (spec §8). |
 | No upgrade-track API on some builds | `C_Item.GetItemUpgradeInfo` is in the 12.1.0 docs; whether it answers for another player's drop link is unconfirmed. | Falls back to the hyperlink tooltip's `ItemUpgradeLevel` line, read with the localized `ITEM_UPGRADE_TOOLTIP_FORMAT_STRING`. English is never parsed. |
 | The trade timer is text | The remaining trade time exists only as a tooltip sentence on your own bag item. | The `TradeTimeRemaining` line (or the `BIND_TRADE_TIME_REMAINING` sentence) is decoded with the client's own duration globals, so it reads in every client language ([`compat-layer.md`](compat-layer.md#the-duration-decoder)). |
+| Loot lines are localized text that other addons rewrite | `CHAT_MSG_LOOT` carries a sentence built from the `LOOT_ITEM*` GlobalStrings in the client's language. Chat addons (PrettyChat) rewrite those globals at runtime. Mid-encounter the line may arrive secret (COMBAT-1). | The parser builds its patterns from the live globals, and rebuilds them on the next line whenever any of them is no longer the exact string it was built from. A positional string (`%2$s`) is read in its own order. A secret line is counted and dropped before it meets a pattern. |
 | Pawn's readiness | Pawn answers nil until it has initialized and until an item is cached. | Every Pawn call waits on `PawnIsInitialized`, runs under `pcall`, and a nil answer means "not ready yet". |

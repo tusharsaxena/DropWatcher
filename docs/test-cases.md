@@ -405,6 +405,36 @@ Total.
 - gear: an item still loading leaves its slot unknown, and its arrival rebuilds
 - gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
 
+### test_loot_parser.lua (27)
+
+- loot parser: loot (self) x1
+- loot parser: loot (self) x3
+- loot parser: bonus (self) x1
+- loot parser: bonus (self) x2
+- loot parser: pushed (self) x1
+- loot parser: pushed (self) x5
+- loot parser: loot (other) x1
+- loot parser: loot (other) x4
+- loot parser: bonus (other) x1
+- loot parser: bonus (other) x2
+- loot parser: pushed (other) x1
+- loot parser: pushed (other) x12
+- loot parser: a cross-realm looter resolves to the member
+- loot parser: a player hyperlink or color around the name is stripped
+- loot parser: a looter the roster cannot place keeps the name and the event's GUID
+- loot parser: the roster's member wins over the event's GUID
+- loot parser: the upgrade echo and the crafting echoes are rejected
+- loot parser: a line that is not a receipt, a non-item link and an empty line are ignored
+- loot parser: secret text is dropped before any pattern touches it
+- loot parser: a secret event GUID is not used
+- loot parser: a secret, empty or absent GlobalString is left out of the set
+- loot parser: a GlobalString rewritten at runtime (PrettyChat) is rebuilt on the next line
+- loot parser: a deDE client reads its own lines
+- loot parser: positional arguments are read in the locale's order
+- loot parser: CHAT_MSG_LOOT hands each receipt to every sink and counts the lines
+- loot parser: the event's twelfth argument is the GUID it uses
+- loot parser: stood down, CHAT_MSG_LOOT reaches nothing; the counters survive
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -417,7 +447,7 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (8)
+### test_diagnostics.lua (9)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -427,6 +457,7 @@ Total.
 - diagnostics: the restrictions section names the answers, the reasons and the last announced
 - diagnostics: the roster section lists the stored members without reading the client
 - diagnostics: the gear section lists the stored slots without reading the client
+- diagnostics: the feed section counts the parser's lines and names the last loot
 
 ### test_vendor_sync.lua (3)
 
@@ -519,8 +550,9 @@ Total.
 | test_roster.lua | 13 |
 | test_item_facts.lua | 18 |
 | test_gear.lua | 17 |
+| test_loot_parser.lua | 27 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 8 |
+| test_diagnostics.lua | 9 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -528,4 +560,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **406** |
+| **Total** | **434** |

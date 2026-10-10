@@ -126,6 +126,19 @@ local function gear(out)
     end
 end
 
+-- What the loot parser has read since login (design spec §13's Feed section): the lines it turned
+-- into loot, the ones it ignored, rejected (upgrade and crafting echoes) and found secret, and the
+-- last loot seen. Stored state only. The feed (DW-27) adds its drop counts here.
+local function feed(out)
+    local s = NS.State.lootParser
+    if not s then return out:add(TAG, "feed: parser has read no loot line yet") end
+    out:add(TAG, "feed: parser hits=%s ignored=%s rejected=%s secret=%s", s.hits, s.ignored,
+        s.rejected, s.secret)
+    if not s.lastAt then return out:add(TAG, "feed: no loot seen yet") end
+    out:add(TAG, "feed: last loot %ss ago (chat, %s) by %s", math.floor(GetTime() - s.lastAt),
+        s.lastKind, s.lastLooter or "?")
+end
+
 local function registration(out)
     local names = NS.FeatureEventNames and NS.FeatureEventNames() or {}
     out:joined(TAG, "feature events (declared)", names)
@@ -154,6 +167,7 @@ function NS.Diagnostics.Sections()
         { "restrictions", restrictions },
         { "roster",       roster },
         { "gear",         gear },
+        { "feed",         feed },
         { "registration", registration },
         { "integrations", integrations },
     }

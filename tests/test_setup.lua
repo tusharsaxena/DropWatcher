@@ -96,7 +96,7 @@ end)
 -- ── Perf ────────────────────────────────────────────────────────────────────────────────────
 
 test("perf: every declared bucket is reached by a real bracket", function()
-    local NS = T.enableAddon()
+    local NS, _, m = T.enableAddon()
     local declared = {}
     for _, key in ipairs(NS.Perf.BUCKET_ORDER) do declared[key] = false end
     assertTrue(next(declared) ~= nil, "buckets are declared")
@@ -104,6 +104,7 @@ test("perf: every declared bucket is reached by a real bracket", function()
     NS.Perf.Note = function(key, ...) declared[key] = true; return real(key, ...) end
     NS.Perf.on = true
     NS.ShowWindow()          -- builds the window and runs its repaint pass (window.refresh)
+    m.__fire("CHAT_MSG_LOOT", "You receive loot: |Hitem:1|h[x]|h.")    -- one line parsed (parse)
     NS.Perf.on, NS.Perf.Note = false, real
     for key, reached in pairs(declared) do
         assertTrue(reached, "bucket " .. key .. " declared but never reached")

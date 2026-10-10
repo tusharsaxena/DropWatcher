@@ -31,7 +31,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | Group | Shim | Ladder | Absent answer |
 |---|---|---|---|
 | Chat | `ChatSender()` | `C_ChatInfo.SendChatMessage` → the deprecated `SendChatMessage` global. Returns the function; the caller runs it under `pcall` (spec §9.2) | `nil` |
-| Patterns | `FormatToPattern(fmt)` | none: a Lua pattern from a printf-style GlobalString (`%s` → text capture, `%d` → digit capture, `%1$s` read as `%s`, every magic character escaped) | n/a (pure) |
+| Patterns | `FormatToPattern(fmt)` | none: a Lua pattern from a printf-style GlobalString (`%s` → text capture, `%d` → digit capture, `%1$s` read as `%s`, every magic character escaped). The order a positional string gives its arguments is the caller's to recover; the loot parser does | n/a (pure) |
 | Duration | `DecodeDuration(text)` | the localized `INT_SPELL_DURATION_DAYS/HOURS/MIN/SEC` and `TIME_UNIT_DELIMITER` globals; see below | `nil` |
 | | `ParseTradeTimeRemaining(text)` | the `BIND_TRADE_TIME_REMAINING` pattern, then `DecodeDuration` on its capture | `nil` |
 | Tooltip | `ReadTooltipLine(data, typeName, parse)` | the lines of `typeName` (an `Enum.TooltipDataLineType` member) when the enum has it; every line, first non-nil `parse` wins, when it does not | `nil` |
@@ -97,6 +97,6 @@ The callers land in M2: Restrictions (DW-21) reads the restriction shims, the ro
 `NormalizedRealm`, ItemFacts (DW-23) reads
 the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (DW-24) reads
 `PlayerSpecID`, the inventory and bag readers and `InventoryItemLevel`, the loot parser (DW-25) builds its patterns with
-`FormatToPattern`, Inspect (DW-26) reads `InventoryItemLevel`, TradeTimer (DW-28) reads
+`FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, Inspect (DW-26) reads `InventoryItemLevel`, TradeTimer (DW-28) reads
 `TradeTimeRemaining` and `GetBagItemGUID`, the trade helper (DW-29) the trade actions, the
 messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.

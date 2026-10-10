@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,gear,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,gear,feed,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -96,4 +96,17 @@ test("diagnostics: the gear section lists the stored slots without reading the c
     assertTrue(text:find("gear: HEAD ilvl=610 quality=4", 1, true) ~= nil, text)
     assertTrue(text:find("gear: NECK empty", 1, true) ~= nil, text)
     assertTrue(text:find("gear: FINGER1 empty owned=620", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the feed section counts the parser's lines and names the last loot", function()
+    local NS, _, m = T.enableAddon()
+    assertTrue(report(NS):find("feed: parser has read no loot line yet", 1, true) ~= nil)
+    m.__now = 50
+    m.__fire("CHAT_MSG_LOOT", "You receive bonus loot: |cnIQ4:|Hitem:3001::::::::90:::::|h[Hood]|h|r.")
+    m.__fire("CHAT_MSG_LOOT", "Changed |Hitem:1|h[a]|h to |Hitem:2|h[b]|h.")
+    m.__fire("CHAT_MSG_LOOT", "Someone has selected Need for: |Hitem:1|h[a]|h")
+    m.__now = 62
+    local text = report(NS)
+    assertTrue(text:find("feed: parser hits=1 ignored=1 rejected=1 secret=0", 1, true) ~= nil, text)
+    assertTrue(text:find("feed: last loot 12s ago (chat, bonus) by Testchar-Testrealm", 1, true) ~= nil, text)
 end)

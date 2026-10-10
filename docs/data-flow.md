@@ -109,6 +109,24 @@ A link the client has not cached is requested and its slot left out (unknown, no
 arrival arms the same timer. The first read, made lazily by a caller, announces nothing. The
 stand-down cancels the timer and drops the snapshot; the stand-up rebuilds it and announces it.
 
+## Today: the loot parser
+
+```
+CHAT_MSG_LOOT (text, ..., guid) ─> LootParser.Parse   [Perf bucket `parse`]
+  text secret ─> dropped, counted `secret`
+  LOOT_ITEM* globals changed (rawequal against the strings the set was built from) ─> Rebuild
+  first matching pattern, in order:
+    CHANGED_OWN_ITEM, LOOT_ITEM_CREATED_SELF*, CREATED_ITEM* ─> rejected
+    self:  bonus, pushed, loot (each *_MULTIPLE first) ─> looter = the player
+    other: bonus, pushed, loot (each *_MULTIPLE first) ─> looter = Roster.Resolve(name),
+                                                          else the name and the event's GUID
+    no match, or a link that is not an item ─> ignored
+  ─> { looterName, looterGUID, link, qty, kind, isSelf } ─> every sink (the feed, DW-27), pcall'd
+  ─> State.lootParser: hits, ignored, rejected, secret, the last loot seen
+```
+
+The counters are kept for the session, across a stand-down; the stand-down unregisters the event.
+
 ## The design's loot pipeline (spec §3)
 
 ```

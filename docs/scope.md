@@ -20,7 +20,8 @@ visibility, test mode), the settings panel's landing page, General page and Prof
 launcher, the debug console and the diagnostics report, the performance harness, the stand-down
 latch, the message catalog, and the situation classifier (it knows where the player is; nothing
 consumes it yet). The verdict kernel, the quality gate, the trade estimator and the messaging
-core exist as pure modules that nothing calls yet. The feed that wires them in, inspection, asking and the
+core exist as pure modules that nothing calls yet. The loot parser reads every loot line in chat
+and counts it in the diagnostics report, but hands nothing to a feed yet. The feed that wires them in, inspection, asking and the
 situation settings arrive with the plan's later items
 ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
 

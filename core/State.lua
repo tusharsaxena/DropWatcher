@@ -42,3 +42,8 @@ State.itemFacts = nil
 -- specID, dualWield, titanGrip, loading, signature }, nil until the first read and again while
 -- stood down.
 State.gear = nil
+
+-- The loot parser's counters since login (modules/LootParser.lua, design spec §13): { hits, ignored,
+-- rejected, secret, lastAt, lastKind, lastLooter }, created on the first line and kept across a
+-- stand-down.
+State.lootParser = nil
