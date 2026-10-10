@@ -112,7 +112,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_compat.lua (48)
+### test_compat.lua (51)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -161,6 +161,9 @@ Total.
 - compat: PickupBagItem prefers C_Container, then the global, then reports false
 - compat: DropItemOnUnit and InitiateTrade call through, and report false when absent
 - compat: NormalizedRealm reads the normalized realm, then the plain one stripped
+- compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library
+- compat: InventoryItemLink reads the worn link, nil when empty, secret or absent
+- compat: the bag readers prefer C_Container, then the globals, then answer empty
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_constants.lua (12)
@@ -382,6 +385,26 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
+### test_gear.lua (17)
+
+- gear: each worn slot is a copy of its facts at the current level; an empty slot is false
+- gear: the candidate carries the class, the spec and the hand flags from ClassData
+- gear: a spec the class flags disagree on leaves the hand flag unknown
+- gear: the qualities are per worn slot, false for an empty one
+- gear: a better bag item you can wear is owned for its slot; one you cannot is not
+- gear: a worn item better than any bag item is its own slot's owned best
+- gear: a pair gets your best two rings, one ring never fills both
+- gear: a dual wielder's one-handers fill both hands, each once
+- gear: a one-hander fills the main hand only for a spec that does not dual wield
+- gear: with Titan's Grip a two-hander can fill the off hand too
+- gear: a tier token and a secret bag link are not owned gear
+- gear: the candidate judges a drop against the worn item, and against the bags with compareOwned
+- gear: the gear events share one throttled rebuild, which announces a change once
+- gear: the player's spec change rebuilds; another unit's does not
+- gear: the first lazy read announces nothing
+- gear: an item still loading leaves its slot unknown, and its arrival rebuilds
+- gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -394,7 +417,7 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (7)
+### test_diagnostics.lua (8)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -403,6 +426,7 @@ Total.
 - diagnostics: a non-default setting is listed, and `enabled` always is
 - diagnostics: the restrictions section names the answers, the reasons and the last announced
 - diagnostics: the roster section lists the stored members without reading the client
+- diagnostics: the gear section lists the stored slots without reading the client
 
 ### test_vendor_sync.lua (3)
 
@@ -483,7 +507,7 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_compat.lua | 48 |
+| test_compat.lua | 51 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -494,8 +518,9 @@ Total.
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 18 |
+| test_gear.lua | 17 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 7 |
+| test_diagnostics.lua | 8 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -503,4 +528,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **385** |
+| **Total** | **406** |

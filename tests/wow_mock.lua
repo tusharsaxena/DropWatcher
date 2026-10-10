@@ -30,6 +30,9 @@
 --                  uncached (GetItemInfo answers nil) and each RequestLoadItemDataByID of its id
 --                  counts it down on the next timer pass; loadRequests records those ids in order
 --   tradeCalls     PickupContainerItem / DropItemOnUnit / InitiateTrade calls, in order
+--   inventory      GetInventoryItemLink's answers: inventory[unit][slot] = link
+--   bags           C_Container's bags: bags[bag] = { size = n, [slot] = link }; an absent bag has 0 slots
+--   specID         GetSpecializationInfo's first return (the base's 250 by default)
 --   units          the group's unit tokens: units[token] = { guid, name, realm, class, classFile,
 --                  connected }; "player" is read from the base's __context unless set. setGroup()
 --                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer
@@ -221,6 +224,23 @@ local function installCompatSurface(M)
         return function(...) M.tradeCalls[#M.tradeCalls + 1] = { name, ... } end
     end
     M.C_Container = { PickupContainerItem = recorder("PickupContainerItem") }
+
+    -- What the player wears and carries (modules/Gear.lua), and the spec the client answers.
+    M.inventory, M.bags = { player = {} }, {}
+    M.GetInventoryItemLink = function(unit, slot)
+        local worn = M.inventory[unit]
+        return worn and worn[slot]
+    end
+    M.C_Container.GetContainerNumSlots = function(bag)
+        local b = M.bags[bag]
+        return b and b.size or 0
+    end
+    M.C_Container.GetContainerItemLink = function(bag, slot)
+        local b = M.bags[bag]
+        return b and b[slot]
+    end
+    M.specID = 250
+    M.GetSpecializationInfo = function() return M.specID, M.__context.spec end
     M.DropItemOnUnit = recorder("DropItemOnUnit")
     M.InitiateTrade = recorder("InitiateTrade")
 end

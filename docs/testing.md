@@ -60,7 +60,11 @@ settled by classFile and by the player's realm, the re-read on a miss, the share
 cached item, the track tier by string id and by name, the tooltip track, uniqueness, tier tokens and
 class gear, the link-color quality, the facts feeding the verdict kernel, the cache and its cap, the
 appearance event, the load with its retries, the give-up, a client that cannot load, and the
-stand-down),
+stand-down), `test_gear` (the gear snapshot: each worn slot at its current level, empty and loading
+slots, the candidate's class, spec and hand flags, the per-slot qualities, the owned best per slot
+with pairs, dual wield, held off hands and Titan's Grip, tier tokens and secret links left out, the
+candidate judged by the verdict kernel with and without the bags, the throttled rebuild and
+`GearChanged`, the spec event, the quiet first read, an item still loading, and the stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

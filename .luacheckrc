@@ -49,6 +49,7 @@ files["core/Compat.lua"] = {
     "PawnGetSingleValueFromItem", "GetNormalizedRealmName", "GetRealmName",
     "GetItemInfo", "GetDetailedItemLevelInfo", "GetItemStats", "GetItemSpecInfo", "GetItemUniqueness",
     "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_MALE", "LOCALIZED_CLASS_NAMES_FEMALE",
+    "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink",
   },
 }
 

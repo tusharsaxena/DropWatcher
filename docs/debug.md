@@ -33,6 +33,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `situation` | the situation classified now and the last one announced, its track, auto-open and quality settings, and the classifier inputs read live |
 | `restrictions` | the four answers now (reason, can send chat, can inspect, can trade), every reason in effect (the Map type included) and the answers last announced |
 | `roster` | the group as last read (stored state, so the report never triggers a read): the member count, then per member the Name-Realm, unit token, classFile, online state, specID and whether it is the player |
+| `gear` | your gear snapshot as last read (stored state, so the report never triggers a read): your class, spec, hand flags and the items still loading, then per slot the worn item level and quality (or `empty`, `loading`) and the best owned level when it is not the worn item |
 | `registration` | the declared feature events (each once), whether they are registered, the events the client refused |
 | `integrations` | the launcher's registration and button; whether Pawn and CanIMogIt are loaded |
 
@@ -46,6 +47,7 @@ reset), `Profile`, `Init` (the session summary and the optional integrations, he
 turned on), `Migrate`, `SIT` (one line per situation change, with the event that caused it), `RES` (one line per change
 of what the restrictions allow, with the event that caused it), `ROSTER` (one line per change of the
 group's members, tokens, names or online states, with the member count and the cause), `ITEM` (an
-item given up after its loads, and the item facts cache emptied at its cap). The
+item given up after its loads, and the item facts cache emptied at its cap), `GEAR` (one line per
+change of your gear snapshot, with your spec, the items still loading and the cause). The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 The design's other feature tags (spec §13) arrive with their modules.

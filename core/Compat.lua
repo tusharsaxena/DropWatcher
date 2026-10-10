@@ -11,8 +11,10 @@ local _, NS = ...
 --     of an equipped item, and the upgrade track;
 --   * the localized duration decoder behind the trade timer (spec §7.4);
 --   * the restriction APIs (C_RestrictedActions, C_ChatInfo.InChatMessagingLockdown);
---   * the player's normalized realm (GetNormalizedRealmName, then GetRealmName);
+--   * the player's normalized realm (GetNormalizedRealmName, then GetRealmName) and own spec
+--     (LibKa0s-Compat-1.0's GetSpecialization and GetSpecializationInfo);
 --   * the bind helpers (C_Item's account binds, the bag item's GUID);
+--   * the inventory and bag readers (GetInventoryItemLink, C_Container's slot count and link);
 --   * the item readers behind the item facts (info, effective level, stats, specs, uniqueness,
 --     transmog, the class restriction line);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
@@ -35,9 +37,9 @@ local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
 -- The library's answer, or the same one-rung body. A deliberate duplication: for a GUARD,
 -- "the library is absent" is not "the client has no secrets system", so a stub answering
 -- IsSecret -> false would send a secret into a comparison on exactly the degraded path. See
--- LibKa0s docs/api/Compat/version-1-docs.md, "Degradation". The six spell and spec readers of
--- that major are not wired: nothing here reads a spell, and the player's own spec is Gear's
--- (DW-24) to wire when it needs it.
+-- LibKa0s docs/api/Compat/version-1-docs.md, "Degradation". Of that major's six spell and spec
+-- readers, the two spec readers are wired, behind PlayerSpecID (Identity, below); nothing here
+-- reads a spell.
 
 --- True when `v` is a 12.0 secret value. Exactly one boolean.
 Compat.IsSecret = CompatLib and CompatLib.IsSecret or function(v)
@@ -382,6 +384,57 @@ function Compat.NormalizedRealm()
     realm = realm and realm:gsub("[%s%-]", "")
     if realm and realm ~= "" then return realm end
     return nil
+end
+
+--- The player's own specialization id: LibKa0s-Compat-1.0's GetSpecialization (the index) and
+--- GetSpecializationInfo (its first return), each C_SpecializationInfo first and the global second.
+--- Nil before the client knows the spec, for a secret answer, and with the library absent (the
+--- major's reader stubs answer nil, so no rung is re-implemented here).
+--- @return number|nil
+function Compat.PlayerSpecID()
+    if not (CompatLib and CompatLib.GetSpecialization and CompatLib.GetSpecializationInfo) then
+        return nil
+    end
+    local index = plainNumber(CompatLib.GetSpecialization())
+    if not index then return nil end
+    return plainNumber((CompatLib.GetSpecializationInfo(index)))
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- Inventory and bags (the gear snapshot, design spec §4)
+-- ---------------------------------------------------------------------------------------------
+
+--- The link of the item `unit` wears in inventory slot `slot`, or nil (an empty slot, a secret
+--- answer, or no API).
+--- @return string|nil
+function Compat.InventoryItemLink(unit, slot)
+    if not GetInventoryItemLink then return nil end
+    return plainString(GetInventoryItemLink(unit, slot))
+end
+
+-- C_Container[name] when present, else the deprecated global `fallback` (a function or nil).
+local function containerApi(name, fallback)
+    local container = C_Container
+    if container and container[name] then return container[name] end
+    return fallback
+end
+
+--- How many slots bag `bag` has: C_Container.GetContainerNumSlots, else the deprecated global. 0
+--- for a missing bag, a secret answer or no API.
+--- @return number
+function Compat.BagSlotCount(bag)
+    local fn = containerApi("GetContainerNumSlots", GetContainerNumSlots)
+    if not fn then return 0 end
+    return plainNumber(fn(bag)) or 0
+end
+
+--- The link of the item in bag `bag`, slot `slot`: C_Container.GetContainerItemLink, else the
+--- deprecated global. Nil for an empty slot, a secret answer or no API.
+--- @return string|nil
+function Compat.BagItemLink(bag, slot)
+    local fn = containerApi("GetContainerItemLink", GetContainerItemLink)
+    if not fn then return nil end
+    return plainString(fn(bag, slot))
 end
 
 -- ---------------------------------------------------------------------------------------------

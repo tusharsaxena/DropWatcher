@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,gear,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -76,4 +76,24 @@ test("diagnostics: the roster section lists the stored members without reading t
     local text = report(NS)
     assertTrue(text:find("roster: 2 members", 1, true) ~= nil, text)
     assertTrue(text:find("roster: Brakk-Testrealm unit=party1 class=WARRIOR online=false spec=unknown player=false", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the gear section lists the stored slots without reading the client", function()
+    local NS, _, m = T.enableAddon()
+    NS.State.gear = nil
+    assertTrue(report(NS):find("gear: not read yet", 1, true) ~= nil)
+    local HEAD = "|cnIQ4:|Hitem:3001::::::::90:::::|h[Hood]|h|r"
+    local RING = "|cnIQ4:|Hitem:3002::::::::90:::::|h[Band]|h|r"
+    m.addItem(HEAD, { name = "Hood", quality = 4, ilvl = 610, equipLoc = "INVTYPE_HEAD", classID = 4,
+        subClassID = 1, stats = {} })
+    m.addItem(RING, { name = "Band", quality = 3, ilvl = 620, equipLoc = "INVTYPE_FINGER", classID = 4,
+        subClassID = 0, stats = {} })
+    m.inventory.player[1] = HEAD
+    m.bags[0] = { size = 1, [1] = RING }
+    NS.Gear.Refresh("test")
+    local text = report(NS)
+    assertTrue(text:find("gear: class=MAGE spec=250 dualWield=false", 1, true) ~= nil, text)
+    assertTrue(text:find("gear: HEAD ilvl=610 quality=4", 1, true) ~= nil, text)
+    assertTrue(text:find("gear: NECK empty", 1, true) ~= nil, text)
+    assertTrue(text:find("gear: FINGER1 empty owned=620", 1, true) ~= nil, text)
 end)

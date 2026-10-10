@@ -85,6 +85,30 @@ ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per l
 `TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts. The stand-down drops the
 cache and the loads; a load that answers after it is ignored.
 
+## Today: the gear snapshot
+
+```
+PLAYER_EQUIPMENT_CHANGED ─┐
+BAG_UPDATE_DELAYED ───────┼─> Gear.Schedule ─> one 0.5 s timer (later events join it)
+PLAYER_SPECIALIZATION_    │                          │
+  CHANGED ("player") ─────┤                          v
+an item load answering ───┘   Gear.Refresh ─> Gear.Read:
+                                UnitClass, Compat.PlayerSpecID ─> classFile, specID
+                                ClassData ─> dualWield, titanGrip
+                                every slot: Compat.InventoryItemLink ─> ItemFacts.Request
+                                  ─> a copy at Compat.InventoryItemLevel (else the facts' ilvl)
+                                bags 0-4: Compat.BagSlotCount / BagItemLink ─> ItemFacts.Request
+                                  ─> kept when Evaluate.Equippability says "ok"
+                                owned: each slot in id order takes the best unplaced item fitting it
+                              ─> State.gear; signature moved ─> GearChanged
+Gear.Candidate() ─> { classFile, specID, dualWield, titanGrip, gear, owned }   (Evaluate, for you)
+Gear.Qualities() ─> { [slot] = quality | false }                             (QualityGate ctx.gear)
+```
+
+A link the client has not cached is requested and its slot left out (unknown, not empty); its
+arrival arms the same timer. The first read, made lazily by a caller, announces nothing. The
+stand-down cancels the timer and drops the snapshot; the stand-up rebuilds it and announces it.
+
 ## The design's loot pipeline (spec §3)
 
 ```

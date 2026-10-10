@@ -55,7 +55,10 @@ chat message, an inspect or a trade is allowed now, and the reason, from the res
 chat lockdown and the combat edges), the roster (`Roster.lua`: the group's members by GUID with
 their Name-Realm, unit token, classFile, specID and online state, and the resolver from a name or a
 GUID to a member), the item facts (`ItemFacts.lua`: a link turned into the facts the kernel
-reads, cached by link, an uncached item loaded and retried through LibKa0s-Item's `LoadItem`), the messaging core (`Messaging.lua`, pure: a
+reads, cached by link, an uncached item loaded and retried through LibKa0s-Item's `LoadItem`), the
+gear snapshot (`Gear.lua`: each slot you wear at its current level and the best item you own per
+slot, bags included, rebuilt behind one throttle on the gear events, and the candidate table the
+verdict kernel takes for you), the messaging core (`Messaging.lua`, pure: a
 template and its tokens in, the text and the ask's next state out; it sends nothing), the window and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
@@ -82,7 +85,7 @@ named sender each (design spec §3). With LibKa0s-Bus present the table is the s
 so a mistyped key raises. Receivers take their own `NS.Bus:NewTarget()`; `NS.StandDown` /
 `NS.StandUp` take every tracked registration down and replay it.
 
-Two messages are sent today, `SITUATION_CHANGED` and `RESTRICTION_CHANGED`. Every other sender module below is **planned**: it
+Three messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED` and `GEAR_CHANGED`. Every other sender module below is **planned**: it
 does not exist until the item named in its row lands. The payloads and consumers are the design
 intent. The item that first sends a message confirms its payload here, and each item that subscribes
 adds itself as a consumer.
@@ -92,7 +95,7 @@ adds itself as a consumer.
 | `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (DW-27) | `dropId` | Window feed tabs (DW-30), Toast (DW-52), History (DW-51) |
 | `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (DW-27) | `dropId` | Window feed tabs (DW-30), detail card (DW-32), Offer panel (DW-33) |
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (DW-26) | `guid` | LootFeed (DW-27): re-evaluate that candidate's drops |
-| `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (DW-24) | none | LootFeed (DW-27): re-evaluate; QualityGate's dynamic threshold (DW-12) |
+| `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (DW-27): re-evaluate; QualityGate's dynamic threshold (DW-12) |
 | `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (DW-2A): flush the queue; Window restriction badge (DW-30) |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | LootFeed (DW-27): the situation gate; Window (DW-30): auto-open and the footer |
 | `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Messaging.lua` (DW-2A) | `dropId`, `state` | Window feed tabs (DW-30), detail card (DW-32) |
@@ -128,6 +131,9 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent`, then `DW.OnRosterEvent` (through `DW:OnSharedFeatureEvent`) | the same (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
+| `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |
+| `BAG_UPDATE_DELAYED` | `DW.OnGearEvent` | the same (a better item may have entered or left the bags) |
+| `PLAYER_SPECIALIZATION_CHANGED` | `DW.OnGearSpecEvent` | the same, for your own unit only (another member's spec change is ignored) |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -227,6 +233,16 @@ spec §4, §9).
   the next request starts afresh. The bonus-roll flag is the loot line's, so the drop record (DW-27)
   carries it, not the cached facts. Whether `GetItemUpgradeInfo` answers for another player's link
   is FEED-5; the item readers' shapes are ITEM-1.
+- The gear snapshot (`modules/Gear.lua`) reads five cases the design leaves open. "Best owned per
+  slot" is a per-slot best, not a loadout planner: the slots fill in id order, each with the
+  highest-level item that fits it and is not placed already, so a pair holds your best two and one
+  item never fills two slots, but unique-equipped limits and a two-hander's claim on both hands are
+  not weighed. A one-hander may fill the off hand only for a dual wielder, a two-hander only with
+  Titan's Grip; with the spec unknown, the class answers when every spec agrees, else neither. Only
+  the backpack and the four bags are read: not the reagent bag, the bank or the warband bank. A
+  worn item's level is its tooltip's (scaling included), else its link's. A link the client has
+  not cached leaves its slot out (unknown, not empty) until it arrives; an item given up on stays
+  out until the next gear event. Whether the tooltip level matches the character sheet is GEAR-1.
 - The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
   edge items wire the rest. Three of its
   readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the
@@ -265,7 +281,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 23 addon-specific shims (three or more) |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 36 addon-specific shims (three or more) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 
 ### Verification and record (documentation-§3)

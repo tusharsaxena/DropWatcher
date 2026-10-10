@@ -607,6 +607,51 @@ test("compat: NormalizedRealm reads the normalized realm, then the plain one str
     assertNil(Compat.NormalizedRealm())
 end)
 
+test("compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library", function()
+    local Compat, m = fresh()
+    m.specID = 72
+    assertEqual(Compat.PlayerSpecID(), 72)
+    m.GetSpecialization = function() return nil end
+    assertNil(Compat.PlayerSpecID(), "no spec chosen yet")
+    m.GetSpecialization = function() return 2 end
+    installSecrets(m)
+    m.specID = T.secret(72)
+    assertNil(Compat.PlayerSpecID(), "a secret answer is never passed on")
+    local degraded, md = fresh{ skip = T.loadAddon.libFiles }
+    md.specID = 72
+    assertNil(degraded.PlayerSpecID(), "the library's reader stubs answer nil; no rung is re-implemented")
+end)
+
+test("compat: InventoryItemLink reads the worn link, nil when empty, secret or absent", function()
+    local Compat, m = fresh()
+    m.inventory.player[1] = "|Hitem:5::|h[Helm]|h"
+    assertEqual(Compat.InventoryItemLink("player", 1), "|Hitem:5::|h[Helm]|h")
+    assertNil(Compat.InventoryItemLink("player", 2))
+    installSecrets(m)
+    m.inventory.player[1] = T.secret("x")
+    assertNil(Compat.InventoryItemLink("player", 1))
+    m.GetInventoryItemLink = nil
+    assertNil(Compat.InventoryItemLink("player", 1))
+end)
+
+test("compat: the bag readers prefer C_Container, then the globals, then answer empty", function()
+    local Compat, m = fresh()
+    m.bags[0] = { size = 2, [1] = "|Hitem:7::|h[Ring]|h" }
+    assertEqual(Compat.BagSlotCount(0), 2); assertEqual(Compat.BagSlotCount(3), 0)
+    assertEqual(Compat.BagItemLink(0, 1), "|Hitem:7::|h[Ring]|h"); assertNil(Compat.BagItemLink(0, 2))
+    m.C_Container.GetContainerNumSlots, m.C_Container.GetContainerItemLink = nil, nil
+    m.GetContainerNumSlots = function() return 4 end
+    m.GetContainerItemLink = function(bag, slot) return bag .. ":" .. slot end
+    assertEqual(Compat.BagSlotCount(1), 4, "the deprecated global")
+    assertEqual(Compat.BagItemLink(1, 3), "1:3")
+    installSecrets(m)
+    m.GetContainerNumSlots = function() return T.secret(4) end
+    m.GetContainerItemLink = function() return T.secret("x") end
+    assertEqual(Compat.BagSlotCount(1), 0); assertNil(Compat.BagItemLink(1, 3))
+    m.GetContainerNumSlots, m.GetContainerItemLink = nil, nil
+    assertEqual(Compat.BagSlotCount(1), 0); assertNil(Compat.BagItemLink(1, 3))
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
@@ -615,7 +660,8 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "GetItemUpgradeInfo", "IsItemBindToAccount", "GetItemGUID", "DropItemOnUnit", "PickupContainerItem",
     "InitiateTrade", "Pawn%u%a+", "issecretvalue", "canaccessvalue", "GetNormalizedRealmName",
     "GetRealmName", "GetItemInfo%f[^%w_]", "GetDetailedItemLevelInfo", "GetItemStats", "GetItemSpecInfo",
-    "GetItemUniqueness", "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_%u+" }
+    "GetItemUniqueness", "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_%u+", "GetSpecialization",
+    "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink", "C_Container" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

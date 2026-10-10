@@ -37,3 +37,8 @@ State.roster = nil
 -- The item facts cache (modules/ItemFacts.lua, design spec §4): { cache = { [link] = facts }, count,
 -- loads = { [link] = job } }, created on first use and dropped while stood down.
 State.itemFacts = nil
+
+-- The player's gear snapshot (modules/Gear.lua, design spec §4): { equipped, owned, classFile,
+-- specID, dualWield, titanGrip, loading, signature }, nil until the first read and again while
+-- stood down.
+State.gear = nil

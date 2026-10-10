@@ -6,12 +6,13 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Thirty-two shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `32`). The three
+**Thirty-six shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `36`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
-`docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not wired, and
-`test_surface_parity` lists them as unwired on purpose.
+`docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
+members, and `test_surface_parity` lists them as unwired on purpose: the two spec readers are
+called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 
 ## The rules every shim keeps
 
@@ -42,6 +43,10 @@ by assignment and not counted: their contract and their library-absent bodies ar
 | | `IsRestrictionStateActive(state)` | anything but `Enum.AddOnRestrictionState.Inactive` (0 without the enum) is active, so `Activating` counts; a boolean (the event's other payload shape) answers itself; a secret state is active | `false` for nil |
 | | `IsRestrictionActive(rtype)` | `C_RestrictedActions.IsAddOnRestrictionActive` → `GetAddOnRestrictionState` through `IsRestrictionStateActive` | `false` |
 | Identity | `NormalizedRealm()` | `GetNormalizedRealmName` (nil early in the login) → `GetRealmName` with spaces and hyphens dropped; a secret answer is skipped | `nil` |
+| | `PlayerSpecID()` | LibKa0s-Compat-1.0's `GetSpecialization` (the index) then `GetSpecializationInfo(index)`'s first return, each `C_SpecializationInfo` first and the global second; a secret answer is nil. With the library absent its reader stubs answer nil, so no rung is re-implemented here | `nil` |
+| Inventory | `InventoryItemLink(unit, slot)` | `GetInventoryItemLink`; a secret answer is nil | `nil` |
+| | `BagSlotCount(bag)` | `C_Container.GetContainerNumSlots` → the deprecated `GetContainerNumSlots` global | `0` |
+| | `BagItemLink(bag, slot)` | `C_Container.GetContainerItemLink` → the deprecated `GetContainerItemLink` global; a secret answer is nil | `nil` |
 | Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
 | | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
@@ -90,7 +95,8 @@ delimiter.
 
 The callers land in M2: Restrictions (DW-21) reads the restriction shims, the roster (DW-22)
 `NormalizedRealm`, ItemFacts (DW-23) reads
-the bind helpers, `GetItemUpgradeInfo` and the item readers, the loot parser (DW-25) builds its patterns with
+the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (DW-24) reads
+`PlayerSpecID`, the inventory and bag readers and `InventoryItemLevel`, the loot parser (DW-25) builds its patterns with
 `FormatToPattern`, Inspect (DW-26) reads `InventoryItemLevel`, TradeTimer (DW-28) reads
 `TradeTimeRemaining` and `GetBagItemGUID`, the trade helper (DW-29) the trade actions, the
 messaging edge (DW-2A) `ChatSender`, and the Pawn scorer (DW-50) the Pawn seam.

@@ -115,6 +115,11 @@ modules\Roster.lua
 # and NS.STAND_DOWN and its handler to NS.addon (core\DropWatcher.lua, above) at load, and reads
 # NS.Constants and NS.State at load. NS.Compat, NS.Item and NS.Debug are read at call time.
 modules\ItemFacts.lua
+# Conventional: publishes NS.Gear, the player's gear snapshot and candidate; appends its rows to
+# NS.FEATURE_EVENTS, NS.STAND_DOWN and NS.STAND_UP and its handlers to NS.addon
+# (core\DropWatcher.lua, above) at load, and reads NS.Constants, NS.ClassData and NS.State at load.
+# NS.Compat, NS.ItemFacts and NS.Evaluate (above) are read at call time.
+modules\Gear.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L and NS.addon,
 # all published above, at load.
 modules\Window.lua

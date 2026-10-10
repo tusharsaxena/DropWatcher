@@ -25,6 +25,7 @@ passed.
 | FEED-1..7 | Feed | The group drops feed (lands with DW-11, DW-25, DW-27, DW-30, DW-31) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
 | ITEM-1..2 | Item facts | The item readers' shapes and the track ids (lands with DW-23) |
+| GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
 | INSPECT-1..4 | Inspect | The inspect broker (lands with DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
 | ASK-1..8 | Ask | Asking, offering, queueing under restriction, auto-ask (lands with DW-2A, DW-33, DW-54) |
@@ -194,6 +195,25 @@ Champion, Hero, Myth) → `/dump C_Item.GetItemUpgradeInfo(link)` answers `track
 `trackStringID`. Record each pair: they fill `C.TRACK_TIER_BY_STRING_ID` so a localized client gets
 a track tier. Result:
 
+## Gear
+
+The snapshot, the owned best and the throttle are headless-tested (`test_gear`); these checks
+confirm the client's answers. Each reads the `gear` lines of `/dw diagnostics`, with `/dw debug on`
+for the `[GEAR]` change lines.
+
+**GEAR-1. Worn and owned.** With a full set on → `gear: class=<YOURCLASS> spec=<your spec id>` and
+one line per slot whose `ilvl=` matches the item level on that item's tooltip, the shirt and tabard
+slots `empty` when you wear none. Put a better item for one slot (a higher-level ring, say) in your
+bags → after the next `[GEAR]` line that slot shows `owned=<its level>`. A dual wielder with a spare
+one-hander → the off hand shows it as owned when it beats the worn one. Record any slot whose level
+differs from the tooltip. Result:
+
+**GEAR-2. The rebuild events.** Swap one item → one `[GEAR]` line about half a second later, naming
+the event that started it (`PLAYER_EQUIPMENT_CHANGED` or `BAG_UPDATE_DELAYED`); swapping several in
+a burst still writes one line. Change your
+specialization → a `[GEAR]` line with the new spec, naming `PLAYER_SPECIALIZATION_CHANGED`. Right
+after login, any slot still `loading` turns into its level without another action. Result:
+
 ## Inspect
 
 Reserved for DW-26: INSPECT-1..4, including INSPECT-4 (is the tooltip item level still needed?).
@@ -311,3 +331,4 @@ client's INSTALL and SLASH checks are sufficient. The section is re-armed by the
 | COMBAT-2 | DW-21, the restriction tracker | No client pass recorded yet |
 | ROSTER-1..2 | DW-22, the roster | No client pass recorded yet |
 | ITEM-1..2 | DW-23, the item facts | No client pass recorded yet |
+| GEAR-1..2 | DW-24, the gear snapshot | No client pass recorded yet |

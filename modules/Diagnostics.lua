@@ -96,6 +96,36 @@ local function roster(out)
     end
 end
 
+-- Inventory slot id -> its C.SLOT name, for the gear lines.
+local function slotNames()
+    local names = {}
+    for name, id in pairs(NS.Constants.SLOT) do names[id] = name end
+    return names
+end
+
+-- One worn slot as the gear line shows it: the level and quality, "empty" or "loading".
+local function wornText(e)
+    if e == false then return "empty" end
+    if e == nil then return "loading" end
+    return ("ilvl=%s quality=%s"):format(tostring(e.ilvl), tostring(e.quality))
+end
+
+-- The player's gear snapshot as last read (design spec §4, §13): stored state only, so the report
+-- never triggers the snapshot's lazy read. One line per slot, with the owned best when it is not
+-- the worn item.
+local function gear(out)
+    local s = NS.State.gear
+    if not s then return out:add(TAG, "gear: not read yet") end
+    out:add(TAG, "gear: class=%s spec=%s dualWield=%s titanGrip=%s loading=%s", s.classFile or "?",
+        s.specID or "unknown", s.dualWield, s.titanGrip, s.loading)
+    local names = slotNames()
+    for _, id in ipairs(NS.Gear.SLOTS) do
+        local worn, owned = s.equipped[id], s.owned[id]
+        local better = owned and owned ~= worn and (" owned=" .. tostring(owned.ilvl)) or ""
+        out:add(TAG, "gear: %s %s%s", names[id], wornText(worn), better)
+    end
+end
+
 local function registration(out)
     local names = NS.FeatureEventNames and NS.FeatureEventNames() or {}
     out:joined(TAG, "feature events (declared)", names)
@@ -123,6 +153,7 @@ function NS.Diagnostics.Sections()
         { "situation",    situation },
         { "restrictions", restrictions },
         { "roster",       roster },
+        { "gear",         gear },
         { "registration", registration },
         { "integrations", integrations },
     }

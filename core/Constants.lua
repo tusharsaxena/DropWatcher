@@ -180,6 +180,11 @@ C.ARMOR_TYPED_EQUIPLOC = {
 -- Slots the dynamic whole-character quality mode ignores (design spec §6.2).
 C.QUALITY_IGNORED_SLOT = { [S.SHIRT] = true, [S.TABARD] = true }
 
+-- The bags the gear snapshot reads for the best item owned per slot (design spec §4): the backpack
+-- (0) and the four bag slots. The reagent bag (5) holds no gear, and the bank is not readable away
+-- from it.
+C.BAG_IDS = { 0, 1, 2, 3, 4 }
+
 -- ---------------------------------------------------------------------------------------------
 -- Situations and difficulties (design spec §6.1)
 -- ---------------------------------------------------------------------------------------------

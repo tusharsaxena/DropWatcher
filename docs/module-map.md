@@ -10,11 +10,11 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string |
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[DW]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip |
-| 4 | `core/Compat.lua` | edge | `NS.Compat`: LibKa0s-Compat's secret guards, and the only caller of version-variant, deprecated and optional client APIs (the chat sender, the tooltip line reader and the trade-time decoder, the upgrade track, the restriction APIs, the player's normalized realm, the bind helpers, the item readers, the Pawn seam, the trade actions); see [`compat-layer.md`](compat-layer.md) |
+| 4 | `core/Compat.lua` | edge | `NS.Compat`: LibKa0s-Compat's secret guards, and the only caller of version-variant, deprecated and optional client APIs (the chat sender, the tooltip line reader and the trade-time decoder, the upgrade track, the restriction APIs, the player's normalized realm and spec, the bind helpers, the inventory and bag readers, the item readers, the Pawn seam, the trade actions); see [`compat-layer.md`](compat-layer.md) |
 | 5 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
-| 6 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry, the gold; the item, quality, slot, difficulty and situation ids, the slot plans, the trade rules |
+| 6 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry, the gold; the item, quality, slot, bag, difficulty and situation ids, the slot plans, the trade rules |
 | 7 | `core/ClassData.lua` | data | `NS.ClassData`: class armor types, weapon proficiencies, every Retail spec (Devourer included) with its primary stat and dual-wield, Titan's Grip, shield and off-hand flags, and the pure lookups over them |
-| 8 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs, the restriction tracker's hints, combat edge and last announced answers, the roster as last read, the item facts cache |
+| 8 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs, the restriction tracker's hints, combat edge and last announced answers, the roster as last read, the item facts cache, the gear snapshot |
 | 9 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
 | 10 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (rows, from the feature items) |
 | 11 | `core/ItemSetup.lua` | setup | LibKa0s-Item: `NS.Item` (link parsing and the item load, read by `modules/ItemFacts.lua`) |
@@ -34,14 +34,15 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 25 | `modules/Restrictions.lua` | edge | `NS.Restrictions`: the restriction tracker of design spec §4, `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason` from `ADDON_RESTRICTION_STATE_CHANGED`, the chat lockdown and the combat edges; sends `RestrictionChanged` |
 | 26 | `modules/Roster.lua` | edge | `NS.Roster`: the group's members of design spec §4 by GUID (Name-Realm, unit token, classFile, specID, online) re-read on `GROUP_ROSTER_UPDATE`, and `Resolve` from a GUID, a Name-Realm or a bare name, a same-name tie settled by classFile |
 | 27 | `modules/ItemFacts.lua` | edge (cached) | `NS.ItemFacts`: an item link turned into the facts of design spec §5.1 (levels, slot, class, quality, binds, the upgrade track and its tier, stats, specs, uniqueness, tier tokens, appearance), cached by link; an uncached item loaded through LibKa0s-Item's `LoadItem`, retried on its callback |
-| 28 | `modules/Window.lua` | UI | the main window's shell and its show decision |
-| 29 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 30 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 31 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 32 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 33 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 34 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 35 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 28 | `modules/Gear.lua` | edge | `NS.Gear`: your own gear snapshot of design spec §4, each worn slot at its current level and the best item you own per slot (bags included), rebuilt on `PLAYER_EQUIPMENT_CHANGED`, `BAG_UPDATE_DELAYED` and your spec change behind one throttle; the candidate table the verdict kernel takes for you and the per-slot qualities the quality gate reads; sends `GearChanged` |
+| 29 | `modules/Window.lua` | UI | the main window's shell and its show decision |
+| 30 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 31 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 32 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 33 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 34 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 35 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 36 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.
