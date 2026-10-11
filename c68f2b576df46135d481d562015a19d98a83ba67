@@ -1,0 +1,25 @@
+M7 independent review (DW-70..DW-74, 26b9079..64f7278, feat/2026-10-10-drop-watcher-v1)
+
+Reviewers (3: code, standards, read-only safety):
+- Code review: gate green (984 passed / 0 failed / 1 skipped; luacheck 0/0 in 125 files). Core design matches the sim spec: NS.Sim seam wraps every non-pure Compat member; send/inspect/trade members guarded even under Sim.Live; real payload shapes; history redirected to the session log; Start refusals correct; test mode refused during a sim; stand-down stops the sim. No critical/high defects.
+- Standards review: gate green; all files under 1000 lines (max core/Compat.lua 999). TOC order, FEATURE_EVENTS (EJ_LOOT_DATA_RECIEVED), State-only sim state, US English locale, docs (ARCHITECTURE, compat-layer, slash row, SIM debug tag, SIM smoke theme, test-cases, automated-test bundle) all comply; no taint path. Two real behavior problems from real client events arriving during a sim.
+- Safety review: gate green; seam and spec section 5 safety rules hold (guarded sender, Stop cancels asks before seam off, global history never written during a sim, timers cancelled, payload shapes correct, EJ reads pcall-protected with selection restored). No critical/high; one medium and several low.
+
+Findings fixed: 5 of 5, rejected 0, in 703c6ea (DW-70):
+- 1/4/5 (LootFeed.lua:615): real loot/trade during a sim was tagged sim and lost on stop. Fix: Sim.delivering flag + Sim.IsDelivering; LootFeed origin() helper; History.LogFor(sim); TRADE_SHOW records sim origin.
+- 3 (Sim.lua deliver): handlers now run under pcall with a SIM debug line.
+- 2 (Sim.lua Stop): CancelQueued and each cleanEngine step pcall-isolated; Stop clears Sim.delivering.
+- 4 new tests (verified failing without the fix); smoke SIM-8 added, owed. Behavior change: /dw add during a sim is real input.
+- Gate after fix: 988 passed / 0 failed / 1 skipped; luacheck 0/0 in 125 files; LootFeed.lua 996 lines.
+
+Low findings recorded, not fixed (11):
+- SimEvents: InCombatLockdown() and LOOT_ITEM* GlobalStrings read directly, against spec section 2 (reported twice).
+- SimVerbs: spec section 3 class filter cannot be set from the slash verb.
+- SimWorld: LFR/matchmade sims never pick INSTANCE_CHAT.
+- Sim.Stop leaves residue (encounter names 99001+, Asks book counts sim sends, hidden counters).
+- Compat.lua (999) and LootFeed.lua grew despite the run rule.
+- SimEvents E.Combat can flip State.combatEdge during real combat.
+- SimWorld: raid1 not aliased for UnitIsConnected/inspect/trade/inventory providers; own member recorded offline in raid/LFR sims.
+- SimPool readAll: no difficulty validity check; world-boss pseudo-instance risk.
+- SimRoster: uncached gear entries dropped with no retry.
+- Sim: ADDON_RESTRICTION_STATE_CHANGED fired with boolean payload, not Enum.AddOnRestrictionState.
