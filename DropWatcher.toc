@@ -297,6 +297,10 @@ modules\OfferPanel.lua
 # NS.WindowCells, NS.Constants, NS.L and NS.State at load. NS.History, NS.WindowGroup's item button
 # and layout, NS.WindowFilterBar and NS.WindowFooter (above) are read at call time.
 modules\WindowHistory.lua
+# Conventional: publishes NS.CompactCards, compact mode's pure card composers (each card's three
+# lines, tones and tooltips for the three tabs, and the header's short form); takes NS.WindowCells,
+# NS.MineCells and NS.L at load. NS.WindowHistory (above) is read at call time.
+modules\CompactCards.lua
 # Conventional: publishes NS.TestData, test mode's pure sample data (the drops and the History
 # groups over pool items); takes NS.Constants and NS.L at load. NS.Item is read at call time.
 modules\TestData.lua

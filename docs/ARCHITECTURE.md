@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Eighty-seven authored files load from the TOC, in the standard's folder order; every one, its kind,
+Ninety authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -101,7 +101,9 @@ its one-line responsibility and why its position is load-bearing or conventional
   run override, `window.compactInRuns`, which opens an auto-open inside a dungeon, raid, key or
   delve compact until the run ends; compact spec §1, DW-C0), one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
-  their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), the three tables'
+  their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`, and compact mode's
+  `CompactCards.lua`: each card's three lines, tones and tooltips and the header's short form, over
+  the same composers; compact spec §2-§3, DW-C1), the three tables'
   shared row height and text size (`WindowRows.lua`: `window.rowHeight` and `window.fontSize`,
   18-pixel rows and the template's own size by default, like Ka0s Loot History's table; a My drops
   row adds its countdown bar's room; feedback-2 spec §8, FB2-9), test mode

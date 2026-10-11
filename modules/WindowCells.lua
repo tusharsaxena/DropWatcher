@@ -475,9 +475,19 @@ function WC.TheirEq(drop, gear, now)
     end
     itemLines(c.tip, items, empty)
     if #items == 0 and empty == 0 then c.tip[#c.tip + 1] = L["Nothing read for this slot yet."] end
-    local insp = drop.inspect
-    c.tip[#c.tip + 1] = readOk(insp) and ageLine(insp, now) or inspectWhy(insp, who, now)
+    c.tip[#c.tip + 1] = WC.InspectLine(drop.inspect, who, now)
     return c
+end
+
+--- How fresh the looter's inspect is, in words (the Their eq tooltip's last line, and compact mode's
+--- freshness tooltip, modules/CompactCards.lua): how old a good read is, else why there is none.
+--- @param insp table|nil the drop's inspect state { status, at, reason }
+--- @param who string the looter's short name
+--- @param now number|nil GetTime()
+--- @return string
+function WC.InspectLine(insp, who, now)
+    if readOk(insp) then return ageLine(insp, now) end
+    return inspectWhy(insp, who, now)
 end
 
 -- ── Item, Ilvl, Slot, Looter ────────────────────────────────────────────────────────────────

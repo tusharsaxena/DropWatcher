@@ -59,6 +59,9 @@ every control, the build without the Widgets library, and the pure row predicate
 `test_window_compact` (compact mode's switch, DW-C0: the pure layout, run, size, bounds and corner
 reads, schema step 5, the title-bar toggle, each layout's own size and point on the one frame, the
 Layout row, and the run override taken on an auto-open and let go when the run ends),
+`test_compact_cards` (compact mode's cards, DW-C1, pure: each Group drops, My drops and History card's
+three lines in every verdict, trade, inspect, ask, countdown and outcome state, each piece's tone and
+tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,

@@ -266,6 +266,38 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
+### test_compact_cards.lua (29)
+
+- compact cards: Truncate cuts by characters, not bytes, and marks the cut with …
+- compact cards: Age is the short duration, then whole days
+- compact cards: a verdict reads glyph then change; a worded one takes ⊘
+- compact cards: the worn levels sit in parentheses, dimmed; none where the full view has a dash
+- compact cards: a cross-realm looter takes ⊕ and the realm in the tooltip
+- compact cards: inspect freshness reads its age or state, dimmed, and the tooltip says why
+- compact cards: the Group drops card reads the spec's three lines
+- compact cards: the Group drops card's pieces keep the full view's tones and tooltips
+- compact cards: every trade state keeps its short word and tone on line 2
+- compact cards: the Ask button keeps its states, and a drop you cannot ask for shows a dash
+- compact cards: your own drop on Group drops reads a dash for Them and no worn levels
+- compact cards: an unread looter says `?` for Them, and the tooltip says why
+- compact cards: a different upgrade track is in the verdict's tooltip, not on line 3
+- compact cards: a drop whose details have not loaded is never blank
+- compact cards: the My drops card reads the spec's three lines
+- compact cards: the countdown keeps its bar fraction, its warning and its estimate
+- compact cards: a drop that cannot be traded shows Not tradeable, a dash for Offer and Hide
+- compact cards: an upgrade for you hides its candidates until you choose to offer it
+- compact cards: the candidates are class-colored parts, the top three and `+n more`
+- compact cards: Announce follows the ask's lifecycle
+- compact cards: the History card reads the spec's three lines
+- compact cards: every History outcome keeps its word and tone
+- compact cards: an older kept drop reads its day, and one with no time `?`
+- compact cards: a kept drop whose looter was never read, and your own kept drop
+- compact cards: the header's short form drops `ago` and `drops`
+- compact cards: a filter that hides drops reads `1 of 2`, the hidden ones in the tooltip
+- compact cards: a long instance name is cut, the full name in the tooltip
+- compact cards: a group with no time or recorder, and the open world's area header
+- compact cards: the History header reads days once a day old, its tooltip the long form
+
 ### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
@@ -1427,6 +1459,7 @@ Total.
 | test_window.lua | 13 |
 | test_window_shell.lua | 57 |
 | test_window_compact.lua | 21 |
+| test_compact_cards.lua | 29 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1478,4 +1511,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1220** |
+| **Total** | **1249** |
