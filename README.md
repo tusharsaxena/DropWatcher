@@ -31,7 +31,10 @@ last loot line came in, where the addon thinks you are, and whether Pawn is load
 reads everyone's gear before the loot starts, which saves waiting later. When a boss fight or a key
 blocks addon chat, an orange lock in the title bar says so and counts the asks waiting to go out.
 
-**Group drops** shows every drop, grouped under the boss or key run it came from. A row gives the
+**Group drops** shows every drop, grouped under the boss or key run it came from. Each group's
+header names everyone who was in the party, you first, each in class color (a raid shows the first
+few and `+n`), and counts its drops: `2 drops · 1 shown` means the filters hide one, and hovering the
+header lists what they hid and why. History keeps the party with each group. A row gives the
 item, its item level and slot, who looted it, what you wear there (**My eq**) and what they wear
 there (**Their eq**), each as icons with item levels, then two verdicts: **Me** (is
 it an upgrade for you?) and **Them** (is it one for the looter?). ▲ means upgrade, ≈ sidegrade, ▽
