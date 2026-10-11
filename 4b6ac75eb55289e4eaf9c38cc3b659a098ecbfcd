@@ -1,0 +1,23 @@
+M8 independent review (DW-80..DW-85, c68f2b5..42401f6), feat/2026-10-10-drop-watcher-v1
+
+Reviewers (3): spec conformance, Ka0s standard compliance, correctness/WoW API.
+Gate at review: lua tests/run.lua 1031 passed / 0 failed / 1 skipped; luacheck 0/0 in 130 files; max file 999 lines (core/Compat.lua); max CCN 13.
+- Spec reviewer: most of M8 matches the spec; 1 high, 1 medium, 2 low.
+- Standard reviewer: compliance holds, no critical/high; 3 low.
+- Correctness/API reviewer: API use checks out; 4 low.
+
+Fixed (2, rejected 0):
+- HIGH, DW-80: History kept the bare encounter link/level/quality (BUG-1 data saved to global.history). Fixed in 3421562 (History takeItem adopts better link + latest level/quality; 3 tests).
+- MEDIUM, DW-83/84: test mode turned on in a dungeon left the window open after test mode off (FB-12 regression). Fixed in 2b3facd (maybeAutoOpen records test-drop auto-open as test mode's; 2 tests; STATE-4 in-dungeon step owed).
+Gate after fixes: 1036 passed / 0 failed / 1 skipped; luacheck 0/0 in 130 files.
+
+Low findings recorded, not fixed (9):
+- TestMode fill() runs once; uncached pool items lost (FB-9 / spec 4).
+- LootFeed merge with learned GUID + better link can skip DropUpdated if Refresh waits/fails (reported twice).
+- History H.ApplyCap trims only the sample log while test mode is on; H.Stats reports sample counts.
+- WindowFilterBar flat search box/checkbox is an unratified deviation (no row in ARCHITECTURE deviations table; I13 draft).
+- LootFeed ApplyBagItem per-tick garbage and duplicate C_Item calls on TradeTimerTick (reported twice).
+- SimPool abandoned builds leak in `builds` on test/sim toggles during journal load.
+- ApplyBagItem never requests the bag link load, so the BUG-1 fix may not apply on a cache miss.
+
+Smoke FEED-16/17/18 and STATE-4 owed; none marked passed.
