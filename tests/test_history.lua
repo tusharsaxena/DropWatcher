@@ -98,6 +98,21 @@ test("history: Refresh takes the latest verdicts, and an expired trade makes it 
     assertEqual(e.outcome, "expired")
 end)
 
+test("history: Refresh's second answer says whether anything it stores changed", function()
+    local Hi = H()
+    local e = Hi.Snapshot(rec(), 1)
+    local _, moved = Hi.Refresh(e, rec())
+    assertFalse(moved, "the same verdicts and trade")
+    _, moved = Hi.Refresh(e, rec({ them = { verdict = "upgrade", ilvlDelta = 4 } }))
+    assertTrue(moved, "their verdict moved")
+    _, moved = Hi.Refresh(e, rec({ them = { verdict = "upgrade", ilvlDelta = 4 },
+        trade = { state = "likely", reasonKey = "notUpgrade", basis = "rule", args = { 610, 617 } } }))
+    assertTrue(moved, "a trade arg moved")
+    _, moved = Hi.Refresh(e, rec({ them = { verdict = "upgrade", ilvlDelta = 4 },
+        trade = { state = "likely", reasonKey = "notUpgrade", basis = "rule", args = { 610, 617 } } }))
+    assertFalse(moved)
+end)
+
 test("history: declined is set by hand, and clearing it puts back what it replaced", function()
     local Hi = H()
     local e = entry({ outcome = "asked" })
@@ -175,6 +190,18 @@ test("history edge: DropUpdated refreshes the entry; an expired trade makes it `
     NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "trade")
     assertEqual(NS.History.OutcomeOf(1), "expired")
     assertEqual(NS.History.EntryOf(1).trade.state, "no")
+end)
+
+test("history edge: a DropUpdated that changes nothing kept sends no HistoryChanged", function()
+    local NS, _, seen, byId = enabled({ rec() })
+    added(NS, 1)
+    assertEqual(seen.changed, 1)
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "score")
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "inspect")
+    assertEqual(seen.changed, 1, "nothing the history keeps moved")
+    byId[1] = rec({ them = { verdict = "upgrade", ilvlDelta = 3 } })
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "inspect")
+    assertEqual(seen.changed, 2)
 end)
 
 test("history edge: a sent ask is `asked`, a sent offer or announce `offered`; other states nothing", function()
@@ -397,6 +424,21 @@ test("history tab: HistoryChanged repaints the shown window on the next frame", 
     assertEqual(#NS.WindowHistory.Drawn().rows, 2, "not yet")
     m.advance(0)
     assertEqual(#NS.WindowHistory.Drawn().rows, 3)
+end)
+
+test("history tab: a DropUpdated that changes the history still repaints the window once", function()
+    local NS, _, m = shownTab()
+    local byId = { [1] = rec() }
+    NS.LootFeed.Get = function(id) return byId[id] end
+    NS.addon:SendMessage(NS.MSG.DROP_ADDED, 1)
+    m.advance(0)
+    local passes, real = 0, NS.Window.Refresh
+    NS.Window.Refresh = function(...) passes = passes + 1; return real(...) end
+    byId[1] = rec({ them = { verdict = "upgrade", ilvlDelta = 3 } })
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "inspect")
+    m.advance(0)
+    NS.Window.Refresh = real
+    assertEqual(passes, 1, "DropUpdated and HistoryChanged share one pass")
 end)
 
 test("history tab: the pure Ago reads seconds, hours, then days", function()

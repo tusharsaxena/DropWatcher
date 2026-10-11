@@ -522,28 +522,17 @@ NS.Window.RegisterTab("history", { build = build, refresh = refresh })
 
 -- ── the bus ─────────────────────────────────────────────────────────────────────────────────
 
--- HistoryChanged repaints the shown window once on the next frame, however many arrive.
-local pending = false
-
-local function flush()
-    pending = false
-    repaint()
-end
-
+-- HistoryChanged repaints the shown window once on the next frame, however many arrive, through
+-- the window's own coalesced repaint: a DropUpdated that also changed the history costs one pass.
 local target = NS.Bus:NewTarget()
 
 local function listen()
     if not target then return end
-    target:RegisterMessage(NS.MSG.HISTORY_CHANGED, function()
-        if pending or not NS.Window.IsShown() then return end
-        pending = true
-        C_Timer.After(0, flush)
-    end)
+    target:RegisterMessage(NS.MSG.HISTORY_CHANGED, function() NS.Window.ScheduleRepaint() end)
 end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    pending = false
     if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()

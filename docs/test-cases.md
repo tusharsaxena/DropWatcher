@@ -856,18 +856,20 @@ Total.
 - transmog test mode: one placeholder's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (25)
+### test_history.lua (28)
 
 - history: Normalize gives the shape in place and keeps the cap
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
 - history: Record groups by key, newest last; the caps drop the oldest first
 - history: an automatic outcome only moves forward
 - history: Refresh takes the latest verdicts, and an expired trade makes it `expired`
+- history: Refresh's second answer says whether anything it stores changed
 - history: declined is set by hand, and clearing it puts back what it replaced
 - history: a completed trade matches the partner's drop first, then any, one entry per item
 - history: an item you gave marks your own drop traded away, never someone else's
 - history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the cap
 - history edge: DropUpdated refreshes the entry; an expired trade makes it `expired`
+- history edge: a DropUpdated that changes nothing kept sends no HistoryChanged
 - history edge: a sent ask is `asked`, a sent offer or announce `offered`; other states nothing
 - history trade: a completed trade marks the drop you got `received`, and the Ask button `Traded`
 - history trade: "Trade complete." before the close completes it too
@@ -882,6 +884,7 @@ Total.
 - history tab: a right-click marks a row declined, through the menu when the client has one
 - history tab: with nothing kept it says what it will hold, and Clear history is off
 - history tab: HistoryChanged repaints the shown window on the next frame
+- history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
 
 ### test_toast.lua (17)
@@ -1063,7 +1066,7 @@ Total.
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 22 |
 | test_transmog.lua | 13 |
-| test_history.lua | 25 |
+| test_history.lua | 28 |
 | test_toast.lua | 17 |
 | test_auto_ask.lua | 20 |
 | test_disabled.lua | 9 |
@@ -1075,4 +1078,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **881** |
+| **Total** | **884** |

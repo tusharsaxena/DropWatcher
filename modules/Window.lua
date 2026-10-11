@@ -751,6 +751,10 @@ local function scheduleRepaint()
     C_Timer.After(0, flushRepaint)
 end
 
+--- Mark the shown window for one repaint on the next frame, shared with the window's own bus
+--- messages so a burst costs one pass (the History tab's HistoryChanged comes through here).
+Window.ScheduleRepaint = scheduleRepaint
+
 -- A countdown moved (TradeTimerTick, the footer ticker): only what shows one repaints, the My drops
 -- tab while it is the active tab and the Offer panel while it is open; the Group drops table, the
 -- filter bar and the footer are left alone.

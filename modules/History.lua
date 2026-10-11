@@ -42,7 +42,8 @@ local _, NS = ...
 --
 -- PURE: Normalize, Snapshot, Refresh, Record, Trim, Advance, SetDeclined and MatchTrade take plain
 -- tables and the clock as arguments and read nothing else; test_history drives them. The edge
--- below reads the account table, the feed and the bus, and sends HistoryChanged on every change.
+-- below reads the account table, the feed and the bus, and sends HistoryChanged on every change
+-- to what it stores, never for a DropUpdated that changed nothing kept.
 
 NS.History = NS.History or {}
 local H = NS.History
@@ -125,17 +126,44 @@ function H.Advance(e, outcome)
     return true
 end
 
+-- Two snapshots (verdictSnap, tradeSnap, or nil) hold the same values: one level of fields, and
+-- the args list one level deeper.
+local function sameSnap(a, b)
+    if a == nil or b == nil then return a == b end
+    for k, v in pairs(a) do
+        if k == "args" then
+            if not sameSnap(v, b.args) then return false end
+        elseif b[k] ~= v then
+            return false
+        end
+    end
+    for k in pairs(b) do
+        if a[k] == nil then return false end
+    end
+    return true
+end
+
+local function takeSnaps(e, rec)
+    local me, them, trade = verdictSnap(rec.me), verdictSnap(rec.them), tradeSnap(rec.trade)
+    local moved = not (sameSnap(e.me, me) and sameSnap(e.them, them) and sameSnap(e.trade, trade))
+    e.me, e.them, e.trade = me, them, trade
+    if num(e.ilvl) == nil and type(rec.facts) == "table" and num(rec.facts.ilvl) then
+        e.ilvl, moved = num(rec.facts.ilvl), true
+    end
+    return moved
+end
+
 --- Take a drop record's latest verdicts and trade estimate; a trade gone `no expired` makes the
 --- outcome `expired` (H.Advance).
 --- @param e table
 --- @param rec table
 --- @return boolean outcomeChanged
+--- @return boolean changed whether anything stored changed (the snapshots or the outcome)
 function H.Refresh(e, rec)
-    e.me, e.them, e.trade = verdictSnap(rec.me), verdictSnap(rec.them), tradeSnap(rec.trade)
-    if num(e.ilvl) == nil and type(rec.facts) == "table" then e.ilvl = num(rec.facts.ilvl) end
+    local moved = takeSnaps(e, rec)
     local t = e.trade
-    if t and t.state == "no" and t.reasonKey == "expired" then return H.Advance(e, "expired") end
-    return false
+    local advanced = t ~= nil and t.state == "no" and t.reasonKey == "expired" and H.Advance(e, "expired")
+    return advanced, advanced or moved
 end
 
 --- Mark an entry declined by hand, or clear that and put back the outcome it replaced. A drop
@@ -340,13 +368,14 @@ function H.OnDropAdded(id)
     changed()
 end
 
---- DropUpdated: refresh a recorded drop's verdicts and trade.
+--- DropUpdated: refresh a recorded drop's verdicts and trade; HistoryChanged only when the stored
+--- entry changed (an inspect, a score retry or a trade sweep often changes nothing it keeps).
 --- @param id any
 function H.OnDropUpdated(id)
     local e, rec = H.EntryOf(id), NS.LootFeed.Get(id)
     if not (e and rec) then return end
-    H.Refresh(e, rec)
-    changed()
+    local _, moved = H.Refresh(e, rec)
+    if moved then changed() end
 end
 
 local SENT_OUTCOME = { ask = "asked", offer = "offered", announce = "offered" }
