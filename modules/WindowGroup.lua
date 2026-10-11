@@ -7,7 +7,8 @@ local _, NS = ...
 -- verdicts: the signed item-level change beside ▲ ≈ ▽, the Them column's tones inverted), Trade
 -- (Yes, Likely, Unknown or No) and Actions (the Ask button and the × that dismisses the row). The
 -- compact preset (`profile.window.compact`, NS.SetCompact) keeps Item and looter, Ilvl, Their eq,
--- Me and Ask; `profile.window.columns[key] = false` hides a column (Item never hides). What every
+-- Me and Ask; `profile.window.columns[key] = false` hides a column (Item never hides). A row too
+-- narrow for them all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
 -- cell says, and its reason tooltip, is modules/WindowCells.lua's (pure); this file is the frame
 -- edge that paints it. Nothing is ever blank.
 --
@@ -17,7 +18,8 @@ local _, NS = ...
 -- the column set keeps.
 --
 -- THE ORDER. Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
--- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate)
+-- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
+-- and your own drops only with `feed.showOwn` on)
 -- and were not dismissed, ordered by the tab's Sort; a group with none is left out. A group the
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles and dismissals are session-only (NS.State.windowGroup).
@@ -45,19 +47,21 @@ local WC    = NS.WindowCells
 local max = math.max
 
 -- The default columns, left to right (design spec §11.1). `flex` takes the width the others leave.
+-- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
+-- also on the row's detail card. Item and Actions never go.
 WG.COLUMNS = {
     { key = "item", label = L["Item"], compactLabel = L["Item / looter"], flex = true,
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, tip = L["The drop's item level."] },
-    { key = "slot", label = L["Slot"], width = 72, tip = L["Where the drop is worn."] },
-    { key = "looter", label = L["Looter"], width = 104, tip = L["Who looted it, in their class color."] },
-    { key = "theirEq", label = L["Their eq"], width = 84,
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
+    { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
+    { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
+    { key = "theirEq", label = L["Their eq"], width = 84, shed = 3,
       tip = L["What the looter wears in that slot (two items for rings, trinkets and weapons), and how old the read is."] },
-    { key = "me", label = L["Me"], width = 70,
+    { key = "me", label = L["Me"], width = 70, shed = 7,
       tip = L["The drop judged for you: the item-level change, with ▲ upgrade, ≈ sidegrade or ▽ downgrade."] },
-    { key = "them", label = L["Them"], width = 70,
+    { key = "them", label = L["Them"], width = 70, shed = 5,
       tip = L["The drop judged for its looter. The colors are inverted: their upgrade is amber, their downgrade green."] },
-    { key = "trade", label = L["Trade"], width = 70, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+    { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
     { key = "actions", label = L["Actions"], compactLabel = L["Ask"], width = 96,
       tip = L["Ask the looter for it, once. The × hides the row for this session."] },
 }
@@ -145,22 +149,54 @@ function WG.Columns(compact, hidden)
     return out
 end
 
---- Each shown column's x and width for a row `total` pixels wide: the fixed columns at their
---- width, the flex column (Item) with the rest, never less than K.ITEM_MIN.
---- @param cols table WG.Columns' answer
---- @param total number
---- @return table { [key] = { x, w } }
-function WG.Layout(cols, total)
+local function fixedWidth(cols)
     local fixed = 0
     for _, col in ipairs(cols) do fixed = fixed + (col.width or 0) + K.CELL_GAP end
-    local flex = max(K.ITEM_MIN, (tonumber(total) or 0) - fixed)
+    return fixed
+end
+
+-- The index of the column to let go first: the lowest `shed`, or nil when none may go.
+local function nextToShed(cols)
+    local at, best
+    for i, col in ipairs(cols) do
+        if col.shed and (not best or col.shed < best) then at, best = i, col.shed end
+    end
+    return at
+end
+
+--- The columns that fit a row `total` pixels wide: while the fixed columns and the Item column's
+--- least width (K.ITEM_MIN) pass it, the column with the lowest `shed` goes.
+--- @param cols table
+--- @param total number
+--- @return table the kept columns, left to right
+function WG.Fit(cols, total)
+    local kept = {}
+    for i, col in ipairs(cols) do kept[i] = col end
+    total = tonumber(total) or 0
+    while fixedWidth(kept) + K.ITEM_MIN > total do
+        local i = nextToShed(kept)
+        if not i then break end
+        table.remove(kept, i)
+    end
+    return kept
+end
+
+--- Each kept column's x and width for a row `total` pixels wide: the columns that do not fit are
+--- shed first (WG.Fit), then the fixed columns take their width and the flex column (Item) the
+--- rest, never less than K.ITEM_MIN. A shed column has no entry, so its cells and label hide.
+--- @param cols table WG.Columns' answer
+--- @param total number
+--- @return table { [key] = { x, w } }, table the kept columns
+function WG.Layout(cols, total)
+    local kept = WG.Fit(cols, total)
+    local flex = max(K.ITEM_MIN, (tonumber(total) or 0) - fixedWidth(kept))
     local out, x = {}, 0
-    for _, col in ipairs(cols) do
+    for _, col in ipairs(kept) do
         local w = col.flex and flex or col.width
         out[col.key] = { x = x, w = w }
         x = x + w + K.CELL_GAP
     end
-    return out
+    return out, kept
 end
 
 local function visibleDrops(group, get, ctx, dismissed)
@@ -659,14 +695,14 @@ local function refresh(pane, ctx)
     local w = profileWindow()
     local cols = WG.Columns(compact, w and w.columns)
     local width = rowWidth(pane)
-    local layout = WG.Layout(cols, width)
+    local layout, kept = WG.Layout(cols, width)
     local LF = NS.LootFeed
     local entries = WG.Entries(LF.Groups(ctx.feed), LF.Get, ctx, view())
     paintHeads(pane, cols, layout, compact)
     NS.Pool.ReleaseAll(pane.rowPool)
     NS.Pool.ReleaseAll(pane.headPool)
     drawEntries(pane, entries, layout, compact, width)
-    pane.entries, pane.columns = entries, cols
+    pane.entries, pane.columns = entries, kept
     paintEmpty(pane, entries, ctx)
 end
 

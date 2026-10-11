@@ -34,17 +34,19 @@ local max = math.max
 WM.COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
       tip = L["Your drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, tip = L["The drop's item level."] },
-    { key = "forMe", label = L["For me"], width = 64,
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 2, tip = L["The drop's item level."] },
+    { key = "forMe", label = L["For me"], width = 64, shed = 3,
       tip = L["The drop judged for you. An upgrade asks whether to keep it, and nobody is offered it by default."] },
-    { key = "trade", label = L["Trade window"], width = 124,
+    { key = "trade", label = L["Trade window"], width = 124, shed = 4,
       tip = L["The time left to trade it: exact once read from the item, estimated before. At 10 minutes it warns."] },
-    { key = "best", label = L["Best candidates"], width = 190,
+    { key = "best", label = L["Best candidates"], width = 190, shed = 1,
       tip = L["The group members it would help most, by their item-level gain."] },
     { key = "actions", label = L["Actions"], width = K.OFFER_BTN_W + K.ANNOUNCE_W + 6,
       tip = L["Offer… opens who could use it. Announce posts your template to the group."] },
 }
 
+-- A narrow row sheds Best candidates, Ilvl, For me, then Trade window (`shed`, NS.WindowGroup.Fit);
+-- the Offer panel's header and list still say what they would.
 local NO_DROPS = L["Your tradeable drops appear here, with who each would help."]
 local NO_MATCH = L["None of your drops matches the filters."]
 

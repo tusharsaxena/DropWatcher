@@ -282,7 +282,12 @@ item (two for a ring, trinket or weapon) with the read's age (`40s`) or `…`, `
 `!`, then Me and Them as a signed number beside `▲`, `≈` or `▽` (the glyphs drawn, not boxes),
 Trade as `Yes`, `Likely`, `Unknown` or `No`, and an `Ask` button or a dash with an `×`. An upgrade
 for you is green in Me; in Them the looter's upgrade is amber and their downgrade green. With View:
-Interesting only your upgrades the looter may trade are listed; View: All lists every drop. Hover
+Interesting the rows are your upgrades plus the drops their looter has no use for that read Yes or
+Likely; View: All lists every drop. Your own loot is not listed here (it is on My drops) until
+`/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").db.profile.feed = { showOwn = true }`, which
+lists it too; set it back. Resize the window to its narrowest → Slot, Looter, Their eq and Ilvl go
+in turn, the column labels with them, and the Ask button and the × stay inside the window; on My
+drops the Offer… and Announce buttons stay inside it too. Hover
 every cell, every column label and the header → each one shows a tooltip with a reason (Trade's
 reads like `Personal loot: 311 is not an upgrade over the 324 <name> wears, so they may trade
 it.`); no cell is blank. Result:

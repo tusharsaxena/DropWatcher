@@ -113,7 +113,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (35)
+### test_window_shell.lua (37)
 
 - shell: the title bar holds the logo, the gold title, the badge, Scan group, minimize and close
 - shell: the default size is board 01's 940 x 600
@@ -132,7 +132,8 @@ Total.
 - shell: a filter change redraws the active tab with the new state
 - shell: a fresh tab's state is seeded from the profile's feed settings when valid
 - shell: the Quality control shows the mode in force and sets it through the shared handler
-- shell: IsInteresting is an upgrade for you that may still be traded, or your own tradeable drop
+- shell: IsInteresting is an upgrade for you, or a drop its looter has no use for and can trade
+- shell: InGroup keeps your own drops out of Group drops unless showOwn is on
 - shell: Matches applies only the controls a tab honors
 - shell: Comparator orders newest, oldest, by item level and by your gain
 - shell: the footer composer says inspect freshness, last loot, the situation and Pawn
@@ -147,11 +148,12 @@ Total.
 - shell: a burst of bus messages repaints once, on the next frame
 - shell: a countdown tick on the Group drops tab repaints nothing of the window
 - shell: the first interesting drop in an auto-open situation opens the window, once
+- shell: your own drop opens the window and counts as new only with showOwn on
 - shell: no auto-open for a test drop, outside an auto-open situation, or with the master off
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (30)
+### test_window_group.lua (32)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -166,7 +168,9 @@ Total.
 - cells: an encounter header reads `Label · Situation · age · n drops`
 - table: the default columns, the compact preset's, and a column the profile turns off
 - table: the Item column takes the slack, never less than its minimum
+- table: a row too narrow for every column sheds Slot, Looter, Their eq and Ilvl, in that order
 - table: groups newest first, the first open and older ones collapsed, empty ones left out
+- table: built at the minimum width, the shed columns hide and Ask stays inside the row
 - table: built headless, one header and one row per drop, each column painted
 - table: the verdicts wear their tones, the looter their class color, the item its quality
 - table: every shown cell has a reason tooltip; nothing is blank
@@ -206,7 +210,7 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_window_mine.lua (30)
+### test_window_mine.lua (31)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -222,6 +226,7 @@ Total.
 - mine cells: the Offer panel docks right, else left, else floats
 - mine cells: the panel's header reads your change, the item level and the trade window
 - mine: the entries are your own drops that pass the filter and were not hidden, in the tab's order
+- mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps Actions inside it
 - mine tab: built headless, one row per drop of yours, each column painted
 - mine tab: every shown cell has a reason tooltip; nothing is blank
 - mine tab: rows come from the pool and a repaint reuses them
@@ -847,10 +852,10 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 35 |
-| test_window_group.lua | 30 |
+| test_window_shell.lua | 37 |
+| test_window_group.lua | 32 |
 | test_detail_card.lua | 19 |
-| test_window_mine.lua | 30 |
+| test_window_mine.lua | 31 |
 | test_test_mode.lua | 18 |
 | test_compat.lua | 64 |
 | test_constants.lua | 12 |
@@ -879,4 +884,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **713** |
+| **Total** | **718** |

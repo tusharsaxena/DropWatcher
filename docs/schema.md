@@ -25,6 +25,7 @@ Exactly two (savedvariables-§4):
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
 | `window.compact` | absent (off) | `NS.SetCompact` (`/dw compact` from DW-42) until the Window page's row lands (DW-40) | the Group drops table's compact preset: Item and looter, Ilvl, Their eq, Me, Ask |
 | `window.columns.<key>` | absent (shown) | none until the Window page's Columns tab lands (DW-40); read only | `false` hides that Group drops column (`ilvl`, `slot`, `looter`, `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
+| `feed.showOwn` | absent (off) | none until the Feed page's row lands (DW-40); read only | your own drops listed in Group drops too (and then they auto-open and count toward `n new`); off, they show on My drops only |
 | `feed.quality.mode` | absent (`fixed`) | the filter bar's Quality control (`NS.SetQualityMode`) until the Feed page's row lands (DW-40) | the minimum-quality mode the feed gates new drops with |
 
 `situations.<key>.track`, `.autoOpen` and `.quality` are read by `modules/Situations.lua` but have

@@ -248,18 +248,41 @@ test("shell: the Quality control shows the mode in force and sets it through the
     assertEqual(tip[1], "Quality: Match slot")
 end)
 
-test("shell: IsInteresting is an upgrade for you that may still be traded, or your own tradeable drop", function()
+test("shell: IsInteresting is an upgrade for you, or a drop its looter has no use for and can trade", function()
     local FB = T.newAddon().WindowFilterBar
+    -- Branch 1: an upgrade for you, whatever its trade estimate.
     assertTrue(FB.IsInteresting(drop()))
-    assertTrue(FB.IsInteresting(drop({ trade = { state = "unknown" } })), "unknown may still trade")
-    assertFalse(FB.IsInteresting(drop({ trade = { state = "no" } })))
-    assertFalse(FB.IsInteresting(drop({ me = { verdict = "sidegrade" } })))
-    assertFalse(FB.IsInteresting(drop({ me = false })), "no verdict for you yet")
+    assertTrue(FB.IsInteresting(drop({ trade = { state = "unknown" } })))
+    assertTrue(FB.IsInteresting(drop({ trade = { state = "no" } })), "the union: your upgrade even when it cannot be traded")
+    -- Branch 2: the looter has no use for it, and it can be traded.
+    for _, v in ipairs({ "downgrade", "cantUse", "doesntWant" }) do
+        for _, st in ipairs({ "yes", "likely" }) do
+            assertTrue(FB.IsInteresting(drop({ me = { verdict = "sidegrade" }, them = { verdict = v }, trade = { state = st } })),
+                v .. " for them, trade " .. st)
+        end
+        assertFalse(FB.IsInteresting(drop({ me = { verdict = "sidegrade" }, them = { verdict = v }, trade = { state = "unknown" } })),
+            v .. " for them, trade unknown")
+        assertFalse(FB.IsInteresting(drop({ me = { verdict = "sidegrade" }, them = { verdict = v }, trade = { state = "no" } })),
+            v .. " for them, trade no")
+    end
+    assertFalse(FB.IsInteresting(drop({ me = { verdict = "sidegrade" }, them = { verdict = "upgrade" }, trade = { state = "yes" } })),
+        "the looter's own upgrade, a sidegrade for you")
+    assertFalse(FB.IsInteresting(drop({ me = { verdict = "sidegrade" } })), "no verdict for the looter")
+    assertFalse(FB.IsInteresting(drop({ me = false })), "no verdict for anyone yet")
     assertTrue(FB.IsInteresting(drop({ isMine = true, me = false, trade = { state = "yes" } })))
     assertFalse(FB.IsInteresting(drop({ isMine = true, trade = { state = "no" } })))
     assertFalse(FB.IsInteresting(nil))
     assertTrue(FB.IsTradeableMine(drop({ isMine = true })))
     assertFalse(FB.IsTradeableMine(drop()))
+end)
+
+test("shell: InGroup keeps your own drops out of Group drops unless showOwn is on", function()
+    local FB = T.newAddon().WindowFilterBar
+    assertTrue(FB.InGroup(drop(), false))
+    assertFalse(FB.InGroup(drop({ isMine = true }), nil), "off by default")
+    assertFalse(FB.InGroup(drop({ isMine = true }), false))
+    assertTrue(FB.InGroup(drop({ isMine = true }), true))
+    assertFalse(FB.InGroup(nil, true))
 end)
 
 test("shell: Matches applies only the controls a tab honors", function()
@@ -485,6 +508,23 @@ test("shell: the first interesting drop in an auto-open situation opens the wind
     NS.HideWindow()
     announce(NS, drop({ id = 3 }))
     assertFalse(NS.IsWindowShown(), "closed again by the player: it stays closed")
+end)
+
+test("shell: your own drop opens the window and counts as new only with showOwn on", function()
+    local NS = inDungeon()
+    local mine = { isMine = true, me = false, trade = { state = "yes" } }
+    local function own(id) local d = drop(mine); d.id = id; return d end
+    announce(NS, own(1))
+    assertFalse(NS.IsWindowShown(), "showOwn off: your loot goes to My drops, it does not open the window")
+    NS.addon.db.profile.feed = { showOwn = true }
+    announce(NS, own(2))
+    assertTrue(NS.IsWindowShown(), "showOwn on: it is a Group drops row like any other")
+    NS.Window.SetMinimized(true)
+    announce(NS, own(3))
+    assertEqual(NS.Window.NewCount(), 1)
+    NS.addon.db.profile.feed.showOwn = false
+    announce(NS, own(4))
+    assertEqual(NS.Window.NewCount(), 1, "off again: not counted")
 end)
 
 test("shell: no auto-open for a test drop, outside an auto-open situation, or with the master off", function()

@@ -119,6 +119,12 @@ local function geometry()
 end
 
 local function isLocked() return setting("locked") == true end
+
+-- `feed.showOwn` (design spec §6.3): your own drops listed in Group drops too. Off by default.
+local function showOwn()
+    local feed = setting("feed")
+    return type(feed) == "table" and feed.showOwn == true
+end
 local function isMinimized() return geometry().minimized == true end
 local function feedName() return NS.State.testMode == true and "test" or "live" end
 
@@ -653,9 +659,11 @@ function Window.TabContext(tab)
     local feed = feedName()
     -- The placeholders ignore the situation, so This instance does not cut them (spec §11.6).
     local ctx = { instanceSince = feed ~= "test" and instanceSince or nil }
+    -- Group drops lists your own loot only with `feed.showOwn` on; it goes to My drops.
+    local own = tab ~= "group" or showOwn()
     return {
         tab = tab, feed = feed, filter = st, honors = honors, ctx = ctx,
-        matches = function(drop) return FB.Matches(drop, st, ctx, honors) end,
+        matches = function(drop) return FB.InGroup(drop, own) and FB.Matches(drop, st, ctx, honors) end,
         compare = FB.Comparator(st.sort),
     }
 end
@@ -939,6 +947,13 @@ function Window.Frame() return frame end
 
 -- ── the bus ─────────────────────────────────────────────────────────────────────────────────
 
+-- An interesting drop the Group drops table would list: what auto-open and `n new` count. Your own
+-- loot counts only with `feed.showOwn` on; otherwise My drops · n is where it shows.
+local function groupInteresting(rec)
+    local FB = NS.WindowFilterBar
+    return FB.InGroup(rec, showOwn()) and FB.IsInteresting(rec)
+end
+
 -- The first interesting live drop in a situation set to auto-open opens a closed window, once per
 -- situation: closing it again is the player's choice (design spec §6.1). Master `autoOpen` false
 -- turns it off everywhere.
@@ -947,7 +962,7 @@ local function maybeAutoOpen(rec)
     local Sit = NS.Situations
     local key = Sit.Current()
     if autoOpenedIn == key or not Sit.ShouldAutoOpen(key) then return end
-    if not NS.WindowFilterBar.IsInteresting(rec) then return end
+    if not groupInteresting(rec) then return end
     autoOpenedIn = key
     NS.Debug(TAG, "auto-open: the first interesting drop in %s", key)
     Window.Open()
@@ -958,7 +973,7 @@ local function onDropAdded(id)
     if not rec then return end
     maybeAutoOpen(rec)
     local inFeed = (rec.test == true) == (NS.State.testMode == true)
-    if isMinimized() and inFeed and NS.WindowFilterBar.IsInteresting(rec) then newCount = newCount + 1 end
+    if isMinimized() and inFeed and groupInteresting(rec) then newCount = newCount + 1 end
     scheduleRepaint()
 end
 

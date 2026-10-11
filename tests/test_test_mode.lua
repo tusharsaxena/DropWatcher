@@ -171,8 +171,15 @@ test("window: test mode draws every placeholder, under the boss and the key run"
     assertTrue(textOf(f.banner.text):find("Nothing is whispered") ~= nil)
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
     assertEqual(#drawn.headers, 2)
-    assertEqual(#drawn.rows, #NS.LootFeed.Drops("test"))
+    local notMine = 0
+    for _, d in ipairs(NS.LootFeed.Drops("test")) do
+        if not d.isMine then notMine = notMine + 1 end
+    end
+    assertEqual(#drawn.rows, notMine, "your own placeholders go to My drops (feed.showOwn off)")
     assertFalse(drawn.empty:IsShown())
+    NS.addon.db.profile.feed = { showOwn = true }
+    NS.Window.Refresh()
+    assertEqual(#NS.WindowGroup.Drawn().rows, #NS.LootFeed.Drops("test"), "showOwn on: every placeholder")
 end)
 
 test("window: every cell of every placeholder row says something and has a reason", function()

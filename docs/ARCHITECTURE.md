@@ -288,7 +288,11 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   difficulty), its age and its count. The **compact preset** changes the columns only (Item and
   looter, Ilvl, Their eq, Me, Ask); the tab strip, the filter bar and the window's size stay as the
   player set them. **Their eq** shows both worn items for rings, trinkets and weapons (the hands
-  the drop could go in), read from the looter's inspect entry. The **Ask button** asks at once:
+  the drop could go in), read from the looter's inspect entry. A **narrow window** sheds columns
+  rather than clip them: while the fixed columns and the Item column's 150px do not fit the row,
+  Slot goes first, then Looter, Their eq, Ilvl, Them, Trade and Me (My drops: Best candidates, Ilvl,
+  For me, Trade window); Item and Actions never go, and the detail card (or the Offer panel) still
+  says what a shed column would. The **Ask button** asks at once:
   the edit-first box is the detail card's Edit message (DW-32), and `messages.editFirst` routing the
   row's Ask button through it waits for its settings row (DW-40); the `Traded ✓` state waits for a
   trade the engine can see (none records one yet), so a received drop stays `Asked`.
@@ -303,9 +307,12 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   looter priority otherwise. **Stats** are the four secondary stats' change against the replaced
   item, the largest first; the primary stat, stamina, sockets and tertiary stats are the header's
   chips. The **Pawn** line shows the scorer's change; without one it says whether Pawn is loaded.
-- The window shell (DW-30) settles four cases the design leaves open. **Interesting** (View) is
-  someone else's drop that is an upgrade for you and whose trade estimate is anything but `no`, or
-  your own drop whose estimate is `yes` or `likely`. **This instance** (Content) is the drops since
+- The window shell (DW-30) settles four cases the design leaves open. **Interesting** (View) is the
+  brainstorm's union (03_FEATURES F1, board 01 note 5): someone else's drop that is an upgrade for
+  you, whatever its trade estimate, or one its looter has no use for (a downgrade, can't use or
+  doesn't want) whose estimate is `yes` or `likely`; and your own drop whose estimate is `yes` or
+  `likely`. **Own loot** stays out of Group drops unless `feed.showOwn` is on (design spec §6.3; it
+  goes to My drops), and then neither auto-opens the window nor counts toward `n new`. **This instance** (Content) is the drops since
   the situation last changed (`SituationChanged`), so two dungeons of the same kind in a row, with
   no other situation between them, read as one. **Auto-open** fires once per situation, on the
   first interesting live drop, only while the window is closed; master `autoOpen` (DW-40) false

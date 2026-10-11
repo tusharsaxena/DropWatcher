@@ -285,6 +285,22 @@ end
 
 local function textOf(region) return region and region:GetText() end
 
+test("mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps Actions inside it", function()
+    local NS = T.newAddon()
+    local K = NS.Constants.WINDOW
+    local cols = NS.WindowMine.COLUMNS
+    local function names(list)
+        local out = {}
+        for _, c in ipairs(list) do out[#out + 1] = c.key end
+        return table.concat(out, ",")
+    end
+    assertEqual(names(NS.WindowGroup.Fit(cols, 900)), "item,ilvl,forMe,trade,best,actions")
+    local narrow = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
+    local layout, kept = NS.WindowGroup.Layout(cols, narrow)
+    assertEqual(names(kept), "item,trade,actions")
+    assertTrue(layout.actions.x + layout.actions.w <= narrow, "Offer… and Announce stay reachable")
+end)
+
 test("mine tab: built headless, one row per drop of yours, each column painted", function()
     local NS, drawn = shownMine()
     assertEqual(#drawn.rows, 4)

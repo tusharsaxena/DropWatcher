@@ -145,20 +145,33 @@ local function tradeState(drop)
     return type(t) == "table" and t.state or nil
 end
 
-local function verdictForMe(drop)
-    local m = drop.me
-    return type(m) == "table" and m.verdict or nil
+local function verdictOf(side)
+    return type(side) == "table" and side.verdict or nil
 end
 
---- Interesting (board 01, note 5): someone else's drop that is an upgrade for you and that its
---- looter may still trade (any estimate but `no`), or your own drop you can trade now.
+-- The looter has no use for it: a downgrade, an item they cannot use, or one they would not want.
+local LOOTER_GIVES = { downgrade = true, cantUse = true, doesntWant = true }
+
+--- Interesting (brainstorm 03_FEATURES F1, board 01 note 5): a union, someone else's drop that is
+--- an upgrade for you, or one its looter has no use for (a downgrade, can't use, doesn't want) and
+--- can trade (`yes` or `likely`); or your own drop you can trade now.
 --- @param drop table
 --- @return boolean
 function FB.IsInteresting(drop)
     if type(drop) ~= "table" then return false end
     local state = tradeState(drop)
     if drop.isMine then return TRADEABLE[state] == true end
-    return verdictForMe(drop) == "upgrade" and state ~= "no"
+    if verdictOf(drop.me) == "upgrade" then return true end
+    return LOOTER_GIVES[verdictOf(drop.them)] == true and TRADEABLE[state] == true
+end
+
+--- Whether a drop belongs in the Group drops table: someone else's always, your own only with
+--- `feed.showOwn` on (design spec §6.3: off by default, own loot goes to My drops).
+--- @param drop table
+--- @param showOwn boolean|nil
+--- @return boolean
+function FB.InGroup(drop, showOwn)
+    return type(drop) == "table" and (not drop.isMine or showOwn == true)
 end
 
 --- Your own drop whose trade estimate is `yes` or `likely` (the `My drops · n` count).

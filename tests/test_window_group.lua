@@ -230,6 +230,22 @@ test("table: the Item column takes the slack, never less than its minimum", func
     assertEqual(WG.Layout(cols, 100).item.w, K.ITEM_MIN)
 end)
 
+test("table: a row too narrow for every column sheds Slot, Looter, Their eq and Ilvl, in that order", function()
+    local NS = T.newAddon()
+    local WG, K = NS.WindowGroup, NS.Constants.WINDOW
+    local cols = WG.Columns(false)
+    local wide = select(2, WG.Layout(cols, 900))
+    assertEqual(keys(wide), "item,ilvl,slot,looter,theirEq,me,them,trade,actions", "board 01's width keeps them all")
+    assertEqual(keys(WG.Fit(cols, 760)), "item,ilvl,looter,theirEq,me,them,trade,actions")
+    assertEqual(keys(WG.Fit(cols, 660)), "item,ilvl,theirEq,me,them,trade,actions")
+    local narrow = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
+    local layout, kept = WG.Layout(cols, narrow)
+    assertEqual(keys(kept), "item,me,them,trade,actions")
+    assertTrue(layout.actions.x + layout.actions.w <= narrow, "Actions inside the row at the minimum width")
+    assertTrue(layout.slot == nil, "a shed column has no place")
+    assertEqual(keys(WG.Fit(cols, 0)), "item,actions", "Item and Actions never go")
+end)
+
 local function ctxOf(pass, sort)
     return { matches = pass or function() return true end, filter = { sort = sort or "newest" },
         compare = function(a, b) return a.id > b.id end }
@@ -286,6 +302,23 @@ local function rowFor(drawn, id)
 end
 
 local function textOf(region) return region and region:GetText() end
+
+test("table: built at the minimum width, the shed columns hide and Ask stays inside the row", function()
+    local NS, _, m = T.enableAddon()
+    local K = NS.Constants.WINDOW
+    m.__now = 100
+    seed(NS, { GROUP }, { drop() })
+    NS.addon.db.profile.window = { width = K.MIN_WIDTH }
+    NS.ShowWindow()
+    local drawn = NS.WindowGroup.Drawn()
+    assertEqual(keys(drawn.columns), "item,me,them,trade,actions")
+    local c = rowFor(drawn, 1).cells
+    assertFalse(c.slot:IsShown()); assertFalse(c.looter:IsShown()); assertFalse(c.theirEq:IsShown())
+    assertFalse(drawn.pane.colHead.labels.slot:IsShown(), "and so does its column label")
+    assertTrue(c.actions:IsShown())
+    local _, _, _, x = c.actions:GetPoint(1)
+    assertTrue(x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
+end)
 
 test("table: built headless, one header and one row per drop, each column painted", function()
     local NS, drawn = shownTable()
@@ -422,6 +455,7 @@ test("table: a drop with no ask offered shows a dash with its reason", function(
     local NS, drawn = shownTable()
     local a = rowFor(drawn, 2).cells.actions
     assertTrue(a.ask:IsShown(), "a sidegrade for you may be asked for")
+    NS.addon.db.profile.feed = { showOwn = true }   -- your own drop listed in Group drops
     seed(NS, { GROUP }, { drop({ isMine = true, them = NONE }) })
     NS.Window.Refresh()
     a = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions
