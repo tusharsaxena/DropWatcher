@@ -1,0 +1,30 @@
+M3 independent review (DW-30..DW-34, f32d765..5c088fd vs 0c12c75)
+
+Reviewers (3): spec conformance, Ka0s standard compliance, correctness/WoW API.
+Gate at review: 708 passed / 0 failed / 1 skipped; luacheck 0/0 in 91 files; under 1500-line cap.
+- Spec: no crash path; 2 spec gaps (own drops shown in Group drops vs spec 6.3; narrow "Interesting" rule), 1 layout defect (clipping below ~846px vs 520 min), 3 low.
+- Standard: compliance holds; 2 medium (minimize leaves Offer panel/Edit box; ARCHITECTURE.md missing Widgets), 1 low (stand-down skips test-mode window hook).
+- Correctness: no critical/high; 4 medium (OnHide misreads UIParent hide; minimize moves title bar from CENTER/BOTTOM anchor; panels on minimized window; unbatched full repaints), several low.
+
+Fixed: 9 of 9 medium-and-above (minimize/panel finding reported twice, counted once); rejected: 0.
+Commits: a77d2c0, b4c4d00, 573d964.
+1 feed.showOwn honoured in Group drops, auto-open, n-new
+2 Interesting = union rule per 03_FEATURES / board 01 note 5
+3 WG.Fit drops columns by priority at narrow widths
+4/8 SetMinimized closes Offer panel and Edit box
+5 ARCHITECTURE.md Widgets row, fifteen libraries
+6 onHide only clears windowOpen on own hide
+7 minimize/expand re-anchor to TOPLEFT
+9 bus repaints coalesced to next frame; ticks repaint My drops/Offer only
+Remaining limit: open Offer panel still fully refreshes every second (CanGive range).
+Gate after fixes: 718 passed / 0 failed / 1 skipped; luacheck 0/0; modules/Window.lua 1023 lines (over ~1000 soft target, under 1500 cap).
+
+Low findings recorded, not fixed (7 distinct):
+- Retry inspect sends test placeholder GUIDs to the real inspect broker
+- Offer panel squashed/stale on minimized window (superseded by fix 4/8)
+- "row goes bold" at trade.warnAt is only a color change
+- StandDown skips Window.OnTestModeChanged(false); window can reopen after stand-up
+- Offer dock math ignores window scale
+- Post my tradeables enable count differs from posted set
+- Test-mode invented item links can go to real chat / tooltip
+Smoke FEED-9/FEED-10 owed, not passed. Nothing pushed.
