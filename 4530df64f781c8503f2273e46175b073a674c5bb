@@ -1,0 +1,17 @@
+M11 independent review (DW-B0..DW-B3, 8ed2e9d..4530df6, feat/2026-10-11-drop-watcher-feedback-3)
+
+Reviewers: 3 (spec conformance, Ka0s standard compliance, correctness/WoW API).
+Gate re-run by every reviewer: lua tests/run.lua 1175 passed / 0 failed / 1 skipped; luacheck 0 warnings / 0 errors over 146 files. Largest authored file core/Compat.lua 995 lines; WindowGroup.lua cut from ~952 to 784 (Entries moved to WindowCells, placement moved to new RowTooltip.lua).
+
+Summaries:
+- Spec: matches sections 0-3. DW-B0 sim report shows where each drop went ("2 drops (1 yours)"), My drops label counts all own drops, Group drops header adds "n yours on My drops", regression test covers six scenarios. DW-B1: all seven controls use the "above" placement (no filter-bar Sort exists; the footer Sort is the only one). DW-B2: every row tooltip goes through RowTooltip.lua at the row's top right outside the window, with a top-left fallback and docked Offer panel counted as window. DW-B3: FEED-26, FEED-27, SIM-12 listed as owed; docs and test bundle updated.
+- Standard: new modules in TOC with load-order comments, strings in enUS, no new events/SVs/Compat shims, no taint or combat risk, docs moved with the code, no smoke check marked passed. No MUST violations.
+- Correctness: SimReport.Collect and Place are correct on the default path; tooltip anchoring order (SetOwner ANCHOR_NONE, Show, then SetPoint) is correct; ancestor walk is capped at 32 levels.
+
+Findings: 0 critical, 0 high, 0 medium, 7 low (overlapping; about 5 distinct issues).
+Fixed: none (no fix pass ran). Rejected: none. All low findings are recorded, not fixed:
+1. SimReport.Place reports "mine" without checking feed.showOwn; with showOwn on the tab sums give 3, not 2.
+2. SimReport.Place ignores which feed the window shows (test mode) and the tabs' filters (Search, Content, View, Character).
+3. WindowCells.visibleDrops counts own drops as "yours on My drops" even when dismissed or filtered out there.
+4. Window.lua My drops tab label counts dismissed and filtered-out own drops, so tabs disagree outside the default state.
+5. Window.lua PlaceAbove never checks vertical room; near the top of the screen the clamp pushes the tooltip back over the dropdown.
