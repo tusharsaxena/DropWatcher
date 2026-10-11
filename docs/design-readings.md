@@ -364,11 +364,17 @@ brainstorm's union (03_FEATURES F1, board 01 note 5): someone else's drop that i
 you, whatever its trade estimate, or one its looter has no use for (a downgrade, can't use or
 doesn't want) whose estimate is `yes` or `likely`; and your own drop whose estimate is `yes` or
 `likely`. **Own loot** stays out of Group drops unless `feed.showOwn` is on (design spec §6.3; it
-goes to My drops), and then neither auto-opens the window nor counts toward `n new`. **This instance** (Content) is the drops since
+goes to My drops). **This instance** (Content) is the drops since
 the situation last changed (`SituationChanged`), so two dungeons of the same kind in a row, with
-no other situation between them, read as one. **Auto-open** fires once per situation, on the
-first interesting live drop, only while the window is closed; master `autoOpen` false
-turns it off. The **Quality** control writes `feed.quality.mode` through the write seam
+no other situation between them, read as one. **Auto-open** (since DW-83, feedback spec §3 FB-12,
+replacing the M3 reading of once per situation on the first interesting drop) fires on every drop
+added to the feed the window shows, your own included and whatever `feed.showOwn` says, while the
+window is hidden; the drop has already passed the feed's gates (its situation tracked, the minimum
+quality). Master `autoOpen` false, or the situation's own `autoOpen` false, turns it off. A
+minimized window stays minimized, and every such drop counts toward `n new`. The frame holds no
+protected frame, so it opens in combat too. **Usable by me** hides the drops whose verdict for you
+is can't use or doesn't want; a drop not judged yet stays. **Upgrade for me** keeps only the
+drops whose verdict for you is an upgrade. Both are the Group drops tab's alone. The **Quality** control writes `feed.quality.mode` through the write seam
 (`NS.SetQualityMode`), the row the Feed page shares.
 
 ## The Group drops table
@@ -379,10 +385,13 @@ when it is the first one shown and collapsed otherwise (board 01); the Sort orde
 inside each group. The **header** names the group, its situation (the feed's groups carry no
 difficulty), its age and its count. The **compact preset** changes the columns only (Item and
 looter, Ilvl, Their eq, Me, Ask); the tab strip, the filter bar and the window's size stay as the
-player set them. **Their eq** shows both worn items for rings, trinkets and weapons (the hands
-the drop could go in), read from the looter's inspect entry. A **narrow window** sheds columns
-rather than clip them: while the fixed columns and the Item column's 150px do not fit the row,
-Slot goes first, then Looter, Their eq, Ilvl, Them, Trade and Me (My drops: Best candidates, Ilvl,
+player set them. **My eq** and **Their eq** (DW-83, feedback spec §3) show both worn items for
+rings, trinkets and weapons (the hands the drop could go in) as icons with their item levels
+(`300/296`), My eq read from your gear snapshot, Their eq from the looter's inspect entry; a slot
+read as empty says `empty slot`, and Their eq's inspect age is in its tooltip (`Inspected 2m ago.`,
+`From the inspect cache, read 6m ago.`), the cell keeping only a no-data state's word. A **narrow
+window** sheds columns rather than clip them: while the fixed columns and the Item column's 150px
+do not fit the row, Slot goes first, then Looter, My eq, Their eq, Ilvl, Them, Trade and Me (My drops: Best candidates, Ilvl,
 For me, Trade window); Item and Actions never go, and the detail card (or the Offer panel) still
 says what a shed column would. The **Ask button** asks at once, or, with `messages.editFirst`
 on, opens the detail card's Edit message box first; it reads `Traded ✓` once the history

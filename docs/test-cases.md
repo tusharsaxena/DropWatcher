@@ -179,11 +179,11 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (43)
+### test_window_shell.lua (47)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
-- shell: the default size is board 01's 940 x 600
+- shell: the default size is 1000 x 600 (board 01's 940, widened for My eq and two filters)
 - shell: Escape and every close path close the dropdowns' shared menu too
 - shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
 - shell: minimized, the title bar wears the plus mark and the `n new` counter; expanded, neither
@@ -196,7 +196,8 @@ Total.
 - shell: My drops counts your tradeable drops in its label
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
 - shell: a tab with no body says what it will hold, never a blank pane
-- shell: the filter bar holds View, Quality, Content, Likely tradeable only and the search box
+- shell: the filter bar holds View, Quality, Content, the three checkboxes and the search box
+- shell: Usable by me and Upgrade for me follow Likely tradeable only, each in the flat skin
 - shell: the search box is Loot History's flat, square box
 - shell: the checkbox is a flat square box with the dropdowns' skin and a gold tick
 - shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
@@ -207,11 +208,12 @@ Total.
 - shell: IsInteresting is an upgrade for you, or a drop its looter has no use for and can trade
 - shell: InGroup keeps your own drops out of Group drops unless showOwn is on
 - shell: Matches applies only the controls a tab honors
+- shell: Usable by me hides what you can't use or don't want; Upgrade for me keeps your upgrades
 - shell: Comparator orders newest, oldest, by item level and by your gain
 - shell: the footer composer says inspect freshness, last loot, the situation and Pawn
 - shell: the live footer reads the client, and its Sort follows the active tab
 - shell: the footer's ticker runs only while the whole window is on screen
-- shell: minimize collapses to the title bar, keeps the size, and counts interesting drops
+- shell: minimize collapses to the title bar, keeps the size, and counts every drop added
 - shell: a double-click on the title bar expands a minimized window
 - shell: minimized, the corner grip does not resize and the stored size is kept
 - shell: a minimized window comes back minimized after a settings repaint
@@ -219,20 +221,23 @@ Total.
 - shell: a parent's hide (Alt-Z, a cinematic) is not the player closing the window
 - shell: a burst of bus messages repaints once, on the next frame
 - shell: a countdown tick on the Group drops tab repaints nothing of the window
-- shell: the first interesting drop in an auto-open situation opens the window, once
-- shell: your own drop opens the window and counts as new only with showOwn on
-- shell: no auto-open for a test drop, outside an auto-open situation, or with the master off
+- shell: every drop added in an auto-open situation opens the window, each time it is closed
+- shell: your own drop opens the window too, whatever showOwn says, and counts as new
+- shell: a minimized window the player closed opens minimized, its count rising
+- shell: a test placeholder opens the window while test mode is on, and a live drop does not then
+- shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (33)
+### test_window_group.lua (35)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
 - cells: the Them column inverts the tones: their upgrade is amber, their downgrade green
 - cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
 - cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
-- cells: Their eq shows both rings for a ring, one item for a helm, and the read's age
+- cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip
+- cells: My eq shows what you wear in the drop's slot, both rings for a ring, and empty slot
 - cells: Their eq says pending, range, combat or failed beside the icons, and a dash on your own
 - cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure
 - cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you
@@ -240,7 +245,7 @@ Total.
 - cells: an encounter header reads `Label · Situation · age · n drops`
 - table: the default columns, the compact preset's, and a column the profile turns off
 - table: the Item column takes the slack, never less than its minimum
-- table: a row too narrow for every column sheds Slot, Looter, Their eq and Ilvl, in that order
+- table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order
 - table: groups newest first, the first open and older ones collapsed, empty ones left out
 - table: built at the minimum width, the shed columns hide and Ask stays inside the row
 - table: the Window page's row height and font size lay out and size the drop rows
@@ -251,6 +256,7 @@ Total.
 - table: a header click collapses its group, and a second expands it
 - table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
 - table: Their eq shows the looter's worn item from their inspect read
+- table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
 - table: a drop with no ask offered shows a dash with its reason
 - table: the × dismisses a row for the session
@@ -1189,8 +1195,8 @@ Total.
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 43 |
-| test_window_group.lua | 33 |
+| test_window_shell.lua | 47 |
+| test_window_group.lua | 35 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
 | test_test_mode.lua | 18 |
@@ -1232,4 +1238,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1014** |
+| **Total** | **1020** |

@@ -74,7 +74,7 @@ local function minimizeTip()
     if NS.Window.IsMinimized() then
         return L["Expand"], L["Show the whole window again. Double-clicking the title bar does the same."]
     end
-    return L["Minimize"], L["Collapse the window to its title bar. Its position is kept, and a counter shows the interesting drops that arrive meanwhile."]
+    return L["Minimize"], L["Collapse the window to its title bar. Its position is kept, and a counter shows the drops that arrive meanwhile."]
 end
 
 local function scanTip()
@@ -82,7 +82,7 @@ local function scanTip()
 end
 
 local function newTip()
-    return L["%d new"]:format(NS.Window.NewCount()), L["Interesting drops that arrived since you minimized the window. Expand it to see them."]
+    return L["%d new"]:format(NS.Window.NewCount()), L["Drops that arrived since you minimized the window. Expand it to see them."]
 end
 
 --- Test mode's text color: Ka0s Loot History's bright red (feedback spec §1, FB-3).

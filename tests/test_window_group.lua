@@ -120,17 +120,48 @@ end)
 
 -- ── the Their eq column ─────────────────────────────────────────────────────────────────────
 
-test("cells: Their eq shows both rings for a ring, one item for a helm, and the read's age", function()
+-- Feedback spec §3 (FB-7): the worn item levels in the cell, the read's age in its tooltip.
+test("cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip", function()
     local W = WC()
     local gear = { [1] = { link = OLD1, ilvl = 324 }, [11] = { link = OLD1, ilvl = 300 }, [12] = { link = OLD2, ilvl = 296 } }
     local helm = W.TheirEq(drop(), gear, 100)
-    assertEqual(#helm.items, 1); assertEqual(helm.text, "40s"); assertEqual(helm.tone, "plain")
+    assertEqual(#helm.items, 1); assertEqual(helm.text, "324"); assertEqual(helm.tone, "plain")
+    assertEqual(helm.items[1].slot, 1, "each item names its slot")
     assertEqual(helm.tip[1], "Seta wears")
     assertEqual(helm.tip[2], "Old Band (324)")
+    assertEqual(helm.tip[3], "Inspected 40s ago.")
     local ring = W.TheirEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER" }, link = RING }), gear, 100)
     assertEqual(#ring.items, 2, "rings compare with both worn rings")
+    assertEqual(ring.text, "300/296")
+    local cached = W.TheirEq(drop({ inspect = { status = "cached", at = 40 } }), gear, 100)
+    assertEqual(cached.tip[#cached.tip], "From the inspect cache, read 1m ago.")
     local none = W.TheirEq(drop(), nil, 100)
-    assertEqual(#none.items, 0); assertTrue(joined(none.tip):find("Nothing read") ~= nil)
+    assertEqual(#none.items, 0); assertEqual(none.text, "–")
+    assertTrue(joined(none.tip):find("Nothing read") ~= nil)
+    local empty = W.TheirEq(drop(), { [1] = false }, 100)
+    assertEqual(empty.text, "empty slot"); assertTrue(joined(empty.tip):find("Empty slot.", 1, true) ~= nil)
+end)
+
+-- Feedback spec §3 (FB-6): what you wear, from your gear snapshot.
+test("cells: My eq shows what you wear in the drop's slot, both rings for a ring, and empty slot", function()
+    local W = WC()
+    local equipped = { [1] = { link = OLD1, ilvl = 292 }, [11] = { link = OLD1, ilvl = 300 }, [12] = false,
+        [13] = { link = OLD1, ilvl = 289 }, [14] = { link = OLD2, ilvl = 301 } }
+    local helm = W.MyEq(drop(), equipped)
+    assertEqual(helm.text, "292"); assertEqual(helm.tone, "plain"); assertEqual(#helm.items, 1)
+    assertEqual(helm.tip[1], "You wear"); assertEqual(helm.tip[2], "Old Band (292)")
+    local ring = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER" } }), equipped)
+    assertEqual(ring.text, "300", "one ring worn, the other slot empty")
+    assertTrue(joined(ring.tip):find("Empty slot.", 1, true) ~= nil)
+    local trinket = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET" } }), equipped)
+    assertEqual(trinket.text, "289/301"); assertEqual(#trinket.items, 2)
+    local cloak = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_CLOAK" } }), { [15] = false })
+    assertEqual(cloak.text, "empty slot"); assertEqual(#cloak.items, 0)
+    local loading = W.MyEq(drop(), {})
+    assertEqual(loading.text, "…"); assertTrue(joined(loading.tip):find("still loading") ~= nil)
+    local notGear = W.MyEq(drop({ facts = { ilvl = 311 } }), equipped)
+    assertEqual(notGear.text, "–"); assertTrue(#notGear.tip >= 2)
+    assertEqual(W.MyEq(drop({ isMine = true }), equipped).text, "292", "your own drop too")
 end)
 
 test("cells: Their eq says pending, range, combat or failed beside the icons, and a dash on your own", function()
@@ -213,10 +244,12 @@ end
 
 test("table: the default columns, the compact preset's, and a column the profile turns off", function()
     local WG = T.newAddon().WindowGroup
-    assertEqual(keys(WG.Columns(false)), "item,ilvl,slot,looter,theirEq,me,them,trade,actions")
+    assertEqual(keys(WG.Columns(false)), "item,ilvl,slot,looter,myEq,theirEq,me,them,trade,actions")
     assertEqual(keys(WG.Columns(true)), "item,ilvl,theirEq,me,actions")
     assertEqual(keys(WG.Columns(false, { slot = false, item = false, them = true })),
-        "item,ilvl,looter,theirEq,me,them,trade,actions", "Item never hides")
+        "item,ilvl,looter,myEq,theirEq,me,them,trade,actions", "Item never hides")
+    assertEqual(keys(WG.Columns(false, { myEq = false })),
+        "item,ilvl,slot,looter,theirEq,me,them,trade,actions", "`window.columns.myEq` turns My eq off")
 end)
 
 test("table: the Item column takes the slack, never less than its minimum", function()
@@ -230,14 +263,15 @@ test("table: the Item column takes the slack, never less than its minimum", func
     assertEqual(WG.Layout(cols, 100).item.w, K.ITEM_MIN)
 end)
 
-test("table: a row too narrow for every column sheds Slot, Looter, Their eq and Ilvl, in that order", function()
+test("table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order", function()
     local NS = T.newAddon()
     local WG, K = NS.WindowGroup, NS.Constants.WINDOW
     local cols = WG.Columns(false)
     local wide = select(2, WG.Layout(cols, 900))
-    assertEqual(keys(wide), "item,ilvl,slot,looter,theirEq,me,them,trade,actions", "board 01's width keeps them all")
-    assertEqual(keys(WG.Fit(cols, 760)), "item,ilvl,looter,theirEq,me,them,trade,actions")
-    assertEqual(keys(WG.Fit(cols, 660)), "item,ilvl,theirEq,me,them,trade,actions")
+    assertEqual(keys(wide), "item,ilvl,slot,looter,myEq,theirEq,me,them,trade,actions", "900 keeps them all")
+    assertEqual(keys(WG.Fit(cols, 850)), "item,ilvl,looter,myEq,theirEq,me,them,trade,actions")
+    assertEqual(keys(WG.Fit(cols, 750)), "item,ilvl,myEq,theirEq,me,them,trade,actions")
+    assertEqual(keys(WG.Fit(cols, 650)), "item,ilvl,theirEq,me,them,trade,actions", "My eq goes before Their eq")
     local narrow = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
     local layout, kept = WG.Layout(cols, narrow)
     assertEqual(keys(kept), "item,me,them,trade,actions")
@@ -452,7 +486,27 @@ test("table: Their eq shows the looter's worn item from their inspect read", fun
     local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.theirEq
     assertEqual(eq.icons[1].link, OLD1); assertTrue(eq.icons[1]:IsShown())
     assertFalse(eq.icons[2]:IsShown(), "a helm: one item")
-    assertEqual(textOf(eq.text), "40s")
+    assertEqual(textOf(eq.text), "324", "the worn item's level; its age is in the tooltip")
+    assertEqual(NS.Window.TooltipOf(eq)[3], "Inspected 40s ago.")
+end)
+
+test("table: My eq shows your worn item from the gear snapshot, its icon showing your own slot", function()
+    local NS, _, m = T.enableAddon()
+    m.__now = 100
+    seed(NS, { GROUP }, { drop() })
+    NS.Gear.Snapshot = function() return { equipped = { [1] = { link = OLD2, ilvl = 296 } } } end
+    NS.ShowWindow()
+    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.myEq
+    assertTrue(eq:IsShown())
+    assertEqual(eq.icons[1].link, OLD2); assertTrue(eq.icons[1]:IsShown())
+    assertEqual(eq.icons[1].worn.unit, "player"); assertEqual(eq.icons[1].worn.slot, 1)
+    assertFalse(eq.icons[2]:IsShown(), "a helm: one item")
+    assertEqual(textOf(eq.text), "296")
+    assertEqual(textOf(NS.WindowGroup.Drawn().pane.colHead.labels.myEq.text), "My eq")
+    NS.Gear.Snapshot = function() return { equipped = { [1] = { link = OLD1, ilvl = 300 } } } end
+    NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
+    m.advance(0)
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.myEq.text), "300", "a new snapshot repaints it")
 end)
 
 test("table: the Ask button asks through the shared handler, and AskStateChanged repaints it", function()
@@ -510,7 +564,7 @@ test("table: the compact preset keeps Item and looter, Ilvl, Their eq, Me and As
     assertEqual(textOf(drawn.pane.colHead.labels.actions.text), "Ask")
     assertEqual(NS.Window.TooltipOf(c.item)[1], "Crown of Roaring Storms")
     NS.ToggleCompact()
-    assertEqual(#NS.WindowGroup.Drawn().columns, 9)
+    assertEqual(#NS.WindowGroup.Drawn().columns, 10)
 end)
 
 test("table: a column the profile turns off is not drawn", function()

@@ -48,12 +48,15 @@ frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibility
 RestrictionChanged(reason) ─> the badge (`Encounter · n queued`, hidden while reason is nil)
 AskStateChanged ───────────> the badge's queued count (NS.Asks.Queued, read); shown: the active
                              tab's body (each row's Ask button)
-SituationChanged ──────────> auto-open re-armed; "This instance" starts now; footer, Quality label
-DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read)
-                               ├─> the first interesting live drop in an auto-open situation opens it
-                               ├─> minimized: `n new` counts it when it is interesting
+SituationChanged ──────────> "This instance" starts now; footer, Quality label
+DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read); a drop of the feed shown (live, or test
+                             mode's while it is on):
+                               ├─> hidden, in an auto-open situation: opens it (every drop, your
+                               │   own included; no latch; DW-83, FB-12)
+                               ├─> minimized: stays minimized, `n new` counts it
                                └─> shown: tabs (`My drops · n`), filter bar, footer, active body
 DropUpdated ───────────────> shown: the same repaint
+GearChanged ───────────────> shown: the same repaint (the My eq column; DW-83)
 InspectDone ───────────────> shown: the footer's inspect freshness
 TradeTimerTick ────────────> shown and expanded: the My drops tab while it is active, the Offer
                              panel while it is open; nothing else
@@ -84,8 +87,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   ├─> WindowGroup.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
   │                       NS.State.windowGroup)                              first, filtered, sorted)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
-  └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / TheirEq / Me / Them / Trade / Ask
-                  reads: NS.TestMode.InspectOf(drop).gear (Their eq: NS.Inspect.Get(looter guid),
+  └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / MyEq / TheirEq / Me / Them / Trade / Ask
+                  reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's
+                  own tooltip), NS.TestMode.InspectOf(drop).gear (Their eq: NS.Inspect.Get(looter guid),
                   or a placeholder's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
 

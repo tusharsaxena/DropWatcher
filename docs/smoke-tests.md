@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..17 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81) and the filter bar beside it (FEED-17, DW-82) |
+| FEED-1..18 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -171,8 +171,8 @@ Click Preview with test data → test mode turns on, bright-red `TEST MODE` text
 amber banner (`Nothing is whispered. Combat ends it.`) above the table, both with the same tooltip;
 View reads All. Two groups show, `Placeholder boss` open and `Placeholder key run` collapsed; expand
 it. Across the rows: Me shows ▲ ≈ ▽, Can't use, Not wanted and `?`; Them shows ▲ ≈ ▽, Can't use and
-`?`; Trade shows Yes, Likely, Unknown and No; Their eq shows `40s`, `6m`, `…`, `range`, `combat`, `!`
-and `–`; Actions shows Ask, Queued, Asked, Retry and a dash. Hover a dozen cells → each has a reason,
+`?`; Trade shows Yes, Likely, Unknown and No; Their eq shows worn item levels (`324`, `297`), `…`,
+`range`, `combat`, `!` and `–`, the read's age on hover; Actions shows Ask, Queued, Asked, Retry and a dash. Hover a dozen cells → each has a reason,
 none is blank, and the text fits its column at the default size and at the minimum size. Expand the
 Placeholder Crown row → the detail card names the looter's spec and `inspected 40s ago`. Click Ask on
 a ready row → chat prints `Test mode, not sent: …` and the button reads Asked; nothing is whispered.
@@ -263,7 +263,7 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), and FEED-17 the filter bar beside Loot History's (DW-82). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), and FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
@@ -331,15 +331,15 @@ off-hand item as `Can't use`. Before the inspect, the same Intellect weapon read
 not known and Intellect suits only one Demon Hunter spec). If the item's own spec list disagrees,
 the item wins: record the item and both verdicts. Result:
 
-**FEED-8. The window's shell.** `/dw show` on a clean `/reload` → a window about 940 × 600 with the
+**FEED-8. The window's shell.** `/dw show` on a clean `/reload` → a window about 1000 × 600 with the
 Ka0s edge (a hard black line with a gray line inside it), the gold `Ka0s Drop Watcher` title centered
 on the title bar (no logo), a `Scan group` button with a people mark, a minimize mark and the close mark; the `Group
 drops` tab gold with a gold underline, `My drops` and `History` gray; the filter bar reads `View:
-Interesting`, `Quality: Rare+`, `Content: This instance`, an unticked `Likely tradeable only` and
-the `Filter looter or item…` box; the footer reads `Inspect: no group`, `No loot seen yet` (or
+Interesting`, `Quality: Rare+`, `Content: This instance`, unticked `Likely tradeable only`, `Usable
+by me` and `Upgrade for me`, and the `Filter looter or item…` box; the footer reads `Inspect: no group`, `No loot seen yet` (or
 `Last loot …`), `Not tracking in Solo · change in settings`, `Pawn: on` or `off`, and `Sort:
 Newest` beside the corner grip. Hover each control → every one shows a tooltip with a reason.
-Click `My drops` → View, Quality and Likely tradeable only gray out (their tooltips say the tab
+Click `My drops` → View, Quality and the three checkboxes gray out (their tooltips say the tab
 does not use them); set Sort to Oldest there, go back to Group drops → Sort reads Newest again.
 Open each dropdown and press Escape → the window and the open menu both close. Drag by the title
 bar and resize from the corner, `/reload` → the same place and size. In a party, `Scan group` →
@@ -352,25 +352,24 @@ Drag the window to the middle of the screen and minimize it again → the title 
 where it was, and the expand grows the window downward from it. Press Alt-Z twice → the window
 comes back with the UI; enter and leave combat → it stays open. On My drops open `Offer…`; on Group
 drops expand a row and click `Edit message`; then minimize → both close with the body. In a
-Heroic dungeon with the window minimized, let a member loot an upgrade for you → a `1 new` chip
-appears beside the title; a double-click on the title bar expands it and the chip goes. Then close
-the window, leave and enter another dungeon (or zone out and back), and let the first upgrade for
-you drop → the window opens by itself once; close it and the next upgrade leaves it closed. In the
-open world solo nothing opens it. Result:
+Heroic dungeon with the window minimized, let a member loot an item → a `1 new` chip
+appears beside the title and the window stays minimized; a double-click on the title bar expands it
+and the chip goes. Superseded in part by FEED-18 (DW-83): every drop now opens it, not only the
+first upgrade. In the open world solo nothing opens it. Result:
 
 **FEED-10. The Group drops table.** In a Heroic dungeon with the window open, let the group loot a
-boss → under the filter bar a row of gray column labels (`Item`, `Ilvl`, `Slot`, `Looter`, `Their
-eq`, `Me`, `Them`, `Trade`, `Actions`), then a gold header `<boss> · Dungeon · <age> ago · <n>
+boss → under the filter bar a row of gray column labels (`Item`, `Ilvl`, `Slot`, `Looter`, `My eq`,
+`Their eq`, `Me`, `Them`, `Trade`, `Actions`), then a gold header `<boss> · Dungeon · <age> ago · <n>
 drops` with a down chevron, then one row per drop: the item's own icon and its name in its quality
-color, its item level, its slot, the looter's short name in their class color, the looter's worn
-item (two for a ring, trinket or weapon) with the read's age (`40s`) or `…`, `range`, `combat`,
-`!`, then Me and Them as a signed number beside `▲`, `≈` or `▽` (the glyphs drawn, not boxes),
+color, its item level, its slot, the looter's short name in their class color, your worn item and
+the looter's (two for a ring, trinket or weapon) as icons with item levels, or `…`, `range`,
+`combat`, `!`, then Me and Them as a signed number beside `▲`, `≈` or `▽` (the glyphs drawn, not boxes),
 Trade as `Yes`, `Likely`, `Unknown` or `No`, and an `Ask` button or a dash with an `×`. An upgrade
 for you is green in Me; in Them the looter's upgrade is amber and their downgrade green. With View:
 Interesting the rows are your upgrades plus the drops their looter has no use for that read Yes or
 Likely; View: All lists every drop. Your own loot is not listed here (it is on My drops) until
 `/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").db.profile.feed = { showOwn = true }`, which
-lists it too; set it back. Resize the window to its narrowest → Slot, Looter, Their eq and Ilvl go
+lists it too; set it back. Resize the window to its narrowest → Slot, Looter, My eq, Their eq and Ilvl go
 in turn, the column labels with them, and the Ask button and the × stay inside the window; on My
 drops the Offer… and Announce buttons stay inside it too. Hover
 every cell, every column label and the header → each one shows a tooltip with a reason (Trade's
@@ -448,6 +447,26 @@ the same skin (no rounded Blizzard checkbox), with a gold tick when on; hovering
 gold, and clicking its label toggles it too. The View, Quality and Content dropdowns match Loot
 History's (same flat box, chevron, font and height), 8px apart. Switch to My drops → the controls it
 does not use gray out the same way. Result:
+
+**FEED-18. My eq, Their eq, the two new filters and auto-open on every drop (DW-83).** In a Heroic
+dungeon with the window open, let the group loot a boss → the `My eq` column sits before `Their
+eq`; each row shows the icon of what you wear in the drop's slot (two icons for a ring, trinket or
+one-hand weapon) with its item level (`300/296` for two), and `empty slot` where you wear nothing.
+Hover a My eq icon → the game's own tooltip for your equipped item (its enchant and gems). Swap a
+piece of gear → My eq follows within a second. Their eq shows the looter's worn icon(s) and item
+level(s); hover the cell → its tooltip names each item and says `Inspected 2m ago.` (or `From the
+inspect cache, read …`); an uninspected looter still shows `…`, `range` or `–`. Settings › Window ›
+Columns → untick My eq → the column goes. Narrow the window → My eq goes before Their eq. Tick
+`Usable by me` → the rows reading Can't use or Not wanted in Me go; tick `Upgrade for me` → only
+your ▲ rows stay; untick both. Switch to My drops and History → both checkboxes gray out, each
+tooltip saying the tab does not use the filter. Settings › Feed › Filters → tick Usable by me,
+`/reload` → a fresh Group drops tab starts with it ticked; untick it. Close the window, then let any
+member loot an item the feed shows → the window opens by itself; close it again and the next drop
+opens it again; loot an item yourself → it opens too. Minimize it, let another drop come → it stays
+minimized and its `n new` count rises. Untick General › When to show › Dungeon › Auto-open → drops
+no longer open it; tick it back. Enter combat with the window closed and let an item drop → it opens
+with no Lua error and no "Interface action blocked" message. `/dw sim start key` with the window
+closed → the simulator's first drop opens it. Result:
 
 ## Roster
 
@@ -1026,6 +1045,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | FEED-13..15 | DW-32, the detail card | No client pass recorded yet |
 | FEED-16 | DW-81, the header matched to Loot History | No client pass recorded yet |
 | FEED-17 | DW-82, the filter bar matched to Loot History | No client pass recorded yet |
+| FEED-18 | DW-83, My eq, Their eq, the two new filters, auto-open on every drop | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |
 | PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |

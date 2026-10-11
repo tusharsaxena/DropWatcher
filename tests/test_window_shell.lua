@@ -88,9 +88,9 @@ test("shell: TEST MODE is bright-red text beside the title, SIMULATION the same 
     assertEqual(f.newChip.__points[1][2], f.simText, "the `n new` counter follows the mode's words")
 end)
 
-test("shell: the default size is board 01's 940 x 600", function()
+test("shell: the default size is 1000 x 600 (board 01's 940, widened for My eq and two filters)", function()
     local _, f = shown()
-    assertEqual(f:GetWidth(), 940)
+    assertEqual(f:GetWidth(), 1000)
     assertEqual(f:GetHeight(), 600)
 end)
 
@@ -248,7 +248,7 @@ end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
 
-test("shell: the filter bar holds View, Quality, Content, Likely tradeable only and the search box", function()
+test("shell: the filter bar holds View, Quality, Content, the three checkboxes and the search box", function()
     local NS = shown()
     local c = NS.WindowFilterBar.Controls()
     assertEqual(textOf(c.view.text), "View: Interesting")
@@ -256,7 +256,38 @@ test("shell: the filter bar holds View, Quality, Content, Likely tradeable only 
     assertEqual(textOf(c.content.text), "Content: This instance")
     assertEqual(textOf(c.likelyOnly.label), "Likely tradeable only")
     assertFalse(c.likelyOnly:GetChecked())
+    assertEqual(textOf(c.usableOnly.label), "Usable by me")
+    assertEqual(textOf(c.upgradeOnly.label), "Upgrade for me")
+    assertFalse(c.usableOnly:GetChecked()); assertFalse(c.upgradeOnly:GetChecked())
     assertEqual(textOf(c.search.hint), "Filter looter or item…")
+    assertTrue(c.search:IsShown(), "the default width leaves room for the search box")
+end)
+
+-- Feedback spec §3 (FB-8): the two checkboxes after Likely tradeable only, in the same skin.
+test("shell: Usable by me and Upgrade for me follow Likely tradeable only, each in the flat skin", function()
+    local NS = shown()
+    local c = NS.WindowFilterBar.Controls()
+    local _, rel, _, x = c.usableOnly:GetPoint(1)
+    assertTrue(rel == c.likelyOnly.label, "Usable by me after Likely tradeable only's label")
+    assertEqual(x, 8)
+    _, rel = c.upgradeOnly:GetPoint(1)
+    assertTrue(rel == c.usableOnly.label, "Upgrade for me after Usable by me")
+    for _, key in ipairs({ "usableOnly", "upgradeOnly" }) do
+        assertEqual(c[key].__backdrop.edgeSize, 1, key)
+        c[key]:SetChecked(true)
+        c[key]:__fire("OnClick")
+        assertTrue(NS.WindowFilterBar.State("group")[key], key .. ": a click sets the tab's state")
+        assertTrue(#NS.Window.TooltipOf(c[key]) >= 2, key .. ": a tooltip with a reason")
+    end
+    NS.Window.SelectTab("mine")
+    assertFalse(c.usableOnly:IsEnabled(), "My drops does not use it: grayed")
+    assertFalse(c.upgradeOnly:IsEnabled())
+    assertEqual(NS.Window.TooltipOf(c.upgradeOnly)[2], "This tab does not use this filter.")
+    assertFalse(c.upgradeOnly:GetChecked(), "My drops' own state")
+    NS.Window.SelectTab("history")
+    assertFalse(c.usableOnly:IsEnabled(), "nor does History")
+    NS.Window.SelectTab("group")
+    assertTrue(c.usableOnly:IsEnabled() and c.usableOnly:GetChecked(), "the Group drops state comes back")
 end)
 
 -- Ka0s Loot History's filter bar look (ui spec §2, FB-5): ../LootHistory/modules/BrowserFilterBar.lua.
@@ -356,12 +387,15 @@ end)
 test("shell: a fresh tab's state is seeded from the profile's feed settings when valid", function()
     local NS = T.enableAddon()
     NS.addon.db.profile.feed = { view = "all", content = "nonsense", sort = "ilvl" }
+    NS.addon.db.profile.feed.usableOnly, NS.addon.db.profile.feed.upgradeOnly = true, "yes"
     NS.addon.db.profile.trade = { likelyOnly = true }
     local st = NS.WindowFilterBar.State("group")
     assertEqual(st.view, "all")
     assertEqual(st.content, "instance", "an invalid stored value falls back")
     assertEqual(st.sort, "ilvl")
     assertTrue(st.likelyOnly)
+    assertTrue(st.usableOnly)
+    assertFalse(st.upgradeOnly, "an invalid stored value falls back to off")
 end)
 
 test("shell: the Quality control shows the mode in force and sets it through the shared handler", function()
@@ -435,6 +469,29 @@ test("shell: Matches applies only the controls a tab honors", function()
     assertFalse(FB.Matches(nil, st))
 end)
 
+-- Feedback spec §3 (FB-8): Usable by me hides can't use and doesn't want; Upgrade for me keeps
+-- only your upgrades. Both are the Group drops tab's alone.
+test("shell: Usable by me hides what you can't use or don't want; Upgrade for me keeps your upgrades", function()
+    local FB = T.newAddon().WindowFilterBar
+    local st = { view = "all", content = "all", search = "", sort = "newest", usableOnly = true }
+    local function v(verdict) return drop({ me = verdict and { verdict = verdict } or false }) end
+    for _, verdict in ipairs({ "upgrade", "sidegrade", "downgrade", "unknown" }) do
+        assertTrue(FB.Matches(v(verdict), st, nil, FB.HONORS.group), "usable: " .. verdict)
+    end
+    assertTrue(FB.Matches(v(nil), st, nil, FB.HONORS.group), "not judged yet: kept")
+    assertFalse(FB.Matches(v("cantUse"), st, nil, FB.HONORS.group))
+    assertFalse(FB.Matches(v("doesntWant"), st, nil, FB.HONORS.group), "your own preferences")
+    assertTrue(FB.Matches(v("cantUse"), st, nil, FB.HONORS.mine), "My drops does not use it")
+    st.usableOnly, st.upgradeOnly = false, true
+    assertTrue(FB.Matches(v("upgrade"), st, nil, FB.HONORS.group))
+    for _, verdict in ipairs({ "sidegrade", "downgrade", "cantUse", "doesntWant", "unknown" }) do
+        assertFalse(FB.Matches(v(verdict), st, nil, FB.HONORS.group), "upgrade only: " .. verdict)
+    end
+    assertFalse(FB.Matches(v(nil), st, nil, FB.HONORS.group), "not judged yet: not an upgrade")
+    assertTrue(FB.Matches(v("downgrade"), st, nil, FB.HONORS.history), "History does not use it")
+    assertFalse(FB.Set("group", "upgradeOnly", "yes"), "a checkbox takes a boolean only")
+end)
+
 test("shell: Comparator orders newest, oldest, by item level and by your gain", function()
     local FB = T.newAddon().WindowFilterBar
     local a = drop({ id = 1, at = 10, facts = { ilvl = 300 }, me = { ilvlDelta = 4 } })
@@ -504,22 +561,24 @@ end)
 
 -- ── minimize ────────────────────────────────────────────────────────────────────────────────
 
-test("shell: minimize collapses to the title bar, keeps the size, and counts interesting drops", function()
+test("shell: minimize collapses to the title bar, keeps the size, and counts every drop added", function()
     local NS, f, m = shown()
     f.minimizeButton:__fire("OnClick")
     assertTrue(NS.Window.IsMinimized())
     assertTrue(NS.addon.db.profile.window.minimized, "kept in the profile")
     assertFalse(f.body:IsShown())
     assertEqual(f:GetHeight(), 32)
-    assertEqual(f:GetWidth(), 940)
+    assertEqual(f:GetWidth(), 1000)
     assertEqual(f.minimizeButton.mark, "add")
     assertFalse(f.newChip:IsShown(), "nothing new yet")
     announce(NS, drop({ id = 7 }))
     announce(NS, drop({ id = 8, me = { verdict = "downgrade" } }))
-    assertEqual(NS.Window.NewCount(), 1, "only the interesting one")
+    assertEqual(NS.Window.NewCount(), 2, "every drop added, not only the interesting ones (FB-12)")
+    announce(NS, drop({ id = 9, test = true }))
+    assertEqual(NS.Window.NewCount(), 2, "a test placeholder is not in the live feed shown")
     m.advance(0)
     assertTrue(f.newChip:IsShown())
-    assertEqual(textOf(f.newChip.text), "1 new")
+    assertEqual(textOf(f.newChip.text), "2 new")
     f.minimizeButton:__fire("OnClick")
     assertTrue(f.body:IsShown())
     assertEqual(f:GetHeight(), 600)
@@ -558,16 +617,16 @@ end)
 test("shell: minimize and expand keep the title bar in place, whatever point it was saved at", function()
     local NS, f = shown()
     assertEqual(f:GetPoint(1), "CENTER", "the default point")
-    -- Where the client draws it: 940 x 600 centered on a 1920 x 1080 screen.
-    f.GetLeft = function() return 490 end
+    -- Where the client draws it: 1000 x 600 centered on a 1920 x 1080 screen.
+    f.GetLeft = function() return 460 end
     f.GetTop = function() return 840 end
     NS.Window.SetMinimized(true)
     local point, _, relPoint, x, y = f:GetPoint(1)
-    assertEqual(table.concat({ point, relPoint, x, y }, ","), "TOPLEFT,BOTTOMLEFT,490,840")
-    assertEqual(table.concat(NS.addon.db.profile.window.point, ","), "TOPLEFT,BOTTOMLEFT,490,840", "and kept")
+    assertEqual(table.concat({ point, relPoint, x, y }, ","), "TOPLEFT,BOTTOMLEFT,460,840")
+    assertEqual(table.concat(NS.addon.db.profile.window.point, ","), "TOPLEFT,BOTTOMLEFT,460,840", "and kept")
     assertEqual(f:GetHeight(), 32)
     NS.Window.SetMinimized(false)
-    assertEqual(table.concat({ f:GetPoint(1) }, ",", 3, 5), "BOTTOMLEFT,490,840", "the expand grows downward")
+    assertEqual(table.concat({ f:GetPoint(1) }, ",", 3, 5), "BOTTOMLEFT,460,840", "the expand grows downward")
     assertEqual(f:GetHeight(), 600)
 end)
 
@@ -627,35 +686,51 @@ local function inDungeon()
     return NS, m
 end
 
-test("shell: the first interesting drop in an auto-open situation opens the window, once", function()
+-- Feedback spec §3 (FB-12): every drop added to the feed opens a hidden window, with no latch.
+test("shell: every drop added in an auto-open situation opens the window, each time it is closed", function()
     local NS = inDungeon()
-    announce(NS, drop({ id = 1, me = { verdict = "downgrade" } }))
-    assertFalse(NS.IsWindowShown(), "not interesting: stays closed")
+    announce(NS, drop({ id = 1, me = { verdict = "downgrade" }, trade = { state = "no" } }))
+    assertTrue(NS.IsWindowShown(), "not interesting, still opens: it passed the feed's gates")
+    NS.HideWindow()
     announce(NS, drop({ id = 2 }))
-    assertTrue(NS.IsWindowShown())
+    assertTrue(NS.IsWindowShown(), "closed by the player: the next drop opens it again")
     NS.HideWindow()
     announce(NS, drop({ id = 3 }))
-    assertFalse(NS.IsWindowShown(), "closed again by the player: it stays closed")
+    assertTrue(NS.IsWindowShown(), "and again: no once-per-situation latch")
 end)
 
-test("shell: your own drop opens the window and counts as new only with showOwn on", function()
+test("shell: your own drop opens the window too, whatever showOwn says, and counts as new", function()
     local NS = inDungeon()
     local mine = { isMine = true, me = false, trade = { state = "yes" } }
     local function own(id) local d = drop(mine); d.id = id; return d end
     announce(NS, own(1))
-    assertFalse(NS.IsWindowShown(), "showOwn off: your loot goes to My drops, it does not open the window")
-    NS.addon.db.profile.feed = { showOwn = true }
-    announce(NS, own(2))
-    assertTrue(NS.IsWindowShown(), "showOwn on: it is a Group drops row like any other")
+    assertTrue(NS.IsWindowShown(), "showOwn off: your own drop still opens the window")
     NS.Window.SetMinimized(true)
-    announce(NS, own(3))
+    announce(NS, own(2))
     assertEqual(NS.Window.NewCount(), 1)
-    NS.addon.db.profile.feed.showOwn = false
-    announce(NS, own(4))
-    assertEqual(NS.Window.NewCount(), 1, "off again: not counted")
+    assertTrue(NS.Window.IsMinimized(), "a minimized window stays minimized")
 end)
 
-test("shell: no auto-open for a test drop, outside an auto-open situation, or with the master off", function()
+test("shell: a minimized window the player closed opens minimized, its count rising", function()
+    local NS = inDungeon()
+    NS.ShowWindow()
+    NS.Window.SetMinimized(true)
+    NS.HideWindow()
+    announce(NS, drop({ id = 1 }))
+    assertTrue(NS.IsWindowShown()); assertTrue(NS.Window.IsMinimized())
+    assertEqual(NS.Window.NewCount(), 1)
+end)
+
+test("shell: a test placeholder opens the window while test mode is on, and a live drop does not then", function()
+    local NS = inDungeon()
+    NS.State.testMode = true
+    announce(NS, drop({ id = 1 }))
+    assertFalse(NS.IsWindowShown(), "a live drop is not in the test feed shown")
+    announce(NS, drop({ id = 2, test = true }))
+    assertTrue(NS.IsWindowShown(), "test mode's drops follow the same rule")
+end)
+
+test("shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off", function()
     local NS = inDungeon()
     announce(NS, drop({ id = 1, test = true }))
     assertFalse(NS.IsWindowShown())
@@ -675,7 +750,7 @@ test("shell: every control on the chrome has a tooltip with a reason", function(
     local segs, sort = NS.WindowFooter.Parts()
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
     local widgets = { f.scanButton, f.minimizeButton, f.badge, f.newChip, f.tabs.group, f.tabs.mine,
-        f.tabs.history, c.view, c.quality, c.content, c.likelyOnly, c.search, sort,
+        f.tabs.history, c.view, c.quality, c.content, c.likelyOnly, c.usableOnly, c.upgradeOnly, c.search, sort,
         segs.inspect, segs.loot, segs.situation, segs.pawn }
     for i, w in ipairs(widgets) do
         local tip = W.TooltipOf(w)

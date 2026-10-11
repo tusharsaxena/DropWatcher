@@ -57,6 +57,8 @@ NS.C = {
             minIlvl         = 0,         -- the absolute floor
             relativeIlvl    = 10,        -- how far below your average equipped level a drop may be
             showOwn         = false,     -- your own loot listed in Group drops too
+            usableOnly      = false,     -- the filter bar's Usable by me, as a fresh tab's seed
+            upgradeOnly     = false,     -- the filter bar's Upgrade for me, as a fresh tab's seed
             clearOnBossKill = false,     -- the feed's session drops cleared at each boss kill
         },
 
@@ -108,7 +110,7 @@ NS.C = {
         -- absent until the player moves, sizes or minimizes the window, and no row addresses it.
         window = {
             columns = {
-                ilvl = true, slot = true, looter = true, theirEq = true, me = true, them = true,
+                ilvl = true, slot = true, looter = true, myEq = true, theirEq = true, me = true, them = true,
                 trade = true, actions = true,
             },
             compact   = false,   -- the Group drops table's compact preset

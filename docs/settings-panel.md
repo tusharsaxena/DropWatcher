@@ -63,8 +63,9 @@ the owner lifts the hold on GitHub writes.
 when its own setting overrides the feed's mode. It repaints with every write.
 
 **Filters:** View, Content and Sort (what a fresh Group drops tab starts with), Gear only, Tier
-tokens, Minimum item level with its absolute and relative values (each live in its mode only), Show
-my own loot in Group drops, Clear on boss kill.
+tokens, Minimum item level with its absolute and relative values (each live in its mode only), Usable
+by me and Upgrade for me (what a fresh tab's two checkboxes start with, DW-83), Show my own loot in
+Group drops, Clear on boss kill.
 
 ## Comparison
 
@@ -107,6 +108,6 @@ prints auto-ask's one-time notice; turning it off cancels the asks waiting to go
 
 ## Window
 
-**Columns:** a checkbox per optional column. **Layout:** Compact, Row height, Font size, Groups kept
+**Columns:** a checkbox per optional column (My eq among them since DW-83). **Layout:** Compact, Row height, Font size, Groups kept
 in history (account-wide; a lower cap trims the history at once). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.

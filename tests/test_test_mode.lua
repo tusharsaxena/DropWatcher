@@ -207,7 +207,7 @@ test("window: the rows show every ask state, every Their eq state and every trad
         trade[textOf(r.cells.trade.text)] = true
     end
     hasAll(ask, { "Ask", "Queued", "Asked", "Retry", "–" }, "ask")
-    hasAll(eq, { "40s", "6m", "…", "range", "combat", "!", "–" }, "their eq")
+    hasAll(eq, { "324", "297", "…", "range", "combat", "!", "–" }, "their eq: worn levels, or the reason word")
     hasAll(trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
 end)
 

@@ -174,7 +174,7 @@ end
 --- Whether loot is tracked in a situation (the current one when `key` is nil).
 function Sit.IsTracking(key) return Sit.Settings(key).track end
 
---- Whether the first interesting drop opens the window there (the current one when `key` is nil).
+--- Whether a drop added to the feed opens the window there (the current one when `key` is nil).
 function Sit.ShouldAutoOpen(key) return Sit.Settings(key).autoOpen end
 
 --- The situation's minimum-quality mode, or nil for the global mode (QualityGate.ResolveMode).

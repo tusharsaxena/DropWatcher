@@ -2,8 +2,9 @@ local _, NS = ...
 -- modules/WindowGroup.lua — the Group drops table (design spec §11.1-§11.2, boards 01, 03 and 06):
 -- every drop the group receives, one row each, under a collapsible header per encounter or key run.
 --
--- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color), Their
--- eq (the looter's worn item or items for that slot, with the inspect's age), Me, Them (the
+-- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color), My eq
+-- (what you wear in that slot, from your gear snapshot), Their eq (what the looter wears there, from
+-- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
 -- verdicts: the signed item-level change beside ▲ ≈ ▽, the Them column's tones inverted), Trade
 -- (Yes, Likely, Unknown or No) and Actions (the Ask button and the × that dismisses the row). The
 -- compact preset (`profile.window.compact`, NS.SetCompact) keeps Item and looter, Ilvl, Their eq,
@@ -55,16 +56,18 @@ local max = math.max
 WG.COLUMNS = {
     { key = "item", label = L["Item"], compactLabel = L["Item / looter"], flex = true,
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 5, tip = L["The drop's item level."] },
     { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
     { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
-    { key = "theirEq", label = L["Their eq"], width = 84, shed = 3,
-      tip = L["What the looter wears in that slot (two items for rings, trinkets and weapons), and how old the read is."] },
-    { key = "me", label = L["Me"], width = 70, shed = 7,
+    { key = "myEq", label = L["My eq"], width = 84, shed = 3,
+      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level. Hover an icon for the item."] },
+    { key = "theirEq", label = L["Their eq"], width = 84, shed = 4,
+      tip = L["What the looter wears in that slot (two items for rings, trinkets and weapons) and its item level. Hover for how old the read is."] },
+    { key = "me", label = L["Me"], width = 70, shed = 8,
       tip = L["The drop judged for you: the item-level change, with ▲ upgrade, ≈ sidegrade or ▽ downgrade."] },
-    { key = "them", label = L["Them"], width = 70, shed = 5,
+    { key = "them", label = L["Them"], width = 70, shed = 6,
       tip = L["The drop judged for its looter. The colors are inverted: their upgrade is amber, their downgrade green."] },
-    { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+    { key = "trade", label = L["Trade"], width = 70, shed = 7, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
     { key = "actions", label = L["Actions"], compactLabel = L["Ask"], width = 96,
       tip = L["Ask the looter for it, once. The × hides the row for this session."] },
 }
@@ -442,8 +445,8 @@ local function itemCell(row)
     return f
 end
 
-local function eqCell(row)
-    local f = textCell(row, "theirEq")
+local function eqCell(row, key)
+    local f = textCell(row, key)
     f.icons = { itemButton(f, K.EQ_ICON), itemButton(f, K.EQ_ICON) }
     f.icons[1]:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.icons[2]:SetPoint("LEFT", f.icons[1], "RIGHT", 2, 0)
@@ -475,7 +478,7 @@ local function actionsCell(row)
     return f
 end
 
-local BUILDERS = { item = itemCell, theirEq = eqCell, actions = actionsCell }
+local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = actionsCell }
 
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
@@ -561,10 +564,20 @@ local function inspectGear(drop)
     return e and e.gear
 end
 
-local function paintEq(f, drop, now)
-    local c = WC.TheirEq(drop, inspectGear(drop), now)
+-- Your worn gear: the gear snapshot's (NS.Gear), so it is always the current one.
+local function myGear()
+    local snap = NS.Gear.Snapshot()
+    return snap and snap.equipped
+end
+
+-- An equipment cell: its worn items' icons, their item levels beside them. `unit` names whose
+-- inventory an icon's tooltip reads (yours: the client's own tooltip for your slot), else the link.
+local function paintEq(f, c, unit)
     paintText(f, c)
-    for i, b in ipairs(f.icons) do setItem(b, c.items[i] and c.items[i].link or nil) end
+    for i, b in ipairs(f.icons) do
+        local it = c.items[i]
+        setItem(b, it and it.link or nil, it and unit and { unit = unit, slot = it.slot } or nil)
+    end
     f.text:ClearAllPoints()
     local last = #c.items > 0 and f.icons[math.min(#c.items, 2)] or nil
     if last then f.text:SetPoint("LEFT", last, "RIGHT", 4, 0) else f.text:SetPoint("LEFT", f, "LEFT", 0, 0) end
@@ -598,7 +611,8 @@ end
 
 -- What a cell's text may take of its width, so a long name is cut short rather than spilling into
 -- the next column: the item button, the verdict glyph and the worn items take their share.
-local TEXT_INSET = { item = K.ROW_ICON + 5, me = 16, them = 16, theirEq = 2 * (K.EQ_ICON + 2) + 4 }
+local EQ_INSET = 2 * (K.EQ_ICON + 2) + 4
+local TEXT_INSET = { item = K.ROW_ICON + 5, me = 16, them = 16, myEq = EQ_INSET, theirEq = EQ_INSET }
 
 local function placeCells(row, layout, height)
     for key, f in pairs(row.cells) do
@@ -631,7 +645,8 @@ local function paintRow(row, drop, layout, compact, now, metrics)
     paintText(cells.looter, lc)
     classTone(cells.looter.text, lc.classFile)
     paintText(cells.them, WC.Them(drop, now))
-    paintEq(cells.theirEq, drop, now)
+    paintEq(cells.myEq, WC.MyEq(drop, myGear()), "player")
+    paintEq(cells.theirEq, WC.TheirEq(drop, inspectGear(drop), now))
     paintActions(cells.actions, drop)
 end
 

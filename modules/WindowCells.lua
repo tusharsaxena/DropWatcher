@@ -326,63 +326,154 @@ function WC.Trade(drop)
     return c
 end
 
--- ── the Their eq column ─────────────────────────────────────────────────────────────────────
+-- ── the My eq and Their eq columns ──────────────────────────────────────────────────────────
+-- Both show the worn item(s) for the drop's slot (two for rings, trinkets and one-hand weapons):
+-- the icons are the edge's, the cell's text is their item levels (`311`, `300/296`), and the
+-- tooltip names each item. Their eq's inspect age is in its tooltip (feedback spec §3, FB-7); a
+-- state with no data keeps its reason word (`…`, `range`, `combat`, `!`, `–`).
 
--- The looter's slots a drop is compared with: both rings, both trinkets, both hands for a weapon.
+-- The worn slots a drop is compared with: both rings, both trinkets, both hands for a weapon.
 local function eqSlots(equipLoc)
     local plan = C.SLOT_PLAN[equipLoc]
-    if not plan then return {} end
+    if not plan then return nil end
     if plan.kind == "single" or plan.kind == "offhand" then return { plan.slots[1] } end
     return plan.slots
 end
 
-local function wornItems(gear, slots)
-    local items = {}
-    if type(gear) ~= "table" then return items end
+--- The inventory slots a drop's equip location is compared with, or nil for an item not worn.
+--- @param equipLoc string|nil
+--- @return table|nil
+function WC.EqSlots(equipLoc) return eqSlots(equipLoc) end
+
+-- What `gear` holds in `slots`: each read item as { link, ilvl, slot }; `empty` counts the slots
+-- read as empty (false), `unread` the ones not read at all (absent).
+local function slotItems(gear, slots)
+    local items, empty, unread = {}, 0, 0
+    gear = type(gear) == "table" and gear or {}
     for _, slot in ipairs(slots) do
         local g = gear[slot]
-        if type(g) == "table" and type(g.link) == "string" then items[#items + 1] = g end
+        if type(g) == "table" and type(g.link) == "string" then
+            items[#items + 1] = { link = g.link, ilvl = g.ilvl, slot = slot }
+        elseif g == false then
+            empty = empty + 1
+        else
+            unread = unread + 1
+        end
     end
-    return items
+    return items, empty, unread
 end
 
--- The cell's short status beside the icons (board 03's inspect freshness).
+local function levelOf(item)
+    local n = num(item.ilvl)
+    return n and tostring(round(n)) or "?"
+end
+
+--- The item levels of worn items, `311` or `300/296`.
+--- @param items table { { ilvl }, ... }
+--- @return string
+function WC.Levels(items)
+    local parts = {}
+    for i, it in ipairs(items) do parts[i] = levelOf(it) end
+    return table.concat(parts, "/")
+end
+
+-- One line per worn item (`Old Band (324)`), and one per slot read as empty.
+local function itemLines(tip, items, empty)
+    for _, it in ipairs(items) do
+        tip[#tip + 1] = ("%s (%s)"):format(WC.ItemName(it.link) or it.link, levelOf(it))
+    end
+    for _ = 1, empty do tip[#tip + 1] = L["Empty slot."] end
+end
+
+local function eqCellOf(text, tone, title, items)
+    local c = cell(text, tone, title)
+    c.items = items
+    return c
+end
+
+
+--- The My eq column: what you wear in the drop's slot, from your gear snapshot (NS.Gear), so it is
+--- always fresh; `empty slot` when you wear nothing there, `…` while your gear is still loading.
+--- @param drop table
+--- @param equipped table|nil the snapshot's `equipped` ({ [slot] = entry | false })
+--- @return table cell, with `items` = { { link, ilvl, slot }, ... }
+function WC.MyEq(drop, equipped)
+    local title = L["You wear"]
+    local slots = eqSlots(facts(drop).equipLoc)
+    if not slots then
+        local c = eqCellOf(DASH, "muted", title, {})
+        c.tip[2] = L["Not an item that is worn, or its details have not loaded."]
+        return c
+    end
+    local items, empty, unread = slotItems(equipped, slots)
+    local c
+    if #items > 0 then
+        c = eqCellOf(WC.Levels(items), "plain", title, items)
+    elseif unread > 0 then
+        c = eqCellOf("…", "muted", title, items)
+    else
+        c = eqCellOf(L["empty slot"], "muted", title, items)
+    end
+    itemLines(c.tip, items, empty)
+    if unread > 0 then c.tip[#c.tip + 1] = L["Your gear is still loading."] end
+    return c
+end
+
+-- The cell's short status when no item is shown (board 03's inspect freshness).
 local STATUS_TEXT = { pending = "…", combatParked = L["combat"], outOfRange = L["range"], failed = "!" }
 
-local function eqStatus(insp, now)
-    local status = insp and insp.status
-    if status == "fresh" or status == "cached" then
-        local at = num(insp.at)
-        if at and num(now) then return WC.Duration(now - at), "plain" end
-        return L["read"], "plain"
+local function readOk(insp)
+    return type(insp) == "table" and (insp.status == "fresh" or insp.status == "cached")
+end
+
+-- The tooltip's line on how old the read is: `Inspected 2m ago.`, or the cache's.
+local function ageLine(insp, now)
+    local at = num(insp.at)
+    local age = at and num(now) and WC.Duration(now - at) or nil
+    if insp.status == "cached" then
+        if age then return L["From the inspect cache, read %s ago."]:format(age) end
+        return L["From the inspect cache."]
     end
-    return STATUS_TEXT[status] or DASH, "muted"
+    if age then return L["Inspected %s ago."]:format(age) end
+    return L["Inspected."]
+end
+
+-- The text and tone when no item is shown: `empty slot` once the read says so, else the state.
+local function theirStatus(insp, empty, unread)
+    if readOk(insp) then
+        if empty > 0 and unread == 0 then return L["empty slot"], "muted" end
+        return DASH, "muted"
+    end
+    return STATUS_TEXT[type(insp) == "table" and insp.status] or DASH, "muted"
 end
 
 --- The Their eq column: the looter's worn item(s) for the drop's slot (two for rings, trinkets and
---- weapons), with the inspect's age or state beside them.
+--- weapons) and their item levels; the inspect's age (or why there is no read) in the tooltip.
 --- @param drop table
 --- @param gear table|nil the looter's inspect entry's `gear` ({ [slot] = { link, ilvl } | false })
 --- @param now number|nil GetTime()
---- @return table cell, with `items` = { { link, ilvl }, ... }
+--- @return table cell, with `items` = { { link, ilvl, slot }, ... }
 function WC.TheirEq(drop, gear, now)
     if drop.isMine then
-        local c = cell(DASH, "muted", L["Their eq"], L["Your own drop: your gear is in the Me column."])
-        c.items = {}
-        return c
+        local own = eqCellOf(DASH, "muted", L["Their eq"], {})
+        own.tip[2] = L["Your own drop: what you wear is in the My eq column."]
+        return own
     end
     local who = looterName(drop)
-    local items = wornItems(gear, eqSlots(facts(drop).equipLoc))
-    local text, tone = eqStatus(drop.inspect, now)
-    local c = cell(text, tone, L["%s wears"]:format(who))
-    for _, g in ipairs(items) do
-        c.tip[#c.tip + 1] = ("%s (%s)"):format(WC.ItemName(g.link) or g.link, tostring(g.ilvl or "?"))
+    local title = L["%s wears"]:format(who)
+    local slots = eqSlots(facts(drop).equipLoc) or {}
+    local items, empty, unread = slotItems(gear, slots)
+    local c
+    if #items > 0 then
+        c = eqCellOf(WC.Levels(items), "plain", title, items)
+    else
+        local text, tone = theirStatus(drop.inspect, empty, unread)
+        c = eqCellOf(text, tone, title, items)
     end
-    if #items == 0 then c.tip[#c.tip + 1] = L["Nothing read for this slot yet."] end
+    itemLines(c.tip, items, empty)
+    if #items == 0 and empty == 0 then c.tip[#c.tip + 1] = L["Nothing read for this slot yet."] end
     local insp = drop.inspect
-    local good = type(insp) == "table" and (insp.status == "fresh" or insp.status == "cached")
-    c.tip[#c.tip + 1] = good and L["Inspected %s ago."]:format(text) or inspectWhy(insp, who, now)
-    c.items = items
+    c.tip[#c.tip + 1] = readOk(insp) and ageLine(insp, now) or inspectWhy(insp, who, now)
     return c
 end
 

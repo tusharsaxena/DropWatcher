@@ -53,10 +53,10 @@ weights and unwanted types written whole through the seam, the Messages page's l
 preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
-panes, the filter bar's per-tab state and its Loot History flat skin, the footer's composer, minimize, auto-open, a tooltip on
+panes, the filter bar's per-tab state and its Loot History flat skin, Usable by me and Upgrade for me, the footer's composer, minimize, auto-open on every drop, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
-each verdict, trade, inspect and ask state, the column sets and the entry order, then the table
+each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
 the Ask button and its repaint, the dismiss mark, the compact preset, the filters, the empty
 state and its two buttons, and the filters' empty line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and

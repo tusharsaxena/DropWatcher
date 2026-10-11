@@ -166,7 +166,7 @@ end
 local function whenToShow()
     local at = { page = "general", group = L["When to show"] }
     bool("autoOpen", P.autoOpen, L["Auto-open the window"],
-        L["Open the window on the first interesting drop in a situation set to auto-open. Off, no situation opens it."], at)
+        L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."], at)
     for _, s in ipairs(K.SITUATIONS) do
         local key, d = s.key, P.situations[s.key]
         local base = "situations." .. key .. "."
@@ -175,7 +175,7 @@ local function whenToShow()
         bool(base .. "track", d.track, L["Track"],
             L["Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."], sit)
         bool(base .. "autoOpen", d.autoOpen, L["Auto-open"],
-            L["Open the window on the first interesting drop here."],
+            L["Open the window whenever a drop here is added to the feed."],
             with(sit, { disabledIf = function() return untracked() or NS.Setting("autoOpen") ~= true end }))
         pick(base .. "quality", d.quality, SITUATION_QUALITY, L["Quality"],
             L["The minimum quality here: the feed's own mode, or one of its own."],
@@ -217,6 +217,10 @@ local function feed()
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
         L["How far under your average equipped item level a drop may be in the relative mode."],
         with(filters, { disabledIf = unless("feed.minIlvlMode", "relative") }))
+    bool("feed.usableOnly", F.usableOnly, L["Usable by me"],
+        L["A fresh Group drops tab hides the drops you can't use and the ones your preferences exclude."], filters)
+    bool("feed.upgradeOnly", F.upgradeOnly, L["Upgrade for me"],
+        L["A fresh Group drops tab lists only the drops that are an upgrade for you."], filters)
     bool("feed.showOwn", F.showOwn, L["Show my own loot in Group drops"],
         L["Off, your own loot shows on My drops only."], filters)
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear on boss kill"],

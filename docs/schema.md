@@ -28,7 +28,7 @@ Every module reads a setting through `NS.Setting(path)`.
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
 | `autoOpen` | `true` | When to show | master auto-open: `false` keeps every situation from opening the window |
 | `situations.<key>.track` | per design spec §6.1 | When to show | loot is watched in that situation |
-| `situations.<key>.autoOpen` | per design spec §6.1 | When to show | the first interesting drop there opens the window |
+| `situations.<key>.autoOpen` | per design spec §6.1 | When to show | every drop added to the feed there opens a hidden window (since DW-83; it was the first interesting drop, once per situation) |
 | `situations.<key>.quality` | `"global"` | When to show | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
 
 `<key>` is each of `mythicPlus`, `dungeon`, `followerDungeon`, `raidLFR`, `raid`, `delve`,
@@ -46,7 +46,9 @@ dungeons and raids, `track` alone for Raid Finder, and off elsewhere.
 | `feed.view`, `feed.content`, `feed.sort` | `"interesting"`, `"instance"`, `"newest"` | Filters | a fresh filter bar tab's View, Content and Sort |
 | `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Filters | armor, weapons, jewelry and trinkets only; tier tokens too |
 | `feed.minIlvlMode` | `"off"` | Filters | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
-| `feed.showOwn` | `false` | Filters | your own loot in Group drops too (then it auto-opens and counts toward `n new`) |
+| `feed.usableOnly` | `false` | Filters | a fresh filter bar tab's Usable by me: hides the drops whose verdict for you is can't use or doesn't want (DW-83) |
+| `feed.upgradeOnly` | `false` | Filters | a fresh filter bar tab's Upgrade for me: lists only your upgrades (DW-83) |
+| `feed.showOwn` | `false` | Filters | your own loot in Group drops too (your own drops auto-open the window and count toward `n new` either way since DW-83) |
 | `feed.clearOnBossKill` | `false` | Filters | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 
 ### Comparison
@@ -89,7 +91,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
-| `window.columns.<col>` | `true` | Columns | `false` hides that Group drops column (`ilvl`, `slot`, `looter`, `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
+| `window.columns.<col>` | `true` | Columns | `false` hides that Group drops column (`ilvl`, `slot`, `looter`, `myEq` (since DW-83), `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
 | `window.compact` | `false` | Layout; `NS.SetCompact`, `/dw compact` (DW-42) | the compact preset: Item and looter, Ilvl, Their eq, Me, Ask |
 | `window.rowHeight`, `window.fontSize` | `24`, `12` | Layout | the Group drops table's row height and text size (WindowGroup, at each repaint) |
 | `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |

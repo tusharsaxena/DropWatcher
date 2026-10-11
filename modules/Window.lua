@@ -69,10 +69,9 @@ local openedByTestMode = false   -- test mode, not the player, opened the window
 local visibilityListeners = {}   -- fn(shown), told on every OnShow and OnHide of the frame
 local tabSpecs = {}              -- [tab] = { build = fn(pane), refresh = fn(pane, ctx) }
 local activeTab = "group"
-local newCount = 0               -- interesting drops since the window was minimized
+local newCount = 0               -- drops added to the shown feed since the window was minimized
 local restrictionReason          -- RestrictionChanged's last `reason` (nil: nothing restricted)
 local restrictionSeen = false    -- a RestrictionChanged has arrived since the stand-up
-local autoOpenedIn               -- the situation the first interesting drop already opened it in
 local instanceSince              -- GetTime() of the last situation change: "This instance"
 local footerTicker
 local repaintPending = false     -- a bus repaint is queued for the next frame
@@ -729,33 +728,36 @@ function Window.Frame() return frame end
 
 -- ── the bus ─────────────────────────────────────────────────────────────────────────────────
 
--- An interesting drop the Group drops table would list: what auto-open and `n new` count. Your own
--- loot counts only with `feed.showOwn` on; otherwise My drops · n is where it shows.
-local function groupInteresting(rec)
-    local FB = NS.WindowFilterBar
-    return FB.InGroup(rec, showOwn()) and FB.IsInteresting(rec)
+-- Whether a drop belongs to the feed the window shows: test mode's placeholders while it is on,
+-- the live feed's drops (the simulator's included) otherwise.
+local function inShownFeed(rec)
+    return (rec.test == true) == (NS.State.testMode == true)
 end
 
--- The first interesting live drop in a situation set to auto-open opens a closed window, once per
--- situation: closing it again is the player's choice (design spec §6.1). Master `autoOpen` false
--- turns it off everywhere.
+-- AUTO-OPEN (feedback spec §3, FB-12). Every drop added to the shown feed opens a hidden window: it
+-- passed the feed's gates (its situation tracked, the minimum quality), whoever looted it, your own
+-- included. There is no once-per-situation latch: a window the player closes opens again on the
+-- next drop. Master `autoOpen` false, or the situation's own `autoOpen` false, turns it off. A
+-- minimized window stays minimized and counts the drop (`n new`). The frame is not protected
+-- (no secure template, no protected child), so opening it in combat is allowed and taints nothing.
 local function maybeAutoOpen(rec)
-    if rec.test or NS.State.windowOpen == true or setting("autoOpen") == false then return end
+    if NS.State.windowOpen == true or setting("autoOpen") == false then return end
     local Sit = NS.Situations
     local key = Sit.Current()
-    if autoOpenedIn == key or not Sit.ShouldAutoOpen(key) then return end
-    if not groupInteresting(rec) then return end
-    autoOpenedIn = key
-    NS.Debug(TAG, "auto-open: the first interesting drop in %s", key)
+    if not Sit.ShouldAutoOpen(key) then return end
+    NS.Debug(TAG, "auto-open: drop %s added in %s", tostring(rec.id), tostring(key))
     Window.Open()
 end
 
 local function onDropAdded(id)
     local rec = NS.LootFeed.Get(id)
     if not rec then return end
+    if not inShownFeed(rec) then
+        scheduleRepaint()
+        return
+    end
     maybeAutoOpen(rec)
-    local inFeed = (rec.test == true) == (NS.State.testMode == true)
-    if isMinimized() and inFeed and groupInteresting(rec) then newCount = newCount + 1 end
+    if isMinimized() then newCount = newCount + 1 end
     scheduleRepaint()
 end
 
@@ -766,7 +768,6 @@ end
 
 local function onSituation()
     instanceSince = GetTime()
-    autoOpenedIn = nil
     scheduleRepaint()
 end
 
@@ -786,6 +787,8 @@ local function listen()
     target:RegisterMessage(M.SITUATION_CHANGED, function() onSituation() end)
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() scheduleRepaint() end)
+    -- The My eq column reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).
+    target:RegisterMessage(M.GEAR_CHANGED, function() scheduleRepaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)
     -- The My drops tab's and the Offer panel's countdowns (modules/TradeTimer.lua).
     target:RegisterMessage(M.TRADE_TIMER_TICK, function() repaintCountdown() end)

@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1014%2F1014_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1020%2F1020_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -19,8 +19,11 @@ nobody gets a whisper unless you click Ask or turn on auto-ask.
 Type `/dw show`, or right-click the minimap button and pick **Show window**. Drag the window by its
 title bar, resize it from the bottom-right corner, and lock it in place with `/dw lock` or the
 **Lock frame** box once you're happy with it. Escape or the close mark puts it away. The minimize
-mark folds it down to the title bar, which then counts the interesting drops you missed; double-click
-the bar to open it again. In a dungeon, a key or a raid it opens by itself on the first drop worth a look.
+mark folds it down to the title bar, which then counts the drops you missed; double-click
+the bar to open it again. In a dungeon, a key or a raid it opens by itself whenever someone loots
+an item it shows, yours included, even after you close it. A minimized window stays minimized and
+counts the drop instead. Turn this off under General › When to show, for every situation or one at
+a time.
 
 The window has three tabs: **Group drops**, **My drops** and **History**. Each keeps its own filters
 in the bar under the tabs. The footer tells you how much of the group's gear has been read, when the
@@ -29,9 +32,12 @@ reads everyone's gear before the loot starts, which saves waiting later. When a 
 blocks addon chat, an orange lock in the title bar says so and counts the asks waiting to go out.
 
 **Group drops** shows every drop, grouped under the boss or key run it came from. A row gives the
-item, its item level and slot, who looted it and what they wear there, then two verdicts: **Me** (is
+item, its item level and slot, who looted it, what you wear there (**My eq**) and what they wear
+there (**Their eq**), each as icons with item levels, then two verdicts: **Me** (is
 it an upgrade for you?) and **Them** (is it one for the looter?). ▲ means upgrade, ≈ sidegrade, ▽
-downgrade. **Trade** reads Yes, Likely, Unknown or No. Hover any cell to see why. Shift-click the
+downgrade. **Trade** reads Yes, Likely, Unknown or No. Hover any cell to see why; hover Their eq for
+how old the read of the looter's gear is. Tick **Usable by me** to hide what you can't use or don't
+want, or **Upgrade for me** to see only your upgrades. Shift-click the
 icon to link the item, ctrl-click to try it on. **Ask** whispers the looter once; mid-fight the
 whisper waits and goes out when the fight ends, and a second click cancels it. Click the row itself
 and a detail card opens under it with the full reasoning: what the item would replace for you and

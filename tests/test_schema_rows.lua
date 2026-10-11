@@ -10,7 +10,7 @@ local SITUATIONS = {
     "mythicPlus", "dungeon", "followerDungeon", "raidLFR", "raid", "delve", "scenario", "pvp",
     "openWorldGroup", "solo",
 }
-local COLUMNS = { "ilvl", "slot", "looter", "theirEq", "me", "them", "trade", "actions" }
+local COLUMNS = { "ilvl", "slot", "looter", "myEq", "theirEq", "me", "them", "trade", "actions" }
 
 -- Spec §12.1's keys as stored paths. `debug` is the session-only console row, `minimap.shown` the
 -- global closure row; `window.point`, `size`, `minimized` and `toast.point` are named state.
@@ -21,7 +21,7 @@ local function specPaths()
         "feed.view", "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
         "feed.quality.upgradeOverride", "feed.gearOnly", "feed.includeTokens", "feed.minIlvlMode",
         "feed.minIlvl", "feed.relativeIlvl", "feed.showOwn", "feed.clearOnBossKill", "feed.sort",
-        "feed.content",
+        "feed.content", "feed.usableOnly", "feed.upgradeOnly",
         "comparison.scorer", "comparison.weights", "comparison.sidegradeBand", "comparison.compareOwned",
         "comparison.heirloomProtect", "comparison.undesired",
         "trade.warnAt", "trade.likelyOnly",
@@ -144,9 +144,13 @@ test("rows: the filter bar seeds a fresh tab from the rows", function()
     local NS = T.bootAddon()
     NS.SchemaRuntime.Set("feed.view", "all")
     NS.SchemaRuntime.Set("trade.likelyOnly", true)
+    NS.SchemaRuntime.Set("feed.usableOnly", true)
+    NS.SchemaRuntime.Set("feed.upgradeOnly", true)
     local d = NS.WindowFilterBar.Defaults()
     assertEqual(d.view, "all")
     assertEqual(d.likelyOnly, true)
+    assertEqual(d.usableOnly, true)
+    assertEqual(d.upgradeOnly, true)
     assertEqual(d.content, "instance")
 end)
 

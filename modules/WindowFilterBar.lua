@@ -1,13 +1,15 @@
 local _, NS = ...
 -- modules/WindowFilterBar.lua — the main window's filter bar (design spec §11.1, board 01): View,
--- Quality, Content, Likely tradeable only and the search box, each tab's own filter state, and the
--- pure predicates the tabs' bodies filter and order their rows with.
+-- Quality, Content, Likely tradeable only, Usable by me, Upgrade for me (feedback spec §3, FB-8) and
+-- the search box, each tab's own filter state, and the pure predicates the tabs' bodies filter and
+-- order their rows with.
 --
 -- ONE BAR, ONE STATE PER TAB. The bar is a single set of controls under the tab strip; each tab
 -- keeps its own state (NS.State.windowFilters[tab], session-only), and selecting a tab puts its
 -- state on the bar (Sync). A control a tab does not honor is grayed rather than hidden, so the bar
 -- never reflows between tabs (Ka0s Loot History's pattern). A fresh tab's state is seeded from the
--- `feed.view`, `feed.content`, `feed.sort` and `trade.likelyOnly` rows (through the schema seam)
+-- `feed.view`, `feed.content`, `feed.sort`, `trade.likelyOnly`, `feed.usableOnly` and
+-- `feed.upgradeOnly` rows (through the schema seam)
 -- when they hold a valid value, else from DEFAULTS, which are those rows' defaults.
 --
 -- THE QUALITY CONTROL IS NOT A VIEW FILTER: it shows the feed's minimum-quality mode in force (the
@@ -35,7 +37,8 @@ FB.VALUES = {
 }
 
 -- Which controls each tab honors (the footer's Sort included).
-local ALL = { view = true, quality = true, content = true, likelyOnly = true, search = true, sort = true }
+local ALL = { view = true, quality = true, content = true, likelyOnly = true, usableOnly = true,
+              upgradeOnly = true, search = true, sort = true }
 FB.HONORS = {
     group   = ALL,
     mine    = { content = true, search = true, sort = true },
@@ -45,13 +48,24 @@ FB.HONORS = {
 local P = NS.C.PROFILE
 local DEFAULTS = {
     view = P.feed.view, content = P.feed.content, likelyOnly = P.trade.likelyOnly, search = "", sort = P.feed.sort,
+    usableOnly = P.feed.usableOnly, upgradeOnly = P.feed.upgradeOnly,
 }
 FB.DEFAULTS = DEFAULTS
 
 -- Where a fresh tab's state is seeded from: the setting's path.
 local SEED = {
     view = "feed.view", content = "feed.content", sort = "feed.sort", likelyOnly = "trade.likelyOnly",
+    usableOnly = "feed.usableOnly", upgradeOnly = "feed.upgradeOnly",
 }
+
+-- The checkboxes, left to right: the state key and the label.
+FB.CHECKS = {
+    { key = "likelyOnly", label = L["Likely tradeable only"] },
+    { key = "usableOnly", label = L["Usable by me"] },
+    { key = "upgradeOnly", label = L["Upgrade for me"] },
+}
+local IS_CHECK = {}
+for _, c in ipairs(FB.CHECKS) do IS_CHECK[c.key] = true end
 
 FB.LABELS = {
     view = { interesting = L["View: Interesting"], all = L["View: All"] },
@@ -70,11 +84,13 @@ local TIPS = {
     view = { L["View"], L["Interesting shows the drops that are an upgrade for you and that their looter may still trade, and your own drops you can trade. All shows everything."] },
     content = { L["Content"], L["This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."] },
     likelyOnly = { L["Likely tradeable only"], L["Hide the drops whose trade estimate is Unknown or No."] },
+    usableOnly = { L["Usable by me"], L["Hide the drops you can't use, and the ones your own preferences exclude."] },
+    upgradeOnly = { L["Upgrade for me"], L["Show only the drops that are an upgrade for you."] },
     search = { L["Search"], L["Show only the drops whose item or looter name contains this text."] },
 }
 local GRAYED = L["This tab does not use this filter."]
 
-local controls = {}     -- the built controls: view, quality, content (each a dropdown or nil), likelyOnly, search
+local controls = {}     -- the built controls: view, quality, content (each a dropdown or nil), the checkboxes, search
 local syncing = false   -- Sync is writing the controls: their change handlers stand aside
 
 -- ── state ───────────────────────────────────────────────────────────────────────────────────
@@ -85,7 +101,7 @@ local function inList(list, v)
 end
 
 local function valid(key, v)
-    if key == "likelyOnly" then return type(v) == "boolean" end
+    if IS_CHECK[key] then return type(v) == "boolean" end
     if key == "search" then return type(v) == "string" end
     return FB.VALUES[key] ~= nil and inList(FB.VALUES[key], v)
 end
@@ -102,7 +118,8 @@ function FB.Defaults()
     return d
 end
 
---- A tab's filter state ({ view, content, likelyOnly, search, sort }), seeded on first use. The
+--- A tab's filter state ({ view, content, likelyOnly, usableOnly, upgradeOnly, search, sort }),
+--- seeded on first use. The
 --- table is the bar's own: read it, and change it through Set.
 --- @param tab string
 --- @return table
@@ -118,7 +135,7 @@ end
 
 --- Change one control's value on one tab. An invalid value is refused; the window redraws the tab.
 --- @param tab string
---- @param key string `view`, `content`, `likelyOnly`, `search` or `sort`
+--- @param key string `view`, `content`, `likelyOnly`, `usableOnly`, `upgradeOnly`, `search` or `sort`
 --- @param value any
 --- @return boolean changed
 function FB.Set(tab, key, value)
@@ -201,10 +218,15 @@ local function matchesContent(drop, content, ctx)
     return drop.at >= since
 end
 
+-- Your verdict that Usable by me hides: you can't use it, or your own preferences exclude it.
+local NOT_USABLE = { cantUse = true, doesntWant = true }
+
 -- Each control's test, in the order Matches asks them: true when the drop passes it.
 local CHECKS = {
     { key = "view", pass = function(d, st) return st.view ~= "interesting" or FB.IsInteresting(d) end },
     { key = "likelyOnly", pass = function(d, st) return not st.likelyOnly or TRADEABLE[tradeState(d)] == true end },
+    { key = "usableOnly", pass = function(d, st) return not st.usableOnly or not NOT_USABLE[verdictOf(d.me)] end },
+    { key = "upgradeOnly", pass = function(d, st) return not st.upgradeOnly or verdictOf(d.me) == "upgrade" end },
     { key = "content", pass = function(d, st, ctx) return matchesContent(d, st.content, ctx) end },
     { key = "search", pass = function(d, st) return matchesSearch(d, st.search) end },
 }
@@ -354,8 +376,9 @@ local function reachLabel(cb)
     if type(w) == "number" and w > 0 and cb.SetHitRectInsets then cb:SetHitRectInsets(0, -(w + 2), 0, 0) end
 end
 
-local function buildCheck(host)
+local function buildCheck(host, key, label)
     local cb = CreateFrame("CheckButton", nil, host, "BackdropTemplate")
+    cb.key = key
     cb:SetSize(CHECK_SIZE, CHECK_SIZE)
     flatSkin(cb)
     cb.tick = cb:CreateTexture(nil, "OVERLAY")
@@ -366,12 +389,12 @@ local function buildCheck(host)
     cb:SetCheckedTexture(cb.tick)
     cb.label = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     cb.label:SetPoint("LEFT", cb, "RIGHT", 4, 0)
-    cb.label:SetText(L["Likely tradeable only"])
+    cb.label:SetText(label)
     reachLabel(cb)
     cb:SetScript("OnClick", function(self)
-        if not syncing then FB.Set(activeTab(), "likelyOnly", self:GetChecked() and true or false) end
+        if not syncing then FB.Set(activeTab(), self.key, self:GetChecked() and true or false) end
     end)
-    NS.Window.AttachTooltip(cb, grayedTip("likelyOnly", TIPS.likelyOnly))
+    NS.Window.AttachTooltip(cb, grayedTip(key, TIPS[key]))
     cb:HookScript("OnEnter", function(self) lineColor(self, FLAT.hover) end)
     cb:HookScript("OnLeave", function(self) lineColor(self, FLAT.line) end)
     return cb
@@ -400,9 +423,15 @@ local function buildSearch(host)
     return eb
 end
 
--- Left to right: View, Quality, Content, the checkbox; the search box on the right.
+-- Left to right: View, Quality, Content, the checkboxes; the search box on the right.
 local WIDTH = { view = 132, quality = 190, content = 172 }
 local GAP = 8   -- Loot History's gap between filter-bar controls
+-- A checkbox's label width when the client measures none (headless): the client's own at 10pt.
+local LABEL_W = { likelyOnly = 112, usableOnly = 70, upgradeOnly = 80 }
+
+-- The order the controls sit in, left to right.
+local ROW = { "view", "quality", "content" }
+for _, c in ipairs(FB.CHECKS) do ROW[#ROW + 1] = c.key end
 
 --- Build the bar's controls on `host` (the window's filter-bar frame). Once per window.
 --- @param host table
@@ -411,17 +440,24 @@ function FB.Build(host)
     controls.view = viewDropdown(host, "view", WIDTH.view)
     controls.quality = qualityDropdown(host, WIDTH.quality)
     controls.content = viewDropdown(host, "content", WIDTH.content)
-    controls.likelyOnly = buildCheck(host)
+    for _, c in ipairs(FB.CHECKS) do controls[c.key] = buildCheck(host, c.key, c.label) end
     controls.search = buildSearch(host)
     local prev
-    for _, key in ipairs({ "view", "quality", "content", "likelyOnly" }) do
+    for _, key in ipairs(ROW) do
         local w = controls[key]
         if w then
             if prev then w:SetPoint("LEFT", prev, "RIGHT", GAP, 0) else w:SetPoint("LEFT", host, "LEFT", 0, 0) end
-            prev = key == "likelyOnly" and w.label or w
+            prev = IS_CHECK[key] and w.label or w
         end
     end
     controls.search:SetPoint("RIGHT", host, "RIGHT", 0, 0)
+end
+
+-- A checkbox's width on the bar: the box, the gap and its label (measured, else LABEL_W).
+local function checkWidth(cb)
+    local w = cb.label.GetStringWidth and cb.label:GetStringWidth()
+    if type(w) ~= "number" or w <= 0 then w = LABEL_W[cb.key] or 100 end
+    return CHECK_SIZE + 4 + w
 end
 
 --- Fit the bar to the window's width: the search box takes what the controls leave, and hides when
@@ -430,8 +466,11 @@ end
 function FB.Layout(width)
     local eb = controls.search
     if not eb then return end
-    local used = 150 + 4 * GAP + 2 * K.INSET
-    for key, w in pairs(WIDTH) do if controls[key] then used = used + w end end
+    local used = 2 * K.INSET
+    for _, key in ipairs(ROW) do
+        local w = controls[key]
+        if w then used = used + GAP + (WIDTH[key] or checkWidth(w)) end
+    end
     local room = (tonumber(width) or K.WIDTH) - used
     eb:SetWidth(math.min(220, math.max(room, 0)))
     eb:SetShown(room >= 80)
@@ -452,7 +491,7 @@ local function putState(st)
         local mode, _, label = FB.QualityReadout()
         controls.quality:SetValue(mode, label)
     end
-    controls.likelyOnly:SetChecked(st.likelyOnly)
+    for _, c in ipairs(FB.CHECKS) do controls[c.key]:SetChecked(st[c.key]) end
     if (controls.search:GetText() or "") ~= st.search then controls.search:SetText(st.search) end
     controls.search.hint:SetShown(st.search == "")
     syncing = false
@@ -464,11 +503,11 @@ function FB.Sync(tab)
     if not controls.host then return end
     putState(FB.State(tab))
     local honors = FB.HONORS[tab]
-    for _, key in ipairs({ "view", "quality", "content", "likelyOnly", "search" }) do
-        setHonored(controls[key], honors[key] == true)
-    end
+    for _, key in ipairs(ROW) do setHonored(controls[key], honors[key] == true) end
+    setHonored(controls.search, honors.search == true)
 end
 
---- The built controls, for the suites: { view, quality, content, likelyOnly, search, host }.
+--- The built controls, for the suites: { view, quality, content, likelyOnly, usableOnly,
+--- upgradeOnly, search, host }.
 --- @return table
 function FB.Controls() return controls end

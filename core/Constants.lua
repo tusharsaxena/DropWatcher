@@ -19,7 +19,7 @@ C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEX
 -- tab's body and a footer.
 C.WINDOW = {
     NAME        = "DropWatcherWindow",
-    WIDTH       = 940,
+    WIDTH       = 1000,   -- board 01 drew 940; the My eq column and two filters (DW-83) take the rest
     HEIGHT      = 600,
     MIN_WIDTH   = 520,
     MIN_HEIGHT  = 260,
@@ -40,7 +40,7 @@ C.WINDOW = {
     GROUP_H     = 20,     -- one encounter header row
     COLHEAD_H   = 18,     -- the column labels above the rows
     ROW_ICON    = 20,     -- a row's item button
-    EQ_ICON     = 16,     -- one of the looter's worn items in the Their eq column
+    EQ_ICON     = 16,     -- one worn item in the My eq and Their eq columns
     CELL_GAP    = 6,      -- between two columns
     ITEM_MIN    = 150,    -- the Item column's least width (it takes the slack)
     SCROLL_W    = 22,     -- the scroll bar's gutter on the right of the rows
