@@ -881,7 +881,7 @@ Total.
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: the pure Ago reads seconds, hours, then days
 
-### test_toast.lua (16)
+### test_toast.lua (17)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose reads board 06 C: the title, the item and Looted by · gain · trade
@@ -891,6 +891,7 @@ Total.
 - toast edge: the queue keeps the newest MAX_QUEUE drops
 - toast edge: a drop that turns likely later toasts on its DropUpdated
 - toast edge: a hover pauses the countdown, and leaving resumes it with the time left
+- toast edge: leaving through the close button resumes the countdown
 - toast edge: not shown in combat; held until it ends, unless toast.inCombat
 - toast edge: a drop asked for, or gone from the feed, is skipped when its turn comes
 - toast edge: Ask goes through the shared host handler, and the button follows its state
@@ -900,7 +901,7 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
-### test_auto_ask.lua (18)
+### test_auto_ask.lua (20)
 
 - auto-ask: DueAt is the delay after the later of the drop and the encounter's end
 - auto-ask: ClampDelay keeps the delay inside 3..30 and defaults to 10
@@ -916,6 +917,8 @@ Total.
 - auto-ask edge: receiving the item cancels it
 - auto-ask edge: a drop gone from the feed, or no longer qualifying, is dropped when due
 - auto-ask edge: turning it off cancels the waiting asks; turned on, older drops do not count
+- auto-ask edge: a profile switch that turns it on never asks for the drops already there
+- auto-ask edge: a profile switch that turns it off cancels the waiting asks
 - auto-ask edge: the first time it is turned on, a one-time notice explains it
 - auto-ask edge: the stand-down cancels every waiting ask
 - auto-ask edge: in test mode a placeholder's ask is printed, never sent
@@ -1058,8 +1061,8 @@ Total.
 | test_asks.lua | 22 |
 | test_transmog.lua | 13 |
 | test_history.lua | 23 |
-| test_toast.lua | 16 |
-| test_auto_ask.lua | 18 |
+| test_toast.lua | 17 |
+| test_auto_ask.lua | 20 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1069,4 +1072,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **875** |
+| **Total** | **878** |

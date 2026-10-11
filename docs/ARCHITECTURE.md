@@ -397,7 +397,10 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   `likely` after the looter's inspect still qualifies; a drop scheduled, sent or canceled is never
   scheduled again that session. **Only new drops:** turned on, it counts only the drops the feed
   records from then on (all of a session's drops when it was on at login), so turning it on never
-  whispers for the drops already in the table. **The timing** is the delay after the later of the
+  whispers for the drops already in the table. A profile switch, copy or reset runs no row
+  reaction, so `reloadProfile` (core/DropWatcher.lua) calls `NS.AutoAsk.OnProfileReloaded`: an
+  incoming profile that turns it on counts from that moment the same way, one that turns it off
+  cancels the waiting asks, and the one-time notice stays the row's alone. **The timing** is the delay after the later of the
   drop and the last `ENCOUNTER_END`; while an encounter is in progress (`ENCOUNTER_START` without
   its end) nothing is due, and the end makes every waiting ask due its delay after that moment. A
   drop that qualifies once its time has passed is asked at once. A keystone run has no

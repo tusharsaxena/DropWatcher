@@ -473,7 +473,8 @@ end
 -- ── profiles ────────────────────────────────────────────────────────────────────────────────
 
 -- The three profile events share one reaction: migrations, panel refresh, the latch re-read
--- (an incoming profile carries its own answer to `enabled`) and the window's settings.
+-- (an incoming profile carries its own answer to `enabled`), auto-ask's `enabled` re-read (no row
+-- reaction runs on a switch) and the window's settings.
 local function reloadProfile(self)
     self:RunMigrations()
     local S = self.Settings
@@ -484,6 +485,7 @@ local function reloadProfile(self)
         NS.Lifecycle:Set(NS.HOLD_DISABLED, not storedEnabled(self))
         NS.Lifecycle:Reevaluate()
     end
+    if NS.AutoAsk then NS.AutoAsk.OnProfileReloaded() end
     if NS.Window then NS.Window.ApplySettings() end
 end
 

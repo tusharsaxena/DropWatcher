@@ -7,7 +7,8 @@ local _, NS = ...
 -- `messages.autoAsk.minGain` item levels (default 5), with a trade estimate of `likely` or `yes`.
 -- Each drop is considered on DropAdded and on each DropUpdated (an inspect can turn its trade
 -- `likely` later) and is scheduled at most once a session. Only drops the feed recorded after
--- auto-ask was turned on are considered, so turning it on never asks for the drops already there.
+-- auto-ask was turned on are considered, so turning it on never asks for the drops already there;
+-- a profile switch, copy or reset that turns it on counts the same (OnProfileReloaded).
 --
 -- THE TIMING (DueAt, pure). The ask is due `messages.autoAsk.delay` seconds (3 to 30, default 10)
 -- after the later of the drop and the last ENCOUNTER_END. While an encounter is in progress
@@ -86,6 +87,7 @@ end
 local pending = {}       -- [drop id] = { target, at, timer, dueAt }: the asks waiting
 local considered = {}    -- [drop id] = true: scheduled, sent or canceled once; never again
 local enabledAt = 0      -- GetTime() when auto-ask was last turned on (0: at load)
+local wasOn              -- the last `enabled` seen (nil until first read)
 local inEncounter = false
 local endedAt            -- GetTime() of the last ENCOUNTER_END
 local counts = { scheduled = 0, sent = 0, canceled = 0 }
@@ -144,6 +146,7 @@ end
 function AA.Consider(id)
     if considered[id] or stoodDown() then return false end
     local cfg = AA.Config()
+    if wasOn == nil then wasOn = cfg.enabled end
     if not cfg.enabled then return false end
     local rec = NS.LootFeed.Get(id)
     if blocker(rec, cfg) or not fresh(rec) then return false end
@@ -231,12 +234,26 @@ end
 --- notice is said once; turned off, every waiting ask is canceled.
 --- @param on boolean
 function AA.OnEnabledChanged(on)
+    wasOn = on == true
     if on == true then
         enabledAt = now()
         AA.Notice()
     else
         cancelAll("off")
     end
+end
+
+--- A profile switch, copy or reset (core/DropWatcher.lua's reloadProfile): no row reaction runs,
+--- so the incoming `enabled` is read here. Turned on by it, only drops from now on count; off,
+--- every waiting ask is canceled. The one-time notice stays the row's alone.
+function AA.OnProfileReloaded()
+    local on = AA.Config().enabled
+    if on and wasOn ~= true then
+        enabledAt = now()
+    elseif not on then
+        cancelAll("off")
+    end
+    wasOn = on
 end
 
 -- ── edges ───────────────────────────────────────────────────────────────────────────────────

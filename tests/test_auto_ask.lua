@@ -220,6 +220,39 @@ test("auto-ask edge: turning it off cancels the waiting asks; turned on, older d
     assertEqual(whispers(m), 1)
 end)
 
+-- A profile `name` saved with auto-ask `on`, then switched to (no row reaction runs).
+local function switchProfile(NS, name, on)
+    local sv = NS.addon.db.sv
+    sv.profiles = sv.profiles or {}
+    sv.profiles[name] = { messages = { autoAsk = { enabled = on } } }
+    NS.addon.db:SetProfile(name)
+end
+
+test("auto-ask edge: a profile switch that turns it on never asks for the drops already there", function()
+    local NS, m, make = party(true)
+    make(); added(NS, 1)
+    m.advance(1)
+    switchProfile(NS, "AutoOn", true)
+    assertEqual(NS.Setting("messages.autoAsk.enabled"), true)
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "inspect")
+    assertEqual(NS.AutoAsk.Stats().waiting, 0, "a drop from before the switch")
+    make({ id = 2, at = m.GetTime() }); added(NS, 2)
+    assertEqual(NS.AutoAsk.Stats().waiting, 1, "a drop after it counts")
+    assertEqual(printed(m, "Auto-ask is on: "), 0, "the notice is the row's alone")
+    m.advance(60)
+    assertEqual(whispers(m), 1)
+end)
+
+test("auto-ask edge: a profile switch that turns it off cancels the waiting asks", function()
+    local NS, m, make = party()
+    make(); added(NS, 1)
+    assertEqual(NS.AutoAsk.Stats().waiting, 1)
+    switchProfile(NS, "AutoOff", false)
+    assertEqual(NS.AutoAsk.Stats().waiting, 0)
+    m.advance(60)
+    assertEqual(whispers(m), 0)
+end)
+
 test("auto-ask edge: the first time it is turned on, a one-time notice explains it", function()
     local NS, m = party(true)
     assertTrue(NS.SchemaRuntime.Set("messages.autoAsk.enabled", true))
