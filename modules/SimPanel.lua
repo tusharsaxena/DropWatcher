@@ -575,10 +575,20 @@ local function paintRows(rows)
     frame:SetHeight(TITLE_H + PAD * 3 + #rows * (ROW_H + GAP) + BAR_H)
 end
 
+-- Opened while the window was closed, the panel waited right of center; once the window opens (a
+-- slow pool opens it later, in modules/SimScenario.lua's ready()) it docks beside it instead of
+-- sitting over it. A dragged (saved) position is never moved.
+local function redock()
+    if frame.dock ~= "center" or not frame:IsShown() then return end
+    local W = NS.Window
+    if W and W.IsShown() then applyPoint() end
+end
+
 --- Repaint every row and control from the timeline. Cheap and idempotent: called on every move
 --- the timeline reports and on every show. A no-op before the first show.
 function SP.Refresh()
     if not frame then return end
+    redock()
     local m, st = model()
     if m.running and NS.SimScenario.SCENARIOS[m.scenario] then choice.scenario = m.scenario end
     frame.__rows = SP.Compose(m)

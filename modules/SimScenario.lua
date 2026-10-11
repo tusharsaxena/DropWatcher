@@ -151,14 +151,17 @@ end
 
 local tick
 
--- One step of a playing timeline, and the next one set for later while any is left.
+-- One step of a playing timeline, and the next one set for later while any is left. The next timer
+-- is set BEFORE the step runs, so the listeners the step notifies already see the timeline playing
+-- (the panel keeps Pause live and Run all spent through an automatic run).
 tick = function(t)
     t.playing = nil
     if timeline() ~= t then return end
-    SC.Step()
-    if t.steps[t.pos + 1] then
+    if t.steps[t.pos + 2] then
         t.playing = Sim.After(SC.STEP_DELAY, function() tick(t) end)
-    else
+    end
+    SC.Step()
+    if not t.playing then
         NS.Debug(TAG, "timeline finished")
         NS.Print(L["The simulation's timeline has finished. /dw sim stop ends it."])
         SC.Notify()

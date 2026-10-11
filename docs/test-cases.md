@@ -1116,7 +1116,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_panel.lua (16)
+### test_sim_panel.lua (18)
 
 - sim panel: a key's preview names every step, with its command, before a run
 - sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states
@@ -1125,6 +1125,8 @@ Total.
 - sim panel: StartCommand carries a raid's size and leaves a random one out
 - sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds PerfPanel's three columns
 - sim panel: `/dw sim start` opens it beside the window, its rows tracking the timeline
+- sim panel: opened before the window, it docks beside the window once a slow pool opens it
+- sim panel: a dragged panel stays where it was put when the window opens later
 - sim panel: clicking the next step runs it; clicking a later one runs every step in between
 - sim panel: clicking a completed step does nothing, and its tooltip says when it ran
 - sim panel: a typed `/dw sim step` moves the panel too
@@ -1281,7 +1283,7 @@ Total.
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 16 |
 | test_sim_e2e.lua | 12 |
-| test_sim_panel.lua | 16 |
+| test_sim_panel.lua | 18 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1291,4 +1293,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1065** |
+| **Total** | **1067** |

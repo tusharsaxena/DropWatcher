@@ -195,6 +195,40 @@ test("sim panel: `/dw sim start` opens it beside the window, its rows tracking t
     assertFalse(NS.SimPanel.Frame().picker:IsShown())
 end)
 
+test("sim panel: opened before the window, it docks beside the window once a slow pool opens it", function()
+    local NS, m = addon()
+    for _, byDifficulty in pairs(m.journal.loot) do
+        for _, list in pairs(byDifficulty) do
+            for _, e in ipairs(list) do e.loadsNeeded = 1 end
+        end
+    end
+    slash(NS, "sim start dungeon")
+    assertTrue(NS.SimPanel.IsShown())
+    assertFalse(NS.Window.IsShown(), "the pool is still loading: no window yet")
+    assertEqual(NS.SimPanel.Stats().dock, "center")
+    m.loadJournal()
+    m.advance(NS.SimPool.SETTLE)
+    assertTrue(NS.Window.IsShown(), "the ready pool opened the window")
+    assertEqual(NS.SimPanel.Stats().dock, "right", "re-docked beside the window, not over it")
+    local pt = { NS.SimPanel.Frame():GetPoint(1) }
+    assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == NS.Window.Frame())
+end)
+
+test("sim panel: a dragged panel stays where it was put when the window opens later", function()
+    local NS, m = addon()
+    for _, byDifficulty in pairs(m.journal.loot) do
+        for _, list in pairs(byDifficulty) do
+            for _, e in ipairs(list) do e.loadsNeeded = 1 end
+        end
+    end
+    NS.addon.db.profile.simPanel = { point = { "TOPLEFT", "TOPLEFT", 40, -60 } }
+    slash(NS, "sim start dungeon")
+    m.loadJournal()
+    m.advance(NS.SimPool.SETTLE)
+    assertTrue(NS.Window.IsShown())
+    assertEqual(NS.SimPanel.Stats().dock, "saved")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Clicking the rows
 -- ---------------------------------------------------------------------------------------------
@@ -255,6 +289,8 @@ test("sim panel: Run all plays the timeline, highlighting each step; Pause holds
     m.advance(NS.SimScenario.STEP_DELAY)
     assertEqual(pos(NS), 2)
     assertEqual(rows(NS)[3].__state, "busy", "the highlight follows the run")
+    assertTrue(ctl.pause:IsEnabled(), "Pause stays live after an automatic step")
+    assertFalse(ctl.run:IsEnabled(), "Run all stays spent after an automatic step")
     ctl.pause:__fire("OnClick")
     assertTrue(NS.SimScenario.Status().paused)
     assertEqual(ctl.pause.__label, "Resume")

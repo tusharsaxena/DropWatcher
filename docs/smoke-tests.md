@@ -1034,10 +1034,12 @@ raid <n>`; Start → the simulation starts and the foot shows Run all, Pause, Re
 the third step ahead → chat prints one step line for each step in between, in order, and the rows
 turn green with a check up to it, the last one gold, the next one bright and the rest gray. Hover a
 completed row → its tooltip says when it ran; clicking it does nothing. Type `/dw sim step` → the
-panel moves on too. Run all → the gold highlight follows each step; Pause → it stops, and Resume
-plays on. Restart → the same scenario starts again at its first step; Stop → the simulation ends and
+panel moves on too. Run all → the gold highlight follows each step, and after the second step Pause is
+still live and Run all still spent; Pause → it stops, and Resume plays on. Restart → the same scenario starts again at its first step; Stop → the simulation ends and
 the picker returns. Drag the panel, `/reload`, `/dw sim panel` → it opens where you left it; Reset
-position on the Window page → it docks beside the window again. Result:
+position on the Window page → it docks beside the window again. Close the window, then
+`/dw sim start raid 30` on a fresh login (the journal still loading) → once the window opens the
+panel moves beside it, not over it. Result:
 
 ## Non-English client
 
