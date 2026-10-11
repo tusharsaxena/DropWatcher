@@ -540,10 +540,14 @@ test("update: a pending score is retried on one shared timer, five times at most
     chat(m, "Lyra-Area52 receives loot: " .. link(301) .. ".")
     local a, b = LF.Drops()[1], LF.Drops()[2]
     assertEqual(a.scoreTries, 0)
+    local r = LF.ScoreRetries()
+    assertEqual(r.pending, 2); assertEqual(r.spent, 0); assertTrue(r.armed, "the shared timer is armed")
     m.advance(1)
     assertEqual(a.scoreTries, 1); assertEqual(b.scoreTries, 1)
     m.advance(LF.SCORE_RETRY * 10)
     assertEqual(a.scoreTries, LF.SCORE_TRIES, "given up after five")
+    r = LF.ScoreRetries()
+    assertEqual(r.pending, 0); assertEqual(r.spent, 2); assertFalse(r.armed, "the timer is spent")
     local n = #seen.updated
     m.advance(5)
     assertEqual(#seen.updated, n, "no more retries")

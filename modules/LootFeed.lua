@@ -459,20 +459,23 @@ end
 local function notePending(rec)
     if rec.test or rec.scoreTries ~= nil or not scorePending(rec) then return end
     rec.scoreTries = 0
+    NS.Debug("SCORE", "drop %s: the scorer is not ready, retrying up to %d times", rec.id, LF.SCORE_TRIES)
     armScoreRetry()
 end
 
 retryScores = function()
-    local cfg, again = LF.Config(), false
+    local cfg, again, n = LF.Config(), false, 0
     for _, rec in ipairs(store().live.drops) do
         if rec.scoreTries and rec.scoreTries < LF.SCORE_TRIES then
             rec.scoreTries = rec.scoreTries + 1
+            n = n + 1
             judgeMe(rec, cfg)
             judgeLooter(rec, cfg, false)
             if scorePending(rec) and rec.scoreTries < LF.SCORE_TRIES then again = true end
             send(NS.MSG.DROP_UPDATED, rec.id, "score")
         end
     end
+    NS.Debug("SCORE", "score retry: %d drops re-scored, still pending=%s", n, again)
     if again then armScoreRetry() end
 end
 
@@ -805,6 +808,20 @@ function LF.Stats()
     local t = now()
     local enc, run = activeEncounter(s.ctx, t), activeRun(s.ctx, t)
     out.encounter, out.run = enc and enc.label, run and run.label
+    return out
+end
+
+--- The score retry's state (diagnostics): drops still retrying a pending score, drops that used
+--- up their tries still pending, and whether the shared timer is armed. Read-only.
+--- @return table { pending, spent, armed }
+function LF.ScoreRetries()
+    local s, out = State.feed, { pending = 0, spent = 0, armed = timers.score ~= nil }
+    if not s then return out end
+    for _, rec in ipairs(s.live.drops) do
+        if rec.scoreTries and scorePending(rec) then
+            if rec.scoreTries < LF.SCORE_TRIES then out.pending = out.pending + 1 else out.spent = out.spent + 1 end
+        end
+    end
     return out
 end
 

@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,window,situation,restrictions,roster,inspect,gear,feed,trade,messaging,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,state,settings,window,situation,restrictions,roster,inspect,gear,feed,trade,scoring,messaging,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()
@@ -177,4 +177,38 @@ test("diagnostics: the messaging section counts the registry, the sends and list
     text = report(NS)
     assertTrue(text:find("messaging: asks=1 queued=1", 1, true) ~= nil, text)
     assertTrue(text:find("messaging: queued ask to Brakk-Testrealm, drop 7", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue", function()
+    local NS, _, m = T.enableAddon()
+    m.__context.inInstance, m.__context.instanceType = true, "party"
+    m.instance.difficultyID = 2
+    m.__fire("PLAYER_ENTERING_WORLD")
+    local text = report(NS)
+    assertTrue(text:find("state: enabled=true situation=dungeon testMode=false restriction=none queuedSends=0", 1, true) ~= nil, text)
+    m.setGroup({ { guid = "Player-1-0000000A", name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
+    NS.Roster.Refresh("test")
+    m.chatLockdown = true
+    NS.Asks.Request("ask", "Brakk", 7)
+    NS.addon:OnSlashCommand("disable")
+    text = report(NS)
+    assertTrue(text:find("state: enabled=false situation=", 1, true) ~= nil, text)
+    assertTrue(text:find("queuedSends=", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the scoring section names the scorer, Pawn and the pending retries", function()
+    local NS, _, m = T.enableAddon()
+    local text = report(NS)
+    assertTrue(text:find("scoring: scorer=auto adapter=none", 1, true) ~= nil, text)
+    assertTrue(text:find("scoring: pawn ready=false scale=none", 1, true) ~= nil, text)
+    assertTrue(text:find("scoring: retries pending=0 spent=0 timer=off", 1, true) ~= nil, text)
+    m.PawnIsInitialized = true
+    m.PawnFindScaleForSpec = function(classID, specID) return "Scale" .. classID .. ":" .. specID end
+    NS.Gear.Refresh("test")
+    NS.Scoring = { Scorer = function() return function() return 1 end end }
+    text = report(NS)
+    assertTrue(text:find("scoring: scorer=auto adapter=ready", 1, true) ~= nil, text)
+    assertTrue(text:find("scoring: pawn ready=true scale=Scale8:250", 1, true) ~= nil, text)
+    NS.Scoring = nil
+    m.PawnIsInitialized, m.PawnFindScaleForSpec = nil, nil
 end)

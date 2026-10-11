@@ -4,8 +4,9 @@ local _, NS = ...
 -- Sections only: the markers, the identity header's library half, the per-section pcall, the cap
 -- and the Add loop are LibKa0s-DebugLog-1.0's. Every section READS state and never acts: no hold,
 -- no event, no timer, safe in combat and while stood down. `out:add` formats %s-only and runs every
--- argument through safeToString, so raw values are passed, never pre-built strings. The feature
--- items add their own sections (design spec §13) here.
+-- argument through safeToString, so raw values are passed, never pre-built strings. Every section
+-- of design spec §13 is here: State, Feed, Inspect, Gear, Trade, Scoring and Messaging, beside the
+-- standard's identity, settings, registration and integrations.
 
 NS.Diagnostics = NS.Diagnostics or {}
 
@@ -40,6 +41,16 @@ end
 local function profile()
     local db = NS.addon and NS.addon.db
     return db and db.profile or {}
+end
+
+-- Design spec §13's State section: the one line that answers "is it on, where am I, can it talk".
+-- The situation is classified live (the classifier's edge only reads); the rest is stored state.
+local function state(out)
+    local p = profile()
+    local key = read(function() return NS.Situations.Classify(NS.Situations.ReadInputs()) end)
+    local snap = NS.Restrictions.Snapshot()
+    out:add(TAG, "state: enabled=%s situation=%s testMode=%s restriction=%s queuedSends=%s",
+        p.enabled ~= false, key, NS.State.testMode == true, snap.reason or "none", NS.Asks.Stats().queued)
 end
 
 -- The window's show decision and its inputs, so "why is the window not showing" is one read.
@@ -239,6 +250,25 @@ local function messaging(out)
     end
 end
 
+-- Your Pawn scale, read from the stored gear snapshot's class and spec (never a fresh read).
+local function pawnScale()
+    local g = NS.State.gear
+    local classID = g and NS.ClassData.CLASS_ID[g.classFile]
+    if not (classID and g.specID) then return nil end
+    return NS.Compat.PawnScaleForSpec(classID, g.specID)
+end
+
+-- Design spec §5.4, §13's Scoring section: the scorer chosen, whether its adapter is built (the
+-- adapters land with the scoring item), Pawn's readiness and your scale, and the score retries.
+local function scoring(out)
+    local S = NS.Scoring
+    local adapter = type(S) == "table" and type(S.Scorer) == "function" and "ready" or "none"
+    out:add(TAG, "scoring: scorer=%s adapter=%s", NS.SchemaRuntime.Get("comparison.scorer"), adapter)
+    out:add(TAG, "scoring: pawn ready=%s scale=%s", NS.Compat.PawnIsReady(), read(pawnScale) or "none")
+    local r = NS.LootFeed.ScoreRetries()
+    out:add(TAG, "scoring: retries pending=%s spent=%s timer=%s", r.pending, r.spent, r.armed and "on" or "off")
+end
+
 local function registration(out)
     local names = NS.FeatureEventNames and NS.FeatureEventNames() or {}
     out:joined(TAG, "feature events (declared)", names)
@@ -261,6 +291,7 @@ end
 function NS.Diagnostics.Sections()
     return {
         { "identity",     identity },
+        { "state",        state },
         { "settings",     settings },
         { "window",       window },
         { "situation",    situation },
@@ -270,6 +301,7 @@ function NS.Diagnostics.Sections()
         { "gear",         gear },
         { "feed",         feed },
         { "trade",        trade },
+        { "scoring",      scoring },
         { "messaging",    messaging },
         { "registration", registration },
         { "integrations", integrations },

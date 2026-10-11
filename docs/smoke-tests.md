@@ -20,7 +20,7 @@ passed.
 | STATE-1..3 | State | Enable/disable, lock, test mode |
 | COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (lands with DW-20) |
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
-| DIAG-1..2 | Diagnostics | The debug console, the report, perf |
+| DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | FEED-1..15 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, reserved), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31) and the detail card (FEED-13..15, DW-32) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
@@ -228,6 +228,12 @@ is on afterwards. `/dw debug diagnostics` writes the same report again below the
 
 **DIAG-2. Perf.** `/dw perf` → the step panel opens with its own close mark; run A, B and finish →
 the report lists `window.refresh`, and `parse` when a loot line arrived during the run. Result:
+
+**DIAG-3. State and Scoring.** In a dungeon, `/dw diagnostics` → `state: enabled=true
+situation=dungeon testMode=false restriction=none queuedSends=0`; pull a boss and run it again →
+`restriction=encounter`. The `scoring:` lines name the scorer setting, `pawn ready=true scale=<your
+spec's Pawn scale>` with Pawn installed (`ready=false scale=none` without it), and `retries pending=0
+spent=0 timer=off` out of loot. Result:
 
 ## Degraded
 
@@ -720,6 +726,7 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 |---|---|---|
 | INSTALL-1..3, SLASH-1..3, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-3, DIAG-1..2, DEGRADED-1 | DW-02, the scaffold | No client pass recorded yet |
 | COMPAT-1..3 | DW-20, the compat seam | No client pass recorded yet |
+| DIAG-3 | DW-43, the State and Scoring diagnostics sections | No client pass recorded yet |
 | COMBAT-2 | DW-21, the restriction tracker | No client pass recorded yet |
 | ROSTER-1..2 | DW-22, the roster | No client pass recorded yet |
 | ITEM-1..2 | DW-23, the item facts | No client pass recorded yet |

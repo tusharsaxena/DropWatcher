@@ -822,7 +822,7 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
 
-### test_diagnostics.lua (13)
+### test_diagnostics.lua (15)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -837,6 +837,8 @@ Total.
 - diagnostics: the trade section shows the timers, the ticker and each entry
 - diagnostics: the inspect section shows the queue and each member's entry
 - diagnostics: the messaging section counts the registry, the sends and lists each queued ask
+- diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue
+- diagnostics: the scoring section names the scorer, Pawn and the pending retries
 
 ### test_vendor_sync.lua (3)
 
@@ -943,7 +945,7 @@ Total.
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 22 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 13 |
+| test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -951,4 +953,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **777** |
+| **Total** | **779** |
