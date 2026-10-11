@@ -11,3 +11,4 @@
    the owner's merge go-ahead.
 
 ## Log
+- **2026-10-11:** M10 (DW-A0..A6) landed and was reviewed (8866d68). The owner then asked for a shorter, adjustable sim step delay and Loot History's table font, added as DW-A7..A9 (spec §8) and run as M10b. The workflow script with branch/spec/plan args is `orchestration/dw-milestone.workflow.js`.

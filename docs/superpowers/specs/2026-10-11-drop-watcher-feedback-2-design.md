@@ -150,6 +150,36 @@ retention by **age**, set in the settings, like Loot History.
 - Regenerate test-cases.
 - Run a fresh automated-test bundle: four suites, CCN ≤ 15, no authored file over 1000 lines.
 
+## 8. Added while M10 ran (DW-A7..DW-A9)
+
+**FB2-8, the simulation step delay (DW-A7).** Auto-run (`/dw sim run`, the panel's Run all) waits a fixed 3 seconds
+between steps (`SC.STEP_DELAY`). The owner wants it shorter and adjustable:
+- the default becomes **2 seconds**;
+- a new setting, `sim.stepDelay`, labeled "Simulation step delay", runs from 0.5 to 10 seconds in steps of 0.5. It
+  sits in a Simulation group on the settings page that fits best, and works with `/dw set sim.stepDelay <n>`;
+- a change takes effect from the next step of a running timeline;
+- the panel's Run all tooltip names the current delay.
+
+**FB2-9, the table font matches Loot History (DW-A8).** Evidence: `11-font-vs-loothistory.png`. Loot History's table
+uses `GameFontHighlightSmall` at its natural size, with 18-pixel rows (`../LootHistory/modules/BrowserTable.lua`,
+`ROW_H_DEFAULT = 18`). Drop Watcher forces `window.fontSize = 12` through `SetFont` and uses 24-pixel rows. The changes:
+- `window.fontSize`'s default becomes "the template's own size", stored as 0 or nil to mean unchanged;
+- the slider keeps a "Default" position;
+- the row height default moves as close to 18 pixels as the item icons allow, on all three tabs. My drops keeps the
+  extra height its countdown bar needs, but uses the smaller text;
+- a value the player stored stays as it is.
+
+**FB2-10, review leftovers worth fixing (DW-A9).** From the M10 review's low findings:
+- **My drops groups:** it has no roster headers, while the spec says all three tabs. Group its rows by run or
+  encounter with the same header, or record a reasoned deviation if a flat list is clearly better there.
+- **Stale docs:** `docs/data-flow.md` and the TOC comment still describe the retired History cap.
+- **Pruning when disabled:** the once-per-session prune is skipped when the addon starts disabled. Prune when it is
+  enabled later in the session.
+- **Tooltip over the Offer panel:** a row tooltip can cover the Offer panel docked beside the window. Place the
+  tooltip beside the panel, or on the other side.
+- **Stale retention popup:** an old retention popup can re-apply an older choice after a later change that deleted
+  nothing. Make the popup act on the latest pending choice only.
+
 ## 7. Out of scope
 
 Changing what "Interesting" means. The owner chose All as the default instead, so the rule stays as documented.
