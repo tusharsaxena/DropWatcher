@@ -32,22 +32,23 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261011-091808`](20261011-091808/) | `eb7aafb` | clean | 0.1.0 | 0/0 | 109 | 886/1/887 | pass | 25529 | 3369 | 7.0 | 2.4 | 13 | 0 | **green** |
 | [`20261010-232937`](20261010-232937/) | `43d3792` | clean | 0.1.0 → 0.1.0 | 0/0 | 39 | 137/1/138 | pass | 2829 | 533 | 4.3 | 2.0 | 10 | 0 | **green** |
 
 ## Test suite
 
-**138 cases** — 137 passed, 0 failed, 1 skipped. The generated inventory
-[`20261010-232937/test-cases.md`](20261010-232937/test-cases.md) is the authority on which cases existed at this run;
+**887 cases** — 886 passed, 0 failed, 1 skipped. The generated inventory
+[`20261011-091808/test-cases.md`](20261011-091808/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-This is the first recorded run, so there is no trend to read yet.
+Moved **138 → 887** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 39 files** (`luacheck .`).
+**0 warnings / 0 errors over 109 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `docs/audits/`, `docs/reviews/`, `docs/revendor/`, `_dev/`, `tests/_kit/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -56,22 +57,24 @@ to whoever thinks to open `.luacheckrc`.
 
 ## Perf
 
-**3 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261010-232937/perf.json`](20261010-232937/perf.json).
+**5 scenarios** from `tests/perf.lua`; the measurements are in
+[`20261011-091808/perf.json`](20261011-091808/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.00011 | 0.00 | 0.0 |
-| `refreshCaptureOn` | 1000 | 0.00034 | 1.00 | 0.0 |
-| `showDecisionStoodDown` | 1000 | 0.00012 | 0.00 | 0.0 |
+| `refreshCaptureOff` | 1000 | 0.06331 | 0.00 | 13456.1 |
+| `refreshCaptureOn` | 1000 | 0.05854 | 1.00 | 13456.1 |
+| `showDecisionStoodDown` | 1000 | 0.00013 | 0.00 | 0.0 |
+| `parseCaptureOff` | 1000 | 0.01002 | 0.00 | 664.2 |
+| `parseCaptureOn` | 1000 | 0.01014 | 1.00 | 664.2 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261010-232937`](20261010-232937/) — **this run's measurement, not its diff.** Max CCN **10** across 533
-functions, **0** of them warned on; 0 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261011-091808`](20261011-091808/) — **this run's measurement, not its diff.** Max CCN **13** across 3369
+functions, **0** of them warned on; 1 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -90,8 +93,7 @@ None.
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-
-None.
+| 1000–1500 (on notice) | `core/Compat.lua` | 1107 | accepted (DW-61) — compat-§1 makes this the only file allowed to call version-variant client APIs, so it cannot be peeled the way a feature module is; about a third of its lines are comments. Re-check when it nears 1500, or when LibKa0s takes `ChatSender` and the tooltip reader (the documented library-stack-§7 deviation), which removes up to about 160 lines |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN
