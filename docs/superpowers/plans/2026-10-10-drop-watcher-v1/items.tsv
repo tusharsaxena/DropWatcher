@@ -38,3 +38,8 @@ DW-60	M6	DropWatcher	Docs sync: README (de-AI pass), ARCHITECTURE hub + Document
 DW-61	M6	DropWatcher	Automated-test bundle (four suites) + offline perf scenarios + CCN<=15 + file cap	DW-60	M		§15
 DW-62	M6	DropWatcher	Independent review + standards audit; fix findings	DW-61	L		all
 DW-63	M6	DropWatcher	File later-tier GitHub issues (DropWatcher) + LibKa0s promotion + WAS chat-sending proposal, throttled	DW-62	S		§14
+DW-70	M7	DropWatcher	Sim core: NS.Sim seam in Compat, safety, [sim] send seam, session sim history, stand-down	DW-63	M	SIM-1	sim §1 §2 §5
+DW-71	M7	DropWatcher	Sim item pool from the Encounter Journal (own-items fallback) + sim roster and gear generator	DW-70	M	SIM-6	sim §3
+DW-72	M7	DropWatcher	Sim event drivers: loot lines, encounters, restrictions/combat, inspect replies, trade windows, sim trade	DW-71	M	SIM-4 SIM-5	sim §2
+DW-73	M7	DropWatcher	Sim scenarios + timeline, /dw sim verbs, SIM chip/footer, diagnostics, SIM debug tag, end-to-end suite	DW-72	M	SIM-2 SIM-3 SIM-7	sim §4 §6 §7
+DW-74	M7	DropWatcher	M7 docs sync + automated-test bundle	DW-73	S		sim §7 §8

@@ -74,3 +74,5 @@ Record anything unusual here: stashes, exceptions or reruns.
 
 - **2026-10-10:** M0 was launched twice. The first launch was stopped within a minute because its review base was wrong, and it left no commits and a clean tree.
 - **2026-10-11:** the orchestration files were committed to `orchestration/` while M2 was running, as an owner request. M2 was launched with exactly the `milestones.json` M2 args. The workflow run ids are wf_9b95c354-c8a (M0), wf_c73336da-006 (M1) and wf_c4583449-d63 (M2); they are only usable for a same-session resume.
+- **2026-10-11:** the owner held pushes after M1 (auto mode refused the M2 checkpoint), then authorized the push after M6; `Checkpoint M6` (26b9079) covers M2–M6. Before that, DW-61 also split the pure text parsers out of `core/Compat.lua` (9def3b0) at the owner's request.
+- **2026-10-11:** the owner asked for an in-game simulator. It is milestone **M7** (DW-70..74), added by `../2026-10-11-drop-watcher-simulator.md` and its spec; this plan stays frozen. `items.tsv`, `resume-state.sh` (milestone list) and `orchestration/milestones.json` gained M7.

@@ -55,7 +55,7 @@ if [ -r "$EXC" ]; then
 fi
 
 total_done=0; total_all=0; next=""
-for m in M0 M1 M2 M3 M4 M5 M6; do
+for m in M0 M1 M2 M3 M4 M5 M6 M7; do
   [ -n "$only" ] && [ "$only" != "$m" ] && continue
   todo=(); done_n=0
   while IFS=$'\t' read -r id mi repo title rest; do
@@ -73,5 +73,5 @@ done
 
 echo
 printf 'TOTAL %d/%d items landed\n' "$total_done" "$total_all"
-if [ -n "$next" ]; then echo "RESUME at $next"; else echo "RESUME: all items landed; run the M6 checkpoint and ask the owner for the merge go-ahead"; fi
+if [ -n "$next" ]; then echo "RESUME at $next"; else echo "RESUME: all items landed; run the last milestone's checkpoint and ask the owner for the merge go-ahead"; fi
 exit 0
