@@ -2,35 +2,9 @@ local _, NS = ...
 -- core/Compat.lua — the only caller of version-variant, deprecated and optional client APIs
 -- (compat, design spec §4). Feature modules call NS.Compat.X and never name the client API.
 --
--- What lives here, in the order of the file:
---   * the secret guards (IsSecret, CanAccess, IsSafeKey), routed through LibKa0s-Compat-1.0, with
---     the one-rung bodies re-implemented for a library-absent load (that major's "Degradation");
---   * the chat sender (C_ChatInfo.SendChatMessage, then the deprecated global);
---   * the tooltip line reader (C_TooltipInfo, matched by Enum.TooltipDataLineType NAME, with a
---     localized-text fallback) and its three readers: the trade timer on a bag item, the item level
---     of an equipped item, and the upgrade track;
---   * the localized duration decoder behind the trade timer (spec §7.4);
---   * the restriction APIs (C_RestrictedActions, C_ChatInfo.InChatMessagingLockdown);
---   * the player's normalized realm (GetNormalizedRealmName, then GetRealmName) and own spec
---     (LibKa0s-Compat-1.0's GetSpecialization and GetSpecializationInfo);
---   * the bind helpers (C_Item's account binds, the bag item's GUID);
---   * the inventory and bag readers (GetInventoryItemLink, C_Container's slot count and link);
---   * the inspect calls (CanInspect, CheckInteractDistance, NotifyInspect and its hook,
---     ClearInspectPlayer, GetInspectSpecialization, the inventory item id, InspectFrame);
---   * the loot sources beside chat (C_LootHistory's won drops, a keystone's map name);
---   * the item readers behind the item facts (info, effective level, stats, specs, uniqueness,
---     transmog through CanIMogIt when it is loaded, else C_TransmogCollection, the class
---     restriction line);
---   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
---   * the trade actions (C_Container.PickupContainerItem, DropItemOnUnit, InitiateTrade) and their
---     trade-range and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor);
---   * the trade window's contents and partner (GetTradePlayerItemLink, GetTradeTargetItemLink,
---     UnitName("NPC")) and the trade-complete info message (LE_GAME_ERR_TRADE_COMPLETE,
---     ERR_TRADE_COMPLETE) for the history's trade completion, and a row's context menu (MenuUtil);
---   * the drop tables' item buttons and class colors (C_Item.GetItemIconByID, C_ClassColor and
---     RAID_CLASS_COLORS, the chat link and the dressing room), and a spec's name for the detail
---     card (GetSpecializationInfoByID);
---   * the toast's alert sound (PlaySound with a SOUNDKIT entry).
+-- Its sections, in file order, are marked by the banners below; every shim, its ladder and its
+-- absent answer are tabled in docs/compat-layer.md. The text parsing is core/TextParse.lua's (pure,
+-- no client call): this file reads the localized GlobalStrings it needs and hands them over.
 --
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -40,6 +14,7 @@ local _, NS = ...
 
 NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
+local TextParse = NS.TextParse -- core/TextParse.lua, above in the TOC: the pure parsers
 local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
 
 -- ---------------------------------------------------------------------------------------------
@@ -105,113 +80,39 @@ function Compat.ChatSender()
 end
 
 -- ---------------------------------------------------------------------------------------------
--- Pattern building from localized GlobalStrings
+-- Pattern building and the duration decoder (design spec §7.4; the parsing is core/TextParse.lua's)
 -- ---------------------------------------------------------------------------------------------
 
--- Lua pattern magic characters, escaped.
-local function escapePattern(s)
-    return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0"))
-end
+--- A Lua pattern from a printf-style GlobalString (pure); for the tests and modules/LootParser.lua.
+function Compat.FormatToPattern(fmt) return TextParse.FormatToPattern(fmt) end
 
---- A Lua pattern from a printf-style GlobalString: `%s` captures text, `%d` captures digits, the
---- positional forms (`%1$s`) read as their plain spelling and every other character is literal.
---- Pure; exported for the tests and for modules/LootParser.lua, which recovers a positional
---- string's argument order itself.
---- @param fmt string
---- @return string
-function Compat.FormatToPattern(fmt)
-    local marked = fmt:gsub("%%%d+%$", "%%"):gsub("%%s", "\1"):gsub("%%d", "\2")
-    return (escapePattern(marked):gsub("\1", "(.+)"):gsub("\2", "(%%d+)"))
-end
-
--- Every spelling of a template's `|4singular:plural;` grammar (some locales carry three forms), as
--- a list of plain templates. A template without the grammar is its own one spelling.
-local function expandPlural(template)
-    local head, forms, tail = template:match("^(.-)|4([^;]*);(.*)$")
-    if not head then return { template } end
-    local out = {}
-    for form in (forms .. ":"):gmatch("([^:]*):") do
-        for _, rest in ipairs(expandPlural(tail)) do out[#out + 1] = head .. form .. rest end
-    end
-    return out
-end
-
--- ---------------------------------------------------------------------------------------------
--- The duration decoder (design spec §7.4)
--- ---------------------------------------------------------------------------------------------
---
--- The client writes a remaining time as unit terms joined by TIME_UNIT_DELIMITER, each term
--- formatted from INT_SPELL_DURATION_<UNIT> ("%d |4hour:hrs;", "%d min", "%d sec" in enUS). The
--- decoder reads the text back with the same globals, so it works in every client language: it
--- walks the text from the left, matching one unit term anchored at the cursor, then skipping one
--- delimiter. Splitting on the delimiter instead would break, because a term ("2 hrs") can contain
--- it. Written here from that idea; no other addon's code was copied.
-
-local DURATION_UNITS = {
-    { name = "INT_SPELL_DURATION_DAYS",  seconds = 86400 },
-    { name = "INT_SPELL_DURATION_HOURS", seconds = 3600 },
-    { name = "INT_SPELL_DURATION_MIN",   seconds = 60 },
-    { name = "INT_SPELL_DURATION_SEC",   seconds = 1 },
-}
-
--- Every unit term as an anchored pattern with its multiplier, longest spelling first so "hrs" is
--- tried before a "hr" that is its prefix. Built per call: the globals may change under a locale
--- rewrite, and the trade timer reads a handful of items at most.
-local function durationTerms()
-    local terms = {}
-    for _, unit in ipairs(DURATION_UNITS) do
+-- The client's unit templates, `{ template, seconds }`, read per call (a locale rewrite wins).
+local function durationUnits()
+    local units = {}
+    for _, unit in ipairs(TextParse.DURATION_UNITS) do
         local template = globalString(unit.name)
-        if template then
-            for _, spelling in ipairs(expandPlural(template)) do
-                terms[#terms + 1] = { spelling = spelling, seconds = unit.seconds,
-                    pattern = "^" .. Compat.FormatToPattern(spelling) }
-            end
-        end
+        if template then units[#units + 1] = { template = template, seconds = unit.seconds } end
     end
-    table.sort(terms, function(a, b) return #a.spelling > #b.spelling end)
-    return terms
+    return units
 end
 
--- One unit term at `pos`: the seconds it is worth and the position after it, or nil.
-local function matchTerm(text, pos, terms)
-    for _, term in ipairs(terms) do
-        local s, e, n = text:find(term.pattern, pos)
-        if s and n then return tonumber(n) * term.seconds, e + 1 end
-    end
-    return nil
-end
-
---- Seconds in a localized duration ("1 hour 59 min"), or nil when the text is not one. Every term
---- must be a known unit; anything left over makes the whole text unreadable rather than a guess.
+--- Seconds in a localized duration ("1 hour 59 min"), or nil when the text is not wholly one.
 --- @param text string
 --- @return number|nil
 function Compat.DecodeDuration(text)
     text = plainString(text)
     if not text then return nil end
-    text = text:match("^%s*(.-)%s*$")
-    local terms = durationTerms()
-    if text == "" or #terms == 0 then return nil end
-    local delim = globalString("TIME_UNIT_DELIMITER") or " "
-    local total, pos = 0, 1
-    while pos <= #text do
-        local seconds, nextPos = matchTerm(text, pos, terms)
-        if not seconds then return nil end
-        total, pos = total + seconds, nextPos
-        if text:sub(pos, pos + #delim - 1) == delim then pos = pos + #delim end
-    end
-    return total
+    return TextParse.DecodeDuration(text, durationUnits(), globalString("TIME_UNIT_DELIMITER"))
 end
 
---- Seconds left on a trade-time line (BIND_TRADE_TIME_REMAINING with its duration), or nil when
---- the text is not that line.
+--- Seconds left on a trade-time line (BIND_TRADE_TIME_REMAINING with its duration), else nil.
 --- @param text string
 --- @return number|nil
 function Compat.ParseTradeTimeRemaining(text)
     text = plainString(text)
     local fmt = globalString("BIND_TRADE_TIME_REMAINING")
     if not (text and fmt) then return nil end
-    local duration = text:match("^" .. Compat.FormatToPattern(fmt) .. "$")
-    return duration and Compat.DecodeDuration(duration) or nil
+    return TextParse.TradeTimeRemaining(text, fmt, durationUnits(), globalString("TIME_UNIT_DELIMITER"))
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -285,9 +186,7 @@ local function parseItemLevel(text, line)
     local n = plainNumber(line.itemLevel)
     if n then return n end
     local fmt = globalString("ITEM_LEVEL")
-    if not fmt then return nil end
-    local level = text:match("^" .. Compat.FormatToPattern(fmt))
-    return tonumber(level)
+    return fmt and TextParse.ItemLevel(text, fmt) or nil
 end
 
 --- The item level of `unit`'s item in inventory slot `slot`, read off its tooltip's ItemLevel line
@@ -302,11 +201,7 @@ end
 -- ("Upgrade Level: %s %d/%d" in enUS).
 local function parseUpgradeLine(text)
     local fmt = globalString("ITEM_UPGRADE_TOOLTIP_FORMAT_STRING")
-    if not fmt then return nil end
-    local track, cur, max = text:match("^" .. Compat.FormatToPattern(fmt) .. "$")
-    if not (track and tonumber(cur) and tonumber(max)) then return nil end
-    return { trackString = track, currentLevel = tonumber(cur), maxLevel = tonumber(max),
-        source = "tooltip" }
+    return fmt and TextParse.UpgradeLine(text, fmt) or nil
 end
 
 -- C_Item.GetItemUpgradeInfo's table, copied with plain fields only, or nil.
@@ -810,18 +705,7 @@ end
 local function parseClasses(text)
     local fmt = globalString("ITEM_CLASSES_ALLOWED")
     if not fmt then return nil end
-    local list = text:match("^" .. Compat.FormatToPattern(fmt) .. "$")
-    if not list then return nil end
-    local delim = globalString("LIST_DELIMITER") or ", "
-    local byName, set = classFilesByName(), nil
-    for name in (list .. delim):gmatch("(.-)" .. escapePattern(delim)) do
-        local classFile = byName[name]
-        if classFile then
-            set = set or {}
-            set[classFile] = true
-        end
-    end
-    return set
+    return TextParse.ClassSet(text, fmt, globalString("LIST_DELIMITER"), classFilesByName)
 end
 
 --- The classes an item is restricted to (a tier token, a class set piece), as a set

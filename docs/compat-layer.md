@@ -3,8 +3,16 @@
 `core/Compat.lua` is the only file that names a version-variant, deprecated or optional client API
 (compat; design spec §4). Feature modules call `NS.Compat.X`; `luacheck` declares those client
 globals for this one file only, and `test_compat`'s last case fails if any other shipped file names
-one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
-and is read inside functions only.
+one in code. It loads in `# Core` right after `core/TextParse.lua`, needs `LibStub` and `NS.TextParse` at
+load, and is read inside functions only.
+
+The text parsing behind the pattern, duration and tooltip-line shims (`FormatToPattern`, the
+duration decoder, and the item level, upgrade track and class list lines) lives in
+`core/TextParse.lua` (`NS.TextParse`, DW-61). That module is pure: it calls no client API and
+reads no global, so it is not a compat file. `core/Compat.lua` reads the localized GlobalStrings
+at call time, guards them, and passes them in; its members of the same names are one-line
+delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
+in; `test_compat` drives them through the shims.
 
 **Sixty-one shims**, counted the way documentation-§3 counts them
 (`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `61`). The three
@@ -106,11 +114,12 @@ is out of combat.
 
 The client writes a remaining time as unit terms joined by `TIME_UNIT_DELIMITER`, each term formatted
 from an `INT_SPELL_DURATION_<UNIT>` global (`"%d |4hour:hrs;"`, `"%d min"` and `"%d sec"` in enUS).
-`DecodeDuration` reads the text back with the same globals:
+`DecodeDuration` reads the text back with the same globals (the walk is `TextParse.DecodeDuration`;
+the shim reads the globals and passes them in):
 
 1. Each unit's template is expanded into every spelling of its `|4…;` plural grammar (two forms in
    enUS and deDE, three in ruRU), and each spelling becomes an anchored pattern through
-   `FormatToPattern`.
+   `FormatToPattern` (`TextParse.ExpandPlural`, `TextParse.FormatToPattern`).
 2. The spellings are tried longest first, so `hrs` is never cut short by a shorter spelling that is
    its prefix.
 3. The decoder walks the text from the left: one term anchored at the cursor, then one optional
@@ -121,7 +130,7 @@ from an `INT_SPELL_DURATION_<UNIT>` global (`"%d |4hour:hrs;"`, `"%d min"` and `
 The globals are read on every call, so a locale rewrite takes effect at once. The idea is the one
 the brainstorm research credits to RCLootCouncil; the code is written here and copies none of
 theirs. `test_compat` drives it in enUS, in a deDE shape and in a ruRU shape with a `", "`
-delimiter.
+delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 
 ## Who calls what
 

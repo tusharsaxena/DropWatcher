@@ -75,7 +75,8 @@ every cell, the chip and banner, the My drops count; Ask and Post my tradeables 
 sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader, the trade window's items and partner, the row menu, and each shim's fallback
-with its API absent), `test_constants` and
+with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups), `test_evaluate` (the verdict kernel, table-driven over
 every slot plan and every equippability path, plus nil and garbage inputs), `test_scoring` (the

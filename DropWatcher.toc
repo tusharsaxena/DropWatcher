@@ -41,8 +41,11 @@ locales\enUS.lua
 core\Namespace.lua
 # LOAD-BEARING: publishes NS.Print / NS.Util.print and NS.LIBKA0S_MISSING, read at load below.
 core\CoreSetup.lua
+# LOAD-BEARING: publishes NS.TextParse (the pure text parsers, no client call), which core\Compat.lua
+# takes at load just below.
+core\TextParse.lua
 # Conventional: NS.Compat (every version-variant client call and the secret guards) is read inside
-# functions only; it needs LibStub alone at load.
+# functions only; it needs LibStub and NS.TextParse (above) at load.
 core\Compat.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua

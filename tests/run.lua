@@ -107,6 +107,7 @@ Kit.run{
         "test_window_mine",
         "test_test_mode",
         "test_compat",
+        "test_text_parse",
         "test_constants",
         "test_class_data",
         "test_evaluate",

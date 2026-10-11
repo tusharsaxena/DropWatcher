@@ -93,7 +93,7 @@ None.
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-| 1000–1500 (on notice) | `core/Compat.lua` | 1107 | accepted (DW-61) — compat-§1 makes this the only file allowed to call version-variant client APIs, so it cannot be peeled the way a feature module is; about a third of its lines are comments. Re-check when it nears 1500, or when LibKa0s takes `ChatSender` and the tooltip reader (the documented library-stack-§7 deviation), which removes up to about 160 lines |
+| 1000–1500 (on notice) | `core/Compat.lua` | 1107 | resolved (DW-61): the pure text parsers moved to `core/TextParse.lua`, which leaves `core/Compat.lua` at 981 lines, under the plan's 1000-line target; compat-§1 still holds, since the moved code calls no client API. This row records the run above; the next run will not list the file
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN

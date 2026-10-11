@@ -407,6 +407,17 @@ Total.
 - compat: ContextMenu builds one button per entry through MenuUtil, else answers false
 - compat: no other shipped file names a seam-only client API in code
 
+### test_text_parse.lua (8)
+
+- textparse: the module is pure — it names no client global and reads no _G
+- textparse: EscapePattern makes every magic character literal
+- textparse: FormatToPattern captures %s and %d, positional forms included
+- textparse: ExpandPlural spells out two- and three-form grammars, and leaves plain text alone
+- textparse: DecodeDuration sums the terms it is given and refuses leftovers
+- textparse: TradeTimeRemaining reads only the whole trade line
+- textparse: ItemLevel and UpgradeLine read their lines and nothing else
+- textparse: ClassSet maps the listed names and asks for the map only on a match
+
 ### test_constants.lua (12)
 
 - constants: without Enum the item ids fall back to the documented literals
@@ -1064,6 +1075,7 @@ Total.
 | test_window_mine.lua | 32 |
 | test_test_mode.lua | 18 |
 | test_compat.lua | 68 |
+| test_text_parse.lua | 8 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 34 |
@@ -1095,4 +1107,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **901** |
+| **Total** | **909** |
