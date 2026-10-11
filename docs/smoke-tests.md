@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..19 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0) |
+| FEED-1..20 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -282,7 +282,7 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), and FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), and FEED-20 the multi-select View (DW-A1). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
@@ -354,11 +354,11 @@ the item wins: record the item and both verdicts. Result:
 Ka0s edge (a hard black line with a gray line inside it), the gold `Ka0s Drop Watcher` title centered
 on the title bar (no logo), a `Scan group` button with a people mark, a minimize mark and the close mark; the `Group
 drops` tab gold with a gold underline, `My drops` and `History` gray; the filter bar reads `View:
-Interesting`, `Quality: Rare+`, `Content: This instance`, unticked `Likely tradeable only`, `Usable
-by me` and `Upgrade for me`, and the `Filter looter or item…` box; the footer reads `Inspect: no group`, `No loot seen yet` (or
+All`, `Quality: Rare+`, `Content: This instance` and the `Filter looter or item…` box (no checkbox:
+DW-A1 made them View values, FEED-20); the footer reads `Inspect: no group`, `No loot seen yet` (or
 `Last loot …`), `Not tracking in Solo · change in settings`, `Pawn: on` or `off`, and `Sort:
 Newest` beside the corner grip. Hover each control → every one shows a tooltip with a reason.
-Click `My drops` → View, Quality and the three checkboxes gray out (their tooltips say the tab
+Click `My drops` → View and Quality gray out (their tooltips say the tab
 does not use them); set Sort to Oldest there, go back to Group drops → Sort reads Newest again.
 Open each dropdown and press Escape → the window and the open menu both close. Drag by the title
 bar and resize from the corner, `/reload` → the same place and size. In a party, `Scan group` →
@@ -386,7 +386,7 @@ the looter's (two for a ring, trinket or weapon) as icons with item levels, or `
 Trade as `Yes`, `Likely`, `Unknown` or `No`, and an `Ask` button or a dash with an `×`. An upgrade
 for you is green in Me; in Them the looter's upgrade is amber and their downgrade green. With View:
 Interesting the rows are your upgrades plus the drops their looter has no use for that read Yes or
-Likely; View: All lists every drop. Your own loot is not listed here (it is on My drops) until
+Likely; View: All (the default since DW-A1) lists every drop. Your own loot is not listed here (it is on My drops) until
 `/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").db.profile.feed = { showOwn = true }`, which
 lists it too; set it back. Resize the window to its narrowest → Slot, Looter, My eq, Their eq and Ilvl go
 in turn, the column labels with them, and the Ask button and the × stay inside the window; on My
@@ -461,9 +461,8 @@ them little room). Result:
 **FEED-17. The filter bar beside Loot History (DW-82).** With the two windows side by side as in
 FEED-16 → Drop Watcher's search box is a flat, square-cornered box, the same dark fill, thin gray
 line and height as Loot History's `Search items…` box, with its gray hint 6px in; click into it →
-its line turns gold, and click away → gray again. `Likely tradeable only` is a small flat square in
-the same skin (no rounded Blizzard checkbox), with a gold tick when on; hovering it lights its line
-gold, and clicking its label toggles it too. The View, Quality and Content dropdowns match Loot
+its line turns gold, and click away → gray again. (The `Likely tradeable only` checkbox this check
+covered is a View value since DW-A1: FEED-20.) The View, Quality and Content dropdowns match Loot
 History's (same flat box, chevron, font and height), 8px apart. Switch to My drops → the controls it
 does not use gray out the same way. Result:
 
@@ -477,9 +476,8 @@ level(s); hover the cell → its tooltip names each item and says `Inspected 2m 
 inspect cache, read …`); an uninspected looter still shows `…`, `range` or `–`. Settings › Window ›
 Columns → untick My eq → the column goes. Narrow the window → My eq goes before Their eq. Tick
 `Usable by me` → the rows reading Can't use or Not wanted in Me go; tick `Upgrade for me` → only
-your ▲ rows stay; untick both. Switch to My drops and History → both checkboxes gray out, each
-tooltip saying the tab does not use the filter. Settings › Feed › Filters → tick Usable by me,
-`/reload` → a fresh Group drops tab starts with it ticked; untick it. Close the window, then let any
+your ▲ rows stay; untick both. (Since DW-A1 these two are View values, not checkboxes: pick them in
+the View dropdown, and FEED-20 covers the grayed tabs and the settings.) Close the window, then let any
 member loot an item the feed shows → the window opens by itself; close it again and the next drop
 opens it again; loot an item yourself → it opens too. Minimize it, let another drop come → it stays
 minimized and its `n new` count rises. Untick General › When to show › Dungeon › Auto-open → drops
@@ -499,6 +497,23 @@ Switch View to All → both rows show and the header reads `2 drops`. A reagent 
 row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
 `/dw diagnostics` → its `drops` section reads `drops: hidden notGear=2` (plus any others) and
 `drops: refused pushed=1`. Result:
+
+**FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** On a
+character whose profile never changed the View, `/dw show` → the bar reads `View: All` and no
+checkbox is left on it. Open View → its rows are `View: All`, `Interesting`, `Likely tradeable`,
+`Usable by me` and `Upgrade for me`, and the menu stays open as you click. Click `Likely tradeable`
+→ the button reads `Likely tradeable` and only Yes or Likely rows stay; click `Usable by me` too →
+`View: 2 selected`, and a row must pass both; click `Likely tradeable` again → `Usable by me`;
+click `View: All` → every row comes back. Hover View → a bullet line per value (`• All: …`,
+`• Interesting: …`, `• Likely tradeable: …`, `• Usable by me: …`, `• Upgrade for me: …`). Switch to
+History → View stays live, `Likely tradeable` is gray in the menu and does not tick, and its
+tooltip line is gray with `(not on this tab)`; switch to My drops → View grays out. Settings › Feed
+› Filters → four rows, `View: Interesting`, `View: Likely tradeable`, `View: Usable by me`, `View:
+Upgrade for me`, all unticked; Trade › Timers no longer has Likely tradeable only. `/dw get
+feed.view.likely` → `false`; `/dw set feed.view.usable true`, `/reload`, `/dw show` → a fresh
+Group drops tab reads `Usable by me`; `/dw set feed.view.usable false`. On a character that had
+ticked Usable by me or Likely tradeable only in the old settings (or `View: All` saved), the first
+load of this version → the same choices show as View values. Result:
 
 ## Roster
 
@@ -1106,6 +1121,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | FEED-16 | DW-81, the header matched to Loot History | No client pass recorded yet |
 | FEED-17 | DW-82, the filter bar matched to Loot History | No client pass recorded yet |
 | FEED-18 | DW-83, My eq, Their eq, the two new filters, auto-open on every drop | No client pass recorded yet |
+| FEED-20 | DW-A1, View: All by default, the multi-select View, its tooltip and the migration | No client pass recorded yet |
 | STATE-4 | DW-84, test mode with real items, History test data, no trailing ellipsis | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |

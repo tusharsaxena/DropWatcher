@@ -248,46 +248,83 @@ end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
 
-test("shell: the filter bar holds View, Quality, Content, the three checkboxes and the search box", function()
+test("shell: the filter bar holds View, Quality, Content and the search box, and no checkbox", function()
     local NS = shown()
     local c = NS.WindowFilterBar.Controls()
-    assertEqual(textOf(c.view.text), "View: Interesting")
+    assertEqual(textOf(c.view.text), "View: All", "All is the default View (FB2-1)")
     assertEqual(textOf(c.quality.text), "Quality: Rare+")
     assertEqual(textOf(c.content.text), "Content: This instance")
-    assertEqual(textOf(c.likelyOnly.label), "Likely tradeable only")
-    assertFalse(c.likelyOnly:GetChecked())
-    assertEqual(textOf(c.usableOnly.label), "Usable by me")
-    assertEqual(textOf(c.upgradeOnly.label), "Upgrade for me")
-    assertFalse(c.usableOnly:GetChecked()); assertFalse(c.upgradeOnly:GetChecked())
+    assertTrue(c.likelyOnly == nil and c.usableOnly == nil and c.upgradeOnly == nil,
+        "the checkboxes are View values now (FB2-2)")
     assertEqual(textOf(c.search.hint), "Filter looter or item…")
     assertTrue(c.search:IsShown(), "the default width leaves room for the search box")
 end)
 
--- Feedback spec §3 (FB-8): the two checkboxes after Likely tradeable only, in the same skin.
-test("shell: Usable by me and Upgrade for me follow Likely tradeable only, each in the flat skin", function()
+-- Feedback-2 spec §1 (FB2-2): the View is multi-select like Loot History's Direction.
+local function pick(dd, value)
+    dd:ToggleSelected(value)
+    if dd.onMultiSelect then dd.onMultiSelect(dd._selected) end
+end
+
+test("shell: the View is multi-select: its values combine, the label counts them, and All clears them", function()
     local NS = shown()
-    local c = NS.WindowFilterBar.Controls()
-    local _, rel, _, x = c.usableOnly:GetPoint(1)
-    assertTrue(rel == c.likelyOnly.label, "Usable by me after Likely tradeable only's label")
-    assertEqual(x, 8)
-    _, rel = c.upgradeOnly:GetPoint(1)
-    assertTrue(rel == c.usableOnly.label, "Upgrade for me after Usable by me")
-    for _, key in ipairs({ "usableOnly", "upgradeOnly" }) do
-        assertEqual(c[key].__backdrop.edgeSize, 1, key)
-        c[key]:SetChecked(true)
-        c[key]:__fire("OnClick")
-        assertTrue(NS.WindowFilterBar.State("group")[key], key .. ": a click sets the tab's state")
-        assertTrue(#NS.Window.TooltipOf(c[key]) >= 2, key .. ": a tooltip with a reason")
-    end
-    NS.Window.SelectTab("mine")
-    assertFalse(c.usableOnly:IsEnabled(), "My drops does not use it: grayed")
-    assertFalse(c.upgradeOnly:IsEnabled())
-    assertEqual(NS.Window.TooltipOf(c.upgradeOnly)[2], "This tab does not use this filter.")
-    assertFalse(c.upgradeOnly:GetChecked(), "My drops' own state")
+    local FB, c = NS.WindowFilterBar, NS.WindowFilterBar.Controls()
+    assertTrue(c.view.multi, "multi-select")
+    local labels = {}
+    for _, o in ipairs(c.view._options) do labels[#labels + 1] = o.label end
+    assertEqual(table.concat(labels, ","), "View: All,Interesting,Likely tradeable,Usable by me,Upgrade for me")
+    pick(c.view, "likely")
+    assertEqual(textOf(c.view.text), "Likely tradeable", "one value: its name")
+    assertTrue(FB.State("group").view.likely)
+    pick(c.view, "usable")
+    assertEqual(textOf(c.view.text), "View: 2 selected")
+    local v = FB.State("group").view
+    assertTrue(v.likely and v.usable and v.interesting == nil)
+    pick(c.view, "likely")
+    assertEqual(textOf(c.view.text), "Usable by me", "a second click takes a value out")
+    pick(c.view, "all")
+    assertEqual(textOf(c.view.text), "View: All")
+    assertEqual(next(FB.State("group").view), nil, "All clears the others")
+end)
+
+test("shell: each tab grays the View values it does not use, and a grayed value does not toggle", function()
+    local NS = shown()
+    local FB, c = NS.WindowFilterBar, NS.WindowFilterBar.Controls()
     NS.Window.SelectTab("history")
-    assertFalse(c.usableOnly:IsEnabled(), "nor does History")
+    assertTrue(c.view:IsEnabled(), "History uses the View")
+    local colors = {}
+    for _, o in ipairs(c.view._options) do colors[o.value] = o.color end
+    assertTrue(colors.likely ~= nil, "History has no Likely tradeable: grayed")
+    assertTrue(colors.interesting == nil and colors.usable == nil and colors.upgrade == nil)
+    pick(c.view, "likely")
+    assertEqual(next(FB.State("history").view), nil, "a grayed value neither toggles nor filters")
+    pick(c.view, "upgrade")
+    assertTrue(FB.State("history").view.upgrade)
+    NS.Window.SelectTab("mine")
+    assertFalse(c.view:IsEnabled(), "My drops does not use the View")
     NS.Window.SelectTab("group")
-    assertTrue(c.usableOnly:IsEnabled() and c.usableOnly:GetChecked(), "the Group drops state comes back")
+    for _, o in ipairs(c.view._options) do assertTrue(o.color == nil, o.value .. " is used on Group drops") end
+    assertEqual(textOf(c.view.text), "View: All", "the Group drops state comes back")
+end)
+
+-- FB2-3: the View tooltip is a bullet list, one line per value.
+test("shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use", function()
+    local NS = shown()
+    local W, c = NS.Window, NS.WindowFilterBar.Controls()
+    local tip = W.TooltipOf(c.view)
+    assertEqual(tip[1], "View")
+    assertEqual(#tip, 6, "the title and five values")
+    assertEqual(tip[2], "• All: every drop that passed the situation and quality gates.")
+    assertTrue(tip[3]:find("^• Interesting: ") ~= nil)
+    assertTrue(tip[4]:find("^• Likely tradeable: ") ~= nil)
+    assertTrue(tip[5]:find("^• Usable by me: ") ~= nil)
+    assertTrue(tip[6]:find("^• Upgrade for me: ") ~= nil)
+    for i = 2, 6 do assertTrue(tip[i]:find("not on this tab", 1, true) == nil, "Group drops uses them all") end
+    NS.Window.SelectTab("history")
+    tip = W.TooltipOf(c.view)
+    assertTrue(tip[4]:find("(not on this tab)", 1, true) ~= nil and tip[4]:find("^|cff") ~= nil,
+        "History grays Likely tradeable")
+    assertTrue(tip[5]:find("not on this tab", 1, true) == nil)
 end)
 
 -- Ka0s Loot History's filter bar look (ui spec §2, FB-5): ../LootHistory/modules/BrowserFilterBar.lua.
@@ -322,26 +359,6 @@ test("shell: the search box is Loot History's flat, square box", function()
     assertEqual(eb.__backdropBorder[1], LH_LINE[1], "and the line goes back")
 end)
 
-test("shell: the checkbox is a flat square box with the dropdowns' skin and a gold tick", function()
-    local NS = shown()
-    local cb = NS.WindowFilterBar.Controls().likelyOnly
-    assertEqual(cb.__frameType, "CheckButton")
-    assertFlatSkin(cb, "checkbox")
-    assertEqual(cb.__width, 14)
-    assertEqual(cb.__height, 14, "square")
-    local tick = cb:GetCheckedTexture()
-    assertTrue(tick == cb.tick and tick ~= nil, "the tick is the checked texture")
-    assertEqual(tick:GetTexture(), NS.Icon("confirm"), "the same tick the dropdown menus use")
-    assertEqual(cb.label.__template, "GameFontHighlightSmall")
-    cb:__fire("OnEnter")
-    assertEqual(cb.__backdropBorder[1], 1, "hover lights the line gold")
-    cb:__fire("OnLeave")
-    assertEqual(cb.__backdropBorder[1], LH_LINE[1])
-    cb:SetChecked(true)
-    cb:__fire("OnClick")
-    assertTrue(NS.WindowFilterBar.State("group").likelyOnly, "a click still filters")
-end)
-
 test("shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them", function()
     local NS = shown()
     local c = NS.WindowFilterBar.Controls()
@@ -357,10 +374,10 @@ end)
 test("shell: each tab keeps its own filter state, and grays what it does not use", function()
     local NS = shown()
     local FB, c = NS.WindowFilterBar, NS.WindowFilterBar.Controls()
-    c.view.onSelect("all")
-    assertEqual(FB.State("group").view, "all")
+    pick(c.view, "interesting")
+    assertTrue(FB.State("group").view.interesting)
     NS.Window.SelectTab("mine")
-    assertEqual(FB.State("mine").view, "interesting", "a separate state")
+    assertEqual(next(FB.State("mine").view), nil, "a separate state")
     assertFalse(c.view:IsEnabled(), "My drops does not use View: grayed, not hidden")
     assertTrue(c.view:IsShown())
     assertTrue(c.search:IsEnabled())
@@ -368,7 +385,7 @@ test("shell: each tab keeps its own filter state, and grays what it does not use
     c.search:__fire("OnTextChanged", true)
     assertEqual(FB.State("mine").search, "crown")
     NS.Window.SelectTab("group")
-    assertEqual(textOf(c.view.text), "View: All", "the tab's own state comes back onto the bar")
+    assertEqual(textOf(c.view.text), "Interesting", "the tab's own state comes back onto the bar")
     assertEqual(c.search:GetText(), "")
     assertTrue(c.view:IsEnabled())
 end)
@@ -378,24 +395,22 @@ test("shell: a filter change redraws the active tab with the new state", functio
     local seen
     NS.Window.RegisterTab("group", { build = function() end, refresh = function(_, ctx) seen = ctx.filter end })
     local c = NS.WindowFilterBar.Controls()
-    c.likelyOnly:SetChecked(true)
-    c.likelyOnly:__fire("OnClick")
-    assertTrue(seen.likelyOnly)
-    assertFalse(NS.WindowFilterBar.Set("group", "view", "bogus"), "an invalid value is refused")
+    pick(c.view, "likely")
+    assertTrue(seen.view.likely)
+    assertFalse(NS.WindowFilterBar.Set("group", "view", "all"), "the View takes a set, not a string")
+    assertFalse(NS.WindowFilterBar.Set("group", "view", { bogus = true }), "an unknown value is refused")
+    assertFalse(NS.WindowFilterBar.Set("group", "view", { likely = "yes" }), "a member is true")
 end)
 
 test("shell: a fresh tab's state is seeded from the profile's feed settings when valid", function()
     local NS = T.enableAddon()
-    NS.addon.db.profile.feed = { view = "all", content = "nonsense", sort = "ilvl" }
-    NS.addon.db.profile.feed.usableOnly, NS.addon.db.profile.feed.upgradeOnly = true, "yes"
-    NS.addon.db.profile.trade = { likelyOnly = true }
+    NS.addon.db.profile.feed = { view = { likely = true, usable = true, upgrade = "yes" },
+        content = "nonsense", sort = "ilvl" }
     local st = NS.WindowFilterBar.State("group")
-    assertEqual(st.view, "all")
+    assertTrue(st.view.likely and st.view.usable)
+    assertTrue(st.view.upgrade == nil, "an invalid stored value falls back to off")
     assertEqual(st.content, "instance", "an invalid stored value falls back")
     assertEqual(st.sort, "ilvl")
-    assertTrue(st.likelyOnly)
-    assertTrue(st.usableOnly)
-    assertFalse(st.upgradeOnly, "an invalid stored value falls back to off")
 end)
 
 test("shell: the Quality control shows the mode in force and sets it through the shared handler", function()
@@ -449,13 +464,14 @@ end)
 
 test("shell: Matches applies only the controls a tab honors", function()
     local FB = T.newAddon().WindowFilterBar
-    local st = { view = "interesting", content = "instance", likelyOnly = true, search = "", sort = "newest" }
+    local st = { view = { interesting = true, likely = true }, content = "instance", search = "", sort = "newest" }
     local dull = drop({ me = { verdict = "downgrade" }, trade = { state = "unknown" } })
-    assertFalse(FB.Matches(dull, st, nil, FB.HONORS.group), "not interesting")
-    st.view = "all"
-    assertFalse(FB.Matches(dull, st, nil, FB.HONORS.group), "likely tradeable only")
+    assertEqual(FB.HiddenBy(dull, st, nil, FB.HONORS.group), "interesting", "not interesting, the first value")
+    st.view = { likely = true }
+    assertEqual(FB.HiddenBy(dull, st, nil, FB.HONORS.group), "likely", "not likely tradeable")
     assertTrue(FB.Matches(dull, st, nil, FB.HONORS.mine), "My drops uses neither")
-    st.likelyOnly = false
+    assertTrue(FB.Matches(dull, st, nil, FB.HONORS.history), "History has no Likely tradeable")
+    st.view = {}
     assertTrue(FB.Matches(dull, st, { instanceSince = 50 }, FB.HONORS.group))
     assertFalse(FB.Matches(dull, st, { instanceSince = 150 }, FB.HONORS.group), "before this instance")
     st.content = "all"
@@ -469,11 +485,11 @@ test("shell: Matches applies only the controls a tab honors", function()
     assertFalse(FB.Matches(nil, st))
 end)
 
--- Feedback spec §3 (FB-8): Usable by me hides can't use and doesn't want; Upgrade for me keeps
--- only your upgrades. Both are the Group drops tab's alone.
+-- Feedback spec §3 (FB-8), now View values (feedback-2 spec §1): Usable by me hides can't use and
+-- doesn't want; Upgrade for me keeps only your upgrades. My drops uses neither.
 test("shell: Usable by me hides what you can't use or don't want; Upgrade for me keeps your upgrades", function()
     local FB = T.newAddon().WindowFilterBar
-    local st = { view = "all", content = "all", search = "", sort = "newest", usableOnly = true }
+    local st = { view = { usable = true }, content = "all", search = "", sort = "newest" }
     local function v(verdict) return drop({ me = verdict and { verdict = verdict } or false }) end
     for _, verdict in ipairs({ "upgrade", "sidegrade", "downgrade", "unknown" }) do
         assertTrue(FB.Matches(v(verdict), st, nil, FB.HONORS.group), "usable: " .. verdict)
@@ -482,14 +498,20 @@ test("shell: Usable by me hides what you can't use or don't want; Upgrade for me
     assertFalse(FB.Matches(v("cantUse"), st, nil, FB.HONORS.group))
     assertFalse(FB.Matches(v("doesntWant"), st, nil, FB.HONORS.group), "your own preferences")
     assertTrue(FB.Matches(v("cantUse"), st, nil, FB.HONORS.mine), "My drops does not use it")
-    st.usableOnly, st.upgradeOnly = false, true
+    st.view = { upgrade = true }
     assertTrue(FB.Matches(v("upgrade"), st, nil, FB.HONORS.group))
     for _, verdict in ipairs({ "sidegrade", "downgrade", "cantUse", "doesntWant", "unknown" }) do
         assertFalse(FB.Matches(v(verdict), st, nil, FB.HONORS.group), "upgrade only: " .. verdict)
     end
     assertFalse(FB.Matches(v(nil), st, nil, FB.HONORS.group), "not judged yet: not an upgrade")
-    assertTrue(FB.Matches(v("downgrade"), st, nil, FB.HONORS.history), "History does not use it")
-    assertFalse(FB.Set("group", "upgradeOnly", "yes"), "a checkbox takes a boolean only")
+    assertFalse(FB.Matches(v("downgrade"), st, nil, FB.HONORS.history), "History uses it")
+    assertTrue(FB.Matches(v("downgrade"), st, nil, FB.HONORS.mine), "My drops does not")
+    st.view = { usable = true, upgrade = true }
+    assertEqual(FB.HiddenBy(v("cantUse"), st, nil, FB.HONORS.group), "usable", "AND: the first value that fails")
+    assertEqual(FB.HiddenBy(v("sidegrade"), st, nil, FB.HONORS.group), "upgrade")
+    assertTrue(FB.Matches(v("upgrade"), st, nil, FB.HONORS.group), "passes both")
+    assertEqual(FB.ReasonLabel("usable", st), "View: Usable by me")
+    assertEqual(FB.ReasonLabel("content", { content = "instance" }), "Content: This instance")
 end)
 
 test("shell: Comparator orders newest, oldest, by item level and by your gain", function()
@@ -775,7 +797,7 @@ test("shell: every control on the chrome has a tooltip with a reason", function(
     local segs, sort = NS.WindowFooter.Parts()
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
     local widgets = { f.scanButton, f.minimizeButton, f.badge, f.newChip, f.tabs.group, f.tabs.mine,
-        f.tabs.history, c.view, c.quality, c.content, c.likelyOnly, c.usableOnly, c.upgradeOnly, c.search, sort,
+        f.tabs.history, c.view, c.quality, c.content, c.search, sort,
         segs.inspect, segs.loot, segs.situation, segs.pawn }
     for i, w in ipairs(widgets) do
         local tip = W.TooltipOf(w)
@@ -797,7 +819,7 @@ test("shell: without the Widgets library the window builds with no dead dropdown
     assertFalse(NS.HasWidgets())
     local c = NS.WindowFilterBar.Controls()
     assertTrue(c.view == nil and c.quality == nil and c.content == nil)
-    assertTrue(c.likelyOnly ~= nil and c.search ~= nil, "the checkbox and the search still filter")
+    assertTrue(c.search ~= nil, "the search still filters")
     local _, sort = NS.WindowFooter.Parts()
     assertTrue(sort == nil)
     NS.CloseMenu()

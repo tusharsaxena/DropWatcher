@@ -63,7 +63,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (7)
+### test_database.lua (9)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -71,6 +71,8 @@ Total.
 - database: a step that raises leaves the stamp at the last completed step
 - database: step 2 reaches a stored profile that is not the active one
 - database: step 2 passes a fresh default profile through unchanged
+- database: step 3 folds the View and the three checkboxes into the View set, per profile
+- database: step 3 passes a profile already in the new shape through unchanged
 - database: the profile defaults carry every Master controls value, and no debug flag
 
 ### test_schema.lua (11)
@@ -179,7 +181,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (49)
+### test_window_shell.lua (50)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -196,10 +198,11 @@ Total.
 - shell: My drops counts your tradeable drops in its label
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
 - shell: a tab with no body says what it will hold, never a blank pane
-- shell: the filter bar holds View, Quality, Content, the three checkboxes and the search box
-- shell: Usable by me and Upgrade for me follow Likely tradeable only, each in the flat skin
+- shell: the filter bar holds View, Quality, Content and the search box, and no checkbox
+- shell: the View is multi-select: its values combine, the label counts them, and All clears them
+- shell: each tab grays the View values it does not use, and a grayed value does not toggle
+- shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use
 - shell: the search box is Loot History's flat, square box
-- shell: the checkbox is a flat square box with the dropdowns' skin and a gold tick
 - shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
 - shell: each tab keeps its own filter state, and grays what it does not use
 - shell: a filter change redraws the active tab with the new state
@@ -1256,13 +1259,13 @@ Total.
 | test_harness.lua | 10 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 18 |
-| test_database.lua | 7 |
+| test_database.lua | 9 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 49 |
+| test_window_shell.lua | 50 |
 | test_window_group.lua | 35 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
@@ -1308,4 +1311,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1078** |
+| **Total** | **1081** |

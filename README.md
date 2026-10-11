@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1078%2F1078_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1081%2F1081_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -36,8 +36,9 @@ item, its item level and slot, who looted it, what you wear there (**My eq**) an
 there (**Their eq**), each as icons with item levels, then two verdicts: **Me** (is
 it an upgrade for you?) and **Them** (is it one for the looter?). ▲ means upgrade, ≈ sidegrade, ▽
 downgrade. **Trade** reads Yes, Likely, Unknown or No. Hover any cell to see why; hover Their eq for
-how old the read of the looter's gear is. Tick **Usable by me** to hide what you can't use or don't
-want, or **Upgrade for me** to see only your upgrades. Shift-click the
+how old the read of the looter's gear is. The **View** dropdown starts on All; pick **Interesting**,
+**Likely tradeable**, **Usable by me** or **Upgrade for me** to narrow it, several at once if you
+like (a drop must pass each), and All again to clear them. Shift-click the
 icon to link the item, ctrl-click to try it on. **Ask** whispers the looter once; mid-fight the
 whisper waits and goes out when the fight ends, and a second click cancels it. Click the row itself
 and a detail card opens under it with the full reasoning: what the item would replace for you and

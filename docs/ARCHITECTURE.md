@@ -33,7 +33,7 @@ lists the toolchain):
 | Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`) and the shared `NS.CloseMenu` |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown at all (`NS.MakeDropdown` answers nil and
-the checkbox and search box still filter), and `NS.CloseMenu` is a no-op. Each setup file holds a
+the search box still filters), and `NS.CloseMenu` is a no-op. Each setup file holds a
 descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live
 surface.
 
@@ -98,8 +98,7 @@ before the database exists). The rows are `settings/Schema.lua`'s `Settings.Sche
 composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
 §12.1 (`settings/SchemaRows.lua`): General's `When to show` (master `autoOpen` and
 `situations.<key>.track|autoOpen|quality`), Feed (`feed.quality.*`, the filters and the filter bar's
-seeds, `feed.usableOnly` and `feed.upgradeOnly` since DW-83), Comparison (`comparison.*`), Trade (`trade.rules.<situation>`, `trade.warnAt`,
-`trade.likelyOnly`), Messages (`messages.*`), Window (`window.columns.<col>`, `window.compact`,
+seeds, the View set `feed.view.<value>` since DW-A1), Comparison (`comparison.*`), Trade (`trade.rules.<situation>`, `trade.warnAt`), Messages (`messages.*`), Window (`window.columns.<col>`, `window.compact`,
 `rowHeight`, `fontSize`, `toast.*`) and the account-wide history cap `global.history.maxGroups`.
 Each row's `group` is its tab on its page (design spec §12.2; a page draws the rows whose `page` is
 its key, `Settings.RowsForPage`), a row with nothing to do carries a `disabledIf` predicate that dims
@@ -129,8 +128,10 @@ button's remembered view, written by `Window.SetMinimized` alone. Every other se
 the feed read is a row: the Group drops table's compact preset (`NS.SetCompact`, the Window page's
 row and `/dw compact`) and the filter bar's Quality control (`NS.SetQualityMode`, the Feed page's
 row) both write through the seam. The filter bar's per-tab state is session-only
-(`NS.State.windowFilters`), seeded from the `feed.view`, `feed.content`, `feed.sort` and
-`trade.likelyOnly` rows when they hold a valid value;
+(`NS.State.windowFilters`), seeded from the `feed.view.<value>`, `feed.content` and `feed.sort`
+rows when they hold a valid value. Its View is a set (DW-A1): the multi-select View dropdown's
+values combine as AND, All is the empty set and the default, and each tab grays the values it does
+not use (`FB.HONORS[tab].views`);
 test mode sets the Group drops tab's View to All while it is on and puts the player's value back
 when it ends (`modules/TestMode.lua`). The
 Group drops table's collapsed groups, dismissed rows and the one expanded row (the detail card)
@@ -150,7 +151,8 @@ while a simulation runs is real, keeps the real situation and is saved (`History
 `global.minimap.minimapPos` is LibDBIcon's own
 write into the table the launcher hands it. The load pass is `NS:RunMigrations`
 (`core/Database.lua`), whose step 2 (`NS.RepairStoredSettings`) drops a stored value a row now
-refuses, in every stored profile. No structural registry exists yet.
+refuses, in every stored profile, and whose step 3 (`NS.MigrateViewSet`, DW-A1) turns the old
+`feed.view` string and the three retired checkbox rows into the View set. No structural registry exists yet.
 
 ## Message Bus
 

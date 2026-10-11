@@ -320,11 +320,12 @@ end)
 test("test mode: the Group drops tab shows View: All while on, and the player's View comes back", function()
     local NS = T.enableAddon()
     local FB = NS.WindowFilterBar
-    assertEqual(FB.State("group").view, "interesting")
+    FB.Set("group", "view", { interesting = true, usable = true })
     NS.SetTestMode(true)
-    assertEqual(FB.State("group").view, "all")
+    assertEqual(FB.ViewLabel(FB.State("group").view), "View: All")
     NS.SetTestMode(false)
-    assertEqual(FB.State("group").view, "interesting")
+    local v = FB.State("group").view
+    assertTrue(v.interesting and v.usable and v.likely == nil, "the player's View comes back")
 end)
 
 -- ── the History tab (FB-10) ─────────────────────────────────────────────────────────────────

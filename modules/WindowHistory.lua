@@ -449,7 +449,7 @@ local function build(pane)
     if not v.seeded then
         v.seeded = true
         local st = NS.WindowFilterBar.State("history")
-        st.view, st.content = "all", "all"
+        st.view, st.content = {}, "all"
     end
 end
 

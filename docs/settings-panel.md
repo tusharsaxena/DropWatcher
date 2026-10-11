@@ -60,10 +60,11 @@ the plan's fallback says, and a LibKa0s issue asking for a grid composer is file
 `In force now: Quality: Rare+`: the filter bar's label for where you stand, naming the situation
 when its own setting overrides the feed's mode. It repaints with every write.
 
-**Filters:** View, Content and Sort (what a fresh Group drops tab starts with), Gear only, Tier
-tokens, Minimum item level with its absolute and relative values (each live in its mode only), Usable
-by me and Upgrade for me (what a fresh tab's two checkboxes start with, DW-83), Show my own loot in
-Group drops, Clear on boss kill.
+**Filters:** View: Interesting, View: Likely tradeable, View: Usable by me and View: Upgrade for me
+(the View a fresh tab opens on, one checkbox per value; all unticked is View: All, the default,
+DW-A1), Content and Sort (what a fresh tab starts with), Gear only, Tier tokens, Minimum item level
+with its absolute and relative values (each live in its mode only), Show my own loot in Group drops,
+Clear on boss kill.
 
 ## Comparison
 
@@ -84,7 +85,7 @@ each time.
 ## Trade
 
 **Rules:** the loot rule per situation (`trade.rules.<situation>`). **Timers:** Warn before a trade
-window closes, Likely tradeable only.
+window closes. (Likely tradeable only moved to Feed › Filters as View: Likely tradeable, DW-A1.)
 
 ## Messages
 

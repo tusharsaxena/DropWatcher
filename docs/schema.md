@@ -43,11 +43,10 @@ dungeons and raids, `track` alone for Raid Finder, and off elsewhere.
 | `feed.quality.fixed` | `3` (Rare) | Quality | the fixed mode's threshold, Uncommon to Legendary |
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
 | `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you shows below the threshold |
-| `feed.view`, `feed.content`, `feed.sort` | `"interesting"`, `"instance"`, `"newest"` | Filters | a fresh filter bar tab's View, Content and Sort |
+| `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade` | `false` each | Filters | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me), the values combine as AND, and all off is All, the default |
+| `feed.content`, `feed.sort` | `"instance"`, `"newest"` | Filters | a fresh filter bar tab's Content and Sort |
 | `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Filters | armor, weapons, jewelry and trinkets only; tier tokens too |
 | `feed.minIlvlMode` | `"off"` | Filters | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
-| `feed.usableOnly` | `false` | Filters | a fresh filter bar tab's Usable by me: hides the drops whose verdict for you is can't use or doesn't want (DW-83) |
-| `feed.upgradeOnly` | `false` | Filters | a fresh filter bar tab's Upgrade for me: lists only your upgrades (DW-83) |
 | `feed.showOwn` | `false` | Filters | your own loot in Group drops too (your own drops auto-open the window and count toward `n new` either way since DW-83) |
 | `feed.clearOnBossKill` | `false` | Filters | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 
@@ -72,7 +71,6 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 |---|---|---|---|
 | `trade.rules.<situation>` | per design spec §7.2 (`personal`; `legacy` for follower dungeons and PvP) | Rules | the rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded |
 | `trade.warnAt` | `600` | Timers | seconds left when your own item's trade timer warns, 0 to 1800; 0 is off |
-| `trade.likelyOnly` | `false` | Timers | a fresh filter bar tab's Likely tradeable only |
 
 ### Messages
 
@@ -152,8 +150,9 @@ history = { maxGroups = 20, v = 1, groups = {
 ## Session-only (never saved)
 
 `NS.State.debug` (the logging flag), `NS.State.testMode`, `NS.State.windowOpen`,
-`NS.State.windowFilters` (the filter bar's state per tab, seeded from `feed.view`, `feed.content`,
-`feed.sort` and `trade.likelyOnly` when they hold a valid value),
+`NS.State.windowFilters` (the filter bar's state per tab, `{ view = { [value] = true }, content,
+search, sort }`, seeded from the `feed.view.<value>`, `feed.content` and `feed.sort` rows when they
+hold a valid value),
 `NS.State.windowGroup` (the Group drops table's collapsed groups, dismissed rows and the row whose detail card is open),
 `NS.State.windowMine` (the My drops tab's hidden rows and the upgrades whose candidates you chose to see),
 `NS.State.offerPanel` (the drop the Offer panel shows),
@@ -166,7 +165,7 @@ and Test mode rows are `sessionOnly` and store through their own closures.
 ## Migrations
 
 `core/Database.lua`: `NS.MIGRATIONS` is a list of steps `{ to, run, perProfile }`, and
-`NS.SCHEMA_VERSION` is the highest step's `to` (today 2). The runner runs in `OnInitialize` straight
+`NS.SCHEMA_VERSION` is the highest step's `to` (today 3). The runner runs in `OnInitialize` straight
 after `AceDB:New`, before anything reads the profile, and again on every profile event. It owns the
 stamp: a step's `to` is stored only after the step returned, so a step that raises is retried on the
 next load. A `perProfile` step runs for every stored profile in the raw SavedVariables, not only the
@@ -176,5 +175,6 @@ active one. The default stays `0`.
 |---|---|
 | 1 | 0 → 1: the stamp itself; nothing to reshape |
 | 2 | 1 → 2, per profile: every setting has a row (DW-40). A stored value its row now refuses (the wrong type, or outside its list or range) is dropped, so the default shows: before the rows, `feed.quality.mode` and `window.compact` were written straight onto the profile, and `trade.rules.*`, `messages.*` and `situations.*` were read with forgiving fallbacks. A valid value and every default pass through unchanged (`NS.RepairStoredSettings`) |
+| 3 | 2 → 3, per profile: the View becomes a set (DW-A1, feedback-2 spec §1). A stored `feed.view` string becomes `feed.view = { [value] = true }` (`interesting` keeps Interesting, `all` is the empty set), and the retired `trade.likelyOnly`, `feed.usableOnly` and `feed.upgradeOnly` fold into it as `likely`, `usable` and `upgrade` when they were on, their leaves removed, so each player keeps the choices they had. A profile that only inherited the old default (`interesting`) stored nothing, since AceDB strips a value equal to its default at logout, and opens on the new default, All. A profile already in the new shape passes through (`NS.MigrateViewSet`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

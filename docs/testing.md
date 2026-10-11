@@ -43,7 +43,8 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
 `test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
-reaching a stored profile that is not the active one), `test_schema`, `test_schema_rows` (every
+reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
+into the View set), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide history cap, the CLI and the degraded load), `test_settings_pages` (the settings
@@ -53,7 +54,7 @@ weights and unwanted types written whole through the seam, the Messages page's l
 preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
-panes, the filter bar's per-tab state and its Loot History flat skin, Usable by me and Upgrade for me, the footer's composer, minimize, auto-open on every drop, a tooltip on
+panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values, label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table

@@ -374,7 +374,7 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     table.sort(outcomes)
     assertEqual(table.concat(outcomes, ","), "Asked,Expired")
     assertEqual(NS.WindowFilterBar.State("history").content, "all", "the tab opens on Content: All")
-    assertEqual(NS.WindowFilterBar.State("history").view, "all", "and View: All")
+    assertEqual(next(NS.WindowFilterBar.State("history").view), nil, "and View: All")
     assertEqual(textOf(drawn.strip.info), "2 of 20 groups kept, 3 drops")
     for _, r in ipairs(drawn.rows) do
         for key, c in pairs(r.cells) do

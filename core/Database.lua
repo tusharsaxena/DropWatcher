@@ -69,12 +69,59 @@ function NS.RepairStoredSettings(profile)
     return cleared
 end
 
+-- ── step 3: the View becomes a set (DW-A1, feedback-2 spec §1) ──────────────────────────────
+
+-- The three filter bar checkboxes that became View values: where each was stored, and its value.
+local FOLDED = {
+    { parent = "trade", leaf = "likelyOnly", view = "likely" },
+    { parent = "feed", leaf = "usableOnly", view = "usable" },
+    { parent = "feed", leaf = "upgradeOnly", view = "upgrade" },
+}
+
+-- The set an old `feed.view` string stands for. AceDB strips a value equal to its default at
+-- logout, so a stored `interesting` (the old default) is rare: kept when it is there, and a profile
+-- that only inherited the old default stores nothing and opens on the new one, All.
+local function viewFrom(old)
+    if type(old) == "table" then return old end
+    return old == "interesting" and { interesting = true } or {}
+end
+
+-- Moves each folded checkbox that was on into the set, and drops its old leaf.
+local function foldChecks(profile, set)
+    for _, f in ipairs(FOLDED) do
+        local parent = profile[f.parent]
+        if type(parent) == "table" then
+            if parent[f.leaf] == true then set[f.view] = true end
+            parent[f.leaf] = nil
+        end
+    end
+end
+
+--- Step 3's work on one stored profile: `feed.view` becomes a set ({ [value] = true }), and
+--- `trade.likelyOnly`, `feed.usableOnly` and `feed.upgradeOnly` fold into it, so each player keeps
+--- the choices they had. Idempotent: a profile already in the new shape passes through.
+--- @param profile table a raw stored profile
+function NS.MigrateViewSet(profile)
+    if type(profile) ~= "table" then return end
+    local feed = type(profile.feed) == "table" and profile.feed or nil
+    local set = viewFrom(feed and feed.view)
+    foldChecks(profile, set)
+    if next(set) == nil then
+        if feed and type(feed.view) ~= "table" then feed.view = nil end
+        return
+    end
+    profile.feed = feed or {}
+    profile.feed.view = set
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
     { to = 1, run = function() end },   -- 0 -> 1: the stamp itself; nothing to reshape
     { to = 2, perProfile = true,         -- 1 -> 2: every setting has a row; drop what it refuses
       run = function(_, profile) NS.RepairStoredSettings(profile) end },
+    { to = 3, perProfile = true,         -- 2 -> 3: the View is a set; its checkboxes fold into it
+      run = function(_, profile) NS.MigrateViewSet(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

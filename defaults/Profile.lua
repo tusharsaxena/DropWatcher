@@ -42,7 +42,9 @@ NS.C = {
 
         -- The feed's gates and the filter bar's seeds (design spec §6.2, §6.3, §11.1).
         feed = {
-            view    = "interesting",   -- the Group drops tab's View: interesting | all
+            -- The View a fresh filter bar tab opens on: a set, every value off is All (feedback-2
+            -- spec §1). Each value is a `feed.view.<value>` row; they combine as AND.
+            view    = { interesting = false, likely = false, usable = false, upgrade = false },
             content = "instance",      -- instance | session | all
             sort    = "newest",        -- newest | oldest | ilvl | gain
             quality = {
@@ -57,8 +59,6 @@ NS.C = {
             minIlvl         = 0,         -- the absolute floor
             relativeIlvl    = 10,        -- how far below your average equipped level a drop may be
             showOwn         = false,     -- your own loot listed in Group drops too
-            usableOnly      = false,     -- the filter bar's Usable by me, as a fresh tab's seed
-            upgradeOnly     = false,     -- the filter bar's Upgrade for me, as a fresh tab's seed
             clearOnBossKill = false,     -- the feed's session drops cleared at each boss kill
         },
 
@@ -83,7 +83,6 @@ NS.C = {
                 pvp = "legacy", openWorldGroup = "personal", solo = "personal",
             },
             warnAt     = 600,     -- seconds left when your own item's trade timer warns; 0 is off
-            likelyOnly = false,   -- the filter bar's Likely tradeable only, as a fresh tab's seed
         },
 
         -- Messaging (design spec §9).

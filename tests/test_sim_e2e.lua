@@ -152,13 +152,12 @@ local function assertSoloWorld(NS)
     assertEqual(NS.Situations.Current(), "solo")
 end
 
--- The window's filters are the defaults: View Interesting, Content This instance, Quality Rare+.
+-- The window's filters are the defaults: View All, Content This instance, Quality Rare+.
 local function assertDefaultFilters(NS)
     local FB = NS.WindowFilterBar
     for _, tab in ipairs({ "group", "mine" }) do
         local st = FB.State(tab)
-        assertEqual(st.view, "interesting"); assertEqual(st.content, "instance")
-        assertFalse(st.likelyOnly); assertFalse(st.usableOnly); assertFalse(st.upgradeOnly)
+        assertEqual(next(st.view), nil, "View: All"); assertEqual(st.content, "instance")
         assertEqual(st.search, "")
     end
     local mode, threshold = FB.QualityReadout()

@@ -18,13 +18,14 @@ local function specPaths()
     local out = {
         "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole", "global.minimap.shown",
         "autoOpen",
-        "feed.view", "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
+        "feed.view.interesting", "feed.view.likely", "feed.view.usable", "feed.view.upgrade",
+        "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
         "feed.quality.upgradeOverride", "feed.gearOnly", "feed.includeTokens", "feed.minIlvlMode",
         "feed.minIlvl", "feed.relativeIlvl", "feed.showOwn", "feed.clearOnBossKill", "feed.sort",
-        "feed.content", "feed.usableOnly", "feed.upgradeOnly",
+        "feed.content",
         "comparison.scorer", "comparison.weights", "comparison.sidegradeBand", "comparison.compareOwned",
         "comparison.heirloomProtect", "comparison.undesired",
-        "trade.warnAt", "trade.likelyOnly",
+        "trade.warnAt",
         "messages.templates.ask", "messages.templates.offer", "messages.templates.announce",
         "messages.editFirst", "messages.oneAsk", "messages.announceChannel", "messages.autoAsk.enabled",
         "messages.autoAsk.delay", "messages.autoAsk.minGain",
@@ -142,15 +143,18 @@ end)
 
 test("rows: the filter bar seeds a fresh tab from the rows", function()
     local NS = T.bootAddon()
-    NS.SchemaRuntime.Set("feed.view", "all")
-    NS.SchemaRuntime.Set("trade.likelyOnly", true)
-    NS.SchemaRuntime.Set("feed.usableOnly", true)
-    NS.SchemaRuntime.Set("feed.upgradeOnly", true)
-    local d = NS.WindowFilterBar.Defaults()
-    assertEqual(d.view, "all")
-    assertEqual(d.likelyOnly, true)
-    assertEqual(d.usableOnly, true)
-    assertEqual(d.upgradeOnly, true)
+    local FB = NS.WindowFilterBar
+    assertEqual(FB.ViewLabel(FB.Defaults().view), "View: All", "the default View is All (FB2-1)")
+    NS.SchemaRuntime.Set("feed.view.likely", true)
+    NS.SchemaRuntime.Set("feed.view.usable", true)
+    NS.SchemaRuntime.Set("feed.view.upgrade", true)
+    local d = FB.Defaults()
+    assertTrue(d.view.likely and d.view.usable and d.view.upgrade, "each View row seeds its value")
+    assertTrue(d.view.interesting == nil, "an off row is not in the set")
+    assertEqual(FB.ViewLabel(d.view), "View: 3 selected")
+    assertFalse(NS.SchemaRuntime.Set("feed.view.likely", "yes"), "a View row takes a boolean")
+    assertTrue(NS.Setting("feed.usableOnly") == nil and NS.Setting("trade.likelyOnly") == nil,
+        "the checkbox rows are retired")
     assertEqual(d.content, "instance")
 end)
 

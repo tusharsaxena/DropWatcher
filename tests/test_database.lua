@@ -58,7 +58,7 @@ test("database: a step that raises leaves the stamp at the last completed step",
     assertTrue(not ok, "the raise reaches the caller")
     assertEqual(g.schemaVersion, 1)
     NS.addon:RunMigrations()
-    assertEqual(g.schemaVersion, 2, "the next load retries it")
+    assertEqual(g.schemaVersion, NS.SCHEMA_VERSION, "the next load retries it")
 end)
 
 test("database: step 2 reaches a stored profile that is not the active one", function()
@@ -89,13 +89,60 @@ test("database: step 2 reaches a stored profile that is not the active one", fun
     assertTrue(raid.messages.announceChannel == nil, "SAY is never a channel")
     assertEqual(raid.situations.delve.track, true)
     assertTrue(raid.situations.delve.quality == nil)
-    assertEqual(NS.addon.db.global.schemaVersion, 2)
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 
 test("database: step 2 passes a fresh default profile through unchanged", function()
     local NS = T.bootAddon()
     local fresh = deepcopy(NS.addon.Settings.BuildDefaults().profile)
     assertEqual(NS.RepairStoredSettings(fresh), 0)
+end)
+
+-- Feedback-2 spec §1 (DW-A1): the View becomes a set, and the three checkboxes fold into it.
+test("database: step 3 folds the View and the three checkboxes into the View set, per profile", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 2 },
+        profiles = {
+            -- The kit's AceDB fake turns a non-table under a table default into a table when it
+            -- activates a profile (real AceDB keeps it), so the old strings sit on profiles that are
+            -- not the active one, and the active one holds only the checkbox leaves.
+            Default = { feed = { upgradeOnly = true }, trade = { likelyOnly = true } },
+            Main = { feed = { view = "interesting", usableOnly = true }, trade = { likelyOnly = false, warnAt = 60 } },
+            Raid = { feed = { view = "all", upgradeOnly = true }, trade = { likelyOnly = true } },
+            Plain = { feed = { view = "all", content = "session" } },
+            Empty = {},
+        },
+    }
+    -- red under: no step 3 (the old string and the checkbox leaves stay)
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    local d = p.Main
+    assertTrue(d.feed.view.interesting and d.feed.view.usable, "a stored Interesting and Usable by me are kept")
+    assertTrue(d.feed.view.likely == nil and d.feed.usableOnly == nil and d.trade.likelyOnly == nil)
+    assertEqual(d.trade.warnAt, 60, "the rest of the profile is untouched")
+    local r = p.Raid
+    assertTrue(r.feed.view.upgrade and r.feed.view.likely and r.feed.view.interesting == nil,
+        "All with two checkboxes on: those two")
+    assertTrue(r.feed.upgradeOnly == nil and r.trade.likelyOnly == nil)
+    assertTrue(p.Plain.feed.view == nil, "All with nothing on: the new default, All")
+    assertEqual(p.Plain.feed.content, "session")
+    assertTrue(p.Empty.feed == nil, "a profile that stored nothing gets nothing")
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    local FB = NS.WindowFilterBar
+    assertEqual(FB.ViewLabel(FB.Defaults().view), "View: 2 selected", "the active profile seeds its set")
+end)
+
+test("database: step 3 passes a profile already in the new shape through unchanged", function()
+    local NS = T.bootAddon()
+    local fresh = deepcopy(NS.addon.Settings.BuildDefaults().profile)
+    NS.MigrateViewSet(fresh)
+    assertEqual(fresh.feed.view.interesting, false, "the default set stays")
+    local chosen = { feed = { view = { likely = true } } }
+    NS.MigrateViewSet(chosen)
+    NS.MigrateViewSet(chosen)
+    assertTrue(chosen.feed.view.likely)
+    NS.MigrateViewSet(nil)
 end)
 
 test("database: the profile defaults carry every Master controls value, and no debug flag", function()

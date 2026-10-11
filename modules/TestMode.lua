@@ -147,7 +147,7 @@ local function showEverything()
     local FB = NS.WindowFilterBar
     if not FB then return end
     savedView = savedView or FB.State("group").view
-    FB.Set("group", "view", "all")
+    FB.Set("group", "view", {})
 end
 
 local function restoreView()
