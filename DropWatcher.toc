@@ -308,6 +308,12 @@ modules\SimEvents.lua
 # Conventional: publishes NS.SimScenario, the simulator's scenarios and timeline; reads NS.L at
 # load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents and NS.Window are read at call time.
 modules\SimScenario.lua
+# Conventional: publishes NS.SimPanel, the simulation step panel; adds its repaint to
+# NS.SimScenario's listeners (above) and its step to NS.STAND_DOWN at load, and reads NS.L and
+# NS.Constants at load. NS.Sim, NS.SimScenario, NS.SimVerbs (settings\, below), NS.SimEvents,
+# NS.Window, NS.MineCells and NS.WindowFooter are read at call time: the frame is built on the
+# first Show.
+modules\SimPanel.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

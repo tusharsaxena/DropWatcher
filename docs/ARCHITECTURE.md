@@ -74,7 +74,9 @@ its one-line responsibility and why its position is load-bearing or conventional
   simulated bag items and the trade window), its event drivers (`SimEvents.lua`: loot lines,
   pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3) and its
   scenarios and timeline (`SimScenario.lua`: what `/dw sim start` builds and `run` and `step`
-  play; simulator spec §4).
+  play, with `pause`, `resume` and `restart`; simulator spec §4) and its step panel (`SimPanel.lua`:
+  PerfPanel's look, the timeline as clickable steps, the run controls and the scenario picker,
+  every click through the typed verb; sim feedback spec §1).
 - `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
   their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
@@ -116,9 +118,12 @@ the history cap (onto `global.history.maxGroups`). Shape, defaults and migration
 are geometry only a drag or a resize sets. Their one owner is `modules/Window.lua`, and its writers
 are `savePoint` (title-bar drag stop and the resize grip's release), `saveSize` (the resize grip's
 release, saved together with the point) and
-`Window.ResetPosition` (the Reset position button, which forgets the toast's point too); `profile.toast.point` is the
+`Window.ResetPosition` (the Reset position button, which forgets the toast's and the simulation
+panel's points too); `profile.toast.point` is the
 toast's position, written by `modules/Toast.lua` alone (a drag, allowed only in test mode, and
-`Toast.ResetPosition`); `profile.window.minimized` is the minimize
+`Toast.ResetPosition`); `profile.simPanel.point` is the simulation panel's position, written by
+`modules/SimPanel.lua` alone (its drag stop and `SimPanel.ResetPosition`), absent until the player
+drags it, so the panel opens beside the window; `profile.window.minimized` is the minimize
 button's remembered view, written by `Window.SetMinimized` alone. Every other setting the window and
 the feed read is a row: the Group drops table's compact preset (`NS.SetCompact`, the Window page's
 row and `/dw compact`) and the filter bar's Quality control (`NS.SetQualityMode`, the Feed page's
@@ -395,6 +400,7 @@ deviation not in this table is not ratified.
 | library-stack-§7, anti-pattern #47 | The item read (`core/ItemRead.lua`: how complete a link is, the better of two links, an item's identity, the gear level read detailed-then-base, the exact level and quality at a bag location, the quality of a link) is written in this addon, shaped as the API LibKa0s-Item-1.0 would take, not taken from LibKa0s | LibKa0s-Item-1.0 carries identity primitives only (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`). Loot History reads the same levels with its own `GetItemExtras` / `GearItemLevel`, and Bank Ledger resolves items too, so the read has three would-be adopters; the run builds in-addon first and promotes later (ui spec §0). A LibKa0s promotion issue is drafted (DW-80: I12 in `docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md`, with the loot-line parser as its second candidate), to be filed when the owner lifts the hold on GitHub writes | 2026-10-11 (ui spec §0) | LibKa0s-Item-1.0 ships these reads, or Loot History or Bank Ledger adopts them |
 | compat (through standard v2.78.3: `core/Compat.lua` the only file to make the calls) | The compat seam is a family, as the standard's v2.79.0 allows: `core/Compat.lua` (the root: every version-variant, deprecated and optional client call, the LibKa0s-Compat-1.0 routing; its header names the others), `core/CompatWorld.lua` (the stable group, unit, instance, combat and GlobalString reads) and `core/CompatItem.lua` (the stable exact bag-item reads and tooltip setters), contiguous in the TOC and all publishing into `NS.Compat`. The two split files make no version-variant call | `core/Compat.lua` stands at 999 lines (layout-§1) and the simulator's seam (`core/SimSeam.lua`) must answer every world read, so each needs an `NS.Compat` member (DW-72, DW-80, DW-90). The owner ratified the family on 2026-10-11 as WowAddonStandards v2.79.0 (DW-93, on that repo's `feat/2026-10-10-drop-watcher-v1`), so no proposal is left to draft | 2026-10-11 | v2.79.0 reaches the standard's master: delete this row, the addon then follows compat's family rule |
 | library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is drafted (DW-63: I09 in `docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md`), to be filed when the owner lifts the hold on GitHub writes (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
+| library-stack-§7, anti-pattern #47 | The simulation step panel (`modules/SimPanel.lua`) copies LibKa0s-Perf-1.0's step panel (`PerfPanel.lua`): its geometry, its three columns and its per-state colors. The frame is built from Core's skin and close mark (`NS.ApplySkin`, `NS.MakeCloseButton`) and the Widgets dropdown, but the row and state logic is this addon's | PerfPanel is attached to the Perf probe and drives only its fixed perf steps; it takes no host step list, so a simulator timeline cannot use it. The owner asked for its look exactly (sim feedback spec §1) | DW-91, 2026-10-11 | The LibKa0s step-panel issue (`issues-to-file.md` I14) lands a shared step panel: adopt it and delete the copy |
 
 ### Files over the 1500-line cap
 

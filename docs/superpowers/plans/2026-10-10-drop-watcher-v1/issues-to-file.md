@@ -38,6 +38,7 @@ creates the eight there first.
 | I11 | tusharsaxena/WowAddonStandards | Proposal: a rule for chat an addon sends on the player's behalf | state:triaged, severity:low, enhancement |
 | I12 | tusharsaxena/LibKa0s | Item-1.0: an exact item read (link detail, better link, level and quality), and a loot-line parser | state:triaged, severity:low, enhancement |
 | I13 | tusharsaxena/LibKa0s | Widgets-1.0: a flat search box and a flat checkbox, in the dropdown's skin | state:triaged, severity:low, enhancement |
+| I14 | tusharsaxena/LibKa0s | Perf-1.0: generalize PerfPanel into a shared step panel | state:triaged, severity:low, enhancement |
 
 **Added by DW-80 (M8, 2026-10-11).** I12 drafts the promotion ui spec §0 asks for: the item read the
 owner's BUG-1 fix wrote as `core/ItemRead.lua`. It is filed with the rest, under the same hold.
@@ -47,10 +48,15 @@ the flat search box and checkbox the filter bar now hand-builds, as Loot History
 box. It sits beside LibKa0s#48 (the test-mode strip as a shared widget), which already exists; the
 two can be merged on filing if the owner prefers one Widgets issue.
 
+**Added by DW-91 (M9, 2026-10-11).** I14 drafts the LibKa0s issue sim feedback spec §1 asks for: a
+shared step panel generalized from Perf's `PerfPanel.lua`, which Drop Watcher's simulation panel
+(`modules/SimPanel.lua`) copies today. It is filed with the rest, under the same hold.
+
 **After filing.** Swap "is filed at the end of the v1 run" in the three LibKa0s rows and the chat row of
 `docs/ARCHITECTURE.md` → `## Documented deviations` for `LibKa0s#<n>` and `WowAddonStandards#<n>`,
 and the DW-63 pointers in Known Limitations and `docs/settings-panel.md` for `LibKa0s#<n>` (I10). That
-closes DRW-02.
+closes DRW-02. The step-panel row of the same register names I14 by its draft id; swap it for
+`LibKa0s#<n>` too.
 
 ---
 
@@ -481,10 +487,50 @@ Decide whether both join `Widgets-1.0` (additively, the skin values shared with 
 
 ---
 
+## I14: Perf-1.0: generalize PerfPanel into a shared step panel
+
+- **Repo:** `tusharsaxena/LibKa0s`
+- **Labels:** `state:triaged`, `severity:low`, `enhancement`
+
+<!-- body:I14 -->
+````markdown
+## What
+
+`LibKa0s-Perf-1.0`'s `PerfPanel.lua` is the collection's clickable step panel: a small titled window, three columns per row (a status dot, the step, its typed slash command right-aligned and dimmer), per-state colors shared by the text and the dot (`done` and `used` green, `ready` bright, `busy` gold, `locked` gray, `cancel` muted red), Core's skin and close mark, Escape to close. It is attached to the Perf probe and drives only the perf run's six fixed steps (`STEPS`, read from `Progress()`), so no other workflow can use it.
+
+Ka0s Drop Watcher's owner asked for exactly that panel for the simulator (Drop Watcher sim feedback spec §1): the scenario's timeline as clickable steps. Drop Watcher DW-91 had to copy its geometry, columns and colors into `modules/SimPanel.lua`, because PerfPanel takes no host step list.
+
+## The candidates
+
+A `StepPanel` widget (in Widgets-1.0, or a small major of its own) that PerfPanel would itself be built on:
+
+1. **`StepPanel.New(descriptor)`**: `{ name, addonName, title, steps = function() -> { { key, label, command, state, tip } } , onClick(key), footer = function(frame) }`. The host owns the step list and the states (a varying number of rows, re-read on every `Refresh`); the panel owns the frame, the three columns, the colors, the hover tint, Escape and the close mark.
+2. **The states** as today's palette, plus a check texture on a completed row (Drop Watcher shows the catalog's `confirm` tick over the dot; PerfPanel's note about the text tick rendering as tofu applies).
+3. **A footer slot** for host controls (Drop Watcher's Run all, Pause / Resume, Restart and Stop, and its scenario picker), and the panel's height following the row count.
+4. **`Refresh()`** idempotent and cheap, so a host repaints on every transition, and the headless record PerfPanel already keeps (`__label`, `__state`, `__command`) on every row.
+
+## The ask
+
+Decide whether a shared step panel belongs in LibKa0s. If accepted, Perf's panel is rebuilt on it (its look unchanged) and Drop Watcher drops `modules/SimPanel.lua`'s frame code on its next re-vendor, keeping only its pure `Compose` (the rows) and its controls.
+
+## Evidence
+
+- `LibKa0s/PerfPanel.lua` (minor 6): `STEPS` is a file-local constant and `__AttachPanel` reads `P.Progress()`.
+- `DropWatcher modules/SimPanel.lua` (DW-91): the copy, and `docs/ARCHITECTURE.md` → Documented deviations, the row that names this issue as its re-check trigger.
+- `DropWatcher docs/superpowers/specs/2026-10-11-drop-watcher-sim-feedback-design.md` §1 and `docs/superpowers/research/2026-10-11-sim-feedback/01-perf-run-panel.png`.
+
+**Severity:** `low`: a promotion question; both panels work today.
+
+---
+*Drafted by DW-91 of the Drop Watcher v1 plan (`docs/superpowers/plans/2026-10-10-drop-watcher-v1/`), sim feedback spec §1.*
+````
+
+---
+
 ## Filing snippet (the owner runs it, once the hold lifts)
 
 Run from the DropWatcher repo root with an authenticated `gh`. It creates the eight `state:`/`severity:`
-labels on `tusharsaxena/DropWatcher` (`--force` is idempotent, two seconds apart), then files the thirteen
+labels on `tusharsaxena/DropWatcher` (`--force` is idempotent, two seconds apart), then files the fourteen
 issues 25 seconds apart, reading each body from this file. It strips the working tree's CRLF from the
 bodies. Each URL is printed; note the numbers for the "After filing" step above. To file only some,
 delete lines from the `ISSUES` list.
@@ -534,6 +580,7 @@ ISSUES=(
   "I11|$WAS|Proposal: a rule for chat an addon sends on the player's behalf"
   "I12|$LK|Item-1.0: an exact item read (link detail, better link, level and quality), and a loot-line parser"
   "I13|$LK|Widgets-1.0: a flat search box and a flat checkbox, in the dropdown's skin"
+  "I14|$LK|Perf-1.0: generalize PerfPanel into a shared step panel"
 )
 
 first=1

@@ -25,7 +25,7 @@ The bare command opens the settings panel.
 | `situation` | feature | no | `SlashVerbs.Situation`: three lines, the situation with its Track, Auto-open and Quality, then the classifier's inputs, read live |
 | `offer <link>` | feature | no | `SlashVerbs.Offer`: your newest live drop of that item, or the bag item added as your drop (`NS.LootFeed.Add`); then the My drops tab and `NS.OfferPanel.Open` |
 | `add <link> [player]` | feature | no | `SlashVerbs.Add`: `NS.LootFeed.Add(link, player)`, you when no player is named; prints the drop's id, that it is loading, or why the feed refused it |
-| `sim [verb]` | feature | no | `SimVerbs.Run` (simulator spec §4): `sim` alone prints the status and the usage; `start <key\|dungeon\|raid\|lfr\|delve\|world> [size]` (`NS.SimScenario.Start`, refused per the simulator's safety rules), `run` / `step` (`NS.SimScenario.Run` / `Step`), `pull` / `kill` (`NS.SimEvents.Pull` / `Kill`), `loot [n] [player\|me]` (`NS.SimEvents.Loot`), `lockdown on\|off` (`NS.Sim.SetLockdown`), `trade <dropID>` (`NS.SimEvents.Trade`), `stop` (`NS.Sim.Stop`) |
+| `sim [verb]` | feature | no | `SimVerbs.Run` (simulator spec §4): `sim` alone prints the status and the usage and opens the step panel (`NS.SimPanel`, sim feedback spec §1); `start <key\|dungeon\|raid\|lfr\|delve\|world> [size]` (`NS.SimScenario.Start`, refused per the simulator's safety rules), `run` / `step` (`NS.SimScenario.Run` / `Step`), `pull` / `kill` (`NS.SimEvents.Pull` / `Kill`), `loot [n] [player\|me]` (`NS.SimEvents.Loot`), `lockdown on\|off` (`NS.Sim.SetLockdown`), `trade <dropID>` (`NS.SimEvents.Trade`), `pause` / `resume` / `restart` (`NS.SimScenario.Pause` / `Resume` / `Restart`), `stop` (`NS.Sim.Stop`), `panel` (`NS.SimPanel.Toggle`); a start or a restart opens the panel |
 
 While disabled, a verb that is not live prints the one refusal line, `Ka0s Drop Watcher is disabled —
 enable it with /dw enable`, and does nothing else. The gate reads the stored `enabled`, not the
@@ -40,10 +40,11 @@ is in neither the feed nor your bags, and an item still loading asks to run it a
 
 `sim` is the simulator's (simulator spec §4), answered by `settings/SimVerbs.lua` (`NS.SimVerbs`),
 loaded just before `settings/Slash.lua`. Its pure `Parse` reads the sub-verb; every sub-verb but the
-status, the usage and `start` says `No simulation is running` when none runs, and each refusal the
+status, the usage, `start` and `panel` says `No simulation is running` when none runs, and each refusal the
 simulator answers (a boss already engaged, no such drop, the timeline finished, the pool still
-loading) prints its own line. The launcher menu has no simulator entry: the slash verbs are its
-interface.
+loading) prints its own line. The launcher menu has no simulator entry: the slash verbs and the step
+panel (`modules/SimPanel.lua`) are its interface, and every click on the panel runs one of these
+verbs through `SimVerbs.Run`, so a click prints what the typed verb prints.
 
 With the library absent, the stub in `settings/Slash.lua` dispatches the same table, keeps the
 same live list, and the schema CLI verbs say the library is missing.

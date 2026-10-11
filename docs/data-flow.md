@@ -183,6 +183,13 @@ NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item c
                    Loot(burst), SetLockdown(off), RunEnd (waits while the pool builds) ─> its chat
                    line (StepLine), typed or played
 /dw sim run ─> a step now, then one every STEP_DELAY seconds on NS.Sim.After (the stop ends it)
+/dw sim pause | resume | restart ─> NS.SimScenario.Pause (the timer canceled) | Resume (Run) | Restart
+                   (NS.Sim.Stop, then Start with the same scenario and size)
+every move of the timeline (start, ready, step, run, pause, the end, the stop) ─> NS.SimScenario.Notify
+                   ─> NS.SimPanel.Refresh: Compose (pure) ─> the rows' states, Controls (pure) ─> the buttons
+the step panel's row click ─> SimPanel.ClickRow (re-composed) ─> Start: SimVerbs.Run("start …") |
+                   a later step: RunTo ─> SimVerbs.Run("step") until it is reached | Stop: SimVerbs.Run("stop")
+the panel's Run all, Pause / Resume, Restart, Stop, picker Start ─> SimVerbs.Run(the typed verb)
 the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.Sim.Status,
                    NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```

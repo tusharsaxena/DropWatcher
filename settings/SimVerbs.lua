@@ -1,7 +1,8 @@
 local _, NS = ...
 -- settings/SimVerbs.lua — `/dw sim`, the simulator's slash verbs (simulator spec §4): status and
 -- usage, `start <scenario> [size]`, `run`, `step`, `pull`, `kill`, `loot [n] [player|me]`,
--- `lockdown on|off`, `trade <dropID>` and `stop`. settings/Slash.lua lists `sim` in NS.COMMANDS
+-- `lockdown on|off`, `trade <dropID>`, `pause`, `resume`, `restart`, `stop` and `panel` (the step
+-- panel, modules/SimPanel.lua, which a bare `/dw sim` and a start also open). settings/Slash.lua lists `sim` in NS.COMMANDS
 -- (a feature verb, so the dispatcher refuses it while the addon is disabled); this file answers it.
 --
 -- Parse is PURE (test_sim_scenario drives it): the argument in, { verb, ... } out. Run calls the
@@ -22,7 +23,8 @@ end
 
 -- ── parse (pure) ────────────────────────────────────────────────────────────────────────────
 
-local BARE = { run = true, step = true, pull = true, kill = true, stop = true, status = true }
+local BARE = { run = true, step = true, pull = true, kill = true, stop = true, status = true, pause = true,
+    resume = true, restart = true, panel = true }
 
 local function parseLoot(w)
     local n = tonumber(w[2])
@@ -52,12 +54,14 @@ end
 
 local PARSERS = { loot = parseLoot, lockdown = parseLockdown, start = parseStart, trade = parseTrade }
 
---- `/dw sim`'s argument as a command (pure): { verb, ... }. `status` for an empty argument;
---- `usage` (with the `form` it was missing) for an argument that does not read.
+--- `/dw sim`'s argument as a command (pure): { verb, ... }. `status` for an empty argument, with
+--- `open` (a bare `/dw sim` opens the panel too); `usage` (with the `form` it was missing) for an
+--- argument that does not read.
 --- @param rest string|nil
 --- @return table
 function V.Parse(rest)
     local w = words(rest)
+    if #w == 0 then return { verb = "status", open = true } end
     local verb = (w[1] or "status"):lower()
     if PARSERS[verb] then return PARSERS[verb](w) end
     if BARE[verb] then return { verb = verb } end
@@ -81,6 +85,8 @@ local WHY = {
     notInBags  = "That drop is no longer in your simulated bags.",
     expired    = "That drop's trade window has closed.",
     noPartner  = "No simulated member can take part in that trade.",
+    notPlaying = "The timeline is not playing: /dw sim run plays it.",
+    notPaused  = "The timeline is not paused.",
     unknown    = "Unknown scenario.",
 }
 
@@ -99,6 +105,8 @@ function V.UsageLines()
         L["  |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r"]:format(s .. " pull", s .. " kill",
             s .. " loot [n] [player|me]", s .. " lockdown on|off"),
         L["  |cffFFFF00%s|r, |cffFFFF00%s|r"]:format(s .. " trade <drop id>", s .. " stop"),
+        L["  |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r (the step panel)"]:format(s .. " pause",
+            s .. " resume", s .. " restart", s .. " panel"),
     }
 end
 
@@ -127,12 +135,40 @@ end
 local DO = {}
 
 -- The verbs that answer with no simulation running.
-local FREE = { status = true, usage = true, start = true }
+local FREE = { status = true, usage = true, start = true, panel = true }
 
-function DO.status() status() return true end
+local function showPanel()
+    if NS.SimPanel then NS.SimPanel.Show() end
+end
+
+function DO.status(c)
+    status()
+    if c.open then showPanel() end
+    return true
+end
+
 function DO.usage() for _, line in ipairs(V.UsageLines()) do NS.Print(line) end return false end
-function DO.start(c) return answered(NS.SimScenario.Start(c.scenario, c.size)) end
+
+function DO.start(c)
+    local ok = answered(NS.SimScenario.Start(c.scenario, c.size))
+    if ok then showPanel() end
+    return ok
+end
+
 function DO.run() return answered(NS.SimScenario.Run()) end
+function DO.pause() return answered(NS.SimScenario.Pause()) end
+function DO.resume() return answered(NS.SimScenario.Resume()) end
+
+function DO.restart()
+    local ok = answered(NS.SimScenario.Restart())
+    if ok then showPanel() end
+    return ok
+end
+
+function DO.panel()
+    if NS.SimPanel then NS.SimPanel.Toggle() end
+    return true
+end
 
 -- The step prints its own line (modules/SimScenario.lua), as a played one does.
 function DO.step()

@@ -711,7 +711,8 @@ function Window.ApplySettings()
 end
 
 --- Reset position: forget the stored point and size, and put the window back where it started;
---- the toast's saved position goes too (modules/Toast.lua).
+--- the toast's and the simulation panel's saved positions go too (modules/Toast.lua,
+--- modules/SimPanel.lua).
 function Window.ResetPosition()
     local g = geometry()
     g.point, g.width, g.height = nil, nil, nil
@@ -720,6 +721,7 @@ function Window.ResetPosition()
         applyPoint()
     end
     if NS.Toast then NS.Toast.ResetPosition() end
+    if NS.SimPanel then NS.SimPanel.ResetPosition() end
     NS.Print(L["window position reset"])
 end
 

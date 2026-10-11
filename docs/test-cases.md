@@ -1116,6 +1116,25 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
+### test_sim_panel.lua (16)
+
+- sim panel: a key's preview names every step, with its command, before a run
+- sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states
+- sim panel: before the pool is ready the start is current and nothing else is clickable
+- sim panel: the controls follow the timeline: Run all, Pause or Resume, Restart, Stop
+- sim panel: StartCommand carries a raid's size and leaves a random one out
+- sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds PerfPanel's three columns
+- sim panel: `/dw sim start` opens it beside the window, its rows tracking the timeline
+- sim panel: clicking the next step runs it; clicking a later one runs every step in between
+- sim panel: clicking a completed step does nothing, and its tooltip says when it ran
+- sim panel: a typed `/dw sim step` moves the panel too
+- sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on
+- sim panel: the typed pause, resume and restart answer as the buttons do
+- sim panel: Restart stops the scenario and starts the same one again; Stop ends it
+- sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel
+- sim panel: the picker starts the chosen scenario, with a raid's member count
+- sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -1262,6 +1281,7 @@ Total.
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 16 |
 | test_sim_e2e.lua | 12 |
+| test_sim_panel.lua | 16 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1271,4 +1291,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1049** |
+| **Total** | **1065** |

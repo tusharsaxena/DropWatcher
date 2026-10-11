@@ -20,7 +20,11 @@ local _, NS = ...
 -- sets a verdict, a trade estimate or an inspect state: each step is an event driver, and the
 -- engine computes the rest.
 --
---   State.sim.timeline = { steps = { { kind, n } }, pos, playing (timer) | nil, ready, size, band }
+--   State.sim.timeline = { steps = { { kind, n, ranAt, detail } }, pos, playing (timer) | nil, paused,
+--                          ready, size, band }
+--
+-- Pause, Resume and Restart are the panel's run controls (and `/dw sim pause|resume|restart`);
+-- every move is told to the listeners (AddListener), which the panel repaints on.
 
 NS.SimScenario = NS.SimScenario or {}
 local SC = NS.SimScenario
@@ -137,8 +141,11 @@ function SC.Step()
     if not step then return nil, "done" end
     t.pos = t.pos + 1
     local did, detail = PLAY[step.kind](step)
+    -- Kept on the step for the panel (modules/SimPanel.lua): when it ran, and what it did.
+    step.ranAt, step.detail = GetTime(), detail
     NS.Debug(TAG, "timeline step %d/%d: %s%s", t.pos, #t.steps, step.kind, did and "" or " (nothing to do)")
     NS.Print(SC.StepLine(t.pos, #t.steps, step.kind, detail))
+    SC.Notify()
     return step
 end
 
@@ -154,6 +161,7 @@ tick = function(t)
     else
         NS.Debug(TAG, "timeline finished")
         NS.Print(L["The simulation's timeline has finished. /dw sim stop ends it."])
+        SC.Notify()
     end
 end
 
@@ -167,8 +175,36 @@ function SC.Run()
     if t.playing then return false, "playing" end
     if not t.steps[t.pos + 1] then return false, "done" end
     NS.Debug(TAG, "timeline plays from step %d", t.pos + 1)
+    t.paused = nil
     tick(t)
+    SC.Notify()
     return true
+end
+
+--- Pause a playing timeline: its next step is not played until Resume (or Run, or a Step). Answers
+--- true, or false and why: `notRunning`, `notPlaying`.
+--- @return boolean, string|nil
+function SC.Pause()
+    local t = timeline()
+    if not t then return false, "notRunning" end
+    if not t.playing then return false, "notPlaying" end
+    local s = Sim.Session()
+    t.playing:Cancel()
+    if s and s.timers then s.timers[t.playing] = nil end
+    t.playing, t.paused = nil, true
+    NS.Debug(TAG, "timeline paused before step %d", t.pos + 1)
+    SC.Notify()
+    return true
+end
+
+--- Resume a paused timeline: it plays on from its next step, as Run does. Answers true, or false
+--- and why: `notRunning`, `notPaused`, or Run's.
+--- @return boolean, string|nil
+function SC.Resume()
+    local t = timeline()
+    if not t then return false, "notRunning" end
+    if not t.paused then return false, "notPaused" end
+    return SC.Run()
 end
 
 --- The timeline at a glance: { scenario, ready, pos, steps, playing, next }; nil when none runs.
@@ -179,8 +215,40 @@ function SC.Status()
     if not t then return nil end
     local nxt = t.steps[t.pos + 1]
     return { scenario = s.scenario, ready = t.ready == true, pos = t.pos, steps = #t.steps,
-        playing = t.playing ~= nil, next = nxt and nxt.kind }
+        playing = t.playing ~= nil, paused = t.paused == true, next = nxt and nxt.kind, size = t.size }
 end
+
+--- The running timeline's steps, each { kind, n, ranAt, detail } (ranAt and detail once played),
+--- for the panel to read; nil when none runs. Read it; only this file writes it.
+--- @return table|nil
+function SC.Steps()
+    local t = timeline()
+    return t and t.steps
+end
+
+-- ── listeners ───────────────────────────────────────────────────────────────────────────────
+
+local listeners = {}
+
+--- Be told `fn()` whenever the timeline moves: a start, its pool ready, a step (typed, clicked or
+--- played), a pause, a run, the end, and the stop (modules/SimPanel.lua repaints on it, so typing
+--- and clicking stay in step). Listeners are never removed.
+--- @param fn function
+function SC.AddListener(fn)
+    listeners[#listeners + 1] = fn
+end
+
+--- Tell every listener the timeline moved. Each runs under pcall, so one that raises never stops
+--- the timeline.
+function SC.Notify()
+    for _, fn in ipairs(listeners) do
+        local ok, err = pcall(fn)
+        if not ok then NS.Debug(TAG, "timeline listener failed: %s", NS.SafeToString(err)) end
+    end
+end
+
+-- The stop moves the timeline too (to nothing): every listener hears it, after the session is gone.
+Sim.AddCleanup(function() SC.Notify() end)
 
 -- ── start ───────────────────────────────────────────────────────────────────────────────────
 
@@ -197,6 +265,7 @@ local function ready(s, def, t)
         :format(#members, pool.size))
     NS.ShowWindow()
     if NS.Window and NS.Window.IsShown() then NS.Window.Refresh() end
+    SC.Notify()
 end
 
 --- Start scenario `name` (spec §4): the session (refused, with the line printed, per
@@ -221,5 +290,19 @@ function SC.Start(name, size, opts)
     s.timeline = t
     NS.SimPool.Build({ situation = def.situation, classFilter = opts.classFilter },
         function() ready(s, def, t) end)
+    SC.Notify()
     return true
+end
+
+--- Stop the running scenario and start the same one again, at the same size, with a fresh seed.
+--- Answers Start's answer, or false and `notRunning`.
+--- @return boolean, string|nil
+function SC.Restart()
+    local s = Sim.Session()
+    local t = s and s.timeline
+    if not t then return false, "notRunning" end
+    local name, size = s.scenario, t.size
+    NS.Debug(TAG, "restarting %s", tostring(name))
+    Sim.Stop("stop")
+    return SC.Start(name, size)
 end

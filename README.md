@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1049%2F1049_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1065%2F1065_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -78,7 +78,10 @@ and `trade <drop>` fire single events. The addon's own engine reads all of it, s
 trade estimates, inspects and asks you see are the real ones. Cyan **SIMULATION** text sits beside the
 title while it runs. Nothing is sent (every message is printed with `[sim]`), nobody is inspected or
 traded with, and your saved history is left alone. `/dw sim stop` ends it, and joining a group or
-entering an instance stops it too. `/dw sim` alone prints where it stands and the verbs.
+entering an instance stops it too. `/dw sim` alone prints where it stands and the verbs, and opens
+the simulation panel: each step of the session as a row you can click (a click ahead runs every step
+in between), Run all, Pause, Resume, Restart and Stop, and a scenario choice when none runs.
+`/dw sim panel` shows or hides it.
 
 Everything else lives under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` (or
 `/dropwatcher help`) lists every command.

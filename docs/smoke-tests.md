@@ -35,7 +35,7 @@ passed.
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..9 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90) |
+| SIM-1..10 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -1025,6 +1025,20 @@ start world` (both untracked by default) → each fills the window the same way.
 → an ask's announce goes to instance chat (`[sim] INSTANCE_CHAT: …`). In `/dw sim start raid 12`
 → you show online in the roster (`/dw diagnostics`, `unit=raid1`). Result:
 
+**SIM-10. The simulation step panel (DW-91, sim feedback §1).** The headless `test_sim_panel` covers
+the same ground. Solo, out of an instance: `/dw sim` → the panel `Ka0s Drop Watcher - Simulation`
+opens beside the window (not over it), in the perf-run panel's look: a dot, the step and its
+command on each row, the close mark at the top right, a scenario choice and Start at the foot. Pick
+Raid and a member count → the rows preview the raid's steps and `Start: Raid` reads `/dw sim start
+raid <n>`; Start → the simulation starts and the foot shows Run all, Pause, Restart and Stop. Click
+the third step ahead → chat prints one step line for each step in between, in order, and the rows
+turn green with a check up to it, the last one gold, the next one bright and the rest gray. Hover a
+completed row → its tooltip says when it ran; clicking it does nothing. Type `/dw sim step` → the
+panel moves on too. Run all → the gold highlight follows each step; Pause → it stops, and Resume
+plays on. Restart → the same scenario starts again at its first step; Stop → the simulation ends and
+the picker returns. Drag the panel, `/reload`, `/dw sim panel` → it opens where you left it; Reset
+position on the Window page → it docks beside the window again. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -1101,3 +1115,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-7 | DW-73, the verbs' refusals and the automatic stop end to end | No client pass recorded yet |
 | SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet |
 | SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet |
+| SIM-10 | DW-91, the simulation step panel | No client pass recorded yet |
