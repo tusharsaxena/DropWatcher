@@ -10,11 +10,11 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string |
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[DW]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip |
-| 4 | `core/Compat.lua` | edge | `NS.Compat`: LibKa0s-Compat's secret guards, and the only caller of version-variant, deprecated and optional client APIs (the chat sender, the tooltip line reader and the trade-time decoder, the upgrade track, the restriction APIs, the player's normalized realm and spec, the bind helpers, the inventory and bag readers, the inspect calls and the `NotifyInspect` hook, the item readers, the Pawn seam, the trade actions, the drop tables' item icon, class color, chat link and dressing room); see [`compat-layer.md`](compat-layer.md) |
+| 4 | `core/Compat.lua` | edge | `NS.Compat`: LibKa0s-Compat's secret guards, and the only caller of version-variant, deprecated and optional client APIs (the chat sender, the tooltip line reader and the trade-time decoder, the upgrade track, the restriction APIs, the player's normalized realm and spec, the bind helpers, the inventory and bag readers, the inspect calls and the `NotifyInspect` hook, the item readers, the Pawn seam, the trade actions, the drop tables' item icon, class color, chat link and dressing room, the detail card's spec name); see [`compat-layer.md`](compat-layer.md) |
 | 5 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
-| 6 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry (the drop tables' row, header and column sizes included), the gold and the drop tables' tones; the item, quality, slot, bag, difficulty and situation ids, the slot plans, the trade rules |
+| 6 | `core/Constants.lua` | data | `FONT_MONO`, the window geometry (the drop tables' row, header and column sizes and the detail card's included), the gold and the drop tables' tones; the item, quality, slot, bag, difficulty and situation ids, the slot plans, the trade rules |
 | 7 | `core/ClassData.lua` | data | `NS.ClassData`: class armor types, weapon proficiencies, every Retail spec (Devourer included) with its primary stat and dual-wield, Titan's Grip, shield and off-hand flags, and the pure lookups over them |
-| 8 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs, the restriction tracker's hints, combat edge and last announced answers, the roster as last read, the item facts cache, the gear snapshot, the loot parser's counters, the inspect broker's entries and queue, the feed's drops, groups, dedupe window and encounter context, the trade timer's entries, the window's filter state per tab, the Group drops table's collapsed groups and dismissed rows |
+| 8 | `core/State.lua` | state | session-only state: debug flag, test mode, the player's window choice, the current situation and its inputs, the restriction tracker's hints, combat edge and last announced answers, the roster as last read, the item facts cache, the gear snapshot, the loot parser's counters, the inspect broker's entries and queue, the feed's drops, groups, dedupe window and encounter context, the trade timer's entries, the window's filter state per tab, the Group drops table's collapsed groups, dismissed rows and the expanded row |
 | 9 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
 | 10 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (the Group drops table's rows and headers) |
 | 11 | `core/ItemSetup.lua` | setup | LibKa0s-Item: `NS.Item` (link parsing and the item load, read by `modules/ItemFacts.lua`) |
@@ -23,7 +23,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 14 | `core/LifecycleSetup.lua` | setup | LibKa0s-Lifecycle: the stand-down latch, `NS.IsStoodDown` |
 | 15 | `core/PerfSetup.lua` | setup | LibKa0s-Perf: `NS.Perf`, the declared buckets |
 | 16 | `core/DebugLogSetup.lua` | setup | LibKa0s-DebugLog: the console, `NS.Debug` and its gates, the diagnostics descriptor |
-| 17 | `core/DropWatcher.lua` | lifecycle | AceAddon registration, the feature-event registration (an event two modules declare fans out through `OnSharedFeatureEvent`), `NS.StandDown` / `NS.StandUp`, the shared host handlers (test mode, lock, the window, Scan group, the Quality mode, the Ask button's `NS.PressAsk`, the compact preset's `NS.SetCompact`), profile callbacks |
+| 17 | `core/DropWatcher.lua` | lifecycle | AceAddon registration, the feature-event registration (an event two modules declare fans out through `OnSharedFeatureEvent`), `NS.StandDown` / `NS.StandUp`, the shared host handlers (test mode, lock, the window, Scan group, the Quality mode, the Ask button's `NS.PressAsk`, the compact preset's `NS.SetCompact`, the detail card's `NS.RetryInspect` and `NS.TradeWithLooter`), profile callbacks |
 | 18 | `core/Database.lua` | data | the schemaVersion migration runner |
 | 19 | `core/LauncherSetup.lua` | setup | LibKa0s-Launcher: the one LDB object, registered twice |
 | 20 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
@@ -46,14 +46,16 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 37 | `modules/WindowFilterBar.lua` | UI | `NS.WindowFilterBar`: the filter bar (View, Quality, Content, Likely tradeable only, the search box), each tab's own filter state and which controls it honors, and the pure row predicates (`IsInteresting`, `IsTradeableMine`, `Matches`, `Comparator`) the tabs' bodies use |
 | 38 | `modules/WindowFooter.lua` | UI | `NS.WindowFooter`: the footer, a pure composer (inspect freshness, the last loot seen, the situation, Pawn) and its reads, and the tab's Sort |
 | 39 | `modules/WindowCells.lua` | UI (pure) | `NS.WindowCells`: what each cell of a drop table says (design spec §11.2): Item, Ilvl, Slot, Looter, Their eq, Me and Them (the signed item-level change beside ▲ ≈ ▽, the Them column's tones inverted), Trade (Yes, Likely, Unknown or No with board 03's reasons), the Ask button's look (Ask, Queued, Asked, Retry, or a dash with its reason) and the encounter header; every cell answers a text, a tone and a reason tooltip, never a blank |
-| 40 | `modules/WindowGroup.lua` | UI | `NS.WindowGroup`: the Group drops tab's body (design spec §11.1-§11.2), registered through `Window.RegisterTab`: the column labels, the scrolled rows pooled through `NS.Pool`, the collapsible encounter headers, the real item buttons (game tooltip, shift-click link, ctrl-click try on), the Ask button (`NS.PressAsk`) and the dismiss mark, the compact preset and the profile's hidden columns, the empty line; the pure `Columns`, `Layout` and `Entries` |
-| 41 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
-| 42 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
-| 43 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
-| 44 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 45 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 46 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 47 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 40 | `modules/WindowGroup.lua` | UI | `NS.WindowGroup`: the Group drops tab's body (design spec §11.1-§11.2), registered through `Window.RegisterTab`: the column labels, the scrolled rows pooled through `NS.Pool`, the collapsible encounter headers, the real item buttons (game tooltip, shift-click link, ctrl-click try on), the Ask button (`NS.PressAsk`) and the dismiss mark, the compact preset and the profile's hidden columns, the empty line, the row click that expands the detail card inline (one row at a time, `ToggleExpand`); the pure `Columns`, `Layout` and `Entries` |
+| 41 | `modules/DetailCells.lua` | UI (pure) | `NS.DetailCells`: what the detail card says (design spec §11.3, board 02): the item header's chips (slot, armor type, bind, track and rank, primary stat, socket, tertiary stats), the For you and For the looter comparisons (what it replaces, the item-level, track and secondary-stat change, Pawn's score or the looter's spec and read age, under a verdict chip), the trade estimate box (state, reason, rule, basis and age) and the six actions with their enabled state; every part answers a reason tooltip, never a blank |
+| 42 | `modules/DetailCard.lua` | UI | `NS.DetailCard`: the detail card's frame edge, built once per pane and painted under the expanded Group drops row (`Build`, `Paint`): the item button and chips, the two comparison boxes, the trade box and the action buttons (`NS.PressAsk`, `NS.RetryInspect`, `NS.TradeWithLooter`, `Compat.InsertChatLink`, `WindowGroup.Dismiss`); and the Edit message box (`OpenEditor`), filled from `NS.Asks.Preview`, with a byte counter, Send and Cancel |
+| 43 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
+| 44 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
+| 45 | `settings/Schema.lua` | settings | the rows, the write seam, the shared reactions, the defaults tree, the global reset |
+| 46 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 47 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 48 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 49 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.
@@ -64,7 +66,7 @@ Why each position is load-bearing or conventional is written beside its line in 
 |---|---|
 | `tests/run.lua` | the load list, the three factories, the kit facts and the suite list |
 | `tests/loader.lua` | the instance factory: TOC files plus `LibKa0s.xml`'s files, isolated per case |
-| `tests/wow_mock.lua` | the thin extender over `tests/_kit/mock_base.lua`; it records the main window's whole frame tree (regions, points, sizes, text, colors, check state) and the drop tables' client surface (item icons, class colors, modifier keys, chat links, the dressing room, item tooltips) |
+| `tests/wow_mock.lua` | the thin extender over `tests/_kit/mock_base.lua`; it records the main window's whole frame tree (regions, points, sizes, text, colors, check state) and the drop tables' client surface (item icons, class colors, modifier keys, chat links, the dressing room, item tooltips, spec names) |
 | `tests/prose_waivers.lua` | what the kit's US-English gate must not correct: the icon catalog's British-spelled minimize key, named in `modules/Window.lua` |
 | `tests/test_*.lua` | one suite per subject (see [`testing.md`](testing.md)) |
 | `tests/perf.lua` | the offline scenarios, outside the gate |

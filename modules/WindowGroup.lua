@@ -22,6 +22,12 @@ local _, NS = ...
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles and dismissals are session-only (NS.State.windowGroup).
 --
+-- THE DETAIL CARD (design spec §11.3, board 02). A click on a row (anywhere but a button) expands
+-- it inline: modules/DetailCard.lua's card is placed under it and the rows below move down by the
+-- card's height. Only one row is expanded at a time (NS.State.windowGroup.expanded); a second click
+-- on it, or on another row, collapses or moves the card. A row filtered out, collapsed under its
+-- header or dismissed takes its card with it.
+--
 -- THE UI LISTENS. Window.lua repaints it on the bus; it reads the feed (NS.LootFeed.Groups, Get),
 -- the looter's inspect entry (NS.Inspect.Get) and the ask's state (NS.Asks.StateOf), all read-only.
 -- The Ask button goes through the host handler NS.PressAsk (core/DropWatcher.lua). An item button
@@ -101,10 +107,27 @@ end
 --- Dismiss one drop's row for the session (its ×).
 --- @param id number
 function WG.Dismiss(id)
-    view().dismissed[id] = true
+    local v = view()
+    v.dismissed[id] = true
+    if v.expanded == id then v.expanded = nil end
     NS.Debug("UI", "drop %s dismissed", tostring(id))
     repaint()
 end
+
+--- Expand one row's detail card, or collapse it when it is the one expanded (design spec §11.3):
+--- one row at a time.
+--- @param id number the drop's id
+function WG.ToggleExpand(id)
+    if id == nil then return end
+    local v = view()
+    if v.expanded == id then v.expanded = nil else v.expanded = id end
+    NS.Debug("UI", "drop %s %s", tostring(id), v.expanded and "expanded" or "collapsed")
+    repaint()
+end
+
+--- The drop whose detail card is open, or nil.
+--- @return number|nil
+function WG.Expanded() return view().expanded end
 
 -- ── the pure halves ─────────────────────────────────────────────────────────────────────────
 
@@ -202,9 +225,15 @@ local function hideTooltip()
     if GameTooltip then GameTooltip:Hide() end
 end
 
+-- A click on a cell is a click on its row (the cells take the mouse for their tooltips).
+local function cellClick(self, button)
+    if button == "LeftButton" and self.row then WG.ToggleExpand(self.row.dropId) end
+end
+
 local function textCell(row, key)
     local f = CreateFrame("Frame", nil, row)
-    f.key = key
+    f.key, f.row = key, row
+    f:SetScript("OnMouseUp", cellClick)
     f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
@@ -232,8 +261,9 @@ local function itemEnter(self)
     GameTooltip:Show()
 end
 
---- An item button's click: shift links the item in chat, ctrl tries it on (design spec §11.1).
---- @param self table the button (`self.link`)
+--- An item button's click: shift links the item in chat, ctrl tries it on (design spec §11.1); a
+--- plain click on a row's own item button expands the row, as a click on the row does.
+--- @param self table the button (`self.link`, and `self.dropId` on a row's item button)
 function WG.OnItemClick(self)
     local link = self.link
     if type(link) ~= "string" then return end
@@ -241,6 +271,8 @@ function WG.OnItemClick(self)
         NS.Compat.InsertChatLink(link)
     elseif IsControlKeyDown() then
         NS.Compat.DressUpItem(link)
+    elseif self.dropId ~= nil then
+        WG.ToggleExpand(self.dropId)
     end
 end
 
@@ -261,6 +293,15 @@ local function setItem(b, link)
     b.art:SetTexture(icon or NS.Icon("help"))
     b:SetShown(link ~= nil)
 end
+
+--- A real item button (the game's tooltip on hover, shift-click links, ctrl-click tries on), for
+--- the detail card too. `WG.SetItem(b, link)` shows an item on it, or hides it for nil.
+--- @param parent table
+--- @param size number
+--- @return table
+function WG.ItemButton(parent, size) return itemButton(parent, size) end
+
+WG.SetItem = setItem
 
 -- ── building a row ──────────────────────────────────────────────────────────────────────────
 
@@ -314,11 +355,19 @@ local function newRow(content)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)
+    row.selected = row:CreateTexture(nil, "BACKGROUND")
+    row.selected:SetAllPoints(row)
+    row.selected:SetColorTexture(C.GOLD.r, C.GOLD.g, C.GOLD.b, 0.08)
+    row.expander = row:CreateTexture(nil, "ARTWORK")
+    row.expander:SetSize(10, 10)
+    row.expander:SetPoint("RIGHT", row, "RIGHT", -1, 0)
+    row.expander:SetTexture(NS.Icon("chevron-up"))
     row.cells = {}
     for _, col in ipairs(WG.COLUMNS) do
         local make = BUILDERS[col.key] or (GLYPH_COLS[col.key] and glyphCell) or textCell
         row.cells[col.key] = make(row, col.key)
     end
+    row:SetScript("OnClick", function(self) WG.ToggleExpand(self.dropId) end)
     return row
 end
 
@@ -438,9 +487,13 @@ local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade }
 
 local function paintRow(row, drop, layout, compact, now)
     row.dropId = drop.id
+    local open = view().expanded == drop.id
+    row.selected:SetShown(open)
+    row.expander:SetShown(open)
     placeCells(row, layout)
     local cells = row.cells
     paintItem(cells.item, drop, compact)
+    cells.item.button.dropId = drop.id
     for key, fn in pairs(SIMPLE) do paintText(cells[key], fn(drop)) end
     local lc = WC.Looter(drop)
     paintText(cells.looter, lc)
@@ -489,6 +542,7 @@ local function build(pane)
     scroll:SetScrollChild(content)
     pane.scroll, pane.content = scroll, content
     pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
+    pane.card = NS.DetailCard.Build(content)
     pane.entries = {}
 end
 
@@ -525,9 +579,21 @@ local function place(frame, content, y, width)
     frame:SetWidth(width)
 end
 
+-- The open row's detail card under it; answers the height it takes.
+local function drawCard(pane, drop, y, width, now)
+    place(pane.card, pane.content, y, width)
+    NS.DetailCard.Paint(pane.card, drop, width, now)
+    pane.card:Show()
+    pane.cardDropId = drop.id
+    return K.CARD_H
+end
+
 local function drawEntries(pane, entries, layout, compact, width)
     local now, y = GetTime(), 0
     local Pool = NS.Pool
+    local expanded = view().expanded
+    pane.card:Hide()
+    pane.cardDropId = nil
     for i, e in ipairs(entries) do
         if e.kind == "header" then
             local h = Pool.Acquire(pane.headPool, function() return newHeader(pane.content) end)
@@ -540,6 +606,7 @@ local function drawEntries(pane, entries, layout, compact, width)
             r.stripe:SetShown(i % 2 == 0)
             paintRow(r, e.drop, layout, compact, now)
             y = y + K.ROW_H
+            if e.drop.id == expanded then y = y + drawCard(pane, e.drop, y, width, now) end
         end
     end
     pane.content:SetSize(width, max(y, 1))
@@ -570,14 +637,15 @@ local function refresh(pane, ctx)
     paintEmpty(pane, entries, ctx)
 end
 
---- The drawn pane's rows and headers, in order, for the suites: { headers = {...}, rows = {...} }.
+--- The drawn pane's rows and headers, in order, for the suites: { headers, rows, entries, columns,
+--- pane, card, cardDropId } (`cardDropId` nil while no card is open on screen).
 --- @return table|nil
 function WG.Drawn()
     local f = NS.Window.Frame()
     local pane = f and f.panes.group
     if not (pane and pane.rowPool) then return nil end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
-        columns = pane.columns, pane = pane }
+        columns = pane.columns, pane = pane, card = pane.card, cardDropId = pane.cardDropId }
 end
 
 NS.Window.RegisterTab("group", { build = build, refresh = refresh })

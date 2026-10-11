@@ -61,7 +61,8 @@
 --   itemIcons      C_Item.GetItemIconByID's answer per id or link (134400 when unset);
 --                  RAID_CLASS_COLORS a few classes' colors; shift / ctrl are IsShiftKeyDown /
 --                  IsControlKeyDown; chatLinks and dressUps record ChatEdit_InsertLink and
---                  DressUpItemLink; tooltipLinks every GameTooltip:SetHyperlink (the drop tables)
+--                  DressUpItemLink; tooltipLinks every GameTooltip:SetHyperlink (the drop tables);
+--                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -534,6 +535,13 @@ local function installTableSurface(M)
     M.GameTooltip.SetHyperlink = function(self, link)
         M.tooltipLinks[#M.tooltipLinks + 1] = link
         return self
+    end
+    -- The detail card's looter spec: GetSpecializationInfoByID's id and name.
+    M.specNames = { [256] = "Discipline", [257] = "Holy", [258] = "Shadow", [250] = "Blood", [577] = "Havoc" }
+    M.GetSpecializationInfoByID = function(id)
+        local name = M.specNames[id]
+        if name then return id, name end
+        return nil
     end
 end
 

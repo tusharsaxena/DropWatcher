@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Fifty-four shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `54`). The three
+**Fifty-five shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `55`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -89,6 +89,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `ClassColor(classFile)` | `C_ClassColor.GetClassColor` → the `RAID_CLASS_COLORS` table; answers `r, g, b`; a secret answer is nil | `nil` |
 | | `InsertChatLink(link)` | `ChatFrameUtil.InsertLink`, the newer spelling → the `ChatEdit_InsertLink` global (an item button's shift-click); `true` when called | `false` |
 | | `DressUpItem(link)` | `DressUpItemLink` → the older `DressUpLink` (an item button's ctrl-click); `true` when called | `false` |
+| Detail card | `SpecName(specID)` | `GetSpecializationInfoByID`'s second return (the looter's spec, in words); a secret, empty or non-string answer is nil | `nil` |
 
 The trade actions return `true` when they called the client. They guard nothing: the range, combat
 and restriction checks are the trade helper's (`modules/TradeHelper.lua`), which calls them only
@@ -127,5 +128,6 @@ the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (
 `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount` and `BagItemLink`, the trade helper (DW-29, landed) the trade actions, `InTradeRange`, the cursor shims and `GetBagItemGUID`, `BagSlotCount`, the
 messaging edge (DW-2A, landed: `modules/Asks.lua`) `ChatSender`, `IsSecret` on the recipient, the
 slot name and a raise's message, the Group drops table (DW-31, landed: `modules/WindowGroup.lua`)
-`ItemIcon`, `ClassColor`, `InsertChatLink` and `DressUpItem`, and the Pawn scorer (DW-50) the Pawn
+`ItemIcon`, `ClassColor`, `InsertChatLink` and `DressUpItem`, the detail card (DW-32, landed:
+`modules/DetailCard.lua`) `SpecName`, `PawnIsReady`, `InsertChatLink` and the item button's three, and the Pawn scorer (DW-50) the Pawn
 seam.

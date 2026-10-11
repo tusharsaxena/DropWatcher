@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-639%2F639_passing-green)
+![Tests](https://img.shields.io/badge/Tests-660%2F660_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -43,6 +43,15 @@ downgrade. **Trade** says Yes, Likely, Unknown or No. Hover any cell for the rea
 the item's icon for its tooltip, shift-click it to link it in chat, ctrl-click it to try it on. The
 **Ask** button whispers the looter once; during a boss fight it waits in the queue and goes out when
 the fight ends, and clicking it again cancels it. The × beside it hides the row for the session.
+
+Click a row to open its **detail card** right under it, and click it again to close it. The card
+spells out the reasoning: the item's slot, armor type, bind, upgrade track, primary stat and any
+socket or tertiary stat; side by side, what it would replace **for you** and **for the looter**,
+with the item-level, track and stat changes, Pawn's score for you and the looter's spec; and the
+trade estimate in a sentence, with the rule behind it and how fresh the data is. Its buttons ask the
+looter, let you edit the message before it goes, link the item in chat, inspect the looter again,
+open a trade with them (grayed, with the reason, when they are out of range or you are in combat),
+and hide the item.
 
 Test mode fills the window with placeholder content so you can see it and place it before a real
 drop arrives. `/dw test` turns it on and off, and so does the **Test mode** box. Entering combat ends

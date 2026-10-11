@@ -850,6 +850,17 @@ test("compat: DressUpItem calls DressUpItemLink, then DressUpLink", function()
     assertFalse(Compat.DressUpItem(ITEM_LINK), "no API")
 end)
 
+test("compat: SpecName reads GetSpecializationInfoByID's name, else nil", function()
+    local Compat, m = fresh()
+    assertEqual(Compat.SpecName(256), "Discipline")
+    assertNil(Compat.SpecName(9999), "an unknown id")
+    assertNil(Compat.SpecName("256"), "not a number")
+    m.specNames[256] = ""
+    assertNil(Compat.SpecName(256), "an empty name")
+    m.GetSpecializationInfoByID = nil
+    assertNil(Compat.SpecName(257), "no API")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------

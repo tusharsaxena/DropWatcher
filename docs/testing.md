@@ -50,7 +50,10 @@ every control, the build without the Widgets library, and the pure row predicate
 each verdict, trade, inspect and ask state, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
 the Ask button and its repaint, the dismiss mark, the compact preset, the filters and the empty
-line), `test_compat` (the compat seam: the
+line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
+the actions with their reasons, state by state, then the card built headless: the row click that
+expands it inline and moves the rows below, one row at a time, a reason on every line, each action
+through its host handler, and the Edit message box), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader and each shim's fallback with its API absent), `test_constants` and
 `test_class_data`

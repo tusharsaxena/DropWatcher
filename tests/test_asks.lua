@@ -3,8 +3,8 @@
 -- one-ask guard and the length limit at the edge, queueing under a restriction, the flush on a
 -- restriction lift, ENCOUNTER_END and CHALLENGE_MODE_COMPLETED (one send every 1.5s, first in first
 -- out, stopped by a new restriction), cancel by a click and when the looter leaves, a failed send
--- and its retry, the announce channel, test mode routed to print, AskStateChanged, and the
--- stand-down.
+-- and its retry, the announce channel, test mode routed to print, AskStateChanged, the preview
+-- the detail card's Edit message box reads, and the stand-down.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -135,6 +135,21 @@ test("send: a stranger, yourself, an offline member and a missing target are ref
     assertEqual(select(2, A.Request("ask", T.secret("Brakk"), id)), "noTarget")
     assertEqual(#m.chatSent, 0)
     assertEqual(A.Stats().refusals, 6)
+end)
+
+test("preview: the template filled in for the drop, with its length; nothing sent or filed", function()
+    local NS, m, A = party()
+    NS.db.profile.messages = { templates = { ask = "{player}: {item} at {ilvl}?" } }
+    local id = drop(NS, m, 300, "Brakk", 613)
+    local p = A.Preview("ask", "Brakk", id)
+    assertEqual(p.text, "Brakk: " .. link(300) .. " at 613?")
+    assertEqual(p.length, #p.text); assertFalse(p.tooLong)
+    assertEqual(#m.chatSent, 0)
+    assertEqual(A.StateOf("ask", "Brakk", id), "ready", "a preview files no ask")
+    local none, why = A.Preview("ask", "Nobody", id)
+    assertNil(none); assertEqual(why, "notInGroup")
+    NS.addon:OnSlashCommand("disable")
+    assertEqual(select(2, A.Preview("ask", "Brakk", id)), "disabled")
 end)
 
 test("send: an offer whispers the candidate, named in {player}", function()

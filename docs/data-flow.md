@@ -62,8 +62,30 @@ header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed �
 × ─────────────> WindowGroup.Dismiss ─> State.windowGroup.dismissed ─> repaint
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id) ─> AskStateChanged ─> repaint
 item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
-                 ctrl-click: Compat.DressUpItem
+                 ctrl-click: Compat.DressUpItem; a plain click expands the row
 NS.SetCompact ─> profile.window.compact (the seam once DW-40's row exists) ─> repaint
+row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
+```
+
+## Today: the detail card
+
+```
+the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
+  ├─> DetailCells.Chips(drop)                                   (pure: the header's chips)
+  ├─> DetailCells.ForYou(drop, Compat.PawnIsReady())            (pure)
+  ├─> DetailCells.ForLooter(drop, NS.Inspect.Get(guid), Compat.SpecName(specID), now)   (pure)
+  ├─> DetailCells.TradeBox(drop, the situation's label)         (pure)
+  └─> DetailCells.Actions(drop, { NS.Asks.StateOf("ask", …), the inspect entry,
+                                  NS.TradeHelper.CanTradeWith(looter) })                  (pure)
+
+Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press ─> AskStateChanged ─> repaint
+Edit message ──> DetailCard.OpenEditor(id) ─> NS.Asks.Preview("ask", looter, id) (nothing sent)
+                   Send ─> NS.PressAsk(id, { text = edited }) ─> NS.Asks.Press
+Link in chat ──> Compat.InsertChatLink(link)
+Retry inspect ─> NS.RetryInspect(id) ─> NS.Inspect.Request(looter guid, PRIORITY.looter)
+                   ─> InspectDone ─> LootFeed re-judges ─> DropUpdated ─> repaint
+Trade ─────────> NS.TradeWithLooter(id) ─> NS.TradeHelper.Open(looter) (its guards; a refusal printed)
+Hide this item ─> WindowGroup.Dismiss(id) ─> State.windowGroup.dismissed, expanded cleared ─> repaint
 ```
 
 ## Today: enable and disable

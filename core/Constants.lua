@@ -46,6 +46,18 @@ C.WINDOW = {
     ITEM_MIN    = 150,    -- the Item column's least width (it takes the slack)
     SCROLL_W    = 22,     -- the scroll bar's gutter on the right of the rows
     ASK_W       = 64,     -- the Ask button
+    -- The detail card, expanded inline under its row (modules/DetailCard.lua, design spec §11.3).
+    CARD_H      = 248,    -- the whole card
+    CARD_PAD    = 8,      -- its margin, and the gap between its boxes
+    CARD_ICON   = 32,     -- the item button in its header
+    CHIP_H      = 16,     -- one header or verdict chip
+    SIDE_H      = 112,    -- a For you / For the looter box
+    SIDE_ROW_H  = 16,     -- one comparison line
+    SIDE_LABEL  = 78,     -- the comparison lines' label column
+    TRADE_BOX_H = 44,     -- the trade estimate box
+    ACTION_H    = 22,     -- an action button
+    EDITOR_W    = 380,    -- the Edit message box
+    EDITOR_H    = 156,
     -- Where a fresh profile, and Reset position, put the window.
     POINT       = { "CENTER", "CENTER", 0, 0 },
 }

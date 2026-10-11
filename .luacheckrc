@@ -53,7 +53,7 @@ files["core/Compat.lua"] = {
     "GetInventoryItemID", "CanInspect", "CheckInteractDistance", "NotifyInspect", "ClearInspectPlayer",
     "GetInspectSpecialization", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
-    "DressUpLink",
+    "DressUpLink", "GetSpecializationInfoByID",
   },
 }
 

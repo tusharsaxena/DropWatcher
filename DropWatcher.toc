@@ -178,9 +178,17 @@ modules\WindowFooter.lua
 modules\WindowCells.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Group drops body through
 # Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells (above), NS.Constants,
-# NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool and the host handlers
-# (core\DropWatcher.lua) are read at call time, when the tab is built and repainted.
+# NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
+# (modules\DetailCard.lua, below) and the host handlers (core\DropWatcher.lua) are read at call time,
+# when the tab is built and repainted.
 modules\WindowGroup.lua
+# Conventional: publishes NS.DetailCells, the detail card's pure composers (chips, both comparisons,
+# the trade box, the actions); takes NS.WindowCells (above), NS.Constants and NS.L at load.
+modules\DetailCells.lua
+# Conventional: publishes NS.DetailCard, the detail card's frame edge and the Edit message box; takes
+# NS.DetailCells (above), NS.Constants and NS.L at load. NS.WindowGroup builds it (above, at call
+# time); NS.Window, the engine modules and the host handlers are read at call time.
+modules\DetailCard.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

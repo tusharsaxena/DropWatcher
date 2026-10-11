@@ -22,9 +22,10 @@ State.windowOpen = false
 State.windowFilters = nil
 
 -- The Group drops table's view state (modules/WindowGroup.lua, design spec §11.1-§11.2):
--- { collapsed = { [groupKey] = true | false }, dismissed = { [dropId] = true } }. A group the
--- player never toggled follows the default (the newest shown group open, older ones collapsed);
--- a dismissed drop (its row's ×) stays out of the table for the session.
+-- { collapsed = { [groupKey] = true | false }, dismissed = { [dropId] = true }, expanded = dropId }.
+-- A group the player never toggled follows the default (the newest shown group open, older ones
+-- collapsed); a dismissed drop (its row's × or its card's Hide this item) stays out of the table for
+-- the session; `expanded` is the one row whose detail card is open (design spec §11.3), or nil.
 State.windowGroup = nil
 
 -- The current situation key and the classifier inputs it came from (modules/Situations.lua,

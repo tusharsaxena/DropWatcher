@@ -230,12 +230,13 @@ function NS.AskTargetOf(drop)
     return who.name or who.guid
 end
 
---- Ask a drop's looter for it (design spec §9.2): the Group drops row's Ask button, through the
---- messaging edge's Press, so a queued ask is canceled by a second click. A refusal is said in chat;
---- a send confirms itself (modules/Asks.lua). Refused while stood down.
+--- Ask a drop's looter for it (design spec §9.2): the Group drops row's Ask button and the detail
+--- card's, through the messaging edge's Press, so a queued ask is canceled by a second click. A
+--- refusal is said in chat; a send confirms itself (modules/Asks.lua). Refused while stood down.
 --- @param dropID number
+--- @param opts table|nil { text = the edited message } (the detail card's Edit message box)
 --- @return string state, string|nil reason (as NS.Asks.Press)
-function NS.PressAsk(dropID)
+function NS.PressAsk(dropID, opts)
     local L = NS.L
     local rec = NS.LootFeed.Get(dropID)
     local target = NS.AskTargetOf(rec)
@@ -245,7 +246,7 @@ function NS.PressAsk(dropID)
     elseif not target then
         state, reason = "refused", rec and "self" or "noDrop"
     else
-        state, reason = NS.Asks.Press("ask", target, dropID)
+        state, reason = NS.Asks.Press("ask", target, dropID, opts)
     end
     if state == "refused" then
         local why = ASK_REFUSAL[reason]
@@ -253,6 +254,52 @@ function NS.PressAsk(dropID)
         NS.Print(L["Not asked: %s"]:format(why))
     end
     return state, reason
+end
+
+-- The looter record of a drop that is not yours, or nil.
+local function looterOf(dropID)
+    local rec = NS.LootFeed.Get(dropID)
+    local who = rec and not rec.isMine and rec.looter
+    return type(who) == "table" and who or nil
+end
+
+--- Inspect a drop's looter again, ahead of the warm-up queue (design spec §8, §11.3): the detail
+--- card's Retry inspect. Refused while stood down; says in chat when there is nobody to inspect.
+--- @param dropID number
+--- @return string|nil status NS.Inspect.Request's answer
+function NS.RetryInspect(dropID)
+    local L = NS.L
+    if NS.IsStoodDown() then
+        NS.Print(NS.SlashCommands:DisabledLine())
+        return nil
+    end
+    local who = looterOf(dropID)
+    local status = who and who.guid and NS.Inspect.Request(who.guid, NS.Inspect.PRIORITY.looter)
+    if not status then
+        NS.Print(L["Nobody to inspect for that drop."])
+        return nil
+    end
+    NS.Debug("UI", "retry inspect: drop %s -> %s", tostring(dropID), status)
+    return status
+end
+
+--- Open a trade with a drop's looter (design spec §11.3): the detail card's Trade button, through
+--- the trade helper's Open and its guards. A refusal is said in chat.
+--- @param dropID number
+--- @return boolean ok, string|nil reason (as NS.TradeHelper.Open)
+function NS.TradeWithLooter(dropID)
+    local who = looterOf(dropID)
+    local target = who and (who.guid or who.name)
+    local ok, reason
+    if not target then
+        ok, reason = false, "noTarget"
+    else
+        ok, reason = NS.TradeHelper.Open(target)
+    end
+    if not ok then
+        NS.Print(NS.L["No trade: %s"]:format(NS.TradeHelper.ReasonText(reason) or tostring(reason)))
+    end
+    return ok, reason
 end
 
 --- Turn the Group drops table's compact preset on or off (design spec §11.1): `window.compact`,

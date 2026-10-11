@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..12 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, reserved), the window's shell (FEED-8..9, DW-30) and the Group drops table (FEED-10..12, DW-31) |
+| FEED-1..15 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, reserved), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31) and the detail card (FEED-13..15, DW-32) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
 | ITEM-1..2 | Item facts | The item readers' shapes and the track ids (lands with DW-23) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
@@ -166,8 +166,8 @@ Result:
 The parser's patterns, the rebuild and the secret guards are headless-tested (`test_loot_parser`),
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
-and the `feed:` lines of `/dw diagnostics`, and FEED-10..12 how the Group drops table draws them
-(DW-31). Reserved: FEED-7 (a Devourer Demon Hunter looter
+and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
+(DW-31), and FEED-13..15 the detail card a row expands into (DW-32). Reserved: FEED-7 (a Devourer Demon Hunter looter
 before inspect: a warglaive or one-hander reads as usable and a held off hand as not, matching the
 item's own spec list; the class data of DW-10, judged by DW-11).
 
@@ -283,6 +283,37 @@ it cannot be sent twice. In a boss fight, click `Ask` on another such drop → i
 a clock mark and the title bar's badge counts it; click it again → it is canceled and reads `Ask`;
 click once more and let the fight end → it is sent and reads `Asked`. A drop of your own, one with
 Trade `No`, or one that is not an upgrade for you shows a dash whose tooltip says why. Result:
+
+**FEED-13. The detail card opens inline.** After FEED-10, click a drop's row (anywhere but a button)
+→ a card opens right under it and the rows below move down; the row gets a faint gold tint and an
+up chevron at its right edge. The card shows the item's icon and name in its quality color, then
+chips: the slot, the armor type (Cloth, Leather, Mail, Plate), the bind (BoP, BoE), the track with
+rank and item level (`Hero 2/6 · 311`), the primary stat, and Socket or a tertiary stat when the
+item has them. Click the row again → the card closes and the rows move back. Click another row →
+the card moves to it: one card at a time. Fold the row's header, or type a search that hides the
+row → the card goes with it; clear the search → it comes back still open. Result:
+
+**FEED-14. Both comparisons and the trade box.** On a drop the looter's inspect has read, the card's
+left box `FOR YOU` and right box `FOR <NAME> (LOOTER)` each show a verdict chip (`UPGRADE ▲`,
+`DOWNGRADE ▽`, …), the item it replaces with its icon and item level, `292 → 311 · +19`, the track
+change (`Champion 6/6 → Hero 2/6 ▲`), the secondary stats gained and lost (`+130 Haste -119
+Mastery`), and for you Pawn's score (or `–`, whose tooltip says whether Pawn is loaded), for the
+looter their spec and `inspected 40s ago`. The values match the item tooltips the game shows
+(compare each by hovering the icons). Below, the trade box shows a chip (`LIKELY TRADEABLE`), the
+reason in a sentence, and `Rule: personal loot, Mythic+ · Basis: inspect 40s ago`. Hover every line
+and chip → each tooltip names it and says why; nothing is blank. Result:
+
+**FEED-15. The card's actions.** On another player's drop that is an upgrade for you: `Ask <name>`
+whispers them as the row's Ask does; `Edit message` opens a small box over the window with the ask
+filled in and `n / 255 bytes`; change the text and click `Send` → the edited text is whispered and
+the box closes; type past 255 bytes → Send grays out; `Cancel` or Escape closes it unsent.
+`Link in chat` puts the item's link in the chat box. `Retry inspect` is grayed while the looter's
+read is fresh (its tooltip gives the age); on a looter whose inspect failed or ran out of range it
+queues them (`/dw debug on` shows the inspect). Standing far from the looter, `Trade` reads `Trade ·
+out of range` grayed, with the reason on hover; walk up to them → it lights up, and a click opens a
+trade window with them; in combat it reads `Trade · in combat`. `Hide this item` removes the row and
+closes the card. On your own drop, Ask, Edit message, Retry inspect and Trade are grayed and each
+says why. Result:
 
 ## Roster
 
@@ -582,3 +613,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | TRADE-6 | DW-29, the trade helper | No client pass recorded yet |
 | ASK-1..4 | DW-2A, the messaging edge | No client pass recorded yet |
 | FEED-10..12 | DW-31, the Group drops table | No client pass recorded yet |
+| FEED-13..15 | DW-32, the detail card | No client pass recorded yet |

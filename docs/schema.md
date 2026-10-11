@@ -61,7 +61,7 @@ Settings Schema names (architecture-§5).
 `NS.State.debug` (the logging flag), `NS.State.testMode`, `NS.State.windowOpen`,
 `NS.State.windowFilters` (the filter bar's state per tab, seeded from `feed.view`, `feed.content`,
 `feed.sort` and `trade.likelyOnly` when they hold a valid value),
-`NS.State.windowGroup` (the Group drops table's collapsed groups and dismissed rows),
+`NS.State.windowGroup` (the Group drops table's collapsed groups, dismissed rows and the row whose detail card is open),
 `NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
 came from; nil while stood down). The Debug console
 and Test mode rows are `sessionOnly` and store through their own closures.

@@ -179,7 +179,29 @@ Total.
 - table: with no drop at all the empty line says so
 - table: PressAsk says why it asked nobody: your own drop, a gone drop, the addon disabled
 
-### test_compat.lua (63)
+### test_detail_card.lua (19)
+
+- cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
+- cells: StatChange lists the secondary stats gained and lost, the largest first
+- cells: For you shows what it replaces, the ilvl, track and stat change, and Pawn's score
+- cells: For you without a score says why: Pawn off, or not scored yet
+- cells: an empty slot and an unread baseline each say so, never blank
+- cells: For the looter compares their inspected gear and names their spec and the read's age
+- cells: the trade box says the state, the reason, the rule in force and how fresh the data is
+- cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
+- cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
+- cells: on your own drop Ask, Edit, Retry and Trade are off, each with its reason
+- card: a row click expands it inline; the rows below move down by the card's height
+- card: one row at a time; a click on a cell or the item button opens it too
+- card: the header, both comparisons and the trade box are painted, each with a reason
+- card: the actions go through their host handlers; Trade is off with its reason
+- card: Hide this item dismisses the row and takes the card with it
+- card: a filtered-out or collapsed row hides its card; it comes back with the row
+- card: Edit message opens the box with the ask filled in; Send asks with the edited text
+- card: the Edit message box says why when the ask would be refused, and Cancel closes it
+- card: RetryInspect and TradeWithLooter say why they did nothing
+
+### test_compat.lua (64)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -243,6 +265,7 @@ Total.
 - compat: ClassColor reads C_ClassColor first, then RAID_CLASS_COLORS
 - compat: InsertChatLink prefers ChatFrameUtil.InsertLink, then ChatEdit_InsertLink
 - compat: DressUpItem calls DressUpItemLink, then DressUpLink
+- compat: SpecName reads GetSpecializationInfoByID's name, else nil
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_constants.lua (12)
@@ -633,13 +656,14 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
-### test_asks.lua (21)
+### test_asks.lua (22)
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
 - send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again
 - send: an edited text over 255 bytes is refused tooLong and nothing is sent
 - send: a stranger, yourself, an offline member and a missing target are refused
+- preview: the template filled in for the drop, with its length; nothing sent or filed
 - send: an offer whispers the candidate, named in {player}
 - fail: a raising sender fails with its message, prints nothing, and may be retried
 - fail: a secret or empty error reads as error; no sender at all is noApi
@@ -766,7 +790,8 @@ Total.
 | test_window.lua | 13 |
 | test_window_shell.lua | 31 |
 | test_window_group.lua | 29 |
-| test_compat.lua | 63 |
+| test_detail_card.lua | 19 |
+| test_compat.lua | 64 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -783,7 +808,7 @@ Total.
 | test_feed.lua | 40 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
-| test_asks.lua | 21 |
+| test_asks.lua | 22 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 13 |
 | test_vendor_sync.lua | 3 |
@@ -793,4 +818,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **639** |
+| **Total** | **660** |

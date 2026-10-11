@@ -24,7 +24,8 @@ local _, NS = ...
 --   * the trade actions (C_Container.PickupContainerItem, DropItemOnUnit, InitiateTrade) and their
 --     trade-range and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor);
 --   * the drop tables' item buttons and class colors (C_Item.GetItemIconByID, C_ClassColor and
---     RAID_CLASS_COLORS, the chat link and the dressing room).
+--     RAID_CLASS_COLORS, the chat link and the dressing room), and a spec's name for the detail
+--     card (GetSpecializationInfoByID).
 --
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -958,4 +959,17 @@ function Compat.DressUpItem(link)
     if type(link) ~= "string" or not fn then return false end
     fn(link)
     return true
+end
+
+--- A specialization's localized name (the detail card's looter spec): GetSpecializationInfoByID's
+--- second return. Nil for no API, an unknown or non-number id, or a secret or empty answer.
+--- @param specID number
+--- @return string|nil
+function Compat.SpecName(specID)
+    if type(specID) ~= "number" or Compat.IsSecret(specID) then return nil end
+    local fn = GetSpecializationInfoByID
+    if not fn then return nil end
+    local _, name = fn(specID)
+    if Compat.IsSecret(name) or type(name) ~= "string" or name == "" then return nil end
+    return name
 end

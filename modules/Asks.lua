@@ -6,7 +6,8 @@ local _, NS = ...
 -- THE SPLIT. modules/Messaging.lua is the pure core (templates, tokens, the length check, the
 -- one-ask guard, the queue's state machine) and holds no state; this edge holds the one book, reads
 -- the restriction tracker, the roster, the feed and the `messages.*` settings, sends, and reports
--- each result back to the core. The UI (DW-33) and auto-ask (DW-54) call Request, Press and Cancel.
+-- each result back to the core. The UI (DW-33) and auto-ask (DW-54) call Request, Press and Cancel;
+-- the detail card's Edit message box (DW-32) reads Preview, which fills the template and sends nothing.
 --
 --   Request(kind, target, dropID, opts) -> state, reason
 --     kind    "ask" | "offer" | "announce"
@@ -290,6 +291,21 @@ function A.Request(kind, target, dropID, opts)
     local req = { kind = kind, target = who.key, dropID = dropID, text = opts.text,
         ctx = context(kind, rec, who, opts.ctx) }
     return act(M.Request(store().book, req, coreOpts(test)), test)
+end
+
+--- What a request would send (the detail card's Edit message box): the template for `kind`,
+--- filled in from the drop record for `target`, as NS.Messaging.Preview answers it ({ text,
+--- length, tooLong, unknown, missing }). Sends nothing and files nothing. Nil and the refusal
+--- reason for a recipient Request would refuse, or while stood down.
+--- @return table|nil preview
+--- @return string|nil reason
+function A.Preview(kind, target, dropID, opts)
+    if stoodDown() then return nil, "disabled" end
+    opts = type(opts) == "table" and opts or {}
+    local rec = dropID ~= nil and NS.LootFeed.Get(dropID) or nil
+    local who, why = recipient(kind, target, isTest(rec))
+    if not who then return nil, why end
+    return M.Preview(M.Template(kind, A.Settings().templates), context(kind, rec, who, opts.ctx))
 end
 
 -- The registry target a request for `target` was filed under: the target itself when an ask is
