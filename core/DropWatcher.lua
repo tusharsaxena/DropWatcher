@@ -131,6 +131,10 @@ function NS.SetTestMode(on)
     end
     NS.State.testMode = on
     NS.Debug("State", "test mode %s", on and "on" or "off")
+    -- The placeholder drops (modules/TestMode.lua): filled before the window shows them.
+    if NS.TestMode then
+        if on then NS.TestMode.Populate() else NS.TestMode.Clear() end
+    end
     if NS.Window then NS.Window.OnTestModeChanged(on) end
     refreshPanels()
     return true

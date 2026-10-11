@@ -1,8 +1,8 @@
 local addonName, NS = ...
 -- modules/Window.lua — the main window's shell (design spec §11.1, boards 01 and 06): frame, skin,
 -- title bar (logo, gold title, restriction badge, Scan group, minimize, close), the tab strip and
--- its lazily built panes, the filter bar's host, the footer's host, the test-mode banner, minimize,
--- resize, position, lock, scale, alpha and the show decision.
+-- its lazily built panes, the filter bar's host, the footer's host, test mode's chip and banner,
+-- minimize, resize, position, lock, scale, alpha and the show decision.
 --
 -- A non-secure standalone window (standalone-windows): built lazily on the first show, skinned
 -- through LibKa0s-Core's ApplySkin, closed by Escape (UISpecialFrames) and by the shared close mark
@@ -387,6 +387,30 @@ local function newTip()
     return L["%d new"]:format(newCount), L["Interesting drops that arrived since you minimized the window. Expand it to see them."]
 end
 
+-- Test mode's chip and banner (design spec §11.6, board 06 E) share one tooltip.
+local function testTip()
+    return L["Test mode"],
+        L["Placeholder drops show every verdict, trade, inspect and ask state, so the layout can be checked anywhere."],
+        L["Ask, Offer and Announce print their text in your chat frame instead of sending it."],
+        L["Combat ends it, and so do /dw test, the launcher menu and the Master controls checkbox."]
+end
+
+local function buildTestChip(bar, title)
+    local chip = CreateFrame("Frame", nil, bar)
+    chip:SetSize(76, K.CONTROL_H - 4)
+    chip:SetPoint("LEFT", title, "RIGHT", 8, 0)
+    chip.fill = chip:CreateTexture(nil, "BACKGROUND")
+    chip.fill:SetAllPoints(chip)
+    chip.fill:SetColorTexture(C.TONE.warn.r, C.TONE.warn.g, C.TONE.warn.b, 0.18)
+    chip.text = chip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    chip.text:SetPoint("CENTER", chip, "CENTER", 0, 0)
+    chip.text:SetText(L["TEST MODE"])
+    chip.text:SetTextColor(C.TONE.warn.r, C.TONE.warn.g, C.TONE.warn.b)
+    Window.AttachTooltip(chip, testTip)
+    chip:Hide()
+    return chip
+end
+
 local function buildTitleControls(f, bar)
     f.closeButton = NS.MakeCloseButton(bar, function() Window.Close() end)
     local right, rightPoint = bar, "RIGHT"
@@ -427,6 +451,7 @@ local function buildTitleBar(f)
     f.title:SetPoint("LEFT", f.logo, "RIGHT", 6, 0)
     f.title:SetText(NS.BRAND)
 
+    f.testChip = buildTestChip(bar, f.title)
     f.newChip = CreateFrame("Frame", nil, bar)
     f.newChip:SetSize(60, K.CONTROL_H)
     f.newChip:SetPoint("LEFT", f.title, "RIGHT", 8, 0)
@@ -481,8 +506,27 @@ local function buildPanes(f, body)
         pane:Hide()
         f.panes[key] = pane
     end
-    -- The Group drops body's text, named for what it is until DW-34's empty state replaces it.
-    f.empty = f.panes.group.placeholder
+end
+
+-- The test-mode banner (board 06 E), between the filter bar and the tab's body.
+local function buildBanner(f, body)
+    local b = CreateFrame("Frame", nil, body)
+    b:SetPoint("TOPLEFT", f.filterHost, "BOTTOMLEFT", 0, -2)
+    b:SetPoint("TOPRIGHT", f.filterHost, "BOTTOMRIGHT", 0, -2)
+    b:SetHeight(K.BANNER_H - 4)
+    b.fill = b:CreateTexture(nil, "BACKGROUND")
+    b.fill:SetAllPoints(b)
+    b.fill:SetColorTexture(C.TONE.warn.r, C.TONE.warn.g, C.TONE.warn.b, 0.12)
+    b.art = b:CreateTexture(nil, "ARTWORK")
+    b.art:SetSize(12, 12)
+    b.art:SetPoint("LEFT", b, "LEFT", 6, 0)
+    b.art:SetTexture(NS.Icon("info"))
+    b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    b.text:SetPoint("LEFT", b.art, "RIGHT", 6, 0)
+    b.text:SetText(L["TEST MODE: placeholder drops in every state. Nothing is whispered. Combat ends it."])
+    Window.AttachTooltip(b, testTip)
+    b:Hide()
+    f.banner = b
 end
 
 local function buildBody(f)
@@ -497,9 +541,7 @@ local function buildBody(f)
     f.filterHost:SetPoint("TOPRIGHT", body, "TOPRIGHT", -K.INSET, -(K.TAB_H + 4))
     f.filterHost:SetHeight(K.FILTER_H)
 
-    f.banner = body:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    f.banner:SetPoint("TOP", f.filterHost, "BOTTOM", 0, -4)
-    f.banner:SetText(L["TEST MODE: placeholder drops, nothing is sent"])
+    buildBanner(f, body)
 
     f.footerHost = CreateFrame("Frame", nil, body)
     f.footerHost:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", K.INSET, 0)
@@ -599,9 +641,11 @@ function Window.TabContext(tab)
     tab = tab or activeTab
     local FB = NS.WindowFilterBar
     local st, honors = FB.State(tab), FB.HONORS[tab]
-    local ctx = { instanceSince = instanceSince }
+    local feed = feedName()
+    -- The placeholders ignore the situation, so This instance does not cut them (spec §11.6).
+    local ctx = { instanceSince = feed ~= "test" and instanceSince or nil }
     return {
-        tab = tab, feed = feedName(), filter = st, honors = honors, ctx = ctx,
+        tab = tab, feed = feed, filter = st, honors = honors, ctx = ctx,
         matches = function(drop) return FB.Matches(drop, st, ctx, honors) end,
         compare = FB.Comparator(st.sort),
     }
@@ -609,10 +653,9 @@ end
 
 local function refreshActive()
     -- A tab with no body shows its placeholder; a body shows it itself, as its empty state, from
-    -- its refresh below (the Group drops body gives way to the test-mode banner).
-    local test = NS.State.testMode == true
+    -- its refresh below.
     for key, p in pairs(frame.panes) do
-        p.placeholder:SetShown(tabSpecs[key] == nil and not (key == "group" and test))
+        p.placeholder:SetShown(tabSpecs[key] == nil)
     end
     local spec = tabSpecs[activeTab]
     if spec and spec.refresh then spec.refresh(frame.panes[activeTab], Window.TabContext(activeTab)) end
@@ -635,6 +678,14 @@ local function paintBadge()
     frame.badge:SetShown(text ~= nil)
 end
 
+-- The TEST MODE chip beside the title, the `n new` counter after it.
+local function paintTestChip()
+    local on = NS.State.testMode == true
+    frame.testChip:SetShown(on)
+    frame.newChip:ClearAllPoints()
+    frame.newChip:SetPoint("LEFT", on and frame.testChip or frame.title, "RIGHT", 8, 0)
+end
+
 local function paintMinimized()
     local m = isMinimized()
     frame.body:SetShown(not m)
@@ -650,6 +701,7 @@ function Window.Refresh()
     if not frame then return end
     local t0 = Perf.on and debugprofilestop()
     paintBadge()
+    paintTestChip()
     paintMinimized()
     if not isMinimized() then
         frame.banner:SetShown(NS.State.testMode == true)

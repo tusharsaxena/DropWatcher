@@ -92,7 +92,25 @@ is disabled — enable it with /dw enable`; the minimap menu grays every entry b
 **STATE-2. Launcher menu.** Right-click the minimap button → Enabled, Locked, Test mode, Show window,
 each ticking the state it shows and toggling it. Result:
 
-**STATE-3.** *Reserved — DW-34 (test mode populates every drop state).*
+**STATE-3. Test mode populates every drop state.** Solo, outside an instance and out of combat, open
+the window with no drop yet → the Group drops tab shows `No drops yet`, `Loot your group receives
+appears here, grouped by boss.` and two buttons, each with a tooltip; Scan group answers in chat.
+Click Preview with test data → test mode turns on, a `TEST MODE` chip sits beside the title and an
+amber banner (`Nothing is whispered. Combat ends it.`) above the table, both with the same tooltip;
+View reads All. Two groups show, `Placeholder boss` open and `Placeholder key run` collapsed; expand
+it. Across the rows: Me shows ▲ ≈ ▽, Can't use, Not wanted and `?`; Them shows ▲ ≈ ▽, Can't use and
+`?`; Trade shows Yes, Likely, Unknown and No; Their eq shows `40s`, `6m`, `…`, `range`, `combat`, `!`
+and `–`; Actions shows Ask, Queued, Asked, Retry and a dash. Hover a dozen cells → each has a reason,
+none is blank, and the text fits its column at the default size and at the minimum size. Expand the
+Placeholder Crown row → the detail card names the looter's spec and `inspected 40s ago`. Click Ask on
+a ready row → chat prints `Test mode, not sent: …` and the button reads Asked; nothing is whispered.
+Open My drops → the tab reads `My drops · 4`, the countdowns move each second (one in bold `ending
+soon`, one estimated with `~`, one `No limit (BoE)`, one not tradeable), and Offer… on Placeholder
+Idol opens the panel with `+14 UPGRADE`, `+6 UPGRADE`, `EQUAL`, `NO UPGRADE`, `CAN'T USE`,
+`CHECKING…` and `UNAVAILABLE`; Offer and Post my tradeables print and send nothing. Drag the window
+and minimize it: the chip stays on the title bar. `/dw test` → the chip, the banner and the rows go,
+View is back to Interesting and the empty state returns. Note: the placeholder items are invented, so
+their icons are the question mark and their game tooltips are empty. Result:
 
 ## Compat
 

@@ -202,6 +202,11 @@ modules\WindowMine.lua
 # NS.Constants, NS.L and NS.State at load. NS.Window, NS.WindowGroup, NS.WindowMine, the feed, the
 # asks, the trade helper and the host handlers are read at call time: it is built on its first Open.
 modules\OfferPanel.lua
+# Conventional: publishes NS.TestMode, test mode's placeholder drops and the hooks the drop tables
+# read (InspectOf, AskState); appends its row to NS.STAND_DOWN at load and reads NS.Constants and
+# NS.L at load. NS.LootFeed, NS.WindowFilterBar, NS.Inspect (above) are read at call time;
+# core\DropWatcher.lua's NS.SetTestMode calls Populate and Clear.
+modules\TestMode.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

@@ -58,6 +58,9 @@ C.WINDOW = {
     ACTION_H    = 22,     -- an action button
     EDITOR_W    = 380,    -- the Edit message box
     EDITOR_H    = 156,
+    -- The Group drops table's empty state (board 06 D): its title, line and two buttons.
+    EMPTY_W     = 360,
+    EMPTY_H     = 90,
     -- The My drops tab (modules/WindowMine.lua) and the Offer panel (modules/OfferPanel.lua),
     -- design spec §11.4, board 04.
     MINE_ROW_H  = 32,     -- one row of your own drops (the countdown sits over its bar)

@@ -106,7 +106,7 @@ Total.
 - window: a drag stores the point, and Reset position forgets it
 - window: locked, a drag does not start
 - window: resizable from the corner grip, with the design's minimum size
-- window: test mode shows the banner and hides the empty-state text
+- window: test mode shows the banner and the chip, and its rows replace the empty state
 - window: combat ends test mode, and test mode cannot start in combat
 - window: with test mode on, Close and Toggle still change what is shown
 - window: turning test mode off closes the window only when test mode opened it
@@ -147,7 +147,7 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (29)
+### test_window_group.lua (30)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -176,7 +176,8 @@ Total.
 - table: the compact preset keeps Item and looter, Ilvl, Their eq, Me and Ask
 - table: a column the profile turns off is not drawn
 - table: the filter bar filters the rows, and the empty line says why nothing shows
-- table: with no drop at all the empty line says so
+- table: with no drop at all the empty state says so, with Preview with test data and Scan group
+- table: the empty state's buttons turn test mode on and scan the group
 - table: PressAsk says why it asked nobody: your own drop, a gone drop, the addon disabled
 
 ### test_detail_card.lua (19)
@@ -232,6 +233,27 @@ Total.
 - offer panel: Announce to group announces the drop
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
+
+### test_test_mode.lua (18)
+
+- test mode data: the other members' drops cover every Me and Them verdict (board 03)
+- test mode data: every trade estimate, inspect state and ask state is there
+- test mode data: your own drops cover every countdown and every candidate pill (board 04)
+- test mode data: two groups, a boss and a key run, and every item is a placeholder
+- feed: AddTest puts a placeholder in the test feed as given, never in the live one
+- feed: AddTest refuses a spec with no item, no looter or no group, and while stood down
+- test mode: on fills the test feed, off empties it; the live feed is never touched
+- test mode: combat and the stand-down both empty the test feed
+- test mode: the Group drops tab shows View: All while on, and the player's View comes back
+- window: test mode draws every placeholder, under the boss and the key run
+- window: every cell of every placeholder row says something and has a reason
+- window: the rows show every ask state, every Their eq state and every trade chip
+- window: a placeholder's Their eq shows its own worn item, and its detail card its own inspect
+- window: the My drops tab counts your tradeable placeholders and draws them all
+- window: the empty state comes back once test mode ends with nothing in the live feed
+- sends: Ask on a placeholder prints the text and sends nothing; its state is the edge's from then on
+- sends: Post my tradeables in test mode prints its lines and sends nothing
+- hooks: AskState shows a placeholder's own state only while the edge holds none
 
 ### test_compat.lua (64)
 
@@ -821,9 +843,10 @@ Total.
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 31 |
-| test_window_group.lua | 29 |
+| test_window_group.lua | 30 |
 | test_detail_card.lua | 19 |
 | test_window_mine.lua | 29 |
+| test_test_mode.lua | 18 |
 | test_compat.lua | 64 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
@@ -851,4 +874,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **689** |
+| **Total** | **708** |

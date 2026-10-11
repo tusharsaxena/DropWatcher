@@ -95,7 +95,8 @@ record in, each column's text, verdict glyph, tone and reason tooltip out, for e
 trade, inspect and ask state), the Group drops table (`WindowGroup.lua`: pooled rows under
 collapsible encounter headers, the nine columns or the compact preset's five, real item buttons,
 the Ask button and the dismiss mark, ordered and filtered by the tab's filter state; a row click
-expands it inline into the detail card, one row at a time), the detail card's words
+expands it inline into the detail card, one row at a time; with no drop at all, the empty state
+with Preview with test data and Scan group), the detail card's words
 (`DetailCells.lua`, pure: the item header's chips, the For you and For the looter comparisons, the
 trade estimate box and the actions, each with its reason tooltip), the detail card itself
 (`DetailCard.lua`: the frame edge that paints them under the open row, and the Edit message box
@@ -107,7 +108,10 @@ tab (`WindowMine.lua`: your own drops in pooled rows with the countdown over its
 candidates, Offer… and Announce or a dash and Hide, and the summary strip with Post my
 tradeables), the Offer panel (`OfferPanel.lua`: "Who could use this?", docked to the window's right
 edge, each member with a class stripe, `eq → drop`, a status pill and Offer and Trade, and Announce
-to group) and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
+to group), test mode (`TestMode.lua`: placeholder drops in every verdict, trade, inspect and ask
+state, put in the separate test feed through `NS.LootFeed.AddTest` when test mode turns on and
+cleared when it ends; the window wears a `TEST MODE` chip and banner, and every send is printed)
+and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
@@ -132,7 +136,9 @@ with DW-40. `profile.feed.quality.mode` is written by
 `NS.SetQualityMode` (core/DropWatcher.lua, the filter bar's Quality control) onto the path the feed
 reads until the Feed page's row exists (DW-40), after which the same handler goes through the seam.
 The filter bar's per-tab state is session-only (`NS.State.windowFilters`), seeded from
-`feed.view`, `feed.content`, `feed.sort` and `trade.likelyOnly` when they hold a valid value. The
+`feed.view`, `feed.content`, `feed.sort` and `trade.likelyOnly` when they hold a valid value;
+test mode sets the Group drops tab's View to All while it is on and puts the player's value back
+when it ends (`modules/TestMode.lua`). The
 Group drops table's collapsed groups, dismissed rows and the one expanded row (the detail card)
 are session-only too (`NS.State.windowGroup`), and so are the My drops tab's hidden rows and the
 upgrades whose candidates you chose to see (`NS.State.windowMine`) and the Offer panel's drop
@@ -167,7 +173,7 @@ adds itself as a consumer.
 
 | `NS.MSG` key | Wire suffix | Sender (planned, item) | Payload | Consumers |
 |---|---|---|---|---|
-| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`) | TradeTimer (since DW-28): your own live drop asks for a bag scan; Window (since DW-30): the first interesting live drop in an auto-open situation opens it, a minimized window counts it (`n new`), and the open window repaints (the `My drops · n` count); Toast (DW-52), History (DW-51) |
+| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`), test mode's placeholders (since DW-34, `AddTest`) one each as they are put in | TradeTimer (since DW-28): your own live drop asks for a bag scan; Window (since DW-30): the first interesting live drop in an auto-open situation opens it, a minimized window counts it (`n new`), and the open window repaints (the `My drops · n` count); Toast (DW-52), History (DW-51) |
 | `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved), `score` (a pending score retried) or `trade` (the trade estimate moved on the sweep or the trade timer: a drop past its window, your own drop's exact timer). Never for a test drop | Window (since DW-30): the open window repaints its tabs and the active tab's body (since DW-31 the Group drops rows: verdicts, trade, Their eq; since DW-32 the open detail card with them; since DW-33 the My drops rows and the open Offer panel's candidates) |
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (sent since DW-26) | `guid`. Sent once per job when it ends: after a read (`fresh` or `cached`), once the read items' facts have loaded or been given up on; at once for `outOfRange` and `failed`. `NS.Inspect.Get(guid)` says which | LootFeed (since DW-27): re-judges the drops that looter received and your own drops' candidate of that GUID; Window (since DW-30): the footer's inspect freshness |
 | `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (since DW-27): re-judges you on every drop; the quality gate's dynamic threshold reads the snapshot at the next drop |

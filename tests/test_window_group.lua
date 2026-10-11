@@ -476,12 +476,35 @@ test("table: the filter bar filters the rows, and the empty line says why nothin
     assertFalse(drawn.pane.colHead:IsShown())
 end)
 
-test("table: with no drop at all the empty line says so", function()
+test("table: with no drop at all the empty state says so, with Preview with test data and Scan group", function()
     local NS = T.enableAddon()
     NS.ShowWindow()
-    local pane = NS.WindowGroup.Drawn().pane
-    assertTrue(pane.placeholder:IsShown())
-    assertEqual(textOf(pane.placeholder), "No drops yet. Loot your group receives appears here.")
+    local drawn = NS.WindowGroup.Drawn()
+    local e = drawn.empty
+    assertTrue(e:IsShown())
+    assertFalse(drawn.pane.placeholder:IsShown(), "the empty state, not the filters' line")
+    assertFalse(drawn.pane.colHead:IsShown())
+    assertEqual(textOf(e.title), "No drops yet")
+    assertEqual(textOf(e.text), "Loot your group receives appears here, grouped by boss.")
+    assertEqual(textOf(e.preview.label), "Preview with test data")
+    assertEqual(textOf(e.scan.label), "Scan group")
+    assertEqual(NS.Window.TooltipOf(e.preview)[1], "Preview with test data")
+    assertEqual(NS.Window.TooltipOf(e.scan)[1], "Scan group")
+end)
+
+test("table: the empty state's buttons turn test mode on and scan the group", function()
+    local NS = T.enableAddon()
+    NS.ShowWindow()
+    local e = NS.WindowGroup.Drawn().empty
+    local scanned = 0
+    NS.ScanGroup = function() scanned = scanned + 1 end
+    e.scan:__fire("OnClick")
+    assertEqual(scanned, 1)
+    e.preview:__fire("OnClick")
+    assertTrue(NS.State.testMode)
+    local drawn = NS.WindowGroup.Drawn()
+    assertFalse(drawn.empty:IsShown())
+    assertTrue(#drawn.rows > 0, "the placeholders are drawn")
 end)
 
 -- ── the host handler ────────────────────────────────────────────────────────────────────────

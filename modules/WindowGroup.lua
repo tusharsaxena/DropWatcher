@@ -64,7 +64,6 @@ WG.COLUMNS = {
 local COMPACT = { item = true, ilvl = true, theirEq = true, me = true, actions = true }
 local GLYPH_COLS = { me = true, them = true }
 
-local NO_DROPS = L["No drops yet. Loot your group receives appears here."]
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
 
 -- ── the view state (session-only) ───────────────────────────────────────────────────────────
@@ -425,10 +424,9 @@ local function paintItem(f, drop, compact)
     classTone(f.text, lc.classFile)
 end
 
+-- The looter's worn gear: their inspect entry's (a test mode placeholder's own).
 local function inspectGear(drop)
-    local guid = type(drop.looter) == "table" and drop.looter.guid
-    if not guid or drop.isMine then return nil end
-    local e = NS.Inspect.Get(guid)
+    local e = NS.TestMode.InspectOf(drop)
     return e and e.gear
 end
 
@@ -444,7 +442,7 @@ end
 local function askState(drop)
     local target = NS.AskTargetOf(drop)
     if not target then return "ready" end
-    return NS.Asks.StateOf("ask", target, drop.id)
+    return NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", target, drop.id))
 end
 
 local function paintActions(f, drop)
@@ -513,6 +511,38 @@ local function paintHeader(h, e, now)
     h.chevron:SetTexture(NS.Icon(e.collapsed and "chevron-right" or "chevron-down"))
 end
 
+-- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
+
+local function previewTip()
+    return L["Preview with test data"], L["Turns test mode on: placeholder drops in every state, so the window can be checked anywhere. Nothing is whispered, and combat ends it."]
+end
+
+local function scanTip()
+    return L["Scan group"], L["Inspects every other member of your group, one at a time and out of combat, so each drop can be judged for its looter."]
+end
+
+-- No drop at all yet: what the table will hold, and the two ways to fill it now.
+local function buildEmpty(pane)
+    local e = CreateFrame("Frame", nil, pane)
+    e:SetSize(K.EMPTY_W, K.EMPTY_H)
+    e:SetPoint("CENTER", pane, "CENTER", 0, 0)
+    e.title = e:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    e.title:SetPoint("TOP", e, "TOP", 0, 0)
+    e.title:SetText(L["No drops yet"])
+    e.text = e:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    e.text:SetPoint("TOP", e.title, "BOTTOM", 0, -8)
+    e.text:SetText(L["Loot your group receives appears here, grouped by boss."])
+    local W = NS.Window
+    e.preview = W.TextButton(e, 160, "eye", L["Preview with test data"], function() NS.SetTestMode(true) end)
+    e.preview:SetPoint("TOPRIGHT", e.text, "BOTTOM", -4, -12)
+    W.AttachTooltip(e.preview, previewTip)
+    e.scan = W.TextButton(e, 110, "people", L["Scan group"], function() NS.ScanGroup() end)
+    e.scan:SetPoint("TOPLEFT", e.text, "BOTTOM", 4, -12)
+    W.AttachTooltip(e.scan, scanTip)
+    e:Hide()
+    return e
+end
+
 -- ── the pane ────────────────────────────────────────────────────────────────────────────────
 
 local function buildHeads(pane)
@@ -543,6 +573,7 @@ local function build(pane)
     pane.scroll, pane.content = scroll, content
     pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
     pane.card = NS.DetailCard.Build(content)
+    pane.emptyState = buildEmpty(pane)
     pane.entries = {}
 end
 
@@ -612,12 +643,14 @@ local function drawEntries(pane, entries, layout, compact, width)
     pane.content:SetSize(width, max(y, 1))
 end
 
+-- Nothing drawn: the empty state when the feed holds no drop at all, else the line saying the
+-- filters hide them. The window is never a blank table.
 local function paintEmpty(pane, entries, ctx)
-    local ph = pane.placeholder
     local none = #entries == 0
-    -- In test mode the banner speaks for the empty test feed (DW-34 draws its rows).
-    ph:SetShown(none and NS.State.testMode ~= true)
-    if none then ph:SetText(#NS.LootFeed.Drops(ctx.feed) == 0 and NO_DROPS or NO_MATCH) end
+    local nothing = none and #NS.LootFeed.Drops(ctx.feed) == 0
+    pane.emptyState:SetShown(nothing)
+    pane.placeholder:SetShown(none and not nothing)
+    pane.placeholder:SetText(NO_MATCH)
     pane.colHead:SetShown(not none)
 end
 
@@ -638,14 +671,16 @@ local function refresh(pane, ctx)
 end
 
 --- The drawn pane's rows and headers, in order, for the suites: { headers, rows, entries, columns,
---- pane, card, cardDropId } (`cardDropId` nil while no card is open on screen).
+--- pane, card, cardDropId, empty } (`cardDropId` nil while no card is open on screen; `empty` the
+--- empty state's frame).
 --- @return table|nil
 function WG.Drawn()
     local f = NS.Window.Frame()
     local pane = f and f.panes.group
     if not (pane and pane.rowPool) then return nil end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
-        columns = pane.columns, pane = pane, card = pane.card, cardDropId = pane.cardDropId }
+        columns = pane.columns, pane = pane, card = pane.card, cardDropId = pane.cardDropId,
+        empty = pane.emptyState }
 end
 
 NS.Window.RegisterTab("group", { build = build, refresh = refresh })

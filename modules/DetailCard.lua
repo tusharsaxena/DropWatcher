@@ -271,7 +271,7 @@ end
 local function askState(drop)
     local target = NS.AskTargetOf(drop)
     if not target then return "ready" end
-    return NS.Asks.StateOf("ask", target, drop.id)
+    return NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", target, drop.id))
 end
 
 local function tradeGuard(drop)
@@ -283,10 +283,9 @@ local function tradeGuard(drop)
     return { ok = ok, reason = reason, text = TH.ReasonText(reason) }
 end
 
+-- The looter's inspect entry (a test mode placeholder's own).
 local function inspectOf(drop)
-    local guid = type(drop.looter) == "table" and drop.looter.guid
-    if not guid or drop.isMine then return nil end
-    return NS.Inspect.Get(guid)
+    return NS.TestMode.InspectOf(drop)
 end
 
 local function paintActions(card, drop, ctx)

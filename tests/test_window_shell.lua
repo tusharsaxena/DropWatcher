@@ -176,7 +176,8 @@ test("shell: a tab with no body says what it will hold, never a blank pane", fun
         local text = textOf(f.panes[key].placeholder)
         assertTrue(type(text) == "string" and #text > 10, key)
     end
-    assertTrue(f.panes.group.placeholder:IsShown())
+    -- The Group drops body has drawn itself: with no drop, its empty state (board 06 D).
+    assertTrue(f.panes.group.emptyState:IsShown())
 end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────

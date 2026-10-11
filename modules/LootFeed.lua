@@ -20,7 +20,8 @@ local _, NS = ...
 -- (`encounter`, which names the encounter) and C_LootHistory's won group-loot drops on
 -- LOOT_HISTORY_UPDATE_DROP (`history`, each drop taken once). Your own `pushed` lines (quest
 -- rewards, containers, purchases) are not drops and are skipped. Add(link, looter, opts) is the
--- fourth door (`manual`): `/dw add` and test mode.
+-- fourth door (`manual`): `/dw add`. Test mode's placeholders come through AddTest(spec), put in
+-- the test feed as given (modules/TestMode.lua).
 --
 -- DEDUPE. One drop is reported by up to all three sources. A receipt merges into a drop seen in
 -- the last DEDUPE_WINDOW seconds with the same item id and the same looter (the same GUID; when
@@ -732,6 +733,35 @@ function LF.Add(link, looter, opts)
     local who = looter == nil and you() or resolveLooter(plainString(looter), nil, nil)
     return LF.Receive({ link = link, qty = 1, kind = "loot", source = "manual", looter = who,
         force = true, test = opts.test == true })
+end
+
+-- A placeholder drop's record: the given verdicts, trade and inspect, nothing judged.
+local function testRecord(s, spec, link, itemID)
+    s.seq = s.seq + 1
+    local who = spec.looter
+    return {
+        id = s.seq, feed = "test", test = true, link = link, itemID = itemID, qty = 1,
+        kind = spec.kind or "loot", bonusRoll = spec.kind == "bonus", looter = who,
+        isMine = who.isSelf == true, at = now() - (tonumber(spec.ago) or 0),
+        situation = spec.situation, sources = { manual = 1 }, source = "manual", group = spec.group,
+        facts = spec.facts, me = spec.me, them = spec.them, trade = spec.trade, inspect = spec.inspect,
+        candidates = spec.candidates, testAsk = spec.testAsk, testInspect = spec.testInspect,
+        state = "new",
+    }
+end
+
+--- Put one placeholder drop in the test feed as given (test mode, modules/TestMode.lua): its
+--- verdicts, trade estimate, inspect state and candidates are the spec's, never judged, and no
+--- gate, inspect or timer touches it. `spec.group` is { key, label, kind } (`encounter` or `run`);
+--- `spec.ago` dates it that many seconds back. Sends DropAdded.
+--- @param spec table { link, looter = { name, guid, classFile, isSelf }, group, situation, ago,
+---   kind, facts, me, them, trade, inspect, candidates, testAsk, testInspect }
+--- @return number|nil id, string status (`added`, or `stoodDown` / `notItem`)
+function LF.AddTest(spec)
+    if stoodDown() then return nil, "stoodDown" end
+    local link, itemID = validItem(type(spec) == "table" and spec.link or nil)
+    if not itemID or type(spec.looter) ~= "table" or type(spec.group) ~= "table" then return nil, "notItem" end
+    return add(testRecord(store(), spec, link, itemID))
 end
 
 -- ── reading the feed ────────────────────────────────────────────────────────────────────────

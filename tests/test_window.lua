@@ -81,15 +81,19 @@ test("window: resizable from the corner grip, with the design's minimum size", f
     assertEqual(minH, 260)
 end)
 
-test("window: test mode shows the banner and hides the empty-state text", function()
+test("window: test mode shows the banner and the chip, and its rows replace the empty state", function()
     local NS = T.enableAddon()
     NS.SetTestMode(true)
     local f = NS.Window.Frame()
+    local empty = NS.WindowGroup.Drawn().empty
     assertTrue(f.banner:IsShown())
-    assertFalse(f.empty:IsShown())
+    assertTrue(f.testChip:IsShown())
+    assertFalse(empty:IsShown())
     NS.SetTestMode(false)
+    NS.ShowWindow()
     assertFalse(f.banner:IsShown())
-    assertTrue(f.empty:IsShown())
+    assertFalse(f.testChip:IsShown())
+    assertTrue(empty:IsShown())
 end)
 
 test("window: combat ends test mode, and test mode cannot start in combat", function()
