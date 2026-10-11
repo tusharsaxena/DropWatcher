@@ -598,6 +598,32 @@ local KIND_LINE = {
 -- At most this many hidden drops are named in a header's tooltip; the rest are counted.
 WC.HIDDEN_TIP_LINES = 8
 
+-- The filters that narrow WHICH groups the player asked for: a group they hide whole is left out.
+local NARROWING = { search = true, content = true, char = true }
+
+-- Whether a hidden drop is the player's narrowing question. A drop with no recorder (kept before
+-- the Character dropdown, feedback-2 spec §4) is not: Current hides it, and it is still counted.
+local function narrowed(h)
+    if h.why == "char" then return type(h.drop) == "table" and type(h.drop.seenBy) == "string" end
+    return NARROWING[h.why] == true
+end
+
+--- Whether a group keeps its header (feedback-2 spec §0, nothing hidden silently): when a drop is
+--- shown under it, or when one the View filter hid (or a drop with no recorder the Character filter
+--- hid) is there to count (`n drops · 0 shown`, the tooltip naming the filter). A group that Search,
+--- Content or a Character choice hides whole is left out, since that is the question the player
+--- asked.
+--- @param shown number the drops shown under it
+--- @param hidden table|nil { { drop, why }, ... }
+--- @return boolean
+function WC.KeepsHeader(shown, hidden)
+    if (tonumber(shown) or 0) > 0 then return true end
+    for _, h in ipairs(type(hidden) == "table" and hidden or {}) do
+        if not narrowed(h) then return true end
+    end
+    return false
+end
+
 --- A group header's count (feedback-2 spec §0): every drop the group holds for the tab, and, while
 --- a filter hides some, how many are shown: `2 drops · 1 shown`.
 --- @param shown number the drops shown under it

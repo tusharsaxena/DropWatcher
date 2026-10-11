@@ -492,7 +492,9 @@ downgrade for you (the owner's run: two Yokes of the Charging Bear, `Bùnian-Azr
 `Keghunt-Thrall`) → the debug console has an `[FEED] drop n: ... by Bùnian-Azralon` line for
 each, both looters spelled as in chat; the group header reads `<run> · Mythic+ · <age> · 2 drops ·
 1 shown`; hover it → the tooltip lists `Yoke of the Charging Bear (Bùnian): View: Interesting`.
-Switch View to All → both rows show and the header reads `2 drops`. A reagent and a non-gear item
+Switch View to All → both rows show and the header reads `2 drops`. A boss whose every drop View:
+Interesting hides → its header still shows, `n drops · 0 shown`, with no row under it; Search for
+an item it does not hold → that group leaves the table. A reagent and a non-gear item
 (a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notGear` line each, no
 row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
 `/dw diagnostics` → its `drops` section reads `drops: hidden notGear=2` (plus any others) and
@@ -544,7 +546,8 @@ the alt → `Character: Current` shows the alt's drops only; the menu lists both
 its class icon and color. Tick the main as well → the label reads `Character: 2 selected` and both
 characters' groups show. Untick the alt → the label is the main's row and only its drops show. Pick
 Current → exactly the alt again, and the Current row lights gold. Pick All → every group, and a group
-kept before this version (no recorder) shows only now. Hover a group header while the dropdown hides
+kept before this version (no recorder) shows its rows only now (under Current or a character it
+keeps a header, `n drops · 0 shown`, its tooltip naming `Character: Current`). Hover a group header while the dropdown hides
 some of its drops → the tooltip names them with `Character: Current`. Turn on `/dw test` → History
 lists you and `Emberwick`, and Current hides the alt's `Placeholder boss (alt)` until All. `/dw sim
 start key` then `/dw sim run` → the simulated run shows under Current on every tab. Result:

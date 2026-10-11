@@ -405,7 +405,7 @@ test("history tab: a header click opens a collapsed group; the filter's Content 
     NS.WindowFilterBar.Set("history", "content", "session")
     drawn = NS.WindowHistory.Drawn()
     assertEqual(#drawn.entries, 0, "every kept drop is from before this session")
-    assertEqual(textOf(drawn.pane.placeholder), "No kept drop matches the filters. View: All and Content: All show everything.")
+    assertEqual(textOf(drawn.pane.placeholder), "No kept drop matches the filters. View: All, Character: All and Content: All show everything.")
 end)
 
 test("history tab: a right-click marks a row declined, through the menu when the client has one", function()

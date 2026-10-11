@@ -62,7 +62,7 @@ local OUTCOME = {
 }
 
 local NO_HISTORY = L["Drops from earlier encounters appear here."]
-local NO_MATCH = L["No kept drop matches the filters. View: All and Content: All show everything."]
+local NO_MATCH = L["No kept drop matches the filters. View: All, Character: All and Content: All show everything."]
 local CLEAR_POPUP = "DROPWATCHER_CLEAR_HISTORY"
 
 -- ── the view state (session-only) ───────────────────────────────────────────────────────────
@@ -172,10 +172,21 @@ local function visibleDrops(group, ctx, base)
     return shown, hidden
 end
 
+-- One group's header, then its shown drops unless it is collapsed.
+local function appendGroup(out, g, drops, hidden, filter, c)
+    out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
+        hidden = hidden, filter = filter, collapsed = c }
+    if c then return end
+    for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
+end
+
 --- The tab's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
 --- collapsed } (as WG.Entries') and
 --- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest); a group with no
---- entry passing the filter is left out; a group never toggled is open when it is the first shown.
+--- entry passing the filter keeps an open header with count 0 while the View filter hid them, or
+--- Character hid entries with no recorder (kept before the Character dropdown); it is left out
+--- when Search, Content or a Character choice did (WC.KeepsHeader). A group never toggled is open
+--- when it is the first shown.
 --- @param groups table NS.History.Groups(), oldest first
 --- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort } }
 --- @param state table|nil { collapsed }
@@ -194,11 +205,9 @@ function WH.Entries(groups, ctx, state)
             local c = collapsed[g.key]
             if c == nil then c = not first end
             first = false
-            out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
-                hidden = hidden, filter = ctx.filter, collapsed = c }
-            if not c then
-                for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
-            end
+            appendGroup(out, g, drops, hidden, ctx.filter, c)
+        elseif WC.KeepsHeader(0, hidden) then
+            appendGroup(out, g, drops, hidden, ctx.filter, false)
         end
     end
     return out

@@ -88,7 +88,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │                       NS.State.windowGroup)                              first, filtered, sorted)
   │     each header: the shown drops, every drop the tab lists (ctx.belongs), and the hidden ones with
   │     the control that hid each (ctx.hiddenBy = WindowFilterBar.HiddenBy) ─> WindowCells.Header:
-  │     `2 drops · 1 shown`, the tooltip naming each hidden drop and its filter (feedback-2 spec §0)
+  │     `2 drops · 1 shown`, the tooltip naming each hidden drop and its filter (feedback-2 spec §0);
+  │     a group the View hid whole keeps its header, `n drops · 0 shown`; one Search, Content or a
+  │     Character choice hid whole is left out (WindowCells.KeepsHeader)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / MyEq / TheirEq / Me / Them / Trade / Ask
                   reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's

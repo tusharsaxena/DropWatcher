@@ -285,7 +285,7 @@ local function ctxOf(pass, sort)
         compare = function(a, b) return a.id > b.id end }
 end
 
-test("table: groups newest first, the first open and older ones collapsed, empty ones left out", function()
+test("table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header", function()
     local WG = T.newAddon().WindowGroup
     local byId = { [1] = drop({ id = 1 }), [2] = drop({ id = 2 }), [3] = drop({ id = 3 }), [4] = drop({ id = 4 }) }
     local groups = {
@@ -293,15 +293,32 @@ test("table: groups newest first, the first open and older ones collapsed, empty
     }
     local get = function(id) return byId[id] end
     local e = WG.Entries(groups, get, ctxOf(function(d) return d.id ~= 4 end), {})
-    assertEqual(e[1].kind, "header"); assertEqual(e[1].group.key, "b", "c has no matching drop")
-    assertFalse(e[1].collapsed); assertEqual(e[1].count, 2)
-    assertEqual(e[2].drop.id, 3, "the tab's order within the group"); assertEqual(e[3].drop.id, 2)
-    assertEqual(e[4].group.key, "a"); assertTrue(e[4].collapsed); assertEqual(#e, 4)
+    -- red under: a group the filter hides whole is left out, with nothing saying its drop exists
+    assertEqual(e[1].kind, "header"); assertEqual(e[1].group.key, "c", "c's drop is hidden, not lost")
+    assertEqual(e[1].count, 0); assertEqual(e[1].total, 1); assertFalse(e[1].collapsed)
+    assertEqual(WC().DropCount(e[1].count, e[1].hidden), "1 drop · 0 shown")
+    assertEqual(e[2].group.key, "b"); assertFalse(e[2].collapsed, "the first group with a drop shown opens")
+    assertEqual(e[2].count, 2)
+    assertEqual(e[3].drop.id, 3, "the tab's order within the group"); assertEqual(e[4].drop.id, 2)
+    assertEqual(e[5].group.key, "a"); assertTrue(e[5].collapsed); assertEqual(#e, 5)
+    local searched = ctxOf(function(d) return d.id ~= 4 end)
+    searched.hiddenBy = function() return "search" end
+    assertEqual(WG.Entries(groups, get, searched, {})[1].group.key, "b", "a group Search hides whole is left out")
     local toggled = WG.Entries(groups, get, ctxOf(), { collapsed = { a = false, c = true }, dismissed = { [2] = true } })
     assertEqual(toggled[1].group.key, "c"); assertTrue(toggled[1].collapsed, "the player's toggle wins")
     assertEqual(toggled[2].group.key, "b"); assertEqual(toggled[2].count, 1, "a dismissed drop is gone")
     local oldest = WG.Entries(groups, get, ctxOf(nil, "oldest"), {})
     assertEqual(oldest[1].group.key, "a", "Sort: Oldest turns the groups round")
+end)
+
+test("cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder", function()
+    local W = WC()
+    assertTrue(W.KeepsHeader(1, {}))
+    assertFalse(W.KeepsHeader(0, {}), "nothing for the tab")
+    assertTrue(W.KeepsHeader(0, { { drop = {}, why = "interesting" } }), "View: counted, never silent")
+    assertFalse(W.KeepsHeader(0, { { drop = {}, why = "search" }, { drop = {}, why = "content" } }), "the question asked")
+    assertFalse(W.KeepsHeader(0, { { drop = { seenBy = "Alt-Testrealm" }, why = "char" } }), "a Character choice")
+    assertTrue(W.KeepsHeader(0, { { drop = {}, why = "char" } }), "kept before the dropdown: no recorder")
 end)
 
 -- ── the table, headless ─────────────────────────────────────────────────────────────────────

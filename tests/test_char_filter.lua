@@ -189,10 +189,20 @@ local function seedHistory(NS)
     }
 end
 
+-- The groups with a drop shown (a header counting `0 shown` is left out here; see emptyHeaders).
 local function headerLabels(NS)
     local out = {}
     for _, e in ipairs(NS.WindowHistory.Drawn().entries) do
-        if e.kind == "header" then out[#out + 1] = e.group.label end
+        if e.kind == "header" and e.count > 0 then out[#out + 1] = e.group.label end
+    end
+    return table.concat(out, ",")
+end
+
+-- The headers that count `0 shown`, each with the filter its tooltip names.
+local function emptyHeaders(NS)
+    local out = {}
+    for _, e in ipairs(NS.WindowHistory.Drawn().entries) do
+        if e.kind == "header" and e.count == 0 then out[#out + 1] = e.group.label .. ":" .. e.hidden[1].why end
     end
     return table.concat(out, ",")
 end
@@ -230,18 +240,22 @@ test("filter bar: History shows your drops under Current, every recorder chosen,
     NS.Window.SelectTab("history")
     local c = NS.WindowFilterBar.Controls()
     assertEqual(headerLabels(NS), "My boss", "Current: yours alone")
+    -- red under: a group the filter hides whole is left out (the upgrade's kept groups vanish)
+    assertEqual(emptyHeaders(NS), "Old boss:char", "a group with no recorder is still counted: 1 drop · 0 shown")
     pick(c.char, "Alt-Testrealm")
     assertEqual(c.char.text:GetText(), "Character: 2 selected")
     assertEqual(headerLabels(NS), "My boss,Alt run")
     pick(c.char, ME)
     assertEqual(uncolored(c.char.text:GetText()), "|A:classicon-priest:14:14|a Alt-Testrealm", "one character: its row")
     assertEqual(headerLabels(NS), "Alt run")
+    assertEqual(emptyHeaders(NS), "Old boss:char", "a group another character saw is the question asked: left out")
     pick(c.char, "current")
     assertEqual(c.char.text:GetText(), "Character: Current", "Current selects exactly you")
     assertTrue(NS.WindowFilterBar.State("history").char[ME])
     pick(c.char, "all")
     assertEqual(c.char.text:GetText(), "Character: All")
     assertEqual(headerLabels(NS), "My boss,Alt run,Old boss", "All shows the unknown group too")
+    assertEqual(emptyHeaders(NS), "")
 end)
 
 test("filter bar: a drop the Character filter hides is named in the header's reason", function()

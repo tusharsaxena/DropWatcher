@@ -235,7 +235,7 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (40)
+### test_window_group.lua (41)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -252,7 +252,8 @@ Total.
 - table: the default columns, the compact preset's, and a column the profile turns off
 - table: the Item column takes the slack, never less than its minimum
 - table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order
-- table: groups newest first, the first open and older ones collapsed, empty ones left out
+- table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
+- cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder
 - table: built at the minimum width, the shed columns hide and Ask stays inside the row
 - table: the Window page's row height and font size lay out and size the drop rows
 - table: built headless, one header and one row per drop, each column painted
@@ -1326,7 +1327,7 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 50 |
-| test_window_group.lua | 40 |
+| test_window_group.lua | 41 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
 | test_test_mode.lua | 30 |
@@ -1374,4 +1375,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1132** |
+| **Total** | **1133** |

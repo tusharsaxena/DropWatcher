@@ -23,7 +23,9 @@ local _, NS = ...
 -- THE ORDER. Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
 -- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
 -- and your own drops only with `feed.showOwn` on)
--- and were not dismissed, ordered by the tab's Sort; a group with none is left out. A group the
+-- and were not dismissed, ordered by the tab's Sort. A group with none keeps its header (`n drops ·
+-- 0 shown`) while the View filter hid them, and is left out when Search or Content did or it has
+-- nothing for the tab (WC.KeepsHeader). A group the
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles and dismissals are session-only (NS.State.windowGroup).
 --
@@ -226,6 +228,14 @@ local function visibleDrops(group, get, ctx, dismissed)
     return shown, hidden
 end
 
+-- One group's header, then its shown drops unless it is collapsed.
+local function appendGroup(out, g, drops, hidden, filter, c)
+    out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
+        hidden = hidden, filter = filter, collapsed = c }
+    if c then return end
+    for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
+end
+
 local function collapsedOf(collapsed, key, first)
     local v = collapsed[key]
     if v == nil then return not first end
@@ -236,8 +246,9 @@ end
 --- collapsed }
 --- and { kind = "drop", drop }. `count` is the drops shown, `total` every drop of the group the tab
 --- lists, `hidden` the ones the filter hid ({ drop, why }), so the header can say `2 drops · 1 shown`
---- (feedback-2 spec §0). Groups newest first (oldest first under Sort: Oldest), a group with no
---- drop passing the filter left out, a collapsed group's drops left out.
+--- (feedback-2 spec §0). Groups newest first (oldest first under Sort: Oldest); a group with no
+--- drop passing the filter keeps an open header with count 0 unless WC.KeepsHeader says no, and
+--- does not take the first group's open default; a collapsed group's drops left out.
 --- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
 --- @param get function id -> drop (NS.LootFeed.Get)
 --- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy }
@@ -256,11 +267,9 @@ function WG.Entries(groups, get, ctx, state)
         if #drops > 0 then
             local c = collapsedOf(collapsed, g.key, first)
             first = false
-            out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
-                hidden = hidden, filter = ctx.filter, collapsed = c }
-            if not c then
-                for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
-            end
+            appendGroup(out, g, drops, hidden, ctx.filter, c)
+        elseif WC.KeepsHeader(0, hidden) then
+            appendGroup(out, g, drops, hidden, ctx.filter, false)
         end
     end
     return out
