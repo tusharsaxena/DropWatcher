@@ -547,7 +547,10 @@ local target = NS.Bus:NewTarget()
 
 local function listen()
     if not target then return end
-    target:RegisterMessage(NS.MSG.HISTORY_CHANGED, function() NS.Window.ScheduleRepaint() end)
+    target:RegisterMessage(NS.MSG.HISTORY_CHANGED, function()
+        NS.WindowFilterBar.InvalidateChars()
+        NS.Window.ScheduleRepaint()
+    end)
 end
 listen()
 

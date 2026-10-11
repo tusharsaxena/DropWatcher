@@ -882,7 +882,7 @@ Total.
 - group header: a raid's header names the first five and +n; its tooltip names all
 - history header: a kept roster is named; an older group with none names nobody
 
-### test_char_filter.lua (17)
+### test_char_filter.lua (18)
 
 - char filter: a recorder key is Name-Realm; a name that carries its realm is kept
 - char filter: the class icon is the classicon atlas as inline markup, nothing with no class
@@ -901,6 +901,7 @@ Total.
 - filter bar: a drop the Character filter hides is named in the header's reason
 - filter bar: a Character selection is a set of keys; anything else is refused
 - filter bar: Group drops keeps every drop under any Character choice it offers
+- filter bar: each sync reuses the Character and View rows; HistoryChanged rebuilds History's
 
 ### test_trade_timer.lua (16)
 
@@ -1348,7 +1349,7 @@ Total.
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
-| test_char_filter.lua | 17 |
+| test_char_filter.lua | 18 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 23 |
@@ -1372,4 +1373,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1130** |
+| **Total** | **1131** |

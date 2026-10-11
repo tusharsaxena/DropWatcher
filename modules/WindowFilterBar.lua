@@ -515,15 +515,30 @@ local function viewDropdown(host, width)
 end
 
 -- The Character menu's rows on one tab (FB2-6): History lists every recorder in the log in force,
--- the session tabs only you.
+-- the session tabs only you. The bar syncs on every repaint, so the rows are built once per scope
+-- and kept while your key and the log's groups table are the same ones (a test mode or simulation
+-- log in force is another table); FB.InvalidateChars drops History's on HistoryChanged.
+local NO_GROUPS = {}
+local charRows = {}     -- [scope] = { key, groups, rows }
+
 local function charOptions(tab)
     local me = CF.Recorder()
     local key, class = me and me.key, me and me.class
-    local groups = (FB.HONORS[tab] or ALL).charScope == "session" and {} or NS.History.Groups()
-    return CF.Options(CF.Characters(groups, key, class), key, NS.Compat.ClassColor)
+    local session = (FB.HONORS[tab] or ALL).charScope == "session"
+    local scope = session and "session" or "history"
+    local groups = session and NO_GROUPS or NS.History.Groups()
+    local c = charRows[scope]
+    if c and c.key == key and c.groups == groups then return c.rows end
+    local rows = CF.Options(CF.Characters(groups, key, class), key, NS.Compat.ClassColor)
+    charRows[scope] = { key = key, groups = groups, rows = rows }
+    return rows
 end
 
 FB.CharOptions = charOptions
+
+--- Drop the History tab's cached Character rows: its log changed (HistoryChanged), so a recorder
+--- may have come or gone.
+function FB.InvalidateChars() charRows.history = nil end
 
 local function charDropdown(host, width)
     local dd = NS.MakeDropdown(host, width)
@@ -661,13 +676,33 @@ local function setHonored(w, on)
     w:SetAlpha(on and 1 or 0.4)
 end
 
+-- The bar syncs on every repaint (performance-§9: the refresh pair's ceiling), so a dropdown is
+-- written only when what it shows would change: its rows when they are another list, its selection
+-- when it differs from the tab's.
+local function putOptions(dd, rows)
+    if dd._options ~= rows then dd:SetOptions(rows) end
+end
+
+local function putSelected(dd, set)
+    if type(dd._selected) == "table" and sameSet(dd._selected, set) then return end
+    dd:SetSelected(set)
+end
+
+-- A tab's View rows and presets never change: built once per tab.
+local viewRows = {}     -- [tab] = { options, presets }
+
 -- The View on one tab: its rows grayed where the tab does not use them, its selection the tab's.
 local function putView(tab, st)
     local dd = controls.view
     if not dd then return end
-    dd.presets = viewPresets(tab)
-    dd:SetOptions(FB.ViewOptions(tab))
-    dd:SetSelected(st.view)
+    local c = viewRows[tab]
+    if not c then
+        c = { options = FB.ViewOptions(tab), presets = viewPresets(tab) }
+        viewRows[tab] = c
+    end
+    dd.presets = c.presets
+    putOptions(dd, c.options)
+    putSelected(dd, st.view)
 end
 
 -- The Character dropdown on one tab: its rows (History's recorders, else you), its selection the
@@ -675,9 +710,10 @@ end
 local function putChar(tab, st)
     local dd = controls.char
     if not dd then return end
-    st.char = CF.Canonical(st.char, CF.CurrentKey())
-    dd:SetOptions(charOptions(tab))
-    dd:SetSelected(st.char)
+    local current = CF.CurrentKey()
+    if current and st.char[CF.CURRENT] then st.char = CF.Canonical(st.char, current) end
+    putOptions(dd, charOptions(tab))
+    putSelected(dd, st.char)
 end
 
 -- Write one tab's state onto the controls; their change handlers stand aside meanwhile.

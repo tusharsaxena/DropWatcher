@@ -280,3 +280,20 @@ test("filter bar: Group drops keeps every drop under any Character choice it off
     pick(c.char, "all")
     assertTrue(NS.Window.TabContext("group").matches({ id = 1, at = 1, looter = { name = "Seta" } }))
 end)
+
+test("filter bar: each sync reuses the Character and View rows; HistoryChanged rebuilds History's", function()
+    local NS = shown()
+    seedHistory(NS)
+    NS.Window.SelectTab("history")
+    local c = NS.WindowFilterBar.Controls()
+    local chars, views = c.char._options, c.view._options
+    NS.Window.Refresh()
+    assertTrue(c.char._options == chars, "an unchanged log keeps its Character rows (the refresh pair's ceiling)")
+    assertTrue(c.view._options == views, "a tab's View rows never change")
+    local g = NS.History.Store().groups[1]
+    g.drops[#g.drops + 1] = { itemLink = link(604), itemID = 604, looter = "Seta", class = "PRIEST",
+        outcome = "seen", at = os.time(), seenBy = "Bank-Testrealm", seenByClass = "ROGUE" }
+    NS.addon:SendMessage(NS.MSG.HISTORY_CHANGED)
+    NS.Window.Refresh()
+    assertEqual(values(c.char), "all,current,Alt-Testrealm,Bank-Testrealm," .. ME, "a new recorder is listed")
+end)
