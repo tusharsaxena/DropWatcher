@@ -13,8 +13,9 @@ local _, NS = ...
 --            score is the sum of stat times weight. A Pawn scale string imports into one spec.
 --   None     no scorer: the verdict is item level alone.
 --
--- `auto` uses Pawn when it is loaded, else your weights when any are set, else none. `pawn` with
--- Pawn absent is none, and so is `weights` with none set: InUse names the adapter actually in use
+-- `auto` uses Pawn once it has initialized (PawnIsInitialized, design spec §5.4: merely loaded is
+-- not enough), else your weights when any are set, else none. `pawn` with Pawn absent or not yet
+-- initialized is none, and so is `weights` with none set: InUse names the adapter actually in use
 -- (the diagnostics' Scoring section prints both).
 --
 -- The pure halves (ParseImport, ImportInto, WeightsScore, HasWeights, Resolve) take plain values
@@ -136,15 +137,15 @@ function S.HasWeights(map)
 end
 
 --- The adapter in use: "pawn", "weights" or "none", from the configured scorer, whether Pawn is
---- loaded and whether any weights are set.
+--- ready (initialized) and whether any weights are set.
 --- @param configured string auto | pawn | weights | none
---- @param pawnLoaded boolean
+--- @param pawnReady boolean
 --- @param hasWeights boolean
 --- @return string
-function S.Resolve(configured, pawnLoaded, hasWeights)
+function S.Resolve(configured, pawnReady, hasWeights)
     if not S.SCORERS[configured] then configured = "auto" end
     if configured == "none" then return "none" end
-    if configured ~= "weights" and pawnLoaded then return "pawn" end
+    if configured ~= "weights" and pawnReady then return "pawn" end
     if configured ~= "pawn" and hasWeights then return "weights" end
     return "none"
 end
@@ -214,8 +215,8 @@ end
 --- The adapter in use now (design spec §13's Scoring section prints it beside the configured one).
 --- @return string "pawn" | "weights" | "none"
 function S.InUse()
-    local loaded = NS.Compat.PawnIsReady() or NS.Compat.PawnIsLoaded()
-    return S.Resolve(NS.Setting("comparison.scorer"), loaded, S.HasWeights(NS.Setting("comparison.weights")))
+    return S.Resolve(NS.Setting("comparison.scorer"), NS.Compat.PawnIsReady(),
+        S.HasWeights(NS.Setting("comparison.weights")))
 end
 
 --- The scorer for the kernel's opts.scorer, or nil (item level alone). Read per evaluation pass by

@@ -31,7 +31,7 @@ passed.
 | ASK-1..8 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); the My drops tab, the Offer panel and Post my tradeables (ASK-5..7, DW-33); auto-ask (ASK-8, DW-54) |
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
-| SCORE-1..2 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50 |
+| SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
@@ -749,6 +749,11 @@ score uses their spec's scale. Turn Pawn off in the AddOns list and `/reload` �
 `weights` when you have set any), the footer reads `Pawn: off`, and verdicts are item level alone.
 Score with `Pawn` while Pawn is off → `scorer=pawn inUse=none`. Result:
 
+**SCORE-3. Pawn counts once it is initialized (DW-62).** Pawn installed, weights set for your spec,
+Score with on `Automatic`. `/reload` and type `/dw diagnostics` straight away, then again ten
+seconds later → the scoring line never pairs `inUse=pawn` with `pawn ready=false`: before Pawn is
+ready it reads `inUse=weights`, after it `inUse=pawn`. Result:
+
 **SCORE-2. Your weights and the Pawn import.** Without Pawn, set Score with to `My weights`. In
 Settings › Comparison › Weights, paste a Pawn scale string (Pawn's Export of your spec's scale) into
 **Import a Pawn scale** and press Enter → chat reads `Imported <name> into <spec>: n weights.` and
@@ -879,6 +884,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | PANEL-4..6 | DW-41, the settings pages | No client pass recorded yet |
 | PANEL-7 | DW-40 / DW-41 review, the rows that act | No client pass recorded yet |
 | SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |
+| SCORE-3 | DW-62, Pawn counts once it is initialized | No client pass recorded yet |
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
 | TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |

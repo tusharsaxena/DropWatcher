@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Sixty-two shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `62`). The three
+**Sixty-one shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `61`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -76,7 +76,6 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `TransmogSource()` | which source answers `PlayerHasTransmog` now: `CanIMogIt`, `C_TransmogCollection` or `none` (the diagnostics' integrations section) | `"none"` |
 | | `ItemClassRestriction(link)` | `C_TooltipInfo.GetHyperlink`'s `RestrictedRaceClass` line read with `ITEM_CLASSES_ALLOWED`, split on `LIST_DELIMITER`, each name mapped to its classFile through `LOCALIZED_CLASS_NAMES_MALE` and `_FEMALE`; a set | `nil` |
 | Pawn | `PawnIsReady()` | the `PawnIsInitialized` global flag (a function spelling is called) | `false` |
-| | `PawnIsLoaded()` | `C_AddOns.IsAddOnLoaded("Pawn")`, ready or not (the scorer picks the Pawn adapter for a loaded Pawn) | `false` |
 | | `PawnItemData(link)` | `PawnGetItemData`; nil while the item is not cached | `nil` |
 | | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
 | | `PawnScaleForSpec(classID, specID)` | `PawnFindScaleForSpec` | `nil` |
@@ -138,7 +137,7 @@ delimiter.
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade`, `InTradeRange`, `CursorHasItem`, `ClearCursor`, `GetBagItemGUID`, `BagSlotCount` |
 | `modules/Asks.lua` | `ChatSender` |
-| `modules/Scoring.lua` | `PawnIsLoaded`, `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
+| `modules/Scoring.lua` | `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
 | `modules/WindowGroup.lua` | `ItemIcon`, `ClassColor`, `InsertChatLink`, `DressUpItem` |
 | `modules/DetailCard.lua` | `InsertChatLink`, `SpecName` |

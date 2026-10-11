@@ -16,9 +16,9 @@ marked as such rather than listed as a requirement.
   ordering, not as things to download.
 - **Optional: Pawn and CanIMogIt.** Named in `## OptionalDeps:` so they load first when installed,
   and reached only through `core/Compat.lua` (their API is called under `pcall`, never copied).
-  **Pawn**, when loaded, drives the `pawn` scorer (`modules/Scoring.lua`, design spec §5.4):
-  `comparison.scorer` `auto` picks it, and it answers `pending` until Pawn has initialized, which
-  the feed retries. Its scale strings can also be imported into your own weights. **CanIMogIt**,
+  **Pawn**, once it has initialized (`PawnIsInitialized`), drives the `pawn` scorer
+  (`modules/Scoring.lua`, design spec §5.4): `comparison.scorer` `auto` picks it then, and until
+  then uses your weights. A nil answer from a ready Pawn reads `pending`, which the feed retries. Its scale strings can also be imported into your own weights. **CanIMogIt**,
   when loaded, answers the transmog-known flag (design spec §4) before `C_TransmogCollection` does.
   Without Pawn, the comparison uses your own weights when any are set, else item level alone;
   without CanIMogIt, the transmog flag comes from the client API. Whether each is loaded is

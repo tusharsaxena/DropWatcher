@@ -26,9 +26,10 @@ holds the category, else the lowest holder anywhere.
 ## Scoring
 
 Scoring (DW-50, `modules/Scoring.lua`) settles how it reads design spec §5.4. The adapter in use
-can differ from `comparison.scorer`: `auto` takes Pawn when it is **loaded** (ready or not yet
-initialized, which answers `pending` and is retried), else your weights when any spec has one,
-else none; `pawn` with Pawn absent is none, and `weights` with no weight set is none. The
+can differ from `comparison.scorer`: `auto` takes Pawn once it has **initialized**
+(`PawnIsInitialized`, spec §5.4; a Pawn that is loaded but not yet initialized does not count, so
+your weights are not displaced while it starts, DW-62), else your weights when any spec has one,
+else none; `pawn` with Pawn absent or not yet initialized is none, and `weights` with no weight set is none. The
 diagnostics' Scoring section prints both (`scorer=` and `inUse=`). For you, Pawn's "best visible
 scale" is the one with the highest `PercentUpgrade` for the drop, else your spec's scale when the
 drop upgrades nothing; the drop and its baseline are both valued on that scale

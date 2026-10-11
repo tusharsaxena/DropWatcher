@@ -229,7 +229,7 @@ local function comparison()
     local Cm = P.comparison
     local scoring = { page = "comparison", group = L["Scoring"] }
     pick("comparison.scorer", Cm.scorer, SCORERS, L["Score with"],
-        L["Automatic uses Pawn when it is loaded, else your weights, else item level alone."], scoring)
+        L["Automatic uses Pawn once it has loaded and initialized, else your weights, else item level alone."], scoring)
     slider("comparison.sidegradeBand", Cm.sidegradeBand, 0, 20, 1, L["Sidegrade band"],
         L["Item levels either side of equal that still read as a sidegrade."], scoring)
     bool("comparison.compareOwned", Cm.compareOwned, L["Compare against items in my bags"],

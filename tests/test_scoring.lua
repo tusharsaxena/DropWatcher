@@ -115,7 +115,7 @@ end)
 test("scoring: Resolve picks the adapter for every setting, Pawn presence and weights", function()
     local S = pure()
     local rows = {
-        -- configured, pawnLoaded, hasWeights, in use
+        -- configured, pawnReady, hasWeights, in use
         { "auto",    true,  true,  "pawn" },
         { "auto",    false, true,  "weights" },
         { "auto",    false, false, "none" },
@@ -132,7 +132,7 @@ test("scoring: Resolve picks the adapter for every setting, Pawn presence and we
     end
 end)
 
-test("scoring: InUse and Scorer follow the settings and whether Pawn is loaded", function()
+test("scoring: InUse and Scorer follow the settings and whether Pawn is initialized", function()
     local NS, _, m = T.enableAddon()
     local S, Set = NS.Scoring, NS.SchemaRuntime.Set
     assertEqual(S.InUse(), "none")
@@ -140,14 +140,23 @@ test("scoring: InUse and Scorer follow the settings and whether Pawn is loaded",
     Set("comparison.weights", { [250] = { [INT] = 1 } })
     assertEqual(S.InUse(), "weights")
     assertEqual(S.Scorer()({ stats = { [INT] = 7 } }, { specID = 250 }), 7)
+    -- Loaded is not enough: the adapter is present only once PawnIsInitialized is true (design spec
+    -- §5.4; DW-62 review F-003). Until then auto keeps your weights.
     m.loadedAddons.Pawn = true
-    assertEqual(S.InUse(), "pawn", "auto prefers a loaded Pawn")
-    assertEqual(S.Scorer()({ link = "x" }, { isPlayer = true }), "pending", "loaded but not initialized")
+    -- red under: an InUse that counts a loaded Pawn (modules/Scoring.lua)
+    assertEqual(S.InUse(), "weights", "loaded but not initialized: your weights")
+    assertEqual(S.Scorer()({ stats = { [INT] = 7 } }, { specID = 250 }), 7)
+    Set("comparison.scorer", "pawn")
+    assertEqual(S.InUse(), "none", "pawn asked for, not initialized: item level alone")
+    m.PawnIsInitialized = true
+    assertEqual(S.InUse(), "pawn")
+    Set("comparison.scorer", "auto")
+    assertEqual(S.InUse(), "pawn", "auto prefers an initialized Pawn")
     Set("comparison.scorer", "weights")
     assertEqual(S.InUse(), "weights")
     Set("comparison.scorer", "none")
     assertNil(S.Scorer())
-    m.loadedAddons.Pawn = nil
+    m.loadedAddons.Pawn, m.PawnIsInitialized = nil, nil
 end)
 
 -- ---------------------------------------------------------------------------------------------

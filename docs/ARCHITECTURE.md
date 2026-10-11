@@ -295,7 +295,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 62 addon-specific shims (three or more) |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 61 addon-specific shims (three or more) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 
 ### Verification and record (documentation-§3)

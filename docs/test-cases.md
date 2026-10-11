@@ -483,7 +483,7 @@ Total.
 - scoring: a weight on an unknown stat key counts 0 and is logged once per key
 - scoring: HasWeights is true once any spec has a weight
 - scoring: Resolve picks the adapter for every setting, Pawn presence and weights
-- scoring: InUse and Scorer follow the settings and whether Pawn is loaded
+- scoring: InUse and Scorer follow the settings and whether Pawn is initialized
 - scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale
 - scoring: for you, a drop that upgrades no scale is valued on your spec's scale
 - scoring: for a looter, Pawn uses the scale for their class and spec

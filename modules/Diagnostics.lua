@@ -279,7 +279,7 @@ local function pawnScale()
 end
 
 -- The adapter actually in use (modules/Scoring.lua), which can differ from the one configured:
--- `pawn` without Pawn loaded is none, `auto` falls back to your weights, then to none.
+-- `pawn` without Pawn initialized is none, `auto` falls back to your weights, then to none.
 local function scorerInUse()
     local S = NS.Scoring
     if type(S) == "table" and type(S.InUse) == "function" then return S.InUse() end

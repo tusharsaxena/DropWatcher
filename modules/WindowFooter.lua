@@ -81,9 +81,9 @@ end
 
 local function pawnSegment(i)
     if i.pawn == "on" then
-        return { text = L["Pawn: on"], tip = { L["Pawn"], L["Pawn is loaded: verdicts can use its scale."] } }
+        return { text = L["Pawn: on"], tip = { L["Pawn"], L["Pawn is ready: verdicts can use its scale."] } }
     end
-    return { text = L["Pawn: off"], tip = { L["Pawn"], L["Pawn is not loaded: verdicts use item level alone."] } }
+    return { text = L["Pawn: off"], tip = { L["Pawn"], L["Pawn is not loaded, or not ready yet: verdicts do not use it."] } }
 end
 
 --- Each segment's text and tooltip from plain inputs.
