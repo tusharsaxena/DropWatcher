@@ -141,6 +141,14 @@ NS.Sim.Stop(reason) ─> its timers canceled ─> NS.Asks.CancelQueued (seam sti
 GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA ─> OnSimWorldEvent (first)
                    ─> a real group or an instance ─> Stop("group" | "instance")
 NS.StandDown ─> Sim's stand-down row (first) ─> Stop("standDown")
+NS.SimPool.Build(opts, done) ─> the journal's frame shown? ─> look again every RETRY seconds
+                            ─> ReadJournal: save the selection ─> the newest tier's dungeons or raids,
+                               every difficulty of the side, under the class filter ─> restore it
+                            ─> entries still loading ─> EJ_LOOT_DATA_RECIEVED (settled) ─> read again
+                            ─> all loaded or TIMEOUT ─> State.sim.pool (journal), else own gear (fallback)
+NS.SimRoster.Create(opts) ─> Members (pure, seeded) ─> Gear per member from the pool's gear entries
+                          inside the band around your average item level ─> NS.Sim.MarkGUID
+                          ─> State.sim.members
 ```
 
 The simulator never writes a verdict, a trade estimate or an inspect state: what it invents enters

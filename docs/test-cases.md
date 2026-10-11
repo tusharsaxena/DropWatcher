@@ -982,6 +982,27 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
+### test_sim_pool.lua (18)
+
+- compat journal: the selection is read whole, the frame's part only once it loads
+- compat journal: Select applies the selection in the journal's order and resets the filters
+- compat journal: Instances lists the tier's dungeons or raids; Loot answers the loaded and the pending
+- sim pool: each situation reads its side and difficulty; the class filter is yours or none
+- sim pool: a read takes every instance of the newest tier at every difficulty and restores the selection
+- sim pool: the selection is restored even when a read raises
+- sim pool: the journal is not read while its frame is shown
+- sim pool: a frame shown the whole time ends in the fallback at the timeout
+- sim pool: entries still loading are awaited through EJ_LOOT_DATA_RECIEVED
+- sim pool: at the timeout the build keeps what has loaded
+- sim pool: loot for me sets the journal's class filter to yours; any lists every class
+- sim pool: an empty journal falls back to your own gear, reported once
+- sim pool: without the journal API the fallback answers at once
+- sim pool: the stop ends a waiting build, and a late event does nothing
+- sim roster: the random source replays a seed and stays in range
+- sim roster: a party has four members, a raid nine to nineteen, each distinct and whole
+- sim roster: gear is drawn inside the band, from what the class can wear; the rest stays empty
+- sim roster: Create draws the group from the session's pool and the stop forgets it
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -1123,6 +1144,7 @@ Total.
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
 | test_sim_core.lua | 21 |
+| test_sim_pool.lua | 18 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1132,4 +1154,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **930** |
+| **Total** | **948** |

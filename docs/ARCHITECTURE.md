@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Sixty-eight authored files load from the TOC, in the standard's folder order; every one, its kind,
+Seventy authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -63,6 +63,9 @@ its one-line responsibility and why its position is load-bearing or conventional
   `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
   `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`); and the
   recorded and opt-in features (`History.lua`, `Toast.lua`, `AutoAsk.lua`).
+- `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`) and its
+  item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`;
+  simulator spec §2, §3).
 - `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
   their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
@@ -216,6 +219,7 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `TRADE_PLAYER_ITEM_CHANGED`, `TRADE_TARGET_ITEM_CHANGED` | `DW.OnHistoryTradeItems` | the items moved: re-read, and any both-accepted state is off |
 | `TRADE_ACCEPT_UPDATE` | `DW.OnHistoryTradeAccept` | either side accepted: the items are read once more and kept as the offer, since they are gone by the end |
 | `TRADE_CLOSED` | `DW.OnHistoryTradeClosed` | the window closed, completed or not: the trade waits `CLOSED_GRACE` (5) seconds for its "Trade complete."; alone it is a cancel or a failure and completes nothing. The client's second `TRADE_CLOSED` changes nothing |
+| `EJ_LOOT_DATA_RECIEVED` (the client's spelling) | `DW.OnSimPoolLoot` | a journal entry loaded: a simulation's item pool waiting for its data reads the journal again once the burst settles (`modules/SimPool.lua`); with no build waiting it does nothing |
 | `UI_INFO_MESSAGE` | `DW.OnHistoryInfoMessage` | the client's "Trade complete." (`Compat.IsTradeCompleteMessage`), before the close or within the grace after it, completes the trade: the offer's items you got mark the matching drops `received`, the items you gave your own `tradedAway`; sends `HistoryChanged`. Any other message, or no trade, returns at once |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
@@ -280,9 +284,17 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
   and filed when the owner lifts the hold on GitHub writes.
 - **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
   headless mock does not model; PROFILE-1 is its in-game check.
-- **The simulator** (milestone M7) has its core only: the session, the seam, its safety and the
-  session-only history log. No `/dw sim` verb starts it yet, and it invents no roster, item pool,
-  loot or encounter until DW-71..73 land.
+- **The simulator** (milestone M7) has its core, its item pool and its group: the session, the
+  seam, its safety, the session-only history log, the pool read from the Encounter Journal (or your
+  own gear) and the invented members with their gear. No `/dw sim` verb starts it yet, and the
+  group reaches no roster, inspect reply or loot line until the event drivers (DW-72) and the
+  scenarios (DW-73) land.
+- **The simulator's item pool** reads the newest Encounter Journal tier, which is the current
+  season's on a live client; a season whose dungeons sit in older tiers is read only as far as the
+  newest tier lists them. Its difficulty ids are the journal's (Mythic Keystone 8 for a key); an
+  instance without one of its side's difficulties repeats another difficulty's links, which the pool
+  de-duplicates. A pool built with `loot for me` lists your class's items only, so members of
+  another armor type draw fewer slots from it.
 - **The logo** is a placeholder generated for the scaffold; the owner may replace the art
   (regenerate the TGAs with the recipe in `DEPENDENCIES.md`).
 

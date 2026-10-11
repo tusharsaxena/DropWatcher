@@ -266,6 +266,15 @@ modules\Toast.lua
 # target at load. NS.LootFeed, NS.Toast's qualifier, NS.Asks, NS.Roster, NS.Restrictions,
 # NS.History, NS.Setting and NS.AskTargetOf are read at call time.
 modules\AutoAsk.lua
+# Conventional: publishes NS.SimRoster, the simulator's invented group and its gear (pure, but for
+# Create); reads NS.Constants and NS.ClassData at load. NS.Sim, NS.SimPool (below) and NS.Compat are
+# read at call time.
+modules\SimRoster.lua
+# Conventional: publishes NS.SimPool, the simulator's item pool from the Encounter Journal; appends
+# its EJ_LOOT_DATA_RECIEVED row to NS.FEATURE_EVENTS and its handler to NS.addon (core\DropWatcher.lua)
+# at load, and reads NS.Constants, NS.ClassData, NS.State and NS.L at load. NS.Sim, NS.Gear and
+# NS.Compat are read at call time.
+modules\SimPool.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

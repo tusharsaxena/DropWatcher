@@ -67,6 +67,15 @@
 --   tradeItems     the open trade window: tradeItems.player[i] / tradeItems.target[i] are
 --                  GetTradePlayerItemLink(i) / GetTradeTargetItemLink(i); units.NPC is the partner;
 --                  LE_GAME_ERR_TRADE_COMPLETE / ERR_TRADE_COMPLETE the completion message
+--   journal        the Encounter Journal (core/Compat.lua's Journal* shims, modules/SimPool.lua):
+--                  journal.tiers[i] = { dungeons = { { id, name } }, raids = { ... } };
+--                  journal.loot[instanceID][difficulty] = { { itemID, link, encounterID, classes,
+--                  loadsNeeded } } (classes = { [classID] = true } limits it under a class filter;
+--                  while loadsNeeded > 0 the entry has no link); the selection is journal.tier,
+--                  .instanceID, .encounterID, .difficulty, .classID, .specID, .slot; journal.selects
+--                  counts EJ_SelectInstance calls and journal.reads every GetLootInfoByIndex.
+--                  EncounterJournal (the frame) is nil until a case sets one; loadJournal() loads
+--                  every entry and fires EJ_LOOT_DATA_RECIEVED once per entry it loaded
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -579,6 +588,67 @@ local function installSound(M)
     M.PlaySound = function(id, channel) M.sounds[#M.sounds + 1] = { id, channel } end
 end
 
+-- The Encounter Journal (core/Compat.lua's Journal* shims): one newest tier with what a case seeds.
+-- The selection behaves as the client's: selecting a tier clears the instance, an instance clears
+-- the encounter.
+local function journalEntries(M)
+    local j = M.journal
+    local out = {}
+    local list = ((j.loot[j.instanceID or 0] or {})[j.difficulty or 0]) or {}
+    for _, e in ipairs(list) do
+        if (j.classID or 0) == 0 or not e.classes or e.classes[j.classID] then out[#out + 1] = e end
+    end
+    return out
+end
+
+local function installJournal(M)
+    local j = { tiers = { { dungeons = {}, raids = {} } }, loot = {}, tier = 1, difficulty = 1, classID = 0,
+        specID = 0, slot = 15, selects = 0, reads = 0 }
+    M.journal = j
+    M.EJ_GetNumTiers = function() return #j.tiers end
+    M.EJ_GetCurrentTier = function() return j.tier end
+    M.EJ_SelectTier = function(t) j.tier, j.instanceID, j.encounterID = t, nil, nil end
+    M.EJ_GetInstanceByIndex = function(i, isRaid)
+        local row = (j.tiers[j.tier] or {})[isRaid and "raids" or "dungeons"] or {}
+        local inst = row[i]
+        if inst then return inst.id, inst.name end
+    end
+    M.EJ_SelectInstance = function(id) j.instanceID, j.encounterID, j.selects = id, nil, j.selects + 1 end
+    M.EJ_SelectEncounter = function(id) j.encounterID = id end
+    M.EJ_GetDifficulty = function() return j.difficulty end
+    M.EJ_SetDifficulty = function(d) j.difficulty = d end
+    M.EJ_GetLootFilter = function() return j.classID, j.specID end
+    M.EJ_SetLootFilter = function(c, sp) j.classID, j.specID = c, sp end
+    M.EJ_GetNumLoot = function() return #journalEntries(M) end
+    M.C_EncounterJournal = {
+        GetSlotFilter = function() return j.slot end,
+        SetSlotFilter = function(v) j.slot = v end,
+        ResetSlotFilter = function() j.slot = 15 end,
+        GetLootInfoByIndex = function(i)
+            j.reads = j.reads + 1
+            local e = journalEntries(M)[i]
+            if not e then return nil end
+            local loaded = (e.loadsNeeded or 0) <= 0
+            return { itemID = e.itemID, encounterID = e.encounterID, link = loaded and e.link or nil,
+                name = loaded and "Item" or nil }
+        end,
+    }
+    function M.loadJournal()
+        local loaded = {}
+        for _, byDifficulty in pairs(j.loot) do
+            for _, list in pairs(byDifficulty) do
+                for _, e in ipairs(list) do
+                    if (e.loadsNeeded or 0) > 0 then
+                        e.loadsNeeded = 0
+                        loaded[#loaded + 1] = e.itemID
+                    end
+                end
+            end
+        end
+        for _, id in ipairs(loaded) do M.__fireEvent("EJ_LOOT_DATA_RECIEVED", id) end
+    end
+end
+
 local function build()
     local M = base()
     M._G = M
@@ -644,6 +714,7 @@ local function build()
     installTableSurface(M)
     installTrade(M)
     installSound(M)
+    installJournal(M)
 
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)

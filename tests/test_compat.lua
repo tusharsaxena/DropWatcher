@@ -935,7 +935,7 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "GetMapUIInfo", "CursorHasItem", "ClearCursor", "GetItemIconByID", "C_ClassColor", "RAID_CLASS_COLORS",
     "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink", "GetTradePlayerItemLink",
-    "GetTradeTargetItemLink", "MenuUtil" }
+    "GetTradeTargetItemLink", "MenuUtil", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

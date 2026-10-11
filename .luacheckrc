@@ -55,6 +55,9 @@ files["core/Compat.lua"] = {
     "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
     "DressUpLink", "GetSpecializationInfoByID", "GetTradePlayerItemLink", "GetTradeTargetItemLink", "LE_GAME_ERR_TRADE_COMPLETE", "ERR_TRADE_COMPLETE",
     "MenuUtil", "PlaySound", "SOUNDKIT",
+    "EncounterJournal", "C_EncounterJournal", "EJ_GetNumTiers", "EJ_GetCurrentTier", "EJ_SelectTier",
+    "EJ_GetInstanceByIndex", "EJ_SelectInstance", "EJ_SelectEncounter", "EJ_GetDifficulty", "EJ_SetDifficulty",
+    "EJ_GetLootFilter", "EJ_SetLootFilter", "EJ_GetNumLoot",
   },
 }
 

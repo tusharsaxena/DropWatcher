@@ -199,6 +199,15 @@ restriction and lockdown, its timers, the session-only history log with saved hi
 a stop that takes its drops, groups, inspect entries and restrictions and leaves a real drop, a
 queued ask canceled before the lift so it never goes out, the situation re-read, the automatic stop
 on joining a group or entering an instance, and the stand-down),
+`test_sim_pool` (the simulator's item pool and group: the four journal shims and their absent
+answers, each situation's side and difficulty, a read of every instance of the newest tier at every
+difficulty with the player's selection restored, even when a read raises, no read while the
+journal's frame is shown, the wait for `EJ_LOOT_DATA_RECIEVED` and its timeout keeping what loaded,
+the class filter, the own-items fallback reported once, the stop ending a waiting build; the seeded
+random source, a party of four and a raid of nine to nineteen with distinct names and GUIDs and
+each spec its class's, the gear drawn inside the band from what the class can wear with the rest
+left empty and the off hand empty behind a two-hander, and the group kept on the session and
+forgotten by the stop),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

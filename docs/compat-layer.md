@@ -14,8 +14,8 @@ at call time, guards them, and passes them in; its members of the same names are
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**Sixty-one shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `61`). The three
+**Sixty-five shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `65`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -104,6 +104,10 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `DressUpItem(link)` | `DressUpItemLink` → the older `DressUpLink` (an item button's ctrl-click); `true` when called | `false` |
 | Detail card | `SpecName(specID)` | `GetSpecializationInfoByID`'s second return (the looter's spec, in words); a secret, empty or non-string answer is nil | `nil` |
 | Toast | `PlayAlertSound()` | `PlaySound(SOUNDKIT.UI_EPICLOOT_TOAST → SOUNDKIT.RAID_WARNING, "Master")` (`toast.sound`); `true` when played | `false` (no `PlaySound`, no `SOUNDKIT` or neither entry) |
+| Encounter Journal | `JournalSelection()` | `EJ_GetNumTiers`, `EJ_GetCurrentTier`, `EJ_GetDifficulty`, `EJ_GetLootFilter`, `C_EncounterJournal.GetSlotFilter`, and the `EncounterJournal` frame's `IsShown`, `instanceID` and `encounterID` (nil before the frame loads): `{ shown, tiers, tier, difficulty, classID, specID, slot, instanceID, encounterID }`; a secret `shown` is not shown | `nil` |
+| | `JournalSelect(sel)` | `EJ_SelectTier` → `EJ_SelectInstance` → `EJ_SetDifficulty` → `EJ_SetLootFilter(classID or 0, specID or 0)` → `EJ_SelectEncounter` → `C_EncounterJournal.SetSlotFilter` (`ResetSlotFilter` for a nil slot), each field only when given; the save and the restore of a read both go through it | `false` |
+| | `JournalInstances(isRaid)` | `EJ_GetInstanceByIndex(i, isRaid)` until it answers no id: `{ { id, name } }` of the selected tier | `{}` |
+| | `JournalLoot()` | `EJ_GetNumLoot` and `C_EncounterJournal.GetLootInfoByIndex`: the loaded entries `{ itemID, link, encounterID }` and how many have no link yet (they load later, announced by `EJ_LOOT_DATA_RECIEVED`) | `{}, 0` |
 
 The trade actions return `true` when they called the client. They guard nothing: the range, combat
 and restriction checks are the trade helper's (`modules/TradeHelper.lua`), which calls them only
@@ -176,6 +180,8 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/Diagnostics.lua` | `PawnIsReady`, `PawnScaleForSpec`, `TransmogSource` |
 | `settings/Editors.lua`, `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec) |
 | `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item) |
+| `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
+| `modules/SimRoster.lua` | `NormalizedRealm` (who shares your realm) |
 
 The secret guards (`IsSecret`, `IsSafeKey`) are read by most of the edges above on every client
 payload. `DecodeDuration`, `ParseTradeTimeRemaining`, `ReadTooltipLine` and `PawnItemData` are

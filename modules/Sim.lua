@@ -12,7 +12,10 @@ local _, NS = ...
 --
 --   State.sim = { sim = true, scenario, situation, startedAt, guids = { [guid] = true },
 --                 timers = { [handle] = true }, restrictions = { [type value] = true },
---                 lockdown, log = { v, groups }, events }
+--                 lockdown, log = { v, groups }, events,
+--                 pool, poolBuild,   -- modules/SimPool.lua's (the item pool and its build)
+--                 members }          -- modules/SimRoster.lua's (the invented group and its gear)
+--   Only the simulator's own modules write their fields; everything else reads them.
 --
 -- SAFETY (spec §5).
 --   * Start refuses while stood down, while a simulation already runs, while test mode is on, in
@@ -59,7 +62,8 @@ function Sim.IsActive()
     return Sim.active == true
 end
 
---- The running simulation's session table, or nil. Read it, never write it.
+--- The running simulation's session table, or nil. Read it; only the simulator's own modules
+--- (SimPool, SimRoster) write their fields.
 --- @return table|nil
 function Sim.Session()
     return State.sim

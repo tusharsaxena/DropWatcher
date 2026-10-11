@@ -35,7 +35,7 @@ passed.
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..7 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); SIM-2..3 *reserved* for DW-73 (a full `key` run, a `raid` run with a large roster), SIM-4..5 *reserved* for DW-72 (the lockdown queue and its flush, a simulated trade into History), SIM-6 *reserved* for DW-71 (the journal fallback), SIM-7 *reserved* for DW-73 (the automatic stop end to end) |
+| SIM-1..7 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); SIM-2..3 *reserved* for DW-73 (a full `key` run, a `raid` run with a large roster), SIM-4..5 *reserved* for DW-72 (the lockdown queue and its flush, a simulated trade into History), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), SIM-7 *reserved* for DW-73 (the automatic stop end to end) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -855,6 +855,20 @@ join a group → `Simulation stopped: you joined a group.`; start one, then `/dw
 `Simulation stopped: the addon was disabled.` After a `/reload`, no simulation is running and
 `/dw history` shows no simulated drop. Result:
 
+**SIM-6. The item pool: the Encounter Journal and its fallback (DW-71).** Runs once `/dw sim` lands
+(DW-73); until then the headless `test_sim_pool` covers it. Solo, outside an instance, with `/dw
+debug on`: open the Encounter Journal, pick an older instance, a difficulty and a class filter,
+and close it. `/dw sim start key` → the debug log shows `[SIM] pool: <n> items from the journal (0
+still loading)` within a few seconds, and a simulated drop's tooltip shows a current-season item at
+the keystone item level. Reopen the Encounter Journal → it shows the instance, difficulty and class
+filter you left, not the last one the simulator read. `/dw sim stop`, then `/dw sim start raid` →
+the pool line again, with raid items. The fallback: leave the Encounter Journal open and start one
+→ no pool line while it stays open; after 5 seconds chat says `The Encounter Journal gave no items,
+so this simulation drops your own gear instead.` and the drops are your own items. Stop and start
+again with it still open → the line is not printed a second time this session. Close it before the
+5 seconds instead → the journal pool is read once it closes. Record the item count of each pool.
+Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -919,3 +933,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | ASK-8 | DW-54, auto-ask | No client pass recorded yet |
 | ASK-9 | DW-62, auto-ask after leaving an encounter | No client pass recorded yet |
 | SIM-1 | DW-70, the simulator's core: the seam, its safety and the session log | No client pass recorded yet |
+| SIM-6 | DW-71, the simulator's item pool and its fallback | No client pass recorded yet |

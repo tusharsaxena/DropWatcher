@@ -1,11 +1,8 @@
 local _, NS = ...
 -- core/Compat.lua — the only caller of version-variant, deprecated and optional client APIs
--- (compat, design spec §4). Feature modules call NS.Compat.X and never name the client API.
---
--- Its sections, in file order, are marked by the banners below; every shim, its ladder and its
--- absent answer are tabled in docs/compat-layer.md. The text parsing is core/TextParse.lua's (pure,
--- no client call): this file reads the localized GlobalStrings it needs and hands them over.
---
+-- (compat, design spec §4). Feature modules call NS.Compat.X and never name the client API. Every
+-- shim, its ladder and its absent answer are tabled in docs/compat-layer.md; the text parsing is
+-- core/TextParse.lua's (pure), handed the localized GlobalStrings this file reads.
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
 -- IsSecret before it is compared, matched, concatenated or formatted. No member raises on a missing
@@ -17,16 +14,10 @@ local Compat = NS.Compat
 local TextParse = NS.TextParse -- core/TextParse.lua, above in the TOC: the pure parsers
 local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
 
--- ---------------------------------------------------------------------------------------------
--- Secret guards: LibKa0s-Compat-1.0
--- ---------------------------------------------------------------------------------------------
---
--- The library's answer, or the same one-rung body. A deliberate duplication: for a GUARD,
--- "the library is absent" is not "the client has no secrets system", so a stub answering
--- IsSecret -> false would send a secret into a comparison on exactly the degraded path. See
--- LibKa0s docs/api/Compat/version-1-docs.md, "Degradation". Of that major's six spell and spec
--- readers, the two spec readers are wired, behind PlayerSpecID (Identity, below); nothing here
--- reads a spell.
+-- ── Secret guards: LibKa0s-Compat-1.0 ───────────────────────────────────────────────────────
+-- The library's answer, or the same one-rung body, on purpose: for a GUARD "the library is absent"
+-- is not "the client has no secrets" (LibKa0s docs/api/Compat/version-1-docs.md, "Degradation").
+-- Of that major's spell and spec readers, only the spec two are wired, behind PlayerSpecID.
 
 --- True when `v` is a 12.0 secret value. Exactly one boolean.
 Compat.IsSecret = CompatLib and CompatLib.IsSecret or function(v)
@@ -64,14 +55,11 @@ local function globalString(name)
     return s
 end
 
--- ---------------------------------------------------------------------------------------------
--- Chat sending
--- ---------------------------------------------------------------------------------------------
+-- ── Chat sending ────────────────────────────────────────────────────────────────────────────
 
 --- The function that sends one chat message, `(text, chatType, languageID, target)`, or nil where
---- the client has none. The bare SendChatMessage global is deprecated since 11.2.0 in favor of
---- C_ChatInfo.SendChatMessage, which takes the same arguments. The caller runs it inside pcall
---- (design spec §9.2 step 4); a nil here means the ask cannot be sent and says so.
+--- the client has none: C_ChatInfo.SendChatMessage, then the bare global (deprecated in 11.2.0).
+--- The caller runs it in pcall (design spec §9.2 step 4); nil means the ask cannot be sent.
 --- @return function|nil
 function Compat.ChatSender()
     local chat = C_ChatInfo
@@ -79,9 +67,7 @@ function Compat.ChatSender()
     return SendChatMessage
 end
 
--- ---------------------------------------------------------------------------------------------
--- Pattern building and the duration decoder (design spec §7.4; the parsing is core/TextParse.lua's)
--- ---------------------------------------------------------------------------------------------
+-- ── Pattern building and the duration decoder (design spec §7.4; the parsing is core/TextParse.lua's) ───
 
 --- A Lua pattern from a printf-style GlobalString (pure); for the tests and modules/LootParser.lua.
 function Compat.FormatToPattern(fmt) return TextParse.FormatToPattern(fmt) end
@@ -115,9 +101,7 @@ function Compat.ParseTradeTimeRemaining(text)
     return TextParse.TradeTimeRemaining(text, fmt, durationUnits(), globalString("TIME_UNIT_DELIMITER"))
 end
 
--- ---------------------------------------------------------------------------------------------
--- The tooltip line reader
--- ---------------------------------------------------------------------------------------------
+-- ── The tooltip line reader ─────────────────────────────────────────────────────────────────
 
 -- The numeric value of Enum.TooltipDataLineType[typeName], or nil when the client has no such
 -- line type (then the reader falls back to the text).
@@ -146,10 +130,9 @@ local function scanLines(lines, wanted, parse)
     return nil
 end
 
---- The parsed value of a tooltip's `typeName` line, or nil. With the line type known, the lines of
---- that type are parsed first; when none of them answers (the client tagged the line with another
---- type, or has no such enum member), every line is offered to `parse` and the first non-nil answer
---- wins, so `parse` must reject foreign lines. `data` is a C_TooltipInfo result.
+--- The parsed value of a tooltip's `typeName` line, or nil: the lines of that type first, then
+--- (none answered, or no such enum member) every line, first non-nil answer wins, so `parse` must
+--- reject foreign lines. `data` is a C_TooltipInfo result.
 --- @param data table|nil
 --- @param typeName string  an Enum.TooltipDataLineType member name
 --- @param parse function   (leftText, line) -> value|nil
@@ -231,9 +214,7 @@ function Compat.GetItemUpgradeInfo(link)
         parseUpgradeLine)
 end
 
--- ---------------------------------------------------------------------------------------------
--- Restrictions (12.0)
--- ---------------------------------------------------------------------------------------------
+-- ── Restrictions (12.0) ─────────────────────────────────────────────────────────────────────
 
 --- True while the chat-messaging lockdown is in effect. A secret answer reads as locked; a client
 --- without the API is never locked.
@@ -253,11 +234,10 @@ function Compat.RestrictionTypes()
     return type(enum) == "table" and enum or {}
 end
 
---- True when a restriction STATE (the second payload of ADDON_RESTRICTION_STATE_CHANGED, or
---- GetAddOnRestrictionState's answer) is anything but Inactive: Activating counts, because the
---- event fires just before the restriction bites. The event has been seen carrying a boolean
---- instead (docs/midnight-quirks.md), which answers itself. A secret state reads as active; a
---- missing or otherwise unreadable one as inactive.
+--- True when a restriction STATE (ADDON_RESTRICTION_STATE_CHANGED's second payload, or
+--- GetAddOnRestrictionState's answer) is not Inactive: Activating counts (it fires just before the
+--- restriction bites). A boolean payload (docs/midnight-quirks.md) answers itself; a secret state
+--- reads as active, a missing or unreadable one as inactive.
 --- @return boolean
 function Compat.IsRestrictionStateActive(state)
     if Compat.IsSecret(state) then return true end
@@ -286,9 +266,7 @@ function Compat.IsRestrictionActive(rtype)
     return false
 end
 
--- ---------------------------------------------------------------------------------------------
--- Identity
--- ---------------------------------------------------------------------------------------------
+-- ── Identity ────────────────────────────────────────────────────────────────────────────────
 
 --- The player's realm as chat and unit names spell it: GetNormalizedRealmName (spaces and hyphens
 --- dropped), which answers nil early in the login, then GetRealmName with the same characters
@@ -317,9 +295,7 @@ function Compat.PlayerSpecID()
     return plainNumber((CompatLib.GetSpecializationInfo(index)))
 end
 
--- ---------------------------------------------------------------------------------------------
--- Inventory and bags (the gear snapshot, design spec §4)
--- ---------------------------------------------------------------------------------------------
+-- ── Inventory and bags (the gear snapshot, design spec §4) ──────────────────────────────────
 
 --- The link of the item `unit` wears in inventory slot `slot`, or nil (an empty slot, a secret
 --- answer, or no API).
@@ -354,9 +330,7 @@ function Compat.BagItemLink(bag, slot)
     return plainString(fn(bag, slot))
 end
 
--- ---------------------------------------------------------------------------------------------
--- Inspecting another player (the inspect broker, design spec §8)
--- ---------------------------------------------------------------------------------------------
+-- ── Inspecting another player (the inspect broker, design spec §8) ──────────────────────────
 
 --- The item id `unit` wears in inventory slot `slot`, or nil (an empty slot, data the client does
 --- not hold, a secret answer, or no API). An id with no link is an incomplete read.
@@ -434,9 +408,7 @@ function Compat.HookNotifyInspect(fn)
     return true
 end
 
--- ---------------------------------------------------------------------------------------------
--- The loot sources beside chat (the feed, design spec §3)
--- ---------------------------------------------------------------------------------------------
+-- ── The loot sources beside chat (the feed, design spec §3) ─────────────────────────────────
 
 -- The winner of a C_LootHistory drop, plain fields only, or nil.
 local function lootWinner(w)
@@ -478,9 +450,7 @@ function Compat.ChallengeMapName(mapID)
     return name
 end
 
--- ---------------------------------------------------------------------------------------------
--- Bind helpers
--- ---------------------------------------------------------------------------------------------
+-- ── Bind helpers ────────────────────────────────────────────────────────────────────────────
 
 -- C_Item.<fn>(link) as a plain boolean; false when the API is absent or the answer is secret.
 local function itemFlag(fn, link)
@@ -511,15 +481,10 @@ function Compat.GetBagItemGUID(bag, slot)
     return plainString(item.GetItemGUID(location))
 end
 
--- ---------------------------------------------------------------------------------------------
--- Item readers (the item facts, design spec §4 and §5.1)
--- ---------------------------------------------------------------------------------------------
---
--- Each item reader takes a link, calls C_Item's spelling, copies plain fields only and answers nil
--- (or false) when the item is not cached yet or the client lacks the call. The bare globals these
--- moved from (GetItemInfo, GetItemStats, ...) are not a second rung: every client at this TOC's
--- interface has the C_Item spelling, so a global rung could never run (compat: a dead rung is
--- deleted, not shimmed). Caching and the load retry are modules/ItemFacts.lua's.
+-- ── Item readers (the item facts, design spec §4 and §5.1) ──────────────────────────────────
+-- Each takes a link, calls C_Item's spelling, copies plain fields only and answers nil (or false)
+-- for an uncached item or a missing call. The bare globals are dead rungs (every client at this
+-- interface has C_Item), so they are deleted, not shimmed. Caching is modules/ItemFacts.lua's.
 
 -- C_Item[name], or nil.
 local function itemApi(name)
@@ -719,13 +684,9 @@ function Compat.ItemClassRestriction(link)
         parseClasses)
 end
 
--- ---------------------------------------------------------------------------------------------
--- The Pawn seam (optional dependency; design spec §5.4)
--- ---------------------------------------------------------------------------------------------
---
--- Pawn is CC BY-NC-ND: its API is called, its code is never copied. Every call is behind
--- PawnIsReady and runs under pcall, because a third-party addon's error must not become this
--- addon's. Nil from a reader means "not ready yet": the scorer answers `pending` and retries.
+-- ── The Pawn seam (optional dependency; design spec §5.4) ───────────────────────────────────
+-- Pawn is CC BY-NC-ND: its API is called, never copied. Every call is behind PawnIsReady and in
+-- pcall (its error is never this addon's). Nil means "not ready yet": the scorer retries.
 
 --- True when Pawn is loaded and has finished initializing. PawnIsInitialized is a global flag in
 --- Pawn; a function spelling is accepted too.
@@ -779,9 +740,7 @@ function Compat.PawnItemValue(link, scale)
     return type(v) == "number" and v or nil
 end
 
--- ---------------------------------------------------------------------------------------------
--- Trade actions (click-driven; the guards for range and combat are TradeHelper's, DW-29)
--- ---------------------------------------------------------------------------------------------
+-- ── Trade actions (click-driven; the guards for range and combat are TradeHelper's, DW-29) ───
 
 --- Picks up the item in bag `bag`, slot `slot` onto the cursor (C_Container.PickupContainerItem).
 --- False when the client lacks it.
@@ -838,9 +797,7 @@ function Compat.ClearCursor()
     return true
 end
 
--- ---------------------------------------------------------------------------------------------
--- The trade window's contents (the history's trade completion, design spec §10)
--- ---------------------------------------------------------------------------------------------
+-- ── The trade window's contents (the history's trade completion, design spec §10) ───────────
 
 -- The trade window's item slots that change hands: 1-6 (slot 7 is "will not be traded").
 local TRADE_SLOTS = 6
@@ -903,9 +860,7 @@ function Compat.ContextMenu(owner, entries)
     return true
 end
 
--- ---------------------------------------------------------------------------------------------
--- The drop tables' item buttons and class colors (design spec §11.1)
--- ---------------------------------------------------------------------------------------------
+-- ── The drop tables' item buttons and class colors (design spec §11.1) ──────────────────────
 
 --- An item's icon texture (C_Item.GetItemIconByID, which takes an id or a link and needs no item
 --- cache), or nil for no API, no item, or a secret or non-texture answer.
@@ -978,4 +933,67 @@ function Compat.PlayAlertSound()
     if type(id) ~= "number" or not PlaySound then return false end
     PlaySound(id, "Master")
     return true
+end
+
+-- ── The Encounter Journal (the simulator's item pool, simulator spec §3) ────────────────────
+-- Reads and selections only; the save and restore, the async wait and the fallback are SimPool's.
+
+--- The journal's selection: { shown, tiers, tier, difficulty, classID, specID, slot, instanceID,
+--- encounterID } (shown and the last two are the frame's, nil before it loads). Nil without EJ_*.
+--- @return table|nil
+function Compat.JournalSelection()
+    if not (EJ_GetNumTiers and EJ_GetCurrentTier and EJ_GetDifficulty and EJ_GetLootFilter) then return nil end
+    local ej, frame = C_EncounterJournal, EncounterJournal
+    local shown = frame and frame.IsShown and frame:IsShown()
+    local classID, specID = EJ_GetLootFilter()
+    return { shown = not Compat.IsSecret(shown) and shown == true, tiers = plainNumber(EJ_GetNumTiers()),
+        tier = EJ_GetCurrentTier(), difficulty = EJ_GetDifficulty(), classID = classID, specID = specID,
+        slot = ej and ej.GetSlotFilter and ej.GetSlotFilter(), instanceID = frame and frame.instanceID,
+        encounterID = frame and frame.encounterID }
+end
+
+local function journalExtras(ej, sel)
+    if sel.encounterID and EJ_SelectEncounter then EJ_SelectEncounter(sel.encounterID) end
+    if sel.slot == nil and ej.ResetSlotFilter then ej.ResetSlotFilter() end
+    if sel.slot ~= nil and ej.SetSlotFilter then ej.SetSlotFilter(sel.slot) end
+end
+
+--- Select what `sel` names, in the journal's order: tier, instanceID, difficulty, the class filter
+--- (classID 0 or nil: every class), encounterID, the slot filter (nil: every slot). False without.
+--- @return boolean
+function Compat.JournalSelect(sel)
+    if not (EJ_SelectTier and EJ_SelectInstance and EJ_SetDifficulty and EJ_SetLootFilter) then return false end
+    if sel.tier then EJ_SelectTier(sel.tier) end
+    if sel.instanceID then EJ_SelectInstance(sel.instanceID) end
+    if sel.difficulty then EJ_SetDifficulty(sel.difficulty) end
+    EJ_SetLootFilter(sel.classID or 0, sel.specID or 0)
+    journalExtras(C_EncounterJournal or {}, sel)
+    return true
+end
+
+--- The selected tier's instances as { { id, name } }: its raids when `isRaid`, else its dungeons.
+--- @return table
+function Compat.JournalInstances(isRaid)
+    local out = {}
+    for i = 1, EJ_GetInstanceByIndex and 200 or 0 do
+        local id, name = EJ_GetInstanceByIndex(i, isRaid == true)
+        if not plainNumber(id) then break end
+        out[#out + 1] = { id = id, name = plainString(name) }
+    end
+    return out
+end
+
+--- The selected instance's loot under the filters, { { itemID, link, encounterID } }, and how many
+--- entries are not loaded yet (no link; EJ_LOOT_DATA_RECIEVED follows). Empty without the API.
+--- @return table loot, number pending
+function Compat.JournalLoot()
+    local ej, out, pending = C_EncounterJournal, {}, 0
+    if not (EJ_GetNumLoot and ej and ej.GetLootInfoByIndex) then return out, 0 end
+    for i = 1, plainNumber(EJ_GetNumLoot()) or 0 do
+        local info = ej.GetLootInfoByIndex(i)
+        local link = type(info) == "table" and plainString(info.link)
+        if link then out[#out + 1] = { itemID = plainNumber(info.itemID), link = link,
+            encounterID = plainNumber(info.encounterID) } else pending = pending + 1 end
+    end
+    return out, pending
 end
