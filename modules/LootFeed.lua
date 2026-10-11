@@ -191,7 +191,7 @@ local function areaName()
 end
 
 -- Where a drop received now belongs: { key, label, kind, encounterID, mapID }.
-local function groupSpec(s, encounterID, t)
+local function placeOf(s, encounterID, t)
     local run = NS.FeedRecords.ActiveRun(s.ctx, t, LF.LOOT_GRACE)
     if run then return { key = run.key, label = run.label, kind = "run", mapID = run.mapID } end
     local enc = NS.FeedRecords.ActiveEncounter(s.ctx, t, LF.LOOT_GRACE)
@@ -203,6 +203,9 @@ local function groupSpec(s, encounterID, t)
     local area = areaName()
     return { key = "area:" .. area, label = area, kind = "area" }
 end
+
+-- ... with the instance and difficulty you are in (modules/GroupPlace.lua, feedback-3 spec §4).
+local function groupSpec(s, encounterID, t) return NS.GroupPlace.Stamp(placeOf(s, encounterID, t)) end
 
 -- ── judging ─────────────────────────────────────────────────────────────────────────────────
 

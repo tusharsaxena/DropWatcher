@@ -328,7 +328,7 @@ Total.
 - mine tab: a row is the row height plus its bar's room, in the Font size row's size
 - mine tab: every shown cell has a reason tooltip; nothing is blank
 - mine tab: rows come from the pool and a repaint reuses them
-- mine tab: the rows sit under a header naming the party; a click collapses the group
+- mine tab: the rows sit under a header naming the place and you; a click collapses the group
 - mine tab: TradeTimerTick moves the countdown while the tab shows
 - mine tab: Hide takes a dead row off the tab for the session
 - mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
@@ -896,15 +896,31 @@ Total.
 - roster merge: the snapshot only grows, you first, the same character never twice
 - roster merge and copy: the entries are copied, never shared
 - roster names: the first few, class-colored, then +n; none for no roster
-- roster tooltip: everyone, with the realm when it is not yours, class-colored
+- roster tooltip: one Group line, the realm when it is not yours, class-colored (fb3 §4)
 - feed roster: the group takes everyone in it when its first drop makes it, you first
 - feed roster: someone who joins mid-run is added on the roster event, and to the History group
 - feed roster: a joiner is also taken by the next drop, with no roster event between
 - feed roster: a roster event with no group open yet changes nothing and raises nothing
 - history roster: Record copies the group's roster in and merges it with each entry
-- group header: the party's names after the count, class-colored; the tooltip lists everyone
-- group header: a raid's header names the first five and +n; its tooltip names all
-- history header: a kept roster is named; an older group with none names nobody
+- group header: you alone after the count, class-colored; the tooltip's Group line names the party
+- group header: a raid's party is not in the header; its tooltip line names ten and +n
+- history header: the recorder alone; an older group with no place and no roster keeps its label
+
+### test_group_place.lua (13)
+
+- group place: a keystone's difficulty reads Mythic+ and its level; any other is the client's name
+- group place: an encounter names its instance, its boss, then its difficulty
+- group place: a key run's and an area's label is the instance, named once
+- group place: with no difficulty name the situation word stands in; an older group keeps its label
+- group place: Who names the recorder alone, its short name class-colored; History falls back to an entry
+- compat: DifficultyName answers the client's name, nil for an unknown id or no API
+- compat: KeystoneLevel answers the active key, else the completed run's, else nil
+- feed: the owner's Timewalking drop names the instance, the boss, Timewalking and you (07)
+- feed: a group keeps the place it opened in
+- feed: a key run's end chest reads Mythic+ and the completed run's level
+- feed: in the open world no place is read and the situation word stands in
+- test mode: the sample groups carry real instance names and realistic difficulties
+- sim: a dungeon boss and a key run name the pool's instance and the client's difficulty
 
 ### test_char_filter.lua (18)
 
@@ -1400,6 +1416,7 @@ Total.
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
+| test_group_place.lua | 13 |
 | test_char_filter.lua | 18 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
@@ -1425,4 +1442,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1175** |
+| **Total** | **1188** |

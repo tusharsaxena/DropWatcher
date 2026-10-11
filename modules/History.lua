@@ -4,7 +4,8 @@ local _, NS = ...
 -- each with its outcome, kept for a number of days.
 --
 --   history = { retentionDays (the schema row's), v = 1, groups = {
---       { key, label, kind, situation, at, roster = { { name, realm, class, me }, ... }, drops = {
+--       { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
+--         roster = { { name, realm, class, me }, ... }, drops = {
 --           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
 --             me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
 --             trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
@@ -13,6 +14,9 @@ local _, NS = ...
 -- `roster` is who was in the group (feedback-2 spec §3, modules/GroupRoster.lua): copied from the
 -- feed group's snapshot by every recorded drop and grown with it; a group kept before it existed
 -- has none.
+-- A group's `instance` and `difficulty` name where it dropped and `seenBy` / `seenByClass` the
+-- character that saw it (feedback-3 spec §4, modules/GroupPlace.lua), from the feed group; a group
+-- kept before they existed has none and keeps its old header.
 -- `seenBy` is the character that saw the drop (Name-Realm) and `seenByClass` its classFile, for the
 -- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
 -- has neither.
@@ -277,7 +281,7 @@ end
 --- Record one entry under the group `info` names (made, newest last, by its first entry), merge
 --- the group's roster in, then hold the log to its limits (H.Trim).
 --- @param hist table
---- @param info table { key, label, kind, situation, roster }
+--- @param info table { key, label, kind, situation, instance, difficulty, seenBy, seenByClass, roster }
 --- @param entry table H.Snapshot's
 --- @param ceiling number|nil H.Trim's
 --- @return table entry
@@ -285,7 +289,8 @@ function H.Record(hist, info, entry, ceiling)
     local g = findGroup(hist, info.key)
     if not g then
         g = { key = info.key, label = info.label, kind = info.kind, situation = info.situation, at = entry.at,
-            drops = {} }
+            instance = info.instance, difficulty = info.difficulty, seenBy = info.seenBy,
+            seenByClass = info.seenByClass, drops = {} }
         hist.groups[#hist.groups + 1] = g
     end
     if type(info.roster) == "table" then
@@ -458,7 +463,8 @@ end
 local function groupInfo(rec)
     local spec = type(rec.group) == "table" and rec.group or {}
     return { key = historyKey(rec.groupKey or spec.key), label = spec.label, kind = spec.kind,
-        situation = rec.situation, roster = feedRoster(rec) }
+        situation = rec.situation, roster = feedRoster(rec), instance = spec.instance,
+        difficulty = spec.difficulty, seenBy = rec.seenBy, seenByClass = rec.seenByClass }
 end
 
 --- A feed group's roster grew between drops (modules/GroupRoster.lua): the History group it is

@@ -245,7 +245,7 @@ Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
   ├─> WindowMine.Rows(Groups, Drops, Get, ctx, NS.State.windowMine) (pure: WindowCells.Entries over
   │     your drops, every group open until toggled; a drop in no group last, with no header)
   ├─> NS.Pool.ReleaseAll(rows, headers) ─> Acquire in order (each built once); each header:
-  │     WindowCells.Header(group, shown, now, …): `Label · Situation · 6m ago · n drops · party`
+  │     WindowCells.Header(group, shown, now, …): `Instance · Boss · Difficulty · 6m ago · n drops · You`
   ├─> each row: WindowCells.Item / Ilvl, MineCells.ForMe / TradeWindow(drop, now, TradeTimer.WarnAt())
   │             / BestCandidates(drop, revealed) / Actions(drop, best, AnnounceButton(…))
   │               reads: NS.Asks.StateOf("announce", nil, id)

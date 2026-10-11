@@ -108,9 +108,11 @@ function FM.ActiveEncounter(ctx, t, grace)
 end
 
 --- The group a drop joins in its feed, made by its first drop. An area group continues while it is
---- the latest group; an area visited again later starts a new one.
+--- the latest group; an area visited again later starts a new one. A new group keeps the place its
+--- spec names (instance, difficulty) and the drop's recorder (feedback-3 spec §4).
 --- @param feed table { groups, groupByKey }
---- @param rec table the drop, with `group` = { key, label, kind, encounterID, mapID }
+--- @param rec table the drop, with `group` = { key, label, kind, encounterID, mapID, instance,
+---   difficulty }
 --- @return table
 function FM.Materialize(feed, rec)
     local spec = rec.group
@@ -123,7 +125,8 @@ function FM.Materialize(feed, rec)
     end
     if g then return g end
     g = { key = spec.key, label = spec.label, kind = spec.kind, encounterID = spec.encounterID,
-        mapID = spec.mapID, situation = rec.situation, at = rec.at, drops = {} }
+        mapID = spec.mapID, situation = rec.situation, at = rec.at, drops = {}, instance = spec.instance,
+        difficulty = spec.difficulty, seenBy = rec.seenBy, seenByClass = rec.seenByClass }
     feed.groups[#feed.groups + 1] = g
     feed.groupByKey[g.key] = g
     return g

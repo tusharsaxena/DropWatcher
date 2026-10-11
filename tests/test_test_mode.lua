@@ -79,9 +79,9 @@ test("test mode data: each sample group names who was in it, you first; the boss
         sizes[s.group.kind] = #r
     end
     assertEqual(sizes.run, 5, "the key run: a party of five")
-    assertEqual(sizes.encounter, 8, "the boss: a raid, longer than a header names")
-    local text = NS.WindowCells.RosterNames(specs[#specs].group.roster):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-    assertEqual(text, "Tester, Seta, Littlewolf, Uniquerogue, Butterz, +3")
+    assertEqual(sizes.encounter, 8, "the boss: a raid")
+    local text = NS.GroupRoster.TipLine(specs[#specs].group.roster):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    assertEqual(text, "Group: Tester, Seta, Littlewolf, Uniquerogue, Butterz, Kaelith, Mistveil, Dawnfeather")
     local src = source(NS)
     for _, g in ipairs(NS.TestData.History(1000, YOU, src).groups) do
         assertTrue(g.roster ~= nil and g.roster[1].me == true, g.key .. ": the sample history keeps a roster")

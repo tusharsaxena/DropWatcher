@@ -69,8 +69,12 @@ its one-line responsibility and why its position is load-bearing or conventional
   `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`, with
   `FeedCounts.lua` counting every receipt it hides or refuses by reason, and `GroupRoster.lua`
   keeping who was in each group: a snapshot taken by its first drop, grown by every later drop and
-  by a roster change, copied into the History group, and named class-colored, you first, in the
-  headers of all three tabs (My drops since DW-A9); feedback-2 spec §3; and `CharFilter.lua`, the Character
+  by a roster change, copied into the History group, and named class-colored, you first, on the
+  one `Group: ...` line of the headers' tooltips on all three tabs; feedback-2 spec §3, and since
+  DW-B4 no longer in the header itself; `GroupPlace.lua` naming where each group dropped, its
+  instance and the client's difficulty name (`Mythic+ <level>` for a key), captured when the group
+  opens and kept on it and its History group, and the character that saw it, the only name a header
+  shows; feedback-3 spec §4; and `CharFilter.lua`, the Character
   dropdown's recorder: every drop record and History entry says who saw it, `seenBy` (Name-Realm)
   and `seenByClass`, and the filter bar's Character dropdown, Current by default, filters History by
   it; feedback-2 spec §4); and the

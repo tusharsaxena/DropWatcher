@@ -307,7 +307,9 @@ L["the filters"] = "the filters"
 
 -- A group header's roster (modules/GroupRoster.lua, feedback-2 spec §3)
 L["+%d"] = "+%d"
-L["In the group (%d):"] = "In the group (%d):"
+L["Group: %s"] = "Group: %s"
+L["Mythic+ %d"] = "Mythic+ %d"
+L["Heroic"] = "Heroic"
 
 -- The Character dropdown (modules/CharFilter.lua, feedback-2 spec §4)
 L["Character: All"] = "Character: All"

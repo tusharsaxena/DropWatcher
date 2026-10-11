@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/GroupRoster.lua — who was in the group for a run or an encounter (feedback-2 spec §3,
--- FB2-5): each feed group's roster snapshot, the History group's kept copy, and the names a group
--- header shows, each in its class color, you first.
+-- FB2-5): each feed group's roster snapshot, the History group's kept copy, and the one `Group: ...`
+-- line a group header's tooltip shows, each name in its class color, you first.
 --
 --   roster = { { name, realm, class, me }, ... }
 --
@@ -18,11 +18,13 @@ local _, NS = ...
 -- (modules/TestData.lua's samples) instead of the client's. A simulation's members come through
 -- NS.Compat like a real group's, so its runs carry its drawn group.
 --
--- THE HEADER. Names shows the first HEADER_NAMES names, each class-colored, then `+n`; TipLines
--- lists everyone, with the realm when it is not yours. A History group recorded before the roster
--- existed has none, and its header shows no names.
+-- THE HEADER. Since feedback-3 spec §4 (DW-B4) the header itself names only the character that saw
+-- the drop (modules/GroupPlace.lua's Who), never the party. The roster is still captured and kept,
+-- and the tooltip's TipLine names it: `Group: ` and the first TIP_NAMES names, each class-colored,
+-- with the realm when it is not yours, then `+n`. A History group recorded before the roster
+-- existed has none, and its tooltip has no such line.
 --
--- PURE: Entry, FromMembers, Merge, Copy, Names and TipLines take plain tables (and a color function)
+-- PURE: Entry, FromMembers, Merge, Copy, Names and TipLine take plain tables (and a color function)
 -- and read nothing else; test_group_roster drives them. Current, Note and Grow are the edge: they
 -- read NS.Roster, NS.Compat, NS.LootFeed, NS.History and NS.Window at call time.
 
@@ -30,8 +32,8 @@ NS.GroupRoster = NS.GroupRoster or {}
 local GR = NS.GroupRoster
 local L = NS.L
 
--- A header names at most this many members; the rest are counted as `+n`.
-GR.HEADER_NAMES = 5
+-- The tooltip's Group line names at most this many members; the rest are counted as `+n`.
+GR.TIP_NAMES = 10
 
 -- ── the pure core ───────────────────────────────────────────────────────────────────────────
 
@@ -136,35 +138,31 @@ local function paint(e, text, colorOf)
     return GR.Colored(text, colorOf(e.class))
 end
 
---- A header's names: the first `limit` short names, each in its class color, then `+n`. Nil for no
---- roster.
+--- The first `limit` names, each in its class color with the realm when it is not yours, then
+--- `+n`. Nil for no roster.
 --- @param list table|nil
---- @param limit number|nil (GR.HEADER_NAMES)
+--- @param limit number|nil (GR.TIP_NAMES)
 --- @param colorOf function|nil classFile -> r, g, b
 --- @return string|nil
 function GR.Names(list, limit, colorOf)
     if type(list) ~= "table" or #list == 0 then return nil end
-    local cap = math.max(1, tonumber(limit) or GR.HEADER_NAMES)
+    local cap = math.max(1, tonumber(limit) or GR.TIP_NAMES)
     local parts = {}
-    for i = 1, math.min(cap, #list) do parts[i] = paint(list[i], list[i].name, colorOf) end
+    for i = 1, math.min(cap, #list) do
+        local e = list[i]
+        parts[i] = paint(e, e.realm and (e.name .. "-" .. e.realm) or e.name, colorOf)
+    end
     if #list > cap then parts[#parts + 1] = L["+%d"]:format(#list - cap) end
     return table.concat(parts, ", ")
 end
 
---- A header tooltip's roster lines: a heading, then everyone in class color, with the realm when it
---- is not yours. Empty for no roster.
+--- A header tooltip's one roster line, `Group: You, Seta, ...` (GR.Names). Nil for no roster.
 --- @param list table|nil
 --- @param colorOf function|nil
---- @return table
-function GR.TipLines(list, colorOf)
-    local out = {}
-    if type(list) ~= "table" or #list == 0 then return out end
-    out[1] = L["In the group (%d):"]:format(#list)
-    for _, e in ipairs(list) do
-        local text = e.realm and (e.name .. "-" .. e.realm) or e.name
-        out[#out + 1] = paint(e, text, colorOf)
-    end
-    return out
+--- @return string|nil
+function GR.TipLine(list, colorOf)
+    local names = GR.Names(list, GR.TIP_NAMES, colorOf)
+    return names and L["Group: %s"]:format(names) or nil
 end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────

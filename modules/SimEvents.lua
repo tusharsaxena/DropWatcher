@@ -44,7 +44,7 @@ local _, NS = ...
 -- re-reads your real bags (BAG_UPDATE_DELAYED), both delivered once the seam is off.
 --
 --   State.sim.drive = { lines, pulls, kills, encounter = { id, name } | nil, run = { mapID, name,
---     ended } | nil, combat, trade = { window, soon, soonLeft }, trades }
+--     level, ended } | nil, combat, trade = { window, soon, soonLeft }, trades }
 
 NS.SimEvents = NS.SimEvents or {}
 local E = NS.SimEvents
@@ -58,6 +58,9 @@ E.TRADE_WINDOW = 2 * 60 * 60
 --- Seconds the "ending soon" drops stay tradeable, and how many of them a session has.
 E.ENDING_SOON = 9 * 60
 E.ENDING_SOON_COUNT = 1
+
+--- The keystone level a simulated run answers (C_ChallengeMode through the seam, feedback-3 spec §4).
+E.KEY_LEVEL = 12
 
 --- The first invented encounter id and keystone map id.
 E.ENCOUNTER_BASE = 99000
@@ -268,7 +271,7 @@ function E.Status()
 end
 
 --- The keystone run in progress (or ended, until the next starts), or nil.
---- @return table|nil { mapID, name, ended }
+--- @return table|nil { mapID, name, level, ended }
 function E.Run()
     local d = Sim.Session() and drive()
     return d and d.run
@@ -351,7 +354,8 @@ function E.RunStart()
     if not d then return nil, "notRunning" end
     if d.run and not d.run.ended then return nil, "inRun" end
     local place = NS.SimWorld.Place()
-    local run = { mapID = E.MAP_BASE + d.pulls, name = place and place.name or L["Simulated instance"] }
+    local run = { mapID = E.MAP_BASE + d.pulls, name = place and place.name or L["Simulated instance"],
+        level = E.KEY_LEVEL }
     d.run = run
     Sim.Fire("CHALLENGE_MODE_START", run.mapID)
     Sim.SetRestriction("ChallengeMode", true)

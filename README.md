@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1175%2F1175_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1188%2F1188_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -32,10 +32,13 @@ reads everyone's gear before the loot starts, which saves waiting later. When a 
 blocks addon chat, an orange lock in the title bar says so and counts the asks waiting to go out.
 
 **Group drops** shows every drop, grouped under the boss or key run it came from. Each group's
-header names everyone who was in the party, you first, each in class color (a raid shows the first
-few and `+n`), and counts its drops: `2 drops · 1 shown` means the filters hide one (a group whose
-every drop the View hides still shows its header, `· 0 shown`), and hovering the header lists what
-they hid and why. My drops uses the same headers, and History keeps the party with each group. A row gives the item, its item level and slot, who looted it, what you wear there (**My eq**) and what they wear
+header says where it dropped, the instance, the boss and the difficulty the game names
+(`Gate of the Setting Sun · Commander Ri'mok · Timewalking`, or `Mythic+ 12` for a key), then how
+long ago, then counts its drops: `2 drops · 1 shown` means the filters hide one (a group whose every
+drop the View hides still shows its header, `· 0 shown`), and it ends with the character that saw
+it, in class color. Hovering the header names the party on one `Group:` line and lists what the
+filters hid and why. My drops uses the same headers, and History keeps the place, the character and
+the party with each group. A row gives the item, its item level and slot, who looted it, what you wear there (**My eq**) and what they wear
 there (**Their eq**), each as icons with item levels, then two verdicts: **Me** (is
 it an upgrade for you?) and **Them** (is it one for the looter?). ▲ means upgrade, ≈ sidegrade, ▽
 downgrade. **Trade** reads Yes, Likely, Unknown or No. Hover any cell to see why; hover Their eq for

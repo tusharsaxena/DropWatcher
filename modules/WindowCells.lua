@@ -661,16 +661,19 @@ function WC.HiddenLines(hidden, filter)
     return out
 end
 
---- A group's roster for its header (feedback-2 spec §3): the first few names, class-colored, then
---- `+n`; nil when it kept none.
---- @param roster table|nil NS.GroupRoster's
---- @return string|nil
-function WC.RosterNames(roster)
-    return NS.GroupRoster.Names(roster, NS.GroupRoster.HEADER_NAMES, NS.Compat.ClassColor)
+--- A group header's place and recorder (feedback-3 spec §4, modules/GroupPlace.lua): the instance,
+--- the boss and the difficulty (the situation word without one), and the character that saw it in
+--- its class color, nil when the group names none.
+--- @param group table
+--- @param situationLabel string|nil
+--- @return table parts, string|nil who
+function WC.Place(group, situationLabel)
+    local GP = NS.GroupPlace
+    return GP.Parts(group, situationLabel), GP.Who(group, NS.Compat.ClassColor)
 end
 
---- A header tooltip: the title, the kind's line, everyone in the group (class-colored), the hidden
---- drops' lines, then the click hint.
+--- A header tooltip: the title, the kind's line, the `Group: ...` line (the party, class-colored;
+--- feedback-3 spec §4), the hidden drops' lines, then the click hint.
 --- @param title string
 --- @param line string
 --- @param hidden table|nil
@@ -680,16 +683,18 @@ end
 --- @return table
 function WC.HeaderTip(title, line, hidden, filter, collapsed, roster)
     local tip = { title, line }
-    for _, l in ipairs(NS.GroupRoster.TipLines(roster, NS.Compat.ClassColor)) do tip[#tip + 1] = l end
+    tip[#tip + 1] = NS.GroupRoster.TipLine(roster, NS.Compat.ClassColor)
     for _, l in ipairs(WC.HiddenLines(hidden, filter)) do tip[#tip + 1] = l end
     tip[#tip + 1] = collapsed and L["Click to expand this group."] or L["Click to collapse this group."]
     return tip
 end
 
---- An encounter header's text and tooltip: `Label · Situation · 2m ago · 4 drops · You, Seta, ...`
---- (the group's roster, class-colored, when it has one), or `... · 2 drops · 1 shown · ...` while
---- the filter hides some, the tooltip listing everyone and naming each hidden drop.
---- @param group table a feed group { key, label, kind, situation, at, roster }
+--- An encounter header's text and tooltip: `Instance · Boss · Difficulty · 2m ago · 4 drops · You`
+--- (feedback-3 spec §4: the place, WC.Place, then the character that saw it, class-colored), or
+--- `... · 2 drops · 1 shown · ...` while the filter hides some, the tooltip naming the party on one
+--- line and each hidden drop.
+--- @param group table a feed group { key, label, kind, situation, at, instance, difficulty, seenBy,
+---   seenByClass, roster }
 --- @param shown number the drops shown under it
 --- @param now number|nil GetTime()
 --- @param situationLabel string|nil the group's situation, in words
@@ -700,12 +705,11 @@ end
 ---   drops` after the count (feedback-3 spec §0)
 --- @return table { text, tip }
 function WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter, yours)
-    local parts = { tostring(group.label or "?") }
-    if situationLabel then parts[#parts + 1] = situationLabel end
+    local parts, who = WC.Place(group, situationLabel)
     if num(group.at) and num(now) then parts[#parts + 1] = L["%s ago"]:format(WC.Duration(now - group.at)) end
     parts[#parts + 1] = WC.DropCount(shown, hidden)
     if (tonumber(yours) or 0) > 0 then parts[#parts + 1] = L["%d yours on My drops"]:format(yours) end
-    parts[#parts + 1] = WC.RosterNames(group.roster)
+    parts[#parts + 1] = who
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
     local title = tostring(group.label or "?")

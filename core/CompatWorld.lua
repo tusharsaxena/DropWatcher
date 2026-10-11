@@ -1,8 +1,8 @@
 local _, NS = ...
 -- core/CompatWorld.lua — the stable world reads, published on NS.Compat so the simulator's answer
 -- seam (core/SimSeam.lua, simulator spec §2) answers them too: the group's size and kind, a unit's
--- GUID, name, class and connection, where the player is (the instance, its difficulty, a keystone
--- run in progress) and whether the player is fighting. (The GlobalString reads are the root's,
+-- GUID, name, class and connection, where the player is (the instance, its difficulty and that
+-- difficulty's name, a keystone run in progress and its level) and whether the player is fighting. (The GlobalString reads are the root's,
 -- core/Compat.lua's Compat.GlobalString: they are not world reads.)
 --
 -- WHY HERE. None of these APIs is version-variant, so the compat rule does not need them in
@@ -100,6 +100,38 @@ end
 function Compat.DifficultyKnown(id)
     if type(id) ~= "number" or id <= 0 or type(GetDifficultyInfo) ~= "function" then return false end
     return GetDifficultyInfo(id) ~= nil
+end
+
+--- GetDifficultyInfo(id)'s name (Timewalking, Heroic, Mythic Keystone, Delves, ...), or nil (an
+--- unknown id, a secret or empty answer, or no API). Feedback-3 spec §4: the group header names it.
+--- @param id any
+--- @return string|nil
+function Compat.DifficultyName(id)
+    if type(id) ~= "number" or id <= 0 or type(GetDifficultyInfo) ~= "function" then return nil end
+    local name = GetDifficultyInfo(id)
+    if Compat.IsSecret(name) or type(name) ~= "string" or name == "" then return nil end
+    return name
+end
+
+-- A plain positive level, or nil.
+local function keyLevel(v)
+    if Compat.IsSecret(v) or type(v) ~= "number" or v <= 0 then return nil end
+    return v
+end
+
+--- The keystone's level: the active run's (C_ChallengeMode.GetActiveKeystoneInfo), else the
+--- completed run's (C_ChallengeMode.GetChallengeCompletionInfo, which still answers while its end
+--- chest is looted), else nil. Feedback-3 spec §4: a key run's header reads `Mythic+ 12`.
+--- @return number|nil
+function Compat.KeystoneLevel()
+    local cm = C_ChallengeMode
+    if cm == nil then return nil end
+    local level = type(cm.GetActiveKeystoneInfo) == "function" and keyLevel((cm.GetActiveKeystoneInfo())) or nil
+    if level then return level end
+    if type(cm.GetChallengeCompletionInfo) ~= "function" then return nil end
+    local info = cm.GetChallengeCompletionInfo()
+    if Compat.IsSecret(info) or type(info) ~= "table" then return nil end
+    return keyLevel(info.level)
 end
 
 --- C_ChallengeMode.IsChallengeModeActive() as a plain boolean (a keystone run in progress).

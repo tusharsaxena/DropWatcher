@@ -154,11 +154,18 @@ and money lines never read as loot; every hidden and refused receipt counted by 
 under FEED and reported in the `drops` diagnostics section; the group headers' `2 drops · 1 shown`
 and the tooltip naming each hidden drop and its filter, on Group drops and History),
 `test_group_roster` (feedback-2 spec §3: the roster snapshot's pure core, `Entry`, `Merge` (it
-only grows, you first, never the same character twice), `Copy`, `Names` (five names then `+n`,
-class-colored) and `TipLines`; a feed group taking the party with its first drop and a mid-run
-joiner on the roster event or with the next drop, its History group keeping it; the Group drops
-and History headers, and an older History group naming nobody; test mode's sample rosters are
-`test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
+only grows, you first, never the same character twice), `Copy`, `Names` (ten names then `+n`,
+class-colored, the realm when not yours) and `TipLine` (the tooltip's one `Group: ...` line); a feed
+group taking the party with its first drop and a mid-run joiner on the roster event or with the
+next drop, its History group keeping it; the Group drops and History headers naming only the
+recorder (feedback-3 spec §4), and an older History group with no `Group:` line; test mode's sample
+rosters are `test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
+`test_group_place` (feedback-3 spec §4, DW-B4: `GroupPlace`'s pure `DifficultyName`, `Parts` and
+`Who`; Compat's `DifficultyName` and `KeystoneLevel`; the owner's Timewalking drop through the real
+feed, its header `Gate of the Setting Sun · Commander Ri'mok · Timewalking · 1 drop · Testchar` and
+its History group keeping the place and the recorder; a group keeping the place it opened in; a
+key's end chest reading `Mythic+ <level>` after the run completed; the open world's situation-word
+fallback; test mode's and the simulator's realistic instance and difficulty names),
 `test_char_filter` (feedback-2 spec §4: the Character dropdown's pure core, `Key`, `IconMarkup`,
 `Passes` (All passes everything, a drop with no recorder only All, the session sentinel is you),
 `Canonical`, `Label` and `IsCurrent`, `Characters` and `Options`; your recorder read live and

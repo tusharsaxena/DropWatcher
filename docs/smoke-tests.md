@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..27 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Group drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on all three tabs (FEED-24, DW-A8); My drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1) |
+| FEED-1..28 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Group drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on all three tabs (FEED-24, DW-A8); My drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -283,7 +283,7 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), FEED-20 the multi-select View (DW-A1), FEED-21 item tooltips beside the window (DW-A2), FEED-22 the party named in every group header (DW-A3), FEED-23 the Character dropdown (DW-A4), FEED-24 the tables' font and row height beside Loot History's (DW-A8), and FEED-25 the My drops group headers and the tooltip beside the docked Offer panel (DW-A9), FEED-26 every row tooltip at the row's top right (DW-B2), FEED-27 the filter bar's tooltips above their controls (DW-B1). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), FEED-20 the multi-select View (DW-A1), FEED-21 item tooltips beside the window (DW-A2), FEED-22 the party named in every group header (DW-A3), FEED-23 the Character dropdown (DW-A4), FEED-24 the tables' font and row height beside Loot History's (DW-A8), and FEED-25 the My drops group headers and the tooltip beside the docked Offer panel (DW-A9), FEED-26 every row tooltip at the row's top right (DW-B2), FEED-27 the filter bar's tooltips above their controls (DW-B1), FEED-28 the group headers' instance, boss, difficulty and recorder (DW-B4). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
@@ -528,17 +528,16 @@ Set the UI scale low (or the window's Scale to 0.7) and repeat near the right ed
 the window, never over it, never off screen. Hover the toast's icon → beside the toast. (Where
 each tooltip sits against the row is FEED-26's since DW-B2: it rises from the row's top.) Result:
 
-**FEED-22. Group headers name the party (DW-A3, feedback-2 spec §3).** In a five-player party, run a
-dungeon or a key until something drops. The Group drops header reads `Den of Nalorakk · Mythic+ · 6m
-ago · 2 drops · You, A, B, C, D`: your name first, every name in its class color (a cross-realm
-member by short name). Hover the header → the tooltip lists `In the group (5):` and everyone, a
-cross-realm member as Name-Realm, in class color. Have someone leave and another join mid-run, then
-let a drop fall (or just wait for the roster change) → the newcomer is added, the leaver stays
-named. Open History → the same group's header names the same party; `/reload` → it still does. A
-History group kept before this version names nobody and still reads correctly. In a raid (or
-`/dw test`, whose Placeholder boss is a raid of eight) → the header names five and `+3`, and the
-tooltip names all eight. `/dw sim start key` then `/dw sim run` → the run's header names you and
-the simulated group, and the simulation's History does too. Result:
+**FEED-22. Group headers keep the party (DW-A3, feedback-2 spec §3; the header since DW-B4).** In a
+five-player party, run a dungeon or a key until something drops. Since DW-B4 the header itself names
+only you (FEED-28). Hover the header → the tooltip's one line reads `Group: You, A, B, C, D`: your
+name first, every name in its class color, a cross-realm member as Name-Realm. Have someone leave
+and another join mid-run, then let a drop fall (or just wait for the roster change) → the newcomer
+is added to that line, the leaver stays named. Open History → the same group's tooltip names the
+same party; `/reload` → it still does. A History group kept before DW-A3 has no `Group:` line and
+still reads correctly. In a raid (or `/dw test`, whose Placeholder boss is a raid of eight) → the
+line names all eight (ten at most, then `+n`). `/dw sim start key` then `/dw sim run` → the run's
+tooltip names you and the simulated group, and the simulation's History does too. Result:
 
 **FEED-23. The Character dropdown (DW-A4, feedback-2 spec §4).** Open the window: after Content the
 bar holds `Character: Current`. Open it on Group drops and on My drops → `Character: All`,
@@ -608,6 +607,23 @@ corner sits on the control's top-right corner, the tooltip rising above the cont
 it; click a dropdown open while its tooltip shows → the menu is never under the tooltip. Drag the
 window to the screen's right edge and hover the right-most controls → the tooltip's bottom-right
 corner sits on the control's top-left corner instead, still above it. Result:
+
+**FEED-28. Group headers name where it dropped and only your character (DW-B4, feedback-3 spec §4).**
+The headless `test_group_place` covers the names and the capture. Research `07-my-drops-real-timewalking-drop.png`
+shows the old header (`Commander Ri'mok · Dungeon · ... · Euthanàsia, Deathllanira, ...`) and
+`08-header-roster-too-long.png` the roster crowding it. Run a Timewalking dungeon and kill a boss that
+drops something → the Group drops (or My drops) header reads `Gate of the Setting Sun · Commander
+Ri'mok · Timewalking · 3m ago · 1 drop · <you>`: the instance, the boss, the client's difficulty name
+(never the generic `Dungeon`), the time, the count, then only your character, in class color. Do the
+same on Normal, Heroic, Mythic, in Raid Finder and in a delve → each header names that difficulty as
+the client does. Finish a key and loot the chest → `<Dungeon> · Mythic+ <key level> · ... · <you>`.
+Open History → the same groups read the same; `/reload` → they still do; log in on an alt and open
+History with `Character: All` → a group the first character saw ends with that character's name, not
+the alt's. A History group kept before this version still reads `Label · Situation · ...`. In the open
+world → `Open world · Open world group` (or `Solo`). `/dw test` → the key run is a real dungeon at
+`Mythic+ 10` and the boss sits in a real instance at Heroic, on Group drops, My drops and History.
+`/dw sim start dungeon` then `/dw sim run` → the boss headers name the pool's dungeon and `Mythic`;
+`/dw sim start key` → the run's header names the dungeon and `Mythic+ 12`. Result:
 
 ## Roster
 
@@ -1263,12 +1279,13 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | FEED-19 | DW-A0, the two-Yoke regression, every hidden or refused drop counted by reason, `n drops · m shown` | No client pass recorded yet |
 | FEED-20 | DW-A1, View: All by default, the multi-select View, its tooltip and the migration | No client pass recorded yet |
 | FEED-21 | DW-A2, item tooltips beside the window, right or else left, on every tab | No client pass recorded yet |
-| FEED-22 | DW-A3, the party named in every group header, class-colored, and kept in History | No client pass recorded yet |
+| FEED-22 | DW-A3, the party kept with every group, on the header tooltip's `Group:` line (DW-B4), and in History | No client pass recorded yet |
 | FEED-23 | DW-A4, the Character dropdown on every tab, History filtered by who saw each drop | No client pass recorded yet |
 | FEED-24 | DW-A8, the tables' font and row height like Loot History's, on all three tabs | No client pass recorded yet |
 | FEED-25 | DW-A9, My drops under the group headers, the tooltip beside the docked Offer panel | No client pass recorded yet |
 | FEED-26 | DW-B2, every row tooltip at the row's top right (else top left), all three tabs and the Offer panel | No client pass recorded yet |
 | FEED-27 | DW-B1, the filter bar's tooltips above their controls, top right (else top left) | No client pass recorded yet |
+| FEED-28 | DW-B4, group headers: the instance, the boss, the difficulty name and only your character, all three tabs and History | No client pass recorded yet |
 | STATE-4 | DW-84, test mode with real items, History test data, no trailing ellipsis | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |

@@ -49,6 +49,7 @@ local function run(seed)
     local NS, _, m = T.enableAddon({ mock = function(m)
         m.__context.inInstance, m.__context.instanceType = true, "party"
         m.instance = { name = "Den of Nalorakk", difficultyID = 8 }
+        m.keystoneLevel = 12
         if seed then seed(m) end
     end })
     m.addItem(RING, def("INVTYPE_FINGER", 600))
@@ -223,14 +224,14 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
     assertEqual(#h.hidden, 1); assertEqual(h.hidden[1].drop.looter.guid, BUNIAN)
     assertEqual(h.hidden[1].why, "interesting")
     local hd = WC.Header(h.group, h.count, nil, nil, false, h.hidden, ctx.filter)
-    assertEqual(uncolored(hd.text), "Den of Nalorakk · 2 drops · 1 shown · Testchar, Bùnian, Keghunt")
+    assertEqual(uncolored(hd.text), "Den of Nalorakk · Mythic+ 12 · 2 drops · 1 shown · Testchar")
     local tip = table.concat(hd.tip, "\n")
     assertTrue(tip:find("Yoke of the Charging Bear (Bùnian): View: Interesting", 1, true) ~= nil, tip)
     FB.State("group").view = {}
     local all = WC.Entries(LF.Groups(ctx.feed), LF.Get, NS.Window.TabContext("group"), {})
     assertEqual(all[1].count, 2); assertEqual(#all[1].hidden, 0)
     assertEqual(uncolored(WC.Header(all[1].group, 2, nil, nil, false, all[1].hidden).text),
-        "Den of Nalorakk · 2 drops · Testchar, Bùnian, Keghunt")
+        "Den of Nalorakk · Mythic+ 12 · 2 drops · Testchar")
 end)
 
 test("header: your own drop, listed in My drops, is not counted as hidden in Group drops", function()
