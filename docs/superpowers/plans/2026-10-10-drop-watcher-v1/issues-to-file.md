@@ -37,9 +37,15 @@ creates the eight there first.
 | I10 | tusharsaxena/LibKa0s | Options: a grid composer for rows of mixed controls | state:triaged, severity:low, enhancement |
 | I11 | tusharsaxena/WowAddonStandards | Proposal: a rule for chat an addon sends on the player's behalf | state:triaged, severity:low, enhancement |
 | I12 | tusharsaxena/LibKa0s | Item-1.0: an exact item read (link detail, better link, level and quality), and a loot-line parser | state:triaged, severity:low, enhancement |
+| I13 | tusharsaxena/LibKa0s | Widgets-1.0: a flat search box and a flat checkbox, in the dropdown's skin | state:triaged, severity:low, enhancement |
 
 **Added by DW-80 (M8, 2026-10-11).** I12 drafts the promotion ui spec §0 asks for: the item read the
 owner's BUG-1 fix wrote as `core/ItemRead.lua`. It is filed with the rest, under the same hold.
+
+**Added by DW-82 (M8, 2026-10-11).** I13 drafts the shared-widget need ui spec §2 (FB-5) asks for:
+the flat search box and checkbox the filter bar now hand-builds, as Loot History hand-builds its search
+box. It sits beside LibKa0s#48 (the test-mode strip as a shared widget), which already exists; the
+two can be merged on filing if the owner prefers one Widgets issue.
 
 **After filing.** Swap "is filed at the end of the v1 run" in the three LibKa0s rows and the chat row of
 `docs/ARCHITECTURE.md` → `## Documented deviations` for `LibKa0s#<n>` and `WowAddonStandards#<n>`,
@@ -438,10 +444,47 @@ Ka0s Drop Watcher showed a real drop wrongly: the owner's *Lustrous Golden Pluma
 
 ---
 
+## I13: Widgets-1.0: a flat search box and a flat checkbox, in the dropdown's skin
+
+- **Repo:** `tusharsaxena/LibKa0s`
+- **Labels:** `state:triaged`, `severity:low`, `enhancement`
+
+<!-- body:I13 -->
+````markdown
+## What
+
+`LibKa0s-Widgets-1.0` gives every Ka0s window its flat dropdown (`W.Dropdown`: a `BackdropTemplate` button, a 1px `WHITE8X8` line, fill `0.1, 0.1, 0.12, 0.9`, line `0.24, 0.24, 0.27, 0.9`, 20px tall). The controls that sit beside it on a filter bar are still hand-built per addon, so each addon re-derives the same skin, or reaches for Blizzard's `InputBoxTemplate` and `UICheckButtonTemplate`, whose rounded art does not match the dropdown next to them.
+
+Ka0s Drop Watcher's owner put its window beside Ka0s Loot History's and saw exactly that: a rounder search box and checkbox (Drop Watcher ui spec §2, FB-5). Drop Watcher DW-82 fixed it by hand-building both the way Loot History builds its search box.
+
+## The candidates
+
+1. **`W.SearchBox(parent, width, opts)`**: an `EditBox` on `BackdropTemplate` in the dropdown's skin, `GameFontHighlightSmall`, 6px text insets, a `GameFontDisableSmall` hint that hides while there is text, Escape and Enter clearing focus, and the line lit gold while focused. It composes with `W.Autocomplete`, which already hooks such a box.
+2. **`W.Checkbox(parent, label, opts)`**: a 14px square `CheckButton` in the same skin, the host's tick mark (the `check` path the dropdown already takes, so menus and boxes wear one tick) tinted gold, a `GameFontHighlightSmall` label whose width joins the click target, and the line lit gold on hover.
+
+Copies today: **Loot History** `modules/BrowserFilterBar.lua` (its search box, and the same skin on `makeBarButton`), **Drop Watcher** `modules/WindowFilterBar.lua` (`buildSearch`, `buildCheck`, `flatSkin`). Related: LibKa0s#48, the test-mode strip as a shared widget.
+
+## The ask
+
+Decide whether both join `Widgets-1.0` (additively, the skin values shared with `W.Dropdown`). If accepted, Loot History and Drop Watcher drop their copies on their next re-vendor.
+
+## Evidence
+
+- `DropWatcher docs/superpowers/specs/2026-10-11-drop-watcher-ui-feedback-design.md` §2 (FB-5) and the side-by-side screenshot `docs/superpowers/research/2026-10-11-ui-feedback/04-beside-loot-history.png`.
+- `DropWatcher tests/test_window_shell.lua`: the flat-skin cases for the search box, the checkbox and the dropdowns.
+
+**Severity:** `low`: a promotion question; both windows look right today.
+
+---
+*Drafted by DW-82 of the Drop Watcher v1 plan (`docs/superpowers/plans/2026-10-10-drop-watcher-v1/`), ui spec §2.*
+````
+
+---
+
 ## Filing snippet (the owner runs it, once the hold lifts)
 
 Run from the DropWatcher repo root with an authenticated `gh`. It creates the eight `state:`/`severity:`
-labels on `tusharsaxena/DropWatcher` (`--force` is idempotent, two seconds apart), then files the twelve
+labels on `tusharsaxena/DropWatcher` (`--force` is idempotent, two seconds apart), then files the thirteen
 issues 25 seconds apart, reading each body from this file. It strips the working tree's CRLF from the
 bodies. Each URL is printed; note the numbers for the "After filing" step above. To file only some,
 delete lines from the `ISSUES` list.
@@ -490,6 +533,7 @@ ISSUES=(
   "I10|$LK|Options: a grid composer for rows of mixed controls"
   "I11|$WAS|Proposal: a rule for chat an addon sends on the player's behalf"
   "I12|$LK|Item-1.0: an exact item read (link detail, better link, level and quality), and a loot-line parser"
+  "I13|$LK|Widgets-1.0: a flat search box and a flat checkbox, in the dropdown's skin"
 )
 
 first=1

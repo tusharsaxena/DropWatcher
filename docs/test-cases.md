@@ -179,7 +179,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (40)
+### test_window_shell.lua (43)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -197,6 +197,9 @@ Total.
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
 - shell: a tab with no body says what it will hold, never a blank pane
 - shell: the filter bar holds View, Quality, Content, Likely tradeable only and the search box
+- shell: the search box is Loot History's flat, square box
+- shell: the checkbox is a flat square box with the dropdowns' skin and a gold tick
+- shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
 - shell: each tab keeps its own filter state, and grays what it does not use
 - shell: a filter change redraws the active tab with the new state
 - shell: a fresh tab's state is seeded from the profile's feed settings when valid
@@ -1186,7 +1189,7 @@ Total.
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 40 |
+| test_window_shell.lua | 43 |
 | test_window_group.lua | 33 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
@@ -1229,4 +1232,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1011** |
+| **Total** | **1014** |

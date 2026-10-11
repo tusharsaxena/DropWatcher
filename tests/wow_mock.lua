@@ -160,6 +160,16 @@ local function decorateGeometry(M, f)
     f.GetAlpha = function(self) return self.__alpha or 1 end
     -- The pointer: a case sets `__mouseOver` on a frame (the toast's hover pause).
     f.IsMouseOver = function(self) return self.__mouseOver == true end
+    -- The flat skin (BackdropTemplate), an edit box's font and insets, and a check button's tick:
+    -- recorded, so a case can compare a control's look with Ka0s Loot History's.
+    f.SetBackdrop = function(self, b) self.__backdrop = b; return self end
+    f.SetBackdropColor = function(self, ...) self.__backdropColor = { ... }; return self end
+    f.SetBackdropBorderColor = function(self, ...) self.__backdropBorder = { ... }; return self end
+    f.SetFontObject = function(self, font) self.__fontObject = font; return self end
+    f.SetTextInsets = function(self, ...) self.__textInsets = { ... }; return self end
+    f.SetCheckedTexture = function(self, tex) self.__checkedTexture = tex; return self end
+    f.GetCheckedTexture = function(self) return self.__checkedTexture end
+    f.SetHitRectInsets = function(self, ...) self.__hitInsets = { ... }; return self end
     decorateText(f)
     return f
 end

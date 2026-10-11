@@ -259,6 +259,70 @@ test("shell: the filter bar holds View, Quality, Content, Likely tradeable only 
     assertEqual(textOf(c.search.hint), "Filter looter or item…")
 end)
 
+-- Ka0s Loot History's filter bar look (ui spec §2, FB-5): ../LootHistory/modules/BrowserFilterBar.lua.
+local LH_FILL, LH_LINE = { 0.1, 0.1, 0.12, 0.9 }, { 0.24, 0.24, 0.27, 0.9 }
+
+local function assertFlatSkin(w, what)
+    assertEqual(w.__template, "BackdropTemplate", what .. ": no Blizzard template's rounded art")
+    local b = w.__backdrop
+    assertTrue(b ~= nil, what .. ": a backdrop")
+    assertEqual(b.bgFile, "Interface\\Buttons\\WHITE8X8", what .. ": flat fill")
+    assertEqual(b.edgeFile, "Interface\\Buttons\\WHITE8X8", what .. ": square edge")
+    assertEqual(b.edgeSize, 1, what .. ": a 1px line")
+    for i = 1, 4 do
+        assertEqual(w.__backdropColor[i], LH_FILL[i], what .. ": fill " .. i)
+        assertEqual(w.__backdropBorder[i], LH_LINE[i], what .. ": line " .. i)
+    end
+end
+
+test("shell: the search box is Loot History's flat, square box", function()
+    local NS = shown()
+    local eb = NS.WindowFilterBar.Controls().search
+    assertEqual(eb.__frameType, "EditBox")
+    assertFlatSkin(eb, "search")
+    assertEqual(eb.__height, 20, "as tall as the dropdowns")
+    assertEqual(eb.__fontObject, "GameFontHighlightSmall")
+    assertEqual(eb.__textInsets[1], 6)
+    assertEqual(eb.hint.__template, "GameFontDisableSmall")
+    assertEqual(eb.hint.__points[1][4], 6, "the hint sits where the typed text starts")
+    eb:__fire("OnEditFocusGained")
+    assertEqual(eb.__backdropBorder[1], 1, "focus lights the line gold")
+    eb:__fire("OnEditFocusLost")
+    assertEqual(eb.__backdropBorder[1], LH_LINE[1], "and the line goes back")
+end)
+
+test("shell: the checkbox is a flat square box with the dropdowns' skin and a gold tick", function()
+    local NS = shown()
+    local cb = NS.WindowFilterBar.Controls().likelyOnly
+    assertEqual(cb.__frameType, "CheckButton")
+    assertFlatSkin(cb, "checkbox")
+    assertEqual(cb.__width, 14)
+    assertEqual(cb.__height, 14, "square")
+    local tick = cb:GetCheckedTexture()
+    assertTrue(tick == cb.tick and tick ~= nil, "the tick is the checked texture")
+    assertEqual(tick:GetTexture(), NS.Icon("confirm"), "the same tick the dropdown menus use")
+    assertEqual(cb.label.__template, "GameFontHighlightSmall")
+    cb:__fire("OnEnter")
+    assertEqual(cb.__backdropBorder[1], 1, "hover lights the line gold")
+    cb:__fire("OnLeave")
+    assertEqual(cb.__backdropBorder[1], LH_LINE[1])
+    cb:SetChecked(true)
+    cb:__fire("OnClick")
+    assertTrue(NS.WindowFilterBar.State("group").likelyOnly, "a click still filters")
+end)
+
+test("shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them", function()
+    local NS = shown()
+    local c = NS.WindowFilterBar.Controls()
+    for _, key in ipairs({ "view", "quality", "content" }) do
+        assertEqual(c[key].__template, "BackdropTemplate", key)
+        assertEqual(c[key].__height, 20, key)
+    end
+    local _, rel, _, x = c.quality:GetPoint(1)
+    assertTrue(rel == c.view, "Quality follows View")
+    assertEqual(x, 8, "Loot History's 8px gap")
+end)
+
 test("shell: each tab keeps its own filter state, and grays what it does not use", function()
     local NS = shown()
     local FB, c = NS.WindowFilterBar, NS.WindowFilterBar.Controls()

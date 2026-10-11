@@ -318,25 +318,74 @@ local function qualityDropdown(host, width)
     return dd
 end
 
+-- ── the flat skin: Ka0s Loot History's filter bar, side by side (ui spec §2, FB-5) ──────────
+-- The search box and the checkbox are built the way ../LootHistory/modules/BrowserFilterBar.lua
+-- builds its search box: a BackdropTemplate frame with a square 1px WHITE8X8 border, the same fill
+-- and line as LibKa0s-Widgets-1.0's dropdown beside them, so every control on the bar is one skin.
+-- The Blizzard InputBoxTemplate and UICheckButtonTemplate this replaces drew rounded art. LibKa0s
+-- has no flat search box or checkbox yet; the shared need is drafted as I13 in
+-- docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md.
+local FLAT = {
+    edge  = "Interface\\Buttons\\WHITE8X8",
+    fill  = { 0.1, 0.1, 0.12, 0.9 },
+    line  = { 0.24, 0.24, 0.27, 0.9 },
+    hover = { 1, 0.82, 0, 0.9 },       -- the gold Loot History lights a bar control with
+    tick  = { 1, 0.82, 0, 1 },
+}
+FB.FLAT = FLAT
+local CHECK_SIZE = 14
+
+local function flatSkin(f)
+    if not f.SetBackdrop then return end
+    f:SetBackdrop({ bgFile = FLAT.edge, edgeFile = FLAT.edge, edgeSize = 1,
+                    insets = { left = 1, right = 1, top = 1, bottom = 1 } })
+    f:SetBackdropColor(unpack(FLAT.fill))
+    f:SetBackdropBorderColor(unpack(FLAT.line))
+end
+
+local function lineColor(f, c)
+    if f.SetBackdropBorderColor then f:SetBackdropBorderColor(unpack(c)) end
+end
+
+-- The label is part of the click target, as the Blizzard template's was not: the hit rectangle
+-- reaches across it (its measured width; a client that measures nothing keeps the box alone).
+local function reachLabel(cb)
+    local w = cb.label.GetStringWidth and cb.label:GetStringWidth()
+    if type(w) == "number" and w > 0 and cb.SetHitRectInsets then cb:SetHitRectInsets(0, -(w + 2), 0, 0) end
+end
+
 local function buildCheck(host)
-    local cb = CreateFrame("CheckButton", nil, host, "UICheckButtonTemplate")
-    cb:SetSize(K.CONTROL_H + 2, K.CONTROL_H + 2)
+    local cb = CreateFrame("CheckButton", nil, host, "BackdropTemplate")
+    cb:SetSize(CHECK_SIZE, CHECK_SIZE)
+    flatSkin(cb)
+    cb.tick = cb:CreateTexture(nil, "OVERLAY")
+    cb.tick:SetPoint("CENTER", cb, "CENTER", 0, 0)
+    cb.tick:SetSize(CHECK_SIZE - 2, CHECK_SIZE - 2)
+    cb.tick:SetTexture(NS.Icon("confirm") or "Interface\\Buttons\\UI-CheckBox-Check")
+    cb.tick:SetVertexColor(unpack(FLAT.tick))
+    cb:SetCheckedTexture(cb.tick)
     cb.label = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    cb.label:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+    cb.label:SetPoint("LEFT", cb, "RIGHT", 4, 0)
     cb.label:SetText(L["Likely tradeable only"])
+    reachLabel(cb)
     cb:SetScript("OnClick", function(self)
         if not syncing then FB.Set(activeTab(), "likelyOnly", self:GetChecked() and true or false) end
     end)
     NS.Window.AttachTooltip(cb, grayedTip("likelyOnly", TIPS.likelyOnly))
+    cb:HookScript("OnEnter", function(self) lineColor(self, FLAT.hover) end)
+    cb:HookScript("OnLeave", function(self) lineColor(self, FLAT.line) end)
     return cb
 end
 
 local function buildSearch(host)
-    local eb = CreateFrame("EditBox", nil, host, "InputBoxTemplate")
+    local eb = CreateFrame("EditBox", nil, host, "BackdropTemplate")
     eb:SetSize(180, K.CONTROL_H)
     eb:SetAutoFocus(false)
+    eb:SetFontObject("GameFontHighlightSmall")
+    eb:SetTextInsets(6, 6, 0, 0)
+    flatSkin(eb)
     eb.hint = eb:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    eb.hint:SetPoint("LEFT", eb, "LEFT", 4, 0)
+    eb.hint:SetPoint("LEFT", eb, "LEFT", 6, 0)
     eb.hint:SetText(L["Filter looter or item…"])
     eb:SetScript("OnTextChanged", function(self)
         local text = self:GetText() or ""
@@ -345,13 +394,15 @@ local function buildSearch(host)
     end)
     eb:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     eb:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    eb:SetScript("OnEditFocusGained", function(self) lineColor(self, FLAT.hover) end)
+    eb:SetScript("OnEditFocusLost", function(self) lineColor(self, FLAT.line) end)
     NS.Window.AttachTooltip(eb, grayedTip("search", TIPS.search))
     return eb
 end
 
 -- Left to right: View, Quality, Content, the checkbox; the search box on the right.
 local WIDTH = { view = 132, quality = 190, content = 172 }
-local GAP = 6
+local GAP = 8   -- Loot History's gap between filter-bar controls
 
 --- Build the bar's controls on `host` (the window's filter-bar frame). Once per window.
 --- @param host table

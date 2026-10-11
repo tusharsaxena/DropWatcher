@@ -21,7 +21,7 @@ without it).
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
 libraries, the main window's whole frame tree (each region its own object, with its points, size,
-text, text color, texture and check state recorded), and the client APIs `core/Compat.lua` wraps: the tooltip
+text, text color, texture and check state recorded, and its backdrop, edit-box font and insets, checked texture and hit insets), and the client APIs `core/Compat.lua` wraps: the tooltip
 data, the chat sender and lockdown, the restriction state, `C_Item`'s upgrade, bind and GUID
 answers, the trade actions, the enums it resolves by name and the enUS GlobalStrings it parses),
 and a mocked clock: `advance(seconds)` runs the kit's timer queue in due order, and
@@ -53,7 +53,7 @@ weights and unwanted types written whole through the seam, the Messages page's l
 preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
-panes, the filter bar's per-tab state, the footer's composer, minimize, auto-open, a tooltip on
+panes, the filter bar's per-tab state and its Loot History flat skin, the footer's composer, minimize, auto-open, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, the column sets and the entry order, then the table

@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..16 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32) and the header beside Loot History (FEED-16, DW-81) |
+| FEED-1..17 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81) and the filter bar beside it (FEED-17, DW-82) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -263,7 +263,7 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), FEED-13..15 the detail card a row expands into (DW-32), and FEED-16 the title bar side by side with Ka0s Loot History's (DW-81). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), and FEED-17 the filter bar beside Loot History's (DW-82). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
@@ -439,6 +439,15 @@ style and place. Minimize with a new drop pending → the `n new` counter sits a
 Resize to the minimum width (520) with test mode on → the title stays centered; record whether
 `TEST MODE` reaches `Scan group` or the restriction badge (at that width the centered title leaves
 them little room). Result:
+
+**FEED-17. The filter bar beside Loot History (DW-82).** With the two windows side by side as in
+FEED-16 → Drop Watcher's search box is a flat, square-cornered box, the same dark fill, thin gray
+line and height as Loot History's `Search items…` box, with its gray hint 6px in; click into it →
+its line turns gold, and click away → gray again. `Likely tradeable only` is a small flat square in
+the same skin (no rounded Blizzard checkbox), with a gold tick when on; hovering it lights its line
+gold, and clicking its label toggles it too. The View, Quality and Content dropdowns match Loot
+History's (same flat box, chevron, font and height), 8px apart. Switch to My drops → the controls it
+does not use gray out the same way. Result:
 
 ## Roster
 
@@ -1016,6 +1025,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | FEED-10..12 | DW-31, the Group drops table | No client pass recorded yet |
 | FEED-13..15 | DW-32, the detail card | No client pass recorded yet |
 | FEED-16 | DW-81, the header matched to Loot History | No client pass recorded yet |
+| FEED-17 | DW-82, the filter bar matched to Loot History | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |
 | PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |
