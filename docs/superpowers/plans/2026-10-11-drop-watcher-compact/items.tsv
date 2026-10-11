@@ -1,0 +1,8 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-C0	M12	DropWatcher	Mode switch core: window.mode, per-mode geometry, migration from window.compact, header toggle, settings Layout, /dw compact|full, compactInRuns		M	COMPACT-1 COMPACT-6	compact §1
+DW-C1	M12	DropWatcher	Pure compact layout (CompactCards): card lines, tones, tooltips, header short form	DW-C0	M	COMPACT-2	compact §2 §3
+DW-C2	M12	DropWatcher	Compact Group drops: pooled cards, headers, stacked detail card, Ask/dismiss, row tooltips	DW-C1	M	COMPACT-2 COMPACT-7	compact §2
+DW-C3	M12	DropWatcher	Compact My drops and History cards, countdown, Offer/Announce, Offer panel docking	DW-C2	M	COMPACT-3 COMPACT-4	compact §3
+DW-C4	M12	DropWatcher	Compact chrome: title bar, tabs, one-row filter bar with Filters menu, strip, footer	DW-C3	M	COMPACT-5	compact §4
+DW-C5	M12	DropWatcher	Test mode, simulator, perf and same-drop-set test in compact	DW-C4	M	COMPACT-2	compact §5
+DW-C6	M12	DropWatcher	Docs + automated-test bundle	DW-C5	S		compact §6 §7
