@@ -39,9 +39,9 @@ local _, NS = ...
 --
 -- THE GATES, in spec §6.2's order: the situation (not tracked there: hidden, nothing loaded), the
 -- item facts (loaded through ItemFacts.Request when uncached; the drop waits), spec §6.3's filters
--- (Filter, pure), the verdict for you (your gear only), the quality gate with that verdict for its
--- upgrade override, then the inspect request for the looter, the looter's verdict and the trade
--- estimate. A hidden drop costs no inspect; it is counted by reason and logged once. Manual drops
+-- (NS.FeedFilter.Filter, pure, modules/FeedFilter.lua), the verdict for you (your gear only),
+-- the quality gate with that verdict for its upgrade override, then the inspect request for the
+-- looter, the looter's verdict and the trade estimate. A hidden drop costs no inspect; it is counted by reason and logged once. Manual drops
 -- skip the situation gate; test drops skip every gate and ask for no inspect.
 --
 -- UPDATES. InspectDone(guid) re-judges the drops that looter received and your own drops'
@@ -149,56 +149,6 @@ function LF.Config()
         undesired = get("comparison.undesired"), heirloomProtect = get("comparison.heirloomProtect"),
         rules = tradeRules(),
     }
-end
-
--- ── the filters (pure) ──────────────────────────────────────────────────────────────────────
-
-local function isGearClass(facts)
-    return facts.classID == C.ITEM_CLASS.ARMOR or facts.classID == C.ITEM_CLASS.WEAPON
-end
-
--- Heirlooms and cosmetics are never shown: the reason, or nil.
-local function alwaysOut(facts)
-    if facts.quality == C.QUALITY.HEIRLOOM then return "heirloom" end
-    if facts.classID == C.ITEM_CLASS.ARMOR and facts.subClassID == C.ARMOR_SUBCLASS.COSMETIC then
-        return "cosmetic"
-    end
-    return nil
-end
-
-local function ilvlCheck(facts, cfg, ctx)
-    local ilvl, mode = facts.ilvl, cfg.minIlvlMode
-    if type(ilvl) ~= "number" then return true end
-    if mode == "absolute" and type(cfg.minIlvl) == "number" and ilvl < cfg.minIlvl then
-        return false, "minIlvl"
-    end
-    local mine = ctx.myIlvl
-    if mode == "relative" and type(mine) == "number" and type(cfg.relativeIlvl) == "number"
-        and ilvl < mine - cfg.relativeIlvl then
-        return false, "minIlvl"
-    end
-    return true
-end
-
---- Spec §6.3's filters: heirlooms and cosmetics always out; tier tokens by `includeTokens`; with
---- `gearOnly`, armor and weapons only (jewelry and trinkets are armor); the minimum item level by
---- `minIlvlMode` (`absolute` against `minIlvl`, `relative` against `ctx.myIlvl - relativeIlvl`).
---- Pure. Facts that could not be read pass, so the feed never hides what it could not judge.
---- @param facts table|nil
---- @param cfg table|nil LF.Config()'s fields
---- @param ctx table|nil { myIlvl }
---- @return boolean pass, string|nil reasonKey (`heirloom`, `cosmetic`, `token`, `notGear`, `minIlvl`)
-function LF.Filter(facts, cfg, ctx)
-    if type(facts) ~= "table" then return true end
-    cfg = type(cfg) == "table" and cfg or {}
-    local why = alwaysOut(facts)
-    if why then return false, why end
-    if facts.isTierToken then
-        if cfg.includeTokens == false then return false, "token" end
-        return true
-    end
-    if cfg.gearOnly ~= false and not isGearClass(facts) then return false, "notGear" end
-    return ilvlCheck(facts, cfg, type(ctx) == "table" and ctx or {})
 end
 
 -- ── looters ─────────────────────────────────────────────────────────────────────────────────
@@ -628,7 +578,7 @@ local function judge(rec, facts)
     local cfg = LF.Config()
     if not rec.test then
         local ctx = { myIlvl = cfg.minIlvlMode == "relative" and myIlvl() or nil }
-        local ok, why = LF.Filter(facts, cfg, ctx)
+        local ok, why = NS.FeedFilter.Filter(facts, cfg, ctx)
         if not ok then return hide(rec, why) end
     end
     judgeMe(rec, cfg)

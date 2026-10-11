@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Sixty-four authored files load from the TOC, in the standard's folder order; every one, its kind,
+Sixty-five authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -52,8 +52,9 @@ its one-line responsibility and why its position is load-bearing or conventional
   lifecycle (`DropWatcher.lua`, which also holds the host handlers every surface shares), and the
   migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
-- `modules/`, the engine: four pure kernels (`Evaluate.lua` the verdict, `QualityGate.lua`,
-  `TradeRules.lua` the trade estimate, `Messaging.lua` the templates and the one-ask guard) and the
+- `modules/`, the engine: five pure kernels (`Evaluate.lua` the verdict, `QualityGate.lua`,
+  `TradeRules.lua` the trade estimate, `FeedFilter.lua` the feed's filters, `Messaging.lua` the
+  templates and the one-ask guard) and the
   scorers (`Scoring.lua`); the edges that read the client (`Situations.lua`, `Restrictions.lua`,
   `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
   `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`); and the

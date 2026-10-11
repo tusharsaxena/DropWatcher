@@ -442,7 +442,7 @@ end)
 
 test("filter: every rule of spec §6.3 (pure)", function()
     local NS = T.newAddon()
-    local F = NS.LootFeed.Filter
+    local F = NS.FeedFilter.Filter
     local C = NS.Constants
     local gear = { classID = C.ITEM_CLASS.ARMOR, subClassID = 0, quality = 4, ilvl = 600 }
     local function with(over)

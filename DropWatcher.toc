@@ -108,6 +108,10 @@ modules\Situations.lua
 # Conventional: publishes NS.TradeRules, the pure trade estimator; read by the feed at call time
 # only, and itself reads NS.Constants (core\, above) and NS.C (defaults\, above) at load.
 modules\TradeRules.lua
+# Conventional: publishes NS.FeedFilter, the feed's pure filters of design spec §6.3 (peeled out of
+# modules\LootFeed.lua); read by the feed at call time only, and itself reads NS.Constants (core\,
+# above) at load.
+modules\FeedFilter.lua
 # Conventional: publishes NS.Messaging, the pure messaging core (templates, the one-ask guard and
 # the send queue); read by the messaging edge at call time only, and itself reads NS.Constants
 # (core\, above) at load.
