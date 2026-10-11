@@ -678,7 +678,7 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_item_read.lua (21)
+### test_item_read.lua (24)
 
 - BUG-1 repro: chat first, the drop reads 311 Epic
 - BUG-1 repro: the encounter's bare link first, then chat's complete one: the complete link wins
@@ -686,6 +686,9 @@ Total.
 - BUG-1 repro: a merge while the first link is still loading judges the complete link
 - BUG-1 hypothesis 2: ItemFacts reads a complete link right and a bare one at the base
 - BUG-1 hypothesis 3: an own drop recorded from a bare link reads level and quality from its bag item
+- BUG-1: the history entry takes the complete link, 311 and Epic when chat merges in
+- BUG-1: the history entry takes the bag item's link, level and quality
+- BUG-1: the history's Refresh never trades a complete link for a bare one
 - BUG-1: a drop the bare link's base quality hid comes back when the complete link merges in
 - ItemRead: LinkDetail reads the bonus ids, the modifiers, the context and how complete a link is
 - ItemRead: BetterLink keeps the more complete link, the first on a tie, and never a non-item
@@ -1224,7 +1227,7 @@ Total.
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 18 |
-| test_item_read.lua | 21 |
+| test_item_read.lua | 24 |
 | test_gear.lua | 20 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
@@ -1249,4 +1252,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1031** |
+| **Total** | **1034** |

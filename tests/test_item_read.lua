@@ -147,6 +147,41 @@ test("BUG-1 hypothesis 3: an own drop recorded from a bare link reads level and 
     assertEqual(rec.link, BAGGED, "the bag item's link is the more complete one")
 end)
 
+-- The history records a drop at DropAdded; the merge and the bag read come later, as DropUpdated.
+test("BUG-1: the history entry takes the complete link, 311 and Epic when chat merges in", function()
+    local NS, m, LF = party()
+    encounterSelf(m, BARE)
+    local rec = only(LF)
+    local e = NS.History.EntryOf(rec.id)
+    assertEqual(e.ilvl, 19, "recorded from the bare link first")
+    chatSelf(m, FULL)
+    e = NS.History.EntryOf(rec.id)
+    assertEqual(e.itemLink, FULL, "the most complete link")
+    assertEqual(e.ilvl, 311); assertEqual(e.quality, 4)
+end)
+
+test("BUG-1: the history entry takes the bag item's link, level and quality", function()
+    local NS, m, LF = party()
+    m.items[FULL] = nil
+    encounterSelf(m, BARE)
+    m.bags[0][1] = BAGGED
+    m.bagGUIDs["0:1"] = "Item-1-0001"
+    m.bagItemReads["0:1"] = { ilvl = 311, quality = 4 }
+    m.tooltips.bag["0:1"] = { lines = {} }
+    m.advance(0)
+    local e = NS.History.EntryOf(only(LF).id)
+    assertEqual(e.itemLink, BAGGED); assertEqual(e.ilvl, 311); assertEqual(e.quality, 4)
+end)
+
+test("BUG-1: the history's Refresh never trades a complete link for a bare one", function()
+    local Hi = T.newAddon().History
+    local e = { itemLink = FULL, ilvl = 311, quality = 4, outcome = "seen", at = 1 }
+    local _, moved = Hi.Refresh(e, { link = BARE, facts = { ilvl = 311, quality = 4 } })
+    assertEqual(e.itemLink, FULL); assertFalse(moved, "nothing kept changed")
+    _, moved = Hi.Refresh(e, { link = FULL, facts = { ilvl = 315, quality = 4 } })
+    assertEqual(e.ilvl, 315); assertTrue(moved, "a level read again moves the entry")
+end)
+
 test("BUG-1: a drop the bare link's base quality hid comes back when the complete link merges in", function()
     local NS, m, LF = party()
     NS.addon.db.profile.feed = { quality = { mode = "fixed", fixed = 4, upgradeOverride = false } }

@@ -31,7 +31,8 @@ local _, NS = ...
 --
 -- RECORDING. A live drop's DropAdded records it (a test drop never is) under its feed group, keyed
 -- by the group's key and this session's start, so a group of an earlier session never collects
--- today's drops. DropUpdated refreshes its verdicts and trade estimate; a trade estimate that
+-- today's drops. DropUpdated refreshes its verdicts and trade estimate, and its link, level and
+-- quality when a merge or the bag read improved them (BUG-1); a trade estimate that
 -- turns `no expired` makes its outcome `expired`. Which entry a live drop is lives in a session-only
 -- index (drop ids restart each session), so after a reload the old entries are read-only.
 --
@@ -53,7 +54,8 @@ local _, NS = ...
 -- failure (out of range, a full bag) and completes nothing.
 --
 -- PURE: Normalize, Snapshot, Refresh, Record, Trim, Advance, SetDeclined and MatchTrade take plain
--- tables and the clock as arguments and read nothing else; test_history drives them. The edge
+-- tables and the clock as arguments and read nothing else but the pure link parse
+-- (NS.ItemRead.BetterLink); test_history and test_item_read drive them. The edge
 -- below reads the account table, the feed and the bus, and sends HistoryChanged on every change
 -- to what it stores, never for a DropUpdated that changed nothing kept.
 
@@ -155,17 +157,36 @@ local function sameSnap(a, b)
     return true
 end
 
+-- One field of the entry takes the record's value when it has one that differs.
+local function takeField(e, key, v)
+    if v == nil or e[key] == v then return false end
+    e[key] = v
+    return true
+end
+
+-- The item itself, read again (ui spec §0, BUG-1): a merge or the bag read keeps the most complete
+-- link and reads the level and quality again after the entry was recorded (DropUpdated `source`,
+-- `bag`), so the entry takes the more complete link (ItemRead.BetterLink, a tie keeps its own) and
+-- the latest level and quality.
+local function takeItem(e, rec)
+    local IR = NS.ItemRead
+    local better = IR and IR.BetterLink(e.itemLink, rec.link) or e.itemLink
+    local moved = takeField(e, "itemLink", type(better) == "string" and better or nil)
+    local facts = type(rec.facts) == "table" and rec.facts or {}
+    moved = takeField(e, "ilvl", num(facts.ilvl)) or moved
+    moved = takeField(e, "quality", num(facts.quality)) or moved
+    return moved
+end
+
 local function takeSnaps(e, rec)
     local me, them, trade = verdictSnap(rec.me), verdictSnap(rec.them), tradeSnap(rec.trade)
     local moved = not (sameSnap(e.me, me) and sameSnap(e.them, them) and sameSnap(e.trade, trade))
     e.me, e.them, e.trade = me, them, trade
-    if num(e.ilvl) == nil and type(rec.facts) == "table" and num(rec.facts.ilvl) then
-        e.ilvl, moved = num(rec.facts.ilvl), true
-    end
-    return moved
+    return takeItem(e, rec) or moved
 end
 
---- Take a drop record's latest verdicts and trade estimate; a trade gone `no expired` makes the
+--- Take a drop record's latest verdicts, trade estimate, more complete link, level and quality;
+--- a trade gone `no expired` makes the
 --- outcome `expired` (H.Advance).
 --- @param e table
 --- @param rec table
