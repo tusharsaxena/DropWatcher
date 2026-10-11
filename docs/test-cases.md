@@ -179,7 +179,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (47)
+### test_window_shell.lua (49)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -225,6 +225,8 @@ Total.
 - shell: your own drop opens the window too, whatever showOwn says, and counts as new
 - shell: a minimized window the player closed opens minimized, its count rising
 - shell: a test placeholder opens the window while test mode is on, and a live drop does not then
+- shell: in a dungeon, turning test mode off closes the window its drops opened
+- shell: a test drop that reopens a window the player closed in test mode closes with test mode
 - shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
@@ -1209,7 +1211,7 @@ Total.
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 47 |
+| test_window_shell.lua | 49 |
 | test_window_group.lua | 35 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
@@ -1252,4 +1254,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1034** |
+| **Total** | **1036** |

@@ -730,6 +730,31 @@ test("shell: a test placeholder opens the window while test mode is on, and a li
     assertTrue(NS.IsWindowShown(), "test mode's drops follow the same rule")
 end)
 
+-- The dungeon variant of test_window's close rule: test mode's own drops auto-open the window (the
+-- pool is ready at once) before test mode marks it, and that open is still test mode's.
+test("shell: in a dungeon, turning test mode off closes the window its drops opened", function()
+    local NS, m = inDungeon()
+    m.seedGearJournal()
+    NS.SetTestMode(true)
+    assertEqual(#NS.LootFeed.Drops("test"), 16, "the test drops are in"); assertTrue(NS.IsWindowShown())
+    NS.SetTestMode(false)
+    assertFalse(NS.IsWindowShown(), "test mode opened it, so off closes it")
+    NS.ShowWindow()
+    NS.SetTestMode(true)
+    NS.SetTestMode(false)
+    assertTrue(NS.IsWindowShown(), "the player opened it, so it stays")
+end)
+
+test("shell: a test drop that reopens a window the player closed in test mode closes with test mode", function()
+    local NS = inDungeon()
+    NS.SetTestMode(true)
+    NS.HideWindow()
+    announce(NS, drop({ id = 1, test = true }))
+    assertTrue(NS.IsWindowShown())
+    NS.SetTestMode(false)
+    assertFalse(NS.IsWindowShown())
+end)
+
 test("shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off", function()
     local NS = inDungeon()
     announce(NS, drop({ id = 1, test = true }))

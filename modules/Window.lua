@@ -740,6 +740,8 @@ end
 -- next drop. Master `autoOpen` false, or the situation's own `autoOpen` false, turns it off. A
 -- minimized window stays minimized and counts the drop (`n new`). The frame is not protected
 -- (no secure template, no protected child), so opening it in combat is allowed and taints nothing.
+-- A test drop's open is test mode's (openedByTestMode), so turning test mode off closes it again:
+-- NS.SetTestMode fills the feed before Window.OnTestModeChanged, so the drops can open it first.
 local function maybeAutoOpen(rec)
     if NS.State.windowOpen == true or setting("autoOpen") == false then return end
     local Sit = NS.Situations
@@ -747,6 +749,7 @@ local function maybeAutoOpen(rec)
     if not Sit.ShouldAutoOpen(key) then return end
     NS.Debug(TAG, "auto-open: drop %s added in %s", tostring(rec.id), tostring(key))
     Window.Open()
+    openedByTestMode = rec.test == true
 end
 
 local function onDropAdded(id)

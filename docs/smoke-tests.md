@@ -199,7 +199,9 @@ samples among them, after a `/reload` too). My drops → the button reads `Offer
 an expired row's Trade window reads `Window passed` in full (its tooltip still says `Not tradeable`
 and why); a candidates cell still being read reads `1 checking`, the pill `CHECKING`. Look over
 every button and cell at the default and the minimum width → none ends in an ellipsis or is cut
-short. Result:
+short. Then in a Heroic dungeon (an auto-open situation), out of combat, with the window closed:
+`/dw test` → the window opens with the test rows; `/dw test` again → the window closes (test mode
+opened it, even though its drops arrived first). Result:
 
 ## Compat
 
