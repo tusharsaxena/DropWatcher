@@ -133,6 +133,27 @@ answer `true` with no call (no trade opens and nothing leaves the bags; the hand
 `NS.Sim.Live(fn)` runs `fn` with the ordinary members answering for the client again, which is how
 the simulator's own safety checks read the real world. `test_sim_core` holds all of this.
 
+## The world reads
+
+`core/CompatWorld.lua` loads between this file and `core/SimSeam.lua` (simulator spec §2, DW-72). It
+adds the stable reads of the group, a unit and the instance to `NS.Compat`: `GroupSize`
+(`GetNumGroupMembers`), `InRaid`, `InGroup(category)`, `InstanceGroupCategory`
+(`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`,
+`InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`), `DifficultyKnown`
+(`GetDifficultyInfo`) and `ChallengeModeActive` (`C_ChallengeMode.IsChallengeModeActive`). None is
+version-variant, so the compat rule does not ask for them here, and they are not counted above; they
+are `NS.Compat` members so the seam wraps them, because a module reading the global would bypass a
+running simulation and see the real, empty group. They answer the client's raw values (secrets
+included) and each caller guards them as before. `modules/Roster.lua`, `modules/Situations.lua`,
+`modules/Inspect.lua`, `modules/Asks.lua` and `modules/LootFeed.lua` read them.
+
+While a simulation runs, `modules/SimWorld.lua` answers them for the invented group and place, and
+answers the inspect members (`NotifyInspect`, guarded, schedules the reply; `InventoryItemLink`,
+`InventoryItemID`, `InventoryItemLevel` and `InspectSpecID` answer until `ClearInspectPlayer`),
+the bag members for your simulated drops (`BagSlotCount`, `BagItemLink`, `GetBagItemGUID`,
+`TradeTimeRemaining`), `InTradeRange`, `ChallengeMapName` and the trade window's members
+(`TradePartnerName`, `TradeItemLinks`, `IsTradeCompleteMessage`). `test_sim_events` holds these.
+
 ## The duration decoder
 
 The client writes a remaining time as unit terms joined by `TIME_UNIT_DELIMITER`, each term formatted
@@ -160,15 +181,16 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | Caller | Shims |
 |---|---|
 | `modules/Restrictions.lua` | `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive` |
-| `modules/Roster.lua` | `NormalizedRealm` |
+| `modules/Roster.lua` | `NormalizedRealm`; `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected` (`core/CompatWorld.lua`) |
+| `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |
 | `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `PlayerHasTransmog` |
 | `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc` |
 | `modules/LootParser.lua` | `FormatToPattern` |
-| `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel` |
-| `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName` |
+| `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |
+| `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo` (`core/CompatWorld.lua`) |
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade`, `InTradeRange`, `CursorHasItem`, `ClearCursor`, `GetBagItemGUID`, `BagSlotCount` |
-| `modules/Asks.lua` | `ChatSender` |
+| `modules/Asks.lua` | `ChatSender`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |
 | `modules/Scoring.lua` | `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
 | `modules/WindowGroup.lua` | `ItemIcon`, `ClassColor`, `InsertChatLink`, `DressUpItem` |
@@ -182,6 +204,8 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item) |
 | `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
 | `modules/SimRoster.lua` | `NormalizedRealm` (who shares your realm) |
+| `modules/SimWorld.lua` | `NormalizedRealm`, `BagSlotCount` (read past the seam); `GetDetailedItemLevel` (a member's slot level); `InstanceGroupCategory`. Its providers answer the members listed under the world reads |
+| `modules/SimEvents.lua` | `GroupSize`, `UnitName`, `UnitGUID`, `NormalizedRealm` (the encounter's group size, your own loot line, who shares your realm) |
 
 The secret guards (`IsSecret`, `IsSafeKey`) are read by most of the edges above on every client
 payload. `DecodeDuration`, `ParseTradeTimeRemaining`, `ReadTooltipLine` and `PawnItemData` are

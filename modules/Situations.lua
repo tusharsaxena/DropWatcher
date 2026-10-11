@@ -8,7 +8,8 @@ local _, NS = ...
 -- row, with the defaults (defaults/Profile.lua) for anything absent or malformed.
 --
 -- The edge, ReadInputs, is the only place this module touches the client: GetInstanceInfo,
--- IsInInstance, C_ChallengeMode.IsChallengeModeActive, IsInGroup / IsInRaid and GetDifficultyInfo.
+-- IsInInstance, C_ChallengeMode.IsChallengeModeActive, IsInGroup / IsInRaid and GetDifficultyInfo,
+-- each through NS.Compat (core/CompatWorld.lua), so a running simulation answers them.
 -- It runs on the six re-evaluation events of spec §6.1, all declared in NS.FEATURE_EVENTS so the
 -- stand-down takes them down, and sends SITUATION_CHANGED (key, previousKey) when the key moves.
 --
@@ -104,20 +105,16 @@ end
 -- falls back to the instance type instead of misclassifying (spec §6.1).
 local function confirmedDifficulty(id)
     if type(id) ~= "number" or id <= 0 then return nil end
-    if type(GetDifficultyInfo) ~= "function" or GetDifficultyInfo(id) == nil then return nil end
+    if not NS.Compat.DifficultyKnown(id) then return nil end
     return id
-end
-
-local function challengeModeActive()
-    local cm = C_ChallengeMode
-    return cm ~= nil and type(cm.IsChallengeModeActive) == "function" and cm.IsChallengeModeActive() == true
 end
 
 --- The classifier inputs, read from the client now. Read-only: safe in combat and stood down.
 --- @return table inputs
 function Sit.ReadInputs()
-    local inInstance, instanceType = IsInInstance()
-    local _, infoType, difficultyID = GetInstanceInfo()
+    local Compat = NS.Compat
+    local inInstance, instanceType = Compat.InstanceState()
+    local _, infoType, difficultyID = Compat.InstanceInfo()
     instanceType = instanceType or infoType or "none"
     difficultyID = confirmedDifficulty(difficultyID)
     local kind = C.DIFFICULTY_KIND[difficultyID]
@@ -125,11 +122,11 @@ function Sit.ReadInputs()
         inInstance            = inInstance == true,
         instanceType          = instanceType,
         difficultyID          = difficultyID,
-        isChallengeModeActive = challengeModeActive(),
+        isChallengeModeActive = Compat.ChallengeModeActive(),
         isDelve               = kind == "delve",
         isFollowerDungeon     = kind == "followerDungeon",
-        inGroup               = IsInGroup() == true,
-        inRaid                = IsInRaid() == true,
+        inGroup               = Compat.InGroup(),
+        inRaid                = Compat.InRaid(),
         isPvP                 = PVP_TYPE[instanceType] == true,
     }
 end

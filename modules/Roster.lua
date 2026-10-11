@@ -3,9 +3,10 @@ local _, NS = ...
 -- Name-Realm, the unit token, the classFile, the specID (once an inspect has read it) and the
 -- online state; and the resolver that turns a name or a GUID into a member.
 --
--- THE EDGE. Refresh reads the client: IsInRaid / IsInGroup / GetNumGroupMembers for the tokens
--- (raid1..N in a raid, player and party1..N-1 in a party, player alone otherwise), then UnitGUID,
--- UnitName, UnitClass and UnitIsConnected per token. The realm of a same-realm member comes from
+-- THE EDGE. Refresh reads the client through NS.Compat (core/CompatWorld.lua, so a running
+-- simulation answers it): IsInRaid / IsInGroup / GetNumGroupMembers for the tokens (raid1..N in a
+-- raid, player and party1..N-1 in a party, player alone otherwise), then UnitGUID, UnitName,
+-- UnitClass and UnitIsConnected per token. The realm of a same-realm member comes from
 -- NS.Compat.NormalizedRealm. It runs on GROUP_ROSTER_UPDATE (declared in NS.FEATURE_EVENTS, shared
 -- with modules/Situations.lua through core/DropWatcher.lua's dispatcher) and at the stand-up, and
 -- lazily on the first read.
@@ -51,33 +52,34 @@ end
 
 -- The unit tokens of the group now, in the client's order.
 local function unitTokens()
-    local n = GetNumGroupMembers() or 0
-    if IsInRaid() and n > 0 then
+    local Compat = NS.Compat
+    local n = Compat.GroupSize()
+    if Compat.InRaid() and n > 0 then
         local out = {}
         for i = 1, n do out[i] = "raid" .. i end
         return out
     end
     local out = { "player" }
-    if IsInGroup() then
+    if Compat.InGroup() then
         for i = 1, n - 1 do out[#out + 1] = "party" .. i end
     end
     return out
 end
 
 local function classFileOf(unit)
-    local _, classFile = UnitClass(unit)
+    local _, classFile = NS.Compat.UnitClass(unit)
     return plainName(classFile)
 end
 
 local function onlineOf(unit)
-    local online = UnitIsConnected(unit)
+    local online = NS.Compat.UnitIsConnected(unit)
     if NS.Compat.IsSecret(online) then return true end
     return online ~= false
 end
 
 -- Name, realm and Name-Realm of a unit; the name and full name are nil when unreadable.
 local function identityOf(unit, ownRealm)
-    local name, realm = UnitName(unit)
+    local name, realm = NS.Compat.UnitName(unit)
     name = plainName(name)
     realm = Ro.NormalizeRealm(realm) or ownRealm
     if not name then return nil, realm, nil end
@@ -86,7 +88,7 @@ end
 
 -- One member read off `unit`, or nil when its GUID cannot key one.
 local function readMember(unit, ownRealm, playerGUID)
-    local guid = UnitGUID(unit)
+    local guid = NS.Compat.UnitGUID(unit)
     if not NS.Compat.IsSafeKey(guid) or type(guid) ~= "string" then return nil end
     local name, realm, fullName = identityOf(unit, ownRealm)
     return {
@@ -96,7 +98,7 @@ local function readMember(unit, ownRealm, playerGUID)
 end
 
 local function playerGUID()
-    local guid = UnitGUID("player")
+    local guid = NS.Compat.UnitGUID("player")
     if NS.Compat.IsSafeKey(guid) then return guid end
     return nil
 end

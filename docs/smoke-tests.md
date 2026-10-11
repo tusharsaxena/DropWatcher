@@ -35,7 +35,7 @@ passed.
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..7 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); SIM-2..3 *reserved* for DW-73 (a full `key` run, a `raid` run with a large roster), SIM-4..5 *reserved* for DW-72 (the lockdown queue and its flush, a simulated trade into History), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), SIM-7 *reserved* for DW-73 (the automatic stop end to end) |
+| SIM-1..7 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); SIM-2..3 *reserved* for DW-73 (a full `key` run, a `raid` run with a large roster), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), SIM-7 *reserved* for DW-73 (the automatic stop end to end) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -855,6 +855,26 @@ join a group → `Simulation stopped: you joined a group.`; start one, then `/dw
 `Simulation stopped: the addon was disabled.` After a `/reload`, no simulation is running and
 `/dw history` shows no simulated drop. Result:
 
+**SIM-4. Inspect replies, the lockdown queue and its flush (DW-72).** Runs once `/dw sim` lands
+(DW-73); until then the headless `test_sim_events` covers it. Solo, outside an instance, with `/dw
+debug on`: `/dw sim start dungeon` → the Group drops tab's roster shows four invented members, and
+the footer's situation is the dungeon. `/dw sim loot 1 <member>` → the drop shows the looter's name
+(a member from another realm as Name-Realm) and, within a few seconds, a Them verdict; the debug log
+shows `[SIM] inspect of <member>: reply in <n>s` and no real inspect window opens. Record whether the
+member's spec shows on the drop's detail card (the broker reads it after its own clear; the
+simulator answers as the client does). `/dw sim pull` → the badge shows the encounter; press Ask on
+a member's drop → it is queued, nothing is printed. `/dw sim kill` → within a few seconds chat prints
+`[sim] WHISPER to <member>: <text>`, and the whisper tab shows nothing sent. Result:
+
+**SIM-5. Your own drops' trade windows and a simulated trade (DW-72).** Runs once `/dw sim` lands
+(DW-73); until then the headless `test_sim_events` covers it. `/dw sim start dungeon`, then `/dw
+sim loot 2 me` → My drops shows both, the first with about 9 minutes left (it warns at once, since
+the warning is at 10 minutes) and the second with about 2 hours; your real bags are unchanged.
+Offer the second to a member and press Trade → chat prints `[sim] Would hand the item to <unit>.` and
+no trade window opens. `/dw sim trade <its id>` → the History tab shows it `Traded away`; loot a
+member's drop and `/dw sim trade <its id>` → `Received`. After `/dw sim stop` the History tab shows
+only your real history. Result:
+
 **SIM-6. The item pool: the Encounter Journal and its fallback (DW-71).** Runs once `/dw sim` lands
 (DW-73); until then the headless `test_sim_pool` covers it. Solo, outside an instance, with `/dw
 debug on`: open the Encounter Journal, pick an older instance, a difficulty and a class filter,
@@ -933,4 +953,6 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | ASK-8 | DW-54, auto-ask | No client pass recorded yet |
 | ASK-9 | DW-62, auto-ask after leaving an encounter | No client pass recorded yet |
 | SIM-1 | DW-70, the simulator's core: the seam, its safety and the session log | No client pass recorded yet |
+| SIM-4 | DW-72, inspect replies, the lockdown queue and its flush | No client pass recorded yet |
+| SIM-5 | DW-72, your own drops' trade windows and a simulated trade | No client pass recorded yet |
 | SIM-6 | DW-71, the simulator's item pool and its fallback | No client pass recorded yet |

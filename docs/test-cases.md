@@ -1003,6 +1003,29 @@ Total.
 - sim roster: gear is drawn inside the band, from what the class can wear; the rest stays empty
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
+### test_sim_events.lua (20)
+
+- sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
+- sim lines: a locale that reorders its arguments is written in its own order
+- sim lines: a burst has one to three lines, your own when asked, and a looter from another realm
+- sim world: the roster, the situation and the announce channel read the invented party
+- sim world: in a raid you are raid1 and the members raid2 onward; the channel is RAID
+- sim world: the stop puts the real world back
+- sim loot: a member's line goes through the parser into the feed, under their GUID
+- sim loot: n random lines, and nothing without a running simulation or a pool
+- sim inspect: a looter is read through the broker's queue after the reply, never the fast path
+- sim inspect: a failing member times out; a member out of range waits and gives up
+- sim inspect: the reply delay is the session's seeded random source
+- sim encounter: a pull raises combat and the lockdown; the ask waits and goes out after the kill
+- sim encounter: loot after a kill joins the boss's group, named by the pull
+- sim encounter: a keystone run groups its loot and holds the ChallengeMode restriction
+- sim combat: the stop ends a combat edge it raised
+- sim own drops: they land in your bags with a trade window the trade timer counts down
+- sim own drops: the scenario sets the window and the ending-soon count
+- sim trade: your drop traded away and another's received land in the session's history log
+- sim trade: refused for an unknown drop, a real one and an expired own drop
+- sim stop: your simulated bag items leave the gear snapshot and the trade timer
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -1145,6 +1168,7 @@ Total.
 | test_auto_ask.lua | 25 |
 | test_sim_core.lua | 21 |
 | test_sim_pool.lua | 18 |
+| test_sim_events.lua | 20 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1154,4 +1178,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **948** |
+| **Total** | **968** |

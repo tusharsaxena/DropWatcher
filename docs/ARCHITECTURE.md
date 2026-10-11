@@ -42,14 +42,15 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Seventy authored files load from the TOC, in the standard's folder order; every one, its kind,
+Seventy-three authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
   seam (`Compat.lua`, the only caller of version-variant, deprecated and optional client APIs, with
   its pure text parsers in `TextParse.lua`, and the simulator's answer seam over it in
-  `SimSeam.lua`, which wraps every member that answers for the client), the
+  `SimSeam.lua`, which wraps every member that answers for the client, with the stable group,
+  unit and instance reads it must also answer in `CompatWorld.lua`), the
   game-data tables (`Constants.lua`, `ClassData.lua`), the session state, the addon object and its
   lifecycle (`DropWatcher.lua`, which also holds the host handlers every surface shares), and the
   migration runner.
@@ -63,9 +64,11 @@ its one-line responsibility and why its position is load-bearing or conventional
   `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
   `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`); and the
   recorded and opt-in features (`History.lua`, `Toast.lua`, `AutoAsk.lua`).
-- `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`) and its
-  item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`;
-  simulator spec §2, §3).
+- `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
+  item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
+  client answers about its world (`SimWorld.lua`: the group, the place, the inspect replies, your
+  simulated bag items and the trade window) and its event drivers (`SimEvents.lua`: loot lines,
+  pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3).
 - `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
   their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
@@ -284,11 +287,18 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
   and filed when the owner lifts the hold on GitHub writes.
 - **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
   headless mock does not model; PROFILE-1 is its in-game check.
-- **The simulator** (milestone M7) has its core, its item pool and its group: the session, the
-  seam, its safety, the session-only history log, the pool read from the Encounter Journal (or your
-  own gear) and the invented members with their gear. No `/dw sim` verb starts it yet, and the
-  group reaches no roster, inspect reply or loot line until the event drivers (DW-72) and the
-  scenarios (DW-73) land.
+- **The simulator** (milestone M7) has its core, its item pool, its group and its event drivers:
+  the session, the seam, its safety, the session-only history log, the pool read from the
+  Encounter Journal (or your own gear), the invented members with their gear, and the drivers that
+  feed loot lines, encounters, a keystone run, combat, inspect replies, your own drops' trade
+  windows and a completed trade into the real engine. No `/dw sim` verb starts it yet, and there is
+  no timeline: the scenarios, `run` and `step` land with DW-73.
+- **A simulated member's spec** stays unknown: the inspect broker reads the spec after it has
+  cleared its own inspect (its flight ends first), and the simulator lets the inspect data go on
+  `ClearInspectPlayer`, as the client does. Whether the live client still answers
+  `GetInspectSpecialization` after the clear is unconfirmed (SIM-4); the headless mock keeps it.
+- **A simulated loot line** carries no `ENCOUNTER_LOOT_RECEIVED` or `C_LootHistory` twin, so the
+  feed's de-duplication across sources is not exercised by a simulation (`test_feed` covers it).
 - **The simulator's item pool** reads the newest Encounter Journal tier, which is the current
   season's on a live client; a season whose dungeons sit in older tiers is read only as far as the
   newest tier lists them. Its difficulty ids are the journal's (Mythic Keystone 8 for a key); an

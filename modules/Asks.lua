@@ -128,9 +128,10 @@ end
 function A.AnnounceChannel()
     local want = A.Settings().announceChannel
     if want ~= "auto" then return want end
-    if IsInGroup(LE_PARTY_CATEGORY_INSTANCE or 2) then return "INSTANCE_CHAT" end
-    if IsInRaid() then return "RAID" end
-    if IsInGroup() then return "PARTY" end
+    local Compat = NS.Compat
+    if Compat.InGroup(Compat.InstanceGroupCategory()) then return "INSTANCE_CHAT" end
+    if Compat.InRaid() then return "RAID" end
+    if Compat.InGroup() then return "PARTY" end
     return nil
 end
 
@@ -446,7 +447,7 @@ end
 
 local function gone(a)
     if a.test then return false end
-    if a.target == A.GROUP then return not IsInGroup() end
+    if a.target == A.GROUP then return not NS.Compat.InGroup() end
     return NS.Roster.Resolve(a.target) == nil
 end
 

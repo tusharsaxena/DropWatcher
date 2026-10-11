@@ -288,7 +288,7 @@ local scheduleRead
 
 -- Whether `unit` still names `guid` (the client may have moved the token since the event).
 local function unitNames(unit, guid)
-    local live = UnitGUID(unit)
+    local live = NS.Compat.UnitGUID(unit)
     return NS.Compat.IsSafeKey(live) and live == guid
 end
 
@@ -325,7 +325,7 @@ end
 local function unitOf(guid)
     local m = NS.Roster.Get(guid)
     if not (m and m.online and m.unit) then return nil end
-    local live = UnitGUID(m.unit)
+    local live = NS.Compat.UnitGUID(m.unit)
     if not NS.Compat.IsSafeKey(live) or live ~= guid then return nil end
     return m.unit
 end
@@ -592,7 +592,7 @@ end
 --- @param unit any
 function I.OnInventoryChanged(unit)
     if NS.Compat.IsSecret(unit) or type(unit) ~= "string" or unit == "player" then return end
-    local guid = UnitGUID(unit)
+    local guid = NS.Compat.UnitGUID(unit)
     if not NS.Compat.IsSafeKey(guid) or not NS.Roster.Get(guid) then return end
     local e = store().entries[guid]
     if not isGood(e) or now() - e.at < I.INVALIDATE_GRACE then return end
@@ -670,7 +670,7 @@ function NS.addon.OnInspectRosterEvent(_, event)
 end
 
 function NS.addon.OnInspectWorldEvent(_, event)
-    if IsInInstance() == true then I.ScheduleWarmup(event) end
+    if NS.Compat.InstanceState() then I.ScheduleWarmup(event) end
 end
 
 function NS.addon.OnInspectCombatEvent(_, event)

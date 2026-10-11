@@ -149,6 +149,21 @@ NS.SimPool.Build(opts, done) ─> the journal's frame shown? ─> look again eve
 NS.SimRoster.Create(opts) ─> Members (pure, seeded) ─> Gear per member from the pool's gear entries
                           inside the band around your average item level ─> NS.Sim.MarkGUID
                           ─> State.sim.members
+NS.SimEvents.Join() ─> Fire(GROUP_ROSTER_UPDATE), Fire(PLAYER_ENTERING_WORLD) ─> the roster, the situation
+                   and the inspect warm-up read the group and the place NS.SimWorld answers through
+                   NS.Compat (core/CompatWorld.lua: the group, a unit, the instance)
+NS.SimEvents.Loot(n, who) ─> Plan (pure, seeded) ─> your own drop: NS.SimWorld.AddBagItem (its trade window)
+                         ─> WriteLine from LOOT_ITEM* ─> Fire(CHAT_MSG_LOOT, text, …, lineID, guid)
+                         ─> the real parser ─> the feed ─> BAG_UPDATE_DELAYED (your own) ─> the trade timer
+the broker's NotifyInspect (guarded) ─> NS.SimWorld schedules INSPECT_READY(guid) after a seeded delay
+                         ─> the broker reads the member's slots and spec (answered until ClearInspectPlayer)
+NS.SimEvents.Pull() ─> Fire(ENCOUNTER_START) ─> Combat(true): PLAYER_REGEN_DISABLED + Combat restriction
+                   ─> SetRestriction(Encounter, on) ─> an ask now is queued
+NS.SimEvents.Kill() ─> Fire(ENCOUNTER_END, …, 1) ─> Combat(false) ─> SetRestriction(Encounter, off)
+                   ─> RestrictionChanged (chat allowed) ─> the queue flushes, printed "[sim] …"
+NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with the ChallengeMode restriction
+NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
+                   TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
 ```
 
 The simulator never writes a verdict, a trade estimate or an inspect state: what it invents enters

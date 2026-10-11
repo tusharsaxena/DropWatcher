@@ -47,8 +47,12 @@ core\TextParse.lua
 # Conventional: NS.Compat (every version-variant client call and the secret guards) is read inside
 # functions only; it needs LibStub and NS.TextParse (above) at load.
 core\Compat.lua
+# LOAD-BEARING: adds the stable world reads (the group, a unit, the instance) to NS.Compat; it
+# loads before core\SimSeam.lua (below), which wraps every member at load. Read inside functions only.
+core\CompatWorld.lua
 # LOAD-BEARING: publishes NS.Sim (the simulator's answer seam) and wraps every NS.Compat member that
-# answers for the client, at load, right after core\Compat.lua and before any file below reads one.
+# answers for the client, at load, right after core\Compat.lua and core\CompatWorld.lua and before any
+# file below reads one.
 # It needs NS.Compat (above), NS.Print and NS.L (above) at load.
 core\SimSeam.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
@@ -275,6 +279,14 @@ modules\SimRoster.lua
 # at load, and reads NS.Constants, NS.ClassData, NS.State and NS.L at load. NS.Sim, NS.Gear and
 # NS.Compat are read at call time.
 modules\SimPool.lua
+# Conventional: publishes NS.SimWorld, the simulated world's client answers, and registers them as
+# providers on NS.Sim (core\SimSeam.lua) at load; reads NS.Constants and NS.L at load. NS.SimRoster,
+# NS.SimPool, NS.SimEvents (below) and NS.Compat are read at call time.
+modules\SimWorld.lua
+# Conventional: publishes NS.SimEvents, the simulator's event drivers, and adds its cleanup step to
+# NS.Sim (modules\Sim.lua) at load. NS.SimWorld, NS.SimPool, NS.Roster, NS.LootFeed and NS.Compat
+# are read at call time.
+modules\SimEvents.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

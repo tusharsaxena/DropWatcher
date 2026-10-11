@@ -10,11 +10,12 @@ local _, NS = ...
 -- payload shapes. It never sets a verdict, a trade estimate or an inspect state itself. Test mode's
 -- placeholders (modules/TestMode.lua) are the opposite: the two are exclusive.
 --
---   State.sim = { sim = true, scenario, situation, startedAt, guids = { [guid] = true },
+--   State.sim = { sim = true, scenario, situation, startedAt, seed, guids = { [guid] = true },
 --                 timers = { [handle] = true }, restrictions = { [type value] = true },
 --                 lockdown, log = { v, groups }, events,
 --                 pool, poolBuild,   -- modules/SimPool.lua's (the item pool and its build)
---                 members }          -- modules/SimRoster.lua's (the invented group and its gear)
+--                 members,           -- modules/SimRoster.lua's (the invented group and its gear)
+--                 world, drive }     -- modules/SimWorld.lua's and modules/SimEvents.lua's
 --   Only the simulator's own modules write their fields; everything else reads them.
 --
 -- SAFETY (spec §5).
@@ -176,6 +177,17 @@ function Sim.After(delay, fn)
     return t
 end
 
+--- Deliver `event` to its handlers with the simulation already ended: only for a stop's cleanup
+--- step (AddCleanup), which undoes an edge the simulation raised (its combat, its bag items) once
+--- the seam is off, so the handlers read the real client. Answers how many ran.
+--- @param event string
+--- @return number
+function Sim.DeliverForCleanup(event, ...)
+    if Sim.active or NS.IsStoodDown() then return 0 end
+    NS.Debug(TAG, "cleanup event %s", tostring(event))
+    return deliver(event, ...)
+end
+
 --- Add a step the stop runs, `fn(session)`, after the queued asks are canceled and the seam is off
 --- (the later items' own state: the roster they invented, their pool). Called under pcall.
 --- @param fn function
@@ -238,7 +250,7 @@ for key, fn in pairs(PROVIDERS) do Sim.SetProvider(key, fn) end
 
 --- Start a simulation (spec §4, §5): refused, with the line printed, per Refusal. `opts` names the
 --- scenario and the situation it simulates; the later items build the roster and the pool.
---- @param opts table|nil { scenario, situation }
+--- @param opts table|nil { scenario, situation, seed }
 --- @return boolean started
 --- @return string|nil refusal
 function Sim.Start(opts)
@@ -250,6 +262,7 @@ function Sim.Start(opts)
     opts = type(opts) == "table" and opts or {}
     State.sim = {
         sim = true, scenario = opts.scenario or "custom", situation = opts.situation, startedAt = GetTime(),
+        seed = tonumber(opts.seed),
         guids = {}, timers = {}, restrictions = {}, lockdown = false, log = { v = 1, groups = {} }, events = 0,
     }
     Sim.counts = { sends = 0, handOvers = 0 }

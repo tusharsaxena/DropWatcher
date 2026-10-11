@@ -202,8 +202,8 @@ local function encounterLabel(s, id)
 end
 
 local function areaName()
-    if IsInInstance() == true then
-        local name = plainString((GetInstanceInfo()))
+    if NS.Compat.InstanceState() then
+        local name = plainString((NS.Compat.InstanceInfo()))
         if name then return name end
     end
     return L["Open world"]

@@ -208,6 +208,19 @@ random source, a party of four and a raid of nine to nineteen with distinct name
 each spec its class's, the gear drawn inside the band from what the class can wear with the rest
 left empty and the off hand empty behind a two-hander, and the group kept on the session and
 forgotten by the stop),
+`test_sim_events` (the simulator's event drivers and its world: every `LOOT_ITEM*` shape written
+from its GlobalString and read back by the parser, a reordering locale written in its own order, a
+burst's size, your own lines and its looter from another realm; the roster, the situation and the
+announce channel reading the invented party or raid while a live read sees the real world, and the
+stop putting it back; a member's line, bare or Name-Realm, reaching the feed under their GUID with
+saved history untouched; an inspect read through the broker's queue after the reply, never the
+fast path, giving the looter's verdict, a failing member timing out and one out of range giving up,
+the reply delay replayed by its seed; a pull's combat edge and Encounter restriction with the ask
+queued and flushed (printed) after the kill, loot after a kill grouped under the boss, a wipe not
+counted, a keystone run's group and ChallengeMode restriction; your own drops in your bags with
+their trade windows (the ending-soon one closing) and the scenario's window; a simulated trade
+settling `tradedAway` and `received` in the session's log with no real trade, and its refusals; and
+the stop ending the combat edge and the bag items),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
