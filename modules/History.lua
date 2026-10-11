@@ -19,8 +19,10 @@ local _, NS = ...
 --
 -- THE SIMULATOR (simulator spec §5). While a simulation runs, the log is the simulation's own
 -- session-only log (NS.Sim.HistoryLog, modules/Sim.lua), never `global.history`: Log() answers it,
--- the History tab shows it, and a simulated drop (`rec.sim`) is never recorded anywhere else. The
--- stop lets it go (ReleaseLog) and the tab shows the account's log again.
+-- the History tab shows it, and a simulated drop (`rec.sim`) is never recorded anywhere else. A
+-- real drop or trade that arrives while one runs is the account's (LogFor reads the record's or the
+-- trade's own origin). The stop lets the simulation's log go (ReleaseLog) and the tab shows the
+-- account's log again.
 --
 -- RECORDING. A live drop's DropAdded records it (a test drop never is) under its feed group, keyed
 -- by the group's key and this session's start, so a group of an earlier session never collects
@@ -317,6 +319,16 @@ function H.Log()
     return H.Store()
 end
 
+--- The log a record or trade of this origin is written to: the running simulation's for a
+--- simulated one (nil once it has stopped), the account's (H.Store) for a real one.
+--- @param sim any the origin's `sim` flag
+--- @return table|nil
+function H.LogFor(sim)
+    if not sim then return H.Store() end
+    local log = NS.Sim.active and NS.Sim.HistoryLog()
+    return log and H.Normalize(log) or nil
+end
+
 --- A stopped simulation's log let go: every entry leaves the session index, and the History tab
 --- reads the account's log again (HistoryChanged).
 --- @param log table|nil
@@ -386,9 +398,9 @@ end
 function H.OnDropAdded(id)
     local rec = NS.LootFeed.Get(id)
     if not rec or rec.test or index[id] then return end
-    -- A simulated drop goes to the simulation's log only, never the account's.
-    if rec.sim and not NS.Sim.active then return end
-    local hist = H.Log()
+    -- A simulated drop goes to the simulation's log only; a real one to the account's, even while
+    -- a simulation runs (the record's own origin decides, never whether one runs).
+    local hist = H.LogFor(rec.sim)
     if not hist then return end
     index[id] = H.Record(hist, groupInfo(rec), H.Snapshot(rec, clock()), H.Cap())
     changed()
@@ -452,7 +464,8 @@ end
 
 --- TRADE_SHOW: a trade opened, with whom.
 function H.OnTradeShow()
-    trade = { partner = NS.Compat.TradePartnerName(), accepted = false, given = {}, received = {} }
+    trade = { partner = NS.Compat.TradePartnerName(), accepted = false, given = {}, received = {},
+        sim = NS.Sim.IsDelivering and NS.Sim.IsDelivering() or nil }
     readItems()
 end
 
@@ -484,7 +497,7 @@ function H.OnTradeAccept(playerAccepted, targetAccepted)
 end
 
 local function settle(t)
-    local hist = H.Log()
+    local hist = H.LogFor(t.sim)
     if not hist then return 0 end
     local n = 0
     for _, m in ipairs(H.MatchTrade(hist, t)) do
@@ -515,7 +528,7 @@ function H.OnInfoMessage(messageType, message)
     trade = nil
     if not t then return end
     local offer = t.offer or t
-    local done = { partner = t.partner, given = offer.given, received = offer.received }
+    local done = { partner = t.partner, given = offer.given, received = offer.received, sim = t.sim }
     NS.Debug("TRADE", "trade with %s completed: gave %d, got %d", tostring(t.partner), #done.given,
         #done.received)
     if settle(done) > 0 then changed() end

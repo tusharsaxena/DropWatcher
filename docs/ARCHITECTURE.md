@@ -130,8 +130,11 @@ time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice i
 account. `global.history.v` and `global.history.groups` are the history's own record, written by
 `modules/History.lua` alone (on a recorded drop, an outcome, a completed trade, the cap and Clear
 history); it never replaces `global.history` whole, since the cap row's value lives in it. While a simulation
-runs, History writes the simulation's session-only log instead (`NS.Sim.HistoryLog`,
-`modules/Sim.lua`), never `global.history`, and the stop lets that log go (simulator spec §5).
+runs, History writes a simulated drop (`sim = true`) and a simulated trade to the simulation's
+session-only log instead (`NS.Sim.HistoryLog`, `modules/Sim.lua`), never `global.history`, and the
+stop lets that log go (simulator spec §5). A drop or trade is simulated only when `Sim.Fire`
+delivered the event that made it (`NS.Sim.IsDelivering`): a real loot line or trade that arrives
+while a simulation runs is real, keeps the real situation and is saved (`History.LogFor`).
 `global.minimap.minimapPos` is LibDBIcon's own
 write into the table the launcher hands it. The load pass is `NS:RunMigrations`
 (`core/Database.lua`), whose step 2 (`NS.RepairStoredSettings`) drops a stored value a row now
@@ -253,7 +256,10 @@ While a simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`c
 keeps the chat sender, the inspect calls, the trade actions and `ClearCursor` from the client
 altogether: a send is printed with `[sim]`, a hand-over is printed, and nothing is inspected,
 picked up or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
-simulated restrictions, so nothing it queued can reach the real sender.
+simulated restrictions, so nothing it queued can reach the real sender. `Sim.Fire` calls each
+handler under `pcall`, as the client's event dispatch isolates it, and the stop runs each cleanup
+step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
+failure is a `SIM` debug line.
 The addon's two confirmations, Clear history (`modules/WindowHistory.lua`) and Reset all settings
 (`settings/Schema.lua`), set `preferredIndex = 3`, so neither shares a StaticPopup slot with
 Blizzard's own dialogs (DW-62).

@@ -196,6 +196,8 @@ the guarded sender prints `[sim]` and never reaches the client (an ask through t
 edge included), no real inspect or trade, each refusal and the line it prints, test mode refused
 while one runs, an event delivered to the handlers its registration calls, the simulated Encounter
 restriction and lockdown, its timers, the session-only history log with saved history untouched,
+a real drop or trade arriving while one runs kept real and saved, a raising handler or stop step
+isolated so the driver and the rest of the cleanup go on,
 a stop that takes its drops, groups, inspect entries and restrictions and leaves a real drop, a
 queued ask canceled before the lift so it never goes out, the situation re-read, the automatic stop
 on joining a group or entering an instance, and the stand-down),

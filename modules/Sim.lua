@@ -37,8 +37,10 @@ local _, NS = ...
 --     themselves with their groups and the encounter context (NS.LootFeed.RemoveWhere), the inspect
 --     entries of its members, the roster, the log, the trade timer's entries (a fresh scan) and the
 --     situation (the classifier re-reads the real one).
+--     Every step runs under pcall, so one that raises never skips the rest (nor the stand-down).
 --   * Everything it invents carries `sim = true` (the session, the feed's drops, the history
---     entries), so a stray one is identifiable.
+--     entries), so a stray one is identifiable. Only what Fire delivers is invented (IsDelivering):
+--     a real loot line or trade that arrives while a simulation runs stays real and is saved.
 
 local Sim = NS.Sim
 local State = NS.State
@@ -135,16 +137,31 @@ end
 
 -- ── events and timers ───────────────────────────────────────────────────────────────────────
 
--- Every handler the registration of `event` calls, in row order, as the client would call them.
+-- Every handler the registration of `event` calls, in row order, as the client would call them:
+-- each one isolated, as the client's event dispatch isolates it, so a handler that raises never
+-- unwinds into the driver that fired the event (its sequence and the timeline go on). The failure
+-- is a SIM debug line.
 local function deliver(event, ...)
     local DW, n = NS.addon, 0
     for _, row in ipairs(NS.FEATURE_EVENTS) do
         if row[1] == event then
-            DW[row[2]](DW, event, ...)
+            local ok, err = pcall(DW[row[2]], DW, event, ...)
+            if not ok then
+                NS.Debug(TAG, "handler %s for %s failed: %s", tostring(row[2]), tostring(event), NS.SafeToString(err))
+            end
             n = n + 1
         end
     end
     return n
+end
+
+--- True only while Fire is delivering a simulated event: what its handlers make (a drop, a trade)
+--- is the simulation's. A real event that arrives while a simulation runs is never delivered
+--- through Fire, so what it makes stays real (spec §5: only what the simulator invented carries
+--- `sim = true`).
+--- @return boolean
+function Sim.IsDelivering()
+    return Sim.delivering == true
 end
 
 --- Deliver game event `event` with payload `...` to the handlers its registration calls (spec §2).
@@ -157,7 +174,11 @@ function Sim.Fire(event, ...)
     if not (Sim.active and s) or NS.IsStoodDown() then return 0 end
     s.events = s.events + 1
     NS.Debug(TAG, "event %s", tostring(event))
-    return deliver(event, ...)
+    local outer = Sim.delivering
+    Sim.delivering = true
+    local n = deliver(event, ...)
+    Sim.delivering = outer
+    return n
 end
 
 --- Run `fn` after `delay` seconds while this simulation still runs; the stop cancels it. Nil when
@@ -305,16 +326,33 @@ local function cleanFeed()
     NS.LootFeed.RemoveWhere(isSim, true)
 end
 
-local function cleanEngine(s)
-    runCleanups(s)
-    liftRestrictions(s)
-    cleanFeed()
+local function forgetMembers(s)
     for guid in pairs(s.guids) do NS.Inspect.Forget(guid) end
-    NS.Roster.Refresh("simStop")
-    NS.History.ReleaseLog(s.log)
-    NS.TradeTimer.Scan("simStop")
-    NS.Situations.Refresh("simStop")
+end
+
+local function refreshWindow()
     if NS.Window and NS.Window.IsShown() then NS.Window.Refresh() end
+end
+
+-- The stop's engine steps, in order. Each runs under pcall (step), so one that raises never skips
+-- the rest, nor the stand-down steps after the stop.
+local ENGINE_STEPS = {
+    { "cleanups",     runCleanups },
+    { "restrictions", liftRestrictions },
+    { "feed",         function() cleanFeed() end },
+    { "inspect",      forgetMembers },
+    { "roster",       function() NS.Roster.Refresh("simStop") end },
+    { "log",          function(s) NS.History.ReleaseLog(s.log) end },
+    { "tradeTimer",   function() NS.TradeTimer.Scan("simStop") end },
+    { "situation",    function() NS.Situations.Refresh("simStop") end },
+    { "window",       refreshWindow },
+}
+
+local function cleanEngine(s)
+    for _, step in ipairs(ENGINE_STEPS) do
+        local ok, err = pcall(step[2], s)
+        if not ok then NS.Debug(TAG, "stop step %s failed: %s", step[1], NS.SafeToString(err)) end
+    end
 end
 
 --- End the running simulation and clean up everything it made (spec §5). `reason` is `stop` (the
@@ -327,8 +365,9 @@ function Sim.Stop(reason)
     reason = STOP_TEXT[reason] and reason or "stop"
     cancelTimers(s)
     -- While the seam still guards the sender: a queued ask must never go out after the stop.
-    NS.Asks.CancelQueued("simStop")
-    Sim.active, State.sim = false, nil
+    local ok, err = pcall(NS.Asks.CancelQueued, "simStop")
+    if not ok then NS.Debug(TAG, "stop step asks failed: %s", NS.SafeToString(err)) end
+    Sim.active, State.sim, Sim.delivering = false, nil, nil
     cleanEngine(s)
     NS.Debug(TAG, "simulation stopped (%s): %d events, %d sends printed", reason, s.events, Sim.counts.sends)
     NS.Print(L[STOP_TEXT[reason]])

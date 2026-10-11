@@ -604,15 +604,23 @@ local function start(rec)
     return judge(rec, facts)
 end
 
+-- Simulated only while Sim.Fire delivers (spec §5); a real drop during a sim keeps the real situation.
+local function origin()
+    local Sim, Sit = NS.Sim, NS.Situations
+    if Sim.delivering or not Sim.active then return Sim.delivering or nil, Sit.Current() end
+    return nil, Sim.Live(function() return Sit.Classify(Sit.ReadInputs()) end)
+end
+
 local function newRecord(s, r)
     s.seq = s.seq + 1
     local t = now()
+    local sim, situation = origin()
     return {
         id = s.seq, feed = r.test and "test" or "live", test = r.test, force = r.force, link = r.link,
         itemID = r.itemID, qty = r.qty or 1, kind = r.kind or "loot", bonusRoll = r.kind == "bonus",
-        looter = r.looter, isMine = r.looter.isSelf == true, at = t, situation = NS.Situations.Current(),
+        looter = r.looter, isMine = r.looter.isSelf == true, at = t, situation = situation,
         encounterID = r.encounterID, sources = { [r.source] = 1 }, source = r.source,
-        group = groupSpec(s, r.encounterID, t), state = "new", sim = NS.Sim.active or nil,
+        group = groupSpec(s, r.encounterID, t), state = "new", sim = sim,
     }
 end
 

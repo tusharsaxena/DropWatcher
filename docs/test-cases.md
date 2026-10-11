@@ -958,7 +958,7 @@ Total.
 - auto-ask edge: in test mode a placeholder's ask is printed, never sent
 - auto-ask: the diagnostics' messaging section reports auto-ask
 
-### test_sim_core.lua (21)
+### test_sim_core.lua (25)
 
 - sim seam: every Compat member that answers for the client is wrapped; the pure ones are not
 - sim seam: a provider answers only while a simulation runs; Live reads the client again
@@ -975,6 +975,10 @@ Total.
 - sim restrictions: Encounter and the lockdown are answered by the client seam and stop the sends
 - sim timers: run while the simulation does, and never after its stop
 - sim history: drops go to the session log, never to DropWatcherDB.global.history
+- sim history: a real drop while a simulation runs is real: saved, and it survives the stop
+- sim history: a real trade while a simulation runs settles against the saved history
+- sim fire: a handler that raises never unwinds into the driver; the later handlers run
+- sim stop: a step that raises never skips the rest of the cleanup
 - sim stop: its drops, groups, inspect entries, restrictions and lockdown go; real drops stay
 - sim stop: a queued ask is canceled before the lift, so it never goes out
 - sim stop: the situation is classified from the real client again
@@ -1185,7 +1189,7 @@ Total.
 | test_history.lua | 28 |
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
-| test_sim_core.lua | 21 |
+| test_sim_core.lua | 25 |
 | test_sim_pool.lua | 18 |
 | test_sim_events.lua | 20 |
 | test_sim_scenario.lua | 16 |
@@ -1198,4 +1202,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **984** |
+| **Total** | **988** |

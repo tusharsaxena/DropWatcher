@@ -35,7 +35,7 @@ passed.
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..7 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the SIM chip, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73) |
+| SIM-1..8 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the SIM chip, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -923,6 +923,13 @@ real group invite mid-run → `Simulation stopped: you joined a group.`, the SIM
 step plays, and the footer shows the real situation. Start one, then zone into an instance (a
 follower dungeon will do) → `Simulation stopped: you entered an instance.` Result:
 
+**SIM-8. Real loot during a simulation stays real (DW-70 review).** The headless `test_sim_core`
+(`sim history: a real drop while a simulation runs …`) covers the same ground. Solo in the open
+world: `/dw sim start world`, then loot a real item from a mob or chest → it appears in the feed
+with your real situation (solo), not the simulated group's, and it is not marked as simulated. `/dw sim stop` → the simulated
+drops go, the real one stays in the feed, and the History tab (the account's log again) shows it.
+`/reload` → it is still in History. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -993,3 +1000,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-5 | DW-72, your own drops' trade windows and a simulated trade | No client pass recorded yet |
 | SIM-6 | DW-71, the simulator's item pool and its fallback | No client pass recorded yet |
 | SIM-7 | DW-73, the verbs' refusals and the automatic stop end to end | No client pass recorded yet |
+| SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet |

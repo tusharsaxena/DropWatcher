@@ -40,6 +40,15 @@ local function drop(NS, m, id, looter)
     return dropID
 end
 
+-- A drop the simulator invented: made while Fire delivers (Sim.IsDelivering), as its loot lines are.
+local function simDrop(NS, m, id, looter)
+    NS.Sim.delivering = true
+    local ok, dropID = pcall(drop, NS, m, id, looter)
+    NS.Sim.delivering = nil
+    assert(ok, dropID)
+    return dropID
+end
+
 local function printed(m, needle)
     local n = 0
     for _, line in ipairs(m.prints) do
@@ -106,7 +115,7 @@ test("sim seam: an ask goes through the real messaging edge and is printed, neve
     local NS, m, Sim = solo()
     Sim.Start({ scenario = "test" })
     withBrakk(NS, m)
-    local id = drop(NS, m, 300, "Brakk")
+    local id = simDrop(NS, m, 300, "Brakk")
     local state = NS.Asks.Request("ask", "Brakk", id)
     assertEqual(state, "sent", "the edge ran its whole pipeline")
     assertEqual(#m.chatSent, 0)
@@ -225,7 +234,7 @@ test("sim history: drops go to the session log, never to DropWatcherDB.global.hi
     local storedDrops = #stored.groups[1].drops
     Sim.Start({ scenario = "test" })
     assertEqual(#NS.History.Groups(), 0, "the History tab shows the simulation's log")
-    local id = drop(NS, m, 300, nil)
+    local id = simDrop(NS, m, 300, nil)
     assertTrue(NS.LootFeed.Get(id).sim, "the feed's drop carries sim = true")
     assertNil(NS.LootFeed.Get(real).sim)
     local groups = NS.History.Groups()
@@ -240,6 +249,81 @@ test("sim history: drops go to the session log, never to DropWatcherDB.global.hi
     assertEqual(NS.History.Groups()[1].drops[1].itemID, 200)
 end)
 
+test("sim history: a real drop while a simulation runs is real: saved, and it survives the stop", function()
+    local NS, m, Sim = solo()
+    Sim.Start({ scenario = "test" })
+    local stored = NS.addon.db.global.history
+    -- red under: newRecord stamping `sim = NS.Sim.active` (modules/LootFeed.lua), or DropAdded
+    -- writing H.Log() (modules/History.lua): the real drop goes to the session log and is lost
+    local id = drop(NS, m, 300, nil)
+    assertNil(NS.LootFeed.Get(id).sim, "a real loot line is not the simulation's")
+    assertEqual(NS.LootFeed.Get(id).situation, "solo", "its situation is the real one")
+    assertEqual(#stored.groups, 1, "it is saved")
+    assertEqual(stored.groups[1].drops[1].itemID, 300)
+    Sim.Stop()
+    assertTrue(NS.LootFeed.Get(id) ~= nil, "the stop leaves it in the feed")
+    assertEqual(#stored.groups, 1); assertTrue(NS.History.EntryOf(id) ~= nil, "and in the history")
+end)
+
+test("sim history: a real trade while a simulation runs settles against the saved history", function()
+    local NS, m, Sim = solo()
+    withBrakk(NS, m)
+    local real = drop(NS, m, 200, "Brakk")
+    m.setGroup({})
+    NS.Roster.Refresh("test")
+    assertTrue(Sim.Start({ scenario = "test" }))
+    m.units.NPC = { name = "Brakk" }
+    m.__fire("TRADE_SHOW")
+    m.tradeItems.target, m.tradeItems.player = { link(200) }, {}
+    m.__fire("TRADE_TARGET_ITEM_CHANGED", 1)
+    m.__fire("TRADE_ACCEPT_UPDATE", 0, 1)
+    m.__fire("TRADE_CLOSED")
+    -- red under: settle() matching against H.Log(), the simulation's log (modules/History.lua)
+    m.__fire("UI_INFO_MESSAGE", m.LE_GAME_ERR_TRADE_COMPLETE, m.ERR_TRADE_COMPLETE)
+    assertEqual(NS.History.OutcomeOf(real), "received")
+    Sim.Stop()
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Isolation: a handler or a stop step that raises
+-- ---------------------------------------------------------------------------------------------
+
+test("sim fire: a handler that raises never unwinds into the driver; the later handlers run", function()
+    local NS, m, Sim = solo()
+    Sim.Start({ scenario = "test" })
+    table.insert(NS.FEATURE_EVENTS, 1, { "ENCOUNTER_START", "OnSimTestBoom" })
+    NS.addon.OnSimTestBoom = function() error("boom") end
+    -- red under: deliver() calling the handlers without pcall (modules/Sim.lua)
+    local ok, n = pcall(Sim.Fire, "ENCOUNTER_START", 2900, "Sim Boss", 16, 20)
+    table.remove(NS.FEATURE_EVENTS, 1)
+    NS.addon.OnSimTestBoom = nil
+    assertTrue(ok, "the driver goes on"); assertTrue(n > 1)
+    assertTrue(NS.LootFeed.Stats().encounter ~= nil, "the later handlers ran")
+    assertFalse(Sim.IsDelivering(), "the delivery ended")
+    Sim.Stop()
+    assertEqual(#m.chatSent, 0)
+end)
+
+test("sim stop: a step that raises never skips the rest of the cleanup", function()
+    local NS, m, Sim = solo()
+    Sim.Start({ scenario = "test" })
+    Sim.MarkGUID(BRAKK)
+    withBrakk(NS, m)
+    local id = simDrop(NS, m, 301, "Brakk")
+    local log = Sim.HistoryLog()
+    m.setGroup({})
+    NS.State.situation = "mythicPlus"
+    local remove = NS.LootFeed.RemoveWhere
+    NS.LootFeed.RemoveWhere = function() error("boom") end
+    -- red under: cleanEngine running its steps without pcall (modules/Sim.lua)
+    local ok = pcall(Sim.Stop)
+    NS.LootFeed.RemoveWhere = remove
+    assertTrue(ok, "the stop finished"); assertFalse(Sim.IsActive())
+    assertNil(NS.Inspect.Get(BRAKK), "the inspect entries went")
+    assertEqual(#log.groups, 0, "the log was let go"); assertNil(NS.History.EntryOf(id))
+    assertEqual(NS.State.situation, "solo", "the situation was read again")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Stop cleans everything
 -- ---------------------------------------------------------------------------------------------
@@ -251,7 +335,7 @@ test("sim stop: its drops, groups, inspect entries, restrictions and lockdown go
     Sim.MarkGUID(BRAKK)
     withBrakk(NS, m)
     Sim.Fire("ENCOUNTER_START", 2900, "Sim Boss", 16, 20)
-    local mine, theirs = drop(NS, m, 300, nil), drop(NS, m, 301, "Brakk")
+    local mine, theirs = simDrop(NS, m, 300, nil), simDrop(NS, m, 301, "Brakk")
     assertTrue(NS.Inspect.Get(BRAKK) ~= nil, "the looter's inspect was asked for")
     Sim.SetRestriction("Encounter", true)
     Sim.SetLockdown(true)
@@ -278,7 +362,7 @@ test("sim stop: a queued ask is canceled before the lift, so it never goes out",
     end)
     Sim.Start({ scenario = "test" })
     withBrakk(NS, m)
-    local id = drop(NS, m, 300, "Brakk")
+    local id = simDrop(NS, m, 300, "Brakk")
     Sim.SetRestriction("Encounter", true)
     assertEqual((NS.Asks.Request("ask", "Brakk", id)), "queued")
     -- red under: cancel the queued asks after cleanEngine (modules/Sim.lua Stop): the lifted
@@ -327,7 +411,7 @@ test("sim stand-down: disabling the addon stops the simulation and leaves no tim
     local NS, m, Sim = solo()
     Sim.Start({ scenario = "test" })
     Sim.After(30, function() end)
-    drop(NS, m, 300, nil)
+    simDrop(NS, m, 300, nil)
     NS.addon:OnSlashCommand("disable")
     assertFalse(Sim.IsActive()); assertNil(NS.State.sim)
     assertEqual(printed(m, "Simulation stopped: the addon was disabled."), 1)
