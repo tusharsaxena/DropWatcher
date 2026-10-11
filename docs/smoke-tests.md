@@ -35,7 +35,7 @@ passed.
 | HIST-1..4 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51; Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..10 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91) |
+| SIM-1..12 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the tabs reconciling with it (SIM-12, DW-B0) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -822,7 +822,7 @@ then revisited). Then, outside combat, turn test mode on (`/dw test`) and run th
 
 **ASK-5. The My drops tab.** In a dungeon, loot three or four items of your own: one you will not
 wear (a downgrade), one that is an upgrade for you, and, if the boss drops it, a bonus-roll item.
-Open the window and click `My drops · n` → n counts the drops you can trade; one row per drop of
+Open the window and click `My drops · n` → n counts every drop of yours, and the tab's tooltip how many you can trade; one row per drop of
 yours: the item button, its item level, `For me` (`-5 ▽`, or `+3 ▲` over `keep?` for the upgrade),
 `Trade window` (`1:59:40` over a green bar that shortens, matching the item tooltip's time to the
 minute once the item is in your bags, `~1:59:40` for a moment before that), `Best candidates`
@@ -1141,7 +1141,7 @@ headless `test_sim_e2e` covers the same ground in every scenario, at the content
 outgearing it. Solo, out of an instance, with the window's filters at their defaults (View:
 Interesting, Quality: Rare+, Content: This instance) and your usual gear: `/dw sim start key`, then
 `/dw sim run` → chat prints one line per step (`Simulation step 1 of 11: runStart.` … `Simulation
-step 10 of 11: loot (2 drops).` … `step 11 of 11: lockdownOff.`), the footer reads `Simulating:
+step 10 of 11: loot: 2 drops (1 yours).` … `step 11 of 11: lockdownOff.`), the footer reads `Simulating:
 Mythic+ · 4 members` and `Inspect 4/4 fresh` once the inspects land, Group drops shows at least one
 member's drop and My drops at least one of yours. Repeat with `/dw sim start delve` and `/dw sim
 start world` (both untracked by default) → each fills the window the same way. `/dw sim start lfr`
@@ -1171,6 +1171,17 @@ hover Run all → `one every 2 seconds`; Run all → the steps come about two se
 slider to 6 while it plays → the step already waiting keeps its time, and the next ones come about
 six seconds apart; hover Run all → `one every 6 seconds`. `/dw set sim.stepDelay 1.5` → the steps
 speed up from the next one, and `/dw get sim.stepDelay` reads 1.5. Result:
+
+**SIM-12. The loot step says where its drops went, and the tabs reconcile (DW-B0, feedback-3 spec
+§0).** The headless `test_sim_report` covers the same ground in every scenario. Solo, with the
+window's filters at their defaults: `/dw sim start key`, then play it to its loot step → the panel
+row and the chat line read `Loot: 2 drops (1 yours)` (`Simulation step 10 of 11: loot: 2 drops (1
+yours).`); hover the row → it names each drop, its looter and where it is (`… (you): My drops`,
+`… (<member>): Group drops`). Group drops shows the member's drop under a header reading `1 drop · 1
+yours on My drops`; the tab reads `My drops · 1` even when your drop is an upgrade you keep, and its
+tooltip says how many of your drops you can still trade. `/dw set feed.minIlvlMode absolute` and
+`/dw set feed.minIlvl 900`, then `/dw sim loot 2` → chat reads `Simulated loot: 2 drops (2
+hidden).` and the tables gain nothing (set both back afterwards). Result:
 
 ## Non-English client
 
@@ -1259,3 +1270,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet |
 | SIM-10 | DW-91, the simulation step panel | No client pass recorded yet |
 | SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet |
+| SIM-12 | DW-B0, the loot step says where its drops went; the tabs reconcile | No client pass recorded yet |

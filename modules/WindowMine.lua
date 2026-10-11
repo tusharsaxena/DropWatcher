@@ -15,7 +15,7 @@ local _, NS = ...
 -- (Window.TabContext: Content, search and Sort) and were not hidden, in the tab's order. They sit
 -- under the same collapsible header per run or encounter as the other two tabs (M10 review,
 -- FB2-10; WC.Header: the place, the age, `n drops · m shown`, the party in class color), through
--- NS.WindowGroup.Entries with only your drops counted: newest group first, every group open until
+-- NS.WindowCells.Entries with only your drops counted: newest group first, every group open until
 -- the player collapses it (an older run's drops are the ones whose trade windows end first), and a
 -- drop in no group listed last, so none is lost. The summary counts every entry, collapsed or not.
 -- A row is
@@ -130,7 +130,7 @@ local function groupedIds(groups)
 end
 
 --- The table's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
---- collapsed } and { kind = "drop", drop }, as NS.WindowGroup.Entries' over your own drops only, every
+--- collapsed } and { kind = "drop", drop }, as NS.WindowCells.Entries' over your own drops only, every
 --- group open until toggled; then any entry of WM.Entries that no group holds, with no header.
 --- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
 --- @param drops table the feed's drops (NS.LootFeed.Drops)
@@ -142,7 +142,7 @@ function WM.Rows(groups, drops, get, ctx, state)
     state, groups = state or {}, groups or {}
     local mine = { matches = ctx.matches, compare = ctx.compare, filter = ctx.filter, hiddenBy = ctx.hiddenBy,
         belongs = function(d) return d.isMine == true and (not ctx.belongs or ctx.belongs(d)) end }
-    local out = NS.WindowGroup.Entries(groups, get, mine,
+    local out = NS.WindowCells.Entries(groups, get, mine,
         { collapsed = state.collapsed, dismissed = state.dismissed, allOpen = true })
     local grouped = groupedIds(groups)
     for _, d in ipairs(WM.Entries(drops, ctx, state)) do

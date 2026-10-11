@@ -21,7 +21,7 @@ local _, NS = ...
 -- sets a verdict, a trade estimate or an inspect state: each step is an event driver, and the
 -- engine computes the rest.
 --
---   State.sim.timeline = { steps = { { kind, n, ranAt, detail } }, pos, playing (timer) | nil, paused,
+--   State.sim.timeline = { steps = { { kind, n, ranAt, detail, report } }, pos, playing (timer) | nil, paused,
 --                          ready, size, band }
 --
 -- Pause, Resume and Restart are the panel's run controls (and `/dw sim pause|resume|restart`);
@@ -122,11 +122,6 @@ local function timeline()
 end
 
 -- Each step kind's event driver. Answers whether it did something, and what, for the step's line.
-local function lootDetail(n)
-    if n == 1 then return L["1 drop"] end
-    return L["%d drops"]:format(n)
-end
-
 local PLAY = {
     runStart    = function() return NS.SimEvents.RunStart() ~= nil end,
     runEnd      = function() return NS.SimEvents.RunEnd() ~= nil end,
@@ -140,14 +135,19 @@ local PLAY = {
     end,
     lockdownOn  = function() return Sim.SetLockdown(true) end,
     lockdownOff = function() return Sim.SetLockdown(false) end,
+    -- Kept on the step: where its drops went (modules/SimReport.lua; feedback-3 spec §0), which the
+    -- panel's row and tooltip read again on every repaint.
     loot        = function(step)
-        local n = NS.SimEvents.Loot(step.n)
-        return n > 0, lootDetail(n)
+        local R = NS.SimReport
+        local n, _, report = R.Loot(step.n)
+        step.report = report
+        return n > 0, R.Summarize(report, NS.LootFeed.Get).text
     end,
 }
 
 --- The chat line of a played step (sim feedback §0: every step gets one, typed or played):
---- `Simulation step 3 of 11: loot (2 drops).`
+--- `Simulation step 3 of 11: kill (Warden Ashvane).`; a loot step says where its drops went
+--- (feedback-3 spec §0): `Simulation step 10 of 11: loot: 2 drops (1 yours).`
 --- @param pos number
 --- @param total number
 --- @param kind string
@@ -155,7 +155,7 @@ local PLAY = {
 --- @return string
 function SC.StepLine(pos, total, kind, detail)
     local what = kind
-    if detail then what = L["%s (%s)"]:format(kind, detail) end
+    if detail then what = (kind == "loot" and L["%s: %s"] or L["%s (%s)"]):format(kind, detail) end
     return L["Simulation step %d of %d: %s."]:format(pos, total, what)
 end
 

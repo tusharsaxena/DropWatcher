@@ -183,7 +183,7 @@ local function appendGroup(out, g, drops, hidden, filter, c)
 end
 
 --- The tab's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
---- collapsed } (as WG.Entries') and
+--- collapsed } (as NS.WindowCells.Entries') and
 --- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest); a group with no
 --- entry passing the filter keeps an open header with count 0 while the View filter hid them, or
 --- Character hid entries with no recorder (kept before the Character dropdown); it is left out

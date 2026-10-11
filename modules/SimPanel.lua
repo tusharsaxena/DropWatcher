@@ -13,7 +13,9 @@ local _, NS = ...
 -- THE ROWS. `Start: <scenario>`, then one row per timeline step (modules/SimScenario.lua), then
 -- `Stop simulation`. Clicking the next step runs it; clicking a later one runs every step up to and
 -- including it, in order (RunTo), never skipping one; clicking a completed step does nothing, and
--- its tooltip says when it ran. Every row's tooltip says what the step injects.
+-- its tooltip says when it ran. Every row's tooltip says what the step injects. A played loot step
+-- says where its drops went, `Loot: 2 drops (1 yours)`, and its tooltip names each drop, its looter
+-- and its tab or the gate that hid it (modules/SimReport.lua; feedback-3 spec §0).
 --
 -- THE PANEL NEVER CHANGES THE TIMELINE. Every click and every control goes through the very verbs
 -- `/dw sim` types (NS.SimVerbs.Run: `start`, `step`, `run`, `pause`, `resume`, `restart`, `stop`),
@@ -100,7 +102,10 @@ local function lineCount(n)
     return L["1 to 3 loot lines"]
 end
 
+-- A played loot step reads its report again (modules/SimReport.lua; feedback-3 spec §0), so a drop
+-- still loading when it ran is placed once it lands: `Loot: 2 drops (1 yours)`.
 local function lootLabel(step)
+    if step.report then return L["Loot: %s"]:format(NS.SimReport.Summarize(step.report, NS.LootFeed.Get).text) end
     if step.detail then return L["Loot: %s"]:format(step.detail) end
     if step.n == 1 then return L["Loot: 1 drop"] end
     if step.n then return L["Loot: %d drops"]:format(step.n) end
@@ -184,6 +189,10 @@ local function timelineRow(m, i, step, boss)
         state = stepState(i, m.pos, live), actionable = live and i > m.pos or false,
         ahead = live and i > m.pos + 1 or false, ranAt = step.ranAt }
     row.tip = tipOf(row, stepTip(step), m)
+    -- A played loot step's tooltip names each drop and where it went, after when it ran.
+    if step.report then
+        for k, line in ipairs(NS.SimReport.TipLines(step.report, NS.LootFeed.Get)) do table.insert(row.tip, 2 + k, line) end
+    end
     return row
 end
 

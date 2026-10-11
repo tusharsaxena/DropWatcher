@@ -140,6 +140,7 @@ Kit.run{
         "test_sim_events",
         "test_sim_scenario",
         "test_sim_e2e",
+        "test_sim_report",
         "test_sim_panel",
         "test_disabled",
         "test_diagnostics",

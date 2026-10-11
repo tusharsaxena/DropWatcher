@@ -54,7 +54,7 @@ local TAB_SET = { group = true, mine = true, history = true }
 local TAB_LABEL = { group = L["Group drops"], mine = L["My drops"], history = L["History"] }
 local TAB_TIP = {
     group   = L["Every drop your group receives, one row each, grouped by boss or key run."],
-    mine    = L["Your own drops you can still trade, with the time left and who each would help."],
+    mine    = L["Your own drops, with the time left to trade them and who each would help."],
     history = L["Drops from earlier encounters, kept across sessions."],
 }
 -- What a tab with no body yet says, so the window is never blank.
@@ -154,7 +154,8 @@ function Window.BadgeText(reason, queued)
     return NS.WindowTitleBar.BadgeText(reason, queued)
 end
 
---- A tab's label: `My drops · 2` counts your tradeable drops.
+--- A tab's label: `My drops · 2` counts every drop of yours in the feed on show, so it reconciles
+--- with the simulator's loot step and the Group drops headers (feedback-3 spec §0).
 --- @param key string
 --- @param mine number|nil
 --- @return string
@@ -166,13 +167,24 @@ end
 
 -- ── reads ───────────────────────────────────────────────────────────────────────────────────
 
--- Your drops you can still trade, in the feed on show (the test feed in test mode).
+-- Your drops in the feed on show (the test feed in test mode), and how many of them you can still
+-- trade (the tab's tooltip).
 local function mineCount()
-    local FB, n = NS.WindowFilterBar, 0
+    local FB, n, tradeable = NS.WindowFilterBar, 0, 0
     for _, d in ipairs(NS.LootFeed.Drops(feedName())) do
-        if FB.IsTradeableMine(d) then n = n + 1 end
+        if d.isMine then n = n + 1 end
+        if FB.IsTradeableMine(d) then tradeable = tradeable + 1 end
     end
-    return n
+    return n, tradeable
+end
+
+-- A tab's tooltip: My drops says how many of your drops you can still trade.
+local function tabTip(key)
+    if key ~= "mine" then return TAB_LABEL[key], TAB_TIP[key] end
+    local n, tradeable = mineCount()
+    if n == 0 then return TAB_LABEL[key], TAB_TIP[key] end
+    local line = tradeable > 0 and L["%d of them you can still trade."]:format(tradeable) or L["None of them can be traded now."]
+    return Window.TabLabel(key, n), TAB_TIP[key], line
 end
 
 --- RestrictionChanged's last reason; before the first one, the tracker's own answer. Nil while
@@ -285,7 +297,7 @@ local function buildTab(strip, key, i)
     tab.underline:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 8, 0)
     tab.underline:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -8, 0)
     tab:SetScript("OnClick", function() Window.SelectTab(key) end)
-    Window.AttachTooltip(tab, function() return TAB_LABEL[key], TAB_TIP[key] end)
+    Window.AttachTooltip(tab, function() return tabTip(key) end)
     return tab
 end
 

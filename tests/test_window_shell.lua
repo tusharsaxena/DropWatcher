@@ -206,14 +206,23 @@ test("shell: clicking a tab shows its pane and moves the gold underline; an unkn
     assertEqual(NS.Window.ActiveTab(), "mine")
 end)
 
-test("shell: My drops counts your tradeable drops in its label", function()
+-- Feedback-3 spec §0 (DW-B0): the label counts every drop of yours, so it reconciles with the
+-- simulator's loot step and the Group drops headers; the tooltip says how many you can still trade.
+test("shell: My drops counts all your drops in its label, the tradeable ones in its tooltip", function()
     local NS, f = shown()
     NS.LootFeed.Drops = function()
         return { drop({ isMine = true, trade = { state = "yes" } }), drop({ isMine = true, trade = { state = "no" } }),
             drop({ isMine = true, trade = { state = "likely" } }), drop() }
     end
     NS.Window.Refresh()
-    assertEqual(textOf(f.tabs.mine.label), "My drops · 2")
+    -- red under: the M10 label, which counted the tradeable two only (the owner's `My drops` with no count)
+    assertEqual(textOf(f.tabs.mine.label), "My drops · 3")
+    local tip = NS.Window.TooltipOf(f.tabs.mine)
+    assertEqual(tip[1], "My drops · 3"); assertEqual(tip[3], "2 of them you can still trade.")
+    NS.LootFeed.Drops = function() return { drop({ isMine = true, trade = { state = "no" } }) } end
+    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[3], "None of them can be traded now.")
+    NS.LootFeed.Drops = function() return { drop() } end
+    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[3], nil, "no drop of yours, no count")
     assertEqual(NS.Window.TabLabel("mine", 0), "My drops")
 end)
 

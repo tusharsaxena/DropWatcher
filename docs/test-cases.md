@@ -196,7 +196,7 @@ Total.
 - shell: Scan group is refused while the addon is disabled
 - shell: three tabs, Group drops active in gold with its underline, the others gray
 - shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused
-- shell: My drops counts your tradeable drops in its label
+- shell: My drops counts all your drops in its label, the tradeable ones in its tooltip
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
 - shell: a tab with no body says what it will hold, never a blank pane
 - shell: the filter bar holds View, Quality, Content and the search box, and no checkbox
@@ -370,7 +370,7 @@ Total.
 - window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Their eq state and every trade chip
 - window: a sample's Their eq shows its own worn item, and its detail card its own inspect
-- window: the My drops tab counts your tradeable samples and draws them all
+- window: the My drops tab counts your samples, the tradeable ones in its tooltip, and draws them all
 - window: the empty state comes back once test mode ends with nothing in the live feed
 - labels: My drops says Offer, and no cell of its rows ends in an ellipsis
 - labels: no button the addon builds is labeled with a trailing ellipsis
@@ -1210,6 +1210,22 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
+### test_sim_report.lua (13)
+
+- sim report: the owner's key run: the second drop is yours, on My drops, nothing lost
+- sim report: the step's chat line says where its drops went
+- sim report: /dw sim loot says where its drops went
+- sim report: each drop's place: Group drops, My drops, hidden by its gate, loading, cleared
+- sim report: the detail counts the drops and says which are yours, hidden or otherwise placed
+- sim report: the tooltip names each drop, its looter and its tab or gate
+- sim report: a Group drops header counts the drops of yours it leaves to My drops
+- sim report regression key: Group drops + My drops + hidden = every loot step's drops
+- sim report regression dungeon: Group drops + My drops + hidden = every loot step's drops
+- sim report regression raid: Group drops + My drops + hidden = every loot step's drops
+- sim report regression lfr: Group drops + My drops + hidden = every loot step's drops
+- sim report regression delve: Group drops + My drops + hidden = every loot step's drops
+- sim report regression world: Group drops + My drops + hidden = every loot step's drops
+
 ### test_sim_panel.lua (19)
 
 - sim panel: a key's preview names every step, with its command, before a run
@@ -1382,6 +1398,7 @@ Total.
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
 | test_sim_e2e.lua | 12 |
+| test_sim_report.lua | 13 |
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
@@ -1392,4 +1409,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1150** |
+| **Total** | **1163** |

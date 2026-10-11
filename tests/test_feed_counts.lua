@@ -213,10 +213,10 @@ end)
 test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`", function()
     local NS, m, LF = run()
     playLines(m)
-    local FB, WG, WC = NS.WindowFilterBar, NS.WindowGroup, NS.WindowCells
+    local FB, WC = NS.WindowFilterBar, NS.WindowCells
     FB.State("group").view = { interesting = true }
     local ctx = NS.Window.TabContext("group")
-    local entries = WG.Entries(LF.Groups(ctx.feed), LF.Get, ctx, {})
+    local entries = WC.Entries(LF.Groups(ctx.feed), LF.Get, ctx, {})
     local h = entries[1]
     assertEqual(h.kind, "header")
     assertEqual(h.count, 1); assertEqual(h.total, 2)
@@ -227,7 +227,7 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
     local tip = table.concat(hd.tip, "\n")
     assertTrue(tip:find("Yoke of the Charging Bear (Bùnian): View: Interesting", 1, true) ~= nil, tip)
     FB.State("group").view = {}
-    local all = WG.Entries(LF.Groups(ctx.feed), LF.Get, NS.Window.TabContext("group"), {})
+    local all = WC.Entries(LF.Groups(ctx.feed), LF.Get, NS.Window.TabContext("group"), {})
     assertEqual(all[1].count, 2); assertEqual(#all[1].hidden, 0)
     assertEqual(uncolored(WC.Header(all[1].group, 2, nil, nil, false, all[1].hidden).text),
         "Den of Nalorakk · 2 drops · Testchar, Bùnian, Keghunt")
@@ -240,8 +240,10 @@ test("header: your own drop, listed in My drops, is not counted as hidden in Gro
     m.advance(0)
     NS.WindowFilterBar.State("group").view = "all"
     local ctx = NS.Window.TabContext("group")
-    local h = NS.WindowGroup.Entries(LF.Groups(ctx.feed), LF.Get, ctx, {})[1]
+    local h = NS.WindowCells.Entries(LF.Groups(ctx.feed), LF.Get, ctx, {})[1]
     assertEqual(h.count, 1); assertEqual(h.total, 1); assertFalse(#h.hidden > 0)
+    -- red under: the M10 header, which said nothing of your own drop (feedback-3 spec §0, DW-B0)
+    assertEqual(h.yours, 1, "your own drop is counted as left to My drops")
 end)
 
 test("header: History names its hidden drops too, and a long list is cut with a count", function()

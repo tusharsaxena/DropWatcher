@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Eighty authored files load from the TOC, in the standard's folder order; every one, its kind,
+Eighty-six authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -82,7 +82,9 @@ its one-line responsibility and why its position is load-bearing or conventional
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
   client answers about its world (`SimWorld.lua`: the group, the place, the inspect replies, your
   simulated bag items and the trade window), its event drivers (`SimEvents.lua`: loot lines,
-  pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3) and its
+  pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3), where a loot
+  burst's drops went (`SimReport.lua`: Group drops, My drops, or the gate that hid each, so the
+  loot step reads `Loot: 2 drops (1 yours)` and reconciles with the tabs; feedback-3 spec §0) and its
   scenarios and timeline (`SimScenario.lua`: what `/dw sim start` builds and `run` and `step`
   play, with `pause`, `resume` and `restart`; simulator spec §4) and its step panel (`SimPanel.lua`:
   PerfPanel's look, the timeline as clickable steps, the run controls and the scenario picker,
@@ -103,7 +105,10 @@ its one-line responsibility and why its position is load-bearing or conventional
   outermost one under UIParent (the window, the toast). While the Offer panel is docked beside the
   window, the two are one span: a tooltip goes beside the pair, never over the panel nor over the
   window (`tipDocked`; feedback-2 spec §8, FB2-10). My drops sits under the same collapsible group
-  headers as the other two tabs, every group open until toggled (DW-A9).
+  headers as the other two tabs, every group open until toggled (DW-A9). The tables' entries in
+  order are `WindowCells.Entries` (pure); a Group drops header counts your own drops it leaves to
+  My drops (`· 1 yours on My drops`), and the tab reads `My drops · n` for every drop of yours, its
+  tooltip naming how many you can still trade (feedback-3 spec §0, DW-B0).
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
 

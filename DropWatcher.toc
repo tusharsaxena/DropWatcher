@@ -326,8 +326,12 @@ modules\SimWorld.lua
 # NS.Sim (modules\Sim.lua) at load. NS.SimWorld, NS.SimPool, NS.Roster, NS.LootFeed and NS.Compat
 # are read at call time.
 modules\SimEvents.lua
+# Conventional: publishes NS.SimReport, where a simulated loot burst's drops went; reads NS.L at
+# load. NS.State, NS.SimEvents (above), NS.LootFeed and NS.WindowCells are read at call time.
+modules\SimReport.lua
 # Conventional: publishes NS.SimScenario, the simulator's scenarios and timeline; reads NS.L at
-# load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents and NS.Window are read at call time.
+# load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents, NS.SimReport and NS.Window are read at call
+# time.
 modules\SimScenario.lua
 # Conventional: publishes NS.SimPanel, the simulation step panel; adds its repaint to
 # NS.SimScenario's listeners (above) and its step to NS.STAND_DOWN at load, and reads NS.L and

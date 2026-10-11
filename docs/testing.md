@@ -281,6 +281,12 @@ footer's `Simulating` and `Inspect n/n`, and rows in Group drops and My drops un
 filters, and the History footer's `kept for 30 days` with a shorter window that deletes nothing of
 the fresh run and so asks nothing; the combat flags during and after the simulated fight, the loot lines written from the
 GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat),
+`test_sim_report` (the owner's `Loot: 2 drops` with one drop shown, DW-B0, feedback-3 spec §0: the
+root cause reproduced, your own drop on My drops and nothing lost; the pure `Place`, `Summarize` and
+`TipLines`; the panel row, its tooltip, the chat line, the `· n yours on My drops` header and the
+`My drops · n` tab; `/dw sim loot`'s line; and the regression over every scenario: each loot step's
+drops on Group drops, on My drops and hidden add up to its count, the minimum item level gate hiding
+them all included),
 `test_sim_panel` (the simulation step panel, DW-91: the rows, their PerfPanel states and commands
 before and during a run, the controls following the timeline, `/dw sim`, `start` and `panel`
 opening or toggling it beside the window, a click on the next step running it and one ahead running

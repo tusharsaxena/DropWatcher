@@ -22,12 +22,13 @@ local _, NS = ...
 -- Ka0s Loot History's table; feedback-2 spec §8, FB2-9); the headers, the column labels and the
 -- buttons keep their own.
 --
--- THE ORDER. Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
+-- THE ORDER. NS.WindowCells.Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
 -- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
 -- and your own drops only with `feed.showOwn` on)
 -- and were not dismissed, ordered by the tab's Sort. A group with none keeps its header (`n drops ·
 -- 0 shown`) while the View filter hid them, and is left out when Search or Content did or it has
--- nothing for the tab (WC.KeepsHeader). A group the
+-- nothing for the tab (WC.KeepsHeader); its header counts your own drops left to My drops (`· 1 yours
+-- on My drops`, feedback-3 spec §0). A group the
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles and dismissals are session-only (NS.State.windowGroup).
 --
@@ -209,73 +210,6 @@ function WG.Layout(cols, total)
         x = x + w + K.CELL_GAP
     end
     return out, kept
-end
-
--- A group's drops for the tab, split into those shown and those its filter hid ({ drop, why },
--- why the control's key, else `filter`). A dismissed drop and one not the tab's (`ctx.belongs`:
--- your own, without `feed.showOwn`) are in neither.
-local function visibleDrops(group, get, ctx, dismissed)
-    local shown, hidden = {}, {}
-    for _, id in ipairs(group.drops or {}) do
-        local d = get(id)
-        if d and not dismissed[id] and (not ctx.belongs or ctx.belongs(d)) then
-            if ctx.matches(d) then
-                shown[#shown + 1] = d
-            else
-                hidden[#hidden + 1] = { drop = d, why = ctx.hiddenBy and ctx.hiddenBy(d) or "filter" }
-            end
-        end
-    end
-    table.sort(shown, ctx.compare)
-    return shown, hidden
-end
-
--- One group's header, then its shown drops unless it is collapsed.
-local function appendGroup(out, g, drops, hidden, filter, c)
-    out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
-        hidden = hidden, filter = filter, collapsed = c }
-    if c then return end
-    for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
-end
-
-local function collapsedOf(collapsed, key, first, allOpen)
-    local v = collapsed[key]
-    if v == nil then return not (first or allOpen) end
-    return v
-end
-
---- The table's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
---- collapsed }
---- and { kind = "drop", drop }. `count` is the drops shown, `total` every drop of the group the tab
---- lists, `hidden` the ones the filter hid ({ drop, why }), so the header can say `2 drops · 1 shown`
---- (feedback-2 spec §0). Groups newest first (oldest first under Sort: Oldest); a group with no
---- drop passing the filter keeps an open header with count 0 unless WC.KeepsHeader says no, and
---- does not take the first group's open default; a collapsed group's drops left out. With
---- `state.allOpen` every group never toggled is open (My drops, modules/WindowMine.lua).
---- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
---- @param get function id -> drop (NS.LootFeed.Get)
---- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy }
---- @param state table|nil { collapsed, dismissed, allOpen } (NS.State.windowGroup)
---- @return table
-function WG.Entries(groups, get, ctx, state)
-    state = state or {}
-    local collapsed, dismissed = state.collapsed or {}, state.dismissed or {}
-    local oldest = type(ctx.filter) == "table" and ctx.filter.sort == "oldest"
-    local from, to, step = #groups, 1, -1
-    if oldest then from, to, step = 1, #groups, 1 end
-    local out, first = {}, true
-    for i = from, to, step do
-        local g = groups[i]
-        local drops, hidden = visibleDrops(g, get, ctx, dismissed)
-        if #drops > 0 then
-            local c = collapsedOf(collapsed, g.key, first, state.allOpen)
-            first = false
-            appendGroup(out, g, drops, hidden, ctx.filter, c)
-        elseif WC.KeepsHeader(0, hidden) then
-            appendGroup(out, g, drops, hidden, ctx.filter, false)
-        end
-    end
-    return out
 end
 
 -- ── painting helpers ────────────────────────────────────────────────────────────────────────
@@ -768,7 +702,7 @@ end
 local function paintHeader(h, e, now)
     local g = e.group
     local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
-    local hd = WC.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter)
+    local hd = WC.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter, e.yours)
     h.groupKey, h.collapsed = g.key, e.collapsed
     h.text:SetText(hd.text)
     h.tipLines = hd.tip
@@ -927,7 +861,7 @@ local function refresh(pane, ctx)
     local width = rowWidth(pane)
     local layout, kept = WG.Layout(cols, width)
     local LF = NS.LootFeed
-    local entries = WG.Entries(LF.Groups(ctx.feed), LF.Get, ctx, view())
+    local entries = WC.Entries(LF.Groups(ctx.feed), LF.Get, ctx, view())
     paintHeads(pane, cols, layout, compact)
     NS.Pool.ReleaseAll(pane.rowPool)
     NS.Pool.ReleaseAll(pane.headPool)

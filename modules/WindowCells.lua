@@ -10,6 +10,9 @@ local _, NS = ...
 -- The frame edge that paints them is modules/WindowGroup.lua; the My drops tab (DW-33) and the
 -- detail card (DW-32) take the same composers.
 --
+-- THE ENTRIES (Entries, DW-B0: peeled out of modules/WindowGroup.lua) are the drop tables' rows in
+-- order, under their group headers; Group drops and My drops both take them.
+--
 --   cell = { text, glyph = "▲" | "≈" | "▽" | nil, tone = key of C.TONE, tip = { title, lines... } }
 --
 -- THE TONES (C.TONE). The Me column: an upgrade is `good` (green), a downgrade or an item you
@@ -693,16 +696,94 @@ end
 --- @param collapsed boolean
 --- @param hidden table|nil { { drop, why }, ... } the group's drops the filter hid
 --- @param filter table|nil the tab's filter state, to name the filters
+--- @param yours number|nil your own drops of the group the tab left to My drops: `· 1 yours on My
+---   drops` after the count (feedback-3 spec §0)
 --- @return table { text, tip }
-function WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
+function WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter, yours)
     local parts = { tostring(group.label or "?") }
     if situationLabel then parts[#parts + 1] = situationLabel end
     if num(group.at) and num(now) then parts[#parts + 1] = L["%s ago"]:format(WC.Duration(now - group.at)) end
     parts[#parts + 1] = WC.DropCount(shown, hidden)
+    if (tonumber(yours) or 0) > 0 then parts[#parts + 1] = L["%d yours on My drops"]:format(yours) end
     parts[#parts + 1] = WC.RosterNames(group.roster)
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
     local title = tostring(group.label or "?")
     return { text = text, tip = WC.HeaderTip(title, KIND_LINE[group.kind] or KIND_LINE.area, hidden, filter, collapsed,
         group.roster) }
+end
+
+-- ── the table's entries (pure; peeled out of modules/WindowGroup.lua) ───────────────────────
+
+-- Whether a drop is the tab's (`ctx.belongs`: Group drops lists your own only with `feed.showOwn`).
+local function belongs(ctx, d) return not ctx.belongs or ctx.belongs(d) end
+
+-- A group's drops for the tab, split into those shown and those its filter hid ({ drop, why },
+-- why the control's key, else `filter`), and how many of your own the tab left to My drops (`yours`,
+-- feedback-3 spec §0). A dismissed drop and one not the tab's are in neither.
+local function visibleDrops(group, get, ctx, dismissed)
+    local shown, hidden, yours = {}, {}, 0
+    for _, id in ipairs(group.drops or {}) do
+        local d = get(id)
+        if d and not belongs(ctx, d) and d.isMine then
+            yours = yours + 1
+        elseif d and not dismissed[id] and belongs(ctx, d) then
+            if ctx.matches(d) then
+                shown[#shown + 1] = d
+            else
+                hidden[#hidden + 1] = { drop = d, why = ctx.hiddenBy and ctx.hiddenBy(d) or "filter" }
+            end
+        end
+    end
+    table.sort(shown, ctx.compare)
+    return shown, hidden, yours
+end
+
+-- One group's header, then its shown drops unless it is collapsed.
+local function appendGroup(out, g, drops, hidden, filter, c, yours)
+    out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
+        hidden = hidden, filter = filter, collapsed = c, yours = yours }
+    if c then return end
+    for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
+end
+
+local function collapsedOf(collapsed, key, first, allOpen)
+    local v = collapsed[key]
+    if v == nil then return not (first or allOpen) end
+    return v
+end
+
+--- The table's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
+--- collapsed, yours }
+--- and { kind = "drop", drop }. `count` is the drops shown, `total` every drop of the group the tab
+--- lists, `hidden` the ones the filter hid ({ drop, why }), so the header can say `2 drops · 1 shown`
+--- (feedback-2 spec §0), and `yours` your own drops of the group the tab leaves to My drops (Group
+--- drops without `feed.showOwn`), so it can say `· 1 yours on My drops` (feedback-3 spec §0).
+--- Groups newest first (oldest first under Sort: Oldest); a group with no drop passing the filter keeps an open header with count 0 unless KeepsHeader says no, and
+--- does not take the first group's open default; a collapsed group's drops left out. With
+--- `state.allOpen` every group never toggled is open (My drops, modules/WindowMine.lua).
+--- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
+--- @param get function id -> drop (NS.LootFeed.Get)
+--- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy }
+--- @param state table|nil { collapsed, dismissed, allOpen } (NS.State.windowGroup)
+--- @return table
+function WC.Entries(groups, get, ctx, state)
+    state = state or {}
+    local collapsed, dismissed = state.collapsed or {}, state.dismissed or {}
+    local oldest = type(ctx.filter) == "table" and ctx.filter.sort == "oldest"
+    local from, to, step = #groups, 1, -1
+    if oldest then from, to, step = 1, #groups, 1 end
+    local out, first = {}, true
+    for i = from, to, step do
+        local g = groups[i]
+        local drops, hidden, yours = visibleDrops(g, get, ctx, dismissed)
+        if #drops > 0 then
+            local c = collapsedOf(collapsed, g.key, first, state.allOpen)
+            first = false
+            appendGroup(out, g, drops, hidden, ctx.filter, c, yours)
+        elseif WC.KeepsHeader(0, hidden) then
+            appendGroup(out, g, drops, hidden, ctx.filter, false, yours)
+        end
+    end
+    return out
 end

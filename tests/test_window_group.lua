@@ -286,13 +286,13 @@ local function ctxOf(pass, sort)
 end
 
 test("table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header", function()
-    local WG = T.newAddon().WindowGroup
+    local Cells = T.newAddon().WindowCells
     local byId = { [1] = drop({ id = 1 }), [2] = drop({ id = 2 }), [3] = drop({ id = 3 }), [4] = drop({ id = 4 }) }
     local groups = {
         { key = "a", drops = { 1 } }, { key = "b", drops = { 2, 3 } }, { key = "c", drops = { 4 } },
     }
     local get = function(id) return byId[id] end
-    local e = WG.Entries(groups, get, ctxOf(function(d) return d.id ~= 4 end), {})
+    local e = Cells.Entries(groups, get, ctxOf(function(d) return d.id ~= 4 end), {})
     -- red under: a group the filter hides whole is left out, with nothing saying its drop exists
     assertEqual(e[1].kind, "header"); assertEqual(e[1].group.key, "c", "c's drop is hidden, not lost")
     assertEqual(e[1].count, 0); assertEqual(e[1].total, 1); assertFalse(e[1].collapsed)
@@ -303,11 +303,11 @@ test("table: groups newest first, the first open and older ones collapsed; a gro
     assertEqual(e[5].group.key, "a"); assertTrue(e[5].collapsed); assertEqual(#e, 5)
     local searched = ctxOf(function(d) return d.id ~= 4 end)
     searched.hiddenBy = function() return "search" end
-    assertEqual(WG.Entries(groups, get, searched, {})[1].group.key, "b", "a group Search hides whole is left out")
-    local toggled = WG.Entries(groups, get, ctxOf(), { collapsed = { a = false, c = true }, dismissed = { [2] = true } })
+    assertEqual(Cells.Entries(groups, get, searched, {})[1].group.key, "b", "a group Search hides whole is left out")
+    local toggled = Cells.Entries(groups, get, ctxOf(), { collapsed = { a = false, c = true }, dismissed = { [2] = true } })
     assertEqual(toggled[1].group.key, "c"); assertTrue(toggled[1].collapsed, "the player's toggle wins")
     assertEqual(toggled[2].group.key, "b"); assertEqual(toggled[2].count, 1, "a dismissed drop is gone")
-    local oldest = WG.Entries(groups, get, ctxOf(nil, "oldest"), {})
+    local oldest = Cells.Entries(groups, get, ctxOf(nil, "oldest"), {})
     assertEqual(oldest[1].group.key, "a", "Sort: Oldest turns the groups round")
 end)
 

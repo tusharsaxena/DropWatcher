@@ -368,7 +368,8 @@ test("mine tab: built headless, one row per drop of yours, each column painted",
     assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:41")
     assertTrue(drawn.pane.summary.post:IsEnabled())
     assertFalse(drawn.pane.placeholder:IsShown())
-    assertEqual(textOf(NS.Window.Frame().tabs.mine.label), "My drops · 3")
+    -- Every drop of yours, the bonus roll too (feedback-3 spec §0, DW-B0); the tooltip says how many trade.
+    assertEqual(textOf(NS.Window.Frame().tabs.mine.label), "My drops · 4")
 end)
 
 -- Feedback-2 spec §8 (FB2-9): the row height plus room for the countdown bar, in the tables' text size,
