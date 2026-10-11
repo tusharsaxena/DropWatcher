@@ -319,6 +319,8 @@ test("history: Clear history asks first, and empties the log only on Yes; the ca
     assertEqual(m.popupsShown[#m.popupsShown][1], NS.WindowHistory.CLEAR_POPUP)
     assertEqual(#NS.History.Groups(), 1, "nothing cleared before the answer")
     local popup = m.StaticPopupDialogs[NS.WindowHistory.CLEAR_POPUP]
+    -- red under: a popup without preferredIndex (DW-62 review F-006): slot 3, clear of Blizzard's own
+    assertEqual(popup.preferredIndex, 3)
     popup.OnAccept()
     assertEqual(#NS.History.Groups(), 0)
     assertEqual(NS.addon.db.global.history.maxGroups, 20)

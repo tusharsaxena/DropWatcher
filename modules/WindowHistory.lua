@@ -362,6 +362,7 @@ local function ensurePopup()
         text = L["Clear the drop history on every character? This cannot be undone."],
         button1 = YES or "Yes", button2 = NO or "No",
         timeout = 0, whileDead = true, hideOnEscape = true,
+        preferredIndex = 3,   -- clear of the slots Blizzard's own popups take first
         OnAccept = function() NS.History.Clear() end,
     }
 end

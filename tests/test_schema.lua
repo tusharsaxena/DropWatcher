@@ -71,7 +71,10 @@ test("schema: Reset all asks first, through the confirmation popup", function()
     local NS, _, m = T.enableAddon()
     NS.addon:OnSlashCommand("resetall")
     assertEqual(m.popupsShown[#m.popupsShown][1], "DROPWATCHER_RESET_ALL")
-    assertTrue(m.StaticPopupDialogs.DROPWATCHER_RESET_ALL ~= nil or _G.StaticPopupDialogs.DROPWATCHER_RESET_ALL ~= nil)
+    local popup = m.StaticPopupDialogs.DROPWATCHER_RESET_ALL or _G.StaticPopupDialogs.DROPWATCHER_RESET_ALL
+    assertTrue(popup ~= nil)
+    -- red under: a popup without preferredIndex (DW-62 review F-006): slot 3, clear of Blizzard's own
+    assertEqual(popup.preferredIndex, 3)
 end)
 
 test("schema: a write to `scale` reaches the window through the row's reaction", function()

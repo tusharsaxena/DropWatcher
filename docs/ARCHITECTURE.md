@@ -233,6 +233,9 @@ item while the cursor holds another, so nothing of the player's is swapped away.
 `hooksecurefunc` (in `core/Compat.lua`), never by replacing it; it never inspects in combat or while
 Blizzard's inspect window is open, and calls `ClearInspectPlayer` only for an inspect it started
 and nobody took over, so another addon's or the player's inspect is never cleared under them.
+The addon's two confirmations, Clear history (`modules/WindowHistory.lua`) and Reset all settings
+(`settings/Schema.lua`), set `preferredIndex = 3`, so neither shares a StaticPopup slot with
+Blizzard's own dialogs (DW-62).
 
 ## Known Limitations
 

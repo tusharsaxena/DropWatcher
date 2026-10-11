@@ -317,6 +317,7 @@ function Settings.EnsureResetPopup()
         timeout      = 0,
         whileDead    = true,
         hideOnEscape = true,
+        preferredIndex = 3,   -- clear of the slots Blizzard's own popups take first
         OnAccept     = function()
             Helpers.RestoreAllDefaults()
             pout(L["all settings reset to defaults"])
