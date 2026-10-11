@@ -1,1 +1,2 @@
 date	milestone	evidence
+2026-10-11	M11 + M11b COMPLETE (DW-B0..B5), reviewed (2 medium+ fixed, lows noted)	DropWatcher 4e4f566: 1199 passed, 0 failed, 1 skipped; luacheck 0/0 in 148 files; bundle 20261011-211521 green
