@@ -61,6 +61,17 @@ To see all this without waiting for loot, type `/dw test`. Test mode fills the w
 drops, shows the toast so you can drag it into place, and prints messages instead of sending them.
 Combat ends it.
 
+To try the whole thing with a group that isn't there, simulate one. Out of a group, outside any
+instance and out of combat, type `/dw sim start key` (or `dungeon`, `raid`, `lfr`, `delve` or
+`world`, with an optional group size). The simulator makes up a group with real gear from the
+Encounter Journal, then `/dw sim run` plays a session: pulls, the boss-fight chat lockdown, kills
+and loot. `/dw sim step` plays one event at a time, and `pull`, `kill`, `loot`, `lockdown on|off`
+and `trade <drop>` fire single events. The addon's own engine reads all of it, so the verdicts,
+trade estimates, inspects and asks you see are the real ones. A cyan **SIM** chip sits in the title
+bar while it runs. Nothing is sent (every message is printed with `[sim]`), nobody is inspected or
+traded with, and your saved history is left alone. `/dw sim stop` ends it, and joining a group or
+entering an instance stops it too. `/dw sim` alone prints where it stands and the verbs.
+
 Everything else lives under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` (or
 `/dropwatcher help`) lists every command.
 
@@ -95,6 +106,7 @@ Everything else lives under **Settings → AddOns → Ka0s Drop Watcher**, and `
 | The window does not open | Check **General visibility** is not set to Never, and that the addon is enabled (`/dw enable`). |
 | The window will not move | It is locked. Untick **Lock frame** or type `/dw unlock`. |
 | Test mode turned itself off | Combat ends test mode. Turn it back on after the fight. |
+| A simulation will not start | It refuses in a group, inside an instance, in combat and while test mode is on, and says which. Leave the group or instance, or wait out the fight. |
 | The Them column shows `?` | The looter's gear hasn't been read yet. Wait a moment, press **Scan group**, or use **Retry inspect** on the detail card. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
 
