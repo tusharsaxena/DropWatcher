@@ -157,9 +157,20 @@ local function recipient(kind, target, test)
     return whisperRecipient(plain)
 end
 
-local function gainOf(eval)
-    local d = type(eval) == "table" and eval.ilvlDelta or nil
+local function intoEmptySlot(eval)
+    for _, r in ipairs(type(eval.reasons) == "table" and eval.reasons or {}) do
+        if type(r) == "table" and r.key == "emptySlot" then return true end
+    end
+    return false
+end
+
+-- A verdict's item-level gain: its ilvlDelta, or the drop's whole item level for an upgrade into an
+-- empty slot (no baseline, so no delta), so `+{mygain}` never reads `+?` there.
+local function gainOf(eval, ilvl)
+    if type(eval) ~= "table" then return nil end
+    local d = eval.ilvlDelta
     if type(d) == "number" and d == d then return d end
+    if type(ilvl) == "number" and intoEmptySlot(eval) then return ilvl end
     return nil
 end
 
@@ -180,7 +191,7 @@ local function dropContext(ctx, kind, rec, who)
     local f = type(rec.facts) == "table" and rec.facts or {}
     ctx.item, ctx.ilvl, ctx.slot = rec.link, f.ilvl, slotText(f.equipLoc)
     ctx.track = type(f.track) == "table" and f.track.name or nil
-    ctx.gain, ctx.mygain = gainOf(theirEval(kind, rec, who)), gainOf(rec.me)
+    ctx.gain, ctx.mygain = gainOf(theirEval(kind, rec, who), f.ilvl), gainOf(rec.me, f.ilvl)
 end
 
 -- The token values of spec §9.1, from the drop record, with `extra` laid over them.

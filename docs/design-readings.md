@@ -301,7 +301,9 @@ reload and the row menu opens in game is HIST-2.
 
 The toast (DW-52, `modules/Toast.lua`) settles what design spec §11.5 leaves open. **The gain**
 is the item-level change for you (`me.ilvlDelta`), as the `toast.minGain` row says, whatever the
-scorer; your own drops never toast. **Once per drop:** a drop is considered on `DropAdded` and on
+scorer; an upgrade into an empty slot has no change to measure and clears any least gain (DW-62:
+spec §5.2 makes it an upgrade, so it is the clearest case), reading `empty` where the gain would
+go; your own drops never toast. **Once per drop:** a drop is considered on `DropAdded` and on
 each `DropUpdated` until it has toasted, so one whose trade turns `likely` after the looter's
 inspect still toasts. **The queue** keeps the newest five; a drop asked for meanwhile, gone from the
 feed or no longer qualifying is skipped when its turn comes. **Combat** holds the queue until
@@ -318,7 +320,8 @@ shows, pauses, places and sounds right in game is TOAST-1.
 
 Auto-ask (DW-54, `modules/AutoAsk.lua`) settles what design spec §9.4 leaves open. **What
 qualifies** is the toast's own test (`NS.Toast.Qualifies`) with `messages.autoAsk.minGain`: the
-item-level change for you, whatever the scorer, never your own drop, and an upgrade only, so it
+item-level change for you, whatever the scorer (an empty slot clears any least gain, and the ask's
+`{mygain}` then reads the drop's whole item level), never your own drop, and an upgrade only, so it
 always fills the plain `ask` template, never the transmog one. **Once per drop:** a drop is
 considered on `DropAdded` and on each `DropUpdated` until it is scheduled, so one whose trade turns
 `likely` after the looter's inspect still qualifies; a drop scheduled, sent or canceled is never

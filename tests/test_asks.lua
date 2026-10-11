@@ -99,6 +99,17 @@ test("send: every token comes from the drop: item, ilvl, slot, track and both ga
     assertEqual(m.chatSent[1].text, "Brakk|" .. link(300) .. "|613|Finger|?|13")
 end)
 
+test("send: into an empty slot the gain is the whole item level, never a ? (DW-62)", function()
+    local NS = party()
+    local empty = { verdict = "upgrade", reasons = { { key = "emptySlot" } } }
+    local rec = { link = link(300), facts = { ilvl = 311 }, me = empty, them = empty }
+    -- red under: a gain read off ilvlDelta alone (modules/Asks.lua gainOf)
+    local ctx = NS.Asks.TokenContext("ask", rec, { name = "Brakk" })
+    assertEqual(ctx.mygain, 311); assertEqual(ctx.gain, 311)
+    rec.me = { verdict = "upgrade", reasons = {} }
+    assertEqual(NS.Asks.TokenContext("ask", rec, { name = "Brakk" }).mygain, nil, "no gain and no empty slot: unknown")
+end)
+
 test("send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again", function()
     local NS, m, A = party()
     local id = drop(NS, m, 300, "Brakk")

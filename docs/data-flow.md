@@ -394,7 +394,8 @@ a click (row button, Offer panel, DW-33) or auto-ask (DW-54)
       ─> recipient: an announce is "group"; a test drop or test mode takes the name as given;
          else Roster.Resolve ─> notInGroup / self / offline, or the member's Name-Realm
       ─> tokens from the drop: item, ilvl, slot, track, gain (the looter's, or the candidate's
-         for an offer), mygain (yours); opts.ctx laid over them, opts.text replaces the template
+         for an offer), mygain (yours); into an empty slot a gain is the drop's whole item level;
+         opts.ctx laid over them, opts.text replaces the template
       ─> Messaging.Request (pure): alreadyAsked / tooLong / badRequest, or queue, or send
          canSend = test or Restrictions.CanSendChat()
   queue ─> AskStateChanged(dropID, "queued", kind, target)
@@ -444,7 +445,8 @@ cell composers over a drop-shaped copy (`WindowHistory.AsDrop`).
 
 ```
 DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet?
-    ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain, trade likely / yes
+    ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain (or into an empty
+       slot, whatever minGain), trade likely / yes
     ─> queue (newest 5) ─> Pump: nothing on screen, not held (combat without toast.inCombat)
     ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose, sound?
     ─> C_Timer toast.duration (none for a test drop) ─> Dismiss ─> Pump

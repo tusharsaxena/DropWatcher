@@ -145,7 +145,7 @@ putting the pickup back; `CanGive` touching nothing; combat refused before the r
 stranger, yourself, an offline member and one out of range; the stand-down; every reason's tooltip
 line; `Open` and its missing API; the diagnostics line), `test_asks` (the messaging edge: a
 whisper to the looter's Name-Realm with the template expanded from the drop's tokens and one
-confirmation line; the one-ask guard and `messages.oneAsk`; an edited text over 255 bytes; a
+confirmation line; an empty slot's gain read as the drop's whole item level; the one-ask guard and `messages.oneAsk`; an edited text over 255 bytes; a
 stranger, yourself, an offline member and a missing or secret target refused; an offer to a
 candidate; a raising sender failed with its message and retried, a secret error, no sender, the
 deprecated global fallback; the announce channel; queueing under a restriction and the flush on
@@ -169,15 +169,19 @@ confirmation; the diagnostics line; and the History tab built headless: kept gro
 the outcome column, a reason on every cell, a header toggle, Content's This session, the row menu
 with and without the client's menu, the empty line and `HistoryChanged`'s repaint),
 `test_toast` (the toast: the pure qualifier, someone else's upgrade for you of `toast.minGain` or
-more with a `likely` or `yes` trade, and every reason it refuses, and the board 06 C texts; then
+more (or into an empty slot, whatever the least gain) with a `likely` or `yes` trade, and every
+reason it refuses, and the board 06 C texts, `empty` for an empty slot; then
 the edge: off by default, a qualifying drop shown and painted and gone after its duration, one at a
 time with each drop once, the queue's cap, a drop that turns likely on its `DropUpdated`, the hover
 pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the
 Ask button through the host handler, the sound, the drag only in test mode with the point saved and
-Reset position, test mode's placeholder toast, the stand-down and the diagnostics line),
+Reset position, test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim) or
+dismissed taking its toast and its place in the queue, an Ask on a gone drop, turning the toast off
+or switching to a profile with it off, the stand-down and the diagnostics line),
 `test_auto_ask` (auto-ask: the pure `DueAt` and the delay's clamp; then the edge: off by default, a
 qualifying drop whispered after the delay once with the ask template, the delay and least gain
-read from the rows, a sidegrade, your own drop or an unknown trade left alone and a later `likely`
+read from the rows, an upgrade into an empty slot asked for whatever the least gain, a sidegrade,
+your own drop or an unknown trade left alone and a later `likely`
 scheduled, held through an encounter and due after its end, an encounter ending after the drop
 pushing it back, each cancel rule (your own ask, the looter leaving, the row dismissed, the item
 received, a drop gone or no longer qualifying when due, turning it off, the stand-down), only drops

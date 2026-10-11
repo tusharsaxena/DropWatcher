@@ -28,12 +28,19 @@ test("toast: Qualifies wants someone else's upgrade for you of minGain or more, 
     assertTrue(Q(drop(), 10))
     assertTrue(Q(drop({ me = { verdict = "upgrade", ilvlDelta = 10 } }), 10), "exactly the threshold")
     assertTrue(Q(drop({ trade = { state = "yes" } }), 10))
+    -- An empty slot is an upgrade with no item-level change (the kernel's emptySlot reason): it
+    -- clears any least gain (DW-62 review F-002, design spec §5.2, §11.5).
+    local empty = { verdict = "upgrade", reasons = { { key = "emptySlot" } } }
+    -- red under: a gain test that reads a missing ilvlDelta as failing (modules/Toast.lua Qualifies)
+    assertTrue(Q(drop({ me = empty }), 10))
+    assertTrue(Q(drop({ me = empty }), 50))
     local cases = {
         { drop({ isMine = true }), "mine" },
         { drop({ me = { verdict = "sidegrade", ilvlDelta = 19 } }), "notUpgrade" },
         { drop({ me = false }), "notUpgrade" },
         { drop({ me = { verdict = "upgrade", ilvlDelta = 9 } }), "gain" },
         { drop({ me = { verdict = "upgrade" } }), "gain" },
+        { drop({ me = { verdict = "upgrade", reasons = { { key = "uniqueEquipped" } } } }), "gain" },
         { drop({ trade = { state = "unknown" } }), "trade" },
         { drop({ trade = { state = "no" } }), "trade" },
         { drop({ trade = false }), "trade" },
@@ -52,6 +59,9 @@ test("toast: Compose reads board 06 C: the title, the item and Looted by · gain
     assertEqual(t.item, "Item 500"); assertEqual(t.link, link(500))
     assertEqual(t.line, "Looted by Seta · +19 ▲ · Likely tradeable")
     assertEqual(Toast.Compose(drop({ trade = { state = "yes" } })).line, "Looted by Seta · +19 ▲ · Tradeable")
+    local empty = { verdict = "upgrade", reasons = { { key = "emptySlot" } } }
+    assertEqual(Toast.Compose(drop({ me = empty })).line, "Looted by Seta · empty ▲ · Likely tradeable",
+        "an empty slot reads as the Me column does, never +0")
 end)
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────

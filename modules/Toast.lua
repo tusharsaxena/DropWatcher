@@ -4,7 +4,8 @@ local _, NS = ...
 --
 -- OFF BY DEFAULT (`toast.enabled`). A drop toasts when it is not yours, its verdict for you is
 -- `upgrade` with an item-level gain of at least `toast.minGain` (default 10), and its trade
--- estimate is `likely` or `yes` (Qualifies, pure). Each drop is considered on DropAdded and again
+-- estimate is `likely` or `yes` (Qualifies, pure). An upgrade into an empty slot (the kernel's
+-- `emptySlot` reason, with no item-level change) clears any least gain and reads `empty`. Each drop is considered on DropAdded and again
 -- on each DropUpdated until it has toasted once (an inspect can turn its trade `likely` later).
 --
 -- ONE AT A TIME. Qualifying drops wait in a queue (MAX_QUEUE, the oldest dropped first); the next
@@ -54,8 +55,22 @@ local function num(v)
     return nil
 end
 
+-- True when the verdict is an upgrade into an empty slot (design spec §5.2: no baseline item).
+local function intoEmptySlot(eval)
+    for _, r in ipairs(type(eval.reasons) == "table" and eval.reasons or {}) do
+        if type(r) == "table" and r.key == "emptySlot" then return true end
+    end
+    return false
+end
+
+local function gainPasses(eval, minGain)
+    local gain = num(eval.ilvlDelta)
+    if not gain then return intoEmptySlot(eval) end
+    return gain >= (num(minGain) or 0)
+end
+
 --- Whether `drop` earns a toast: someone else's drop, an upgrade for you by at least `minGain` item
---- levels, with a trade estimate of `likely` or `yes`.
+--- levels (or into an empty slot, whatever `minGain`), with a trade estimate of `likely` or `yes`.
 --- @param drop table a feed record
 --- @param minGain number
 --- @return boolean ok, string|nil why (`mine`, `notUpgrade`, `gain` or `trade`) when not
@@ -63,8 +78,7 @@ function Toast.Qualifies(drop, minGain)
     if type(drop) ~= "table" or drop.isMine then return false, "mine" end
     local me = type(drop.me) == "table" and drop.me or {}
     if me.verdict ~= "upgrade" then return false, "notUpgrade" end
-    local gain = num(me.ilvlDelta)
-    if not gain or gain < (num(minGain) or 0) then return false, "gain" end
+    if not gainPasses(me, minGain) then return false, "gain" end
     local t = type(drop.trade) == "table" and drop.trade.state
     if not TRADE_WORD[t] then return false, "trade" end
     return true
@@ -75,19 +89,27 @@ local function shortName(name)
     return (name:gsub("%-.*$", ""))
 end
 
+-- The gain as the line shows it: `+19`, or `empty` for an upgrade into an empty slot (the Me
+-- column's word).
+local function gainText(me)
+    local gain = num(me.ilvlDelta)
+    if not gain and intoEmptySlot(me) then return L["empty"] end
+    return NS.WindowCells.Signed(gain or 0)
+end
+
 --- The toast's texts for a qualifying drop: { title, item, line, link }. `line` reads
---- `Looted by Seta · +19 ▲ · Likely tradeable`.
+--- `Looted by Seta · +19 ▲ · Likely tradeable` (`empty` in place of the gain into an empty slot).
 --- @param drop table
 --- @return table
 function Toast.Compose(drop)
     local who = type(drop.looter) == "table" and drop.looter.name or nil
-    local gain = num(drop.me and drop.me.ilvlDelta) or 0
+    local me = type(drop.me) == "table" and drop.me or {}
     local trade = TRADE_WORD[drop.trade and drop.trade.state] or ""
     return {
         title = L["Big upgrade for you"],
         item = NS.WindowCells.ItemName(drop.link) or "?",
         link = drop.link,
-        line = L["Looted by %s · %s %s · %s"]:format(shortName(who), NS.WindowCells.Signed(gain),
+        line = L["Looted by %s · %s %s · %s"]:format(shortName(who), gainText(me),
             NS.WindowCells.GLYPH.upgrade, trade),
     }
 end

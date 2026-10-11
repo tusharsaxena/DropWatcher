@@ -818,10 +818,11 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
-### test_asks.lua (22)
+### test_asks.lua (23)
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
+- send: into an empty slot the gain is the whole item level, never a ? (DW-62)
 - send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again
 - send: an edited text over 255 bytes is refused tooLong and nothing is sent
 - send: a stranger, yourself, an offline member and a missing target are refused
@@ -917,13 +918,14 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
-### test_auto_ask.lua (20)
+### test_auto_ask.lua (21)
 
 - auto-ask: DueAt is the delay after the later of the drop and the encounter's end
 - auto-ask: ClampDelay keeps the delay inside 3..30 and defaults to 10
 - auto-ask edge: off by default; a qualifying drop is never asked for
 - auto-ask edge: a qualifying drop is whispered for after the delay, once, with the ask template
 - auto-ask edge: the delay and the least gain are the settings'
+- auto-ask edge: an upgrade into an empty slot is asked for, whatever the least gain (DW-62)
 - auto-ask edge: a sidegrade, your own drop or an unknown trade is not asked for; a later likely is
 - auto-ask edge: held while an encounter is in progress, then due the delay after its end
 - auto-ask edge: an encounter that ends after the drop pushes the ask back
@@ -1074,11 +1076,11 @@ Total.
 | test_feed.lua | 44 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
-| test_asks.lua | 22 |
+| test_asks.lua | 23 |
 | test_transmog.lua | 13 |
 | test_history.lua | 28 |
 | test_toast.lua | 24 |
-| test_auto_ask.lua | 20 |
+| test_auto_ask.lua | 21 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1088,4 +1090,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **894** |
+| **Total** | **896** |
