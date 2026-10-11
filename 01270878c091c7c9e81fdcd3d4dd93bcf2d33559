@@ -1,0 +1,22 @@
+M4 independent review (DW-40 f30737e, DW-41 a6beb6f, DW-42 4d7c2b8, DW-43 a8bed7b; 573d964..a8bed7b)
+
+Reviewers (3): spec conformance (§6, §9, §12.1-§12.4, §13); Ka0s standard compliance; correctness and WoW API use.
+Each reviewer re-ran the gate: 779 passed / 0 failed / 1 skipped; luacheck 0/0 in 98 files; largest file modules/Window.lua 1023 lines.
+- Spec: no critical or high findings. Schema/defaults, seam handoffs, migration step 2, pages, slash verbs, diagnostics, perf buckets and debug tags conform. Findings were spec-conformance gaps.
+- Standard: compliance good (migration runner per savedvariables-§1, defaults, seam, pages, diagnostics). Problems: TOC load-order annotations made wrong by the defaults move; doc and smoke-check gaps.
+- Correctness: nothing critical/high/medium. Two low findings. Combat perf acceptable (LootFeed.Config about 23 seam reads per call).
+
+Findings: 2 fixed, 0 rejected, 8 low recorded and not fixed.
+Fixed:
+1. (medium, DW-40/41) Five settings rows had no reader. Readers written for feed.clearOnBossKill, comparison.heirloomProtect, messages.editFirst, window.rowHeight, window.fontSize; tests, docs and smoke PANEL-7 (owed) added. Commit dc70260.
+2. (high, DW-40) DropWatcher.toc load-order comments corrected: QualityGate, Situations, TradeRules, WindowFilterBar read NS.C at load; TradeRules reads NS.Constants and NS.C at load (reviewer's claim of call-time corrected). Commit 0127087.
+Gate after fixes: 786 passed / 0 failed / 1 skipped; luacheck 0/0; no .lua over 1500 lines.
+
+Low findings not fixed (recorded):
+- SchemaRows: situations.<key>.track/.quality and feed.showOwn rows lack onChange; open window stays stale after a settings write.
+- Diagnostics: Scoring section prints configured comparison.scorer ('auto'), not the scorer actually in use (spec §13).
+- SchemaRows: global.history.maxGroups on the Window page, not resetExempt; Window Defaults and /dw resetall reset account-wide state (reported twice).
+- smoke-tests.md: SLASH-4..6 missing from the Pending sign-off table.
+- smoke-tests.md: no smoke check for the Trade page or Window Columns/Layout tabs.
+- Schema: NS.Setting claimed as the one read path, but Window.lua and WindowGroup.lua still read db.profile directly.
+- SchemaRows: template maxLetters counts UTF-8 characters while counter and chat limit count bytes; non-ASCII templates can exceed 255 bytes.
