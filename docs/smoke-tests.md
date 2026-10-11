@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..15 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31) and the detail card (FEED-13..15, DW-32) |
+| FEED-1..16 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32) and the header beside Loot History (FEED-16, DW-81) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -35,7 +35,7 @@ passed.
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..8 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the SIM chip, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8) |
+| SIM-1..8 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -167,7 +167,7 @@ each ticking the state it shows and toggling it. Result:
 **STATE-3. Test mode populates every drop state.** Solo, outside an instance and out of combat, open
 the window with no drop yet → the Group drops tab shows `No drops yet`, `Loot your group receives
 appears here, grouped by boss.` and two buttons, each with a tooltip; Scan group answers in chat.
-Click Preview with test data → test mode turns on, a `TEST MODE` chip sits beside the title and an
+Click Preview with test data → test mode turns on, bright-red `TEST MODE` text sits beside the title and an
 amber banner (`Nothing is whispered. Combat ends it.`) above the table, both with the same tooltip;
 View reads All. Two groups show, `Placeholder boss` open and `Placeholder key run` collapsed; expand
 it. Across the rows: Me shows ▲ ≈ ▽, Can't use, Not wanted and `?`; Them shows ▲ ≈ ▽, Can't use and
@@ -180,7 +180,7 @@ Open My drops → the tab reads `My drops · 4`, the countdowns move each second
 soon`, one estimated with `~`, one `No limit (BoE)`, one not tradeable), and Offer… on Placeholder
 Idol opens the panel with `+14 UPGRADE`, `+6 UPGRADE`, `EQUAL`, `NO UPGRADE`, `CAN'T USE`,
 `CHECKING…` and `UNAVAILABLE`; Offer and Post my tradeables print and send nothing. Drag the window
-and minimize it: the chip stays on the title bar. `/dw test` → the chip, the banner and the rows go,
+and minimize it: the `TEST MODE` text stays on the title bar. `/dw test` → the text, the banner and the rows go,
 View is back to Interesting and the empty state returns. Note: the placeholder items are invented, so
 their icons are the question mark and their game tooltips are empty. Result:
 
@@ -263,7 +263,7 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), and FEED-13..15 the detail card a row expands into (DW-32). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+(DW-31), FEED-13..15 the detail card a row expands into (DW-32), and FEED-16 the title bar side by side with Ka0s Loot History's (DW-81). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
@@ -332,8 +332,8 @@ not known and Intellect suits only one Demon Hunter spec). If the item's own spe
 the item wins: record the item and both verdicts. Result:
 
 **FEED-8. The window's shell.** `/dw show` on a clean `/reload` → a window about 940 × 600 with the
-Ka0s edge (a hard black line with a gray line inside it), the logo and the gold `Ka0s Drop Watcher`
-title, a `Scan group` button with a people mark, a minimize mark and the close mark; the `Group
+Ka0s edge (a hard black line with a gray line inside it), the gold `Ka0s Drop Watcher` title centered
+on the title bar (no logo), a `Scan group` button with a people mark, a minimize mark and the close mark; the `Group
 drops` tab gold with a gold underline, `My drops` and `History` gray; the filter bar reads `View:
 Interesting`, `Quality: Rare+`, `Content: This instance`, an unticked `Likely tradeable only` and
 the `Filter looter or item…` box; the footer reads `Inspect: no group`, `No loot seen yet` (or
@@ -426,6 +426,19 @@ out of range` grayed, with the reason on hover; walk up to them → it lights up
 trade window with them; in combat it reads `Trade · in combat`. `Hide this item` removes the row and
 closes the card. On your own drop, Ask, Edit message, Retry inspect and Trade are grayed and each
 says why. Result:
+
+**FEED-16. The header beside Loot History (DW-81).** Open Ka0s Loot History (`/lh`) and put the two
+windows side by side. → Drop Watcher's title bar has no logo (the minimap button and the AddOns list
+keep it), and its gold `Ka0s Drop Watcher` title sits centered on the bar in the same font as Loot
+History's. `/dw test` and Loot History's test mode → each shows `TEST MODE` in bright red, the same
+size and color, 10px right of its title, with no box behind it; Drop Watcher's hover still shows the
+test-mode tooltip. The yellow strip under the filter bar (`TEST MODE: placeholder drops in every
+state. …`) is unchanged. On the right, the restriction badge, `Scan group`, minimize and the close
+mark keep their places. `/dw test` off, then `/dw sim start key` → `SIMULATION` in cyan, the same
+style and place. Minimize with a new drop pending → the `n new` counter sits after the mode's words.
+Resize to the minimum width (520) with test mode on → the title stays centered; record whether
+`TEST MODE` reaches `Scan group` or the restriction badge (at that width the centered title leaves
+them little room). Result:
 
 ## Roster
 
@@ -880,7 +893,7 @@ join a group → `Simulation stopped: you joined a group.`; start one, then `/dw
 
 **SIM-2. A full `key` run (DW-73).** The headless `test_sim_scenario` (`sim e2e key`) covers the same
 ground. Solo, outside an instance, out of combat, with `/dw debug on`: `/dw sim start key` → chat says
-`Simulation ready: 4 members, <n> items. …`, the window opens with a cyan `SIM` chip beside the title
+`Simulation ready: 4 members, <n> items. …`, the window opens with cyan `SIMULATION` text beside the title
 (its tooltip names `Scenario: key (Mythic+)`), and the footer reads `Simulating: Mythic+ · 4 members`.
 `/dw sim run` → over about half a minute the badge shows `Mythic+ key`, then each boss's `Encounter`
 in turn, then `Chat lockdown` after the completion; the completion's loot lands in Group drops and My
@@ -942,7 +955,7 @@ running: start one with /dw sim start <scenario>.`; `/dw sim start nowhere` prin
 scenario.`; `/dw disable`, then `/dw sim start dungeon` → the disabled line, and no simulation starts.
 With one running: `/dw sim pull` twice → `A simulated boss is already engaged: /dw sim kill first.`;
 `/dw sim run` twice → `The timeline is already playing.` Start one and `/dw sim run`, then accept a
-real group invite mid-run → `Simulation stopped: you joined a group.`, the SIM chip goes, no further
+real group invite mid-run → `Simulation stopped: you joined a group.`, the `SIMULATION` text goes, no further
 step plays, and the footer shows the real situation. Start one, then zone into an instance (a
 follower dungeon will do) → `Simulation stopped: you entered an instance.` Result:
 
@@ -1002,6 +1015,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | STATE-3, FEED-8..9 | DW-30 / DW-34, the window shell and test mode | No client pass recorded yet |
 | FEED-10..12 | DW-31, the Group drops table | No client pass recorded yet |
 | FEED-13..15 | DW-32, the detail card | No client pass recorded yet |
+| FEED-16 | DW-81, the header matched to Loot History | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |
 | PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |

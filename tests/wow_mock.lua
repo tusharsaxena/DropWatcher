@@ -124,9 +124,11 @@ local function decorateGeometry(M, f)
     -- itself, so hiding the banner would hide the window.
     f.__regions = {}
     local function region(kind)
-        return function(self)
+        return function(self, _, layer, template)
             local r = M.__stubFrame()
             r.__objType = kind
+            -- The draw layer and the font template it was made with (a case reads `__template`).
+            r.__layer, r.__template = layer, template
             self.__regions[#self.__regions + 1] = r
             decorateText(r)
             r.__points = {}

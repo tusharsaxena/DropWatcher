@@ -33,7 +33,6 @@ C.WINDOW = {
     INSET       = 6,      -- the body's side margin
     CONTROL_H   = 20,     -- a title-bar button, a dropdown, the search box
     ICON        = 18,     -- a title-bar control's square slot (the close mark's size)
-    LOGO        = 18,
     DOUBLE_CLICK = 0.4,   -- seconds between two clicks on the title bar that expand a minimized window
     FOOTER_TICK = 5,      -- seconds between footer repaints while shown ("Last loot 12s ago")
     -- The drop tables (modules/WindowGroup.lua, design spec §11.1-§11.2).

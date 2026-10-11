@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/Window.lua — the main window's shell (design spec §11.1, boards 01 and 06): frame, skin,
--- title bar (logo, gold title, restriction badge, Scan group, minimize, close), the tab strip and
--- its lazily built panes, the filter bar's host, the footer's host, test mode's chip and banner,
+-- title bar (centered gold title, restriction badge, Scan group, minimize, close), the tab strip and
+-- its lazily built panes, the filter bar's host, the footer's host, test mode's title text and banner,
 -- minimize, resize, position, lock, scale, alpha and the show decision.
 --
 -- A non-secure standalone window (standalone-windows): built lazily on the first show, skinned
@@ -494,7 +494,7 @@ function Window.Refresh()
     local t0 = Perf.on and debugprofilestop()
     local TB = NS.WindowTitleBar
     TB.PaintBadge(frame)
-    TB.PaintTestChip(frame)
+    TB.PaintModeText(frame)
     paintMinimized()
     if not isMinimized() then
         frame.banner:SetShown(NS.State.testMode == true)

@@ -1,6 +1,6 @@
 -- tests/test_sim_scenario.lua — the simulator's scenarios, timeline and controls (simulator spec
 -- §4, §6, §7): the pure verb parser and timeline; `/dw sim` through the real dispatcher (status,
--- usage, the refusals, refused while disabled); the SIM chip, the footer and the diagnostics
+-- usage, the refusals, refused while disabled); the SIMULATION text, the footer and the diagnostics
 -- section; and the end-to-end scenarios: a `key` and a `raid` run headless through the mock,
 -- asserting only what the real engine produced (modules/SimScenario.lua, settings/SimVerbs.lua).
 
@@ -254,20 +254,21 @@ end)
 -- The chip, the footer and the diagnostics section
 -- ---------------------------------------------------------------------------------------------
 
-test("sim window: the SIM chip with the scenario tooltip, and the footer says Simulating", function()
+test("sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating", function()
     local NS = addon()
     NS.ShowWindow()
     local f = NS.Window.Frame()
-    assertFalse(f.simChip:IsShown())
+    assertFalse(f.simText:IsShown())
     slash(NS, "sim start raid 10")
     NS.Window.Refresh()
-    assertTrue(f.simChip:IsShown()); assertFalse(f.testChip:IsShown())
+    assertTrue(f.simText:IsShown()); assertFalse(f.testText:IsShown())
+    assertEqual(f.simText.text:GetText(), "SIMULATION")
     local title, scenario = NS.WindowTitleBar.SimTip()
     assertEqual(title, "Simulation"); assertEqual(scenario, "Scenario: raid (Raid)")
     local seg = NS.WindowFooter.Compose(NS.WindowFooter.Read()).situation
     assertEqual(seg.text, "Simulating: Raid · 10 members")
     slash(NS, "sim stop")
-    assertFalse(f.simChip:IsShown(), "gone with the simulation")
+    assertFalse(f.simText:IsShown(), "gone with the simulation")
     seg = NS.WindowFooter.Compose(NS.WindowFooter.Read()).situation
     assertTrue(seg.text:find("Simulating", 1, true) == nil, "the real situation again")
 end)

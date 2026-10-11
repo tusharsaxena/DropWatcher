@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1010%2F1010_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1011%2F1011_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -67,8 +67,8 @@ instance and out of combat, type `/dw sim start key` (or `dungeon`, `raid`, `lfr
 Encounter Journal, then `/dw sim run` plays a session: pulls, the boss-fight chat lockdown, kills
 and loot. `/dw sim step` plays one event at a time, and `pull`, `kill`, `loot`, `lockdown on|off`
 and `trade <drop>` fire single events. The addon's own engine reads all of it, so the verdicts,
-trade estimates, inspects and asks you see are the real ones. A cyan **SIM** chip sits in the title
-bar while it runs. Nothing is sent (every message is printed with `[sim]`), nobody is inspected or
+trade estimates, inspects and asks you see are the real ones. Cyan **SIMULATION** text sits beside the
+title while it runs. Nothing is sent (every message is printed with `[sim]`), nobody is inspected or
 traded with, and your saved history is left alone. `/dw sim stop` ends it, and joining a group or
 entering an instance stops it too. `/dw sim` alone prints where it stands and the verbs.
 

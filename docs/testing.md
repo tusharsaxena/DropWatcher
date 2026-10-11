@@ -71,7 +71,7 @@ Offer, Trade and Post my tradeables through their host handlers), `test_test_mod
 placeholders: every Me and Them verdict, trade estimate, inspect state, ask state, countdown and
 candidate pill covered by the data; `AddTest` and the test feed filled and emptied with test mode,
 by combat and by the stand-down; the window built headless with every placeholder drawn, a reason on
-every cell, the chip and banner, the My drops count; Ask and Post my tradeables printed, never
+every cell, the TEST MODE text and banner, the My drops count; Ask and Post my tradeables printed, never
 sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader, the trade window's items and partner, the row menu, and each shim's fallback
@@ -232,7 +232,7 @@ the stop ending the combat edge and the bag items),
 timeline; `/dw sim` through the real dispatcher with its status, usage and refusals, refused while
 disabled, in combat and with test mode on; a scenario's pool, group, situation and window, a raid
 sized by its argument; the timeline waiting for the pool, a step at a time, a run a few seconds per
-step to its end, the stop and the stand-down ending a playing run; the SIM chip, the footer's
+step to its end, the stop and the stand-down ending a playing run; the SIMULATION text, the footer's
 `Simulating` line, the `sim` diagnostics section and the `SIM` debug lines; and the end-to-end
 scenarios (spec §7): a `key` and a `raid` run headless, asserting drops parsed from the written
 lines, your verdict and the looter's after the simulated inspect, the ask held in the lockdown and

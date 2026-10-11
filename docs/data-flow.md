@@ -110,7 +110,7 @@ launcher menu entry ──────┼─> NS.SetTestMode(on) (refused stood 
                                 │          ├─> LootFeed.AddTest(spec) each ─> the test feed ─> DropAdded
                                 │          └─> the Group drops tab's View ─> All (the old value kept)
                                 ├─> off: TestMode.Clear() ─> LootFeed.Clear("test"), the View put back
-                                └─> Window.OnTestModeChanged ─> the TEST MODE chip and banner, the test feed drawn
+                                └─> Window.OnTestModeChanged ─> the TEST MODE title text and banner, the test feed drawn
 PLAYER_REGEN_DISABLED ─> NS.SetTestMode(false) ─> "Test mode ended: you entered combat."
 NS.StandDown ─> State.testMode = false; TestMode's stand-down row ─> TestMode.Clear()
 Ask, Offer, Announce, Post my tradeables on a placeholder ─> NS.Asks ─> printed ("Test mode, not sent: …")
@@ -170,7 +170,7 @@ NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item c
 /dw sim step ─> NS.SimScenario.Step ─> the next step's driver: RunStart, Pull, SetLockdown(on), Kill,
                    Loot(burst), SetLockdown(off), RunEnd (waits while the pool builds)
 /dw sim run ─> a step now, then one every STEP_DELAY seconds on NS.Sim.After (the stop ends it)
-the SIM chip, the footer's "Simulating: …" and the `sim` diagnostics section read NS.Sim.Status,
+the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.Sim.Status,
                    NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```
 

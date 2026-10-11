@@ -303,7 +303,7 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
 - **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
   headless mock does not model; PROFILE-1 is its in-game check.
 - **The simulator** (milestone M7) runs end to end: `/dw sim start <scenario> [size]` builds the
-  pool and the group, `run` and `step` play the scenario's timeline, and the SIM chip, the footer's
+  pool and the group, `run` and `step` play the scenario's timeline, and the `SIMULATION` title text, the footer's
   `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). The
   timeline's steps are event drivers only; the engine computes every verdict, estimate and inspect.
   A key's bosses drop nothing: its loot comes with the completion, as the end-of-run chest's does.

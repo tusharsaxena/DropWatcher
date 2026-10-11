@@ -172,16 +172,17 @@ Total.
 - window: a drag stores the point, and Reset position forgets it
 - window: locked, a drag does not start
 - window: resizable from the corner grip, with the design's minimum size
-- window: test mode shows the banner and the chip, and its rows replace the empty state
+- window: test mode shows the banner and the TEST MODE text, and its rows replace the empty state
 - window: combat ends test mode, and test mode cannot start in combat
 - window: with test mode on, Close and Toggle still change what is shown
 - window: turning test mode off closes the window only when test mode opened it
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (39)
+### test_window_shell.lua (40)
 
-- shell: the title bar holds the logo, the gold title, the badge, Scan group, minimize and close
+- shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
+- shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
 - shell: the default size is board 01's 940 x 600
 - shell: Escape and every close path close the dropdowns' shared menu too
 - shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
@@ -1068,7 +1069,7 @@ Total.
 - sim run: plays every step a few seconds apart, then says it has finished
 - sim stop: ends a playing timeline and its timers
 - sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
-- sim window: the SIM chip with the scenario tooltip, and the footer says Simulating
+- sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating
 - sim diagnostics: the section reads the session, the pool, the timeline and the sends
 - sim debug: the SIM tag logs every injected event and every step
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
@@ -1185,7 +1186,7 @@ Total.
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 39 |
+| test_window_shell.lua | 40 |
 | test_window_group.lua | 33 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
@@ -1228,4 +1229,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1010** |
+| **Total** | **1011** |

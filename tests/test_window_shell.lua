@@ -33,10 +33,18 @@ local function textOf(region) return region and region:GetText() end
 
 -- ── the title bar ───────────────────────────────────────────────────────────────────────────
 
-test("shell: the title bar holds the logo, the gold title, the badge, Scan group, minimize and close", function()
+test("shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo", function()
     local NS, f = shown()
-    assertTrue(f.logo:GetTexture():find("dropwatcher%.logo%.128%.tga$") ~= nil, "the 128px logo")
+    assertEqual(f.logo, nil, "no logo in the title bar: the launcher and the TOC keep it")
+    for _, r in ipairs(f.titleBar.__regions) do
+        local tex = r.__objType == "Texture" and r:GetTexture()
+        assertTrue(not (type(tex) == "string" and tex:find("logo", 1, true)), "no logo texture on the bar")
+    end
     assertEqual(textOf(f.title), "Ka0s Drop Watcher")
+    assertEqual(f.title.__template, "GameFontNormal")
+    local pt = f.title.__points[1]
+    assertEqual(#f.title.__points, 1, "one anchor")
+    assertEqual(pt[1], "CENTER"); assertEqual(pt[2], f.titleBar); assertEqual(pt[3], "CENTER")
     local r, g, b = f.title:GetTextColor()
     assertEqual(table.concat({ r, g, b }, ","), "1,0.82,0", "ApplySkin tints the title gold")
     assertFalse(f.badge:IsShown(), "no badge while nothing is restricted")
@@ -45,6 +53,39 @@ test("shell: the title bar holds the logo, the gold title, the badge, Scan group
     assertTrue(f.minimizeButton.art:IsShown() and not f.minimizeButton.glyph:IsShown(), "the catalog mark, not the glyph")
     assertTrue(f.closeButton ~= nil)
     assertTrue(NS.HasWidgets())
+end)
+
+-- Feedback spec §1 (FB-3): a mode's words sit 10px right of the title in GameFontNormalLarge, in
+-- their own color, with no box: the frame that carries their tooltip draws nothing.
+local function assertModeText(m, word, r, g, b, title)
+    assertEqual(m.text:GetText(), word)
+    assertEqual(m.text.__template, "GameFontNormalLarge")
+    local cr, cg, cb = m.text:GetTextColor()
+    assertEqual(table.concat({ cr, cg, cb }, ","), table.concat({ r, g, b }, ","))
+    local pt = m.__points[1]
+    assertEqual(pt[1], "LEFT"); assertEqual(pt[2], title); assertEqual(pt[3], "RIGHT"); assertEqual(pt[4], 10)
+    for _, reg in ipairs(m.__regions) do
+        assertTrue(reg.__objType ~= "Texture", "no chip fill or border behind the words")
+    end
+    assertTrue(m:GetWidth() > 0, "sized to the words, so the tooltip has an area")
+end
+
+test("shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode", function()
+    local NS, f = shown()
+    local TB = NS.WindowTitleBar
+    assertModeText(f.testText, "TEST MODE", 1, 0.15, 0.15, f.title)
+    assertModeText(f.simText, "SIMULATION", 0.35, 0.8, 1, f.title)
+    assertFalse(f.testText:IsShown()); assertFalse(f.simText:IsShown())
+    NS.SetTestMode(true)
+    NS.Window.Refresh()
+    assertTrue(f.testText:IsShown()); assertFalse(f.simText:IsShown())
+    assertEqual(NS.Window.TooltipOf(f.testText)[1], "Test mode")
+    assertTrue(f.banner:IsShown(), "the yellow strip under the filter bar is kept")
+    NS.SetTestMode(false)
+    NS.Sim.IsActive = function() return true end
+    TB.PaintModeText(f)
+    assertTrue(f.simText:IsShown()); assertFalse(f.testText:IsShown())
+    assertEqual(f.newChip.__points[1][2], f.simText, "the `n new` counter follows the mode's words")
 end)
 
 test("shell: the default size is board 01's 940 x 600", function()
