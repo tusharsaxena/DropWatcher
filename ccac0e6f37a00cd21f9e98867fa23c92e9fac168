@@ -1,0 +1,22 @@
+M11b independent review (DW-B4 2849185; DW-B5 0c42908, 0bca5ca, 040482f) on feat/2026-10-11-drop-watcher-feedback-3
+
+Reviewers (3): every reviewer ran the gate and found it green (1196 passed / 0 failed / 1 skipped; luacheck 0/0 in 148 files; largest file core/Compat.lua at 995 lines). None found a critical or high problem.
+- R1: DW-B4 and DW-B5 conform to spec sections 4 and 5 (Compat reads guarded, place stamped and kept, header and Group: tooltip, realistic samples, never-throw). Remaining problems are edge cases and doc drift.
+- R2: Standard-compliant (Compat, SimSeam, TOC comment, saved-variable fields documented, docs updated, smoke checks owed). Three low findings only.
+- R3: Retail 12.x API usage is correct and the sim seam covers the new reads. Raised a possible delve-tier spec gap, a test-data realism gap and minor efficiency/edge-case items.
+
+Fixed (2, rejected 0):
+1. DW-B5 SimReport.Place counted an own drop as `mine` even when My drops hid or filtered it out. Fixed in b5e95f8: WindowMine.LeftOutNow, a `not on My drops: <why>` extra, tests, and SIM-13 updated (owed).
+2. DW-B4 GP.Read ignored the difficultyName from GetInstanceInfo. Fixed in 4e4f566: it now prefers that name and falls back to GetDifficultyInfo. Delve tier recorded as a Known Limitation in ARCHITECTURE.md; new owed smoke check FEED-30.
+Gate after the fixes: 1199 passed / 0 failed / 1 skipped; luacheck 0/0 (148 files); CRLF; all files under 1000 lines. Nothing pushed.
+
+Low findings not fixed (recorded only):
+- GroupPlace delve tier: header reads `Delves`, not the tier (partly addressed by the limitation and FEED-30)
+- FeedRecords: a continued area group keeps its first difficulty after a reset to another difficulty
+- module-map.md WindowCells row and WindowMine.lua:17 comment still describe the old party header
+- L["Mythic+"] missing from enUS (predates this run, WindowFooter.lua:24)
+- TestData uses a hard-coded L["Heroic"], not the client-localized name
+- WM.ListsNow builds a TabContext for each own drop on every Group drops repaint (allocations, x2 reports)
+- Compat.KeystoneLevel may show the previous run's level after an abandoned key
+- LF.OpenGroup runs GroupPlace.Stamp reads on every roster change and throws them away
+- TestData withPlace shows a dungeon name under a raid situation
