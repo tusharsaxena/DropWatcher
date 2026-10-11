@@ -7,6 +7,9 @@
 -- player at the content's level and once with a player who outgears it, the owner's case.
 -- Also the M7 review's low findings on the same reads: the combat flags and the LOOT_ITEM*
 -- strings through Compat, raid1 aliased to you, you online in a raid, LFR's instance chat.
+-- Every scenario runs once in each layout (compact spec §5, DW-C5): the full table, with Open in
+-- compact view during a run off so the run's auto-open keeps it, and the compact cards, every piece
+-- of every card saying something.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -186,18 +189,42 @@ local function assertFooter(NS, sc, label)
     assertEqual(seg.inspect.text, ("Inspect %d/%d fresh"):format(sc.members, sc.members), label)
 end
 
-local function assertWindow(NS, label)
+-- The pieces every compact card fills, per tab (modules/CompactGroup.lua, CompactMine.lua).
+local CARD_PIECES = {
+    group = { "item", "ilvl", "looter", "slot", "trade", "fresh", "you", "them" },
+    mine  = { "item", "ilvl", "forYouLabel", "forYou", "trade", "candidates" },
+}
+
+-- Each drawn row is a card in the compact layout, a table row in the full one; a card leaves no
+-- piece blank.
+local function assertLayout(drawn, tab, mode, label)
+    assertTrue((drawn.compact == true) == (mode == "compact"), label .. ": " .. tab .. " is drawn " .. mode)
+    if mode ~= "compact" then return end
+    assertTrue(#drawn.rows > 0, label .. ": " .. tab .. " shows cards")
+    for _, card in ipairs(drawn.rows) do
+        for _, key in ipairs(CARD_PIECES[tab]) do
+            local t = card.cells[key].text:GetText()
+            assertTrue(t ~= nil and t ~= "", ("%s: %s card %s %s"):format(label, tab, tostring(card.dropId), key))
+        end
+    end
+end
+
+local function assertWindow(NS, mode, label)
     local W = NS.Window
     assertTrue(W.IsShown(), label .. ": the window opened")
+    assertEqual(NS.WindowCompact.Mode(), mode, label .. ": the layout")
     W.SelectTab("group")
     W.Refresh()
     -- red under: the M7 roster, which dressed the group around you, so content you outgear left
     -- the members naked and nothing Interesting (the owner's empty window)
-    assertTrue(dropEntries(NS.WindowGroup.Drawn()) > 0, label .. ": Group drops shows rows")
+    local group = NS.WindowGroup.Drawn()
+    assertTrue(dropEntries(group) > 0, label .. ": Group drops shows rows")
+    assertLayout(group, "group", mode, label)
     W.SelectTab("mine")
     W.Refresh()
     local mine = NS.WindowMine.Drawn()
     assertTrue(mine ~= nil and #mine.entries > 0, label .. ": My drops shows your drops")
+    assertLayout(mine, "mine", mode, label)
 end
 
 -- Every group the run made names the whole simulated group, you first, and its History group (the
@@ -246,9 +273,17 @@ local function assertRetention(NS, m, label)
     assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 30), label)
 end
 
-local function runScenario(sc, ilvl, seed)
-    local label = ("%s at %d, seed %d"):format(sc.name, ilvl, seed)
+-- The layout a run is drawn in: compact as stored, or full with the run override off (else the
+-- run's auto-open would open it compact, compact spec §1).
+local function setLayout(NS, mode)
+    if mode == "full" then assertTrue(NS.SchemaRuntime.Set("window.compactInRuns", false)) end
+    NS.SetWindowMode(mode)
+end
+
+local function runScenario(sc, ilvl, seed, mode)
+    local label = ("%s at %d, seed %d, %s"):format(sc.name, ilvl, seed, mode)
     local NS, m = addon(ilvl)
+    setLayout(NS, mode)
     assertSoloWorld(NS)
     assertTrue(NS.SimScenario.Start(sc.name, sc.size, { seed = seed }), label)
     assertDefaultFilters(NS)
@@ -262,7 +297,7 @@ local function runScenario(sc, ilvl, seed)
     end
     assertDrops(NS, label)
     assertFooter(NS, sc, label)
-    assertWindow(NS, label)
+    assertWindow(NS, mode, label)
     assertRosters(NS, label)
     assertRecorder(NS, label)
     assertRetention(NS, m, label)
@@ -270,13 +305,48 @@ local function runScenario(sc, ilvl, seed)
     assertEqual(NS.Situations.Current(), "solo", label .. ": the real world again")
 end
 
-for _, sc in ipairs(SCENARIOS) do
-    test("sim e2e " .. sc.name .. ": a run fills Group drops and My drops under the default filters", function()
-        for _, ilvl in ipairs({ 600, 660 }) do
-            for seed = 1, 3 do runScenario(sc, ilvl, seed) end
-        end
-    end)
+for _, mode in ipairs({ "full", "compact" }) do
+    for _, sc in ipairs(SCENARIOS) do
+        test(("sim e2e %s, %s: a run fills Group drops and My drops under the default filters"):format(sc.name, mode),
+            function()
+                for _, ilvl in ipairs({ 600, 660 }) do
+                    for seed = 1, 3 do runScenario(sc, ilvl, seed, mode) end
+                end
+            end)
+    end
 end
+
+-- With the defaults (the full layout stored, Open in compact view during a run on): the simulation
+-- opens the window itself when its group forms, a player's open, so in the stored layout; closed,
+-- a simulated key's drop auto-opens it compact, or full with the option off; and stopping the
+-- simulation lets the override go once the window is hidden (compact spec §1 and §5).
+local function closeWindow(NS)
+    NS.HideWindow()
+    local f = NS.Window.Frame()
+    f:GetScript("OnHide")(f)
+end
+
+test("sim e2e: a simulated key's auto-open is compact by default, full with the option off, then the stored layout", function()
+    for _, case in ipairs({ { "key", "compact", true }, { "key", "full", false } }) do
+        local NS, m = addon(600)
+        assertTrue(NS.SchemaRuntime.Set("window.compactInRuns", case[3]) or case[3], "the option")
+        assertTrue(NS.SimScenario.Start(case[1], nil, { seed = 1 }), case[1])
+        assertTrue(NS.Window.IsShown(), case[1] .. ": the simulation opened the window")
+        assertEqual(NS.WindowCompact.Mode(), "full", case[1] .. ": its own open is the stored layout")
+        closeWindow(NS)
+        assertTrue(NS.SimScenario.Run(), case[1])
+        m.advance(NS.SimScenario.STEP_DELAY * NS.SimScenario.Status().steps + 30)
+        assertTrue(NS.Window.IsShown(), case[1] .. ": a drop opened it again")
+        assertEqual(NS.WindowCompact.Mode(), case[2], case[1] .. ": the auto-open's layout")
+        assertEqual(NS.WindowGroup.Drawn().compact == true, case[2] == "compact", case[1] .. ": cards or the table")
+        NS.Sim.Stop("stop")
+        closeWindow(NS)
+        assertTrue(not NS.WindowCompact.InRun(), case[1] .. ": the override let go")
+        NS.ShowWindow()
+        assertEqual(NS.WindowCompact.Mode(), "full", case[1] .. ": the stored layout again")
+        assertEqual(NS.Setting("window.mode"), "full", case[1] .. ": never written")
+    end
+end)
 
 -- ---------------------------------------------------------------------------------------------
 -- The M7 review's low findings on the same reads

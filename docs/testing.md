@@ -85,6 +85,15 @@ tooltips, View, the search box and Filters on one row with Quality, Content, Cha
 moved into the Filters panel and filtering as on the full bar, the panel closing on hide, minimize
 and the switch, the full layout taking every control back, the shortened strip, the one-line footer
 under the ticker, and the filter state kept across a switch),
+`test_compact_modes` (the two layouts over one engine, DW-C5, compact spec §5: the same drop set, the
+full table and the compact cards drawing the same drops and headers in the same order on every tab,
+for test mode's samples and a simulated dungeon and open-world run, under every View, Content,
+Character, search and Sort, with a group collapsed, a drop dismissed and your own drops shown;
+switching back and forth on every tab leaving every verdict, trade state, inspect status, feed
+count, history entry and send as it was; and every test-mode state on a compact card saying what
+its full row says: the verdicts, trade words, ask states, inspect freshness and worn levels on Group
+drops, every countdown with Offer or its dash and Announce or Hide on My drops, and every outcome on
+History),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
@@ -320,7 +329,10 @@ outgearing it, with drops in the feed, your verdict and the looter's, a chat lin
 footer's `Simulating` and `Inspect n/n`, and rows in Group drops and My drops under the default
 filters, and the History footer's `kept for 30 days` with a shorter window that deletes nothing of
 the fresh run and so asks nothing; the combat flags during and after the simulated fight, the loot lines written from the
-GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat),
+GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat;
+every scenario runs once in each layout, DW-C5: the full table with Open in compact view during a
+run off, and the compact cards with no piece of any card blank; and a simulated key's auto-open is
+compact by default and full with the option off, the stored layout back once the run is stopped),
 `test_sim_report` (the owner's `Loot: 2 drops` with one drop shown, DW-B0, feedback-3 spec §0: the
 root cause reproduced, your own drop on My drops and nothing lost; the pure `Place`, `Summarize` and
 `TipLines`; the panel row, its tooltip, the chat line, the `· n yours on My drops` header and the

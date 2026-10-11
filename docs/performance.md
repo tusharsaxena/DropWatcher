@@ -38,9 +38,17 @@ notes per iteration, never time:
 |---|---|---|
 | `refreshCaptureOff` | the shown window's whole repaint with capture off: the bracket notes nothing, and allocates nothing over the same pass with capture on (zero overhead, paired) | 14500 bytes (the pass's own labels, footer strings, tab context and empty state, plus M10's group-header hidden-drop predicates and Character context; 14168 measured 2026-10-11, DW-A6, after the filter bar stopped rebuilding its dropdown rows on every sync), 0 notes |
 | `refreshCaptureOn` | the same with capture on: one note per pass, at most 64 bytes over the off run | 14500 bytes, 1 note |
+| `refreshCompactCaptureOff` | the same repaint in the compact layout (compact spec §5, DW-C5): the cards' pane and the compact chrome; the bracket notes nothing and allocates nothing over the on run (paired) | 11500 bytes (11065 measured 2026-10-11, under the full pass: no column labels or table to lay out), 0 notes |
+| `refreshCompactCaptureOn` | the same with capture on: one note per pass, at most 64 bytes over the off run | 11500 bytes, 1 note |
 | `showDecisionStoodDown` | the stood-down show decision returns before any work | 0 bytes, 0 notes |
 | `parseCaptureOff` | one third-person loot line parsed, the looter in the group; the bracket notes nothing | 700 bytes (the parse's own captures, record and roster lookup; 664 measured), 0 notes |
 | `parseCaptureOn` | the same with capture on: one note, and the same bytes, so the bracket adds none | 700 bytes, 1 note |
+
+The warm-up and the measured loop call each scenario through one helper, so both run at the same Lua
+stack depth. Before DW-C5 the measured loop sat one frame deeper, and the first scenario paid a one-time
+stack reallocation, about 1.8 KB, once DW-C2 deepened the refresh path. That put `refreshCaptureOff`
+at 14249.9 bytes against `refreshCaptureOn`'s 14248.1 and failed the pair's check (found by bisecting
+the M12 commits).
 
 ## In game
 

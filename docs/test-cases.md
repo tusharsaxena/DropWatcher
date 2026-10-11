@@ -368,6 +368,16 @@ Total.
 - chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
 - chrome: switching the chrome keeps every tab's filter state and builds no second window
 
+### test_compact_modes.lua (7)
+
+- modes: test mode's samples are the same drops in both layouts, on every tab, under every filter
+- modes: a collapsed group, a dismissed drop and your own drops shown are the same in both layouts
+- modes: a simulated run is the same drops in both layouts, on every tab, under every filter
+- modes: switching layouts on every tab changes nothing the engine recorded, judged or sent
+- modes: test mode's Group drops cards show every state, each saying what its full row says
+- modes: test mode's My drops cards show every countdown, Offer and Announce state, as the full rows
+- modes: test mode's History cards show every outcome, each saying what its full row says
+
 ### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
@@ -1355,16 +1365,23 @@ Total.
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
 - sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
 
-### test_sim_e2e.lua (12)
+### test_sim_e2e.lua (19)
 
 - sim e2e: no module reads the world the simulator answers except through NS.Compat
 - sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
-- sim e2e key: a run fills Group drops and My drops under the default filters
-- sim e2e dungeon: a run fills Group drops and My drops under the default filters
-- sim e2e raid: a run fills Group drops and My drops under the default filters
-- sim e2e lfr: a run fills Group drops and My drops under the default filters
-- sim e2e delve: a run fills Group drops and My drops under the default filters
-- sim e2e world: a run fills Group drops and My drops under the default filters
+- sim e2e key, full: a run fills Group drops and My drops under the default filters
+- sim e2e dungeon, full: a run fills Group drops and My drops under the default filters
+- sim e2e raid, full: a run fills Group drops and My drops under the default filters
+- sim e2e lfr, full: a run fills Group drops and My drops under the default filters
+- sim e2e delve, full: a run fills Group drops and My drops under the default filters
+- sim e2e world, full: a run fills Group drops and My drops under the default filters
+- sim e2e key, compact: a run fills Group drops and My drops under the default filters
+- sim e2e dungeon, compact: a run fills Group drops and My drops under the default filters
+- sim e2e raid, compact: a run fills Group drops and My drops under the default filters
+- sim e2e lfr, compact: a run fills Group drops and My drops under the default filters
+- sim e2e delve, compact: a run fills Group drops and My drops under the default filters
+- sim e2e world, compact: a run fills Group drops and My drops under the default filters
+- sim e2e: a simulated key's auto-open is compact by default, full with the option off, then the stored layout
 - sim e2e: the combat flags answer the simulated fight, and the client's again after it
 - sim e2e: the loot lines are written from the GlobalStrings Compat reads
 - sim e2e: in a raid, raid1 is you, online, for every unit read
@@ -1534,6 +1551,7 @@ Total.
 | test_compact_mine.lua | 16 |
 | test_compact_history.lua | 9 |
 | test_compact_chrome.lua | 19 |
+| test_compact_modes.lua | 7 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1573,7 +1591,7 @@ Total.
 | test_sim_pool.lua | 19 |
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
-| test_sim_e2e.lua | 12 |
+| test_sim_e2e.lua | 19 |
 | test_sim_report.lua | 21 |
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
@@ -1585,4 +1603,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1307** |
+| **Total** | **1321** |

@@ -1289,7 +1289,10 @@ it at the compact width, For you, For the looter and the trade box one under ano
 two or three lines, nothing cut off on the right; click it again → it closes; switch to full with it
 open → the same row is open there. Click × → the card goes for the session. Settings → Window → Font
 size 14 → the cards grow with the text. Run `/dw sim start` and step it → the cards fill the same
-way. Result:
+way. On each tab, switch to full and back → the same drops under the same headers, in the same
+order, and the same counts on the tabs (DW-C5). With the defaults, `/dw sim start key`, close the
+window and `/dw sim run` → the next drop opens it compact; stop the simulation, close the window and
+open it → the full layout. Result:
 
 **COMPACT-3. My drops cards, the countdown, Offer and Announce (DW-C3).** Turn test mode on and
 switch to the compact layout, then open My drops → each drop of yours is a three-line card under a
@@ -1440,6 +1443,6 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-12 | DW-B0, the loot step says where its drops went; the tabs reconcile | No client pass recorded yet |
 | SIM-13 | DW-B5, the loot step honors `feed.showOwn`, test mode's feed and My drops' Hide and filters | No client pass recorded yet |
 | COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
-| COMPACT-2, COMPACT-7 | DW-C2, compact Group drops cards, the stacked detail card and the card tooltips | No client pass recorded yet |
+| COMPACT-2, COMPACT-7 | DW-C2, compact Group drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
 | COMPACT-3, COMPACT-4 | DW-C3, compact My drops and History cards, the countdown, Offer and Announce, the docked Offer panel | No client pass recorded yet |
 | COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |
