@@ -204,7 +204,11 @@ when it ends (`modules/TestMode.lua`). The
 Group drops table's collapsed groups, dismissed rows and the one expanded row (the detail card)
 are session-only too (`NS.State.windowGroup`), and so are the My drops tab's hidden rows and the
 upgrades whose candidates you chose to see and its collapsed groups (`NS.State.windowMine`) and the Offer panel's drop
-(`NS.State.offerPanel`), and so are the History tab's collapsed groups (`NS.State.windowHistory`).
+(`NS.State.offerPanel`), and so are the History tab's collapsed groups (`NS.State.windowHistory`)
+and compact mode's run override (`NS.State.compactRun`, `{ key, ended }` while an auto-open inside a
+run holds the window compact; `modules/WindowCompact.lua`). Compact mode keeps no state of its own
+beyond it: the cards read the same session tables as the rows, so a switch keeps the tab, the
+filters, the collapsed groups, the hidden rows and the expanded detail card.
 `global.notices.autoAsk` is auto-ask's one-time notice, set by `modules/AutoAsk.lua` alone the first
 time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once per
 account. `global.history.v` and `global.history.groups` are the history's own record, written by
@@ -222,7 +226,10 @@ while a simulation runs is real, keeps the real situation and is saved (`History
 write into the table the launcher hands it. The load pass is `NS:RunMigrations`
 (`core/Database.lua`), whose step 2 (`NS.RepairStoredSettings`) drops a stored value a row now
 refuses, in every stored profile, and whose step 3 (`NS.MigrateViewSet`, DW-A1) turns the old
-`feed.view` string and the three retired checkbox rows into the View set. No structural registry exists yet.
+`feed.view` string and the three retired checkbox rows into the View set. Step 4
+(`NS.RetireHistoryCap`, DW-A5) removes the retired history cap, and step 5
+(`NS.MigrateWindowMode`, DW-C0) turns the compact preset into `window.mode` and moves the single
+layout's point and size into `window.geometry.full`. No structural registry exists yet.
 
 ## Message Bus
 
@@ -413,6 +420,12 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
   instance without one of its side's difficulties repeats another difficulty's links, which the pool
   de-duplicates. A pool built with `loot for me` lists your class's items only, so members of
   another armor type draw fewer slots from it.
+- **Compact mode** (M12, compact spec) is a second layout of the same window, unconfirmed in game
+  like the rest (COMPACT-1..7). A switch carries the scroll offset as the same fraction of the
+  scroll range, so the drop at the top can move by a card or two; the Columns rows and Row height
+  shape the full layout's tables only. The run override reads the situation edge, so a run ends
+  when the situation moves off the one it began in (a key's completion re-reads it as a dungeon),
+  not on a boss kill or a wipe.
 - **The logo** is a placeholder generated for the scaffold; the owner may replace the art
   (regenerate the TGAs with the recipe in `DEPENDENCIES.md`).
 

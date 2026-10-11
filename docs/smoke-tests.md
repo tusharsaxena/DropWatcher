@@ -36,7 +36,7 @@ passed.
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the tabs reconciling with it (SIM-12, DW-B0), the loot step honoring `feed.showOwn` and test mode (SIM-13, DW-B5) |
-| COMPACT-1, COMPACT-6 | [Compact](#compact) | Compact mode (compact spec §1, DW-C0): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6). COMPACT-2..5 and 7 arrive with DW-C2..C5 |
+| COMPACT-1..7 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Group drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); My drops cards, the countdown, Offer and Announce, the Offer panel docked beside (COMPACT-3, DW-C3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -1335,18 +1335,18 @@ switch to full → the panel closes. The footer is one line, `Inspect 4/4 · Myt
 tooltip lists the last loot, the situation and Pawn. Switch to full → every control is back on the
 bar and Sort back in the footer, each at its place. Result:
 
-**COMPACT-7. Card tooltips at the card's top right (DW-C2).** In the compact layout, hover each piece
-of a card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn
-levels, Ask and ×) and a header → each tooltip rises from the card's top-right corner, just outside
-the window's right edge (or its left edge when the window sits against the right of the screen),
-never over the cards. Result:
-
 **COMPACT-6. Open in compact view during a run (DW-C0).** With the Layout on Full and Settings →
 Window → Open in compact view during a run on (the default), close the window and start a Mythic+
 key → the first drop opens the window compact; the Layout setting still reads Full. Complete the key
 with the window still open → it stays compact; close it and reopen it (`/dw show`) → it opens full.
 Close it inside a dungeon run, let a drop open it → compact; click the toggle → full at once, and it
 stays the player's choice. Turn the option off → an auto-open in a run keeps the Layout. Result:
+
+**COMPACT-7. Card tooltips at the card's top right (DW-C2).** In the compact layout, hover each piece
+of a card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn
+levels, Ask and ×) and a header → each tooltip rises from the card's top-right corner, just outside
+the window's right edge (or its left edge when the window sits against the right of the screen),
+never over the cards. Result:
 
 ## Non-English client
 

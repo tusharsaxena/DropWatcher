@@ -72,7 +72,7 @@ end
 
 -- ── the reactions ───────────────────────────────────────────────────────────────────────────
 
--- What the open window shows follows the row: its columns, its preset, its Quality label.
+-- What the open window shows follows the row: its columns, its layout, its Quality label.
 local function repaintWindow()
     local W = NS.Window
     if W and W.IsShown and W.IsShown() then W.Refresh() end

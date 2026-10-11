@@ -385,9 +385,9 @@ The Group drops table (DW-31) settles five cases the design leaves open. **Group
 newest first (oldest first under Sort: Oldest), and a group the player never toggled is open
 when it is the first one shown and collapsed otherwise (board 01); the Sort orders the drops
 inside each group. The **header** names the group, its situation (the feed's groups carry no
-difficulty), its age and its count. The **compact preset** changes the columns only (Item and
-looter, Ilvl, Their eq, Me, Ask); the tab strip, the filter bar and the window's size stay as the
-player set them. **My eq** and **Their eq** (DW-83, feedback spec §3) show both worn items for
+difficulty), its age and its count. The M3 **compact preset**, which changed the columns only, is
+retired: compact mode (M12) is a second layout of the whole window, with its own size and
+cards in place of rows (see Compact mode below). **My eq** and **Their eq** (DW-83, feedback spec §3) show both worn items for
 rings, trinkets and weapons (the hands the drop could go in) as icons with their item levels
 (`300/296`), My eq read from your gear snapshot, Their eq from the looter's inspect entry; a slot
 read as empty says `empty slot`, and Their eq's inspect age is in its tooltip (`Inspected 2m ago.`,
@@ -466,3 +466,18 @@ readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names 
 shape of the trade-time and item-level tooltip lines (whether the `ItemLevel` line carries a
 numeric field), and that `PawnIsInitialized` is a boolean flag. A secret chat-lockdown or
 restriction answer reads as locked, a secret bind answer as not bound ([`midnight-quirks.md`](midnight-quirks.md)).
+
+## Compact mode
+
+Compact mode (M12, compact spec) settles four cases its spec leaves open. **The switch** carries the
+scroll offset as the same fraction of the scroll range (`CompactGroup.CarryScroll`), since a card and
+a row differ in height; the expanded detail card, the collapsed groups and the hidden rows are the
+session tables both layouts read, so they carry exactly. **The run override** ends on the situation
+edge, not on `CHALLENGE_MODE_COMPLETED` alone: a key's completion re-reads the situation as a
+dungeon, and leaving the instance ends the rest; a shown window keeps its layout until it is next
+hidden, so a run's end never resizes the window under the player. **The columns** (the Columns rows
+and Row height) shape the full layout's tables only; a card carries every fact on its three lines
+and sizes from its font (`window.fontSize`). **The Filters menu** is a small panel under the
+`Filters` button holding the full bar's own Quality, Content and Character dropdowns and the
+footer's Sort, moved rather than copied, so their choices and multi-select behavior cannot differ;
+it closes on a second click, minimize, close or a switch to full, which puts each control back.
