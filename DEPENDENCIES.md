@@ -14,11 +14,16 @@ marked as such rather than listed as a requirement.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load
   ordering, not as things to download.
-- **Optional: Pawn and CanIMogIt.** Named in `## OptionalDeps:` so they load first when installed.
-  Today the addon only reports whether each is loaded (`core/DropWatcher.lua` `logDependencies`, and
-  the `integrations` section of `modules/Diagnostics.lua`, both through `C_AddOns.IsAddOnLoaded`).
-  The Pawn scoring adapter and the transmog flag arrive with the feature items that use them (design
-  spec §5.4 and §4); without either addon, Drop Watcher compares by item level alone.
+- **Optional: Pawn and CanIMogIt.** Named in `## OptionalDeps:` so they load first when installed,
+  and reached only through `core/Compat.lua` (their API is called under `pcall`, never copied).
+  **Pawn**, when loaded, drives the `pawn` scorer (`modules/Scoring.lua`, design spec §5.4):
+  `comparison.scorer` `auto` picks it, and it answers `pending` until Pawn has initialized, which
+  the feed retries. Its scale strings can also be imported into your own weights. **CanIMogIt**,
+  when loaded, answers the transmog-known flag (design spec §4) before `C_TransmogCollection` does.
+  Without Pawn, the comparison uses your own weights when any are set, else item level alone;
+  without CanIMogIt, the transmog flag comes from the client API. Whether each is loaded is
+  reported by `core/DropWatcher.lua` `logDependencies` and the diagnostics' `integrations` and
+  Scoring sections (`modules/Diagnostics.lua`), the latter naming the scorer actually in use.
 
 ## Development — the contributor toolchain
 
