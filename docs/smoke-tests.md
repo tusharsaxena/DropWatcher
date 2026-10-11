@@ -35,7 +35,7 @@ passed.
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..7 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); SIM-2..3 *reserved* for DW-73 (a full `key` run, a `raid` run with a large roster), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), SIM-7 *reserved* for DW-73 (the automatic stop end to end) |
+| SIM-1..7 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the SIM chip, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -842,8 +842,8 @@ collect. Result:
 
 ## Simulator
 
-**SIM-1. Start and stop, the refusals, nothing sent (DW-70).** Runs once `/dw sim` lands (DW-73);
-until then the headless `test_sim_core` covers it. Solo, outside an instance and out of combat:
+**SIM-1. Start and stop, the refusals, nothing sent (DW-70).** The headless `test_sim_core` covers
+the same ground. Solo, outside an instance and out of combat:
 `/dw sim start dungeon` → chat says `Simulation started (…): nothing is sent, and your saved history
 is not touched.` Ask for a simulated drop → chat prints `[sim] WHISPER to <name>: <text>` and your
 whisper tab shows nothing sent. `/dw sim stop` → `Simulation stopped.`, the simulated drops leave the
@@ -855,8 +855,31 @@ join a group → `Simulation stopped: you joined a group.`; start one, then `/dw
 `Simulation stopped: the addon was disabled.` After a `/reload`, no simulation is running and
 `/dw history` shows no simulated drop. Result:
 
-**SIM-4. Inspect replies, the lockdown queue and its flush (DW-72).** Runs once `/dw sim` lands
-(DW-73); until then the headless `test_sim_events` covers it. Solo, outside an instance, with `/dw
+**SIM-2. A full `key` run (DW-73).** The headless `test_sim_scenario` (`sim e2e key`) covers the same
+ground. Solo, outside an instance, out of combat, with `/dw debug on`: `/dw sim start key` → chat says
+`Simulation ready: 4 members, <n> items. …`, the window opens with a cyan `SIM` chip beside the title
+(its tooltip names `Scenario: key (Mythic+)`), and the footer reads `Simulating: Mythic+ · 4 members`.
+`/dw sim run` → over about half a minute the badge shows `Mythic+ key`, then each boss's `Encounter`
+in turn, then `Chat lockdown` after the completion; the completion's loot lands in Group drops and My
+drops, the debug log shows one `[SIM] event …` line per injected event and one `[SIM] timeline step
+n/11: …` per step, and chat ends with `The simulation's timeline has finished.` Press Ask on a member's
+drop while the lockdown holds → it waits in the badge's queue; when it lifts, chat prints `[sim]
+WHISPER to <member>: <text>` and the whisper tab shows nothing sent. Each drop shows your verdict and,
+within a few seconds, the looter's. `/dw diagnostics` → the `sim:` lines show `scenario=key`, the
+pool's size and `source=journal`, `timeline step=11/11` and the sends printed. Result:
+
+**SIM-3. A `raid` run with a large roster (DW-73).** The headless `test_sim_scenario` (`sim e2e raid`)
+covers the same ground. `/dw sim start raid 19` → the Group drops tab's roster shows 19 invented
+members besides you (raid2 onward), the footer reads `Simulating: Raid · 19 members`, and `/dw
+situation` says Raid. Turn on Settings > Messages > Auto-ask, then `/dw sim run` → two bosses, each
+with a loot burst of five lines from random looters (a member from another realm named Name-Realm).
+Record how long the inspect warm-up takes to read all 19 (the footer's `Inspect n/19 fresh`), whether
+any automatic ask goes out (`[sim] WHISPER`, never a real whisper) once the second boss is down, and
+the frame rate while the burst lands. `/dw sim trade <id>` on a member's drop → the History tab shows
+it `Received`. `/dw sim stop` → the roster is you alone, and the History tab shows only your real
+history. Result:
+**SIM-4. Inspect replies, the lockdown queue and its flush (DW-72).** The headless `test_sim_events`
+covers the same ground. Solo, outside an instance, with `/dw
 debug on`: `/dw sim start dungeon` → the Group drops tab's roster shows four invented members, and
 the footer's situation is the dungeon. `/dw sim loot 1 <member>` → the drop shows the looter's name
 (a member from another realm as Name-Realm) and, within a few seconds, a Them verdict; the debug log
@@ -866,8 +889,8 @@ simulator answers as the client does). `/dw sim pull` → the badge shows the en
 a member's drop → it is queued, nothing is printed. `/dw sim kill` → within a few seconds chat prints
 `[sim] WHISPER to <member>: <text>`, and the whisper tab shows nothing sent. Result:
 
-**SIM-5. Your own drops' trade windows and a simulated trade (DW-72).** Runs once `/dw sim` lands
-(DW-73); until then the headless `test_sim_events` covers it. `/dw sim start dungeon`, then `/dw
+**SIM-5. Your own drops' trade windows and a simulated trade (DW-72).** The headless `test_sim_events`
+covers the same ground. `/dw sim start dungeon`, then `/dw
 sim loot 2 me` → My drops shows both, the first with about 9 minutes left (it warns at once, since
 the warning is at 10 minutes) and the second with about 2 hours; your real bags are unchanged.
 Offer the second to a member and press Trade → chat prints `[sim] Would hand the item to <unit>.` and
@@ -875,8 +898,8 @@ no trade window opens. `/dw sim trade <its id>` → the History tab shows it `Tr
 member's drop and `/dw sim trade <its id>` → `Received`. After `/dw sim stop` the History tab shows
 only your real history. Result:
 
-**SIM-6. The item pool: the Encounter Journal and its fallback (DW-71).** Runs once `/dw sim` lands
-(DW-73); until then the headless `test_sim_pool` covers it. Solo, outside an instance, with `/dw
+**SIM-6. The item pool: the Encounter Journal and its fallback (DW-71).** The headless `test_sim_pool`
+covers the same ground. Solo, outside an instance, with `/dw
 debug on`: open the Encounter Journal, pick an older instance, a difficulty and a class filter,
 and close it. `/dw sim start key` → the debug log shows `[SIM] pool: <n> items from the journal (0
 still loading)` within a few seconds, and a simulated drop's tooltip shows a current-season item at
@@ -888,6 +911,17 @@ so this simulation drops your own gear instead.` and the drops are your own item
 again with it still open → the line is not printed a second time this session. Close it before the
 5 seconds instead → the journal pool is read once it closes. Record the item count of each pool.
 Result:
+
+**SIM-7. The verbs' refusals and the automatic stop end to end (DW-73).** The headless
+`test_sim_scenario` and `test_sim_core` cover the same ground. With no simulation running, `/dw sim
+run`, `step`, `pull`, `kill`, `loot`, `lockdown on`, `trade 1` and `stop` each print `No simulation is
+running: start one with /dw sim start <scenario>.`; `/dw sim start nowhere` prints `Unknown
+scenario.`; `/dw disable`, then `/dw sim start dungeon` → the disabled line, and no simulation starts.
+With one running: `/dw sim pull` twice → `A simulated boss is already engaged: /dw sim kill first.`;
+`/dw sim run` twice → `The timeline is already playing.` Start one and `/dw sim run`, then accept a
+real group invite mid-run → `Simulation stopped: you joined a group.`, the SIM chip goes, no further
+step plays, and the footer shows the real situation. Start one, then zone into an instance (a
+follower dungeon will do) → `Simulation stopped: you entered an instance.` Result:
 
 ## Non-English client
 
@@ -953,6 +987,9 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | ASK-8 | DW-54, auto-ask | No client pass recorded yet |
 | ASK-9 | DW-62, auto-ask after leaving an encounter | No client pass recorded yet |
 | SIM-1 | DW-70, the simulator's core: the seam, its safety and the session log | No client pass recorded yet |
+| SIM-2 | DW-73, a full `key` run | No client pass recorded yet |
+| SIM-3 | DW-73, a `raid` run with a large roster | No client pass recorded yet |
 | SIM-4 | DW-72, inspect replies, the lockdown queue and its flush | No client pass recorded yet |
 | SIM-5 | DW-72, your own drops' trade windows and a simulated trade | No client pass recorded yet |
 | SIM-6 | DW-71, the simulator's item pool and its fallback | No client pass recorded yet |
+| SIM-7 | DW-73, the verbs' refusals and the automatic stop end to end | No client pass recorded yet |

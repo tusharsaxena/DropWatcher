@@ -287,6 +287,9 @@ modules\SimWorld.lua
 # NS.Sim (modules\Sim.lua) at load. NS.SimWorld, NS.SimPool, NS.Roster, NS.LootFeed and NS.Compat
 # are read at call time.
 modules\SimEvents.lua
+# Conventional: publishes NS.SimScenario, the simulator's scenarios and timeline; reads NS.L at
+# load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents and NS.Window are read at call time.
+modules\SimScenario.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 
@@ -319,6 +322,9 @@ settings\Pages.lua
 # settings\Slash.lua's NS.COMMANDS calls at RUN time; reads NS.L at load and every module above
 # at call time.
 settings\SlashVerbs.lua
+# Conventional: publishes NS.SimVerbs, `/dw sim`'s handler, which settings\Slash.lua's NS.COMMANDS
+# calls at RUN time; reads NS.L at load and the simulator's modules (above) at call time.
+settings\SimVerbs.lua
 # LOAD-BEARING: captures NS.SchemaRuntime.Get/Set/FindRow/ApplyDefault at load.
 settings\Slash.lua
 # LAST, so its RegisterOptionsPage call queues behind every other page's (options-ui-§3).

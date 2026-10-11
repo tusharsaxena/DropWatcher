@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Seventy-three authored files load from the TOC, in the standard's folder order; every one, its kind,
+Seventy-five authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -67,14 +67,16 @@ its one-line responsibility and why its position is load-bearing or conventional
 - `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
   client answers about its world (`SimWorld.lua`: the group, the place, the inspect replies, your
-  simulated bag items and the trade window) and its event drivers (`SimEvents.lua`: loot lines,
-  pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3).
+  simulated bag items and the trade window), its event drivers (`SimEvents.lua`: loot lines,
+  pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3) and its
+  scenarios and timeline (`SimScenario.lua`: what `/dw sim start` builds and `run` and `step`
+  play; simulator spec §4).
 - `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
   their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
   (`TestMode.lua`) and the diagnostics sections (`Diagnostics.lua`).
-- `settings/`: the schema seam and its rows, the options pages and their editors, the slash table
-  and the slash-only verbs, and Profiles, last.
+- `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
+  the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
 
 The window only listens: it reads the engine through read-only accessors and the bus, and every
 button goes through the host handler its slash verb shares.
@@ -287,12 +289,11 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
   and filed when the owner lifts the hold on GitHub writes.
 - **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
   headless mock does not model; PROFILE-1 is its in-game check.
-- **The simulator** (milestone M7) has its core, its item pool, its group and its event drivers:
-  the session, the seam, its safety, the session-only history log, the pool read from the
-  Encounter Journal (or your own gear), the invented members with their gear, and the drivers that
-  feed loot lines, encounters, a keystone run, combat, inspect replies, your own drops' trade
-  windows and a completed trade into the real engine. No `/dw sim` verb starts it yet, and there is
-  no timeline: the scenarios, `run` and `step` land with DW-73.
+- **The simulator** (milestone M7) runs end to end: `/dw sim start <scenario> [size]` builds the
+  pool and the group, `run` and `step` play the scenario's timeline, and the SIM chip, the footer's
+  `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). The
+  timeline's steps are event drivers only; the engine computes every verdict, estimate and inspect.
+  A key's bosses drop nothing: its loot comes with the completion, as the end-of-run chest's does.
 - **A simulated member's spec** stays unknown: the inspect broker reads the spec after it has
   cleared its own inspect (its flight ends first), and the simulator lets the inspect data go on
   `ClearInspectPlayer`, as the client does. Whether the live client still answers

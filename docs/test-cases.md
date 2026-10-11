@@ -1026,6 +1026,25 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
+### test_sim_scenario.lua (16)
+
+- sim verbs: Parse reads every verb and its arguments
+- sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
+- sim verbs: `/dw sim` prints the status and the usage; the verbs need a running simulation
+- sim verbs: refused while the addon is disabled, like every feature verb
+- sim start: refused in combat and with test mode on, each with its line
+- sim start: the scenario's pool, group and situation, and the window open
+- sim start: a raid takes its size; a party is always four
+- sim step: the timeline waits for the pool, then plays one step at a time
+- sim run: plays every step a few seconds apart, then says it has finished
+- sim stop: ends a playing timeline and its timers
+- sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
+- sim window: the SIM chip with the scenario tooltip, and the footer says Simulating
+- sim diagnostics: the section reads the session, the pool, the timeline and the sends
+- sim debug: the SIM tag logs every injected event and every step
+- sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
+- sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -1169,6 +1188,7 @@ Total.
 | test_sim_core.lua | 21 |
 | test_sim_pool.lua | 18 |
 | test_sim_events.lua | 20 |
+| test_sim_scenario.lua | 16 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1178,4 +1198,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **968** |
+| **Total** | **984** |

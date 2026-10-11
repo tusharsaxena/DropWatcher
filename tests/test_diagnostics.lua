@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,state,settings,window,situation,restrictions,roster,inspect,gear,feed,trade,scoring,messaging,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,state,settings,window,situation,restrictions,roster,inspect,gear,feed,trade,scoring,messaging,sim,registration,integrations")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the window decision", function()

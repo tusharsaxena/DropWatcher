@@ -7,7 +7,8 @@ local _, NS = ...
 -- its Master controls row and its launcher entry call (core/DropWatcher.lua). The design spec's
 -- feature verbs (§12.3) follow the window verbs: `scan` and `compact` call the window's own host
 -- handlers; `clear`, `history`, `mine`, `situation`, `offer` and `add` are slash-only and answered
--- by settings/SlashVerbs.lua.
+-- by settings/SlashVerbs.lua. The simulator's `sim` (simulator spec §4) is answered by
+-- settings/SimVerbs.lua.
 
 local DW = NS.addon
 local L  = NS.L
@@ -79,6 +80,8 @@ local COMMANDS = {
         function(rest) NS.SlashVerbs.Offer(rest) end},
     {"add",      L["Inject a drop for testing — `/dw add <item link> [player]`"],
         function(rest) NS.SlashVerbs.Add(rest) end},
+    {"sim",      L["Simulate a group session through the real engine — `/dw sim` for its verbs"],
+        function(rest) NS.SimVerbs.Run(rest) end},
 }
 NS.COMMANDS = COMMANDS
 

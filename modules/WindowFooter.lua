@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/WindowFooter.lua — the main window's footer (design spec §11.1, board 01 note 12): a
 -- quick health check, so it is clear the addon is listening even with no drop on screen. Inspect
 -- freshness, the last loot seen, the situation and Pawn's status on the left; the tab's Sort on the
--- right, beside the resize grip.
+-- right, beside the resize grip. While a simulation runs, the situation reads `Simulating: <situation>
+-- · n members` (simulator spec §6).
 --
 -- Compose is PURE: plain inputs in, each segment's text and tooltip out, so test_window drives it
 -- case by case. Read gathers the inputs through the engine's read-only accessors (the roster, the
@@ -71,6 +72,10 @@ end
 
 local function situationSegment(i)
     local name = WF.SituationLabel(i.situation)
+    if type(i.sim) == "table" then
+        return { text = L["Simulating: %s · %d members"]:format(name, i.sim.members or 0), tip = { L["Simulation"],
+            L["A simulation is running: the situation and the group are made up. /dw sim stop ends it."] } }
+    end
     if i.tracking == false then
         return { text = L["Not tracking in %s · change in settings"]:format(name), tip = { L["Situation"],
             L["Loot is not tracked here. Settings > General > When to show turns tracking on for %s."]:format(name) } }
@@ -87,7 +92,8 @@ local function pawnSegment(i)
 end
 
 --- Each segment's text and tooltip from plain inputs.
---- @param i table { members, good, outOfRange, pending, lastLootAgo, situation, tracking, pawn }
+--- @param i table { members, good, outOfRange, pending, lastLootAgo, situation, tracking, pawn,
+---   sim = { members } while a simulation runs }
 --- @return table { inspect, loot, situation, pawn }, each { text, tip = { title, lines... } }
 function WF.Compose(i)
     i = type(i) == "table" and i or {}
@@ -122,6 +128,7 @@ function WF.Read()
     if type(lastAt) == "number" then i.lastLootAgo = GetTime() - lastAt end
     i.situation = NS.Situations.Current()
     i.tracking = NS.Situations.IsTracking(i.situation)
+    if NS.Sim.IsActive() then i.sim = { members = #NS.SimRoster.Get() } end
     i.pawn = NS.Compat.PawnIsReady() and "on" or "off"
     return i
 end

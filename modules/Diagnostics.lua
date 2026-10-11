@@ -6,7 +6,8 @@ local _, NS = ...
 -- no event, no timer, safe in combat and while stood down. `out:add` formats %s-only and runs every
 -- argument through safeToString, so raw values are passed, never pre-built strings. Every section
 -- of design spec §13 is here: State, Feed, Inspect, Gear, Trade, Scoring and Messaging, beside the
--- standard's identity, settings, registration and integrations.
+-- standard's identity, settings, registration and integrations, and the simulator's (simulator
+-- spec §6).
 
 NS.Diagnostics = NS.Diagnostics or {}
 
@@ -296,6 +297,26 @@ local function scoring(out)
     out:add(TAG, "scoring: retries pending=%s spent=%s timer=%s", r.pending, r.spent, r.armed and "on" or "off")
 end
 
+-- The simulator (simulator spec §6): whether one runs, its scenario and situation, its members,
+-- its pool's size and source, the timeline's position and the sends it printed instead of sending.
+-- Stored state only.
+local function sim(out)
+    local st = NS.Sim.Status()
+    if not st.active then
+        return out:add(TAG, "sim: active=false sendsPrinted=%s handOvers=%s", st.sends, st.handOvers)
+    end
+    out:add(TAG, "sim: active=true scenario=%s situation=%s members=%s events=%s", st.scenario,
+        st.situation or "none", #NS.SimRoster.Get(), st.events)
+    local p = NS.SimPool.Status()
+    out:add(TAG, "sim: pool size=%s source=%s building=%s pending=%s", p.size, p.source or "none",
+        p.building, p.pending)
+    local t = NS.SimScenario.Status() or { pos = 0, steps = 0, ready = false, playing = false }
+    out:add(TAG, "sim: timeline step=%s/%s next=%s ready=%s playing=%s", t.pos, t.steps, t.next or "none",
+        t.ready, t.playing)
+    out:add(TAG, "sim: sendsPrinted=%s handOvers=%s lockdown=%s restrictions=%s", st.sends, st.handOvers,
+        st.lockdown, st.restrictions)
+end
+
 local function registration(out)
     local names = NS.FeatureEventNames and NS.FeatureEventNames() or {}
     out:joined(TAG, "feature events (declared)", names)
@@ -331,6 +352,7 @@ function NS.Diagnostics.Sections()
         { "trade",        trade },
         { "scoring",      scoring },
         { "messaging",    messaging },
+        { "sim",          sim },
         { "registration", registration },
         { "integrations", integrations },
     }

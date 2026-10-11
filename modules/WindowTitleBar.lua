@@ -1,8 +1,8 @@
 local addonName, NS = ...
 -- modules/WindowTitleBar.lua — the main window's title bar (design spec §11.1, boards 01, 06 A and
--- 06 E): the logo, the gold title, test mode's chip, the `n new` counter, the restriction badge,
--- Scan group, minimize and the close mark, plus the window's flat and icon buttons, which other
--- frames borrow through NS.Window.TextButton.
+-- 06 E): the logo, the gold title, test mode's chip, the simulator's SIM chip (simulator spec
+-- §6), the `n new` counter, the restriction badge, Scan group, minimize and the close mark, plus
+-- the window's flat and icon buttons, which other frames borrow through NS.Window.TextButton.
 --
 -- Peeled out of modules/Window.lua (layout-§1's 1000-line notice band). The shell keeps everything
 -- that writes state: geometry (the drag's start and stop come in as `host` callbacks), the
@@ -86,6 +86,19 @@ end
 
 local function newTip()
     return L["%d new"]:format(NS.Window.NewCount()), L["Interesting drops that arrived since you minimized the window. Expand it to see them."]
+end
+
+--- The SIM chip's own color (simulator spec §6): a cyan apart from every verdict tone.
+TB.SIM_TONE = { r = 0.35, g = 0.80, b = 1.00 }
+
+--- The SIM chip's tooltip (simulator spec §6): the scenario and what the simulation never does.
+function TB.SimTip()
+    local st = NS.Sim.Status()
+    local scenario = st.active and tostring(st.scenario) or L["none"]
+    return L["Simulation"],
+        L["Scenario: %s (%s)"]:format(scenario, NS.WindowFooter.SituationLabel(st.situation)),
+        L["A made-up group session runs through the real engine: nothing is sent, and your saved history is not touched."],
+        L["/dw sim lists its verbs; /dw sim stop ends it."]
 end
 
 --- Test mode's chip and banner (design spec §11.6, board 06 E) share one tooltip.
@@ -174,18 +187,19 @@ local function buildBadge(bar)
     return b
 end
 
-local function buildTestChip(bar, title)
+-- One chip beside the title: a tinted fill, its word in its tone, and a tooltip.
+local function buildChip(bar, title, width, word, tone, tip)
     local chip = CreateFrame("Frame", nil, bar)
-    chip:SetSize(76, K.CONTROL_H - 4)
+    chip:SetSize(width, K.CONTROL_H - 4)
     chip:SetPoint("LEFT", title, "RIGHT", 8, 0)
     chip.fill = chip:CreateTexture(nil, "BACKGROUND")
     chip.fill:SetAllPoints(chip)
-    chip.fill:SetColorTexture(C.TONE.warn.r, C.TONE.warn.g, C.TONE.warn.b, 0.18)
+    chip.fill:SetColorTexture(tone.r, tone.g, tone.b, 0.18)
     chip.text = chip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     chip.text:SetPoint("CENTER", chip, "CENTER", 0, 0)
-    chip.text:SetText(L["TEST MODE"])
-    chip.text:SetTextColor(C.TONE.warn.r, C.TONE.warn.g, C.TONE.warn.b)
-    NS.Window.AttachTooltip(chip, TB.TestTip)
+    chip.text:SetText(word)
+    chip.text:SetTextColor(tone.r, tone.g, tone.b)
+    NS.Window.AttachTooltip(chip, tip)
     chip:Hide()
     return chip
 end
@@ -220,7 +234,7 @@ local function buildControls(f, bar)
 end
 
 --- Build the title bar into the window frame `f` (f.titleBar, f.logo, f.title, f.testChip,
---- f.newChip, f.closeButton, f.minimizeButton, f.scanButton, f.badge, f.divider). The drag goes
+--- f.simChip, f.newChip, f.closeButton, f.minimizeButton, f.scanButton, f.badge, f.divider). The drag goes
 --- through `host`, the shell, which owns the geometry it writes.
 --- @param f table the window frame
 --- @param host table { onDragStart = fn, onDragStop = fn }
@@ -246,7 +260,8 @@ function TB.Build(f, host)
     f.title:SetPoint("LEFT", f.logo, "RIGHT", 6, 0)
     f.title:SetText(NS.BRAND)
 
-    f.testChip = buildTestChip(bar, f.title)
+    f.testChip = buildChip(bar, f.title, 76, L["TEST MODE"], C.TONE.warn, TB.TestTip)
+    f.simChip = buildChip(bar, f.title, 36, L["SIM"], TB.SIM_TONE, TB.SimTip)
     buildNewChip(f, bar)
     buildControls(f, bar)
 
@@ -266,13 +281,16 @@ function TB.PaintBadge(f)
     f.badge:SetShown(text ~= nil)
 end
 
---- The TEST MODE chip beside the title, the `n new` counter after it.
+--- The TEST MODE chip or the SIM chip beside the title (the two modes are exclusive), the `n new`
+--- counter after it.
 --- @param f table the window frame
 function TB.PaintTestChip(f)
-    local on = NS.State.testMode == true
-    f.testChip:SetShown(on)
+    local test = NS.State.testMode == true
+    local sim = not test and NS.Sim.IsActive()
+    f.testChip:SetShown(test)
+    f.simChip:SetShown(sim)
     f.newChip:ClearAllPoints()
-    f.newChip:SetPoint("LEFT", on and f.testChip or f.title, "RIGHT", 8, 0)
+    f.newChip:SetPoint("LEFT", (test and f.testChip) or (sim and f.simChip) or f.title, "RIGHT", 8, 0)
 end
 
 --- The minimize mark (minus, or plus while minimized) and the `n new` counter, shown minimized only.

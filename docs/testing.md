@@ -221,6 +221,16 @@ counted, a keystone run's group and ChallengeMode restriction; your own drops in
 their trade windows (the ending-soon one closing) and the scenario's window; a simulated trade
 settling `tradedAway` and `received` in the session's log with no real trade, and its refusals; and
 the stop ending the combat edge and the bag items),
+`test_sim_scenario` (the simulator's scenarios, timeline and controls: the pure verb parser and
+timeline; `/dw sim` through the real dispatcher with its status, usage and refusals, refused while
+disabled, in combat and with test mode on; a scenario's pool, group, situation and window, a raid
+sized by its argument; the timeline waiting for the pool, a step at a time, a run a few seconds per
+step to its end, the stop and the stand-down ending a playing run; the SIM chip, the footer's
+`Simulating` line, the `sim` diagnostics section and the `SIM` debug lines; and the end-to-end
+scenarios (spec §7): a `key` and a `raid` run headless, asserting drops parsed from the written
+lines, your verdict and the looter's after the simulated inspect, the ask held in the lockdown and
+flushed, auto-ask firing after its delay, your own drop's countdown, a simulated trade in the
+session's log, saved history untouched and the real chat sender, inspect and trade never called),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

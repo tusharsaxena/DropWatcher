@@ -120,7 +120,7 @@ A placeholder is never judged, re-estimated or inspected: its verdicts, trade, i
 (`testInspect`) and ask state (`testAsk`) are the data's. The ask state shows only while the
 messaging edge holds none for it, so a click on Ask moves it like a live row's.
 
-## The simulator (simulator spec §1, §2, §5)
+## The simulator (simulator spec §1, §2, §4, §5, §6)
 
 ```
 NS.Sim.Start(opts) ─> refused (printed): stood down, already running, test mode, combat,
@@ -164,6 +164,14 @@ NS.SimEvents.Kill() ─> Fire(ENCOUNTER_END, …, 1) ─> Combat(false) ─> Set
 NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with the ChallengeMode restriction
 NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
                    TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
+/dw sim <verb> ─> NS.SimVerbs.Parse (pure) ─> no simulation running: "No simulation is running" (but start)
+/dw sim start <scenario> [size] ─> NS.SimScenario.Start ─> NS.Sim.Start (refusals) ─> Timeline (pure)
+                   ─> NS.SimPool.Build ─> ready: SimRoster.Create ─> SimEvents.Join ─> the window opens
+/dw sim step ─> NS.SimScenario.Step ─> the next step's driver: RunStart, Pull, SetLockdown(on), Kill,
+                   Loot(burst), SetLockdown(off), RunEnd (waits while the pool builds)
+/dw sim run ─> a step now, then one every STEP_DELAY seconds on NS.Sim.After (the stop ends it)
+the SIM chip, the footer's "Simulating: …" and the `sim` diagnostics section read NS.Sim.Status,
+                   NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```
 
 The simulator never writes a verdict, a trade estimate or an inspect state: what it invents enters
