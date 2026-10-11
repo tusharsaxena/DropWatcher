@@ -1,0 +1,1294 @@
+# Test Cases
+
+The full inventory of every headless test case in this repo, grouped by the suite file it
+lives in. The `## Totals` table below counts the cases that run: its **Total** is the
+authoritative pass count, and the README test badge and any count quoted in the docs must equal
+it. A declared skip is listed by name in its group and counted on the `Skipped` row, never in
+Total.
+
+**Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
+
+### test_harness.lua (10)
+
+- harness: the addon's file list is the TOC's, Namespace first and Profiles last
+- harness: every LibKa0s file comes from LibKa0s.xml, in its order
+- harness: every adopted LibKa0s module is the live library, not its stub
+- toc: the fixed field order, a single Retail Interface line and the X-Standard field
+- toc: the icon is the 128x128 logo, and the file exists
+- toc: OptionalDeps names Pawn and CanIMogIt, and no hard Dependencies
+- repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
+- repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
+- repo: every authored file opens with the bootstrap and a comment naming its path
+- repo: the .pkgmeta has no externals and ignores the dev-only entries
+
+### test_surface_parity.lua (18)
+
+- parity: the degraded load really is library-absent, and the live one is not
+- parity: the Core seam's namespace surface survives the library's absence
+- parity: the DebugLog stub carries the whole live surface
+- parity: the Slash stub carries the whole live surface
+- parity: the Slash stub's one library string is the library's, byte for byte
+- parity: the Options helpers stub carries the whole live surface
+- parity: the Schema host stub's instance carries the whole live instance surface
+- parity: the Schema host stub carries the library's own members
+- parity: the Launcher stub carries the whole live surface
+- parity: the Lifecycle stand-in carries every member of the live latch
+- parity: the Bus stand-in carries every member of the live bus
+- parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
+- parity: the Item stub carries the whole LibKa0s-Item-1.0 surface
+- parity: the Perf stub carries every Perf member the addon reaches
+- parity: the Env seam publishes the same NS members on both paths
+- parity: the Media seam publishes the same NS members on both paths
+- parity: the Compat seam carries every library member it wires
+- parity: the Compat seam publishes the same members on both load paths
+
+### test_setup.lua (18)
+
+- core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
+- core: the printer tags every line with the cyan [DW] prefix
+- core: the close-button wrapper passes the addon folder as the third argument
+- core: no file but the wrapper calls a close-button factory directly
+- media: FONT_MONO is the shipped face live, and a real client font degraded
+- bus: the catalog holds the ten messages of the design, each Ka0s_DropWatcher_<Event>
+- bus: a tracked target's registrations come down with the stand-down and back with the stand-up
+- bus: the seam answers tracked once; without the library the modules take their receivers down
+- perf: every declared bucket is reached by a real bracket
+- perf: with capture off the bracket notes nothing
+- perf: the `perf` hold stands the addon down, and the verbs keep answering
+- perf: the descriptor's SavedVariables global is declared in the TOC
+- launcher: one object, labeled with the brand, the logo as its icon, registered on enable
+- launcher: the right-click menu is Enabled, Locked, Test mode, Show window, in that order
+- launcher: each menu entry calls the same handler its verb and its row call
+- options: the category registers eagerly, with the General page under it
+- options: the General page's first group is exactly `Master controls`
+- options: the degraded load completes, and the panel says once that it is unavailable
+
+### test_database.lua (7)
+
+- database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
+- database: the runner is idempotent, and a stored stamp at the target runs no step
+- database: the steps rise one by one, and the target is the highest step
+- database: a step that raises leaves the stamp at the last completed step
+- database: step 2 reaches a stored profile that is not the active one
+- database: step 2 passes a fresh default profile through unchanged
+- database: the profile defaults carry every Master controls value, and no debug flag
+
+### test_schema.lua (11)
+
+- schema: every row validates against the defaults
+- schema: a stored row whose path has no default is counted, not passed vacuously
+- schema: the Minimap button row's backing key resolves against the global defaults
+- schema: the Master controls rows are the canonical set, in the canonical order
+- schema: an unknown path is refused and stores nothing
+- schema: the Minimap button row inverts onto LibDBIcon's own hide, with no shown key
+- schema: neither reset touches the minimap button (launcher-§3)
+- schema: Reset all asks first, through the confirmation popup
+- schema: a write to `scale` reaches the window through the row's reaction
+- schema: degraded, `enabled` and `locked` are written through and still react
+- schema: degraded, a row-less path not in the list is still refused
+
+### test_schema_rows.lua (12)
+
+- rows: every spec §12.1 setting has a row
+- rows: every hand-written row names its page, tab, label and a type the schema knows
+- rows: every default is defaults/Profile.lua's, and passes the row's own check
+- rows: NS.Setting answers the default before the database, and the stored value after
+- rows: a value outside a row's list or range is refused and stores nothing
+- rows: the per-spec maps take keyed values whole, and refuse a malformed one
+- rows: the feed, the situations and the messaging edge read the rows
+- rows: the filter bar seeds a fresh tab from the rows
+- rows: the Quality control and the compact preset write through the seam (handoff from M3)
+- rows: the history cap is account-wide, and a profile reset leaves it
+- rows: `/dw set` reaches a hand-written row
+- rows: degraded, the hand-written rows still read, write and refuse
+
+### test_settings_pages.lua (29)
+
+- pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
+- pages: each page's strip is its own tabs, one per group, in declaration order
+- pages: a page's rows are the rows whose page is its key
+- pages: every schema row with a page but the Profiles page's is drawn by one of these pages
+- when to show: one block per situation, Track and Auto-open then Quality, under its name
+- when to show: an untracked situation's Auto-open and Quality are dimmed, and so is every Auto-open with the master off
+- feed: the Quality tab closes with the threshold in force now, repainted on a write
+- feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only
+- feed: the readout names the situation whose own quality setting is in force
+- comparison: Weights draws your class's specs as a sub-strip and one slider per stat
+- comparison: a weight slider writes the whole map through the seam, for the spec on screen
+- comparison: the Pawn import box replaces the spec on screen's weights and says what came in
+- comparison: Preferences lists the class's weapon types and marks one unwanted per spec
+- messages: three editors whose labels count the template's bytes against 255
+- messages: typing repaints the counter and the preview live, and stores nothing until Enter
+- messages: the preview flags an unknown token and a text past the chat limit
+- messages: an empty template is refused by the seam and the box shows the stored one again
+- messages: a token chip goes into the template last edited and is stored at once
+- messages: Reset templates puts the three back and repaints the boxes
+- pages: a page's Defaults resets that page's rows and no other page's
+- editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
+- editors: a spec's stats are its primary stat, Stamina and the four secondaries
+- editors: unwanted types are the class's weapons, then shields where a spec carries one
+- editors: an unwanted mark is a fresh map, and the last one cleared drops the spec
+- editors: the spec strip keeps the remembered spec, else yours, else the first
+- editors: the counter label counts bytes and turns red past the limit
+- editors: the preview's drop is the newest that fits its template, an upgrade for you first
+- editors: the preview's lines name who it goes to, the length and what is wrong
+- asks: TokenContext fills the tokens from a drop for who it goes to
+
+### test_slash.lua (26)
+
+- slash: NS.COMMANDS is positional triples, every reserved verb present
+- slash: `diagnostics` has no alias of any kind (debug-logging-§14)
+- slash: both chat commands are registered through AceConsole, and both dispatch
+- slash: the bare command opens the settings panel
+- slash: lock and unlock write `locked` through the seam
+- slash: show, hide and toggle drive the window
+- slash: `test` toggles test mode through the shared handler
+- slash: `perf` is the addon's verb and prints the harness's lines
+- slash: `reset` with no path explains itself rather than resetting everything
+- slash: degraded, the host verbs still work and the CLI names the missing library
+- slash: every verb of spec §12.3 is in the table, after the reserved ones
+- slash: SplitLink takes a whole link, spaces and all, and leaves the rest
+- slash: `scan` is the window's Scan group handler
+- slash: `add` injects a drop for you, or for a named player, and says what happened
+- slash: `add` with no link prints its usage; a refused drop says why
+- slash: `add` of an item still loading says it shows once it loads
+- slash: `clear` empties this session's feed and leaves the test feed alone
+- slash: `clear` closes an Offer panel whose drop it took
+- slash: `history` and `mine` open the window on that tab, expanded
+- slash: a tab verb the Visibility setting keeps hidden says so
+- slash: `compact` toggles the preset through the seam and prints the new state
+- slash: `situation` prints the situation, its settings and the classifier's inputs
+- slash: `offer` opens the panel on your newest drop of that item
+- slash: `offer` of a bag item the feed never saw adds it as yours first
+- slash: `offer` refuses an item not in your bags, and prints its usage without a link
+- slash: every feature verb is refused while disabled
+
+### test_window.lua (13)
+
+- window: built lazily, on the first show, and not before
+- window: Escape closes it (UISpecialFrames) and it wears the shared close mark
+- window: General visibility `never` keeps it hidden even when opened
+- window: `inCombat` shows it only in combat, re-read on both combat edges
+- window: a drag stores the point, and Reset position forgets it
+- window: locked, a drag does not start
+- window: resizable from the corner grip, with the design's minimum size
+- window: test mode shows the banner and the TEST MODE text, and its rows replace the empty state
+- window: combat ends test mode, and test mode cannot start in combat
+- window: with test mode on, Close and Toggle still change what is shown
+- window: turning test mode off closes the window only when test mode opened it
+- window: the combat edge decides, even while the player's combat flag lags it
+- window: a resize saves the anchor with the size, so a settings repaint does not move it
+
+### test_window_shell.lua (49)
+
+- shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
+- shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
+- shell: the default size is 1000 x 600 (board 01's 940, widened for My eq and two filters)
+- shell: Escape and every close path close the dropdowns' shared menu too
+- shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
+- shell: minimized, the title bar wears the plus mark and the `n new` counter; expanded, neither
+- shell: BadgeText names the restriction and counts the queued asks
+- shell: RestrictionChanged shows the badge, AskStateChanged counts the queue, its tooltip lists it
+- shell: Scan group asks the inspect broker through the shared handler, and says what it did
+- shell: Scan group is refused while the addon is disabled
+- shell: three tabs, Group drops active in gold with its underline, the others gray
+- shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused
+- shell: My drops counts your tradeable drops in its label
+- shell: a tab's body is built on its first show, and refreshed with the tab's view
+- shell: a tab with no body says what it will hold, never a blank pane
+- shell: the filter bar holds View, Quality, Content, the three checkboxes and the search box
+- shell: Usable by me and Upgrade for me follow Likely tradeable only, each in the flat skin
+- shell: the search box is Loot History's flat, square box
+- shell: the checkbox is a flat square box with the dropdowns' skin and a gold tick
+- shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
+- shell: each tab keeps its own filter state, and grays what it does not use
+- shell: a filter change redraws the active tab with the new state
+- shell: a fresh tab's state is seeded from the profile's feed settings when valid
+- shell: the Quality control shows the mode in force and sets it through the shared handler
+- shell: IsInteresting is an upgrade for you, or a drop its looter has no use for and can trade
+- shell: InGroup keeps your own drops out of Group drops unless showOwn is on
+- shell: Matches applies only the controls a tab honors
+- shell: Usable by me hides what you can't use or don't want; Upgrade for me keeps your upgrades
+- shell: Comparator orders newest, oldest, by item level and by your gain
+- shell: the footer composer says inspect freshness, last loot, the situation and Pawn
+- shell: the live footer reads the client, and its Sort follows the active tab
+- shell: the footer's ticker runs only while the whole window is on screen
+- shell: minimize collapses to the title bar, keeps the size, and counts every drop added
+- shell: a double-click on the title bar expands a minimized window
+- shell: minimized, the corner grip does not resize and the stored size is kept
+- shell: a minimized window comes back minimized after a settings repaint
+- shell: minimize and expand keep the title bar in place, whatever point it was saved at
+- shell: a parent's hide (Alt-Z, a cinematic) is not the player closing the window
+- shell: a burst of bus messages repaints once, on the next frame
+- shell: a countdown tick on the Group drops tab repaints nothing of the window
+- shell: every drop added in an auto-open situation opens the window, each time it is closed
+- shell: your own drop opens the window too, whatever showOwn says, and counts as new
+- shell: a minimized window the player closed opens minimized, its count rising
+- shell: a test placeholder opens the window while test mode is on, and a live drop does not then
+- shell: in a dungeon, turning test mode off closes the window its drops opened
+- shell: a test drop that reopens a window the player closed in test mode closes with test mode
+- shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off
+- shell: every control on the chrome has a tooltip with a reason
+- shell: without the Widgets library the window builds with no dead dropdown
+
+### test_window_group.lua (35)
+
+- cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
+- cells: a verdict with no glyph says a word, and every verdict's tooltip says why
+- cells: the Them column inverts the tones: their upgrade is amber, their downgrade green
+- cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
+- cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
+- cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip
+- cells: My eq shows what you wear in the drop's slot, both rings for a ring, and empty slot
+- cells: Their eq says pending, range, combat or failed beside the icons, and a dash on your own
+- cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure
+- cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you
+- cells: Item, Ilvl, Slot and Looter are never blank, each with a reason tooltip
+- cells: an encounter header reads `Label · Situation · age · n drops`
+- table: the default columns, the compact preset's, and a column the profile turns off
+- table: the Item column takes the slack, never less than its minimum
+- table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order
+- table: groups newest first, the first open and older ones collapsed, empty ones left out
+- table: built at the minimum width, the shed columns hide and Ask stays inside the row
+- table: the Window page's row height and font size lay out and size the drop rows
+- table: built headless, one header and one row per drop, each column painted
+- table: the verdicts wear their tones, the looter their class color, the item its quality
+- table: every shown cell has a reason tooltip; nothing is blank
+- table: rows come from the pool: a repaint reuses them, fewer drops park the rest
+- table: a header click collapses its group, and a second expands it
+- table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
+- table: Their eq shows the looter's worn item from their inspect read
+- table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
+- table: the Ask button asks through the shared handler, and AskStateChanged repaints it
+- table: a drop with no ask offered shows a dash with its reason
+- table: the × dismisses a row for the session
+- table: the compact preset keeps Item and looter, Ilvl, Their eq, Me and Ask
+- table: a column the profile turns off is not drawn
+- table: the filter bar filters the rows, and the empty line says why nothing shows
+- table: with no drop at all the empty state says so, with Preview with test data and Scan group
+- table: the empty state's buttons turn test mode on and scan the group
+- table: PressAsk says why it asked nobody: your own drop, a gone drop, the addon disabled
+
+### test_detail_card.lua (20)
+
+- cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
+- cells: StatChange lists the secondary stats gained and lost, the largest first
+- cells: For you shows what it replaces, the ilvl, track and stat change, and Pawn's score
+- cells: For you without a score says why: no scorer, Pawn or your weights not scored yet
+- cells: an empty slot and an unread baseline each say so, never blank
+- cells: For the looter compares their inspected gear and names their spec and the read's age
+- cells: the trade box says the state, the reason, the rule in force and how fresh the data is
+- cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
+- cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
+- cells: on your own drop Ask, Edit, Retry and Trade are off, each with its reason
+- card: a row click expands it inline; the rows below move down by the card's height
+- card: one row at a time; a click on a cell or the item button opens it too
+- card: the header, both comparisons and the trade box are painted, each with a reason
+- card: the actions go through their host handlers; Trade is off with its reason
+- card: Hide this item dismisses the row and takes the card with it
+- card: a filtered-out or collapsed row hides its card; it comes back with the row
+- card: Edit message opens the box with the ask filled in; Send asks with the edited text
+- card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels
+- card: the Edit message box says why when the ask would be refused, and Cancel closes it
+- card: RetryInspect and TradeWithLooter say why they did nothing
+
+### test_window_mine.lua (32)
+
+- mine cells: Clock reads h:mm:ss
+- mine cells: the countdown is exact from the item's timer, estimated from the drop before it
+- mine cells: the Trade window says the countdown, ending soon, not tradeable or no limit
+- mine cells: For me asks `keep?` under an upgrade for you
+- mine cells: the candidates are ranked upgrades first by gain, each with its pill and eq → drop
+- mine cells: Best candidates shows the top three, `+n more`, or why there are none
+- mine cells: an upgrade for you hides its candidates until you choose to offer it
+- mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabled with its reason
+- mine cells: a tradeable row offers Offer and Announce; a dead one a dash and Hide
+- mine cells: the summary counts the tradeable drops and names the next expiry
+- mine cells: Post my tradeables lists every link, cut at the chat limit without splitting one
+- mine cells: the Offer panel docks right, else left, else floats
+- mine cells: the panel's header reads your change, the item level and the trade window
+- mine: the entries are your own drops that pass the filter and were not hidden, in the tab's order
+- mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps Actions inside it
+- mine tab: built headless, one row per drop of yours, each column painted
+- mine tab: every shown cell has a reason tooltip; nothing is blank
+- mine tab: rows come from the pool and a repaint reuses them
+- mine tab: TradeTimerTick moves the countdown while the tab shows
+- mine tab: Hide takes a dead row off the tab for the session
+- mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
+- mine tab: with no drop of yours the empty line says so; a filter that hides them says that
+- offer panel: Offer opens it docked right, the candidates ranked with their pills
+- offer panel: every part has a reason tooltip; Trade is disabled with the trade helper's reason
+- offer panel: Offer whispers through the shared handler; Trade hands the item over
+- offer panel: opening an upgrade for you reveals its Best candidates
+- offer panel: the close mark closes it, and it closes itself when its drop is gone
+- offer panel: minimizing the window closes the panel and the Edit message box
+- offer panel: with Edit before sending on, Offer and Announce open the box for their kind
+- offer panel: Announce to group announces the drop
+- handlers: Post my tradeables announces every tradeable drop of yours, line by line
+- handlers: Offer, Announce and Trade say why they did nothing
+
+### test_test_mode.lua (29)
+
+- test mode data: the other members' drops cover every Me and Them verdict (board 03)
+- test mode data: every trade estimate, inspect state and ask state is there
+- test mode data: your own drops cover every countdown and every candidate pill (board 04)
+- test mode data: two groups, a boss and a key run, every item a pool item that keeps its slot
+- test mode data: worn items are other pool items of the slot, nearest the level the change implies
+- test mode data: the trade reason's two levels are the drop's and the looter's worn item's
+- test mode data: an empty pool gives no sample, and a pool short of a slot borrows a real item
+- test mode data: the History sample has two groups and every outcome, oldest first
+- feed: AddTest puts a sample in the test feed as given, never in the live one
+- feed: AddTest refuses a spec with no item, no looter or no group, and while stood down
+- test mode: on fills the test feed from the item pool, off empties it; the live feed is never touched
+- test mode: while the pool loads the tab says so and holds no drop; the drops fill in when it is ready
+- test mode: turned off while the pool loads, nothing arrives later
+- test mode: with no journal and no gear of your own there is no sample, and it says so
+- test mode: combat and the stand-down both empty the test feed
+- test mode: the Group drops tab shows View: All while on, and the player's View comes back
+- history: test mode shows its sample groups, every outcome, and never writes the account's history
+- history: the account's kept groups come back when test mode ends
+- window: test mode draws every sample, under the boss and the key run, with real icons
+- window: every cell of every sample row says something and has a reason
+- window: the rows show every ask state, every Their eq state and every trade chip
+- window: a sample's Their eq shows its own worn item, and its detail card its own inspect
+- window: the My drops tab counts your tradeable samples and draws them all
+- window: the empty state comes back once test mode ends with nothing in the live feed
+- labels: My drops says Offer, and no cell of its rows ends in an ellipsis
+- labels: no button the addon builds is labeled with a trailing ellipsis
+- sends: Ask on a sample prints the text and sends nothing; its state is the edge's from then on
+- sends: Post my tradeables in test mode prints its lines and sends nothing
+- hooks: AskState shows a sample's own state only while the edge holds none
+
+### test_compat.lua (68)
+
+- compat: the secret guards are the library's members on a live load
+- compat: the guards answer the library's answers under the same fixture, on both load paths
+- compat: with canaccessvalue present the degraded CanAccess asks it
+- compat: ChatSender prefers C_ChatInfo.SendChatMessage
+- compat: ChatSender falls back to the global, then to nil
+- compat: FormatToPattern captures %s and %d and escapes every magic character
+- compat: DecodeDuration reads every enUS unit and their sums
+- compat: DecodeDuration refuses anything that is not wholly a duration
+- compat: DecodeDuration never touches a secret
+- compat: DecodeDuration reads the client's own language (deDE, with a two-form plural)
+- compat: DecodeDuration reads a three-form plural and a multi-character delimiter
+- compat: DecodeDuration answers nil when the client has no duration globals
+- compat: ParseTradeTimeRemaining reads the whole trade line and nothing else
+- compat: TradeTimeRemaining reads the TradeTimeRemaining line of a bag item
+- compat: with the line type known, a line of that type is read before any other
+- compat: the enum member exists but the line carries another type: the text still reads
+- compat: without the enum member the reader falls back to the localized text
+- compat: the tooltip reader skips a secret line and survives a malformed answer
+- compat: InventoryItemLevel prefers the line's number, then its text
+- compat: GetItemUpgradeInfo takes the API's table, plain fields only
+- compat: GetItemUpgradeInfo falls back to the ItemUpgradeLevel tooltip line
+- compat: GetItemUpgradeInfo answers nil with no track, no API and a secret answer
+- compat: InChatMessagingLockdown reads the client, a secret as locked, absent as open
+- compat: IsRestrictionActive asks the client, falling back to the state
+- compat: IsRestrictionStateActive reads the state by the enum's Inactive
+- compat: IsRestrictionStateActive takes the event's boolean payload as it is
+- compat: RestrictionTypes is the enum, or an empty table
+- compat: the account-bind helpers read C_Item and answer false without it
+- compat: a secret bind answer reads as not bound
+- compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slot or no API
+- compat: GetItemInfo copies the cached fields, nil while uncached or without a link
+- compat: GetItemInfo answers nil without C_Item.GetItemInfo; the dead global is never read
+- compat: a secret item answer is never copied
+- compat: ItemEquipLoc reads the instant info with no cache; nil when secret or absent
+- compat: GetDetailedItemLevel reads the effective level, nil without the API
+- compat: GetItemStats copies every key, unknown ones too, and is empty without an answer
+- compat: GetItemSpecs is a set, nil for an empty list or no API
+- compat: GetItemUniqueness reads the category and the item's own uniqueness
+- compat: PlayerHasTransmog answers the collection, nil when absent or secret
+- compat: ItemClassRestriction reads the classes line by type, else by text
+- compat: CanRequestItemLoad needs the load request and a timer
+- compat: without Pawn every reader answers nil and nothing raises
+- compat: Pawn loaded but not initialized is not ready
+- compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached
+- compat: an error inside Pawn reads as not ready, never as this addon's error
+- compat: a function-spelled PawnIsInitialized is called
+- compat: PickupBagItem calls C_Container, and reports false without it
+- compat: DropItemOnUnit and InitiateTrade call through, and report false when absent
+- compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
+- compat: CursorHasItem and ClearCursor call through, and answer false when absent
+- compat: NormalizedRealm reads the normalized realm, then the plain one stripped
+- compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library
+- compat: InventoryItemLink reads the worn link, nil when empty, secret or absent
+- compat: the bag readers call C_Container, guard a secret answer, and answer empty without it
+- compat: the inspect gates answer plain booleans; a secret answer or no API is the safe side
+- compat: the inspect calls, the spec, the item id, the inspect window and the hook
+- compat: LootHistoryDrop answers a won drop's plain fields, else nil
+- compat: ChallengeMapName answers a keystone dungeon's name, else nil
+- compat: ItemIcon answers C_Item.GetItemIconByID's texture, else nil
+- compat: ClassColor reads C_ClassColor first, then RAID_CLASS_COLORS
+- compat: InsertChatLink prefers ChatFrameUtil.InsertLink, then ChatEdit_InsertLink
+- compat: DressUpItem calls DressUpItemLink, then DressUpLink
+- compat: SpecName reads GetSpecializationInfoByID's name, else nil
+- compat: TradeItemLinks reads slots 1-6 of both sides, plain links only
+- compat: TradePartnerName names the trade window's partner, with a realm when given
+- compat: IsTradeCompleteMessage knows the client's "Trade complete.", by type, else by text
+- compat: ContextMenu builds one button per entry through MenuUtil, else answers false
+- compat: no other shipped file names a seam-only client API in code
+
+### test_text_parse.lua (8)
+
+- textparse: the module is pure — it names no client global and reads no _G
+- textparse: EscapePattern makes every magic character literal
+- textparse: FormatToPattern captures %s and %d, positional forms included
+- textparse: ExpandPlural spells out two- and three-form grammars, and leaves plain text alone
+- textparse: DecodeDuration sums the terms it is given and refuses leftovers
+- textparse: TradeTimeRemaining reads only the whole trade line
+- textparse: ItemLevel and UpgradeLine read their lines and nothing else
+- textparse: ClassSet maps the listed names and asks for the map only on a match
+
+### test_constants.lua (12)
+
+- constants: without Enum the item ids fall back to the documented literals
+- constants: with Enum present the ids are read from it, not from the literals
+- constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
+- constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
+- constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use
+- constants: every slot plan has a known kind and real slot ids
+- constants: the slot plan maps each equip location to the spec §5.2 kind
+- constants: universal and armor-typed equip locations partition the armor plans
+- constants: every situation key is listed once, in order, with the spec §6.1 defaults
+- constants: every difficulty id maps to a situation kind the classifier knows
+- constants: the trade rules are the spec §7.2 table, and every situation has a rule
+- constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
+
+### test_class_data.lua (12)
+
+- classdata: thirteen classes with their client classIDs, each with an armor type
+- classdata: every spec row is well-formed and its class lists it
+- classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder
+- classdata: dual wield and Titan's Grip are the right specs
+- classdata: dual wield and Titan's Grip by spec, or by class when every spec agrees
+- classdata: shields go to Protection, Holy, Elemental and Restoration Shaman only
+- classdata: held off hands go to the caster and healer specs
+- classdata: a spec of another class is not trusted over the class
+- classdata: armor type is exact, and an unknown class or subclass cannot tell
+- classdata: weapon proficiencies by class
+- classdata: primary stat is the spec's, or the class's when every spec shares one
+- classdata: lookups never throw on junk input
+
+### test_evaluate.lua (34)
+
+- evaluate: every equip location in SLOT_PLAN compares against its slot
+- evaluate: an equip location with no plan is unknown (not gear)
+- evaluate: pair compares against the lower of the two slots
+- evaluate: an empty slot is an upgrade with the emptySlot reason
+- evaluate: a slot that is not known is unknown, never an upgrade
+- evaluate: a one-hander compares against the main hand only, unless the candidate dual wields
+- evaluate: a dual wielder holding a two-hander compares a one-hander against the two-hander
+- evaluate: a two-hander compares against the average of both hands
+- evaluate: Titan's Grip compares a two-hander as a pair over both hands
+- evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot
+- evaluate: ranged weapons are two-handers for hunters and main hand for wand users
+- evaluate: a gun, crossbow or wand in the main hand is a two-hander for off hands and one-handers
+- evaluate: a unique-equipped drop compares against the item holding its category
+- evaluate: a unique drop whose own slot holds the category replaces that item
+- evaluate: compareOwned takes the better of equipped and owned per slot
+- evaluate: a known spec is judged by the item's own spec list
+- evaluate: spec unknown falls back to ClassData for armor, jewelry, shields and off hands
+- evaluate: a known spec with no item spec list uses the spec's own class data
+- evaluate: the primary stat decides when every spec agrees, and is ambiguous otherwise
+- evaluate: an unknown class cannot be judged
+- evaluate: tier tokens are judged by their class list
+- evaluate: a class-restricted item refuses other classes
+- evaluate: an undesired subclass is doesntWant, but only when the item is usable
+- evaluate: the sidegrade band splits upgrade, sidegrade and downgrade
+- evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign
+- evaluate: the scorer is optional, may be pending, and may fail without harm
+- evaluate: a two-hander's score baseline is the average of both hands' scores
+- evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison
+- evaluate: the track delta orders tracks by tier, then rank
+- evaluate: the output carries every field of spec 5.2 step 5
+- evaluate: nil and garbage inputs never throw and answer unknown with a reason
+- evaluate: garbage inside the tables never throws
+- evaluate: an internal failure is caught and reported as unknown
+- evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
+
+### test_scoring.lua (15)
+
+- scoring: a Pawn v1 string imports its stats under GetItemStats' keys
+- scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
+- scoring: ImportInto replaces one spec's weights in a fresh map and keeps the others
+- scoring: a weights score is the sum of stat times weight
+- scoring: a weight on an unknown stat key counts 0 and is logged once per key
+- scoring: HasWeights is true once any spec has a weight
+- scoring: Resolve picks the adapter for every setting, Pawn presence and weights
+- scoring: InUse and Scorer follow the settings and whether Pawn is initialized
+- scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale
+- scoring: for you, a drop that upgrades no scale is valued on your spec's scale
+- scoring: for a looter, Pawn uses the scale for their class and spec
+- scoring: Pawn answers pending while it is not ready or has not read the item
+- scoring: the kernel hands the scorer the drop beside each item
+- scoring: with weights, a higher item level that scores lower is a sidegrade
+- scoring: the feed judges your drop with your weights once they are set
+
+### test_quality_gate.lua (24)
+
+- quality gate: fixed passes at or above the threshold and hides below it
+- quality gate: fixed defaults to Rare, and the floor does not apply to it
+- quality gate: no mode or an unknown mode is the default fixed mode
+- quality gate: dynamicSlot uses the baseline slot's equipped quality
+- quality gate: dynamicSlot is floored, Uncommon by default
+- quality gate: dynamicSlot with an empty or unread baseline slot uses the floor
+- quality gate: dynamicSlot without a baseline slot takes the lower of the plan's slots
+- quality gate: gear entries may be item facts carrying a quality
+- quality gate: dynamicCharacter uses the most common equipped quality
+- quality gate: dynamicCharacter ties go to the lower quality
+- quality gate: dynamicCharacter ignores shirt, tabard and empty slots
+- quality gate: dynamicCharacter is floored, and with no gear uses the floor
+- quality gate: the upgrade override shows a below-threshold upgrade for me, on by default
+- quality gate: the override needs an upgrade verdict, nothing less
+- quality gate: a drop at the threshold passes on quality, not on the override
+- quality gate: the override applies in the dynamic modes too
+- quality gate: a situation's quality setting overrides the global mode
+- quality gate: absent, global or unknown situation quality falls back to the global mode
+- quality gate: the resolved situation mode decides the drop
+- quality gate: Threshold answers the threshold and where it came from
+- quality gate: the filter bar label for each mode
+- quality gate: every quality id has a display name
+- quality gate: an unknown drop quality passes, so the feed never hides what it cannot read
+- quality gate: nil and garbage inputs never throw
+
+### test_situations.lua (14)
+
+- situations: the classifier truth table
+- situations: the truth table reaches every situation key
+- situations: garbage inputs classify as solo and never throw
+- situations: with nothing stored, every key takes the spec's track and auto-open
+- situations: a stored row overrides, and a malformed field falls back to the default
+- situations: an unknown key tracks nothing
+- situations: each re-evaluation event classifies and announces a change once
+- situations: an event that changes nothing sends nothing
+- situations: the edge's inputs are what the client says
+- situations: a difficulty the client does not know falls back to the instance type
+- situations: a client with no C_ChallengeMode still classifies
+- situations: Current classifies live before the first event, without a message
+- situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
+- situations: stood down, the events are gone; the stand-up announces where the player is
+
+### test_trade_rules.lua (24)
+
+- trade rules: a warbound or account-bound drop is no warbound
+- trade rules: a bonus roll is no bonusRoll, and warbound wins over it
+- trade rules: a BoE or BoU drop is yes boe, in any situation and past the window
+- trade rules: the legacy rule is no legacy (follower dungeons and PvP)
+- trade rules: the group rule (ilvlRule none) is likely groupLoot without inspect
+- trade rules: personal, the looter's evaluation known and not an upgrade, is likely notUpgrade
+- trade rules: personal, an upgrade for the looter, is no upgradeForLooter
+- trade rules: the item level decides, not the scored verdict (the game's rule is ilvl)
+- trade rules: an empty slot on the looter is an upgrade for them
+- trade rules: the looter unknown is unknown noInspect, carrying the inspect reason
+- trade rules: an estimate has no expiresAt; only the own-item timer sets one
+- trade rules: past the rule's window the drop is no expired
+- trade rules: at exactly the window the drop has not expired
+- trade rules: with no clock or no drop time there is no expiry check
+- trade rules: binds and legacy are decided before the window
+- trade rules: each situation's default rule is its `trade.rules` default, raid conservatively personal
+- trade rules: the override map replaces a situation's rule
+- trade rules: an override naming no rule, or equal to the default, is not an override
+- trade rules: an unknown or missing situation takes the default personal rule
+- trade rules: Rules lists every situation in order with its rule, default and override flag
+- trade rules: Reset clears the override map in place, restoring the defaults
+- trade rules: IsRule knows the three rule names and nothing else
+- trade rules: nil and garbage inputs never throw
+- trade rules: bad facts are unknown badFacts
+
+### test_messaging.lua (25)
+
+- messaging: the default templates are the spec §9.1 text, one per kind
+- messaging: Template takes the owner's text, and the default for an empty or absent one
+- messaging: Expand fills every token, and formats the gains as numbers
+- messaging: unknown tokens are left as they are, and reported once each in order
+- messaging: a known token with no value reads as ?, and is reported as missing
+- messaging: a + before a worded gain is dropped; before a number or a missing one it stays
+- messaging: a value with pattern characters is inserted literally
+- messaging: Preview gives the text, its length and the too-long flag
+- messaging: a request that can send answers send, with the expanded text, state ready
+- messaging: the owner's template and an edited text override the default
+- messaging: the one-ask guard refuses a repeat once sent, alreadyAsked
+- messaging: with oneAsk off a sent ask can be repeated; an ask in flight never can
+- messaging: a message over 255 characters is refused tooLong, with its length
+- messaging: the guard runs before the length check
+- messaging: a malformed request is refused badRequest
+- messaging: under restriction a request is queued, state queued
+- messaging: a failed send is failed with its reason, and a retry is allowed
+- messaging: MarkSent and MarkFailed act only on an ask that is ready
+- messaging: the flush hands back queued asks first in, first out, each ready to send
+- messaging: the flush triggers are a lift to can-send, ENCOUNTER_END and CHALLENGE_MODE_COMPLETED
+- messaging: cancel drops a queued ask, which the flush then skips
+- messaging: a canceled ask can be asked again
+- messaging: a looter leaving drops every ask queued to them, and only theirs
+- messaging: Counts reports the registry for diagnostics
+- messaging: garbage never throws
+
+### test_restrictions.lua (15)
+
+- restrictions: nothing restricted, everything allowed and nothing announced
+- restrictions: an encounter stops chat and is the reason; its lift is announced
+- restrictions: a lift the client does not confirm yet keeps the restriction
+- restrictions: the event's boolean payload is read too
+- restrictions: each type gives its reason; Map blocks nothing
+- restrictions: the reason is the highest in priority
+- restrictions: a type the client adds later is reported by name and blocks nothing
+- restrictions: the chat lockdown stops chat, a secret answer too
+- restrictions: the combat edges stop inspect and trade, ahead of the client's flag
+- restrictions: before any edge, the client's combat flag decides
+- restrictions: combat under an encounter announces the change of what is allowed
+- restrictions: a secret payload never raises; a secret state reads as active
+- restrictions: a client without the restriction APIs restricts nothing but combat
+- restrictions: Refresh announces a lift no event reported
+- restrictions: stood down, nothing is heard; the stand-up announces what is in effect
+
+### test_roster.lua (13)
+
+- roster: solo, the player alone, read lazily
+- roster: a party, in unit order, keyed by GUID, with realm, class and online
+- roster: a raid reads raid1..N, the player among them
+- roster: Resolve by GUID, by Name-Realm and by a bare same-realm name, without case
+- roster: a bare name two members share is settled by classFile, else unresolved
+- roster: a bare name prefers the member on the player's own realm
+- roster: GROUP_ROSTER_UPDATE re-reads the group; the specID survives
+- roster: the event fans out to the situation edge and the roster both
+- roster: a miss re-reads the client once, so a name still Unknown at the event resolves
+- roster: secret answers never raise; a secret GUID drops the unit, a secret name hides it
+- roster: garbage queries answer nil
+- roster: NormalizeRealm drops spaces and hyphens
+- roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
+
+### test_item_facts.lua (18)
+
+- item facts: a cached ring reads every field of spec §5.1
+- item facts: a chest reads its appearance, account binds and no specs or track
+- item facts: the track tier, by string id first, then by enUS name, else unset
+- item facts: the track falls back to the tooltip's upgrade line
+- item facts: an item unique on its own takes its item id as the category
+- item facts: a token naming classes is a tier token; class gear carries classes only
+- item facts: the quality falls back to the link's color
+- item facts: the facts feed the verdict kernel
+- item facts: Get caches by link until invalidated
+- item facts: at its cap the cache drops its least recently used quarter, never the whole
+- item facts: garbage links answer nil and never raise
+- item facts: learning an appearance re-reads the flag on the cached facts
+- item facts: Request answers a cached item at once and never calls back
+- item facts: an uncached item loads, and every waiter is called back once
+- item facts: the callback retries until the item arrives
+- item facts: an item that never arrives is given up after MAX_LOAD_TRIES, with nil
+- item facts: a client that cannot load items answers unavailable
+- item facts: stood down, the cache and the loads are dropped and a late answer is ignored
+
+### test_item_read.lua (24)
+
+- BUG-1 repro: chat first, the drop reads 311 Epic
+- BUG-1 repro: the encounter's bare link first, then chat's complete one: the complete link wins
+- BUG-1 repro: a complete link first is never replaced by a later bare one
+- BUG-1 repro: a merge while the first link is still loading judges the complete link
+- BUG-1 hypothesis 2: ItemFacts reads a complete link right and a bare one at the base
+- BUG-1 hypothesis 3: an own drop recorded from a bare link reads level and quality from its bag item
+- BUG-1: the history entry takes the complete link, 311 and Epic when chat merges in
+- BUG-1: the history entry takes the bag item's link, level and quality
+- BUG-1: the history's Refresh never trades a complete link for a bare one
+- BUG-1: a drop the bare link's base quality hid comes back when the complete link merges in
+- ItemRead: LinkDetail reads the bonus ids, the modifiers, the context and how complete a link is
+- ItemRead: BetterLink keeps the more complete link, the first on a tie, and never a non-item
+- ItemRead: the identity is the item and its bonus ids; unique id, level, spec and modifiers do not count
+- ItemRead: EffectiveItemLevel answers gear's detailed level, else its base, and nothing for non-gear
+- ItemRead: a bag location answers the exact level and quality; an empty slot answers nothing
+- ItemRead: QualityOf answers the client's quality for the link, else the link's color
+- ItemFacts: the level and quality say where they came from
+- FeedRecords: a merge keeps the more complete link, chat's on a tie
+- trade timer: two own copies of one item id each match the bag item of their own identity
+- diagnostics: one drops line per drop names its sources, link, level and quality with their sources, and the bag match
+- BUG-2: your own drop matched to its bag item shows the bag item; moved away, its link
+- BUG-2: an item you wear shows your inventory slot; someone else's item its link
+- BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
+- BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
+
+### test_gear.lua (20)
+
+- gear: each worn slot is a copy of its facts at the current level; an empty slot is false
+- gear: the candidate carries the class, the spec and the hand flags from ClassData
+- gear: a spec the class flags disagree on leaves the hand flag unknown
+- gear: the qualities are per worn slot, false for an empty one
+- gear: a better bag item you can wear is owned for its slot; one you cannot is not
+- gear: a worn item better than any bag item is its own slot's owned best
+- gear: a pair gets your best two rings, one ring never fills both
+- gear: a dual wielder's one-handers fill both hands, each once
+- gear: a one-hander fills the main hand only for a spec that does not dual wield
+- gear: with Titan's Grip a two-hander can fill the off hand too
+- gear: a bag item with no slot plan (a reagent, a potion) is never asked of the item facts
+- gear: a tier token and a secret bag link are not owned gear
+- gear: the candidate judges a drop against the worn item, and against the bags with compareOwned
+- gear: the gear events share one throttled rebuild, which announces a change once
+- gear: a bag event in combat arms nothing; the combat's end rebuilds once
+- gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again
+- gear: the player's spec change rebuilds; another unit's does not
+- gear: the first lazy read announces nothing
+- gear: an item still loading leaves its slot unknown, and its arrival rebuilds
+- gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
+
+### test_loot_parser.lua (27)
+
+- loot parser: loot (self) x1
+- loot parser: loot (self) x3
+- loot parser: bonus (self) x1
+- loot parser: bonus (self) x2
+- loot parser: pushed (self) x1
+- loot parser: pushed (self) x5
+- loot parser: loot (other) x1
+- loot parser: loot (other) x4
+- loot parser: bonus (other) x1
+- loot parser: bonus (other) x2
+- loot parser: pushed (other) x1
+- loot parser: pushed (other) x12
+- loot parser: a cross-realm looter resolves to the member
+- loot parser: a player hyperlink or color around the name is stripped
+- loot parser: a looter the roster cannot place keeps the name and the event's GUID
+- loot parser: the roster's member wins over the event's GUID
+- loot parser: the upgrade echo and the crafting echoes are rejected
+- loot parser: a line that is not a receipt, a non-item link and an empty line are ignored
+- loot parser: secret text is dropped before any pattern touches it
+- loot parser: a secret event GUID is not used
+- loot parser: a secret, empty or absent GlobalString is left out of the set
+- loot parser: a GlobalString rewritten at runtime (PrettyChat) is rebuilt on the next line
+- loot parser: a deDE client reads its own lines
+- loot parser: positional arguments are read in the locale's order
+- loot parser: CHAT_MSG_LOOT hands each receipt to every sink and counts the lines
+- loot parser: the event's twelfth argument is the GUID it uses
+- loot parser: stood down, CHAT_MSG_LOOT reaches nothing; the counters survive
+
+### test_inspect.lua (32)
+
+- inspect: a request sends one NotifyInspect, and the ready read stores gear and spec
+- inspect: a slot's level comes from its tooltip, else from the link
+- inspect: one in flight at a time, spaced SPACING seconds apart
+- inspect: looters first, then offer candidates, then warm-up; a later ask can raise a job
+- inspect: no INSPECT_READY in 2.5s retries once, then the job fails with a timeout
+- inspect: out of range waits without using an attempt, then sends once in range
+- inspect: 25s out of range ends the job as outOfRange; CanInspect false waits the same way
+- inspect: a GUID with no unit fails after 10s; an offline member waits the same way
+- inspect: an incomplete link is read again, 0.3s apart, and completes when it arrives
+- inspect: still incomplete after three retries, the read is kept and says so
+- inspect: every link already readable completes at once, cached, with no inspect
+- inspect: a foreign inspect re-queues the job in flight, free, and resets the spacing
+- inspect: a foreign inspect after the data arrived lets the read finish, and clears nothing
+- inspect: anyone's INSPECT_READY for a group member is read, completing its queued job
+- inspect: the fast path needs neck, rings and trinkets; visible slots alone send the inspect
+- inspect: an INSPECT_READY whose data is gone by the read is never stored as fresh
+- inspect: the data arriving within the retries is read; a moved unit token is no data
+- inspect: an empty read nobody asked for is dropped, and the entry kept as it was
+- inspect: combat parks the queue, the job in flight still finishes, and its end resumes
+- inspect: the queue waits while the inspect window is open
+- inspect: with the old data still held, a request completes on the fast path
+- inspect: a read is good for 600s; after that a request inspects again
+- inspect: UNIT_INVENTORY_CHANGED marks a group member stale and re-queues it
+- inspect: the roster event drops the entries of members who left
+- inspect: 2s after a roster update in a tracked situation, the idle queue warms up
+- inspect: entering an instance warms up too; untracked or busy, nothing is queued
+- inspect: Scan queues every other member that has no good read
+- inspect: the candidate carries the roster's class, the read spec and the hand flags
+- inspect: InspectDone waits for the read's items to load
+- inspect: one debug line per job
+- inspect: secret GUIDs, units and specs are never used
+- inspect: the stand-down clears this broker's inspect, every timer and the state
+
+### test_feed.lua (44)
+
+- feed: a member's loot is added once, judged for you, and asks for the looter's inspect
+- feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
+- feed: an upgrade for the looter cannot be traded under the personal rule
+- feed: a bonus roll is never tradeable
+- dedupe: chat, the encounter loot event and the loot history report one drop
+- dedupe: the encounter event first, chat second, merges the same way
+- dedupe: a looter the roster cannot place is matched by name without the realm
+- dedupe: a GUID learned from a second source asks for the looter's inspect
+- dedupe: two copies from one source are two drops; another looter's copy is its own
+- dedupe: a report after the window is a new drop
+- history: a drop is taken once it has a winner, and only once
+- history: your own won drop is yours
+- groups: trash, a boss kill's loot window, then trash again
+- groups: a wipe opens no loot window
+- groups: clear on boss kill empties the live feed at a kill, not at a wipe
+- groups: loot naming an earlier encounter joins that encounter's group
+- groups: a keystone run gathers every drop, the chest after completion included
+- groups: outside an instance the area is the open world
+- gates: an untracked situation hides the drop before its item is even loaded
+- gates: below the quality threshold a downgrade for you is hidden, and costs no inspect
+- gates: the upgrade override shows an upgrade for you below the threshold
+- gates: the stored quality settings and the situation's override are read
+- comparison: heirloom protection (on by default) calls your upgrade over an heirloom a sidegrade
+- comparison: heirloom protection is yours alone; the looter's verdict is plain
+- gates: the filters run after the situation and before the verdict
+- filter: every rule of spec §6.3 (pure)
+- gates: the relative minimum item level reads your average equipped level
+- load: an uncached item waits for its facts; a second source merges meanwhile
+- load: an item that never loads is shown, judged unknown
+- own: your drop is judged for you, its trade by your verdict, and every member a candidate
+- own: an upgrade for you cannot trade, so no candidate is inspected for it
+- own: an item pushed to you (a quest reward, a purchase) is not a drop
+- update: GearChanged re-judges you on every drop
+- update: a pending score is retried on one shared timer, five times at most
+- trade: a group drop past its rule's window turns no expired on the sweep
+- trade: your own drop takes the timer's exact read: yes with expiresAt, then no expired
+- trade: your own drop the rule called no, with a live timer, asks for its candidates then
+- trade: a BoE own drop keeps the bind's answer; the timer folds nothing in
+- add: injects a drop past the situation gate; a stranger is judged without an inspect
+- add: the test feed skips every gate and every inspect, and stays apart
+- cap: the oldest drop goes first, and an emptied group with it
+- removal: the sinks hear every clear and every trim, with the feed's name (DW-62)
+- secrets: a secret link, name or encounter id is never used
+- stand-down: timers and pending loads are dropped, the drops kept
+
+### test_trade_timer.lua (16)
+
+- read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
+- read: the sentence on a line of another type is still the timer (the text fallback)
+- decoder: without the line type, the localized sentence is decoded with the client's globals
+- read: no timer line (bound, or the window gone) means no: expired, never live
+- read: a BoE drop has no timer line and no window: permanent, never expired, never live
+- match: by exact link first, then by item id; each drop takes one item
+- match: an item that is none of your drops, and another member's drop, are not timed
+- match: test drops are never timed
+- match: an item that left the bags drops its entry; a moved one keeps it
+- scan: BAG_UPDATE_DELAYED, LOOT_CLOSED and your DropAdded ask for it; once per 2 seconds
+- ticker: slow while the window is hidden, fast while it is shown, off when nothing is live
+- ticker: a second live item shares the one ticker
+- warn: once per item at the threshold, with TradeTimerExpiring and one chat line
+- warn: an item first read below the threshold warns at once; warnAt 0 turns it off
+- secrets: a secret bag link, GUID or tooltip text is never used
+- stand-down: the ticker and the scan stop, the entries are kept; the stand-up scans again
+
+### test_trade_helper.lua (16)
+
+- give: the drop's bag item is picked up by GUID and dropped on the member
+- give: the target may be a name or a Name-Realm as well as a GUID
+- give: an item moved since the last scan is found by a walk of the bags
+- give: FindBagSlot takes the hinted slot first and refuses a missing or secret GUID
+- give: an item gone from the bags, or a drop never matched, is notInBags
+- give: an item whose trade window has passed is expired
+- give: a BoE drop has no trade-time line, and is given all the same
+- give: a busy cursor is never swapped away
+- give: with no DropItemOnUnit the pickup is put back, and the reason is noApi
+- give: CanGive answers every guard and touches nothing
+- guards: combat refuses before the range is read
+- guards: a stranger, yourself, an offline member and one out of range are refused
+- guards: stood down, nothing is traded
+- guards: every reason has its tooltip line, and none has none
+- open: InitiateTrade with the member's unit; noApi without it
+- diagnostics: the trade section reports the helper's counts once it has been used
+
+### test_asks.lua (23)
+
+- send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
+- send: every token comes from the drop: item, ilvl, slot, track and both gains
+- send: into an empty slot the gain reads as words, never the item level or a ? (DW-62)
+- send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again
+- send: an edited text over 255 bytes is refused tooLong and nothing is sent
+- send: a stranger, yourself, an offline member and a missing target are refused
+- preview: the template filled in for the drop, with its length; nothing sent or filed
+- send: an offer whispers the candidate, named in {player}
+- fail: a raising sender fails with its message, prints nothing, and may be retried
+- fail: a secret or empty error reads as error; no sender at all is noApi
+- fail: the deprecated global sender is the fallback
+- announce: auto picks INSTANCE_CHAT, then RAID, then PARTY, and never SAY or YELL
+- announce: outside a group it fails noChannel
+- queue: under a restriction the ask is queued, and the lift sends it at once
+- flush: one send every 1.5 seconds, first in first out
+- flush: a restriction back mid-flush stops it; the rest wait for the next trigger
+- flush: ENCOUNTER_END and CHALLENGE_MODE_COMPLETED re-read a lockdown that lifted silently
+- flush: a trigger with nothing queued, or while chat is still restricted, sends nothing
+- cancel: pressing a queued ask cancels it; the lift sends nothing and the button is ready
+- cancel: an ask queued to a looter who leaves is dropped; others stay
+- cancel: a queued announce is dropped once you leave the group
+- test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
+- stand-down: a request is refused, the flush timer is canceled and the queue is dropped
+
+### test_transmog.lua (13)
+
+- transmog compat: CanIMogIt answers first when it is loaded, else the client's collection
+- transmog compat: CanIMogIt's no-appearance answer is nil; a raise or a non-boolean falls back
+- transmog facts: the item facts read the look through CanIMogIt when it is loaded
+- transmog template: the plain ask for a gain; For transmog only when on and the look is missing
+- transmog template: its default text, the owner's own, and a request that names it
+- transmog card: the header's look chip says New look, Look known or nothing
+- transmog ask: offered for a missing look only with transmogAsk on, with its own tooltip
+- transmog edge: with transmogAsk on, an ask for a missing look sends the For transmog text
+- transmog edge: a collected look keeps the plain ask
+- transmog settings: the template and the opt-in are rows, the opt-in off by default
+- transmog settings: the preview sample is a drop whose look you have not collected
+- transmog test mode: one sample's look is collected and one's is not
+- transmog diagnostics: the integrations name the look's source, messaging the opt-in
+
+### test_history.lua (28)
+
+- history: Normalize gives the shape in place and keeps the cap
+- history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
+- history: Record groups by key, newest last; the caps drop the oldest first
+- history: an automatic outcome only moves forward
+- history: Refresh takes the latest verdicts, and an expired trade makes it `expired`
+- history: Refresh's second answer says whether anything it stores changed
+- history: declined is set by hand, and clearing it puts back what it replaced
+- history: a completed trade matches the partner's drop first, then any, one entry per item
+- history: an item you gave marks your own drop traded away, never someone else's
+- history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the cap
+- history edge: DropUpdated refreshes the entry; an expired trade makes it `expired`
+- history edge: a DropUpdated that changes nothing kept sends no HistoryChanged
+- history edge: a sent ask is `asked`, a sent offer or announce `offered`; other states nothing
+- history trade: a completed trade marks the drop you got `received`, and the Ask button `Traded`
+- history trade: "Trade complete." before the close completes it too
+- history trade: a close after both accepted with no "Trade complete." completes nothing
+- history trade: an item you gave marks your drop `tradedAway`
+- history trade: a canceled trade completes nothing; the offer is the last one accepted
+- history: lowering the cap row trims the stored log at once
+- history: Clear history asks first, and empties the log only on Yes; the cap stays
+- history: the diagnostics' feed section reports the history and the trade
+- history tab: kept groups newest first, the first open, each row's outcome painted
+- history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
+- history tab: a right-click marks a row declined, through the menu when the client has one
+- history tab: with nothing kept it says what it will hold, and Clear history is off
+- history tab: HistoryChanged repaints the shown window on the next frame
+- history tab: a DropUpdated that changes the history still repaints the window once
+- history tab: the pure Ago reads seconds, hours, then days
+
+### test_toast.lua (24)
+
+- toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
+- toast: Compose reads board 06 C: the title, the item and Looted by · gain · trade
+- toast edge: off by default; nothing is built or shown
+- toast edge: a qualifying drop shows at once, painted, and goes after its duration
+- toast edge: one at a time; the next waits its turn, and each drop toasts once
+- toast edge: the queue keeps the newest MAX_QUEUE drops
+- toast edge: a drop that turns likely later toasts on its DropUpdated
+- toast edge: a hover pauses the countdown, and leaving resumes it with the time left
+- toast edge: leaving through the close button resumes the countdown
+- toast edge: not shown in combat; held until it ends, unless toast.inCombat
+- toast edge: a drop asked for, or gone from the feed, is skipped when its turn comes
+- toast edge: Ask goes through the shared host handler, and the button follows its state
+- toast edge: toast.sound plays the client's alert from SOUNDKIT
+- toast edge: only test mode drags it; the position is saved and Reset position forgets it
+- toast edge: test mode's placeholder toasts and stays until test mode ends
+- toast edge: a drop that leaves the feed takes its toast and its place in the queue
+- toast edge: the cap's trim takes the trimmed drop's toast, through the real feed
+- toast edge: dismissing the row forgets its toast, shown or waiting
+- toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing
+- toast edge: turning the toast off takes it down and empties the queue; on again, new drops toast
+- toast edge: a test toast goes when the toast is turned off, though it has no countdown
+- toast edge: a profile switch to one with the toast off takes it down
+- toast edge: the stand-down empties the queue and takes the toast down
+- toast: the diagnostics' window section reports the toast
+
+### test_auto_ask.lua (25)
+
+- auto-ask: DueAt is the delay after the later of the drop and the encounter's end
+- auto-ask: ClampDelay keeps the delay inside 3..30 and defaults to 10
+- auto-ask edge: off by default; a qualifying drop is never asked for
+- auto-ask edge: a qualifying drop is whispered for after the delay, once, with the ask template
+- auto-ask edge: the delay and the least gain are the settings'
+- auto-ask edge: an upgrade into an empty slot is asked for, whatever the least gain (DW-62)
+- auto-ask edge: a sidegrade, your own drop or an unknown trade is not asked for; a later likely is
+- auto-ask edge: held while an encounter is in progress, then due the delay after its end
+- auto-ask edge: a loading screen out of an encounter lets the held asks go (DW-62)
+- auto-ask edge: the restriction lifting after the loading screen ends the hold (M6 review)
+- auto-ask edge: a restriction change with no world event never ends a held encounter
+- auto-ask edge: a zone change with no encounter restriction ends a held encounter too
+- auto-ask edge: an encounter that ends after the drop pushes the ask back
+- auto-ask edge: asking yourself cancels it
+- auto-ask edge: the looter leaving the group cancels it
+- auto-ask edge: dismissing the row cancels it for good
+- auto-ask edge: receiving the item cancels it
+- auto-ask edge: a drop gone from the feed, or no longer qualifying, is dropped when due
+- auto-ask edge: turning it off cancels the waiting asks; turned on, older drops do not count
+- auto-ask edge: a profile switch that turns it on never asks for the drops already there
+- auto-ask edge: a profile switch that turns it off cancels the waiting asks
+- auto-ask edge: the first time it is turned on, a one-time notice explains it
+- auto-ask edge: the stand-down cancels every waiting ask
+- auto-ask edge: in test mode a placeholder's ask is printed, never sent
+- auto-ask: the diagnostics' messaging section reports auto-ask
+
+### test_sim_core.lua (25)
+
+- sim seam: every Compat member that answers for the client is wrapped; the pure ones are not
+- sim seam: a provider answers only while a simulation runs; Live reads the client again
+- sim seam: the sender prints [sim] with the channel and the target, and sends nothing
+- sim seam: an ask goes through the real messaging edge and is printed, never whispered
+- sim seam: no real inspect and no real trade while a simulation runs
+- sim start: refused while stood down, and it says which
+- sim start: refused while test mode is on, and it says which
+- sim start: refused in combat, and it says which
+- sim start: refused inside an instance, and it says which
+- sim start: refused in a real group, and it says which
+- sim start: a second start is refused; test mode is refused while one runs
+- sim fire: an event reaches the handlers its registration calls, with its payload
+- sim restrictions: Encounter and the lockdown are answered by the client seam and stop the sends
+- sim timers: run while the simulation does, and never after its stop
+- sim history: drops go to the session log, never to DropWatcherDB.global.history
+- sim history: a real drop while a simulation runs is real: saved, and it survives the stop
+- sim history: a real trade while a simulation runs settles against the saved history
+- sim fire: a handler that raises never unwinds into the driver; the later handlers run
+- sim stop: a step that raises never skips the rest of the cleanup
+- sim stop: its drops, groups, inspect entries, restrictions and lockdown go; real drops stay
+- sim stop: a queued ask is canceled before the lift, so it never goes out
+- sim stop: the situation is classified from the real client again
+- sim auto-stop: joining a real group ends the simulation
+- sim auto-stop: entering an instance ends the simulation
+- sim stand-down: disabling the addon stops the simulation and leaves no timer
+
+### test_sim_pool.lua (19)
+
+- compat journal: the selection is read whole, the frame's part only once it loads
+- compat journal: Select applies the selection in the journal's order and resets the filters
+- compat journal: Instances lists the tier's dungeons or raids; Loot answers the loaded and the pending
+- sim pool: each situation reads its side and difficulty; the class filter is yours or none
+- sim pool: a read takes every instance of the newest tier at every difficulty and restores the selection
+- sim pool: the selection is restored even when a read raises
+- sim pool: the journal is not read while its frame is shown
+- sim pool: a frame shown the whole time ends in the fallback at the timeout
+- sim pool: entries still loading are awaited through EJ_LOOT_DATA_RECIEVED
+- sim pool: at the timeout the build keeps what has loaded
+- sim pool: loot for me sets the journal's class filter to yours; any lists every class
+- sim pool: an empty journal falls back to your own gear, reported once
+- sim pool: without the journal API the fallback answers at once
+- sim pool: the stop ends a waiting build, and a late event does nothing
+- sim roster: the random source replays a seed and stays in range
+- sim roster: a party has four members, a raid nine to nineteen, each distinct and whole
+- sim roster: gear is what the class can wear, worn at a level inside the band; the rest stays empty
+- sim roster: the content's level is the median of the pool's drops
+- sim roster: Create draws the group from the session's pool and the stop forgets it
+
+### test_sim_events.lua (21)
+
+- sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
+- sim lines: a locale that reorders its arguments is written in its own order
+- sim lines: a burst has one to three lines, your own when asked, and a looter from another realm
+- sim world: the roster, the situation and the announce channel read the invented party
+- sim world: in a raid you are raid1 and the members raid2 onward; the channel is RAID
+- sim world: the stop puts the real world back
+- sim loot: a member's line goes through the parser into the feed, under their GUID
+- sim loot: n random lines, and nothing without a running simulation or a pool
+- sim inspect: a looter is read through the broker's queue after the reply, never the fast path
+- sim inspect: a failing member times out; a member out of range waits and gives up
+- sim inspect: the reply delay is the session's seeded random source
+- sim encounter: a pull raises combat and the lockdown; the ask waits and goes out after the kill
+- sim encounter: loot after a kill joins the boss's group, named by the pull
+- sim encounter: a keystone run groups its loot and holds the ChallengeMode restriction
+- sim combat: the stop ends a combat edge it raised
+- sim own drops: they land in your bags with a trade window the trade timer counts down
+- sim own drops: read at their bag slot from their link, and their tooltip is their link's (DW-80)
+- sim own drops: the scenario sets the window and the ending-soon count
+- sim trade: your drop traded away and another's received land in the session's history log
+- sim trade: refused for an unknown drop, a real one and an expired own drop
+- sim stop: your simulated bag items leave the gear snapshot and the trade timer
+
+### test_sim_scenario.lua (16)
+
+- sim verbs: Parse reads every verb and its arguments
+- sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
+- sim verbs: `/dw sim` prints the status and the usage; the verbs need a running simulation
+- sim verbs: refused while the addon is disabled, like every feature verb
+- sim start: refused in combat and with test mode on, each with its line
+- sim start: the scenario's pool, group and situation, and the window open
+- sim start: a raid takes its size; a party is always four
+- sim step: the timeline waits for the pool, then plays one step at a time
+- sim run: plays every step a few seconds apart, each with its line, then says it has finished
+- sim stop: ends a playing timeline and its timers
+- sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
+- sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating
+- sim diagnostics: the section reads the session, the pool, the timeline and the sends
+- sim debug: the SIM tag logs every injected event and every step
+- sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
+- sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
+
+### test_sim_e2e.lua (12)
+
+- sim e2e: no module reads the world the simulator answers except through NS.Compat
+- sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
+- sim e2e key: a run fills Group drops and My drops under the default filters
+- sim e2e dungeon: a run fills Group drops and My drops under the default filters
+- sim e2e raid: a run fills Group drops and My drops under the default filters
+- sim e2e lfr: a run fills Group drops and My drops under the default filters
+- sim e2e delve: a run fills Group drops and My drops under the default filters
+- sim e2e world: a run fills Group drops and My drops under the default filters
+- sim e2e: the combat flags answer the simulated fight, and the client's again after it
+- sim e2e: the loot lines are written from the GlobalStrings Compat reads
+- sim e2e: in a raid, raid1 is you, online, for every unit read
+- sim e2e: Raid Finder is an instance group, so asks announce in instance chat
+
+### test_sim_panel.lua (16)
+
+- sim panel: a key's preview names every step, with its command, before a run
+- sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states
+- sim panel: before the pool is ready the start is current and nothing else is clickable
+- sim panel: the controls follow the timeline: Run all, Pause or Resume, Restart, Stop
+- sim panel: StartCommand carries a raid's size and leaves a random one out
+- sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds PerfPanel's three columns
+- sim panel: `/dw sim start` opens it beside the window, its rows tracking the timeline
+- sim panel: clicking the next step runs it; clicking a later one runs every step in between
+- sim panel: clicking a completed step does nothing, and its tooltip says when it ran
+- sim panel: a typed `/dw sim step` moves the panel too
+- sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on
+- sim panel: the typed pause, resume and restart answer as the buttons do
+- sim panel: Restart stops the scenario and starts the same one again; Stop ends it
+- sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel
+- sim panel: the picker starts the chosen scenario, with a raid's member count
+- sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it
+
+### test_disabled.lua (9)
+
+- disabled 1: enabled, the addon registers exactly the events it declares
+- disabled 2: through /dw disable, nothing is registered, scheduled or shown
+- disabled 2: through the write seam, nothing is registered, scheduled or shown
+- disabled 3: no SavedVariables write from a game event while disabled
+- disabled 4: every reserved verb keeps answering while disabled
+- disabled 5: a feature verb answers with the one refusal line and does nothing
+- disabled 6: the stand-up re-registers from current state and the window comes back
+- disabled 7: a disabled profile loads stood down, with nothing registered
+- disabled 8: the launcher's menu grays every entry but Enabled
+
+### test_diagnostics.lua (15)
+
+- diagnostics: the sections are the addon's, in report order
+- diagnostics: the report names the schema, the profile, the holds and the window decision
+- diagnostics: the situation section names the key, its settings and the inputs
+- diagnostics: it runs while stood down and says so, without acting
+- diagnostics: a non-default setting is listed, and `enabled` always is
+- diagnostics: the restrictions section names the answers, the reasons and the last announced
+- diagnostics: the roster section lists the stored members without reading the client
+- diagnostics: the gear section lists the stored slots without reading the client
+- diagnostics: the feed section counts the parser's lines and names the last loot
+- diagnostics: the feed section counts the drops, the hidden ones and the context
+- diagnostics: the trade section shows the timers, the ticker and each entry
+- diagnostics: the inspect section shows the queue and each member's entry
+- diagnostics: the messaging section counts the registry, the sends and lists each queued ask
+- diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue
+- diagnostics: the scoring section names the scorer, the one in use, Pawn and the pending retries
+
+### test_vendor_sync.lua (3)
+
+- libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
+- tests/_kit is the test kit that shipped with that release
+- the automated-test runner is recorded executable (100755)
+
+### test_eol.lua (2)
+
+- eol: every tracked file carries the terminator .gitattributes declares for it
+- eol: .gitattributes is line-endings-§5's canonical body for this repo kind
+
+### test_prose.lua (15)
+
+- prose: no authored file carries a British spelling from localization-§5's published list
+- prose: the gate carries localization-§5's two lists whole, and nothing of its own
+- prose self-test: the carve-out suppresses the named generated folder, and only it
+- prose self-test: a path the carve-out does not name is not covered by one that looks like it
+- prose self-test: a carve-out that is not a set of path strings is a failure, not a silence
+- prose self-test: a TOC's file lines are read as paths, and its directives and comments are not
+- prose self-test: a .pkgmeta's ignore block is read, and the keys around it are not
+- prose self-test: an ignore entry covers a path exactly, by folder, and by wildcard
+- prose self-test: the carve-out admits a generated dump and refuses a file the TOC loads
+- prose self-test: a waiver-file exclusion meets the same two refusals as the carve-out
+- prose self-test: each list is refused on the matching rule its own scan uses
+- prose self-test: the scan and the refusals read the added exclusions through one reader
+- prose self-test: a narrowing is refused by what it suppresses, not by how it is written
+- prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
+- prose self-test: a malformed waived is a failure, not a silence
+
+### test_layout_cap.lua (13)
+
+- layoutcap: every authored file over the 1500-line cap is named in the census
+- layoutcap: no census row outlives the breach it records
+- layoutcap: every over-cap census row carries one of layout-§1's three terminal states
+- layoutcap: the census and the exempt set agree about which paths were exempted
+- layoutcap: an empty census is written as a result rather than left standing empty
+- layoutcap self-test: the parser reads the census nested under the register, and stops there
+- layoutcap self-test: a census outside its register, or at the wrong level, is not read
+- layoutcap self-test: an over-cap file missing from the census is reported, and an exempt one is not
+- layoutcap self-test: a census row that outlives its breach is reported
+- layoutcap self-test: an over-cap row that names no terminal state is reported
+- layoutcap self-test: the census and the exempt set are held to naming the same paths
+- layoutcap self-test: a census that states nothing is told apart from one that states none
+- layoutcap self-test: the exempt set takes folders as well as paths
+
+### test_diagnostics_contract.lua (9)
+
+- diagnostics contract: both forms run the report
+- diagnostics contract: the debug word is matched in any case
+- diagnostics contract: both markers carry the brand and the end counts the report
+- diagnostics contract: the report appends after what the console already holds
+- diagnostics contract: the report lands with logging off and turns it on for the session
+- diagnostics contract: an addon that opts out lands the report and leaves logging off (skipped: this addon keeps the default (Kit.diagnostics.enablesLogging is not false), so its report turns logging on; the case above holds it)
+- diagnostics contract: with logging already on, the report writes no second enable line
+- diagnostics contract: both forms run while the addon is disabled
+- diagnostics contract: no other name runs the report
+
+### test_lizard_sighted.lua (8)
+
+- lizard sighted: every hazard lizard loses a function over is neutralized
+- lizard sighted: fields, strings, comments and look-alike names come through unchanged
+- lizard sighted: a method definition is rewritten to its dot form with self
+- lizard sighted: no line is added or removed, CRLF included
+- lizard sighted: countFunctions counts the keyword, not strings, comments or longer names
+- lizard sighted: listedCounts reads the per-file table, once per file
+- lizard sighted: parity names every file whose counts differ, and only those
+- lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
+
+## Totals
+
+| Suite | Cases |
+|-------|------:|
+| test_harness.lua | 10 |
+| test_surface_parity.lua | 18 |
+| test_setup.lua | 18 |
+| test_database.lua | 7 |
+| test_schema.lua | 11 |
+| test_schema_rows.lua | 12 |
+| test_settings_pages.lua | 29 |
+| test_slash.lua | 26 |
+| test_window.lua | 13 |
+| test_window_shell.lua | 49 |
+| test_window_group.lua | 35 |
+| test_detail_card.lua | 20 |
+| test_window_mine.lua | 32 |
+| test_test_mode.lua | 29 |
+| test_compat.lua | 68 |
+| test_text_parse.lua | 8 |
+| test_constants.lua | 12 |
+| test_class_data.lua | 12 |
+| test_evaluate.lua | 34 |
+| test_scoring.lua | 15 |
+| test_quality_gate.lua | 24 |
+| test_situations.lua | 14 |
+| test_trade_rules.lua | 24 |
+| test_messaging.lua | 25 |
+| test_restrictions.lua | 15 |
+| test_roster.lua | 13 |
+| test_item_facts.lua | 18 |
+| test_item_read.lua | 24 |
+| test_gear.lua | 20 |
+| test_loot_parser.lua | 27 |
+| test_inspect.lua | 32 |
+| test_feed.lua | 44 |
+| test_trade_timer.lua | 16 |
+| test_trade_helper.lua | 16 |
+| test_asks.lua | 23 |
+| test_transmog.lua | 13 |
+| test_history.lua | 28 |
+| test_toast.lua | 24 |
+| test_auto_ask.lua | 25 |
+| test_sim_core.lua | 25 |
+| test_sim_pool.lua | 19 |
+| test_sim_events.lua | 21 |
+| test_sim_scenario.lua | 16 |
+| test_sim_e2e.lua | 12 |
+| test_sim_panel.lua | 16 |
+| test_disabled.lua | 9 |
+| test_diagnostics.lua | 15 |
+| test_vendor_sync.lua | 3 |
+| test_eol.lua | 2 |
+| test_prose.lua | 15 |
+| test_layout_cap.lua | 13 |
+| test_diagnostics_contract.lua | 8 |
+| test_lizard_sighted.lua | 8 |
+| Skipped | 1 |
+| **Total** | **1065** |
