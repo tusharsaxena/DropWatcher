@@ -8,8 +8,9 @@ local _, NS = ...
 -- THE GROUP. Once modules/SimRoster.lua has drawn the members, the group's size, kind and unit
 -- tokens answer for them (party1.. in a party; raid1 is you and raid2.. the members in a raid), and
 -- each token's GUID, name, realm (nil on your own realm, as the client answers), class and
--- connection are the member's. A member can be marked out of range, failing (its inspect never
--- answers) or offline (SetMember).
+-- connection are the member's; every unit read of raid1 in a raid is yours (DW-90). Raid Finder's
+-- group is matchmade: IsInGroup answers for the instance category alone. A member can be marked
+-- out of range, failing (its inspect never answers) or offline (SetMember).
 --
 -- WHERE. The session's situation answers IsInInstance, GetInstanceInfo (the journal instance the
 -- pool came from, its type and the situation's difficulty) and the keystone state (a run in
@@ -19,9 +20,9 @@ local _, NS = ...
 -- so the broker's fast path never fires for it and every read goes through the broker's real queue:
 -- NotifyInspect (guarded: no client call) schedules INSPECT_READY(guid) after a random delay in
 -- INSPECT_DELAY (the session's seeded random source, so a suite replays it), unless the member is
--- failing. From then on the member's slots, item ids, item levels and spec answer, until
--- ClearInspectPlayer lets the data go, as the client's does. Only the last inspected member's
--- data is held.
+-- failing. From then on the member's slots, item ids, worn levels (the roster's) and spec answer,
+-- until ClearInspectPlayer lets the data go, as the client's does. Only the last inspected
+-- member's data is held.
 --
 -- YOUR BAGS. Your own simulated drops sit in the backpack after its real slots (AddBagItem), each
 -- with a GUID and a trade window: TradeTimeRemaining answers the seconds left until it closes, then
@@ -56,12 +57,14 @@ W.BAG = 0
 --- The UI_INFO_MESSAGE type a simulated trade completes with.
 W.TRADE_COMPLETE = "SIM_TRADE_COMPLETE"
 
---- situation -> what the client answers there: in an instance, its type, its difficulty.
+--- situation -> what the client answers there: in an instance, its type, its difficulty, and
+--- whether the group is a matchmade instance group (Raid Finder: IsInGroup answers for the instance
+--- category only, so the announce channel is INSTANCE_CHAT).
 W.PLACES = {
     mythicPlus     = { inInstance = true, instanceType = "party", difficulty = D.MYTHIC_KEYSTONE },
     dungeon        = { inInstance = true, instanceType = "party", difficulty = D.MYTHIC_DUNGEON },
     raid           = { inInstance = true, instanceType = "raid", difficulty = D.HEROIC_RAID },
-    raidLFR        = { inInstance = true, instanceType = "raid", difficulty = D.LFR },
+    raidLFR        = { inInstance = true, instanceType = "raid", difficulty = D.LFR, instanceGroup = true },
     delve          = { inInstance = true, instanceType = "scenario", difficulty = D.DELVE },
     openWorldGroup = { inInstance = false, instanceType = "none", difficulty = 0 },
 }
@@ -162,7 +165,7 @@ end
 
 --- What the client answers about where the running simulation is: W.PLACES' row with the
 --- instance's name, or nil when the session names no known situation.
---- @return table|nil { inInstance, instanceType, difficulty, name }
+--- @return table|nil { inInstance, instanceType, difficulty, name, instanceGroup }
 function W.Place()
     local s = NS.Sim.Session()
     local row = s and W.PLACES[s.situation]
@@ -173,7 +176,7 @@ function W.Place()
         name = drops[1] and drops[1].instance or L["Simulated instance"]
     end
     return { inInstance = row.inInstance, instanceType = row.instanceType, difficulty = row.difficulty,
-        name = name }
+        name = name, instanceGroup = row.instanceGroup == true }
 end
 
 -- ── the bags ────────────────────────────────────────────────────────────────────────────────
@@ -297,25 +300,31 @@ function P.InRaid(live)
     return w.kind == "raid"
 end
 
+-- A matchmade group (W.PLACES' instanceGroup) answers for the instance category alone; any other
+-- for every category but that one. No category asks for any group.
 function P.InGroup(live, category)
     if not group() then return live(category) end
-    return category == nil or category ~= NS.Compat.InstanceGroupCategory()
+    if category == nil then return true end
+    local p = W.Place()
+    local matchmade = p ~= nil and p.instanceGroup == true
+    return (category == NS.Compat.InstanceGroupCategory()) == matchmade
 end
 
--- In a raid, raid1 is you: its answers are the player's.
-local function playerAlias(unit)
-    return unit == "raid1" and W.Kind() == "raid"
+-- In a raid, raid1 is you: its answers are the player's, for every unit read (M7 review).
+local function liveUnit(unit)
+    if unit == "raid1" and W.Kind() == "raid" then return "player" end
+    return unit
 end
 
 function P.UnitGUID(live, unit)
     local m = W.MemberOfUnit(unit)
     if m then return m.guid end
-    return live(playerAlias(unit) and "player" or unit)
+    return live(liveUnit(unit))
 end
 
 function P.UnitName(live, unit)
     local m = W.MemberOfUnit(unit)
-    if not m then return live(playerAlias(unit) and "player" or unit) end
+    if not m then return live(liveUnit(unit)) end
     local own = Sim.Live(NS.Compat.NormalizedRealm)
     if m.realm == own then return m.name, nil end
     return m.name, m.realm
@@ -323,13 +332,13 @@ end
 
 function P.UnitClass(live, unit)
     local m = W.MemberOfUnit(unit)
-    if not m then return live(playerAlias(unit) and "player" or unit) end
+    if not m then return live(liveUnit(unit)) end
     return m.classFile, m.classFile, m.classID
 end
 
 function P.UnitIsConnected(live, unit)
     local m = W.MemberOfUnit(unit)
-    if not m then return live(unit) end
+    if not m then return live(liveUnit(unit)) end
     return not mark(m, "offline")
 end
 
@@ -364,13 +373,13 @@ end
 
 function P.CanInspectUnit(live, unit)
     local m = W.MemberOfUnit(unit)
-    if not m then return live(unit) end
+    if not m then return live(liveUnit(unit)) end
     return not mark(m, "offline")
 end
 
 function P.InInspectRange(live, unit)
     local m = W.MemberOfUnit(unit)
-    if not m then return live(unit) end
+    if not m then return live(liveUnit(unit)) end
     return not mark(m, "far")
 end
 
@@ -390,26 +399,28 @@ function P.ClearInspectPlayer(guarded)
 end
 
 function P.InventoryItemLink(live, unit, slot)
-    if not W.MemberOfUnit(unit) then return live(unit, slot) end
+    if not W.MemberOfUnit(unit) then return live(liveUnit(unit), slot) end
     local m = held(unit)
     return m and m.gear and m.gear[slot] or nil
 end
 
 function P.InventoryItemID(live, unit, slot)
-    if not W.MemberOfUnit(unit) then return live(unit, slot) end
+    if not W.MemberOfUnit(unit) then return live(liveUnit(unit), slot) end
     local m = held(unit)
     return itemID(m and m.gear and m.gear[slot])
 end
 
+-- The worn level the roster drew inside its band (modules/SimRoster.lua), else the link's.
 function P.InventoryItemLevel(live, unit, slot)
-    if not W.MemberOfUnit(unit) then return live(unit, slot) end
+    if not W.MemberOfUnit(unit) then return live(liveUnit(unit), slot) end
     local m = held(unit)
     local link = m and m.gear and m.gear[slot]
-    return link and NS.Compat.GetDetailedItemLevel(link) or nil
+    if not link then return nil end
+    return (m.levels and m.levels[slot]) or NS.Compat.GetDetailedItemLevel(link)
 end
 
 function P.InspectSpecID(live, unit)
-    if not W.MemberOfUnit(unit) then return live(unit) end
+    if not W.MemberOfUnit(unit) then return live(liveUnit(unit)) end
     local m = held(unit)
     return m and m.specID or nil
 end

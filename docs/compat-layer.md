@@ -1,7 +1,10 @@
 # Compat layer — Ka0s Drop Watcher
 
 `core/Compat.lua` is the only file that names a version-variant, deprecated or optional client API
-(compat; design spec §4). Feature modules call `NS.Compat.X`; `luacheck` declares those client
+(compat; design spec §4). It is the root of the addon's compat family: `core/CompatWorld.lua` and
+`core/CompatItem.lua` add stable reads to the same `NS.Compat` (below), and the root's header names
+both. The family is the standard's v2.79.0 rule, not yet on its master: until it is, the split is a
+row in `ARCHITECTURE.md`'s Documented deviations. Feature modules call `NS.Compat.X`; `luacheck` declares those client
 globals for this one file only, and `test_compat`'s last case fails if any other shipped file names
 one in code. It loads in `# Core` right after `core/TextParse.lua`, needs `LibStub` and `NS.TextParse` at
 load, and is read inside functions only.
@@ -140,16 +143,23 @@ adds the stable reads of the group, a unit and the instance to `NS.Compat`: `Gro
 (`GetNumGroupMembers`), `InRaid`, `InGroup(category)`, `InstanceGroupCategory`
 (`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`,
 `InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`), `DifficultyKnown`
-(`GetDifficultyInfo`) and `ChallengeModeActive` (`C_ChallengeMode.IsChallengeModeActive`). None is
-version-variant, so the compat rule does not ask for them here, and they are not counted above; they
-are `NS.Compat` members so the seam wraps them, because a module reading the global would bypass a
-running simulation and see the real, empty group. They answer the client's raw values (secrets
-included) and each caller guards them as before. `modules/Roster.lua`, `modules/Situations.lua`,
-`modules/Inspect.lua`, `modules/Asks.lua` and `modules/LootFeed.lua` read them.
+(`GetDifficultyInfo`) and `ChallengeModeActive` (`C_ChallengeMode.IsChallengeModeActive`); and,
+since DW-90 (sim feedback §0), whether you are fighting, `InCombatLockdown` and `PlayerInCombat`
+(`UnitAffectingCombat("player")`), each a plain boolean, and `GlobalString(name)` (`_G[name]`: the
+`LOOT_ITEM*` lines, a slot's or a chat type's name). None is version-variant, so the compat rule
+does not ask for them here, and they are not counted above; they are `NS.Compat` members so the
+seam wraps them, because a module reading the global would bypass a running simulation and see the
+real, empty group. They answer the client's raw values (secrets included) and each caller guards
+them as before. No other file names these globals: `tests/test_sim_e2e.lua` scans every shipped
+file and fails one that does (the engine's modules for `_G` too).
 
-While a simulation runs, `modules/SimWorld.lua` answers them for the invented group and place, and
+While a simulation runs, `modules/SimWorld.lua` answers them for the invented group and place (raid1
+is you in a raid, for every unit read; Raid Finder is an instance group, answering `InGroup` for the
+instance category alone), `modules/SimEvents.lua` answers the two combat flags `true` while its
+simulated combat edge is up (the client's answer otherwise, so real combat is never hidden), and
 answers the inspect members (`NotifyInspect`, guarded, schedules the reply; `InventoryItemLink`,
-`InventoryItemID`, `InventoryItemLevel` and `InspectSpecID` answer until `ClearInspectPlayer`),
+`InventoryItemID`, `InventoryItemLevel` (the roster's worn level) and `InspectSpecID` answer until
+`ClearInspectPlayer`),
 the bag members for your simulated drops (`BagSlotCount`, `BagItemLink`, `GetBagItemGUID`,
 `TradeTimeRemaining`, and `core/CompatItem.lua`'s `BagItemLevelQuality` and `TooltipBagItem`), `InTradeRange`, `ChallengeMapName` and the trade window's members
 (`TradePartnerName`, `TradeItemLinks`, `IsTradeCompleteMessage`). `test_sim_events` holds these.
@@ -200,18 +210,18 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 
 | Caller | Shims |
 |---|---|
-| `modules/Restrictions.lua` | `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive` |
+| `modules/Restrictions.lua` | `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive`; `InCombatLockdown` (`core/CompatWorld.lua`) |
 | `modules/Roster.lua` | `NormalizedRealm`; `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected` (`core/CompatWorld.lua`) |
 | `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |
 | `core/ItemRead.lua` | `GetItemInfo`, `GetDetailedItemLevel`; `BagItemLevelQuality` (`core/CompatItem.lua`) |
 | `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `PlayerHasTransmog` |
-| `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc` |
-| `modules/LootParser.lua` | `FormatToPattern` |
+| `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc`; `UnitClass` (`core/CompatWorld.lua`) |
+| `modules/LootParser.lua` | `FormatToPattern`; `GlobalString`, `UnitName`, `UnitGUID` (`core/CompatWorld.lua`) |
 | `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |
-| `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo` (`core/CompatWorld.lua`) |
+| `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo`, `UnitName` (`core/CompatWorld.lua`) |
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade`, `InTradeRange`, `CursorHasItem`, `ClearCursor`, `GetBagItemGUID`, `BagSlotCount` |
-| `modules/Asks.lua` | `ChatSender`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |
+| `modules/Asks.lua` | `ChatSender`; `InGroup`, `InRaid`, `InstanceGroupCategory`, `GlobalString` (`core/CompatWorld.lua`) |
 | `modules/Scoring.lua` | `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
 | `modules/WindowGroup.lua` | `ItemIcon`, `ClassColor`, `InsertChatLink`, `DressUpItem`, `BagItemLink`, `InventoryItemLink`; `TooltipBagItem`, `TooltipInventoryItem`, `TooltipHyperlink` (`core/CompatItem.lua`) |
@@ -219,14 +229,17 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/OfferPanel.lua` | `ClassColor` |
 | `modules/WindowHistory.lua` | `ContextMenu`, `ClassColor` |
 | `modules/WindowFooter.lua` | `PawnIsReady` |
-| `modules/Toast.lua` | `PlayAlertSound` |
+| `modules/Toast.lua` | `PlayAlertSound`; `InCombatLockdown` (`core/CompatWorld.lua`) |
+| `modules/Window.lua` | `PlayerInCombat` (`core/CompatWorld.lua`: the show decision off a combat edge) |
+| `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal) |
+| `modules/TestMode.lua` | `UnitName`, `UnitClass`, `UnitGUID` (`core/CompatWorld.lua`: you, as a placeholder's looter) |
 | `modules/Diagnostics.lua` | `PawnIsReady`, `PawnScaleForSpec`, `TransmogSource` |
-| `settings/Editors.lua`, `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec) |
+| `settings/Editors.lua`, `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec); `UnitClass` (`core/CompatWorld.lua`) |
 | `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item) |
 | `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
 | `modules/SimRoster.lua` | `NormalizedRealm` (who shares your realm) |
 | `modules/SimWorld.lua` | `NormalizedRealm`, `BagSlotCount` (read past the seam); `GetDetailedItemLevel` (a member's slot level); `InstanceGroupCategory`. Its providers answer the members listed under the world reads |
-| `modules/SimEvents.lua` | `GroupSize`, `UnitName`, `UnitGUID`, `NormalizedRealm` (the encounter's group size, your own loot line, who shares your realm) |
+| `modules/SimEvents.lua` | `GroupSize`, `UnitName`, `UnitGUID`, `NormalizedRealm`, `GlobalString`, `InCombatLockdown` (the encounter's group size, your own loot line, who shares your realm, the `LOOT_ITEM*` lines, the stop's combat check). Its providers answer `InCombatLockdown` and `PlayerInCombat` |
 
 The secret guards (`IsSecret`, `IsSafeKey`) are read by most of the edges above on every client
 payload. `DecodeDuration`, `ParseTradeTimeRemaining`, `ReadTooltipLine` and `PawnItemData` are

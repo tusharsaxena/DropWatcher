@@ -17,8 +17,8 @@ local _, NS = ...
 --              isFollowerDungeon, inGroup, inRaid, isPvP }
 --
 -- The settings are the `situations.<key>.*` rows, read through the schema seam. Test mode ignores
--- the situation gate: that bypass is the consumer's (LootFeed), so IsTracking always answers for
--- the situation itself.
+-- the situation gate: that bypass is the consumer's (LootFeed), so IsTracking answers for the
+-- situation itself, except that a running simulation tracks the situation it simulates.
 
 NS.Situations = NS.Situations or {}
 local Sit = NS.Situations
@@ -171,8 +171,16 @@ function Sit.Settings(key)
     return Sit.Resolve(key, storedRow(key))
 end
 
---- Whether loot is tracked in a situation (the current one when `key` is nil).
-function Sit.IsTracking(key) return Sit.Settings(key).track end
+--- Whether loot is tracked in a situation (the current one when `key` is nil). A running
+--- simulation always tracks the situation it simulates, whatever its row says (sim feedback §0:
+--- a run exists to fill the window, the delve and the open world untracked by default included);
+--- the real world keeps its own row.
+function Sit.IsTracking(key)
+    key = key or Sit.Current()
+    local s = NS.Sim.IsActive() and NS.Sim.Session()
+    if s and s.situation == key then return true end
+    return Sit.Settings(key).track
+end
 
 --- Whether a drop added to the feed opens the window there (the current one when `key` is nil).
 function Sit.ShouldAutoOpen(key) return Sit.Settings(key).autoOpen end

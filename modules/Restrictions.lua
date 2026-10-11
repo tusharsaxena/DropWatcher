@@ -53,7 +53,7 @@ end
 local function inCombat()
     local edge = State.combatEdge
     if edge ~= nil then return edge end
-    return InCombatLockdown() == true
+    return NS.Compat.InCombatLockdown()
 end
 
 -- The reason key for an enum member name: the known ones by table, any other by its own name.

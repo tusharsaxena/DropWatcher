@@ -135,6 +135,7 @@ Kit.run{
         "test_sim_pool",
         "test_sim_events",
         "test_sim_scenario",
+        "test_sim_e2e",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

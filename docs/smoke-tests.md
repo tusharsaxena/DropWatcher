@@ -35,7 +35,7 @@ passed.
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..8 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8) |
+| SIM-1..9 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -1013,6 +1013,18 @@ with your real situation (solo), not the simulated group's, and it is not marked
 drops go, the real one stays in the feed, and the History tab (the account's log again) shows it.
 `/reload` → it is still in History. Result:
 
+**SIM-9. A sim run fills the window under the default filters (DW-90, sim feedback §0).** The
+headless `test_sim_e2e` covers the same ground in every scenario, at the content's level and
+outgearing it. Solo, out of an instance, with the window's filters at their defaults (View:
+Interesting, Quality: Rare+, Content: This instance) and your usual gear: `/dw sim start key`, then
+`/dw sim run` → chat prints one line per step (`Simulation step 1 of 11: runStart.` … `Simulation
+step 10 of 11: loot (2 drops).` … `step 11 of 11: lockdownOff.`), the footer reads `Simulating:
+Mythic+ · 4 members` and `Inspect 4/4 fresh` once the inspects land, Group drops shows at least one
+member's drop and My drops at least one of yours. Repeat with `/dw sim start delve` and `/dw sim
+start world` (both untracked by default) → each fills the window the same way. `/dw sim start lfr`
+→ an ask's announce goes to instance chat (`[sim] INSTANCE_CHAT: …`). In `/dw sim start raid 12`
+→ you show online in the roster (`/dw diagnostics`, `unit=raid1`). Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -1088,3 +1100,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-6 | DW-71, the simulator's item pool and its fallback | No client pass recorded yet |
 | SIM-7 | DW-73, the verbs' refusals and the automatic stop end to end | No client pass recorded yet |
 | SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet |
+| SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet |

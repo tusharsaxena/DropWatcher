@@ -112,7 +112,7 @@ local function readEquipped(waiting, prev)
 end
 
 local function classFileOf()
-    local _, classFile = UnitClass("player")
+    local _, classFile = NS.Compat.UnitClass("player")
     if NS.Compat.IsSecret(classFile) or type(classFile) ~= "string" then return nil end
     return classFile
 end

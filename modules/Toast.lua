@@ -134,7 +134,7 @@ local function store()
     return p.toast
 end
 
-local function inCombat() return InCombatLockdown() == true end
+local function inCombat() return NS.Compat.InCombatLockdown() end
 
 local function held()
     return inCombat() and setting("inCombat") ~= true

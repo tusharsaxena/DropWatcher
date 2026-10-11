@@ -118,7 +118,7 @@ end
 -- Why test mode may not turn on now, as the line to print, or nil when it may.
 local function testModeRefusal()
     if NS.IsStoodDown() then return NS.SlashCommands:DisabledLine() end
-    if InCombatLockdown() then return NS.L["Test mode is not available in combat."] end
+    if NS.Compat.InCombatLockdown() then return NS.L["Test mode is not available in combat."] end
     -- The simulator and test mode are exclusive (simulator spec §1): placeholders are not the engine.
     if NS.Sim.active then return NS.L["Test mode is not available while a simulation runs."] end
     return nil

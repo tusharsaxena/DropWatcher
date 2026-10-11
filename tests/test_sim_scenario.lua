@@ -201,7 +201,7 @@ test("sim step: the timeline waits for the pool, then plays one step at a time",
     m.advance(1)
     assertTrue(NS.SimScenario.Status().ready)
     slash(NS, "sim step")
-    assertEqual(printed(m, "Simulation step 1 of 15: pull."), 1)
+    assertEqual(printed(m, "Simulation step 1 of 15: pull (Warden Ashvane)."), 1)
     assertTrue(NS.SimEvents.Status().encounter ~= nil)
     slash(NS, "sim step")
     assertTrue(NS.Restrictions.ActiveSet().chatLockdown, "the lockdown step")
@@ -209,17 +209,23 @@ test("sim step: the timeline waits for the pool, then plays one step at a time",
     assertEqual(printed(m, "A simulated boss is already engaged"), 1)
 end)
 
-test("sim run: plays every step a few seconds apart, then says it has finished", function()
+test("sim run: plays every step a few seconds apart, each with its line, then says it has finished", function()
     local NS, m = addon()
     slash(NS, "sim start world")
     slash(NS, "sim run")
     assertEqual(NS.SimScenario.Status().pos, 1, "the first step at once")
+    assertEqual(printed(m, "Simulation step 1 of 5: pull (Warden Ashvane)."), 1)
     slash(NS, "sim run")
     assertEqual(printed(m, "The timeline is already playing."), 1)
     m.advance(NS.SimScenario.STEP_DELAY * 5)
     local st = NS.SimScenario.Status()
     assertEqual(st.pos, st.steps); assertFalse(st.playing)
     assertEqual(printed(m, "The simulation's timeline has finished."), 1)
+    -- red under: the M7 run, which printed no step it played itself (sim feedback §0)
+    for _, line in ipairs({ "2 of 5: lockdownOn.", "3 of 5: kill (Warden Ashvane).", "4 of 5: loot (3 drops).",
+        "5 of 5: lockdownOff." }) do
+        assertEqual(printed(m, "Simulation step " .. line), 1, line)
+    end
     assertEqual(NS.SimEvents.Status().kills, 1)
     slash(NS, "sim step")
     assertEqual(printed(m, "The simulation's timeline has finished."), 2)

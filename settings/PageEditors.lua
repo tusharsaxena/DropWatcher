@@ -57,7 +57,7 @@ end
 -- ── the spec sub-strip (Weights and Preferences) ────────────────────────────────────────────
 
 local function classFile()
-    local _, file = UnitClass("player")
+    local _, file = NS.Compat.UnitClass("player")
     return file
 end
 

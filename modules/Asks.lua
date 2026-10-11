@@ -179,7 +179,7 @@ end
 -- The slot's localized name: the client's INVTYPE_* GlobalString, else nil.
 local function slotText(equipLoc)
     local key = plainString(equipLoc)
-    return key and plainString(_G[key]) or nil
+    return key and plainString(NS.Compat.GlobalString(key)) or nil
 end
 
 -- The verdict whose gain is {gain}: the looter's for an ask, the candidate's for an offer.
@@ -259,7 +259,7 @@ local function confirm(a, chatType)
     if chatType == "WHISPER" then
         return NS.Print(L["Whispered %s: %s"]:format(shortName(a.target), itemOf(a)))
     end
-    local label = plainString(_G[chatType]) or chatType
+    local label = plainString(NS.Compat.GlobalString(chatType)) or chatType
     NS.Print(L["Announced in %s: %s"]:format(label, itemOf(a)))
 end
 

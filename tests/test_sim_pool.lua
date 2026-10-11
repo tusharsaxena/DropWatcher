@@ -2,8 +2,8 @@
 -- Encounter Journal shims (core/Compat.lua), the pool read from the journal with the player's
 -- selection saved and restored, never while its frame is shown, the wait for
 -- EJ_LOOT_DATA_RECIEVED and its timeout, the class filter and the own-items fallback reported once
--- (modules/SimPool.lua); and the invented roster and its gear drawn from the pool inside a band
--- around your item level (modules/SimRoster.lua).
+-- (modules/SimPool.lua); and the invented roster and its gear drawn from the pool, worn inside a
+-- band around the content's item level (modules/SimRoster.lua).
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -368,7 +368,7 @@ test("sim roster: a party has four members, a raid nine to nineteen, each distin
     assertTrue(other > 0, "some come from another realm")
 end)
 
-test("sim roster: gear is drawn inside the band, from what the class can wear; the rest stays empty", function()
+test("sim roster: gear is what the class can wear, worn at a level inside the band; the rest stays empty", function()
     local NS = T.newAddon()
     local R, S = NS.SimRoster, NS.Constants.SLOT
     local W = NS.Constants.WEAPON_SUBCLASS
@@ -383,22 +383,37 @@ test("sim roster: gear is drawn inside the band, from what the class can wear; t
     }
     -- A Retribution paladin (70): plate, a two-hander, no Titan's Grip.
     local ret = { classFile = "PALADIN", specID = 70 }
-    local gear = R.Gear(ret, entries, { low = 590, high = 605 }, R.Random(5))
+    local gear, levels = R.Gear(ret, entries, { low = 590, high = 605 }, R.Random(5))
     assertEqual(gear[S.HEAD], "plate600", "plate, never cloth")
-    assertNil(gear[S.CHEST], "650 is outside the band: the slot stays empty")
+    -- red under: the M7 roster, which left a slot empty when the pool sat outside the band, so a
+    -- group around you wore nothing of content you outgear (sim feedback §0)
+    assertEqual(gear[S.CHEST], "plate650", "the item is drawn whatever its own level")
+    for slot, l in pairs(gear) do
+        assertTrue(levels[slot] >= 590 and levels[slot] <= 605, l .. " is worn inside the band")
+    end
     assertTrue((gear[S.FINGER1] == "ringA" and gear[S.FINGER2] == "ringB")
         or (gear[S.FINGER1] == "ringB" and gear[S.FINGER2] == "ringA"), "two different rings")
     assertEqual(gear[S.MAINHAND], "sword2h")
     -- red under: a generator that fills the off hand behind a two-hander
     assertNil(gear[S.OFFHAND], "a two-hander leaves the off hand empty")
     assertNil(gear[S.WAIST], "nothing in the pool for the waist")
+    assertNil(levels[S.WAIST])
     -- A mage cannot wear plate nor a shield, and has no two-hander sword.
     local mage = R.Gear({ classFile = "MAGE", specID = 62 }, entries, { low = 590, high = 605 }, R.Random(5))
     assertEqual(mage[S.HEAD], "cloth600")
     assertNil(mage[S.MAINHAND]); assertNil(mage[S.OFFHAND])
     local band = R.BandAround(600)
-    assertEqual(band.low, 590); assertEqual(band.high, 605)
+    assertEqual(band.low, 601); assertEqual(band.high, 612)
     assertEqual(R.BandAround(600, { low = -20, high = 0 }).low, 580)
+end)
+
+test("sim roster: the content's level is the median of the pool's drops", function()
+    local R = T.newAddon().SimRoster
+    assertNil(R.ContentLevel({}))
+    assertNil(R.ContentLevel({ { link = "x" } }), "no known level")
+    assertEqual(R.ContentLevel({ { ilvl = 610 } }), 610)
+    assertEqual(R.ContentLevel({ { ilvl = 630 }, { ilvl = 600 }, { ilvl = 610 } }), 610)
+    assertEqual(R.ContentLevel({ { ilvl = 600 }, { ilvl = 610 }, { link = "x" }, { ilvl = 620 }, { ilvl = 640 } }), 610)
 end)
 
 test("sim roster: Create draws the group from the session's pool and the stop forgets it", function()
@@ -413,10 +428,11 @@ test("sim roster: Create draws the group from the session's pool and the stop fo
     local rings = 0
     for _, mem in ipairs(members) do
         assertTrue(NS.Sim.IsSimGUID(mem.guid), "marked as the simulation's")
-        for _, l in pairs(mem.gear) do
+        for slot, l in pairs(mem.gear) do
             assertTrue(m.items[l] ~= nil, "a pool item")
-            local ilvl = m.items[l].ilvl
-            assertTrue(ilvl >= 590 and ilvl <= 605, "inside the default band around 600")
+            local worn = mem.levels[slot]
+            -- The mythic dungeon's drops are 600: the group wears 601 to 612 (sim feedback §0).
+            assertTrue(worn >= 601 and worn <= 612, "worn inside the default band above the content's 600")
             if m.items[l].equipLoc == "INVTYPE_FINGER" then rings = rings + 1 end
         end
     end

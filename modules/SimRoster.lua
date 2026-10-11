@@ -1,8 +1,8 @@
 local _, NS = ...
 -- modules/SimRoster.lua — the simulator's group and what it wears (simulator spec §2, §3): a
 -- roster of invented members with names, realms, GUIDs, classes and specs, and each member's gear
--- drawn slot by slot from the item pool (modules/SimPool.lua) inside an item-level band around
--- yours.
+-- drawn slot by slot from the item pool (modules/SimPool.lua) and worn inside an item-level band
+-- around the content's level (the median of the pool's drops, ContentLevel; yours without one).
 --
 -- PURE. Random, Members and Gear take every input as an argument (the random source included)
 -- and touch no client and no state, so a seed replays the same group. Create is the edge: it reads
@@ -12,7 +12,8 @@ local _, NS = ...
 -- and the loot lines through the event drivers (DW-72), which read Members.
 --
 --   member = { sim = true, guid, name, realm, fullName, unit, classFile, classID, specID,
---              gear = { [slot] = link } }   -- a slot the pool cannot fill is absent (empty)
+--              gear = { [slot] = link },    -- a slot the pool cannot fill is absent (empty)
+--              levels = { [slot] = ilvl } } -- each worn item's level, drawn inside the band
 
 NS.SimRoster = NS.SimRoster or {}
 local R = NS.SimRoster
@@ -26,8 +27,11 @@ local TAG = "SIM"
 R.PARTY_SIZE = 4
 R.RAID_MIN, R.RAID_MAX = 9, 19
 
---- The default item-level band around your average (spec §3): from 10 below to 5 above.
-R.BAND = { low = -10, high = 5 }
+--- The default item-level band around the content's level (sim feedback §0): from 1 to 12 above.
+--- The group is a little ahead of the content it runs, so its drops are spare for their looters
+--- and likely tradeable: what the window's Interesting view is for, whatever you wear. A scenario
+--- (or a suite) passes its own band to draw a group behind the content instead.
+R.BAND = { low = 1, high = 12 }
 
 -- Invented names and realms. About one member in three comes from another realm.
 local NAMES = {
@@ -162,21 +166,23 @@ local function hasSlot(plan, slot)
     return false
 end
 
-local function inBand(e, band)
-    return type(e.ilvl) == "number" and e.ilvl >= band.low and e.ilvl <= band.high
-end
-
 -- Every entry that may fill `slot` for this member, not worn already.
-local function candidates(m, entries, slot, band, used)
+local function candidates(m, entries, slot, used)
     local out = {}
     for _, e in ipairs(entries) do
         local plan = C.SLOT_PLAN[e.equipLoc]
-        if plan and not used[e.link] and hasSlot(plan, slot) and inBand(e, band)
-            and fitsHand(m, plan.kind, slot) and canUse(m, e) then
+        if plan and not used[e.link] and hasSlot(plan, slot) and fitsHand(m, plan.kind, slot) and canUse(m, e) then
             out[#out + 1] = e
         end
     end
     return out
+end
+
+-- A level inside the band, at random.
+local function levelIn(band, rnd)
+    local low, high = math.floor(band.low), math.floor(band.high)
+    if high <= low then return low end
+    return rnd(low, high)
 end
 
 -- True when the main hand holds an item that fills both hands (a two-hander without Titan's
@@ -187,28 +193,44 @@ local function handsFull(m, entry)
     return kind == "weapon2H" and CD.TitanGripFor(m.classFile, m.specID) ~= true
 end
 
---- One member's gear (spec §3): each slot drawn at random from the entries it can wear whose item
---- level is inside `band` ({ low, high }, absolute levels). A slot no entry fits stays empty
---- (absent), and so does the off hand behind a two-hander. `entries` are pool entries with their
---- facts: { link, equipLoc, ilvl, classID, subClassID }.
+--- One member's gear (spec §3; sim feedback §0): each slot drawn at random from the entries it can
+--- wear, and worn at an item level drawn inside `band` ({ low, high }, absolute levels), which the
+--- simulated inspect answers (`levels`). The pool sits at the content's level and your band may
+--- not: drawing the level apart from the item dresses the group around you whatever you wear, so
+--- the content's drops are upgrades for some members and spare for others. A slot nothing fits
+--- stays empty (absent), and so does the off hand behind a two-hander. `entries` are pool entries
+--- with their facts: { link, equipLoc, ilvl, classID, subClassID }.
 --- @param m table a member
 --- @param entries table
 --- @param band table
 --- @param rnd function
---- @return table gear { [slot] = link }
+--- @return table gear { [slot] = link }, table levels { [slot] = worn item level }
 function R.Gear(m, entries, band, rnd)
-    local gear, used, main = {}, {}, nil
+    local gear, levels, used, main = {}, {}, {}, nil
     for _, slot in ipairs(ORDER) do
         if not (slot == S.OFFHAND and handsFull(m, main)) then
-            local cands = candidates(m, entries, slot, band, used)
+            local cands = candidates(m, entries, slot, used)
             if #cands > 0 then
                 local e = cands[rnd(#cands)]
-                gear[slot], used[e.link] = e.link, true
+                gear[slot], levels[slot], used[e.link] = e.link, levelIn(band, rnd), true
                 if slot == S.MAINHAND then main = e end
             end
         end
     end
-    return gear
+    return gear, levels
+end
+
+--- The content's item level (pure): the median level of the pool's drops, nil for none.
+--- @param entries table pool entries, each with its `ilvl` when known
+--- @return number|nil
+function R.ContentLevel(entries)
+    local levels = {}
+    for _, e in ipairs(type(entries) == "table" and entries or {}) do
+        if type(e.ilvl) == "number" then levels[#levels + 1] = e.ilvl end
+    end
+    if #levels == 0 then return nil end
+    table.sort(levels)
+    return levels[math.floor((#levels + 1) / 2)]
 end
 
 --- The absolute band around an average item level: { low = avg + band.low, high = avg + band.high }.
@@ -223,7 +245,8 @@ end
 -- ── the edge ───────────────────────────────────────────────────────────────────────────────
 
 --- Draw the running simulation's group and its gear (spec §2, §3) and keep it on the session.
---- `opts` = { kind, size, seed, band = { low, high } offsets }. The pool is the session's
+--- `opts` = { kind, size, seed, band = { low, high } offsets around the content's level }. The
+--- pool is the session's
 --- (modules/SimPool.lua); without one every member is drawn with empty slots. Nil when no
 --- simulation runs.
 --- @param opts table|nil
@@ -236,9 +259,12 @@ function R.Create(opts)
     local members = R.Members({ kind = opts.kind, size = opts.size,
         ownRealm = NS.Compat.NormalizedRealm() }, rnd)
     local entries = NS.SimPool.GearEntries(s.pool)
-    local band = R.BandAround(NS.SimPool.PlayerAverageLevel() or 0, opts.band)
+    local drops = {}
+    for _, e in ipairs(NS.SimPool.Drops(s.pool)) do drops[#drops + 1] = NS.SimPool.Facts(e) end
+    local anchor = R.ContentLevel(drops) or NS.SimPool.PlayerAverageLevel() or 0
+    local band = R.BandAround(anchor, opts.band)
     for _, m in ipairs(members) do
-        m.gear = R.Gear(m, entries, band, rnd)
+        m.gear, m.levels = R.Gear(m, entries, band, rnd)
         NS.Sim.MarkGUID(m.guid)
     end
     s.members = members

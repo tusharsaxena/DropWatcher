@@ -108,7 +108,7 @@ local compiled, sources
 function LP.Rebuild()
     local out, src = {}, {}
     for i, s in ipairs(LP.SHAPES) do
-        local raw = _G[s.global]
+        local raw = NS.Compat.GlobalString(s.global)
         src[i] = raw
         local fmt = usable(raw)
         if fmt then
@@ -124,9 +124,9 @@ end
 -- True when every global still is the exact string the set was built from.
 local function fresh()
     if not sources then return false end
-    local shapes = LP.SHAPES
+    local shapes, read = LP.SHAPES, NS.Compat.GlobalString
     for i = 1, #shapes do
-        if not rawequal(sources[i], _G[shapes[i].global]) then return false end
+        if not rawequal(sources[i], read(shapes[i].global)) then return false end
     end
     return true
 end
@@ -165,8 +165,8 @@ end
 local function selfLooter()
     local me = NS.Roster.Player()
     if me then return me.fullName or me.name, me.guid end
-    local guid = UnitGUID("player")
-    return usable(UnitName("player")), NS.Compat.IsSafeKey(guid) and guid or nil
+    local guid = NS.Compat.UnitGUID("player")
+    return usable(NS.Compat.UnitName("player")), NS.Compat.IsSafeKey(guid) and guid or nil
 end
 
 -- A third-person looter: the roster's member when it can place the name, else the name as captured

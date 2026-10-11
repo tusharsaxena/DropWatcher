@@ -134,11 +134,10 @@ function DO.usage() for _, line in ipairs(V.UsageLines()) do NS.Print(line) end 
 function DO.start(c) return answered(NS.SimScenario.Start(c.scenario, c.size)) end
 function DO.run() return answered(NS.SimScenario.Run()) end
 
+-- The step prints its own line (modules/SimScenario.lua), as a played one does.
 function DO.step()
     local step, code = NS.SimScenario.Step()
     if not step then return answered(false, code) end
-    local t = NS.SimScenario.Status()
-    NS.Print(L["Simulation step %d of %d: %s."]:format(t.pos, t.steps, step.kind))
     return true
 end
 

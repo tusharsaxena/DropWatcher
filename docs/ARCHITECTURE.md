@@ -47,11 +47,12 @@ its one-line responsibility and why its position is load-bearing or conventional
 [`module-map.md`](module-map.md). In short:
 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
-  seam (`Compat.lua`, the only caller of version-variant, deprecated and optional client APIs, with
-  its pure text parsers in `TextParse.lua`, and the simulator's answer seam over it in
-  `SimSeam.lua`, which wraps every member that answers for the client, with the stable group,
-  unit and instance reads it must also answer in `CompatWorld.lua`, and the exact item reads at a
-  bag location and the game tooltip's item setters in `CompatItem.lua`), the library-shaped item
+  family (its root `Compat.lua`, the only caller of version-variant, deprecated and optional client
+  APIs, with its pure text parsers in `TextParse.lua`; the stable group, unit, instance, combat and
+  GlobalString reads the simulator must also answer in `CompatWorld.lua`; the exact item reads at a
+  bag location and the game tooltip's item setters in `CompatItem.lua`; no other file names those
+  client globals), and the simulator's answer seam over it in `SimSeam.lua`, which wraps every
+  member that answers for the client, the library-shaped item
   reads (`ItemRead.lua`: how complete a link is, the better of two, level and quality read the
   exact way; ui spec §0), the
   game-data tables (`Constants.lua`, `ClassData.lua`), the session state, the addon object and its
@@ -264,7 +265,9 @@ picked up or traded (simulator spec §5). The stop cancels every queued ask befo
 simulated restrictions, so nothing it queued can reach the real sender. `Sim.Fire` calls each
 handler under `pcall`, as the client's event dispatch isolates it, and the stop runs each cleanup
 step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
-failure is a `SIM` debug line.
+failure is a `SIM` debug line. While its combat edge is up, the simulator answers
+`InCombatLockdown` and the player's combat flag `true` through the seam and never `false`, so a
+caller that must not act in combat is never told it may (DW-90).
 The addon's two confirmations, Clear history (`modules/WindowHistory.lua`) and Reset all settings
 (`settings/Schema.lua`), set `preferredIndex = 3`, so neither shares a StaticPopup slot with
 Blizzard's own dialogs (DW-62).
@@ -309,6 +312,13 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
   `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). The
   timeline's steps are event drivers only; the engine computes every verdict, estimate and inspect.
   A key's bosses drop nothing: its loot comes with the completion, as the end-of-run chest's does.
+  Since the owner's first run (DW-90, sim feedback §0) a run fills the window under the default
+  filters in every scenario: the group wears the content's items 1 to 12 levels above it (so its
+  drops are spare for their looters whatever you wear; the M7 band around your own level left a
+  group naked of content you outgear, and nothing read as Interesting), each random burst has a
+  line of yours and a member's plain loot line, a simulation tracks the situation it simulates
+  whatever its row says (the delve and the open world are untracked by default), and every step
+  prints its line. So a simulation does not exercise a situation's tracking switch.
 - **A simulated member's spec** stays unknown: the inspect broker reads the spec after it has
   cleared its own inspect (its flight ends first), and the simulator lets the inspect data go on
   `ClearInspectPlayer`, as the client does. Whether the live client still answers
@@ -352,7 +362,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 61 addon-specific shims (three or more) |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 65 addon-specific shims (three or more), and its family adds the stable reads of `core/CompatWorld.lua` and `core/CompatItem.lua` |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 
 ### Verification and record (documentation-§3)
@@ -383,6 +393,7 @@ deviation not in this table is not ratified.
 | (no rule yet) chat sent by an addon | The addon whispers and posts to group chat on the player's behalf: an ask or offer whispered to one member, an announce to INSTANCE_CHAT, RAID or PARTY, each from a click or, when queued under a restriction, from the 1.5-second flush timer (`modules/Asks.lua`) | The standard has no rule for addon-sent chat. The addon holds itself to design spec §9: one send per click, the one-ask guard, the 255-byte limit, the restriction queue, `pcall` around the sender, never SAY or YELL, a confirmation line per send, and test mode printing instead. A WowAddonStandards proposal issue is drafted (DW-63: I11 in `docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md`), to be filed when the owner lifts the hold on GitHub writes (design spec §14) | 2026-10-10 (design spec §2, §14) | The standard adopts a rule for addon-sent chat |
 | library-stack-§7, anti-pattern #47 | The loot parser (`modules/LootParser.lua`: the `LOOT_ITEM*` GlobalStrings compiled into patterns for every looter, rebuilt when the globals change, the upgrade and crafting echoes rejected) is written in this addon, not taken from LibKa0s | No LibKa0s major parses loot lines. LootHistory carries the only other parser (`core/Util.lua`), and it reads the player's own loot only, so the semantics differ. A LibKa0s promotion issue is drafted (DW-63: I09 in `docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md`), to be filed when the owner lifts the hold on GitHub writes (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a loot-line major, or LootHistory needs third-person loot |
 | library-stack-§7, anti-pattern #47 | The item read (`core/ItemRead.lua`: how complete a link is, the better of two links, an item's identity, the gear level read detailed-then-base, the exact level and quality at a bag location, the quality of a link) is written in this addon, shaped as the API LibKa0s-Item-1.0 would take, not taken from LibKa0s | LibKa0s-Item-1.0 carries identity primitives only (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`). Loot History reads the same levels with its own `GetItemExtras` / `GearItemLevel`, and Bank Ledger resolves items too, so the read has three would-be adopters; the run builds in-addon first and promotes later (ui spec §0). A LibKa0s promotion issue is drafted (DW-80: I12 in `docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md`, with the loot-line parser as its second candidate), to be filed when the owner lifts the hold on GitHub writes | 2026-10-11 (ui spec §0) | LibKa0s-Item-1.0 ships these reads, or Loot History or Bank Ledger adopts them |
+| compat (through standard v2.78.3: `core/Compat.lua` the only file to make the calls) | The compat seam is a family, as the standard's v2.79.0 allows: `core/Compat.lua` (the root: every version-variant, deprecated and optional client call, the LibKa0s-Compat-1.0 routing; its header names the others), `core/CompatWorld.lua` (the stable group, unit, instance, combat and GlobalString reads) and `core/CompatItem.lua` (the stable exact bag-item reads and tooltip setters), contiguous in the TOC and all publishing into `NS.Compat`. The two split files make no version-variant call | `core/Compat.lua` stands at 999 lines (layout-§1) and the simulator's seam (`core/SimSeam.lua`) must answer every world read, so each needs an `NS.Compat` member (DW-72, DW-80, DW-90). The owner ratified the family on 2026-10-11 as WowAddonStandards v2.79.0 (DW-93, on that repo's `feat/2026-10-10-drop-watcher-v1`), so no proposal is left to draft | 2026-10-11 | v2.79.0 reaches the standard's master: delete this row, the addon then follows compat's family rule |
 | library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is drafted (DW-63: I09 in `docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md`), to be filed when the owner lifts the hold on GitHub writes (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
 
 ### Files over the 1500-line cap

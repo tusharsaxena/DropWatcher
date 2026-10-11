@@ -169,7 +169,7 @@ end
 local function you()
     local me = NS.Roster.Player()
     if me then return resolveLooter(nil, me.guid) end
-    return { name = plainString(UnitName("player")), isSelf = true }
+    return { name = plainString(NS.Compat.UnitName("player")), isSelf = true }
 end
 
 -- ── grouping ────────────────────────────────────────────────────────────────────────────────

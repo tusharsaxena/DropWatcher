@@ -15,9 +15,10 @@ local _, NS = ...
 -- the client's may, so an ask made during the loot burst waits and goes out when it lifts). A key
 -- starts the run first, plays its bosses without loot, and ends with the completion:
 --   runStart, (pull, kill) x bosses, lockdownOn, runEnd, loot, lockdownOff
--- Step plays the next step; Run plays them all, one every STEP_DELAY seconds, on the session's
--- timers (NS.Sim.After), so the stop ends it. Nothing here sets a verdict, a trade estimate or an
--- inspect state: each step is an event driver, and the engine computes the rest.
+-- Step plays the next step and prints its line (StepLine); Run plays them all, one every
+-- STEP_DELAY seconds, on the session's timers (NS.Sim.After), so the stop ends it. Nothing here
+-- sets a verdict, a trade estimate or an inspect state: each step is an event driver, and the
+-- engine computes the rest.
 --
 --   State.sim.timeline = { steps = { { kind, n } }, pos, playing (timer) | nil, ready, size, band }
 
@@ -32,14 +33,15 @@ local TAG = "SIM"
 SC.STEP_DELAY = 3
 
 --- name -> { situation, kind, bosses, keystone, burst (loot lines per burst; nil: 1 to 3 at
---- random), band (the members' item-level offsets around yours; nil: the roster's default) }.
+--- random), band (the members' item-level offsets around the content's level; nil: the roster's
+--- default) }.
 SC.SCENARIOS = {
     key     = { situation = "mythicPlus",     kind = "party", bosses = 3, keystone = true, burst = 2 },
-    dungeon = { situation = "dungeon",        kind = "party", bosses = 3 },
+    dungeon = { situation = "dungeon",        kind = "party", bosses = 3, burst = 3 },
     raid    = { situation = "raid",           kind = "raid",  bosses = 2, burst = 5 },
     lfr     = { situation = "raidLFR",        kind = "raid",  bosses = 2, burst = 4 },
-    delve   = { situation = "delve",          kind = "party", bosses = 1 },
-    world   = { situation = "openWorldGroup", kind = "party", bosses = 1 },
+    delve   = { situation = "delve",          kind = "party", bosses = 1, burst = 3 },
+    world   = { situation = "openWorldGroup", kind = "party", bosses = 1, burst = 3 },
 }
 
 --- The scenario names, in the order the usage line lists them.
@@ -86,19 +88,46 @@ local function timeline()
     return s and s.timeline
 end
 
--- Each step kind's event driver. Answers whether it did something, and why not.
+-- Each step kind's event driver. Answers whether it did something, and what, for the step's line.
+local function lootDetail(n)
+    if n == 1 then return L["1 drop"] end
+    return L["%d drops"]:format(n)
+end
+
 local PLAY = {
     runStart    = function() return NS.SimEvents.RunStart() ~= nil end,
     runEnd      = function() return NS.SimEvents.RunEnd() ~= nil end,
-    pull        = function() return NS.SimEvents.Pull() ~= nil end,
-    kill        = function() return NS.SimEvents.Kill() ~= nil end,
+    pull        = function()
+        local enc = NS.SimEvents.Pull()
+        return enc ~= nil, enc and enc.name
+    end,
+    kill        = function()
+        local enc = NS.SimEvents.Kill()
+        return enc ~= nil, enc and enc.name
+    end,
     lockdownOn  = function() return Sim.SetLockdown(true) end,
     lockdownOff = function() return Sim.SetLockdown(false) end,
-    loot        = function(step) return NS.SimEvents.Loot(step.n) > 0 end,
+    loot        = function(step)
+        local n = NS.SimEvents.Loot(step.n)
+        return n > 0, lootDetail(n)
+    end,
 }
 
---- Play the timeline's next step. Answers the step, or nil and why: `notRunning`, `building` (the
---- pool is not ready yet), `done` (no step left).
+--- The chat line of a played step (sim feedback §0: every step gets one, typed or played):
+--- `Simulation step 3 of 11: loot (2 drops).`
+--- @param pos number
+--- @param total number
+--- @param kind string
+--- @param detail string|nil
+--- @return string
+function SC.StepLine(pos, total, kind, detail)
+    local what = kind
+    if detail then what = L["%s (%s)"]:format(kind, detail) end
+    return L["Simulation step %d of %d: %s."]:format(pos, total, what)
+end
+
+--- Play the timeline's next step and print its line. Answers the step, or nil and why:
+--- `notRunning`, `building` (the pool is not ready yet), `done` (no step left).
 --- @return table|nil step, string|nil why
 function SC.Step()
     local t = timeline()
@@ -107,8 +136,9 @@ function SC.Step()
     local step = t.steps[t.pos + 1]
     if not step then return nil, "done" end
     t.pos = t.pos + 1
-    local did = PLAY[step.kind](step)
+    local did, detail = PLAY[step.kind](step)
     NS.Debug(TAG, "timeline step %d/%d: %s%s", t.pos, #t.steps, step.kind, did and "" or " (nothing to do)")
+    NS.Print(SC.StepLine(t.pos, #t.steps, step.kind, detail))
     return step
 end
 
@@ -172,8 +202,8 @@ end
 --- Start scenario `name` (spec §4): the session (refused, with the line printed, per
 --- NS.Sim.Refusal), its pool, then its group and the window. `size` sizes a raid's group;
 --- `opts` = { seed, classFilter = `mine`|`any`, band = { low, high } (the members' item-level
---- offsets around yours; the scenario's, else modules/SimRoster.lua's default) }. Answers true, or false and why: `unknown` (no
---- such scenario), `refused`.
+--- offsets around the content's level; the scenario's, else modules/SimRoster.lua's default) }.
+--- Answers true, or false and why: `unknown` (no such scenario), `refused`.
 --- @param name string
 --- @param size number|nil
 --- @param opts table|nil

@@ -1036,7 +1036,7 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (18)
+### test_sim_pool.lua (19)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
@@ -1054,7 +1054,8 @@ Total.
 - sim pool: the stop ends a waiting build, and a late event does nothing
 - sim roster: the random source replays a seed and stays in range
 - sim roster: a party has four members, a raid nine to nineteen, each distinct and whole
-- sim roster: gear is drawn inside the band, from what the class can wear; the rest stays empty
+- sim roster: gear is what the class can wear, worn at a level inside the band; the rest stays empty
+- sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
 ### test_sim_events.lua (21)
@@ -1091,7 +1092,7 @@ Total.
 - sim start: the scenario's pool, group and situation, and the window open
 - sim start: a raid takes its size; a party is always four
 - sim step: the timeline waits for the pool, then plays one step at a time
-- sim run: plays every step a few seconds apart, then says it has finished
+- sim run: plays every step a few seconds apart, each with its line, then says it has finished
 - sim stop: ends a playing timeline and its timers
 - sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
 - sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating
@@ -1099,6 +1100,21 @@ Total.
 - sim debug: the SIM tag logs every injected event and every step
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
 - sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
+
+### test_sim_e2e.lua (12)
+
+- sim e2e: no module reads the world the simulator answers except through NS.Compat
+- sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
+- sim e2e key: a run fills Group drops and My drops under the default filters
+- sim e2e dungeon: a run fills Group drops and My drops under the default filters
+- sim e2e raid: a run fills Group drops and My drops under the default filters
+- sim e2e lfr: a run fills Group drops and My drops under the default filters
+- sim e2e delve: a run fills Group drops and My drops under the default filters
+- sim e2e world: a run fills Group drops and My drops under the default filters
+- sim e2e: the combat flags answer the simulated fight, and the client's again after it
+- sim e2e: the loot lines are written from the GlobalStrings Compat reads
+- sim e2e: in a raid, raid1 is you, online, for every unit read
+- sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
 ### test_disabled.lua (9)
 
@@ -1242,9 +1258,10 @@ Total.
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
 | test_sim_core.lua | 25 |
-| test_sim_pool.lua | 18 |
+| test_sim_pool.lua | 19 |
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 16 |
+| test_sim_e2e.lua | 12 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1254,4 +1271,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1036** |
+| **Total** | **1049** |

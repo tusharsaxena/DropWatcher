@@ -83,9 +83,10 @@ end
 -- ── the items ───────────────────────────────────────────────────────────────────────────────
 
 local function you()
-    local name = UnitName("player")
-    local _, classFile = UnitClass("player")
-    return { name = name or L["You"], guid = UnitGUID("player"), classFile = classFile, isSelf = true }
+    local Compat = NS.Compat
+    local name = Compat.UnitName("player")
+    local _, classFile = Compat.UnitClass("player")
+    return { name = name or L["You"], guid = Compat.UnitGUID("player"), classFile = classFile, isSelf = true }
 end
 
 -- An entry's facts: the item cache's, else the pool's level and slot with the link's quality.

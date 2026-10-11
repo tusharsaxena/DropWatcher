@@ -5,14 +5,16 @@ local _, NS = ...
 -- handlers the event registration calls, with the client's payload shapes; the engine computes
 -- everything that follows. Nothing here sets a verdict, a trade estimate or an inspect state.
 --
--- LOOT LINES are written from the client's own LOOT_ITEM* GlobalStrings (the self or the
--- third-person form of a loot, a bonus roll or a pushed item, each with its *_MULTIPLE twin, a
--- positional locale read in its own order), so the real parser reads them. A looter on your realm
+-- LOOT LINES are written from the client's own LOOT_ITEM* GlobalStrings, read through
+-- NS.Compat.GlobalString (the self or the third-person form of a loot, a bonus roll or a pushed
+-- item, each with its *_MULTIPLE twin, a positional locale read in its own order), so the real
+-- parser reads them. A looter on your realm
 -- is named bare, one from another realm Name-Realm, as chat names them. The payload is
 -- CHAT_MSG_LOOT's: text, playerName, languageName, channelName, playerName2, specialFlags,
 -- zoneChannelID, channelIndex, channelBaseName, languageID, lineID, guid. Plan draws a burst: one to
--- three lines by default, random looters (you among them), occasional multiples and bonus rolls,
--- and a looter from another realm whenever the group has one and the burst has room.
+-- three lines by default, random looters (you and a member always among them in a burst of two
+-- or more), occasional multiples and bonus rolls, and a looter from another realm whenever the
+-- group has one and the burst has room.
 --
 -- YOUR OWN DROPS land in your bags first, each with a trade window (TRADE_WINDOW seconds by
 -- default; Configure sets it per scenario, and the first ENDING_SOON_COUNT of them close in
@@ -34,6 +36,9 @@ local _, NS = ...
 -- partner and items), the item changes, both accepts, TRADE_CLOSED and the "Trade complete."
 -- UI_INFO_MESSAGE follow; the history's own trade reader settles the outcome. A given item leaves
 -- your bags.
+--
+-- COMBAT FLAGS. While the simulated combat edge is up, InCombatLockdown and the player's combat
+-- flag answer true through the seam; otherwise the client answers.
 --
 -- THE STOP. A cleanup step ends the combat edge it raised (unless you really are fighting) and
 -- re-reads your real bags (BAG_UPDATE_DELAYED), both delivered once the seam is off.
@@ -94,9 +99,9 @@ function E.Render(fmt, args)
     end))
 end
 
---- One CHAT_MSG_LOOT line, or nil when the GlobalString is missing. `G` holds the GlobalStrings
---- (the client's _G).
---- @param G table
+--- One CHAT_MSG_LOOT line, or nil when the GlobalString is missing. `G` reads the GlobalStrings:
+--- a reader `G(name)` (NS.Compat.GlobalString, so the seam covers it) or a table of them.
+--- @param G function|table
 --- @param kind string
 --- @param isSelf boolean
 --- @param name string|nil the looter as chat names them (ignored for your own line)
@@ -105,7 +110,9 @@ end
 --- @return string|nil
 function E.WriteLine(G, kind, isSelf, name, link, qty)
     local multiple = (tonumber(qty) or 1) > 1
-    local fmt = G[E.GlobalFor(kind, isSelf, multiple)]
+    local key = E.GlobalFor(kind, isSelf, multiple)
+    local fmt
+    if type(G) == "function" then fmt = G(key) else fmt = G[key] end
     if type(fmt) ~= "string" or fmt == "" then return nil end
     local args = isSelf and { link } or { name, link }
     if multiple then args[#args + 1] = qty end
@@ -136,19 +143,66 @@ local function crossRealm(members, ownRealm)
     return nil
 end
 
--- A random burst gives its last line to a looter from another realm when none has one yet.
+-- The last line a cross-realm looter may take: never your only line in the burst.
+local function lastSpare(plan)
+    local mine = 0
+    for _, line in ipairs(plan) do
+        if line.looter == nil then mine = mine + 1 end
+    end
+    for i = #plan, 1, -1 do
+        if plan[i].looter ~= nil or mine > 1 then return i end
+    end
+    return nil
+end
+
+-- A random burst gives its last spare line to a looter from another realm when none has one yet.
 local function ensureCrossRealm(plan, members, ownRealm)
     if #plan < 2 then return end
     for _, line in ipairs(plan) do
         if line.looter and line.looter.realm ~= ownRealm then return end
     end
-    local m = crossRealm(members, ownRealm)
-    if m then plan[#plan].looter = m end
+    local m, i = crossRealm(members, ownRealm), lastSpare(plan)
+    if m and i then plan[i].looter = m end
+end
+
+-- A random burst of two or more lines gives you its first line when none is yours, so every
+-- such burst fills My drops as well as Group drops (sim feedback §0).
+local function ensureMine(plan)
+    if #plan < 2 then return end
+    for _, line in ipairs(plan) do
+        if line.looter == nil then return end
+    end
+    plan[1].looter = nil
+end
+
+-- A random burst of two or more lines gives a member its last line when every line is yours, so
+-- Group drops has something too.
+local function ensureTheirs(plan, members, rnd)
+    if #plan < 2 or #members == 0 then return end
+    for _, line in ipairs(plan) do
+        if line.looter ~= nil then return end
+    end
+    plan[#plan].looter = members[rnd(#members)]
+end
+
+-- A random burst's members always get one plain loot line: a bonus roll is never tradeable, so a
+-- burst of bonus rolls alone would leave nothing spare for the window's Interesting view.
+local function ensurePlainLoot(plan)
+    local first
+    for _, line in ipairs(plan) do
+        if line.looter ~= nil then
+            if line.kind == "loot" then return end
+            first = first or line
+        end
+    end
+    if first then first.kind = "loot" end
 end
 
 --- A burst of loot lines (pure): `n` lines (1 to 3 at random when nil), each { looter (a member,
 --- or nil for you), entry (a pool drop), qty, kind }. `who` is `me`, a member, or nil for random
---- looters; about one line in eight is a multiple and one in six a bonus roll.
+--- looters; about one line in eight is a multiple and one in six a bonus roll. A random burst of
+--- two or more has a line of yours, a member's and, when the group has one, a looter from
+--- another realm; its members' lines are never all bonus rolls.
 --- @param n number|nil
 --- @param members table
 --- @param drops table pool entries with a link
@@ -166,7 +220,12 @@ function E.Plan(n, members, drops, rnd, who, ownRealm)
             qty = rnd(8) == 1 and 2 or 1, kind = rnd(6) == 1 and "bonus" or "loot",
         }
     end
-    if who == nil then ensureCrossRealm(plan, members, ownRealm) end
+    if who == nil then
+        ensureMine(plan)
+        ensureTheirs(plan, members, rnd)
+        ensureCrossRealm(plan, members, ownRealm)
+        ensurePlainLoot(plan)
+    end
     return plan
 end
 
@@ -329,7 +388,7 @@ local function deliverLine(d, line, me, ownRealm)
     local link, m = line.entry.link, line.looter
     local name, guid = me.name, me.guid
     if m then name, guid = E.ChatName(m, ownRealm), m.guid end
-    local text = E.WriteLine(_G, line.kind, m == nil, name, link, line.qty)
+    local text = E.WriteLine(NS.Compat.GlobalString, line.kind, m == nil, name, link, line.qty)
     if not text then return false end
     if not m then NS.SimWorld.AddBagItem(link, nextWindow(d)) end
     d.lines = d.lines + 1
@@ -420,10 +479,33 @@ function E.Trade(dropID)
     return true
 end
 
+-- ── the combat answers ──────────────────────────────────────────────────────────────────────
+
+-- The seam's providers for the client's combat flags, keyed by their NS.Compat member names
+-- (written as fields, so test_compat's seam-only scan never mistakes a key for a client call): the
+-- simulated combat edge reads as fighting. Out of it the client answers, so real combat is never
+-- hidden from a caller that must not act in it.
+local PROVIDERS = {}
+
+local function simCombat()
+    local s = Sim.Session()
+    return s ~= nil and s.drive ~= nil and s.drive.combat == true
+end
+
+function PROVIDERS.InCombatLockdown(live)
+    return simCombat() or live()
+end
+
+function PROVIDERS.PlayerInCombat(live)
+    return simCombat() or live()
+end
+
+for key, fn in pairs(PROVIDERS) do Sim.SetProvider(key, fn) end
+
 -- ── the stop ────────────────────────────────────────────────────────────────────────────────
 
 Sim.AddCleanup(function(s)
     local d, w = s.drive, s.world
-    if d and d.combat and InCombatLockdown() ~= true then Sim.DeliverForCleanup("PLAYER_REGEN_ENABLED") end
+    if d and d.combat and not NS.Compat.InCombatLockdown() then Sim.DeliverForCleanup("PLAYER_REGEN_ENABLED") end
     if w and #w.bag > 0 then Sim.DeliverForCleanup("BAG_UPDATE_DELAYED") end
 end)

@@ -620,7 +620,7 @@ local function combatAllows(inCombat)
     local v = setting("visibility") or "always"
     if v == "never" then return false end
     if v == "always" then return true end
-    if inCombat == nil then inCombat = UnitAffectingCombat("player") and true or false end
+    if inCombat == nil then inCombat = NS.Compat.PlayerInCombat() end
     if v == "inCombat" then return inCombat end
     return not inCombat
 end
