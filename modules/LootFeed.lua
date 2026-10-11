@@ -62,6 +62,11 @@ local _, NS = ...
 -- Each feed (live and test) keeps MAX_DROPS drops, the oldest dropped first. Stood down, the
 -- timers and the pending loads are dropped with the dedupe window and the encounter context; the
 -- drops recorded so far are kept for the session, and the stand-up's GearChanged re-judges them.
+--
+-- REMOVAL. A drop leaves a feed only through Clear (`/dw clear`, clear on boss kill, the end of
+-- test mode) or the cap's trim. Each tells the removal sinks (AddRemovalSink, the loot parser's
+-- AddSink shape) with the feed's name, so a view of one drop (the toast) can let it go. A sink is
+-- called under pcall: its error never stops the feed.
 
 NS.LootFeed = NS.LootFeed or {}
 local LF = NS.LootFeed
@@ -80,6 +85,8 @@ LF.SCORE_TRIES = 5
 LF.TRADE_SWEEP = 30
 
 local timers = {}
+
+local removalSinks = {}
 
 -- Bumped at every stand-down: an item load answering after it is ignored.
 local generation = 0
@@ -567,6 +574,19 @@ local function removeOldest(feed)
     end
 end
 
+--- Be told `fn(feedName)` whenever drops leave a feed: a Clear, or the cap's trim.
+--- @param fn function
+function LF.AddRemovalSink(fn)
+    removalSinks[#removalSinks + 1] = fn
+end
+
+local function notifyRemoved(name)
+    for _, fn in ipairs(removalSinks) do
+        local ok, err = pcall(fn, name)
+        if not ok then NS.Debug(TAG, "removal sink failed: %s", NS.SafeToString(err)) end
+    end
+end
+
 local function verdictOf(eval) return eval and eval.verdict or "-" end
 
 local function add(rec)
@@ -576,7 +596,9 @@ local function add(rec)
     g.drops[#g.drops + 1] = rec.id
     feed.drops[#feed.drops + 1] = rec
     feed.byId[rec.id] = rec
+    local trimmed = #feed.drops > LF.MAX_DROPS
     while #feed.drops > LF.MAX_DROPS do removeOldest(feed) end
+    if trimmed then notifyRemoved(rec.feed) end
     notePending(rec)
     if not rec.test then LF.ArmTradeSweep() end
     NS.Debug(TAG, "drop %s: %s by %s (%s) in %s: me=%s them=%s trade=%s", rec.id, rec.link,
@@ -788,12 +810,14 @@ function LF.Groups(name)
     return feedNamed(name).groups
 end
 
---- Empty a feed (`/dw clear`, the end of test mode).
+--- Empty a feed (`/dw clear`, clear on boss kill, the end of test mode), then tell the removal sinks.
 --- @param name string|nil
 function LF.Clear(name)
     local s = store()
-    s[name == "test" and "test" or "live"] = newFeed()
-    NS.Debug(TAG, "feed cleared: %s", name or "live")
+    local which = name == "test" and "test" or "live"
+    s[which] = newFeed()
+    NS.Debug(TAG, "feed cleared: %s", which)
+    notifyRemoved(which)
 end
 
 --- The counts the diagnostics report shows: { group, mine, test, groups, merged, hidden, loading,

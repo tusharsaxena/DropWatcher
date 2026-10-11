@@ -256,6 +256,91 @@ test("toast edge: test mode's placeholder toasts and stays until test mode ends"
     assertFalse(shown(NS)); assertEqual(NS.Toast.Stats().waiting, 0)
 end)
 
+-- ── the toast follows its drop and its switch (DW-62 review F-001, F-004) ───────────────────
+
+test("toast edge: a drop that leaves the feed takes its toast and its place in the queue", function()
+    local NS, _, byId = enabled({ drop(), drop({ id = 2 }), drop({ id = 3 }) })
+    added(NS, 1); added(NS, 2); added(NS, 3)
+    assertEqual(NS.Toast.Stats().dropId, 1); assertEqual(NS.Toast.Stats().waiting, 2)
+    -- `/dw clear` and clear-on-boss-kill empty the feed through LootFeed.Clear, which tells its sinks.
+    byId[1], byId[2] = nil, nil
+    -- red under: a toast with no removal sink (modules/Toast.lua)
+    NS.LootFeed.Clear("live")
+    assertEqual(NS.Toast.Stats().dropId, 3, "the gone toast went, and the gone drop in the queue was skipped")
+    byId[3] = nil
+    NS.LootFeed.Clear("live")
+    assertFalse(shown(NS)); assertEqual(NS.Toast.Stats().waiting, 0)
+end)
+
+test("toast edge: the cap's trim takes the trimmed drop's toast, through the real feed", function()
+    local NS, m = T.enableAddon()
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    local LF = NS.LootFeed
+    local first = LF.AddTest({ link = link(500), looter = { name = "Seta", classFile = "PRIEST" },
+        group = { key = "g", label = "G", kind = "encounter" }, me = { verdict = "upgrade", ilvlDelta = 19 },
+        trade = { state = "likely", args = {} } })
+    assertEqual(NS.Toast.Stats().dropId, first)
+    LF.MAX_DROPS = 1
+    LF.AddTest({ link = link(501), looter = { name = "Seta", classFile = "PRIEST" },
+        group = { key = "g", label = "G", kind = "encounter" }, me = { verdict = "downgrade", ilvlDelta = -3 },
+        trade = { state = "likely", args = {} } })
+    LF.MAX_DROPS = 200
+    assertEqual(LF.Get(first), nil, "the first drop was trimmed")
+    assertFalse(shown(NS), "and its toast went with it")
+    m.advance(1)
+end)
+
+test("toast edge: dismissing the row forgets its toast, shown or waiting", function()
+    local NS = enabled({ drop(), drop({ id = 2 }), drop({ id = 3 }) })
+    added(NS, 1); added(NS, 2); added(NS, 3)
+    NS.DismissDrop(2)
+    assertEqual(NS.Toast.Stats().waiting, 1, "the waiting one left the queue")
+    -- red under: NS.DismissDrop without NS.Toast.Forget (core/DropWatcher.lua)
+    NS.DismissDrop(1)
+    assertEqual(NS.Toast.Stats().dropId, 3, "the shown one went, and the next took its turn")
+end)
+
+test("toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing", function()
+    local NS, _, byId = enabled({ drop() })
+    added(NS, 1)
+    local pressed = 0
+    NS.PressAsk = function() pressed = pressed + 1 end
+    byId[1] = nil
+    NS.Toast.Ask()
+    assertEqual(pressed, 0); assertFalse(shown(NS))
+end)
+
+test("toast edge: turning the toast off takes it down and empties the queue; on again, new drops toast", function()
+    local NS = enabled({ drop(), drop({ id = 2 }), drop({ id = 3 }) })
+    added(NS, 1); added(NS, 2)
+    -- red under: a toast.enabled row with no reaction (settings/SchemaRows.lua)
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", false))
+    assertFalse(shown(NS)); assertEqual(NS.Toast.Stats().waiting, 0)
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    assertFalse(shown(NS), "what was dropped stays dropped")
+    added(NS, 3)
+    assertEqual(NS.Toast.Stats().dropId, 3)
+end)
+
+test("toast edge: a test toast goes when the toast is turned off, though it has no countdown", function()
+    local NS = T.enableAddon()
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    NS.SetTestMode(true)
+    assertTrue(shown(NS))
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", false))
+    assertFalse(shown(NS))
+end)
+
+test("toast edge: a profile switch to one with the toast off takes it down", function()
+    local NS = enabled({ drop(), drop({ id = 2 }) })
+    added(NS, 1); added(NS, 2)
+    local db = NS.addon.db
+    db:SetProfile("Other")
+    assertEqual(NS.Setting("toast.enabled"), false)
+    -- red under: reloadProfile without NS.Toast.OnProfileReloaded (core/DropWatcher.lua)
+    assertFalse(shown(NS)); assertEqual(NS.Toast.Stats().waiting, 0)
+end)
+
 test("toast edge: the stand-down empties the queue and takes the toast down", function()
     local NS = enabled({ drop(), drop({ id = 2 }) })
     added(NS, 1); added(NS, 2)

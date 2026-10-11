@@ -310,12 +310,14 @@ function NS.TradeWithLooter(dropID)
 end
 
 --- Dismiss a drop's row for the session (design spec §11.2, §9.4): the Group drops row's × and the
---- detail card's Hide. The row goes from the table (modules/WindowGroup.lua) and the drop's waiting
---- automatic ask is canceled (modules/AutoAsk.lua), so a dismissed drop is never asked for.
+--- detail card's Hide. The row goes from the table (modules/WindowGroup.lua), the drop's waiting
+--- automatic ask is canceled (modules/AutoAsk.lua), so a dismissed drop is never asked for, and its
+--- toast goes, shown or waiting (modules/Toast.lua).
 --- @param dropID number
 function NS.DismissDrop(dropID)
     NS.WindowGroup.Dismiss(dropID)
     if NS.AutoAsk then NS.AutoAsk.Cancel(dropID, "dismissed") end
+    if NS.Toast then NS.Toast.Forget(dropID) end
 end
 
 -- Why an offer or an announce was not sent, in words (modules/Asks.lua's refusal reasons).
@@ -473,8 +475,8 @@ end
 -- ── profiles ────────────────────────────────────────────────────────────────────────────────
 
 -- The three profile events share one reaction: migrations, panel refresh, the latch re-read
--- (an incoming profile carries its own answer to `enabled`), auto-ask's `enabled` re-read (no row
--- reaction runs on a switch) and the window's settings.
+-- (an incoming profile carries its own answer to `enabled`), auto-ask's and the toast's `enabled`
+-- re-read (no row reaction runs on a switch) and the window's settings.
 local function reloadProfile(self)
     self:RunMigrations()
     local S = self.Settings
@@ -486,6 +488,7 @@ local function reloadProfile(self)
         NS.Lifecycle:Reevaluate()
     end
     if NS.AutoAsk then NS.AutoAsk.OnProfileReloaded() end
+    if NS.Toast then NS.Toast.OnProfileReloaded() end
     if NS.Window then NS.Window.ApplySettings() end
 end
 

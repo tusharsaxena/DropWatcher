@@ -314,8 +314,10 @@ local function window()
 
     local T = P.toast
     local toast = { page = "window", group = L["Toast"] }
+    -- Turned off, the toast on screen goes and the queue empties (DW-62 review F-004).
     bool("toast.enabled", T.enabled, L["Show a toast"],
-        L["Pop up a toast for a likely tradeable upgrade for you."], toast)
+        L["Pop up a toast for a likely tradeable upgrade for you."],
+        with(toast, { onChange = function(v) NS.Toast.OnEnabledChanged(v) end }))
     toast = with(toast, { disabledIf = unless("toast.enabled", true) })
     slider("toast.minGain", T.minGain, 1, 50, 1, L["Least gain (item levels)"],
         L["The least item-level gain for you a toast needs."], toast)

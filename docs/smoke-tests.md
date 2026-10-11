@@ -33,7 +33,7 @@ passed.
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..2 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50 |
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
-| TOAST-1 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52 |
+| TOAST-1..2 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
@@ -794,6 +794,15 @@ left); press Ask → the button reads `Queued` or `Asked` and the whisper goes a
 second qualifying drop waits until the first goes. Pull a mob while one is due → nothing shows in
 combat, and it shows when combat ends; with Show in combat on, it shows at once. Result:
 
+**TOAST-2. The toast leaves with its drop and with its switch (DW-62).** Toast on, `/dw test` → the
+test toast shows. Untick Settings › Window › Toast › Show a toast → it goes at once (a test toast has
+no countdown, so nothing else would take it down). Tick it again and turn test mode off and on → the
+toast is back. On Group drops, click the toasted row's × → the toast goes, and no other takes its
+place. Out of test mode, in a group: `/dw add <a link you would upgrade> <member>` → a toast; `/dw
+clear` → it goes at once. `/dw add` again, then Settings › Profiles › switch to a profile with Show a
+toast off → it goes. In none of these does the toast's Ask stay pressable for a drop that is gone or
+dismissed, and no Lua error shows. Result:
+
 ## Transmog
 
 **TMOG-1. The look chip and the For transmog ask.** `/dw test`, open the Group drops tab and expand
@@ -867,5 +876,6 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
+| TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |
 | TMOG-1 | DW-53, the transmog-known flag and the For transmog ask | No client pass recorded yet |
 | ASK-8 | DW-54, auto-ask | No client pass recorded yet |

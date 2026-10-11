@@ -145,8 +145,11 @@ the trade timer (`modules/TradeTimer.lua`) `DROP_ADDED`, the messaging edge (`mo
 accessors and never calls an engine action; a button's action goes through the host handler its
 slash verb shares (`NS.ScanGroup`, `NS.SetQualityMode`, `NS.PressAsk`, `NS.SetCompact`, and the
 detail card's `NS.RetryInspect` and `NS.TradeWithLooter`, the row's × and the detail card's Hide
-`NS.DismissDrop` (which also cancels the drop's automatic ask), and the My drops tab's and the Offer
-panel's `NS.PressOffer`, `NS.PressAnnounce`, `NS.GiveDrop` and `NS.PostTradeables`). The payloads and consumers below are the code's.
+`NS.DismissDrop` (which also cancels the drop's automatic ask and forgets its toast), and the My drops tab's and the Offer
+panel's `NS.PressOffer`, `NS.PressAnnounce`, `NS.GiveDrop` and `NS.PostTradeables`). Drops leaving a
+feed are not a message: `LF.Clear` and the cap's trim call the feed's removal sinks
+(`NS.LootFeed.AddRemovalSink`, the loot parser's `AddSink` shape), and the toast's sink lets a toast
+go with its drop. The payloads and consumers below are the code's.
 
 | `NS.MSG` key | Wire suffix | Sender | Payload | Consumers |
 |---|---|---|---|---|

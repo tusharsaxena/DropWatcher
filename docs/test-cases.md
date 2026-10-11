@@ -733,7 +733,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (43)
+### test_feed.lua (44)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -776,6 +776,7 @@ Total.
 - add: injects a drop past the situation gate; a stranger is judged without an inspect
 - add: the test feed skips every gate and every inspect, and stays apart
 - cap: the oldest drop goes first, and an emptied group with it
+- removal: the sinks hear every clear and every trim, with the feed's name (DW-62)
 - secrets: a secret link, name or encounter id is never used
 - stand-down: timers and pending loads are dropped, the drops kept
 
@@ -889,7 +890,7 @@ Total.
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
 
-### test_toast.lua (17)
+### test_toast.lua (24)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose reads board 06 C: the title, the item and Looted by · gain · trade
@@ -906,6 +907,13 @@ Total.
 - toast edge: toast.sound plays the client's alert from SOUNDKIT
 - toast edge: only test mode drags it; the position is saved and Reset position forgets it
 - toast edge: test mode's placeholder toasts and stays until test mode ends
+- toast edge: a drop that leaves the feed takes its toast and its place in the queue
+- toast edge: the cap's trim takes the trimmed drop's toast, through the real feed
+- toast edge: dismissing the row forgets its toast, shown or waiting
+- toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing
+- toast edge: turning the toast off takes it down and empties the queue; on again, new drops toast
+- toast edge: a test toast goes when the toast is turned off, though it has no countdown
+- toast edge: a profile switch to one with the toast off takes it down
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
@@ -1063,13 +1071,13 @@ Total.
 | test_gear.lua | 20 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
-| test_feed.lua | 43 |
+| test_feed.lua | 44 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 22 |
 | test_transmog.lua | 13 |
 | test_history.lua | 28 |
-| test_toast.lua | 17 |
+| test_toast.lua | 24 |
 | test_auto_ask.lua | 20 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
@@ -1080,4 +1088,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **886** |
+| **Total** | **894** |

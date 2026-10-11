@@ -8,10 +8,16 @@ local _, NS = ...
 -- on each DropUpdated until it has toasted once (an inspect can turn its trade `likely` later).
 --
 -- ONE AT A TIME. Qualifying drops wait in a queue (MAX_QUEUE, the oldest dropped first); the next
--- shows when the current one goes. A toast goes after `toast.duration` seconds (default 8), when
--- its close mark is clicked, or when its drop leaves the feed; the countdown pauses while the
--- pointer is over it and resumes with the time it had left. A drop asked for meanwhile, or no
--- longer qualifying, is skipped when its turn comes.
+-- shows when the current one goes. A toast goes after `toast.duration` seconds (default 8) or when
+-- its close mark is clicked; the countdown pauses while the pointer is over it and resumes with the
+-- time it had left. A drop asked for meanwhile, or no longer qualifying, is skipped when its turn
+-- comes.
+--
+-- IT FOLLOWS ITS DROP AND ITS SWITCH. A drop that leaves the feed (a Clear or the cap's trim: the
+-- feed's removal sink, Prune) or whose row is dismissed (NS.DismissDrop, Forget) takes its toast
+-- and its place in the queue with it, and an Ask on a drop already gone only takes the toast down.
+-- Turning `toast.enabled` off (its row's reaction, OnEnabledChanged) or switching to a profile with
+-- it off (OnProfileReloaded) takes the toast down and empties the queue.
 --
 -- COMBAT. Unless `toast.inCombat` is set, nothing shows in combat: the queue waits for
 -- PLAYER_REGEN_ENABLED, and a toast on screen when combat starts goes back to the head of the queue.
@@ -318,6 +324,7 @@ end
 --- The toast's Ask: the shared host handler, so a second click cancels a queued ask.
 function Toast.Ask()
     if not shownId then return end
+    if not NS.LootFeed.Get(shownId) then return Toast.Dismiss() end
     NS.PressAsk(shownId)
     local rec = NS.LootFeed.Get(shownId)
     if rec and frame then paintAsk(rec) end
@@ -348,15 +355,63 @@ end
 --- PLAYER_REGEN_ENABLED: what combat held shows now.
 function Toast.OnCombatEnd() Toast.Pump() end
 
+--- Drops gone from the feed leave the queue, and a toast whose drop is gone goes (the next one
+--- shows). The feed's removal sink: a Clear or the cap's trim. Answers how many it let go.
+--- @return number
+function Toast.Prune()
+    local n = 0
+    for i = #queue, 1, -1 do
+        if not NS.LootFeed.Get(queue[i]) then
+            table.remove(queue, i)
+            n = n + 1
+        end
+    end
+    if shownId and not NS.LootFeed.Get(shownId) then
+        n = n + 1
+        Toast.Dismiss()
+    end
+    if n > 0 then NS.Debug(TAG, "toast: %d gone with their drops", n) end
+    return n
+end
+
+--- One drop's toast, shown or waiting, goes for good: its row was dismissed (NS.DismissDrop).
+--- @param id any
+function Toast.Forget(id)
+    toasted[id] = true
+    for i = #queue, 1, -1 do
+        if queue[i] == id then table.remove(queue, i) end
+    end
+    if shownId ~= nil and shownId == id then Toast.Dismiss() end
+end
+
+-- Toasts turned off: the one on screen goes and nothing waits.
+local function stopAll(why)
+    if #queue == 0 and shownId == nil then return end
+    queue = {}
+    Toast.Dismiss()
+    NS.Debug(TAG, "toast off (%s): queue emptied", why)
+end
+
+--- The `toast.enabled` row's reaction: off takes the toast down and empties the queue; on shows
+--- nothing old (what was dropped stays dropped), and the next qualifying drop toasts.
+--- @param on boolean
+function Toast.OnEnabledChanged(on)
+    if on ~= true then return stopAll("setting") end
+    Toast.Pump()
+end
+
+--- A profile switch, copy or reset (core/DropWatcher.lua's reloadProfile): no row reaction runs,
+--- so the incoming `toast.enabled` is read here.
+function Toast.OnProfileReloaded()
+    if setting("enabled") ~= true then stopAll("profile") end
+end
+
 --- Test mode turned on or off (core/DropWatcher.lua NS.SetTestMode): turned off, a test drop's
 --- toast goes, and the test drops leave the queue (their feed is already empty).
 --- @param on boolean
 function Toast.OnTestModeChanged(on)
     if on then return end
-    for i = #queue, 1, -1 do
-        if not NS.LootFeed.Get(queue[i]) then table.remove(queue, i) end
-    end
-    if shownId and not NS.LootFeed.Get(shownId) then Toast.Dismiss() end
+    Toast.Prune()
 end
 
 --- Forget the saved position: the toast goes back under the top of the screen.
@@ -389,6 +444,9 @@ end
 -- Tracked, so the stand-down takes them down and the stand-up replays them. Without the bus
 -- library it is a bare target, unregistered here instead (NS.Bus.tracked says which).
 local target = NS.Bus:NewTarget()
+
+-- Not a registration: a plain function the feed calls, so nothing to take down on the stand-down.
+NS.LootFeed.AddRemovalSink(function() Toast.Prune() end)
 
 local function listen()
     if not target then return end

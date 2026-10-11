@@ -450,7 +450,12 @@ DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted 
     ─> C_Timer toast.duration (none for a test drop) ─> Dismiss ─> Pump
 hover ─> Pause (seconds left kept)      leave ─> Resume
 PLAYER_REGEN_DISABLED ─> the shown toast back to the queue's head   PLAYER_REGEN_ENABLED ─> Pump
-Ask ─> NS.PressAsk(id)    AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
+Ask ─> NS.PressAsk(id) (a drop already gone: the toast goes, nothing asked)
+AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
+LootFeed.Clear / the cap's trim ─> removal sink ─> Toast.Prune: gone drops leave the queue, a gone
+    shown drop's toast goes ─> Pump
+NS.DismissDrop(id) (row ×, card Hide) ─> Toast.Forget(id): out of the queue, off the screen
+toast.enabled off (the row's reaction) / a profile with it off ─> the toast goes, the queue empties
 drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.ResetPosition
 ```
 

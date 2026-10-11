@@ -737,6 +737,24 @@ test("cap: the oldest drop goes first, and an emptied group with it", function()
     assertEqual(labels(LF), "area:The Rookery=2")
 end)
 
+test("removal: the sinks hear every clear and every trim, with the feed's name (DW-62)", function()
+    local _, m, LF = party()
+    local heard = {}
+    LF.AddRemovalSink(function() error("a broken sink") end)
+    LF.AddRemovalSink(function(name) heard[#heard + 1] = name end)
+    LF.MAX_DROPS = 1
+    for id = 300, 302 do m.addItem(link(id), ring(620)) end
+    brakkLoots(m, 300)
+    assertEqual(table.concat(heard, ","), "", "nothing removed yet")
+    -- red under: a trim that tells no sink (modules/LootFeed.lua add)
+    brakkLoots(m, 301)
+    LF.MAX_DROPS = 200
+    assertEqual(table.concat(heard, ","), "live", "the cap's trim, past a broken sink")
+    LF.Clear("live")
+    LF.Clear("test")
+    assertEqual(table.concat(heard, ","), "live,live,test")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Secrets and the stand-down
 -- ---------------------------------------------------------------------------------------------
