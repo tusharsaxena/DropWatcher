@@ -205,13 +205,14 @@ local function qualityLine(out)
     out:joined(TAG, "feed: quality mode=dynamicSlot thresholds", parts)
 end
 
--- The history (design spec §10): groups and drops kept against the cap, the drops this session
+-- The history (design spec §10, feedback-2 spec §5): the groups and drops kept, the drops against
+-- the safety ceiling, how many days they are kept (0 = never delete), the drops this session
 -- recorded, and the open trade's state. Stored state only.
 local function historyLine(out)
     local H = NS.History
     local st, t = H.Stats(), H.OpenTrade()
-    out:add(TAG, "feed: history groups=%s/%s drops=%s session=%s trade=%s", st.groups, st.cap, st.drops,
-        st.tracked, t and (t.accepted and "accepted" or "open") or "none")
+    out:add(TAG, "feed: history groups=%s drops=%s/%s keep=%sd session=%s trade=%s", st.groups, st.drops,
+        st.ceiling, st.days, st.tracked, t and (t.accepted and "accepted" or "open") or "none")
 end
 
 -- Design spec §13's Feed section. Stored state only, apart from the situation read live.

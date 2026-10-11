@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1117%2F1117_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1130%2F1130_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -52,8 +52,10 @@ ranks everyone by how much they'd gain, with an **Offer** whisper and a **Trade*
 the trade with the item already in it. **Post my tradeables** lists all of them in group chat in one
 line.
 
-The **History** tab remembers what the feed showed, across logouts and across your characters: the last 20
-bosses or key runs by default. Each drop says what became of it: asked, offered, expired, received
+The **History** tab remembers what the feed showed, across logouts and across your characters, for
+30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never
+delete, and asks before a shorter time deletes anything. Its footer says how many bosses or key runs
+and drops it holds, and for how long. Each drop says what became of it: asked, offered, expired, received
 or traded away, the last two once a trade with that item goes through. Right-click a row to mark it
 declined. The **Character** dropdown in the bar starts on **Current**, the character you're playing;
 on History it lists every character that saw a drop, with its class icon, so pick another, several,

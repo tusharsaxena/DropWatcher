@@ -117,7 +117,7 @@ The simulation panel's position (sim feedback spec §1, DW-91) is named state as
 | `schemaVersion` | `0` | the migration stamp; the runner owns it |
 | `minimap.hide` | `false` | LibDBIcon's own key; the Minimap button row inverts onto it, and no `shown` twin exists (launcher-§3) |
 | `minimap.minimapPos` | absent | LibDBIcon's own write |
-| `history.maxGroups` | `20` | the History tab's cap, 1 to 100; the `global.history.maxGroups` row (Window › Layout) stores here through its own closures, and a change trims the log at once (`NS.History.ApplyCap`) |
+| `history.retentionDays` | `30` | Keep history for (feedback-2 spec §5): 7, 14, 30, 60, 90 or 180 days, or `0`, Never delete; the `global.history.retentionDays` row (Window › Layout) stores here through its own closures. A change to a window that would delete anything asks first (`NS.HistoryRetention.OnChanged`); the groups older than it go once per session, five seconds after the first `PLAYER_ENTERING_WORLD`. Account-wide: a profile switch, copy or reset never changes it. It replaced `history.maxGroups` (the 20-group cap), which step 4 removes |
 | `history.v` | absent until the first drop is recorded | the history's own shape stamp, `1` (`NS.History.VERSION`); `NS.History.Normalize` sets it and makes `groups` a list, in place |
 | `history.groups` | absent until the first drop is recorded | the kept drops, below; written by `modules/History.lua` alone, never through the seam |
 | `notices.autoAsk` | absent until auto-ask is first turned on | `true` once auto-ask's one-time chat notice was said (design spec §9.4); written by `modules/AutoAsk.lua` alone, never through the seam |
@@ -125,11 +125,12 @@ The simulation panel's position (sim feedback spec §1, DW-91) is named state as
 ### The history (design spec §10)
 
 `modules/History.lua` owns `history.v` and `history.groups` and never replaces `global.history`
-whole, because the cap row lives in the same table. It is account-wide: every character adds to one
+whole, because the retention row lives in the same table; `modules/HistoryRetention.lua` deletes the
+groups older than it. It is account-wide: every character adds to one
 log and sees it.
 
 ```lua
-history = { maxGroups = 20, v = 1, groups = {
+history = { retentionDays = 30, v = 1, groups = {
     { key, label, kind, situation, at, roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
           me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
@@ -154,8 +155,11 @@ history = { maxGroups = 20, v = 1, groups = {
   shows. No migration step: the fields are optional.
 - `outcome` is `seen`, `asked`, `offered`, `received`, `tradedAway`, `expired` or `declined`;
   `before` is the outcome a hand-set `declined` replaced.
-- The cap: `history.maxGroups` groups (the oldest go first) and 50 drops per group (the oldest go
-  first). No migration step is involved: the history's shape has its own stamp, `v`.
+- How long it is kept: a group goes whole once its newest entry's `at` is older than
+  `history.retentionDays` days (never under `0`), at the session's prune or a confirmed shorter
+  window. Beside that, 50 drops per group and a safety ceiling of 5,000 drops in all
+  (`NS.History.CEILING`, a constant the diagnostics report), the oldest going first, keep
+  SavedVariables bounded even under Never delete. The history's shape has its own stamp, `v`.
 
 ## Session-only (never saved)
 
@@ -176,7 +180,7 @@ and Test mode rows are `sessionOnly` and store through their own closures.
 ## Migrations
 
 `core/Database.lua`: `NS.MIGRATIONS` is a list of steps `{ to, run, perProfile }`, and
-`NS.SCHEMA_VERSION` is the highest step's `to` (today 3). The runner runs in `OnInitialize` straight
+`NS.SCHEMA_VERSION` is the highest step's `to` (today 4). The runner runs in `OnInitialize` straight
 after `AceDB:New`, before anything reads the profile, and again on every profile event. It owns the
 stamp: a step's `to` is stored only after the step returned, so a step that raises is retried on the
 next load. A `perProfile` step runs for every stored profile in the raw SavedVariables, not only the
@@ -187,5 +191,6 @@ active one. The default stays `0`.
 | 1 | 0 → 1: the stamp itself; nothing to reshape |
 | 2 | 1 → 2, per profile: every setting has a row (DW-40). A stored value its row now refuses (the wrong type, or outside its list or range) is dropped, so the default shows: before the rows, `feed.quality.mode` and `window.compact` were written straight onto the profile, and `trade.rules.*`, `messages.*` and `situations.*` were read with forgiving fallbacks. A valid value and every default pass through unchanged (`NS.RepairStoredSettings`) |
 | 3 | 2 → 3, per profile: the View becomes a set (DW-A1, feedback-2 spec §1). A stored `feed.view` string becomes `feed.view = { [value] = true }` (`interesting` keeps Interesting, `all` is the empty set), and the retired `trade.likelyOnly`, `feed.usableOnly` and `feed.upgradeOnly` fold into it as `likely`, `usable` and `upgrade` when they were on, their leaves removed, so each player keeps the choices they had. A profile that only inherited the old default (`interesting`) stored nothing, since AceDB strips a value equal to its default at logout, and opens on the new default, All. A profile already in the new shape passes through (`NS.MigrateViewSet`) |
+| 4 | 3 → 4, global: the History is kept by days (DW-A5, feedback-2 spec §5). The retired group cap, `global.history.maxGroups`, is removed; nothing is pruned by the step, and Keep history for starts on its default, 30 days, which the session's prune applies (`NS.RetireHistoryCap`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

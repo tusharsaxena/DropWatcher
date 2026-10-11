@@ -1,7 +1,7 @@
 -- tests/test_database.lua — the defaults tree and the migration runner (savedvariables-§1).
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
 local function deepcopy(v)
     if type(v) ~= "table" then return v end
@@ -156,5 +156,24 @@ test("database: the profile defaults carry every Master controls value, and no d
     -- The debug flag is session-only (debug-logging-§5), and so is test mode.
     assertTrue(p.debug == nil and p.state == nil)
     assertEqual(NS.addon.db.global.minimap.hide, false)
-    assertEqual(NS.addon.db.global.history.maxGroups, 20)
+    assertEqual(NS.addon.db.global.history.retentionDays, 30)
+    assertNil(NS.addon.db.global.history.maxGroups, "the group cap is retired")
+end)
+
+-- Feedback-2 spec §5 (DW-A5): the History is kept by days; the group cap goes, and nothing is pruned.
+test("database: step 4 retires the History's group cap and prunes nothing", function()
+    local NS = T.newAddon()
+    local old = { at = 1, drops = { { at = 1, outcome = "seen" } } }
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 3, history = { maxGroups = 35, v = 1, groups = { old } } },
+    }
+    -- red under: no step 4 (the stored cap stays)
+    NS.addon:OnInitialize()
+    local h = _G.DropWatcherDB.global.history
+    assertNil(h.maxGroups)
+    assertEqual(#h.groups, 1, "a group older than any window is still there")
+    assertEqual(h.v, 1)
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertEqual(NS.addon.db.global.history.retentionDays, 30, "the default window")
+    NS.RetireHistoryCap(nil); NS.RetireHistoryCap({}); NS.RetireHistoryCap({ global = { history = 3 } })
 end)

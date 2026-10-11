@@ -107,6 +107,7 @@ prints auto-ask's one-time notice; turning it off cancels the asks waiting to go
 
 ## Window
 
-**Columns:** a checkbox per optional column (My eq among them since DW-83). **Layout:** Compact, Row height, Font size, Groups kept
-in history (account-wide; a lower cap trims the history at once). **Toast:** Show a toast, then its least gain, duration, combat and sound
+**Columns:** a checkbox per optional column (My eq among them since DW-83). **Layout:** Compact, Row height, Font size, Keep history
+for (7 to 180 days or Never delete, default 30; account-wide; a shorter time that would delete groups
+asks first, and No puts the previous time back). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.

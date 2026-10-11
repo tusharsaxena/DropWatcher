@@ -114,6 +114,15 @@ function NS.MigrateViewSet(profile)
     profile.feed.view = set
 end
 
+--- Step 4's work: the History's group cap, `global.history.maxGroups`, is retired (feedback-2 spec
+--- §5: the History is kept by days now). Only the key goes; nothing is pruned here.
+--- @param sv table|nil the raw SavedVariables
+function NS.RetireHistoryCap(sv)
+    local g = type(sv) == "table" and sv.global
+    local h = type(g) == "table" and g.history
+    if type(h) == "table" then h.maxGroups = nil end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -122,6 +131,7 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.RepairStoredSettings(profile) end },
     { to = 3, perProfile = true,         -- 2 -> 3: the View is a set; its checkboxes fold into it
       run = function(_, profile) NS.MigrateViewSet(profile) end },
+    { to = 4, run = function(sv) NS.RetireHistoryCap(sv) end },   -- 3 -> 4: History by days
 }
 
 -- The runner's target: the highest step's `to`.

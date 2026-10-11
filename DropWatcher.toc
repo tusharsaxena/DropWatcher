@@ -221,6 +221,12 @@ modules\Asks.lua
 # AskStateChanged receivers on a NS.Bus target at load. NS.LootFeed, NS.Compat and NS.Setting
 # (settings\Schema.lua, below) are read at call time.
 modules\History.lua
+# Conventional: publishes NS.HistoryRetention (Keep history for: the window, the confirmation, the
+# login prune); appends its PLAYER_ENTERING_WORLD row to NS.FEATURE_EVENTS and NS.STAND_DOWN /
+# NS.STAND_UP and its handler to NS.addon (core\DropWatcher.lua) at load. NS.History (above),
+# NS.Setting and NS.SchemaRuntime (settings\Schema.lua, below) are read at call time;
+# settings\SchemaRows.lua (below) reads its Choices at load.
+modules\HistoryRetention.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L, NS.Constants,
 # NS.Bus and NS.MSG, and appends its rows to NS.STAND_DOWN / NS.STAND_UP, all published above, at
 # load, and registers its bus receivers (RestrictionChanged, AskStateChanged, SituationChanged,

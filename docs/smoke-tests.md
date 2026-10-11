@@ -151,7 +151,7 @@ page (general, feed, comparison, trade, messages, window), the two Comparison ma
 `/dw set feed.quality.fixed 4` → the filter bar reads `Quality: Epic+`; `/dw set feed.quality.mode
 bogus` and `/dw set messages.announceChannel SAY` are refused and change nothing. `/reload` →
 `/dw get feed.quality.fixed` still reads 4. Switch to a new profile → it reads 3; switch back → 4.
-`/dw set global.history.maxGroups 30`, switch profile → still 30 (it is account-wide). On the
+`/dw set global.history.retentionDays 60`, switch profile → still 60 (it is account-wide). On the
 first login on this build, `/dw debug on` → one held `[Migrate] v1 -> v2` line. Result:
 
 ## State
@@ -935,10 +935,22 @@ beside `/dump LE_GAME_ERR_TRADE_COMPLETE`) around the accept, and in which order
 All and Content: All, the drops are under their encounter's header (the newest open), each row
 with its Outcome; a header of an older day reads `n days ago`. Right-click a row → a menu with
 `Mark as declined`; choose it → the row reads `Declined`; right-click again → `Clear declined`
-puts the earlier outcome back. Content: This session → only today's drops. Settings › Window ›
-Layout › Groups kept in history to 1 → the tab keeps only the newest group at once. Clear history →
+puts the earlier outcome back. Content: This session → only today's drops. Clear history →
 a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
 reads `History cleared.` Result:
+
+**HIST-3. Keep history for (DW-A5, feedback-2 spec §5).** On the first login on this build, `/dw
+debug on` → one held `[Migrate] v3 -> v4` line, and every kept group is still there; the History
+footer reads `n groups, m drops · kept for 30 days` (no `of 20 groups kept`). Settings › Window ›
+Layout › Keep history for lists 7, 14, 30, 60, 90 and 180 days and Never delete. Pick 90 → taken at
+once, no question. With a group older than 7 days kept (or `/dw test`, whose `Placeholder boss
+(alt)` is ten days old), pick 7 days → a confirmation, `This deletes n groups (m drops) older than 7
+days.`; No → the dropdown reads 90 again, chat says nothing was deleted, and every group stays; pick
+7 again and Yes → the older groups leave the tab at once. Never delete → the footer reads `kept
+forever`. `/reload` with a group older than the window kept → about five seconds after the login it
+leaves the tab (`/dw debug on` shows `history: login prune`). Log on to an alt → the same window and
+the same groups (account-wide); switch profile → the window does not change. `/dw diagnostics` →
+`feed: history groups=n drops=m/5000 keep=30d`. Result:
 
 ## Toast
 
@@ -1167,6 +1179,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |
 | SCORE-3 | DW-62, Pawn counts once it is initialized | No client pass recorded yet |
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
+| HIST-3 | DW-A5, Keep history for, its confirmation, the login prune and step 4 | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
 | TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |
 | TOAST-3 | DW-62, an empty-slot upgrade toasts and auto-asks | No client pass recorded yet |

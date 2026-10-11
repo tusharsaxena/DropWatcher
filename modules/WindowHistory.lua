@@ -500,7 +500,7 @@ end
 
 local function paintStrip(pane, groups)
     local st = NS.History.Stats()
-    pane.strip.info:SetText(L["%d of %d groups kept, %d drops"]:format(#groups, st.cap, st.drops))
+    pane.strip.info:SetText(NS.HistoryRetention.FooterText(#groups, st.drops, st.days))
     pane.strip.clear:SetEnabled(#groups > 0)
     pane.strip.clear:SetAlpha(#groups > 0 and 1 or 0.5)
 end

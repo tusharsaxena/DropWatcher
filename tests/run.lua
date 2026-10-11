@@ -132,6 +132,7 @@ Kit.run{
         "test_asks",
         "test_transmog",
         "test_history",
+        "test_history_retention",
         "test_toast",
         "test_auto_ask",
         "test_sim_core",

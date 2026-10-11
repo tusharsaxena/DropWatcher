@@ -519,7 +519,12 @@ The stand-down cancels the flush timer and drops the queued asks; the sent regis
 
 ```
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
-                          (live drops only)        group = feed group @ session, cap = maxGroups)
+                          (live drops only)        group = feed group @ session; Trim: 50 a group,
+                                                   CEILING 5,000 drops in all, the oldest first)
+first PLAYER_ENTERING_WORLD ─> 5s (canceled by the stand-down) ─> HistoryRetention.LoginPrune:
+                          groups whose newest entry is older than retentionDays ─> HistoryChanged
+Keep history for row ─> HistoryRetention.OnChanged ─> deletes nothing: taken | deletes: StaticPopup
+                          ─> Yes: PruneAll (account + shown session log) | No: the agreed value back
 DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
                           (HistoryChanged only when the entry changed)
 AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)

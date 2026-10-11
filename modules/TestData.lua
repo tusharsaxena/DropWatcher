@@ -28,7 +28,8 @@ local _, NS = ...
 -- THE HISTORY (FB-10). History(nowEpoch, you, src) answers a session-only log of two groups that
 -- between them show every outcome (seen, asked, offered, expired, declined, received, traded away),
 -- seen by you, and a third seen by an invented alt on your realm (ALT), so the Character dropdown
--- (feedback-2 spec §4) lists two characters and Current hides the alt's group.
+-- (feedback-2 spec §4) lists two characters and Current hides the alt's group. The alt's group is
+-- ten days old, so a Keep history for of 7 days (feedback-2 spec §5) asks to delete it.
 -- modules/TestMode.lua holds it while test mode is on; it is never written to the account's history.
 
 NS.TestData = NS.TestData or {}
@@ -356,7 +357,7 @@ local HISTORY = {
         { slot = "INVTYPE_FEET", me = { "downgrade", -20 }, trade = { "no", "expired" }, outcome = "expired" },
     } },
     { group = { key = "test:history:alt", label = L["Placeholder boss (alt)"], kind = "encounter", situation = "raid" },
-      party = RUN_PARTY, ago = 172800, alt = true, drops = {
+      party = RUN_PARTY, ago = 864000, alt = true, drops = {
         { who = "seta", slot = "INVTYPE_HAND", me = { "upgrade", 4 }, them = { "downgrade", -6 },
           trade = { "likely", "notUpgrade" }, outcome = "seen" },
         { slot = "INVTYPE_WAIST", me = { "downgrade", -9 }, trade = { "yes", "timer" }, outcome = "offered" },
@@ -391,7 +392,7 @@ local function altSeer(you)
 end
 
 --- The History tab's session-only sample log (FB-10): { v = 1, groups }, two groups (a boss two
---- hours ago, a key run a day ago) covering every outcome, over real items, and the alt's boss two
+--- hours ago, a key run a day ago) covering every outcome, over real items, and the alt's boss ten
 --- days ago. Pure.
 --- @param nowEpoch number time()
 --- @param you table your looter { name, classFile, seenBy (your recorder key) }

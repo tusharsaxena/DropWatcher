@@ -232,6 +232,20 @@ local function assertRecorder(NS, label)
     assertTrue(#NS.WindowHistory.Drawn().headers > 0, label .. ": History shows the run under Current")
 end
 
+-- The History footer says how long the run is kept (feedback-2 spec §5), and a shorter window
+-- deletes nothing of a run that has just happened, so it asks nothing.
+local function assertRetention(NS, m, label)
+    NS.Window.SelectTab("history")
+    NS.Window.Refresh()
+    local text = NS.WindowHistory.Drawn().strip.info:GetText()
+    assertTrue(text:find("^%d+ groups, %d+ drops · kept for 30 days$") ~= nil, label .. ": " .. text)
+    local groups, asked = #NS.History.Log().groups, #m.popupsShown
+    assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 7), label)
+    assertEqual(#m.popupsShown, asked, label .. ": nothing to delete, nothing asked")
+    assertEqual(#NS.History.Log().groups, groups, label .. ": the run is kept")
+    assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 30), label)
+end
+
 local function runScenario(sc, ilvl, seed)
     local label = ("%s at %d, seed %d"):format(sc.name, ilvl, seed)
     local NS, m = addon(ilvl)
@@ -251,6 +265,7 @@ local function runScenario(sc, ilvl, seed)
     assertWindow(NS, label)
     assertRosters(NS, label)
     assertRecorder(NS, label)
+    assertRetention(NS, m, label)
     NS.Sim.Stop("stop")
     assertEqual(NS.Situations.Current(), "solo", label .. ": the real world again")
 end

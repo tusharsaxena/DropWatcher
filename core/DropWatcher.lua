@@ -528,6 +528,8 @@ function DW:OnInitialize()
 
     -- Before anything reads the profile (savedvariables-§1).
     self:RunMigrations()
+    -- The "Keep history for" confirmation's baseline: the stored window is the confirmed one.
+    if NS.HistoryRetention then NS.HistoryRetention.Sync() end
 
     if self.db.RegisterCallback then
         self.db.RegisterCallback(self, "OnProfileChanged", function(...) self:OnProfileChanged(...) end)

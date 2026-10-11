@@ -38,11 +38,11 @@ end
 
 -- ── the pure core ───────────────────────────────────────────────────────────────────────────
 
-test("history: Normalize gives the shape in place and keeps the cap", function()
+test("history: Normalize gives the shape in place and keeps the retention row", function()
     local Hi = H()
-    local hist = { maxGroups = 35 }
+    local hist = { retentionDays = 14 }
     assertTrue(Hi.Normalize(hist) == hist)
-    assertEqual(hist.v, 1); assertEqual(#hist.groups, 0); assertEqual(hist.maxGroups, 35)
+    assertEqual(hist.v, 1); assertEqual(#hist.groups, 0); assertEqual(hist.retentionDays, 14)
     hist.groups = "broken"
     Hi.Normalize(hist)
     assertEqual(type(hist.groups), "table", "a broken list is replaced, not the table")
@@ -63,19 +63,38 @@ test("history: Snapshot keeps the drop small: link, looter, verdicts, trade, `se
     assertTrue(mine.isMine); assertNil(mine.them); assertEqual(mine.itemID, 500, "read from the link")
 end)
 
-test("history: Record groups by key, newest last; the caps drop the oldest first", function()
+test("history: Record groups by key, newest last; no group cap, 50 drops a group", function()
     local Hi = H()
     local hist = Hi.Normalize({})
-    local a = Hi.Record(hist, { key = "a", label = "A" }, entry(), 2)
-    Hi.Record(hist, { key = "a", label = "A" }, entry(), 2)
-    Hi.Record(hist, { key = "b", label = "B" }, entry(), 2)
+    Hi.Record(hist, { key = "a", label = "A" }, entry())
+    Hi.Record(hist, { key = "a", label = "A" }, entry())
+    Hi.Record(hist, { key = "b", label = "B" }, entry())
     assertEqual(#hist.groups, 2); assertEqual(#hist.groups[1].drops, 2)
-    Hi.Record(hist, { key = "c", label = "C" }, entry(), 2)
-    assertEqual(#hist.groups, 2); assertEqual(hist.groups[1].key, "b", "the oldest group went")
-    assertTrue(a.gone, "a dropped entry is marked gone")
-    for _ = 1, Hi.MAX_DROPS + 3 do Hi.Record(hist, { key = "c" }, entry(), 2) end
-    assertEqual(#hist.groups[2].drops, Hi.MAX_DROPS, "50 drops per group")
-    assertEqual(Hi.Trim(hist, 1), 1)
+    -- red under: the retired 20-group cap (FB2-7): a 25th group drops nothing
+    for i = 1, 23 do Hi.Record(hist, { key = "g" .. i }, entry()) end
+    assertEqual(#hist.groups, 25, "every group is kept; age, not count, retires them")
+    local first = hist.groups[25].drops
+    for _ = 1, Hi.MAX_DROPS + 3 do Hi.Record(hist, { key = "g23" }, entry()) end
+    assertEqual(#first, Hi.MAX_DROPS, "50 drops per group")
+    assertEqual(Hi.CEILING, 5000)
+end)
+
+test("history: the safety ceiling drops the oldest drops first, and an emptied group goes", function()
+    local Hi = H()
+    local hist = Hi.Normalize({})
+    local a1 = Hi.Record(hist, { key = "a" }, entry({ at = 1 }), 3)
+    local a2 = Hi.Record(hist, { key = "a" }, entry({ at = 2 }), 3)
+    Hi.Record(hist, { key = "b" }, entry({ at = 3 }), 3)
+    assertEqual(#hist.groups, 2)
+    -- red under: no ceiling (a 4th drop over a ceiling of 3 stays)
+    Hi.Record(hist, { key = "b" }, entry({ at = 4 }), 3)
+    assertTrue(a1.gone and not a2.gone, "the oldest drop went first")
+    assertEqual(#hist.groups[1].drops, 1)
+    Hi.Record(hist, { key = "c" }, entry({ at = 5 }), 3)
+    assertTrue(a2.gone)
+    assertEqual(#hist.groups, 2, "the emptied group went too")
+    assertEqual(hist.groups[1].key, "b"); assertEqual(hist.groups[2].key, "c")
+    assertEqual(Hi.Trim(hist, 1), 2, "two more drops over a ceiling of 1")
     assertEqual(#hist.groups, 1); assertEqual(hist.groups[1].key, "c")
 end)
 
@@ -172,12 +191,12 @@ end
 
 local function added(NS, id) NS.addon:SendMessage(NS.MSG.DROP_ADDED, id) end
 
-test("history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the cap", function()
+test("history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the retention row", function()
     local NS, _, seen = enabled({ rec(), rec({ id = 2, test = true }) })
-    assertTrue(NS.SchemaRuntime.Set("global.history.maxGroups", 35))
+    assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 90))
     added(NS, 1); added(NS, 2); added(NS, 1)
     local g = NS.addon.db.global.history
-    assertEqual(g.maxGroups, 35, "the cap row's value is still in the table")
+    assertEqual(g.retentionDays, 90, "the retention row's value is still in the table")
     assertEqual(g.v, 1); assertEqual(#g.groups, 1); assertEqual(#g.groups[1].drops, 1)
     assertEqual(g.groups[1].label, "Boss A"); assertEqual(g.groups[1].situation, "dungeon")
     assertTrue(g.groups[1].key:find("^enc:2900:5@") ~= nil, "keyed by the feed group and the session")
@@ -304,17 +323,7 @@ test("history trade: a canceled trade completes nothing; the offer is the last o
     assertEqual(NS.History.OutcomeOf(2), "received")
 end)
 
-test("history: lowering the cap row trims the stored log at once", function()
-    local NS = enabled({ rec(), rec({ id = 2, groupKey = "enc:2:1" }), rec({ id = 3, groupKey = "enc:3:1" }) })
-    added(NS, 1); added(NS, 2); added(NS, 3)
-    assertEqual(#NS.History.Groups(), 3)
-    assertTrue(NS.SchemaRuntime.Set("global.history.maxGroups", 1))
-    assertEqual(#NS.History.Groups(), 1)
-    assertNil(NS.History.OutcomeOf(1), "a dropped entry leaves the session index")
-    assertEqual(NS.History.OutcomeOf(3), "seen")
-end)
-
-test("history: Clear history asks first, and empties the log only on Yes; the cap stays", function()
+test("history: Clear history asks first, and empties the log only on Yes; the retention row stays", function()
     local NS, m = enabled({ rec() })
     added(NS, 1)
     NS.WindowHistory.AskClear()
@@ -325,7 +334,9 @@ test("history: Clear history asks first, and empties the log only on Yes; the ca
     assertEqual(popup.preferredIndex, 3)
     popup.OnAccept()
     assertEqual(#NS.History.Groups(), 0)
-    assertEqual(NS.addon.db.global.history.maxGroups, 20)
+    assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 60))
+    NS.History.Clear()
+    assertEqual(NS.addon.db.global.history.retentionDays, 60)
     assertNil(NS.History.OutcomeOf(1))
 end)
 
@@ -335,7 +346,7 @@ test("history: the diagnostics' feed section reports the history and the trade",
     NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("diagnostics")
     local text = table.concat(NS.DebugLog.buffer, "\n")
-    assertTrue(text:find("feed: history groups=1/20 drops=1 session=1 trade=none", 1, true) ~= nil, text)
+    assertTrue(text:find("feed: history groups=1 drops=1/5000 keep=30d session=1 trade=none", 1, true) ~= nil, text)
 end)
 
 -- ── the History tab ─────────────────────────────────────────────────────────────────────────
@@ -377,7 +388,7 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     assertEqual(table.concat(outcomes, ","), "Asked,Expired")
     assertEqual(NS.WindowFilterBar.State("history").content, "all", "the tab opens on Content: All")
     assertEqual(next(NS.WindowFilterBar.State("history").view), nil, "and View: All")
-    assertEqual(textOf(drawn.strip.info), "2 of 20 groups kept, 3 drops")
+    assertEqual(textOf(drawn.strip.info), "2 groups, 3 drops · kept for 30 days")
     for _, r in ipairs(drawn.rows) do
         for key, c in pairs(r.cells) do
             local itemTip = c.showItem and c.itemButton.link ~= nil   -- the real item tooltip (DW-80)

@@ -56,9 +56,11 @@ local function minimapStore()
     local db = DW.db
     return db and db.global and db.global.minimap
 end
--- The History tab's cap (design spec §10, §12.1) is account-wide: `global.history.maxGroups`.
-local HISTORY_CAP_PATH = "global.history.maxGroups"
-Settings.HISTORY_CAP_PATH = HISTORY_CAP_PATH
+-- How long the History tab keeps its groups (feedback-2 spec §5) is account-wide, beside the data:
+-- `global.history.retentionDays` (modules/HistoryRetention.lua). A profile switch, copy or reset
+-- never changes it.
+local HISTORY_RETENTION_PATH = "global.history.retentionDays"
+Settings.HISTORY_RETENTION_PATH = HISTORY_RETENTION_PATH
 local function historyStore(create)
     local g = DW.db and DW.db.global
     if not g then return nil end
@@ -80,16 +82,16 @@ local GLOBAL = {
         end,
         backing = { "minimap", "hide" },
     },
-    [HISTORY_CAP_PATH] = {
+    [HISTORY_RETENTION_PATH] = {
         get = function()
             local h = historyStore(false)
-            return h and h.maxGroups
+            return h and h.retentionDays
         end,
         set = function(v)
             local h = historyStore(true)
-            if h then h.maxGroups = v end
+            if h then h.retentionDays = v end
         end,
-        backing = { "history", "maxGroups" },
+        backing = { "history", "retentionDays" },
     },
 }
 

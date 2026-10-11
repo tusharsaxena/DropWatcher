@@ -31,7 +31,7 @@ local function specPaths()
         "messages.autoAsk.delay", "messages.autoAsk.minGain",
         "window.compact", "window.rowHeight", "window.fontSize",
         "toast.enabled", "toast.minGain", "toast.duration", "toast.inCombat", "toast.sound",
-        "global.history.maxGroups",
+        "global.history.retentionDays",
     }
     for _, key in ipairs(SITUATIONS) do
         for _, f in ipairs({ "track", "autoOpen", "quality" }) do out[#out + 1] = "situations." .. key .. "." .. f end
@@ -70,7 +70,7 @@ end)
 test("rows: every default is defaults/Profile.lua's, and passes the row's own check", function()
     local NS = T.newAddon()
     for _, row in ipairs(NS.addon.Settings.Rows) do
-        local want = row.path == "global.history.maxGroups" and NS.C.GLOBAL_DEFAULTS.history.maxGroups
+        local want = row.path == "global.history.retentionDays" and NS.C.GLOBAL_DEFAULTS.history.retentionDays
             or profileDefault(NS, row.path)
         -- red under: a row whose `default` is a literal of its own that drifted from defaults/
         assertTrue(row.default == want, row.path .. " default is the defaults table's")
@@ -179,18 +179,19 @@ test("rows: the Quality control and the compact preset write through the seam (h
     assertTrue(repaints >= 3)
 end)
 
-test("rows: the history cap is account-wide, and a profile reset leaves it", function()
+test("rows: Keep history for is account-wide, and a profile reset leaves it", function()
     local NS = T.enableAddon()
-    local S, path = NS.SchemaRuntime, "global.history.maxGroups"
-    assertEqual(S.Get(path), 20)
-    assertTrue(S.Set(path, 35))
-    assertEqual(NS.addon.db.global.history.maxGroups, 35)
+    local S, path = NS.SchemaRuntime, "global.history.retentionDays"
+    assertEqual(S.Get(path), 30)
+    assertTrue(S.Set(path, 90))
+    assertEqual(NS.addon.db.global.history.retentionDays, 90)
     assertTrue(NS.addon.db.profile.global == nil, "nothing lands in the profile")
-    assertFalse(S.Set(path, 0))
+    assertTrue(S.Set(path, 0), "Never delete")
+    assertFalse(S.Set(path, 45), "only the listed windows")
     NS.addon.Settings.Helpers.RestoreAllDefaults()
-    assertEqual(S.Get(path), 35, "Reset all is a profile reset")
+    assertEqual(S.Get(path), 0, "Reset all is a profile reset")
     S.ApplyDefault(S.FindRow(path))
-    assertEqual(NS.addon.db.global.history.maxGroups, 20)
+    assertEqual(NS.addon.db.global.history.retentionDays, 30)
 end)
 
 test("rows: `/dw set` reaches a hand-written row", function()
@@ -206,6 +207,6 @@ test("rows: degraded, the hand-written rows still read, write and refuse", funct
     assertTrue(D.SchemaRuntime.Set("feed.quality.mode", "dynamicSlot"))
     assertEqual(D.addon.db.profile.feed.quality.mode, "dynamicSlot")
     assertFalse(D.SchemaRuntime.Set("feed.quality.mode", "bogus"))
-    assertTrue(D.SchemaRuntime.Set("global.history.maxGroups", 10))
-    assertEqual(D.addon.db.global.history.maxGroups, 10)
+    assertTrue(D.SchemaRuntime.Set("global.history.retentionDays", 14))
+    assertEqual(D.addon.db.global.history.retentionDays, 14)
 end)

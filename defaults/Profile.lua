@@ -131,8 +131,9 @@ NS.C = {
     GLOBAL_DEFAULTS = {
         schemaVersion = 0,
         minimap = { hide = false },
-        -- The History tab's cap (design spec §10). The history itself (`history.v`,
-        -- `history.groups`) is modules/History.lua's (DW-51), which never replaces the table whole.
-        history = { maxGroups = 20 },
+        -- How long the History tab keeps a group, in days (feedback-2 spec §5; 0 = never delete).
+        -- The history itself (`history.v`, `history.groups`) is modules/History.lua's (DW-51), which
+        -- never replaces the table whole.
+        history = { retentionDays = 30 },
     },
 }

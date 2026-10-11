@@ -63,7 +63,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (9)
+### test_database.lua (10)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -74,6 +74,7 @@ Total.
 - database: step 3 folds the View and the three checkboxes into the View set, per profile
 - database: step 3 passes a profile already in the new shape through unchanged
 - database: the profile defaults carry every Master controls value, and no debug flag
+- database: step 4 retires the History's group cap and prunes nothing
 
 ### test_schema.lua (11)
 
@@ -100,7 +101,7 @@ Total.
 - rows: the feed, the situations and the messaging edge read the rows
 - rows: the filter bar seeds a fresh tab from the rows
 - rows: the Quality control and the compact preset write through the seam (handoff from M3)
-- rows: the history cap is account-wide, and a profile reset leaves it
+- rows: Keep history for is account-wide, and a profile reset leaves it
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 
@@ -983,16 +984,17 @@ Total.
 
 ### test_history.lua (28)
 
-- history: Normalize gives the shape in place and keeps the cap
+- history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
-- history: Record groups by key, newest last; the caps drop the oldest first
+- history: Record groups by key, newest last; no group cap, 50 drops a group
+- history: the safety ceiling drops the oldest drops first, and an emptied group goes
 - history: an automatic outcome only moves forward
 - history: Refresh takes the latest verdicts, and an expired trade makes it `expired`
 - history: Refresh's second answer says whether anything it stores changed
 - history: declined is set by hand, and clearing it puts back what it replaced
 - history: a completed trade matches the partner's drop first, then any, one entry per item
 - history: an item you gave marks your own drop traded away, never someone else's
-- history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the cap
+- history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the retention row
 - history edge: DropUpdated refreshes the entry; an expired trade makes it `expired`
 - history edge: a DropUpdated that changes nothing kept sends no HistoryChanged
 - history edge: a sent ask is `asked`, a sent offer or announce `offered`; other states nothing
@@ -1001,8 +1003,7 @@ Total.
 - history trade: a close after both accepted with no "Trade complete." completes nothing
 - history trade: an item you gave marks your drop `tradedAway`
 - history trade: a canceled trade completes nothing; the offer is the last one accepted
-- history: lowering the cap row trims the stored log at once
-- history: Clear history asks first, and empties the log only on Yes; the cap stays
+- history: Clear history asks first, and empties the log only on Yes; the retention row stays
 - history: the diagnostics' feed section reports the history and the trade
 - history tab: kept groups newest first, the first open, each row's outcome painted
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
@@ -1011,6 +1012,21 @@ Total.
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
+
+### test_history_retention.lua (12)
+
+- retention: the labels, the choices and the footer
+- retention: a group's age is its newest entry's, else its own
+- retention: Count says what a window deletes, and deletes nothing; Prune deletes it
+- retention row: account-wide, on the Window page, the listed windows only
+- retention: a longer window, or one that deletes nothing, is taken at once
+- retention: a shorter window that deletes asks first; Yes prunes
+- retention: No writes the last agreed window back and deletes nothing
+- retention: headless (no popup), a shorter window prunes at once
+- retention: the login prune runs once, deferred off the login, over the account's log
+- retention: the stand-down takes the pending prune back; the stand-up arms it again
+- retention: Never delete keeps every group at login
+- retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
 ### test_toast.lua (24)
 
@@ -1301,7 +1317,7 @@ Total.
 | test_harness.lua | 10 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 18 |
-| test_database.lua | 9 |
+| test_database.lua | 10 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
 | test_settings_pages.lua | 29 |
@@ -1338,6 +1354,7 @@ Total.
 | test_asks.lua | 23 |
 | test_transmog.lua | 13 |
 | test_history.lua | 28 |
+| test_history_retention.lua | 12 |
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
 | test_sim_core.lua | 25 |
@@ -1355,4 +1372,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1117** |
+| **Total** | **1130** |

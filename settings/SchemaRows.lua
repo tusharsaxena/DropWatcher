@@ -338,14 +338,15 @@ local function window()
     bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], toast)
 end
 
--- ── History (design spec §10): account-wide ─────────────────────────────────────────────────
+-- ── History (feedback-2 spec §5): kept by days, account-wide ────────────────────────────────
 
 local function history()
-    local row = slider(Settings.HISTORY_CAP_PATH, NS.C.GLOBAL_DEFAULTS.history.maxGroups, 1, 100, 1,
-        L["Groups kept in history"], L["How many groups (encounters or runs) the History tab keeps, on every character."],
-        { page = "window", group = L["Layout"], onChange = function()
-            -- A lower cap applies at once (modules/History.lua), not at the next drop.
-            if NS.History then NS.History.ApplyCap() end
+    local row = pick(Settings.HISTORY_RETENTION_PATH, NS.C.GLOBAL_DEFAULTS.history.retentionDays,
+        NS.HistoryRetention.Choices(), L["Keep history for"],
+        L["How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."],
+        { page = "window", group = L["Layout"], onChange = function(v)
+            -- A shorter window that would delete something asks first (modules/HistoryRetention.lua).
+            NS.HistoryRetention.OnChanged(v)
         end })
     Settings.StampClosureRows({ row })
 end
