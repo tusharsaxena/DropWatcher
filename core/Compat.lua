@@ -55,6 +55,16 @@ local function globalString(name)
     return s
 end
 
+--- The client's GlobalString `name` (a LOOT_ITEM* line, an INVTYPE_* slot name, a chat type's
+--- label), raw, read at call time; nil for a non-string name. On NS.Compat so the simulator's seam
+--- answers it too (core/SimSeam.lua, DW-90): no module reads _G itself.
+--- @param name any
+--- @return any
+function Compat.GlobalString(name)
+    if type(name) ~= "string" then return nil end
+    return _G[name]
+end
+
 -- ── Chat sending ────────────────────────────────────────────────────────────────────────────
 
 --- The function that sends one chat message, `(text, chatType, languageID, target)`, or nil where
@@ -110,24 +120,10 @@ local function lineTypeValue(typeName)
     return enum and plainNumber(enum[typeName]) or nil
 end
 
--- `parse(leftText)` for one line, guarded: a secret or missing text answers nil.
-local function parseLine(line, parse)
-    if type(line) ~= "table" then return nil end
-    local text = plainString(line.leftText)
-    if not text then return nil end
-    return parse(text, line)
-end
-
--- The first non-nil `parse` answer over the lines whose type is `wanted` (every line when nil).
+-- The first non-nil `parse` answer over the lines whose type is `wanted` (every line when nil):
+-- the pure scan is core/TextParse.lua's, handed this file's secret guards.
 local function scanLines(lines, wanted, parse)
-    for _, line in ipairs(lines) do
-        local lineType = type(line) == "table" and plainNumber(line.type) or nil
-        if wanted == nil or lineType == wanted then
-            local value = parseLine(line, parse)
-            if value ~= nil then return value end
-        end
-    end
-    return nil
+    return TextParse.ScanLines(lines, wanted, parse, plainString, plainNumber)
 end
 
 --- The parsed value of a tooltip's `typeName` line, or nil: the lines of that type first, then

@@ -93,3 +93,18 @@ test("textparse: ClassSet maps the listed names and asks for the map only on a m
     assertEqual(asked, 1, "a foreign line never builds the map")
     assertNil(TP().ClassSet("Classes: Nobody", "Classes: %s", nil, byName), "no known class")
 end)
+
+test("textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed", function()
+    local SECRET = {}
+    local function str(v) if v ~= SECRET and type(v) == "string" then return v end end
+    local function num(v) if v ~= SECRET and type(v) == "number" then return v end end
+    local lines = { "junk", { type = 1, leftText = "a" }, { type = 2, leftText = SECRET },
+        { type = SECRET, leftText = "c" }, { type = 2, leftText = "d" } }
+    local seen = {}
+    local function parse(text) seen[#seen + 1] = text; return text == "d" and text or nil end
+    assertEqual(TP().ScanLines(lines, 2, parse, str, num), "d")
+    assertEqual(table.concat(seen, ","), "d", "a secret text or type never meets parse or the compare")
+    seen = {}
+    assertNil(TP().ScanLines(lines, nil, function(text) seen[#seen + 1] = text end, str, num))
+    assertEqual(table.concat(seen, ","), "a,c,d", "every plain line when no type is wanted")
+end)

@@ -1,11 +1,13 @@
 local _, NS = ...
 -- core/TextParse.lua — the pure text parsers behind core/Compat.lua's tooltip and duration readers
 -- (DW-61): Lua patterns from printf-style GlobalStrings, the `|4a:b;` plural grammar, the localized
--- duration decoder (design spec §7.4) and the item level, upgrade track and class list lines.
+-- duration decoder (design spec §7.4), the tooltip line scan and the item level, upgrade track and
+-- class list lines.
 --
 -- PURE. Nothing here calls a client API or reads a global: every localized GlobalString arrives as
 -- an argument, already read and secret-guarded by core/Compat.lua, which stays the only file that
--- touches the client (compat-§1). Every text argument is a plain string.
+-- touches the client (compat-§1). Every text argument is a plain string, except the raw tooltip
+-- lines ScanLines walks, whose fields it reads only through the secret guards it is handed.
 
 NS.TextParse = NS.TextParse or {}
 local TextParse = NS.TextParse
@@ -156,4 +158,21 @@ function TextParse.ClassSet(text, fmt, delim, byName)
         end
     end
     return set
+end
+
+--- The first non-nil `parse(text, line)` answer over the tooltip `lines` whose type is `wanted`
+--- (every line when nil). The lines are the client's, raw: `plainString` and `plainNumber`
+--- (core/Compat.lua's secret guards) answer a field's plain value or nil, so no secret is compared.
+--- @return any
+function TextParse.ScanLines(lines, wanted, parse, plainString, plainNumber)
+    for _, line in ipairs(lines) do
+        if type(line) == "table" then
+            local text = plainString(line.leftText)
+            if text and (wanted == nil or plainNumber(line.type) == wanted) then
+                local value = parse(text, line)
+                if value ~= nil then return value end
+            end
+        end
+    end
+    return nil
 end

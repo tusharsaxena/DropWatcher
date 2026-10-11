@@ -10,15 +10,16 @@ one in code. It loads in `# Core` right after `core/TextParse.lua`, needs `LibSt
 load, and is read inside functions only.
 
 The text parsing behind the pattern, duration and tooltip-line shims (`FormatToPattern`, the
-duration decoder, and the item level, upgrade track and class list lines) lives in
+duration decoder, the tooltip line scan (`ScanLines`, handed this file's secret guards), and the
+item level, upgrade track and class list lines) lives in
 `core/TextParse.lua` (`NS.TextParse`, DW-61). That module is pure: it calls no client API and
 reads no global, so it is not a compat file. `core/Compat.lua` reads the localized GlobalStrings
 at call time, guards them, and passes them in; its members of the same names are one-line
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**Sixty-five shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `65`). The three
+**Sixty-six shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `66`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -47,6 +48,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | Group | Shim | Ladder | Absent answer |
 |---|---|---|---|
 | Chat | `ChatSender()` | `C_ChatInfo.SendChatMessage` → the deprecated `SendChatMessage` global. Returns the function; the caller runs it under `pcall` (spec §9.2) | `nil` |
+| Strings | `GlobalString(name)` | none: `_G[name]`, read at call time and answered raw (the caller guards it): the `LOOT_ITEM*` lines, a slot's `INVTYPE_*` name, a chat type's label. Not version-variant; it is a member so the simulator's seam answers it (DW-90), in the root because a GlobalString read is not a world read (`core/CompatWorld.lua`'s one topic) | `nil` for a non-string name |
 | Patterns | `FormatToPattern(fmt)` | none: a Lua pattern from a printf-style GlobalString (`%s` → text capture, `%d` → digit capture, `%1$s` read as `%s`, every magic character escaped). The order a positional string gives its arguments is the caller's to recover; the loot parser does | n/a (pure) |
 | Duration | `DecodeDuration(text)` | the localized `INT_SPELL_DURATION_DAYS/HOURS/MIN/SEC` and `TIME_UNIT_DELIMITER` globals; see below | `nil` |
 | | `ParseTradeTimeRemaining(text)` | the `BIND_TRADE_TIME_REMAINING` pattern, then `DecodeDuration` on its capture | `nil` |
@@ -145,8 +147,8 @@ adds the stable reads of the group, a unit and the instance to `NS.Compat`: `Gro
 `InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`), `DifficultyKnown`
 (`GetDifficultyInfo`) and `ChallengeModeActive` (`C_ChallengeMode.IsChallengeModeActive`); and,
 since DW-90 (sim feedback §0), whether you are fighting, `InCombatLockdown` and `PlayerInCombat`
-(`UnitAffectingCombat("player")`), each a plain boolean, and `GlobalString(name)` (`_G[name]`: the
-`LOOT_ITEM*` lines, a slot's or a chat type's name). None is version-variant, so the compat rule
+(`UnitAffectingCombat("player")`), each a plain boolean. (`GlobalString(name)` is the root's, in the
+table above: a GlobalString read is not a world read.) None is version-variant, so the compat rule
 does not ask for them here, and they are not counted above; they are `NS.Compat` members so the
 seam wraps them, because a module reading the global would bypass a running simulation and see the
 real, empty group. They answer the client's raw values (secrets included) and each caller guards
@@ -216,12 +218,12 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `core/ItemRead.lua` | `GetItemInfo`, `GetDetailedItemLevel`; `BagItemLevelQuality` (`core/CompatItem.lua`) |
 | `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `PlayerHasTransmog` |
 | `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc`; `UnitClass` (`core/CompatWorld.lua`) |
-| `modules/LootParser.lua` | `FormatToPattern`; `GlobalString`, `UnitName`, `UnitGUID` (`core/CompatWorld.lua`) |
+| `modules/LootParser.lua` | `FormatToPattern`, `GlobalString`; `UnitName`, `UnitGUID` (`core/CompatWorld.lua`) |
 | `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |
 | `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo`, `UnitName` (`core/CompatWorld.lua`) |
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade`, `InTradeRange`, `CursorHasItem`, `ClearCursor`, `GetBagItemGUID`, `BagSlotCount` |
-| `modules/Asks.lua` | `ChatSender`; `InGroup`, `InRaid`, `InstanceGroupCategory`, `GlobalString` (`core/CompatWorld.lua`) |
+| `modules/Asks.lua` | `ChatSender`, `GlobalString`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |
 | `modules/Scoring.lua` | `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
 | `modules/WindowGroup.lua` | `ItemIcon`, `ClassColor`, `InsertChatLink`, `DressUpItem`, `BagItemLink`, `InventoryItemLink`; `TooltipBagItem`, `TooltipInventoryItem`, `TooltipHyperlink` (`core/CompatItem.lua`) |

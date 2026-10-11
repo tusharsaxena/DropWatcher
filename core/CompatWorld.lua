@@ -2,7 +2,8 @@ local _, NS = ...
 -- core/CompatWorld.lua — the stable world reads, published on NS.Compat so the simulator's answer
 -- seam (core/SimSeam.lua, simulator spec §2) answers them too: the group's size and kind, a unit's
 -- GUID, name, class and connection, where the player is (the instance, its difficulty, a keystone
--- run in progress), whether the player is fighting, and the GlobalStrings (the LOOT_ITEM* lines).
+-- run in progress) and whether the player is fighting. (The GlobalString reads are the root's,
+-- core/Compat.lua's Compat.GlobalString: they are not world reads.)
 --
 -- WHY HERE. None of these APIs is version-variant, so the compat rule does not need them in
 -- core/Compat.lua (which stays the only caller of the variant ones, under its 1000-line cap). They
@@ -118,13 +119,4 @@ end
 --- @return boolean
 function Compat.PlayerInCombat()
     return UnitAffectingCombat ~= nil and UnitAffectingCombat("player") and true or false
-end
-
---- The client's GlobalString `name` (a LOOT_ITEM* line, an INVTYPE_* slot name, a chat type's
---- label), raw, read at call time; nil for a non-string name.
---- @param name any
---- @return any
-function Compat.GlobalString(name)
-    if type(name) ~= "string" then return nil end
-    return _G[name]
 end
