@@ -16,14 +16,18 @@ local _, NS = ...
 -- THE ROWS. Pooled through LibKa0s-Pool-1.0 (NS.Pool), one pool for the drop rows and one for the
 -- headers, released and re-acquired in order on every repaint (Pool v3 hands them back in their
 -- order). Each row builds every column's cell once; a repaint shows, places and paints the ones
--- the column set keeps. A drop row's height and its cells' text size are the Window page's Layout
--- rows (`window.rowHeight`, `window.fontSize`), read through the schema seam at each repaint; the
--- headers, the column labels and the buttons keep their own.
+-- the column set keeps. A drop row's height, its item button and its cells' text size are the
+-- Window page's Layout rows (`window.rowHeight`, `window.fontSize`), read through
+-- modules/WindowRows.lua at each repaint (18 pixels and the template's own size by default, like
+-- Ka0s Loot History's table; feedback-2 spec §8, FB2-9); the headers, the column labels and the
+-- buttons keep their own.
 --
 -- THE ORDER. Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
 -- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
 -- and your own drops only with `feed.showOwn` on)
--- and were not dismissed, ordered by the tab's Sort; a group with none is left out. A group the
+-- and were not dismissed, ordered by the tab's Sort. A group with none keeps its header (`n drops ·
+-- 0 shown`) while the View filter hid them, and is left out when Search or Content did or it has
+-- nothing for the tab (WC.KeepsHeader). A group the
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles and dismissals are session-only (NS.State.windowGroup).
 --
@@ -207,29 +211,51 @@ function WG.Layout(cols, total)
     return out, kept
 end
 
+-- A group's drops for the tab, split into those shown and those its filter hid ({ drop, why },
+-- why the control's key, else `filter`). A dismissed drop and one not the tab's (`ctx.belongs`:
+-- your own, without `feed.showOwn`) are in neither.
 local function visibleDrops(group, get, ctx, dismissed)
-    local out = {}
+    local shown, hidden = {}, {}
     for _, id in ipairs(group.drops or {}) do
         local d = get(id)
-        if d and not dismissed[id] and ctx.matches(d) then out[#out + 1] = d end
+        if d and not dismissed[id] and (not ctx.belongs or ctx.belongs(d)) then
+            if ctx.matches(d) then
+                shown[#shown + 1] = d
+            else
+                hidden[#hidden + 1] = { drop = d, why = ctx.hiddenBy and ctx.hiddenBy(d) or "filter" }
+            end
+        end
     end
-    table.sort(out, ctx.compare)
-    return out
+    table.sort(shown, ctx.compare)
+    return shown, hidden
 end
 
-local function collapsedOf(collapsed, key, first)
+-- One group's header, then its shown drops unless it is collapsed.
+local function appendGroup(out, g, drops, hidden, filter, c)
+    out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
+        hidden = hidden, filter = filter, collapsed = c }
+    if c then return end
+    for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
+end
+
+local function collapsedOf(collapsed, key, first, allOpen)
     local v = collapsed[key]
-    if v == nil then return not first end
+    if v == nil then return not (first or allOpen) end
     return v
 end
 
---- The table's entries, top to bottom: { kind = "header", group, count, collapsed } and
---- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest), a group with no
---- drop passing the filter left out, a collapsed group's drops left out.
+--- The table's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
+--- collapsed }
+--- and { kind = "drop", drop }. `count` is the drops shown, `total` every drop of the group the tab
+--- lists, `hidden` the ones the filter hid ({ drop, why }), so the header can say `2 drops · 1 shown`
+--- (feedback-2 spec §0). Groups newest first (oldest first under Sort: Oldest); a group with no
+--- drop passing the filter keeps an open header with count 0 unless WC.KeepsHeader says no, and
+--- does not take the first group's open default; a collapsed group's drops left out. With
+--- `state.allOpen` every group never toggled is open (My drops, modules/WindowMine.lua).
 --- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
 --- @param get function id -> drop (NS.LootFeed.Get)
---- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort } }
---- @param state table|nil { collapsed, dismissed } (NS.State.windowGroup)
+--- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy }
+--- @param state table|nil { collapsed, dismissed, allOpen } (NS.State.windowGroup)
 --- @return table
 function WG.Entries(groups, get, ctx, state)
     state = state or {}
@@ -240,14 +266,13 @@ function WG.Entries(groups, get, ctx, state)
     local out, first = {}, true
     for i = from, to, step do
         local g = groups[i]
-        local drops = visibleDrops(g, get, ctx, dismissed)
+        local drops, hidden = visibleDrops(g, get, ctx, dismissed)
         if #drops > 0 then
-            local c = collapsedOf(collapsed, g.key, first)
+            local c = collapsedOf(collapsed, g.key, first, state.allOpen)
             first = false
-            out[#out + 1] = { kind = "header", group = g, count = #drops, collapsed = c }
-            if not c then
-                for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
-            end
+            appendGroup(out, g, drops, hidden, ctx.filter, c)
+        elseif WC.KeepsHeader(0, hidden) then
+            appendGroup(out, g, drops, hidden, ctx.filter, false)
         end
     end
     return out
@@ -258,29 +283,6 @@ end
 local function setTone(fs, tone)
     local c = C.TONE[tone] or C.TONE.plain
     fs:SetTextColor(c.r, c.g, c.b)
-end
-
--- A font string's size, keeping its face and flags (the template's, or the monospace face's).
-local function setFontSize(fs, size)
-    local file, _, flags = fs:GetFont()
-    if type(file) == "string" then fs:SetFont(file, size, flags or "") end
-end
-
--- The row's text cells at `size` points, once per change.
-local function applyFontSize(row, size)
-    if row.fontSize == size then return end
-    row.fontSize = size
-    for _, f in pairs(row.cells) do
-        if f.text then setFontSize(f.text, size) end
-        if f.glyph then f.glyph:SetFont(C.FONT_MONO, size, "") end
-    end
-end
-
---- The drop rows' metrics, from the Window page's Layout rows through the schema seam:
---- { height = `window.rowHeight`, fontSize = `window.fontSize` }.
---- @return table
-function WG.RowMetrics()
-    return { height = NS.Setting("window.rowHeight"), fontSize = NS.Setting("window.fontSize") }
 end
 
 local function tipOf(frame)
@@ -358,13 +360,123 @@ function WG.SetItemTooltip(tip, b)
     return "link"
 end
 
+-- BESIDE THE WINDOW (feedback-2 spec §2, FB2-4). An item tooltip never covers the table: it opens
+-- beside the frame the hovered item sits in, top-aligned with the hovered row, on its right, or on
+-- its left when the screen has no room on the right (Loot History's row tooltip, ANCHOR_RIGHT on a
+-- row as wide as its window). That frame is the nearest ancestor marked `tipHost` (the Offer
+-- panel, docked beside the window), else the outermost one under UIParent (the window, the toast).
+-- With the Offer panel docked beside the window (its `dock` right or left, shown), the two count as
+-- one span (M10 review, FB2-10): the tooltip goes beside the pair, never over the panel from a window
+-- row nor over the window from a panel row. The window names its panel as `tipDocked`.
+
+local function num(v) return type(v) == "number" and v or nil end
+
+-- A geometry read, a number or nil (an unplaced frame answers nil).
+local function geom(frame, method)
+    local fn = frame and frame[method]
+    return fn and num(fn(frame)) or nil
+end
+
+local function scaleOf(frame) return geom(frame, "GetEffectiveScale") or 1 end
+
+local function parentOf(frame)
+    local p = frame.GetParent and frame:GetParent()
+    if type(p) ~= "table" or p == frame or p == UIParent then return nil end
+    return p
+end
+
+local function tipHostOf(owner)
+    local f = owner
+    for _ = 1, 32 do
+        if f.tipHost then return f end
+        local p = parentOf(f)
+        if not p then return f end
+        f = p
+    end
+    return f
+end
+
+-- A frame's left and right edges in screen pixels, or nil when it is unplaced.
+local function edgesPx(f)
+    local l, r, s = geom(f, "GetLeft"), geom(f, "GetRight"), scaleOf(f)
+    if not (l and r and geom(f, "GetTop")) then return nil end
+    return l * s, r * s
+end
+
+local function dockedBeside(panel)
+    return panel.dock == "right" or panel.dock == "left"
+end
+
+-- The frame docked beside `host` that the tooltip must not cover: the window's shown, docked panel,
+-- or, for a docked panel, the window it hangs off.
+local function companionOf(host)
+    local panel = host.tipDocked
+    if panel then
+        local shown = panel.IsShown and panel:IsShown()
+        return (shown and dockedBeside(panel)) and panel or nil
+    end
+    if host.tipHost and dockedBeside(host) then return parentOf(host) end
+    return nil
+end
+
+-- The span the tooltip goes beside, in screen pixels, and the frame at each end of it.
+local function spanOf(host)
+    local l, r = edgesPx(host)
+    local outL, outR = host, host
+    local c = companionOf(host)
+    local cl, cr
+    if c then cl, cr = edgesPx(c) end
+    if cl and cl < l then l, outL = cl, c end
+    if cr and cr > r then r, outR = cr, c end
+    return l, r, outL, outR
+end
+
+-- Which side of the span the tooltip goes, in screen pixels: right when it fits, else left.
+local function sideOf(l, r, tip, gap)
+    local ts = scaleOf(tip)
+    local screen = geom(UIParent, "GetWidth")
+    local side = NS.MineCells.DockSide(l, r, (geom(tip, "GetWidth") or 0) * ts,
+        screen and screen * scaleOf(UIParent), gap * ts)
+    return side == "right" and "right" or "left"
+end
+
+--- Place a shown item tooltip beside the frame `owner` sits in (the window, a docked panel, and the
+--- one docked beside it), top-aligned with `owner`: on the right, or the left when the screen has no
+--- room on the right.
+--- Measured after Show (the tooltip's width), at each frame's effective scale. Answers `right` or
+--- `left`, or nil when the geometry is unknown (nothing is placed; the caller anchors it).
+--- @param tip table a GameTooltip, shown
+--- @param owner table the hovered frame
+--- @return string|nil
+function WG.PlaceItemTooltip(tip, owner)
+    local host = tipHostOf(owner)
+    local rowTop = geom(owner, "GetTop")
+    if not (rowTop and edgesPx(host)) then return nil end
+    local gap = K.TIP_GAP
+    local l, r, outL, outR = spanOf(host)
+    local side = sideOf(l, r, tip, gap)
+    local anchor = side == "right" and outR or outL
+    local dy = (rowTop * scaleOf(owner) - geom(anchor, "GetTop") * scaleOf(anchor)) / scaleOf(tip)
+    tip:ClearAllPoints()
+    if side == "right" then
+        tip:SetPoint("TOPLEFT", anchor, "TOPRIGHT", gap, dy)
+    else
+        tip:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -gap, dy)
+    end
+    return side
+end
+
 -- `owner` is the hovered frame: the button, or a name beside it (WG.ItemHover).
 local function itemEnter(self, owner)
     if not (self.link and GameTooltip) then return end
-    GameTooltip:SetOwner(owner or self, "ANCHOR_RIGHT")
+    owner = owner or self
+    GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     WG.SetItemTooltip(GameTooltip, self)
     GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], C.IDLE.r, C.IDLE.g, C.IDLE.b)
     GameTooltip:Show()
+    if WG.PlaceItemTooltip(GameTooltip, owner) then return end
+    GameTooltip:ClearAllPoints()   -- unknown geometry: on the hovered frame's right, as before
+    GameTooltip:SetPoint("BOTTOMLEFT", owner, "TOPRIGHT", 0, 0)
 end
 
 --- An item button's click: shift links the item in chat, ctrl tries it on (design spec §11.1); a
@@ -484,7 +596,7 @@ local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = a
 
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
-    row:SetHeight(K.ROW_H)
+    row:SetHeight(NS.WindowRows.ROW_H)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)
@@ -638,7 +750,8 @@ local function paintRow(row, drop, layout, compact, now, metrics)
     row.expander:SetShown(open)
     row:SetHeight(metrics.height)
     placeCells(row, layout, metrics.height)
-    applyFontSize(row, metrics.fontSize)
+    NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
+    NS.WindowRows.ApplyRowIcon(row, metrics.icon)
     local cells = row.cells
     paintItem(cells.item, drop, compact)
     cells.item.button.dropId = drop.id
@@ -655,7 +768,7 @@ end
 local function paintHeader(h, e, now)
     local g = e.group
     local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
-    local hd = WC.Header(g, e.count, now, sit, e.collapsed)
+    local hd = WC.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter)
     h.groupKey, h.collapsed = g.key, e.collapsed
     h.text:SetText(hd.text)
     h.tipLines = hd.tip
@@ -771,7 +884,7 @@ local function drawCard(pane, drop, y, width, now)
 end
 
 local function drawEntries(pane, entries, layout, compact, width)
-    local now, y, metrics = GetTime(), 0, WG.RowMetrics()
+    local now, y, metrics = GetTime(), 0, NS.WindowRows.Metrics()
     local Pool = NS.Pool
     local expanded = view().expanded
     pane.card:Hide()

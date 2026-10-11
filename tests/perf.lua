@@ -24,7 +24,11 @@
 -- its row predicate's closures, the Group drops table's empty state), coalesced to at most one pass
 -- a frame. Its ceiling is that work; the zero-overhead evidence is PAIRED below: capture off may
 -- allocate nothing over capture on, and capture on no more than one note's PAIR_SLACK over off.
-local BYTE_CEILING = { refreshCaptureOff = 14000, refreshCaptureOn = 14000, showDecisionStoodDown = 0,
+-- Raised to 14500 on 2026-10-11 (DW-A6, M10): the pass measured 17226 bytes once the filter bar
+-- rebuilt its View and Character rows and selections on every sync; those are now built once and
+-- written only on change, which leaves 14168, the M10 work itself (a group header's hidden-drop
+-- predicates, DW-A0, and the Character dropdown's context, DW-A4) over the M9 figure of 13680.
+local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,
     parseCaptureOff = 700, parseCaptureOn = 700 }
 -- Each bracketed path measured off and on: [off] = on. The bracket with capture off is one upvalue
 -- read and one boolean test, so the off run allocates no more than the on run; the on run adds at

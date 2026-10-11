@@ -129,6 +129,18 @@ function FM.Materialize(feed, rec)
     return g
 end
 
+--- The group a drop of `spec` would join, when it already exists (the area's: the latest group,
+--- while it is that area's), else nil. Nothing is made.
+--- @param feed table
+--- @param spec table groupSpec's { key, label, kind }
+--- @return table|nil
+function FM.Existing(feed, spec)
+    if spec.kind ~= "area" then return feed.groupByKey[spec.key] end
+    local last = feed.groups[#feed.groups]
+    if last and last.kind == "area" and last.label == spec.label then return last end
+    return nil
+end
+
 --- Remove feed.drops[at] and its place in its group; the group goes with its last drop.
 --- @param feed table
 --- @param at number

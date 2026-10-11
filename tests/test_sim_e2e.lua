@@ -152,14 +152,16 @@ local function assertSoloWorld(NS)
     assertEqual(NS.Situations.Current(), "solo")
 end
 
--- The window's filters are the defaults: View Interesting, Content This instance, Quality Rare+.
+-- The window's filters are the defaults: View All, Character Current, Content This instance,
+-- Quality Rare+.
 local function assertDefaultFilters(NS)
     local FB = NS.WindowFilterBar
-    for _, tab in ipairs({ "group", "mine" }) do
+    for _, tab in ipairs({ "group", "mine", "history" }) do
         local st = FB.State(tab)
-        assertEqual(st.view, "interesting"); assertEqual(st.content, "instance")
-        assertFalse(st.likelyOnly); assertFalse(st.usableOnly); assertFalse(st.upgradeOnly)
+        assertEqual(next(st.view), nil, "View: All"); assertEqual(st.content, "instance")
         assertEqual(st.search, "")
+        assertTrue(st.char["Testchar-Testrealm"] == true and next(st.char, next(st.char)) == nil,
+            "Character: Current (feedback-2 spec §4)")
     end
     local mode, threshold = FB.QualityReadout()
     assertEqual(mode, "fixed"); assertEqual(threshold, 3)
@@ -198,6 +200,52 @@ local function assertWindow(NS, label)
     assertTrue(mine ~= nil and #mine.entries > 0, label .. ": My drops shows your drops")
 end
 
+-- Every group the run made names the whole simulated group, you first, and its History group (the
+-- simulation's own log) keeps the same roster (feedback-2 spec §3).
+local function assertRosters(NS, label)
+    local n = NS.Roster.Count()
+    assertTrue(n > 1, label .. ": the simulated group is drawn")
+    for _, g in ipairs(NS.LootFeed.Groups("live")) do
+        assertEqual(#(g.roster or {}), n, label .. ": group " .. g.key .. " names the whole group")
+        assertTrue(g.roster[1].me == true, label .. ": you first in " .. g.key)
+    end
+    local kept = NS.History.Log().groups
+    assertTrue(#kept > 0, label .. ": the run is in the simulation's history")
+    for _, g in ipairs(kept) do
+        assertEqual(#(g.roster or {}), n, label .. ": history group " .. g.key .. " keeps the roster")
+    end
+end
+
+-- Every simulated drop, and its entry in the simulation's history, is seen by you, the real player
+-- (the simulator never answers for "player"), so Character: Current shows the run on every tab
+-- (feedback-2 spec §4).
+local function assertRecorder(NS, label)
+    local me = "Testchar-Testrealm"
+    for _, rec in ipairs(NS.LootFeed.Drops("live")) do
+        assertEqual(rec.seenBy, me, label .. ": drop " .. rec.id .. " says who saw it")
+    end
+    for _, g in ipairs(NS.History.Log().groups) do
+        for _, e in ipairs(g.drops) do assertEqual(e.seenBy, me, label .. ": its history entry too") end
+    end
+    NS.Window.SelectTab("history")
+    NS.Window.Refresh()
+    assertTrue(#NS.WindowHistory.Drawn().headers > 0, label .. ": History shows the run under Current")
+end
+
+-- The History footer says how long the run is kept (feedback-2 spec §5), and a shorter window
+-- deletes nothing of a run that has just happened, so it asks nothing.
+local function assertRetention(NS, m, label)
+    NS.Window.SelectTab("history")
+    NS.Window.Refresh()
+    local text = NS.WindowHistory.Drawn().strip.info:GetText()
+    assertTrue(text:find("^%d+ groups, %d+ drops · kept for 30 days$") ~= nil, label .. ": " .. text)
+    local groups, asked = #NS.History.Log().groups, #m.popupsShown
+    assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 7), label)
+    assertEqual(#m.popupsShown, asked, label .. ": nothing to delete, nothing asked")
+    assertEqual(#NS.History.Log().groups, groups, label .. ": the run is kept")
+    assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 30), label)
+end
+
 local function runScenario(sc, ilvl, seed)
     local label = ("%s at %d, seed %d"):format(sc.name, ilvl, seed)
     local NS, m = addon(ilvl)
@@ -215,6 +263,9 @@ local function runScenario(sc, ilvl, seed)
     assertDrops(NS, label)
     assertFooter(NS, sc, label)
     assertWindow(NS, label)
+    assertRosters(NS, label)
+    assertRecorder(NS, label)
+    assertRetention(NS, m, label)
     NS.Sim.Stop("stop")
     assertEqual(NS.Situations.Current(), "solo", label .. ": the real world again")
 end

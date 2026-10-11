@@ -180,10 +180,7 @@ local function dropLines(out)
     if not st then return out:add(TAG, "feed: no drop received yet") end
     out:add(TAG, "feed: drops group=%s mine=%s test=%s groups=%s merged=%s loading=%s", st.group,
         st.mine, st.test, st.groups, st.merged, st.loading)
-    local hidden = {}
-    for reason, n in pairs(st.hidden) do hidden[#hidden + 1] = reason .. "=" .. n end
-    table.sort(hidden)
-    out:joined(TAG, "feed: hidden", hidden)
+    out:joined(TAG, "feed: hidden", NS.FeedCounts.Parts(st.hidden))
     out:add(TAG, "feed: encounter=%s run=%s", st.encounter or "none", st.run or "none")
 end
 
@@ -208,13 +205,14 @@ local function qualityLine(out)
     out:joined(TAG, "feed: quality mode=dynamicSlot thresholds", parts)
 end
 
--- The history (design spec §10): groups and drops kept against the cap, the drops this session
+-- The history (design spec §10, feedback-2 spec §5): the groups and drops kept, the drops against
+-- the safety ceiling, how many days they are kept (0 = never delete), the drops this session
 -- recorded, and the open trade's state. Stored state only.
 local function historyLine(out)
     local H = NS.History
     local st, t = H.Stats(), H.OpenTrade()
-    out:add(TAG, "feed: history groups=%s/%s drops=%s session=%s trade=%s", st.groups, st.cap, st.drops,
-        st.tracked, t and (t.accepted and "accepted" or "open") or "none")
+    out:add(TAG, "feed: history groups=%s drops=%s/%s keep=%sd session=%s trade=%s", st.groups, st.drops,
+        st.ceiling, st.days, st.tracked, t and (t.accepted and "accepted" or "open") or "none")
 end
 
 -- Design spec §13's Feed section. Stored state only, apart from the situation read live.
@@ -243,8 +241,14 @@ local function dropLine(out, rec)
         f.ilvlSource or "?", f.quality, f.qualitySource or "?", rec.isMine == true, matched and "yes" or "no")
 end
 
+-- First what the feed turned away by reason (feedback-2 spec §0: nothing dropped silently), then
+-- the drops themselves.
 local function drops(out)
     local s = NS.State.feed
+    if s then
+        out:joined(TAG, "drops: hidden", NS.FeedCounts.Parts(s.hidden))
+        out:joined(TAG, "drops: refused", NS.FeedCounts.Parts(s.refused))
+    end
     local list = s and s.live.drops or {}
     if #list == 0 then return out:add(TAG, "drops: none") end
     for i = #list, math.max(1, #list - DROP_LINES + 1), -1 do dropLine(out, list[i]) end

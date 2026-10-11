@@ -1,0 +1,11 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-A0	M10	DropWatcher	Two-Yoke regression; refused/hidden counted by reason; header n drops · m shown		M	FEED	fb2 §0
+DW-A1	M10	DropWatcher	View All default; checkboxes become multi-select View values; bullet tooltip; migration	DW-A0	M	FEED	fb2 §1
+DW-A2	M10	DropWatcher	Item tooltips beside the window, all tabs	DW-A1	S	FEED	fb2 §2
+DW-A3	M10	DropWatcher	Group headers name the party, class-colored; History keeps roster	DW-A2	M	FEED	fb2 §3
+DW-A4	M10	DropWatcher	Character dropdown (All, Current, each); recorder on drops and History	DW-A3	M	FEED	fb2 §4
+DW-A5	M10	DropWatcher	History kept by days like Loot History; maxGroups retired	DW-A4	M	HIST	fb2 §5
+DW-A6	M10	DropWatcher	Docs sync + automated-test bundle	DW-A5	S		fb2 §6
+DW-A7	M10	DropWatcher	Sim step delay 2s default + Simulation step delay setting	DW-A6	S	SIM	fb2 §8
+DW-A8	M10	DropWatcher	Table font and row height like Loot History, all tabs	DW-A7	S	FEED	fb2 §8
+DW-A9	M10	DropWatcher	Review leftovers: My drops roster headers, stale cap docs, prune when enabled later, tooltip vs Offer panel, stale retention popup	DW-A8	S	FEED	fb2 §8

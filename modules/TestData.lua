@@ -26,7 +26,10 @@ local _, NS = ...
 -- two levels. Every player name is invented; nothing names a real player.
 --
 -- THE HISTORY (FB-10). History(nowEpoch, you, src) answers a session-only log of two groups that
--- between them show every outcome (seen, asked, offered, expired, declined, received, traded away).
+-- between them show every outcome (seen, asked, offered, expired, declined, received, traded away),
+-- seen by you, and a third seen by an invented alt on your realm (ALT), so the Character dropdown
+-- (feedback-2 spec §4) lists two characters and Current hides the alt's group. The alt's group is
+-- ten days old, so a Keep history for of 7 days (feedback-2 spec §5) asks to delete it.
 -- modules/TestMode.lua holds it while test mode is on; it is never written to the account's history.
 
 NS.TestData = NS.TestData or {}
@@ -277,6 +280,26 @@ end
 local BOSS = { key = "test:boss", label = L["Placeholder boss"], kind = "encounter" }
 local RUN  = { key = "test:run", label = L["Placeholder key run"], kind = "run" }
 
+-- Who was in each sample group (feedback-2 spec §3): you first, then these members. The boss is a
+-- raid's, longer than a header names, so its header ends `+n`.
+local RUN_PARTY = { "butterz", "kaelith", "littlewolf", "seta" }
+local RAID = { "seta", "littlewolf", "uniquerogue", "butterz", "kaelith", "mistveil", "dawnfeather" }
+
+local function roster(you, keys)
+    local GR = NS.GroupRoster
+    local out = { GR.Entry({ name = you.name, classFile = you.classFile, isSelf = true }) }
+    for _, k in ipairs(keys) do out[#out + 1] = GR.Entry(MEMBERS[k]) end
+    return out
+end
+
+-- `group` with its roster, a fresh table each call (the samples' are shared).
+local function withRoster(group, you, keys)
+    local g = {}
+    for k, v in pairs(group) do g[k] = v end
+    g.roster = roster(you, keys)
+    return g
+end
+
 -- Each row of `rows` made by `make`, placed in `group` at `situation` (`ago` unless its own).
 local function place(out, rows, make, group, situation, ago)
     for _, row in ipairs(rows) do
@@ -298,20 +321,26 @@ function TD.Placeholders(now, you, src)
     local out = {}
     local function theirs(row) return other(src, now, row) end
     local function yours(row) return mine(src, now, you, row) end
-    place(out, YOURS_IN_RUN, yours, RUN, "mythicPlus")
-    place(out, OTHERS_IN_RUN, theirs, RUN, "mythicPlus", 3600)
-    place(out, OTHERS_AT_BOSS, theirs, BOSS, "raid", 120)
-    place(out, YOURS_AT_BOSS, yours, BOSS, "raid")
+    local run, boss = withRoster(RUN, you, RUN_PARTY), withRoster(BOSS, you, RAID)
+    place(out, YOURS_IN_RUN, yours, run, "mythicPlus")
+    place(out, OTHERS_IN_RUN, theirs, run, "mythicPlus", 3600)
+    place(out, OTHERS_AT_BOSS, theirs, boss, "raid", 120)
+    place(out, YOURS_AT_BOSS, yours, boss, "raid")
     return out
 end
 
 -- ── the history (pure) ──────────────────────────────────────────────────────────────────────
 
--- Two groups, every outcome between them: the looter (nil: you), the slot, Me and Them, the trade
--- { state, reasonKey }, and the outcome (`before` under a declined one).
+-- The alt that saw the third sample group: an invented character on your realm.
+local ALT = { name = "Emberwick", classFile = "WARLOCK" }
+TD.ALT = ALT
+
+-- Two groups, every outcome between them, then the alt's: the looter (nil: whoever saw it), the
+-- slot, Me and Them, the trade { state, reasonKey }, and the outcome (`before` under a declined
+-- one). `alt` marks the group the alt saw.
 local HISTORY = {
     { group = { key = "test:history:boss", label = L["Placeholder boss"], kind = "encounter", situation = "raid" },
-      ago = 7200, drops = {
+      party = RAID, ago = 7200, drops = {
         { who = "seta", slot = "INVTYPE_HEAD", me = { "upgrade", 19 }, them = { "downgrade", -13 },
           trade = { "likely", "notUpgrade" }, outcome = "asked" },
         { who = "butterz", slot = "INVTYPE_CLOAK", me = { "upgrade", 7 }, them = { "sidegrade", 0 },
@@ -322,10 +351,16 @@ local HISTORY = {
           trade = { "likely", "notUpgrade" }, outcome = "declined", before = "seen" },
     } },
     { group = { key = "test:history:run", label = L["Placeholder key run"], kind = "run", situation = "mythicPlus" },
-      ago = 93600, drops = {
+      party = RUN_PARTY, ago = 93600, drops = {
         { slot = "INVTYPE_TRINKET", me = { "downgrade", -6 }, trade = { "yes", "timer" }, outcome = "offered" },
         { slot = "INVTYPE_FINGER", me = { "downgrade", -3 }, trade = { "yes", "groupLoot" }, outcome = "tradedAway" },
         { slot = "INVTYPE_FEET", me = { "downgrade", -20 }, trade = { "no", "expired" }, outcome = "expired" },
+    } },
+    { group = { key = "test:history:alt", label = L["Placeholder boss (alt)"], kind = "encounter", situation = "raid" },
+      party = RUN_PARTY, ago = 864000, alt = true, drops = {
+        { who = "seta", slot = "INVTYPE_HAND", me = { "upgrade", 4 }, them = { "downgrade", -6 },
+          trade = { "likely", "notUpgrade" }, outcome = "seen" },
+        { slot = "INVTYPE_WAIST", me = { "downgrade", -9 }, trade = { "yes", "timer" }, outcome = "offered" },
     } },
 }
 
@@ -334,33 +369,43 @@ local function snap(spec)
     return { verdict = spec[1], ilvlDelta = spec[2] }
 end
 
-local function historyEntry(src, you, row, at)
+-- `seer` is whoever saw the group: you, or the alt (`seenBy`, its recorder key, and its class).
+local function historyEntry(src, seer, row, at)
     local item = src:Drop(row.slot)
     if not item then return nil end
     local f, m = item.facts, row.who and MEMBERS[row.who]
     return {
         itemLink = item.link, itemID = item.itemID or NS.Item.ItemIDFromLink(item.link),
-        looter = m and m.name or you.name, class = m and m.classFile or you.classFile, isMine = m == nil or nil,
+        looter = m and m.name or seer.name, class = m and m.classFile or seer.classFile, isMine = m == nil or nil,
         ilvl = f.ilvl, equipLoc = f.equipLoc, quality = f.quality, me = snap(row.me), them = snap(row.them),
         trade = { state = row.trade[1], reasonKey = row.trade[2], basis = "rule", args = {} },
         outcome = row.outcome, before = row.before, at = at, test = true,
+        seenBy = seer.seenBy, seenByClass = seer.classFile,
     }
 end
 
+-- The alt as a seer: on your realm (the one in your recorder key), else realm-less.
+local function altSeer(you)
+    local realm = type(you.seenBy) == "string" and you.seenBy:match("%-(.+)$") or nil
+    return { name = ALT.name, classFile = ALT.classFile, isSelf = true,
+        seenBy = NS.CharFilter.Key(ALT.name, realm) }
+end
+
 --- The History tab's session-only sample log (FB-10): { v = 1, groups }, two groups (a boss two
---- hours ago, a key run a day ago) covering every outcome, over real items. Pure.
+--- hours ago, a key run a day ago) covering every outcome, over real items, and the alt's boss ten
+--- days ago. Pure.
 --- @param nowEpoch number time()
---- @param you table your looter { name, classFile }
+--- @param you table your looter { name, classFile, seenBy (your recorder key) }
 --- @param src table TD.Source's
 --- @return table log
 function TD.History(nowEpoch, you, src)
     local log = { v = 1, groups = {} }
     for _, g in ipairs(HISTORY) do
-        local at = nowEpoch - g.ago
+        local at, seer = nowEpoch - g.ago, g.alt and altSeer(you) or you
         local group = { key = g.group.key, label = g.group.label, kind = g.group.kind,
-            situation = g.group.situation, at = at, drops = {} }
+            situation = g.group.situation, at = at, roster = roster(seer, g.party), drops = {} }
         for i, row in ipairs(g.drops) do
-            group.drops[#group.drops + 1] = historyEntry(src, you, row, at + i * 30)
+            group.drops[#group.drops + 1] = historyEntry(src, seer, row, at + i * 30)
         end
         if #group.drops > 0 then log.groups[#log.groups + 1] = group end
     end

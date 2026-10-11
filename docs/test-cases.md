@@ -63,7 +63,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (7)
+### test_database.lua (10)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -71,7 +71,10 @@ Total.
 - database: a step that raises leaves the stamp at the last completed step
 - database: step 2 reaches a stored profile that is not the active one
 - database: step 2 passes a fresh default profile through unchanged
+- database: step 3 folds the View and the three checkboxes into the View set, per profile
+- database: step 3 passes a profile already in the new shape through unchanged
 - database: the profile defaults carry every Master controls value, and no debug flag
+- database: step 4 retires the History's group cap and prunes nothing
 
 ### test_schema.lua (11)
 
@@ -98,7 +101,7 @@ Total.
 - rows: the feed, the situations and the messaging edge read the rows
 - rows: the filter bar seeds a fresh tab from the rows
 - rows: the Quality control and the compact preset write through the seam (handoff from M3)
-- rows: the history cap is account-wide, and a profile reset leaves it
+- rows: Keep history for is account-wide, and a profile reset leaves it
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 
@@ -179,7 +182,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (49)
+### test_window_shell.lua (50)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -196,10 +199,11 @@ Total.
 - shell: My drops counts your tradeable drops in its label
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
 - shell: a tab with no body says what it will hold, never a blank pane
-- shell: the filter bar holds View, Quality, Content, the three checkboxes and the search box
-- shell: Usable by me and Upgrade for me follow Likely tradeable only, each in the flat skin
+- shell: the filter bar holds View, Quality, Content and the search box, and no checkbox
+- shell: the View is multi-select: its values combine, the label counts them, and All clears them
+- shell: each tab grays the View values it does not use, and a grayed value does not toggle
+- shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use
 - shell: the search box is Loot History's flat, square box
-- shell: the checkbox is a flat square box with the dropdowns' skin and a gold tick
 - shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
 - shell: each tab keeps its own filter state, and grays what it does not use
 - shell: a filter change redraws the active tab with the new state
@@ -231,7 +235,7 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (35)
+### test_window_group.lua (46)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -248,8 +252,12 @@ Total.
 - table: the default columns, the compact preset's, and a column the profile turns off
 - table: the Item column takes the slack, never less than its minimum
 - table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order
-- table: groups newest first, the first open and older ones collapsed, empty ones left out
+- table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
+- cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder
 - table: built at the minimum width, the shed columns hide and Ask stays inside the row
+- rows: the pure metrics read Default as the template's size and keep the row height in range
+- rows: a stored row height and font size stay as the player set them
+- rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0
 - table: the Window page's row height and font size lay out and size the drop rows
 - table: built headless, one header and one row per drop, each column painted
 - table: the verdicts wear their tones, the looter their class color, the item its quality
@@ -257,6 +265,13 @@ Total.
 - table: rows come from the pool: a repaint reuses them, fewer drops park the rest
 - table: a header click collapses its group, and a second expands it
 - table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
+- item tooltip: it opens on the window's right, top-aligned with the hovered row
+- item tooltip: it opens on the window's left when the screen has no room on the right
+- item tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
+- item tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
+- item tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
+- item tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
+- item tooltip: a row's item button opens the game's tooltip beside the window, else on its own right
 - table: Their eq shows the looter's worn item from their inspect read
 - table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
@@ -292,7 +307,7 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_window_mine.lua (32)
+### test_window_mine.lua (35)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -308,10 +323,13 @@ Total.
 - mine cells: the Offer panel docks right, else left, else floats
 - mine cells: the panel's header reads your change, the item level and the trade window
 - mine: the entries are your own drops that pass the filter and were not hidden, in the tab's order
+- mine: rows sit under their run's or encounter's header, newest group first, every group open
 - mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps Actions inside it
 - mine tab: built headless, one row per drop of yours, each column painted
+- mine tab: a row is the row height plus its bar's room, in the Font size row's size
 - mine tab: every shown cell has a reason tooltip; nothing is blank
 - mine tab: rows come from the pool and a repaint reuses them
+- mine tab: the rows sit under a header naming the party; a click collapses the group
 - mine tab: TradeTimerTick moves the countdown while the tab shows
 - mine tab: Hide takes a dead row off the tab for the session
 - mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
@@ -327,8 +345,9 @@ Total.
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
 
-### test_test_mode.lua (29)
+### test_test_mode.lua (30)
 
+- test mode data: each sample group names who was in it, you first; the boss is a raid's (fb2 §3)
 - test mode data: the other members' drops cover every Me and Them verdict (board 03)
 - test mode data: every trade estimate, inspect state and ask state is there
 - test mode data: your own drops cover every countdown and every candidate pill (board 04)
@@ -336,7 +355,7 @@ Total.
 - test mode data: worn items are other pool items of the slot, nearest the level the change implies
 - test mode data: the trade reason's two levels are the drop's and the looter's worn item's
 - test mode data: an empty pool gives no sample, and a pool short of a slot borrows a real item
-- test mode data: the History sample has two groups and every outcome, oldest first
+- test mode data: the History sample has your two groups, every outcome, and an alt's, oldest first
 - feed: AddTest puts a sample in the test feed as given, never in the live one
 - feed: AddTest refuses a spec with no item, no looter or no group, and while stood down
 - test mode: on fills the test feed from the item pool, off empties it; the live feed is never touched
@@ -843,6 +862,56 @@ Total.
 - secrets: a secret link, name or encounter id is never used
 - stand-down: timers and pending loads are dropped, the drops kept
 
+### test_feed_counts.lua (10)
+
+- two yokes: both Yokes are separate drops with the right looters, the accented name resolved
+- two yokes: the reagent and the altar are hidden by the gear-only rule and counted, not lost
+- two yokes: with gear-only off, the common reagent is hidden by the quality rule
+- two yokes: each hidden drop is logged with its reason under the FEED tag
+- refused: every receipt the feed turns away is counted by reason and logged under FEED
+- refused: a C_LootHistory drop already taken is counted as seen
+- diagnostics: the drops section reports the hidden and the refused counts by reason
+- header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`
+- header: your own drop, listed in My drops, is not counted as hidden in Group drops
+- header: History names its hidden drops too, and a long list is cut with a count
+
+### test_group_roster.lua (13)
+
+- roster entry: the short name, the realm only when it is not yours, the class, you marked
+- roster merge: the snapshot only grows, you first, the same character never twice
+- roster merge and copy: the entries are copied, never shared
+- roster names: the first few, class-colored, then +n; none for no roster
+- roster tooltip: everyone, with the realm when it is not yours, class-colored
+- feed roster: the group takes everyone in it when its first drop makes it, you first
+- feed roster: someone who joins mid-run is added on the roster event, and to the History group
+- feed roster: a joiner is also taken by the next drop, with no roster event between
+- feed roster: a roster event with no group open yet changes nothing and raises nothing
+- history roster: Record copies the group's roster in and merges it with each entry
+- group header: the party's names after the count, class-colored; the tooltip lists everyone
+- group header: a raid's header names the first five and +n; its tooltip names all
+- history header: a kept roster is named; an older group with none names nobody
+
+### test_char_filter.lua (18)
+
+- char filter: a recorder key is Name-Realm; a name that carries its realm is kept
+- char filter: the class icon is the classicon atlas as inline markup, nothing with no class
+- char filter: All passes everything; a recorder passes when chosen; none passes only All
+- char filter: Canonical swaps the sentinel for your key once it is known, in a fresh set
+- char filter: the label reads All, Current, the one character, or n selected
+- char filter: the characters are every recorder in the log once, you always, sorted by name
+- char filter: the menu is All, Current, then each character with its class icon and color
+- recorder: you are Name-Realm and your class, read live and kept
+- recorder: unknown while the client has no realm yet, then known
+- recorder: every drop record and its History entry say who saw it
+- recorder: a test placeholder is stamped too, and a stamp already there is kept
+- filter bar: the Character dropdown sits after Content, multi-select, Current by default
+- filter bar: the session tabs list All, Current and you alone; History every recorder
+- filter bar: History shows your drops under Current, every recorder chosen, and unknown only under All
+- filter bar: a drop the Character filter hides is named in the header's reason
+- filter bar: a Character selection is a set of keys; anything else is refused
+- filter bar: Group drops keeps every drop under any Character choice it offers
+- filter bar: each sync reuses the Character and View rows; HistoryChanged rebuilds History's
+
 ### test_trade_timer.lua (16)
 
 - read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
@@ -923,18 +992,19 @@ Total.
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (28)
+### test_history.lua (29)
 
-- history: Normalize gives the shape in place and keeps the cap
+- history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
-- history: Record groups by key, newest last; the caps drop the oldest first
+- history: Record groups by key, newest last; no group cap, 50 drops a group
+- history: the safety ceiling drops the oldest drops first, and an emptied group goes
 - history: an automatic outcome only moves forward
 - history: Refresh takes the latest verdicts, and an expired trade makes it `expired`
 - history: Refresh's second answer says whether anything it stores changed
 - history: declined is set by hand, and clearing it puts back what it replaced
 - history: a completed trade matches the partner's drop first, then any, one entry per item
 - history: an item you gave marks your own drop traded away, never someone else's
-- history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the cap
+- history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the retention row
 - history edge: DropUpdated refreshes the entry; an expired trade makes it `expired`
 - history edge: a DropUpdated that changes nothing kept sends no HistoryChanged
 - history edge: a sent ask is `asked`, a sent offer or announce `offered`; other states nothing
@@ -943,16 +1013,35 @@ Total.
 - history trade: a close after both accepted with no "Trade complete." completes nothing
 - history trade: an item you gave marks your drop `tradedAway`
 - history trade: a canceled trade completes nothing; the offer is the last one accepted
-- history: lowering the cap row trims the stored log at once
-- history: Clear history asks first, and empties the log only on Yes; the cap stays
+- history: Clear history asks first, and empties the log only on Yes; the retention row stays
 - history: the diagnostics' feed section reports the history and the trade
 - history tab: kept groups newest first, the first open, each row's outcome painted
+- history tab: rows take the Window page's row height and font size
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
 - history tab: a right-click marks a row declined, through the menu when the client has one
 - history tab: with nothing kept it says what it will hold, and Clear history is off
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
+
+### test_history_retention.lua (16)
+
+- retention: the labels, the choices and the footer
+- retention: a group's age is its newest entry's, else its own
+- retention: Count says what a window deletes, and deletes nothing; Prune deletes it
+- retention row: account-wide, on the Window page, the listed windows only
+- retention: a longer window, or one that deletes nothing, is taken at once
+- retention: a shorter window that deletes asks first; Yes prunes
+- retention: No writes the last agreed window back and deletes nothing
+- retention: an unanswered popup (a /reload with it open) leaves nothing to prune at the next login
+- retention: a later change that deletes nothing retires the open popup; its Yes does nothing
+- retention: of two deleting changes, only the latest popup's answer counts
+- retention: headless (no popup), a shorter window prunes at once
+- retention: the login prune runs once, deferred off the login, over the account's log
+- retention: the stand-down takes the pending prune back; the stand-up arms it again
+- retention: enabled later in a session that started disabled, the prune still runs once
+- retention: Never delete keeps every group at login
+- retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
 ### test_toast.lua (24)
 
@@ -1083,7 +1172,7 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
-### test_sim_scenario.lua (16)
+### test_sim_scenario.lua (20)
 
 - sim verbs: Parse reads every verb and its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
@@ -1094,6 +1183,10 @@ Total.
 - sim start: a raid takes its size; a party is always four
 - sim step: the timeline waits for the pool, then plays one step at a time
 - sim run: plays every step a few seconds apart, each with its line, then says it has finished
+- sim step delay: two seconds by default, read from `sim.stepDelay`; a bad value falls back
+- sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5; DelayText drops a whole number's point
+- sim step delay: `/dw set sim.stepDelay` takes a half step, clamps to the range, refuses a quarter step
+- sim step delay: a run waits the set delay, and a change takes effect from the next step
 - sim stop: ends a playing timeline and its timers
 - sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
 - sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating
@@ -1117,7 +1210,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_panel.lua (18)
+### test_sim_panel.lua (19)
 
 - sim panel: a key's preview names every step, with its command, before a run
 - sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states
@@ -1132,6 +1225,7 @@ Total.
 - sim panel: clicking a completed step does nothing, and its tooltip says when it ran
 - sim panel: a typed `/dw sim step` moves the panel too
 - sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on
+- sim panel: Run all's tooltip names the current step delay (feedback-2 spec §8, FB2-8)
 - sim panel: the typed pause, resume and restart answer as the buttons do
 - sim panel: Restart stops the scenario and starts the same one again; Stop ends it
 - sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel
@@ -1243,17 +1337,17 @@ Total.
 | test_harness.lua | 10 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 18 |
-| test_database.lua | 7 |
+| test_database.lua | 10 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 49 |
-| test_window_group.lua | 35 |
+| test_window_shell.lua | 50 |
+| test_window_group.lua | 46 |
 | test_detail_card.lua | 20 |
-| test_window_mine.lua | 32 |
-| test_test_mode.lua | 29 |
+| test_window_mine.lua | 35 |
+| test_test_mode.lua | 30 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 9 |
 | test_constants.lua | 12 |
@@ -1272,19 +1366,23 @@ Total.
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
 | test_feed.lua | 44 |
+| test_feed_counts.lua | 10 |
+| test_group_roster.lua | 13 |
+| test_char_filter.lua | 18 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 23 |
 | test_transmog.lua | 13 |
-| test_history.lua | 28 |
+| test_history.lua | 29 |
+| test_history_retention.lua | 16 |
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 19 |
 | test_sim_events.lua | 21 |
-| test_sim_scenario.lua | 16 |
+| test_sim_scenario.lua | 20 |
 | test_sim_e2e.lua | 12 |
-| test_sim_panel.lua | 18 |
+| test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1294,4 +1392,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1068** |
+| **Total** | **1150** |

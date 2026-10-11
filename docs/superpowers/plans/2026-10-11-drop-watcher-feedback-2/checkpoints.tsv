@@ -1,0 +1,2 @@
+date	milestone	evidence
+2026-10-11	M10 + M10b COMPLETE (DW-A0..A9), reviewed (6 medium+ fixed, 16 low noted)	DropWatcher 43735ca: 1150 passed, 0 failed, 1 skipped; luacheck 0/0 in 142 files; bundle 20261011-192657 green (max CCN 13)

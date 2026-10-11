@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..18 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83) |
+| FEED-1..25 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Group drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on all three tabs (FEED-24, DW-A8); My drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -32,7 +32,7 @@ passed.
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
-| HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
+| HIST-1..4 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51; Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..10 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91) |
@@ -136,7 +136,8 @@ sidegrade."; untick Protect heirlooms → it reads `▲`. Messages › Sending: 
 press a row's Ask → the Edit message box opens with the ask filled in and nothing is sent until you
 press Send; an Offer panel's Offer and Announce to group open the box with the offer's and the
 announcement's text; Post my tradeables still posts at once. Window › Layout: drag Row height to 32
-and Font size to 15 → the Group drops rows grow and their text with them, at once. Result:
+and Font size to 15 → the rows grow and their text with them, at once, on Group drops, My drops and
+History. Result:
 
 ## Profiles
 
@@ -151,7 +152,7 @@ page (general, feed, comparison, trade, messages, window), the two Comparison ma
 `/dw set feed.quality.fixed 4` → the filter bar reads `Quality: Epic+`; `/dw set feed.quality.mode
 bogus` and `/dw set messages.announceChannel SAY` are refused and change nothing. `/reload` →
 `/dw get feed.quality.fixed` still reads 4. Switch to a new profile → it reads 3; switch back → 4.
-`/dw set global.history.maxGroups 30`, switch profile → still 30 (it is account-wide). On the
+`/dw set global.history.retentionDays 60`, switch profile → still 60 (it is account-wide). On the
 first login on this build, `/dw debug on` → one held `[Migrate] v1 -> v2` line. Result:
 
 ## State
@@ -282,7 +283,7 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), and FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), FEED-20 the multi-select View (DW-A1), FEED-21 item tooltips beside the window (DW-A2), FEED-22 the party named in every group header (DW-A3), FEED-23 the Character dropdown (DW-A4), FEED-24 the tables' font and row height beside Loot History's (DW-A8), and FEED-25 the My drops group headers and the tooltip beside the docked Offer panel (DW-A9). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
@@ -354,11 +355,11 @@ the item wins: record the item and both verdicts. Result:
 Ka0s edge (a hard black line with a gray line inside it), the gold `Ka0s Drop Watcher` title centered
 on the title bar (no logo), a `Scan group` button with a people mark, a minimize mark and the close mark; the `Group
 drops` tab gold with a gold underline, `My drops` and `History` gray; the filter bar reads `View:
-Interesting`, `Quality: Rare+`, `Content: This instance`, unticked `Likely tradeable only`, `Usable
-by me` and `Upgrade for me`, and the `Filter looter or item…` box; the footer reads `Inspect: no group`, `No loot seen yet` (or
+All`, `Quality: Rare+`, `Content: This instance` and the `Filter looter or item…` box (no checkbox:
+DW-A1 made them View values, FEED-20); the footer reads `Inspect: no group`, `No loot seen yet` (or
 `Last loot …`), `Not tracking in Solo · change in settings`, `Pawn: on` or `off`, and `Sort:
 Newest` beside the corner grip. Hover each control → every one shows a tooltip with a reason.
-Click `My drops` → View, Quality and the three checkboxes gray out (their tooltips say the tab
+Click `My drops` → View and Quality gray out (their tooltips say the tab
 does not use them); set Sort to Oldest there, go back to Group drops → Sort reads Newest again.
 Open each dropdown and press Escape → the window and the open menu both close. Drag by the title
 bar and resize from the corner, `/reload` → the same place and size. In a party, `Scan group` →
@@ -386,7 +387,7 @@ the looter's (two for a ring, trinket or weapon) as icons with item levels, or `
 Trade as `Yes`, `Likely`, `Unknown` or `No`, and an `Ask` button or a dash with an `×`. An upgrade
 for you is green in Me; in Them the looter's upgrade is amber and their downgrade green. With View:
 Interesting the rows are your upgrades plus the drops their looter has no use for that read Yes or
-Likely; View: All lists every drop. Your own loot is not listed here (it is on My drops) until
+Likely; View: All (the default since DW-A1) lists every drop. Your own loot is not listed here (it is on My drops) until
 `/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").db.profile.feed = { showOwn = true }`, which
 lists it too; set it back. Resize the window to its narrowest → Slot, Looter, My eq, Their eq and Ilvl go
 in turn, the column labels with them, and the Ask button and the × stay inside the window; on My
@@ -461,9 +462,8 @@ them little room). Result:
 **FEED-17. The filter bar beside Loot History (DW-82).** With the two windows side by side as in
 FEED-16 → Drop Watcher's search box is a flat, square-cornered box, the same dark fill, thin gray
 line and height as Loot History's `Search items…` box, with its gray hint 6px in; click into it →
-its line turns gold, and click away → gray again. `Likely tradeable only` is a small flat square in
-the same skin (no rounded Blizzard checkbox), with a gold tick when on; hovering it lights its line
-gold, and clicking its label toggles it too. The View, Quality and Content dropdowns match Loot
+its line turns gold, and click away → gray again. (The `Likely tradeable only` checkbox this check
+covered is a View value since DW-A1: FEED-20.) The View, Quality and Content dropdowns match Loot
 History's (same flat box, chevron, font and height), 8px apart. Switch to My drops → the controls it
 does not use gray out the same way. Result:
 
@@ -477,15 +477,112 @@ level(s); hover the cell → its tooltip names each item and says `Inspected 2m 
 inspect cache, read …`); an uninspected looter still shows `…`, `range` or `–`. Settings › Window ›
 Columns → untick My eq → the column goes. Narrow the window → My eq goes before Their eq. Tick
 `Usable by me` → the rows reading Can't use or Not wanted in Me go; tick `Upgrade for me` → only
-your ▲ rows stay; untick both. Switch to My drops and History → both checkboxes gray out, each
-tooltip saying the tab does not use the filter. Settings › Feed › Filters → tick Usable by me,
-`/reload` → a fresh Group drops tab starts with it ticked; untick it. Close the window, then let any
+your ▲ rows stay; untick both. (Since DW-A1 these two are View values, not checkboxes: pick them in
+the View dropdown, and FEED-20 covers the grayed tabs and the settings.) Close the window, then let any
 member loot an item the feed shows → the window opens by itself; close it again and the next drop
 opens it again; loot an item yourself → it opens too. Minimize it, let another drop come → it stays
 minimized and its `n new` count rises. Untick General › When to show › Dungeon › Auto-open → drops
 no longer open it; tick it back. Enter combat with the window closed and let an item drop → it opens
 with no Lua error and no "Interface action blocked" message. `/dw sim start key` with the window
 closed → the simulator's first drop opens it. Result:
+
+**FEED-19. Every drop counted: the two-Yoke regression (DW-A0, feedback-2 spec §0).** In a Mythic+
+dungeon with a cross-realm group, `/dw debug on`, View: Interesting. Let two members loot the same
+item, one for whom it is an equal (sidegrade) and one for whom it is a downgrade, while it is a
+downgrade for you (the owner's run: two Yokes of the Charging Bear, `Bùnian-Azralon` and
+`Keghunt-Thrall`) → the debug console has an `[FEED] drop n: ... by Bùnian-Azralon` line for
+each, both looters spelled as in chat; the group header reads `<run> · Mythic+ · <age> · 2 drops ·
+1 shown`; hover it → the tooltip lists `Yoke of the Charging Bear (Bùnian): View: Interesting`.
+Switch View to All → both rows show and the header reads `2 drops`. A boss whose every drop View:
+Interesting hides → its header still shows, `n drops · 0 shown`, with no row under it; Search for
+an item it does not hold → that group leaves the table. A reagent and a non-gear item
+(a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notGear` line each, no
+row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
+`/dw diagnostics` → its `drops` section reads `drops: hidden notGear=2` (plus any others) and
+`drops: refused pushed=1`. Result:
+
+**FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** On a
+character whose profile never changed the View, `/dw show` → the bar reads `View: All` and no
+checkbox is left on it. Open View → its rows are `View: All`, `Interesting`, `Likely tradeable`,
+`Usable by me` and `Upgrade for me`, and the menu stays open as you click. Click `Likely tradeable`
+→ the button reads `Likely tradeable` and only Yes or Likely rows stay; click `Usable by me` too →
+`View: 2 selected`, and a row must pass both; click `Likely tradeable` again → `Usable by me`;
+click `View: All` → every row comes back. Hover View → a bullet line per value (`• All: …`,
+`• Interesting: …`, `• Likely tradeable: …`, `• Usable by me: …`, `• Upgrade for me: …`). Switch to
+History → View stays live, `Likely tradeable` is gray in the menu and does not tick, and its
+tooltip line is gray with `(not on this tab)`; switch to My drops → View grays out. Settings › Feed
+› Filters → four rows, `View: Interesting`, `View: Likely tradeable`, `View: Usable by me`, `View:
+Upgrade for me`, all unticked; Trade › Timers no longer has Likely tradeable only. `/dw get
+feed.view.likely` → `false`; `/dw set feed.view.usable true`, `/reload`, `/dw show` → a fresh
+Group drops tab reads `Usable by me`; `/dw set feed.view.usable false`. On a character that had
+ticked Usable by me or Likely tradeable only in the old settings (or `View: All` saved), the first
+load of this version → the same choices show as View values. Result:
+
+**FEED-21. Item tooltips beside the window (DW-A2, feedback-2 spec §2).** `/dw test`, window in the
+middle of the screen. Hover an item in each place: a Group drops row (icon and name), My eq and Their
+eq, the detail card's icon, name and Replaces rows, a My drops row, the Offer panel's icon and name,
+and a History row → each tooltip opens to the RIGHT of the window, its top level with the hovered
+row, and covers none of the table (the Offer panel's opens to the right of the panel). Drag the
+window to the screen's right edge and hover again → each opens on the LEFT of the window instead.
+Set the UI scale low (or the window's Scale to 0.7) and repeat near the right edge → still beside
+the window, never over it, never off screen. Hover the toast's icon → beside the toast. Result:
+
+**FEED-22. Group headers name the party (DW-A3, feedback-2 spec §3).** In a five-player party, run a
+dungeon or a key until something drops. The Group drops header reads `Den of Nalorakk · Mythic+ · 6m
+ago · 2 drops · You, A, B, C, D`: your name first, every name in its class color (a cross-realm
+member by short name). Hover the header → the tooltip lists `In the group (5):` and everyone, a
+cross-realm member as Name-Realm, in class color. Have someone leave and another join mid-run, then
+let a drop fall (or just wait for the roster change) → the newcomer is added, the leaver stays
+named. Open History → the same group's header names the same party; `/reload` → it still does. A
+History group kept before this version names nobody and still reads correctly. In a raid (or
+`/dw test`, whose Placeholder boss is a raid of eight) → the header names five and `+3`, and the
+tooltip names all eight. `/dw sim start key` then `/dw sim run` → the run's header names you and
+the simulated group, and the simulation's History does too. Result:
+
+**FEED-23. The Character dropdown (DW-A4, feedback-2 spec §4).** Open the window: after Content the
+bar holds `Character: Current`. Open it on Group drops and on My drops → `Character: All`,
+`Character: Current` and your own character alone, its class icon beside the name, in class color.
+Loot something on this character, log on to an alt and loot something there, then open History on
+the alt → `Character: Current` shows the alt's drops only; the menu lists both characters, each with
+its class icon and color. Tick the main as well → the label reads `Character: 2 selected` and both
+characters' groups show. Untick the alt → the label is the main's row and only its drops show. Pick
+Current → exactly the alt again, and the Current row lights gold. Pick All → every group, and a group
+kept before this version (no recorder) shows its rows only now (under Current or a character it
+keeps a header, `n drops · 0 shown`, its tooltip naming `Character: Current`). Hover a group header while the dropdown hides
+some of its drops → the tooltip names them with `Character: Current`. Turn on `/dw test` → History
+lists you and `Emberwick`, and Current hides the alt's `Placeholder boss (alt)` until All. `/dw sim
+start key` then `/dw sim run` → the simulated run shows under Current on every tab. Result:
+
+**FEED-24. The tables' font and row height beside Loot History's (DW-A8, feedback-2 spec §8, FB2-9).**
+The headless `test_window_group` (`rows:`, `table: the Window page's row height`), `test_window_mine`
+(`a row is the row height plus its bar's room`) and `test_history` (`rows take the Window page's row
+height`) cover the same ground. On a profile that never moved Row height or Font size, `/dw test`, then
+open Ka0s Loot History beside the window → the Group drops rows are as tall as Loot History's (18
+pixels), the item icon fits inside the row, and the text is the same small table font at the same size
+(compare research `11-font-vs-loothistory.png`, where Drop Watcher's was larger). My drops → the
+same text size; each row is taller by the room its countdown bar needs, and the countdown and its bar
+do not overlap. History → the same rows as Group drops. Settings › Window › Layout → Row height reads
+18 and Font size reads 0, all the way left (Default). Drag Font size to 15 → the text grows on all
+three tabs, the My drops countdown included (also while it reads `ending soon` in bold), and the My
+drops rows grow with it so an upgrade's verdict never touches its `keep?` line and the countdown never
+runs into its bar (also at Font size 20 with Row height 18); drag it back
+to 0 → the original size returns. `/dw get window.fontSize` → `0 (Default)`. On a profile where you had
+stored another row height or font size before this version, it is unchanged. Result:
+
+**FEED-25. My drops headers and the tooltip beside the Offer panel (DW-A9, feedback-2 spec §8,
+FB2-10).** The headless `test_window_mine` (`rows sit under their run's or encounter's header`, `the
+rows sit under a header naming the party`) and `test_window_group` (`beside the docked Offer panel`,
+`a docked panel's row never opens over the window`) cover the same ground. `/dw sim start key` then
+`/dw sim run` until your own drops fall, or `/dw test` → My drops shows its rows under the same
+headers as Group drops: `Den of Nalorakk · Mythic+ · 6m ago · 2 drops · You, A, B, C, D`, the party
+in class color, every group open. Click a header → its rows fold away and it reads `(collapsed)`,
+while the summary strip still counts their tradeables; click again → they return. Search for one
+item → the header reads `n drops · 1 shown`. Open a row's Offer panel, docked on the window's right,
+then hover a My drops row's item → the tooltip opens to the RIGHT of the panel, never over it; drag
+the window toward the screen's right edge until the panel has no room beside it (or the tooltip
+does not fit) → the tooltip opens on the window's LEFT. Hover an item in the panel → the tooltip
+never covers the window (right of the panel, else left of the window). Close the panel and hover a
+row → the tooltip is beside the window again. Result:
 
 ## Roster
 
@@ -873,10 +970,36 @@ beside `/dump LE_GAME_ERR_TRADE_COMPLETE`) around the accept, and in which order
 All and Content: All, the drops are under their encounter's header (the newest open), each row
 with its Outcome; a header of an older day reads `n days ago`. Right-click a row → a menu with
 `Mark as declined`; choose it → the row reads `Declined`; right-click again → `Clear declined`
-puts the earlier outcome back. Content: This session → only today's drops. Settings › Window ›
-Layout › Groups kept in history to 1 → the tab keeps only the newest group at once. Clear history →
+puts the earlier outcome back. Content: This session → only today's drops. Clear history →
 a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
 reads `History cleared.` Result:
+
+**HIST-3. Keep history for (DW-A5, feedback-2 spec §5).** On the first login on this build, `/dw
+debug on` → one held `[Migrate] v3 -> v4` line, and every kept group is still there; the History
+footer reads `n groups, m drops · kept for 30 days` (no `of 20 groups kept`). Settings › Window ›
+Layout › Keep history for lists 7, 14, 30, 60, 90 and 180 days and Never delete. Pick 90 → taken at
+once, no question. With a group older than 7 days kept (or `/dw test`, whose `Placeholder boss
+(alt)` is ten days old), pick 7 days → a confirmation, `This deletes n groups (m drops) older than 7
+days.`; No → the dropdown reads 90 again, chat says nothing was deleted, and every group stays; pick
+7 again and Yes → the older groups leave the tab at once. Pick 7 days with an older group kept and
+`/reload` while the confirmation is still open → after the login the dropdown reads the window
+agreed before, and no group leaves the tab (an unanswered confirmation deletes nothing). Never delete → the footer reads `kept
+forever`. `/reload` with a group older than the window kept → about five seconds after the login it
+leaves the tab (`/dw debug on` shows `history: login prune`). Log on to an alt → the same window and
+the same groups (account-wide); switch profile → the window does not change. `/dw diagnostics` →
+`feed: history groups=n drops=m/5000 keep=30d`. Result:
+
+**HIST-4. The prune after a disabled start, and a stale confirmation (DW-A9, feedback-2 spec §8,
+FB2-10).** The headless `test_history_retention` (`enabled later in a session that started
+disabled`, `a later change that deletes nothing retires the open popup`, `only the latest popup's
+answer counts`) covers the same ground. With a group older than the window kept, `/dw disable`,
+`/reload`, wait ten seconds, then `/dw enable` → about five seconds later the old group leaves the
+History tab (`/dw debug on` shows `history: login prune`), once only: `/dw disable` and `/dw enable`
+again prunes nothing more. With an older group kept, pick 7 days so the confirmation opens; leave it
+open and pick 90 days (deletes nothing) → the confirmation closes; if it stays on screen, its Yes
+deletes nothing and the dropdown still reads 90. Pick 7 days, then 14 days while the first
+confirmation is open → only the 14-day question counts: Yes deletes what 14 days puts out of reach
+and the dropdown reads 14. Result:
 
 ## Toast
 
@@ -1041,6 +1164,14 @@ position on the Window page → it docks beside the window again. Close the wind
 `/dw sim start raid 30` on a fresh login (the journal still loading) → once the window opens the
 panel moves beside it, not over it. Result:
 
+**SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** The headless `test_sim_scenario`
+and `test_sim_panel` (`sim step delay`) cover the same ground. Settings › General › Simulation →
+`Simulation step delay` reads 2 and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`,
+hover Run all → `one every 2 seconds`; Run all → the steps come about two seconds apart. Set the
+slider to 6 while it plays → the step already waiting keeps its time, and the next ones come about
+six seconds apart; hover Run all → `one every 6 seconds`. `/dw set sim.stepDelay 1.5` → the steps
+speed up from the next one, and `/dw get sim.stepDelay` reads 1.5. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -1093,6 +1224,13 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | FEED-16 | DW-81, the header matched to Loot History | No client pass recorded yet |
 | FEED-17 | DW-82, the filter bar matched to Loot History | No client pass recorded yet |
 | FEED-18 | DW-83, My eq, Their eq, the two new filters, auto-open on every drop | No client pass recorded yet |
+| FEED-19 | DW-A0, the two-Yoke regression, every hidden or refused drop counted by reason, `n drops · m shown` | No client pass recorded yet |
+| FEED-20 | DW-A1, View: All by default, the multi-select View, its tooltip and the migration | No client pass recorded yet |
+| FEED-21 | DW-A2, item tooltips beside the window, right or else left, on every tab | No client pass recorded yet |
+| FEED-22 | DW-A3, the party named in every group header, class-colored, and kept in History | No client pass recorded yet |
+| FEED-23 | DW-A4, the Character dropdown on every tab, History filtered by who saw each drop | No client pass recorded yet |
+| FEED-24 | DW-A8, the tables' font and row height like Loot History's, on all three tabs | No client pass recorded yet |
+| FEED-25 | DW-A9, My drops under the group headers, the tooltip beside the docked Offer panel | No client pass recorded yet |
 | STATE-4 | DW-84, test mode with real items, History test data, no trailing ellipsis | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |
@@ -1102,6 +1240,8 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |
 | SCORE-3 | DW-62, Pawn counts once it is initialized | No client pass recorded yet |
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
+| HIST-3 | DW-A5, Keep history for, its confirmation, the login prune and step 4 | No client pass recorded yet |
+| HIST-4 | DW-A9, the prune after a disabled start, a stale confirmation | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
 | TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |
 | TOAST-3 | DW-62, an empty-slot upgrade toasts and auto-asks | No client pass recorded yet |
@@ -1118,3 +1258,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet |
 | SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet |
 | SIM-10 | DW-91, the simulation step panel | No client pass recorded yet |
+| SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet |

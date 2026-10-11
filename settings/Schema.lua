@@ -56,9 +56,11 @@ local function minimapStore()
     local db = DW.db
     return db and db.global and db.global.minimap
 end
--- The History tab's cap (design spec §10, §12.1) is account-wide: `global.history.maxGroups`.
-local HISTORY_CAP_PATH = "global.history.maxGroups"
-Settings.HISTORY_CAP_PATH = HISTORY_CAP_PATH
+-- How long the History tab keeps its groups (feedback-2 spec §5) is account-wide, beside the data:
+-- `global.history.retentionDays` (modules/HistoryRetention.lua). A profile switch, copy or reset
+-- never changes it.
+local HISTORY_RETENTION_PATH = "global.history.retentionDays"
+Settings.HISTORY_RETENTION_PATH = HISTORY_RETENTION_PATH
 local function historyStore(create)
     local g = DW.db and DW.db.global
     if not g then return nil end
@@ -80,16 +82,16 @@ local GLOBAL = {
         end,
         backing = { "minimap", "hide" },
     },
-    [HISTORY_CAP_PATH] = {
+    [HISTORY_RETENTION_PATH] = {
         get = function()
             local h = historyStore(false)
-            return h and h.maxGroups
+            return h and h.retentionDays
         end,
         set = function(v)
             local h = historyStore(true)
-            if h then h.maxGroups = v end
+            if h then h.retentionDays = v end
         end,
-        backing = { "history", "maxGroups" },
+        backing = { "history", "retentionDays" },
     },
 }
 
@@ -184,14 +186,19 @@ local function countKeys(t)
 end
 
 --- How `/dw list|get|set|reset` render a value: a `map` row as its entry count (its editor is the
---- panel's), every other row through the library's own formatter.
+--- panel's), a row with a `zeroText` names what its 0 means (`window.fontSize`'s `0 (Default)`),
+--- every other row through the library's own formatter.
 --- @param row table
 --- @param v any
 --- @param format function the library's FormatValue
 --- @return string
 function Settings.FormatValue(row, v, format)
-    if type(row) == "table" and row.type == "map" and type(v) == "table" then
+    if type(row) ~= "table" then return format(row, v) end
+    if row.type == "map" and type(v) == "table" then
         return ("{%d}"):format(countKeys(v))
+    end
+    if row.zeroText and v == 0 then
+        return ("%s (%s)"):format(format(row, v), row.zeroText)
     end
     return format(row, v)
 end
@@ -212,7 +219,7 @@ local function defaultsRootFor(profileDefaults)
 end
 
 -- Each global closure row's backing key must resolve in the GLOBAL defaults: the Minimap button
--- row's is LibDBIcon's `hide` (launcher-§3), the history cap's its own key.
+-- row's is LibDBIcon's `hide` (launcher-§3), Keep history for's its own key.
 local function globalBackingMissing(defaults)
     local missing = 0
     for path, spec in pairs(GLOBAL) do

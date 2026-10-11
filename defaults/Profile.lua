@@ -4,7 +4,7 @@ local _, NS = ...
 -- Two scopes, each one AceDB defaults table (settings/Schema.lua's Settings.BuildDefaults assembles
 -- them with the schema rows' own defaults, which reference these values):
 --   profile  every setting of design spec §12.1 and the window's geometry;
---   global   the schema stamp, LibDBIcon's table and the history cap.
+--   global   the schema stamp, LibDBIcon's table and the History's Keep history for.
 --
 -- The Master controls rows are composed by LibKa0s-Options-1.0, so their values live here too: with
 -- the library absent the schema has no `enabled` row, and a schema-only defaults tree would hand
@@ -42,7 +42,9 @@ NS.C = {
 
         -- The feed's gates and the filter bar's seeds (design spec §6.2, §6.3, §11.1).
         feed = {
-            view    = "interesting",   -- the Group drops tab's View: interesting | all
+            -- The View a fresh filter bar tab opens on: a set, every value off is All (feedback-2
+            -- spec §1). Each value is a `feed.view.<value>` row; they combine as AND.
+            view    = { interesting = false, likely = false, usable = false, upgrade = false },
             content = "instance",      -- instance | session | all
             sort    = "newest",        -- newest | oldest | ilvl | gain
             quality = {
@@ -57,8 +59,6 @@ NS.C = {
             minIlvl         = 0,         -- the absolute floor
             relativeIlvl    = 10,        -- how far below your average equipped level a drop may be
             showOwn         = false,     -- your own loot listed in Group drops too
-            usableOnly      = false,     -- the filter bar's Usable by me, as a fresh tab's seed
-            upgradeOnly     = false,     -- the filter bar's Upgrade for me, as a fresh tab's seed
             clearOnBossKill = false,     -- the feed's session drops cleared at each boss kill
         },
 
@@ -83,7 +83,6 @@ NS.C = {
                 pvp = "legacy", openWorldGroup = "personal", solo = "personal",
             },
             warnAt     = 600,     -- seconds left when your own item's trade timer warns; 0 is off
-            likelyOnly = false,   -- the filter bar's Likely tradeable only, as a fresh tab's seed
         },
 
         -- Messaging (design spec §9).
@@ -114,8 +113,11 @@ NS.C = {
                 trade = true, actions = true,
             },
             compact   = false,   -- the Group drops table's compact preset
-            rowHeight = 24,      -- one drop row, in pixels
-            fontSize  = 12,      -- the table's text
+            -- Like Ka0s Loot History's table (feedback-2 spec §8, FB2-9): 18-pixel rows, and the
+            -- text at its template's own size (0 is Default). All three tabs read both; a My drops
+            -- row adds the room its countdown bar needs. A value the player stored stays as it is.
+            rowHeight = 18,      -- one drop row, in pixels
+            fontSize  = 0,       -- the tables' text: 0 is the template's own size, else 8 to 20
         },
 
         -- The upgrade toast (design spec §11.5). Its `point` is geometry, like the window's.
@@ -126,14 +128,20 @@ NS.C = {
             inCombat = false,
             sound    = false,
         },
+
+        -- The simulator (feedback-2 spec §8): the seconds an automatic run waits between steps.
+        sim = {
+            stepDelay = 2,
+        },
     },
 
     -- schemaVersion is 0, never the current version (savedvariables-§1).
     GLOBAL_DEFAULTS = {
         schemaVersion = 0,
         minimap = { hide = false },
-        -- The History tab's cap (design spec §10). The history itself (`history.v`,
-        -- `history.groups`) is modules/History.lua's (DW-51), which never replaces the table whole.
-        history = { maxGroups = 20 },
+        -- How long the History tab keeps a group, in days (feedback-2 spec §5; 0 = never delete).
+        -- The history itself (`history.v`, `history.groups`) is modules/History.lua's (DW-51), which
+        -- never replaces the table whole.
+        history = { retentionDays = 30 },
     },
 }

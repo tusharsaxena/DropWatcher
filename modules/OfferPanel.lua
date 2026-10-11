@@ -198,6 +198,8 @@ local function build()
     local p = CreateFrame("Frame", nil, win, "BackdropTemplate")
     p:SetSize(K.OFFER_W, win:GetHeight() > 0 and win:GetHeight() or K.HEIGHT)
     p:SetFrameStrata("MEDIUM")
+    p.tipHost = true   -- its item tooltip goes beside the panel, not the window under it (WindowGroup.PlaceItemTooltip)
+    win.tipDocked = p  -- and a window row's tooltip goes beside the docked panel, not over it
     p:EnableMouse(true)
     NS.ApplySkin(p)
     buildTitle(p)

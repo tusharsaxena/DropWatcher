@@ -9,11 +9,15 @@ local _, NS = ...
 -- Trade and Me, in that order (NS.WindowGroup.Fit); Item and Outcome stay. The cells are
 -- modules/WindowCells.lua's composers over each entry turned into a drop-shaped record (AsDrop);
 -- this file adds the Outcome cell and a header that reads days for an old group. Nothing is blank.
+-- A row's height, item button and text size are the Group drops rows' (modules/WindowRows.lua, the
+-- Window page's Layout rows; feedback-2 spec §8, FB2-9).
 --
 -- READ-ONLY. No row asks, offers or expands. A right-click on a row opens its menu (core/Compat.lua's
 -- ContextMenu): Mark as declined, or Clear declined; a client without the menu toggles it at once.
 --
--- THE FILTER. The tab honors View, Content, the search box and Sort (modules/WindowFilterBar.lua).
+-- THE FILTER. The tab honors View, Character, Content, the search box and Sort
+-- (modules/WindowFilterBar.lua). History is account-wide, so Character (Current by default, feedback-2
+-- spec §4) filters it by who saw each drop; an entry kept before that was recorded shows only under All.
 -- An entry's `at` is time(), so This instance and This session are the window's GetTime() marks
 -- turned into time() (ctx: instanceSince, sessionSince = NS.History.SessionStart()). The tab opens
 -- on View: All and Content: All the first time it is shown in a session: it is a record of earlier
@@ -60,7 +64,7 @@ local OUTCOME = {
 }
 
 local NO_HISTORY = L["Drops from earlier encounters appear here."]
-local NO_MATCH = L["No kept drop matches the filters. View: All and Content: All show everything."]
+local NO_MATCH = L["No kept drop matches the filters. View: All, Character: All and Content: All show everything."]
 local CLEAR_POPUP = "DROPWATCHER_CLEAR_HISTORY"
 
 -- ── the view state (session-only) ───────────────────────────────────────────────────────────
@@ -96,7 +100,7 @@ end
 function WH.AsDrop(e, id)
     return {
         id = id, link = e.itemLink, at = e.at, isMine = e.isMine == true, outcome = e.outcome, entry = e,
-        looter = { name = e.looter, classFile = e.class },
+        looter = { name = e.looter, classFile = e.class }, seenBy = e.seenBy, seenByClass = e.seenByClass,
         facts = { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = e.quality },
         me = e.me, them = e.them, trade = e.trade,
     }
@@ -133,37 +137,58 @@ function WH.Ago(seconds)
     return days == 1 and L["1 day ago"] or L["%d days ago"]:format(days)
 end
 
---- A kept group's header: `Label · Situation · 2 days ago · 4 drops`, and its tooltip.
---- @param group table { label, kind, situation, at }
+--- A kept group's header: `Label · Situation · 2 days ago · 4 drops · You, Seta, ...` (`... · 4 drops
+--- · 3 shown` while the filter hides some, feedback-2 spec §0; the kept roster, class-colored, when
+--- the group has one, §3), and its tooltip listing everyone and naming each hidden drop.
+--- @param group table { label, kind, situation, at, roster }
 --- @param shown number
 --- @param now number time()
 --- @param situationLabel string|nil
 --- @param collapsed boolean
+--- @param hidden table|nil { { drop, why }, ... }
+--- @param filter table|nil the tab's filter state
 --- @return table { text, tip }
-function WH.Header(group, shown, now, situationLabel, collapsed)
+function WH.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     local parts = { tostring(group.label or "?") }
     if situationLabel then parts[#parts + 1] = situationLabel end
     if type(group.at) == "number" and type(now) == "number" then parts[#parts + 1] = WH.Ago(now - group.at) end
-    parts[#parts + 1] = shown == 1 and L["1 drop"] or L["%d drops"]:format(shown)
+    parts[#parts + 1] = WC.DropCount(shown, hidden)
+    parts[#parts + 1] = WC.RosterNames(group.roster)
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
-    local click = collapsed and L["Click to expand this group."] or L["Click to collapse this group."]
-    return { text = text, tip = { tostring(group.label or "?"), L["Kept in the history across sessions."], click } }
+    return { text = text, tip = WC.HeaderTip(tostring(group.label or "?"), L["Kept in the history across sessions."],
+        hidden, filter, collapsed, group.roster) }
 end
 
 local function visibleDrops(group, ctx, base)
-    local out = {}
+    local shown, hidden = {}, {}
     for i, e in ipairs(group.drops or {}) do
         local d = WH.AsDrop(e, base + i)
-        if ctx.matches(d) then out[#out + 1] = d end
+        if ctx.matches(d) then
+            shown[#shown + 1] = d
+        else
+            hidden[#hidden + 1] = { drop = d, why = ctx.hiddenBy and ctx.hiddenBy(d) or "filter" }
+        end
     end
-    table.sort(out, ctx.compare)
-    return out
+    table.sort(shown, ctx.compare)
+    return shown, hidden
 end
 
---- The tab's entries, top to bottom: { kind = "header", group, count, collapsed } and
+-- One group's header, then its shown drops unless it is collapsed.
+local function appendGroup(out, g, drops, hidden, filter, c)
+    out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
+        hidden = hidden, filter = filter, collapsed = c }
+    if c then return end
+    for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
+end
+
+--- The tab's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
+--- collapsed } (as WG.Entries') and
 --- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest); a group with no
---- entry passing the filter is left out; a group never toggled is open when it is the first shown.
+--- entry passing the filter keeps an open header with count 0 while the View filter hid them, or
+--- Character hid entries with no recorder (kept before the Character dropdown); it is left out
+--- when Search, Content or a Character choice did (WC.KeepsHeader). A group never toggled is open
+--- when it is the first shown.
 --- @param groups table NS.History.Groups(), oldest first
 --- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort } }
 --- @param state table|nil { collapsed }
@@ -176,16 +201,15 @@ function WH.Entries(groups, ctx, state)
     local out, first, base = {}, true, 0
     for i = from, to, step do
         local g = groups[i]
-        local drops = visibleDrops(g, ctx, base)
+        local drops, hidden = visibleDrops(g, ctx, base)
         base = base + #(g.drops or {})
         if #drops > 0 then
             local c = collapsed[g.key]
             if c == nil then c = not first end
             first = false
-            out[#out + 1] = { kind = "header", group = g, count = #drops, collapsed = c }
-            if not c then
-                for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
-            end
+            appendGroup(out, g, drops, hidden, ctx.filter, c)
+        elseif WC.KeepsHeader(0, hidden) then
+            appendGroup(out, g, drops, hidden, ctx.filter, false)
         end
     end
     return out
@@ -197,15 +221,16 @@ end
 --- @param nowEpoch number time()
 --- @param nowClock number GetTime()
 --- @param sessionSince number|nil
---- @return table { filter, matches, compare }
+--- @return table { filter, matches, hiddenBy, compare }
 function WH.Context(tc, nowEpoch, nowClock, sessionSince)
     local FB = NS.WindowFilterBar
     local since = tc.ctx and tc.ctx.instanceSince
-    local ctx = { sessionSince = sessionSince,
+    local ctx = { sessionSince = sessionSince, current = tc.ctx and tc.ctx.current,
         instanceSince = type(since) == "number" and nowEpoch - (nowClock - since) or nil }
     return {
         filter = tc.filter,
         matches = function(d) return FB.Matches(d, tc.filter, ctx, tc.honors) end,
+        hiddenBy = function(d) return FB.HiddenBy(d, tc.filter, ctx, tc.honors) end,
         compare = FB.Comparator(tc.filter.sort),
     }
 end
@@ -268,7 +293,7 @@ end
 
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
-    row:SetHeight(K.ROW_H)
+    row:SetHeight(NS.WindowRows.ROW_H)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)
@@ -310,14 +335,14 @@ end
 
 local TEXT_INSET = { item = K.ROW_ICON + 5, me = 16, them = 16 }
 
-local function placeCells(row, layout)
+local function placeCells(row, layout, height)
     for key, f in pairs(row.cells) do
         local at = layout[key]
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
             f:SetPoint("LEFT", row, "LEFT", at.x, 0)
-            f:SetSize(at.w, K.ROW_H)
+            f:SetSize(at.w, height)
             f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10))
         end
     end
@@ -334,9 +359,12 @@ end
 
 local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade, them = WH.Them, outcome = WH.Outcome }
 
-local function paintRow(row, drop, layout)
+local function paintRow(row, drop, layout, metrics)
     row.entry = drop.entry
-    placeCells(row, layout)
+    row:SetHeight(metrics.height)
+    placeCells(row, layout, metrics.height)
+    NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
+    NS.WindowRows.ApplyRowIcon(row, metrics.icon)
     local cells = row.cells
     paintText(cells.item, WC.Item(drop))
     tone(cells.item.text, qualityColor(drop.facts.quality))
@@ -350,7 +378,8 @@ end
 
 local function paintHeader(h, e, now)
     local g = e.group
-    local hd = WH.Header(g, e.count, now, NS.WindowFooter.SITUATION_LABEL[g.situation], e.collapsed)
+    local hd = WH.Header(g, e.count, now, NS.WindowFooter.SITUATION_LABEL[g.situation], e.collapsed, e.hidden,
+        e.filter)
     h.groupKey, h.collapsed = g.key, e.collapsed
     h.text:SetText(hd.text)
     h.tipLines = hd.tip
@@ -438,7 +467,7 @@ local function build(pane)
     if not v.seeded then
         v.seeded = true
         local st = NS.WindowFilterBar.State("history")
-        st.view, st.content = "all", "all"
+        st.view, st.content = {}, "all"
     end
 end
 
@@ -464,9 +493,9 @@ local function rowWidth(pane)
 end
 
 local function drawEntries(pane, entries, layout, width, now)
-    local y = 0
+    local y, metrics = 0, NS.WindowRows.Metrics()
     for i, e in ipairs(entries) do
-        local pool, make, h = pane.rowPool, newRow, K.ROW_H
+        local pool, make, h = pane.rowPool, newRow, metrics.height
         if e.kind == "header" then pool, make, h = pane.headPool, newHeader, K.GROUP_H end
         local f = NS.Pool.Acquire(pool, function() return make(pane.content) end)
         f:ClearAllPoints()
@@ -476,7 +505,7 @@ local function drawEntries(pane, entries, layout, width, now)
             paintHeader(f, e, now)
         else
             f.stripe:SetShown(i % 2 == 0)
-            paintRow(f, e.drop, layout)
+            paintRow(f, e.drop, layout, metrics)
         end
         y = y + h
     end
@@ -485,7 +514,7 @@ end
 
 local function paintStrip(pane, groups)
     local st = NS.History.Stats()
-    pane.strip.info:SetText(L["%d of %d groups kept, %d drops"]:format(#groups, st.cap, st.drops))
+    pane.strip.info:SetText(NS.HistoryRetention.FooterText(#groups, st.drops, st.days))
     pane.strip.clear:SetEnabled(#groups > 0)
     pane.strip.clear:SetAlpha(#groups > 0 and 1 or 0.5)
 end
@@ -532,7 +561,10 @@ local target = NS.Bus:NewTarget()
 
 local function listen()
     if not target then return end
-    target:RegisterMessage(NS.MSG.HISTORY_CHANGED, function() NS.Window.ScheduleRepaint() end)
+    target:RegisterMessage(NS.MSG.HISTORY_CHANGED, function()
+        NS.WindowFilterBar.InvalidateChars()
+        NS.Window.ScheduleRepaint()
+    end)
 end
 listen()
 

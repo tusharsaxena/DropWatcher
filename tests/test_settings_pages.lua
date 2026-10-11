@@ -11,7 +11,7 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 -- The pages after the landing page, and each page's strip, in order. Stated here rather than read
 -- from the rows, so a tab that moves is a named failure.
 local PAGES = {
-    { key = "general",    title = "General",    strip = { "Master controls", "When to show" } },
+    { key = "general",    title = "General",    strip = { "Master controls", "When to show", "Simulation" } },
     { key = "feed",       title = "Feed",       strip = { "Quality", "Filters" } },
     { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Preferences" } },
     { key = "trade",      title = "Trade",      strip = { "Rules", "Timers" } },

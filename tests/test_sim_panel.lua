@@ -305,6 +305,15 @@ test("sim panel: Run all plays the timeline, highlighting each step; Pause holds
     assertEqual(rows(NS)[17].__state, "cancel", "Stop is what is left")
 end)
 
+test("sim panel: Run all's tooltip names the current step delay (feedback-2 spec §8, FB2-8)", function()
+    local NS = addon()
+    slash(NS, "sim start dungeon")
+    local run = NS.SimPanel.Frame().controls.run
+    assertEqual(NS.Window.TooltipOf(run)[2], "Plays every step left, one every 2 seconds, as `/dw sim run` does.")
+    slash(NS, "set sim.stepDelay 3.5")
+    assertEqual(NS.Window.TooltipOf(run)[2], "Plays every step left, one every 3.5 seconds, as `/dw sim run` does.")
+end)
+
 test("sim panel: the typed pause, resume and restart answer as the buttons do", function()
     local NS, m = addon()
     slash(NS, "sim pause")

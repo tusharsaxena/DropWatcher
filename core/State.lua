@@ -23,7 +23,7 @@ State.sim = nil
 State.windowOpen = false
 
 -- The window's filter bar, one state per tab (modules/WindowFilterBar.lua, design spec §11.1):
--- { [tab] = { view, content, likelyOnly, search, sort } }, each seeded on the tab's first use.
+-- { [tab] = { view = { [value] = true }, content, search, sort } }, each seeded on the tab's first use.
 State.windowFilters = nil
 
 -- The Group drops table's view state (modules/WindowGroup.lua, design spec §11.1-§11.2):

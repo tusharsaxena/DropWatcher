@@ -143,6 +143,9 @@ modules\FeedFilter.lua
 # overlay; peeled out of modules\LootFeed.lua); read by the feed at call time only. NS.ItemRead
 # (core\, above) is read at call time.
 modules\FeedRecords.lua
+# Conventional: publishes NS.FeedCounts, the feed's hidden and refused receipts counted by reason
+# (peeled out of modules\LootFeed.lua); read by the feed and the diagnostics at call time only.
+modules\FeedCounts.lua
 # Conventional: publishes NS.Messaging, the pure messaging core (templates, the one-ask guard and
 # the send queue); read by the messaging edge at call time only, and itself reads NS.Constants
 # (core\, above) at load.
@@ -158,6 +161,14 @@ modules\Restrictions.lua
 # above) at load, and reads NS.State at load. A module declaring the event below it hears it after
 # the roster is fresh.
 modules\Roster.lua
+# Conventional: publishes NS.GroupRoster, each group's roster snapshot and the header's names; adds
+# its Grow to NS.Roster's change sinks (above) at load and reads NS.L at load. NS.Compat,
+# NS.LootFeed, NS.History and NS.Window (below) are read at call time.
+modules\GroupRoster.lua
+# LOAD-BEARING: publishes NS.CharFilter, the Character dropdown's recorder, rows and predicate
+# (feedback-2 spec §4), which modules\WindowFilterBar.lua (below) takes as a load-time upvalue;
+# reads NS.L at load. NS.Compat is read at call time.
+modules\CharFilter.lua
 # Conventional: publishes NS.ItemFacts, the cached item facts; appends its row to NS.FEATURE_EVENTS
 # and NS.STAND_DOWN and its handler to NS.addon (core\DropWatcher.lua, above) at load, and reads
 # NS.Constants and NS.State at load. NS.Compat, NS.Item and NS.Debug are read at call time.
@@ -204,12 +215,18 @@ modules\TradeHelper.lua
 # after modules\Situations.lua's and modules\LootFeed.lua's. NS.Restrictions, NS.Roster and
 # NS.LootFeed (above) are read at call time.
 modules\Asks.lua
-# Conventional: publishes NS.History, the capped account-wide log of the feed's drops and their
+# Conventional: publishes NS.History, the account-wide log (kept by days) of the feed's drops and their
 # outcomes; appends its TRADE_* rows to NS.FEATURE_EVENTS and NS.STAND_DOWN / NS.STAND_UP and its
 # handlers to NS.addon (core\DropWatcher.lua) at load, and registers its DropAdded, DropUpdated and
 # AskStateChanged receivers on a NS.Bus target at load. NS.LootFeed, NS.Compat and NS.Setting
 # (settings\Schema.lua, below) are read at call time.
 modules\History.lua
+# Conventional: publishes NS.HistoryRetention (Keep history for: the window, the confirmation, the
+# login prune); appends its PLAYER_ENTERING_WORLD row to NS.FEATURE_EVENTS and NS.STAND_DOWN /
+# NS.STAND_UP and its handler to NS.addon (core\DropWatcher.lua) at load. NS.History (above),
+# NS.Setting and NS.SchemaRuntime (settings\Schema.lua, below) are read at call time;
+# settings\SchemaRows.lua (below) reads its Choices at load.
+modules\HistoryRetention.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L, NS.Constants,
 # NS.Bus and NS.MSG, and appends its rows to NS.STAND_DOWN / NS.STAND_UP, all published above, at
 # load, and registers its bus receivers (RestrictionChanged, AskStateChanged, SituationChanged,
@@ -231,6 +248,10 @@ modules\WindowFooter.lua
 # Conventional: publishes NS.WindowCells, the drop tables' pure cell composers (each column's text,
 # glyph, tone and reason tooltip); reads NS.Constants and NS.L at load.
 modules\WindowCells.lua
+# Conventional: publishes NS.WindowRows, the drop tables' row height and text size (the pure
+# resolution and the font edge the three tabs share); reads NS.Constants at load and NS.Setting at
+# call time.
+modules\WindowRows.lua
 # Conventional: publishes NS.MineCells, the My drops tab's and the Offer panel's pure composers (the
 # countdown, the candidates and their pills, the buttons, Post my tradeables' lines, the dock);
 # takes NS.WindowCells (above), NS.Constants and NS.L at load.

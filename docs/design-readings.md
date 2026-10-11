@@ -292,13 +292,15 @@ accepted, because the second accept can complete the trade with no both-accepted
 window is empty by the end; an item change makes both sides accept again, so the last offer is the
 one traded. The message's order against the close is HIST-1. **The match** for an item you got is the newest drop of that
 item id that is someone else's and not yet received, the partner's own drop first; for an item you
-gave, your own drop of that id; one entry per item. **The cap** counts groups, oldest out first,
-and 50 drops per group; a lower cap trims at once. **The tab** opens on View: All and Content: All
+gave, your own drop of that id; one entry per item. **The keeping** is by age (Keep history for,
+feedback-2 spec §5): a group whose newest entry is older than the window goes, once per session and
+when the window shrinks (after a confirmation when that deletes anything), with 50 drops per group
+and a safety ceiling of 5,000 drops in all, the oldest first. **The tab** opens on View: All and Content: All
 the first time each session (Content's This session and This instance then cut by time, and
 `n days ago` names an older group); it is read-only but for the row menu (right-click: Mark as
 declined or Clear declined, through the client's `MenuUtil`, or at once without it), and Clear
-history asks first (a StaticPopup), then empties the log on every character and keeps the cap.
-**Account-wide:** one log for all your characters, as the cap row says. That the log survives a
+history asks first (a StaticPopup), then empties the log on every character and keeps the window.
+**Account-wide:** one log for all your characters, as the Keep history for row says. That the log survives a
 reload and the row menu opens in game is HIST-2.
 
 ## The toast
@@ -453,8 +455,9 @@ press through the Edit message box (the detail card's, now one box for all three
 Send goes back through the same handler with the edited text, a press on a queued send still
 cancels it, a press with the window closed sends as it stands, and Post my tradeables never opens
 it (its lines are already cut to the chat limit). **`window.rowHeight`** and **`window.fontSize`**
-size the Group drops table's rows and their cells' text; the headers, the column labels, the
-buttons and the My drops tab keep their own.
+size the drop tables' rows and their cells' text on all three tabs (feedback-2 spec §8, FB2-9: 18
+pixels and the template's own size by default, like Ka0s Loot History's table; a My drops row adds
+room for its countdown bar); the headers, the column labels and the buttons keep their own.
 
 ## The compat seam
 

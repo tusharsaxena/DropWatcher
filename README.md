@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1068%2F1068_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1150%2F1150_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -31,13 +31,17 @@ last loot line came in, where the addon thinks you are, and whether Pawn is load
 reads everyone's gear before the loot starts, which saves waiting later. When a boss fight or a key
 blocks addon chat, an orange lock in the title bar says so and counts the asks waiting to go out.
 
-**Group drops** shows every drop, grouped under the boss or key run it came from. A row gives the
-item, its item level and slot, who looted it, what you wear there (**My eq**) and what they wear
+**Group drops** shows every drop, grouped under the boss or key run it came from. Each group's
+header names everyone who was in the party, you first, each in class color (a raid shows the first
+few and `+n`), and counts its drops: `2 drops · 1 shown` means the filters hide one (a group whose
+every drop the View hides still shows its header, `· 0 shown`), and hovering the header lists what
+they hid and why. My drops uses the same headers, and History keeps the party with each group. A row gives the item, its item level and slot, who looted it, what you wear there (**My eq**) and what they wear
 there (**Their eq**), each as icons with item levels, then two verdicts: **Me** (is
 it an upgrade for you?) and **Them** (is it one for the looter?). ▲ means upgrade, ≈ sidegrade, ▽
 downgrade. **Trade** reads Yes, Likely, Unknown or No. Hover any cell to see why; hover Their eq for
-how old the read of the looter's gear is. Tick **Usable by me** to hide what you can't use or don't
-want, or **Upgrade for me** to see only your upgrades. Shift-click the
+how old the read of the looter's gear is. The **View** dropdown starts on All; pick **Interesting**,
+**Likely tradeable**, **Usable by me** or **Upgrade for me** to narrow it, several at once if you
+like (a drop must pass each), and All again to clear them. Shift-click the
 icon to link the item, ctrl-click to try it on. **Ask** whispers the looter once; mid-fight the
 whisper waits and goes out when the fight ends, and a second click cancels it. Click the row itself
 and a detail card opens under it with the full reasoning: what the item would replace for you and
@@ -51,10 +55,14 @@ ranks everyone by how much they'd gain, with an **Offer** whisper and a **Trade*
 the trade with the item already in it. **Post my tradeables** lists all of them in group chat in one
 line.
 
-The **History** tab remembers what the feed showed, across logouts and across your characters: the last 20
-bosses or key runs by default. Each drop says what became of it: asked, offered, expired, received
+The **History** tab remembers what the feed showed, across logouts and across your characters, for
+30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never
+delete, and asks before a shorter time deletes anything. Its footer says how many bosses or key runs
+and drops it holds, and for how long. Each drop says what became of it: asked, offered, expired, received
 or traded away, the last two once a trade with that item goes through. Right-click a row to mark it
-declined.
+declined. The **Character** dropdown in the bar starts on **Current**, the character you're playing;
+on History it lists every character that saw a drop, with its class icon, so pick another, several,
+or **All** (the only choice that shows drops kept before Drop Watcher noted who saw them).
 
 Two extras are off until you turn them on. The **toast** (Settings › Window › Toast) pops up when
 someone else loots a big upgrade for you, 10 item levels or more, that they can probably trade. It
@@ -65,8 +73,8 @@ yours. It backs off if you ask first, they leave, you hide the row or the item r
 
 To see all this without waiting for loot, type `/dw test`. Test mode fills the window with sample
 drops of real items from this season's dungeons (your own gear if the Encounter Journal has none),
-looted by made-up players, in every state the window can show. The History tab gets two sample
-groups of its own, which never touch your real history. Test mode shows the toast so you can drag it
+looted by made-up players, in every state the window can show. The History tab gets sample groups
+of its own, one of them seen by a made-up alt, which never touch your real history. Test mode shows the toast so you can drag it
 into place, and prints messages instead of sending them. Combat ends it.
 
 To try the whole thing with a group that isn't there, simulate one. Out of a group, outside any

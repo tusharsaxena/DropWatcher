@@ -1,0 +1,70 @@
+{
+ "_readme": "Workflow args for ../2026-10-10-drop-watcher-v1/orchestration/dw-milestone.workflow.js",
+ "M10": {
+  "milestone": "M10",
+  "base": "<run base>",
+  "extra": "M10 is the owner's second in-game feedback (2026-10-11), on branch feat/2026-10-11-drop-watcher-feedback-2 (NOT feat/2026-10-10-drop-watcher-v1: that branch is merged and deleted; verify with git branch --show-current and never switch). Read docs/superpowers/specs/2026-10-11-drop-watcher-feedback-2-design.md (governing for M10) and LOOK at the screenshots in docs/superpowers/research/2026-10-11-feedback-2/ with the Read tool, then docs/ARCHITECTURE.md. Reference for look and behavior: ../LootHistory (read the files the spec cites). Compat: the standard (v2.79.0) allows the core/Compat*.lua family: core/Compat.lua is the root; topic files (CompatItem, CompatWorld) take hand-written shims of one topic; no other file calls the client. Keep every authored file under 1000 lines (move code out rather than grow Window.lua, Compat.lua, LootFeed.lua, History.lua). The simulator (/dw sim) and test mode must keep working: extend them so the new header roster, Character dropdown and retention are exercised. Plan data for this run: docs/superpowers/plans/2026-10-11-drop-watcher-feedback-2/ (items.tsv). No GitHub writes; drafts go in that folder's issues-to-file.md if any are owed.",
+  "items": [
+   {
+    "id": "DW-A0",
+    "title": "The two-Yoke regression (the owner's chat lines through the real parser and feed); every refused or hidden receipt counted by reason; group headers say `n drops · m shown`",
+    "notes": "Feedback-2 spec section 0. Reproduce headless with the exact lines in research/2026-10-11-feedback-2/03-chat-loot-lines.png (accented cross-realm name Bùnian-Azralon)."
+   },
+   {
+    "id": "DW-A1",
+    "title": "View: All by default; Likely tradeable / Usable by me / Upgrade for me become multi-select View values (checkboxes removed); bullet tooltip; settings migration",
+    "notes": "Spec section 1. Multi-select like Loot History's Direction dropdown (read ../LootHistory/modules/BrowserFilterBar.lua)."
+   },
+   {
+    "id": "DW-A2",
+    "title": "Item tooltips beside the window (right, else left when no room), all tabs",
+    "notes": "Spec section 2; Loot History precedent ../LootHistory/modules/BrowserTable.lua row OnEnter (ANCHOR_RIGHT on a full-width row)."
+   },
+   {
+    "id": "DW-A3",
+    "title": "Group headers name the party, class-colored, all tabs; History keeps the roster",
+    "notes": "Spec section 3."
+   },
+   {
+    "id": "DW-A4",
+    "title": "Character dropdown like Loot History (All, Current, each character; default Current), all tabs; recorder on drops and History",
+    "notes": "Spec section 4; Loot History's Character dropdown in ../LootHistory/modules/BrowserFilterBar.lua."
+   },
+   {
+    "id": "DW-A5",
+    "title": "History kept by days like Loot History (Keep history for, default 30, account-wide, confirm on shrink, safety ceiling); maxGroups retired by migration",
+    "notes": "Spec section 5; Loot History precedent ../LootHistory/settings/Schema.lua settings.retentionDays and defaults/Global.lua."
+   },
+   {
+    "id": "DW-A6",
+    "title": "M10 docs sync + automated-test bundle",
+    "notes": "Spec section 6."
+   }
+  ]
+ },
+ "M10b": {
+  "milestone": "M10b",
+  "base": "8866d68",
+  "extra": "M10 is the owner's second in-game feedback (2026-10-11), on branch feat/2026-10-11-drop-watcher-feedback-2 (NOT feat/2026-10-10-drop-watcher-v1: that branch is merged and deleted; verify with git branch --show-current and never switch). Read docs/superpowers/specs/2026-10-11-drop-watcher-feedback-2-design.md (governing for M10) and LOOK at the screenshots in docs/superpowers/research/2026-10-11-feedback-2/ with the Read tool, then docs/ARCHITECTURE.md. Reference for look and behavior: ../LootHistory (read the files the spec cites). Compat: the standard (v2.79.0) allows the core/Compat*.lua family: core/Compat.lua is the root; topic files (CompatItem, CompatWorld) take hand-written shims of one topic; no other file calls the client. Keep every authored file under 1000 lines (move code out rather than grow Window.lua, Compat.lua, LootFeed.lua, History.lua). The simulator (/dw sim) and test mode must keep working: extend them so the new header roster, Character dropdown and retention are exercised. Plan data for this run: docs/superpowers/plans/2026-10-11-drop-watcher-feedback-2/ (items.tsv). No GitHub writes; drafts go in that folder's issues-to-file.md if any are owed.",
+  "branch": "feat/2026-10-11-drop-watcher-feedback-2",
+  "spec": "docs/superpowers/specs/2026-10-11-drop-watcher-feedback-2-design.md",
+  "plan": "docs/superpowers/plans/2026-10-11-drop-watcher-feedback-2.md",
+  "items": [
+   {
+    "id": "DW-A7",
+    "title": "Sim auto-run step delay: 2s default and a Simulation step delay setting (0.5-10s)",
+    "notes": "Spec section 8 FB2-8. modules/SimScenario.lua SC.STEP_DELAY."
+   },
+   {
+    "id": "DW-A8",
+    "title": "Table font and row height like Loot History, all three tabs",
+    "notes": "Spec section 8 FB2-9; LOOK at research/2026-10-11-feedback-2/11-font-vs-loothistory.png. Then regenerate the automated-test bundle is NOT needed here; DW-A9 records it."
+   },
+   {
+    "id": "DW-A9",
+    "title": "M10 review leftovers (My drops roster headers, stale cap docs, prune when enabled later, tooltip vs Offer panel, stale retention popup) + docs sync + fresh automated-test bundle",
+    "notes": "Spec section 8 FB2-10, then a fresh automated-test bundle (four suites, CCN <= 15, no authored file over 1000 lines)."
+   }
+  ]
+ }
+}

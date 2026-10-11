@@ -94,7 +94,17 @@ local function qualityChoices(from, to)
 end
 local FIXED_QUALITIES = qualityChoices(K.QUALITY.UNCOMMON, K.QUALITY.LEGENDARY)
 local FLOOR_QUALITIES = qualityChoices(K.QUALITY.COMMON, K.QUALITY.EPIC)
-local VIEWS    = choices{ "interesting", L["Interesting"], "all", L["All"] }
+-- The View's values as rows: `feed.view.<key>` (modules/WindowFilterBar.lua FB.VIEWS).
+local VIEW_ROWS = {
+    { key = "interesting", label = L["View: Interesting"],
+      tip = L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."] },
+    { key = "likely", label = L["View: Likely tradeable"],
+      tip = L["A fresh tab lists only the drops whose trade estimate is yes or likely."] },
+    { key = "usable", label = L["View: Usable by me"],
+      tip = L["A fresh tab hides the drops you can't use and the item types you marked as unwanted."] },
+    { key = "upgrade", label = L["View: Upgrade for me"],
+      tip = L["A fresh tab lists only the drops that are an upgrade for you."] },
+}
 local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"], "all", L["All"] }
 local SORTS    = choices{ "newest", L["Newest"], "oldest", L["Oldest"], "ilvl", L["Item level"], "gain", L["Gain"] }
 local ILVL_MODES = choices{ "off", L["Off"], "absolute", L["Absolute"], "relative", L["Relative to my gear"] }
@@ -200,8 +210,11 @@ local function feed()
         L["A drop below the minimum still shows when it is an upgrade for you."], quality)
 
     local filters = { page = "feed", group = L["Filters"] }
-    pick("feed.view", F.view, VIEWS, L["View"],
-        L["What a fresh Group drops tab shows: the interesting drops, or every drop."], filters)
+    -- The View a fresh tab opens on is a set (feedback-2 spec §1): one row per value, all off is
+    -- All. They combine as AND, as the filter bar's multi-select View does.
+    for _, v in ipairs(VIEW_ROWS) do
+        bool("feed.view." .. v.key, F.view[v.key], v.label, v.tip, filters)
+    end
     pick("feed.content", F.content, CONTENTS, L["Content"],
         L["Which drops a fresh tab lists: this instance's, this session's, or all of them."], filters)
     pick("feed.sort", F.sort, SORTS, L["Sort"], L["How a fresh tab sorts its rows."], filters)
@@ -217,10 +230,6 @@ local function feed()
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
         L["How far under your average equipped item level a drop may be in the relative mode."],
         with(filters, { disabledIf = unless("feed.minIlvlMode", "relative") }))
-    bool("feed.usableOnly", F.usableOnly, L["Usable by me"],
-        L["A fresh Group drops tab hides the drops you can't use and the ones your preferences exclude."], filters)
-    bool("feed.upgradeOnly", F.upgradeOnly, L["Upgrade for me"],
-        L["A fresh Group drops tab lists only the drops that are an upgrade for you."], filters)
     bool("feed.showOwn", F.showOwn, L["Show my own loot in Group drops"],
         L["Off, your own loot shows on My drops only."], filters)
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear on boss kill"],
@@ -258,8 +267,6 @@ local function trade()
     local timers = { page = "trade", group = L["Timers"] }
     slider("trade.warnAt", T.warnAt, 0, 1800, 60, L["Warn before a trade window closes (seconds)"],
         L["Warn this many seconds before your own item stops being tradeable. 0 turns the warning off."], timers)
-    bool("trade.likelyOnly", T.likelyOnly, L["Likely tradeable only"],
-        L["A fresh Group drops tab lists only the drops that are likely tradeable."], timers)
 end
 
 -- ── Messages › Templates, Sending and Auto-ask (design spec §9) ─────────────────────────────
@@ -313,8 +320,13 @@ local function window()
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }
     bool("window.compact", W.compact, L["Compact"],
         L["Show Item and looter, Ilvl, Their eq, Me and Ask only."], layout)
-    slider("window.rowHeight", W.rowHeight, 18, 40, 1, L["Row height"], L["The height of one row in the Group drops table."], layout)
-    slider("window.fontSize", W.fontSize, 8, 20, 1, L["Font size"], L["The size of the Group drops table's text."], layout)
+    slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
+        L["The height of one row in the drop tables: Group drops, My drops and History. A My drops row adds room for its countdown bar."], layout)
+    -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table
+    -- (feedback-2 spec §8, FB2-9); 1 to 7 read as the least size (modules/WindowRows.lua).
+    slider("window.fontSize", W.fontSize, 0, K.WINDOW.FONT_MAX, 1, L["Font size"],
+        L["The size of the drop tables' text, on all three tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
+        with(layout, { zeroText = L["Default"] }))
 
     local T = P.toast
     local toast = { page = "window", group = L["Toast"] }
@@ -331,19 +343,31 @@ local function window()
     bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], toast)
 end
 
--- ── History (design spec §10): account-wide ─────────────────────────────────────────────────
+-- ── History (feedback-2 spec §5): kept by days, account-wide ────────────────────────────────
 
 local function history()
-    local row = slider(Settings.HISTORY_CAP_PATH, NS.C.GLOBAL_DEFAULTS.history.maxGroups, 1, 100, 1,
-        L["Groups kept in history"], L["How many groups (encounters or runs) the History tab keeps, on every character."],
-        { page = "window", group = L["Layout"], onChange = function()
-            -- A lower cap applies at once (modules/History.lua), not at the next drop.
-            if NS.History then NS.History.ApplyCap() end
+    local row = pick(Settings.HISTORY_RETENTION_PATH, NS.C.GLOBAL_DEFAULTS.history.retentionDays,
+        NS.HistoryRetention.Choices(), L["Keep history for"],
+        L["How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."],
+        { page = "window", group = L["Layout"], onChange = function(v)
+            -- A shorter window that would delete something asks first (modules/HistoryRetention.lua).
+            NS.HistoryRetention.OnChanged(v)
         end })
     Settings.StampClosureRows({ row })
 end
 
+-- ── General › Simulation (feedback-2 spec §8): the simulator's automatic run ─────────────────
+
+local function simulation()
+    local SC = NS.SimScenario
+    slider("sim.stepDelay", P.sim.stepDelay, SC.STEP_DELAY_MIN, SC.STEP_DELAY_MAX, SC.STEP_DELAY_STEP,
+        L["Simulation step delay"],
+        L["How many seconds the simulator's automatic run (Run all, `/dw sim run`) waits between steps. A change takes effect from the next step."],
+        { page = "general", group = L["Simulation"], validate = SC.ValidStepDelay })
+end
+
 whenToShow()
+simulation()
 feed()
 comparison()
 trade()

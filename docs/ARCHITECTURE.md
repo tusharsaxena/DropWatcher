@@ -33,7 +33,7 @@ lists the toolchain):
 | Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`) and the shared `NS.CloseMenu` |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown at all (`NS.MakeDropdown` answers nil and
-the checkbox and search box still filter), and `NS.CloseMenu` is a no-op. Each setup file holds a
+the search box still filters), and `NS.CloseMenu` is a no-op. Each setup file holds a
 descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live
 surface.
 
@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Seventy-nine authored files load from the TOC, in the standard's folder order; every one, its kind,
+Eighty authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -66,8 +66,18 @@ its one-line responsibility and why its position is load-bearing or conventional
   feed's record logic, `Messaging.lua` the templates and the one-ask guard) and the
   scorers (`Scoring.lua`); the edges that read the client (`Situations.lua`, `Restrictions.lua`,
   `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
-  `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`); and the
-  recorded and opt-in features (`History.lua`, `Toast.lua`, `AutoAsk.lua`).
+  `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`, with
+  `FeedCounts.lua` counting every receipt it hides or refuses by reason, and `GroupRoster.lua`
+  keeping who was in each group: a snapshot taken by its first drop, grown by every later drop and
+  by a roster change, copied into the History group, and named class-colored, you first, in the
+  headers of all three tabs (My drops since DW-A9); feedback-2 spec §3; and `CharFilter.lua`, the Character
+  dropdown's recorder: every drop record and History entry says who saw it, `seenBy` (Name-Realm)
+  and `seenByClass`, and the filter bar's Character dropdown, Current by default, filters History by
+  it; feedback-2 spec §4); and the
+  recorded and opt-in features (`History.lua`, with `HistoryRetention.lua` keeping it by days:
+  Keep history for, confirmed before a shorter window deletes (only the latest pending choice is
+  answered), pruned once per session, also when the addon is enabled later in a session that
+  started disabled; feedback-2 spec §5, §8; `Toast.lua`, `AutoAsk.lua`).
 - `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
   client answers about its world (`SimWorld.lua`: the group, the place, the inspect replies, your
@@ -79,10 +89,21 @@ its one-line responsibility and why its position is load-bearing or conventional
   every click through the typed verb; sim feedback spec §1).
 - `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
-  their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
+  their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), the three tables'
+  shared row height and text size (`WindowRows.lua`: `window.rowHeight` and `window.fontSize`,
+  18-pixel rows and the template's own size by default, like Ka0s Loot History's table; a My drops
+  row adds its countdown bar's room; feedback-2 spec §8, FB2-9), test mode
   (`TestData.lua`, its pure sample drops and History groups over real items from the simulator's
   item pool, and `TestMode.lua`, its edge; ui spec §4) and the diagnostics sections
-  (`Diagnostics.lua`).
+  (`Diagnostics.lua`). Every item tooltip (the three tabs, the equipment columns, the detail card,
+  the Offer panel, the toast) opens beside its frame, top-aligned with the hovered row: on the
+  right, or the left when the screen has no room on the right, measured after `Show()` at each
+  frame's effective scale (`WindowGroup.PlaceItemTooltip`, beside `SetItemTooltip`; feedback-2
+  spec §2). The frame is the nearest ancestor marked `tipHost` (the docked Offer panel), else the
+  outermost one under UIParent (the window, the toast). While the Offer panel is docked beside the
+  window, the two are one span: a tooltip goes beside the pair, never over the panel nor over the
+  window (`tipDocked`; feedback-2 spec §8, FB2-10). My drops sits under the same collapsible group
+  headers as the other two tabs, every group open until toggled (DW-A9).
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
 
@@ -96,10 +117,11 @@ and the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or
 before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
 composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
 §12.1 (`settings/SchemaRows.lua`): General's `When to show` (master `autoOpen` and
-`situations.<key>.track|autoOpen|quality`), Feed (`feed.quality.*`, the filters and the filter bar's
-seeds, `feed.usableOnly` and `feed.upgradeOnly` since DW-83), Comparison (`comparison.*`), Trade (`trade.rules.<situation>`, `trade.warnAt`,
-`trade.likelyOnly`), Messages (`messages.*`), Window (`window.columns.<col>`, `window.compact`,
-`rowHeight`, `fontSize`, `toast.*`) and the account-wide history cap `global.history.maxGroups`.
+`situations.<key>.track|autoOpen|quality`) and `Simulation` (`sim.stepDelay`, feedback-2 spec §8,
+DW-A7), Feed (`feed.quality.*`, the filters and the filter bar's
+seeds, the View set `feed.view.<value>` since DW-A1), Comparison (`comparison.*`), Trade (`trade.rules.<situation>`, `trade.warnAt`), Messages (`messages.*`), Window (`window.columns.<col>`, `window.compact`,
+`rowHeight`, `fontSize`, `toast.*`) and the account-wide `Keep history for`,
+`global.history.retentionDays` (feedback-2 spec §5, DW-A5; it replaced the group cap).
 Each row's `group` is its tab on its page (design spec §12.2; a page draws the rows whose `page` is
 its key, `Settings.RowsForPage`), a row with nothing to do carries a `disabledIf` predicate that dims
 it on the panel, its `default` references
@@ -111,7 +133,9 @@ every surface shares are `Settings.REACTIONS` (Master controls) and the window r
 Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared `writeThrough` so the
 host verbs still land on a load where the composers are hollow (options-ui-§1 route (a)). The
 global closure rows are the Minimap button (`global.minimap.shown`, onto LibDBIcon's `hide`) and
-the history cap (onto `global.history.maxGroups`). Shape, defaults and migrations:
+Keep history for (onto `global.history.retentionDays`, whose change to a shorter window asks before
+it deletes anything, `modules/HistoryRetention.lua`; until the player answers, its onChange writes
+the agreed window back, so an unanswered confirmation never leaves an unconfirmed window stored). Shape, defaults and migrations:
 [`schema.md`](schema.md); the panel: [`settings-panel.md`](settings-panel.md).
 
 **State written outside the seam** (architecture-§5): `profile.window.point`, `.width` and `.height`
@@ -128,19 +152,24 @@ button's remembered view, written by `Window.SetMinimized` alone. Every other se
 the feed read is a row: the Group drops table's compact preset (`NS.SetCompact`, the Window page's
 row and `/dw compact`) and the filter bar's Quality control (`NS.SetQualityMode`, the Feed page's
 row) both write through the seam. The filter bar's per-tab state is session-only
-(`NS.State.windowFilters`), seeded from the `feed.view`, `feed.content`, `feed.sort` and
-`trade.likelyOnly` rows when they hold a valid value;
+(`NS.State.windowFilters`), seeded from the `feed.view.<value>`, `feed.content` and `feed.sort`
+rows when they hold a valid value. Its View is a set (DW-A1): the multi-select View dropdown's
+values combine as AND, All is the empty set and the default, and each tab grays the values it does
+not use (`FB.HONORS[tab].views`);
 test mode sets the Group drops tab's View to All while it is on and puts the player's value back
 when it ends (`modules/TestMode.lua`). The
 Group drops table's collapsed groups, dismissed rows and the one expanded row (the detail card)
 are session-only too (`NS.State.windowGroup`), and so are the My drops tab's hidden rows and the
-upgrades whose candidates you chose to see (`NS.State.windowMine`) and the Offer panel's drop
+upgrades whose candidates you chose to see and its collapsed groups (`NS.State.windowMine`) and the Offer panel's drop
 (`NS.State.offerPanel`), and so are the History tab's collapsed groups (`NS.State.windowHistory`).
 `global.notices.autoAsk` is auto-ask's one-time notice, set by `modules/AutoAsk.lua` alone the first
 time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once per
 account. `global.history.v` and `global.history.groups` are the history's own record, written by
-`modules/History.lua` alone (on a recorded drop, an outcome, a completed trade, the cap and Clear
-history); it never replaces `global.history` whole, since the cap row's value lives in it. While a simulation
+`modules/History.lua` alone (on a recorded drop, an outcome, a completed trade, the safety ceiling
+and Clear history), and by `modules/HistoryRetention.lua`, which deletes the groups older than Keep
+history for (once per session, five seconds after the first `PLAYER_ENTERING_WORLD`, or after the
+stand-up when the addon started disabled, and on a confirmed shorter window); neither replaces `global.history` whole, since the retention row's value
+lives in it. While a simulation
 runs, History writes a simulated drop (`sim = true`) and a simulated trade to the simulation's
 session-only log instead (`NS.Sim.HistoryLog`, `modules/Sim.lua`), never `global.history`, and the
 stop lets that log go (simulator spec §5). A drop or trade is simulated only when `Sim.Fire`
@@ -149,7 +178,8 @@ while a simulation runs is real, keeps the real situation and is saved (`History
 `global.minimap.minimapPos` is LibDBIcon's own
 write into the table the launcher hands it. The load pass is `NS:RunMigrations`
 (`core/Database.lua`), whose step 2 (`NS.RepairStoredSettings`) drops a stored value a row now
-refuses, in every stored profile. No structural registry exists yet.
+refuses, in every stored profile, and whose step 3 (`NS.MigrateViewSet`, DW-A1) turns the old
+`feed.view` string and the three retired checkbox rows into the View set. No structural registry exists yet.
 
 ## Message Bus
 
@@ -191,7 +221,7 @@ go with its drop. The payloads and consumers below are the code's.
 | `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Asks.lua` (sent since DW-2A) | `dropId`, `state` (`queued`, `sent`, `failed`, or `ready` after a cancel), `kind` (`ask`, `offer` or `announce`), `target` (the Name-Realm, or `group` for an announce), `reason` (a failure's reason, or `canceled` / `left` after a cancel). Sent on every move of one ask; `NS.Asks.StateOf(kind, target, dropId)` reads it back | Window (since DW-30): the restriction badge's queued count, and (since DW-31) a repaint of the active tab, so each Group drops row's Ask button follows its ask, and (since DW-32) the open detail card's Ask and Edit message, and (since DW-33) the My drops rows' Announce and the Offer panel's Offer and Announce to group; History (since DW-51): `sent` makes the drop's outcome `asked` (an ask) or `offered` (an offer or announce); Toast (since DW-52): the toast on screen repaints its Ask button; AutoAsk (since DW-54): any move of a drop's `ask` cancels its waiting automatic ask (you asked yourself) |
 | `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (sent since DW-28) | none. Sent on every tick of the shared ticker (each second while the window is shown, each minute while it is hidden, never with nothing live) and after a scan that found your own drops or dropped the last entries; `NS.TradeTimer.ForDrop(dropId)` and `Remaining(entry)` are the countdown | LootFeed (since the DW-27 review): reads each own drop the timer matched from its bag item (since DW-80, `ReadBagItems`: `DropUpdated(id, "bag")` when its level, quality or link moved), then re-estimates your own drops' trade with the timer folded in; Window (since DW-33): repaints the My drops tab while it is active and the Offer panel while it is open, nothing else |
 | `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (sent since DW-28) | `dropId`, `itemGUID`, `remaining` (seconds). Sent once per item, when its remaining time first falls to `trade.warnAt` (600s) or less; the module prints the chat warning itself, and the entry's `warned` is set | Window (since DW-33): one whole repaint, batched; the countdown reads `ending soon` in bold from its own clock, so a repaint carries it |
-| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (sent since DW-51); `modules/TestMode.lua` (since DW-84) when its sample groups arrive or leave | none. Sent when a drop is recorded, a refresh changes what its entry keeps (its verdicts, trade estimate, outcome, or its link, level and quality read again; a DropUpdated that changes none of them sends nothing), an outcome moves (an ask sent, declined set or cleared, a completed trade), the cap trims the log, or Clear history empties it; `NS.History.Groups()` is the log | History tab (since DW-51, `modules/WindowHistory.lua`): one repaint of the shown window on the next frame through the window's own coalesced repaint (`Window.ScheduleRepaint`, shared with `DropUpdated`, so the two cost one pass), the Group drops rows included (a received drop's Ask button reads `Traded`); AutoAsk (since DW-54): a waiting automatic ask for a drop now `received` is canceled |
+| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (sent since DW-51); `modules/TestMode.lua` (since DW-84) when its sample groups arrive or leave; `modules/HistoryRetention.lua` (since DW-A5) when Keep history for deletes groups | none. Sent when a drop is recorded, a refresh changes what its entry keeps (its verdicts, trade estimate, outcome, or its link, level and quality read again; a DropUpdated that changes none of them sends nothing), an outcome moves (an ask sent, declined set or cleared, a completed trade), Keep history for deletes groups (`modules/HistoryRetention.lua`, since DW-A5: the login prune or a confirmed shorter window), or Clear history empties it; `NS.History.Groups()` is the log | History tab (since DW-51, `modules/WindowHistory.lua`): the filter bar's cached History Character rows dropped (`WindowFilterBar.InvalidateChars`, since DW-A6), then one repaint of the shown window on the next frame through the window's own coalesced repaint (`Window.ScheduleRepaint`, shared with `DropUpdated`, so the two cost one pass), the Group drops rows included (a received drop's Ask button reads `Traded`); AutoAsk (since DW-54): a waiting automatic ask for a drop now `received` is canceled |
 
 ## Slash Commands
 
@@ -216,11 +246,11 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `PLAYER_REGEN_DISABLED` | `DW.OnCombatStart`, then `DW.OnInspectCombatEvent`, then `DW.OnToastCombatStart` (through `DW:OnSharedFeatureEvent`) | ends test mode; re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua`; then parks the inspect queue (`modules/Inspect.lua`); then, unless `toast.inCombat`, takes the toast on screen down and puts it back at the head of its queue (`modules/Toast.lua`) |
 | `PLAYER_REGEN_ENABLED` | `DW.OnCombatEnd`, then `DW.OnInspectCombatEvent`, then `DW.OnGearRegenEvent`, then `DW.OnToastCombatEnd` (the same) | re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua`; then resumes the inspect queue; then arms the gear rebuild a bag event deferred in combat (`modules/Gear.lua`); then shows the toast combat held (`modules/Toast.lua`) |
 | `ADDON_RESTRICTION_STATE_CHANGED` | `DW.OnRestrictionEvent` | records the type's state as a hint and re-reads the restrictions (`modules/Restrictions.lua`); sends `RestrictionChanged` on a change |
-| `PLAYER_ENTERING_WORLD` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnInspectWorldEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | ends a running simulation when the real client is now inside an instance or in a group (`modules/Sim.lua`, read past the seam); then re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change; then, inside an instance, arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-62) ends auto-ask's encounter hold when no Encounter restriction is left in force, so a player who left mid-fight is not held for good, or, while it is still in force, lets its later lifting (`RestrictionChanged`) end the hold (`modules/AutoAsk.lua`) |
+| `PLAYER_ENTERING_WORLD` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnInspectWorldEvent`, then `DW.OnRetentionWorldEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | ends a running simulation when the real client is now inside an instance or in a group (`modules/Sim.lua`, read past the seam); then re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change; then, inside an instance, arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-A5) the first one of the session arms the History's prune by age five seconds later on a cancelable timer the stand-down takes back (`modules/HistoryRetention.lua`); then (since DW-62) ends auto-ask's encounter hold when no Encounter restriction is left in force, so a player who left mid-fight is not held for good, or, while it is still in force, lets its later lifting (`RestrictionChanged`) end the hold (`modules/AutoAsk.lua`) |
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop and the situation, as above; then auto-ask's encounter hold, as above |
 | `CHALLENGE_MODE_START` | `DW.OnSituationEvent`, then `DW.OnFeedRunStart` (through `DW:OnSharedFeatureEvent`) | the same (a keystone started); then opens the run's drop group (`modules/LootFeed.lua`) |
 | `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent` (the same) | the same (a keystone ended); then keeps the run's group open 120 seconds for the chest; then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`) |
-| `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then `DW.OnAskRosterEvent` cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then `DW.OnAutoAskRosterEvent` cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
+| `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`), and on a change its sinks grow the open group's roster and its History group's (`modules/GroupRoster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then `DW.OnAskRosterEvent` cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then `DW.OnAutoAskRosterEvent` cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |

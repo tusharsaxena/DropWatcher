@@ -12,7 +12,7 @@ predicate, `settings/SchemaRows.lua`), never hidden, and keeps its value.
 | Page | Covers |
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `When to show` |
+| General | `Master controls`, `When to show`, `Simulation` |
 | Feed | `Quality`, `Filters` |
 | Comparison | `Scoring`, `Weights`, `Preferences` |
 | Trade | `Rules`, `Timers` |
@@ -53,6 +53,14 @@ setting) has no LibKa0s composer: `ChoiceGrid` draws one choice per row over one
 situation's line holds two checkboxes and a dropdown. So the tab draws one block per situation, as
 the plan's fallback says, and a LibKa0s issue asking for a grid composer is filed as [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
 
+## General → Simulation
+
+One slider, `Simulation step delay` (`sim.stepDelay`, feedback-2 spec §8, DW-A7): the seconds the
+simulator's automatic run (`/dw sim run`, the simulation panel's Run all) waits between steps, 0.5
+to 10 in steps of 0.5, 2 by default. `/dw set sim.stepDelay <n>` reaches it too (the slash parser
+clamps a number outside the range to it). A change takes effect from the next step of a running
+timeline, and the panel's Run all tooltip names the current delay.
+
 ## Feed
 
 **Quality:** `Minimum quality` (`feed.quality.mode`), `Fixed minimum` (live in the fixed mode only),
@@ -60,10 +68,11 @@ the plan's fallback says, and a LibKa0s issue asking for a grid composer is file
 `In force now: Quality: Rare+`: the filter bar's label for where you stand, naming the situation
 when its own setting overrides the feed's mode. It repaints with every write.
 
-**Filters:** View, Content and Sort (what a fresh Group drops tab starts with), Gear only, Tier
-tokens, Minimum item level with its absolute and relative values (each live in its mode only), Usable
-by me and Upgrade for me (what a fresh tab's two checkboxes start with, DW-83), Show my own loot in
-Group drops, Clear on boss kill.
+**Filters:** View: Interesting, View: Likely tradeable, View: Usable by me and View: Upgrade for me
+(the View a fresh tab opens on, one checkbox per value; all unticked is View: All, the default,
+DW-A1), Content and Sort (what a fresh tab starts with), Gear only, Tier tokens, Minimum item level
+with its absolute and relative values (each live in its mode only), Show my own loot in Group drops,
+Clear on boss kill.
 
 ## Comparison
 
@@ -84,7 +93,7 @@ each time.
 ## Trade
 
 **Rules:** the loot rule per situation (`trade.rules.<situation>`). **Timers:** Warn before a trade
-window closes, Likely tradeable only.
+window closes. (Likely tradeable only moved to Feed › Filters as View: Likely tradeable, DW-A1.)
 
 ## Messages
 
@@ -106,6 +115,8 @@ prints auto-ask's one-time notice; turning it off cancels the asks waiting to go
 
 ## Window
 
-**Columns:** a checkbox per optional column (My eq among them since DW-83). **Layout:** Compact, Row height, Font size, Groups kept
-in history (account-wide; a lower cap trims the history at once). **Toast:** Show a toast, then its least gain, duration, combat and sound
+**Columns:** a checkbox per optional column (My eq among them since DW-83). **Layout:** Compact, Row height (18 by default, all three
+tabs), Font size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table; DW-A8), Keep history
+for (7 to 180 days or Never delete, default 30; account-wide; a shorter time that would delete groups
+asks first, and No puts the previous time back). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.

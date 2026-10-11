@@ -1,21 +1,29 @@
 local _, NS = ...
 -- modules/History.lua — the history (design spec §10): every drop the feed shows, kept across
--- sessions in a capped log on the account (DropWatcherDB.global.history), grouped by encounter or
--- run, each with its outcome.
+-- sessions in a log on the account (DropWatcherDB.global.history), grouped by encounter or run,
+-- each with its outcome, kept for a number of days.
 --
---   history = { maxGroups (the schema row's), v = 1, groups = {
---       { key, label, kind, situation, at, drops = {
---           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality,
+--   history = { retentionDays (the schema row's), v = 1, groups = {
+--       { key, label, kind, situation, at, roster = { { name, realm, class, me }, ... }, drops = {
+--           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
 --             me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
 --             trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
 --
 -- `at` is time() (seconds since the epoch), never GetTime(), so it means the same after a reload.
+-- `roster` is who was in the group (feedback-2 spec §3, modules/GroupRoster.lua): copied from the
+-- feed group's snapshot by every recorded drop and grown with it; a group kept before it existed
+-- has none.
+-- `seenBy` is the character that saw the drop (Name-Realm) and `seenByClass` its classFile, for the
+-- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
+-- has neither.
 -- `looter` is the Name-Realm and `class` its classFile. `before` is the outcome a hand-set
 -- `declined` replaced, so clearing it puts that back. The table is the account's: History never
--- replaces `global.history` whole (the cap row lives in it), only its `groups` list.
+-- replaces `global.history` whole (the retention row lives in it), only its `groups` list.
 --
--- THE CAP (spec §10). At most `global.history.maxGroups` groups (default 20, read through
--- NS.Setting), the oldest dropped first, and MAX_DROPS (50) drops per group, the oldest first.
+-- HOW LONG IT IS KEPT (feedback-2 spec §5). By age, not by count: modules/HistoryRetention.lua
+-- deletes the groups older than `global.history.retentionDays` (Keep history for, default 30 days).
+-- Here, MAX_DROPS (50) drops per group and CEILING (5,000) drops in all, a safety ceiling that keeps
+-- SavedVariables bounded even when nothing is deleted by age, the oldest dropped first.
 --
 -- THE SIMULATOR (simulator spec §5). While a simulation runs, the log is the simulation's own
 -- session-only log (NS.Sim.HistoryLog, modules/Sim.lua), never `global.history`: Log() answers it,
@@ -67,6 +75,7 @@ local TAG = "FEED"
 
 H.VERSION = 1
 H.MAX_DROPS = 50
+H.CEILING = 5000
 
 -- How far each outcome has come: an automatic move never goes back. `declined` is the player's.
 H.RANK = { seen = 0, asked = 1, offered = 1, expired = 2, declined = 3, received = 4, tradedAway = 4 }
@@ -80,7 +89,7 @@ local function num(v)
 end
 
 --- Make `hist` the current shape in place: a `groups` list and the version stamp. Anything else in
---- it (the cap) is left alone.
+--- it (the retention row) is left alone.
 --- @param hist table
 --- @return table hist
 function H.Normalize(hist)
@@ -124,6 +133,7 @@ function H.Snapshot(rec, now)
         itemLink = rec.link, itemID = itemIDOf(rec), looter = who.name, class = who.classFile,
         isMine = rec.isMine == true or nil, ilvl = num(facts.ilvl), equipLoc = facts.equipLoc,
         quality = num(facts.quality), outcome = "seen", at = now, sim = rec.sim == true or nil,
+        seenBy = rec.seenBy, seenByClass = rec.seenByClass,
     }
     H.Refresh(e, rec)
     return e
@@ -219,21 +229,42 @@ local function markGone(group)
     for _, e in ipairs(group.drops) do e.gone = true end
 end
 
---- Hold `hist` to the cap: at most `maxGroups` groups (the oldest go) and MAX_DROPS drops in each
---- (the oldest go). A dropped entry is marked `gone` for the session index.
---- @param hist table
---- @param maxGroups number|nil
---- @return number groups dropped
-function H.Trim(hist, maxGroups)
-    local cap, n = math.max(1, math.floor(num(maxGroups) or 20)), 0
-    while #hist.groups > cap do
-        markGone(table.remove(hist.groups, 1))
-        n = n + 1
-    end
-    for _, g in ipairs(hist.groups) do
-        while #g.drops > H.MAX_DROPS do table.remove(g.drops, 1).gone = true end
-    end
+local function totalDrops(hist)
+    local n = 0
+    for _, g in ipairs(hist.groups) do n = n + #g.drops end
     return n
+end
+
+-- The ceiling: the oldest drop of the oldest group goes first, and a group left empty goes too.
+local function holdCeiling(hist, ceiling)
+    local over, n = totalDrops(hist) - ceiling, 0
+    while over > 0 and #hist.groups > 0 do
+        local g = hist.groups[1]
+        if #g.drops == 0 then
+            table.remove(hist.groups, 1)
+        else
+            table.remove(g.drops, 1).gone = true
+            over, n = over - 1, n + 1
+        end
+    end
+    if hist.groups[1] and #hist.groups[1].drops == 0 then table.remove(hist.groups, 1) end
+    return n
+end
+
+--- Hold `hist` to its limits: MAX_DROPS drops in each group and `ceiling` (CEILING by default)
+--- drops in all, the oldest first. A dropped entry is marked `gone` for the session index.
+--- @param hist table
+--- @param ceiling number|nil
+--- @return number drops dropped
+function H.Trim(hist, ceiling)
+    local n = 0
+    for _, g in ipairs(hist.groups) do
+        while #g.drops > H.MAX_DROPS do
+            table.remove(g.drops, 1).gone = true
+            n = n + 1
+        end
+    end
+    return n + holdCeiling(hist, math.max(1, math.floor(num(ceiling) or H.CEILING)))
 end
 
 local function findGroup(hist, key)
@@ -243,22 +274,26 @@ local function findGroup(hist, key)
     return nil
 end
 
---- Record one entry under the group `info` names (made, newest last, by its first entry), then
---- hold the log to the cap.
+--- Record one entry under the group `info` names (made, newest last, by its first entry), merge
+--- the group's roster in, then hold the log to its limits (H.Trim).
 --- @param hist table
---- @param info table { key, label, kind, situation }
+--- @param info table { key, label, kind, situation, roster }
 --- @param entry table H.Snapshot's
---- @param maxGroups number|nil
+--- @param ceiling number|nil H.Trim's
 --- @return table entry
-function H.Record(hist, info, entry, maxGroups)
+function H.Record(hist, info, entry, ceiling)
     local g = findGroup(hist, info.key)
     if not g then
         g = { key = info.key, label = info.label, kind = info.kind, situation = info.situation, at = entry.at,
             drops = {} }
         hist.groups[#hist.groups + 1] = g
     end
+    if type(info.roster) == "table" then
+        g.roster = g.roster or {}
+        NS.GroupRoster.Merge(g.roster, info.roster)
+    end
     g.drops[#g.drops + 1] = entry
-    H.Trim(hist, maxGroups)
+    H.Trim(hist, ceiling)
     return entry
 end
 
@@ -367,12 +402,6 @@ function H.ReleaseLog(log)
     changed()
 end
 
---- The cap in force: `global.history.maxGroups`, through the schema seam.
---- @return number
-function H.Cap()
-    return num(NS.Setting and NS.Setting("global.history.maxGroups")) or 20
-end
-
 --- When this session's recording started (time()), for the History tab's This session.
 --- @return number
 function H.SessionStart()
@@ -387,7 +416,7 @@ function H.Groups()
     return hist and hist.groups or {}
 end
 
---- A live drop's entry this session, or nil (never recorded, or dropped by the cap).
+--- A live drop's entry this session, or nil (never recorded, or since deleted).
 --- @param dropId any
 --- @return table|nil
 function H.EntryOf(dropId)
@@ -415,10 +444,36 @@ function H.AskState(drop, state, reason)
     return state, reason
 end
 
+local function historyKey(feedKey) return tostring(feedKey or "?") .. "@" .. H.SessionStart() end
+
+-- The feed group's roster snapshot for a drop, or nil.
+local function feedRoster(rec)
+    local groups = NS.LootFeed.Groups(rec.feed)
+    for i = #groups, 1, -1 do
+        if groups[i].key == rec.groupKey then return groups[i].roster end
+    end
+    return nil
+end
+
 local function groupInfo(rec)
     local spec = type(rec.group) == "table" and rec.group or {}
-    return { key = tostring(rec.groupKey or spec.key or "?") .. "@" .. H.SessionStart(), label = spec.label,
-        kind = spec.kind, situation = rec.situation }
+    return { key = historyKey(rec.groupKey or spec.key), label = spec.label, kind = spec.kind,
+        situation = rec.situation, roster = feedRoster(rec) }
+end
+
+--- A feed group's roster grew between drops (modules/GroupRoster.lua): the History group it is
+--- recorded under (in the running simulation's log while one runs, else the account's) takes the
+--- newcomers. HistoryChanged when it did.
+--- @param feedGroup table
+--- @return boolean grown
+function H.GrowRoster(feedGroup)
+    local hist = H.LogFor(NS.Sim.active)
+    local g = hist and findGroup(hist, historyKey(feedGroup.key))
+    if not g then return false end
+    g.roster = g.roster or {}
+    if not NS.GroupRoster.Merge(g.roster, feedGroup.roster) then return false end
+    changed()
+    return true
 end
 
 --- DropAdded: record a live drop.
@@ -430,7 +485,7 @@ function H.OnDropAdded(id)
     -- a simulation runs (the record's own origin decides, never whether one runs).
     local hist = H.LogFor(rec.sim)
     if not hist then return end
-    index[id] = H.Record(hist, groupInfo(rec), H.Snapshot(rec, clock()), H.Cap())
+    index[id] = H.Record(hist, groupInfo(rec), H.Snapshot(rec, clock()))
     changed()
 end
 
@@ -463,7 +518,8 @@ function H.SetEntryDeclined(e, on)
     end
 end
 
---- Empty the history (the History tab's Clear history, behind its confirmation). The cap stays.
+--- Empty the history (the History tab's Clear history, behind its confirmation). The retention
+--- row stays.
 function H.Clear()
     local hist = H.Log()
     if not hist then return end
@@ -471,12 +527,6 @@ function H.Clear()
     hist.groups = {}
     NS.Print(L["History cleared."])
     changed()
-end
-
---- Hold the stored log to the cap now (the cap row's change).
-function H.ApplyCap()
-    local hist = H.Log()
-    if hist and H.Trim(hist, H.Cap()) > 0 then changed() end
 end
 
 -- ── the trade window ────────────────────────────────────────────────────────────────────────
@@ -567,14 +617,16 @@ end
 --- @return table|nil
 function H.OpenTrade() return openTrade() end
 
---- The counts the diagnostics report shows: { groups, drops, cap, tracked }.
+--- The counts the diagnostics report and the History footer show: { groups, drops, days (the
+--- retention, 0 = never delete), ceiling, tracked }.
 --- @return table
 function H.Stats()
     local groups, drops = H.Groups(), 0
     for _, g in ipairs(groups) do drops = drops + #g.drops end
     local tracked = 0
     for _ in pairs(index) do tracked = tracked + 1 end
-    return { groups = #groups, drops = drops, cap = H.Cap(), tracked = tracked }
+    return { groups = #groups, drops = drops, days = NS.HistoryRetention.Days(), ceiling = H.CEILING,
+        tracked = tracked }
 end
 
 -- ── events, messages and the lifecycle ──────────────────────────────────────────────────────

@@ -86,6 +86,11 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   ├─> WindowGroup.Layout(columns, the rows' width)                          (pure)
   ├─> WindowGroup.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
   │                       NS.State.windowGroup)                              first, filtered, sorted)
+  │     each header: the shown drops, every drop the tab lists (ctx.belongs), and the hidden ones with
+  │     the control that hid each (ctx.hiddenBy = WindowFilterBar.HiddenBy) ─> WindowCells.Header:
+  │     `2 drops · 1 shown`, the tooltip naming each hidden drop and its filter (feedback-2 spec §0);
+  │     a group the View hid whole keeps its header, `n drops · 0 shown`; one Search, Content or a
+  │     Character choice hid whole is left out (WindowCells.KeepsHeader)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / MyEq / TheirEq / Me / Them / Trade / Ask
                   reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's
@@ -182,7 +187,8 @@ NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item c
 /dw sim step ─> NS.SimScenario.Step ─> the next step's driver: RunStart, Pull, SetLockdown(on), Kill,
                    Loot(burst), SetLockdown(off), RunEnd (waits while the pool builds) ─> its chat
                    line (StepLine), typed or played
-/dw sim run ─> a step now, then one every STEP_DELAY seconds on NS.Sim.After (the stop ends it)
+/dw sim run ─> a step now, then one every SimScenario.StepDelay() seconds (`sim.stepDelay`, 2 by
+                   default, read as each next step is set) on NS.Sim.After (the stop ends it)
 /dw sim pause | resume | restart ─> NS.SimScenario.Pause (the timer canceled) | Resume (Run) | Restart
                    (NS.Sim.Stop, then Start with the same scenario and size)
 every move of the timeline (start, ready, step, run, pause, the end, the stop) ─> NS.SimScenario.Notify
@@ -227,7 +233,10 @@ Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
   ├─> WindowGroup.Layout(WindowMine.COLUMNS, the rows' width)              (pure)
   ├─> WindowMine.Entries(NS.LootFeed.Drops(feed), ctx, NS.State.windowMine) (pure: your own drops,
   │                                                                           filtered, sorted)
-  ├─> NS.Pool.ReleaseAll(rows) ─> Acquire in order (each row built once)
+  ├─> WindowMine.Rows(Groups, Drops, Get, ctx, NS.State.windowMine) (pure: WindowGroup.Entries over
+  │     your drops, every group open until toggled; a drop in no group last, with no header)
+  ├─> NS.Pool.ReleaseAll(rows, headers) ─> Acquire in order (each built once); each header:
+  │     WindowCells.Header(group, shown, now, …): `Label · Situation · 6m ago · n drops · party`
   ├─> each row: WindowCells.Item / Ilvl, MineCells.ForMe / TradeWindow(drop, now, TradeTimer.WarnAt())
   │             / BestCandidates(drop, revealed) / Actions(drop, best, AnnounceButton(…))
   │               reads: NS.Asks.StateOf("announce", nil, id)
@@ -285,7 +294,11 @@ GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent ─> DW.OnSituationEvent (above
         ├─> per token: UnitGUID (secret or missing: skipped), UnitName (secret or Unknown: no
         │              name), UnitClass, UnitIsConnected; same-realm realm from
         │              Compat.NormalizedRealm
-        └─> NS.State.roster = { byGUID, list }, each member's specID carried over
+        ├─> NS.State.roster = { byGUID, list }, each member's specID carried over
+        └─> changed: the change sinks ─> GroupRoster.Grow
+              └─> LootFeed.OpenGroup (the live group a drop now would join, if it exists)
+                    ─> GroupRoster.Merge(its roster, GroupRoster.Current()) ─> grew:
+                    History.GrowRoster (its History group, HistoryChanged) + Window.ScheduleRepaint
 
 Roster.Resolve(GUID | "Name-Realm" | "Name", classFile?)
   ├─> GUID hit, else name (+ realm) match without case, realms normalized
@@ -294,7 +307,11 @@ Roster.Resolve(GUID | "Name-Realm" | "Name", classFile?)
 ```
 
 The roster sends no message: a module that needs the fresh group declares `GROUP_ROSTER_UPDATE`
-below `modules/Roster.lua` in the TOC and hears it after the roster's handler. The stand-down drops
+below `modules/Roster.lua` in the TOC and hears it after the roster's handler. The one exception is
+the group's roster snapshot (feedback-2 spec §3): `modules/GroupRoster.lua` is told through
+`Roster.AddChangeSink`, only when the re-read changed the group. Each feed group also takes the
+members with every drop it receives (`GroupRoster.Note`, from the feed's add; a test drop takes its
+spec's roster), so the snapshot grows with a mid-run joiner and never shrinks. The stand-down drops
 the roster; the stand-up re-reads it.
 
 ## The item facts
@@ -411,7 +428,7 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`]   ─> drop.me
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
   QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`]
-    ─> hidden `quality` (one QUAL debug line), before any inspect
+    ─> hidden `quality` (one FEED line with the reason, one QUAL line with the threshold), before any inspect
   someone else's drop: Inspect.Request(looter, looter priority)
       ─> Evaluate(facts, Inspect.Candidate(looter)) once read ─> drop.them
       ─> TradeRules.Estimate(bind facts + bonus roll, drop.them, situation rule) ─> drop.trade
@@ -508,7 +525,15 @@ The stand-down cancels the flush timer and drops the queued asks; the sent regis
 
 ```
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
-                          (live drops only)        group = feed group @ session, cap = maxGroups)
+                          (live drops only)        group = feed group @ session; Trim: 50 a group,
+                                                   CEILING 5,000 drops in all, the oldest first)
+first PLAYER_ENTERING_WORLD, or the stand-up after a disabled start
+                          ─> 5s (canceled by the stand-down) ─> HistoryRetention.LoginPrune:
+                          groups whose newest entry is older than retentionDays ─> HistoryChanged
+Keep history for row ─> HistoryRetention.OnChanged ─> deletes nothing: taken | deletes: StaticPopup
+                          ─> Yes: PruneAll (account + shown session log) | No: the agreed value back
+                          (HistoryRetention.Answer: only the latest pending choice; a later change
+                          retires the open popup)
 DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
                           (HistoryChanged only when the entry changed)
 AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)
@@ -517,7 +542,7 @@ TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TR
           5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
-Clear history ─> StaticPopup ─> History.Clear        cap row ─> History.ApplyCap
+Clear history ─> StaticPopup ─> History.Clear
 every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint: one pass next frame,
                                    shared with DropUpdated's
                                    (the History tab; a received drop's Ask reads Traded)

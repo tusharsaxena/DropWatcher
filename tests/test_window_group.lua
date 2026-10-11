@@ -285,7 +285,7 @@ local function ctxOf(pass, sort)
         compare = function(a, b) return a.id > b.id end }
 end
 
-test("table: groups newest first, the first open and older ones collapsed, empty ones left out", function()
+test("table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header", function()
     local WG = T.newAddon().WindowGroup
     local byId = { [1] = drop({ id = 1 }), [2] = drop({ id = 2 }), [3] = drop({ id = 3 }), [4] = drop({ id = 4 }) }
     local groups = {
@@ -293,15 +293,32 @@ test("table: groups newest first, the first open and older ones collapsed, empty
     }
     local get = function(id) return byId[id] end
     local e = WG.Entries(groups, get, ctxOf(function(d) return d.id ~= 4 end), {})
-    assertEqual(e[1].kind, "header"); assertEqual(e[1].group.key, "b", "c has no matching drop")
-    assertFalse(e[1].collapsed); assertEqual(e[1].count, 2)
-    assertEqual(e[2].drop.id, 3, "the tab's order within the group"); assertEqual(e[3].drop.id, 2)
-    assertEqual(e[4].group.key, "a"); assertTrue(e[4].collapsed); assertEqual(#e, 4)
+    -- red under: a group the filter hides whole is left out, with nothing saying its drop exists
+    assertEqual(e[1].kind, "header"); assertEqual(e[1].group.key, "c", "c's drop is hidden, not lost")
+    assertEqual(e[1].count, 0); assertEqual(e[1].total, 1); assertFalse(e[1].collapsed)
+    assertEqual(WC().DropCount(e[1].count, e[1].hidden), "1 drop · 0 shown")
+    assertEqual(e[2].group.key, "b"); assertFalse(e[2].collapsed, "the first group with a drop shown opens")
+    assertEqual(e[2].count, 2)
+    assertEqual(e[3].drop.id, 3, "the tab's order within the group"); assertEqual(e[4].drop.id, 2)
+    assertEqual(e[5].group.key, "a"); assertTrue(e[5].collapsed); assertEqual(#e, 5)
+    local searched = ctxOf(function(d) return d.id ~= 4 end)
+    searched.hiddenBy = function() return "search" end
+    assertEqual(WG.Entries(groups, get, searched, {})[1].group.key, "b", "a group Search hides whole is left out")
     local toggled = WG.Entries(groups, get, ctxOf(), { collapsed = { a = false, c = true }, dismissed = { [2] = true } })
     assertEqual(toggled[1].group.key, "c"); assertTrue(toggled[1].collapsed, "the player's toggle wins")
     assertEqual(toggled[2].group.key, "b"); assertEqual(toggled[2].count, 1, "a dismissed drop is gone")
     local oldest = WG.Entries(groups, get, ctxOf(nil, "oldest"), {})
     assertEqual(oldest[1].group.key, "a", "Sort: Oldest turns the groups round")
+end)
+
+test("cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder", function()
+    local W = WC()
+    assertTrue(W.KeepsHeader(1, {}))
+    assertFalse(W.KeepsHeader(0, {}), "nothing for the tab")
+    assertTrue(W.KeepsHeader(0, { { drop = {}, why = "interesting" } }), "View: counted, never silent")
+    assertFalse(W.KeepsHeader(0, { { drop = {}, why = "search" }, { drop = {}, why = "content" } }), "the question asked")
+    assertFalse(W.KeepsHeader(0, { { drop = { seenBy = "Alt-Testrealm" }, why = "char" } }), "a Character choice")
+    assertTrue(W.KeepsHeader(0, { { drop = {}, why = "char" } }), "kept before the dropdown: no recorder")
 end)
 
 -- ── the table, headless ─────────────────────────────────────────────────────────────────────
@@ -354,19 +371,61 @@ test("table: built at the minimum width, the shed columns hide and Ask stays ins
     assertTrue(x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
 end)
 
+-- Feedback-2 spec §8 (FB2-9): the tables read like Ka0s Loot History's, 18-pixel rows and the
+-- template's own text size (0 is Default); a stored size from 8 to 20 replaces it.
+test("rows: the pure metrics read Default as the template's size and keep the row height in range", function()
+    local NS = T.newAddon()
+    local WR, K = NS.WindowRows, NS.Constants.WINDOW
+    assertEqual(K.ROW_H, nil, "the default lives only in defaults/Profile.lua")
+    assertEqual(WR.ROW_H, 18, "Loot History's row height, read from the profile defaults")
+    assertEqual(NS.C.PROFILE.window.rowHeight, 18); assertEqual(NS.C.PROFILE.window.fontSize, 0)
+    assertEqual(WR.FontSize(0), nil, "0 is Default"); assertEqual(WR.FontSize(nil), nil)
+    assertEqual(WR.FontSize("12"), nil); assertEqual(WR.FontSize(-3), nil); assertEqual(WR.FontSize(0 / 0), nil)
+    assertEqual(WR.FontSize(12), 12); assertEqual(WR.FontSize(12.4), 12)
+    assertEqual(WR.FontSize(3), K.FONT_MIN, "1 to 7 read as the least size"); assertEqual(WR.FontSize(99), K.FONT_MAX)
+    assertEqual(WR.RowHeight(nil), 18); assertEqual(WR.RowHeight(24), 24)
+    assertEqual(WR.RowHeight(4), K.ROW_H_MIN); assertEqual(WR.RowHeight(400), K.ROW_H_MAX)
+    assertEqual(WR.IconSize(18), 16, "the item button fits an 18-pixel row")
+    assertEqual(WR.IconSize(32), K.ROW_ICON, "and never grows past its own size")
+    assertEqual(WR.MineRowHeight(18), 32, "a My drops row keeps room for its countdown bar")
+    assertEqual(WR.MineRowHeight(18, nil), 32, "Default reads the template's size")
+    assertEqual(WR.MineRowHeight(30), 44, "a taller row adds the bar's room")
+    assertEqual(WR.MineRowHeight(18, 14), 40, "a larger text grows the row so its two lines never overlap")
+    assertEqual(WR.MineRowHeight(18, 20), 52)
+    assertEqual(WR.MineRowHeight(40, 8), 54, "the row height wins when it needs more")
+end)
+
+test("rows: a stored row height and font size stay as the player set them", function()
+    local NS = T.enableAddon()
+    NS.addon.db.profile.window.rowHeight, NS.addon.db.profile.window.fontSize = 24, 12
+    local m = NS.WindowRows.Metrics()
+    assertEqual(m.height, 24); assertEqual(m.fontSize, 12); assertEqual(m.icon, 20); assertEqual(m.mineHeight, 38)
+end)
+
+test("rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0", function()
+    local NS = T.bootAddon()
+    local row = NS.SchemaRuntime.FindRow("window.fontSize")
+    assertEqual(row.min, 0); assertEqual(row.max, 20)
+    local fmt = function(_, v) return tostring(v) end
+    assertEqual(NS.addon.Settings.FormatValue(row, 0, fmt), "0 (Default)")
+    assertEqual(NS.addon.Settings.FormatValue(row, 14, fmt), "14")
+end)
+
 test("table: the Window page's row height and font size lay out and size the drop rows", function()
     local NS, drawn = shownTable()
     local K = NS.Constants.WINDOW
     local r1 = rowFor(drawn, 1)
-    assertEqual(r1:GetHeight(), K.ROW_H, "the default row height")
+    assertEqual(r1:GetHeight(), NS.WindowRows.ROW_H, "the default row height")
+    assertEqual(r1.cells.item.button:GetWidth(), 16, "the item button fits the row")
     local _, size = r1.cells.ilvl.text:GetFont()
-    assertEqual(size, 12, "the default font size")
+    assertEqual(size, 10, "the template's own size: the mock's default face answers 10")
     NS.SchemaRuntime.Set("window.rowHeight", 32)
     NS.SchemaRuntime.Set("window.fontSize", 15)
     drawn = NS.WindowGroup.Drawn()
     r1 = rowFor(drawn, 1)
     local r2 = rowFor(drawn, 2)
     assertEqual(r1:GetHeight(), 32); assertEqual(r1.cells.ilvl:GetHeight(), 32)
+    assertEqual(r1.cells.item.button:GetWidth(), K.ROW_ICON)
     local _, _, _, _, y1 = r1:GetPoint(1)
     local _, _, _, _, y2 = r2:GetPoint(1)
     assertEqual(math.abs(y2 - y1), 32, "the next row starts one row height down")
@@ -374,6 +433,12 @@ test("table: the Window page's row height and font size lay out and size the dro
     assertEqual(size, 15)
     _, size = r1.cells.me.glyph:GetFont()
     assertEqual(size, 15, "the verdict glyph too")
+    NS.SchemaRuntime.Set("window.fontSize", 0)
+    r1 = rowFor(NS.WindowGroup.Drawn(), 1)
+    _, size = r1.cells.ilvl.text:GetFont()
+    assertEqual(size, 10, "Default puts the template's size back")
+    _, size = r1.cells.me.glyph:GetFont()
+    assertEqual(size, 12, "and the glyph's own")
 end)
 
 test("table: built headless, one header and one row per drop, each column painted", function()
@@ -473,6 +538,156 @@ test("table: an item button shows the game's tooltip, shift-click links it and c
     b:__fire("OnClick", "LeftButton")
     assertEqual(m.dressUps[1], LINK)
     assertTrue(b.art:GetTexture() ~= nil, "the item's own icon")
+end)
+
+-- ── the item tooltip beside the window (feedback-2 spec §2, FB2-4) ──────────────────────────
+
+-- A plain frame for PlaceItemTooltip: its edges, width, scale and parent, and the points it is given.
+local function box(t)
+    local f = { pts = {}, tipHost = t.tipHost, dock = t.dock, tipDocked = t.tipDocked }
+    if t.shown ~= nil then function f.IsShown() return t.shown end end
+    function f.GetLeft() return t.left end
+    function f.GetRight() return t.right end
+    function f.GetTop() return t.top end
+    function f.GetWidth() return t.width end
+    function f.GetEffectiveScale() return t.scale or 1 end
+    function f.GetParent() return t.parent end
+    function f.ClearAllPoints(self) self.pts = {} end
+    function f.SetPoint(self, ...) self.pts[#self.pts + 1] = { ... } end
+    return f
+end
+
+local function placed(NS, m, screen, row, tip)
+    m.UIParent.GetWidth = function() return screen end
+    return NS.WindowGroup.PlaceItemTooltip(tip, row)
+end
+
+test("item tooltip: it opens on the window's right, top-aligned with the hovered row", function()
+    local NS, _, m = T.newAddon()
+    local gap = NS.Constants.WINDOW.TIP_GAP
+    local win = box({ left = 400, right = 1400, top = 900 })
+    local row = box({ top = 700, parent = box({ top = 720, parent = win }) })
+    local tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, row, tip), "right")
+    assertEqual(#tip.pts, 1)
+    local p = tip.pts[1]
+    assertEqual(p[1] .. ">" .. p[3], "TOPLEFT>TOPRIGHT")
+    assertTrue(p[2] == win, "beside the window, not the row")
+    assertEqual(p[4], gap); assertEqual(p[5], -200)
+end)
+
+test("item tooltip: it opens on the window's left when the screen has no room on the right", function()
+    local NS, _, m = T.newAddon()
+    local gap = NS.Constants.WINDOW.TIP_GAP
+    local win = box({ left = 600, right = 1700, top = 900 })
+    local row = box({ top = 850, parent = win })
+    local tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, row, tip), "left")
+    local p = tip.pts[1]
+    assertEqual(p[1] .. ">" .. p[3], "TOPRIGHT>TOPLEFT")
+    assertTrue(p[2] == win)
+    assertEqual(p[4], -gap); assertEqual(p[5], -50)
+end)
+
+test("item tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)", function()
+    local NS, _, m = T.newAddon()
+    -- 2000 window units at 0.64 is 1280 px: 300 px of tooltip fit in 1920.
+    local win = box({ left = 500, right = 2000, top = 1200, scale = 0.64 })
+    local row = box({ top = 1000, scale = 0.64, parent = win })
+    local tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, row, tip), "right")
+    assertEqual(tip.pts[1][5], -128, "the row's top in the tooltip's own units")
+    -- The tooltip at 2.2: 300 units are 660 px, and 1280 + 660 is past 1920.
+    local big = box({ width = 300, scale = 2.2 })
+    assertEqual(placed(NS, m, 1920, row, big), "left")
+end)
+
+test("item tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside", function()
+    local NS, _, m = T.newAddon()
+    local tip = box({ width = 300 })
+    assertTrue(placed(NS, m, 1920, box({ top = 10 }), tip) == nil)
+    assertEqual(#tip.pts, 0, "left to the caller's fallback")
+    local win = box({ left = 100, right = 900, top = 900 })
+    local panel = box({ left = 904, right = 1344, top = 900, parent = win, tipHost = true })
+    local row = box({ top = 800, parent = panel })
+    assertEqual(placed(NS, m, 1920, row, tip), "right")
+    assertTrue(tip.pts[1][2] == panel, "the Offer panel's own edge, not the window's under it")
+end)
+
+-- M10 review (FB2-10): with the Offer panel docked beside the window, a tooltip opens beside the
+-- pair, never over the panel (a window row) or over the window (a panel row).
+local function dockedPair(side, shown)
+    local win = box({ left = 500, right = 1300, top = 900 })
+    local panel = side == "right"
+        and box({ left = 1304, right = 1744, top = 900, parent = win, tipHost = true, dock = side, shown = shown })
+        or box({ left = 56, right = 496, top = 900, parent = win, tipHost = true, dock = side, shown = shown })
+    win.tipDocked = panel
+    return win, panel
+end
+
+test("item tooltip: a window row's tooltip goes beside the docked Offer panel, not over it", function()
+    local NS, _, m = T.newAddon()
+    local gap = NS.Constants.WINDOW.TIP_GAP
+    local win, panel = dockedPair("right", true)
+    local row = box({ top = 700, parent = win })
+    local tip = box({ width = 150 })
+    -- red under: the window's own right edge (1300), under the panel
+    assertEqual(placed(NS, m, 1920, row, tip), "right")
+    assertTrue(tip.pts[1][2] == panel, "beyond the panel's right edge")
+    assertEqual(tip.pts[1][4], gap); assertEqual(tip.pts[1][5], -200)
+    -- no room right of the panel: the window's other side
+    tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, row, tip), "left")
+    assertTrue(tip.pts[1][2] == win)
+    -- a panel docked on the left: the tooltip's left side starts at the panel
+    local win2, left = dockedPair("left", true)
+    tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1700, box({ top = 700, parent = win2 }), tip), "right")
+    assertTrue(tip.pts[1][2] == win2)
+    assertEqual(placed(NS, m, 1310, box({ top = 700, parent = win2 }), tip), "left")
+    assertTrue(tip.pts[1][2] == left, "beyond the panel's left edge")
+end)
+
+test("item tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored", function()
+    local NS, _, m = T.newAddon()
+    local win, panel = dockedPair("right", true)
+    local tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = panel }), tip), "left")
+    assertTrue(tip.pts[1][2] == win, "beyond the window's left edge, not over it")
+    win = dockedPair("right", false)
+    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = win }), tip), "right")
+    assertTrue(tip.pts[1][2] == win, "a hidden panel takes no room")
+    win, panel = dockedPair("right", true)
+    panel.dock = "float"
+    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = win }), tip), "right")
+    assertTrue(tip.pts[1][2] == win, "a floating panel sits inside the window")
+end)
+
+test("item tooltip: a row's item button opens the game's tooltip beside the window, else on its own right", function()
+    local NS, drawn, m = shownTable()
+    local b = rowFor(drawn, 1).cells.item.button
+    b:__fire("OnEnter")
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE")
+    local point, rel, relPoint = m.GameTooltip:GetPoint(1)
+    assertEqual(point .. ">" .. relPoint, "BOTTOMLEFT>TOPRIGHT", "no geometry: on the button's right")
+    assertTrue(rel == b)
+    local win = NS.Window.Frame()
+    win.GetLeft = function() return 200 end
+    win.GetRight = function() return 1200 end
+    win.GetTop = function() return 800 end
+    b.GetTop = function() return 600 end
+    m.UIParent.GetWidth = function() return 1920 end
+    m.GameTooltip.GetWidth = function() return 320 end
+    b:__fire("OnEnter")
+    point, rel, relPoint = m.GameTooltip:GetPoint(1)
+    assertEqual(point .. ">" .. relPoint, "TOPLEFT>TOPRIGHT")
+    assertTrue(rel == win, "beside the window")
+    assertEqual(select(5, m.GameTooltip:GetPoint(1)), -200)
+    m.UIParent.GetWidth = function() return 1400 end
+    b:__fire("OnEnter")
+    point, rel, relPoint = m.GameTooltip:GetPoint(1)
+    assertEqual(point .. ">" .. relPoint, "TOPRIGHT>TOPLEFT", "no room on the right")
+    assertTrue(rel == win)
 end)
 
 test("table: Their eq shows the looter's worn item from their inspect read", function()
