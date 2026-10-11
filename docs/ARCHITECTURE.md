@@ -347,6 +347,10 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
   offline: the headless reproduction shows that a first report without bonus data read the drop at
   its base level and quality, and the fix keeps the most complete link and reads your own drops from
   their bag item whatever the source. ITEM-3 and the `drops` diagnostics line record it in game.
+- **A delve's tier** is not in its group header: the header names the difficulty as the client
+  gives it (GetInstanceInfo's difficultyName, else GetDifficultyInfo's), and neither is known to
+  name the tier, so a delve reads `Delves` (feedback-3 spec §4 names `a delve tier`). FEED-30 records
+  what the client gives.
 - **Tier tokens** are recognized, but the slot a token makes is not read, so the verdict for one is
   `unknown` until the tier-token follow-up (design spec §14).
 - **Your gear** is a per-slot best, not a loadout planner: unique-equipped limits and a

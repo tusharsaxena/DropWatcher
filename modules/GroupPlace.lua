@@ -6,10 +6,12 @@ local _, NS = ...
 --   group = { ..., instance, difficulty, seenBy, seenByClass }
 --
 -- `instance` is the instance's name (a dungeon, raid, delve, battleground or arena) while you are in
--- one, else nil. `difficulty` is the difficulty's name as the client gives it (GetDifficultyInfo:
--- Timewalking, Normal, Heroic, Mythic, Looking For Raid, Delves, ...), or `Mythic+ 12` for a keystone
--- run (the active key's level, else the completed run's; `Mythic+` when neither answers); nil
--- outside an instance. Both come through NS.Compat (core/CompatWorld.lua), so a simulation's seam
+-- one, else nil. `difficulty` is the difficulty's name as the client gives it (GetInstanceInfo's own
+-- difficultyName when it names one, else GetDifficultyInfo's: Timewalking, Normal, Heroic, Mythic,
+-- Looking For Raid, Delves, ...), or `Mythic+ 12` for a keystone run (the active key's level, else
+-- the completed run's; `Mythic+` when neither answers); nil outside an instance. A delve's tier is
+-- not read: neither call is known to name it (both give `Delves` for difficulty 208), so a delve
+-- header reads `Delves` until SMOKE FEED-30 shows what the client gives (a known limitation). Both come through NS.Compat (core/CompatWorld.lua), so a simulation's seam
 -- answers them. `seenBy` and `seenByClass` are the recorder of the group's first drop
 -- (modules/CharFilter.lua's stamp).
 --
@@ -118,12 +120,12 @@ end
 function GP.Read()
     local Compat = NS.Compat
     if not Compat.InstanceState() then return {} end
-    local name, _, id = Compat.InstanceInfo()
+    local name, _, id, diffName = Compat.InstanceInfo()
     id = plainNumber(id)
     local out = { instance = plainString(name) }
     if id and id > 0 then
         local level = id == C.DIFFICULTY.MYTHIC_KEYSTONE and Compat.KeystoneLevel() or nil
-        out.difficulty = GP.DifficultyName(id, Compat.DifficultyName(id), level)
+        out.difficulty = GP.DifficultyName(id, plainString(diffName) or Compat.DifficultyName(id), level)
     end
     return out
 end

@@ -783,7 +783,7 @@ local function build()
     M.challengeModeActive = false
     M.unknownDifficulties = {}
     M.GetInstanceInfo = function()
-        return M.instance.name, M.__context.instanceType, M.instance.difficultyID
+        return M.instance.name, M.__context.instanceType, M.instance.difficultyID, M.instance.difficultyName
     end
     M.difficultyNames = { [1] = "Normal", [2] = "Heroic", [8] = "Mythic Keystone", [14] = "Normal",
         [15] = "Heroic", [16] = "Mythic", [17] = "Looking For Raid", [23] = "Mythic", [24] = "Timewalking",

@@ -85,12 +85,12 @@ function Compat.InstanceState()
     return inInstance == true, instanceType
 end
 
---- GetInstanceInfo(): name, instanceType, difficultyID, raw. Nil without the API.
---- @return any, any, any
+--- GetInstanceInfo(): name, instanceType, difficultyID, difficultyName, raw. Nil without the API.
+--- @return any, any, any, any
 function Compat.InstanceInfo()
     if not GetInstanceInfo then return nil end
-    local name, instanceType, difficultyID = GetInstanceInfo()
-    return name, instanceType, difficultyID
+    local name, instanceType, difficultyID, difficultyName = GetInstanceInfo()
+    return name, instanceType, difficultyID, difficultyName
 end
 
 --- Whether the client knows difficulty `id` (GetDifficultyInfo answers for it). False for a

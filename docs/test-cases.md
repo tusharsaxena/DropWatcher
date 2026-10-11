@@ -908,7 +908,7 @@ Total.
 - group header: a raid's party is not in the header; its tooltip line names ten and +n
 - history header: the recorder alone; an older group with no place and no roster keeps its label
 
-### test_group_place.lua (13)
+### test_group_place.lua (14)
 
 - group place: a keystone's difficulty reads Mythic+ and its level; any other is the client's name
 - group place: an encounter names its instance, its boss, then its difficulty
@@ -918,6 +918,7 @@ Total.
 - compat: DifficultyName answers the client's name, nil for an unknown id or no API
 - compat: KeystoneLevel answers the active key, else the completed run's, else nil
 - feed: the owner's Timewalking drop names the instance, the boss, Timewalking and you (07)
+- feed: GetInstanceInfo's own difficulty name wins over GetDifficultyInfo's; an empty one falls back
 - feed: a group keeps the place it opened in
 - feed: a key run's end chest reads Mythic+ and the completed run's level
 - feed: in the open world no place is read and the situation word stands in
@@ -1426,7 +1427,7 @@ Total.
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
-| test_group_place.lua | 13 |
+| test_group_place.lua | 14 |
 | test_char_filter.lua | 18 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
@@ -1452,4 +1453,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1198** |
+| **Total** | **1199** |

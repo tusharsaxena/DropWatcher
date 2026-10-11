@@ -133,6 +133,20 @@ test("feed: the owner's Timewalking drop names the instance, the boss, Timewalki
     assertEqual(uncolored(wh.text), "Gate of the Setting Sun · Commander Ri'mok · Timewalking · 1 drop · Testchar")
 end)
 
+test("feed: GetInstanceInfo's own difficulty name wins over GetDifficultyInfo's; an empty one falls back", function()
+    local NS, m = inInstance("Gate of the Setting Sun", 24, function(m)
+        m.instance.difficultyName = "Instance Says This"
+    end)
+    loot(m, "You receive loot: " .. LEGGINGS .. ".")
+    m.advance(0)
+    assertEqual(NS.LootFeed.Groups("live")[1].difficulty, "Instance Says This")
+    assertEqual(NS.GroupPlace.Read().difficulty, "Instance Says This")
+    m.instance.difficultyName = ""
+    assertEqual(NS.GroupPlace.Read().difficulty, "Timewalking", "GetDifficultyInfo's name when the instance gives none")
+    m.instance.difficultyName = nil
+    assertEqual(NS.GroupPlace.Read().difficulty, "Timewalking")
+end)
+
 test("feed: a group keeps the place it opened in", function()
     local NS, m = inInstance("Gate of the Setting Sun", 24)
     m.__fire("ENCOUNTER_START", 1425, "Commander Ri'mok", 24, 5)
