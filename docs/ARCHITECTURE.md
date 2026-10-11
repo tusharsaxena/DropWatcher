@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Sixty-three authored files load from the TOC, in the standard's folder order; every one, its kind,
+Sixty-four authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -58,7 +58,7 @@ its one-line responsibility and why its position is load-bearing or conventional
   `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
   `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`); and the
   recorded and opt-in features (`History.lua`, `Toast.lua`, `AutoAsk.lua`).
-- `modules/`, the window: the shell (`Window.lua`), its filter bar and footer, one body per tab
+- `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
   their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
   (`TestMode.lua`) and the diagnostics sections (`Diagnostics.lua`).

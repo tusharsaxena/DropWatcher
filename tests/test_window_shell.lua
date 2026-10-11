@@ -63,6 +63,29 @@ test("shell: Escape and every close path close the dropdowns' shared menu too", 
     assertFalse(NS.State.windowOpen, "Escape is the player closing it")
 end)
 
+test("shell: the title bar is its own module, and the shell's BadgeText and TextButton are its", function()
+    local NS = T.newAddon()
+    local TB, W = NS.WindowTitleBar, NS.Window
+    assertTrue(type(TB) == "table" and type(TB.Build) == "function", "modules/WindowTitleBar.lua publishes NS.WindowTitleBar")
+    assertEqual(W.BadgeText("combat", 3), TB.BadgeText("combat", 3))
+    local tip = { TB.TestTip() }
+    assertEqual(tip[1], "Test mode")
+    assertEqual(#tip, 4, "the chip and the banner share one four-line tooltip")
+end)
+
+test("shell: minimized, the title bar wears the plus mark and the `n new` counter; expanded, neither", function()
+    local NS, f = shown()
+    NS.WindowTitleBar.PaintMinimized(f, true, 2)
+    assertEqual(f.minimizeButton.mark, "add")
+    assertTrue(f.newChip:IsShown())
+    assertEqual(textOf(f.newChip.text), "2 new")
+    NS.WindowTitleBar.PaintMinimized(f, true, 0)
+    assertFalse(f.newChip:IsShown(), "no counter while nothing new arrived")
+    NS.WindowTitleBar.PaintMinimized(f, false, 2)
+    assertTrue(f.minimizeButton.mark ~= "add", "the minimize mark again")
+    assertFalse(f.newChip:IsShown())
+end)
+
 -- ── the restriction badge ───────────────────────────────────────────────────────────────────
 
 test("shell: BadgeText names the restriction and counts the queued asks", function()

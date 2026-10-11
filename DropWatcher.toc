@@ -179,9 +179,13 @@ modules\History.lua
 # NS.Bus and NS.MSG, and appends its rows to NS.STAND_DOWN / NS.STAND_UP, all published above, at
 # load, and registers its bus receivers (RestrictionChanged, AskStateChanged, SituationChanged,
 # DropAdded, DropUpdated, InspectDone, TradeTimerTick, TradeTimerExpiring) on its own NS.Bus
-# target. Every engine module above, and NS.WindowFilterBar / NS.WindowFooter / NS.OfferPanel
-# (below), are read at call time: the frame is built on the first show.
+# target. Every engine module above, and NS.WindowTitleBar / NS.WindowFilterBar / NS.WindowFooter /
+# NS.OfferPanel (below), are read at call time: the frame is built on the first show.
 modules\Window.lua
+# Conventional: publishes NS.WindowTitleBar (the title bar, the badge's words and the window's flat
+# and icon buttons); reads NS.Constants and NS.L at load, and NS.Window (above), NS.Asks and the
+# host handlers at call time.
+modules\WindowTitleBar.lua
 # Conventional: publishes NS.WindowFilterBar (the filter bar, each tab's filter state and the row
 # predicates); reads NS.Constants, NS.L, NS.State and NS.C (defaults\, above) at load, and NS.Window
 # (above) at call time.

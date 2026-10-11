@@ -179,11 +179,13 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (37)
+### test_window_shell.lua (39)
 
 - shell: the title bar holds the logo, the gold title, the badge, Scan group, minimize and close
 - shell: the default size is board 01's 940 x 600
 - shell: Escape and every close path close the dropdowns' shared menu too
+- shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
+- shell: minimized, the title bar wears the plus mark and the `n new` counter; expanded, neither
 - shell: BadgeText names the restriction and counts the queued asks
 - shell: RestrictionChanged shows the badge, AskStateChanged counts the queue, its tooltip lists it
 - shell: Scan group asks the inspect broker through the shared handler, and says what it did
@@ -1041,7 +1043,7 @@ Total.
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 37 |
+| test_window_shell.lua | 39 |
 | test_window_group.lua | 33 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
@@ -1078,4 +1080,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **884** |
+| **Total** | **886** |

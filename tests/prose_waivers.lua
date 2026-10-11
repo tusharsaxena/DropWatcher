@@ -14,6 +14,6 @@ return {
         -- A LIBRARY'S FIELD NAME. LibKa0s-Media-1.0 ships the title-bar mark as
         -- `libs/LibKa0s/media/icons/minimise.tga` and catalogs it under `minimise`; NS.Icon looks
         -- it up by that key, and a respelling answers nil and draws the fallback character.
-        ["modules/Window.lua"] = { minimis = true },
+        ["modules/WindowTitleBar.lua"] = { minimis = true },
     },
 }

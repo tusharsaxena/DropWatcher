@@ -1,4 +1,4 @@
-local addonName, NS = ...
+local _, NS = ...
 -- modules/Window.lua — the main window's shell (design spec §11.1, boards 01 and 06): frame, skin,
 -- title bar (logo, gold title, restriction badge, Scan group, minimize, close), the tab strip and
 -- its lazily built panes, the filter bar's host, the footer's host, test mode's chip and banner,
@@ -11,11 +11,13 @@ local addonName, NS = ...
 -- History's window: a 30px title bar, a 26px tab strip with a gold active label and underline, the
 -- filter bar, the tab's body and the footer.
 --
--- THE SPLIT. modules/WindowFilterBar.lua owns the filter bar (its controls, each tab's filter state
--- and the pure row predicates), modules/WindowFooter.lua the footer (its pure composer and its
--- reads). The tabs' bodies are the feature items' (WindowGroup, WindowMine, WindowHistory): each
--- calls Window.RegisterTab(key, { build, refresh }) and is built on its tab's first show. A tab
--- with no body yet shows a line saying what it will hold, so the window is never blank.
+-- THE SPLIT. modules/WindowTitleBar.lua owns the title bar (its controls, the badge's words and
+-- the window's flat and icon buttons), modules/WindowFilterBar.lua the filter bar (its controls,
+-- each tab's filter state and the pure row predicates), modules/WindowFooter.lua the footer (its
+-- pure composer and its reads). The tabs' bodies are the feature items' (WindowGroup, WindowMine,
+-- WindowHistory): each calls Window.RegisterTab(key, { build, refresh }) and is built on its tab's
+-- first show. A tab with no body yet shows a line saying what it will hold, so the window is never
+-- blank.
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
 -- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
@@ -46,9 +48,6 @@ local Perf   = NS.Perf
 
 local TAG = "UI"
 
--- The 128x128 logo the TOC and the launcher wear.
-local LOGO = ("Interface\\AddOns\\%s\\media\\logos\\%s.logo.128.tga"):format(addonName, addonName:lower())
-
 -- The tabs, in strip order (design spec §11.1).
 Window.TABS = { "group", "mine", "history" }
 local TAB_SET = { group = true, mine = true, history = true }
@@ -65,22 +64,6 @@ local TAB_PLACEHOLDER = {
     history = L["Drops from earlier encounters appear here."],
 }
 
--- The restriction badge's words (design spec §11.1), keyed by RestrictionChanged's `reason`.
-local REASON_LABEL = {
-    encounter = L["Encounter"], challengeMode = L["Mythic+ key"], pvpMatch = L["PvP match"],
-    chat = L["Chat restricted"], chatLockdown = L["Chat lockdown"], combat = L["Combat"],
-}
-local REASON_TIP = {
-    encounter     = L["A boss encounter is in progress: addons cannot whisper or inspect until it ends. Asks wait in the queue and are sent then."],
-    challengeMode = L["A Mythic+ key is running: addon chat is restricted until it ends. Asks wait in the queue and are sent then."],
-    pvpMatch      = L["A PvP match is in progress: addon chat is restricted until it ends. Asks wait in the queue."],
-    chat          = L["The client restricts addon chat right now. Asks wait in the queue and are sent once it lifts."],
-    chatLockdown  = L["Chat messaging is locked down right now. Asks wait in the queue and are sent once it lifts."],
-    combat        = L["You are in combat: inspects and trades wait until it ends. Asks are still sent."],
-}
-local KIND_LABEL = { ask = L["Ask"], offer = L["Offer"], announce = L["Announce"] }
-local BADGE_LIST_MAX = 8
-
 local frame   -- built on the first show
 local openedByTestMode = false   -- test mode, not the player, opened the window
 local visibilityListeners = {}   -- fn(shown), told on every OnShow and OnHide of the frame
@@ -92,7 +75,6 @@ local restrictionSeen = false    -- a RestrictionChanged has arrived since the s
 local autoOpenedIn               -- the situation the first interesting drop already opened it in
 local instanceSince              -- GetTime() of the last situation change: "This instance"
 local footerTicker
-local lastTitleClick
 local repaintPending = false     -- a bus repaint is queued for the next frame
 local repaintCountdown           -- the countdowns' own repaint (defined with the repaints below)
 
@@ -165,17 +147,12 @@ end
 
 -- ── pure labels ─────────────────────────────────────────────────────────────────────────────
 
---- The restriction badge's text: nil while nothing is restricted (the badge hides), else the
---- reason and, when asks wait, how many: `Encounter · 2 queued`.
+--- The restriction badge's text (modules/WindowTitleBar.lua's BadgeText).
 --- @param reason string|nil RestrictionChanged's reason
 --- @param queued number|nil
 --- @return string|nil
 function Window.BadgeText(reason, queued)
-    if reason == nil then return nil end
-    local label = REASON_LABEL[reason] or tostring(reason)
-    local n = tonumber(queued) or 0
-    if n > 0 then return L["%s · %d queued"]:format(label, n) end
-    return label
+    return NS.WindowTitleBar.BadgeText(reason, queued)
 end
 
 --- A tab's label: `My drops · 2` counts your tradeable drops.
@@ -190,10 +167,6 @@ end
 
 -- ── reads ───────────────────────────────────────────────────────────────────────────────────
 
-local function queuedAsks()
-    return NS.Asks and NS.Asks.Queued() or {}
-end
-
 -- Your drops you can still trade, in the feed on show (the test feed in test mode).
 local function mineCount()
     local FB, n = NS.WindowFilterBar, 0
@@ -203,25 +176,12 @@ local function mineCount()
     return n
 end
 
--- RestrictionChanged's last reason; before the first one, the tracker's own answer.
-local function currentReason()
+--- RestrictionChanged's last reason; before the first one, the tracker's own answer. Nil while
+--- nothing is restricted. The title bar's badge reads it.
+--- @return string|nil
+function Window.RestrictionReason()
     if restrictionSeen then return restrictionReason end
     return NS.Restrictions and NS.Restrictions.ActiveReason() or nil
-end
-
-local function badgeTooltip()
-    local reason = currentReason()
-    local lines = { Window.BadgeText(reason, 0) or L["Not restricted"] }
-    if REASON_TIP[reason] then lines[2] = REASON_TIP[reason] end
-    local queued = queuedAsks()
-    for i, a in ipairs(queued) do
-        if i > BADGE_LIST_MAX then
-            lines[#lines + 1] = L["and %d more"]:format(#queued - BADGE_LIST_MAX)
-            break
-        end
-        lines[#lines + 1] = L["Queued: %s to %s"]:format(KIND_LABEL[a.kind] or tostring(a.kind), tostring(a.target))
-    end
-    return unpack(lines)
 end
 
 -- ── geometry ────────────────────────────────────────────────────────────────────────────────
@@ -291,7 +251,7 @@ local function startTicker()
     footerTicker = C_Timer.NewTicker(K.FOOTER_TICK, tick)
 end
 
--- ── construction: the title bar ─────────────────────────────────────────────────────────────
+-- ── construction: the title bar's drag (the bar is modules/WindowTitleBar.lua) ────────────────
 
 local function onDragStart()
     if isLocked() then return end
@@ -303,181 +263,12 @@ local function onDragStop()
     savePoint()
 end
 
--- A double-click on the bar expands a minimized window (board 06 A).
-local function onTitleClick(_, button)
-    if button ~= "LeftButton" then return end
-    local now = GetTime()
-    if lastTitleClick and now - lastTitleClick <= K.DOUBLE_CLICK and isMinimized() then
-        lastTitleClick = nil
-        Window.SetMinimized(false)
-        return
-    end
-    lastTitleClick = now
-end
-
--- The mark for `icon` from the catalog, or `glyph` when the texture does not resolve.
-local function setMark(b, icon, glyph)
-    local path = NS.Icon(icon)
-    b.art:SetTexture(path)
-    b.art:SetShown(path ~= nil)
-    b.glyph:SetText(glyph)
-    b.glyph:SetShown(path == nil)
-    b.mark = icon
-end
-
-local function iconButton(parent, icon, glyph, onClick)
-    local b = CreateFrame("Button", nil, parent)
-    b:SetSize(K.ICON, K.ICON)
-    b.art = b:CreateTexture(nil, "ARTWORK")
-    b.art:SetPoint("TOPLEFT", b, "TOPLEFT", 3, -3)
-    b.art:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -3, 3)
-    b.glyph = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    b.glyph:SetPoint("CENTER", b, "CENTER", 0, 0)
-    setMark(b, icon, glyph)
-    b:SetScript("OnClick", onClick)
-    return b
-end
-
--- A flat button: the skin's fill and inner line, a label kept centered and a mark beside it
--- (standalone-windows: a wide action button keeps its label).
-local function textButton(parent, width, icon, text, onClick)
-    local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    b:SetSize(width, K.CONTROL_H)
-    local S = NS.SKIN
-    if b.SetBackdrop and S.bgFile then
-        b:SetBackdrop({ bgFile = S.bgFile, edgeFile = S.edgeFile, edgeSize = S.edgeSize })
-        b:SetBackdropColor(0.12, 0.12, 0.14, 1)
-        b:SetBackdropBorderColor(unpack(S.innerBorder or S.border))
-    end
-    b.art = b:CreateTexture(nil, "ARTWORK")
-    b.art:SetSize(12, 12)
-    b.art:SetPoint("LEFT", b, "LEFT", 6, 0)
-    b.art:SetTexture(NS.Icon(icon))
-    b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    b.label:SetPoint("CENTER", b, "CENTER", 7, 0)
-    b.label:SetText(text)
-    b:SetScript("OnClick", onClick)
-    return b
-end
-
 --- A flat button in the window's look (the Scan group button's, and each Group drops row's Ask):
 --- the skin's fill and inner line, a catalog mark at the left (`icon` may be nil) and a centered
---- label (`b.label`, `b.art`). `onClick(b)` runs on a click.
+--- label (`b.label`, `b.art`). `onClick(b)` runs on a click. Built by modules/WindowTitleBar.lua.
 --- @return table
 function Window.TextButton(parent, width, icon, text, onClick)
-    return textButton(parent, width, icon, text, onClick)
-end
-
-local function buildBadge(bar)
-    local b = CreateFrame("Frame", nil, bar)
-    b:SetSize(170, K.CONTROL_H)
-    b.art = b:CreateTexture(nil, "ARTWORK")
-    b.art:SetSize(12, 12)
-    b.art:SetPoint("LEFT", b, "LEFT", 4, 0)
-    b.art:SetTexture(NS.Icon("lock"))
-    b.art:SetVertexColor(1, 0.6, 0.2)
-    b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    b.text:SetPoint("LEFT", b.art, "RIGHT", 4, 0)
-    b.text:SetTextColor(1, 0.6, 0.2)
-    Window.AttachTooltip(b, badgeTooltip)
-    b:Hide()
-    return b
-end
-
-local function minimizeTip()
-    if isMinimized() then
-        return L["Expand"], L["Show the whole window again. Double-clicking the title bar does the same."]
-    end
-    return L["Minimize"], L["Collapse the window to its title bar. Its position is kept, and a counter shows the interesting drops that arrive meanwhile."]
-end
-
-local function scanTip()
-    return L["Scan group"], L["Inspects every other member of your group, one at a time and out of combat, so each drop can be judged for its looter."]
-end
-
-local function newTip()
-    return L["%d new"]:format(newCount), L["Interesting drops that arrived since you minimized the window. Expand it to see them."]
-end
-
--- Test mode's chip and banner (design spec §11.6, board 06 E) share one tooltip.
-local function testTip()
-    return L["Test mode"],
-        L["Placeholder drops show every verdict, trade, inspect and ask state, so the layout can be checked anywhere."],
-        L["Ask, Offer and Announce print their text in your chat frame instead of sending it."],
-        L["Combat ends it, and so do /dw test, the launcher menu and the Master controls checkbox."]
-end
-
-local function buildTestChip(bar, title)
-    local chip = CreateFrame("Frame", nil, bar)
-    chip:SetSize(76, K.CONTROL_H - 4)
-    chip:SetPoint("LEFT", title, "RIGHT", 8, 0)
-    chip.fill = chip:CreateTexture(nil, "BACKGROUND")
-    chip.fill:SetAllPoints(chip)
-    chip.fill:SetColorTexture(C.TONE.warn.r, C.TONE.warn.g, C.TONE.warn.b, 0.18)
-    chip.text = chip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    chip.text:SetPoint("CENTER", chip, "CENTER", 0, 0)
-    chip.text:SetText(L["TEST MODE"])
-    chip.text:SetTextColor(C.TONE.warn.r, C.TONE.warn.g, C.TONE.warn.b)
-    Window.AttachTooltip(chip, testTip)
-    chip:Hide()
-    return chip
-end
-
-local function buildTitleControls(f, bar)
-    f.closeButton = NS.MakeCloseButton(bar, function() Window.Close() end)
-    local right, rightPoint = bar, "RIGHT"
-    if f.closeButton then
-        f.closeButton:SetPoint("RIGHT", bar, "RIGHT", -6, 0)
-        right, rightPoint = f.closeButton, "LEFT"
-    end
-    -- The catalog's minimize mark; the key is the library's spelling (tests/prose_waivers.lua).
-    f.minimizeButton = iconButton(bar, "minimise", "-", function() Window.ToggleMinimized() end)
-    f.minimizeButton:SetPoint("RIGHT", right, rightPoint, -4, 0)
-    Window.AttachTooltip(f.minimizeButton, minimizeTip)
-    f.scanButton = textButton(bar, 96, "people", L["Scan group"], function() NS.ScanGroup() end)
-    f.scanButton:SetPoint("RIGHT", f.minimizeButton, "LEFT", -6, 0)
-    Window.AttachTooltip(f.scanButton, scanTip)
-    f.badge = buildBadge(bar)
-    f.badge:SetPoint("RIGHT", f.scanButton, "LEFT", -8, 0)
-end
-
-local function buildTitleBar(f)
-    local bar = CreateFrame("Frame", nil, f)
-    bar:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
-    bar:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
-    bar:SetHeight(K.TITLE_H)
-    bar:EnableMouse(true)
-    bar:RegisterForDrag("LeftButton")
-    bar:SetScript("OnDragStart", onDragStart)
-    bar:SetScript("OnDragStop", onDragStop)
-    bar:SetScript("OnMouseUp", onTitleClick)
-    f.titleBar = bar
-
-    f.logo = bar:CreateTexture(nil, "ARTWORK")
-    f.logo:SetSize(K.LOGO, K.LOGO)
-    f.logo:SetPoint("LEFT", bar, "LEFT", 8, 0)
-    f.logo:SetTexture(LOGO)
-
-    -- Gold through ApplySkin, which tints `frame.title`.
-    f.title = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    f.title:SetPoint("LEFT", f.logo, "RIGHT", 6, 0)
-    f.title:SetText(NS.BRAND)
-
-    f.testChip = buildTestChip(bar, f.title)
-    f.newChip = CreateFrame("Frame", nil, bar)
-    f.newChip:SetSize(60, K.CONTROL_H)
-    f.newChip:SetPoint("LEFT", f.title, "RIGHT", 8, 0)
-    f.newChip.text = f.newChip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    f.newChip.text:SetPoint("LEFT", f.newChip, "LEFT", 0, 0)
-    Window.AttachTooltip(f.newChip, newTip)
-    f.newChip:Hide()
-
-    buildTitleControls(f, bar)
-
-    f.divider = f:CreateTexture(nil, "ARTWORK")
-    f.divider:SetHeight(1)
-    f.divider:SetPoint("TOPLEFT", bar, "BOTTOMLEFT", 0, 0)
-    f.divider:SetPoint("TOPRIGHT", bar, "BOTTOMRIGHT", 0, 0)
+    return NS.WindowTitleBar.TextButton(parent, width, icon, text, onClick)
 end
 
 -- ── construction: the tabs and the body ─────────────────────────────────────────────────────
@@ -536,7 +327,7 @@ local function buildBanner(f, body)
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.text:SetPoint("LEFT", b.art, "RIGHT", 6, 0)
     b.text:SetText(L["TEST MODE: placeholder drops in every state. Nothing is whispered. Combat ends it."])
-    Window.AttachTooltip(b, testTip)
+    Window.AttachTooltip(b, NS.WindowTitleBar.TestTip)
     b:Hide()
     f.banner = b
 end
@@ -620,7 +411,7 @@ local function build()
     applySize()
     applyPoint()
     applyLook()
-    buildTitleBar(f)
+    NS.WindowTitleBar.Build(f, { onDragStart = onDragStart, onDragStop = onDragStop })
     buildBody(f)
     NS.ApplySkin(f)
     makeResizable(f)
@@ -689,27 +480,11 @@ local function paintTabs()
     end
 end
 
-local function paintBadge()
-    local text = Window.BadgeText(currentReason(), #queuedAsks())
-    frame.badge.text:SetText(text or "")
-    frame.badge:SetShown(text ~= nil)
-end
-
--- The TEST MODE chip beside the title, the `n new` counter after it.
-local function paintTestChip()
-    local on = NS.State.testMode == true
-    frame.testChip:SetShown(on)
-    frame.newChip:ClearAllPoints()
-    frame.newChip:SetPoint("LEFT", on and frame.testChip or frame.title, "RIGHT", 8, 0)
-end
-
 local function paintMinimized()
     local m = isMinimized()
     frame.body:SetShown(not m)
     if frame.resizeGrip then frame.resizeGrip:SetShown(not m) end
-    if m then setMark(frame.minimizeButton, "add", "+") else setMark(frame.minimizeButton, "minimise", "-") end
-    frame.newChip.text:SetText(L["%d new"]:format(newCount))
-    frame.newChip:SetShown(m and newCount > 0)
+    NS.WindowTitleBar.PaintMinimized(frame, m, newCount)
 end
 
 --- One repaint pass: the title bar's badge and counter, the tabs, and (expanded) the banner, the
@@ -717,8 +492,9 @@ end
 function Window.Refresh()
     if not frame then return end
     local t0 = Perf.on and debugprofilestop()
-    paintBadge()
-    paintTestChip()
+    local TB = NS.WindowTitleBar
+    TB.PaintBadge(frame)
+    TB.PaintTestChip(frame)
     paintMinimized()
     if not isMinimized() then
         frame.banner:SetShown(NS.State.testMode == true)
@@ -1004,7 +780,7 @@ local function listen()
     target:RegisterMessage(M.RESTRICTION_CHANGED, function(_, reason) onRestriction(reason) end)
     -- The badge's queued count, and the Ask buttons of the active tab's rows.
     target:RegisterMessage(M.ASK_STATE_CHANGED, function()
-        if frame then paintBadge() end
+        if frame then NS.WindowTitleBar.PaintBadge(frame) end
         scheduleRepaint()
     end)
     target:RegisterMessage(M.SITUATION_CHANGED, function() onSituation() end)
