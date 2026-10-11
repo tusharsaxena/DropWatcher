@@ -258,12 +258,19 @@ local function pawnScale()
     return NS.Compat.PawnScaleForSpec(classID, g.specID)
 end
 
--- Design spec §5.4, §13's Scoring section: the scorer chosen, whether its adapter is built (the
--- adapters land with the scoring item), Pawn's readiness and your scale, and the score retries.
-local function scoring(out)
+-- The adapter actually in use (modules/Scoring.lua), which can differ from the one configured:
+-- `pawn` without Pawn loaded is none, `auto` falls back to your weights, then to none.
+local function scorerInUse()
     local S = NS.Scoring
-    local adapter = type(S) == "table" and type(S.Scorer) == "function" and "ready" or "none"
-    out:add(TAG, "scoring: scorer=%s adapter=%s", NS.SchemaRuntime.Get("comparison.scorer"), adapter)
+    if type(S) == "table" and type(S.InUse) == "function" then return S.InUse() end
+    return "none"
+end
+
+-- Design spec §5.4, §13's Scoring section: the scorer configured and the one in use, Pawn's
+-- readiness and your scale, and the score retries.
+local function scoring(out)
+    out:add(TAG, "scoring: scorer=%s inUse=%s", NS.SchemaRuntime.Get("comparison.scorer"),
+        read(scorerInUse) or "none")
     out:add(TAG, "scoring: pawn ready=%s scale=%s", NS.Compat.PawnIsReady(), read(pawnScale) or "none")
     local r = NS.LootFeed.ScoreRetries()
     out:add(TAG, "scoring: retries pending=%s spent=%s timer=%s", r.pending, r.spent, r.armed and "on" or "off")

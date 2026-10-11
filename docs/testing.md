@@ -77,7 +77,10 @@ secret guards on both load paths, the localized duration decoder in three client
 tooltip line reader and each shim's fallback with its API absent), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups), `test_evaluate` (the verdict kernel, table-driven over
-every slot plan and every equippability path, plus nil and garbage inputs), `test_quality_gate`
+every slot plan and every equippability path, plus nil and garbage inputs), `test_scoring` (the
+scorers: the Pawn scale import, the weights score and its unknown keys, the adapter in use for each
+setting, the Pawn adapter's scales and `pending`, and the sidegrade item level and score reach
+through the kernel and the feed), `test_quality_gate`
 (the minimum-quality gate: each mode, the floor, empty slots, ties, both overrides),
 `test_situations` (the situation classifier's truth table for every key, the per-situation settings
 and their spec defaults, the six re-evaluation events and the stand-down), `test_trade_rules` (the

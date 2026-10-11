@@ -122,6 +122,29 @@ function E.WithWeight(map, specID, stat, value)
     return out
 end
 
+-- The import box's chat lines (modules/Scoring.lua's ImportInto answers the result or a reason).
+local IMPORT_FAIL = {
+    empty   = L["Paste a Pawn scale string first."],
+    format  = L["That is not a Pawn scale string: it reads ( Pawn: v1: \"name\": Key=value, ... )."],
+    noStats = L["That scale has no stat Drop Watcher scores, so nothing was imported."],
+    noSpec  = L["Pick a specialization first."],
+}
+
+--- The chat line after an import: what was imported and what was left out, or why it failed.
+--- @param result table|string ImportInto's result, or its reason
+--- @param specLabel string the specialization's name
+--- @return string
+function E.ImportText(result, specLabel)
+    if not isTable(result) then return IMPORT_FAIL[result] or IMPORT_FAIL.format end
+    local n = 0
+    for _ in pairs(result.weights or {}) do n = n + 1 end
+    local text = L["Imported %s into %s: %d weights."]:format(result.name or "", tostring(specLabel), n)
+    if result.skipped and #result.skipped > 0 then
+        text = text .. " " .. L["Not scored: %s."]:format(table.concat(result.skipped, ", "))
+    end
+    return text
+end
+
 -- ── Comparison › Preferences ────────────────────────────────────────────────────────────────
 
 -- The weapon types in the order a player reads them, with their English names. Ids from

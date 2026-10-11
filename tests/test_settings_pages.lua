@@ -216,6 +216,28 @@ test("comparison: a weight slider writes the whole map through the seam, for the
     assertEqual(w[62].ITEM_MOD_HASTE_RATING_SHORT, 1.5)
 end)
 
+test("comparison: the Pawn import box replaces the spec on screen's weights and says what came in", function()
+    local NS, _, m = T.enableAddon()
+    local ctx = open(NS, m, "comparison")
+    local drawn = tab(m, ctx, "Weights")
+    local box = find(drawn, "EditBox", "Import a Pawn scale")
+    assertTrue(box ~= nil, "the import box")
+    NS.SchemaRuntime.Set("comparison.weights", { [63] = { ITEM_MOD_HASTE_RATING_SHORT = 2 } })
+    local printed = #m.prints
+    box:__fire("OnEnterPressed", '( Pawn: v1: "Mine": Intellect=1.2, HasteRating=0.7, Dps=4 )')
+    local w = NS.Setting("comparison.weights")
+    assertEqual(w[62].ITEM_MOD_INTELLECT_SHORT, 1.2)
+    assertEqual(w[62].ITEM_MOD_HASTE_RATING_SHORT, 0.7)
+    assertEqual(w[63].ITEM_MOD_HASTE_RATING_SHORT, 2, "another spec's weights are kept")
+    local line = m.prints[printed + 1]
+    assertTrue(line and line:find("Imported Mine into", 1, true) ~= nil and line:find("2 weights", 1, true) ~= nil, tostring(line))
+    assertTrue(line:find("Not scored: Dps.", 1, true) ~= nil, line)
+    -- A string that is not Pawn's writes nothing and says why.
+    box:__fire("OnEnterPressed", "Intellect=9")
+    assertEqual(NS.Setting("comparison.weights")[62].ITEM_MOD_INTELLECT_SHORT, 1.2)
+    assertTrue(m.prints[#m.prints]:find("not a Pawn scale string", 1, true) ~= nil, m.prints[#m.prints])
+end)
+
 test("comparison: Preferences lists the class's weapon types and marks one unwanted per spec", function()
     local NS, _, m = T.enableAddon()
     local ctx = open(NS, m, "comparison")

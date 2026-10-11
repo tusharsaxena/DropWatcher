@@ -31,6 +31,7 @@ passed.
 | ASK-1..8 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); the My drops tab, the Offer panel and Post my tradeables (ASK-5..7, DW-33); auto-ask (ASK-8, DW-54) |
 | SIT-1..5 | Situations | Where the addon is active (lands with DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (lands with DW-12) |
+| SCORE-1..2 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50 |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
 ## Before you start
@@ -713,6 +714,25 @@ counted), and the diagnostics report shows the same threshold. Result:
 `Quality` to `Dynamic per slot`. Entering a dungeon switches the filter bar to `Quality: Match slot`;
 leaving it, back to `Quality: Rare+`. `Use global` restores the global mode. Result:
 
+## Scoring
+
+**SCORE-1. Pawn.** With Pawn installed and Settings › Comparison › Scoring › Score with on
+`Automatic`: `/dw diagnostics` → `scoring: scorer=auto inUse=pawn` and `pawn ready=true scale=<your
+spec's scale>`. `/dw add <shift-click a ring you carry>` → the detail card's **Pawn** line shows a
+signed score, and a drop at a higher item level that Pawn scores lower reads `SIDEGRADE` with the
+reason "Item level and score disagree". On a looter's drop once they are inspected, their side's
+score uses their spec's scale. Turn Pawn off in the AddOns list and `/reload` → `inUse=none` (or
+`weights` when you have set any), the footer reads `Pawn: off`, and verdicts are item level alone.
+Score with `Pawn` while Pawn is off → `scorer=pawn inUse=none`. Result:
+
+**SCORE-2. Your weights and the Pawn import.** Without Pawn, set Score with to `My weights`. In
+Settings › Comparison › Weights, paste a Pawn scale string (Pawn's Export of your spec's scale) into
+**Import a Pawn scale** and press Enter → chat reads `Imported <name> into <spec>: n weights.` and
+lists the Pawn keys not scored; the sliders show the imported values; the other specs keep theirs.
+Paste `hello` → chat says it is not a Pawn scale string and nothing changes. `/dw diagnostics` →
+`scorer=weights inUse=weights`. `/dw add` two drops of one slot whose stats differ → the score line, labeled **Weights**,
+shows the weighted score's change and the verdict follows it as SCORE-1 describes. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -753,3 +773,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |
 | PANEL-4..6 | DW-41, the settings pages | No client pass recorded yet |
 | PANEL-7 | DW-40 / DW-41 review, the rows that act | No client pass recorded yet |
+| SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |

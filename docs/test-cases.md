@@ -102,7 +102,7 @@ Total.
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 
-### test_settings_pages.lua (28)
+### test_settings_pages.lua (29)
 
 - pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -115,6 +115,7 @@ Total.
 - feed: the readout names the situation whose own quality setting is in force
 - comparison: Weights draws your class's specs as a sub-strip and one slider per stat
 - comparison: a weight slider writes the whole map through the seam, for the spec on screen
+- comparison: the Pawn import box replaces the spec on screen's weights and says what came in
 - comparison: Preferences lists the class's weapon types and marks one unwanted per spec
 - messages: three editors whose labels count the template's bytes against 255
 - messages: typing repaints the counter and the preview live, and stores nothing until Enter
@@ -259,7 +260,7 @@ Total.
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
 - cells: For you shows what it replaces, the ilvl, track and stat change, and Pawn's score
-- cells: For you without a score says why: Pawn off, or not scored yet
+- cells: For you without a score says why: no scorer, Pawn or your weights not scored yet
 - cells: an empty slot and an unread baseline each say so, never blank
 - cells: For the looter compares their inspected gear and names their spec and the read's age
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
@@ -466,6 +467,24 @@ Total.
 - evaluate: garbage inside the tables never throws
 - evaluate: an internal failure is caught and reported as unknown
 - evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
+
+### test_scoring.lua (15)
+
+- scoring: a Pawn v1 string imports its stats under GetItemStats' keys
+- scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
+- scoring: ImportInto replaces one spec's weights in a fresh map and keeps the others
+- scoring: a weights score is the sum of stat times weight
+- scoring: a weight on an unknown stat key counts 0 and is logged once per key
+- scoring: HasWeights is true once any spec has a weight
+- scoring: Resolve picks the adapter for every setting, Pawn presence and weights
+- scoring: InUse and Scorer follow the settings and whether Pawn is loaded
+- scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale
+- scoring: for you, a drop that upgrades no scale is valued on your spec's scale
+- scoring: for a looter, Pawn uses the scale for their class and spec
+- scoring: Pawn answers pending while it is not ready or has not read the item
+- scoring: the kernel hands the scorer the drop beside each item
+- scoring: with weights, a higher item level that scores lower is a sidegrade
+- scoring: the feed judges your drop with your weights once they are set
 
 ### test_quality_gate.lua (24)
 
@@ -845,7 +864,7 @@ Total.
 - diagnostics: the inspect section shows the queue and each member's entry
 - diagnostics: the messaging section counts the registry, the sends and lists each queued ask
 - diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue
-- diagnostics: the scoring section names the scorer, Pawn and the pending retries
+- diagnostics: the scoring section names the scorer, the one in use, Pawn and the pending retries
 
 ### test_vendor_sync.lua (3)
 
@@ -925,7 +944,7 @@ Total.
 | test_database.lua | 7 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
-| test_settings_pages.lua | 28 |
+| test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 37 |
@@ -937,6 +956,7 @@ Total.
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 34 |
+| test_scoring.lua | 15 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
@@ -960,4 +980,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **786** |
+| **Total** | **802** |

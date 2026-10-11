@@ -265,14 +265,24 @@ local function statsRow(eval, dropStats)
     return row("stats", L["Stats"], text, "plain", L["Stats"], L["The secondary stats it gains and loses."])
 end
 
-local function scoreRow(eval, pawn)
+-- The score line by the scorer in use (modules/Scoring.lua's InUse): its label, and why there is
+-- no score when there is none.
+local SCORER_LINE = {
+    pawn    = { label = L["Pawn"], none = L["Pawn has not scored it yet."] },
+    weights = { label = L["Weights"],
+                none = L["Your weights for this specialization score nothing yet: set them in Settings, Comparison."] },
+    none    = { label = L["Score"], none = L["No scorer is in use: the verdict uses item level alone."] },
+}
+
+local function scoreRow(eval, scorer)
+    if scorer == true then scorer = "pawn" end
+    local line = SCORER_LINE[scorer] or SCORER_LINE.none
     local sd = type(eval) == "table" and num(eval.scoreDelta) or nil
     if sd then
-        return row("score", L["Pawn"], ("%+.1f"):format(sd), sd >= 0 and "good" or "bad", L["Score"],
+        return row("score", line.label, ("%+.1f"):format(sd), sd >= 0 and "good" or "bad", L["Score"],
             L["The scorer's change for your spec."])
     end
-    local why = pawn and L["Pawn has not scored it yet."] or L["Pawn is not loaded: the verdict uses item level alone."]
-    return row("score", L["Pawn"], DASH, "muted", L["Score"], why)
+    return row("score", line.label, DASH, "muted", L["Score"], line.none)
 end
 
 local function specRow(drop, inspect, specName, now)
@@ -299,12 +309,12 @@ end
 
 --- The For you column (board 02, callouts 2 and 3).
 --- @param drop table
---- @param pawn boolean whether Pawn is loaded (the footer's own read)
+--- @param scorer string|boolean the scorer in use, "pawn" | "weights" | "none" (true reads "pawn")
 --- @return table side
-function DC.ForYou(drop, pawn)
+function DC.ForYou(drop, scorer)
     local cell = WC.Me(drop)
     local rows = sideRows(drop.me, facts(drop), cell.tone, L["you"])
-    rows[#rows + 1] = scoreRow(drop.me, pawn)
+    rows[#rows + 1] = scoreRow(drop.me, scorer)
     return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }
 end
 

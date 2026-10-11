@@ -47,7 +47,9 @@ holds the identity, eleven of the setup files, the compat seam (`Compat.lua`: th
 version-variant, deprecated and optional client APIs, see [`compat-layer.md`](compat-layer.md)), the game-data tables (`Constants.lua` and
 `ClassData.lua`, data plus pure lookups), the session state, the addon object and its lifecycle,
 and the migration runner; `defaults/` the default values; `modules/` the verdict kernel
-(`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the minimum-quality gate
+(`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the scorers it takes
+(`Scoring.lua`: the Pawn adapter through the Compat seam, your per-spec weights with the Pawn scale
+string import, or none, chosen by `comparison.scorer` and Pawn's presence), the minimum-quality gate
 (`QualityGate.lua`, pure: a drop's quality, the mode and the equipped qualities in, pass or hide
 out), the situation classifier (`Situations.lua`: a pure classifier over the client's instance,
 difficulty and group inputs, and the edge that reads them on six events), the trade estimator
@@ -274,11 +276,24 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   Offer panel (DW-33); the History tab says what it will hold until it lands (DW-51)
   ([`scope.md`](scope.md)).
 - Every setting of design spec §12.1 has its row and default (DW-40), and some rows are ahead of
-  their reader: `comparison.scorer` and `comparison.weights` wait for the scoring adapters (DW-50),
-  `global.history.maxGroups` for History (DW-51), `toast.*` for the toast (DW-52) and
-  `messages.autoAsk.*` for auto-ask (DW-54). The Comparison page's Weights tab edits
-  `comparison.weights`, which no scorer reads until DW-50 adds the weights adapter and its import
-  string.
+  their reader: `global.history.maxGroups` waits for History (DW-51), `toast.*` for the toast (DW-52)
+  and `messages.autoAsk.*` for auto-ask (DW-54).
+- Scoring (DW-50, `modules/Scoring.lua`) settles how it reads design spec §5.4. The adapter in use
+  can differ from `comparison.scorer`: `auto` takes Pawn when it is **loaded** (ready or not yet
+  initialized, which answers `pending` and is retried), else your weights when any spec has one,
+  else none; `pawn` with Pawn absent is none, and `weights` with no weight set is none. The
+  diagnostics' Scoring section prints both (`scorer=` and `inUse=`). For you, Pawn's "best visible
+  scale" is the one with the highest `PercentUpgrade` for the drop, else your spec's scale when the
+  drop upgrades nothing; the drop and its baseline are both valued on that scale
+  (`PawnGetSingleValueFromItem`), so `scoreDelta` is a value difference, not Pawn's percent. For a
+  looter it is `PawnFindScaleForSpec(classID, specID)`; with no scale for that spec there is no
+  score (item level alone), not a pending one. The kernel hands every scorer the drop beside the
+  item it values (`scorer(facts, candidate, drop)`). Weights are per spec and apply to anyone of
+  that spec, a looter included; a spec without weights is not scored. The Pawn scale string import
+  (the Weights tab's box) replaces the weights of the spec on screen, whatever `Class=` and `Spec=`
+  the string carries; Pawn keys it does not score (`Dps`, `Armor`, the `Is*` and socket keys) are
+  named in the chat line and left out, and a stored weight on a stat key it does not know counts 0,
+  logged once per key under `SCORE`.
 - Five rows settle how they act. **`feed.clearOnBossKill`** empties the live feed at a kill's
   `ENCOUNTER_END` (never a wipe), before the boss's loot arrives, and repaints the window; queued
   asks keep their text and still flush. **`comparison.heirloomProtect`** (on by default) is yours
@@ -343,7 +358,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   still good or already queued, since the broker would not inspect again, and queues them at the
   looter priority otherwise. **Stats** are the four secondary stats' change against the replaced
   item, the largest first; the primary stat, stamina, sockets and tertiary stats are the header's
-  chips. The **Pawn** line shows the scorer's change; without one it says whether Pawn is loaded.
+  chips. The score line is labeled by the scorer in use (**Pawn**, **Weights**, or **Score** with
+  none) and shows its change; without one it says why (not scored yet, or no scorer in use).
 - The window shell (DW-30) settles four cases the design leaves open. **Interesting** (View) is the
   brainstorm's union (03_FEATURES F1, board 01 note 5): someone else's drop that is an upgrade for
   you, whatever its trade estimate, or one its looter has no use for (a downgrade, can't use or

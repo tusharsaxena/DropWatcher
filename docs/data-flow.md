@@ -105,7 +105,7 @@ messaging edge holds none for it, so a click on Ask moves it like a live row's.
 ```
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
   ├─> DetailCells.Chips(drop)                                   (pure: the header's chips)
-  ├─> DetailCells.ForYou(drop, Compat.PawnIsReady())            (pure)
+  ├─> DetailCells.ForYou(drop, Scoring.InUse())                 (pure)
   ├─> DetailCells.ForLooter(drop, NS.Inspect.Get(guid), Compat.SpecName(specID), now)   (pure)
   ├─> DetailCells.TradeBox(drop, the situation's label)         (pure)
   └─> DetailCells.Actions(drop, { NS.Asks.StateOf("ask", …), the inspect entry,
@@ -306,6 +306,7 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   ItemFacts.Request ─> loading? wait for the load, then go on
   Filter (heirloom, cosmetic, tokens, gear only, minimum item level) ─> hidden with its reason
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`]   ─> drop.me
+    (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
   QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`]
     ─> hidden `quality` (one QUAL debug line), before any inspect
   someone else's drop: Inspect.Request(looter, looter priority)

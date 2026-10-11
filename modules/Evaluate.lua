@@ -12,7 +12,7 @@ local _, NS = ...
 --   candidate = { classFile, specID, dualWield, titanGrip, gear = { [slot] = facts | false },
 --                 owned = { [slot] = facts }, prefs = { undesired = { [SubClassKey] = true } } }
 --   opts      = { sidegradeBand = 0, compareOwned = false, heirloomProtect = false,
---                 scorer = function(facts, candidate) }
+--                 scorer = function(facts, candidate, drop) }
 --
 -- With `heirloomProtect`, a drop whose baseline is an heirloom is never called an upgrade: what
 -- would be one reads as a sidegrade, with the reason `heirloomProtected`.
@@ -356,8 +356,9 @@ local function average(items, value)
 end
 
 -- The scorer's answer for one item: a number, "pending", or nil. A scorer that throws is no score.
-local function scoreOf(scorer, f, candidate)
-    local ok, v = pcall(scorer, f, candidate)
+-- It is handed the drop as well, so a scorer can value the drop and its baseline on one scale.
+local function scoreOf(scorer, f, candidate, drop)
+    local ok, v = pcall(scorer, f, candidate, drop)
     if not ok then return nil end
     if v == "pending" then return v end
     return num(v)
@@ -368,7 +369,7 @@ local function scoreDelta(facts, items, candidate, opts, reasons)
     if type(scorer) ~= "function" then return nil end
     local pending = false
     local function value(f)
-        local v = scoreOf(scorer, f, candidate)
+        local v = scoreOf(scorer, f, candidate, facts)
         if v == "pending" then pending = true return nil end
         return v
     end

@@ -322,7 +322,7 @@ function DCard.Paint(card, drop, width, now)
     local insp = inspectOf(drop)
     local specName = insp and NS.Compat.SpecName(insp.specID) or nil
     local sideW = max(floor((width - 3 * K.CARD_PAD) / 2), 120)
-    paintSide(card.me, DC.ForYou(drop, NS.Compat.PawnIsReady()), sideW)
+    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse()), sideW)
     paintSide(card.them, DC.ForLooter(drop, insp, specName, now), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
     paintTrade(card.trade, DC.TradeBox(drop, situation))

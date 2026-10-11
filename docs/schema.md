@@ -53,11 +53,11 @@ dungeons and raids, `track` alone for Raid Finder, and off elsewhere.
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
-| `comparison.scorer` | `"auto"` | Scoring | `auto`, `pawn`, `weights` or `none` (read from DW-50) |
+| `comparison.scorer` | `"auto"` | Scoring | `auto`, `pawn`, `weights` or `none`; the adapter in use (`modules/Scoring.lua`) can differ, see the Known Limitations |
 | `comparison.sidegradeBand` | `0` | Scoring | item levels either side of equal that read as a sidegrade, 0 to 20 |
 | `comparison.compareOwned` | `false` | Scoring | judge against the best of worn and carried |
 | `comparison.heirloomProtect` | `true` | Scoring | a slot holding an heirloom is not called an upgrade for you (LootFeed → Evaluate's `heirloomProtect`) |
-| `comparison.weights` | `{}` | Weights (`map`) | `{ [specID] = { STAT_KEY = weight } }` (read from DW-50) |
+| `comparison.weights` | `{}` | Weights (`map`) | `{ [specID] = { STAT_KEY = weight } }`, the Weights adapter's scores; the Pawn scale import writes one spec's |
 | `comparison.undesired` | `{}` | Preferences (`map`) | `{ [specID] = { ["<classID>:<subClassID>"] = true } }`, the item types a spec never wants |
 
 The two `map` rows are whole values: a write replaces the whole table through the seam, and the

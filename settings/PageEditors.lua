@@ -11,7 +11,7 @@ local _, NS = ...
 --   Settings.PageEditors.TemplatesTab  Messages › Templates: token chips, the three editors with
 --                                      their live counters, the live preview and Reset templates.
 --   Settings.PageEditors.WeightsTab    Comparison › Weights: a sub-strip of your class's specs,
---                                      then one slider per stat.
+--                                      then one slider per stat and the Pawn scale import box.
 --   Settings.PageEditors.PrefsTab      Comparison › Preferences: the same sub-strip, then one
 --                                      checkbox per item type your class's loot comes in.
 --   Settings.PageEditors.QualityReadout  Feed › Quality's afterGroup: the threshold in force now.
@@ -101,7 +101,40 @@ local function weightRow(spec, stat)
     }
 end
 
---- Comparison › Weights: your weights per spec, written whole through the seam.
+local function specLabel(spec)
+    local name = NS.Compat.SpecName(spec)
+    return type(name) == "string" and name ~= "" and name or tostring(spec)
+end
+
+-- Enter in the import box: the pasted Pawn scale replaces this spec's weights through the seam,
+-- the chat says what came in, and the page redraws its sliders.
+local function importScale(ctx, spec, text, box)
+    local map, result = NS.Scoring.ImportInto(NS.Setting(WEIGHTS_PATH), spec, text)
+    NS.Print(E.ImportText(result, specLabel(spec)))
+    if not map then return end
+    set(WEIGHTS_PATH, map)
+    box:SetText("")
+    H().RefreshPanel(ctx, true)
+end
+
+local function importLine(spec)
+    return {
+        wide = true,
+        make = function(ctx, into)
+            local h = H()
+            local box = h.AceGUI:Create("EditBox")
+            box:SetLabel(L["Import a Pawn scale"])
+            box:SetFullWidth(true)
+            box:SetCallback("OnEnterPressed", function(_, _, text) importScale(ctx, spec, text, box) end)
+            h.AttachTooltip(box, L["Import a Pawn scale"],
+                L["Paste a Pawn scale string and press Enter: it replaces this specialization's weights."])
+            into:AddChild(box)
+        end,
+    }
+end
+
+--- Comparison › Weights: your weights per spec, written whole through the seam, and the box a
+--- Pawn scale string is imported through (design spec §5.4).
 --- @param ctx table
 function P.WeightsTab(ctx)
     local h = H()
@@ -112,6 +145,7 @@ function P.WeightsTab(ctx)
     h.AddSpacer(h.EnsureScroll(ctx), 6)
     local items = {}
     for _, stat in ipairs(E.StatsFor(spec)) do items[#items + 1] = weightRow(spec, stat) end
+    items[#items + 1] = importLine(spec)
     h.RenderGrid(ctx, items)
 end
 

@@ -809,6 +809,16 @@ function Compat.PawnIsReady()
     return flag == true
 end
 
+--- True when the Pawn addon is loaded (C_AddOns.IsAddOnLoaded), ready or not: the scorer picks
+--- the Pawn adapter for a loaded Pawn and answers "pending" until it has initialized.
+--- @return boolean
+function Compat.PawnIsLoaded()
+    local api = C_AddOns and C_AddOns.IsAddOnLoaded
+    if type(api) ~= "function" then return false end
+    local ok, v = pcall(api, "Pawn")
+    return ok and v == true
+end
+
 -- pcall(fn, ...) when Pawn is ready and `fn` is a function; the first return, or nil.
 local function pawnCall(fn, ...)
     if not (Compat.PawnIsReady() and type(fn) == "function") then return nil end

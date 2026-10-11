@@ -110,6 +110,7 @@ Kit.run{
         "test_constants",
         "test_class_data",
         "test_evaluate",
+        "test_scoring",
         "test_quality_gate",
         "test_situations",
         "test_trade_rules",

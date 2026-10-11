@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-786%2F786_passing-green)
+![Tests](https://img.shields.io/badge/Tests-802%2F802_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -97,7 +97,7 @@ The design, in the order the pieces are being built:
 | Question | Answer |
 |---|---|
 | Does it whisper people on its own? | No. Every whisper is a click, unless you turn on the optional auto-ask once it ships. |
-| Does it need Pawn? | No. If Pawn is installed, a later release will use its scores; without it, items are compared by item level. |
+| Does it need Pawn? | No. If Pawn is installed, its scale scores each drop beside the item level; without it, you can enter your own stat weights or import a Pawn scale string in Settings › Comparison, or compare by item level alone. |
 | Will it work in raids? | Yes, it is being built for parties and raids alike. |
 
 ## Troubleshooting

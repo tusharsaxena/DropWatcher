@@ -75,6 +75,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `PlayerHasTransmog(link)` | `C_TransmogCollection.PlayerHasTransmogByItemInfo`; a secret answer is nil | `nil` |
 | | `ItemClassRestriction(link)` | `C_TooltipInfo.GetHyperlink`'s `RestrictedRaceClass` line read with `ITEM_CLASSES_ALLOWED`, split on `LIST_DELIMITER`, each name mapped to its classFile through `LOCALIZED_CLASS_NAMES_MALE` and `_FEMALE`; a set | `nil` |
 | Pawn | `PawnIsReady()` | the `PawnIsInitialized` global flag (a function spelling is called) | `false` |
+| | `PawnIsLoaded()` | `C_AddOns.IsAddOnLoaded("Pawn")`, ready or not (the scorer picks the Pawn adapter for a loaded Pawn) | `false` |
 | | `PawnItemData(link)` | `PawnGetItemData`; nil while the item is not cached | `nil` |
 | | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
 | | `PawnScaleForSpec(classID, specID)` | `PawnFindScaleForSpec` | `nil` |
@@ -129,5 +130,5 @@ the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (
 messaging edge (DW-2A, landed: `modules/Asks.lua`) `ChatSender`, `IsSecret` on the recipient, the
 slot name and a raise's message, the Group drops table (DW-31, landed: `modules/WindowGroup.lua`)
 `ItemIcon`, `ClassColor`, `InsertChatLink` and `DressUpItem`, the detail card (DW-32, landed:
-`modules/DetailCard.lua`) `SpecName`, `PawnIsReady`, `InsertChatLink` and the item button's three, and the Pawn scorer (DW-50) the Pawn
-seam.
+`modules/DetailCard.lua`) `SpecName`, `PawnIsReady`, `InsertChatLink` and the item button's three, and the scorers (DW-50, landed:
+`modules/Scoring.lua`) the Pawn seam, `PawnIsLoaded` and `IsSecret` on the links.

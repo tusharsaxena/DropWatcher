@@ -196,19 +196,25 @@ test("diagnostics: the state section is one read of enabled, situation, test mod
     assertTrue(text:find("queuedSends=", 1, true) ~= nil, text)
 end)
 
-test("diagnostics: the scoring section names the scorer, Pawn and the pending retries", function()
+test("diagnostics: the scoring section names the scorer, the one in use, Pawn and the pending retries", function()
     local NS, _, m = T.enableAddon()
     local text = report(NS)
-    assertTrue(text:find("scoring: scorer=auto adapter=none", 1, true) ~= nil, text)
+    assertTrue(text:find("scoring: scorer=auto inUse=none", 1, true) ~= nil, text)
     assertTrue(text:find("scoring: pawn ready=false scale=none", 1, true) ~= nil, text)
     assertTrue(text:find("scoring: retries pending=0 spent=0 timer=off", 1, true) ~= nil, text)
     m.PawnIsInitialized = true
     m.PawnFindScaleForSpec = function(classID, specID) return "Scale" .. classID .. ":" .. specID end
     NS.Gear.Refresh("test")
-    NS.Scoring = { Scorer = function() return function() return 1 end end }
     text = report(NS)
-    assertTrue(text:find("scoring: scorer=auto adapter=ready", 1, true) ~= nil, text)
+    assertTrue(text:find("scoring: scorer=auto inUse=pawn", 1, true) ~= nil, text)
     assertTrue(text:find("scoring: pawn ready=true scale=Scale8:250", 1, true) ~= nil, text)
-    NS.Scoring = nil
+    -- Configured Pawn without Pawn: the scorer in use is none, not the one configured.
     m.PawnIsInitialized, m.PawnFindScaleForSpec = nil, nil
+    NS.SchemaRuntime.Set("comparison.scorer", "pawn")
+    text = report(NS)
+    assertTrue(text:find("scoring: scorer=pawn inUse=none", 1, true) ~= nil, text)
+    NS.SchemaRuntime.Set("comparison.scorer", "weights")
+    NS.SchemaRuntime.Set("comparison.weights", { [250] = { ITEM_MOD_INTELLECT_SHORT = 1 } })
+    text = report(NS)
+    assertTrue(text:find("scoring: scorer=weights inUse=weights", 1, true) ~= nil, text)
 end)

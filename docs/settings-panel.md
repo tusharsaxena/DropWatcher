@@ -72,7 +72,10 @@ my own loot in Group drops, Clear on boss kill.
 `comparison.undesired`). Each opens with a secondary strip of your class's specs (options-ui-§13:
 session state in `ctx.activeSubTab`, keyed by the tab, never stored), on your own spec first.
 Weights draws a slider (0 to 5) per stat: the spec's primary stat, Stamina and the four secondaries,
-keyed by `GetItemStats`' own stat keys; 0 leaves a stat out. Preferences draws a checkbox per weapon
+keyed by `GetItemStats`' own stat keys; 0 leaves a stat out. Under the sliders, **Import a Pawn
+scale** takes a Pawn scale string (`( Pawn: v1: "name": Key=value, ... )`): Enter replaces the
+weights of the spec on screen, the chat says how many came in and which Pawn keys are not scored,
+and a string that is not Pawn's writes nothing and says why. Preferences draws a checkbox per weapon
 type your class's loot comes in, then Shields where a spec carries one; a ticked type is never
 called an upgrade for that spec. Every change writes the whole map through the seam, a fresh table
 each time.
