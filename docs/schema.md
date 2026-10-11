@@ -105,10 +105,12 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `window.width`, `window.height` | absent | a resize; Reset position clears them | the window's size |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
 | `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }` |
+| `simPanel.point` | absent | a drag of the simulation panel; Reset position clears it | `{ point, relativePoint, x, y }`; until set, the panel opens beside the window |
 
 Their one owner is `modules/Window.lua` (`savePoint`, `saveSize`, `Window.SetMinimized`,
 `Window.ResetPosition`), as `docs/ARCHITECTURE.md` → Settings Schema names (architecture-§5).
 The toast's position (design spec §11.5) is named state too: `toast.point` (`{ point, relativePoint, x, y }`, absent until a drag), written by `modules/Toast.lua` alone, from a drag that only test mode allows; the Window's Reset position forgets it with the window's.
+The simulation panel's position (sim feedback spec §1, DW-91) is named state as well: `simPanel.point`, written by `modules/SimPanel.lua` alone (its drag stop and `SimPanel.ResetPosition`), absent until a drag; the Window's Reset position forgets it with the window's.
 
 ## `DropWatcherDB.global`
 

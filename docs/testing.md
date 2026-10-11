@@ -242,6 +242,20 @@ scenarios (spec §7): a `key` and a `raid` run headless, asserting drops parsed 
 lines, your verdict and the looter's after the simulated inspect, the ask held in the lockdown and
 flushed, auto-ask firing after its delay, your own drop's countdown, a simulated trade in the
 session's log, saved history untouched and the real chat sender, inspect and trade never called),
+`test_sim_e2e` (the sim feedback regression, DW-90: a scan failing any module that names a world
+global the simulator answers, the seam wrapping every world read, the combat flags and the
+GlobalStrings; every scenario run in the real solo, out-of-instance world, at the content's level and
+outgearing it, with drops in the feed, your verdict and the looter's, a chat line per step, the
+footer's `Simulating` and `Inspect n/n`, and rows in Group drops and My drops under the default
+filters; the combat flags during and after the simulated fight, the loot lines written from the
+GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat),
+`test_sim_panel` (the simulation step panel, DW-91: the rows, their PerfPanel states and commands
+before and during a run, the controls following the timeline, `/dw sim`, `start` and `panel`
+opening or toggling it beside the window, a click on the next step running it and one ahead running
+every step in between, a completed step inert with its tooltip naming when it ran, a typed step,
+stop or automatic stop repainting it, Run all, Pause and Resume, Restart and Stop, typed or clicked,
+the picker starting the chosen scenario with a raid's count, and the dragged position remembered,
+forgotten by Reset position and the panel hidden at stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
