@@ -1,0 +1,16 @@
+M9 independent review (DW-90, DW-91, DW-92; commits 4b6ac75..d954f9d)
+
+Reviewers (3, read-only; each re-ran the gate via ka0s-bounded: 1065 passed / 0 failed / 1 skipped, luacheck 0/0 in 133 files, largest file core/Compat.lua 999 lines):
+- Spec reviewer: DW-90 matches sim feedback spec s0 (all world reads via NS.Compat, raid1 aliased to player, LFR asks via INSTANCE_CHAT, sim combat flags only add true, e2e regression over all scenarios). DW-91 mostly matches s1 (PerfPanel look, click-to-run-through, saved/reset position). Found 2 real panel defects, confirmed by probe on a scratch copy.
+- Standards reviewer: seam, compat split, SimSeam wiring, SimPanel, strings, docs all compliant; smoke SIM-9/SIM-10 listed as owed. Found 1 problem: Compat.GlobalString in core/CompatWorld.lua breaks the compat one-topic-per-file MUST (standard v2.79.0).
+- WoW API reviewer: new CompatWorld members stable, combat providers never hide real combat, stop cleanup reads real InCombatLockdown, LFR InGroup logic correct, pause/timers/alive() correct. Found 1 medium (panel placement) and 1 low (repaints while hidden).
+
+Findings: 4 actionable (1 high, 3 medium; findings 2 and 4 are the same docking bug) + 1 low.
+Fixed 4, rejected 0:
+1. HIGH DW-91 SimScenario tick: next Sim.After now armed before SC.Step(), so Pause stays enabled / Run all disabled during auto-run. Fixed in d16329d (test assertions failed before fix).
+2+4. MEDIUM DW-91 SimPanel docked only at show time: new redock() in SP.Refresh moves a center-parked panel beside the window once it opens; saved positions never moved. Fixed in d16329d with two tests; SIM-10 smoke text updated (owed, not passed).
+3. MEDIUM DW-90 GlobalString moved to root core/Compat.lua; tooltip line scan moved to TextParse.ScanLines (guards passed in), Compat.lua 999 -> 995 lines; docs updated, no fourth compat file. Fixed in e2014b4.
+
+Low, not fixed (recorded): SP.Refresh repaints all rows/controls while the panel is hidden after first Show (each Run/RunTo step and stop cleanup; SC.Status/SC.Steps called twice per model). Small wasted work.
+
+Gate after fixes: lua tests/run.lua 1068 passed / 0 failed / 1 skipped; luacheck . 0 warnings / 0 errors in 133 files. Nothing pushed.
