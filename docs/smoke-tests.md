@@ -71,7 +71,7 @@ its corner; `/dw unlock` → both work again; the Lock frame box follows. Result
 the footer's inspect freshness moves as they are read. `/dw add <shift-click an item>` → `Added
 [item] for you (drop n).` and the drop is on My drops; `/dw add <item> <a member's name>` → the drop
 is on Group drops under that member; `/dw add <item> Nobody` → it shows, with no inspect asked.
-`/dw clear` → `Cleared this session's drops.`, both tabs empty; with test mode on, its placeholders
+`/dw clear` → `Cleared this session's drops.`, both tabs empty; with test mode on, its sample drops
 stay. Result:
 
 **SLASH-5. View verbs.** `/dw history` and `/dw mine` → the window opens on that tab, expanded even
@@ -760,7 +760,7 @@ tradeable the button is grayed. In test mode (`/dw test`) the lines are printed,
 on → chat reads the one-time notice (`Auto-ask is on: … 5 or more item levels … 10 seconds after the
 boss kill or the drop.` and how to turn it off); turn it off and on again → no second notice, and
 none after a `/reload`. `/dw test` with it on → about 10 seconds later chat reads `Test mode, not
-sent: …` for the placeholders that qualify, and nothing is whispered. In a dungeon with
+sent: …` for the sample drops that qualify, and nothing is whispered. In a dungeon with
 `/dw debug on`, kill a boss whose loot gives someone else a likely tradeable upgrade of 5+ item
 levels for you → `[MSG] auto-ask scheduled` when the drop lands, then 10 seconds after the kill (or
 the drop, if later) the whisper goes with `Whispered <name>: [item]` and the row's Ask reads
@@ -879,8 +879,8 @@ reads `History cleared.` Result:
 ## Toast
 
 **TOAST-1. The upgrade toast.** Settings › Window › Toast › Show a toast on, then `/dw test` → a
-toast under the top of the screen reads `Big upgrade for you`, `Placeholder Crown` and `Looted by
-Seta · +19 ▲ · Likely tradeable`, with an Ask button and a close mark; it stays while test mode is
+toast under the top of the screen reads `Big upgrade for you`, the name of Seta's head item (a real
+item since DW-84) and `Looted by Seta · +19 ▲ · Likely tradeable`, with an Ask button and a close mark; it stays while test mode is
 on. Drag it somewhere else, `/dw test` off (it goes), `/reload`, `/dw test` → it comes back where you
 left it. Outside test mode it cannot be dragged. Window › Layout › Reset position → back under the
 top. With Play a sound on, each toast plays the epic loot sound. In a dungeon with a group member,
@@ -908,9 +908,9 @@ Result:
 ## Transmog
 
 **TMOG-1. The look chip and the For transmog ask.** `/dw test`, open the Group drops tab and expand
-`Placeholder Crown` → its header has a gray `Look known` chip; expand `Placeholder Spellblade` → a
-green `New look` chip, and its Ask is a dash (`It is not an upgrade for you.`). Settings › Messages ›
-Sending › Ask for transmog on → the Spellblade's Ask is offered, its tooltip reads `Ask for
+Seta's head item (real items since DW-84) → its header has a gray `Look known` chip; expand
+Littlewolf's one-hand weapon → a green `New look` chip, and its Ask is a dash (`It is not an upgrade
+for you.`). Settings › Messages › Sending › Ask for transmog on → the weapon's Ask is offered, its tooltip reads `Ask for
 transmog`; press it → chat prints the For transmog template (`… could I have it for transmog? …`),
 not the plain ask. Messages › Templates shows four editors; edit Ask for transmog and its preview
 follows. In a group, on a real drop someone else looted that is no gain for you: `/dump
