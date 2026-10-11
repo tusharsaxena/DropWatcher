@@ -1,0 +1,18 @@
+DW-62 independent review + standards audit (whole addon at 87d8694)
+
+Bundles: docs/reviews/2026-10-11/ (review) and docs/audits/2026-10-11/ (audit, prefix DRW, standard v2.78.3).
+Measured fresh: luacheck 0/0 in 109 files; 886 passed / 0 failed / 1 skipped; inventory equal to docs/test-cases.md; complexity 0 warnings, max CCN 13, 0 blind files; vendor diffs empty vs LibKa0s v1.71.0; cross-addon pass clean (13 addons, 4 classes).
+
+Review findings: 5 Medium, 2 Low; Critical 0, High 0.
+- F-001 toast outlives its drop (clear, clear on kill, trim, dismiss) -> 240f173
+- F-004 toast.enabled off leaves the toast and queue -> 240f173
+- F-002 empty-slot upgrade never toasts or auto-asks -> 3cb7fae
+- F-003 Scoring.InUse picks a loaded but uninitialized Pawn -> 3519a0c
+- F-005 auto-ask held after leaving an encounter -> 2a164c9
+- F-006 StaticPopups without preferredIndex = 3 -> f4af985
+- F-007 toast's degraded typed close glyph: kept (degraded-only; audit DRW-01, Low)
+The toast fix took modules/LootFeed.lua to 1015 lines; the filters were peeled into modules/FeedFilter.lua -> 0aac37d (965 lines).
+
+Audit: compliant. DRW-01 Low (the degraded toast close glyph), DRW-02 Info (the register's promised issues await DW-63). No MUST failure is user-reachable.
+
+Gate at 0aac37d: 898 passed / 0 failed / 1 skipped; luacheck 0/0 in 110 files. Smoke checks TOAST-2, TOAST-3, SCORE-3 and ASK-9 owed to the owner. Nothing pushed, merged, tagged or bumped.
