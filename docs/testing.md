@@ -175,6 +175,14 @@ time with each drop once, the queue's cap, a drop that turns likely on its `Drop
 pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the
 Ask button through the host handler, the sound, the drag only in test mode with the point saved and
 Reset position, test mode's placeholder toast, the stand-down and the diagnostics line),
+`test_auto_ask` (auto-ask: the pure `DueAt` and the delay's clamp; then the edge: off by default, a
+qualifying drop whispered after the delay once with the ask template, the delay and least gain
+read from the rows, a sidegrade, your own drop or an unknown trade left alone and a later `likely`
+scheduled, held through an encounter and due after its end, an encounter ending after the drop
+pushing it back, each cancel rule (your own ask, the looter leaving, the row dismissed, the item
+received, a drop gone or no longer qualifying when due, turning it off, the stand-down), only drops
+from after it was turned on, the one-time notice, test mode printing instead of sending and the
+diagnostics lines),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

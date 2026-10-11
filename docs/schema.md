@@ -81,7 +81,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `messages.editFirst` | `false` | Sending | open the Edit message box before an ask, offer or announce (the host handlers) |
 | `messages.oneAsk` | `true` | Sending | each (drop, target, kind) is sent once |
 | `messages.announceChannel` | `"auto"` | Sending | `auto`, `INSTANCE_CHAT`, `RAID` or `PARTY`; never say or yell |
-| `messages.autoAsk.enabled` | `false` | Auto-ask | ask on your behalf (read from DW-54) |
+| `messages.autoAsk.enabled` | `false` | Auto-ask | ask on your behalf (`modules/AutoAsk.lua`, read at each drop and when an ask is due); its reaction says the one-time notice when it turns on and cancels the waiting asks when it turns off |
 | `messages.autoAsk.delay` | `10` | Auto-ask | seconds after the boss kill or the drop, 3 to 30 |
 | `messages.autoAsk.minGain` | `5` | Auto-ask | the least item-level gain for you, 1 to 50 |
 
@@ -118,6 +118,7 @@ The toast's position (design spec §11.5) is named state too: `toast.point` (`{ 
 | `history.maxGroups` | `20` | the History tab's cap, 1 to 100; the `global.history.maxGroups` row (Window › Layout) stores here through its own closures, and a change trims the log at once (`NS.History.ApplyCap`) |
 | `history.v` | absent until the first drop is recorded | the history's own shape stamp, `1` (`NS.History.VERSION`); `NS.History.Normalize` sets it and makes `groups` a list, in place |
 | `history.groups` | absent until the first drop is recorded | the kept drops, below; written by `modules/History.lua` alone, never through the seam |
+| `notices.autoAsk` | absent until auto-ask is first turned on | `true` once auto-ask's one-time chat notice was said (design spec §9.4); written by `modules/AutoAsk.lua` alone, never through the seam |
 
 ### The history (design spec §10)
 

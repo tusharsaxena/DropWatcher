@@ -286,8 +286,10 @@ local function messages()
     local A = M.autoAsk
     local auto = { page = "messages", group = L["Auto-ask"] }
     local autoOff = with(auto, { disabledIf = unless("messages.autoAsk.enabled", true) })
+    -- Turned on, the one-time notice and a fresh start; turned off, the waiting asks go (DW-54).
     bool("messages.autoAsk.enabled", A.enabled, L["Ask automatically"],
-        L["Ask for a likely tradeable upgrade for you on your behalf, after a delay."], auto)
+        L["Ask for a likely tradeable upgrade for you on your behalf, after a delay."],
+        with(auto, { onChange = function(v) NS.AutoAsk.OnEnabledChanged(v) end }))
     slider("messages.autoAsk.delay", A.delay, 3, 30, 1, L["Delay (seconds)"],
         L["How long after the boss kill, or the drop, the ask waits."], autoOff)
     slider("messages.autoAsk.minGain", A.minGain, 1, 50, 1, L["Least gain (item levels)"],

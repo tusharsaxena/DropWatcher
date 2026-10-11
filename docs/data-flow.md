@@ -430,6 +430,22 @@ Ask ─> NS.PressAsk(id)    AskStateChanged / DropUpdated of the shown drop ─>
 drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.ResetPosition
 ```
 
+## Today: auto-ask (DW-54, spec §9.4)
+
+```
+DropAdded(id) / DropUpdated(id) ─> AutoAsk.Consider: messages.autoAsk.enabled? not considered yet?
+    ─> Toast.Qualifies(rec, autoAsk.minGain), the looter known, the ask still ready, not received,
+       recorded after auto-ask was turned on ─> pending (one C_Timer each)
+    ─> due = DueAt(drop, last ENCOUNTER_END, autoAsk.delay)   (held while an encounter is in progress)
+ENCOUNTER_START ─> timers stopped        ENCOUNTER_END ─> every waiting ask due delay after now
+due ─> AutoAsk.Fire: checked again (on, in the feed, qualifying, never asked, not received, looter in
+       the group) ─> Asks.Request("ask", looter, id)   (guard, queue under a restriction, send, confirm)
+cancel: AskStateChanged(id, _, "ask") (you asked)   GROUP_ROSTER_UPDATE (looter left)
+        NS.DismissDrop(id) (row ×, card Hide)        HistoryChanged + received
+        the row turned off                           the stand-down
+first turned on ─> one-time notice ─> global.notices.autoAsk = true
+```
+
 ## The design's loot pipeline (spec §3)
 
 ```

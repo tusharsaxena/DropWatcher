@@ -666,6 +666,20 @@ tradeables` under the My drops rows → one party (instance) chat line `Up for t
 raid) it is two or more lines, none cut mid-link. Click it again → it posts again. With none
 tradeable the button is grayed. In test mode (`/dw test`) the lines are printed, not sent. Result:
 
+**ASK-8. Auto-ask.** Its timing, its checks and its cancel rules are headless-tested
+(`test_auto_ask`); this confirms the client's side. Settings › Messages › Auto-ask › Ask automatically
+on → chat reads the one-time notice (`Auto-ask is on: … 5 or more item levels … 10 seconds after the
+boss kill or the drop.` and how to turn it off); turn it off and on again → no second notice, and
+none after a `/reload`. `/dw test` with it on → about 10 seconds later chat reads `Test mode, not
+sent: …` for the placeholders that qualify, and nothing is whispered. In a dungeon with
+`/dw debug on`, kill a boss whose loot gives someone else a likely tradeable upgrade of 5+ item
+levels for you → `[MSG] auto-ask scheduled` when the drop lands, then 10 seconds after the kill (or
+the drop, if later) the whisper goes with `Whispered <name>: [item]` and the row's Ask reads
+`Asked`. Repeat with each cancel: press Ask yourself first (one whisper only), dismiss the row with
+its × (none), or have the looter leave the group (none); each logs `[MSG] auto-ask canceled` with
+its reason. Pull the next boss while one is waiting → nothing goes during the fight, and it goes
+10 seconds after that boss dies. Result:
+
 ## Situations
 
 The classifier's truth table is headless-tested (`test_situations`); these checks confirm that the
@@ -831,3 +845,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
 | TMOG-1 | DW-53, the transmog-known flag and the For transmog ask | No client pass recorded yet |
+| ASK-8 | DW-54, auto-ask | No client pass recorded yet |

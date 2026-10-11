@@ -47,7 +47,10 @@ completed trade), expired, or declined (set from the row's right-click menu); Cl
 first. The toast, off until turned on, pops up a drop someone else looted that is a big upgrade for
 you (10 item levels or more by default) and likely tradeable, with an Ask button: one at a time,
 gone after 8 seconds and paused while hovered, never in combat unless allowed, with an optional
-sound, and placed by a drag in test mode. Auto-ask arrives with the plan's later items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
+sound, and placed by a drag in test mode. Auto-ask, off until turned on, whispers the looter of a
+likely tradeable upgrade for you (5 item levels or more by default) your ask template 10 seconds
+after the boss kill or the drop, and holds off when you ask yourself, they leave, you dismiss the row
+or you get the item; the first time it is turned on, one chat line says so.
 The messaging edge behind the coming ask buttons is in: it whispers the looter (or a candidate, or
 announces to the group) with one confirmation line, queues while chat is restricted and sends the
 queue when the restriction lifts or the boss dies, and in test mode prints instead of sending.

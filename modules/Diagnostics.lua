@@ -244,7 +244,8 @@ local function trade(out)
 end
 
 -- The messaging edge (design spec §9.2, §13): the one-ask registry by state, the sends, failures,
--- refusals and flushes, each template's length, then one line per queued ask. Stored state only.
+-- refusals and flushes, each template's length, one line per queued ask, then auto-ask's settings
+-- and its waiting asks (design spec §9.4). Stored state only.
 local function messaging(out)
     local A, M = NS.Asks, NS.Messaging
     local st = A.Stats()
@@ -263,6 +264,10 @@ local function messaging(out)
     for _, a in ipairs(A.Queued()) do
         out:add(TAG, "messaging: queued %s to %s, drop %s", a.kind, a.target, a.dropID)
     end
+    local aa = NS.AutoAsk.Stats()
+    out:add(TAG, "auto-ask: enabled=%s delay=%s minGain=%s waiting=%s nextDue=%s inEncounter=%s", aa.enabled,
+        aa.delay, aa.minGain, aa.waiting, aa.nextDue and math.floor(aa.nextDue) or "none", aa.inEncounter)
+    out:add(TAG, "auto-ask: scheduled=%s sent=%s canceled=%s", aa.scheduled, aa.sent, aa.canceled)
 end
 
 -- Your Pawn scale, read from the stored gear snapshot's class and spec (never a fresh read).

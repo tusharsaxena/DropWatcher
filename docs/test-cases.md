@@ -900,6 +900,27 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
+### test_auto_ask.lua (18)
+
+- auto-ask: DueAt is the delay after the later of the drop and the encounter's end
+- auto-ask: ClampDelay keeps the delay inside 3..30 and defaults to 10
+- auto-ask edge: off by default; a qualifying drop is never asked for
+- auto-ask edge: a qualifying drop is whispered for after the delay, once, with the ask template
+- auto-ask edge: the delay and the least gain are the settings'
+- auto-ask edge: a sidegrade, your own drop or an unknown trade is not asked for; a later likely is
+- auto-ask edge: held while an encounter is in progress, then due the delay after its end
+- auto-ask edge: an encounter that ends after the drop pushes the ask back
+- auto-ask edge: asking yourself cancels it
+- auto-ask edge: the looter leaving the group cancels it
+- auto-ask edge: dismissing the row cancels it for good
+- auto-ask edge: receiving the item cancels it
+- auto-ask edge: a drop gone from the feed, or no longer qualifying, is dropped when due
+- auto-ask edge: turning it off cancels the waiting asks; turned on, older drops do not count
+- auto-ask edge: the first time it is turned on, a one-time notice explains it
+- auto-ask edge: the stand-down cancels every waiting ask
+- auto-ask edge: in test mode a placeholder's ask is printed, never sent
+- auto-ask: the diagnostics' messaging section reports auto-ask
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -1038,6 +1059,7 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 23 |
 | test_toast.lua | 16 |
+| test_auto_ask.lua | 18 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1047,4 +1069,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **857** |
+| **Total** | **875** |

@@ -34,7 +34,8 @@ local _, NS = ...
 --
 -- THE UI LISTENS. Window.lua repaints it on the bus; it reads the feed (NS.LootFeed.Groups, Get),
 -- the looter's inspect entry (NS.Inspect.Get) and the ask's state (NS.Asks.StateOf), all read-only.
--- The Ask button goes through the host handler NS.PressAsk (core/DropWatcher.lua). An item button
+-- The Ask button goes through the host handler NS.PressAsk, the × through NS.DismissDrop (both
+-- core/DropWatcher.lua, which also cancels the drop's automatic ask). An item button
 -- shows the game's tooltip, shift-click links it (Compat.InsertChatLink) and ctrl-click tries it
 -- on (Compat.DressUpItem).
 
@@ -400,7 +401,7 @@ local function actionsCell(row)
     f.dismiss.art:SetAllPoints(f.dismiss)
     f.dismiss.art:SetTexture(NS.Icon("close"))
     f.dismiss.art:SetVertexColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
-    f.dismiss:SetScript("OnClick", function(b) WG.Dismiss(b.dropId) end)
+    f.dismiss:SetScript("OnClick", function(b) NS.DismissDrop(b.dropId) end)
     NS.Window.AttachTooltip(f.dismiss, function()
         return L["Dismiss"], L["Hide this drop from the table for this session."]
     end)

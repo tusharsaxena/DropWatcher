@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-857%2F857_passing-green)
+![Tests](https://img.shields.io/badge/Tests-875%2F875_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -78,6 +78,13 @@ alert pops up with the item, who looted it and an **Ask** button. It shows one a
 8 seconds (it waits while your pointer is over it), stays out of the way in combat unless you allow
 it, and can play a sound. Turn on test mode to see it and drag it where you want it.
 
+**Auto-ask** is off until you turn it on (Settings › Messages › Auto-ask). Then, when someone else
+loots a likely tradeable upgrade for you (5 item levels by default), Drop Watcher whispers them your
+ask template 10 seconds after the boss dies or the item drops, whichever is later. It holds off if
+you ask yourself first, they leave the group, you dismiss the row or the item reaches you. It only
+asks for drops that arrive after you turn it on, and the first time you do, one chat line explains
+it.
+
 Test mode fills the window with placeholder content so you can see it and place it before a real
 drop arrives. `/dw test` turns it on and off, and so does the **Test mode** box. Entering combat ends
 it, since you have better things to look at then.
@@ -109,7 +116,7 @@ The design, in the order the pieces are being built:
 
 | Question | Answer |
 |---|---|
-| Does it whisper people on its own? | No. Every whisper is a click, unless you turn on the optional auto-ask once it ships. |
+| Does it whisper people on its own? | No. Every whisper is a click, unless you turn on the optional auto-ask (Settings › Messages › Auto-ask). |
 | Does it need Pawn? | No. If Pawn is installed, its scale scores each drop beside the item level; without it, you can enter your own stat weights or import a Pawn scale string in Settings › Comparison, or compare by item level alone. |
 | Will it work in raids? | Yes, it is being built for parties and raids alike. |
 

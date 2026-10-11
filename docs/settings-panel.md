@@ -100,7 +100,8 @@ the limit or an unknown token. Reset templates puts the four back.
 **Sending:** Ask for transmog (off: also offer an ask, with the For transmog template, on a drop
 that is no gain for you but whose look you have not collected), Edit before sending, Ask once,
 Announce channel. **Auto-ask:** Ask automatically, then
-its delay and least gain, live only while it is on.
+its delay and least gain, live only while it is on. Turning Ask automatically on the first time
+prints auto-ask's one-time notice; turning it off cancels the asks waiting to go.
 
 ## Window
 

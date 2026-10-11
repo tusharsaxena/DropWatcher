@@ -18,7 +18,7 @@ local _, NS = ...
 -- entry (NS.Inspect.Get), the ask's state (NS.Asks.StateOf), the message preview (NS.Asks.Preview),
 -- the trade guard (NS.TradeHelper.CanTradeWith) and the client through NS.Compat (the spec's name,
 -- Pawn's presence), all read-only. Its buttons go through the host handlers in core/DropWatcher.lua
--- (NS.PressAsk, NS.RetryInspect, NS.TradeWithLooter) and the table's own Dismiss; Link in chat is
+-- (NS.PressAsk, NS.RetryInspect, NS.TradeWithLooter, and NS.DismissDrop for Hide); Link in chat is
 -- Compat.InsertChatLink, as an item button's shift-click is.
 --
 -- THE EDIT MESSAGE BOX. Edit message opens a small skinned box over the window, prefilled with the
@@ -184,7 +184,7 @@ local ON_CLICK = {
     link  = function(b) if b.link then NS.Compat.InsertChatLink(b.link) end end,
     retry = function(b) NS.RetryInspect(b.dropId) end,
     trade = function(b) NS.TradeWithLooter(b.dropId) end,
-    hide  = function(b) NS.WindowGroup.Dismiss(b.dropId) end,
+    hide  = function(b) NS.DismissDrop(b.dropId) end,
 }
 
 local function buildActions(card)

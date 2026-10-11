@@ -22,14 +22,16 @@ local PINNED = {
 -- DropAdded with the trade timer, InspectDone with the feed and RestrictionChanged with the asks;
 -- DW-33 added its TradeTimerTick, beside the feed's, and TradeTimerExpiring for the My drops tab;
 -- DW-51's history hears DropAdded, DropUpdated and AskStateChanged, and its tab HistoryChanged;
--- DW-52's toast hears the same three as the history).
+-- DW-52's toast hears the same three as the history; DW-54's auto-ask hears those three and
+-- HistoryChanged).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
-    "Ka0s_DropWatcher_AskStateChanged",
+    "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
-    "Ka0s_DropWatcher_DropAdded",
+    "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
     "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated",
+    "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_GearChanged",
-    "Ka0s_DropWatcher_HistoryChanged",
+    "Ka0s_DropWatcher_HistoryChanged", "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
     "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_SituationChanged", "Ka0s_DropWatcher_TradeTimerExpiring",

@@ -309,6 +309,15 @@ function NS.TradeWithLooter(dropID)
     return ok, reason
 end
 
+--- Dismiss a drop's row for the session (design spec §11.2, §9.4): the Group drops row's × and the
+--- detail card's Hide. The row goes from the table (modules/WindowGroup.lua) and the drop's waiting
+--- automatic ask is canceled (modules/AutoAsk.lua), so a dismissed drop is never asked for.
+--- @param dropID number
+function NS.DismissDrop(dropID)
+    NS.WindowGroup.Dismiss(dropID)
+    if NS.AutoAsk then NS.AutoAsk.Cancel(dropID, "dismissed") end
+end
+
 -- Why an offer or an announce was not sent, in words (modules/Asks.lua's refusal reasons).
 local SEND_REFUSAL = {
     offer = { alreadyAsked = NS.L["You already offered it to %s."], self = NS.L["You cannot offer it to yourself."],

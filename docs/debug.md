@@ -39,7 +39,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `feed` | what the loot parser has read since login (stored state): the lines turned into loot (`hits`), ignored, rejected (upgrade and crafting echoes) and secret, and the last loot seen with its age, kind and looter; then the feed's drops (Group drops and My drops, the test feed, the groups, the reports merged, the drops still loading), the drops hidden by reason, the encounter and keystone run in progress, and the quality mode in force here with its threshold (one per slot, compact, for the per-slot mode) |
 | `trade` | the trade helper's counts once it has been used (`trade helper: gives=… opens=… refused=… last=<reason>`), then the trade timer (stored state): the live and expired entries, the scans so far and the ticker's period (`off` with nothing live), then per entry the drop id, the item, the seconds left, whether it has expired or warned, and the item GUID |
 | `scoring` | the scorer chosen (`comparison.scorer`) and the adapter actually in use (`inUse=pawn`, `weights` or `none`: `pawn` without Pawn loaded is none, `auto` falls back to your weights, then none), whether Pawn is ready and your Pawn scale (from the stored gear snapshot's class and spec), then the score retries: drops still retrying a pending score, drops that used up their tries, and whether the shared retry timer is armed |
-| `messaging` | the one-ask registry by state (asks, queued, sent, failed, ready), the sends, failures, refusals and flushes and whether a flush is running, each template's length (the transmog ask's included), `oneAsk`, the announce channel and `transmogAsk`, then one line per queued ask |
+| `messaging` | the one-ask registry by state (asks, queued, sent, failed, ready), the sends, failures, refusals and flushes and whether a flush is running, each template's length (the transmog ask's included), `oneAsk`, the announce channel and `transmogAsk`, then one line per queued ask; then auto-ask: on or off, its delay and least gain, how many asks wait, the seconds until the next is due, whether an encounter holds them, and how many were scheduled, sent and canceled (`auto-ask: enabled=… delay=… minGain=… waiting=… nextDue=… inEncounter=…`, `auto-ask: scheduled=… sent=… canceled=…`) |
 | `registration` | the declared feature events (each once), whether they are registered, the events the client refused |
 | `integrations` | the launcher's registration and button; whether Pawn and CanIMogIt are loaded; which source answers whether you have collected a look (`transmog: source=CanIMogIt`, `C_TransmogCollection` or `none`) |
 
@@ -71,7 +71,9 @@ drop, the item and the seconds left; one per trade-helper give or open, with the
 unit, and one per refusal, with its reason), `MSG` (one line per ask, offer or announce sent, queued
 with the restriction that held it, failed with its reason, refused with its reason, or canceled by a
 click or because its looter left; one per flush started, with its trigger and the queue length; one
-when the stand-down drops queued asks), `UI` (one line per tab selected, per filter changed on a
+when the stand-down drops queued asks; one per automatic ask scheduled, with its drop and looter and
+whether an encounter holds it, one per automatic ask sent with the messaging edge's answer, and one
+per automatic ask canceled or dropped when due, with its reason), `UI` (one line per tab selected, per filter changed on a
 tab, per minimize and expand, per auto-open with its situation, and per Group drops header
 collapsed or expanded, per row dismissed, and per detail card expanded or collapsed and per Retry
 inspect with the broker's answer; per My drops row hidden, per Offer panel opened with its drop,

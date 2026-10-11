@@ -181,3 +181,9 @@ L["window position reset"] = "window position reset"
 L["window unlocked"] = "window unlocked"
 L["|cffFFFF00%s|r takes a setting path: |cffFFFF00%s|r (try |cffFFFF00%s|r). To reset everything: |cffFFFF00%s|r."] =
     "|cffFFFF00%s|r takes a setting path: |cffFFFF00%s|r (try |cffFFFF00%s|r). To reset everything: |cffFFFF00%s|r."
+
+-- Auto-ask's one-time notice (modules/AutoAsk.lua, design spec §9.4)
+L["Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or more item levels for you, your ask template is whispered to them %d seconds after the boss kill or the drop."] =
+    "Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or more item levels for you, your ask template is whispered to them %d seconds after the boss kill or the drop."
+L["It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."] =
+    "It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."
