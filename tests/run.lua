@@ -100,6 +100,7 @@ Kit.run{
         "test_slash",
         "test_window",
         "test_window_shell",
+        "test_window_group",
         "test_compat",
         "test_constants",
         "test_class_data",

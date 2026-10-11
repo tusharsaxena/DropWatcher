@@ -45,7 +45,12 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_database`, `test_schema`, `test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
 panes, the filter bar's per-tab state, the footer's composer, minimize, auto-open, a tooltip on
-every control, the build without the Widgets library, and the pure row predicates), `test_compat` (the compat seam: the
+every control, the build without the Widgets library, and the pure row predicates),
+`test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
+each verdict, trade, inspect and ask state, the column sets and the entry order, then the table
+built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
+the Ask button and its repaint, the dismiss mark, the compact preset, the filters and the empty
+line), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader and each shim's fallback with its API absent), `test_constants` and
 `test_class_data`

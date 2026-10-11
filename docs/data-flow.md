@@ -26,7 +26,8 @@ frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibility
 
 ```
 RestrictionChanged(reason) ─> the badge (`Encounter · n queued`, hidden while reason is nil)
-AskStateChanged ───────────> the badge's queued count (NS.Asks.Queued, read)
+AskStateChanged ───────────> the badge's queued count (NS.Asks.Queued, read); shown: the active
+                             tab's body (each row's Ask button)
 SituationChanged ──────────> auto-open re-armed; "This instance" starts now; footer, Quality label
 DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read)
                                ├─> the first interesting live drop in an auto-open situation opens it
@@ -38,10 +39,32 @@ footer ticker (5s) ────────> shown and expanded: the footer ("La
 filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
+resize (grip released) ────> the whole repaint (the table's columns take the new width)
 ```
 
 The tab's body (DW-31, DW-33, DW-51) is handed `Window.TabContext(tab)`: its feed (`test` in test
 mode), its filter state, the controls it honors, `matches(drop)` and `compare(a, b)`.
+
+## Today: the Group drops table
+
+```
+Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
+  ├─> WindowGroup.Columns(profile.window.compact, profile.window.columns)   (pure)
+  ├─> WindowGroup.Layout(columns, the rows' width)                          (pure)
+  ├─> WindowGroup.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
+  │                       NS.State.windowGroup)                              first, filtered, sorted)
+  ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
+  └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / TheirEq / Me / Them / Trade / Ask
+                  reads: NS.Inspect.Get(looter guid).gear (Their eq), NS.Asks.StateOf("ask", …)
+                  client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
+
+header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint
+× ─────────────> WindowGroup.Dismiss ─> State.windowGroup.dismissed ─> repaint
+Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id) ─> AskStateChanged ─> repaint
+item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
+                 ctrl-click: Compat.DressUpItem
+NS.SetCompact ─> profile.window.compact (the seam once DW-40's row exists) ─> repaint
+```
 
 ## Today: enable and disable
 

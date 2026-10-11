@@ -26,7 +26,7 @@ read_globals = {
   "Settings", "StaticPopup_Show", "YES", "NO",
   "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
   "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected", "UNKNOWNOBJECT",
-  "GetTime", "LE_PARTY_CATEGORY_INSTANCE", "GameTooltip",
+  "GetTime", "LE_PARTY_CATEGORY_INSTANCE", "GameTooltip", "IsShiftKeyDown", "IsControlKeyDown",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The
@@ -52,6 +52,8 @@ files["core/Compat.lua"] = {
     "GetInventoryItemLink",
     "GetInventoryItemID", "CanInspect", "CheckInteractDistance", "NotifyInspect", "ClearInspectPlayer",
     "GetInspectSpecialization", "InspectFrame", "hooksecurefunc", "C_LootHistory",
+    "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
+    "DressUpLink",
   },
 }
 

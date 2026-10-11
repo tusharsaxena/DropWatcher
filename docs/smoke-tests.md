@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..9 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, reserved) and the window's shell (FEED-8..9, DW-30) |
+| FEED-1..12 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, reserved), the window's shell (FEED-8..9, DW-30) and the Group drops table (FEED-10..12, DW-31) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
 | ITEM-1..2 | Item facts | The item readers' shapes and the track ids (lands with DW-23) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
@@ -166,8 +166,8 @@ Result:
 The parser's patterns, the rebuild and the secret guards are headless-tested (`test_loot_parser`),
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
-and the `feed:` lines of `/dw diagnostics` until the window's feed tabs draw them (DW-30, DW-31; the
-table's own checks take the next free numbers). Reserved: FEED-7 (a Devourer Demon Hunter looter
+and the `feed:` lines of `/dw diagnostics`, and FEED-10..12 how the Group drops table draws them
+(DW-31). Reserved: FEED-7 (a Devourer Demon Hunter looter
 before inspect: a warglaive or one-hander reads as usable and a held off hand as not, matching the
 item's own spec list; the class data of DW-10, judged by DW-11).
 
@@ -250,6 +250,39 @@ appears beside the title; a double-click on the title bar expands it and the chi
 the window, leave and enter another dungeon (or zone out and back), and let the first upgrade for
 you drop → the window opens by itself once; close it and the next upgrade leaves it closed. In the
 open world solo nothing opens it. Result:
+
+**FEED-10. The Group drops table.** In a Heroic dungeon with the window open, let the group loot a
+boss → under the filter bar a row of gray column labels (`Item`, `Ilvl`, `Slot`, `Looter`, `Their
+eq`, `Me`, `Them`, `Trade`, `Actions`), then a gold header `<boss> · Dungeon · <age> ago · <n>
+drops` with a down chevron, then one row per drop: the item's own icon and its name in its quality
+color, its item level, its slot, the looter's short name in their class color, the looter's worn
+item (two for a ring, trinket or weapon) with the read's age (`40s`) or `…`, `range`, `combat`,
+`!`, then Me and Them as a signed number beside `▲`, `≈` or `▽` (the glyphs drawn, not boxes),
+Trade as `Yes`, `Likely`, `Unknown` or `No`, and an `Ask` button or a dash with an `×`. An upgrade
+for you is green in Me; in Them the looter's upgrade is amber and their downgrade green. With View:
+Interesting only your upgrades the looter may trade are listed; View: All lists every drop. Hover
+every cell, every column label and the header → each one shows a tooltip with a reason (Trade's
+reads like `Personal loot: 311 is not an upgrade over the 324 <name> wears, so they may trade
+it.`); no cell is blank. Result:
+
+**FEED-11. Headers, item buttons, dismiss, compact.** After FEED-10, kill a second boss → its group
+is on top and open, the first one collapsed with a right chevron and `(collapsed)`; click each
+header → it opens or collapses. Hover an item icon → the game's item tooltip with a `Shift-click to
+link it in chat; ctrl-click to try it on.` line; shift-click it with the chat box open → the link is
+inserted; ctrl-click it → the dressing room shows it. Click a row's `×` → the row goes for the
+session. Turn the compact preset on (`/dw compact` once DW-42 lands; until then
+`/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").db.profile.window.compact = true` and
+`/reload`) → the labels read `Item / looter`, `Ilvl`, `Their eq`, `Me`, `Ask`, the item
+cell names the looter, and the other columns are gone; set it back. Resize the window → the Item
+column takes the width. Scroll with the mouse wheel when the rows pass the bottom. Result:
+
+**FEED-12. The table's Ask button.** In a party, on a drop that is an upgrade for you and Likely
+tradeable, click `Ask` → the looter is whispered your ask template and the chat line `Whispered
+<name>: [item]` appears; the button reads `Asked` with a check mark and is grayed; its tooltip says
+it cannot be sent twice. In a boss fight, click `Ask` on another such drop → it reads `Queued` with
+a clock mark and the title bar's badge counts it; click it again → it is canceled and reads `Ask`;
+click once more and let the fight end → it is sent and reads `Asked`. A drop of your own, one with
+Trade `No`, or one that is not an upgrade for you shows a dash whose tooltip says why. Result:
 
 ## Roster
 
@@ -548,3 +581,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | TRADE-5 | DW-28, the trade timer | No client pass recorded yet |
 | TRADE-6 | DW-29, the trade helper | No client pass recorded yet |
 | ASK-1..4 | DW-2A, the messaging edge | No client pass recorded yet |
+| FEED-10..12 | DW-31, the Group drops table | No client pass recorded yet |

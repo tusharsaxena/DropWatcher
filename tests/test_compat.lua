@@ -2,7 +2,8 @@
 -- design spec §4): the secret guards on both load paths, the chat sender's ladder, the localized
 -- duration decoder behind the trade timer (spec §7.4) in three client languages, the tooltip line
 -- reader and its three readers, the restriction APIs, the bind helpers, the item readers, the Pawn
--- seam (spec §5.4) and the trade actions. Every shim is also driven with its API absent, where it
+-- seam (spec §5.4), the trade actions and the drop tables' item icon, class color, chat link and
+-- dressing room (spec §11.1). Every shim is also driven with its API absent, where it
 -- must answer its documented absent value and never raise, the inspect calls (spec §8) and the
 -- feed's loot history and keystone map readers included.
 
@@ -792,6 +793,64 @@ test("compat: ChallengeMapName answers a keystone dungeon's name, else nil", fun
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- The drop tables' item buttons and class colors
+-- ---------------------------------------------------------------------------------------------
+
+local ITEM_LINK = "|cffa335ee|Hitem:212::|h[Crown of Roaring Storms]|h|r"
+
+test("compat: ItemIcon answers C_Item.GetItemIconByID's texture, else nil", function()
+    local Compat, m = fresh()
+    m.itemIcons[ITEM_LINK] = 133071
+    assertEqual(Compat.ItemIcon(ITEM_LINK), 133071)
+    assertNil(Compat.ItemIcon(nil))
+    m.C_Item.GetItemIconByID = function() return nil end
+    assertNil(Compat.ItemIcon(ITEM_LINK))
+    installSecrets(m)
+    m.C_Item.GetItemIconByID = function() return T.secret(133071) end
+    assertNil(Compat.ItemIcon(ITEM_LINK), "a secret answer")
+    m.C_Item.GetItemIconByID = nil
+    assertNil(Compat.ItemIcon(ITEM_LINK), "no API")
+end)
+
+test("compat: ClassColor reads C_ClassColor first, then RAID_CLASS_COLORS", function()
+    local Compat, m = fresh()
+    local r, g, b = Compat.ClassColor("MAGE")
+    assertEqual(table.concat({ r, g, b }, ","), "0.25,0.78,0.92", "the table, with no C_ClassColor")
+    m.C_ClassColor = { GetClassColor = function(c) if c == "MAGE" then return { r = 0.2, g = 0.7, b = 0.9 } end end }
+    assertEqual((Compat.ClassColor("MAGE")), 0.2, "the API first")
+    assertEqual((Compat.ClassColor("ROGUE")), 1, "the table when the API has no answer")
+    assertNil(Compat.ClassColor("NOPE")); assertNil(Compat.ClassColor(nil))
+    m.C_ClassColor, m.RAID_CLASS_COLORS = nil, nil
+    assertNil(Compat.ClassColor("MAGE"), "neither source")
+end)
+
+test("compat: InsertChatLink prefers ChatFrameUtil.InsertLink, then ChatEdit_InsertLink", function()
+    local Compat, m = fresh()
+    assertTrue(Compat.InsertChatLink(ITEM_LINK))
+    assertEqual(m.chatLinks[1], ITEM_LINK)
+    local util = {}
+    m.ChatFrameUtil = { InsertLink = function(l) util[#util + 1] = l end }
+    assertTrue(Compat.InsertChatLink(ITEM_LINK))
+    assertEqual(#util, 1); assertEqual(#m.chatLinks, 1, "the newer spelling wins")
+    assertFalse(Compat.InsertChatLink(nil))
+    m.ChatFrameUtil, m.ChatEdit_InsertLink = nil, nil
+    assertFalse(Compat.InsertChatLink(ITEM_LINK), "no API")
+end)
+
+test("compat: DressUpItem calls DressUpItemLink, then DressUpLink", function()
+    local Compat, m = fresh()
+    assertTrue(Compat.DressUpItem(ITEM_LINK))
+    assertEqual(m.dressUps[1], ITEM_LINK)
+    m.DressUpItemLink = nil
+    local older = {}
+    m.DressUpLink = function(l) older[#older + 1] = l end
+    assertTrue(Compat.DressUpItem(ITEM_LINK)); assertEqual(older[1], ITEM_LINK)
+    assertFalse(Compat.DressUpItem(nil))
+    m.DressUpLink = nil
+    assertFalse(Compat.DressUpItem(ITEM_LINK), "no API")
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
 
@@ -803,7 +862,8 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink", "C_Container",
     "NotifyInspect", "ClearInspectPlayer", "GetInspectSpecialization", "CheckInteractDistance",
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
-    "GetMapUIInfo", "CursorHasItem", "ClearCursor" }
+    "GetMapUIInfo", "CursorHasItem", "ClearCursor", "GetItemIconByID", "C_ClassColor", "RAID_CLASS_COLORS",
+    "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-606%2F606_passing-green)
+![Tests](https://img.shields.io/badge/Tests-639%2F639_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -14,9 +14,10 @@ looter's. Your own tradeable drops get a list of their own, with the time left t
 the people it would help. Out of the box it stays in its window. Alerts and sounds are opt-in, and
 nothing is whispered unless you click.
 
-**This is an early build.** Version 0.1.0 is the frame of the addon: the window, the settings, the
-minimap button, the slash command and the test mode. The loot feed, the comparisons and the asking
-arrive in the releases that follow, and this page will grow with them.
+**This is an early build.** Version 0.1.0 is the frame of the addon: the window with its Group
+drops table, the settings, the minimap button, the slash command and the test mode. Your own drops,
+offering and trading, and the history arrive in the releases that follow, and this page will grow
+with them.
 
 ## Usage
 
@@ -33,6 +34,15 @@ filters. The footer is a quick health check: how many group members' gear has be
 last loot line came in, where the addon thinks you are, and whether Pawn is loaded. **Scan group**
 reads everyone's gear ahead of the loot. During a boss fight or a key, an orange lock badge in the
 title bar says chat is restricted and how many asks are waiting to go out.
+
+**Group drops** lists every drop, one row each, under a header per boss or key run; click a header
+to fold it away. Each row shows the item, its item level and slot, who looted it, what they wear
+there, and two verdicts: **Me** (is it an upgrade for you?) and **Them** (is it one for the
+looter?), each a signed item-level change with ▲ for an upgrade, ≈ for a sidegrade and ▽ for a
+downgrade. **Trade** says Yes, Likely, Unknown or No. Hover any cell for the reason behind it. Hover
+the item's icon for its tooltip, shift-click it to link it in chat, ctrl-click it to try it on. The
+**Ask** button whispers the looter once; during a boss fight it waits in the queue and goes out when
+the fight ends, and clicking it again cancels it. The × beside it hides the row for the session.
 
 Test mode fills the window with placeholder content so you can see it and place it before a real
 drop arrives. `/dw test` turns it on and off, and so does the **Test mode** box. Entering combat ends

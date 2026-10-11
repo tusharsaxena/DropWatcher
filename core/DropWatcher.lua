@@ -211,6 +211,74 @@ function NS.SetQualityMode(mode)
     return ok ~= false
 end
 
+-- Why an ask was not sent, in words (modules/Asks.lua's refusal reasons, and the core's).
+local ASK_REFUSAL = {
+    notInGroup = NS.L["%s is not in your group."], self = NS.L["That is your own drop."],
+    offline = NS.L["%s is offline."], noTarget = NS.L["The looter is not known."],
+    alreadyAsked = NS.L["You already asked %s for it."],
+    tooLong = NS.L["The message is longer than chat allows; shorten the ask template."],
+    disabled = NS.L["The addon is disabled."], noDrop = NS.L["That drop is gone."],
+}
+
+--- The name an ask for `drop` is filed under (NS.Asks.Request's and StateOf's `target`): the
+--- looter's name, else their GUID; nil for your own drop or a looter with neither.
+--- @param drop table a feed record
+--- @return string|nil
+function NS.AskTargetOf(drop)
+    local who = type(drop) == "table" and not drop.isMine and drop.looter
+    if type(who) ~= "table" then return nil end
+    return who.name or who.guid
+end
+
+--- Ask a drop's looter for it (design spec §9.2): the Group drops row's Ask button, through the
+--- messaging edge's Press, so a queued ask is canceled by a second click. A refusal is said in chat;
+--- a send confirms itself (modules/Asks.lua). Refused while stood down.
+--- @param dropID number
+--- @return string state, string|nil reason (as NS.Asks.Press)
+function NS.PressAsk(dropID)
+    local L = NS.L
+    local rec = NS.LootFeed.Get(dropID)
+    local target = NS.AskTargetOf(rec)
+    local state, reason
+    if NS.IsStoodDown() then
+        state, reason = "refused", "disabled"
+    elseif not target then
+        state, reason = "refused", rec and "self" or "noDrop"
+    else
+        state, reason = NS.Asks.Press("ask", target, dropID)
+    end
+    if state == "refused" then
+        local why = ASK_REFUSAL[reason]
+        why = why and why:format(target or "?") or tostring(reason)
+        NS.Print(L["Not asked: %s"]:format(why))
+    end
+    return state, reason
+end
+
+--- Turn the Group drops table's compact preset on or off (design spec §11.1): `window.compact`,
+--- through the write seam once the Window page's row exists (DW-40), until then onto the profile
+--- path the table reads. `/dw compact` (DW-42) shares it.
+--- @param on boolean
+function NS.SetCompact(on)
+    on = on and true or false
+    local S, path = NS.SchemaRuntime, "window.compact"
+    if S and S.FindRow and S.FindRow(path) then
+        S.Set(path, on)
+    else
+        local p = DW.db and DW.db.profile
+        if not p then return end
+        if type(p.window) ~= "table" then p.window = {} end
+        p.window.compact = on
+        NS.Debug("Set", "window.compact = %s", tostring(on))
+    end
+    if NS.Window and NS.Window.IsShown() then NS.Window.Refresh() end
+end
+
+function NS.ToggleCompact()
+    local p = DW.db and DW.db.profile
+    NS.SetCompact(not (p and type(p.window) == "table" and p.window.compact == true))
+end
+
 -- Combat ends test mode (preview-mode), both combat edges re-run the window's show decision
 -- (General visibility can depend on combat) and both hand the edge to the restriction tracker
 -- (modules/Restrictions.lua, design spec §4), which loads below and is read at call time. Feature

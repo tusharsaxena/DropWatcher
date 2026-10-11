@@ -147,7 +147,39 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_compat.lua (59)
+### test_window_group.lua (29)
+
+- cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
+- cells: a verdict with no glyph says a word, and every verdict's tooltip says why
+- cells: the Them column inverts the tones: their upgrade is amber, their downgrade green
+- cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
+- cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
+- cells: Their eq shows both rings for a ring, one item for a helm, and the read's age
+- cells: Their eq says pending, range, combat or failed beside the icons, and a dash on your own
+- cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure
+- cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you
+- cells: Item, Ilvl, Slot and Looter are never blank, each with a reason tooltip
+- cells: an encounter header reads `Label · Situation · age · n drops`
+- table: the default columns, the compact preset's, and a column the profile turns off
+- table: the Item column takes the slack, never less than its minimum
+- table: groups newest first, the first open and older ones collapsed, empty ones left out
+- table: built headless, one header and one row per drop, each column painted
+- table: the verdicts wear their tones, the looter their class color, the item its quality
+- table: every shown cell has a reason tooltip; nothing is blank
+- table: rows come from the pool: a repaint reuses them, fewer drops park the rest
+- table: a header click collapses its group, and a second expands it
+- table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
+- table: Their eq shows the looter's worn item from their inspect read
+- table: the Ask button asks through the shared handler, and AskStateChanged repaints it
+- table: a drop with no ask offered shows a dash with its reason
+- table: the × dismisses a row for the session
+- table: the compact preset keeps Item and looter, Ilvl, Their eq, Me and Ask
+- table: a column the profile turns off is not drawn
+- table: the filter bar filters the rows, and the empty line says why nothing shows
+- table: with no drop at all the empty line says so
+- table: PressAsk says why it asked nobody: your own drop, a gone drop, the addon disabled
+
+### test_compat.lua (63)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -207,6 +239,10 @@ Total.
 - compat: the inspect calls, the spec, the item id, the inspect window and the hook
 - compat: LootHistoryDrop answers a won drop's plain fields, else nil
 - compat: ChallengeMapName answers a keystone dungeon's name, else nil
+- compat: ItemIcon answers C_Item.GetItemIconByID's texture, else nil
+- compat: ClassColor reads C_ClassColor first, then RAID_CLASS_COLORS
+- compat: InsertChatLink prefers ChatFrameUtil.InsertLink, then ChatEdit_InsertLink
+- compat: DressUpItem calls DressUpItemLink, then DressUpLink
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_constants.lua (12)
@@ -729,7 +765,8 @@ Total.
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 31 |
-| test_compat.lua | 59 |
+| test_window_group.lua | 29 |
+| test_compat.lua | 63 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 33 |
@@ -756,4 +793,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **606** |
+| **Total** | **639** |

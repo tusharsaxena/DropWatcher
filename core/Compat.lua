@@ -22,7 +22,9 @@ local _, NS = ...
 --     transmog, the class restriction line);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
 --   * the trade actions (C_Container.PickupContainerItem, DropItemOnUnit, InitiateTrade) and their
---     trade-range and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor).
+--     trade-range and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor);
+--   * the drop tables' item buttons and class colors (C_Item.GetItemIconByID, C_ClassColor and
+--     RAID_CLASS_COLORS, the chat link and the dressing room).
 --
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -902,5 +904,58 @@ end
 function Compat.ClearCursor()
     if not ClearCursor then return false end
     ClearCursor()
+    return true
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- The drop tables' item buttons and class colors (design spec §11.1)
+-- ---------------------------------------------------------------------------------------------
+
+--- An item's icon texture (C_Item.GetItemIconByID, which takes an id or a link and needs no item
+--- cache), or nil for no API, no item, or a secret or non-texture answer.
+--- @param item number|string an item id or link
+--- @return number|string|nil
+function Compat.ItemIcon(item)
+    local fn = C_Item and C_Item.GetItemIconByID
+    if not fn or item == nil then return nil end
+    local v = fn(item)
+    if Compat.IsSecret(v) then return nil end
+    if type(v) == "number" or type(v) == "string" then return v end
+    return nil
+end
+
+--- A class's color as r, g, b: C_ClassColor.GetClassColor, then the RAID_CLASS_COLORS table. Nil
+--- for an unknown class, a secret answer or neither source.
+--- @param classFile string
+--- @return number|nil r, number|nil g, number|nil b
+function Compat.ClassColor(classFile)
+    if type(classFile) ~= "string" or Compat.IsSecret(classFile) then return nil end
+    local api = C_ClassColor and C_ClassColor.GetClassColor
+    local c = api and api(classFile)
+    if c == nil and type(RAID_CLASS_COLORS) == "table" then c = RAID_CLASS_COLORS[classFile] end
+    if type(c) ~= "table" or Compat.IsSecret(c.r) or type(c.r) ~= "number" then return nil end
+    return c.r, c.g, c.b
+end
+
+--- Puts `link` in the chat edit box (an item button's shift-click): ChatFrameUtil.InsertLink, the
+--- newer spelling, then the ChatEdit_InsertLink global. True when one was called.
+--- @param link string
+--- @return boolean
+function Compat.InsertChatLink(link)
+    local util = ChatFrameUtil and ChatFrameUtil.InsertLink
+    local fn = util or ChatEdit_InsertLink
+    if type(link) ~= "string" or not fn then return false end
+    fn(link)
+    return true
+end
+
+--- Shows `link` in the dressing room (an item button's ctrl-click): DressUpItemLink, then the
+--- older DressUpLink. True when one was called.
+--- @param link string
+--- @return boolean
+function Compat.DressUpItem(link)
+    local fn = DressUpItemLink or DressUpLink
+    if type(link) ~= "string" or not fn then return false end
+    fn(link)
     return true
 end

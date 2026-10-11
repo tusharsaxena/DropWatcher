@@ -23,6 +23,8 @@ Exactly two (savedvariables-§4):
 | `window.point` | absent | a drag; Reset position clears it | `{ point, relativePoint, x, y }` |
 | `window.width`, `window.height` | absent | a resize; Reset position clears them | the window's size |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
+| `window.compact` | absent (off) | `NS.SetCompact` (`/dw compact` from DW-42) until the Window page's row lands (DW-40) | the Group drops table's compact preset: Item and looter, Ilvl, Their eq, Me, Ask |
+| `window.columns.<key>` | absent (shown) | none until the Window page's Columns tab lands (DW-40); read only | `false` hides that Group drops column (`ilvl`, `slot`, `looter`, `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
 | `feed.quality.mode` | absent (`fixed`) | the filter bar's Quality control (`NS.SetQualityMode`) until the Feed page's row lands (DW-40) | the minimum-quality mode the feed gates new drops with |
 
 `situations.<key>.track`, `.autoOpen` and `.quality` are read by `modules/Situations.lua` but have
@@ -41,8 +43,8 @@ Settings › Messages). An absent or empty template means the design spec §9.1 
 `C.MESSAGE_TEMPLATES`, an absent `oneAsk` means on, and an absent or unknown `announceChannel`
 (anything but `INSTANCE_CHAT`, `RAID` or `PARTY`) means `auto`.
 
-`window.*` is geometry only a drag, a resize or the minimize button sets: no row addresses it, and
-its one owner is `modules/Window.lua` (`savePoint`, `saveSize`, `Window.SetMinimized`,
+`window.*` beside `compact` and `columns` is geometry only a drag, a resize or the minimize button
+sets: no row addresses it, and its one owner is `modules/Window.lua` (`savePoint`, `saveSize`, `Window.SetMinimized`,
 `Window.ResetPosition`), as `docs/ARCHITECTURE.md` →
 Settings Schema names (architecture-§5).
 
@@ -59,6 +61,7 @@ Settings Schema names (architecture-§5).
 `NS.State.debug` (the logging flag), `NS.State.testMode`, `NS.State.windowOpen`,
 `NS.State.windowFilters` (the filter bar's state per tab, seeded from `feed.view`, `feed.content`,
 `feed.sort` and `trade.likelyOnly` when they hold a valid value),
+`NS.State.windowGroup` (the Group drops table's collapsed groups and dismissed rows),
 `NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
 came from; nil while stood down). The Debug console
 and Test mode rows are `sessionOnly` and store through their own closures.

@@ -36,6 +36,16 @@ C.WINDOW = {
     LOGO        = 18,
     DOUBLE_CLICK = 0.4,   -- seconds between two clicks on the title bar that expand a minimized window
     FOOTER_TICK = 5,      -- seconds between footer repaints while shown ("Last loot 12s ago")
+    -- The drop tables (modules/WindowGroup.lua, design spec §11.1-§11.2).
+    ROW_H       = 24,     -- one drop row
+    GROUP_H     = 20,     -- one encounter header row
+    COLHEAD_H   = 18,     -- the column labels above the rows
+    ROW_ICON    = 20,     -- a row's item button
+    EQ_ICON     = 16,     -- one of the looter's worn items in the Their eq column
+    CELL_GAP    = 6,      -- between two columns
+    ITEM_MIN    = 150,    -- the Item column's least width (it takes the slack)
+    SCROLL_W    = 22,     -- the scroll bar's gutter on the right of the rows
+    ASK_W       = 64,     -- the Ask button
     -- Where a fresh profile, and Reset position, put the window.
     POINT       = { "CENTER", "CENTER", 0, 0 },
 }
@@ -44,6 +54,17 @@ C.WINDOW = {
 -- an idle tab and the footer's text.
 C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
 C.IDLE = { r = 0.62, g = 0.62, b = 0.64 }
+
+-- The drop tables' tones (design spec §11.2, board 03): `good` is news in your favor (an upgrade for
+-- you, the looter's downgrade, a tradeable estimate), `bad` the opposite, `warn` the looter's own
+-- upgrade (amber: the Them column is inverted), `plain` a sidegrade, `muted` what is not known yet.
+C.TONE = {
+    good  = { r = 0.30, g = 0.85, b = 0.40 },
+    bad   = { r = 0.55, g = 0.55, b = 0.58 },
+    warn  = { r = 1.00, g = 0.65, b = 0.15 },
+    plain = { r = 0.92, g = 0.92, b = 0.92 },
+    muted = { r = 0.70, g = 0.70, b = 0.72 },
+}
 
 -- ---------------------------------------------------------------------------------------------
 -- Item ids (design spec §5.2). Read from the client's Enum tables when present; each literal beside

@@ -58,6 +58,10 @@
 --                  (C_Timer entries are stamped with their due time when queued; AceTimer's carry
 --                  `ends`); entries queued while it runs are honored too. __fireTimers still runs a
 --                  whole pass regardless of the clock
+--   itemIcons      C_Item.GetItemIconByID's answer per id or link (134400 when unset);
+--                  RAID_CLASS_COLORS a few classes' colors; shift / ctrl are IsShiftKeyDown /
+--                  IsControlKeyDown; chatLinks and dressUps record ChatEdit_InsertLink and
+--                  DressUpItemLink; tooltipLinks every GameTooltip:SetHyperlink (the drop tables)
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -511,6 +515,28 @@ local function installClock(M)
     end
 end
 
+-- The drop tables' client surface (modules/WindowGroup.lua through core/Compat.lua): item icons,
+-- class colors, the modifier keys, the chat link, the dressing room and the item tooltip.
+local function installTableSurface(M)
+    M.itemIcons = {}
+    M.C_Item.GetItemIconByID = function(item) return M.itemIcons[item] or 134400 end
+    M.RAID_CLASS_COLORS = {
+        PRIEST = { r = 1, g = 1, b = 1 }, MAGE = { r = 0.25, g = 0.78, b = 0.92 },
+        ROGUE = { r = 1, g = 0.96, b = 0.41 }, WARRIOR = { r = 0.78, g = 0.61, b = 0.43 },
+    }
+    M.shift, M.ctrl = false, false
+    M.IsShiftKeyDown = function() return M.shift == true end
+    M.IsControlKeyDown = function() return M.ctrl == true end
+    M.chatLinks, M.dressUps = {}, {}
+    M.ChatEdit_InsertLink = function(link) M.chatLinks[#M.chatLinks + 1] = link; return true end
+    M.DressUpItemLink = function(link) M.dressUps[#M.dressUps + 1] = link; return true end
+    M.tooltipLinks = {}
+    M.GameTooltip.SetHyperlink = function(self, link)
+        M.tooltipLinks[#M.tooltipLinks + 1] = link
+        return self
+    end
+end
+
 local function build()
     local M = base()
     M._G = M
@@ -573,6 +599,7 @@ local function build()
     installUnits(M)
     installInspect(M)
     installClock(M)
+    installTableSurface(M)
 
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)

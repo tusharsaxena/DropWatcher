@@ -28,9 +28,12 @@ snapshot) and for its looter (over the inspect broker's read), and estimates whe
 traded; the diagnostics report counts what it holds. Your own drops' exact trade countdown runs
 too: each one's bag item is read for its trade-time line, and a chat line warns once when ten
 minutes are left. The trade helper behind the coming Trade and Offer buttons is in too: it hands your
-drop to a member or opens a trade, and refuses with a reason in combat or out of range. Nothing draws the drops yet: the tabs'
-tables, the ask and trade buttons, and the settings that tune the feed arrive with the plan's later
-items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
+drop to a member or opens a trade, and refuses with a reason in combat or out of range. The Group
+drops tab draws the feed: one row per drop under a collapsible header per boss or key run, with
+the item button, its item level and slot, the looter, the looter's worn item, the verdicts for you
+and for them, the trade estimate and an Ask button, every cell with its reason on hover, and a
+compact preset. The My drops and History tables, the offer and trade buttons, and the settings that
+tune the feed arrive with the plan's later items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
 The messaging edge behind the coming ask buttons is in: it whispers the looter (or a candidate, or
 announces to the group) with one confirmation line, queues while chat is restricted and sends the
 queue when the restriction lifts or the boss dies, and in test mode prints instead of sending.

@@ -173,6 +173,14 @@ modules\WindowFilterBar.lua
 # Conventional: publishes NS.WindowFooter (the footer's composer and reads); reads NS.Constants and
 # NS.L at load, and NS.Window, NS.WindowFilterBar (above) and the engine modules at call time.
 modules\WindowFooter.lua
+# Conventional: publishes NS.WindowCells, the drop tables' pure cell composers (each column's text,
+# glyph, tone and reason tooltip); reads NS.Constants and NS.L at load.
+modules\WindowCells.lua
+# LOAD-BEARING: publishes NS.WindowGroup and registers the Group drops body through
+# Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells (above), NS.Constants,
+# NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool and the host handlers
+# (core\DropWatcher.lua) are read at call time, when the tab is built and repainted.
+modules\WindowGroup.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

@@ -331,6 +331,14 @@ local function textButton(parent, width, icon, text, onClick)
     return b
 end
 
+--- A flat button in the window's look (the Scan group button's, and each Group drops row's Ask):
+--- the skin's fill and inner line, a catalog mark at the left (`icon` may be nil) and a centered
+--- label (`b.label`, `b.art`). `onClick(b)` runs on a click.
+--- @return table
+function Window.TextButton(parent, width, icon, text, onClick)
+    return textButton(parent, width, icon, text, onClick)
+end
+
 local function buildBadge(bar)
     local b = CreateFrame("Frame", nil, bar)
     b:SetSize(170, K.CONTROL_H)
@@ -507,6 +515,8 @@ local function makeResizable(f)
             saveSize(width, height)
             savePoint()
             NS.WindowFilterBar.Layout(width)
+            -- The table's columns take the new width.
+            Window.Refresh()
         end,
     })
 end
@@ -581,7 +591,8 @@ function Window.TabContext(tab)
 end
 
 local function refreshActive()
-    -- The Group drops placeholder gives way to the test-mode banner (DW-34 draws the test rows).
+    -- A tab with no body shows its placeholder; a body shows it itself, as its empty state, from
+    -- its refresh below (the Group drops body gives way to the test-mode banner).
     local test = NS.State.testMode == true
     for key, p in pairs(frame.panes) do
         p.placeholder:SetShown(tabSpecs[key] == nil and not (key == "group" and test))
@@ -862,7 +873,11 @@ local function listen()
     if not target then return end
     local M = NS.MSG
     target:RegisterMessage(M.RESTRICTION_CHANGED, function(_, reason) onRestriction(reason) end)
-    target:RegisterMessage(M.ASK_STATE_CHANGED, function() if frame then paintBadge() end end)
+    -- The badge's queued count, and the Ask buttons of the active tab's rows.
+    target:RegisterMessage(M.ASK_STATE_CHANGED, function()
+        if frame then paintBadge() end
+        repaint()
+    end)
     target:RegisterMessage(M.SITUATION_CHANGED, function() onSituation() end)
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() repaint() end)
