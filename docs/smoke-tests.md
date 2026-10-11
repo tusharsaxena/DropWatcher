@@ -15,7 +15,7 @@ passed.
 |---|---|---|
 | INSTALL-1..3 | Install | Load, reload, first run, the logo |
 | SLASH-1..3 | Slash | `/dw` and `/dropwatcher`, help, the window verbs |
-| PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
+| PANEL-1..6 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41 |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..3 | State | Enable/disable, lock, test mode |
 | COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (lands with DW-20) |
@@ -73,6 +73,36 @@ and Reset all settings. Each control changes the window at once. Result:
 
 **PANEL-3. Defaults and Reset all.** Hide the minimap button, change the scale, press the header's
 Defaults button and accept → the scale is back to 1.0 and the minimap button stays hidden. Result:
+
+**PANEL-4. When to show and Feed.** The settings list shows General, Feed, Comparison, Trade,
+Messages, Window and Profiles, in that order, and every page has a tab strip with the tabs of design
+spec §12.2. General › When to show: Auto-open the window, then one block per situation under its
+name; untick Delve's Track → its Auto-open and Quality dim, tick it → they light; untick the master
+row → every Auto-open dims. Feed › Quality: with Minimum quality `Fixed minimum` the Floor is dimmed;
+switch to `Match each slot` → Fixed minimum dims, Floor lights, and the closing line reads
+`In force now: Quality: Match slot`, as the window's filter bar does. In a dungeon whose Quality is
+set on When to show, the line names it (`(Dungeon's own setting)`). Feed › Filters: the absolute and
+relative item levels light only in their mode. Press Feed's Defaults → only Feed's rows go back
+(a Trade value you changed stays). Result:
+
+**PANEL-5. Comparison.** Comparison › Weights opens on your current spec in a strip of your class's
+specs (no other class's), with a slider for your primary stat (no other primary), Stamina and the
+four secondaries; set Haste to 1.5, switch spec in the strip, set it to 0.75, switch back → 1.5 is
+kept, and `/dw get comparison.weights` reads `{2}`. Preferences: one checkbox per weapon type your
+class uses (Shields only for a class with a shield spec); tick Daggers → `/dw get comparison.undesired`
+reads `{1}`, and a dagger that drops afterwards reads `Doesn't want` for you, with the reason "You marked this item
+type as not wanted for your spec." Comparison's Defaults clears both. The tabs, the strip and the
+sliders cannot be used in combat (the page is covered). Result:
+
+**PANEL-6. Messages.** Messages › Templates (board 08): the seven token chips, each with its tooltip;
+the three editors with `n / 255` in their labels, counting as you type; the preview below names who
+it goes to (a real drop's looter when the feed has one, else a placeholder) and follows the editor
+you type in. Type `{bogus}` into Ask → the preview's status line shows it in red; press Enter → it is
+stored and shown again on `/reload`. Clear a box and press Enter → refused, and the stored text comes
+back. Click into Offer, then click `{item}` → it lands at the cursor and is stored. Reset templates →
+all three back to the shipped wording. With test mode on, Ask in the window sends the text you
+stored (printed). Sending and Auto-ask: Auto-ask's delay and least gain are dimmed until Ask
+automatically is ticked. Window › Toast: its rows dim until Show a toast is ticked. Result:
 
 ## Profiles
 
@@ -453,7 +483,7 @@ Blizzard's inspect window on the member in flight → no `fresh` line with `slot
 
 The estimator's decision is headless-tested (`test_trade_rules`); TRADE-1..4 confirm it against the
 game's own trade rules. They run once the feed (DW-27, DW-31) shows trade chips; the rules are the
-`trade.rules.<situation>` rows (`/dw list`), drawn on Settings › Trade once it lands (DW-41). Read each chip's tooltip, and the `TRADE` debug lines with `/dw debug on`.
+`trade.rules.<situation>` rows, drawn on Settings › Trade › Rules (and `/dw list`). Read each chip's tooltip, and the `TRADE` debug lines with `/dw debug on`.
 TRADE-5 (the own-item timer, DW-28) and TRADE-6 (the trade helper, DW-29) are below.
 
 **TRADE-1. Binds.** A BoE drop shows `Yes` (BoE) whatever the looter's gear. A warbound or
@@ -601,8 +631,8 @@ tradeable the button is grayed. In test mode (`/dw test`) the lines are printed,
 
 The classifier's truth table is headless-tested (`test_situations`); these checks confirm that the
 real client's answers land in the right row. Each reads the `situation` lines of `/dw diagnostics`,
-with `/dw debug on` for the `[SIT]` change lines. The settings, the window footer and the
-`/dw situation` verb land with DW-41, DW-30 and DW-42, and their checks join these then.
+with `/dw debug on` for the `[SIT]` change lines. The settings are General › When to show (PANEL-4);
+the `/dw situation` verb lands with DW-42, and its check joins these then.
 
 **SIT-1. Open world.** Alone in a city → `situation: solo`. Invite a friend → a `[SIT] situation
 solo -> openWorldGroup (GROUP_ROSTER_UPDATE)` line, and the report reads `openWorldGroup`. Leave the
@@ -628,8 +658,8 @@ disabled. Result:
 ## Quality
 
 The gate's decision is headless-tested (`test_quality_gate`); these checks confirm it on real loot.
-They run once the feed (DW-27, DW-31) and the Feed › Quality page (DW-41) land; until then the
-`feed.quality.*` rows are set with `/dw set`.
+Set the `feed.quality.*` rows on Settings › Feed › Quality (or with `/dw set`); its closing line,
+`In force now: …`, must read what the filter bar reads.
 
 **QUAL-1. Fixed.** Feed › Quality mode `Fixed` at Rare, upgrade override off. In a dungeon, an
 Uncommon drop for another player is not listed and a Rare or Epic one is; the filter bar reads
@@ -685,3 +715,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | FEED-13..15 | DW-32, the detail card | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |
+| PANEL-4..6 | DW-41, the settings pages | No client pass recorded yet |

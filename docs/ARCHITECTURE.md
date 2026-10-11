@@ -113,7 +113,7 @@ edge, each member with a class stripe, `eq → drop`, a status pill and Offer an
 to group), test mode (`TestMode.lua`: placeholder drops in every verdict, trade, inspect and ask
 state, put in the separate test feed through `NS.LootFeed.AddTest` when test mode turns on and
 cleared when it ends; the window wears a `TEST MODE` chip and banner, and every send is printed)
-and the diagnostics sections; `settings/` the schema (the seam in `Schema.lua`, every hand-written row of design spec §12.1 in `SchemaRows.lua`), the panel pages and the slash table. The design's feature modules
+and the diagnostics sections; `settings/` the schema (the seam in `Schema.lua`, every hand-written row of design spec §12.1 in `SchemaRows.lua`), the panel pages (the landing page and General in `Panel.lua`, Feed, Comparison, Trade, Messages and Window in `Pages.lua`, each a tab strip over its rows; the pages' own editors, the per-spec weights and unwanted types, the template editors with their counters, chips and preview, and the Quality tab's readout, in `PageEditors.lua` over the pure `Editors.lua`), Profiles and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
@@ -127,7 +127,9 @@ composed Master controls rows (`settings/Panel.lua`), then every hand-written ro
 seeds), Comparison (`comparison.*`), Trade (`trade.rules.<situation>`, `trade.warnAt`,
 `trade.likelyOnly`), Messages (`messages.*`), Window (`window.columns.<col>`, `window.compact`,
 `rowHeight`, `fontSize`, `toast.*`) and the account-wide history cap `global.history.maxGroups`.
-Each row's `group` is its tab on its page (design spec §12.2), its `default` references
+Each row's `group` is its tab on its page (design spec §12.2; a page draws the rows whose `page` is
+its key, `Settings.RowsForPage`), a row with nothing to do carries a `disabledIf` predicate that dims
+it on the panel, its `default` references
 `defaults/Profile.lua`, and its `validate` refuses a value outside its list or range before the
 seam stores it. `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by
 specID (architecture-§5's value route: a membership change is a whole write through the seam),
@@ -274,9 +276,12 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   `global.history.maxGroups` for History (DW-51), `toast.*` for the toast (DW-52) and
   `messages.autoAsk.*` for auto-ask (DW-54); `messages.editFirst`, `feed.clearOnBossKill`,
   `comparison.heirloomProtect`, `window.rowHeight` and `window.fontSize` are stored and settable
-  but read by no module yet. Until the settings pages land (DW-41) only the General page draws, and
-  its `When to show` tab lists each situation's three rows under the situation's name rather than as
-  a grid.
+  but read by no module yet. The Comparison page's Weights tab edits `comparison.weights`, which no
+  scorer reads until DW-50 adds the weights adapter and its import string.
+- The General page's `When to show` tab draws one block per situation (`Track`, `Auto-open`, then
+  `Quality`, under the situation's name) rather than the design's grid of situations by setting:
+  LibKa0s-Options has no composer for a grid of mixed controls (`ChoiceGrid` is one choice per row
+  over one value list). A LibKa0s issue asking for one is filed at the end of the v1 run (DW-63).
 - The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The
   tab** lists every drop of yours in the tab's feed, a drop that cannot be traded included (a dash
   and Hide, board 04's last row); `My drops · n` counts only the tradeable ones, and Hide is

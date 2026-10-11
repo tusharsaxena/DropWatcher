@@ -102,6 +102,37 @@ Total.
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 
+### test_settings_pages.lua (28)
+
+- pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
+- pages: each page's strip is its own tabs, one per group, in declaration order
+- pages: a page's rows are the rows whose page is its key
+- pages: every schema row with a page but the Profiles page's is drawn by one of these pages
+- when to show: one block per situation, Track and Auto-open then Quality, under its name
+- when to show: an untracked situation's Auto-open and Quality are dimmed, and so is every Auto-open with the master off
+- feed: the Quality tab closes with the threshold in force now, repainted on a write
+- feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only
+- feed: the readout names the situation whose own quality setting is in force
+- comparison: Weights draws your class's specs as a sub-strip and one slider per stat
+- comparison: a weight slider writes the whole map through the seam, for the spec on screen
+- comparison: Preferences lists the class's weapon types and marks one unwanted per spec
+- messages: three editors whose labels count the template's bytes against 255
+- messages: typing repaints the counter and the preview live, and stores nothing until Enter
+- messages: the preview flags an unknown token and a text past the chat limit
+- messages: an empty template is refused by the seam and the box shows the stored one again
+- messages: a token chip goes into the template last edited and is stored at once
+- messages: Reset templates puts the three back and repaints the boxes
+- pages: a page's Defaults resets that page's rows and no other page's
+- editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
+- editors: a spec's stats are its primary stat, Stamina and the four secondaries
+- editors: unwanted types are the class's weapons, then shields where a spec carries one
+- editors: an unwanted mark is a fresh map, and the last one cleared drops the spec
+- editors: the spec strip keeps the remembered spec, else yours, else the first
+- editors: the counter label counts bytes and turns red past the limit
+- editors: the preview's drop is the newest that fits its template, an upgrade for you first
+- editors: the preview's lines name who it goes to, the length and what is wrong
+- asks: TokenContext fills the tokens from a drop for who it goes to
+
 ### test_slash.lua (10)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
@@ -869,6 +900,7 @@ Total.
 | test_database.lua | 7 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
+| test_settings_pages.lua | 28 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 37 |
@@ -903,4 +935,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **733** |
+| **Total** | **761** |

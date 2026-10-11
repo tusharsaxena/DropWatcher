@@ -177,6 +177,17 @@ local function context(kind, rec, who, extra)
     return ctx
 end
 
+--- The token values a request for `kind` fills its template from: the drop record's, for `who`
+--- ({ name, guid }; for an offer the candidate whose gain is {gain}). Reads nothing else and sends
+--- nothing; the Messages page's preview (settings/PageEditors.lua) writes its sample through it.
+--- @param kind string
+--- @param rec table|nil
+--- @param who table|nil
+--- @return table
+function A.TokenContext(kind, rec, who)
+    return context(kind, type(rec) == "table" and rec or nil, type(who) == "table" and who or {})
+end
+
 -- ── sending ─────────────────────────────────────────────────────────────────────────────────
 
 local function changed(a, state, reason)

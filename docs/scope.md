@@ -17,7 +17,9 @@ sound are opt-in.
 The frame the features plug into: the window shell (the Ka0s-skinned frame with its title bar,
 restriction badge, Scan group button, the Group drops, My drops and History tabs, the filter bar,
 the footer's health line, minimize, position, size, lock, scale, alpha, General visibility, test
-mode and auto-open), the settings panel's landing page, General page and Profiles page, the
+mode and auto-open), the settings panel's pages (the landing page, General, Feed, Comparison,
+Trade, Messages, Window and Profiles, with the per-spec weights and unwanted types and the message
+templates' editors, counters and preview), the
 `/dw` command with the reserved verbs and `lock`, `unlock`, `show`, `hide`, `toggle` and `test`, the
 launcher, the debug console and the diagnostics report, the performance harness, the stand-down
 latch, the message catalog, and the situation classifier. The feed wires the engine together: it

@@ -166,6 +166,17 @@ function NS.Setting(path)
     return v
 end
 
+--- One settings page's rows, in schema order: those whose `page` is `pageKey`.
+--- @param pageKey string
+--- @return table
+function Settings.RowsForPage(pageKey)
+    local out = {}
+    for _, row in ipairs(Schema) do
+        if row.page == pageKey then out[#out + 1] = row end
+    end
+    return out
+end
+
 local function countKeys(t)
     local n = 0
     for _ in pairs(t) do n = n + 1 end

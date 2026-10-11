@@ -56,11 +56,14 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 47 | `modules/Diagnostics.lua` | sections | the addon's sections of `/dw diagnostics` |
 | 48 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
 | 49 | `settings/Schema.lua` | settings | the rows array, the write seam, `NS.Setting` (the one settings read), the shared reactions, the global closure rows (Minimap button, history cap), the defaults tree, the global reset |
-| 50 | `settings/SchemaRows.lua` | settings | every hand-written row of design spec §12.1 (`Settings.Rows`): page, tab, type, label, tooltip, the check the seam runs, the default from `defaults/Profile.lua`, and the window repaint reaction |
+| 50 | `settings/SchemaRows.lua` | settings | every hand-written row of design spec §12.1 (`Settings.Rows`): page, tab, type, label, tooltip, the check the seam runs, the default from `defaults/Profile.lua`, the window repaint reaction, and the predicates that dim a row with nothing to do |
 | 51 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
-| 52 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 53 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 54 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 52 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls, When to show) |
+| 53 | `settings/Editors.lua` | settings | `Settings.Editors`, pure: what the pages' own editors show and write (the per-spec weights and unwanted types as fresh maps, the class's specs and item types, the template counters, the preview's sample drop and lines, the "in force now" readout) |
+| 54 | `settings/PageEditors.lua` | settings | `Settings.PageEditors`: the widgets of those editors, drawn as host tabs (Messages › Templates, Comparison › Weights and Preferences) and an `afterGroup` hook (Feed › Quality's readout) |
+| 55 | `settings/Pages.lua` | settings | the Feed, Comparison, Trade, Messages and Window pages, each through the tabbed renderer with its own Defaults |
+| 56 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 57 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.

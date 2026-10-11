@@ -46,7 +46,12 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 reaching a stored profile that is not the active one), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
-through the seam, the account-wide history cap, the CLI and the degraded load), `test_slash`, `test_window`, `test_window_shell` (the window's
+through the seam, the account-wide history cap, the CLI and the degraded load), `test_settings_pages` (the settings
+pages built headless: the page list and each page's strip, a page's rows by its key, When to show's
+blocks and dimmed rows, the Feed page's "in force now" readout, the Comparison page's per-spec
+weights and unwanted types written whole through the seam, the Messages page's live counters,
+preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
+`test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
 panes, the filter bar's per-tab state, the footer's composer, minimize, auto-open, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),

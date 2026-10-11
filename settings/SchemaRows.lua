@@ -104,6 +104,21 @@ local CHANNELS = choices{
 }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
 
+-- ── the dimming predicates ──────────────────────────────────────────────────────────────────
+
+-- A row drawn disabled while it has nothing to do (the library's `disabledIf` predicate form): the
+-- value is kept and the CLI still reaches it.
+local function unless(path, want)
+    return function() return NS.Setting(path) ~= want end
+end
+
+local function with(base, fields)
+    local out = {}
+    for k, v in pairs(base) do out[k] = v end
+    for k, v in pairs(fields) do out[k] = v end
+    return out
+end
+
 -- ── the row makers ──────────────────────────────────────────────────────────────────────────
 
 local function add(row)
@@ -134,7 +149,7 @@ end
 
 local function text(path, default, label, tip, extra)
     local row = { path = path, type = "string", default = default, label = label, tooltip = tip,
-                  validate = nonEmptyString, wide = true }
+                  validate = nonEmptyString, wide = true, dialogControl = "EditBox" }
     for k, v in pairs(extra or {}) do row[k] = v end
     return add(row)
 end
@@ -156,12 +171,15 @@ local function whenToShow()
         local key, d = s.key, P.situations[s.key]
         local base = "situations." .. key .. "."
         local sit = { page = "general", group = L["When to show"], subgroup = NS.WindowFooter.SituationLabel(key) }
+        local untracked = unless(base .. "track", true)
         bool(base .. "track", d.track, L["Track"],
             L["Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."], sit)
         bool(base .. "autoOpen", d.autoOpen, L["Auto-open"],
-            L["Open the window on the first interesting drop here."], sit)
+            L["Open the window on the first interesting drop here."],
+            with(sit, { disabledIf = function() return untracked() or NS.Setting("autoOpen") ~= true end }))
         pick(base .. "quality", d.quality, SITUATION_QUALITY, L["Quality"],
-            L["The minimum quality here: the feed's own mode, or one of its own."], sit)
+            L["The minimum quality here: the feed's own mode, or one of its own."],
+            with(sit, { disabledIf = untracked }))
     end
 end
 
@@ -173,9 +191,11 @@ local function feed()
     pick("feed.quality.mode", Q.mode, QUALITY_MODES, L["Minimum quality"],
         L["Fixed: one quality for every drop. Match each slot: the quality of what the drop would replace. Match my gear: the quality most of your gear is."], quality)
     pick("feed.quality.fixed", Q.fixed, FIXED_QUALITIES, L["Fixed minimum"],
-        L["The least quality a drop needs in the fixed mode."], quality)
+        L["The least quality a drop needs in the fixed mode."],
+        with(quality, { disabledIf = unless("feed.quality.mode", "fixed") }))
     pick("feed.quality.floor", Q.floor, FLOOR_QUALITIES, L["Floor"],
-        L["The least quality the two matching modes ever ask for, and what an empty slot asks for."], quality)
+        L["The least quality the two matching modes ever ask for, and what an empty slot asks for."],
+        with(quality, { disabledIf = function() return NS.Setting("feed.quality.mode") == "fixed" end }))
     bool("feed.quality.upgradeOverride", Q.upgradeOverride, L["Always show upgrades for me"],
         L["A drop below the minimum still shows when it is an upgrade for you."], quality)
 
@@ -192,9 +212,11 @@ local function feed()
     pick("feed.minIlvlMode", F.minIlvlMode, ILVL_MODES, L["Minimum item level"],
         L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."], filters)
     slider("feed.minIlvl", F.minIlvl, 0, 1000, 1, L["Absolute minimum"],
-        L["The least item level a drop needs in the absolute mode."], filters)
+        L["The least item level a drop needs in the absolute mode."],
+        with(filters, { disabledIf = unless("feed.minIlvlMode", "absolute") }))
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
-        L["How far under your average equipped item level a drop may be in the relative mode."], filters)
+        L["How far under your average equipped item level a drop may be in the relative mode."],
+        with(filters, { disabledIf = unless("feed.minIlvlMode", "relative") }))
     bool("feed.showOwn", F.showOwn, L["Show my own loot in Group drops"],
         L["Off, your own loot shows on My drops only."], filters)
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear on boss kill"],
@@ -258,12 +280,13 @@ local function messages()
 
     local A = M.autoAsk
     local auto = { page = "messages", group = L["Auto-ask"] }
+    local autoOff = with(auto, { disabledIf = unless("messages.autoAsk.enabled", true) })
     bool("messages.autoAsk.enabled", A.enabled, L["Ask automatically"],
         L["Ask for a likely tradeable upgrade for you on your behalf, after a delay."], auto)
     slider("messages.autoAsk.delay", A.delay, 3, 30, 1, L["Delay (seconds)"],
-        L["How long after the boss kill, or the drop, the ask waits."], auto)
+        L["How long after the boss kill, or the drop, the ask waits."], autoOff)
     slider("messages.autoAsk.minGain", A.minGain, 1, 50, 1, L["Least gain (item levels)"],
-        L["The least item-level gain for you an automatic ask needs."], auto)
+        L["The least item-level gain for you an automatic ask needs."], autoOff)
 end
 
 -- ── Window › Columns, Layout and Toast (design spec §11) ────────────────────────────────────
@@ -286,6 +309,7 @@ local function window()
     local toast = { page = "window", group = L["Toast"] }
     bool("toast.enabled", T.enabled, L["Show a toast"],
         L["Pop up a toast for a likely tradeable upgrade for you."], toast)
+    toast = with(toast, { disabledIf = unless("toast.enabled", true) })
     slider("toast.minGain", T.minGain, 1, 50, 1, L["Least gain (item levels)"],
         L["The least item-level gain for you a toast needs."], toast)
     slider("toast.duration", T.duration, 2, 30, 1, L["Duration (seconds)"],

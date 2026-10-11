@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-733%2F733_passing-green)
+![Tests](https://img.shields.io/badge/Tests-761%2F761_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -72,8 +72,11 @@ it, since you have better things to look at then.
 The **General visibility** setting decides when the window may show at all: always, only in combat,
 only out of combat, or never. Master scale and Master alpha size and fade it.
 
-Everything is configured under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` (or
-`/dropwatcher help`) prints the full command list.
+Everything is configured under **Settings → AddOns → Ka0s Drop Watcher**: General (the master
+controls and when to show the window, situation by situation), Feed (the minimum quality and the
+filters), Comparison (scoring, your stat weights and the item types you never want, per spec),
+Trade, Messages (what Ask, Offer and Announce say, with a live preview), Window and Profiles.
+`/dw help` (or `/dropwatcher help`) prints the full command list.
 
 ## How the loot watching works
 

@@ -88,7 +88,9 @@ local O = lib:New({
     get          = NS.SchemaRuntime.Get,
     set          = NS.SchemaRuntime.Set,
     applyDefault = NS.SchemaRuntime.ApplyDefault,
-    rowsForPage = function() return Settings.Schema end,
+    -- A page's rows are those whose `page` is its key; `group` is the tab within it (options-ui-§13).
+    -- The whole schema here would hand every page every tab, and a page's Defaults button every row.
+    rowsForPage = function(pageKey) return Settings.RowsForPage(pageKey) end,
     allRows     = function() return Settings.Schema end,
     validate = function() host.ValidateSchema() end,
     buildMain = function(ctx) Settings.Helpers.BuildMainContent(ctx) end,
