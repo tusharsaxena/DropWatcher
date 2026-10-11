@@ -241,11 +241,12 @@ modules\TestMode.lua
 # is built on the first toast.
 modules\Toast.lua
 # Conventional: publishes NS.AutoAsk, the opt-in auto-ask; appends its ENCOUNTER_START,
-# ENCOUNTER_END and GROUP_ROSTER_UPDATE rows (after modules\Roster.lua's and modules\Asks.lua's) to
+# ENCOUNTER_END, GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows (after
+# modules\Roster.lua's, modules\Situations.lua's, modules\Inspect.lua's and modules\Asks.lua's) to
 # NS.FEATURE_EVENTS and its STAND_DOWN / STAND_UP steps and handlers to NS.addon at load, and
 # registers its DropAdded, DropUpdated, AskStateChanged and HistoryChanged receivers on a NS.Bus
-# target at load. NS.LootFeed, NS.Toast's qualifier, NS.Asks, NS.Roster, NS.History, NS.Setting and
-# NS.AskTargetOf are read at call time.
+# target at load. NS.LootFeed, NS.Toast's qualifier, NS.Asks, NS.Roster, NS.Restrictions,
+# NS.History, NS.Setting and NS.AskTargetOf are read at call time.
 modules\AutoAsk.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua

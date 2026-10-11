@@ -28,7 +28,7 @@ passed.
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
 | INSPECT-1..4 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
-| ASK-1..8 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); the My drops tab, the Offer panel and Post my tradeables (ASK-5..7, DW-33); auto-ask (ASK-8, DW-54) |
+| ASK-1..9 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); the My drops tab, the Offer panel and Post my tradeables (ASK-5..7, DW-33); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62) |
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
@@ -687,6 +687,14 @@ its × (none), or have the looter leave the group (none); each logs `[MSG] auto-
 its reason. Pull the next boss while one is waiting → nothing goes during the fight, and it goes
 10 seconds after that boss dies. Result:
 
+**ASK-9. Auto-ask after leaving an encounter (DW-62).** Auto-ask on, `/dw debug on`, in a dungeon
+group. Pull a boss, then hearth out (or release and run out) before it dies. After the loading
+screen the console reads `[MSG] auto-ask: left the encounter without its end; …` (only when one
+was held) and `/dw diagnostics` shows auto-ask `inEncounter=false`. Have a member loot a likely
+tradeable upgrade for you (or `/dw add` one naming them) → the whisper goes after the delay, not at
+the next boss or `/reload`. Back inside, pull a boss and cross into another part of the instance
+during the fight → nothing is asked until the boss dies. Result:
+
 ## Situations
 
 The classifier's truth table is headless-tested (`test_situations`); these checks confirm that the
@@ -891,3 +899,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | TOAST-3 | DW-62, an empty-slot upgrade toasts and auto-asks | No client pass recorded yet |
 | TMOG-1 | DW-53, the transmog-known flag and the For transmog ask | No client pass recorded yet |
 | ASK-8 | DW-54, auto-ask | No client pass recorded yet |
+| ASK-9 | DW-62, auto-ask after leaving an encounter | No client pass recorded yet |

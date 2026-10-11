@@ -13,7 +13,10 @@ local _, NS = ...
 -- THE TIMING (DueAt, pure). The ask is due `messages.autoAsk.delay` seconds (3 to 30, default 10)
 -- after the later of the drop and the last ENCOUNTER_END. While an encounter is in progress
 -- (between ENCOUNTER_START and ENCOUNTER_END) nothing is due: the waiting asks are held, and the
--- encounter's end schedules them again from that moment. A drop that qualifies after its time has
+-- encounter's end schedules them again from that moment. A player who leaves mid-fight (a hearth,
+-- a release, a teleport) may never hear that ENCOUNTER_END, so a loading screen or a new zone
+-- (PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA) ends the hold too, unless the restriction tracker
+-- still reports the Encounter restriction (a zone line crossed inside the fight). A drop that qualifies after its time has
 -- passed is asked at once. A test drop is timed from when it is considered, since its age is made up.
 --
 -- THE SEND. When it is due the drop is checked again (still on, still in the feed, still
@@ -270,6 +273,14 @@ function AA.OnEncounterEnd()
     for id in pairs(pending) do arm(id) end
 end
 
+--- PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA: an encounter held with no Encounter
+--- restriction left in force is over for this player, so it ends as ENCOUNTER_END would.
+function AA.OnWorldChanged()
+    if not inEncounter or NS.Restrictions.ActiveSet().encounter then return end
+    NS.Debug(TAG, "auto-ask: left the encounter without its end; the waiting asks are due")
+    AA.OnEncounterEnd()
+end
+
 --- GROUP_ROSTER_UPDATE: a waiting ask to a looter who left is canceled.
 function AA.OnRosterChanged()
     for id, p in pairs(pending) do
@@ -299,12 +310,15 @@ function AA.Stats()
         inEncounter = inEncounter, nextDue = nextDue and math.max(nextDue - now(), 0) or nil }
 end
 
--- ENCOUNTER_START, ENCOUNTER_END and GROUP_ROSTER_UPDATE are shared (core/DropWatcher.lua fans each
--- out in declaration order, so the roster is fresh here).
+-- ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and
+-- ZONE_CHANGED_NEW_AREA are shared (core/DropWatcher.lua fans each out in declaration order, so the
+-- roster is fresh here).
 local EVENTS = {
     { "ENCOUNTER_START", "OnAutoAskEncounterStart", AA.OnEncounterStart },
     { "ENCOUNTER_END", "OnAutoAskEncounterEnd", AA.OnEncounterEnd },
     { "GROUP_ROSTER_UPDATE", "OnAutoAskRosterEvent", AA.OnRosterChanged },
+    { "PLAYER_ENTERING_WORLD", "OnAutoAskWorldEvent", AA.OnWorldChanged },
+    { "ZONE_CHANGED_NEW_AREA", "OnAutoAskWorldEvent", AA.OnWorldChanged },
 }
 for _, row in ipairs(EVENTS) do
     local fn = row[3]

@@ -149,6 +149,39 @@ test("auto-ask edge: held while an encounter is in progress, then due the delay 
     assertEqual(whispers(m), 1)
 end)
 
+test("auto-ask edge: a loading screen out of an encounter lets the held asks go (DW-62)", function()
+    local NS, m, make = party()
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    m.__fire("ENCOUNTER_START", 2902, "Boss", 16, 20)
+    m.restrictionStates[RT.Encounter] = RS.Active
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Active)
+    make(); added(NS, 1)
+    m.__fire("ZONE_CHANGED_NEW_AREA")
+    assertTrue(NS.AutoAsk.Stats().inEncounter, "a zone line crossed inside the fight keeps the hold")
+    -- A hearth or a release out of the instance: no ENCOUNTER_END reaches this player.
+    m.restrictionStates[RT.Encounter] = nil
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Inactive)
+    -- red under: an AutoAsk with no PLAYER_ENTERING_WORLD row (modules/AutoAsk.lua EVENTS)
+    m.__fire("PLAYER_ENTERING_WORLD", false, false)
+    assertFalse(NS.AutoAsk.Stats().inEncounter, "the encounter is over for us")
+    m.advance(9.9)
+    assertEqual(whispers(m), 0, "due the delay after the loading screen")
+    m.advance(0.2)
+    assertEqual(whispers(m), 1)
+end)
+
+test("auto-ask edge: a zone change with no encounter restriction ends a held encounter too", function()
+    local NS, m, make = party()
+    m.__fire("ENCOUNTER_START", 2902, "Boss", 16, 20)
+    make(); added(NS, 1)
+    m.__fire("ZONE_CHANGED_NEW_AREA")
+    assertFalse(NS.AutoAsk.Stats().inEncounter)
+    m.advance(10.1)
+    assertEqual(whispers(m), 1)
+    m.__fire("PLAYER_ENTERING_WORLD", false, true)
+    assertFalse(NS.AutoAsk.Stats().inEncounter, "no encounter: nothing to end")
+end)
+
 test("auto-ask edge: an encounter that ends after the drop pushes the ask back", function()
     local NS, m, make = party()
     make(); added(NS, 1)

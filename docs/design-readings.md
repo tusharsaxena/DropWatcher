@@ -334,6 +334,9 @@ incoming profile that turns it on counts from that moment the same way, one that
 cancels the waiting asks, and the one-time notice stays the row's alone. **The timing** is the delay after the later of the
 drop and the last `ENCOUNTER_END`; while an encounter is in progress (`ENCOUNTER_START` without
 its end) nothing is due, and the end makes every waiting ask due its delay after that moment. A
+player who leaves mid-fight may never hear that end, so a loading screen or a new zone
+(`PLAYER_ENTERING_WORLD`, `ZONE_CHANGED_NEW_AREA`) ends the hold the same way, unless the
+restriction tracker still reports the Encounter restriction (DW-62). A
 drop that qualifies once its time has passed is asked at once. A keystone run has no
 `ENCOUNTER_END` for its chest, so its drops are timed from the drop. **The send** is checked again
 when due (on, in the feed, qualifying, never asked, not received, its looter in the group) and

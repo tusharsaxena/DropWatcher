@@ -469,6 +469,7 @@ DropAdded(id) / DropUpdated(id) ─> AutoAsk.Consider: messages.autoAsk.enabled?
        recorded after auto-ask was turned on ─> pending (one C_Timer each)
     ─> due = DueAt(drop, last ENCOUNTER_END, autoAsk.delay)   (held while an encounter is in progress)
 ENCOUNTER_START ─> timers stopped        ENCOUNTER_END ─> every waiting ask due delay after now
+PLAYER_ENTERING_WORLD / ZONE_CHANGED_NEW_AREA, held, no Encounter restriction ─> as ENCOUNTER_END
 due ─> AutoAsk.Fire: checked again (on, in the feed, qualifying, never asked, not received, looter in
        the group) ─> Asks.Request("ask", looter, id)   (guard, queue under a restriction, send, confirm)
 cancel: AskStateChanged(id, _, "ask") (you asked)   GROUP_ROSTER_UPDATE (looter left)
