@@ -288,5 +288,27 @@
     "notes": "Spec section 5. README, ARCHITECTURE, module-map, schema (new rows), settings-panel, smoke-tests (owed, never passed), test-cases regenerated; ka0s-bounded tests/_kit/run-automated-tests.sh green, CCN <= 15, no authored file over 1000 lines."
    }
   ]
+ },
+ "M9": {
+  "milestone": "M9",
+  "base": "<M8 checkpoint commit>",
+  "extra": "M9 is the owner's simulator feedback (2026-10-11). Read docs/superpowers/specs/2026-10-11-drop-watcher-sim-feedback-design.md (governing for M9), the evidence in docs/superpowers/research/2026-10-11-sim-feedback/ (LOOK at the PNGs with the Read tool), the simulator spec 2026-10-11-drop-watcher-simulator-design.md, then docs/ARCHITECTURE.md. Reference for the panel: ../LibKa0s/LibKa0s/PerfPanel.lua (also vendored under libs/LibKa0s). COMPAT FILES: the addon now has core/Compat.lua (999 lines), core/CompatItem.lua and core/CompatWorld.lua. compat-sec1 of the standard says core/Compat.lua is the ONLY file allowed to make version-variant/deprecated client calls. Do not add a fourth compat file. Plain stable client calls may live in the split files only if they are not version-variant; if any version-variant call sits outside core/Compat.lua, move pure code out of core/Compat.lua to make room and put it back there. Make sure ARCHITECTURE.md's Documented deviations records the split honestly, and draft (do not file) a WowAddonStandards proposal in issues-to-file.md to allow a core/Compat*.lua family if the split must stay. Keep every authored file under 1000 lines. No GitHub writes.",
+  "items": [
+   {
+    "id": "DW-90",
+    "title": "A sim run fills the window: every read the simulator answers goes through the seam; end-to-end regression for every scenario under default filters; footer and chat report the run",
+    "notes": "Sim feedback spec section 0, in full. Systematic debugging: reproduce first with the mock answering the REAL solo, out-of-instance world for every global the sim must answer; prove which reads bypass the seam; fix; regression asserts rows visible in Group drops and My drops under default filters for every scenario. Also the M7 low findings listed there."
+   },
+   {
+    "id": "DW-91",
+    "title": "Simulation step panel (PerfPanel look and states, clickable steps that run the steps in between, Run all / Pause / Resume / Restart / Stop, scenario picker, /dw sim panel)",
+    "notes": "Sim feedback spec section 1 and section 2's tests. One new file under 1000 lines. Draft the LibKa0s step-panel issue in issues-to-file.md."
+   },
+   {
+    "id": "DW-92",
+    "title": "M9 docs sync + automated-test bundle",
+    "notes": "Sim feedback spec section 3."
+   }
+  ]
  }
 }

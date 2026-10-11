@@ -1,0 +1,7 @@
+12:40:20 [DW] Simulation started (key): nothing is sent, and your saved history is not touched.
+12:40:21 [DW] Simulation ready: 4 members, 828 items. /dw sim run plays it, /dw sim step one event at a time.
+12:40:42 [DW] Simulation step 5 of 11: kill.
+12:40:50 [DW] Simulation step 8 of 11: lockdownOn.
+12:40:54 [DW] Simulation step 11 of 11: lockdownOff.
+12:40:56 [DW] The simulation's timeline has finished. /dw sim stop ends it.
+12:41:01 [DW] Simulation stopped.

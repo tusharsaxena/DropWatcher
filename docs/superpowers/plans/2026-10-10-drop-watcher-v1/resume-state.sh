@@ -55,7 +55,7 @@ if [ -r "$EXC" ]; then
 fi
 
 total_done=0; total_all=0; next=""
-for m in M0 M1 M2 M3 M4 M5 M6 M7 M8; do
+for m in M0 M1 M2 M3 M4 M5 M6 M7 M8 M9; do
   [ -n "$only" ] && [ "$only" != "$m" ] && continue
   todo=(); done_n=0
   while IFS=$'\t' read -r id mi repo title rest; do

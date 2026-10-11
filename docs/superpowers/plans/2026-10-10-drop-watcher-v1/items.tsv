@@ -49,3 +49,6 @@ DW-82	M8	DropWatcher	Filter bar widgets styled like Loot History	DW-81	S	PANEL	u
 DW-83	M8	DropWatcher	My eq column, Their eq icons+levels, Usable by me / Upgrade for me, open on every eligible drop	DW-82	M	FEED	ui §3
 DW-84	M8	DropWatcher	Test mode with real items, History test data, no trailing ellipses	DW-83	M	STATE	ui §4
 DW-85	M8	DropWatcher	M8 docs sync + automated-test bundle	DW-84	S		ui §5
+DW-90	M9	DropWatcher	A sim run fills the window: seam every read the sim answers; e2e regression all scenarios; footer/chat report	DW-85	M	SIM	simfb §0
+DW-91	M9	DropWatcher	Simulation step panel (PerfPanel look, clickable steps, run controls, scenario picker)	DW-90	M	SIM	simfb §1
+DW-92	M9	DropWatcher	M9 docs sync + automated-test bundle	DW-91	S		simfb §3
