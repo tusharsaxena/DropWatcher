@@ -7,7 +7,7 @@ local _, NS = ...
 -- close mark; the item header (a real item button, the name in its quality color, and `You: -5 ilvl ·
 -- 305 · Trade window 1:47:12`); the column labels; the candidates, ranked (upgrades first by their
 -- gain), each with a class-colored stripe, the name, `eq → drop`, a status pill (`+n UPGRADE`,
--- `EQUAL`, `NO UPGRADE`, `CAN'T USE`, `CHECKING…` or `UNAVAILABLE`) and, for an upgrade or an equal,
+-- `EQUAL`, `NO UPGRADE`, `CAN'T USE`, `CHECKING` or `UNAVAILABLE`) and, for an upgrade or an equal,
 -- the Offer and Trade buttons; the list scrolls in a raid. The foot strip holds Announce to group and
 -- a note on the order. What each part says is modules/MineCells.lua's (pure); this file is the frame
 -- edge. Nothing is ever blank: a member with no button shows a dash with the reason.
@@ -347,7 +347,7 @@ function OP.Refresh()
     paintFoot(panel, drop, #list)
 end
 
---- Open the panel for one of your drops (its row's Offer…). It reveals the drop's Best candidates
+--- Open the panel for one of your drops (its row's Offer). It reveals the drop's Best candidates
 --- when it is an upgrade for you: the player chose to offer it.
 --- @param dropID number
 --- @return table|nil the panel, or nil before the window is built or for a drop that is not yours

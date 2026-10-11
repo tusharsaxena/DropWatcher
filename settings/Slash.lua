@@ -62,7 +62,7 @@ local COMMANDS = {
         function() NS.HideWindow() end},
     {"toggle",   L["Show or hide the window"],
         function() NS.ToggleWindow() end},
-    {"test",     L["Turn test mode on or off (placeholder drops; combat ends it)"],
+    {"test",     L["Turn test mode on or off (sample drops; combat ends it)"],
         function() NS.ToggleTestMode() end},
     {"scan",     L["Inspect the whole group, one member at a time"],
         function() NS.ScanGroup() end},

@@ -235,10 +235,14 @@ test("transmog settings: the preview sample is a drop whose look you have not co
     assertEqual(any.id, 1, "any other member's drop when none lacks its look")
 end)
 
-test("transmog test mode: one placeholder's look is collected and one's is not", function()
+test("transmog test mode: one sample's look is collected and one's is not", function()
     local NS = T.newAddon()
-    local seen = {}
-    for _, s in ipairs(NS.TestMode.Placeholders(1000, { name = "Tester", guid = "P1", isSelf = true })) do
+    local seen, pool = {}, {}
+    for i, loc in ipairs({ "INVTYPE_HEAD", "INVTYPE_WEAPON", "INVTYPE_FINGER" }) do
+        pool[i] = { link = ("|cnIQ4:|Hitem:%d::::::::90:::::|h[Real]|h|r"):format(7700 + i), equipLoc = loc, ilvl = 300 }
+    end
+    local src = NS.TestData.Source(pool, pool, function(e) return { ilvl = e.ilvl, equipLoc = e.equipLoc } end)
+    for _, s in ipairs(NS.TestMode.Placeholders(1000, { name = "Tester", guid = "P1", isSelf = true }, src)) do
         if type(s.facts) == "table" and s.facts.transmogKnown ~= nil then seen[s.facts.transmogKnown] = true end
     end
     assertTrue(seen[true] and seen[false])

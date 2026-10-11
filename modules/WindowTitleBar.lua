@@ -107,7 +107,7 @@ end
 --- Test mode's title text and banner (design spec §11.6, board 06 E) share one tooltip.
 function TB.TestTip()
     return L["Test mode"],
-        L["Placeholder drops show every verdict, trade, inspect and ask state, so the layout can be checked anywhere."],
+        L["Sample drops of real items show every verdict, trade, inspect and ask state, so the layout can be checked anywhere."],
         L["Ask, Offer and Announce print their text in your chat frame instead of sending it."],
         L["Combat ends it, and so do /dw test, the launcher menu and the Master controls checkbox."]
 end

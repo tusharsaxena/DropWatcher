@@ -607,7 +607,8 @@ test("table: with no drop at all the empty state says so, with Preview with test
 end)
 
 test("table: the empty state's buttons turn test mode on and scan the group", function()
-    local NS = T.enableAddon()
+    local NS, _, m = T.enableAddon()
+    m.seedGearJournal()
     NS.ShowWindow()
     local e = NS.WindowGroup.Drawn().empty
     local scanned = 0

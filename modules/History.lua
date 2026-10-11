@@ -24,6 +24,11 @@ local _, NS = ...
 -- trade's own origin). The stop lets the simulation's log go (ReleaseLog) and the tab shows the
 -- account's log again.
 --
+-- TEST MODE (ui spec §4, FB-10). While test mode is on, Log() answers test mode's session-only
+-- sample log (NS.TestMode.HistoryLog: two groups covering every outcome), so the History tab
+-- shows it and Clear history or a hand-set declined touches only it. It is never written to
+-- `global.history`; a real drop that arrives meanwhile is still the account's (LogFor).
+--
 -- RECORDING. A live drop's DropAdded records it (a test drop never is) under its feed group, keyed
 -- by the group's key and this session's start, so a group of an earlier session never collects
 -- today's drops. DropUpdated refreshes its verdicts and trade estimate; a trade estimate that
@@ -310,10 +315,12 @@ function H.Store()
     return H.Normalize(g.history)
 end
 
---- The log being written: the simulation's session-only log while one runs (simulator spec §5),
---- else the account's (H.Store). Nil before the database exists.
+--- The log being written: test mode's session-only sample log while test mode is on (ui spec
+--- §4, FB-10), the simulation's session-only log while one runs (simulator spec §5), else the
+--- account's (H.Store). Nil before the database exists.
 --- @return table|nil
 function H.Log()
+    if NS.State.testMode == true then return H.Normalize(NS.TestMode.HistoryLog()) end
     local log = NS.Sim.active and NS.Sim.HistoryLog()
     if log then return H.Normalize(log) end
     return H.Store()

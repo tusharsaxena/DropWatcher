@@ -79,7 +79,8 @@
 --                  .instanceID, .encounterID, .difficulty, .classID, .specID, .slot; journal.selects
 --                  counts EJ_SelectInstance calls and journal.reads every GetLootInfoByIndex.
 --                  EncounterJournal (the frame) is nil until a case sets one; loadJournal() loads
---                  every entry and fires EJ_LOOT_DATA_RECIEVED once per entry it loaded
+--                  every entry and fires EJ_LOOT_DATA_RECIEVED once per entry it loaded;
+--                  seedGearJournal() adds a newest tier whose one dungeon drops gear for every slot
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -684,6 +685,40 @@ local function installJournal(M)
     end
 end
 
+-- A journal with gear for every slot (test mode's sample drops, modules/TestMode.lua): one dungeon,
+-- "Test Vault" (901), in the newest tier, dropping two items per equip location at Mythic Keystone
+-- (level 300), Mythic (290) and Heroic (280), every one cached, loaded and with its own icon.
+local GEAR_SLOTS = {
+    { "INVTYPE_HEAD", "Helm" }, { "INVTYPE_NECK", "Choker" }, { "INVTYPE_SHOULDER", "Pauldrons" },
+    { "INVTYPE_CLOAK", "Cloak" }, { "INVTYPE_CHEST", "Breastplate" }, { "INVTYPE_WRIST", "Bracers" },
+    { "INVTYPE_HAND", "Gloves" }, { "INVTYPE_WAIST", "Belt" }, { "INVTYPE_LEGS", "Greaves" },
+    { "INVTYPE_FEET", "Boots" }, { "INVTYPE_FINGER", "Ring" }, { "INVTYPE_TRINKET", "Idol" },
+    { "INVTYPE_WEAPON", "Sword" },
+}
+local GEAR_LEVELS = { { 8, 300 }, { 23, 290 }, { 2, 280 } }
+
+local function seedGearJournal(M)
+    local j = M.journal
+    j.tiers[#j.tiers + 1] = { dungeons = { { id = 901, name = "Test Vault" } }, raids = {} }
+    j.loot[901] = {}
+    for d, row in ipairs(GEAR_LEVELS) do
+        local list = {}
+        for i, slot in ipairs(GEAR_SLOTS) do
+            for copy = 1, 2 do
+                local id = 70000 + i * 100 + copy * 10 + d
+                local name = ("Vault %s %d"):format(slot[2], copy)
+                local link = ("|cnIQ4:|Hitem:%d::::::::90:::::%d|h[%s]|h|r"):format(id, row[2], name)
+                local weapon = slot[1] == "INVTYPE_WEAPON"
+                M.addItem(link, { name = name, quality = 4, ilvl = row[2], equipLoc = slot[1],
+                    classID = weapon and 2 or 4, subClassID = weapon and 7 or 4, bindType = 1, stats = {} })
+                M.itemIcons[id], M.itemIcons[link] = 5000000 + id, 5000000 + id
+                list[#list + 1] = { itemID = id, link = link, encounterID = 3000 + i }
+            end
+        end
+        j.loot[901][row[1]] = list
+    end
+end
+
 local function build()
     local M = base()
     M._G = M
@@ -750,6 +785,7 @@ local function build()
     installTrade(M)
     installSound(M)
     installJournal(M)
+    M.seedGearJournal = function() seedGearJournal(M) end
 
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)

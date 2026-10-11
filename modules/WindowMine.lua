@@ -3,9 +3,9 @@ local _, NS = ...
 -- each, with the time left to trade them and who each would help.
 --
 -- THE COLUMNS. Item (a real item button and the name), Ilvl, For me (the verdict, with `keep?`
--- under an upgrade), Trade window (the countdown over its bar, `Not tradeable: why`, or `No limit`
+-- under an upgrade), Trade window (the countdown over its bar, why it is not tradeable, or `No limit`
 -- for a bind-on-equip drop), Best candidates (the top three upgrades, or why there are none) and
--- Actions (Offer… and Announce while it may be traded; a dash and Hide when it cannot). Under the
+-- Actions (Offer and Announce while it may be traded; a dash and Hide when it cannot). Under the
 -- rows, a summary strip: how many are tradeable, the next expiry and Post my tradeables. What every
 -- cell says, and its reason tooltip, is modules/MineCells.lua's (pure); this file is the frame edge
 -- that paints it. Nothing is ever blank.
@@ -17,7 +17,7 @@ local _, NS = ...
 -- THE UI LISTENS. Window.lua repaints it on the bus (TradeTimerTick moves the countdowns each second
 -- while a timer is live) and on its footer ticker while the tab is shown. It reads the feed
 -- (NS.LootFeed.Drops), the ask states (NS.Asks.StateOf) and the warning threshold
--- (NS.TradeTimer.WarnAt), all read-only. Offer… opens the Offer panel (modules/OfferPanel.lua);
+-- (NS.TradeTimer.WarnAt), all read-only. Offer opens the Offer panel (modules/OfferPanel.lua);
 -- Announce and Post my tradeables go through the host handlers NS.PressAnnounce and
 -- NS.PostTradeables (core/DropWatcher.lua); Hide is the tab's own, session-only.
 
@@ -42,7 +42,7 @@ WM.COLUMNS = {
     { key = "best", label = L["Best candidates"], width = 190, shed = 1,
       tip = L["The group members it would help most, by their item-level gain."] },
     { key = "actions", label = L["Actions"], width = K.OFFER_BTN_W + K.ANNOUNCE_W + 6,
-      tip = L["Offer… opens who could use it. Announce posts your template to the group."] },
+      tip = L["Offer opens who could use it. Announce posts your template to the group."] },
 }
 
 -- A narrow row sheds Best candidates, Ilvl, For me, then Trade window (`shed`, NS.WindowGroup.Fit);
@@ -181,7 +181,7 @@ local function actionsCell(row)
     local f = CreateFrame("Frame", nil, row)
     f.key = "actions"
     local W = NS.Window
-    f.offer = W.TextButton(f, K.OFFER_BTN_W, nil, L["Offer…"], function(b) NS.OfferPanel.Open(b.dropId) end)
+    f.offer = W.TextButton(f, K.OFFER_BTN_W, nil, L["Offer"], function(b) NS.OfferPanel.Open(b.dropId) end)
     f.offer:SetPoint("LEFT", f, "LEFT", 0, 0)
     attach(f.offer)
     f.announce = W.TextButton(f, K.ANNOUNCE_W, nil, L["Announce"], function(b) NS.PressAnnounce(b.dropId) end)

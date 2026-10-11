@@ -180,16 +180,12 @@ end
 
 local function kindOf(row) return row.path:match("([^.]+)$") end
 
-local function you()
-    return { name = UnitName("player") or L["You"], guid = UnitGUID("player"), isSelf = true }
-end
-
--- The drop a preview is written for: the feed on screen first, then test mode's placeholders.
+-- The drop a preview is written for: the feed on screen first, then test mode's samples.
 local function sample(kind)
     local feed = NS.LootFeed.Drops(NS.State.testMode and "test" or nil)
     local rec, who = E.PreviewSample(kind, feed)
     if rec then return rec, who end
-    return E.PreviewSample(kind, NS.TestMode.Placeholders(GetTime(), you()))
+    return E.PreviewSample(kind, NS.TestMode.PreviewSpecs())
 end
 
 local CHANNEL_NAME = { INSTANCE_CHAT = L["Instance"], RAID = L["Raid"], PARTY = L["Party"] }

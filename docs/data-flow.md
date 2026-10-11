@@ -90,7 +90,7 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / MyEq / TheirEq / Me / Them / Trade / Ask
                   reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's
                   own tooltip), NS.TestMode.InspectOf(drop).gear (Their eq: NS.Inspect.Get(looter guid),
-                  or a placeholder's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
+                  or a sample's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
 
 header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint
@@ -103,21 +103,27 @@ row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.e
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
 ```
 
-## Test mode (design spec §11.6)
+## Test mode (design spec §11.6, ui spec §4)
 
 ```
 Master controls checkbox ─┐
 launcher menu entry ──────┼─> NS.SetTestMode(on) (refused stood down, in combat or while a simulation runs)
 /dw test, Preview button ─┘     ├─> on:  TestMode.Populate()
-                                │          ├─> LootFeed.Clear("test")
-                                │          ├─> TestMode.Placeholders(GetTime(), you)      (pure)
-                                │          ├─> LootFeed.AddTest(spec) each ─> the test feed ─> DropAdded
-                                │          └─> the Group drops tab's View ─> All (the old value kept)
-                                ├─> off: TestMode.Clear() ─> LootFeed.Clear("test"), the View put back
+                                │          ├─> LootFeed.Clear("test"); State.testHistory = an empty log
+                                │          ├─> the Group drops tab's View ─> All (the old value kept)
+                                │          └─> SimPool.BuildInto(State.testPool, …)   (the journal at Mythic
+                                │                Keystone, your own gear as the fallback; meanwhile the tab
+                                │                says "Gathering real items for test mode.")
+                                │                └─> ready ─> TestData.Placeholders(GetTime(), you, src)  (pure)
+                                │                      ├─> LootFeed.AddTest(spec) each ─> the test feed ─> DropAdded
+                                │                      └─> TestData.History(time(), you, src) ─> State.testHistory
+                                │                            ─> HistoryChanged (History.Log() answers it while on)
+                                ├─> off: TestMode.Clear() ─> the pool's timers canceled, LootFeed.Clear("test"),
+                                │          State.testHistory = nil, the View put back
                                 └─> Window.OnTestModeChanged ─> the TEST MODE title text and banner, the test feed drawn
 PLAYER_REGEN_DISABLED ─> NS.SetTestMode(false) ─> "Test mode ended: you entered combat."
 NS.StandDown ─> State.testMode = false; TestMode's stand-down row ─> TestMode.Clear()
-Ask, Offer, Announce, Post my tradeables on a placeholder ─> NS.Asks ─> printed ("Test mode, not sent: …")
+Ask, Offer, Announce, Post my tradeables on a sample ─> NS.Asks ─> printed ("Test mode, not sent: …")
 ```
 
 A placeholder is never judged, re-estimated or inspected: its verdicts, trade, inspect entry
@@ -222,7 +228,7 @@ Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
         └─> each candidate: MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)),
                             MineCells.TradeButton(NS.TradeHelper.CanGive(id, member))
 
-Offer… ────────────> OfferPanel.Open(id) ─> State.offerPanel.dropId, WindowMine.Reveal(id) ─> repaint
+Offer ────────────> OfferPanel.Open(id) ─> State.offerPanel.dropId, WindowMine.Reveal(id) ─> repaint
 Announce ──────────> NS.PressAnnounce(id) ─> NS.Asks.Press("announce", nil, id) ─> AskStateChanged
 Hide ──────────────> WindowMine.Dismiss(id) ─> State.windowMine.dismissed ─> repaint
 Post my tradeables ─> NS.PostTradeables() ─> MineCells.PostLines(your tradeable links)

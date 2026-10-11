@@ -2,7 +2,7 @@ local _, NS = ...
 -- modules/MineCells.lua — what the My drops tab and the Offer panel say (design spec §11.4, board
 -- 04): each column's text, tone and reason tooltip for your own drops, the candidates ranked with
 -- their status pills, the tab's summary line, the Post my tradeables lines and where the Offer
--- panel docks. Nothing is ever blank: an unknown value says `?`, `–` or `Checking…` and its
+-- panel docks. Nothing is ever blank: an unknown value says `?`, `–` or `Checking` and its
 -- tooltip says why.
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
@@ -20,7 +20,7 @@ local _, NS = ...
 -- At `trade.warnAt` seconds or less the countdown reads `ending soon` and is drawn bold (spec §7.4).
 --
 -- THE CANDIDATES (spec §11.4). Every other member, judged for your drop by the feed: upgrades first
--- by their gain, then EQUAL, NO UPGRADE, CAN'T USE, CHECKING… and UNAVAILABLE, each tie by name. An
+-- by their gain, then EQUAL, NO UPGRADE, CAN'T USE, CHECKING and UNAVAILABLE, each tie by name. An
 -- upgrade for you is not offered by default: the Best candidates cell says `Hidden: an upgrade for
 -- you` until you open the Offer panel yourself (AskFlow B2).
 
@@ -89,9 +89,11 @@ local function endingSoon(left, warnAt)
 end
 
 -- A short reason a drop cannot be traded, for the cell (the tooltip has the whole sentence).
+-- Why not, in the words that fit the Trade window column (ui spec §4, FB-11: never cut short); the
+-- full reason is the cell's tooltip.
 local NO_SHORT = {
-    bonusRoll = L["bonus roll"], warbound = L["warbound"], legacy = L["legacy loot"],
-    expired = L["window passed"], upgradeForLooter = L["an upgrade for you"], badFacts = L["not loaded"],
+    bonusRoll = L["Bonus roll"], warbound = L["Warbound"], legacy = L["Legacy loot"],
+    expired = L["Window passed"], upgradeForLooter = L["Your upgrade"], badFacts = L["Not loaded"],
 }
 
 -- ── the My drops columns ────────────────────────────────────────────────────────────────────
@@ -120,7 +122,7 @@ local function windowTip(cd, soon)
     return lines
 end
 
---- The Trade window column: the countdown and its bar, `Not tradeable: why`, or `No limit` for a
+--- The Trade window column: the countdown and its bar, why it is not tradeable, or `No limit` for a
 --- bind-on-equip drop. `fraction` is how much of the bar is filled; `bold` marks ending soon.
 --- @param drop table
 --- @param now number GetTime()
@@ -129,7 +131,7 @@ end
 function MC.TradeWindow(drop, now, warnAt)
     local t = tradeOf(drop)
     if t.state == "no" then
-        local c = cell(L["Not tradeable: %s"]:format(NO_SHORT[t.reasonKey] or tostring(t.reasonKey or "?")), "bad",
+        local c = cell(NO_SHORT[t.reasonKey] or L["Not tradeable"], "bad",
             L["Not tradeable"], WC.TradeReason(t, L["you"]))
         c.fraction = 0
         return c
@@ -141,7 +143,7 @@ function MC.TradeWindow(drop, now, warnAt)
     end
     local cd = MC.Countdown(drop, now)
     if not cd then
-        local c = cell(L["Checking…"], "muted", L["Trade window"], L["Not estimated yet: the item's details are loading."])
+        local c = cell(L["Checking"], "muted", L["Trade window"], L["Not estimated yet: the item's details are loading."])
         c.fraction = 0
         return c
     end
@@ -162,7 +164,7 @@ local PILL_TONE = { upgrade = "good", sidegrade = "plain", downgrade = "bad", ca
     unknown = "muted", checking = "muted", unavailable = "muted" }
 local PILL_TEXT = {
     sidegrade = L["EQUAL"], downgrade = L["NO UPGRADE"], cantUse = L["CAN'T USE"], doesntWant = L["CAN'T USE"],
-    unknown = L["UNAVAILABLE"], checking = L["CHECKING…"], unavailable = L["UNAVAILABLE"],
+    unknown = L["UNAVAILABLE"], checking = L["CHECKING"], unavailable = L["UNAVAILABLE"],
 }
 local PILL_TIP = {
     upgrade = L["An upgrade for them: a higher item level than what they wear there."],
@@ -273,7 +275,7 @@ local function noUpgradeCell(list)
     local checking = countChecking(list)
     local c
     if checking > 0 then
-        c = { text = L["Checking %d…"]:format(checking), tone = "muted", tip = rankedTip(list) }
+        c = { text = L["%d checking"]:format(checking), tone = "muted", tip = rankedTip(list) }
         c.tip[#c.tip + 1] = L["Their gear is being inspected; the list fills in as each read lands."]
     else
         c = { text = L["Nobody's upgrade"], tone = "muted", tip = rankedTip(list) }
@@ -296,7 +298,7 @@ function MC.BestCandidates(drop, revealed)
         c = cell(L["Nobody else in your group"], "muted", L["Best candidates"], L["Join a group to see who it would help."])
     elseif type(drop.me) == "table" and drop.me.verdict == "upgrade" and not revealed then
         c = cell(L["Hidden: an upgrade for you"], "muted", L["Best candidates"],
-            L["It is an upgrade for you, so nobody is offered it unless you choose to. Offer… shows who it would help."])
+            L["It is an upgrade for you, so nobody is offered it unless you choose to. Offer shows who it would help."])
         c.hidden = true
     else
         local ups = upgradesOf(list)
@@ -380,7 +382,7 @@ function MC.TradeButton(ok, why, who)
     return { enabled = false, tip = { L["Trade: not now"], why or L["The trade cannot be opened now."] } }
 end
 
---- A row's actions (board 04 note 4): Offer… and Announce while it may be traded; a dash and Hide
+--- A row's actions (board 04 note 4): Offer and Announce while it may be traded; a dash and Hide
 --- when it cannot.
 --- @param drop table
 --- @param best table MC.BestCandidates' answer
@@ -396,7 +398,7 @@ function MC.Actions(drop, best, announce)
     local ups = upgradesOf(best.list or {})
     local primary = #ups > 0 and not best.hidden
     return { tradeable = true, announce = announce,
-        offer = { primary = primary, tip = { L["Offer…"], L["Open the panel of who could use it, ranked by their gain, with Offer and Trade for each."] } } }
+        offer = { primary = primary, tip = { L["Offer"], L["Open the panel of who could use it, ranked by their gain, with Offer and Trade for each."] } } }
 end
 
 -- ── the summary and Post my tradeables ──────────────────────────────────────────────────────

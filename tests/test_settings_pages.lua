@@ -291,8 +291,18 @@ test("messages: typing repaints the counter and the preview live, and stores not
     assertEqual(NS.Setting("messages.templates.offer"), "Want {item}?")
 end)
 
+-- Your worn helm, so a preview with no drop in the feed has a real item to name (test mode's
+-- samples over your own gear, NS.TestMode.PreviewSpecs).
+local function wearHelm(NS, m)
+    local helm = m.addItem("|cnIQ4:|Hitem:6101::::::::90:::::|h[Worn Helm]|h|r",
+        { name = "Worn Helm", quality = 4, ilvl = 300, equipLoc = "INVTYPE_HEAD", classID = 4, subClassID = 4, stats = {} })
+    m.inventory.player[1] = helm
+    NS.Gear.Refresh("test")
+end
+
 test("messages: the preview flags an unknown token and a text past the chat limit", function()
     local NS, _, m = T.enableAddon()
+    wearHelm(NS, m)
     local _, drawn, boxes = templates(NS, m)
     local status
     for _, w in ipairs(drawn) do

@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1020%2F1020_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1031%2F1031_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -46,7 +46,7 @@ From there you can edit the message before it goes, inspect the looter again, or
 
 Your own loot goes on **My drops**. Each item shows the time left to trade it (exact once it's in your
 bags, bold with ten minutes to go) and the group members it would help most. If it's an upgrade for
-you, it asks **keep?** and nobody sees it offered until you decide. **Offer…** opens a panel that
+you, it asks **keep?** and nobody sees it offered until you decide. **Offer** opens a panel that
 ranks everyone by how much they'd gain, with an **Offer** whisper and a **Trade** button that opens
 the trade with the item already in it. **Post my tradeables** lists all of them in group chat in one
 line.
@@ -63,9 +63,11 @@ unless you let it. **Auto-ask** (Settings › Messages › Auto-ask) whispers th
 seconds after the boss dies, when a likely tradeable drop is at least 5 item levels better than
 yours. It backs off if you ask first, they leave, you hide the row or the item reaches you.
 
-To see all this without waiting for loot, type `/dw test`. Test mode fills the window with made-up
-drops, shows the toast so you can drag it into place, and prints messages instead of sending them.
-Combat ends it.
+To see all this without waiting for loot, type `/dw test`. Test mode fills the window with sample
+drops of real items from this season's dungeons (your own gear if the Encounter Journal has none),
+looted by made-up players, in every state the window can show. The History tab gets two sample
+groups of its own, which never touch your real history. Test mode shows the toast so you can drag it
+into place, and prints messages instead of sending them. Combat ends it.
 
 To try the whole thing with a group that isn't there, simulate one. Out of a group, outside any
 instance and out of combat, type `/dw sim start key` (or `dungeon`, `raid`, `lfr`, `delve` or

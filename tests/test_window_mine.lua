@@ -2,8 +2,8 @@
 -- every cell's text, tone and reason tooltip (modules/MineCells.lua, pure), the countdown, the
 -- candidates ranked with their pills, the buttons' lifecycles, the summary, Post my tradeables'
 -- lines and the dock; then the tab and the panel built headless under the mock: pooled rows, the
--- countdown that moves on TradeTimerTick, Hide, Announce, Offer…, Offer, Trade and Post my
--- tradeables through their host handlers.
+-- countdown that moves on TradeTimerTick, Hide, Announce, Offer (the row's and the panel's), Trade
+-- and Post my tradeables through their host handlers.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -88,12 +88,12 @@ test("mine cells: the Trade window says the countdown, ending soon, not tradeabl
     local est = M.TradeWindow(drop({ trade = { state = "likely", reasonKey = "groupLoot", basis = "rule" } }), NOW, 600)
     assertEqual(est.text, "~1:48:20"); assertTrue(joined(est.tip):find("Estimated from when it dropped") ~= nil)
     local no = M.TradeWindow(drop({ trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), NOW, 600)
-    assertEqual(no.text, "Not tradeable: bonus roll"); assertEqual(no.fraction, 0); assertEqual(no.tone, "bad")
+    assertEqual(no.text, "Bonus roll"); assertEqual(no.fraction, 0); assertEqual(no.tone, "bad")
     assertEqual(no.tip[2], "Bonus roll loot can't be traded.")
     local boe = M.TradeWindow(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), NOW, 600)
     assertEqual(boe.text, "No limit (BoE)"); assertEqual(boe.fraction, 1)
     local none = M.TradeWindow(drop({ trade = NONE }), NOW, 600)
-    assertEqual(none.text, "Checking…"); assertTrue(#none.tip >= 2)
+    assertEqual(none.text, "Checking"); assertTrue(#none.tip >= 2)
 end)
 
 test("mine cells: For me asks `keep?` under an upgrade for you", function()
@@ -113,7 +113,7 @@ test("mine cells: the candidates are ranked upgrades first by gain, each with it
     local names, pills, eqs = {}, {}, {}
     for i, e in ipairs(list) do names[i], pills[i], eqs[i] = e.short, e.pill.text, e.eq end
     assertEqual(table.concat(names, ","), "Seta,Butterz,Littlewolf,Uniquerogue,Fifth")
-    assertEqual(table.concat(pills, ","), "+14 UPGRADE,+6 UPGRADE,EQUAL,CAN'T USE,CHECKING…")
+    assertEqual(table.concat(pills, ","), "+14 UPGRADE,+6 UPGRADE,EQUAL,CAN'T USE,CHECKING")
     assertEqual(table.concat(eqs, ","), "291 → 305,299 → 305,305 → 305,– → 305,… → 305")
     assertTrue(list[1].offerable and list[3].offerable); assertFalse(list[4].offerable)
     for _, e in ipairs(list) do assertTrue(#e.pill.tip >= 2, e.short .. " has a reason") end
@@ -135,7 +135,7 @@ test("mine cells: Best candidates shows the top three, `+n more`, or why there a
     end
     assertEqual(M.BestCandidates(drop({ candidates = many })).text, "Seta +14 · Butterz +6 · Extra3 +3 · +2 more")
     local checking = M.BestCandidates(drop({ candidates = { x = cand("Fifth", "DRUID", "checking") } }))
-    assertEqual(checking.text, "Checking 1…")
+    assertEqual(checking.text, "1 checking")
     local nobody = M.BestCandidates(drop({ candidates = { x = cand("Big", "MAGE", "ready", { verdict = "downgrade", ilvlDelta = -9, reasons = {} }) } }))
     assertEqual(nobody.text, "Nobody's upgrade")
     assertEqual(M.BestCandidates(drop({ candidates = {} })).text, "Nobody else in your group")
@@ -171,11 +171,11 @@ test("mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabl
     assertTrue(M.TradeButton(true, nil, "Seta").enabled)
 end)
 
-test("mine cells: a tradeable row offers Offer… and Announce; a dead one a dash and Hide", function()
+test("mine cells: a tradeable row offers Offer and Announce; a dead one a dash and Hide", function()
     local M = MC()
     local d = drop()
     local a = M.Actions(d, M.BestCandidates(d), M.AnnounceButton("ready"))
-    assertTrue(a.tradeable); assertTrue(a.offer.primary, "an upgrade for someone: Offer… stands out")
+    assertTrue(a.tradeable); assertTrue(a.offer.primary, "an upgrade for someone: Offer stands out")
     local up = drop({ me = { verdict = "upgrade", ilvlDelta = 3, reasons = {} } })
     assertFalse(M.Actions(up, M.BestCandidates(up), M.AnnounceButton("ready")).offer.primary)
     local dead = drop({ trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } })
@@ -298,7 +298,7 @@ test("mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps A
     local narrow = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
     local layout, kept = NS.WindowGroup.Layout(cols, narrow)
     assertEqual(names(kept), "item,trade,actions")
-    assertTrue(layout.actions.x + layout.actions.w <= narrow, "Offer… and Announce stay reachable")
+    assertTrue(layout.actions.x + layout.actions.w <= narrow, "Offer and Announce stay reachable")
 end)
 
 test("mine tab: built headless, one row per drop of yours, each column painted", function()
@@ -319,7 +319,7 @@ test("mine tab: built headless, one row per drop of yours, each column painted",
     local trinket = rowFor(drawn, 3).cells
     assertEqual(textOf(trinket.trade.text), "0:08:41 ending soon"); assertTrue(trinket.trade.bold)
     local boots = rowFor(drawn, 4).cells
-    assertEqual(textOf(boots.trade.text), "Not tradeable: bonus roll")
+    assertEqual(textOf(boots.trade.text), "Bonus roll")
     assertFalse(boots.actions.offer:IsShown()); assertTrue(boots.actions.dash:IsShown()); assertTrue(boots.actions.hide:IsShown())
     assertEqual(drawn.summary.text, "3 tradeable · next expiry 0:08:41")
     assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:41")
@@ -413,7 +413,7 @@ local function openPanel()
     return NS, NS.OfferPanel.Drawn(), m
 end
 
-test("offer panel: Offer… opens it docked right, the candidates ranked with their pills", function()
+test("offer panel: Offer opens it docked right, the candidates ranked with their pills", function()
     local NS, p = openPanel()
     assertTrue(NS.OfferPanel.IsShown()); assertEqual(NS.OfferPanel.DropId(), 1)
     assertEqual(p.panel.dock, "right")
@@ -426,7 +426,7 @@ test("offer panel: Offer… opens it docked right, the candidates ranked with th
     assertTrue(r1.offer:IsShown()); assertTrue(r1.trade:IsShown())
     local r4 = p.rows[4]
     assertEqual(textOf(r4.pill.text), "CAN'T USE"); assertFalse(r4.offer:IsShown()); assertTrue(r4.dash:IsShown())
-    assertEqual(textOf(p.rows[5].pill.text), "CHECKING…")
+    assertEqual(textOf(p.rows[5].pill.text), "CHECKING")
     assertEqual(textOf(p.panel.note.text), "5 members · sorted by gain")
 end)
 

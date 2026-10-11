@@ -325,7 +325,7 @@ local function buildBanner(f, body)
     b.art:SetTexture(NS.Icon("info"))
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.text:SetPoint("LEFT", b.art, "RIGHT", 6, 0)
-    b.text:SetText(L["TEST MODE: placeholder drops in every state. Nothing is whispered. Combat ends it."])
+    b.text:SetText(L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
     Window.AttachTooltip(b, NS.WindowTitleBar.TestTip)
     b:Hide()
     f.banner = b

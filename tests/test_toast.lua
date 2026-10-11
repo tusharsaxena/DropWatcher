@@ -256,6 +256,7 @@ end)
 test("toast edge: test mode's placeholder toasts and stays until test mode ends", function()
     local NS, m = T.enableAddon()
     assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    m.seedGearJournal()
     NS.SetTestMode(true)
     local id = NS.Toast.Stats().dropId
     assertTrue(id ~= nil, "the +19 crown qualifies")
@@ -333,8 +334,9 @@ test("toast edge: turning the toast off takes it down and empties the queue; on 
 end)
 
 test("toast edge: a test toast goes when the toast is turned off, though it has no countdown", function()
-    local NS = T.enableAddon()
+    local NS, _, m = T.enableAddon()
     assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    m.seedGearJournal()
     NS.SetTestMode(true)
     assertTrue(shown(NS))
     assertTrue(NS.SchemaRuntime.Set("toast.enabled", false))

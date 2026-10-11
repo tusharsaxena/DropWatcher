@@ -30,7 +30,8 @@ local _, NS = ...
 --   entry = { link, itemID, encounterID, difficulty, instance, equipLoc, ilvl, classID, subClassID }
 --
 -- The build lives on the running session (State.sim.pool, State.sim.poolBuild) and its timers are
--- the session's (NS.Sim.After), so the stop ends both.
+-- the session's (NS.Sim.After), so the stop ends both. Test mode (modules/TestMode.lua) builds the
+-- same pool into its own holder (BuildInto), for real items in its sample drops (ui spec §4, FB-9).
 
 NS.SimPool = NS.SimPool or {}
 local P = NS.SimPool
@@ -65,8 +66,8 @@ P.FAMILY = {
     raid    = { D.LFR, D.NORMAL_RAID, D.HEROIC_RAID, D.MYTHIC_RAID },
 }
 
--- Whether the fallback was reported this session of play.
-local reported = false
+-- The fallback lines already printed this session of play.
+local reported = {}
 
 -- ── pure ───────────────────────────────────────────────────────────────────────────────────
 
@@ -213,31 +214,49 @@ local function ownItems()
     return out
 end
 
---- The own-items fallback pool (spec §3), reported in chat once per session of play.
+P.FALLBACK_LINE = L["The Encounter Journal gave no items, so this simulation drops your own gear instead."]
+
+--- The own-items fallback pool (spec §3). `line` (the simulation's by default) is printed once per
+--- session of play.
+--- @param line string|nil
 --- @return table pool
-function P.Fallback()
+function P.Fallback(line)
+    line = line or P.FALLBACK_LINE
     local entries = NS.Sim.Live(ownItems)
-    if not reported then
-        reported = true
-        NS.Print(L["The Encounter Journal gave no items, so this simulation drops your own gear instead."])
+    if not reported[line] then
+        reported[line] = true
+        NS.Print(line)
     end
     return { sim = true, source = "fallback", entries = entries, pending = 0 }
 end
 
 -- ── the build ──────────────────────────────────────────────────────────────────────────────
+--
+-- A build fills a HOLDER's `pool` and `poolBuild` fields: the running simulation's session
+-- (Build), or test mode's own holder (BuildInto, modules/TestMode.lua). Its host says whether the
+-- holder still wants it (`alive`), how to wait (`after(delay, fn)`, a timer its owner cancels) and
+-- the fallback's chat line. A build its holder replaced or let go does nothing more.
+
+-- The builds that may be waiting for EJ_LOOT_DATA_RECIEVED.
+local builds = {}
+
+local function current(b)
+    return b.host.alive() and b.holder.poolBuild == b
+end
 
 local function finish(b)
-    local s = b.session
-    s.poolBuild = nil
+    builds[b] = nil
+    local holder = b.holder
+    holder.poolBuild = nil
     local pool
     if b.entries and #b.entries > 0 then
         pool = { sim = true, source = "journal", difficulty = b.source.difficulty, raid = b.source.raid,
             pending = b.pending or 0, entries = b.entries }
     else
-        pool = P.Fallback()
+        pool = P.Fallback(b.host.fallbackLine)
     end
     for _, e in ipairs(pool.entries) do P.Facts(e) end
-    s.pool = pool
+    holder.pool = pool
     NS.Debug(TAG, "pool: %d items from the %s (%d still loading)", #pool.entries, pool.source, pool.pending)
     if b.done then b.done(pool) end
 end
@@ -254,7 +273,7 @@ end
 -- Read again after `delay` seconds, unless a read is already set for then.
 local function again(b, delay)
     if b.timer then return end
-    b.timer = NS.Sim.After(delay, function()
+    b.timer = b.host.after(delay, function()
         b.timer = nil
         attempt(b)
     end)
@@ -262,14 +281,37 @@ end
 
 -- One read; then done, or the wait (the frame shown: poll; data loading: the event or the timeout).
 attempt = function(b)
-    if State.sim ~= b.session or b.session.poolBuild ~= b then return end
+    if not current(b) then
+        builds[b] = nil
+        return
+    end
     local entries, pending, why = P.ReadJournal(b.source, b.filter)
     if entries then b.entries, b.pending = entries, pending end
     local left = b.deadline - GetTime()
     if settled(entries, pending, why, left) then return finish(b) end
     b.waiting = why or "loot"
     if why == "shown" then return again(b, math.min(P.RETRY, left)) end
-    b.timeout = b.timeout or NS.Sim.After(left, function() attempt(b) end)
+    b.timeout = b.timeout or b.host.after(left, function() attempt(b) end)
+end
+
+--- Build a pool into `holder` (its `pool` and `poolBuild`) and call `done(pool)` when it is ready
+--- (at once when nothing has to load). `host` = { alive = fn() -> boolean, after = fn(delay, fn),
+--- fallbackLine }; `opts` = { situation, classFilter = `mine`|`any`, timeout }.
+--- @param holder table
+--- @param host table
+--- @param opts table|nil
+--- @param done function|nil
+function P.BuildInto(holder, host, opts, done)
+    opts = type(opts) == "table" and opts or {}
+    local snap = NS.Gear.Snapshot()
+    local b = {
+        holder = holder, host = host, done = done, source = P.Source(opts.situation),
+        filter = P.Filter(opts.classFilter, snap.classFile, snap.specID),
+        deadline = GetTime() + (tonumber(opts.timeout) or P.TIMEOUT),
+    }
+    holder.pool, holder.poolBuild = nil, b
+    builds[b] = true
+    attempt(b)
 end
 
 --- Build the running simulation's pool (spec §3) and call `done(pool)` when it is ready (at once
@@ -281,15 +323,8 @@ end
 function P.Build(opts, done)
     local s = State.sim
     if not s then return false end
-    opts = type(opts) == "table" and opts or {}
-    local snap = NS.Gear.Snapshot()
-    local b = {
-        session = s, done = done, source = P.Source(opts.situation),
-        filter = P.Filter(opts.classFilter, snap.classFile, snap.specID),
-        deadline = GetTime() + (tonumber(opts.timeout) or P.TIMEOUT),
-    }
-    s.pool, s.poolBuild = nil, b
-    attempt(b)
+    local host = { alive = function() return State.sim == s end, after = NS.Sim.After }
+    P.BuildInto(s, host, opts, done)
     return true
 end
 
@@ -316,10 +351,10 @@ end
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "EJ_LOOT_DATA_RECIEVED", "OnSimPoolLoot" }
 
---- EJ_LOOT_DATA_RECIEVED: a journal entry loaded. A build waiting for its data reads again once
---- the burst settles; with no build waiting it does nothing.
+--- EJ_LOOT_DATA_RECIEVED: a journal entry loaded. Every build waiting for its data reads again
+--- once the burst settles; with no build waiting it does nothing.
 function NS.addon.OnSimPoolLoot()
-    local s = State.sim
-    local b = s and s.poolBuild
-    if b and b.waiting == "loot" then again(b, P.SETTLE) end
+    for b in pairs(builds) do
+        if current(b) and b.waiting == "loot" then again(b, P.SETTLE) end
+    end
 end

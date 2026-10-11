@@ -66,13 +66,17 @@ through its host handler, and the Edit message box), `test_window_mine` (the My 
 Offer panel: the countdown, exact and estimated, `ending soon`, For me's `keep?`, the candidates
 ranked with their pills, Best candidates hidden for your upgrade, the buttons' lifecycles, the
 summary, Post my tradeables' lines and the dock, then the tab and the panel built headless: pooled
-rows, a reason on every cell, the countdown moved by `TradeTimerTick`, Hide, Announce, Offer…,
-Offer, Trade and Post my tradeables through their host handlers), `test_test_mode` (test mode's
-placeholders: every Me and Them verdict, trade estimate, inspect state, ask state, countdown and
-candidate pill covered by the data; `AddTest` and the test feed filled and emptied with test mode,
-by combat and by the stand-down; the window built headless with every placeholder drawn, a reason on
-every cell, the TEST MODE text and banner, the My drops count; Ask and Post my tradeables printed, never
-sent), `test_compat` (the compat seam: the
+rows, a reason on every cell, the countdown moved by `TradeTimerTick`, Hide, Announce, the row's
+and the panel's Offer, Trade and Post my tradeables through their host handlers), `test_test_mode`
+(test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
+and candidate pill covered by the data, over pool items that keep their slot and level, the worn
+items the nearest of their slot, an empty pool giving none; the History sample with every outcome;
+`AddTest` and the test feed filled from the mock journal's pool (`seedGearJournal`) and emptied
+with test mode, while the pool loads, with no pool at all, by combat and by the stand-down; the
+History tab's samples never written to `global.history`; the window built headless with every
+sample drawn with a real icon, a reason on every cell, the TEST MODE text and banner, the My drops
+count; no button label or My drops cell ending in an ellipsis; Ask and Post my tradeables printed,
+never sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader, the trade window's items and partner, the row menu, and each shim's fallback
 with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the

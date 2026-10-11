@@ -300,7 +300,7 @@ Total.
 - mine cells: Best candidates shows the top three, `+n more`, or why there are none
 - mine cells: an upgrade for you hides its candidates until you choose to offer it
 - mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabled with its reason
-- mine cells: a tradeable row offers Offer… and Announce; a dead one a dash and Hide
+- mine cells: a tradeable row offers Offer and Announce; a dead one a dash and Hide
 - mine cells: the summary counts the tradeable drops and names the next expiry
 - mine cells: Post my tradeables lists every link, cut at the chat limit without splitting one
 - mine cells: the Offer panel docks right, else left, else floats
@@ -314,7 +314,7 @@ Total.
 - mine tab: Hide takes a dead row off the tab for the session
 - mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
 - mine tab: with no drop of yours the empty line says so; a filter that hides them says that
-- offer panel: Offer… opens it docked right, the candidates ranked with their pills
+- offer panel: Offer opens it docked right, the candidates ranked with their pills
 - offer panel: every part has a reason tooltip; Trade is disabled with the trade helper's reason
 - offer panel: Offer whispers through the shared handler; Trade hands the item over
 - offer panel: opening an upgrade for you reveals its Best candidates
@@ -325,26 +325,37 @@ Total.
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
 
-### test_test_mode.lua (18)
+### test_test_mode.lua (29)
 
 - test mode data: the other members' drops cover every Me and Them verdict (board 03)
 - test mode data: every trade estimate, inspect state and ask state is there
 - test mode data: your own drops cover every countdown and every candidate pill (board 04)
-- test mode data: two groups, a boss and a key run, and every item is a placeholder
-- feed: AddTest puts a placeholder in the test feed as given, never in the live one
+- test mode data: two groups, a boss and a key run, every item a pool item that keeps its slot
+- test mode data: worn items are other pool items of the slot, nearest the level the change implies
+- test mode data: the trade reason's two levels are the drop's and the looter's worn item's
+- test mode data: an empty pool gives no sample, and a pool short of a slot borrows a real item
+- test mode data: the History sample has two groups and every outcome, oldest first
+- feed: AddTest puts a sample in the test feed as given, never in the live one
 - feed: AddTest refuses a spec with no item, no looter or no group, and while stood down
-- test mode: on fills the test feed, off empties it; the live feed is never touched
+- test mode: on fills the test feed from the item pool, off empties it; the live feed is never touched
+- test mode: while the pool loads the tab says so and holds no drop; the drops fill in when it is ready
+- test mode: turned off while the pool loads, nothing arrives later
+- test mode: with no journal and no gear of your own there is no sample, and it says so
 - test mode: combat and the stand-down both empty the test feed
 - test mode: the Group drops tab shows View: All while on, and the player's View comes back
-- window: test mode draws every placeholder, under the boss and the key run
-- window: every cell of every placeholder row says something and has a reason
+- history: test mode shows its sample groups, every outcome, and never writes the account's history
+- history: the account's kept groups come back when test mode ends
+- window: test mode draws every sample, under the boss and the key run, with real icons
+- window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Their eq state and every trade chip
-- window: a placeholder's Their eq shows its own worn item, and its detail card its own inspect
-- window: the My drops tab counts your tradeable placeholders and draws them all
+- window: a sample's Their eq shows its own worn item, and its detail card its own inspect
+- window: the My drops tab counts your tradeable samples and draws them all
 - window: the empty state comes back once test mode ends with nothing in the live feed
-- sends: Ask on a placeholder prints the text and sends nothing; its state is the edge's from then on
+- labels: My drops says Offer, and no cell of its rows ends in an ellipsis
+- labels: no button the addon builds is labeled with a trailing ellipsis
+- sends: Ask on a sample prints the text and sends nothing; its state is the edge's from then on
 - sends: Post my tradeables in test mode prints its lines and sends nothing
-- hooks: AskState shows a placeholder's own state only while the edge holds none
+- hooks: AskState shows a sample's own state only while the edge holds none
 
 ### test_compat.lua (68)
 
@@ -903,7 +914,7 @@ Total.
 - transmog edge: a collected look keeps the plain ask
 - transmog settings: the template and the opt-in are rows, the opt-in off by default
 - transmog settings: the preview sample is a drop whose look you have not collected
-- transmog test mode: one placeholder's look is collected and one's is not
+- transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
 ### test_history.lua (28)
@@ -1199,7 +1210,7 @@ Total.
 | test_window_group.lua | 35 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
-| test_test_mode.lua | 18 |
+| test_test_mode.lua | 29 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 8 |
 | test_constants.lua | 12 |
@@ -1238,4 +1249,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1020** |
+| **Total** | **1031** |

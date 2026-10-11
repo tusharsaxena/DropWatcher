@@ -17,7 +17,7 @@ passed.
 | SLASH-1..6 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42) |
 | PANEL-1..7 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
-| STATE-1..3 | State | Enable/disable, lock, test mode |
+| STATE-1..4 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84) |
 | COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (DW-20) |
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
@@ -170,19 +170,36 @@ appears here, grouped by boss.` and two buttons, each with a tooltip; Scan group
 Click Preview with test data → test mode turns on, bright-red `TEST MODE` text sits beside the title and an
 amber banner (`Nothing is whispered. Combat ends it.`) above the table, both with the same tooltip;
 View reads All. Two groups show, `Placeholder boss` open and `Placeholder key run` collapsed; expand
-it. Across the rows: Me shows ▲ ≈ ▽, Can't use, Not wanted and `?`; Them shows ▲ ≈ ▽, Can't use and
-`?`; Trade shows Yes, Likely, Unknown and No; Their eq shows worn item levels (`324`, `297`), `…`,
+it (since DW-84 the items are real: see STATE-4). Across the rows: Me shows ▲ ≈ ▽, Can't use, Not wanted and `?`; Them shows ▲ ≈ ▽, Can't use and
+`?`; Trade shows Yes, Likely, Unknown and No; Their eq shows worn item levels, `…`,
 `range`, `combat`, `!` and `–`, the read's age on hover; Actions shows Ask, Queued, Asked, Retry and a dash. Hover a dozen cells → each has a reason,
 none is blank, and the text fits its column at the default size and at the minimum size. Expand the
-Placeholder Crown row → the detail card names the looter's spec and `inspected 40s ago`. Click Ask on
+head-slot row Seta looted → the detail card names the looter's spec and `inspected 40s ago`. Click Ask on
 a ready row → chat prints `Test mode, not sent: …` and the button reads Asked; nothing is whispered.
 Open My drops → the tab reads `My drops · 4`, the countdowns move each second (one in bold `ending
-soon`, one estimated with `~`, one `No limit (BoE)`, one not tradeable), and Offer… on Placeholder
-Idol opens the panel with `+14 UPGRADE`, `+6 UPGRADE`, `EQUAL`, `NO UPGRADE`, `CAN'T USE`,
-`CHECKING…` and `UNAVAILABLE`; Offer and Post my tradeables print and send nothing. Drag the window
+soon`, one estimated with `~`, one `No limit (BoE)`, one not tradeable), and Offer on the trinket
+opens the panel with `+14 UPGRADE`, `+6 UPGRADE`, `EQUAL`, `NO UPGRADE`, `CAN'T USE`,
+`CHECKING` and `UNAVAILABLE`; Offer and Post my tradeables print and send nothing. Drag the window
 and minimize it: the `TEST MODE` text stays on the title bar. `/dw test` → the text, the banner and the rows go,
-View is back to Interesting and the empty state returns. Note: the placeholder items are invented, so
-their icons are the question mark and their game tooltips are empty. Result:
+View is back to Interesting and the empty state returns. Result:
+
+**STATE-4. Test mode shows real items, History test data and no trailing ellipsis (DW-84).** Solo,
+outside an instance and out of combat, `/dw test` → for a moment the Group drops tab may read
+`Gathering real items for test mode.`, then the rows fill. Every row's icon is a real item's (no red
+question mark anywhere: Item, My eq, Their eq, the detail card, My drops, the Offer panel), the
+names are real items of the current season's dungeons (or your own gear, with the chat line `The
+Encounter Journal gave no items, so test mode shows your own gear instead.`), each in its slot (the
+head row a helm, the ring rows rings), and the Ilvl column shows each item's real level: hover an
+item → the game's own tooltip agrees with it. Their eq shows a real worn item and its level for the
+inspected looters. The looter names stay invented (Seta, Butterz, …). Every state of STATE-3 is
+still there. Open History → two groups, `Placeholder key run` (a day ago) and `Placeholder boss` (two
+hours ago), whose rows read Seen, Asked, Offered, Received, Traded away, Expired and Declined, over
+real items. `/dw test` off → the History tab shows your own kept groups again, untouched (none of the
+samples among them, after a `/reload` too). My drops → the button reads `Offer`, with no ellipsis;
+an expired row's Trade window reads `Window passed` in full (its tooltip still says `Not tradeable`
+and why); a candidates cell still being read reads `1 checking`, the pill `CHECKING`. Look over
+every button and cell at the default and the minimum width → none ends in an ellipsis or is cut
+short. Result:
 
 ## Compat
 
@@ -350,7 +367,7 @@ the chat line `Inspecting <n> group members, one at a time.`, and within a minut
 to its title bar where it stood, the mark becomes a plus; `/reload` → it comes back minimized. In a
 Drag the window to the middle of the screen and minimize it again → the title bar stays exactly
 where it was, and the expand grows the window downward from it. Press Alt-Z twice → the window
-comes back with the UI; enter and leave combat → it stays open. On My drops open `Offer…`; on Group
+comes back with the UI; enter and leave combat → it stays open. On My drops open `Offer`; on Group
 drops expand a row and click `Edit message`; then minimize → both close with the body. In a
 Heroic dungeon with the window minimized, let a member loot an item → a `1 new` chip
 appears beside the title and the window stays minimized; a double-click on the title bar expands it
@@ -371,7 +388,7 @@ Likely; View: All lists every drop. Your own loot is not listed here (it is on M
 `/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").db.profile.feed = { showOwn = true }`, which
 lists it too; set it back. Resize the window to its narrowest → Slot, Looter, My eq, Their eq and Ilvl go
 in turn, the column labels with them, and the Ask button and the × stay inside the window; on My
-drops the Offer… and Announce buttons stay inside it too. Hover
+drops the Offer and Announce buttons stay inside it too. Hover
 every cell, every column label and the header → each one shows a tooltip with a reason (Trade's
 reads like `Personal loot: 311 is not an upgrade over the 324 <name> wears, so they may trade
 it.`); no cell is blank. Result:
@@ -431,8 +448,8 @@ windows side by side. → Drop Watcher's title bar has no logo (the minimap butt
 keep it), and its gold `Ka0s Drop Watcher` title sits centered on the bar in the same font as Loot
 History's. `/dw test` and Loot History's test mode → each shows `TEST MODE` in bright red, the same
 size and color, 10px right of its title, with no box behind it; Drop Watcher's hover still shows the
-test-mode tooltip. The yellow strip under the filter bar (`TEST MODE: placeholder drops in every
-state. …`) is unchanged. On the right, the restriction badge, `Scan group`, minimize and the close
+test-mode tooltip. The yellow strip under the filter bar (`TEST MODE: sample drops of real items in
+every state. …`) is unchanged. On the right, the restriction badge, `Scan group`, minimize and the close
 mark keep their places. `/dw test` off, then `/dw sim start key` → `SIMULATION` in cyan, the same
 style and place. Minimize with a new drop pending → the `n new` counter sits after the mode's words.
 Resize to the minimum width (520) with test mode on → the title stays centered; record whether
@@ -710,8 +727,8 @@ Open the window and click `My drops · n` → n counts the drops you can trade; 
 yours: the item button, its item level, `For me` (`-5 ▽`, or `+3 ▲` over `keep?` for the upgrade),
 `Trade window` (`1:59:40` over a green bar that shortens, matching the item tooltip's time to the
 minute once the item is in your bags, `~1:59:40` for a moment before that), `Best candidates`
-(`Seta +14 · Butterz +6`, `Checking 2…` while their inspects run, or `Hidden: an upgrade for you`
-on your upgrade) and `Offer…` and `Announce`. The bonus-roll row reads `Not tradeable: bonus roll`
+(`Seta +14 · Butterz +6`, `2 checking` while their inspects run, or `Hidden: an upgrade for you`
+on your upgrade) and `Offer` and `Announce`. The bonus-roll row reads `Bonus roll`
 with a dash and `Hide`; Hide removes it. With ten minutes or less left, the countdown reads
 `0:09:59 ending soon`, in bold amber, and the trade timer's chat warning prints once. The summary
 under the rows reads `2 tradeable · next expiry 0:08:41`. Click `Announce` → "[item] is up for
@@ -719,17 +736,17 @@ grabs, whisper me." in party (instance) chat, the button reads `Announced` graye
 it reads `Queued` and goes out at the kill. Hover every cell and button → each tooltip says why;
 nothing is blank. Result:
 
-**ASK-6. The Offer panel, Offer and Trade.** On the downgrade's row click `Offer…` → a panel
+**ASK-6. The Offer panel, Offer and Trade.** On the downgrade's row click `Offer` → a panel
 `Who could use this? YOUR DROP` opens docked to the window's right edge (move the window to the
 screen's right edge and it docks on the left instead; make the window nearly screen-wide and it
 floats over the window's right half). Its header shows the item, `You: -5 ilvl · 305 · Trade window
 1:47:12`, then every other member with a class-colored stripe, `291 → 305` and a pill (`+14
-UPGRADE`, `EQUAL`, `NO UPGRADE`, `CAN'T USE`, `CHECKING…`), upgrades first by gain; in a raid the
+UPGRADE`, `EQUAL`, `NO UPGRADE`, `CAN'T USE`, `CHECKING`), upgrades first by gain; in a raid the
 list scrolls. Click `Offer` on the top member → they are whispered "Hi <name>, [item] is tradeable
 and looks like +14 for you. Want it?" and the button reads `Offered`. Standing far from them,
 `Trade` is grayed with "That player is out of trade range."; walk up → click it → the trade window
 opens with the item already placed; cancel it. `Announce to group` posts the announce once. On the
-upgrade's row, `Offer…` opens the panel and the row's `Best candidates` now shows the names. Close
+upgrade's row, `Offer` opens the panel and the row's `Best candidates` now shows the names. Close
 the panel with its close mark. Result:
 
 **ASK-7. Post my tradeables.** With two or more tradeable drops of yours, click `Post my
@@ -843,7 +860,7 @@ member loot an item that is a downgrade for them and an upgrade for you; press i
 them (they put the item in), both accept → with `/dw debug on`, the console shows `[TRADE] trade
 with <name> completed: gave 0, got 1` and `history: <item> received`; the Group drops row's Ask
 button reads `Traded ✓` and the History tab's row `Received`. Then trade one of your own drops away
-(My drops › Offer… › Trade, both accept) → its History row reads `Traded away`. Cancel a trade
+(My drops › Offer › Trade, both accept) → its History row reads `Traded away`. Cancel a trade
 before both accept → nothing changes. Then a trade that fails after both accept (the partner's bags
 full, or one of you walks out of range as the second accept lands) → no `completed` line and the
 History row keeps its outcome. If no `completed` line appears after a real trade, record what
@@ -1046,6 +1063,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | FEED-16 | DW-81, the header matched to Loot History | No client pass recorded yet |
 | FEED-17 | DW-82, the filter bar matched to Loot History | No client pass recorded yet |
 | FEED-18 | DW-83, My eq, Their eq, the two new filters, auto-open on every drop | No client pass recorded yet |
+| STATE-4 | DW-84, test mode with real items, History test data, no trailing ellipsis | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |
 | PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |

@@ -75,6 +75,8 @@ local COMPACT = { item = true, ilvl = true, theirEq = true, me = true, actions =
 local GLYPH_COLS = { me = true, them = true }
 
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
+local TEST_LOADING = L["Gathering real items for test mode."]
+local TEST_NONE = L["Test mode found no items to show."]
 
 -- ── the view state (session-only) ───────────────────────────────────────────────────────────
 
@@ -663,7 +665,7 @@ end
 -- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
 
 local function previewTip()
-    return L["Preview with test data"], L["Turns test mode on: placeholder drops in every state, so the window can be checked anywhere. Nothing is whispered, and combat ends it."]
+    return L["Preview with test data"], L["Turns test mode on: sample drops of real items in every state, so the window can be checked anywhere. Nothing is whispered, and combat ends it."]
 end
 
 local function scanTip()
@@ -794,12 +796,14 @@ end
 
 -- Nothing drawn: the empty state when the feed holds no drop at all, else the line saying the
 -- filters hide them. The window is never a blank table.
+-- In test mode an empty test feed is still gathering its items, or found none (ui spec §4).
 local function paintEmpty(pane, entries, ctx)
     local none = #entries == 0
     local nothing = none and #NS.LootFeed.Drops(ctx.feed) == 0
-    pane.emptyState:SetShown(nothing)
-    pane.placeholder:SetShown(none and not nothing)
-    pane.placeholder:SetText(NO_MATCH)
+    local test = nothing and ctx.feed == "test"
+    pane.emptyState:SetShown(nothing and not test)
+    pane.placeholder:SetShown(none and (test or not nothing))
+    pane.placeholder:SetText(not test and NO_MATCH or NS.TestMode.IsLoading() and TEST_LOADING or TEST_NONE)
     pane.colHead:SetShown(not none)
 end
 
