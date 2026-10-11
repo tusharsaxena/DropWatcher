@@ -201,6 +201,38 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
+### test_window_mine.lua (29)
+
+- mine cells: Clock reads h:mm:ss
+- mine cells: the countdown is exact from the item's timer, estimated from the drop before it
+- mine cells: the Trade window says the countdown, ending soon, not tradeable or no limit
+- mine cells: For me asks `keep?` under an upgrade for you
+- mine cells: the candidates are ranked upgrades first by gain, each with its pill and eq → drop
+- mine cells: Best candidates shows the top three, `+n more`, or why there are none
+- mine cells: an upgrade for you hides its candidates until you choose to offer it
+- mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabled with its reason
+- mine cells: a tradeable row offers Offer… and Announce; a dead one a dash and Hide
+- mine cells: the summary counts the tradeable drops and names the next expiry
+- mine cells: Post my tradeables lists every link, cut at the chat limit without splitting one
+- mine cells: the Offer panel docks right, else left, else floats
+- mine cells: the panel's header reads your change, the item level and the trade window
+- mine: the entries are your own drops that pass the filter and were not hidden, in the tab's order
+- mine tab: built headless, one row per drop of yours, each column painted
+- mine tab: every shown cell has a reason tooltip; nothing is blank
+- mine tab: rows come from the pool and a repaint reuses them
+- mine tab: TradeTimerTick moves the countdown while the tab shows
+- mine tab: Hide takes a dead row off the tab for the session
+- mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
+- mine tab: with no drop of yours the empty line says so; a filter that hides them says that
+- offer panel: Offer… opens it docked right, the candidates ranked with their pills
+- offer panel: every part has a reason tooltip; Trade is disabled with the trade helper's reason
+- offer panel: Offer whispers through the shared handler; Trade hands the item over
+- offer panel: opening an upgrade for you reveals its Best candidates
+- offer panel: the close mark closes it, and it closes itself when its drop is gone
+- offer panel: Announce to group announces the drop
+- handlers: Post my tradeables announces every tradeable drop of yours, line by line
+- handlers: Offer, Announce and Trade say why they did nothing
+
 ### test_compat.lua (64)
 
 - compat: the secret guards are the library's members on a live load
@@ -791,6 +823,7 @@ Total.
 | test_window_shell.lua | 31 |
 | test_window_group.lua | 29 |
 | test_detail_card.lua | 19 |
+| test_window_mine.lua | 29 |
 | test_compat.lua | 64 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
@@ -818,4 +851,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **660** |
+| **Total** | **689** |

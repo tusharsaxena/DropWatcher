@@ -163,9 +163,9 @@ modules\Asks.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L, NS.Constants,
 # NS.Bus and NS.MSG, and appends its rows to NS.STAND_DOWN / NS.STAND_UP, all published above, at
 # load, and registers its bus receivers (RestrictionChanged, AskStateChanged, SituationChanged,
-# DropAdded, DropUpdated, InspectDone) on its own NS.Bus target. Every engine module above, and
-# NS.WindowFilterBar / NS.WindowFooter (below), are read at call time: the frame is built on the
-# first show.
+# DropAdded, DropUpdated, InspectDone, TradeTimerTick, TradeTimerExpiring) on its own NS.Bus
+# target. Every engine module above, and NS.WindowFilterBar / NS.WindowFooter / NS.OfferPanel
+# (below), are read at call time: the frame is built on the first show.
 modules\Window.lua
 # Conventional: publishes NS.WindowFilterBar (the filter bar, each tab's filter state and the row
 # predicates); reads NS.Constants, NS.L and NS.State at load, and NS.Window (above) at call time.
@@ -176,6 +176,10 @@ modules\WindowFooter.lua
 # Conventional: publishes NS.WindowCells, the drop tables' pure cell composers (each column's text,
 # glyph, tone and reason tooltip); reads NS.Constants and NS.L at load.
 modules\WindowCells.lua
+# Conventional: publishes NS.MineCells, the My drops tab's and the Offer panel's pure composers (the
+# countdown, the candidates and their pills, the buttons, Post my tradeables' lines, the dock);
+# takes NS.WindowCells (above), NS.Constants and NS.L at load.
+modules\MineCells.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Group drops body through
 # Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells (above), NS.Constants,
 # NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
@@ -189,6 +193,15 @@ modules\DetailCells.lua
 # NS.DetailCells (above), NS.Constants and NS.L at load. NS.WindowGroup builds it (above, at call
 # time); NS.Window, the engine modules and the host handlers are read at call time.
 modules\DetailCard.lua
+# LOAD-BEARING: publishes NS.WindowMine and registers the My drops body through Window.RegisterTab
+# (modules\Window.lua, above) at load; takes NS.MineCells (above), NS.Constants, NS.L and NS.State
+# at load. NS.WindowGroup's item button and layout, the feed, the asks, the trade timer, the pool,
+# the Offer panel (below) and the host handlers (core\DropWatcher.lua) are read at call time.
+modules\WindowMine.lua
+# Conventional: publishes NS.OfferPanel, the "Who could use this?" panel; takes NS.MineCells (above),
+# NS.Constants, NS.L and NS.State at load. NS.Window, NS.WindowGroup, NS.WindowMine, the feed, the
+# asks, the trade helper and the host handlers are read at call time: it is built on its first Open.
+modules\OfferPanel.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

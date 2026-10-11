@@ -69,7 +69,8 @@ click or because its looter left; one per flush started, with its trigger and th
 when the stand-down drops queued asks), `UI` (one line per tab selected, per filter changed on a
 tab, per minimize and expand, per auto-open with its situation, and per Group drops header
 collapsed or expanded, per row dismissed, and per detail card expanded or collapsed and per Retry
-inspect with the broker's answer); `Set` also logs `window.compact` when the compact
+inspect with the broker's answer; per My drops row hidden, per Offer panel opened with its drop,
+and per Post my tradeables with the lines posted); `Set` also logs `window.compact` when the compact
 preset is stored outside the seam. The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 The design's other feature tags (spec §13) arrive with their modules.

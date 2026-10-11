@@ -53,7 +53,12 @@ the Ask button and its repaint, the dismiss mark, the compact preset, the filter
 line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
-through its host handler, and the Edit message box), `test_compat` (the compat seam: the
+through its host handler, and the Edit message box), `test_window_mine` (the My drops tab and the
+Offer panel: the countdown, exact and estimated, `ending soon`, For me's `keep?`, the candidates
+ranked with their pills, Best candidates hidden for your upgrade, the buttons' lifecycles, the
+summary, Post my tradeables' lines and the dock, then the tab and the panel built headless: pooled
+rows, a reason on every cell, the countdown moved by `TradeTimerTick`, Hide, Announce, Offer…,
+Offer, Trade and Post my tradeables through their host handlers), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader and each shim's fallback with its API absent), `test_constants` and
 `test_class_data`

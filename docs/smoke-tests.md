@@ -28,7 +28,7 @@ passed.
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
 | INSPECT-1..4 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
-| ASK-1..8 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); the buttons and auto-ask (ASK-5..8, DW-33, DW-54) |
+| ASK-1..8 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); the My drops tab, the Offer panel and Post my tradeables (ASK-5..7, DW-33); auto-ask (ASK-8, DW-54) |
 | SIT-1..5 | Situations | Where the addon is active (lands with DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (lands with DW-12) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
@@ -484,9 +484,9 @@ action failed" message, or an item left on the cursor. Result:
 
 The messaging core's decisions (token expansion, the length limit, the one-ask guard, the queue's
 order and cancel) are headless-tested (`test_messaging`), and the edge's send, queue, flush, cancel
-and test-mode routing too (`test_asks`); these checks confirm the client's side. The row buttons
-arrive with DW-33 (ASK-5..7) and auto-ask with DW-54 (ASK-8); until then each check drives the edge
-from the chat box, with a drop already in the feed (`/dw diagnostics` names the drops; `/dw debug on`
+and test-mode routing too (`test_asks`); these checks confirm the client's side. The My drops
+tab's and the Offer panel's buttons are ASK-5..7 (DW-33) and auto-ask is ASK-8 (DW-54); ASK-1..4
+drive the edge from the chat box, with a drop already in the feed (`/dw diagnostics` names the drops; `/dw debug on`
 shows the `[MSG]` lines):
 
 ```
@@ -528,6 +528,40 @@ arrives, the queue holds asks longer than it must (design spec §9.2 and COMBAT-
 then revisited). Then, outside combat, turn test mode on (`/dw test`) and run the ASK-1 line with
 `oneAsk` in mind (a drop not asked yet) → `Test mode, not sent: ...` is printed, the print reads
 `sent`, and nobody is whispered. Result:
+
+**ASK-5. The My drops tab.** In a dungeon, loot three or four items of your own: one you will not
+wear (a downgrade), one that is an upgrade for you, and, if the boss drops it, a bonus-roll item.
+Open the window and click `My drops · n` → n counts the drops you can trade; one row per drop of
+yours: the item button, its item level, `For me` (`-5 ▽`, or `+3 ▲` over `keep?` for the upgrade),
+`Trade window` (`1:59:40` over a green bar that shortens, matching the item tooltip's time to the
+minute once the item is in your bags, `~1:59:40` for a moment before that), `Best candidates`
+(`Seta +14 · Butterz +6`, `Checking 2…` while their inspects run, or `Hidden: an upgrade for you`
+on your upgrade) and `Offer…` and `Announce`. The bonus-roll row reads `Not tradeable: bonus roll`
+with a dash and `Hide`; Hide removes it. With ten minutes or less left, the countdown reads
+`0:09:59 ending soon`, in bold amber, and the trade timer's chat warning prints once. The summary
+under the rows reads `2 tradeable · next expiry 0:08:41`. Click `Announce` → "[item] is up for
+grabs, whisper me." in party (instance) chat, the button reads `Announced` grayed; in a boss fight
+it reads `Queued` and goes out at the kill. Hover every cell and button → each tooltip says why;
+nothing is blank. Result:
+
+**ASK-6. The Offer panel, Offer and Trade.** On the downgrade's row click `Offer…` → a panel
+`Who could use this? YOUR DROP` opens docked to the window's right edge (move the window to the
+screen's right edge and it docks on the left instead; make the window nearly screen-wide and it
+floats over the window's right half). Its header shows the item, `You: -5 ilvl · 305 · Trade window
+1:47:12`, then every other member with a class-colored stripe, `291 → 305` and a pill (`+14
+UPGRADE`, `EQUAL`, `NO UPGRADE`, `CAN'T USE`, `CHECKING…`), upgrades first by gain; in a raid the
+list scrolls. Click `Offer` on the top member → they are whispered "Hi <name>, [item] is tradeable
+and looks like +14 for you. Want it?" and the button reads `Offered`. Standing far from them,
+`Trade` is grayed with "That player is out of trade range."; walk up → click it → the trade window
+opens with the item already placed; cancel it. `Announce to group` posts the announce once. On the
+upgrade's row, `Offer…` opens the panel and the row's `Best candidates` now shows the names. Close
+the panel with its close mark. Result:
+
+**ASK-7. Post my tradeables.** With two or more tradeable drops of yours, click `Post my
+tradeables` under the My drops rows → one party (instance) chat line `Up for trade, whisper me:
+[item] [item]` with every link intact; with enough drops to pass 255 characters (or long names in a
+raid) it is two or more lines, none cut mid-link. Click it again → it posts again. With none
+tradeable the button is grayed. In test mode (`/dw test`) the lines are printed, not sent. Result:
 
 ## Situations
 
@@ -614,3 +648,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | ASK-1..4 | DW-2A, the messaging edge | No client pass recorded yet |
 | FEED-10..12 | DW-31, the Group drops table | No client pass recorded yet |
 | FEED-13..15 | DW-32, the detail card | No client pass recorded yet |
+| ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |

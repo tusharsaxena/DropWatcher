@@ -102,6 +102,7 @@ Kit.run{
         "test_window_shell",
         "test_window_group",
         "test_detail_card",
+        "test_window_mine",
         "test_compat",
         "test_constants",
         "test_class_data",

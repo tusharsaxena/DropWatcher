@@ -28,6 +28,16 @@ State.windowFilters = nil
 -- the session; `expanded` is the one row whose detail card is open (design spec §11.3), or nil.
 State.windowGroup = nil
 
+-- The My drops tab's view state (modules/WindowMine.lua, design spec §11.4): { dismissed =
+-- { [dropId] = true }, revealed = { [dropId] = true } }. A dismissed drop (its row's Hide) stays off
+-- the tab for the session; a revealed one is an upgrade for you whose Offer panel you opened, so its
+-- Best candidates are no longer hidden.
+State.windowMine = nil
+
+-- The Offer panel (modules/OfferPanel.lua, design spec §11.4): { dropId } while it is open for one
+-- of your drops, else nil.
+State.offerPanel = nil
+
 -- The current situation key and the classifier inputs it came from (modules/Situations.lua,
 -- design spec §6.1). Nil until the first re-evaluation event, and again while stood down.
 State.situation = nil

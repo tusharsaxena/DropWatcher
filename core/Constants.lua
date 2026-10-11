@@ -58,6 +58,21 @@ C.WINDOW = {
     ACTION_H    = 22,     -- an action button
     EDITOR_W    = 380,    -- the Edit message box
     EDITOR_H    = 156,
+    -- The My drops tab (modules/WindowMine.lua) and the Offer panel (modules/OfferPanel.lua),
+    -- design spec §11.4, board 04.
+    MINE_ROW_H  = 32,     -- one row of your own drops (the countdown sits over its bar)
+    BAR_H       = 3,      -- the trade window's bar
+    MINE_FOOT_H = 26,     -- the tab's summary strip, with Post my tradeables
+    OFFER_BTN_W = 64,     -- a row's Offer… button
+    ANNOUNCE_W  = 76,     -- a row's Announce button
+    POST_W      = 140,    -- Post my tradeables
+    OFFER_W     = 440,    -- the Offer panel
+    OFFER_HEAD_H = 92,    -- its title, item header and column labels
+    OFFER_FOOT_H = 32,    -- its Announce to group strip
+    OFFER_ROW_H = 26,     -- one candidate
+    PILL_W      = 96,     -- a status pill
+    PANEL_BTN_W = 52,     -- a candidate's Offer or Trade button
+    DOCK_GAP    = 4,      -- between the window and the docked panel
     -- Where a fresh profile, and Reset position, put the window.
     POINT       = { "CENTER", "CENTER", 0, 0 },
 }

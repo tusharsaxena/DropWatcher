@@ -13,6 +13,8 @@ local _, NS = ...
 --     kind    "ask" | "offer" | "announce"
 --     target  a member's GUID, "Name-Realm" or bare name (the looter for an ask, the candidate for
 --             an offer); ignored for an announce, whose registry target is "group"
+--     dropID  the drop's id; Post my tradeables (DW-33, NS.PostTradeables) files each of its lines
+--             under a key of its own instead, `post:<n>:<i>`, which names no drop (no token context)
 --     opts    { text = edited text (the edit-first popup), ctx = token overrides }
 --     state   "sent" | "queued" | "failed" | "refused"; reason says why for the last two
 --

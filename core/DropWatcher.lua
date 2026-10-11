@@ -302,6 +302,116 @@ function NS.TradeWithLooter(dropID)
     return ok, reason
 end
 
+-- Why an offer or an announce was not sent, in words (modules/Asks.lua's refusal reasons).
+local SEND_REFUSAL = {
+    offer = { alreadyAsked = NS.L["You already offered it to %s."], self = NS.L["You cannot offer it to yourself."],
+        noTarget = NS.L["That member is not known."] },
+    announce = { alreadyAsked = NS.L["You already announced it."], noDrop = NS.L["That drop is gone."],
+        noChannel = NS.L["You are not in a group, so there is no channel to post in."],
+        noApi = NS.L["This client cannot send chat."] },
+}
+
+local function sendRefusal(kind, reason, who)
+    local why = SEND_REFUSAL[kind][reason] or ASK_REFUSAL[reason]
+    return why and why:format(who or "?") or tostring(reason)
+end
+
+-- One of your drops by id, or nil.
+local function mineOf(dropID)
+    local rec = dropID ~= nil and NS.LootFeed.Get(dropID) or nil
+    return rec and rec.isMine and rec or nil
+end
+
+--- Offer one of your drops to a member (design spec §9.2, §11.4): the Offer panel's Offer button,
+--- through the messaging edge's Press, so a queued offer is canceled by a second click. A refusal is
+--- said in chat. Refused while stood down.
+--- @param dropID number
+--- @param target string the member's "Name-Realm", name or GUID
+--- @return string state, string|nil reason (as NS.Asks.Press)
+function NS.PressOffer(dropID, target)
+    local state, reason
+    if NS.IsStoodDown() then
+        state, reason = "refused", "disabled"
+    elseif not mineOf(dropID) then
+        state, reason = "refused", "noDrop"
+    else
+        state, reason = NS.Asks.Press("offer", target, dropID)
+    end
+    if state == "refused" then
+        NS.Print(NS.L["Not offered: %s"]:format(sendRefusal("offer", reason, target)))
+    end
+    return state, reason
+end
+
+--- Announce one of your drops to the group (design spec §9.2, §11.4): a My drops row's Announce and
+--- the Offer panel's Announce to group, through the messaging edge's Press. A refusal is said in
+--- chat. Refused while stood down.
+--- @param dropID number
+--- @return string state, string|nil reason (as NS.Asks.Press)
+function NS.PressAnnounce(dropID)
+    local state, reason
+    if NS.IsStoodDown() then
+        state, reason = "refused", "disabled"
+    elseif not mineOf(dropID) then
+        state, reason = "refused", "noDrop"
+    else
+        state, reason = NS.Asks.Press("announce", nil, dropID)
+    end
+    if state == "refused" then
+        NS.Print(NS.L["Not announced: %s"]:format(sendRefusal("announce", reason)))
+    end
+    return state, reason
+end
+
+--- Hand one of your drops to a member (design spec §11.4, AskFlow B4): the Offer panel's Trade
+--- button, through the trade helper's Give and its guards. A refusal is said in chat.
+--- @param dropID number
+--- @param target string the member's "Name-Realm", name or GUID
+--- @return boolean ok, string|nil reason (as NS.TradeHelper.Give)
+function NS.GiveDrop(dropID, target)
+    local ok, reason = NS.TradeHelper.Give(dropID, target)
+    if not ok then
+        NS.Print(NS.L["No trade: %s"]:format(NS.TradeHelper.ReasonText(reason) or tostring(reason)))
+    end
+    return ok, reason
+end
+
+local postSeq = 0   -- each Post my tradeables files its lines under a key of its own
+
+--- Post my tradeables (design spec §11.4): one announce listing every drop of yours you can still
+--- trade (in the feed on show), cut at the chat limit into several lines, each sent as an announce
+--- through the messaging edge (queued under a restriction, printed in test mode).
+--- @return number lines posted (sent or queued)
+function NS.PostTradeables()
+    local L = NS.L
+    if NS.IsStoodDown() then
+        NS.Print(NS.SlashCommands:DisabledLine())
+        return 0
+    end
+    local links = {}
+    local feed = NS.State.testMode == true and "test" or "live"
+    for _, d in ipairs(NS.LootFeed.Drops(feed)) do
+        if NS.WindowFilterBar.IsTradeableMine(d) then links[#links + 1] = d.link end
+    end
+    local lines = NS.MineCells.PostLines(links)
+    if #lines == 0 then
+        NS.Print(L["Nothing to post: none of your drops can be traded now."])
+        return 0
+    end
+    postSeq = postSeq + 1
+    local posted = 0
+    for i, text in ipairs(lines) do
+        local state, reason = NS.Asks.Request("announce", nil, ("post:%d:%d"):format(postSeq, i), { text = text })
+        if state == "sent" or state == "queued" then
+            posted = posted + 1
+        else
+            NS.Print(L["Not announced: %s"]:format(sendRefusal("announce", reason)))
+        end
+    end
+    NS.Debug("UI", "post my tradeables: %d of %d lines", posted, #lines)
+    return posted
+end
+
 --- Turn the Group drops table's compact preset on or off (design spec §11.1): `window.compact`,
 --- through the write seam once the Window page's row exists (DW-40), until then onto the profile
 --- path the table reads. `/dw compact` (DW-42) shares it.

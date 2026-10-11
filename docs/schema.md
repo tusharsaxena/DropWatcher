@@ -62,6 +62,8 @@ Settings Schema names (architecture-§5).
 `NS.State.windowFilters` (the filter bar's state per tab, seeded from `feed.view`, `feed.content`,
 `feed.sort` and `trade.likelyOnly` when they hold a valid value),
 `NS.State.windowGroup` (the Group drops table's collapsed groups, dismissed rows and the row whose detail card is open),
+`NS.State.windowMine` (the My drops tab's hidden rows and the upgrades whose candidates you chose to see),
+`NS.State.offerPanel` (the drop the Offer panel shows),
 `NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
 came from; nil while stood down). The Debug console
 and Test mode rows are `sessionOnly` and store through their own closures.

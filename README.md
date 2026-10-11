@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-660%2F660_passing-green)
+![Tests](https://img.shields.io/badge/Tests-689%2F689_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -52,6 +52,18 @@ trade estimate in a sentence, with the rule behind it and how fresh the data is.
 looter, let you edit the message before it goes, link the item in chat, inspect the looter again,
 open a trade with them (grayed, with the reason, when they are out of range or you are in combat),
 and hide the item.
+
+**My drops** lists your own loot: the item, its item level, whether it is an upgrade for you (an
+upgrade asks **keep?**, and nobody is offered it unless you choose to), the time left to trade it on
+a bar that shortens (read from the item itself once it is in your bags, and bold when ten minutes
+are left), and the group members it would help most. **Announce** posts your announce template to
+the group. **Offer…** opens the **Who could use this?** panel beside the window: every member
+ranked by how much they would gain, with a status pill (`+14 UPGRADE`, `EQUAL`, `NO UPGRADE`,
+`CAN'T USE`, `CHECKING…`), an **Offer** button that whispers them your offer template and a
+**Trade** button that opens the trade window with the item already placed (grayed, with the reason,
+when they are out of range or you are in combat). Under the rows, a line counts your tradeable
+drops and the next one to run out, and **Post my tradeables** posts them all in one line to the
+group.
 
 Test mode fills the window with placeholder content so you can see it and place it before a real
 drop arrives. `/dw test` turns it on and off, and so does the **Test mode** box. Entering combat ends

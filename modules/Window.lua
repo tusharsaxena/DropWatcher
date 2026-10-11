@@ -18,7 +18,9 @@ local addonName, NS = ...
 -- with no body yet shows a line saying what it will hold, so the window is never blank.
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
--- DropAdded, DropUpdated, InspectDone) and on its own footer ticker while shown; it reads records
+-- DropAdded, DropUpdated, InspectDone, and TradeTimerTick / TradeTimerExpiring while the My drops
+-- tab or the Offer panel shows a countdown) and on its own footer ticker while shown (which also
+-- moves the My drops tab's estimated countdowns); it reads records
 -- through the engine's read-only accessors and never calls an engine action. A button's action goes
 -- through the host handler its slash verb shares (NS.ScanGroup, NS.SetQualityMode,
 -- core/DropWatcher.lua).
@@ -250,6 +252,21 @@ local function repaintFooter()
     if frame and frame:IsShown() and not isMinimized() and NS.WindowFooter then NS.WindowFooter.Refresh() end
 end
 
+-- Whether a countdown is on screen: the My drops tab, or the Offer panel.
+local function showsCountdown()
+    return activeTab == "mine" or (NS.OfferPanel ~= nil and NS.OfferPanel.IsShown())
+end
+
+-- A countdown moved: the whole window repaints while one is on screen, else nothing.
+local function repaintCountdown()
+    if frame and frame:IsShown() and not isMinimized() and showsCountdown() then Window.Refresh() end
+end
+
+-- The footer ticker: the footer's ages, and the countdowns while one is on screen.
+local function tick()
+    if showsCountdown() then repaintCountdown() else repaintFooter() end
+end
+
 local function stopTicker()
     if footerTicker then footerTicker:Cancel() end
     footerTicker = nil
@@ -259,7 +276,7 @@ end
 -- window is on screen.
 local function startTicker()
     if footerTicker or isMinimized() or not (frame and frame:IsShown()) then return end
-    footerTicker = C_Timer.NewTicker(K.FOOTER_TICK, repaintFooter)
+    footerTicker = C_Timer.NewTicker(K.FOOTER_TICK, tick)
 end
 
 -- ── construction: the title bar ─────────────────────────────────────────────────────────────
@@ -641,6 +658,8 @@ function Window.Refresh()
         NS.WindowFilterBar.Sync(activeTab)
         NS.WindowFooter.Refresh()
         refreshActive()
+        -- The Offer panel docks beside the window and repaints with it (modules/OfferPanel.lua).
+        if NS.OfferPanel then NS.OfferPanel.Refresh() end
     end
     if t0 then Perf.Note("window.refresh", debugprofilestop() - t0) end
 end
@@ -882,6 +901,9 @@ local function listen()
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() repaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)
+    -- The My drops tab's and the Offer panel's countdowns (modules/TradeTimer.lua).
+    target:RegisterMessage(M.TRADE_TIMER_TICK, function() repaintCountdown() end)
+    target:RegisterMessage(M.TRADE_TIMER_EXPIRING, function() repaintCountdown() end)
 end
 listen()
 

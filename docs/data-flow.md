@@ -35,7 +35,9 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
                                └─> shown: tabs (`My drops · n`), filter bar, footer, active body
 DropUpdated ───────────────> shown: the same repaint
 InspectDone ───────────────> shown: the footer's inspect freshness
-footer ticker (5s) ────────> shown and expanded: the footer ("Last loot 12s ago")
+TradeTimerTick / Expiring ─> shown, My drops or the Offer panel on screen: the whole repaint
+footer ticker (5s) ────────> shown and expanded: the footer ("Last loot 12s ago"); the whole
+                             repaint instead while My drops or the Offer panel is on screen
 filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
@@ -86,6 +88,35 @@ Retry inspect ─> NS.RetryInspect(id) ─> NS.Inspect.Request(looter guid, PRIO
                    ─> InspectDone ─> LootFeed re-judges ─> DropUpdated ─> repaint
 Trade ─────────> NS.TradeWithLooter(id) ─> NS.TradeHelper.Open(looter) (its guards; a refusal printed)
 Hide this item ─> WindowGroup.Dismiss(id) ─> State.windowGroup.dismissed, expanded cleared ─> repaint
+```
+
+## Today: the My drops tab and the Offer panel
+
+```
+Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
+  ├─> WindowGroup.Layout(WindowMine.COLUMNS, the rows' width)              (pure)
+  ├─> WindowMine.Entries(NS.LootFeed.Drops(feed), ctx, NS.State.windowMine) (pure: your own drops,
+  │                                                                           filtered, sorted)
+  ├─> NS.Pool.ReleaseAll(rows) ─> Acquire in order (each row built once)
+  ├─> each row: WindowCells.Item / Ilvl, MineCells.ForMe / TradeWindow(drop, now, TradeTimer.WarnAt())
+  │             / BestCandidates(drop, revealed) / Actions(drop, best, AnnounceButton(…))
+  │               reads: NS.Asks.StateOf("announce", nil, id)
+  └─> MineCells.Summary(rows, now) ─> the summary strip; Post my tradeables enabled when any
+  └─> then OfferPanel.Refresh() (open: its drop, else nothing)
+        ├─> MineCells.DockSide(window left, right, panel width, screen width)   (pure)
+        ├─> MineCells.PanelHeader(drop, now, warnAt), MineCells.Candidates(drop)   (pure)
+        └─> each candidate: MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)),
+                            MineCells.TradeButton(NS.TradeHelper.CanGive(id, member))
+
+Offer… ────────────> OfferPanel.Open(id) ─> State.offerPanel.dropId, WindowMine.Reveal(id) ─> repaint
+Announce ──────────> NS.PressAnnounce(id) ─> NS.Asks.Press("announce", nil, id) ─> AskStateChanged
+Hide ──────────────> WindowMine.Dismiss(id) ─> State.windowMine.dismissed ─> repaint
+Post my tradeables ─> NS.PostTradeables() ─> MineCells.PostLines(your tradeable links)
+                        ─> NS.Asks.Request("announce", nil, "post:<n>:<i>", { text }) per line
+panel Offer ───────> NS.PressOffer(id, member) ─> NS.Asks.Press("offer", member, id) ─> AskStateChanged
+panel Trade ───────> NS.GiveDrop(id, member) ─> NS.TradeHelper.Give (its guards; a refusal printed)
+Announce to group ─> NS.PressAnnounce(id)
+close mark ────────> OfferPanel.Close() ─> State.offerPanel = nil
 ```
 
 ## Today: enable and disable
