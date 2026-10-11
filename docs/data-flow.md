@@ -103,7 +103,7 @@ no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(tru
 
 ```
 Master controls checkbox ─┐
-launcher menu entry ──────┼─> NS.SetTestMode(on) (refused stood down or in combat)
+launcher menu entry ──────┼─> NS.SetTestMode(on) (refused stood down, in combat or while a simulation runs)
 /dw test, Preview button ─┘     ├─> on:  TestMode.Populate()
                                 │          ├─> LootFeed.Clear("test")
                                 │          ├─> TestMode.Placeholders(GetTime(), you)      (pure)
@@ -119,6 +119,33 @@ Ask, Offer, Announce, Post my tradeables on a placeholder ─> NS.Asks ─> prin
 A placeholder is never judged, re-estimated or inspected: its verdicts, trade, inspect entry
 (`testInspect`) and ask state (`testAsk`) are the data's. The ask state shows only while the
 messaging edge holds none for it, so a click on Ask moves it like a live row's.
+
+## The simulator (simulator spec §1, §2, §5)
+
+```
+NS.Sim.Start(opts) ─> refused (printed): stood down, already running, test mode, combat,
+                      an instance, a real group (the real world read through NS.Sim.Live)
+                  └─> State.sim = { sim = true, … }; NS.Sim.active = true
+every NS.Compat call ─> core/SimSeam.lua's wrap ─> NS.Sim.Answer(name, live, …) while active
+                          ├─> a provider (the simulator's invented answer, else the live member)
+                          └─> guarded: ChatSender prints "[sim] …"; inspect and trade calls do nothing
+NS.Sim.Fire(event, …) ─> every handler NS.FEATURE_EVENTS declares for it, in row order
+NS.Sim.SetRestriction(name, on) ─> answered active ─> Fire(ADDON_RESTRICTION_STATE_CHANGED, type, on)
+NS.Sim.SetLockdown(on) ─> InChatMessagingLockdown answered ─> NS.Restrictions.Refresh
+DropAdded of a drop made while active (rec.sim) ─> History.Log() = the session log, never global.history
+NS.Sim.Stop(reason) ─> its timers canceled ─> NS.Asks.CancelQueued (seam still on)
+                   ─> NS.Sim.active = false ─> the cleanup steps ─> its restrictions lifted (event)
+                   ─> its drops' automatic asks ─> LootFeed.RemoveWhere(sim, context reset)
+                   ─> Inspect.Forget(its GUIDs) ─> Roster.Refresh ─> History.ReleaseLog
+                   ─> TradeTimer.Scan ─> Situations.Refresh ─> the open window repainted
+GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA ─> OnSimWorldEvent (first)
+                   ─> a real group or an instance ─> Stop("group" | "instance")
+NS.StandDown ─> Sim's stand-down row (first) ─> Stop("standDown")
+```
+
+The simulator never writes a verdict, a trade estimate or an inspect state: what it invents enters
+at the client seam and through the event handlers, and the engine computes the rest. Test mode and
+the simulator are exclusive: each refuses while the other is on.
 
 ## The detail card
 

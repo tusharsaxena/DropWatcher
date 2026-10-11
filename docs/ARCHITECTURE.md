@@ -42,17 +42,20 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Sixty-six authored files load from the TOC, in the standard's folder order; every one, its kind,
+Sixty-eight authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
   seam (`Compat.lua`, the only caller of version-variant, deprecated and optional client APIs, with
-  its pure text parsers in `TextParse.lua`), the
+  its pure text parsers in `TextParse.lua`, and the simulator's answer seam over it in
+  `SimSeam.lua`, which wraps every member that answers for the client), the
   game-data tables (`Constants.lua`, `ClassData.lua`), the session state, the addon object and its
   lifecycle (`DropWatcher.lua`, which also holds the host handlers every surface shares), and the
   migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
+- `modules/`, the simulator's session first (`Sim.lua`: start, stop and its cleanup, the refusals,
+  the automatic stop, the event delivery and the session-only history log; simulator spec §1, §5).
 - `modules/`, the engine: five pure kernels (`Evaluate.lua` the verdict, `QualityGate.lua`,
   `TradeRules.lua` the trade estimate, `FeedFilter.lua` the feed's filters, `Messaging.lua` the
   templates and the one-ask guard) and the
@@ -118,7 +121,9 @@ upgrades whose candidates you chose to see (`NS.State.windowMine`) and the Offer
 time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once per
 account. `global.history.v` and `global.history.groups` are the history's own record, written by
 `modules/History.lua` alone (on a recorded drop, an outcome, a completed trade, the cap and Clear
-history); it never replaces `global.history` whole, since the cap row's value lives in it.
+history); it never replaces `global.history` whole, since the cap row's value lives in it. While a simulation
+runs, History writes the simulation's session-only log instead (`NS.Sim.HistoryLog`,
+`modules/Sim.lua`), never `global.history`, and the stop lets that log go (simulator spec §5).
 `global.minimap.minimapPos` is LibDBIcon's own
 write into the table the launcher hands it. The load pass is `NS:RunMigrations`
 (`core/Database.lua`), whose step 2 (`NS.RepairStoredSettings`) drops a stored value a row now
@@ -189,11 +194,11 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `PLAYER_REGEN_DISABLED` | `DW.OnCombatStart`, then `DW.OnInspectCombatEvent`, then `DW.OnToastCombatStart` (through `DW:OnSharedFeatureEvent`) | ends test mode; re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua`; then parks the inspect queue (`modules/Inspect.lua`); then, unless `toast.inCombat`, takes the toast on screen down and puts it back at the head of its queue (`modules/Toast.lua`) |
 | `PLAYER_REGEN_ENABLED` | `DW.OnCombatEnd`, then `DW.OnInspectCombatEvent`, then `DW.OnGearRegenEvent`, then `DW.OnToastCombatEnd` (the same) | re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua`; then resumes the inspect queue; then arms the gear rebuild a bag event deferred in combat (`modules/Gear.lua`); then shows the toast combat held (`modules/Toast.lua`) |
 | `ADDON_RESTRICTION_STATE_CHANGED` | `DW.OnRestrictionEvent` | records the type's state as a hint and re-reads the restrictions (`modules/Restrictions.lua`); sends `RestrictionChanged` on a change |
-| `PLAYER_ENTERING_WORLD` | `DW.OnSituationEvent`, then `DW.OnInspectWorldEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change; then, inside an instance, arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-62) ends auto-ask's encounter hold when no Encounter restriction is left in force, so a player who left mid-fight is not held for good, or, while it is still in force, lets its later lifting (`RestrictionChanged`) end the hold (`modules/AutoAsk.lua`) |
-| `ZONE_CHANGED_NEW_AREA` | `DW.OnSituationEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | the situation, as above; then auto-ask's encounter hold, as above |
+| `PLAYER_ENTERING_WORLD` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnInspectWorldEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | ends a running simulation when the real client is now inside an instance or in a group (`modules/Sim.lua`, read past the seam); then re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change; then, inside an instance, arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-62) ends auto-ask's encounter hold when no Encounter restriction is left in force, so a player who left mid-fight is not held for good, or, while it is still in force, lets its later lifting (`RestrictionChanged`) end the hold (`modules/AutoAsk.lua`) |
+| `ZONE_CHANGED_NEW_AREA` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop and the situation, as above; then auto-ask's encounter hold, as above |
 | `CHALLENGE_MODE_START` | `DW.OnSituationEvent`, then `DW.OnFeedRunStart` (through `DW:OnSharedFeatureEvent`) | the same (a keystone started); then opens the run's drop group (`modules/LootFeed.lua`) |
 | `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent` (the same) | the same (a keystone ended); then keeps the run's group open 120 seconds for the chest; then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`) |
-| `GROUP_ROSTER_UPDATE` | `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the same (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then `DW.OnAskRosterEvent` cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then `DW.OnAutoAskRosterEvent` cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
+| `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then `DW.OnAskRosterEvent` cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then `DW.OnAutoAskRosterEvent` cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |
@@ -235,6 +240,11 @@ item while the cursor holds another, so nothing of the player's is swapped away.
 `hooksecurefunc` (in `core/Compat.lua`), never by replacing it; it never inspects in combat or while
 Blizzard's inspect window is open, and calls `ClearInspectPlayer` only for an inspect it started
 and nobody took over, so another addon's or the player's inspect is never cleared under them.
+While a simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`core/SimSeam.lua`)
+keeps the chat sender, the inspect calls, the trade actions and `ClearCursor` from the client
+altogether: a send is printed with `[sim]`, a hand-over is printed, and nothing is inspected,
+picked up or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
+simulated restrictions, so nothing it queued can reach the real sender.
 The addon's two confirmations, Clear history (`modules/WindowHistory.lua`) and Reset all settings
 (`settings/Schema.lua`), set `preferredIndex = 3`, so neither shares a StaticPopup slot with
 Blizzard's own dialogs (DW-62).
@@ -270,6 +280,9 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
   and filed when the owner lifts the hold on GitHub writes.
 - **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
   headless mock does not model; PROFILE-1 is its in-game check.
+- **The simulator** (milestone M7) has its core only: the session, the seam, its safety and the
+  session-only history log. No `/dw sim` verb starts it yet, and it invents no roster, item pool,
+  loot or encounter until DW-71..73 land.
 - **The logo** is a placeholder generated for the scaffold; the owner may replace the art
   (regenerate the TGAs with the recipe in `DEPENDENCIES.md`).
 

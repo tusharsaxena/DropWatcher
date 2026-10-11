@@ -47,6 +47,10 @@ core\TextParse.lua
 # Conventional: NS.Compat (every version-variant client call and the secret guards) is read inside
 # functions only; it needs LibStub and NS.TextParse (above) at load.
 core\Compat.lua
+# LOAD-BEARING: publishes NS.Sim (the simulator's answer seam) and wraps every NS.Compat member that
+# answers for the client, at load, right after core\Compat.lua and before any file below reads one.
+# It needs NS.Compat (above), NS.Print and NS.L (above) at load.
+core\SimSeam.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
 # LOAD-BEARING: publishes the NS.Constants id tables, which core\ClassData.lua reads at load; FONT_MONO
@@ -92,6 +96,13 @@ core\LauncherSetup.lua
 defaults\Profile.lua
 
 # Modules
+# LOAD-BEARING: publishes the simulator's session on NS.Sim (core\SimSeam.lua, above). It is the first
+# module so its GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows run before
+# every other module's (the automatic stop, before anything reads the client) and its STAND_DOWN
+# step runs first (the stop cleans up while every module still holds its state). Appends to
+# NS.FEATURE_EVENTS and NS.STAND_DOWN and its handler to NS.addon (core\DropWatcher.lua) at load;
+# every module below is read at call time.
+modules\Sim.lua
 # Conventional: publishes NS.Evaluate, the pure verdict kernel; read by the feature modules at call
 # time only, and itself reads NS.Constants and NS.ClassData (core\, above) at load.
 modules\Evaluate.lua

@@ -190,3 +190,21 @@ L["Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or m
     "Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or more item levels for you, your ask template is whispered to them %d seconds after the boss kill or the drop."
 L["It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."] =
     "It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."
+
+-- The simulator (core/SimSeam.lua, modules/Sim.lua, simulator spec §5): the printed sends and
+-- hand-overs, the refusals, start and stop
+L["A simulation cannot start in a group: leave it first."] = "A simulation cannot start in a group: leave it first."
+L["A simulation cannot start in combat."] = "A simulation cannot start in combat."
+L["A simulation cannot start inside an instance."] = "A simulation cannot start inside an instance."
+L["A simulation is already running."] = "A simulation is already running."
+L["Simulation started (%s): nothing is sent, and your saved history is not touched."] = "Simulation started (%s): nothing is sent, and your saved history is not touched."
+L["Simulation stopped."] = "Simulation stopped."
+L["Simulation stopped: the addon was disabled."] = "Simulation stopped: the addon was disabled."
+L["Simulation stopped: you entered an instance."] = "Simulation stopped: you entered an instance."
+L["Simulation stopped: you joined a group."] = "Simulation stopped: you joined a group."
+L["Test mode is not available while a simulation runs."] = "Test mode is not available while a simulation runs."
+L["Turn test mode off before starting a simulation."] = "Turn test mode off before starting a simulation."
+L["[sim] %s to %s: %s"] = "[sim] %s to %s: %s"
+L["[sim] %s: %s"] = "[sim] %s: %s"
+L["[sim] Would hand the item to %s."] = "[sim] Would hand the item to %s."
+L["[sim] Would open a trade with %s."] = "[sim] Would open a trade with %s."

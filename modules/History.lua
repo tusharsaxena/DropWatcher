@@ -17,6 +17,11 @@ local _, NS = ...
 -- THE CAP (spec §10). At most `global.history.maxGroups` groups (default 20, read through
 -- NS.Setting), the oldest dropped first, and MAX_DROPS (50) drops per group, the oldest first.
 --
+-- THE SIMULATOR (simulator spec §5). While a simulation runs, the log is the simulation's own
+-- session-only log (NS.Sim.HistoryLog, modules/Sim.lua), never `global.history`: Log() answers it,
+-- the History tab shows it, and a simulated drop (`rec.sim`) is never recorded anywhere else. The
+-- stop lets it go (ReleaseLog) and the tab shows the account's log again.
+--
 -- RECORDING. A live drop's DropAdded records it (a test drop never is) under its feed group, keyed
 -- by the group's key and this session's start, so a group of an earlier session never collects
 -- today's drops. DropUpdated refreshes its verdicts and trade estimate; a trade estimate that
@@ -109,7 +114,7 @@ function H.Snapshot(rec, now)
     local e = {
         itemLink = rec.link, itemID = itemIDOf(rec), looter = who.name, class = who.classFile,
         isMine = rec.isMine == true or nil, ilvl = num(facts.ilvl), equipLoc = facts.equipLoc,
-        quality = num(facts.quality), outcome = "seen", at = now,
+        quality = num(facts.quality), outcome = "seen", at = now, sim = rec.sim == true or nil,
     }
     H.Refresh(e, rec)
     return e
@@ -303,6 +308,25 @@ function H.Store()
     return H.Normalize(g.history)
 end
 
+--- The log being written: the simulation's session-only log while one runs (simulator spec §5),
+--- else the account's (H.Store). Nil before the database exists.
+--- @return table|nil
+function H.Log()
+    local log = NS.Sim.active and NS.Sim.HistoryLog()
+    if log then return H.Normalize(log) end
+    return H.Store()
+end
+
+--- A stopped simulation's log let go: every entry leaves the session index, and the History tab
+--- reads the account's log again (HistoryChanged).
+--- @param log table|nil
+function H.ReleaseLog(log)
+    if type(log) ~= "table" or type(log.groups) ~= "table" then return end
+    for _, g in ipairs(log.groups) do markGone(g) end
+    log.groups = {}
+    changed()
+end
+
 --- The cap in force: `global.history.maxGroups`, through the schema seam.
 --- @return number
 function H.Cap()
@@ -319,7 +343,7 @@ end
 --- The groups, oldest first (empty before the database exists). Read them, never write them.
 --- @return table
 function H.Groups()
-    local hist = H.Store()
+    local hist = H.Log()
     return hist and hist.groups or {}
 end
 
@@ -362,7 +386,9 @@ end
 function H.OnDropAdded(id)
     local rec = NS.LootFeed.Get(id)
     if not rec or rec.test or index[id] then return end
-    local hist = H.Store()
+    -- A simulated drop goes to the simulation's log only, never the account's.
+    if rec.sim and not NS.Sim.active then return end
+    local hist = H.Log()
     if not hist then return end
     index[id] = H.Record(hist, groupInfo(rec), H.Snapshot(rec, clock()), H.Cap())
     changed()
@@ -399,7 +425,7 @@ end
 
 --- Empty the history (the History tab's Clear history, behind its confirmation). The cap stays.
 function H.Clear()
-    local hist = H.Store()
+    local hist = H.Log()
     if not hist then return end
     for _, g in ipairs(hist.groups) do markGone(g) end
     hist.groups = {}
@@ -409,7 +435,7 @@ end
 
 --- Hold the stored log to the cap now (the cap row's change).
 function H.ApplyCap()
-    local hist = H.Store()
+    local hist = H.Log()
     if hist and H.Trim(hist, H.Cap()) > 0 then changed() end
 end
 
@@ -458,7 +484,7 @@ function H.OnTradeAccept(playerAccepted, targetAccepted)
 end
 
 local function settle(t)
-    local hist = H.Store()
+    local hist = H.Log()
     if not hist then return 0 end
     local n = 0
     for _, m in ipairs(H.MatchTrade(hist, t)) do

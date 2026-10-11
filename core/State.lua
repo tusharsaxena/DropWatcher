@@ -13,6 +13,11 @@ State.debug = false
 -- NS.SetTestMode (core/DropWatcher.lua).
 State.testMode = false
 
+-- The simulator's session (modules/Sim.lua, simulator spec §1, §5): nil while no simulation runs.
+-- Never saved: a /reload or a logout ends a simulation. NS.Sim.active (core/SimSeam.lua) says the
+-- same in one boolean, read on every Compat call.
+State.sim = nil
+
 -- Whether the player has the main window open this session. The window's own show decision
 -- (modules/Window.lua) combines it with the General visibility setting and the stand-down latch.
 State.windowOpen = false

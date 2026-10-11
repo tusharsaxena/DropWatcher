@@ -130,6 +130,7 @@ Kit.run{
         "test_history",
         "test_toast",
         "test_auto_ask",
+        "test_sim_core",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

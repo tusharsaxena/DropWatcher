@@ -77,7 +77,7 @@ per automatic ask canceled or dropped when due, with its reason), `UI` (one line
 tab, per minimize and expand, per auto-open with its situation, and per Group drops header
 collapsed or expanded, per row dismissed, and per detail card expanded or collapsed and per Retry
 inspect with the broker's answer; per My drops row hidden, per Offer panel opened with its drop,
-and per Post my tradeables with the lines posted; per toast queued, with the drop, how many wait and whether combat holds it, per toast shown and per toast held back for combat); `Set` also logs `window.compact` when the compact
+and per Post my tradeables with the lines posted; per toast queued, with the drop, how many wait and whether combat holds it, per toast shown and per toast held back for combat); `SIM` (one line per simulation started, with its scenario and situation, and per simulation stopped, with the reason, the events it delivered and the sends it printed; one per event it delivered; one per chat lockdown it turned on or off; one per cleanup step that raised); `Set` also logs `window.compact` when the compact
 preset is stored outside the seam. The
 libraries add their own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`.
 Every feature tag of design spec §13 is in use (`PARSE`, `FEED`, `EVAL`, `INSPECT`, `TRADE`, `MSG`,

@@ -467,6 +467,22 @@ function A.OnRosterChanged()
     return n
 end
 
+--- Cancel every queued ask, each told on the bus as `ready` with reason `why` (the simulator's
+--- stop: nothing it queued may go out once it has ended). Answers how many were canceled.
+--- @param why string
+--- @return number
+function A.CancelQueued(why)
+    local book, n = store().book, 0
+    for _, a in ipairs(A.Queued()) do
+        if M.Cancel(book, a.key) then
+            n = n + 1
+            NS.Debug(TAG, "canceled %s to %s, drop %s: %s", a.kind, a.target, tostring(a.dropID), tostring(why))
+            changed(a, "ready", why)
+        end
+    end
+    return n
+end
+
 -- ── diagnostics ─────────────────────────────────────────────────────────────────────────────
 
 --- Diagnostics: the registry by state ({ asks, ready, queued, sent, failed }) plus the edge's

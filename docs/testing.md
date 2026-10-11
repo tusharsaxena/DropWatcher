@@ -190,6 +190,15 @@ the drop pushing it back, each cancel rule (your own ask, the looter leaving, th
 received, a drop gone or no longer qualifying when due, turning it off, the stand-down), only drops
 from after it was turned on, the one-time notice, test mode printing instead of sending and the
 diagnostics lines),
+`test_sim_core` (the simulator's core: the seam wraps every Compat member that answers for the
+client and no pure one, a provider answers only while a simulation runs and a live read skips it,
+the guarded sender prints `[sim]` and never reaches the client (an ask through the real messaging
+edge included), no real inspect or trade, each refusal and the line it prints, test mode refused
+while one runs, an event delivered to the handlers its registration calls, the simulated Encounter
+restriction and lockdown, its timers, the session-only history log with saved history untouched,
+a stop that takes its drops, groups, inspect entries and restrictions and leaves a real drop, a
+queued ask canceled before the lift so it never goes out, the situation re-read, the automatic stop
+on joining a group or entering an instance, and the stand-down),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

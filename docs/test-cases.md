@@ -958,6 +958,30 @@ Total.
 - auto-ask edge: in test mode a placeholder's ask is printed, never sent
 - auto-ask: the diagnostics' messaging section reports auto-ask
 
+### test_sim_core.lua (21)
+
+- sim seam: every Compat member that answers for the client is wrapped; the pure ones are not
+- sim seam: a provider answers only while a simulation runs; Live reads the client again
+- sim seam: the sender prints [sim] with the channel and the target, and sends nothing
+- sim seam: an ask goes through the real messaging edge and is printed, never whispered
+- sim seam: no real inspect and no real trade while a simulation runs
+- sim start: refused while stood down, and it says which
+- sim start: refused while test mode is on, and it says which
+- sim start: refused in combat, and it says which
+- sim start: refused inside an instance, and it says which
+- sim start: refused in a real group, and it says which
+- sim start: a second start is refused; test mode is refused while one runs
+- sim fire: an event reaches the handlers its registration calls, with its payload
+- sim restrictions: Encounter and the lockdown are answered by the client seam and stop the sends
+- sim timers: run while the simulation does, and never after its stop
+- sim history: drops go to the session log, never to DropWatcherDB.global.history
+- sim stop: its drops, groups, inspect entries, restrictions and lockdown go; real drops stay
+- sim stop: a queued ask is canceled before the lift, so it never goes out
+- sim stop: the situation is classified from the real client again
+- sim auto-stop: joining a real group ends the simulation
+- sim auto-stop: entering an instance ends the simulation
+- sim stand-down: disabling the addon stops the simulation and leaves no timer
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -1098,6 +1122,7 @@ Total.
 | test_history.lua | 28 |
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
+| test_sim_core.lua | 21 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1107,4 +1132,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **909** |
+| **Total** | **930** |

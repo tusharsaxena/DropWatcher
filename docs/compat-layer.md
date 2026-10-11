@@ -110,6 +110,25 @@ and restriction checks are the trade helper's (`modules/TradeHelper.lua`), which
 from a click, and reads `InTradeRange` only once `NS.Restrictions.CanTrade()` has said the player
 is out of combat.
 
+## The simulator's seam
+
+`core/SimSeam.lua` loads right after this file (simulator spec §2, §5, DW-70). It names no client
+API and adds no shim, so the count above stands. At load it wraps every member here that answers
+for the client, which is every one but the secret guards and the pure text helpers (`IsSecret`,
+`CanAccess`, `IsSafeKey`, `FormatToPattern`, `DecodeDuration`, `ParseTradeTimeRemaining`,
+`ReadTooltipLine`, `IsRestrictionStateActive`). While `NS.Sim.active` is true, a wrapped call goes
+to `NS.Sim.Answer(name, live, ...)`. That answer comes from the simulator's provider for the member
+(`NS.Sim.SetProvider`), which may hand anything it does not invent back to the live member. Without
+a provider, the live member answers. With no simulation running, the wrap costs one boolean test.
+
+The **guarded** members never reach the client while a simulation runs, whatever a provider does:
+`ChatSender` hands out a sender that prints `[sim] <channel> to <target>: <text>` (nothing is
+whispered or posted), `NotifyInspect` and `ClearInspectPlayer` answer `true` with no call (a real
+player is never inspected), and `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade` and `ClearCursor`
+answer `true` with no call (no trade opens and nothing leaves the bags; the hand-over is printed).
+`NS.Sim.Live(fn)` runs `fn` with the ordinary members answering for the client again, which is how
+the simulator's own safety checks read the real world. `test_sim_core` holds all of this.
+
 ## The duration decoder
 
 The client writes a remaining time as unit terms joined by `TIME_UNIT_DELIMITER`, each term formatted

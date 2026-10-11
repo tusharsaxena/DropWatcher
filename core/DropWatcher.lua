@@ -105,7 +105,8 @@ end
 -- ── the shared host handlers ────────────────────────────────────────────────────────────────
 
 --- Turn test mode on or off (preview-mode). One handler for the Master controls checkbox, the
---- launcher entry and `/dw test`. Refused while stood down and while in combat, which also ends it.
+--- launcher entry and `/dw test`. Refused while stood down, in combat (which also ends it) and
+--- while a simulation runs (modules/Sim.lua).
 --- @param on boolean
 --- @return boolean changed
 -- Repaint any open settings page, so a checkbox follows a change another surface made.
@@ -118,6 +119,8 @@ end
 local function testModeRefusal()
     if NS.IsStoodDown() then return NS.SlashCommands:DisabledLine() end
     if InCombatLockdown() then return NS.L["Test mode is not available in combat."] end
+    -- The simulator and test mode are exclusive (simulator spec §1): placeholders are not the engine.
+    if NS.Sim.active then return NS.L["Test mode is not available while a simulation runs."] end
     return nil
 end
 

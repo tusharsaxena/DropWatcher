@@ -35,6 +35,7 @@ passed.
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
+| SIM-1..7 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); SIM-2..3 *reserved* for DW-73 (a full `key` run, a `raid` run with a large roster), SIM-4..5 *reserved* for DW-72 (the lockdown queue and its flush, a simulated trade into History), SIM-6 *reserved* for DW-71 (the journal fallback), SIM-7 *reserved* for DW-73 (the automatic stop end to end) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -839,6 +840,21 @@ known` (CanIMogIt's own tooltip agrees); without it → `source=C_TransmogCollec
 or mail drop on a plate character: whether the card says `New look` for a look your class cannot
 collect. Result:
 
+## Simulator
+
+**SIM-1. Start and stop, the refusals, nothing sent (DW-70).** Runs once `/dw sim` lands (DW-73);
+until then the headless `test_sim_core` covers it. Solo, outside an instance and out of combat:
+`/dw sim start dungeon` → chat says `Simulation started (…): nothing is sent, and your saved history
+is not touched.` Ask for a simulated drop → chat prints `[sim] WHISPER to <name>: <text>` and your
+whisper tab shows nothing sent. `/dw sim stop` → `Simulation stopped.`, the simulated drops leave the
+Group drops tab, and the History tab shows only your real history. Each refusal prints its own line:
+in a group (`… cannot start in a group: leave it first.`), inside an instance, in combat, with test
+mode on (`Turn test mode off before starting a simulation.`), and a second start while one runs.
+While one runs, `/dw test` → `Test mode is not available while a simulation runs.` Start one, then
+join a group → `Simulation stopped: you joined a group.`; start one, then `/dw disable` →
+`Simulation stopped: the addon was disabled.` After a `/reload`, no simulation is running and
+`/dw history` shows no simulated drop. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -902,3 +918,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | TMOG-1 | DW-53, the transmog-known flag and the For transmog ask | No client pass recorded yet |
 | ASK-8 | DW-54, auto-ask | No client pass recorded yet |
 | ASK-9 | DW-62, auto-ask after leaving an encounter | No client pass recorded yet |
+| SIM-1 | DW-70, the simulator's core: the seam, its safety and the session log | No client pass recorded yet |

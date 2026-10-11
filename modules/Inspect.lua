@@ -618,6 +618,22 @@ function I.ScheduleWarmup(cause)
     end)
 end
 
+--- Forget a member entirely: its entry, its queued job, its pending read, and its flight (the
+--- simulator's stop, for the members it invented). Answers whether anything was held.
+--- @param guid string
+--- @return boolean
+function I.Forget(guid)
+    local s = State.inspect
+    if not s or guid == nil then return false end
+    local held = s.entries[guid] ~= nil or findJob(guid) ~= nil
+    removeJob(guid)
+    if s.inFlight and s.inFlight.guid == guid then endFlight(s.inFlight); held = true; schedulePump(0) end
+    cancel(timers.reads[guid])
+    timers.reads[guid] = nil
+    s.entries[guid] = nil
+    return held
+end
+
 -- Drop the entries of members who left (nothing queued or in flight for them).
 local function prune()
     local s = store()

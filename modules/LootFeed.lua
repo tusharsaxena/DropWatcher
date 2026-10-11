@@ -7,7 +7,7 @@ local _, NS = ...
 --            isMine, at, situation, encounterID, groupKey, sources = { [source] = n }, source,
 --            facts, me, them, inspect = { status, reason, at } | nil, trade, quality = { mode,
 --            threshold, reason }, candidates = { [guid] = { guid, name, classFile, status, eval } },
---            test, scoreTries }
+--            test, sim (made while a simulation runs), scoreTries }
 --
 -- `facts` is the item facts cache's own table (read, never write); `me` and `them` are
 -- NS.Evaluate's answers for you and for the looter (`them` nil until the looter's inspect read
@@ -64,7 +64,7 @@ local _, NS = ...
 -- drops recorded so far are kept for the session, and the stand-up's GearChanged re-judges them.
 --
 -- REMOVAL. A drop leaves a feed only through Clear (`/dw clear`, clear on boss kill, the end of
--- test mode) or the cap's trim. Each tells the removal sinks (AddRemovalSink, the loot parser's
+-- test mode), RemoveWhere (the simulator's stop takes its `sim` drops) or the cap's trim. Each tells the removal sinks (AddRemovalSink, the loot parser's
 -- AddSink shape) with the feed's name, so a view of one drop (the toast) can let it go. A sink is
 -- called under pcall: its error never stops the feed.
 
@@ -509,8 +509,9 @@ local function feedOf(rec)
     return store()[rec.feed]
 end
 
-local function removeOldest(feed)
-    local rec = table.remove(feed.drops, 1)
+-- Remove feed.drops[at] and its place in its group; the group goes with its last drop.
+local function removeAt(feed, at)
+    local rec = table.remove(feed.drops, at)
     feed.byId[rec.id] = nil
     local g = feed.groupByKey[rec.groupKey]
     if not g then return end
@@ -524,7 +525,7 @@ local function removeOldest(feed)
     end
 end
 
---- Be told `fn(feedName)` whenever drops leave a feed: a Clear, or the cap's trim.
+--- Be told `fn(feedName)` whenever drops leave a feed: a Clear, a RemoveWhere, or the cap's trim.
 --- @param fn function
 function LF.AddRemovalSink(fn)
     removalSinks[#removalSinks + 1] = fn
@@ -547,7 +548,7 @@ local function add(rec)
     feed.drops[#feed.drops + 1] = rec
     feed.byId[rec.id] = rec
     local trimmed = #feed.drops > LF.MAX_DROPS
-    while #feed.drops > LF.MAX_DROPS do removeOldest(feed) end
+    while #feed.drops > LF.MAX_DROPS do removeAt(feed, 1) end
     if trimmed then notifyRemoved(rec.feed) end
     notePending(rec)
     if not rec.test then LF.ArmTradeSweep() end
@@ -611,7 +612,7 @@ local function newRecord(s, r)
         itemID = r.itemID, qty = r.qty or 1, kind = r.kind or "loot", bonusRoll = r.kind == "bonus",
         looter = r.looter, isMine = r.looter.isSelf == true, at = t, situation = NS.Situations.Current(),
         encounterID = r.encounterID, sources = { [r.source] = 1 }, source = r.source,
-        group = groupSpec(s, r.encounterID, t), state = "new",
+        group = groupSpec(s, r.encounterID, t), state = "new", sim = NS.Sim.active or nil,
     }
 end
 
@@ -768,6 +769,28 @@ function LF.Clear(name)
     s[which] = newFeed()
     NS.Debug(TAG, "feed cleared: %s", which)
     notifyRemoved(which)
+end
+
+--- Remove every live drop `pred(rec)` answers true for, from the feed and the dedupe window, then
+--- tell the removal sinks (the simulator's stop, which also resets the encounter and run context
+--- with `resetContext`). Answers how many drops left.
+--- @param pred function
+--- @param resetContext boolean|nil
+--- @return number
+function LF.RemoveWhere(pred, resetContext)
+    local s, n = store(), 0
+    for i = #s.live.drops, 1, -1 do
+        if pred(s.live.drops[i]) then removeAt(s.live, i); n = n + 1 end
+    end
+    local keep = {}
+    for _, rec in ipairs(s.recent) do
+        if not pred(rec) then keep[#keep + 1] = rec end
+    end
+    s.recent = keep
+    if resetContext then s.ctx = {} end
+    NS.Debug(TAG, "removed %d drops", n)
+    if n > 0 then notifyRemoved("live") end
+    return n
 end
 
 --- The counts the diagnostics report shows: { group, mine, test, groups, merged, hidden, loading,
