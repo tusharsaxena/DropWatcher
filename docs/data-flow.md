@@ -416,6 +416,20 @@ The History tab's body reads `NS.History.Groups()` (oldest first) through the pu
 into `time()` marks (`WindowHistory.Context`); each entry is painted with the Group drops table's
 cell composers over a drop-shaped copy (`WindowHistory.AsDrop`).
 
+## Today: the toast
+
+```
+DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet?
+    ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain, trade likely / yes
+    ─> queue (newest 5) ─> Pump: nothing on screen, not held (combat without toast.inCombat)
+    ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose, sound?
+    ─> C_Timer toast.duration (none for a test drop) ─> Dismiss ─> Pump
+hover ─> Pause (seconds left kept)      leave ─> Resume
+PLAYER_REGEN_DISABLED ─> the shown toast back to the queue's head   PLAYER_REGEN_ENABLED ─> Pump
+Ask ─> NS.PressAsk(id)    AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
+drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.ResetPosition
+```
+
 ## The design's loot pipeline (spec §3)
 
 ```

@@ -931,7 +931,8 @@ function Window.ApplySettings()
     Window.UpdateVisibility()
 end
 
---- Reset position: forget the stored point and size, and put the window back where it started.
+--- Reset position: forget the stored point and size, and put the window back where it started;
+--- the toast's saved position goes too (modules/Toast.lua).
 function Window.ResetPosition()
     local g = geometry()
     g.point, g.width, g.height = nil, nil, nil
@@ -939,6 +940,7 @@ function Window.ResetPosition()
         applySize()
         applyPoint()
     end
+    if NS.Toast then NS.Toast.ResetPosition() end
     NS.Print(L["window position reset"])
 end
 

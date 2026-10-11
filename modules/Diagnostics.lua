@@ -65,6 +65,10 @@ local function window(out)
     out:joined(TAG, "window: point", point)
     out:add(TAG, "window: size=%sx%s", g.width or "default", g.height or "default")
     out:add(TAG, "window: tab=%s minimized=%s new=%s", read(W.ActiveTab), g.minimized == true, read(W.NewCount))
+    local t = NS.Toast.Stats()
+    out:add(TAG, "toast: enabled=%s built=%s shown=%s drop=%s waiting=%s held=%s", NS.Setting("toast.enabled"),
+        t.built, t.shown, t.dropId or "none", t.waiting, t.held)
+    out:joined(TAG, "toast: point", type(t.point) == "table" and t.point or { "default" })
 end
 
 -- Where the addon thinks the player is, the inputs it read and that situation's settings

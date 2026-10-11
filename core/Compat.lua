@@ -27,7 +27,8 @@ local _, NS = ...
 --     UnitName("NPC")) for the history's trade completion, and a row's context menu (MenuUtil);
 --   * the drop tables' item buttons and class colors (C_Item.GetItemIconByID, C_ClassColor and
 --     RAID_CLASS_COLORS, the chat link and the dressing room), and a spec's name for the detail
---     card (GetSpecializationInfoByID).
+--     card (GetSpecializationInfoByID);
+--   * the toast's alert sound (PlaySound with a SOUNDKIT entry).
 --
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -1036,4 +1037,15 @@ function Compat.SpecName(specID)
     local _, name = fn(specID)
     if Compat.IsSecret(name) or type(name) ~= "string" or name == "" then return nil end
     return name
+end
+
+--- Plays the toast's alert (design spec §11.5) through PlaySound, from SOUNDKIT: the epic loot
+--- toast's sound, else the raid warning's. False when the API or both entries are absent.
+--- @return boolean
+function Compat.PlayAlertSound()
+    local kit = type(SOUNDKIT) == "table" and SOUNDKIT or nil
+    local id = kit and (kit.UI_EPICLOOT_TOAST or kit.RAID_WARNING)
+    if type(id) ~= "number" or not PlaySound then return false end
+    PlaySound(id, "Master")
+    return true
 end

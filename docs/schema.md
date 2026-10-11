@@ -91,7 +91,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `window.columns.<col>` | `true` | Columns | `false` hides that Group drops column (`ilvl`, `slot`, `looter`, `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
 | `window.compact` | `false` | Layout; `NS.SetCompact`, `/dw compact` (DW-42) | the compact preset: Item and looter, Ilvl, Their eq, Me, Ask |
 | `window.rowHeight`, `window.fontSize` | `24`, `12` | Layout | the Group drops table's row height and text size (WindowGroup, at each repaint) |
-| `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (read from DW-52) |
+| `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
 
 ### Named state (no row)
@@ -101,10 +101,11 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `window.point` | absent | a drag; Reset position clears it | `{ point, relativePoint, x, y }` |
 | `window.width`, `window.height` | absent | a resize; Reset position clears them | the window's size |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
+| `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }` |
 
 Their one owner is `modules/Window.lua` (`savePoint`, `saveSize`, `Window.SetMinimized`,
 `Window.ResetPosition`), as `docs/ARCHITECTURE.md` → Settings Schema names (architecture-§5).
-The toast's position (design spec §11.5) joins them with the toast (DW-52).
+The toast's position (design spec §11.5) is named state too: `toast.point` (`{ point, relativePoint, x, y }`, absent until a drag), written by `modules/Toast.lua` alone, from a drag that only test mode allows; the Window's Reset position forgets it with the window's.
 
 ## `DropWatcherDB.global`
 

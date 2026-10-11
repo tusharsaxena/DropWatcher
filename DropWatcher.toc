@@ -228,6 +228,13 @@ modules\WindowHistory.lua
 # NS.L at load. NS.LootFeed, NS.WindowFilterBar, NS.Inspect (above) are read at call time;
 # core\DropWatcher.lua's NS.SetTestMode calls Populate and Clear.
 modules\TestMode.lua
+# Conventional: publishes NS.Toast, the opt-in upgrade toast; appends its PLAYER_REGEN rows (after
+# core\DropWatcher.lua's and modules\Inspect.lua's) to NS.FEATURE_EVENTS and its STAND_DOWN /
+# STAND_UP steps and handlers to NS.addon at load, and registers its DropAdded, DropUpdated and
+# AskStateChanged receivers on a NS.Bus target at load. NS.LootFeed, NS.Asks, NS.Window,
+# NS.WindowGroup, NS.WindowCells, NS.Setting and the host handlers are read at call time: the frame
+# is built on the first toast.
+modules\Toast.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

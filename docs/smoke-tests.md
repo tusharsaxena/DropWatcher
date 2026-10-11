@@ -33,6 +33,7 @@ passed.
 | QUAL-1..4 | Quality | The minimum-quality gate (lands with DW-12) |
 | SCORE-1..2 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50 |
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
+| TOAST-1 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52 |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
 ## Before you start
@@ -755,6 +756,20 @@ Layout › Groups kept in history to 1 → the tab keeps only the newest group a
 a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
 reads `History cleared.` Result:
 
+## Toast
+
+**TOAST-1. The upgrade toast.** Settings › Window › Toast › Show a toast on, then `/dw test` → a
+toast under the top of the screen reads `Big upgrade for you`, `Placeholder Crown` and `Looted by
+Seta · +19 ▲ · Likely tradeable`, with an Ask button and a close mark; it stays while test mode is
+on. Drag it somewhere else, `/dw test` off (it goes), `/reload`, `/dw test` → it comes back where you
+left it. Outside test mode it cannot be dragged. Window › Layout › Reset position → back under the
+top. With Play a sound on, each toast plays the epic loot sound. In a dungeon with a group member,
+when a drop of theirs is a 10+ item-level upgrade for you and likely tradeable → the toast shows
+once, goes after 8 seconds, and stays while the pointer is over it (it then has the seconds it had
+left); press Ask → the button reads `Queued` or `Asked` and the whisper goes as from the row. A
+second qualifying drop waits until the first goes. Pull a mob while one is due → nothing shows in
+combat, and it shows when combat ends; with Show in combat on, it shows at once. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -797,3 +812,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | PANEL-7 | DW-40 / DW-41 review, the rows that act | No client pass recorded yet |
 | SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
+| TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |

@@ -63,6 +63,7 @@
 --                  IsControlKeyDown; chatLinks and dressUps record ChatEdit_InsertLink and
 --                  DressUpItemLink; tooltipLinks every GameTooltip:SetHyperlink (the drop tables);
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
+--   SOUNDKIT, sounds  the alert sound's SOUNDKIT entries; sounds records every PlaySound(id, channel)
 --   tradeItems     the open trade window: tradeItems.player[i] / tradeItems.target[i] are
 --                  GetTradePlayerItemLink(i) / GetTradeTargetItemLink(i); units.NPC is the partner
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
@@ -72,11 +73,12 @@
 local base = dofile("tests/_kit/mock_base.lua")
 
 local WINDOW_NAME = "DropWatcherWindow"
+local TOAST_NAME = "DropWatcherToast"
 
 -- The main window and every frame built inside it, recorded (modules/Window.lua and the tabs it
 -- hosts): the kit's frame answers every unmodeled getter with the frame itself, so "the window went
 -- back to where it started" or "the badge reads `Encounter · 2 queued`" could not fail without this.
--- A frame is decorated when it is the window, or when its parent is decorated (`__dwTree`), so the
+-- A frame is decorated when it is the window or the toast, or when its parent is decorated (`__dwTree`), so the
 -- whole tree is, and nothing outside it changes.
 
 -- Text, color, font, texture and check state, recorded on any widget or region of the tree (a font
@@ -140,6 +142,8 @@ local function decorateGeometry(M, f)
     f.GetScale = function(self) return self.__scale or 1 end
     f.SetAlpha = function(self, a) self.__alpha = a; return self end
     f.GetAlpha = function(self) return self.__alpha or 1 end
+    -- The pointer: a case sets `__mouseOver` on a frame (the toast's hover pause).
+    f.IsMouseOver = function(self) return self.__mouseOver == true end
     decorateText(f)
     return f
 end
@@ -562,6 +566,14 @@ local function installTrade(M)
     M.GetTradeTargetItemLink = function(i) return M.tradeItems.target[i] end
 end
 
+-- The toast's alert (core/Compat.lua's PlayAlertSound): SOUNDKIT's two entries it reads, and every
+-- PlaySound(id, channel) call recorded in `sounds`.
+local function installSound(M)
+    M.SOUNDKIT = { UI_EPICLOOT_TOAST = 31578, RAID_WARNING = 8959 }
+    M.sounds = {}
+    M.PlaySound = function(id, channel) M.sounds[#M.sounds + 1] = { id, channel } end
+end
+
 local function build()
     local M = base()
     M._G = M
@@ -626,11 +638,12 @@ local function build()
     installClock(M)
     installTableSurface(M)
     installTrade(M)
+    installSound(M)
 
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreateFrame(frameType, name, parent, template)
-        if name == WINDOW_NAME or (type(parent) == "table" and parent.__dwTree) then
+        if name == WINDOW_NAME or name == TOAST_NAME or (type(parent) == "table" and parent.__dwTree) then
             decorateGeometry(M, f)
         end
         return f

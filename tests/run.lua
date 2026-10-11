@@ -126,6 +126,7 @@ Kit.run{
         "test_trade_helper",
         "test_asks",
         "test_history",
+        "test_toast",
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",

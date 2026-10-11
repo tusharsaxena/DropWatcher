@@ -865,6 +865,25 @@ Total.
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: the pure Ago reads seconds, hours, then days
 
+### test_toast.lua (16)
+
+- toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
+- toast: Compose reads board 06 C: the title, the item and Looted by · gain · trade
+- toast edge: off by default; nothing is built or shown
+- toast edge: a qualifying drop shows at once, painted, and goes after its duration
+- toast edge: one at a time; the next waits its turn, and each drop toasts once
+- toast edge: the queue keeps the newest MAX_QUEUE drops
+- toast edge: a drop that turns likely later toasts on its DropUpdated
+- toast edge: a hover pauses the countdown, and leaving resumes it with the time left
+- toast edge: not shown in combat; held until it ends, unless toast.inCombat
+- toast edge: a drop asked for, or gone from the feed, is skipped when its turn comes
+- toast edge: Ask goes through the shared host handler, and the button follows its state
+- toast edge: toast.sound plays the client's alert from SOUNDKIT
+- toast edge: only test mode drags it; the position is saved and Reset position forgets it
+- toast edge: test mode's placeholder toasts and stays until test mode ends
+- toast edge: the stand-down empties the queue and takes the toast down
+- toast: the diagnostics' window section reports the toast
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -1001,6 +1020,7 @@ Total.
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 22 |
 | test_history.lua | 23 |
+| test_toast.lua | 16 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1010,4 +1030,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **828** |
+| **Total** | **844** |

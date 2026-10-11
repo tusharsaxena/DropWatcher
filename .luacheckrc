@@ -54,7 +54,7 @@ files["core/Compat.lua"] = {
     "GetInspectSpecialization", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
     "DressUpLink", "GetSpecializationInfoByID", "GetTradePlayerItemLink", "GetTradeTargetItemLink",
-    "MenuUtil",
+    "MenuUtil", "PlaySound", "SOUNDKIT",
   },
 }
 

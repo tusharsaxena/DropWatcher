@@ -161,6 +161,13 @@ unfinished or changed trade marking nothing; the cap row trimming at once; Clear
 confirmation; the diagnostics line; and the History tab built headless: kept groups newest first,
 the outcome column, a reason on every cell, a header toggle, Content's This session, the row menu
 with and without the client's menu, the empty line and `HistoryChanged`'s repaint),
+`test_toast` (the toast: the pure qualifier, someone else's upgrade for you of `toast.minGain` or
+more with a `likely` or `yes` trade, and every reason it refuses, and the board 06 C texts; then
+the edge: off by default, a qualifying drop shown and painted and gone after its duration, one at a
+time with each drop once, the queue's cap, a drop that turns likely on its `DropUpdated`, the hover
+pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the
+Ask button through the host handler, the sound, the drag only in test mode with the point saved and
+Reset position, test mode's placeholder toast, the stand-down and the diagnostics line),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

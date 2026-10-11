@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-828%2F828_passing-green)
+![Tests](https://img.shields.io/badge/Tests-844%2F844_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -71,6 +71,12 @@ each with what became of it. A drop reads **Asked** or **Offered** once your whi
 **Expired** when its trade window passed, and **Received** or **Traded away** when a trade with that
 item goes through (the Group drops row's Ask button then reads **Traded ✓**). Right-click a row to
 mark it **Declined**. **Clear history** empties it, after asking.
+
+The **toast** is off until you turn it on (Settings › Window › Toast). Then, when someone else loots
+an item that is a big upgrade for you (10 item levels by default) and likely tradeable, a small
+alert pops up with the item, who looted it and an **Ask** button. It shows one at a time, goes after
+8 seconds (it waits while your pointer is over it), stays out of the way in combat unless you allow
+it, and can play a sound. Turn on test mode to see it and drag it where you want it.
 
 Test mode fills the window with placeholder content so you can see it and place it before a real
 drop arrives. `/dw test` turns it on and off, and so does the **Test mode** box. Entering combat ends

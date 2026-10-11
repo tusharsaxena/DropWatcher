@@ -94,6 +94,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `InsertChatLink(link)` | `ChatFrameUtil.InsertLink`, the newer spelling → the `ChatEdit_InsertLink` global (an item button's shift-click); `true` when called | `false` |
 | | `DressUpItem(link)` | `DressUpItemLink` → the older `DressUpLink` (an item button's ctrl-click); `true` when called | `false` |
 | Detail card | `SpecName(specID)` | `GetSpecializationInfoByID`'s second return (the looter's spec, in words); a secret, empty or non-string answer is nil | `nil` |
+| Toast | `PlayAlertSound()` | `PlaySound(SOUNDKIT.UI_EPICLOOT_TOAST → SOUNDKIT.RAID_WARNING, "Master")` (`toast.sound`); `true` when played | `false` (no `PlaySound`, no `SOUNDKIT` or neither entry) |
 
 The trade actions return `true` when they called the client. They guard nothing: the range, combat
 and restriction checks are the trade helper's (`modules/TradeHelper.lua`), which calls them only
@@ -136,5 +137,6 @@ slot name and a raise's message, the Group drops table (DW-31, landed: `modules/
 `modules/DetailCard.lua`) `SpecName`, `PawnIsReady`, `InsertChatLink` and the item button's three, and the scorers (DW-50, landed:
 `modules/Scoring.lua`) the Pawn seam, `PawnIsLoaded` and `IsSecret` on the links, the history (DW-51,
 landed: `modules/History.lua`) `TradeItemLinks`, `TradePartnerName` and `IsSecret` on the accept
-flags, and the History tab (DW-51: `modules/WindowHistory.lua`) `ContextMenu`, `ClassColor` and the
+flags, the History tab (DW-51: `modules/WindowHistory.lua`) `ContextMenu`, `ClassColor` and the
+item button's three, and the toast (DW-52, landed: `modules/Toast.lua`) `PlayAlertSound` and the
 item button's three.

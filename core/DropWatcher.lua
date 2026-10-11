@@ -136,6 +136,8 @@ function NS.SetTestMode(on)
         if on then NS.TestMode.Populate() else NS.TestMode.Clear() end
     end
     if NS.Window then NS.Window.OnTestModeChanged(on) end
+    -- The toast is placed in test mode; turned off, a test drop's toast goes (modules/Toast.lua).
+    if NS.Toast then NS.Toast.OnTestModeChanged(on) end
     refreshPanels()
     return true
 end
