@@ -202,6 +202,7 @@ local function build()
     buildTexts(f)
     hoverPauses(f.icon)
     hoverPauses(f.ask)
+    hoverPauses(f.close)
     applyPoint()
     return f
 end

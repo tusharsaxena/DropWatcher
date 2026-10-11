@@ -150,6 +150,27 @@ test("toast edge: a hover pauses the countdown, and leaving resumes it with the 
     assertFalse(shown(NS), "the 3s it had left ran out")
 end)
 
+test("toast edge: leaving through the close button resumes the countdown", function()
+    local NS, m = enabled({ drop() })
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    m.advance(5)
+    f.__mouseOver = true
+    f:GetScript("OnEnter")(f)
+    -- The pointer moves onto the close button: still over the frame, so its OnLeave holds the pause.
+    f:GetScript("OnLeave")(f)
+    f.close:GetScript("OnEnter")(f.close)
+    m.advance(30)
+    assertTrue(shown(NS), "paused while over the close button")
+    -- Then straight off the toast from the close button.
+    f.__mouseOver = false
+    f.close:GetScript("OnLeave")(f.close)
+    m.advance(2.9)
+    assertTrue(shown(NS))
+    m.advance(0.2)
+    assertFalse(shown(NS), "the 3s it had left ran out")
+end)
+
 test("toast edge: not shown in combat; held until it ends, unless toast.inCombat", function()
     local NS, m = enabled({ drop(), drop({ id = 2 }) })
     m.inCombat = true
