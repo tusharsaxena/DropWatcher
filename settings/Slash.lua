@@ -5,8 +5,9 @@ local _, NS = ...
 -- What stays here is the ordered verb table (positional triples {name, desc, fn}) and the host verbs
 -- that reach into this addon's own state. Every verb that toggles something calls the same handler
 -- its Master controls row and its launcher entry call (core/DropWatcher.lua). The design spec's
--- feature verbs (§12.3: scan, clear, history, mine, compact, situation, offer, add) arrive with the
--- items that own them.
+-- feature verbs (§12.3) follow the window verbs: `scan` and `compact` call the window's own host
+-- handlers; `clear`, `history`, `mine`, `situation`, `offer` and `add` are slash-only and answered
+-- by settings/SlashVerbs.lua.
 
 local DW = NS.addon
 local L  = NS.L
@@ -62,6 +63,22 @@ local COMMANDS = {
         function() NS.ToggleWindow() end},
     {"test",     L["Turn test mode on or off (placeholder drops; combat ends it)"],
         function() NS.ToggleTestMode() end},
+    {"scan",     L["Inspect the whole group, one member at a time"],
+        function() NS.ScanGroup() end},
+    {"clear",    L["Clear this session's drops from the feed"],
+        function() NS.SlashVerbs.Clear() end},
+    {"history",  L["Open the History tab"],
+        function() NS.SlashVerbs.OpenTab("history") end},
+    {"mine",     L["Open the My drops tab"],
+        function() NS.SlashVerbs.OpenTab("mine") end},
+    {"compact",  L["Turn the Group drops table's compact preset on or off"],
+        function() NS.SlashVerbs.Compact() end},
+    {"situation", L["Print the situation, its settings and the classifier's inputs"],
+        function() NS.SlashVerbs.Situation() end},
+    {"offer",    L["Open the Offer panel for a bag item — `/dw offer <item link>`"],
+        function(rest) NS.SlashVerbs.Offer(rest) end},
+    {"add",      L["Inject a drop for testing — `/dw add <item link> [player]`"],
+        function(rest) NS.SlashVerbs.Add(rest) end},
 }
 NS.COMMANDS = COMMANDS
 

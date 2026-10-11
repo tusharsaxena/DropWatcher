@@ -108,3 +108,202 @@ test("slash: degraded, the host verbs still work and the CLI names the missing l
     assertTrue(m.prints[1]:find("is disabled", 1, true) ~= nil, tostring(m.prints[1]))
     assertFalse(D.State.testMode)
 end)
+
+-- ── the feature verbs (design spec §12.3) ───────────────────────────────────────────────────
+
+local FEATURE = { "show", "hide", "toggle", "test", "scan", "clear", "history", "mine", "compact",
+    "situation", "offer", "add" }
+
+local function itemLink(id, name)
+    return ("|cnIQ4:|Hitem:%d::::::::90:::::|h[%s]|h|r"):format(id, name or ("Item " .. id))
+end
+
+local function ring(ilvl)
+    return { name = "Item", quality = 4, ilvl = ilvl, equipLoc = "INVTYPE_FINGER", classID = 4,
+        subClassID = 0, bindType = 1, stats = {} }
+end
+
+local BAND = itemLink(300, "Band of Many Words")
+
+-- An enabled instance outside any instance, wearing two 600 rings, with item 300 (a 620 ring) known.
+local function equipped()
+    local NS, _, m = T.enableAddon()
+    m.addItem(itemLink(100), ring(600)); m.addItem(itemLink(101), ring(600))
+    m.inventory.player[11], m.inventory.player[12] = itemLink(100), itemLink(101)
+    m.addItem(BAND, ring(620))
+    m.prints = {}
+    return NS, m
+end
+
+local function printed(m, needle)
+    for _, line in ipairs(m.prints) do
+        if line:find(needle, 1, true) then return true end
+    end
+    return false
+end
+
+test("slash: every verb of spec §12.3 is in the table, after the reserved ones", function()
+    local NS = T.newAddon()
+    local v, at = verbs(NS), {}
+    for i, entry in ipairs(NS.COMMANDS) do at[entry[1]] = i end
+    for _, name in ipairs(FEATURE) do assertTrue(v[name] ~= nil, "feature verb " .. name) end
+    for _, name in ipairs(RESERVED) do assertTrue(at[name] < at.show, name .. " before the feature verbs") end
+end)
+
+test("slash: SplitLink takes a whole link, spaces and all, and leaves the rest", function()
+    local V = T.newAddon().SlashVerbs
+    local link = BAND
+    local got, tail = V.SplitLink("  " .. link .. "  Brakk-Silvermoon ")
+    assertEqual(got, link); assertEqual(tail, "Brakk-Silvermoon")
+    got, tail = V.SplitLink(link)
+    assertEqual(got, link); assertEqual(tail, "")
+    local plain = "|Hitem:300::|h[Band of Many Words]|h"
+    got, tail = V.SplitLink(plain .. " Lyra")
+    assertEqual(got, plain); assertEqual(tail, "Lyra")
+    -- red under: a split on the first space (the name's own spaces end the link early)
+    got, tail = V.SplitLink("Brakk " .. link)
+    assertTrue(got == nil); assertEqual(tail, "Brakk " .. link)
+    assertTrue(V.SplitLink("|cff71d5ff|Hspell:1::|h[Spell Name]|h|r") == nil, "a spell is no item")
+    assertTrue(V.SplitLink(nil) == nil)
+end)
+
+test("slash: `scan` is the window's Scan group handler", function()
+    local NS = T.enableAddon()
+    local calls = 0
+    NS.ScanGroup = function() calls = calls + 1; return 0 end
+    NS.addon:OnSlashCommand("scan")
+    assertEqual(calls, 1)
+end)
+
+test("slash: `add` injects a drop for you, or for a named player, and says what happened", function()
+    local NS, m = equipped()
+    NS.addon:OnSlashCommand("add " .. BAND)
+    local drops = NS.LootFeed.Drops()
+    assertEqual(#drops, 1); assertTrue(drops[1].isMine); assertEqual(drops[1].source, "manual")
+    assertTrue(printed(m, "for you (drop 1)"), tostring(m.prints[1]))
+    NS.addon:OnSlashCommand("add " .. BAND .. " Nobody-Elsewhere")
+    assertEqual(#NS.LootFeed.Drops(), 2)
+    assertEqual(NS.LootFeed.Drops()[2].looter.name, "Nobody-Elsewhere")
+    assertFalse(NS.LootFeed.Drops()[2].isMine)
+end)
+
+test("slash: `add` with no link prints its usage; a refused drop says why", function()
+    local NS, m = equipped()
+    NS.addon:OnSlashCommand("add Brakk")
+    assertTrue(printed(m, "/dw add <item link> [player]"), tostring(m.prints[1]))
+    assertEqual(#NS.LootFeed.Drops(), 0)
+    m.prints = {}
+    NS.LootFeed.Add = function() return nil, "quality" end
+    NS.addon:OnSlashCommand("add " .. BAND)
+    assertTrue(printed(m, "Not added: below the minimum quality."), tostring(m.prints[1]))
+end)
+
+test("slash: `add` of an item still loading says it shows once it loads", function()
+    local NS, m = equipped()
+    NS.LootFeed.Add = function() return 7, "loading" end
+    NS.addon:OnSlashCommand("add " .. BAND)
+    assertTrue(printed(m, "its item data is loading"), tostring(m.prints[1]))
+end)
+
+test("slash: `clear` empties this session's feed and leaves the test feed alone", function()
+    local NS, m = equipped()
+    NS.LootFeed.Add(BAND)
+    NS.LootFeed.Add(BAND, "Brakk", { test = true })
+    NS.addon:OnSlashCommand("clear")
+    assertEqual(#NS.LootFeed.Drops(), 0)
+    assertEqual(#NS.LootFeed.Drops("test"), 1)
+    assertTrue(printed(m, "Cleared this session's drops."))
+end)
+
+test("slash: `clear` closes an Offer panel whose drop it took", function()
+    local NS = equipped()
+    local id = NS.LootFeed.Add(BAND)
+    NS.ShowWindow()
+    assertTrue(NS.OfferPanel.Open(id) ~= nil)
+    NS.addon:OnSlashCommand("clear")
+    assertFalse(NS.OfferPanel.IsShown())
+end)
+
+test("slash: `history` and `mine` open the window on that tab, expanded", function()
+    local NS = T.enableAddon()
+    NS.addon:OnSlashCommand("history")
+    assertTrue(NS.IsWindowShown()); assertEqual(NS.Window.ActiveTab(), "history")
+    NS.Window.SetMinimized(true)
+    NS.addon:OnSlashCommand("mine")
+    assertEqual(NS.Window.ActiveTab(), "mine")
+    assertFalse(NS.Window.IsMinimized(), "a tab verb expands the window")
+end)
+
+test("slash: a tab verb the Visibility setting keeps hidden says so", function()
+    local NS, _, m = T.enableAddon()
+    NS.SchemaRuntime.Set("visibility", "never")
+    m.prints = {}
+    NS.addon:OnSlashCommand("mine")
+    assertFalse(NS.IsWindowShown())
+    assertTrue(printed(m, "Visibility setting"), tostring(m.prints[1]))
+end)
+
+test("slash: `compact` toggles the preset through the seam and prints the new state", function()
+    local NS, _, m = T.enableAddon()
+    local before = NS.Setting("window.compact") == true
+    m.prints = {}
+    NS.addon:OnSlashCommand("compact")
+    assertEqual(NS.addon.db.profile.window.compact == true, not before)
+    assertTrue(printed(m, before and "Compact preset off." or "Compact preset on."))
+    NS.addon:OnSlashCommand("compact")
+    assertEqual(NS.Setting("window.compact") == true, before)
+end)
+
+test("slash: `situation` prints the situation, its settings and the classifier's inputs", function()
+    local NS, _, m = T.enableAddon{ mock = function(mk)
+        mk.__context.inInstance, mk.__context.instanceType = true, "party"
+        mk.instance = { name = "The Rookery", difficultyID = 2 }
+    end }
+    m.prints = {}
+    NS.addon:OnSlashCommand("situation")
+    assertEqual(#m.prints, 3)
+    assertTrue(m.prints[1]:find("(dungeon)", 1, true) ~= nil, m.prints[1])
+    assertTrue(m.prints[1]:find("Track yes", 1, true) ~= nil, m.prints[1])
+    assertTrue(m.prints[2]:find("in instance yes · type party · difficulty 2", 1, true) ~= nil, m.prints[2])
+    assertTrue(m.prints[3]:find("raid no", 1, true) ~= nil, m.prints[3])
+    assertEqual(#NS.SlashVerbs.SituationLines(), 3)
+end)
+
+test("slash: `offer` opens the panel on your newest drop of that item", function()
+    local NS = equipped()
+    NS.LootFeed.Add(BAND)
+    local newest = NS.LootFeed.Add(BAND)
+    NS.addon:OnSlashCommand("offer " .. BAND)
+    assertTrue(NS.OfferPanel.IsShown()); assertEqual(NS.OfferPanel.DropId(), newest)
+    assertEqual(NS.Window.ActiveTab(), "mine")
+end)
+
+test("slash: `offer` of a bag item the feed never saw adds it as yours first", function()
+    local NS, m = equipped()
+    m.bags[1] = { size = 4, [3] = BAND }
+    NS.addon:OnSlashCommand("offer " .. BAND)
+    local drops = NS.LootFeed.Drops()
+    assertEqual(#drops, 1); assertTrue(drops[1].isMine)
+    assertTrue(NS.OfferPanel.IsShown()); assertEqual(NS.OfferPanel.DropId(), drops[1].id)
+end)
+
+test("slash: `offer` refuses an item not in your bags, and prints its usage without a link", function()
+    local NS, m = equipped()
+    NS.addon:OnSlashCommand("offer " .. BAND)
+    assertTrue(printed(m, "is not in your bags"), tostring(m.prints[1]))
+    assertEqual(#NS.LootFeed.Drops(), 0); assertFalse(NS.OfferPanel.IsShown())
+    m.prints = {}
+    NS.addon:OnSlashCommand("offer")
+    assertTrue(printed(m, "/dw offer <item link>"), tostring(m.prints[1]))
+end)
+
+test("slash: every feature verb is refused while disabled", function()
+    local NS, m = equipped()
+    NS.addon:OnSlashCommand("disable")
+    for _, verb in ipairs({ "scan", "clear", "history", "mine", "compact", "situation", "offer", "add" }) do
+        m.prints = {}
+        NS.addon:OnSlashCommand(verb .. " " .. BAND)
+        assertTrue(m.prints[1] ~= nil and m.prints[1]:find("is disabled", 1, true) ~= nil, verb)
+    end
+    assertEqual(#NS.LootFeed.Drops(), 0)
+end)

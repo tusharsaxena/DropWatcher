@@ -14,7 +14,7 @@ passed.
 | ID range | Theme | What it covers |
 |---|---|---|
 | INSTALL-1..3 | Install | Load, reload, first run, the logo |
-| SLASH-1..3 | Slash | `/dw` and `/dropwatcher`, help, the window verbs |
+| SLASH-1..6 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42) |
 | PANEL-1..6 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41 |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..3 | State | Enable/disable, lock, test mode |
@@ -61,6 +61,25 @@ toggles; Escape closes it too. Result:
 
 **SLASH-3. Lock verbs.** `/dw lock` → the window cannot be dragged by its title bar or resized from
 its corner; `/dw unlock` → both work again; the Lock frame box follows. Result:
+
+**SLASH-4. Feed verbs.** In a group, `/dw scan` → `Inspecting n group members, one at a time.` and
+the footer's inspect freshness moves as they are read. `/dw add <shift-click an item>` → `Added
+[item] for you (drop n).` and the drop is on My drops; `/dw add <item> <a member's name>` → the drop
+is on Group drops under that member; `/dw add <item> Nobody` → it shows, with no inspect asked.
+`/dw clear` → `Cleared this session's drops.`, both tabs empty; with test mode on, its placeholders
+stay. Result:
+
+**SLASH-5. View verbs.** `/dw history` and `/dw mine` → the window opens on that tab, expanded even
+when it was minimized. `/dw compact` → `Compact preset on.` and the Group drops table narrows; again →
+`Compact preset off.`; the Window page's Compact box follows. `/dw situation` in a Heroic dungeon →
+three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
+party, difficulty 2); outdoors alone → `Solo (solo)`. Result:
+
+**SLASH-6. Offer verb.** `/dw offer <one of your drops>` → the window opens on My drops with the
+Offer panel docked for that drop. `/dw offer <a tradeable bag item the feed never saw>` → it is added
+as your drop and the panel opens for it. `/dw offer <an item not in your bags>` → `[item] is not in
+your bags.`; `/dw offer` alone → the usage line. While disabled, every one of these verbs answers
+the one disabled line. Result:
 
 ## Settings panel
 

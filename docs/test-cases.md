@@ -133,7 +133,7 @@ Total.
 - editors: the preview's lines name who it goes to, the length and what is wrong
 - asks: TokenContext fills the tokens from a drop for who it goes to
 
-### test_slash.lua (10)
+### test_slash.lua (26)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -145,6 +145,22 @@ Total.
 - slash: `perf` is the addon's verb and prints the harness's lines
 - slash: `reset` with no path explains itself rather than resetting everything
 - slash: degraded, the host verbs still work and the CLI names the missing library
+- slash: every verb of spec §12.3 is in the table, after the reserved ones
+- slash: SplitLink takes a whole link, spaces and all, and leaves the rest
+- slash: `scan` is the window's Scan group handler
+- slash: `add` injects a drop for you, or for a named player, and says what happened
+- slash: `add` with no link prints its usage; a refused drop says why
+- slash: `add` of an item still loading says it shows once it loads
+- slash: `clear` empties this session's feed and leaves the test feed alone
+- slash: `clear` closes an Offer panel whose drop it took
+- slash: `history` and `mine` open the window on that tab, expanded
+- slash: a tab verb the Visibility setting keeps hidden says so
+- slash: `compact` toggles the preset through the seam and prints the new state
+- slash: `situation` prints the situation, its settings and the classifier's inputs
+- slash: `offer` opens the panel on your newest drop of that item
+- slash: `offer` of a bag item the feed never saw adds it as yours first
+- slash: `offer` refuses an item not in your bags, and prints its usage without a link
+- slash: every feature verb is refused while disabled
 
 ### test_window.lua (13)
 
@@ -901,7 +917,7 @@ Total.
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
 | test_settings_pages.lua | 28 |
-| test_slash.lua | 10 |
+| test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 37 |
 | test_window_group.lua | 32 |
@@ -935,4 +951,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **761** |
+| **Total** | **777** |

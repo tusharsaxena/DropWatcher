@@ -236,6 +236,10 @@ settings\PageEditors.lua
 # LOAD-BEARING: registers the Feed, Comparison, Trade, Messages and Window pages after General's
 # (settings\Panel.lua, above) and before Profiles' (below), the order the settings list shows.
 settings\Pages.lua
+# Conventional: publishes NS.SlashVerbs, the slash-only feature verbs' handlers, which
+# settings\Slash.lua's NS.COMMANDS calls at RUN time; reads NS.L at load and every module above
+# at call time.
+settings\SlashVerbs.lua
 # LOAD-BEARING: captures NS.SchemaRuntime.Get/Set/FindRow/ApplyDefault at load.
 settings\Slash.lua
 # LAST, so its RegisterOptionsPage call queues behind every other page's (options-ui-§3).

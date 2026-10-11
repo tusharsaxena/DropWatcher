@@ -113,7 +113,7 @@ edge, each member with a class stripe, `eq → drop`, a status pill and Offer an
 to group), test mode (`TestMode.lua`: placeholder drops in every verdict, trade, inspect and ask
 state, put in the separate test feed through `NS.LootFeed.AddTest` when test mode turns on and
 cleared when it ends; the window wears a `TEST MODE` chip and banner, and every send is printed)
-and the diagnostics sections; `settings/` the schema (the seam in `Schema.lua`, every hand-written row of design spec §12.1 in `SchemaRows.lua`), the panel pages (the landing page and General in `Panel.lua`, Feed, Comparison, Trade, Messages and Window in `Pages.lua`, each a tab strip over its rows; the pages' own editors, the per-spec weights and unwanted types, the template editors with their counters, chips and preview, and the Quality tab's readout, in `PageEditors.lua` over the pure `Editors.lua`), Profiles and the slash table. The design's feature modules
+and the diagnostics sections; `settings/` the schema (the seam in `Schema.lua`, every hand-written row of design spec §12.1 in `SchemaRows.lua`), the panel pages (the landing page and General in `Panel.lua`, Feed, Comparison, Trade, Messages and Window in `Pages.lua`, each a tab strip over its rows; the pages' own editors, the per-spec weights and unwanted types, the template editors with their counters, chips and preview, and the Quality tab's readout, in `PageEditors.lua` over the pure `Editors.lua`), Profiles, the slash table (`Slash.lua`) and the slash-only feature verbs' handlers (`SlashVerbs.lua`). The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
@@ -204,10 +204,12 @@ adds itself as a consumer.
 ## Slash Commands
 
 `/dw`, alias `/dropwatcher`. The reserved verbs (`help config enable disable version list get set
-reset resetall profile debug diagnostics perf`) plus `lock`, `unlock`, `show`, `hide`, `toggle` and
-`test`; the full table, the live-while-disabled set and the handlers are in
+reset resetall profile debug diagnostics perf`) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
+`test` and the feature verbs of design spec §12.3 (`scan clear history mine compact situation offer
+add`); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
-controls row and its launcher entry (`core/DropWatcher.lua`).
+controls row and its launcher entry (`core/DropWatcher.lua`); `scan` and `compact` share the window's
+own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`.
 
 ## Event Subscriptions
 
@@ -476,7 +478,7 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   ignored. The waits and the spacing are module constants (`NS.Inspect.SPACING` and its siblings):
   spec §12.1 has no `inspect` setting. The queue's priority is the caller's to give: the feed
   (DW-27) asks for looters and the Offer panel (DW-33) for its candidates; `Scan` is the window's
-  Scan group button (DW-30, through `NS.ScanGroup`) and has no slash verb until DW-42. Whether the fast path, the spec read and the tooltip level hold
+  Scan group button (DW-30, through `NS.ScanGroup`) and `/dw scan` (DW-42). Whether the fast path, the spec read and the tooltip level hold
   for an inspected unit in game is INSPECT-1..4.
 - The feed (`modules/LootFeed.lua`) settles ten cases the design leaves open. Reports of one drop
   merge for 120 seconds (`NS.LootFeed.DEDUPE_WINDOW`) when the item id and the looter match (the
@@ -499,7 +501,7 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   200 drops (`MAX_DROPS`), the oldest dropped first; the stand-down keeps the drops and drops the
   dedupe window, the encounter context and any item still loading. The feed reads its settings,
   the `feed.*`, `comparison.*` and `trade.rules.*` rows, through `NS.Setting` (`LootFeed.Config`).
-  `/dw add` and test mode reach it through `NS.LootFeed.Add` once their verbs land (DW-42, DW-34).
+  `/dw add` (DW-42) and `/dw offer` for a bag item the feed never saw reach it through `NS.LootFeed.Add`; `/dw clear` empties the live feed (`NS.LootFeed.Clear`).
 - The trade timer (`modules/TradeTimer.lua`) settles eight cases the design leaves open. A bag item
   is matched to one of your drops by its exact link first and its item id second, each drop taking
   one item, so two copies of one drop each keep their own timer; test drops are never timed. A
@@ -557,7 +559,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 20 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 28 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |

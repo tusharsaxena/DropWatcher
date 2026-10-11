@@ -62,8 +62,9 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 53 | `settings/Editors.lua` | settings | `Settings.Editors`, pure: what the pages' own editors show and write (the per-spec weights and unwanted types as fresh maps, the class's specs and item types, the template counters, the preview's sample drop and lines, the "in force now" readout) |
 | 54 | `settings/PageEditors.lua` | settings | `Settings.PageEditors`: the widgets of those editors, drawn as host tabs (Messages › Templates, Comparison › Weights and Preferences) and an `afterGroup` hook (Feed › Quality's readout) |
 | 55 | `settings/Pages.lua` | settings | the Feed, Comparison, Trade, Messages and Window pages, each through the tabbed renderer with its own Defaults |
-| 56 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
-| 57 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+| 56 | `settings/SlashVerbs.lua` | settings | `NS.SlashVerbs`: the slash-only feature verbs of design spec §12.3 (`clear`, `history`, `mine`, `compact`'s line, `situation`, `offer`, `add`) and the pure `SplitLink` |
+| 57 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
+| 58 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
 (toc-file-§5). The planned feature modules and the files they add are listed in design spec §4.
