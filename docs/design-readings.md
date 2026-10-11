@@ -87,7 +87,10 @@ game also counts their bags is TRADE-4. The raid rule is `personal` until TRADE-
 The messaging core (`modules/Messaging.lua`) reads five cases the design leaves open. A known
 token with no value reads `?` rather than an empty gap, and the preview lists it as missing;
 token names are case-sensitive, so `{Player}` is unknown and left as it is. A gain prints with
-one decimal at most. The length limit counts the raw bytes, so an item link counts whole. An
+one decimal at most. A gain into an empty slot has no item-level change, so it reads as the words
+`an empty-slot upgrade` (`modules/Asks.lua`), and a `+` right before a token whose value is words
+is dropped, so the default `It'd be +{mygain} for me` reads `It'd be an empty-slot upgrade for
+me` (M6 review). The length limit counts the raw bytes, so an item link counts whole. An
 ask that is queued, or handed to the sender and not yet reported, is never asked twice, even
 with `messages.oneAsk` off; a failed one may be retried, and a canceled one leaves the registry,
 so its button is ready again. The `messages.*` settings are rows, read by the edge through
@@ -322,7 +325,7 @@ shows, pauses, places and sounds right in game is TOAST-1.
 Auto-ask (DW-54, `modules/AutoAsk.lua`) settles what design spec §9.4 leaves open. **What
 qualifies** is the toast's own test (`NS.Toast.Qualifies`) with `messages.autoAsk.minGain`: the
 item-level change for you, whatever the scorer (an empty slot clears any least gain, and the ask's
-`{mygain}` then reads the drop's whole item level), never your own drop, and an upgrade only, so it
+`{mygain}` then reads `an empty-slot upgrade`, never the drop's item level, which is no gain), never your own drop, and an upgrade only, so it
 always fills the plain `ask` template, never the transmog one. **Once per drop:** a drop is
 considered on `DropAdded` and on each `DropUpdated` until it is scheduled, so one whose trade turns
 `likely` after the looter's inspect still qualifies; a drop scheduled, sent or canceled is never

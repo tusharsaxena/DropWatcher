@@ -84,13 +84,15 @@ local function noteOnce(list, seen, name)
 end
 
 --- Fills each `{token}` of `template` from `ctx`. An unknown token is left as it is; a known one
---- with no value reads "?". Answers the text, the unknown tokens and the missing ones (each list in
---- order of first appearance, once each).
+--- with no value reads "?". A `+` right before a token whose value is words, not a number (an
+--- empty-slot upgrade's gain), is dropped, so `+{mygain}` reads `an empty-slot upgrade`. Answers
+--- the text, the unknown tokens and the missing ones (each list in order of first appearance, once
+--- each).
 function M.Expand(template, ctx)
     local unknown, missing, seen = {}, {}, {}
     if type(template) ~= "string" then return "", unknown, missing end
     ctx = isTable(ctx) and ctx or {}
-    local text = template:gsub("{(%w+)}", function(name)
+    local text = template:gsub("(%+?){(%w+)}", function(plus, name)
         if not KNOWN[name] then
             noteOnce(unknown, seen, name)
             return nil
@@ -98,9 +100,10 @@ function M.Expand(template, ctx)
         local v = ctx[name]
         if v == nil then
             noteOnce(missing, seen, name)
-            return "?"
+            return plus .. "?"
         end
-        return formatValue(v)
+        if type(v) ~= "number" then plus = "" end
+        return plus .. formatValue(v)
     end)
     return text, unknown, missing
 end

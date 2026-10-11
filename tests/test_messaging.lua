@@ -88,6 +88,14 @@ test("messaging: a known token with no value reads as ?, and is reported as miss
     assertEqual(missing[1], "mygain")
 end)
 
+test("messaging: a + before a worded gain is dropped; before a number or a missing one it stays", function()
+    local M = load()
+    assertEqual(M.Expand("It'd be +{mygain} for me", { mygain = "an empty-slot upgrade" }),
+        "It'd be an empty-slot upgrade for me")
+    assertEqual(M.Expand("+{gain} and +{mygain}", { gain = 7 }), "+7 and +?")
+    assertEqual(M.Expand("+{foo}", {}), "+{foo}")
+end)
+
 test("messaging: a value with pattern characters is inserted literally", function()
     local M = load()
     assertEqual(M.Expand("{item}", { item = "100% [x]%1" }), "100% [x]%1")

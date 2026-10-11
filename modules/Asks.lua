@@ -164,13 +164,14 @@ local function intoEmptySlot(eval)
     return false
 end
 
--- A verdict's item-level gain: its ilvlDelta, or the drop's whole item level for an upgrade into an
--- empty slot (no baseline, so no delta), so `+{mygain}` never reads `+?` there.
-local function gainOf(eval, ilvl)
+-- A verdict's item-level gain: its ilvlDelta, or for an upgrade into an empty slot (no baseline, so
+-- no delta) the words `an empty-slot upgrade`, never the drop's item level, which is no gain;
+-- Messaging.Expand drops the template's `+` before a worded gain, so `+{mygain}` never reads `+?`.
+local function gainOf(eval)
     if type(eval) ~= "table" then return nil end
     local d = eval.ilvlDelta
     if type(d) == "number" and d == d then return d end
-    if type(ilvl) == "number" and intoEmptySlot(eval) then return ilvl end
+    if intoEmptySlot(eval) then return L["an empty-slot upgrade"] end
     return nil
 end
 
@@ -191,7 +192,7 @@ local function dropContext(ctx, kind, rec, who)
     local f = type(rec.facts) == "table" and rec.facts or {}
     ctx.item, ctx.ilvl, ctx.slot = rec.link, f.ilvl, slotText(f.equipLoc)
     ctx.track = type(f.track) == "table" and f.track.name or nil
-    ctx.gain, ctx.mygain = gainOf(theirEval(kind, rec, who), f.ilvl), gainOf(rec.me, f.ilvl)
+    ctx.gain, ctx.mygain = gainOf(theirEval(kind, rec, who)), gainOf(rec.me)
 end
 
 -- The token values of spec §9.1, from the drop record, with `extra` laid over them.

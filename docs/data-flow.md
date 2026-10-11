@@ -394,7 +394,7 @@ a click (row button, Offer panel, DW-33) or auto-ask (DW-54)
       ─> recipient: an announce is "group"; a test drop or test mode takes the name as given;
          else Roster.Resolve ─> notInGroup / self / offline, or the member's Name-Realm
       ─> tokens from the drop: item, ilvl, slot, track, gain (the looter's, or the candidate's
-         for an offer), mygain (yours); into an empty slot a gain is the drop's whole item level;
+         for an offer), mygain (yours); into an empty slot a gain is the words `an empty-slot upgrade`;
          opts.ctx laid over them, opts.text replaces the template
       ─> Messaging.Request (pure): alreadyAsked / tooLong / badRequest, or queue, or send
          canSend = test or Restrictions.CanSendChat()

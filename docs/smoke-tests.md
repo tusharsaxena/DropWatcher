@@ -818,8 +818,9 @@ dismissed, and no Lua error shows. Result:
 
 **TOAST-3. An upgrade into an empty slot toasts and auto-asks (DW-62).** Take off a ring. Toast on
 with Least gain 50, auto-ask on. In a group: `/dw add <a BoE ring link> <member>` → a toast reading
-`Looted by <member> · empty ▲ · Tradeable`; after the auto-ask delay the whisper goes, and its
-`+{mygain}` reads the ring's item level, never `+?`. Result:
+`Looted by <member> · empty ▲ · Tradeable`; after the auto-ask delay the whisper goes and reads
+`It'd be an empty-slot upgrade for me`: never the ring's item level, never `+?` and never `+an`.
+Result:
 
 ## Transmog
 

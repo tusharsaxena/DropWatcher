@@ -145,7 +145,7 @@ putting the pickup back; `CanGive` touching nothing; combat refused before the r
 stranger, yourself, an offline member and one out of range; the stand-down; every reason's tooltip
 line; `Open` and its missing API; the diagnostics line), `test_asks` (the messaging edge: a
 whisper to the looter's Name-Realm with the template expanded from the drop's tokens and one
-confirmation line; an empty slot's gain read as the drop's whole item level; the one-ask guard and `messages.oneAsk`; an edited text over 255 bytes; a
+confirmation line; an empty slot's gain read as `an empty-slot upgrade`, never the item level, its `+` dropped; the one-ask guard and `messages.oneAsk`; an edited text over 255 bytes; a
 stranger, yourself, an offline member and a missing or secret target refused; an offer to a
 candidate; a raising sender failed with its message and retried, a secret error, no sender, the
 deprecated global fallback; the announce channel; queueing under a restriction and the flush on

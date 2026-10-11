@@ -109,6 +109,9 @@ L["You cannot trade in combat."] = "You cannot trade in combat."
 L["You cannot trade with yourself."] = "You cannot trade with yourself."
 L["Your cursor is holding an item."] = "Your cursor is holding an item."
 
+-- The gain token of an upgrade into an empty slot (modules/Asks.lua, design spec §9.1)
+L["an empty-slot upgrade"] = "an empty-slot upgrade"
+
 -- Test mode (modules/TestMode.lua): the placeholders, the window's chip and banner, the empty state
 L["Ask, Offer and Announce print their text in your chat frame instead of sending it."] = "Ask, Offer and Announce print their text in your chat frame instead of sending it."
 L["Combat ends it, and so do /dw test, the launcher menu and the Master controls checkbox."] = "Combat ends it, and so do /dw test, the launcher menu and the Master controls checkbox."

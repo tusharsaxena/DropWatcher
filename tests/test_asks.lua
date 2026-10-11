@@ -99,13 +99,16 @@ test("send: every token comes from the drop: item, ilvl, slot, track and both ga
     assertEqual(m.chatSent[1].text, "Brakk|" .. link(300) .. "|613|Finger|?|13")
 end)
 
-test("send: into an empty slot the gain is the whole item level, never a ? (DW-62)", function()
+test("send: into an empty slot the gain reads as words, never the item level or a ? (DW-62)", function()
     local NS = party()
     local empty = { verdict = "upgrade", reasons = { { key = "emptySlot" } } }
     local rec = { link = link(300), facts = { ilvl = 311 }, me = empty, them = empty }
-    -- red under: a gain read off ilvlDelta alone (modules/Asks.lua gainOf)
+    -- red under: the drop's whole item level as the gain (modules/Asks.lua gainOf, M6 review)
     local ctx = NS.Asks.TokenContext("ask", rec, { name = "Brakk" })
-    assertEqual(ctx.mygain, 311); assertEqual(ctx.gain, 311)
+    assertEqual(ctx.mygain, "an empty-slot upgrade"); assertEqual(ctx.gain, "an empty-slot upgrade")
+    local text = NS.Messaging.Expand(NS.Messaging.Template("ask"), ctx)
+    assertEqual(text:find("311", 1, true), nil, "the item level is never whispered as a gain")
+    assertTrue(text:find("It'd be an empty-slot upgrade for me", 1, true) ~= nil, text)
     rec.me = { verdict = "upgrade", reasons = {} }
     assertEqual(NS.Asks.TokenContext("ask", rec, { name = "Brakk" }).mygain, nil, "no gain and no empty slot: unknown")
 end)

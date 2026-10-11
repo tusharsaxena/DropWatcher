@@ -563,13 +563,14 @@ Total.
 - trade rules: nil and garbage inputs never throw
 - trade rules: bad facts are unknown badFacts
 
-### test_messaging.lua (24)
+### test_messaging.lua (25)
 
 - messaging: the default templates are the spec §9.1 text, one per kind
 - messaging: Template takes the owner's text, and the default for an empty or absent one
 - messaging: Expand fills every token, and formats the gains as numbers
 - messaging: unknown tokens are left as they are, and reported once each in order
 - messaging: a known token with no value reads as ?, and is reported as missing
+- messaging: a + before a worded gain is dropped; before a number or a missing one it stays
 - messaging: a value with pattern characters is inserted literally
 - messaging: Preview gives the text, its length and the too-long flag
 - messaging: a request that can send answers send, with the expanded text, state ready
@@ -822,7 +823,7 @@ Total.
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
-- send: into an empty slot the gain is the whole item level, never a ? (DW-62)
+- send: into an empty slot the gain reads as words, never the item level or a ? (DW-62)
 - send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again
 - send: an edited text over 255 bytes is refused tooLong and nothing is sent
 - send: a stranger, yourself, an offline member and a missing target are refused
@@ -1068,7 +1069,7 @@ Total.
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
-| test_messaging.lua | 24 |
+| test_messaging.lua | 25 |
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 18 |
@@ -1092,4 +1093,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **898** |
+| **Total** | **899** |
