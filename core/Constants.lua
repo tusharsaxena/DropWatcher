@@ -23,6 +23,14 @@ C.WINDOW = {
     HEIGHT      = 600,
     MIN_WIDTH   = 520,
     MIN_HEIGHT  = 260,
+    -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
+    -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
+    COMPACT_WIDTH  = 380,
+    COMPACT_HEIGHT = 460,
+    COMPACT_MIN_W  = 320,
+    COMPACT_MAX_W  = 520,
+    COMPACT_MIN_H  = 220,
+    COMPACT_MAX_H  = 900,
     TITLE_H     = 30,
     TAB_H       = 26,
     TAB_W       = 118,    -- one tab button; the strip's pitch adds TAB_GAP

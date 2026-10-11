@@ -100,7 +100,7 @@ Total.
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
 - rows: the feed, the situations and the messaging edge read the rows
 - rows: the filter bar seeds a fresh tab from the rows
-- rows: the Quality control and the compact preset write through the seam (handoff from M3)
+- rows: the Quality control and the window's layout write through the seam (handoff from M3)
 - rows: Keep history for is account-wide, and a profile reset leaves it
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
@@ -159,7 +159,7 @@ Total.
 - slash: `clear` closes an Offer panel whose drop it took
 - slash: `history` and `mine` open the window on that tab, expanded
 - slash: a tab verb the Visibility setting keeps hidden says so
-- slash: `compact` toggles the preset through the seam and prints the new state
+- slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it
 - slash: `situation` prints the situation, its settings and the classifier's inputs
 - slash: `offer` opens the panel on your newest drop of that item
 - slash: `offer` of a bag item the feed never saw adds it as yours first
@@ -242,6 +242,30 @@ Total.
 - filter bar tooltip: AboveFits is true when the screen has room over the control, else false
 - filter bar tooltip: near the top of the screen it opens below the control, never over it
 
+### test_window_compact.lua (21)
+
+- compact: the layout in force is the stored one, compact while a run holds it, full for junk
+- compact: a run is a dungeon, raid, key or delve, and nothing else
+- compact: each layout's default size and bounds; a stored size is kept within them
+- compact: CornerPoint puts compact's top right on the full window's, whatever its anchor
+- compact: step 5 maps the retired preset to the compact layout and moves the geometry
+- compact: step 5 runs for every stored profile on load
+- compact: a fresh profile stores the full layout, and opens in a run compact by default
+- compact: the title-bar toggle sits between Scan group and minimize, with a catalog mark
+- compact: the toggle swaps the layout: compact is 380 x 460 at the full window's top right
+- compact: each layout remembers its own size and position
+- compact: switching keeps the tab, the minimized state, and builds no second window
+- compact: the Layout row lays the window out, and the stored layout is the next build's
+- compact: the toggle's tooltip names the layout it switches to and the setting
+- compact: an auto-open inside a run opens compact, and the stored layout is untouched
+- compact: the run ending lets go when the window is next hidden, so the next open is full
+- compact: a run ending while the window is hidden lets go at once
+- compact: a parent's hide (Alt-Z) is not the window closing, so the run's layout stays
+- compact: with Open in compact view during a run off, an auto-open keeps the stored layout
+- compact: the player's own toggle during a run lets the override go
+- compact: a window the player opened is never switched by a drop
+- compact: the diagnostics report names the layout, the override and each layout's geometry
+
 ### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
@@ -278,7 +302,7 @@ Total.
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
 - table: a drop with no ask offered shows a dash with its reason
 - table: the × dismisses a row for the session
-- table: the compact preset keeps Item and looter, Ilvl, Their eq, Me and Ask
+- table: the compact layout keeps the retired preset's Item and looter, Ilvl, Their eq, Me and Ask
 - table: a column the profile turns off is not drawn
 - table: the filter bar filters the rows, and the empty line says why nothing shows
 - table: with no drop at all the empty state says so, with Preview with test data and Scan group
@@ -1402,6 +1426,7 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 57 |
+| test_window_compact.lua | 21 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1453,4 +1478,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1199** |
+| **Total** | **1220** |

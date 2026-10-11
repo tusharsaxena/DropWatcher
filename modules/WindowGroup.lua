@@ -7,8 +7,8 @@ local _, NS = ...
 -- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
 -- verdicts: the signed item-level change beside ▲ ≈ ▽, the Them column's tones inverted), Trade
 -- (Yes, Likely, Unknown or No) and Actions (the Ask button and the × that dismisses the row). The
--- compact preset (`profile.window.compact`, NS.SetCompact) keeps Item and looter, Ilvl, Their eq,
--- Me and Ask; `profile.window.columns[key] = false` hides a column (Item never hides). A row too
+-- compact layout (`window.mode`, WG.IsCompact; the retired preset's set) keeps Item and looter, Ilvl,
+-- Their eq, Me and Ask; `profile.window.columns[key] = false` hides a column (Item never hides). A row too
 -- narrow for them all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
 -- cell says, and its reason tooltip, is modules/WindowCells.lua's (pure); this file is the frame
 -- edge that paints it. Nothing is ever blank.
@@ -100,11 +100,11 @@ local function profileWindow()
     return type(w) == "table" and w or nil
 end
 
---- Whether the compact preset is on (`profile.window.compact`).
+--- Whether the window is in its compact layout (modules/WindowCompact.lua): until the compact
+--- cards land (DW-C2), the table keeps the retired preset's narrow column set there.
 --- @return boolean
 function WG.IsCompact()
-    local w = profileWindow()
-    return w ~= nil and w.compact == true
+    return NS.WindowCompact.Mode() == "compact"
 end
 
 local function repaint()
@@ -147,7 +147,7 @@ function WG.Expanded() return view().expanded end
 
 -- ── the pure halves ─────────────────────────────────────────────────────────────────────────
 
---- The columns shown: the compact preset's, or the default ones, less each one the profile turns
+--- The columns shown: the compact layout's, or the default ones, less each one the profile turns
 --- off (`columns[key] = false`); Item always stays.
 --- @param compact boolean
 --- @param hidden table|nil `profile.window.columns`

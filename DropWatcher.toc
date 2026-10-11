@@ -242,6 +242,12 @@ modules\Window.lua
 # and icon buttons); reads NS.Constants and NS.L at load, and NS.Window (above), NS.Asks and the
 # host handlers at call time.
 modules\WindowTitleBar.lua
+# Conventional: publishes NS.WindowCompact (compact mode's switch: the layout in force, each
+# layout's geometry, the run override); reads NS.Constants at load, appends its rows to
+# NS.STAND_DOWN / NS.STAND_UP, adds a visibility listener to NS.Window (above) and registers its
+# SituationChanged receiver on its own NS.Bus target at load. NS.Setting, NS.WindowFilterBar and
+# NS.State are read at call time.
+modules\WindowCompact.lua
 # Conventional: publishes NS.WindowFilterBar (the filter bar, each tab's filter state and the row
 # predicates); reads NS.Constants, NS.L, NS.State and NS.C (defaults\, above) at load, and NS.Window
 # (above) at call time.

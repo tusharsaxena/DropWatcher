@@ -104,15 +104,22 @@ NS.C = {
             },
         },
 
-        -- The window (design spec §11.1). `point`, `width`, `height` and `minimized` are geometry
-        -- and a remembered view, written by modules/Window.lua alone (architecture-§5): each is
-        -- absent until the player moves, sizes or minimizes the window, and no row addresses it.
+        -- The window (design spec §11.1). `geometry.full` and `geometry.compact` (each { point,
+        -- width, height }, one per layout: compact spec §1) and `minimized` are geometry and a
+        -- remembered view, written by modules/Window.lua and modules/WindowCompact.lua alone
+        -- (architecture-§5): each is absent until the player moves, sizes or minimizes the window,
+        -- and no row addresses it.
         window = {
             columns = {
                 ilvl = true, slot = true, looter = true, myEq = true, theirEq = true, me = true, them = true,
                 trade = true, actions = true,
             },
-            compact   = false,   -- the Group drops table's compact preset
+            -- The layout (compact spec §1): `full` (the tables) or `compact` (the narrow card
+            -- view). Schema step 5 maps the retired `compact` preset to it.
+            mode          = "full",
+            -- An auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever
+            -- `mode` says, until that run ends.
+            compactInRuns = true,
             -- Like Ka0s Loot History's table (feedback-2 spec §8, FB2-9): 18-pixel rows, and the
             -- text at its template's own size (0 is Default). All three tabs read both; a My drops
             -- row adds the room its countdown bar needs. A value the player stored stays as it is.

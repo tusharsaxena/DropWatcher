@@ -359,7 +359,7 @@ test("table: built at the minimum width, the shed columns hide and Ask stays ins
     local K = NS.Constants.WINDOW
     m.__now = 100
     seed(NS, { GROUP }, { drop() })
-    NS.addon.db.profile.window = { width = K.MIN_WIDTH }
+    NS.addon.db.profile.window = { geometry = { full = { width = K.MIN_WIDTH } } }
     NS.ShowWindow()
     local drawn = NS.WindowGroup.Drawn()
     assertEqual(keys(drawn.columns), "item,me,them,trade,actions")
@@ -645,10 +645,13 @@ test("table: the × dismisses a row for the session", function()
     assertTrue(NS.State.windowGroup.dismissed[1])
 end)
 
-test("table: the compact preset keeps Item and looter, Ilvl, Their eq, Me and Ask", function()
+test("table: the compact layout keeps the retired preset's Item and looter, Ilvl, Their eq, Me and Ask", function()
     local NS = shownTable()
-    NS.SetCompact(true)
-    assertTrue(NS.addon.db.profile.window.compact)
+    -- compact at its widest (until the cards land, DW-C2, it draws this table)
+    NS.addon.db.profile.window.geometry = { compact = { width = NS.Constants.WINDOW.COMPACT_MAX_W } }
+    NS.SetWindowMode("compact")
+    assertEqual(NS.addon.db.profile.window.mode, "compact")
+    assertTrue(NS.WindowGroup.IsCompact())
     local drawn = NS.WindowGroup.Drawn()
     assertEqual(keys(drawn.columns), "item,ilvl,theirEq,me,actions")
     local c = rowFor(drawn, 1).cells
@@ -657,7 +660,7 @@ test("table: the compact preset keeps Item and looter, Ilvl, Their eq, Me and As
     assertEqual(textOf(drawn.pane.colHead.labels.item.text), "Item / looter")
     assertEqual(textOf(drawn.pane.colHead.labels.actions.text), "Ask")
     assertEqual(NS.Window.TooltipOf(c.item)[1], "Crown of Roaring Storms")
-    NS.ToggleCompact()
+    NS.ToggleWindowMode()
     assertEqual(#NS.WindowGroup.Drawn().columns, 10)
 end)
 

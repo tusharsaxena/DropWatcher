@@ -18,6 +18,11 @@ State.testMode = false
 -- same in one boolean, read on every Compat call.
 State.sim = nil
 
+-- The run override of compact mode (modules/WindowCompact.lua, compact spec §1): { key, ended }
+-- while an auto-open inside a run (`key`, its situation) holds the window compact, else nil. `ended`
+-- marks a run that ended while the window was shown: it lets go when the window is next hidden.
+State.compactRun = nil
+
 -- Whether the player has the main window open this session. The window's own show decision
 -- (modules/Window.lua) combines it with the General visibility setting and the stand-down latch.
 State.windowOpen = false

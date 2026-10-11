@@ -91,7 +91,8 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | Key | Default | Tab | What it is |
 |---|---|---|---|
 | `window.columns.<col>` | `true` | Columns | `false` hides that Group drops column (`ilvl`, `slot`, `looter`, `myEq` (since DW-83), `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
-| `window.compact` | `false` | Layout; `NS.SetCompact`, `/dw compact` (DW-42) | the compact preset: Item and looter, Ilvl, Their eq, Me, Ask |
+| `window.mode` | `"full"` | Layout; `NS.SetWindowMode`, the title-bar toggle, `/dw compact`, `/dw full` (DW-C0) | the window's layout, `full` or `compact` (compact spec §1, `modules/WindowCompact.lua`); its reaction lets a run override go and lays the window out. Replaced the compact preset `window.compact` (DW-42), which step 5 maps here |
+| `window.compactInRuns` | `true` | Layout (DW-C0) | Open in compact view during a run: an auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever `window.mode`, until the situation leaves that run (the override itself is session-only, `NS.State.compactRun`) |
 | `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on all three tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a My drops row is the row height plus 10 for its countdown bar. Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
 | `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
@@ -100,14 +101,13 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 
 | Key | Default | Set by | What it is |
 |---|---|---|---|
-| `window.point` | absent | a drag; Reset position clears it | `{ point, relativePoint, x, y }` |
-| `window.width`, `window.height` | absent | a resize; Reset position clears them | the window's size |
+| `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, compact is 380 x 460 at the full window's top right |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
 | `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }` |
 | `simPanel.point` | absent | a drag of the simulation panel; Reset position clears it | `{ point, relativePoint, x, y }`; until set, the panel opens beside the window |
 
 Their one owner is `modules/Window.lua` (`savePoint`, `saveSize`, `Window.SetMinimized`,
-`Window.ResetPosition`), as `docs/ARCHITECTURE.md` → Settings Schema names (architecture-§5).
+`Window.ResetPosition`, through `NS.WindowCompact.Geometry` for the layout in force), as `docs/ARCHITECTURE.md` → Settings Schema names (architecture-§5).
 The toast's position (design spec §11.5) is named state too: `toast.point` (`{ point, relativePoint, x, y }`, absent until a drag), written by `modules/Toast.lua` alone, from a drag that only test mode allows; the Window's Reset position forgets it with the window's.
 The simulation panel's position (sim feedback spec §1, DW-91) is named state as well: `simPanel.point`, written by `modules/SimPanel.lua` alone (its drag stop and `SimPanel.ResetPosition`), absent until a drag; the Window's Reset position forgets it with the window's.
 
@@ -189,7 +189,7 @@ and Test mode rows are `sessionOnly` and store through their own closures.
 ## Migrations
 
 `core/Database.lua`: `NS.MIGRATIONS` is a list of steps `{ to, run, perProfile }`, and
-`NS.SCHEMA_VERSION` is the highest step's `to` (today 4). The runner runs in `OnInitialize` straight
+`NS.SCHEMA_VERSION` is the highest step's `to` (today 5). The runner runs in `OnInitialize` straight
 after `AceDB:New`, before anything reads the profile, and again on every profile event. It owns the
 stamp: a step's `to` is stored only after the step returned, so a step that raises is retried on the
 next load. A `perProfile` step runs for every stored profile in the raw SavedVariables, not only the
@@ -201,5 +201,6 @@ active one. The default stays `0`.
 | 2 | 1 → 2, per profile: every setting has a row (DW-40). A stored value its row now refuses (the wrong type, or outside its list or range) is dropped, so the default shows: before the rows, `feed.quality.mode` and `window.compact` were written straight onto the profile, and `trade.rules.*`, `messages.*` and `situations.*` were read with forgiving fallbacks. A valid value and every default pass through unchanged (`NS.RepairStoredSettings`) |
 | 3 | 2 → 3, per profile: the View becomes a set (DW-A1, feedback-2 spec §1). A stored `feed.view` string becomes `feed.view = { [value] = true }` (`interesting` keeps Interesting, `all` is the empty set), and the retired `trade.likelyOnly`, `feed.usableOnly` and `feed.upgradeOnly` fold into it as `likely`, `usable` and `upgrade` when they were on, their leaves removed, so each player keeps the choices they had. A profile that only inherited the old default (`interesting`) stored nothing, since AceDB strips a value equal to its default at logout, and opens on the new default, All. A profile already in the new shape passes through (`NS.MigrateViewSet`) |
 | 4 | 3 → 4, global: the History is kept by days (DW-A5, feedback-2 spec §5). The retired group cap, `global.history.maxGroups`, is removed; nothing is pruned by the step, and Keep history for starts on its default, 30 days, which the session's prune applies (`NS.RetireHistoryCap`) |
+| 5 | 4 → 5, per profile: compact mode (DW-C0, compact spec §1). The retired compact preset, `window.compact = true`, becomes `window.mode = "compact"` (the preset wins over a `mode` the defaults answer), and the key goes; the single-layout geometry `window.point`, `.width` and `.height` moves into `window.geometry.full`, keeping any value already there. A profile already in the new shape passes through (`NS.MigrateWindowMode`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

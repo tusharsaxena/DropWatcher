@@ -123,6 +123,41 @@ function NS.RetireHistoryCap(sv)
     if type(h) == "table" then h.maxGroups = nil end
 end
 
+-- ── step 5: compact mode (DW-C0, compact spec §1) ───────────────────────────────────────────
+
+-- The geometry the single-layout window stored straight on `window`, now the full layout's.
+local GEOMETRY_KEYS = { "point", "width", "height" }
+
+-- Moves `window.point`, `width` and `height` into `window.geometry.full`, keeping any value
+-- already there.
+local function moveGeometry(w)
+    local full
+    for _, k in ipairs(GEOMETRY_KEYS) do
+        if w[k] ~= nil then
+            if type(w.geometry) ~= "table" then w.geometry = {} end
+            full = full or (type(w.geometry.full) == "table" and w.geometry.full) or {}
+            if full[k] == nil then full[k] = w[k] end
+            w[k] = nil
+        end
+    end
+    if full then w.geometry.full = full end
+end
+
+--- Step 5's work on one stored profile: the retired compact preset (`window.compact = true`)
+--- becomes the compact layout (`window.mode = "compact"`) and its key goes; the window's single
+--- geometry becomes the full layout's (`window.geometry.full`). The preset decides the layout even
+--- over a `mode` already there: AceDB's defaults can answer `full` for a key the player never set,
+--- and a profile that held the preset never chose a layout. Idempotent: the preset's key goes, so a
+--- profile already in the new shape passes through.
+--- @param profile table a raw stored profile
+function NS.MigrateWindowMode(profile)
+    local w = type(profile) == "table" and profile.window
+    if type(w) ~= "table" then return end
+    if w.compact == true then w.mode = "compact" end
+    w.compact = nil
+    moveGeometry(w)
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -132,6 +167,8 @@ NS.MIGRATIONS = {
     { to = 3, perProfile = true,         -- 2 -> 3: the View is a set; its checkboxes fold into it
       run = function(_, profile) NS.MigrateViewSet(profile) end },
     { to = 4, run = function(sv) NS.RetireHistoryCap(sv) end },   -- 3 -> 4: History by days
+    { to = 5, perProfile = true,         -- 4 -> 5: compact mode; the window's geometry per layout
+      run = function(_, profile) NS.MigrateWindowMode(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

@@ -102,6 +102,7 @@ Kit.run{
         "test_slash",
         "test_window",
         "test_window_shell",
+        "test_window_compact",
         "test_window_group",
         "test_detail_card",
         "test_window_mine",

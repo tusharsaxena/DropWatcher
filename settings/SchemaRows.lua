@@ -112,6 +112,7 @@ local SCORERS  = choices{ "auto", L["Automatic"], "pawn", L["Pawn"], "weights", 
 local CHANNELS = choices{
     "auto", L["Automatic"], "INSTANCE_CHAT", L["Instance"], "RAID", L["Raid"], "PARTY", L["Party"],
 }
+local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
 
 -- ── the dimming predicates ──────────────────────────────────────────────────────────────────
@@ -318,8 +319,13 @@ local function window()
         end
     end
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }
-    bool("window.compact", W.compact, L["Compact"],
-        L["Show Item and looter, Ilvl, Their eq, Me and Ask only."], layout)
+    -- Compact mode (compact spec §1): the stored layout, and the run override's switch.
+    pick("window.mode", W.mode, LAYOUTS, L["Layout"],
+        L["Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."],
+        with(layout, { onChange = function() NS.WindowCompact.OnModeChanged() end }))
+    bool("window.compactInRuns", W.compactInRuns, L["Open in compact view during a run"],
+        L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
+        layout)
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
         L["The height of one row in the drop tables: Group drops, My drops and History. A My drops row adds room for its countdown bar."], layout)
     -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table

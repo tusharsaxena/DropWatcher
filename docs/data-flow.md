@@ -82,7 +82,7 @@ mode), its filter state, the controls it honors, `matches(drop)` and `compare(a,
 
 ```
 Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
-  ├─> WindowGroup.Columns(profile.window.compact, profile.window.columns)   (pure)
+  ├─> WindowGroup.Columns(WindowGroup.IsCompact(), profile.window.columns)  (pure; the layout)
   ├─> WindowGroup.Layout(columns, the rows' width)                          (pure)
   ├─> WindowCells.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
   │                       NS.State.windowGroup)                              first, filtered, sorted)
@@ -109,7 +109,7 @@ item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.Inse
 row hover ─────> a cell, button or header: Window.AttachTooltip ("row") ─> GameTooltip:Show() ─>
                  RowTooltip.Place: BOTTOMLEFT at the row's top, outside the window's right edge (else
                  BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2)
-NS.SetCompact ─> SchemaRuntime.Set("window.compact") ─> the row's repaint
+NS.SetWindowMode ─> SchemaRuntime.Set("window.mode") ─> WindowCompact.OnModeChanged ─> Apply
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
 ```

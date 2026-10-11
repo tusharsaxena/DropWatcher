@@ -36,6 +36,7 @@ passed.
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the tabs reconciling with it (SIM-12, DW-B0), the loot step honoring `feed.showOwn` and test mode (SIM-13, DW-B5) |
+| COMPACT-1, COMPACT-6 | [Compact](#compact) | Compact mode (compact spec §1, DW-C0): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6). COMPACT-2..5 and 7 arrive with DW-C2..C5 |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -75,8 +76,9 @@ is on Group drops under that member; `/dw add <item> Nobody` → it shows, with 
 stay. Result:
 
 **SLASH-5. View verbs.** `/dw history` and `/dw mine` → the window opens on that tab, expanded even
-when it was minimized. `/dw compact` → `Compact preset on.` and the Group drops table narrows; again →
-`Compact preset off.`; the Window page's Compact box follows. `/dw situation` in a Heroic dungeon →
+when it was minimized. `/dw compact` → `Compact view.` and the window narrows to its compact layout
+(COMPACT-1); again → `Full view.`; `/dw full` → `Full view.` and stays full; the Window page's
+Layout choice follows. `/dw situation` in a Heroic dungeon →
 three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
 party, difficulty 2); outdoors alone → `Solo (solo)`. Result:
 
@@ -401,9 +403,8 @@ is on top and open, the first one collapsed with a right chevron and `(collapsed
 header → it opens or collapses. Hover an item icon → the game's item tooltip with a `Shift-click to
 link it in chat; ctrl-click to try it on.` line; shift-click it with the chat box open → the link is
 inserted; ctrl-click it → the dressing room shows it. Click a row's `×` → the row goes for the
-session. Turn the compact preset on (`/dw compact` once DW-42 lands; until then
-`/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").db.profile.window.compact = true` and
-`/reload`) → the labels read `Item / looter`, `Ilvl`, `Their eq`, `Me`, `Ask`, the item
+session. Switch to the compact layout (`/dw compact`; until the compact cards land, DW-C2, it
+draws this table narrowed, and at its widest, 520) → the labels read `Item / looter`, `Ilvl`, `Their eq`, `Me`, `Ask`, the item
 cell names the looter, and the other columns are gone; set it back. Resize the window → the Item
 column takes the width. Scroll with the mouse wheel when the rows pass the bottom. Result:
 
@@ -1261,6 +1262,26 @@ back. On My drops, Hide your drop → the tab reads `My drops`, and the row `Loo
 drops)` with the tooltip `… (you): not on My drops: you hid it`; type a search your drop fails on
 My drops instead → the same, the tooltip ending `not on My drops: Search`. Result:
 
+## Compact
+
+**COMPACT-1. The layout switch (DW-C0).** With the window open in its full layout, hover the
+title bar's new mark between Scan group and minimize → `Compact view`, naming the Layout setting.
+Click it → the same window narrows to 380 x 460 with its top-right corner where the full window's
+was, and the mark turns to the enlarge mark (`Full view`). Drag it somewhere else and size it from
+the corner → it stops at 320 and 520 wide (220 and 900 tall). Click the mark → the full window comes
+back at its own size and place; click again → compact returns where you left it. `/dw compact` and
+`/dw full` do the same and print `Compact view.` / `Full view.`; Settings → Window → Layout shows
+the choice and switching it there moves the window too. `/reload` → the window opens in the layout
+it was in, each at its own place; Reset position puts both back. An account that had the old compact
+preset on opens compact after the update. Result:
+
+**COMPACT-6. Open in compact view during a run (DW-C0).** With the Layout on Full and Settings →
+Window → Open in compact view during a run on (the default), close the window and start a Mythic+
+key → the first drop opens the window compact; the Layout setting still reads Full. Complete the key
+with the window still open → it stays compact; close it and reopen it (`/dw show`) → it opens full.
+Close it inside a dungeon run, let a drop open it → compact; click the toggle → full at once, and it
+stays the player's choice. Turn the option off → an auto-open in a run keeps the Layout. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -1355,3 +1376,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet |
 | SIM-12 | DW-B0, the loot step says where its drops went; the tabs reconcile | No client pass recorded yet |
 | SIM-13 | DW-B5, the loot step honors `feed.showOwn`, test mode's feed and My drops' Hide and filters | No client pass recorded yet |
+| COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |

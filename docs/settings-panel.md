@@ -115,7 +115,7 @@ prints auto-ask's one-time notice; turning it off cancels the asks waiting to go
 
 ## Window
 
-**Columns:** a checkbox per optional column (My eq among them since DW-83). **Layout:** Compact, Row height (18 by default, all three
+**Columns:** a checkbox per optional column (My eq among them since DW-83). **Layout:** Layout (Full or Compact, compact spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`), Open in compact view during a run (on by default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends), Row height (18 by default, all three
 tabs), Font size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table; DW-A8), Keep history
 for (7 to 180 days or Never delete, default 30; account-wide; a shorter time that would delete groups
 asks first, and No puts the previous time back). **Toast:** Show a toast, then its least gain, duration, combat and sound

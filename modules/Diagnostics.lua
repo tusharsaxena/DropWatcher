@@ -62,9 +62,14 @@ local function window(out)
     out:add(TAG, "window: open=%s testMode=%s visibility=%s locked=%s", State.windowOpen,
         State.testMode, p.visibility, p.locked)
     local g = type(p.window) == "table" and p.window or {}
-    local point = type(g.point) == "table" and g.point or { "default" }
-    out:joined(TAG, "window: point", point)
-    out:add(TAG, "window: size=%sx%s", g.width or "default", g.height or "default")
+    local WC = NS.WindowCompact
+    out:add(TAG, "window: layout=%s stored=%s run=%s compactInRuns=%s", read(WC.Mode), read(WC.StoredMode),
+        State.compactRun and tostring(State.compactRun.key) or "none", NS.Setting("window.compactInRuns"))
+    for _, mode in ipairs(WC.MODES) do
+        local mg = WC.Geometry(mode)
+        out:joined(TAG, "window: " .. mode .. " point", type(mg.point) == "table" and mg.point or { "default" })
+        out:add(TAG, "window: %s size=%sx%s", mode, mg.width or "default", mg.height or "default")
+    end
     out:add(TAG, "window: tab=%s minimized=%s new=%s", read(W.ActiveTab), g.minimized == true, read(W.NewCount))
     local t = NS.Toast.Stats()
     out:add(TAG, "toast: enabled=%s built=%s shown=%s drop=%s waiting=%s held=%s", NS.Setting("toast.enabled"),
