@@ -413,6 +413,11 @@ function DCard.OpenEditor(dropID)
     return editor
 end
 
+--- Close the Edit message box without sending (the window minimizing takes it down).
+function DCard.CloseEditor()
+    if editor then editor:Hide() end
+end
+
 --- The Edit message box, or nil before its first use. For the suites.
 --- @return table|nil
 function DCard.Editor() return editor end

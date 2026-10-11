@@ -18,9 +18,10 @@ local addonName, NS = ...
 -- with no body yet shows a line saying what it will hold, so the window is never blank.
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
--- DropAdded, DropUpdated, InspectDone, and TradeTimerTick / TradeTimerExpiring while the My drops
--- tab or the Offer panel shows a countdown) and on its own footer ticker while shown (which also
--- moves the My drops tab's estimated countdowns); it reads records
+-- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
+-- many messages arrive; InspectDone repaints the footer alone; TradeTimerTick and its own footer
+-- ticker (which also moves the My drops tab's estimated countdowns) repaint only what shows a
+-- countdown, the My drops tab and the Offer panel. It reads records
 -- through the engine's read-only accessors and never calls an engine action. A button's action goes
 -- through the host handler its slash verb shares (NS.ScanGroup, NS.SetQualityMode,
 -- core/DropWatcher.lua).
@@ -92,6 +93,8 @@ local autoOpenedIn               -- the situation the first interesting drop alr
 local instanceSince              -- GetTime() of the last situation change: "This instance"
 local footerTicker
 local lastTitleClick
+local repaintPending = false     -- a bus repaint is queued for the next frame
+local repaintCountdown           -- the countdowns' own repaint (defined with the repaints below)
 
 local function notifyVisibility(shown)
     for _, fn in ipairs(visibilityListeners) do fn(shown) end
@@ -234,6 +237,18 @@ local function applyPoint()
     frame:SetPoint(pt[1], UIParent, pt[2], pt[3] or 0, pt[4] or 0)
 end
 
+-- Minimize and expand grow and shrink the window from its top edge, so the title bar stays where
+-- it is whatever point it was saved at (CENTER by default): the anchor moves to the top-left corner
+-- first. GetLeft/GetTop answer in the frame's own coordinates, the ones UIParent's BOTTOMLEFT offsets
+-- take, so no scale adjustment is needed.
+local function anchorTopLeft()
+    local left, top = frame:GetLeft(), frame:GetTop()
+    if type(left) ~= "number" or type(top) ~= "number" then return end
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+    savePoint()
+end
+
 -- Minimized, the window is its title bar alone; the stored height is kept for the expand.
 local function applySize()
     local g = geometry()
@@ -252,19 +267,10 @@ local function repaintFooter()
     if frame and frame:IsShown() and not isMinimized() and NS.WindowFooter then NS.WindowFooter.Refresh() end
 end
 
--- Whether a countdown is on screen: the My drops tab, or the Offer panel.
-local function showsCountdown()
-    return activeTab == "mine" or (NS.OfferPanel ~= nil and NS.OfferPanel.IsShown())
-end
-
--- A countdown moved: the whole window repaints while one is on screen, else nothing.
-local function repaintCountdown()
-    if frame and frame:IsShown() and not isMinimized() and showsCountdown() then Window.Refresh() end
-end
-
 -- The footer ticker: the footer's ages, and the countdowns while one is on screen.
 local function tick()
-    if showsCountdown() then repaintCountdown() else repaintFooter() end
+    repaintFooter()
+    repaintCountdown()
 end
 
 local function stopTicker()
@@ -580,8 +586,11 @@ local function makeResizable(f)
     })
 end
 
-local function onHide()
-    NS.State.windowOpen = false
+-- A parent's hide (Alt-Z, a cinematic, the full-screen map) also runs OnHide, but leaves the frame's
+-- own shown flag set, and the window returns with UIParent: only a hide of the frame itself (Escape,
+-- the close mark, the ladder) is the player closing it.
+local function onHide(self)
+    if not self:IsShown() then NS.State.windowOpen = false end
     stopTicker()
     -- The dropdowns' popup is a process-wide singleton: hiding the window does not reach it.
     NS.CloseMenu()
@@ -720,6 +729,29 @@ local function repaint()
     if frame and frame:IsShown() then Window.Refresh() end
 end
 
+local function flushRepaint()
+    repaintPending = false
+    repaint()
+end
+
+-- A bus message marks the window for one repaint on the next frame, so a burst (test mode's
+-- placeholders, a Scan group's DropUpdated per drop, a run of ask states) costs one pass, not one
+-- per message. A player's own click still repaints at once (repaint).
+local function scheduleRepaint()
+    if repaintPending or not (frame and frame:IsShown()) then return end
+    repaintPending = true
+    C_Timer.After(0, flushRepaint)
+end
+
+-- A countdown moved (TradeTimerTick, the footer ticker): only what shows one repaints, the My drops
+-- tab while it is the active tab and the Offer panel while it is open; the Group drops table, the
+-- filter bar and the footer are left alone.
+repaintCountdown = function()
+    if not (frame and frame:IsShown()) or isMinimized() then return end
+    if activeTab == "mine" then refreshActive() end
+    if NS.OfferPanel and NS.OfferPanel.IsShown() then NS.OfferPanel.Refresh() end
+end
+
 -- ── tabs ────────────────────────────────────────────────────────────────────────────────────
 
 --- Show one tab: its pane is built on its first show, and the filter bar takes its state.
@@ -774,6 +806,11 @@ function Window.SetMinimized(on)
     NS.Debug(TAG, "window %s", on and "minimized" or "expanded")
     if not frame then return end
     NS.CloseMenu()
+    -- The Offer panel and the Edit message box hang off the window, not its body: they close with
+    -- the body rather than float beside a title bar.
+    if on and NS.OfferPanel then NS.OfferPanel.Close() end
+    if on and NS.DetailCard then NS.DetailCard.CloseEditor() end
+    anchorTopLeft()
     applySize()
     if on then stopTicker() else startTicker() end
     Window.Refresh()
@@ -922,18 +959,18 @@ local function onDropAdded(id)
     maybeAutoOpen(rec)
     local inFeed = (rec.test == true) == (NS.State.testMode == true)
     if isMinimized() and inFeed and NS.WindowFilterBar.IsInteresting(rec) then newCount = newCount + 1 end
-    repaint()
+    scheduleRepaint()
 end
 
 local function onRestriction(reason)
     restrictionSeen, restrictionReason = true, reason
-    repaint()
+    scheduleRepaint()
 end
 
 local function onSituation()
     instanceSince = GetTime()
     autoOpenedIn = nil
-    repaint()
+    scheduleRepaint()
 end
 
 -- Tracked, so the stand-down takes them down and the stand-up replays them. Without the bus
@@ -947,20 +984,22 @@ local function listen()
     -- The badge's queued count, and the Ask buttons of the active tab's rows.
     target:RegisterMessage(M.ASK_STATE_CHANGED, function()
         if frame then paintBadge() end
-        repaint()
+        scheduleRepaint()
     end)
     target:RegisterMessage(M.SITUATION_CHANGED, function() onSituation() end)
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
-    target:RegisterMessage(M.DROP_UPDATED, function() repaint() end)
+    target:RegisterMessage(M.DROP_UPDATED, function() scheduleRepaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)
     -- The My drops tab's and the Offer panel's countdowns (modules/TradeTimer.lua).
     target:RegisterMessage(M.TRADE_TIMER_TICK, function() repaintCountdown() end)
-    target:RegisterMessage(M.TRADE_TIMER_EXPIRING, function() repaintCountdown() end)
+    -- A drop nearing its end changes the tab's count and the rows' tones: one whole pass.
+    target:RegisterMessage(M.TRADE_TIMER_EXPIRING, function() scheduleRepaint() end)
 end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     stopTicker()
+    repaintPending = false
     restrictionSeen, restrictionReason = false, nil
     if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
 end

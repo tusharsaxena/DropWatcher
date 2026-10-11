@@ -35,14 +35,22 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
                                └─> shown: tabs (`My drops · n`), filter bar, footer, active body
 DropUpdated ───────────────> shown: the same repaint
 InspectDone ───────────────> shown: the footer's inspect freshness
-TradeTimerTick / Expiring ─> shown, My drops or the Offer panel on screen: the whole repaint
-footer ticker (5s) ────────> shown and expanded: the footer ("Last loot 12s ago"); the whole
-                             repaint instead while My drops or the Offer panel is on screen
+TradeTimerTick ────────────> shown and expanded: the My drops tab while it is active, the Offer
+                             panel while it is open; nothing else
+TradeTimerExpiring ────────> shown: the whole repaint
+footer ticker (5s) ────────> shown and expanded: the footer ("Last loot 12s ago"), then what
+                             TradeTimerTick repaints
 filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
 resize (grip released) ────> the whole repaint (the table's columns take the new width)
+minimize ──────────────────> the Offer panel and the Edit message box close; the anchor moves to
+                             the top-left corner first, so the title bar stays where it is
 ```
+
+Every bus repaint above but InspectDone's and the countdowns' is batched: a message marks the window
+and one repaint runs on the next frame (`C_Timer.After(0)`), so a burst (test mode's placeholders,
+a Scan group's `DropUpdated` per drop) costs one pass. A player's own click repaints at once.
 
 The tab's body (DW-31, DW-33, DW-51) is handed `Window.TabContext(tab)`: its feed (`test` in test
 mode), its filter state, the controls it honors, `matches(drop)` and `compare(a, b)`.

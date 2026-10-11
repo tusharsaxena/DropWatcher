@@ -263,6 +263,10 @@ the chat line `Inspecting <n> group members, one at a time.`, and within a minut
 
 **FEED-9. Minimize and auto-open.** With the window open, the minimize mark → the window shrinks
 to its title bar where it stood, the mark becomes a plus; `/reload` → it comes back minimized. In a
+Drag the window to the middle of the screen and minimize it again → the title bar stays exactly
+where it was, and the expand grows the window downward from it. Press Alt-Z twice → the window
+comes back with the UI; enter and leave combat → it stays open. On My drops open `Offer…`; on Group
+drops expand a row and click `Edit message`; then minimize → both close with the body. In a
 Heroic dungeon with the window minimized, let a member loot an upgrade for you → a `1 new` chip
 appears beside the title; a double-click on the title bar expands it and the chip goes. Then close
 the window, leave and enter another dungeon (or zone out and back), and let the first upgrade for

@@ -357,17 +357,19 @@ test("mine tab: Hide takes a dead row off the tab for the session", function()
 end)
 
 test("mine tab: Announce goes through the shared handler, and AskStateChanged repaints it", function()
-    local NS, drawn = shownMine()
+    local NS, drawn, m = shownMine()
     local calls, state = {}, "ready"
     NS.Asks.Press = function(kind, target, id) calls[#calls + 1] = { kind, tostring(target), id }; state = "queued"; return "queued" end
     NS.Asks.StateOf = function(kind) return kind == "announce" and state or "ready" end
     rowFor(drawn, 1).cells.actions.announce:__fire("OnClick")
     assertEqual(table.concat(calls[1], ","), "announce,nil,1")
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "queued", "announce", "group")
+    m.advance(0)   -- a bus message repaints on the next frame
     local b = rowFor(NS.WindowMine.Drawn(), 1).cells.actions.announce
     assertEqual(textOf(b.label), "Queued")
     state = "sent"
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "sent", "announce", "group")
+    m.advance(0)
     b = rowFor(NS.WindowMine.Drawn(), 1).cells.actions.announce
     assertEqual(textOf(b.label), "Announced"); assertFalse(b:IsEnabled())
 end)
@@ -460,6 +462,19 @@ test("offer panel: the close mark closes it, and it closes itself when its drop 
     assertFalse(NS.OfferPanel.IsShown())
     assertTrue(p.panel.closeButton ~= nil)
     assertTrue(NS.OfferPanel.Open(99) == nil, "no such drop")
+end)
+
+test("offer panel: minimizing the window closes the panel and the Edit message box", function()
+    local NS = openPanel()
+    assertTrue(NS.OfferPanel.IsShown())
+    local e = NS.DetailCard.OpenEditor(1)
+    assertTrue(e:IsShown())
+    NS.Window.SetMinimized(true)
+    assertFalse(NS.OfferPanel.IsShown(), "no panel docked beside a title bar")
+    assertTrue(NS.State.offerPanel == nil)
+    assertFalse(e:IsShown(), "no editor over a title bar")
+    NS.Window.SetMinimized(false)
+    assertFalse(NS.OfferPanel.IsShown(), "the expand does not bring it back by itself")
 end)
 
 test("offer panel: Announce to group announces the drop", function()

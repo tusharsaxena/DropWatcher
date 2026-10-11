@@ -113,7 +113,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (31)
+### test_window_shell.lua (35)
 
 - shell: the title bar holds the logo, the gold title, the badge, Scan group, minimize and close
 - shell: the default size is board 01's 940 x 600
@@ -142,6 +142,10 @@ Total.
 - shell: a double-click on the title bar expands a minimized window
 - shell: minimized, the corner grip does not resize and the stored size is kept
 - shell: a minimized window comes back minimized after a settings repaint
+- shell: minimize and expand keep the title bar in place, whatever point it was saved at
+- shell: a parent's hide (Alt-Z, a cinematic) is not the player closing the window
+- shell: a burst of bus messages repaints once, on the next frame
+- shell: a countdown tick on the Group drops tab repaints nothing of the window
 - shell: the first interesting drop in an auto-open situation opens the window, once
 - shell: no auto-open for a test drop, outside an auto-open situation, or with the master off
 - shell: every control on the chrome has a tooltip with a reason
@@ -202,7 +206,7 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_window_mine.lua (29)
+### test_window_mine.lua (30)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -230,6 +234,7 @@ Total.
 - offer panel: Offer whispers through the shared handler; Trade hands the item over
 - offer panel: opening an upgrade for you reveals its Best candidates
 - offer panel: the close mark closes it, and it closes itself when its drop is gone
+- offer panel: minimizing the window closes the panel and the Edit message box
 - offer panel: Announce to group announces the drop
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
@@ -842,10 +847,10 @@ Total.
 | test_schema.lua | 11 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 31 |
+| test_window_shell.lua | 35 |
 | test_window_group.lua | 30 |
 | test_detail_card.lua | 19 |
-| test_window_mine.lua | 29 |
+| test_window_mine.lua | 30 |
 | test_test_mode.lua | 18 |
 | test_compat.lua | 64 |
 | test_constants.lua | 12 |
@@ -874,4 +879,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **708** |
+| **Total** | **713** |

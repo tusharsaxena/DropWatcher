@@ -399,7 +399,7 @@ test("table: Their eq shows the looter's worn item from their inspect read", fun
 end)
 
 test("table: the Ask button asks through the shared handler, and AskStateChanged repaints it", function()
-    local NS, drawn = shownTable()
+    local NS, drawn, m = shownTable()
     local calls, state = {}, "ready"
     NS.Asks.Press = function(kind, target, id) calls[#calls + 1] = { kind, target, id }; state = "queued"; return "queued" end
     NS.Asks.StateOf = function() return state end
@@ -407,11 +407,13 @@ test("table: the Ask button asks through the shared handler, and AskStateChanged
     ask:__fire("OnClick")
     assertEqual(table.concat(calls[1], ","), "ask,Seta-Realm,1")
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "queued", "ask", "Seta-Realm")
+    m.advance(0)   -- a bus message repaints on the next frame
     ask = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions.ask
     assertEqual(textOf(ask.label), "Queued")
     assertTrue(ask.art:IsShown(), "the catalog's clock mark")
     state = "sent"
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "sent", "ask", "Seta-Realm")
+    m.advance(0)
     ask = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions.ask
     assertEqual(textOf(ask.label), "Asked"); assertFalse(ask:IsEnabled())
 end)

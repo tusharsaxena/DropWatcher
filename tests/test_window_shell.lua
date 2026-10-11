@@ -76,8 +76,9 @@ test("shell: BadgeText names the restriction and counts the queued asks", functi
 end)
 
 test("shell: RestrictionChanged shows the badge, AskStateChanged counts the queue, its tooltip lists it", function()
-    local NS, f = shown()
+    local NS, f, m = shown()
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
+    m.advance(0)   -- a bus message repaints on the next frame
     assertTrue(f.badge:IsShown())
     assertEqual(textOf(f.badge.text), "Encounter")
     NS.Asks.Queued = function() return { { kind = "ask", target = "Seta-Realm" } } end
@@ -88,6 +89,7 @@ test("shell: RestrictionChanged shows the badge, AskStateChanged counts the queu
     assertTrue(tip[2]:find("boss encounter") ~= nil, "which restriction, in words")
     assertEqual(tip[3], "Queued: Ask to Seta-Realm")
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, nil, true)
+    m.advance(0)
     assertFalse(f.badge:IsShown(), "lifted: the badge goes")
 end)
 
@@ -352,7 +354,7 @@ end)
 -- ── minimize ────────────────────────────────────────────────────────────────────────────────
 
 test("shell: minimize collapses to the title bar, keeps the size, and counts interesting drops", function()
-    local NS, f = shown()
+    local NS, f, m = shown()
     f.minimizeButton:__fire("OnClick")
     assertTrue(NS.Window.IsMinimized())
     assertTrue(NS.addon.db.profile.window.minimized, "kept in the profile")
@@ -364,6 +366,7 @@ test("shell: minimize collapses to the title bar, keeps the size, and counts int
     announce(NS, drop({ id = 7 }))
     announce(NS, drop({ id = 8, me = { verdict = "downgrade" } }))
     assertEqual(NS.Window.NewCount(), 1, "only the interesting one")
+    m.advance(0)
     assertTrue(f.newChip:IsShown())
     assertEqual(textOf(f.newChip.text), "1 new")
     f.minimizeButton:__fire("OnClick")
@@ -399,6 +402,65 @@ test("shell: a minimized window comes back minimized after a settings repaint", 
     NS.Window.SetMinimized(true)
     NS.SchemaRuntime.Set("alpha", 0.8)
     assertEqual(f:GetHeight(), 32)
+end)
+
+test("shell: minimize and expand keep the title bar in place, whatever point it was saved at", function()
+    local NS, f = shown()
+    assertEqual(f:GetPoint(1), "CENTER", "the default point")
+    -- Where the client draws it: 940 x 600 centered on a 1920 x 1080 screen.
+    f.GetLeft = function() return 490 end
+    f.GetTop = function() return 840 end
+    NS.Window.SetMinimized(true)
+    local point, _, relPoint, x, y = f:GetPoint(1)
+    assertEqual(table.concat({ point, relPoint, x, y }, ","), "TOPLEFT,BOTTOMLEFT,490,840")
+    assertEqual(table.concat(NS.addon.db.profile.window.point, ","), "TOPLEFT,BOTTOMLEFT,490,840", "and kept")
+    assertEqual(f:GetHeight(), 32)
+    NS.Window.SetMinimized(false)
+    assertEqual(table.concat({ f:GetPoint(1) }, ",", 3, 5), "BOTTOMLEFT,490,840", "the expand grows downward")
+    assertEqual(f:GetHeight(), 600)
+end)
+
+-- ── a parent's hide ─────────────────────────────────────────────────────────────────────────
+
+test("shell: a parent's hide (Alt-Z, a cinematic) is not the player closing the window", function()
+    local NS, f = shown()
+    -- UIParent hidden: the client runs the window's OnHide, but its own shown flag stays set.
+    f:__fire("OnHide")
+    assertTrue(NS.State.windowOpen, "the player's choice is kept")
+    f:__fire("OnShow")
+    NS.Window.UpdateVisibility(true)
+    assertTrue(f:IsShown(), "a later show decision keeps it open")
+    f:Hide()
+    f:__fire("OnHide")
+    assertFalse(NS.State.windowOpen, "a hide of the frame itself still closes it")
+end)
+
+-- ── batched repaints ────────────────────────────────────────────────────────────────────────
+
+test("shell: a burst of bus messages repaints once, on the next frame", function()
+    local NS, _, m = shown()
+    local W, n = NS.Window, 0
+    local refresh = W.Refresh
+    W.Refresh = function(...) n = n + 1; return refresh(...) end
+    for i = 1, 5 do NS.addon:SendMessage(NS.MSG.DROP_UPDATED, i) end
+    NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "queued", "ask", "Seta-Realm")
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
+    assertEqual(n, 0, "nothing repaints inside the burst")
+    m.advance(0)
+    assertEqual(n, 1, "one pass for the whole burst")
+    m.advance(1)
+    assertEqual(n, 1, "and nothing more queued")
+end)
+
+test("shell: a countdown tick on the Group drops tab repaints nothing of the window", function()
+    local NS, _, m = shown()
+    local W, n = NS.Window, 0
+    local refresh = W.Refresh
+    W.Refresh = function(...) n = n + 1; return refresh(...) end
+    assertEqual(W.ActiveTab(), "group")
+    NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
+    m.advance(0)
+    assertEqual(n, 0, "no countdown on screen, no repaint")
 end)
 
 -- ── auto-open ───────────────────────────────────────────────────────────────────────────────
