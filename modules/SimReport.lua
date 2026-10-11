@@ -12,14 +12,16 @@ local _, NS = ...
 -- burst (NS.SimEvents.Loot), then collects the receipts made since the mark (Collect): the records
 -- the feed took (each with its state: added, loading or hidden by a gate), how many lines merged
 -- into an earlier drop, and how many lines went out. Place says where one drop is now (pure, given
--- the feed's reader): Group drops, My drops, hidden by a gate (its reason), loading, or cleared from
--- the feed since. Summarize counts the places (pure) and words the step's detail: `2 drops (1
+-- the feed's reader and the window's view, View): Group drops, My drops, hidden by a gate (its
+-- reason), loading, cleared from the feed since, or not shown while test mode is on. It honors
+-- `feed.showOwn` (a drop of yours is then on Group drops, and My drops too) and the feed the window
+-- shows (feedback-3 spec §5, DW-B5). Summarize counts the places (pure) and words the step's detail: `2 drops (1
 -- yours)`, `3 drops (1 yours, 1 hidden)`; TipLines names each drop, its looter and its place, for the
 -- panel row's tooltip. The panel reads the report again on every repaint, so a drop that was still
 -- loading when the step ran is placed once it lands.
 --
--- It reads NS.State.feed (the receipts, read-only, as the diagnostics do), NS.LootFeed.Get and
--- NS.WindowCells' name helpers at call time.
+-- It reads NS.State.feed (the receipts, read-only, as the diagnostics do), NS.LootFeed.Get,
+-- NS.Window.FeedView and NS.WindowCells' name helpers at call time.
 --
 --   report = { drops = { rec, ... } (oldest first), merged, sent }
 
@@ -38,7 +40,8 @@ local GATE = {
 local EXTRAS = {
     { key = "mine", fmt = L["%d yours"] }, { key = "hidden", fmt = L["%d hidden"] },
     { key = "loading", fmt = L["%d loading"] }, { key = "merged", fmt = L["%d merged"] },
-    { key = "cleared", fmt = L["%d cleared"] }, { key = "refused", fmt = L["%d refused"] },
+    { key = "cleared", fmt = L["%d cleared"] }, { key = "offscreen", fmt = L["%d not shown in test mode"] },
+    { key = "refused", fmt = L["%d refused"] },
 }
 
 --- The feed's receipt sequence and merge count now, before a burst.
@@ -75,32 +78,44 @@ function R.Loot(n, who)
     return sent, why, R.Collect(mark, sent)
 end
 
---- Where one drop is now (pure, given `get`, the feed's reader): `group`, `mine`, `hidden` (and the
---- gate's reason), `loading`, or `cleared` (taken out of the feed since).
+--- What the window shows (the edge): its feed and `feed.showOwn` (NS.Window.FeedView), so a place
+--- honors them (feedback-3 spec §5, DW-B5).
+--- @return table { feed, showOwn }
+function R.View() return NS.Window.FeedView() end
+
+--- Where one drop is now (pure, given `get`, the feed's reader, and `view`, the window's R.View;
+--- nil is the live feed with `feed.showOwn` off): `group`, `mine`, `hidden` (and the gate's reason),
+--- `loading`, `cleared` (taken out of the feed since) or `offscreen` (in a feed the window does not
+--- show: test mode is on). With `feed.showOwn` on, a drop of yours is `group` (Group drops lists it,
+--- and My drops too).
 --- @param rec table
 --- @param get function|nil id -> drop (NS.LootFeed.Get)
+--- @param view table|nil { feed, showOwn }
 --- @return string place, string|nil why
-function R.Place(rec, get)
+function R.Place(rec, get, view)
+    view = view or {}
     if rec.state == "hidden" then return "hidden", rec.hidden end
     if rec.state ~= "added" then return "loading" end
     if get and get(rec.id) ~= rec then return "cleared" end
-    if rec.isMine then return "mine" end
+    if (rec.feed or "live") ~= (view.feed or "live") then return "offscreen" end
+    if rec.isMine and not view.showOwn then return "mine" end
     return "group"
 end
 
---- A report's counts and its detail (pure, given `get`): { total, group, mine, hidden, loading,
---- merged, cleared, refused, text }. `text` is `2 drops (1 yours, 1 hidden)`, the count alone when
---- every drop is on Group drops.
+--- A report's counts and its detail (pure, given `get` and `view`, as R.Place's): { total, group,
+--- mine, hidden, loading, merged, cleared, offscreen, refused, text }. `text` is `2 drops (1 yours,
+--- 1 hidden)`, the count alone when every drop is on Group drops.
 --- @param report table
 --- @param get function|nil
+--- @param view table|nil
 --- @return table
-function R.Summarize(report, get)
+function R.Summarize(report, get, view)
     report = type(report) == "table" and report or {}
     local drops = report.drops or {}
     local c = { total = tonumber(report.sent) or #drops, group = 0, mine = 0, hidden = 0, loading = 0, cleared = 0,
-        merged = tonumber(report.merged) or 0 }
+        offscreen = 0, merged = tonumber(report.merged) or 0 }
     for _, rec in ipairs(drops) do
-        local place = R.Place(rec, get)
+        local place = R.Place(rec, get, view)
         c[place] = c[place] + 1
     end
     c.refused = math.max(0, c.total - #drops - c.merged)
@@ -115,28 +130,31 @@ function R.Summarize(report, get)
 end
 
 local PLACE_WORDS = { group = L["Group drops"], mine = L["My drops"], loading = L["still loading"],
-    cleared = L["cleared from the feed"] }
+    cleared = L["cleared from the feed"], offscreen = L["not shown while test mode is on"] }
 
-local function where(rec, get)
-    local place, why = R.Place(rec, get)
+local function where(rec, get, view)
+    local place, why = R.Place(rec, get, view)
     if place == "hidden" then return L["hidden: %s"]:format(GATE[why] or tostring(why)) end
+    if place == "group" and rec.isMine then return L["Group drops and My drops"] end
     return PLACE_WORDS[place]
 end
 
 --- The tooltip's lines for a report (pure, given `get`): each drop, its looter and where it is
 --- (`Item (Seta): Group drops`, `Item (you): My drops`, `Item (Seta): hidden: below the quality
---- gate`), then the merged and refused lines' counts.
+--- gate`; `Item (you): Group drops and My drops` with `feed.showOwn` on), then the merged and refused
+--- lines' counts. `view` as R.Place's.
 --- @param report table
 --- @param get function|nil
+--- @param view table|nil
 --- @return table lines
-function R.TipLines(report, get)
+function R.TipLines(report, get, view)
     local WC, out = NS.WindowCells, {}
     report = type(report) == "table" and report or {}
     for _, rec in ipairs(report.drops or {}) do
         local who = rec.isMine and L["you"] or WC.ShortName(type(rec.looter) == "table" and rec.looter.name or nil)
-        out[#out + 1] = L["%s (%s): %s"]:format(WC.ItemName(rec.link) or "?", who, where(rec, get))
+        out[#out + 1] = L["%s (%s): %s"]:format(WC.ItemName(rec.link) or "?", who, where(rec, get, view))
     end
-    local c = R.Summarize(report, get)
+    local c = R.Summarize(report, get, view)
     if c.merged > 0 then out[#out + 1] = L["%d merged into an earlier drop"]:format(c.merged) end
     if c.refused > 0 then out[#out + 1] = L["%d refused by the feed"]:format(c.refused) end
     return out

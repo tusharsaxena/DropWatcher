@@ -88,7 +88,8 @@ its one-line responsibility and why its position is load-bearing or conventional
   simulated bag items and the trade window), its event drivers (`SimEvents.lua`: loot lines,
   pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3), where a loot
   burst's drops went (`SimReport.lua`: Group drops, My drops, or the gate that hid each, so the
-  loot step reads `Loot: 2 drops (1 yours)` and reconciles with the tabs; feedback-3 spec §0) and its
+  loot step reads `Loot: 2 drops (1 yours)` and reconciles with the tabs; feedback-3 spec §0; it
+  honors `feed.showOwn` and the feed the window shows, `Window.FeedView`, §5) and its
   scenarios and timeline (`SimScenario.lua`: what `/dw sim start` builds and `run` and `step`
   play, with `pause`, `resume` and `restart`; simulator spec §4) and its step panel (`SimPanel.lua`:
   PerfPanel's look, the timeline as clickable steps, the run controls and the scenario picker,
@@ -116,12 +117,16 @@ its one-line responsibility and why its position is load-bearing or conventional
   (`tipDocked`; feedback-2 spec §8, FB2-10). My drops sits under the same collapsible group
   headers as the other two tabs, every group open until toggled (DW-A9). The tables' entries in
   order are `WindowCells.Entries` (pure); a Group drops header counts your own drops it leaves to
-  My drops (`· 1 yours on My drops`), and the tab reads `My drops · n` for every drop of yours, its
-  tooltip naming how many you can still trade (feedback-3 spec §0, DW-B0). A filter-bar control's
+  My drops (`· 1 yours on My drops`), and the tab reads `My drops · n`, its tooltip naming how many
+  you can still trade (feedback-3 spec §0, DW-B0). Both count only the drops My drops actually
+  lists: not the ones hidden with Hide nor the ones its own filters hide (`WindowMine.Lists`,
+  `Tally`, `Lister`), and the tab's tooltip names those it leaves out (feedback-3 spec §5, DW-B5). A filter-bar control's
   tooltip (View, Quality, Content, Character, the search box and the footer's Sort) opens above the
   control, never over it or its menu: its `BOTTOMLEFT` on the control's `TOPRIGHT`, or its
   `BOTTOMRIGHT` on the `TOPLEFT` when the screen has no room on the right (`Window.AttachTooltip`'s
-  `above` placement, `Window.PlaceAbove`; feedback-3 spec §1, DW-B1).
+  `above` placement, `Window.PlaceAbove`; feedback-3 spec §1, DW-B1). Near the top of the screen,
+  with no room above, it opens below instead: its `TOPLEFT` on the control's `BOTTOMRIGHT`, else its
+  `TOPRIGHT` on the `BOTTOMLEFT` (`Window.AboveFits`; feedback-3 spec §5, DW-B5).
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
 

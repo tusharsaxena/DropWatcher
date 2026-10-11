@@ -197,7 +197,7 @@ function DO.stop() return NS.Sim.Stop("stop") end
 function DO.loot(c)
     local R = NS.SimReport
     local n, code, report = R.Loot(c.n, c.who)
-    if n > 0 then NS.Print(L["Simulated loot: %s."]:format(R.Summarize(report, NS.LootFeed.Get).text)) end
+    if n > 0 then NS.Print(L["Simulated loot: %s."]:format(R.Summarize(report, NS.LootFeed.Get, R.View()).text)) end
     return answered(n > 0, code)
 end
 

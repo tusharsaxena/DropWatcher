@@ -894,3 +894,34 @@ test("shell: without the Widgets library the window builds with no dead dropdown
     assertTrue(sort == nil)
     NS.CloseMenu()
 end)
+
+-- M11 review leftover (feedback-3 spec §5, DW-B5): near the top of the screen the tooltip goes below.
+test("filter bar tooltip: AboveFits is true when the screen has room over the control, else false", function()
+    local fits = T.newAddon().Window.AboveFits
+    assertTrue(fits(800, 200, 1080))
+    assertTrue(fits(880, 200, 1080), "exactly fits")
+    assertTrue(not fits(881, 200, 1080))
+    assertTrue(fits(nil, 200, 1080), "unknown geometry: above")
+    assertTrue(fits(1000, 200, nil))
+end)
+
+local function hoverNearTop(m, w, right, top)
+    w.GetTop = function() return top end
+    m.UIParent.GetHeight = function() return 1080 end
+    m.GameTooltip.GetHeight = function() return 120 end
+    local pts, rel = hoverAbove(m, w, right, 300)
+    w.GetTop = nil
+    return pts, rel
+end
+
+test("filter bar tooltip: near the top of the screen it opens below the control, never over it", function()
+    local NS, _, m = shown()
+    local view = NS.WindowFilterBar.Controls().view
+    local pts, rel = hoverNearTop(m, view, 900, 1000)
+    assertEqual(pts, "TOPLEFT>BOTTOMRIGHT", "its top left on the control's bottom right")
+    assertTrue(rel == view)
+    assertEqual((hoverNearTop(m, view, 1800, 1000)), "TOPRIGHT>BOTTOMLEFT", "no room on the right either")
+    assertEqual((hoverNearTop(m, view, 900, 900)), "BOTTOMLEFT>TOPRIGHT", "room above: above")
+    local side, where = NS.Window.PlaceAbove(m.GameTooltip, view)
+    assertEqual(side, "right"); assertEqual(where, "above")
+end)

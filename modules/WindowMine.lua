@@ -111,13 +111,88 @@ function WM.IsRevealed(id) return view().revealed[id] == true end
 --- @param state table|nil { dismissed } (NS.State.windowMine)
 --- @return table drops
 function WM.Entries(drops, ctx, state)
-    local dismissed = state and state.dismissed or {}
     local out = {}
     for _, d in ipairs(drops or {}) do
-        if d.isMine and not dismissed[d.id] and ctx.matches(d) then out[#out + 1] = d end
+        if WM.Lists(d, ctx, state) then out[#out + 1] = d end
     end
     table.sort(out, ctx.compare)
     return out
+end
+
+--- Whether the tab lists drop `d`: yours, not hidden with its row's Hide and passing the tab's own
+--- filters. The tab's label and the Group drops headers' `· n yours on My drops` count with it, so
+--- they agree with what the tab lists (feedback-3 spec §5, DW-B5).
+--- @param d table
+--- @param ctx table { matches = fn(drop) }
+--- @param state table|nil { dismissed }
+--- @return boolean
+function WM.Lists(d, ctx, state)
+    local dismissed = state and state.dismissed or {}
+    return type(d) == "table" and d.isMine == true and not dismissed[d.id] and ctx.matches(d) == true
+end
+
+-- Why the tab leaves one of your drops out: `dismissed` (its row's Hide), else the filter's key.
+local function excludedWhy(d, ctx, state)
+    if state and state.dismissed and state.dismissed[d.id] then return "dismissed" end
+    return ctx.hiddenBy and ctx.hiddenBy(d) or "filter"
+end
+
+--- Your drops in `drops`, tallied the way the tab lists them (pure): `listed` (WM.Lists), how many
+--- of those you can still trade, and the ones left out ({ drop, why }, why `dismissed` or the
+--- filter's key) for the tab's tooltip (feedback-3 spec §5).
+--- @param drops table|nil
+--- @param ctx table { matches = fn(drop), hiddenBy = fn(drop) }
+--- @param state table|nil { dismissed }
+--- @return table { listed, tradeable, excluded }
+function WM.Tally(drops, ctx, state)
+    local FB, t = NS.WindowFilterBar, { listed = 0, tradeable = 0, excluded = {} }
+    for _, d in ipairs(drops or {}) do
+        if WM.Lists(d, ctx, state) then
+            t.listed = t.listed + 1
+            if FB.IsTradeableMine(d) then t.tradeable = t.tradeable + 1 end
+        elseif type(d) == "table" and d.isMine then
+            t.excluded[#t.excluded + 1] = { drop = d, why = excludedWhy(d, ctx, state) }
+        end
+    end
+    return t
+end
+
+--- The tab tooltip's lines for your drops it leaves out (pure): `Not listed here:`, then each drop
+--- and why (`you hid it`, or the filter: FB.ReasonLabel), the first WC.HIDDEN_TIP_LINES of them.
+--- @param excluded table|nil WM.Tally's
+--- @param filter table|nil the tab's filter state
+--- @return table lines (empty when none is left out)
+function WM.ExcludedLines(excluded, filter)
+    local WC, out = NS.WindowCells, {}
+    if type(excluded) ~= "table" or #excluded == 0 then return out end
+    out[1] = L["Not listed here:"]
+    for i, x in ipairs(excluded) do
+        if i > WC.HIDDEN_TIP_LINES then
+            out[#out + 1] = L["and %d more"]:format(#excluded - WC.HIDDEN_TIP_LINES)
+            break
+        end
+        local why = x.why == "dismissed" and L["you hid it"] or NS.WindowFilterBar.ReasonLabel(x.why, filter)
+        out[#out + 1] = L["%s: %s"]:format(WC.ItemName(x.drop.link) or "?", why)
+    end
+    return out
+end
+
+--- The tab's tally over the feed the window shows, through its own filters and Hide (the edge
+--- the tab label and its tooltip read).
+--- @return table WM.Tally's, plus `filter` (the tab's filter state)
+function WM.TabTally()
+    local ctx = NS.Window.TabContext("mine")
+    local t = WM.Tally(NS.LootFeed.Drops(ctx.feed), ctx, view())
+    t.filter = ctx.filter
+    return t
+end
+
+--- A predicate answering whether the tab lists a drop now (WM.Lists over its own filters and Hide),
+--- for the Group drops headers' `· n yours on My drops`.
+--- @return function fn(drop) -> boolean
+function WM.Lister()
+    local ctx, state = NS.Window.TabContext("mine"), view()
+    return function(d) return WM.Lists(d, ctx, state) end
 end
 
 -- The ids the feed's groups hold.

@@ -103,9 +103,11 @@ local function lineCount(n)
 end
 
 -- A played loot step reads its report again (modules/SimReport.lua; feedback-3 spec §0), so a drop
--- still loading when it ran is placed once it lands: `Loot: 2 drops (1 yours)`.
+-- still loading when it ran is placed once it lands: `Loot: 2 drops (1 yours)`. It reads the window's
+-- view each time too (SimReport.View: `feed.showOwn` and test mode; feedback-3 spec §5).
 local function lootLabel(step)
-    if step.report then return L["Loot: %s"]:format(NS.SimReport.Summarize(step.report, NS.LootFeed.Get).text) end
+    local R = NS.SimReport
+    if step.report then return L["Loot: %s"]:format(R.Summarize(step.report, NS.LootFeed.Get, R.View()).text) end
     if step.detail then return L["Loot: %s"]:format(step.detail) end
     if step.n == 1 then return L["Loot: 1 drop"] end
     if step.n then return L["Loot: %d drops"]:format(step.n) end
@@ -191,7 +193,8 @@ local function timelineRow(m, i, step, boss)
     row.tip = tipOf(row, stepTip(step), m)
     -- A played loot step's tooltip names each drop and where it went, after when it ran.
     if step.report then
-        for k, line in ipairs(NS.SimReport.TipLines(step.report, NS.LootFeed.Get)) do table.insert(row.tip, 2 + k, line) end
+        local R = NS.SimReport
+        for k, line in ipairs(R.TipLines(step.report, NS.LootFeed.Get, R.View())) do table.insert(row.tip, 2 + k, line) end
     end
     return row
 end

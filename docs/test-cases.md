@@ -182,7 +182,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (55)
+### test_window_shell.lua (57)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -239,6 +239,8 @@ Total.
 - shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
+- filter bar tooltip: AboveFits is true when the screen has room over the control, else false
+- filter bar tooltip: near the top of the screen it opens below the control, never over it
 
 ### test_window_group.lua (40)
 
@@ -1241,7 +1243,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_report.lua (13)
+### test_sim_report.lua (19)
 
 - sim report: the owner's key run: the second drop is yours, on My drops, nothing lost
 - sim report: the step's chat line says where its drops went
@@ -1256,6 +1258,12 @@ Total.
 - sim report regression lfr: Group drops + My drops + hidden = every loot step's drops
 - sim report regression delve: Group drops + My drops + hidden = every loot step's drops
 - sim report regression world: Group drops + My drops + hidden = every loot step's drops
+- tab counts: My drops tallies the drops it lists and names the ones you hid or its filters hide
+- tab counts: a drop you hid leaves the My drops count and the Group drops suffix, and the tooltip names it
+- tab counts: a drop My drops' own filters hide leaves both counts, and the tooltip names the filter
+- sim report: a place honors feed.showOwn and the feed the window shows
+- sim report: View reads feed.showOwn and the feed the window shows
+- sim report: with feed.showOwn on, the owner's step lists yours on Group drops, and the tabs agree
 
 ### test_sim_panel.lua (19)
 
@@ -1390,7 +1398,7 @@ Total.
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 55 |
+| test_window_shell.lua | 57 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1431,7 +1439,7 @@ Total.
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
 | test_sim_e2e.lua | 12 |
-| test_sim_report.lua | 13 |
+| test_sim_report.lua | 19 |
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
@@ -1442,4 +1450,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1188** |
+| **Total** | **1196** |

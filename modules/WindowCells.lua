@@ -722,16 +722,21 @@ end
 -- Whether a drop is the tab's (`ctx.belongs`: Group drops lists your own only with `feed.showOwn`).
 local function belongs(ctx, d) return not ctx.belongs or ctx.belongs(d) end
 
+-- One of your drops the tab left to My drops that My drops lists (`ctx.onMine`, its own filters and
+-- Hide: feedback-3 spec §5); every one of yours without the predicate.
+local function onMine(ctx, d) return d.isMine == true and (not ctx.onMine or ctx.onMine(d)) end
+
 -- A group's drops for the tab, split into those shown and those its filter hid ({ drop, why },
--- why the control's key, else `filter`), and how many of your own the tab left to My drops (`yours`,
--- feedback-3 spec §0). A dismissed drop and one not the tab's are in neither.
+-- why the control's key, else `filter`), and how many of your own the tab left to My drops that My
+-- drops lists (`yours`, feedback-3 spec §0 and §5). A dismissed drop and one not the tab's are in
+-- neither.
 local function visibleDrops(group, get, ctx, dismissed)
     local shown, hidden, yours = {}, {}, 0
     for _, id in ipairs(group.drops or {}) do
         local d = get(id)
-        if d and not belongs(ctx, d) and d.isMine then
-            yours = yours + 1
-        elseif d and not dismissed[id] and belongs(ctx, d) then
+        if d and not belongs(ctx, d) then
+            if onMine(ctx, d) then yours = yours + 1 end
+        elseif d and not dismissed[id] then
             if ctx.matches(d) then
                 shown[#shown + 1] = d
             else
@@ -768,7 +773,8 @@ end
 --- `state.allOpen` every group never toggled is open (My drops, modules/WindowMine.lua).
 --- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
 --- @param get function id -> drop (NS.LootFeed.Get)
---- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy }
+--- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy,
+---   onMine = fn(drop): whether My drops lists one of yours the tab leaves to it (`yours`) }
 --- @param state table|nil { collapsed, dismissed, allOpen } (NS.State.windowGroup)
 --- @return table
 function WC.Entries(groups, get, ctx, state)

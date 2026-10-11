@@ -109,13 +109,21 @@ end
 local function isMinimized() return geometry().minimized == true end
 local function feedName() return NS.State.testMode == true and "test" or "live" end
 
+--- What the window shows: its feed (`test` in test mode, else `live`) and whether Group drops lists
+--- your own drops too (`feed.showOwn`). The simulator's report places its drops by it (SimReport).
+--- @return table { feed, showOwn }
+function Window.FeedView() return { feed = feedName(), showOwn = showOwn() } end
+
 -- ── tooltips ────────────────────────────────────────────────────────────────────────────────
 
 -- ABOVE THE CONTROL (feedback-3 spec §1, DW-B1). A filter-bar control's tooltip (the bar's
 -- dropdowns, its search box and the footer's Sort) never covers the control or the menu it opens
 -- below: its BOTTOMLEFT sits on the control's TOPRIGHT (ANCHOR_RIGHT's place), or, when the screen
--- has no room on the right, its BOTTOMRIGHT on the control's TOPLEFT (ANCHOR_LEFT's). Placed by
--- hand after Show, so the room is measured on the tooltip's real width, at each frame's scale.
+-- has no room on the right, its BOTTOMRIGHT on the control's TOPLEFT (ANCHOR_LEFT's). Near the top
+-- of the screen, with no room above, it goes below instead (its TOPLEFT on the control's BOTTOMRIGHT,
+-- else its TOPRIGHT on the BOTTOMLEFT; feedback-3 spec §5, DW-B5), so the clamp never pushes it over
+-- the dropdown. Placed by hand after Show, so the room is measured on the tooltip's real size, at
+-- each frame's scale.
 
 local function num(v) return type(v) == "number" and v or nil end
 
@@ -138,22 +146,47 @@ function Window.AboveSide(controlRight, tipWidth, screenWidth)
     return controlRight + tipWidth <= screenWidth and "right" or "left"
 end
 
---- Place a shown tooltip above `widget`, at its top right, else its top left. Answers the side.
+--- Whether a tooltip fits above a control, in screen pixels: the control's top plus the tooltip's
+--- height within the screen's height (feedback-3 spec §5, DW-B5). Unknown geometry answers true.
+--- @param controlTop number|nil
+--- @param tipHeight number|nil
+--- @param screenHeight number|nil
+--- @return boolean
+function Window.AboveFits(controlTop, tipHeight, screenHeight)
+    controlTop, tipHeight, screenHeight = num(controlTop), num(tipHeight), num(screenHeight)
+    if not (controlTop and tipHeight and screenHeight) then return true end
+    return controlTop + tipHeight <= screenHeight
+end
+
+-- The tooltip's point and the control's, by side and by whether it fits above. Below (near the top
+-- of the screen) its top corner sits on the control's bottom one, so the clamp never pushes it over
+-- the dropdown.
+local ABOVE_POINTS = {
+    above = { right = { "BOTTOMLEFT", "TOPRIGHT" }, left = { "BOTTOMRIGHT", "TOPLEFT" } },
+    below = { right = { "TOPLEFT", "BOTTOMRIGHT" }, left = { "TOPRIGHT", "BOTTOMLEFT" } },
+}
+
+-- A frame's measure in screen pixels, nil when unknown.
+local function screenPx(f, method)
+    local v = geom(f, method)
+    return v and v * scaleOf(f) or nil
+end
+
+--- Place a shown tooltip above `widget`, at its top right, else its top left; below it (its bottom
+--- right, else its bottom left) when the screen has no room above. Answers the side and `above` or
+--- `below`.
 --- @param tip table a GameTooltip, shown
 --- @param widget table the hovered control
---- @return string
+--- @return string side, string where
 function Window.PlaceAbove(tip, widget)
-    local right = geom(widget, "GetRight")
-    local screen = geom(UIParent, "GetWidth")
-    local side = Window.AboveSide(right and right * scaleOf(widget),
-        (geom(tip, "GetWidth") or 0) * scaleOf(tip), screen and screen * scaleOf(UIParent))
+    local side = Window.AboveSide(screenPx(widget, "GetRight"), (geom(tip, "GetWidth") or 0) * scaleOf(tip),
+        screenPx(UIParent, "GetWidth"))
+    local where = Window.AboveFits(screenPx(widget, "GetTop"), (geom(tip, "GetHeight") or 0) * scaleOf(tip),
+        screenPx(UIParent, "GetHeight")) and "above" or "below"
+    local pts = ABOVE_POINTS[where][side]
     tip:ClearAllPoints()
-    if side == "right" then
-        tip:SetPoint("BOTTOMLEFT", widget, "TOPRIGHT", 0, 0)
-    else
-        tip:SetPoint("BOTTOMRIGHT", widget, "TOPLEFT", 0, 0)
-    end
-    return side
+    tip:SetPoint(pts[1], widget, pts[2], 0, 0)
+    return side, where
 end
 
 -- Each placement after Show: `above` (a filter-bar control, DW-B1) and `row` (a table row's cell,
@@ -212,8 +245,9 @@ function Window.BadgeText(reason, queued)
     return NS.WindowTitleBar.BadgeText(reason, queued)
 end
 
---- A tab's label: `My drops · 2` counts every drop of yours in the feed on show, so it reconciles
---- with the simulator's loot step and the Group drops headers (feedback-3 spec §0).
+--- A tab's label: `My drops · 2` counts the drops of yours the tab lists (the feed on show, less
+--- the ones hidden with Hide or by its own filters), so it reconciles with what it lists, the
+--- simulator's loot step and the Group drops headers (feedback-3 spec §0 and §5).
 --- @param key string
 --- @param mine number|nil
 --- @return string
@@ -225,24 +259,18 @@ end
 
 -- ── reads ───────────────────────────────────────────────────────────────────────────────────
 
--- Your drops in the feed on show (the test feed in test mode), and how many of them you can still
--- trade (the tab's tooltip).
-local function mineCount()
-    local FB, n, tradeable = NS.WindowFilterBar, 0, 0
-    for _, d in ipairs(NS.LootFeed.Drops(feedName())) do
-        if d.isMine then n = n + 1 end
-        if FB.IsTradeableMine(d) then tradeable = tradeable + 1 end
-    end
-    return n, tradeable
-end
-
--- A tab's tooltip: My drops says how many of your drops you can still trade.
+-- A tab's tooltip: My drops says how many of the drops it lists you can still trade, then names
+-- your drops it leaves out (hidden with Hide or by its filters; feedback-3 spec §5).
 local function tabTip(key)
     if key ~= "mine" then return TAB_LABEL[key], TAB_TIP[key] end
-    local n, tradeable = mineCount()
-    if n == 0 then return TAB_LABEL[key], TAB_TIP[key] end
-    local line = tradeable > 0 and L["%d of them you can still trade."]:format(tradeable) or L["None of them can be traded now."]
-    return Window.TabLabel(key, n), TAB_TIP[key], line
+    local t = NS.WindowMine.TabTally()
+    local out = { Window.TabLabel(key, t.listed), TAB_TIP[key] }
+    if t.listed > 0 then
+        out[3] = t.tradeable > 0 and L["%d of them you can still trade."]:format(t.tradeable)
+            or L["None of them can be traded now."]
+    end
+    for _, line in ipairs(NS.WindowMine.ExcludedLines(t.excluded, t.filter)) do out[#out + 1] = line end
+    return unpack(out)
 end
 
 --- RestrictionChanged's last reason; before the first one, the tracker's own answer. Nil while
@@ -523,10 +551,12 @@ function Window.TabContext(tab)
     -- The placeholders ignore the situation, so This instance does not cut them (spec §11.6). The
     -- Character dropdown reads your recorder key (modules/CharFilter.lua).
     local ctx = { instanceSince = feed ~= "test" and instanceSince or nil, current = NS.CharFilter.CurrentKey() }
-    -- Group drops lists your own loot only with `feed.showOwn` on; it goes to My drops.
+    -- Group drops lists your own loot only with `feed.showOwn` on; it goes to My drops, and a header
+    -- counts only the ones My drops lists (`onMine`, feedback-3 spec §5).
     local own = tab ~= "group" or showOwn()
     return {
         tab = tab, feed = feed, filter = st, honors = honors, ctx = ctx,
+        onMine = tab == "group" and not own and NS.WindowMine.Lister() or nil,
         matches = function(drop) return FB.InGroup(drop, own) and FB.Matches(drop, st, ctx, honors) end,
         belongs = function(drop) return FB.InGroup(drop, own) end,
         hiddenBy = function(drop) return FB.HiddenBy(drop, st, ctx, honors) end,
@@ -545,7 +575,7 @@ local function refreshActive()
 end
 
 local function paintTabs()
-    local mine = mineCount()
+    local mine = NS.WindowMine.TabTally().listed
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
         local c = active and C.GOLD or C.IDLE

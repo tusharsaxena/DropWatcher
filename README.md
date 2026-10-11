@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1188%2F1188_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1196%2F1196_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -56,7 +56,9 @@ bags, bold with ten minutes to go) and the group members it would help most. If 
 you, it asks **keep?** and nobody sees it offered until you decide. **Offer** opens a panel that
 ranks everyone by how much they'd gain, with an **Offer** whisper and a **Trade** button that opens
 the trade with the item already in it. **Post my tradeables** lists all of them in group chat in one
-line.
+line. The tab's label, `My drops · 2`, counts the drops it lists, and a Group drops header's `· 1
+yours on My drops` counts the same way, so a drop you hid or filtered out leaves both. Hover the
+tab to see which of yours it leaves out, and why.
 
 The **History** tab remembers what the feed showed, across logouts and across your characters, for
 30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never

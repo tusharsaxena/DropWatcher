@@ -141,7 +141,7 @@ local PLAY = {
         local R = NS.SimReport
         local n, _, report = R.Loot(step.n)
         step.report = report
-        return n > 0, R.Summarize(report, NS.LootFeed.Get).text
+        return n > 0, R.Summarize(report, NS.LootFeed.Get, R.View()).text
     end,
 }
 

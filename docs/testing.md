@@ -297,7 +297,9 @@ root cause reproduced, your own drop on My drops and nothing lost; the pure `Pla
 `TipLines`; the panel row, its tooltip, the chat line, the `· n yours on My drops` header and the
 `My drops · n` tab; `/dw sim loot`'s line; and the regression over every scenario: each loot step's
 drops on Group drops, on My drops and hidden add up to its count, the minimum item level gate hiding
-them all included),
+them all included; then the M11 review leftovers, DW-B5, feedback-3 spec §5: the `My drops · n` label
+and the `· n yours on My drops` suffix count only what My drops lists, a drop hidden with Hide or by
+its filters named in the tab's tooltip, and the report honoring `feed.showOwn` and test mode's feed),
 `test_sim_panel` (the simulation step panel, DW-91: the rows, their PerfPanel states and commands
 before and during a run, the controls following the timeline, `/dw sim`, `start` and `panel`
 opening or toggling it beside the window, a click on the next step running it and one ahead running
