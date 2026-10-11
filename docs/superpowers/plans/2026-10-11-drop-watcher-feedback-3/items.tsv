@@ -3,3 +3,5 @@ DW-B0	M11	DropWatcher	Sim loot step vs tabs: root cause, step names where drops 
 DW-B1	M11	DropWatcher	Filter-bar tooltips above the control	DW-B0	S	PANEL	fb3 §1
 DW-B2	M11	DropWatcher	Every row tooltip at the row top right, all tabs	DW-B1	M	FEED	fb3 §2
 DW-B3	M11	DropWatcher	Docs sync + automated-test bundle	DW-B2	S		fb3 §3
+DW-B4	M11	DropWatcher	Headers: only your character; instance + boss + difficulty name	DW-B3	M	FEED	fb3 §4
+DW-B5	M11	DropWatcher	M11 review leftovers: tab counts agree, SimReport showOwn/feed, PlaceAbove vertical room, docs + bundle	DW-B4	S	FEED	fb3 §5

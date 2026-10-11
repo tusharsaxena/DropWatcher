@@ -76,6 +76,41 @@ Then fix whatever is actually wrong. Whatever the cause, these must hold afterwa
 - **Out of scope:** tooltips outside rows (the title bar, the footer, the settings pages) keep their own anchors,
   apart from the filter bar in §1.
 
+## 4. Group headers: your character, and where the drop came from (DW-B4)
+
+**Evidence.**
+- `07-my-drops-real-timewalking-drop.png` shows a **real** Timewalking drop: Gate of the Setting Sun, boss Commander
+  Ri'mok. Its header reads only `Commander Ri'mok · Dungeon`.
+- `08-header-roster-too-long.png` shows the party roster crowding the header (`… Telerodron, +4`).
+- `09-timewalking-leggings-tooltip.png` shows item level 183, Soulbound, with no trade line. The read was **correct**.
+
+**Owner decisions.**
+- **Show only your character.** The header shows only **the character that saw the drop**, class-colored: you on
+  Group drops and My drops, and the recorder on History. It no longer shows the party. The roster is still captured
+  and stored (DW-A3), but nothing displays it, apart from one optional tooltip line, `Group: …`.
+- **Name where it dropped.** The header names **where** the drop happened: the instance (dungeon, raid, delve,
+  battleground or arena), then the boss or encounter when there is one, then the **difficulty name** the client
+  gives (Timewalking, Normal, Heroic, Mythic, Mythic+ with the key level, LFR, a delve tier), then the time and the
+  counts. For example: `Gate of the Setting Sun · Commander Ri'mok · Timewalking · 3m ago · 1 drop · Euthanàsia`.
+- **Reading the names.**
+  - Read the instance and difficulty through the compat family: `GetInstanceInfo` for the name and difficulty id,
+    `GetDifficultyInfo` for the difficulty name, and the active keystone level for Mythic+.
+  - Capture them when the group opens, and keep them on the group.
+  - History stores them with each group. Older groups without them keep their current label.
+  - A generic situation word ("Dungeon") is only a fallback when the client gives no name.
+- **Tests.** Test mode and the simulator give their groups realistic instance and difficulty names.
+
+## 5. M11 review leftovers (DW-B5)
+
+The tabs and the panel must agree beyond the default state:
+- **The My drops tab label** counts the own drops the My drops tab would actually list. That excludes dismissed drops
+  and drops its own filters hide, and the tooltip names the excluded ones.
+- **The Group drops `· n yours on My drops` suffix** uses the same count.
+- **`SimReport.Place`** honors `feed.showOwn` and the feed the window shows (live or test).
+- **`Window.PlaceAbove`** checks the vertical room too. Near the top of the screen it places the tooltip below the
+  control (`TOPLEFT` at `BOTTOMRIGHT`, else `TOPRIGHT` at `BOTTOMLEFT`) instead of letting the clamp push it over
+  the dropdown.
+
 ## 3. Docs, tests and the bundle (DW-B3)
 
 - **Smoke checks**, owed: the panel's loot step reconciles with the tabs; dropdown tooltips sit above the dropdown;
