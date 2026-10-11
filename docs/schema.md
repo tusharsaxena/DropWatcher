@@ -130,7 +130,7 @@ log and sees it.
 
 ```lua
 history = { maxGroups = 20, v = 1, groups = {
-    { key, label, kind, situation, at, drops = {
+    { key, label, kind, situation, at, roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality,
           me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
           trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
@@ -142,6 +142,11 @@ history = { maxGroups = 20, v = 1, groups = {
 - `at` is `time()` (seconds since the epoch), so it reads the same after a reload; `looter` is the
   Name-Realm and `class` its classFile; `me`, `them` and `trade` are the verdicts and the trade
   estimate as last judged while the drop was in the feed, plain fields only.
+- `roster` is who was in the group (feedback-2 spec §3, `modules/GroupRoster.lua`): each a short
+  `name`, the normalized `realm` only when it is not the recorder's, the `class` (classFile) and
+  `me` on the recorder's own entry, the recorder first. Every recorded drop merges the feed group's
+  snapshot in, and a mid-run joiner is added; it only grows. A group kept before DW-A3 has none and
+  its header names nobody. No migration step: the field is optional.
 - `outcome` is `seen`, `asked`, `offered`, `received`, `tradedAway`, `expired` or `declined`;
   `before` is the outcome a hand-set `declined` replaced.
 - The cap: `history.maxGroups` groups (the oldest go first) and 50 drops per group (the oldest go

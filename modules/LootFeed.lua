@@ -470,6 +470,7 @@ local function verdictOf(eval) return eval and eval.verdict or "-" end
 local function add(rec)
     local feed = feedOf(rec)
     local g = NS.FeedRecords.Materialize(feed, rec)
+    NS.GroupRoster.Note(g, rec)
     rec.state, rec.groupKey = "added", g.key
     g.drops[#g.drops + 1] = rec.id
     feed.drops[#feed.drops + 1] = rec
@@ -683,11 +684,18 @@ function LF.Drops(name)
 end
 
 --- A feed's groups, oldest first, each { key, label, kind, encounterID, mapID, situation, at,
---- drops = { id, ... } }.
+--- roster (NS.GroupRoster's snapshot), drops = { id, ... } }.
 --- @param name string|nil
 --- @return table
 function LF.Groups(name)
     return feedNamed(name).groups
+end
+
+--- The live group a drop received now would join, when it exists (its roster grows, spec §3).
+--- @return table|nil
+function LF.OpenGroup()
+    local s = store()
+    return NS.FeedRecords.Existing(s.live, groupSpec(s, nil, now()))
 end
 
 --- Empty a feed (`/dw clear`, clear on boss kill, the end of test mode), then tell the removal sinks.

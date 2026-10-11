@@ -262,8 +262,22 @@ end
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "GROUP_ROSTER_UPDATE", "OnRosterEvent" }
 
+-- Told `fn()` after a roster event changed the group (modules/GroupRoster.lua grows the open
+-- group's roster snapshot).
+local changeSinks = {}
+
+--- Be told `fn()` whenever a GROUP_ROSTER_UPDATE changed the roster.
+--- @param fn function
+function Ro.AddChangeSink(fn)
+    changeSinks[#changeSinks + 1] = fn
+end
+
 function NS.addon.OnRosterEvent(_, event)
-    Ro.Refresh(event)
+    if not Ro.Refresh(event) then return end
+    for _, fn in ipairs(changeSinks) do
+        local ok, err = pcall(fn)
+        if not ok then NS.Debug(TAG, "change sink failed: %s", NS.SafeToString(err)) end
+    end
 end
 
 -- Stood down, no event reaches the roster, so it goes stale and is dropped; the stand-up re-reads.

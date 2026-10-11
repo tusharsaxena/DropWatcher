@@ -133,9 +133,10 @@ function WH.Ago(seconds)
     return days == 1 and L["1 day ago"] or L["%d days ago"]:format(days)
 end
 
---- A kept group's header: `Label · Situation · 2 days ago · 4 drops` (`... · 4 drops · 3 shown`
---- while the filter hides some, feedback-2 spec §0), and its tooltip naming each hidden drop.
---- @param group table { label, kind, situation, at }
+--- A kept group's header: `Label · Situation · 2 days ago · 4 drops · You, Seta, ...` (`... · 4 drops
+--- · 3 shown` while the filter hides some, feedback-2 spec §0; the kept roster, class-colored, when
+--- the group has one, §3), and its tooltip listing everyone and naming each hidden drop.
+--- @param group table { label, kind, situation, at, roster }
 --- @param shown number
 --- @param now number time()
 --- @param situationLabel string|nil
@@ -148,10 +149,11 @@ function WH.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     if situationLabel then parts[#parts + 1] = situationLabel end
     if type(group.at) == "number" and type(now) == "number" then parts[#parts + 1] = WH.Ago(now - group.at) end
     parts[#parts + 1] = WC.DropCount(shown, hidden)
+    parts[#parts + 1] = WC.RosterNames(group.roster)
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
     return { text = text, tip = WC.HeaderTip(tostring(group.label or "?"), L["Kept in the history across sessions."],
-        hidden, filter, collapsed) }
+        hidden, filter, collapsed, group.roster) }
 end
 
 local function visibleDrops(group, ctx, base)

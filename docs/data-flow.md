@@ -288,7 +288,11 @@ GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent ─> DW.OnSituationEvent (above
         ├─> per token: UnitGUID (secret or missing: skipped), UnitName (secret or Unknown: no
         │              name), UnitClass, UnitIsConnected; same-realm realm from
         │              Compat.NormalizedRealm
-        └─> NS.State.roster = { byGUID, list }, each member's specID carried over
+        ├─> NS.State.roster = { byGUID, list }, each member's specID carried over
+        └─> changed: the change sinks ─> GroupRoster.Grow
+              └─> LootFeed.OpenGroup (the live group a drop now would join, if it exists)
+                    ─> GroupRoster.Merge(its roster, GroupRoster.Current()) ─> grew:
+                    History.GrowRoster (its History group, HistoryChanged) + Window.ScheduleRepaint
 
 Roster.Resolve(GUID | "Name-Realm" | "Name", classFile?)
   ├─> GUID hit, else name (+ realm) match without case, realms normalized
@@ -297,7 +301,11 @@ Roster.Resolve(GUID | "Name-Realm" | "Name", classFile?)
 ```
 
 The roster sends no message: a module that needs the fresh group declares `GROUP_ROSTER_UPDATE`
-below `modules/Roster.lua` in the TOC and hears it after the roster's handler. The stand-down drops
+below `modules/Roster.lua` in the TOC and hears it after the roster's handler. The one exception is
+the group's roster snapshot (feedback-2 spec §3): `modules/GroupRoster.lua` is told through
+`Roster.AddChangeSink`, only when the re-read changed the group. Each feed group also takes the
+members with every drop it receives (`GroupRoster.Note`, from the feed's add; a test drop takes its
+spec's roster), so the snapshot grows with a mid-run joiner and never shrinks. The stand-down drops
 the roster; the stand-up re-reads it.
 
 ## The item facts

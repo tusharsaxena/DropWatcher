@@ -67,7 +67,10 @@ its one-line responsibility and why its position is load-bearing or conventional
   scorers (`Scoring.lua`); the edges that read the client (`Situations.lua`, `Restrictions.lua`,
   `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
   `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`, with
-  `FeedCounts.lua` counting every receipt it hides or refuses by reason); and the
+  `FeedCounts.lua` counting every receipt it hides or refuses by reason, and `GroupRoster.lua`
+  keeping who was in each group: a snapshot taken by its first drop, grown by every later drop and
+  by a roster change, copied into the History group, and named class-colored, you first, in the
+  Group drops and History headers; feedback-2 spec §3); and the
   recorded and opt-in features (`History.lua`, `Toast.lua`, `AutoAsk.lua`).
 - `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
@@ -228,7 +231,7 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop and the situation, as above; then auto-ask's encounter hold, as above |
 | `CHALLENGE_MODE_START` | `DW.OnSituationEvent`, then `DW.OnFeedRunStart` (through `DW:OnSharedFeatureEvent`) | the same (a keystone started); then opens the run's drop group (`modules/LootFeed.lua`) |
 | `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent` (the same) | the same (a keystone ended); then keeps the run's group open 120 seconds for the chest; then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`) |
-| `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then `DW.OnAskRosterEvent` cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then `DW.OnAutoAskRosterEvent` cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
+| `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`), and on a change its sinks grow the open group's roster and its History group's (`modules/GroupRoster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then `DW.OnAskRosterEvent` cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then `DW.OnAutoAskRosterEvent` cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |

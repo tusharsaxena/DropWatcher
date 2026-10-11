@@ -632,23 +632,35 @@ function WC.HiddenLines(hidden, filter)
     return out
 end
 
---- A header tooltip: the title, the kind's line, the hidden drops' lines, then the click hint.
+--- A group's roster for its header (feedback-2 spec §3): the first few names, class-colored, then
+--- `+n`; nil when it kept none.
+--- @param roster table|nil NS.GroupRoster's
+--- @return string|nil
+function WC.RosterNames(roster)
+    return NS.GroupRoster.Names(roster, NS.GroupRoster.HEADER_NAMES, NS.Compat.ClassColor)
+end
+
+--- A header tooltip: the title, the kind's line, everyone in the group (class-colored), the hidden
+--- drops' lines, then the click hint.
 --- @param title string
 --- @param line string
 --- @param hidden table|nil
 --- @param filter table|nil
 --- @param collapsed boolean
+--- @param roster table|nil the group's roster
 --- @return table
-function WC.HeaderTip(title, line, hidden, filter, collapsed)
+function WC.HeaderTip(title, line, hidden, filter, collapsed, roster)
     local tip = { title, line }
+    for _, l in ipairs(NS.GroupRoster.TipLines(roster, NS.Compat.ClassColor)) do tip[#tip + 1] = l end
     for _, l in ipairs(WC.HiddenLines(hidden, filter)) do tip[#tip + 1] = l end
     tip[#tip + 1] = collapsed and L["Click to expand this group."] or L["Click to collapse this group."]
     return tip
 end
 
---- An encounter header's text and tooltip: `Label · Situation · 2m ago · 4 drops`, or
---- `... · 2 drops · 1 shown` while the filter hides some, the tooltip naming each hidden drop.
---- @param group table a feed group { key, label, kind, situation, at }
+--- An encounter header's text and tooltip: `Label · Situation · 2m ago · 4 drops · You, Seta, ...`
+--- (the group's roster, class-colored, when it has one), or `... · 2 drops · 1 shown · ...` while
+--- the filter hides some, the tooltip listing everyone and naming each hidden drop.
+--- @param group table a feed group { key, label, kind, situation, at, roster }
 --- @param shown number the drops shown under it
 --- @param now number|nil GetTime()
 --- @param situationLabel string|nil the group's situation, in words
@@ -661,8 +673,10 @@ function WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     if situationLabel then parts[#parts + 1] = situationLabel end
     if num(group.at) and num(now) then parts[#parts + 1] = L["%s ago"]:format(WC.Duration(now - group.at)) end
     parts[#parts + 1] = WC.DropCount(shown, hidden)
+    parts[#parts + 1] = WC.RosterNames(group.roster)
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
     local title = tostring(group.label or "?")
-    return { text = text, tip = WC.HeaderTip(title, KIND_LINE[group.kind] or KIND_LINE.area, hidden, filter, collapsed) }
+    return { text = text, tip = WC.HeaderTip(title, KIND_LINE[group.kind] or KIND_LINE.area, hidden, filter, collapsed,
+        group.roster) }
 end

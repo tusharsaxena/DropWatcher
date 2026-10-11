@@ -4,12 +4,15 @@ local _, NS = ...
 -- run, each with its outcome.
 --
 --   history = { maxGroups (the schema row's), v = 1, groups = {
---       { key, label, kind, situation, at, drops = {
+--       { key, label, kind, situation, at, roster = { { name, realm, class, me }, ... }, drops = {
 --           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality,
 --             me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
 --             trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
 --
 -- `at` is time() (seconds since the epoch), never GetTime(), so it means the same after a reload.
+-- `roster` is who was in the group (feedback-2 spec §3, modules/GroupRoster.lua): copied from the
+-- feed group's snapshot by every recorded drop and grown with it; a group kept before it existed
+-- has none.
 -- `looter` is the Name-Realm and `class` its classFile. `before` is the outcome a hand-set
 -- `declined` replaced, so clearing it puts that back. The table is the account's: History never
 -- replaces `global.history` whole (the cap row lives in it), only its `groups` list.
@@ -243,10 +246,10 @@ local function findGroup(hist, key)
     return nil
 end
 
---- Record one entry under the group `info` names (made, newest last, by its first entry), then
---- hold the log to the cap.
+--- Record one entry under the group `info` names (made, newest last, by its first entry), merge
+--- the group's roster in, then hold the log to the cap.
 --- @param hist table
---- @param info table { key, label, kind, situation }
+--- @param info table { key, label, kind, situation, roster }
 --- @param entry table H.Snapshot's
 --- @param maxGroups number|nil
 --- @return table entry
@@ -256,6 +259,10 @@ function H.Record(hist, info, entry, maxGroups)
         g = { key = info.key, label = info.label, kind = info.kind, situation = info.situation, at = entry.at,
             drops = {} }
         hist.groups[#hist.groups + 1] = g
+    end
+    if type(info.roster) == "table" then
+        g.roster = g.roster or {}
+        NS.GroupRoster.Merge(g.roster, info.roster)
     end
     g.drops[#g.drops + 1] = entry
     H.Trim(hist, maxGroups)
@@ -415,10 +422,36 @@ function H.AskState(drop, state, reason)
     return state, reason
 end
 
+local function historyKey(feedKey) return tostring(feedKey or "?") .. "@" .. H.SessionStart() end
+
+-- The feed group's roster snapshot for a drop, or nil.
+local function feedRoster(rec)
+    local groups = NS.LootFeed.Groups(rec.feed)
+    for i = #groups, 1, -1 do
+        if groups[i].key == rec.groupKey then return groups[i].roster end
+    end
+    return nil
+end
+
 local function groupInfo(rec)
     local spec = type(rec.group) == "table" and rec.group or {}
-    return { key = tostring(rec.groupKey or spec.key or "?") .. "@" .. H.SessionStart(), label = spec.label,
-        kind = spec.kind, situation = rec.situation }
+    return { key = historyKey(rec.groupKey or spec.key), label = spec.label, kind = spec.kind,
+        situation = rec.situation, roster = feedRoster(rec) }
+end
+
+--- A feed group's roster grew between drops (modules/GroupRoster.lua): the History group it is
+--- recorded under (in the running simulation's log while one runs, else the account's) takes the
+--- newcomers. HistoryChanged when it did.
+--- @param feedGroup table
+--- @return boolean grown
+function H.GrowRoster(feedGroup)
+    local hist = H.LogFor(NS.Sim.active)
+    local g = hist and findGroup(hist, historyKey(feedGroup.key))
+    if not g then return false end
+    g.roster = g.roster or {}
+    if not NS.GroupRoster.Merge(g.roster, feedGroup.roster) then return false end
+    changed()
+    return true
 end
 
 --- DropAdded: record a live drop.

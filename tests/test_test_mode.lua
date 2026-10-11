@@ -69,6 +69,24 @@ local function idOf(link) return tonumber(link:match("item:(%d+)")) end
 
 -- ── the data (pure) ─────────────────────────────────────────────────────────────────────────
 
+test("test mode data: each sample group names who was in it, you first; the boss is a raid's (fb2 §3)", function()
+    local NS, specs = placeholders()
+    local sizes = {}
+    for _, s in ipairs(specs) do
+        local r = s.group.roster
+        assertTrue(r ~= nil and r[1].me == true and r[1].name == "Tester", s.group.key .. ": you first")
+        sizes[s.group.kind] = #r
+    end
+    assertEqual(sizes.run, 5, "the key run: a party of five")
+    assertEqual(sizes.encounter, 8, "the boss: a raid, longer than a header names")
+    local text = NS.WindowCells.RosterNames(specs[#specs].group.roster):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    assertEqual(text, "Tester, Seta, Littlewolf, Uniquerogue, Butterz, +3")
+    local src = source(NS)
+    for _, g in ipairs(NS.TestData.History(1000, YOU, src).groups) do
+        assertTrue(g.roster ~= nil and g.roster[1].me == true, g.key .. ": the sample history keeps a roster")
+    end
+end)
+
 test("test mode data: the other members' drops cover every Me and Them verdict (board 03)", function()
     local _, specs = placeholders()
     local me, them = {}, {}

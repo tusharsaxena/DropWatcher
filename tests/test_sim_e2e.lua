@@ -197,6 +197,22 @@ local function assertWindow(NS, label)
     assertTrue(mine ~= nil and #mine.entries > 0, label .. ": My drops shows your drops")
 end
 
+-- Every group the run made names the whole simulated group, you first, and its History group (the
+-- simulation's own log) keeps the same roster (feedback-2 spec §3).
+local function assertRosters(NS, label)
+    local n = NS.Roster.Count()
+    assertTrue(n > 1, label .. ": the simulated group is drawn")
+    for _, g in ipairs(NS.LootFeed.Groups("live")) do
+        assertEqual(#(g.roster or {}), n, label .. ": group " .. g.key .. " names the whole group")
+        assertTrue(g.roster[1].me == true, label .. ": you first in " .. g.key)
+    end
+    local kept = NS.History.Log().groups
+    assertTrue(#kept > 0, label .. ": the run is in the simulation's history")
+    for _, g in ipairs(kept) do
+        assertEqual(#(g.roster or {}), n, label .. ": history group " .. g.key .. " keeps the roster")
+    end
+end
+
 local function runScenario(sc, ilvl, seed)
     local label = ("%s at %d, seed %d"):format(sc.name, ilvl, seed)
     local NS, m = addon(ilvl)
@@ -214,6 +230,7 @@ local function runScenario(sc, ilvl, seed)
     assertDrops(NS, label)
     assertFooter(NS, sc, label)
     assertWindow(NS, label)
+    assertRosters(NS, label)
     NS.Sim.Stop("stop")
     assertEqual(NS.Situations.Current(), "solo", label .. ": the real world again")
 end

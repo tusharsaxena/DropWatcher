@@ -5,6 +5,7 @@
 -- the currency and money lines never reach the feed. Every receipt the feed refuses is counted by
 -- reason too, the diagnostics report both, and /dw debug logs each under the FEED tag. A group
 -- header counts every drop: `2 drops · 1 shown`, its tooltip naming the hidden drop and its filter.
+-- It names the party too (spec §3), class-colored: the color codes are stripped where text is read.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -63,6 +64,11 @@ local function run(seed)
     wears(m, "party1", 300, 596)
     wears(m, "party2", 400, 630)
     return NS, m, NS.LootFeed
+end
+
+-- `s` without its color escapes.
+local function uncolored(s)
+    return (s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
 end
 
 local function loot(m, text)
@@ -217,13 +223,14 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
     assertEqual(#h.hidden, 1); assertEqual(h.hidden[1].drop.looter.guid, BUNIAN)
     assertEqual(h.hidden[1].why, "interesting")
     local hd = WC.Header(h.group, h.count, nil, nil, false, h.hidden, ctx.filter)
-    assertEqual(hd.text, "Den of Nalorakk · 2 drops · 1 shown")
+    assertEqual(uncolored(hd.text), "Den of Nalorakk · 2 drops · 1 shown · Testchar, Bùnian, Keghunt")
     local tip = table.concat(hd.tip, "\n")
     assertTrue(tip:find("Yoke of the Charging Bear (Bùnian): View: Interesting", 1, true) ~= nil, tip)
     FB.State("group").view = {}
     local all = WG.Entries(LF.Groups(ctx.feed), LF.Get, NS.Window.TabContext("group"), {})
     assertEqual(all[1].count, 2); assertEqual(#all[1].hidden, 0)
-    assertEqual(WC.Header(all[1].group, 2, nil, nil, false, all[1].hidden).text, "Den of Nalorakk · 2 drops")
+    assertEqual(uncolored(WC.Header(all[1].group, 2, nil, nil, false, all[1].hidden).text),
+        "Den of Nalorakk · 2 drops · Testchar, Bùnian, Keghunt")
 end)
 
 test("header: your own drop, listed in My drops, is not counted as hidden in Group drops", function()

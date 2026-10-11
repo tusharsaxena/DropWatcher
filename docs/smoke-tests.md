@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..21 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2) |
+| FEED-1..22 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Group drops and History (FEED-22, DW-A3) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -282,7 +282,7 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), and FEED-20 the multi-select View (DW-A1). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), FEED-20 the multi-select View (DW-A1), FEED-21 item tooltips beside the window (DW-A2), and FEED-22 the party named in every group header (DW-A3). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
@@ -523,6 +523,18 @@ row, and covers none of the table (the Offer panel's opens to the right of the p
 window to the screen's right edge and hover again → each opens on the LEFT of the window instead.
 Set the UI scale low (or the window's Scale to 0.7) and repeat near the right edge → still beside
 the window, never over it, never off screen. Hover the toast's icon → beside the toast. Result:
+
+**FEED-22. Group headers name the party (DW-A3, feedback-2 spec §3).** In a five-player party, run a
+dungeon or a key until something drops. The Group drops header reads `Den of Nalorakk · Mythic+ · 6m
+ago · 2 drops · You, A, B, C, D`: your name first, every name in its class color (a cross-realm
+member by short name). Hover the header → the tooltip lists `In the group (5):` and everyone, a
+cross-realm member as Name-Realm, in class color. Have someone leave and another join mid-run, then
+let a drop fall (or just wait for the roster change) → the newcomer is added, the leaver stays
+named. Open History → the same group's header names the same party; `/reload` → it still does. A
+History group kept before this version names nobody and still reads correctly. In a raid (or
+`/dw test`, whose Placeholder boss is a raid of eight) → the header names five and `+3`, and the
+tooltip names all eight. `/dw sim start key` then `/dw sim run` → the run's header names you and
+the simulated group, and the simulation's History does too. Result:
 
 ## Roster
 
@@ -1131,6 +1143,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | FEED-17 | DW-82, the filter bar matched to Loot History | No client pass recorded yet |
 | FEED-18 | DW-83, My eq, Their eq, the two new filters, auto-open on every drop | No client pass recorded yet |
 | FEED-20 | DW-A1, View: All by default, the multi-select View, its tooltip and the migration | No client pass recorded yet |
+| FEED-22 | DW-A3, the party named in every group header, class-colored, and kept in History | No client pass recorded yet |
 | STATE-4 | DW-84, test mode with real items, History test data, no trailing ellipsis | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |

@@ -149,6 +149,12 @@ altar hidden by the gear-only rule and the reagent by the quality rule with it o
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged
 under FEED and reported in the `drops` diagnostics section; the group headers' `2 drops · 1 shown`
 and the tooltip naming each hidden drop and its filter, on Group drops and History),
+`test_group_roster` (feedback-2 spec §3: the roster snapshot's pure core, `Entry`, `Merge` (it
+only grows, you first, never the same character twice), `Copy`, `Names` (five names then `+n`,
+class-colored) and `TipLines`; a feed group taking the party with its first drop and a mid-run
+joiner on the roster event or with the next drop, its History group keeping it; the Group drops
+and History headers, and an older History group naming nobody; test mode's sample rosters are
+`test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
 `test_trade_timer` (your own drops' trade timer: the `TradeTimeRemaining` line read
 by its type and keyed by item GUID, a line of another type ignored, the localized sentence decoded
 from deDE-shaped globals without the line type, no line read as `no expired`; the match by exact

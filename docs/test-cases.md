@@ -335,8 +335,9 @@ Total.
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
 
-### test_test_mode.lua (29)
+### test_test_mode.lua (30)
 
+- test mode data: each sample group names who was in it, you first; the boss is a raid's (fb2 §3)
 - test mode data: the other members' drops cover every Me and Them verdict (board 03)
 - test mode data: every trade estimate, inspect state and ask state is there
 - test mode data: your own drops cover every countdown and every candidate pill (board 04)
@@ -864,6 +865,22 @@ Total.
 - header: your own drop, listed in My drops, is not counted as hidden in Group drops
 - header: History names its hidden drops too, and a long list is cut with a count
 
+### test_group_roster.lua (13)
+
+- roster entry: the short name, the realm only when it is not yours, the class, you marked
+- roster merge: the snapshot only grows, you first, the same character never twice
+- roster merge and copy: the entries are copied, never shared
+- roster names: the first few, class-colored, then +n; none for no roster
+- roster tooltip: everyone, with the realm when it is not yours, class-colored
+- feed roster: the group takes everyone in it when its first drop makes it, you first
+- feed roster: someone who joins mid-run is added on the roster event, and to the History group
+- feed roster: a joiner is also taken by the next drop, with no roster event between
+- feed roster: a roster event with no group open yet changes nothing and raises nothing
+- history roster: Record copies the group's roster in and merges it with each entry
+- group header: the party's names after the count, class-colored; the tooltip lists everyone
+- group header: a raid's header names the first five and +n; its tooltip names all
+- history header: a kept roster is named; an older group with none names nobody
+
 ### test_trade_timer.lua (16)
 
 - read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
@@ -1274,7 +1291,7 @@ Total.
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
-| test_test_mode.lua | 29 |
+| test_test_mode.lua | 30 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 9 |
 | test_constants.lua | 12 |
@@ -1294,6 +1311,7 @@ Total.
 | test_inspect.lua | 32 |
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
+| test_group_roster.lua | 13 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 23 |
@@ -1316,4 +1334,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1086** |
+| **Total** | **1100** |

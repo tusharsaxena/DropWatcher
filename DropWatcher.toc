@@ -161,6 +161,10 @@ modules\Restrictions.lua
 # above) at load, and reads NS.State at load. A module declaring the event below it hears it after
 # the roster is fresh.
 modules\Roster.lua
+# Conventional: publishes NS.GroupRoster, each group's roster snapshot and the header's names; adds
+# its Grow to NS.Roster's change sinks (above) at load and reads NS.L at load. NS.Compat,
+# NS.LootFeed, NS.History and NS.Window (below) are read at call time.
+modules\GroupRoster.lua
 # Conventional: publishes NS.ItemFacts, the cached item facts; appends its row to NS.FEATURE_EVENTS
 # and NS.STAND_DOWN and its handler to NS.addon (core\DropWatcher.lua, above) at load, and reads
 # NS.Constants and NS.State at load. NS.Compat, NS.Item and NS.Debug are read at call time.

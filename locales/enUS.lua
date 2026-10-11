@@ -302,3 +302,7 @@ L["Hidden by the filters:"] = "Hidden by the filters:"
 L["%s (%s): %s"] = "%s (%s): %s"
 L["and %d more"] = "and %d more"
 L["the filters"] = "the filters"
+
+-- A group header's roster (modules/GroupRoster.lua, feedback-2 spec §3)
+L["+%d"] = "+%d"
+L["In the group (%d):"] = "In the group (%d):"

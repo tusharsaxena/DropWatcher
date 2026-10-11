@@ -277,6 +277,26 @@ end
 local BOSS = { key = "test:boss", label = L["Placeholder boss"], kind = "encounter" }
 local RUN  = { key = "test:run", label = L["Placeholder key run"], kind = "run" }
 
+-- Who was in each sample group (feedback-2 spec §3): you first, then these members. The boss is a
+-- raid's, longer than a header names, so its header ends `+n`.
+local RUN_PARTY = { "butterz", "kaelith", "littlewolf", "seta" }
+local RAID = { "seta", "littlewolf", "uniquerogue", "butterz", "kaelith", "mistveil", "dawnfeather" }
+
+local function roster(you, keys)
+    local GR = NS.GroupRoster
+    local out = { GR.Entry({ name = you.name, classFile = you.classFile, isSelf = true }) }
+    for _, k in ipairs(keys) do out[#out + 1] = GR.Entry(MEMBERS[k]) end
+    return out
+end
+
+-- `group` with its roster, a fresh table each call (the samples' are shared).
+local function withRoster(group, you, keys)
+    local g = {}
+    for k, v in pairs(group) do g[k] = v end
+    g.roster = roster(you, keys)
+    return g
+end
+
 -- Each row of `rows` made by `make`, placed in `group` at `situation` (`ago` unless its own).
 local function place(out, rows, make, group, situation, ago)
     for _, row in ipairs(rows) do
@@ -298,10 +318,11 @@ function TD.Placeholders(now, you, src)
     local out = {}
     local function theirs(row) return other(src, now, row) end
     local function yours(row) return mine(src, now, you, row) end
-    place(out, YOURS_IN_RUN, yours, RUN, "mythicPlus")
-    place(out, OTHERS_IN_RUN, theirs, RUN, "mythicPlus", 3600)
-    place(out, OTHERS_AT_BOSS, theirs, BOSS, "raid", 120)
-    place(out, YOURS_AT_BOSS, yours, BOSS, "raid")
+    local run, boss = withRoster(RUN, you, RUN_PARTY), withRoster(BOSS, you, RAID)
+    place(out, YOURS_IN_RUN, yours, run, "mythicPlus")
+    place(out, OTHERS_IN_RUN, theirs, run, "mythicPlus", 3600)
+    place(out, OTHERS_AT_BOSS, theirs, boss, "raid", 120)
+    place(out, YOURS_AT_BOSS, yours, boss, "raid")
     return out
 end
 
@@ -311,7 +332,7 @@ end
 -- { state, reasonKey }, and the outcome (`before` under a declined one).
 local HISTORY = {
     { group = { key = "test:history:boss", label = L["Placeholder boss"], kind = "encounter", situation = "raid" },
-      ago = 7200, drops = {
+      party = RAID, ago = 7200, drops = {
         { who = "seta", slot = "INVTYPE_HEAD", me = { "upgrade", 19 }, them = { "downgrade", -13 },
           trade = { "likely", "notUpgrade" }, outcome = "asked" },
         { who = "butterz", slot = "INVTYPE_CLOAK", me = { "upgrade", 7 }, them = { "sidegrade", 0 },
@@ -322,7 +343,7 @@ local HISTORY = {
           trade = { "likely", "notUpgrade" }, outcome = "declined", before = "seen" },
     } },
     { group = { key = "test:history:run", label = L["Placeholder key run"], kind = "run", situation = "mythicPlus" },
-      ago = 93600, drops = {
+      party = RUN_PARTY, ago = 93600, drops = {
         { slot = "INVTYPE_TRINKET", me = { "downgrade", -6 }, trade = { "yes", "timer" }, outcome = "offered" },
         { slot = "INVTYPE_FINGER", me = { "downgrade", -3 }, trade = { "yes", "groupLoot" }, outcome = "tradedAway" },
         { slot = "INVTYPE_FEET", me = { "downgrade", -20 }, trade = { "no", "expired" }, outcome = "expired" },
@@ -358,7 +379,7 @@ function TD.History(nowEpoch, you, src)
     for _, g in ipairs(HISTORY) do
         local at = nowEpoch - g.ago
         local group = { key = g.group.key, label = g.group.label, kind = g.group.kind,
-            situation = g.group.situation, at = at, drops = {} }
+            situation = g.group.situation, at = at, roster = roster(you, g.party), drops = {} }
         for i, row in ipairs(g.drops) do
             group.drops[#group.drops + 1] = historyEntry(src, you, row, at + i * 30)
         end
