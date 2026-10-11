@@ -36,6 +36,10 @@ creates the eight there first.
 | I09 | tusharsaxena/LibKa0s | Promotion candidates from Drop Watcher: chat sender, tooltip line reader, loot-line parser, restriction tracker | state:triaged, severity:low, enhancement |
 | I10 | tusharsaxena/LibKa0s | Options: a grid composer for rows of mixed controls | state:triaged, severity:low, enhancement |
 | I11 | tusharsaxena/WowAddonStandards | Proposal: a rule for chat an addon sends on the player's behalf | state:triaged, severity:low, enhancement |
+| I12 | tusharsaxena/LibKa0s | Item-1.0: an exact item read (link detail, better link, level and quality), and a loot-line parser | state:triaged, severity:low, enhancement |
+
+**Added by DW-80 (M8, 2026-10-11).** I12 drafts the promotion ui spec §0 asks for: the item read the
+owner's BUG-1 fix wrote as `core/ItemRead.lua`. It is filed with the rest, under the same hold.
 
 **After filing.** Swap "is filed at the end of the v1 run" in the three LibKa0s rows and the chat row of
 `docs/ARCHITECTURE.md` → `## Documented deviations` for `LibKa0s#<n>` and `WowAddonStandards#<n>`,
@@ -390,12 +394,54 @@ Ka0s Drop Watcher's v1 design spec §14, and its 2026-10-11 standards audit (`Dr
 *Drafted by DW-63 of the Drop Watcher v1 plan (`docs/superpowers/plans/2026-10-10-drop-watcher-v1/`), design spec §14.*
 ````
 
+## I12: Item-1.0: an exact item read (link detail, better link, level and quality), and a loot-line parser
+
+- **Repo:** `tusharsaxena/LibKa0s`
+- **Labels:** `state:triaged`, `severity:low`, `enhancement`
+
+<!-- body:I12 -->
+````markdown
+## What
+
+Ka0s Drop Watcher showed a real drop wrongly: the owner's *Lustrous Golden Plumage* (item 159617, Mythic+, item level 311, Epic) was listed at item level 19 and Rare, its base item. The client answers a link's level and quality from the data inside that link, and the feed had kept the first link it saw for the drop, which can lack the bonus ids and upgrade modifier the chat line's link carries. The fix (Drop Watcher DW-80) wrote the reusable part as one library-shaped file, `core/ItemRead.lua`, with no Drop Watcher state and the API `LibKa0s-Item-1.0` would take. Three addons read items this way, so the read is proposed for the library, beside its identity primitives (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`).
+
+## The candidates
+
+1. **The item read** (`DropWatcher core/ItemRead.lua`):
+   - `LinkDetail(link)`: how complete a link is (its bonus ids, its modifiers by type, its context, `complete`, and a `score` that orders two links of one item).
+   - `BetterLink(a, b)`: the more complete of two links of one item (a tie keeps the first).
+   - `IdentityKey(link)` / `SameItem(a, b)`: an item's identity, its id and bonus ids, so two reports of one item match when their unique id, link level, spec, context or modifiers differ (a bag copy against a chat line).
+   - `EffectiveItemLevel(linkOrLocation)`: gear only (a weapon or armor with a slot): the detailed level, else the base one; at a bag location the exact one.
+   - `ItemLevelAt(bag, slot)` / `QualityAt(bag, slot)`: `C_Item.GetCurrentItemLevel` / `C_Item.GetItemQuality` on the slot's `ItemLocation`, which are always exact.
+   - `QualityOf(link)`: the client's answer for the link, else the link's color (`QualityFromLink`).
+
+   Adopters: **Loot History** (`core/Compat.lua` `GetItemExtras` and `GearItemLevel` read the same detailed-then-base level for weapons and armor), **Bank Ledger** (its item resolution and quality gate) and **Drop Watcher** (its item facts, its feed's link merge and its own drops' bag read). The read takes no position on the uncached question the module's header records (Loot History guesses, Bank Ledger refuses): every reader answers nil when the client has nothing, and the caller decides.
+2. **The loot-line parser**, a second candidate: Loot History's `NS.Util.ParseSelfLoot` reads the player's own `CHAT_MSG_LOOT` lines; Drop Watcher's `modules/LootParser.lua` reads every looter's, compiling the `LOOT_ITEM*` GlobalStrings into patterns, rebuilding them when another addon rewrites the globals, and rejecting the upgrade and crafting echoes. One every-looter parser with a self-only filter would serve both. This is I09's item 3, re-raised with the item read because both are what a loot addon needs from `Item-1.0`.
+
+## The ask
+
+- Decide (1). If accepted, ship it additively in `LibKa0s-Item-1.0` (its client calls behind the module's own guards, as LibKa0s-Compat does), and the three adopters move to it on their next re-vendor, each dropping its copy and Drop Watcher its deviation row.
+- Decide (2) with I09's item 3, or record it as "not yet" with its re-check trigger.
+
+## Evidence
+
+- `DropWatcher docs/superpowers/specs/2026-10-11-drop-watcher-ui-feedback-design.md` §0 (BUG-1, the comparison with Loot History).
+- `DropWatcher tests/test_item_read.lua`: the reproduction with realistic 12.x links per loot source, and the read's own cases.
+- `DropWatcher docs/ARCHITECTURE.md`, `## Documented deviations` (the item read's library-stack-§7 row).
+- `LootHistory core/Compat.lua` (`GetItemExtras`, `GearItemLevel`), `LootHistory core/Util.lua` (`ParseSelfLoot`).
+
+**Severity:** `low`: a promotion question. The defect itself is fixed in Drop Watcher; nothing is broken while the read stays in-addon.
+
+---
+*Drafted by DW-80 of the Drop Watcher v1 plan (`docs/superpowers/plans/2026-10-10-drop-watcher-v1/`), ui spec §0.*
+````
+
 ---
 
 ## Filing snippet (the owner runs it, once the hold lifts)
 
 Run from the DropWatcher repo root with an authenticated `gh`. It creates the eight `state:`/`severity:`
-labels on `tusharsaxena/DropWatcher` (`--force` is idempotent, two seconds apart), then files the eleven
+labels on `tusharsaxena/DropWatcher` (`--force` is idempotent, two seconds apart), then files the twelve
 issues 25 seconds apart, reading each body from this file. It strips the working tree's CRLF from the
 bodies. Each URL is printed; note the numbers for the "After filing" step above. To file only some,
 delete lines from the `ISSUES` list.
@@ -443,6 +489,7 @@ ISSUES=(
   "I09|$LK|Promotion candidates from Drop Watcher: chat sender, tooltip line reader, loot-line parser, restriction tracker"
   "I10|$LK|Options: a grid composer for rows of mixed controls"
   "I11|$WAS|Proposal: a rule for chat an addon sends on the player's behalf"
+  "I12|$LK|Item-1.0: an exact item read (link detail, better link, level and quality), and a loot-line parser"
 )
 
 first=1

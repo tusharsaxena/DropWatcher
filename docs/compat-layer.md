@@ -151,8 +151,28 @@ While a simulation runs, `modules/SimWorld.lua` answers them for the invented gr
 answers the inspect members (`NotifyInspect`, guarded, schedules the reply; `InventoryItemLink`,
 `InventoryItemID`, `InventoryItemLevel` and `InspectSpecID` answer until `ClearInspectPlayer`),
 the bag members for your simulated drops (`BagSlotCount`, `BagItemLink`, `GetBagItemGUID`,
-`TradeTimeRemaining`), `InTradeRange`, `ChallengeMapName` and the trade window's members
+`TradeTimeRemaining`, and `core/CompatItem.lua`'s `BagItemLevelQuality` and `TooltipBagItem`), `InTradeRange`, `ChallengeMapName` and the trade window's members
 (`TradePartnerName`, `TradeItemLinks`, `IsTradeCompleteMessage`). `test_sim_events` holds these.
+
+## The item reads at a location and the tooltip setters
+
+`core/CompatItem.lua` loads after `core/CompatWorld.lua` and before `core/SimSeam.lua` (ui spec §0,
+DW-80), on the same terms: none of its calls is version-variant, so they are not counted above, and
+they are `NS.Compat` members so the seam answers them.
+
+| Member | Client call | Absent answer |
+|---|---|---|
+| `BagItemLevelQuality(bag, slot)` | `C_Item.GetCurrentItemLevel` and `C_Item.GetItemQuality` on the slot's `ItemLocation` (`ItemLocation:CreateFromBagAndSlot`, after `C_Item.DoesItemExist`): the exact level and quality, every bonus, upgrade and scaling applied | `nil, nil` for an empty slot or no API; each `nil` for a secret or missing answer |
+| `TooltipBagItem(tip, bag, slot)` | `tip:SetBagItem(bag, slot)`: the client's own tooltip, with its trade-time line | `false` when the tooltip has no such method |
+| `TooltipInventoryItem(tip, unit, slot)` | `tip:SetInventoryItem(unit, slot)` | `false` |
+| `TooltipHyperlink(tip, link)` | `tip:SetHyperlink(link)` | `false`, also for a secret or non-string link |
+
+`core/ItemRead.lua` reads `BagItemLevelQuality` (its `ItemLevelAt` and `QualityAt`); the drop tables'
+item buttons (`NS.WindowGroup.SetItemTooltip`) call the three setters: your own drop matched to its
+bag item shows the bag slot, an item you wear your inventory slot, anything else its link. While a
+simulation runs, `modules/SimWorld.lua` answers `BagItemLevelQuality` (the link's detailed level and
+quality) and `TooltipBagItem` (the link's tooltip) for a simulated bag slot, which the client does
+not have. `test_item_read` and `test_sim_events` hold these.
 
 ## The duration decoder
 
@@ -183,6 +203,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/Restrictions.lua` | `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive` |
 | `modules/Roster.lua` | `NormalizedRealm`; `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected` (`core/CompatWorld.lua`) |
 | `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |
+| `core/ItemRead.lua` | `GetItemInfo`, `GetDetailedItemLevel`; `BagItemLevelQuality` (`core/CompatItem.lua`) |
 | `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `PlayerHasTransmog` |
 | `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc` |
 | `modules/LootParser.lua` | `FormatToPattern` |
@@ -193,7 +214,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/Asks.lua` | `ChatSender`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |
 | `modules/Scoring.lua` | `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
-| `modules/WindowGroup.lua` | `ItemIcon`, `ClassColor`, `InsertChatLink`, `DressUpItem` |
+| `modules/WindowGroup.lua` | `ItemIcon`, `ClassColor`, `InsertChatLink`, `DressUpItem`, `BagItemLink`, `InventoryItemLink`; `TooltipBagItem`, `TooltipInventoryItem`, `TooltipHyperlink` (`core/CompatItem.lua`) |
 | `modules/DetailCard.lua` | `InsertChatLink`, `SpecName` |
 | `modules/OfferPanel.lua` | `ClassColor` |
 | `modules/WindowHistory.lua` | `ContextMenu`, `ClassColor` |

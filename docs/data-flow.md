@@ -281,9 +281,11 @@ the roster; the stand-up re-reads it.
 
 ```
 ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
-  Compat.GetItemInfo (nil: uncached) ─> name, quality (else the link color), base ilvl, equipLoc,
-                                        classID, subClassID, bindType, setID
-  Compat.GetDetailedItemLevel ─> ilvl          Compat.GetItemUpgradeInfo ─> track (+ tier)
+  Compat.GetItemInfo (nil: uncached) ─> name, base ilvl, equipLoc, classID, subClassID, bindType, setID
+  ItemRead.QualityOf ─> quality + qualitySource (the client's for the link `item`, else its color `link`)
+  ItemRead.EffectiveItemLevel ─> ilvl + ilvlSource (gear: `detailed`, else `base`;
+                                 anything else: the detailed level all the same, else the base)
+  Compat.GetItemUpgradeInfo ─> track (+ tier)
   Compat.GetItemStats ─> stats                 Compat.GetItemSpecs ─> specs
   Compat.GetItemUniqueness ─> unique           Compat.IsItemBindToAccount* ─> warbound
   Compat.ItemClassRestriction ─> classes, isTierToken
@@ -375,7 +377,10 @@ LootFeed.Add(link, looter, opts) ─> source `manual` (skips the situation gate;
   every payload secret-guarded; the looter resolved through the roster
 LootFeed.Receive   [Perf bucket `feed.add`]
   same item id + same looter (GUID, else name without realm) within 120s, not yet from this source
-    ─> merged: sources += source, a learned GUID asks for the inspect ─> DropUpdated(id, "source")
+    ─> merged: sources += source, a learned GUID asks for the inspect,
+       the more complete link kept (FeedRecords.PreferredLink: more bonus ids and modifiers, chat's on
+       a tie; ui spec §0): a shown drop re-reads its facts (LootFeed.Refresh), a loading one loads the
+       new link, a hidden one runs the gates again ─> DropUpdated(id, "source")
   else a new drop, its group fixed now:
     keystone run (until 120s after CHALLENGE_MODE_COMPLETED) ─> the run's group
     else the encounter it names, else the encounter in progress or killed < 120s ago
@@ -396,6 +401,9 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   ─> State.feed.live (200 drops, oldest out) ─> DropAdded(id)
 InspectDone(guid) ─> that looter's drops and your drops' candidate re-judged ─> DropUpdated(id, "inspect")
 GearChanged ─> you re-judged on every drop (and your drops' trade) ─> DropUpdated(id, "gear")
+TradeTimerTick ─> LootFeed.ReadBagItems: each own drop the timer matched, read from its bag item
+    (the bag item's link when more complete; ItemRead.ItemLevelAt / QualityAt, exact, laid over the
+    cached facts as `current` / `location`) ─> re-judged ─> DropUpdated(id, "bag") when it moved
 a scorer answering "pending" ─> one shared 1s timer, five tries per drop ─> DropUpdated(id, "score")
 ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the grouping context
 ```
@@ -409,7 +417,8 @@ dedupe window, the context and any drop still loading; the recorded drops are ke
 BAG_UPDATE_DELAYED / LOOT_CLOSED / DropAdded(id) for your own drop
   ─> TradeTimer.Schedule (one scan per 2s; the asks inside share it)
   ─> TradeTimer.Scan: your own live drops (never test drops)
-      ─> each bag item matched to a drop: the exact link first, then the item id; one item per drop
+      ─> each bag item matched to a drop: the exact link first, then its identity (item id and
+         bonus ids: ItemRead.IdentityKey), then the item id; one item per drop
       ─> NS.Compat.TradeTimeRemaining(bag, slot): the TradeTimeRemaining line, or the
          BIND_TRADE_TIME_REMAINING sentence decoded with the duration globals
       ─> State.tradeTimer.timers[itemGUID] = { dropID, expiresAt | expired, warned }

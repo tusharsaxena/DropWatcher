@@ -26,7 +26,8 @@ local _, NS = ...
 -- YOUR BAGS. Your own simulated drops sit in the backpack after its real slots (AddBagItem), each
 -- with a GUID and a trade window: TradeTimeRemaining answers the seconds left until it closes, then
 -- nothing, as the tooltip line does. The trade timer, the gear snapshot and the Offer panel's Give
--- read them through their usual members.
+-- read them through their usual members; their exact level and quality (BagItemLevelQuality) are
+-- their link's, and their tooltip (TooltipBagItem) is their link's (DW-80).
 --
 -- THE TRADE WINDOW. While a simulated trade is open (OpenTrade), its partner and both sides' items
 -- answer TradePartnerName and TradeItemLinks, and a UI_INFO_MESSAGE of type TRADE_COMPLETE is
@@ -432,6 +433,20 @@ function P.GetBagItemGUID(live, bag, slot)
     local item = bagItem(bag, slot)
     if item then return item.guid end
     return live(bag, slot)
+end
+
+-- A simulated bag item has no ItemLocation: its level and quality are its link's (core/ItemRead.lua).
+function P.BagItemLevelQuality(live, bag, slot)
+    local item = bagItem(bag, slot)
+    if not item then return live(bag, slot) end
+    return NS.Compat.GetDetailedItemLevel(item.link), (NS.ItemRead.QualityOf(item.link))
+end
+
+-- Nor a slot the client can show: its tooltip is its link's.
+function P.TooltipBagItem(live, tip, bag, slot)
+    local item = bagItem(bag, slot)
+    if not item then return live(tip, bag, slot) end
+    return NS.Compat.TooltipHyperlink(tip, item.link)
 end
 
 function P.TradeTimeRemaining(live, bag, slot)

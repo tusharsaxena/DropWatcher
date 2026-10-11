@@ -283,7 +283,7 @@ test("card: the header, both comparisons and the trade box are painted, each wit
         end
     end
     assertTrue(#W.TooltipOf(card.trade) >= 3)
-    assertTrue(#W.TooltipOf(card.nameTip) >= 2)
+    assertTrue(card.nameTip.showItem and card.nameTip.itemButton.link ~= nil, "the name shows the real item tooltip")
 end)
 
 test("card: the actions go through their host handlers; Trade is off with its reason", function()

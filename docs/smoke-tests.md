@@ -24,7 +24,7 @@ passed.
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | FEED-1..15 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31) and the detail card (FEED-13..15, DW-32) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
-| ITEM-1..2 | Item facts | The item readers' shapes and the track ids (DW-23) |
+| ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
 | INSPECT-1..4 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
@@ -463,6 +463,29 @@ Record any reader that answers another shape. Result:
 Champion, Hero, Myth) → `/dump C_Item.GetItemUpgradeInfo(link)` answers `trackString` and
 `trackStringID`. Record each pair: they fill `C.TRACK_TIER_BY_STRING_ID` so a localized client gets
 a track tier. Result:
+
+**ITEM-3. A real drop reads at its real level and quality (BUG-1).** `/dw debug on`, run a Mythic+
+dungeon (or any content whose loot carries an upgrade track or scales to your level) and loot an
+item yourself, ideally one that also reaches the feed through the encounter's report. → My drops
+lists it at the item level and in the quality color its own game tooltip shows (the owner's case:
+*Lustrous Golden Plumage*, 311 and Epic, never 19 and Rare). If the console showed `also reported by
+encounter` before the chat line, it also shows `(its more complete link taken)` on the chat line's merge. Once the
+item is in your bags (a second or two after the loot window closes) the console shows `read from its
+bag item <bag>:<slot>`, and `/dw diagnostics` shows a `drops:` line for it reading `complete=true
+ilvl=<the tooltip's level> (current) quality=<4 for Epic> (location) mine=true bag=yes`. Its For me
+verdict and its trade window agree with the game tooltip's own "You may trade this item…" line.
+Record any drop whose level or color differs from its tooltip, and paste its `drops:` line. Result:
+
+**ITEM-4. The real game tooltip, everywhere (BUG-2).** Hover an item in each place: a My drops row
+(the icon and the name), a Group drops row (the icon and the name), the detail card's icon, name and
+Replaces row for you and for the looter, the Offer panel's icon and name, a History row, the toast's
+icon, and the Their eq column. → Each shows the game's own item tooltip, exactly as hovering the
+item in your bags or on the character sheet does, with the addon's line (shift-click to link,
+ctrl-click to try on) after the game's lines. Your own drop that is still tradeable shows the
+client's "You may trade this item with players that were also eligible to loot this item for the
+next …" line; your own worn item in the Replaces row shows your equipped copy (its enchant and gems).
+Move your own drop to another bag slot and hover again → still the right tooltip. Record any place
+that shows a tooltip built from text, or misses the trade line. Result:
 
 ## Gear
 

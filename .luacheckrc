@@ -61,6 +61,12 @@ files["core/Compat.lua"] = {
   },
 }
 
+-- core/CompatItem.lua's one client namespace beyond the shared globals: the ItemLocation of a bag
+-- slot (DW-80).
+files["core/CompatItem.lua"] = {
+  read_globals = { "ItemLocation" },
+}
+
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;
 -- neither body reads the receiver.
 files["settings/Slash.lua"] = {

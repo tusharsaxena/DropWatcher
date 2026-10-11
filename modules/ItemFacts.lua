@@ -2,17 +2,19 @@ local _, NS = ...
 -- modules/ItemFacts.lua — an item link turned into the facts the verdict kernel reads (design spec
 -- §4, §5.1), cached by link.
 --
---   facts = { link, itemID, name, ilvl, baseIlvl, equipLoc, classID, subClassID, quality,
---             bindType, setID, warbound, warboundUntilEquip,
+--   facts = { link, itemID, name, ilvl, ilvlSource, baseIlvl, equipLoc, classID, subClassID,
+--             quality, qualitySource, bindType, setID, warbound, warboundUntilEquip,
 --             track = { name, rank, max, tier, stringID, maxItemLevel, source } | nil,
 --             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil,
 --             unique = { cat, max } | nil, isTierToken, classes = { [classFile] = true } | nil,
 --             transmogKnown = true | false | nil }
 --
 -- THE EDGE. Every client read goes through NS.Compat: the cached fields (GetItemInfo), the
--- effective level (GetDetailedItemLevel, else the base level), the upgrade track
--- (GetItemUpgradeInfo: the API, else the tooltip's ItemUpgradeLevel line), the stats, the spec
--- list, the uniqueness, the account binds, the class restriction line and the appearance.
+-- effective level and the quality through NS.ItemRead (core/ItemRead.lua: the detailed level, else
+-- the base one; the quality the client answers for the link, else the link's color), the
+-- upgrade track (GetItemUpgradeInfo: the API, else the tooltip's ItemUpgradeLevel line), the
+-- stats, the spec list, the uniqueness, the account binds, the class restriction line and the
+-- appearance.
 --
 -- THE TRACK. `tier` comes from the track's trackStringID through C.TRACK_TIER_BY_STRING_ID, else
 -- from its enUS name through C.TRACK_TIER; a localized name that matches neither leaves `tier` nil,
@@ -121,19 +123,32 @@ local function readBinds(facts)
     facts.warbound = untilEquip or NS.Compat.IsItemBindToAccount(facts.link)
 end
 
+-- The level and its source (ui spec §0): gear's through NS.ItemRead.EffectiveItemLevel; anything
+-- else (a tier token) the detailed level all the same, else the base one.
+local function levelOf(link, info)
+    local ilvl, source = NS.ItemRead.EffectiveItemLevel(link)
+    if ilvl then return ilvl, source end
+    ilvl = NS.Compat.GetDetailedItemLevel(link)
+    if ilvl then return ilvl, "detailed" end
+    return info.itemLevel, "base"
+end
+
 --- The facts of a link read from the client now, uncached; nil while the client has not cached the
---- item, or for a link that names no item.
+--- item, or for a link that names no item. `ilvlSource` (`detailed` or `base`) and `qualitySource`
+--- (`item` or `link`) say where each came from (NS.ItemRead, the `drops` diagnostics).
 --- @param link string
 --- @return table|nil
 function IF.Read(link)
     local itemID = validLink(link)
     local info = itemID and NS.Compat.GetItemInfo(link)
     if not info then return nil end
+    local ilvl, ilvlSource = levelOf(link, info)
+    local quality, qualitySource = NS.ItemRead.QualityOf(link)
     local facts = {
         link = link, itemID = itemID, name = info.name, baseIlvl = info.itemLevel,
-        ilvl = NS.Compat.GetDetailedItemLevel(link) or info.itemLevel,
+        ilvl = ilvl, ilvlSource = ilvlSource,
         equipLoc = info.equipLoc, classID = info.classID, subClassID = info.subClassID,
-        quality = info.quality or NS.Item.QualityFromLink(link), bindType = info.bindType,
+        quality = quality, qualitySource = qualitySource, bindType = info.bindType,
         setID = info.setID, track = readTrack(link), stats = NS.Compat.GetItemStats(link),
         specs = NS.Compat.GetItemSpecs(link), unique = readUnique(link, itemID),
         transmogKnown = readTransmog(link, info.equipLoc),

@@ -15,7 +15,9 @@ local _, NS = ...
 -- THE SCAN. BAG_UPDATE_DELAYED, LOOT_CLOSED and a DropAdded for one of your own drops each ask for
 -- a scan; scans run at most once per THROTTLE seconds, the asks inside it sharing one. A scan walks
 -- the bags only while you have own drops in the live feed (test drops never), matching a bag item
--- to a drop by its exact link first, then by its item id, each drop taken by one item at most. The
+-- to a drop by its exact link first, then by its identity (NS.ItemRead.IdentityKey: the item id
+-- and bonus ids), then by its item id, each drop taken by one item at most. The feed then reads
+-- each matched drop's level and quality from its bag item (LootFeed.ReadBagItems, on the tick). The
 -- remaining time is read from the item's TradeTimeRemaining tooltip line, or the
 -- BIND_TRADE_TIME_REMAINING sentence decoded with the client's duration globals
 -- (NS.Compat.TradeTimeRemaining); the tooltip shows whole minutes, so a re-read within a minute of
@@ -215,17 +217,22 @@ end
 
 -- ── the scan ────────────────────────────────────────────────────────────────────────────────
 
--- Your own live drops, by exact link and by item id.
+local function index(map, key, rec)
+    if key == nil then return end
+    map[key] = map[key] or {}
+    table.insert(map[key], rec)
+end
+
+-- Your own live drops, by exact link, by identity (NS.ItemRead.IdentityKey) and by item id.
 local function ownDrops()
-    local own = { byLink = {}, byItemID = {}, byId = {}, n = 0 }
+    local own = { byLink = {}, byKey = {}, byItemID = {}, byId = {}, n = 0 }
     for _, rec in ipairs(NS.LootFeed.Drops()) do
         if rec.isMine and not rec.test then
             own.n = own.n + 1
             own.byId[rec.id] = rec
-            own.byLink[rec.link] = own.byLink[rec.link] or {}
-            table.insert(own.byLink[rec.link], rec)
-            own.byItemID[rec.itemID] = own.byItemID[rec.itemID] or {}
-            table.insert(own.byItemID[rec.itemID], rec)
+            index(own.byLink, rec.link, rec)
+            index(own.byKey, NS.ItemRead.IdentityKey(rec.link), rec)
+            index(own.byItemID, rec.itemID, rec)
         end
     end
     return own
@@ -265,7 +272,8 @@ local function claimPass(items, claimed, listOf)
 end
 
 -- Each bag item's drop: the one its entry already holds, else (over every item) an unclaimed drop
--- with its exact link, else (over the rest) one with its item id.
+-- with its exact link, else one of its identity (the link differing only in non-identity fields:
+-- unique id, link level, spec, context, modifiers), else (over the rest) one with its item id.
 local function assign(items, own, timers)
     local claimed = {}
     for _, it in ipairs(items) do
@@ -275,6 +283,10 @@ local function assign(items, own, timers)
         end
     end
     claimPass(items, claimed, function(it) return own.byLink[it.link] end)
+    claimPass(items, claimed, function(it)
+        local key = NS.ItemRead.IdentityKey(it.link)
+        return key and own.byKey[key]
+    end)
     claimPass(items, claimed, function(it) return own.byItemID[it.itemID] end)
 end
 

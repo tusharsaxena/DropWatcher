@@ -119,6 +119,7 @@ Kit.run{
         "test_restrictions",
         "test_roster",
         "test_item_facts",
+        "test_item_read",
         "test_gear",
         "test_loot_parser",
         "test_inspect",

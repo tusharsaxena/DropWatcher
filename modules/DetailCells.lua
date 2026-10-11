@@ -206,13 +206,15 @@ local function emptySlot(eval)
     return false
 end
 
-local function replacesRow(eval, whose)
+-- `mine`: the item is yours, so its slot is kept for the real tooltip (`wornSlot`, DW-80).
+local function replacesRow(eval, whose, mine)
     local base = baseOf(eval)
     if base then
         local name = WC.ItemName(base.link) or "?"
         local r = row("replaces", L["Replaces"], ("%s · %s"):format(name, tostring(num(base.ilvl) or "?")), "plain",
             L["Replaces"], L["The item %s would take off for it: the lower of two where there are two."]:format(whose))
         r.link = base.link
+        r.wornSlot = mine and num(base.slot) or nil
         return r
     end
     if emptySlot(eval) then
@@ -319,9 +321,9 @@ local function verdictChip(cell)
     return { text = (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown) .. glyph, tone = cell.tone, tip = cell.tip }
 end
 
-local function sideRows(eval, f, tone, whose)
+local function sideRows(eval, f, tone, whose, mine)
     local ilvl = num(f.ilvl)
-    return { replacesRow(eval, whose), ilvlRow(eval, ilvl, tone), trackRow(eval, f.track), statsRow(eval, f.stats) }
+    return { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone), trackRow(eval, f.track), statsRow(eval, f.stats) }
 end
 
 --- The For you column (board 02, callouts 2 and 3).
@@ -330,7 +332,7 @@ end
 --- @return table side
 function DC.ForYou(drop, scorer)
     local cell = WC.Me(drop)
-    local rows = sideRows(drop.me, facts(drop), cell.tone, L["you"])
+    local rows = sideRows(drop.me, facts(drop), cell.tone, L["you"], true)
     rows[#rows + 1] = scoreRow(drop.me, scorer)
     return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }
 end

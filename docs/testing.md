@@ -98,7 +98,12 @@ settled by classFile and by the player's realm, the re-read on a miss, the share
 cached item, the track tier by string id and by name, the tooltip track, uniqueness, tier tokens and
 class gear, the link-color quality, the facts feeding the verdict kernel, the cache and its cap, the
 appearance event, the load with its retries, the give-up, a client that cannot load, and the
-stand-down), `test_gear` (the gear snapshot: each worn slot at its current level, empty and loading
+stand-down), `test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
+realistic 12.x links per loot source and each hypothesis proved or refuted, the merge keeping the most
+complete link (loading and hidden drops included), `core/ItemRead.lua`'s link detail, better link,
+identity, effective level, location reads and quality, the bag match by identity, an own drop read
+from its bag item, the `drops` diagnostics line, and the real game tooltip: bag slot, worn slot,
+link, and the addon's line after the game's), `test_gear` (the gear snapshot: each worn slot at its current level, empty and loading
 slots, the candidate's class, spec and hand flags, the per-slot qualities, the owned best per slot
 with pairs, dual wield, held off hands and Titan's Grip, tier tokens and secret links left out, the
 candidate judged by the verdict kernel with and without the bags, the throttled rebuild and

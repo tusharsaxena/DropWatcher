@@ -129,6 +129,8 @@ end
 local function itemCell(row)
     local f = textCell(row, "item")
     f.button = NS.WindowGroup.ItemButton(f, K.ROW_ICON)
+    NS.WindowGroup.ItemHover(f, f.button)
+    f.showItem = true   -- the real item tooltip on the name too (DW-80)
     f.button:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:ClearAllPoints()
     f.text:SetPoint("LEFT", f.button, "RIGHT", 5, 0)
@@ -222,8 +224,9 @@ end
 
 local function paintItem(f, drop)
     local c = NS.WindowCells.Item(drop)
-    NS.WindowGroup.SetItem(f.button, drop.link)
+    NS.WindowGroup.SetItem(f.button, drop.link, NS.WindowGroup.Where(drop))
     paintText(f, c)
+    f.tipLines = nil
     local q = type(drop.facts) == "table" and drop.facts.quality
     local qc = type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[q]
     if qc then f.text:SetTextColor(qc.r, qc.g, qc.b) end

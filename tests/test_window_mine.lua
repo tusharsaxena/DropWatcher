@@ -334,7 +334,8 @@ test("mine tab: every shown cell has a reason tooltip; nothing is blank", functi
     for _, row in ipairs(drawn.rows) do
         for key, cell in pairs(row.cells) do
             if key ~= "actions" then
-                assertTrue(#W.TooltipOf(cell) >= 2, key .. " has a reason")
+                local itemTip = cell.showItem and cell.itemButton.link ~= nil   -- the real item tooltip (DW-80)
+                assertTrue(itemTip or #W.TooltipOf(cell) >= 2, key .. " has a reason")
                 assertTrue((cell.text:GetText() or "") ~= "", key .. " is not blank")
             end
         end

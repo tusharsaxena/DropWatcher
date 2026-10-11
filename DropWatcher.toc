@@ -50,6 +50,10 @@ core\Compat.lua
 # LOAD-BEARING: adds the stable world reads (the group, a unit, the instance) to NS.Compat; it
 # loads before core\SimSeam.lua (below), which wraps every member at load. Read inside functions only.
 core\CompatWorld.lua
+# LOAD-BEARING: adds the exact item reads at a bag location and the game tooltip's item setters to
+# NS.Compat; it loads before core\SimSeam.lua (below), which wraps every member at load. Read
+# inside functions only.
+core\CompatItem.lua
 # LOAD-BEARING: publishes NS.Sim (the simulator's answer seam) and wraps every NS.Compat member that
 # answers for the client, at load, right after core\Compat.lua and core\CompatWorld.lua and before any
 # file below reads one.
@@ -70,6 +74,10 @@ core\EnvSetup.lua
 core\PoolSetup.lua
 # Conventional: NS.Item is read inside functions only.
 core\ItemSetup.lua
+# Conventional: publishes NS.ItemRead (the library-shaped item reads: how complete a link is, the
+# better of two, level and quality read the exact way); reads NS.Compat and NS.Item (above) at call
+# time only.
+core\ItemRead.lua
 # Conventional: NS.MakeDropdown / NS.CloseMenu are read inside functions only (the window's
 # filter bar and footer, built on the first show).
 core\WidgetsSetup.lua
@@ -130,6 +138,11 @@ modules\TradeRules.lua
 # modules\LootFeed.lua); read by the feed at call time only, and itself reads NS.Constants (core\,
 # above) at load.
 modules\FeedFilter.lua
+# Conventional: publishes NS.FeedRecords, the feed's pure record logic (the dedupe match, the link a
+# merge keeps, the encounter and run in force, the groups, a test drop's record, the bag item's
+# overlay; peeled out of modules\LootFeed.lua); read by the feed at call time only. NS.ItemRead
+# (core\, above) is read at call time.
+modules\FeedRecords.lua
 # Conventional: publishes NS.Messaging, the pure messaging core (templates, the one-ask guard and
 # the send queue); read by the messaging edge at call time only, and itself reads NS.Constants
 # (core\, above) at load.

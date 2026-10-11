@@ -117,6 +117,7 @@ local function buildHeader(card)
     card.nameTip = CreateFrame("Frame", nil, card)
     card.nameTip:SetAllPoints(card.name)
     attach(card.nameTip)
+    NS.WindowGroup.ItemHover(card.nameTip, card.icon)
     card.chips = {}
     for i = 1, MAX_CHIPS do
         local c = newChip(card)
@@ -236,10 +237,10 @@ end
 
 local function paintHeader(card, drop)
     local name = NS.WindowCells.ItemName(drop.link) or "?"
-    NS.WindowGroup.SetItem(card.icon, drop.link)
+    NS.WindowGroup.SetItem(card.icon, drop.link, NS.WindowGroup.Where(drop))
     card.name:SetText(name)
     qualityTone(card.name, drop)
-    card.nameTip.tipLines = { name, L["Shift-click the icon to link it in chat; ctrl-click to try it on."] }
+    card.nameTip.showItem = true   -- the real item tooltip (WindowGroup.ItemHover, DW-80)
     local chips = DC.Chips(drop)
     for i, c in ipairs(card.chips) do
         local chip = chips[i]
@@ -256,7 +257,7 @@ local function paintSideRow(r, line, width)
     setTone(r.value, line.tone)
     r.tipLines = line.tip
     r.key = line.key
-    NS.WindowGroup.SetItem(r.item, line.link)
+    NS.WindowGroup.SetItem(r.item, line.link, line.wornSlot and { unit = "player", slot = line.wornSlot } or nil)
     r.value:ClearAllPoints()
     local x = K.SIDE_LABEL + (line.link and K.SIDE_ROW_H + 2 or 0)
     r.value:SetPoint("LEFT", r, "LEFT", x, 0)

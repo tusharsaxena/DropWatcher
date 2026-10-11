@@ -314,10 +314,50 @@ end
 
 -- ── the item button ─────────────────────────────────────────────────────────────────────────
 
-local function itemEnter(self)
+-- THE REAL GAME TOOLTIP (ui spec §0, BUG-2). Every item button shows the client's own tooltip,
+-- never one assembled from facts: your own drop matched to its bag item shows that bag item (so the
+-- client's "You may trade this item..." line appears), an item you wear shows your inventory slot,
+-- anything else its link. Each place is checked against the link at hover time, so a moved item
+-- falls back to its link. The addon's own line goes after the game's.
+
+local function sameItemAs(link, other)
+    return other ~= nil and NS.Item.ItemIDFromLink(other) == NS.Item.ItemIDFromLink(link)
+end
+
+-- Your own drop's bag slot: the trade timer's match, while the slot still holds the item.
+local function bagSlotOf(dropId, link)
+    local TT = NS.TradeTimer
+    local e = dropId and TT and TT.ForDrop(dropId)
+    if not (e and e.bag and e.slot) then return nil end
+    if not sameItemAs(link, NS.Compat.BagItemLink(e.bag, e.slot)) then return nil end
+    return e.bag, e.slot
+end
+
+local function showWorn(tip, b)
+    local w = b.worn
+    if not (w and sameItemAs(b.link, NS.Compat.InventoryItemLink(w.unit, w.slot))) then return false end
+    return NS.Compat.TooltipInventoryItem(tip, w.unit, w.slot)
+end
+
+--- Show an item button's item on `tip` the client's own way: its bag slot (`b.ownDropId`, your own
+--- drop matched to its bag item), else its inventory slot (`b.worn` = { unit, slot }), else its
+--- link. Answers which: `bag`, `inventory` or `link`.
+--- @param tip table a GameTooltip
+--- @param b table the item button
+--- @return string
+function WG.SetItemTooltip(tip, b)
+    local bag, slot = bagSlotOf(b.ownDropId, b.link)
+    if bag and NS.Compat.TooltipBagItem(tip, bag, slot) then return "bag" end
+    if showWorn(tip, b) then return "inventory" end
+    NS.Compat.TooltipHyperlink(tip, b.link)
+    return "link"
+end
+
+-- `owner` is the hovered frame: the button, or a name beside it (WG.ItemHover).
+local function itemEnter(self, owner)
     if not (self.link and GameTooltip) then return end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetHyperlink(self.link)
+    GameTooltip:SetOwner(owner or self, "ANCHOR_RIGHT")
+    WG.SetItemTooltip(GameTooltip, self)
     GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], C.IDLE.r, C.IDLE.g, C.IDLE.b)
     GameTooltip:Show()
 end
@@ -342,21 +382,26 @@ local function itemButton(parent, size)
     b:SetSize(size, size)
     b.art = b:CreateTexture(nil, "ARTWORK")
     b.art:SetAllPoints(b)
-    b:SetScript("OnEnter", itemEnter)
+    b:SetScript("OnEnter", function(self) itemEnter(self) end)
     b:SetScript("OnLeave", hideTooltip)
     b:SetScript("OnClick", WG.OnItemClick)
     return b
 end
 
-local function setItem(b, link)
+-- `where` says where the item is, for its tooltip: { dropId } for your own drop, { unit, slot }
+-- for an item worn; nil for anything else (its link).
+local function setItem(b, link, where)
     b.link = link
+    b.ownDropId = where and where.dropId or nil
+    b.worn = where and where.unit and where or nil
     local icon = link and NS.Compat.ItemIcon(link)
     b.art:SetTexture(icon or NS.Icon("help"))
     b:SetShown(link ~= nil)
 end
 
 --- A real item button (the game's tooltip on hover, shift-click links, ctrl-click tries on), for
---- the detail card too. `WG.SetItem(b, link)` shows an item on it, or hides it for nil.
+--- the detail card too. `WG.SetItem(b, link, where)` shows an item on it, or hides it for nil;
+--- `where` is WG.Where(drop) for a drop, { unit, slot } for an item worn, nil for a link only.
 --- @param parent table
 --- @param size number
 --- @return table
@@ -364,11 +409,33 @@ function WG.ItemButton(parent, size) return itemButton(parent, size) end
 
 WG.SetItem = setItem
 
+--- Where a drop's item is, for its tooltip: your own live drop's bag item (once the trade timer
+--- matched it), else nil (its link).
+--- @param drop table
+--- @return table|nil
+function WG.Where(drop)
+    if type(drop) ~= "table" or not drop.isMine or drop.test then return nil end
+    return { dropId = drop.id }
+end
+
+--- A name beside an item button shows the button's real tooltip on hover while `frame.showItem` is
+--- true (its own text tooltip then has no lines).
+--- @param frame table
+--- @param button table the item button
+function WG.ItemHover(frame, button)
+    frame.itemButton = button
+    frame:HookScript("OnEnter", function(self)
+        if self.showItem then itemEnter(self.itemButton, self) end
+    end)
+    frame:HookScript("OnLeave", hideTooltip)
+end
+
 -- ── building a row ──────────────────────────────────────────────────────────────────────────
 
 local function itemCell(row)
     local f = textCell(row, "item")
     f.button = itemButton(f, K.ROW_ICON)
+    WG.ItemHover(f, f.button)
     f.button:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:ClearAllPoints()
     f.text:SetPoint("LEFT", f.button, "RIGHT", 5, 0)
@@ -474,9 +541,11 @@ end
 
 local function paintItem(f, drop, compact)
     local c = WC.Item(drop)
-    setItem(f.button, drop.link)
+    setItem(f.button, drop.link, WG.Where(drop))
+    f.showItem = not compact
     if not compact then
         paintText(f, c)
+        f.tipLines = nil   -- the real item tooltip instead (WG.ItemHover)
         qualityTone(f.text, drop)
         return
     end

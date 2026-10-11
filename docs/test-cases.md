@@ -657,6 +657,30 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
+### test_item_read.lua (21)
+
+- BUG-1 repro: chat first, the drop reads 311 Epic
+- BUG-1 repro: the encounter's bare link first, then chat's complete one: the complete link wins
+- BUG-1 repro: a complete link first is never replaced by a later bare one
+- BUG-1 repro: a merge while the first link is still loading judges the complete link
+- BUG-1 hypothesis 2: ItemFacts reads a complete link right and a bare one at the base
+- BUG-1 hypothesis 3: an own drop recorded from a bare link reads level and quality from its bag item
+- BUG-1: a drop the bare link's base quality hid comes back when the complete link merges in
+- ItemRead: LinkDetail reads the bonus ids, the modifiers, the context and how complete a link is
+- ItemRead: BetterLink keeps the more complete link, the first on a tie, and never a non-item
+- ItemRead: the identity is the item and its bonus ids; unique id, level, spec and modifiers do not count
+- ItemRead: EffectiveItemLevel answers gear's detailed level, else its base, and nothing for non-gear
+- ItemRead: a bag location answers the exact level and quality; an empty slot answers nothing
+- ItemRead: QualityOf answers the client's quality for the link, else the link's color
+- ItemFacts: the level and quality say where they came from
+- FeedRecords: a merge keeps the more complete link, chat's on a tie
+- trade timer: two own copies of one item id each match the bag item of their own identity
+- diagnostics: one drops line per drop names its sources, link, level and quality with their sources, and the bag match
+- BUG-2: your own drop matched to its bag item shows the bag item; moved away, its link
+- BUG-2: an item you wear shows your inventory slot; someone else's item its link
+- BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
+- BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
+
 ### test_gear.lua (20)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
@@ -1007,7 +1031,7 @@ Total.
 - sim roster: gear is drawn inside the band, from what the class can wear; the rest stays empty
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (20)
+### test_sim_events.lua (21)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -1025,6 +1049,7 @@ Total.
 - sim encounter: a keystone run groups its loot and holds the ChallengeMode restriction
 - sim combat: the stop ends a combat edge it raised
 - sim own drops: they land in your bags with a trade window the trade timer counts down
+- sim own drops: read at their bag slot from their link, and their tooltip is their link's (DW-80)
 - sim own drops: the scenario sets the window and the ending-soon count
 - sim trade: your drop traded away and another's received land in the session's history log
 - sim trade: refused for an unknown drop, a real one and an expired own drop
@@ -1178,6 +1203,7 @@ Total.
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 18 |
+| test_item_read.lua | 21 |
 | test_gear.lua | 20 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
@@ -1191,7 +1217,7 @@ Total.
 | test_auto_ask.lua | 25 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 18 |
-| test_sim_events.lua | 20 |
+| test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 16 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
@@ -1202,4 +1228,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **988** |
+| **Total** | **1010** |

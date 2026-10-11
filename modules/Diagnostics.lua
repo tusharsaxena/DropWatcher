@@ -5,9 +5,9 @@ local _, NS = ...
 -- and the Add loop are LibKa0s-DebugLog-1.0's. Every section READS state and never acts: no hold,
 -- no event, no timer, safe in combat and while stood down. `out:add` formats %s-only and runs every
 -- argument through safeToString, so raw values are passed, never pre-built strings. Every section
--- of design spec §13 is here: State, Feed, Inspect, Gear, Trade, Scoring and Messaging, beside the
--- standard's identity, settings, registration and integrations, and the simulator's (simulator
--- spec §6).
+-- of design spec §13 is here: State, Feed, Inspect, Gear, Trade, Scoring and Messaging (and, from
+-- ui spec §0, one Drops line per drop), beside the standard's identity, settings, registration
+-- and integrations, and the simulator's (simulator spec §6).
 
 NS.Diagnostics = NS.Diagnostics or {}
 
@@ -225,6 +225,31 @@ local function feed(out)
     historyLine(out)
 end
 
+-- One line per live drop, newest first, the newest DROP_LINES (ui spec §0, BUG-1): its sources, the
+-- stored link's item string and whether it is complete, the level and the quality with where each
+-- came from (ItemFacts' and the feed's ilvlSource / qualitySource), and whether a bag item matched
+-- it. What the owner pastes when a drop reads wrongly. Stored state only.
+local DROP_LINES = 20
+
+local function dropLine(out, rec)
+    local f = type(rec.facts) == "table" and rec.facts or {}
+    local sources = {}
+    for k in pairs(rec.sources or {}) do sources[#sources + 1] = k end
+    table.sort(sources)
+    local d = NS.ItemRead.LinkDetail(rec.link)
+    local matched = rec.isMine and NS.TradeTimer.ForDrop(rec.id) ~= nil
+    out:add(TAG, "drops: %s sources=%s item=%s complete=%s ilvl=%s (%s) quality=%s (%s) mine=%s bag=%s", rec.id,
+        table.concat(sources, ","), d and d.itemString or "?", d ~= nil and d.complete, f.ilvl,
+        f.ilvlSource or "?", f.quality, f.qualitySource or "?", rec.isMine == true, matched and "yes" or "no")
+end
+
+local function drops(out)
+    local s = NS.State.feed
+    local list = s and s.live.drops or {}
+    if #list == 0 then return out:add(TAG, "drops: none") end
+    for i = #list, math.max(1, #list - DROP_LINES + 1), -1 do dropLine(out, list[i]) end
+end
+
 -- The trade helper's counts (once it has been used), then the trade timer's entries (design spec
 -- §7.4, §13): the live and expired counts, the scans and the ticker's period, then one line per
 -- entry. Stored state only.
@@ -349,6 +374,7 @@ function NS.Diagnostics.Sections()
         { "inspect",      inspect },
         { "gear",         gear },
         { "feed",         feed },
+        { "drops",        drops },
         { "trade",        trade },
         { "scoring",      scoring },
         { "messaging",    messaging },

@@ -378,7 +378,8 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     assertEqual(textOf(drawn.strip.info), "2 of 20 groups kept, 3 drops")
     for _, r in ipairs(drawn.rows) do
         for key, c in pairs(r.cells) do
-            if c:IsShown() then assertTrue(#NS.Window.TooltipOf(c) >= 2, key .. " has a reason") end
+            local itemTip = c.showItem and c.itemButton.link ~= nil   -- the real item tooltip (DW-80)
+            if c:IsShown() then assertTrue(itemTip or #NS.Window.TooltipOf(c) >= 2, key .. " has a reason") end
         end
     end
 end)

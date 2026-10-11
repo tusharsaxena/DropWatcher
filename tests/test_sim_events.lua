@@ -384,6 +384,20 @@ test("sim own drops: they land in your bags with a trade window the trade timer 
     assertEqual(#m.chatSent, 0)
 end)
 
+test("sim own drops: read at their bag slot from their link, and their tooltip is their link's (DW-80)", function()
+    local NS, m = sim()
+    NS.SimEvents.Loot(1, "me")
+    m.advance(3)
+    local rec = lastDrop(NS)
+    local e = NS.TradeTimer.ForDrop(rec.id)
+    assertTrue(e ~= nil, "matched to its simulated bag item")
+    assertEqual(rec.facts.ilvlSource, "current"); assertEqual(rec.facts.qualitySource, "location")
+    assertEqual(rec.facts.ilvl, NS.ItemFacts.Get(rec.link).ilvl)
+    local b = { link = rec.link, ownDropId = rec.id }
+    assertEqual(NS.WindowGroup.SetItemTooltip(m.GameTooltip, b), "bag")
+    assertEqual(m.tooltipSets[#m.tooltipSets], "link:" .. rec.link, "a simulated slot shows its link")
+end)
+
 test("sim own drops: the scenario sets the window and the ending-soon count", function()
     local NS, m = sim()
     local E = NS.SimEvents

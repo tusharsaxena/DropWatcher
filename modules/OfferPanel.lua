@@ -139,6 +139,7 @@ local function buildHeader(p)
     p.item = NS.WindowGroup.ItemButton(p, K.CARD_ICON)
     p.item:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -32)
     p.name = tipFrame(p)
+    NS.WindowGroup.ItemHover(p.name, p.item)
     p.name:SetPoint("TOPLEFT", p.item, "TOPRIGHT", 8, 0)
     p.name:SetSize(K.OFFER_W - K.CARD_ICON - 40, 16)
     p.name.text:SetFontObject("GameFontNormal")
@@ -244,9 +245,9 @@ end
 
 local function paintHeader(p, drop, now, warnAt)
     local h = MC.PanelHeader(drop, now, warnAt)
-    NS.WindowGroup.SetItem(p.item, drop.link)
+    NS.WindowGroup.SetItem(p.item, drop.link, NS.WindowGroup.Where(drop))
     p.name.text:SetText(h.name)
-    p.name.tipLines = { h.name, L["Your drop. Shift-click its icon to link it in chat."] }
+    p.name.showItem = true   -- the real item tooltip (WindowGroup.ItemHover, DW-80)
     local q = type(drop.facts) == "table" and drop.facts.quality
     local qc = type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[q]
     if qc then p.name.text:SetTextColor(qc.r, qc.g, qc.b) end

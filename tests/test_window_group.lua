@@ -381,7 +381,9 @@ test("table: every shown cell has a reason tooltip; nothing is blank", function(
     for _, row in ipairs(drawn.rows) do
         for key, cell in pairs(row.cells) do
             if cell:IsShown() and key ~= "actions" then
-                assertTrue(#W.TooltipOf(cell) >= 2, key .. " has a reason")
+                -- the item cell's hover is the real item tooltip (DW-80, BUG-2), not a text one
+                local itemTip = cell.showItem and cell.itemButton.link ~= nil
+                assertTrue(itemTip or #W.TooltipOf(cell) >= 2, key .. " has a reason")
                 assertTrue((cell.text:GetText() or "") ~= "", key .. " is not blank")
             end
         end

@@ -27,8 +27,10 @@ local _, NS = ...
 -- the last DEDUPE_WINDOW seconds with the same item id and the same looter (the same GUID; when
 -- either side lacks one, the same name without its realm, ignoring case) that this source has not
 -- already reported; anything else is a new drop, so two copies of one item from one source stay
--- two. A merge can teach the drop its looter's GUID, which then asks for their inspect. Manual and
--- test drops never merge.
+-- two. A merge can teach the drop its looter's GUID, which then asks for their inspect, and keeps
+-- the more complete link (NS.FeedRecords.PreferredLink, ui spec §0: a link without its bonus data
+-- reads as the base item), reading the facts again from it. Manual and test drops never merge. The
+-- matching and the record logic are modules/FeedRecords.lua's (pure).
 --
 -- GROUPING. ENCOUNTER_START / ENCOUNTER_END and CHALLENGE_MODE_START / CHALLENGE_MODE_COMPLETED keep
 -- the context. Inside a keystone run, and for LOOT_GRACE seconds after it completes, every drop
@@ -47,8 +49,10 @@ local _, NS = ...
 -- UPDATES. InspectDone(guid) re-judges the drops that looter received and your own drops'
 -- candidate of that GUID; GearChanged re-judges you on every drop (and your own drops' trade); a
 -- scorer answering "pending" is retried on one shared SCORE_RETRY timer, SCORE_TRIES times per
--- drop. Each sends DropUpdated(id, cause): `source`, `inspect`, `gear` or `score`. A new drop sends
--- DropAdded(id). Updates re-judge the verdicts and the trade only: a drop once shown stays shown.
+-- drop; your own drop the trade timer matched to its bag item is read from it on each
+-- TradeTimerTick (ReadBagItems: the exact level and quality). Each sends DropUpdated(id, cause):
+-- `source`, `inspect`, `gear`, `score` or `bag`. A new drop sends DropAdded(id). Updates re-judge
+-- the verdicts and the trade only: a drop once shown stays shown.
 -- Test drops are never updated.
 --
 -- THE TRADE OVER TIME. The estimate is made again at read time's pace: one shared ticker, every
@@ -162,17 +166,6 @@ local function resolveLooter(name, guid, classFile)
     return { name = name, guid = guid, classFile = classFile, isSelf = false }
 end
 
-local function shortName(name)
-    if type(name) ~= "string" then return nil end
-    return (name:match("^([^%-]+)") or name):lower()
-end
-
-local function sameLooter(a, b)
-    if a.guid and b.guid then return a.guid == b.guid end
-    local an = shortName(a.name)
-    return an ~= nil and an == shortName(b.name)
-end
-
 local function you()
     local me = NS.Roster.Player()
     if me then return resolveLooter(nil, me.guid) end
@@ -182,20 +175,6 @@ end
 -- ── grouping ────────────────────────────────────────────────────────────────────────────────
 
 local function now() return GetTime() end
-
-local function activeRun(ctx, t)
-    local run = ctx.run
-    if not run or (run.endedAt and t - run.endedAt > LF.LOOT_GRACE) then return nil end
-    return run
-end
-
-local function activeEncounter(ctx, t)
-    local enc = ctx.encounter
-    if not enc then return nil end
-    if not enc.endedAt then return enc end
-    if enc.success and t - enc.endedAt <= LF.LOOT_GRACE then return enc end
-    return nil
-end
 
 local function encounterLabel(s, id)
     return (id and s.names[id]) or (id and L["Encounter %s"]:format(id)) or L["Encounter"]
@@ -211,9 +190,9 @@ end
 
 -- Where a drop received now belongs: { key, label, kind, encounterID, mapID }.
 local function groupSpec(s, encounterID, t)
-    local run = activeRun(s.ctx, t)
+    local run = NS.FeedRecords.ActiveRun(s.ctx, t, LF.LOOT_GRACE)
     if run then return { key = run.key, label = run.label, kind = "run", mapID = run.mapID } end
-    local enc = activeEncounter(s.ctx, t)
+    local enc = NS.FeedRecords.ActiveEncounter(s.ctx, t, LF.LOOT_GRACE)
     if encounterID and not (enc and enc.id == encounterID) then
         return { key = "enc:" .. encounterID, label = encounterLabel(s, encounterID), kind = "encounter",
             encounterID = encounterID }
@@ -221,25 +200,6 @@ local function groupSpec(s, encounterID, t)
     if enc then return { key = enc.key, label = enc.label, kind = "encounter", encounterID = enc.id } end
     local area = areaName()
     return { key = "area:" .. area, label = area, kind = "area" }
-end
-
--- The group a drop joins in its feed, made by its first drop. An area group continues while it is
--- the latest group; an area visited again later starts a new one.
-local function materialize(feed, rec)
-    local spec = rec.group
-    local g = feed.groupByKey[spec.key]
-    if spec.kind == "area" then
-        local last = feed.groups[#feed.groups]
-        if last and last.kind == "area" and last.label == spec.label then return last end
-        g = nil
-        spec.key = spec.key .. ":" .. rec.id
-    end
-    if g then return g end
-    g = { key = spec.key, label = spec.label, kind = spec.kind, encounterID = spec.encounterID,
-        mapID = spec.mapID, situation = rec.situation, at = rec.at, drops = {} }
-    feed.groups[#feed.groups + 1] = g
-    feed.groupByKey[g.key] = g
-    return g
 end
 
 -- ── judging ─────────────────────────────────────────────────────────────────────────────────
@@ -391,21 +351,7 @@ end
 
 -- ── the score retry ─────────────────────────────────────────────────────────────────────────
 
-local function hasReason(eval, key)
-    if type(eval) ~= "table" then return false end
-    for _, r in ipairs(eval.reasons or {}) do
-        if r.key == key then return true end
-    end
-    return false
-end
-
-local function scorePending(rec)
-    if hasReason(rec.me, "scorePending") or hasReason(rec.them, "scorePending") then return true end
-    for _, c in pairs(rec.candidates or {}) do
-        if hasReason(c.eval, "scorePending") then return true end
-    end
-    return false
-end
+local function scorePending(rec) return NS.FeedRecords.ScorePending(rec) end
 
 local retryScores
 
@@ -443,17 +389,12 @@ end
 
 -- ── the trade over time ─────────────────────────────────────────────────────────────────────
 
-local function sameTrade(a, b)
-    return a ~= nil and a.state == b.state and a.reasonKey == b.reasonKey and a.basis == b.basis
-        and a.expiresAt == b.expiresAt
-end
-
 -- One drop's trade made again; true when it moved. Your own drop moving off `no` asks for its
 -- candidates' inspects (they were skipped while it could not trade).
 local function reestimate(rec, cfg)
     local old = rec.trade
     if rec.isMine then estimate(rec, rec.me, cfg, nil) else estimate(rec, rec.them, cfg, rec.inspect) end
-    if sameTrade(old, rec.trade) then return false end
+    if NS.FeedRecords.SameTrade(old, rec.trade) then return false end
     if rec.isMine and old and old.state == "no" and rec.trade.state ~= "no" then
         judgeCandidates(rec, cfg, true)
     end
@@ -509,22 +450,6 @@ local function feedOf(rec)
     return store()[rec.feed]
 end
 
--- Remove feed.drops[at] and its place in its group; the group goes with its last drop.
-local function removeAt(feed, at)
-    local rec = table.remove(feed.drops, at)
-    feed.byId[rec.id] = nil
-    local g = feed.groupByKey[rec.groupKey]
-    if not g then return end
-    for i, id in ipairs(g.drops) do
-        if id == rec.id then table.remove(g.drops, i) break end
-    end
-    if #g.drops > 0 then return end
-    feed.groupByKey[g.key] = nil
-    for i, other in ipairs(feed.groups) do
-        if other == g then table.remove(feed.groups, i) break end
-    end
-end
-
 --- Be told `fn(feedName)` whenever drops leave a feed: a Clear, a RemoveWhere, or the cap's trim.
 --- @param fn function
 function LF.AddRemovalSink(fn)
@@ -542,13 +467,13 @@ local function verdictOf(eval) return eval and eval.verdict or "-" end
 
 local function add(rec)
     local feed = feedOf(rec)
-    local g = materialize(feed, rec)
+    local g = NS.FeedRecords.Materialize(feed, rec)
     rec.state, rec.groupKey = "added", g.key
     g.drops[#g.drops + 1] = rec.id
     feed.drops[#feed.drops + 1] = rec
     feed.byId[rec.id] = rec
     local trimmed = #feed.drops > LF.MAX_DROPS
-    while #feed.drops > LF.MAX_DROPS do removeAt(feed, 1) end
+    while #feed.drops > LF.MAX_DROPS do NS.FeedRecords.RemoveAt(feed, 1) end
     if trimmed then notifyRemoved(rec.feed) end
     notePending(rec)
     if not rec.test then LF.ArmTradeSweep() end
@@ -573,6 +498,8 @@ local function hide(rec, why)
     return nil, why
 end
 
+local start
+
 -- The gates after the facts are in (or given up on), then the looter's side.
 local function judge(rec, facts)
     rec.facts = facts
@@ -588,13 +515,14 @@ local function judge(rec, facts)
     return add(rec)
 end
 
-local function start(rec)
+start = function(rec)
     if not (rec.test or rec.force) and not NS.Situations.IsTracking(rec.situation) then
         return hide(rec, "notTracking")
     end
-    local gen = generation
-    local facts, status = NS.ItemFacts.Request(rec.link, function(f)
+    local gen, link = generation, rec.link
+    local facts, status = NS.ItemFacts.Request(link, function(f)
         if gen ~= generation or stoodDown() then return end
+        if rec.link ~= link then return start(rec) end   -- a more complete link merged in meanwhile
         judge(rec, f)
     end)
     if status == "loading" then
@@ -634,16 +562,18 @@ local function prune(s)
     s.recent = keep
 end
 
-local function findRecent(s, r)
-    for _, rec in ipairs(s.recent) do
-        if rec.itemID == r.itemID and not rec.sources[r.source] and sameLooter(rec.looter, r.looter) then
-            return rec
-        end
-    end
-    return nil
+-- A hidden drop whose link changed (a more complete one merged in) runs the gates again on it, its
+-- hidden count given back. A loading one loads the new link (start's callback); a shown one is
+-- re-judged (LF.Refresh).
+local function rerun(rec)
+    local s = store()
+    s.hidden[rec.hidden] = (s.hidden[rec.hidden] or 1) - 1
+    rec.hidden = nil
+    return start(rec)
 end
 
--- What a second source adds: its count, the looter's GUID and the encounter, when missing.
+-- What a second source adds: its count, the looter's GUID, the encounter when missing, and its link
+-- when more complete (ui spec §0, BUG-1).
 local function merge(rec, r)
     local s = store()
     s.merged = s.merged + 1
@@ -651,13 +581,20 @@ local function merge(rec, r)
     local learned = not rec.looter.guid and r.looter.guid ~= nil
     if learned then rec.looter = r.looter end
     rec.encounterID = rec.encounterID or r.encounterID
-    NS.Debug(TAG, "drop %s: %s also reported by %s", rec.id, rec.link, r.source)
-    if rec.state ~= "added" then return rec.id, "merged" end
-    if learned then
-        local cfg = LF.Config()
-        judgeLooter(rec, cfg, true)
-        notePending(rec)
+    local link = NS.FeedRecords.PreferredLink(rec.link, r.link, r.source)
+    local relinked = link ~= rec.link
+    rec.link = link
+    NS.Debug(TAG, "drop %s: %s also reported by %s%s", rec.id, rec.link, r.source,
+        relinked and " (its more complete link taken)" or "")
+    if relinked and rec.state == "hidden" then
+        rerun(rec)
+        return rec.id, "merged"
     end
+    if rec.state ~= "added" then return rec.id, "merged" end
+    local cfg = LF.Config()
+    if learned then judgeLooter(rec, cfg, true) end
+    if relinked then return rec.id, LF.Refresh(rec, "source") end
+    notePending(rec)
     send(NS.MSG.DROP_UPDATED, rec.id, "source")
     return rec.id, "merged"
 end
@@ -677,7 +614,7 @@ local function receive(r)
     local s = store()
     prune(s)
     if r.source ~= "manual" then
-        local hit = findRecent(s, r)
+        local hit = NS.FeedRecords.FindRecent(s.recent, r)
         if hit then return merge(hit, r) end
     end
     local rec = newRecord(s, r)
@@ -711,21 +648,6 @@ function LF.Add(link, looter, opts)
         force = true, test = opts.test == true })
 end
 
--- A placeholder drop's record: the given verdicts, trade and inspect, nothing judged.
-local function testRecord(s, spec, link, itemID)
-    s.seq = s.seq + 1
-    local who = spec.looter
-    return {
-        id = s.seq, feed = "test", test = true, link = link, itemID = itemID, qty = 1,
-        kind = spec.kind or "loot", bonusRoll = spec.kind == "bonus", looter = who,
-        isMine = who.isSelf == true, at = now() - (tonumber(spec.ago) or 0),
-        situation = spec.situation, sources = { manual = 1 }, source = "manual", group = spec.group,
-        facts = spec.facts, me = spec.me, them = spec.them, trade = spec.trade, inspect = spec.inspect,
-        candidates = spec.candidates, testAsk = spec.testAsk, testInspect = spec.testInspect,
-        state = "new",
-    }
-end
-
 --- Put one placeholder drop in the test feed as given (test mode, modules/TestMode.lua): its
 --- verdicts, trade estimate, inspect state and candidates are the spec's, never judged, and no
 --- gate, inspect or timer touches it. `spec.group` is { key, label, kind } (`encounter` or `run`);
@@ -737,7 +659,9 @@ function LF.AddTest(spec)
     if stoodDown() then return nil, "stoodDown" end
     local link, itemID = validItem(type(spec) == "table" and spec.link or nil)
     if not itemID or type(spec.looter) ~= "table" or type(spec.group) ~= "table" then return nil, "notItem" end
-    return add(testRecord(store(), spec, link, itemID))
+    local s = store()
+    s.seq = s.seq + 1
+    return add(NS.FeedRecords.TestRecord(s.seq, spec, link, itemID, now()))
 end
 
 -- ── reading the feed ────────────────────────────────────────────────────────────────────────
@@ -788,7 +712,7 @@ end
 function LF.RemoveWhere(pred, resetContext)
     local s, n = store(), 0
     for i = #s.live.drops, 1, -1 do
-        if pred(s.live.drops[i]) then removeAt(s.live, i); n = n + 1 end
+        if pred(s.live.drops[i]) then NS.FeedRecords.RemoveAt(s.live, i); n = n + 1 end
     end
     local keep = {}
     for _, rec in ipairs(s.recent) do
@@ -816,7 +740,7 @@ function LF.Stats()
         if rec.state == "loading" then out.loading = out.loading + 1 end
     end
     local t = now()
-    local enc, run = activeEncounter(s.ctx, t), activeRun(s.ctx, t)
+    local enc, run = NS.FeedRecords.ActiveEncounter(s.ctx, t, LF.LOOT_GRACE), NS.FeedRecords.ActiveRun(s.ctx, t, LF.LOOT_GRACE)
     out.encounter, out.run = enc and enc.label, run and run.label
     return out
 end
@@ -852,6 +776,65 @@ function LF.OnInspectDone(guid)
         end
     end
     if n > 0 then NS.Debug("EVAL", "re-judged %d drops after an inspect", n) end
+end
+
+-- A shown drop judged again on new facts: for you, its looter (no inspect asked) and the trade.
+local function rejudge(rec, facts, cause)
+    rec.facts = facts
+    local cfg = LF.Config()
+    judgeMe(rec, cfg)
+    judgeLooter(rec, cfg, false)
+    notePending(rec)
+    send(NS.MSG.DROP_UPDATED, rec.id, cause)
+end
+
+--- Read a shown drop's facts again for its (changed) link and re-judge it, sending
+--- DropUpdated(id, cause) once they are in. Answers `merged` (the merge's status).
+--- @param rec table
+--- @param cause string
+--- @return string
+function LF.Refresh(rec, cause)
+    local gen, link = generation, rec.link
+    local facts = NS.ItemFacts.Request(link, function(f)
+        if gen == generation and not stoodDown() and f and rec.link == link then rejudge(rec, f, cause) end
+    end)
+    if facts then rejudge(rec, facts, cause) end
+    return "merged"
+end
+
+--- Your own drop matched to its bag item (the trade timer's entry `e`, ui spec §0): it keeps the
+--- bag item's link when that is more complete, and reads its level and quality from the bag item
+--- (NS.ItemRead.ItemLevelAt / QualityAt, always exact). Re-judged, with DropUpdated(id, `bag`),
+--- only when something moved. Answers whether it did.
+--- @param rec table
+--- @param e table { link, bag, slot }
+--- @return boolean
+function LF.ApplyBagItem(rec, e)
+    local IR = NS.ItemRead
+    local link = IR.BetterLink(rec.link, e.link) or rec.link
+    local base = NS.ItemFacts.Get(link)
+    if not base then return false end
+    local ilvl, quality = IR.ItemLevelAt(e.bag, e.slot), IR.QualityAt(e.bag, e.slot)
+    local new, f = NS.FeedRecords.Overlay(base, ilvl, quality), rec.facts
+    if link == rec.link and f and f.ilvl == new.ilvl and f.quality == new.quality and f.ilvlSource == new.ilvlSource
+        and f.qualitySource == new.qualitySource then
+        return false
+    end
+    NS.Debug(TAG, "drop %s: read from its bag item %s:%s, ilvl %s, quality %s", rec.id, e.bag, e.slot,
+        tostring(ilvl), tostring(quality))
+    rec.link = link
+    rejudge(rec, new, "bag")
+    return true
+end
+
+--- Every own live drop the trade timer matched to a bag item, read from it (ApplyBagItem).
+function LF.ReadBagItems()
+    local TT = NS.TradeTimer
+    if stoodDown() or not TT then return end
+    for _, rec in ipairs(store().live.drops) do
+        local e = rec.isMine and not rec.test and TT.ForDrop(rec.id)
+        if e and e.bag and e.slot then LF.ApplyBagItem(rec, e) end
+    end
 end
 
 --- Your gear moved: re-judge you on every drop, and your own drops' trade.
@@ -977,7 +960,10 @@ local function listen()
     if not target then return end
     target:RegisterMessage(NS.MSG.INSPECT_DONE, function(_, guid) LF.OnInspectDone(guid) end)
     target:RegisterMessage(NS.MSG.GEAR_CHANGED, function() LF.OnGearChanged() end)
-    target:RegisterMessage(NS.MSG.TRADE_TIMER_TICK, function() LF.SweepTrade(true) end)
+    target:RegisterMessage(NS.MSG.TRADE_TIMER_TICK, function()
+        LF.ReadBagItems()
+        LF.SweepTrade(true)
+    end)
 end
 listen()
 

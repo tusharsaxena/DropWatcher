@@ -189,7 +189,9 @@ test("window: every cell of every placeholder row says something and has a reaso
             if cell.text and cell:IsShown() then
                 local text = textOf(cell.text)
                 assertTrue(type(text) == "string" and text ~= "", ("row %s %s is blank"):format(r.dropId, key))
-                assertTrue(type(cell.tipLines) == "table" and #cell.tipLines >= 2, ("row %s %s has no reason"):format(r.dropId, key))
+                local itemTip = cell.showItem and cell.itemButton.link ~= nil   -- the real item tooltip (DW-80)
+                assertTrue(itemTip or (type(cell.tipLines) == "table" and #cell.tipLines >= 2),
+                    ("row %s %s has no reason"):format(r.dropId, key))
             end
         end
     end

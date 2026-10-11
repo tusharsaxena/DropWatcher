@@ -62,6 +62,10 @@
 --                  RAID_CLASS_COLORS a few classes' colors; shift / ctrl are IsShiftKeyDown /
 --                  IsControlKeyDown; chatLinks and dressUps record ChatEdit_InsertLink and
 --                  DressUpItemLink; tooltipLinks every GameTooltip:SetHyperlink (the drop tables);
+--                  tooltipSets every GameTooltip setter as "link:<link>", "bag:<bag>:<slot>" or
+--                  "inventory:<unit>:<slot>" (the real game tooltip, in order);
+--                  bagItemReads["bag:slot"] = { ilvl, quality } is C_Item.GetCurrentItemLevel's and
+--                  C_Item.GetItemQuality's answer on that bag slot's ItemLocation;
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
 --   SOUNDKIT, sounds  the alert sound's SOUNDKIT entries; sounds records every PlaySound(id, channel)
 --   tradeItems     the open trade window: tradeItems.player[i] / tradeItems.target[i] are
@@ -316,7 +320,17 @@ local function installCompatSurface(M)
         IsItemBindToAccountUntilEquip = function(link) return M.accountBoundUE[link] == true end,
         DoesItemExist = function(loc) return M.bagGUIDs[loc.bag .. ":" .. loc.slot] ~= nil end,
         GetItemGUID = function(loc) return M.bagGUIDs[loc.bag .. ":" .. loc.slot] end,
+        -- The exact reads at a location (core/CompatItem.lua): bagItemReads["bag:slot"] = { ilvl, quality }.
+        GetCurrentItemLevel = function(loc)
+            local r = M.bagItemReads[loc.bag .. ":" .. loc.slot]
+            return r and r.ilvl
+        end,
+        GetItemQuality = function(loc)
+            local r = M.bagItemReads[loc.bag .. ":" .. loc.slot]
+            return r and r.quality
+        end,
     }
+    M.bagItemReads = {}
     M.ItemLocation = {
         CreateFromBagAndSlot = function(_, bag, slot) return { bag = bag, slot = slot } end,
     }
@@ -553,9 +567,18 @@ local function installTableSurface(M)
     M.chatLinks, M.dressUps = {}, {}
     M.ChatEdit_InsertLink = function(link) M.chatLinks[#M.chatLinks + 1] = link; return true end
     M.DressUpItemLink = function(link) M.dressUps[#M.dressUps + 1] = link; return true end
-    M.tooltipLinks = {}
+    M.tooltipLinks, M.tooltipSets = {}, {}
     M.GameTooltip.SetHyperlink = function(self, link)
         M.tooltipLinks[#M.tooltipLinks + 1] = link
+        M.tooltipSets[#M.tooltipSets + 1] = "link:" .. tostring(link)
+        return self
+    end
+    M.GameTooltip.SetBagItem = function(self, bag, slot)
+        M.tooltipSets[#M.tooltipSets + 1] = ("bag:%s:%s"):format(tostring(bag), tostring(slot))
+        return self
+    end
+    M.GameTooltip.SetInventoryItem = function(self, unit, slot)
+        M.tooltipSets[#M.tooltipSets + 1] = ("inventory:%s:%s"):format(tostring(unit), tostring(slot))
         return self
     end
     -- The detail card's looter spec: GetSpecializationInfoByID's id and name.

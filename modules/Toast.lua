@@ -254,7 +254,7 @@ local function paint(rec)
     frame.title:SetText(t.title)
     frame.item:SetText(t.item)
     frame.line:SetText(t.line)
-    NS.WindowGroup.SetItem(frame.icon, t.link)
+    NS.WindowGroup.SetItem(frame.icon, t.link, NS.WindowGroup.Where(rec))
     frame.icon.dropId = nil
     paintAsk(rec)
 end
