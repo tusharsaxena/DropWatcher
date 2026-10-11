@@ -236,7 +236,7 @@ test("card: a row click expands it inline; the rows below move down by the card'
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.card:IsShown()); assertEqual(drawn.cardDropId, top)
     assertEqual(NS.WindowGroup.Expanded(), top)
-    assertEqual(yOf(drawn.card), yOf(rowFor(drawn, top)) - K.ROW_H, "right under its row")
+    assertEqual(yOf(drawn.card), yOf(rowFor(drawn, top)) - NS.WindowRows.ROW_H, "right under its row")
     assertEqual(yOf(rowFor(drawn, below)), before - K.CARD_H, "the next row moves down")
     assertTrue(rowFor(drawn, top).expander:IsShown(), "the open row shows its collapse mark")
     rowFor(drawn, top):__fire("OnClick", "LeftButton")

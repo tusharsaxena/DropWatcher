@@ -37,9 +37,8 @@ C.WINDOW = {
     FOOTER_TICK = 5,      -- seconds between footer repaints while shown ("Last loot 12s ago")
     -- The drop tables (modules/WindowGroup.lua, design spec §11.1-§11.2).
     -- A drop row's height and text size are the Window page's Layout rows, `window.rowHeight` and
-    -- `window.fontSize` (modules/WindowRows.lua; feedback-2 spec §8, FB2-9): 18 pixels and the
-    -- template's own size by default, like Ka0s Loot History's table.
-    ROW_H       = 18,     -- one drop row, by default
+    -- `window.fontSize` (modules/WindowRows.lua; feedback-2 spec §8, FB2-9). Their defaults live in
+    -- defaults/Profile.lua (savedvariables-§2); NS.WindowRows.ROW_H reads the row height from there.
     ROW_H_MIN   = 18,
     ROW_H_MAX   = 40,
     FONT_MIN    = 8,      -- the Font size row's least size; 0 is Default (the template's own)
@@ -69,7 +68,9 @@ C.WINDOW = {
     EMPTY_H     = 90,
     -- The My drops tab (modules/WindowMine.lua) and the Offer panel (modules/OfferPanel.lua),
     -- design spec §11.4, board 04.
-    MINE_EXTRA  = 10,     -- a My drops row's height over the row height (its countdown sits over its bar)
+    MINE_EXTRA  = 14,     -- a My drops row's height over the row height (its countdown sits over its bar)
+    MINE_FONT   = 10,     -- the small template's own text size, for a My drops row at Default
+    MINE_PAD    = 12,     -- a My drops row's room around its two lines (verdict and keep?, countdown and bar)
     BAR_H       = 3,      -- the trade window's bar
     MINE_FOOT_H = 26,     -- the tab's summary strip, with Post my tradeables
     OFFER_BTN_W = 64,     -- a row's Offer button

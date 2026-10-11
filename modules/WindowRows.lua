@@ -8,7 +8,8 @@ local _, NS = ...
 -- default is 0, "Default": the cells keep their template's own size, and a size from FONT_MIN to
 -- FONT_MAX replaces it (a stored 1 to 7 reads as FONT_MIN). The row height defaults to 18; the item
 -- button is ROW_ICON at most and 2 pixels under a shorter row's height. A My drops row is
--- MINE_EXTRA taller than the row height: its countdown bar sits under the text.
+-- MINE_EXTRA taller than the row height (its countdown bar sits under the text), and tall enough
+-- for its two lines of text at the chosen size.
 --
 -- PURE: FontSize, RowHeight, IconSize, MineRowHeight. The frame edge: Metrics reads the two rows
 -- through the schema seam (NS.Setting) once per repaint; SetFontSize and ApplyRowFont set a font
@@ -20,6 +21,10 @@ local K  = NS.Constants.WINDOW
 
 local min, max, floor = math.min, math.max, math.floor
 
+-- The default row height, read from defaults/Profile.lua (savedvariables-§2: the one place a
+-- default value is written), which loads before this file.
+WR.ROW_H = NS.C.PROFILE.window.rowHeight
+
 --- The text size a stored `window.fontSize` asks for: nil for Default (0, nil or not a number),
 --- the template's own size; else a whole size from FONT_MIN to FONT_MAX.
 --- @param v any
@@ -30,11 +35,11 @@ function WR.FontSize(v)
 end
 
 --- The row height a stored `window.rowHeight` asks for: a whole height from ROW_H_MIN to
---- ROW_H_MAX, ROW_H for anything not a number.
+--- ROW_H_MAX, the default (WR.ROW_H) for anything not a number.
 --- @param v any
 --- @return number
 function WR.RowHeight(v)
-    if type(v) ~= "number" or v ~= v then return K.ROW_H end
+    if type(v) ~= "number" or v ~= v then return WR.ROW_H end
     return min(K.ROW_H_MAX, max(K.ROW_H_MIN, floor(v + 0.5)))
 end
 
@@ -45,11 +50,13 @@ function WR.IconSize(height)
     return min(K.ROW_ICON, height - 2)
 end
 
---- A My drops row's height: the row height plus the room its countdown bar needs.
+--- A My drops row's height: the row height plus the room its countdown bar needs, and never less
+--- than its two lines of text at `fontSize` (nil = Default, the template's MINE_FONT) need.
 --- @param height number
+--- @param fontSize number|nil
 --- @return number
-function WR.MineRowHeight(height)
-    return height + K.MINE_EXTRA
+function WR.MineRowHeight(height, fontSize)
+    return max(height + K.MINE_EXTRA, 2 * (fontSize or K.MINE_FONT) + K.MINE_PAD)
 end
 
 --- The rows' metrics for one repaint, from the Window page's Layout rows:
@@ -57,8 +64,8 @@ end
 --- @return table
 function WR.Metrics()
     local h = WR.RowHeight(NS.Setting("window.rowHeight"))
-    return { height = h, fontSize = WR.FontSize(NS.Setting("window.fontSize")),
-             icon = WR.IconSize(h), mineHeight = WR.MineRowHeight(h) }
+    local size = WR.FontSize(NS.Setting("window.fontSize"))
+    return { height = h, fontSize = size, icon = WR.IconSize(h), mineHeight = WR.MineRowHeight(h, size) }
 end
 
 -- ── the frame edge ──────────────────────────────────────────────────────────────────────────

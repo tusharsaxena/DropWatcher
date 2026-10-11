@@ -371,18 +371,19 @@ test("mine tab: built headless, one row per drop of yours, each column painted",
     assertEqual(textOf(NS.Window.Frame().tabs.mine.label), "My drops · 3")
 end)
 
--- Feedback-2 spec §8 (FB2-9): the row height plus room for the countdown bar, in the tables' text size.
+-- Feedback-2 spec §8 (FB2-9): the row height plus room for the countdown bar, in the tables' text size,
+-- and never too short for its two lines at that size (DW-A8 review).
 test("mine tab: a row is the row height plus its bar's room, in the Font size row's size", function()
     local NS, drawn = shownMine()
     local r = rowFor(drawn, 3)
-    assertEqual(r:GetHeight(), 28, "18 plus the bar's 10")
-    assertEqual(r.cells.trade:GetHeight(), 28)
+    assertEqual(r:GetHeight(), 32, "18 plus the bar's 14")
+    assertEqual(r.cells.trade:GetHeight(), 32)
     local _, size = r.cells.ilvl.text:GetFont()
     assertEqual(size, 10, "the template's own size by default")
     NS.SchemaRuntime.Set("window.rowHeight", 24)
     NS.SchemaRuntime.Set("window.fontSize", 14)
     r = rowFor(NS.WindowMine.Drawn(), 3)
-    assertEqual(r:GetHeight(), 34)
+    assertEqual(r:GetHeight(), 40, "two 14-point lines need more than 24 plus 14")
     _, size = r.cells.ilvl.text:GetFont()
     assertEqual(size, 14)
     _, size = r.cells.trade.text:GetFont()

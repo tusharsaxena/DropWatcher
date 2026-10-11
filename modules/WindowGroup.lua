@@ -596,7 +596,7 @@ local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = a
 
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
-    row:SetHeight(K.ROW_H)
+    row:SetHeight(NS.WindowRows.ROW_H)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)

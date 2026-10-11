@@ -563,7 +563,9 @@ pixels), the item icon fits inside the row, and the text is the same small table
 same text size; each row is taller by the room its countdown bar needs, and the countdown and its bar
 do not overlap. History → the same rows as Group drops. Settings › Window › Layout → Row height reads
 18 and Font size reads 0, all the way left (Default). Drag Font size to 15 → the text grows on all
-three tabs, the My drops countdown included (also while it reads `ending soon` in bold); drag it back
+three tabs, the My drops countdown included (also while it reads `ending soon` in bold), and the My
+drops rows grow with it so an upgrade's verdict never touches its `keep?` line and the countdown never
+runs into its bar (also at Font size 20 with Row height 18); drag it back
 to 0 → the original size returns. `/dw get window.fontSize` → `0 (Default)`. On a profile where you had
 stored another row height or font size before this version, it is unchanged. Result:
 
