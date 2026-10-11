@@ -155,7 +155,7 @@ local function decorateGeometry(M, f)
         if pt then return pt[1], pt[2], pt[3], pt[4], pt[5] end
     end
     -- The parent CreateFrame was given (the kit records it as `__parent`), and a reparent: the item
-    -- tooltip walks up to the window it goes beside (modules/WindowGroup.lua, PlaceItemTooltip).
+    -- tooltip walks up to the window it goes beside (modules/RowTooltip.lua, Place).
     f.GetParent = function(self) return self.__parent end
     f.SetParent = function(self, p) self.__parent = p; return self end
     f.SetSize = function(self, w, h) self.__width, self.__height = w, h; return self end

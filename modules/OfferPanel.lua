@@ -51,8 +51,10 @@ end
 
 local function tipOf(frame) return unpack(frame.tipLines or {}) end
 
-local function attach(frame)
-    NS.Window.AttachTooltip(frame, function() return tipOf(frame) end)
+-- `place` is "row" for a candidate row's parts (the row's top right, modules/RowTooltip.lua), nil
+-- for the panel's header.
+local function attach(frame, place)
+    NS.Window.AttachTooltip(frame, function() return tipOf(frame) end, place)
 end
 
 local function sink()
@@ -64,13 +66,13 @@ local function sink()
     return s
 end
 
-local function tipFrame(parent)
+local function tipFrame(parent, place)
     local f = CreateFrame("Frame", nil, parent)
     f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
-    attach(f)
+    attach(f, place)
     return f
 end
 
@@ -85,7 +87,7 @@ local function newPill(row)
     end
     p.text = p:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     p.text:SetPoint("CENTER", p, "CENTER", 0, 0)
-    attach(p)
+    attach(p, "row")
     return p
 end
 
@@ -93,11 +95,11 @@ local function rowButtons(row)
     local W = NS.Window
     row.offer = W.TextButton(row, K.PANEL_BTN_W, nil, L["Offer"], function(b) NS.PressOffer(b.dropId, b.target) end)
     row.offer:SetPoint("LEFT", row, "LEFT", COLS[4].x, 0)
-    attach(row.offer)
+    attach(row.offer, "row")
     row.trade = W.TextButton(row, K.PANEL_BTN_W, "transfer", L["Trade"], function(b) NS.GiveDrop(b.dropId, b.target) end)
     row.trade:SetPoint("LEFT", row.offer, "RIGHT", 4, 0)
-    attach(row.trade)
-    row.dash = tipFrame(row)
+    attach(row.trade, "row")
+    row.dash = tipFrame(row, "row")
     row.dash:SetPoint("LEFT", row, "LEFT", COLS[4].x, 0)
     row.dash:SetSize(K.PANEL_BTN_W, K.OFFER_ROW_H)
     row.dash.text:SetText("–")
@@ -106,13 +108,14 @@ end
 local function newRow(content)
     local row = CreateFrame("Frame", nil, content)
     row:SetHeight(K.OFFER_ROW_H)
+    row.tipRow = true
     row.stripe = row:CreateTexture(nil, "ARTWORK")
     row.stripe:SetSize(3, K.OFFER_ROW_H - 6)
     row.stripe:SetPoint("LEFT", row, "LEFT", 0, 0)
-    row.member = tipFrame(row)
+    row.member = tipFrame(row, "row")
     row.member:SetPoint("LEFT", row, "LEFT", COLS[1].x, 0)
     row.member:SetSize(COLS[2].x - COLS[1].x - 6, K.OFFER_ROW_H)
-    row.eq = tipFrame(row)
+    row.eq = tipFrame(row, "row")
     row.eq:SetPoint("LEFT", row, "LEFT", COLS[2].x, 0)
     row.eq:SetSize(COLS[3].x - COLS[2].x - 6, K.OFFER_ROW_H)
     row.pill = newPill(row)
@@ -198,7 +201,7 @@ local function build()
     local p = CreateFrame("Frame", nil, win, "BackdropTemplate")
     p:SetSize(K.OFFER_W, win:GetHeight() > 0 and win:GetHeight() or K.HEIGHT)
     p:SetFrameStrata("MEDIUM")
-    p.tipHost = true   -- its item tooltip goes beside the panel, not the window under it (WindowGroup.PlaceItemTooltip)
+    p.tipHost = true   -- its item tooltip goes beside the panel, not the window under it (modules/RowTooltip.lua)
     win.tipDocked = p  -- and a window row's tooltip goes beside the docked panel, not over it
     p:EnableMouse(true)
     NS.ApplySkin(p)

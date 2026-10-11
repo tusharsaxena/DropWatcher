@@ -156,15 +156,22 @@ function Window.PlaceAbove(tip, widget)
     return side
 end
 
+-- Each placement after Show: `above` (a filter-bar control, DW-B1) and `row` (a table row's cell,
+-- button or header, DW-B2: modules/RowTooltip.lua, the row's top right like Loot History).
+local PLACERS = {
+    above = function(tip, w) Window.PlaceAbove(tip, w) end,
+    row = function(tip, w) NS.RowTooltip.PlaceOrFallback(tip, w) end,
+}
+
 local function showTooltip(self)
     local lines = { self.tooltip() }
     if #lines == 0 or not GameTooltip then return end
-    local above = self.tipPlace == "above"
-    GameTooltip:SetOwner(self, above and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
+    local placer = PLACERS[self.tipPlace]
+    GameTooltip:SetOwner(self, placer and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
     GameTooltip:SetText(lines[1], C.GOLD.r, C.GOLD.g, C.GOLD.b)
     for i = 2, #lines do GameTooltip:AddLine(lines[i], 1, 1, 1, true) end
     GameTooltip:Show()
-    if above then Window.PlaceAbove(GameTooltip, self) end
+    if placer then placer(GameTooltip, self) end
 end
 
 local function hideTooltip()
@@ -174,8 +181,8 @@ end
 --- Give `widget` a tooltip: `fn()` answers the title, then each line. Read on every hover, so it is
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
 --- Hooked rather than set, so a library widget keeps its own hover tint.
---- `place` is nil (below the widget, ANCHOR_BOTTOM) or `above` (Window.PlaceAbove: a filter-bar
---- control, DW-B1).
+--- `place` is nil (below the widget, ANCHOR_BOTTOM), `above` (Window.PlaceAbove: a filter-bar
+--- control, DW-B1) or `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2).
 --- @param widget table
 --- @param fn function
 --- @param place string|nil

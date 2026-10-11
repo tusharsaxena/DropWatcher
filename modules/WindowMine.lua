@@ -160,8 +160,9 @@ end
 
 local function tipOf(frame) return unpack(frame.tipLines or {}) end
 
+-- Every tooltip attached here is a row's (a cell, a button, a header): the row's top right.
 local function attach(frame)
-    NS.Window.AttachTooltip(frame, function() return tipOf(frame) end)
+    NS.Window.AttachTooltip(frame, function() return tipOf(frame) end, "row")
 end
 
 local function textCell(row, key)
@@ -254,6 +255,7 @@ local BUILDERS = { item = itemCell, forMe = forMeCell, trade = tradeCell, action
 local function newHeader(content)
     local h = CreateFrame("Button", nil, content)
     h:SetHeight(K.GROUP_H)
+    h.tipRow = true
     h.fill = h:CreateTexture(nil, "BACKGROUND")
     h.fill:SetAllPoints(h)
     h.fill:SetColorTexture(1, 1, 1, 0.06)
@@ -281,6 +283,7 @@ end
 local function newRow(content)
     local row = CreateFrame("Frame", nil, content)
     row:SetHeight(NS.WindowRows.MineRowHeight(NS.WindowRows.ROW_H))
+    row.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)

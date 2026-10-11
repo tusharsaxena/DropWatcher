@@ -104,6 +104,9 @@ header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed �
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id) ─> AskStateChanged ─> repaint
 item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
                  ctrl-click: Compat.DressUpItem; a plain click expands the row
+row hover ─────> a cell, button or header: Window.AttachTooltip ("row") ─> GameTooltip:Show() ─>
+                 RowTooltip.Place: BOTTOMLEFT at the row's top, outside the window's right edge (else
+                 BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2)
 NS.SetCompact ─> SchemaRuntime.Set("window.compact") ─> the row's repaint
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup

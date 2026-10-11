@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..25 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Group drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on all three tabs (FEED-24, DW-A8); My drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) |
+| FEED-1..26 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Group drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on all three tabs (FEED-24, DW-A8); My drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) and every row tooltip at the row's top right (FEED-26, DW-B2) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -283,7 +283,7 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), FEED-20 the multi-select View (DW-A1), FEED-21 item tooltips beside the window (DW-A2), FEED-22 the party named in every group header (DW-A3), FEED-23 the Character dropdown (DW-A4), FEED-24 the tables' font and row height beside Loot History's (DW-A8), and FEED-25 the My drops group headers and the tooltip beside the docked Offer panel (DW-A9). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+(DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), FEED-20 the multi-select View (DW-A1), FEED-21 item tooltips beside the window (DW-A2), FEED-22 the party named in every group header (DW-A3), FEED-23 the Character dropdown (DW-A4), FEED-24 the tables' font and row height beside Loot History's (DW-A8), and FEED-25 the My drops group headers and the tooltip beside the docked Offer panel (DW-A9), FEED-26 every row tooltip at the row's top right (DW-B2). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
@@ -525,7 +525,8 @@ and a History row → each tooltip opens to the RIGHT of the window, its top lev
 row, and covers none of the table (the Offer panel's opens to the right of the panel). Drag the
 window to the screen's right edge and hover again → each opens on the LEFT of the window instead.
 Set the UI scale low (or the window's Scale to 0.7) and repeat near the right edge → still beside
-the window, never over it, never off screen. Hover the toast's icon → beside the toast. Result:
+the window, never over it, never off screen. Hover the toast's icon → beside the toast. (Where
+each tooltip sits against the row is FEED-26's since DW-B2: it rises from the row's top.) Result:
 
 **FEED-22. Group headers name the party (DW-A3, feedback-2 spec §3).** In a five-player party, run a
 dungeon or a key until something drops. The Group drops header reads `Den of Nalorakk · Mythic+ · 6m
@@ -583,6 +584,21 @@ the window toward the screen's right edge until the panel has no room beside it 
 does not fit) → the tooltip opens on the window's LEFT. Hover an item in the panel → the tooltip
 never covers the window (right of the panel, else left of the window). Close the panel and hover a
 row → the tooltip is beside the window again. Result:
+
+**FEED-26. Every row tooltip at the row's top right, like Loot History (DW-B2, feedback-3 spec §2).**
+The headless `test_row_tooltip` covers the same ground. `/dw test`, window in the middle of the
+screen, Ka0s Loot History open for comparison (research `06-loothistory-tooltip-top-right.png`). On
+Group drops hover a row's item, then its Looter, My eq, Their eq, Me, Them and Trade cells, the Ask
+button and the dismiss ×, then a group header → every tooltip's bottom-left corner sits at the
+hovered row's top-right corner, just outside the window's right edge, rising above the row, never
+over the table (compare `04-cell-tooltip-in-row.png`, where a reason opened over other columns). On
+My drops hover each cell of a row, its Offer and Announce buttons (or the dash and Hide), and a
+header → the same corner. On History hover each cell of a row and a header → the same. Open a
+row's Offer panel (docked right) and hover a window row → the tooltip rises outside the panel's
+right edge; hover a candidate's cells, pill, Offer and Trade → the same corner, never over the
+window. Drag the window to the screen's right edge and repeat a few → each rises from the row's
+top-LEFT corner instead, just outside the window's left edge. The column labels, the tabs, the title
+bar, the footer and the filter bar keep their own anchors. Result:
 
 ## Roster
 
@@ -1242,6 +1258,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | FEED-23 | DW-A4, the Character dropdown on every tab, History filtered by who saw each drop | No client pass recorded yet |
 | FEED-24 | DW-A8, the tables' font and row height like Loot History's, on all three tabs | No client pass recorded yet |
 | FEED-25 | DW-A9, My drops under the group headers, the tooltip beside the docked Offer panel | No client pass recorded yet |
+| FEED-26 | DW-B2, every row tooltip at the row's top right (else top left), all three tabs and the Offer panel | No client pass recorded yet |
 | STATE-4 | DW-84, test mode with real items, History test data, no trailing ellipsis | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |

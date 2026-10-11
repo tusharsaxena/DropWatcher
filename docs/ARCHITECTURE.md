@@ -97,14 +97,19 @@ its one-line responsibility and why its position is load-bearing or conventional
   row adds its countdown bar's room; feedback-2 spec §8, FB2-9), test mode
   (`TestData.lua`, its pure sample drops and History groups over real items from the simulator's
   item pool, and `TestMode.lua`, its edge; ui spec §4) and the diagnostics sections
-  (`Diagnostics.lua`). Every item tooltip (the three tabs, the equipment columns, the detail card,
-  the Offer panel, the toast) opens beside its frame, top-aligned with the hovered row: on the
-  right, or the left when the screen has no room on the right, measured after `Show()` at each
-  frame's effective scale (`WindowGroup.PlaceItemTooltip`, beside `SetItemTooltip`; feedback-2
-  spec §2). The frame is the nearest ancestor marked `tipHost` (the docked Offer panel), else the
-  outermost one under UIParent (the window, the toast). While the Offer panel is docked beside the
-  window, the two are one span: a tooltip goes beside the pair, never over the panel nor over the
-  window (`tipDocked`; feedback-2 spec §8, FB2-10). My drops sits under the same collapsible group
+  (`Diagnostics.lua`). Every tooltip raised from a table row (the item tooltip, every cell's
+  reason, the Ask, Offer, Announce and Hide buttons, the dismiss mark and the group headers, on the
+  three tabs and the Offer panel, and the item tooltip of the equipment columns, the detail card and
+  the toast) has one placement, like Ka0s Loot History's `ANCHOR_RIGHT` on a full-width row: the
+  tooltip's `BOTTOMLEFT` at the row's top, just outside the right edge of the frame the row sits
+  in, or its `BOTTOMRIGHT` outside the left edge when the screen has no room on the right, measured
+  after `Show()` at each frame's effective scale (`RowTooltip.lua`: `RowTooltip.Place`, which
+  `Window.AttachTooltip`'s `row` placement and the item buttons share; feedback-3 spec §2, DW-B2,
+  after DW-A2's beside-the-window placement). The row is the nearest ancestor marked `tipRow`; the
+  frame is the nearest ancestor marked `tipHost` (the docked Offer panel), else the outermost one
+  under UIParent (the window, the toast). While the Offer panel is docked beside the window, the two
+  are one span: a tooltip goes beside the pair, never over the panel nor over the window
+  (`tipDocked`; feedback-2 spec §8, FB2-10). My drops sits under the same collapsible group
   headers as the other two tabs, every group open until toggled (DW-A9). The tables' entries in
   order are `WindowCells.Entries` (pure); a Group drops header counts your own drops it leaves to
   My drops (`· 1 yours on My drops`), and the tab reads `My drops · n` for every drop of yours, its

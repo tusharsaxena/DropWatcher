@@ -268,7 +268,7 @@ local function textCell(row, key)
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
-    NS.Window.AttachTooltip(f, function() return tipOf(f) end)
+    NS.Window.AttachTooltip(f, function() return tipOf(f) end, "row")
     return f
 end
 
@@ -294,6 +294,7 @@ end
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
     row:SetHeight(NS.WindowRows.ROW_H)
+    row.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)
@@ -309,6 +310,7 @@ end
 local function newHeader(content)
     local h = CreateFrame("Button", nil, content)
     h:SetHeight(K.GROUP_H)
+    h.tipRow = true
     h.fill = h:CreateTexture(nil, "BACKGROUND")
     h.fill:SetAllPoints(h)
     h.fill:SetColorTexture(1, 1, 1, 0.06)
@@ -319,7 +321,7 @@ local function newHeader(content)
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
     h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
     h:SetScript("OnClick", function(self) WH.ToggleGroup(self.groupKey, self.collapsed) end)
-    NS.Window.AttachTooltip(h, function() return tipOf(h) end)
+    NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")
     return h
 end
 

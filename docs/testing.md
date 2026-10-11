@@ -59,8 +59,7 @@ every control, the build without the Widgets library, and the pure row predicate
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
-the item tooltip beside the window (right, else left at the UI scale, top-aligned with the row, the
-docked Offer panel's own edge, and the fallback on unknown geometry),
+the item tooltip at the row's top right, else its top left,
 the Ask button and its repaint, the dismiss mark, the compact preset, the filters, the empty
 state and its two buttons, and the filters' empty line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
@@ -70,7 +69,12 @@ Offer panel: the countdown, exact and estimated, `ending soon`, For me's `keep?`
 ranked with their pills, Best candidates hidden for your upgrade, the buttons' lifecycles, the
 summary, Post my tradeables' lines and the dock, then the tab and the panel built headless: pooled
 rows, a reason on every cell, the countdown moved by `TradeTimerTick`, Hide, Announce, the row's
-and the panel's Offer, Trade and Post my tradeables through their host handlers), `test_test_mode`
+and the panel's Offer, Trade and Post my tradeables through their host handlers),
+`test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
+top just outside the window, else its bottom right outside the left edge, at the UI scale, the row
+a cell sits in, the docked Offer panel as part of the window, the fallback on unknown geometry, then
+every cell, button and header of the three tabs placed by it, the column labels and tabs not),
+`test_test_mode`
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
 and candidate pill covered by the data, over pool items that keep their slot and level, the worn
 items the nearest of their slot, an empty pool giving none; the History sample with every outcome;

@@ -240,7 +240,7 @@ local function textCell(row, key)
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
-    NS.Window.AttachTooltip(f, function() return tipOf(f) end)
+    NS.Window.AttachTooltip(f, function() return tipOf(f) end, "row")
     return f
 end
 
@@ -294,111 +294,9 @@ function WG.SetItemTooltip(tip, b)
     return "link"
 end
 
--- BESIDE THE WINDOW (feedback-2 spec §2, FB2-4). An item tooltip never covers the table: it opens
--- beside the frame the hovered item sits in, top-aligned with the hovered row, on its right, or on
--- its left when the screen has no room on the right (Loot History's row tooltip, ANCHOR_RIGHT on a
--- row as wide as its window). That frame is the nearest ancestor marked `tipHost` (the Offer
--- panel, docked beside the window), else the outermost one under UIParent (the window, the toast).
--- With the Offer panel docked beside the window (its `dock` right or left, shown), the two count as
--- one span (M10 review, FB2-10): the tooltip goes beside the pair, never over the panel from a window
--- row nor over the window from a panel row. The window names its panel as `tipDocked`.
-
-local function num(v) return type(v) == "number" and v or nil end
-
--- A geometry read, a number or nil (an unplaced frame answers nil).
-local function geom(frame, method)
-    local fn = frame and frame[method]
-    return fn and num(fn(frame)) or nil
-end
-
-local function scaleOf(frame) return geom(frame, "GetEffectiveScale") or 1 end
-
-local function parentOf(frame)
-    local p = frame.GetParent and frame:GetParent()
-    if type(p) ~= "table" or p == frame or p == UIParent then return nil end
-    return p
-end
-
-local function tipHostOf(owner)
-    local f = owner
-    for _ = 1, 32 do
-        if f.tipHost then return f end
-        local p = parentOf(f)
-        if not p then return f end
-        f = p
-    end
-    return f
-end
-
--- A frame's left and right edges in screen pixels, or nil when it is unplaced.
-local function edgesPx(f)
-    local l, r, s = geom(f, "GetLeft"), geom(f, "GetRight"), scaleOf(f)
-    if not (l and r and geom(f, "GetTop")) then return nil end
-    return l * s, r * s
-end
-
-local function dockedBeside(panel)
-    return panel.dock == "right" or panel.dock == "left"
-end
-
--- The frame docked beside `host` that the tooltip must not cover: the window's shown, docked panel,
--- or, for a docked panel, the window it hangs off.
-local function companionOf(host)
-    local panel = host.tipDocked
-    if panel then
-        local shown = panel.IsShown and panel:IsShown()
-        return (shown and dockedBeside(panel)) and panel or nil
-    end
-    if host.tipHost and dockedBeside(host) then return parentOf(host) end
-    return nil
-end
-
--- The span the tooltip goes beside, in screen pixels, and the frame at each end of it.
-local function spanOf(host)
-    local l, r = edgesPx(host)
-    local outL, outR = host, host
-    local c = companionOf(host)
-    local cl, cr
-    if c then cl, cr = edgesPx(c) end
-    if cl and cl < l then l, outL = cl, c end
-    if cr and cr > r then r, outR = cr, c end
-    return l, r, outL, outR
-end
-
--- Which side of the span the tooltip goes, in screen pixels: right when it fits, else left.
-local function sideOf(l, r, tip, gap)
-    local ts = scaleOf(tip)
-    local screen = geom(UIParent, "GetWidth")
-    local side = NS.MineCells.DockSide(l, r, (geom(tip, "GetWidth") or 0) * ts,
-        screen and screen * scaleOf(UIParent), gap * ts)
-    return side == "right" and "right" or "left"
-end
-
---- Place a shown item tooltip beside the frame `owner` sits in (the window, a docked panel, and the
---- one docked beside it), top-aligned with `owner`: on the right, or the left when the screen has no
---- room on the right.
---- Measured after Show (the tooltip's width), at each frame's effective scale. Answers `right` or
---- `left`, or nil when the geometry is unknown (nothing is placed; the caller anchors it).
---- @param tip table a GameTooltip, shown
---- @param owner table the hovered frame
---- @return string|nil
-function WG.PlaceItemTooltip(tip, owner)
-    local host = tipHostOf(owner)
-    local rowTop = geom(owner, "GetTop")
-    if not (rowTop and edgesPx(host)) then return nil end
-    local gap = K.TIP_GAP
-    local l, r, outL, outR = spanOf(host)
-    local side = sideOf(l, r, tip, gap)
-    local anchor = side == "right" and outR or outL
-    local dy = (rowTop * scaleOf(owner) - geom(anchor, "GetTop") * scaleOf(anchor)) / scaleOf(tip)
-    tip:ClearAllPoints()
-    if side == "right" then
-        tip:SetPoint("TOPLEFT", anchor, "TOPRIGHT", gap, dy)
-    else
-        tip:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -gap, dy)
-    end
-    return side
-end
+-- AT THE ROW'S TOP RIGHT (feedback-3 spec §2, DW-B2). An item tooltip never covers the table: it
+-- rises from the hovered row's top-right corner, just outside the window (else its top left),
+-- through the one row-tooltip placement every row cell shares (modules/RowTooltip.lua).
 
 -- `owner` is the hovered frame: the button, or a name beside it (WG.ItemHover).
 local function itemEnter(self, owner)
@@ -408,9 +306,7 @@ local function itemEnter(self, owner)
     WG.SetItemTooltip(GameTooltip, self)
     GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], C.IDLE.r, C.IDLE.g, C.IDLE.b)
     GameTooltip:Show()
-    if WG.PlaceItemTooltip(GameTooltip, owner) then return end
-    GameTooltip:ClearAllPoints()   -- unknown geometry: on the hovered frame's right, as before
-    GameTooltip:SetPoint("BOTTOMLEFT", owner, "TOPRIGHT", 0, 0)
+    NS.RowTooltip.PlaceOrFallback(GameTooltip, owner)
 end
 
 --- An item button's click: shift links the item in chat, ctrl tries it on (design spec §11.1); a
@@ -506,12 +402,12 @@ local function actionsCell(row)
     f.key = "actions"
     f.ask = NS.Window.TextButton(f, K.ASK_W, nil, L["Ask"], function(b) NS.PressAsk(b.dropId) end)
     f.ask:SetPoint("LEFT", f, "LEFT", 0, 0)
-    NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end)
+    NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end, "row")
     f.dash = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     f.dash:SetPoint("CENTER", f.ask, "CENTER", 0, 0)
     f.dashTip = CreateFrame("Frame", nil, f)
     f.dashTip:SetAllPoints(f.ask)
-    NS.Window.AttachTooltip(f.dashTip, function() return tipOf(f.dashTip) end)
+    NS.Window.AttachTooltip(f.dashTip, function() return tipOf(f.dashTip) end, "row")
     f.dismiss = CreateFrame("Button", nil, f)
     f.dismiss:SetSize(14, 14)
     f.dismiss:SetPoint("LEFT", f.ask, "RIGHT", 6, 0)
@@ -522,7 +418,7 @@ local function actionsCell(row)
     f.dismiss:SetScript("OnClick", function(b) NS.DismissDrop(b.dropId) end)
     NS.Window.AttachTooltip(f.dismiss, function()
         return L["Dismiss"], L["Hide this drop from the table for this session."]
-    end)
+    end, "row")
     return f
 end
 
@@ -531,6 +427,7 @@ local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = a
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
     row:SetHeight(NS.WindowRows.ROW_H)
+    row.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)
@@ -553,6 +450,7 @@ end
 local function newHeader(content)
     local h = CreateFrame("Button", nil, content)
     h:SetHeight(K.GROUP_H)
+    h.tipRow = true
     h.fill = h:CreateTexture(nil, "BACKGROUND")
     h.fill:SetAllPoints(h)
     h.fill:SetColorTexture(1, 1, 1, 0.06)
@@ -563,7 +461,7 @@ local function newHeader(content)
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
     h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
     h:SetScript("OnClick", function(self) WG.ToggleGroup(self.groupKey, self.collapsed) end)
-    NS.Window.AttachTooltip(h, function() return tipOf(h) end)
+    NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")
     return h
 end
 

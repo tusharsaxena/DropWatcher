@@ -256,6 +256,10 @@ modules\WindowRows.lua
 # countdown, the candidates and their pills, the buttons, Post my tradeables' lines, the dock);
 # takes NS.WindowCells (above), NS.Constants and NS.L at load.
 modules\MineCells.lua
+# Conventional: publishes NS.RowTooltip, the one placement of a table row's tooltips (the row's top
+# right, like Ka0s Loot History; feedback-3 spec §2, DW-B2); takes NS.Constants at load. NS.MineCells
+# (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
+modules\RowTooltip.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Group drops body through
 # Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells (above), NS.Constants,
 # NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card

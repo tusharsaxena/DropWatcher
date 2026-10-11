@@ -240,7 +240,7 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (46)
+### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -270,13 +270,7 @@ Total.
 - table: rows come from the pool: a repaint reuses them, fewer drops park the rest
 - table: a header click collapses its group, and a second expands it
 - table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
-- item tooltip: it opens on the window's right, top-aligned with the hovered row
-- item tooltip: it opens on the window's left when the screen has no room on the right
-- item tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
-- item tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
-- item tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
-- item tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
-- item tooltip: a row's item button opens the game's tooltip beside the window, else on its own right
+- item tooltip: a row's item button opens the game's tooltip at the row's top right, else on its own
 - table: Their eq shows the looter's worn item from their inspect read
 - table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
@@ -349,6 +343,22 @@ Total.
 - offer panel: Announce to group announces the drop
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
+
+### test_row_tooltip.lua (13)
+
+- row tooltip: it rises from the row's top right, just outside the window
+- row tooltip: with no room on the right it rises from the row's top left, outside the window
+- row tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
+- row tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
+- row tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
+- row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
+- row tooltip: a cell, a button or an icon in a marked row opens at the row's top, not its own
+- row tooltip: unknown geometry falls back to the hovered frame's top right
+- row tooltip: Group drops, every cell, Ask, the dismiss mark and the header open at the row's top right
+- row tooltip: with no room on the right a row tooltip rises from the row's top left, outside the window
+- row tooltip: My drops rows, their Offer and Announce buttons and the headers open at the row's top right
+- row tooltip: History rows and headers open at the row's top right
+- row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
 ### test_test_mode.lua (30)
 
@@ -1365,9 +1375,10 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 55 |
-| test_window_group.lua | 46 |
+| test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
+| test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 30 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 9 |
@@ -1414,4 +1425,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1168** |
+| **Total** | **1175** |
