@@ -36,8 +36,8 @@ notes per iteration, never time:
 
 | Scenario | What it shows | Ceiling |
 |---|---|---|
-| `refreshCaptureOff` | the bracketed repaint with capture off notes nothing and allocates nothing (zero overhead) | 0 bytes, 0 notes |
-| `refreshCaptureOn` | one note per pass with capture on | 64 bytes, 1 note |
+| `refreshCaptureOff` | the shown window's whole repaint with capture off: the bracket notes nothing, and allocates nothing over the same pass with capture on (zero overhead, paired) | 14000 bytes (the pass's own labels, footer strings, tab context and empty state; 13456 measured 2026-10-11), 0 notes |
+| `refreshCaptureOn` | the same with capture on: one note per pass, at most 64 bytes over the off run | 14000 bytes, 1 note |
 | `showDecisionStoodDown` | the stood-down show decision returns before any work | 0 bytes, 0 notes |
 | `parseCaptureOff` | one third-person loot line parsed, the looter in the group; the bracket notes nothing | 700 bytes (the parse's own captures, record and roster lookup; 664 measured), 0 notes |
 | `parseCaptureOn` | the same with capture on: one note, and the same bytes, so the bracket adds none | 700 bytes, 1 note |

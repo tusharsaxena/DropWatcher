@@ -12,15 +12,27 @@
 -- line (DW-25). The questions are performance-§9's: does each bracket cost nothing with capture off
 -- (zero overhead), and is the stood-down show decision free.
 --
--- CEILINGS (measured 2026-10-10, Lua 5.1.5). Pinned hard at 0 bytes: the gated bracket and the
--- stood-down early return must allocate nothing. Raise one only by re-measuring and saying why; a
--- rise is the finding.
+-- CEILINGS (measured 2026-10-10, Lua 5.1.5). Pinned hard at 0 bytes: the stood-down early return
+-- must allocate nothing. Raise one only by re-measuring and saying why; a rise is the finding.
 
 -- The parse pair (measured 2026-10-11 at 664 bytes in both) allocates its captures, the loot record
 -- and the roster lookup's lowercased name; its ceiling is that work, and the pair being equal is the
 -- zero-overhead evidence.
-local BYTE_CEILING = { refreshCaptureOff = 0, refreshCaptureOn = 64, showDecisionStoodDown = 0,
+-- The refresh pair was pinned at 0 when the scaffold's Refresh painted nothing. Re-measured
+-- 2026-10-11 (DW-61) at 13456 bytes in both: the shown window's whole pass now does real work (the
+-- tab labels' and the footer's formatted strings, the filter bar's labels, the tab's context and
+-- its row predicate's closures, the Group drops table's empty state), coalesced to at most one pass
+-- a frame. Its ceiling is that work; the zero-overhead evidence is PAIRED below: capture off may
+-- allocate nothing over capture on, and capture on no more than one note's PAIR_SLACK over off.
+local BYTE_CEILING = { refreshCaptureOff = 14000, refreshCaptureOn = 14000, showDecisionStoodDown = 0,
     parseCaptureOff = 700, parseCaptureOn = 700 }
+-- Each bracketed path measured off and on: [off] = on. The bracket with capture off is one upvalue
+-- read and one boolean test, so the off run allocates no more than the on run; the on run adds at
+-- most PAIR_SLACK bytes (the note itself) per iteration. PAIR_NOISE absorbs the two loops'
+-- incidental spread (a fraction of a byte per iteration, measured), nothing more.
+local PAIRS = { refreshCaptureOff = "refreshCaptureOn", parseCaptureOff = "parseCaptureOn" }
+local PAIR_SLACK = 64
+local PAIR_NOISE = 1
 local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0,
     parseCaptureOff = 0, parseCaptureOn = 1 }
 
@@ -126,6 +138,21 @@ for _, r in ipairs(results) do
     local want = NOTES_PER_ITER[r.name]
     check(want ~= nil and math.abs(r.notesPerIter - want) < 1e-9,
         ("%s noted %.2f times/iter, pinned at %s"):format(r.name, r.notesPerIter, tostring(want)))
+end
+
+local byName = {}
+for _, r in ipairs(results) do byName[r.name] = r end
+for offName, onName in pairs(PAIRS) do
+    local off, on = byName[offName], byName[onName]
+    check(off ~= nil and on ~= nil, ("the pair %s / %s was not measured"):format(offName, onName))
+    if off and on then
+        check(off.bytesPerIter <= on.bytesPerIter + PAIR_NOISE,
+            ("%s allocated %.1f bytes/iter, more than %s's %.1f: the off bracket is not free"):format(
+                offName, off.bytesPerIter, onName, on.bytesPerIter))
+        check(on.bytesPerIter <= off.bytesPerIter + PAIR_SLACK,
+            ("%s allocated %.1f bytes/iter, over %s's %.1f by more than %d"):format(
+                onName, on.bytesPerIter, offName, off.bytesPerIter, PAIR_SLACK))
+    end
 end
 
 -- ── report ──────────────────────────────────────────────────────────────────────────────────
