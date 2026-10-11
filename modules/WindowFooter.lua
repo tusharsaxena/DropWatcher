@@ -137,6 +137,7 @@ end
 
 local segments = {}   -- [key] = { frame, text }
 local sortDropdown
+local footerHost
 
 local function textWidth(fs)
     local w = fs:GetStringWidth()
@@ -159,15 +160,15 @@ local function buildSegment(host, key, prev)
     return s
 end
 
+local SORT_W = 150
+
 local function buildSort(host)
-    local dd = NS.MakeDropdown(host, 150)
+    local dd = NS.MakeDropdown(host, SORT_W)
     if not dd then return nil end
     local opts = {}
     local FB = NS.WindowFilterBar
     for _, v in ipairs(FB.VALUES.sort) do opts[#opts + 1] = { value = v, label = FB.LABELS.sort[v] } end
     dd:SetOptions(opts)
-    -- Left of the resize grip, which sits in the window's bottom-right corner.
-    dd:SetPoint("RIGHT", host, "RIGHT", -16, 0)
     dd.onSelect = function(v) FB.Set(NS.Window.ActiveTab(), "sort", v) end
     NS.Window.AttachTooltip(dd, function()
         return L["Sort"], L["The order of the rows on this tab."]
@@ -178,21 +179,40 @@ end
 --- Build the footer on `host` (the window's footer frame). Once per window.
 --- @param host table
 function WF.Build(host)
-    segments = {}
+    segments, footerHost = {}, host
     local prev
     for _, key in ipairs(WF.SEGMENTS) do prev = buildSegment(host, key, prev) end
     sortDropdown = buildSort(host)
+    WF.AnchorSort()
 end
 
---- Repaint every segment from a fresh read, and the Sort control from the active tab's state.
+--- Put the Sort control at its place in the footer, left of the resize grip in the window's
+--- bottom-right corner (the build, and the full layout taking it back from the compact Filters
+--- panel, modules/CompactChrome.lua).
+function WF.AnchorSort()
+    local dd, host = sortDropdown, footerHost
+    if not (dd and host) then return end
+    dd:SetParent(host)
+    dd:ClearAllPoints()
+    dd:SetPoint("RIGHT", host, "RIGHT", -16, 0)
+    dd:SetWidth(SORT_W)
+end
+
+--- Repaint every segment from a fresh read, and the Sort control from the active tab's state. The
+--- compact layout's one line is NS.CompactChrome.PaintFooter's (compact spec §4).
 function WF.Refresh()
     if not segments.inspect then return end
-    local composed = WF.Compose(WF.Read())
-    for key, s in pairs(segments) do
-        local seg = composed[key]
-        s.text:SetText(seg.text)
-        s.tipLines = seg.tip
-        s:SetWidth(textWidth(s.text))
+    local read = WF.Read()
+    local composed = WF.Compose(read)
+    if NS.WindowCompact.Mode() == "compact" then
+        NS.CompactChrome.PaintFooter(segments, read, composed)
+    else
+        for key, s in pairs(segments) do
+            local seg = composed[key]
+            s.text:SetText(seg.text)
+            s.tipLines = seg.tip
+            s:SetWidth(textWidth(s.text))
+        end
     end
     if sortDropdown then
         local tab = NS.Window.ActiveTab()

@@ -77,6 +77,14 @@ back, the text size, and the panel docked right, left or floating centered at it
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
 repainting, the collapsing headers, every tooltip at the card's top right, Clear shortened and put
 back, the text size and test mode's samples),
+`test_compact_chrome` (the window's chrome in the compact layout, DW-C4: the short tab labels, `TEST`
+and `SIM`, the badge's count, the footer's one line and its tooltip, the Filters count, label and
+tooltip, pure; then headless: the short title centered with its word, the badge at the left with its
+tooltip, Scan group as an icon button, the short tabs at their width with the full names in their
+tooltips, View, the search box and Filters on one row with Quality, Content, Character and Sort
+moved into the Filters panel and filtering as on the full bar, the panel closing on hide, minimize
+and the switch, the full layout taking every control back, the shortened strip, the one-line footer
+under the ticker, and the filter state kept across a switch),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,

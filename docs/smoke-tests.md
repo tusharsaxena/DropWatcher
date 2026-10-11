@@ -1316,6 +1316,22 @@ verdicts. Right-click a card → Mark as declined; its outcome reads Declined; r
 Clear declined. The strip's button reads `Clear` with the Clear history tooltip, and it still asks
 first. Switch to full → `Clear history` again. Result:
 
+**COMPACT-5. The compact chrome and the Filters ▾ menu (DW-C4).** Switch to the compact layout →
+the title reads `Drop Watcher`, centered; turn test mode on → `TEST` in red beside it, the two
+centered together, and the yellow strip's shorter text, on two lines if the window is narrow; run
+`/dw sim start` → `SIM` in cyan instead. Scan group is an icon button with its tooltip; the layout
+toggle, minimize and close sit at the right. Start a boss encounter with an ask queued → the badge
+at the bar's left is its lock and `1`, its tooltip the full reason and queue. The tabs read `Group`,
+`Mine · n` and `History`, and their tooltips the full names. The filter bar is one row: View, the
+search box reading `Filter…`, and `Filters` on the right. Click Filters → a small panel under it
+holds Quality, Content, Character and Sort; open each → the same choices as the full bar and the
+footer's Sort, Character still multi-select with Current. Pick Content: All and Character: All →
+the button reads `Filters · 2`, and its tooltip lists every value with a dot on those two. Pick a
+Sort → the cards reorder, and the count does not change. Click Filters again, minimize, close or
+switch to full → the panel closes. The footer is one line, `Inspect 4/4 · Mythic+`-style, and its
+tooltip lists the last loot, the situation and Pawn. Switch to full → every control is back on the
+bar and Sort back in the footer, each at its place. Result:
+
 **COMPACT-7. Card tooltips at the card's top right (DW-C2).** In the compact layout, hover each piece
 of a card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn
 levels, Ask and ×) and a header → each tooltip rises from the card's top-right corner, just outside
@@ -1426,3 +1442,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
 | COMPACT-2, COMPACT-7 | DW-C2, compact Group drops cards, the stacked detail card and the card tooltips | No client pass recorded yet |
 | COMPACT-3, COMPACT-4 | DW-C3, compact My drops and History cards, the countdown, Offer and Announce, the docked Offer panel | No client pass recorded yet |
+| COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |

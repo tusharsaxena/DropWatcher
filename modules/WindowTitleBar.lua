@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/WindowTitleBar.lua — the main window's title bar (design spec §11.1, boards 01, 06 A and
 -- 06 E, as the owner's feedback spec §1 reshaped it to match Ka0s Loot History): the centered gold
 -- title (no logo: the launcher and the TOC keep it), test mode's bright-red `TEST MODE` text, the
--- simulator's `SIMULATION` text in its own color (simulator spec §6), the `n new` counter, the restriction badge, Scan group, the layout
+-- simulator's `SIMULATION` text in its own color (simulator spec §6), the `n new` counter, the
+-- restriction badge, Scan group, the layout
 -- toggle (compact spec §1: between Scan group and minimize), minimize and the close mark, plus
 -- the window's flat and icon buttons, which other frames borrow through NS.Window.TextButton.
 --
@@ -10,7 +11,8 @@ local _, NS = ...
 -- that writes state: geometry (the drag's start and stop come in as `host` callbacks), the
 -- minimized flag, the `n new` count and the restriction reason, each read here through NS.Window's
 -- public accessors at call time. BadgeText is PURE. Build and the Paint* functions are the frame
--- edge, called from the shell's build and its one repaint pass.
+-- edge, called from the shell's build and its one repaint pass. The compact layout's title, words,
+-- badge and Scan group are modules/CompactChrome.lua's (compact spec §4), over these same controls.
 
 NS.WindowTitleBar = NS.WindowTitleBar or {}
 local TB = NS.WindowTitleBar
@@ -291,10 +293,13 @@ end
 
 -- ── painting ────────────────────────────────────────────────────────────────────────────────
 
---- The restriction badge: the current reason and the queued asks' count, hidden when free.
+--- The restriction badge: the current reason and the queued asks' count, hidden when free. In the
+--- compact layout its lock and the count alone (NS.CompactChrome.BadgeShort; the same tooltip).
 --- @param f table the window frame
 function TB.PaintBadge(f)
-    local text = TB.BadgeText(NS.Window.RestrictionReason(), #queuedAsks())
+    local queued = #queuedAsks()
+    local text = TB.BadgeText(NS.Window.RestrictionReason(), queued)
+    if text and NS.WindowCompact.Mode() == "compact" then text = NS.CompactChrome.BadgeShort(queued) end
     f.badge.text:SetText(text or "")
     f.badge:SetShown(text ~= nil)
 end

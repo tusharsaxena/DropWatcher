@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Ninety-three authored files load from the TOC, in the standard's folder order; every one, its kind,
+Ninety-four authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -108,7 +108,11 @@ its one-line responsibility and why its position is load-bearing or conventional
   `WindowGroup`'s entries, the detail card stacked at the compact width; compact spec §2, DW-C2;
   `CompactMine.lua` and `CompactHistory.lua`: My drops' cards with the countdown's bar, Offer and
   Announce or Hide, and History's with the outcome and the row menu, drawn through `CompactGroup`'s
-  shared kit, the Offer panel docked beside the compact window; compact spec §3, DW-C3),
+  shared kit, the Offer panel docked beside the compact window; compact spec §3, DW-C3), compact
+  mode's chrome (`CompactChrome.lua`: the short title with `TEST` or `SIM`, the badge's lock and
+  count, the icon Scan group, the short tabs, the one-row filter bar whose `Filters ▾` panel holds the
+  full bar's own Quality, Content and Character dropdowns and the footer's Sort, the shortened strip
+  and the one-line footer, over the same frame and controls; compact spec §4, DW-C4),
   the three tables'
   shared row height and text size (`WindowRows.lua`: `window.rowHeight` and `window.fontSize`,
   18-pixel rows and the template's own size by default, like Ka0s Loot History's table; a My drops

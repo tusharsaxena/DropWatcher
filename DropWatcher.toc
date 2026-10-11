@@ -314,6 +314,11 @@ modules\CompactMine.lua
 # with the outcome, the row menu on a right-click); takes NS.Constants and NS.L at load.
 # NS.CompactGroup's kit, NS.CompactCards and NS.WindowHistory are read at call time.
 modules\CompactHistory.lua
+# Conventional: publishes NS.CompactChrome, the window's chrome in the compact layout (the short
+# title and words, the badge, the icon Scan group, the short tabs, the one-row filter bar and its
+# Filters panel, the strip and the one-line footer); takes NS.Constants and NS.L at load and adds a
+# visibility listener to NS.Window (above). Everything else is read at call time.
+modules\CompactChrome.lua
 # Conventional: publishes NS.TestData, test mode's pure sample data (the drops and the History
 # groups over pool items); takes NS.Constants and NS.L at load. NS.Item is read at call time.
 modules\TestData.lua

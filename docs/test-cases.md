@@ -346,6 +346,28 @@ Total.
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
 
+### test_compact_chrome.lua (19)
+
+- chrome: the tabs' compact labels are Group, Mine · n and History; full keeps its own
+- chrome: TEST MODE and SIMULATION shorten to TEST and SIM
+- chrome: the compact badge shows the queued count beside its lock, or nothing
+- chrome: the footer's one line is inspect freshness and the situation
+- chrome: the footer's tooltip carries every full segment
+- chrome: the Filters count is Quality, Content and Character off their default, on a tab that honors them
+- chrome: the Filters label counts, and its tooltip lists each value with a dot on the active ones
+- chrome: compact shows the short title, TEST beside it, the title and the word centered together
+- chrome: a simulation reads SIM in compact, in its cyan
+- chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
+- chrome: Scan group becomes an icon button, with its tooltip and its click
+- chrome: the tabs keep three at a reduced width, short labels, full names in their tooltips
+- chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
+- chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does
+- chrome: the panel closes when the window hides, minimizes or goes back to full
+- chrome: the full layout takes every control back to its place on the bar and in the footer
+- chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
+- chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
+- chrome: switching the chrome keeps every tab's filter state and builds no second window
+
 ### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
@@ -1511,6 +1533,7 @@ Total.
 | test_compact_group.lua | 14 |
 | test_compact_mine.lua | 16 |
 | test_compact_history.lua | 9 |
+| test_compact_chrome.lua | 19 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1562,4 +1585,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1288** |
+| **Total** | **1307** |

@@ -107,6 +107,7 @@ Kit.run{
         "test_compact_group",
         "test_compact_mine",
         "test_compact_history",
+        "test_compact_chrome",
         "test_window_group",
         "test_detail_card",
         "test_window_mine",

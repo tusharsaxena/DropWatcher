@@ -14,10 +14,9 @@ local _, NS = ...
 -- THE SPLIT. modules/WindowTitleBar.lua owns the title bar (its controls, the badge's words and
 -- the window's flat and icon buttons), modules/WindowFilterBar.lua the filter bar (its controls,
 -- each tab's filter state and the pure row predicates), modules/WindowFooter.lua the footer (its
--- pure composer and its reads). The tabs' bodies are the feature items' (WindowGroup, WindowMine,
--- WindowHistory): each calls Window.RegisterTab(key, { build, refresh }) and is built on its tab's
--- first show. A tab with no body yet shows a line saying what it will hold, so the window is never
--- blank.
+-- pure composer and its reads), modules/CompactChrome.lua all of it in the compact layout. The tabs'
+-- bodies (WindowGroup, WindowMine, WindowHistory) each call Window.RegisterTab(key, { build,
+-- refresh }) and are built on the tab's first show; a tab with no body says what it will hold.
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
 -- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
@@ -458,7 +457,7 @@ end
 
 -- The panes fill between the filter bar (and the banner, in test mode) and the footer.
 local function layoutPanes()
-    local top = K.TAB_H + 4 + K.FILTER_H + (NS.State.testMode == true and K.BANNER_H or 0)
+    local top = K.TAB_H + 4 + K.FILTER_H + (NS.State.testMode == true and NS.CompactChrome.BannerH() or 0)
     for _, pane in pairs(frame.panes) do
         pane:ClearAllPoints()
         pane:SetPoint("TOPLEFT", frame.body, "TOPLEFT", K.INSET, -top)
@@ -582,7 +581,7 @@ local function paintTabs()
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
         local c = active and C.GOLD or C.IDLE
-        tab.label:SetText(Window.TabLabel(key, mine))
+        tab.label:SetText(NS.CompactChrome.TabText(key, mine))
         tab.label:SetTextColor(c.r, c.g, c.b)
         tab.underline:SetShown(active)
     end
@@ -603,6 +602,7 @@ function Window.Refresh()
     local TB = NS.WindowTitleBar
     TB.PaintBadge(frame)
     TB.PaintModeText(frame)
+    NS.CompactChrome.Paint(frame)   -- the compact layout's chrome (compact spec §4)
     paintMinimized()
     if not isMinimized() then
         frame.banner:SetShown(NS.State.testMode == true)
