@@ -1,6 +1,6 @@
 # DW-63: GitHub issues to file
 
-**Status: drafted, not filed.** The owner held every GitHub write for the v1 run ("Hold the pushes"),
+**Status: filed 2026-10-11** on the owner's go-ahead: I01–I08 are DropWatcher#1–#8, I09 LibKa0s#49, I10 LibKa0s#50, I11 WowAddonStandards#11, I12 LibKa0s#51, I13 LibKa0s#52, I14 LibKa0s#53. The text below is the draft as written; it is kept as the record. **Earlier status: drafted, not filed.** The owner held every GitHub write for the v1 run ("Hold the pushes"),
 so DW-63 drafts the issues here instead of creating them. Nothing below exists on GitHub yet. When the
 hold lifts, the owner runs the snippet at the end of this file, which files them at least 20 seconds
 apart (the plan's DW-63 rule).

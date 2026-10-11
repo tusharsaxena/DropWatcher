@@ -51,9 +51,7 @@ situation's name: `Track` and `Auto-open`, then `Quality` (`Use global` or a mod
 situation's `Auto-open` is dimmed while the master row is off. The design's grid (situations by
 setting) has no LibKa0s composer: `ChoiceGrid` draws one choice per row over one value list, and a
 situation's line holds two checkboxes and a dropdown. So the tab draws one block per situation, as
-the plan's fallback says, and a LibKa0s issue asking for a grid composer is drafted
-(DW-63: I10 in `docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md`), to be filed when
-the owner lifts the hold on GitHub writes.
+the plan's fallback says, and a LibKa0s issue asking for a grid composer is filed as [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
 
 ## Feed
 

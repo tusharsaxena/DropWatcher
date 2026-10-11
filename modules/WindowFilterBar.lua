@@ -345,8 +345,7 @@ end
 -- builds its search box: a BackdropTemplate frame with a square 1px WHITE8X8 border, the same fill
 -- and line as LibKa0s-Widgets-1.0's dropdown beside them, so every control on the bar is one skin.
 -- The Blizzard InputBoxTemplate and UICheckButtonTemplate this replaces drew rounded art. LibKa0s
--- has no flat search box or checkbox yet; the shared need is drafted as I13 in
--- docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md.
+-- has no flat search box or checkbox yet; the shared need is LibKa0s#52.
 local FLAT = {
     edge  = "Interface\\Buttons\\WHITE8X8",
     fill  = { 0.1, 0.1, 0.12, 0.9 },
