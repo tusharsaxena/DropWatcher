@@ -509,7 +509,7 @@ end
 
 local function paintActions(f, drop)
     local state, reason = askState(drop)
-    local a = WC.Ask(drop, state, reason)
+    local a = WC.Ask(drop, state, reason, NS.Setting("messages.transmogAsk") == true)
     f.ask.dropId, f.dismiss.dropId = drop.id, drop.id
     f.ask:SetShown(a.offered)
     f.dashTip:SetShown(not a.offered)

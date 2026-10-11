@@ -83,7 +83,9 @@ out of range, for a stranger, yourself or an offline member, and for an item gon
 cursor; no events, no timers, no messages), the messaging core (`Messaging.lua`, pure: a
 template and its tokens in, the text and the ask's next state out; it sends nothing), the messaging
 edge (`Asks.lua`: an ask, offer or announce resolved to its recipient, expanded from the drop's
-tokens and sent through `Compat.ChatSender` inside `pcall` with one confirmation line, or queued
+tokens (an ask with the template `NS.Messaging.AskTemplate` picks: the plain ask for a gain, or with
+`messages.transmogAsk` on the For transmog ask for a drop whose look you have not collected) and
+sent through `Compat.ChatSender` inside `pcall` with one confirmation line, or queued
 while chat is restricted and flushed one every 1.5 seconds when the restriction lifts, on
 `ENCOUNTER_END` and on `CHALLENGE_MODE_COMPLETED`; a queued ask is canceled by a second click or
 when its looter leaves; test mode prints instead of sending; it sends `AskStateChanged`), the
@@ -107,7 +109,7 @@ collapsible encounter headers, the nine columns or the compact preset's five, re
 the Ask button and the dismiss mark, ordered and filtered by the tab's filter state; a row click
 expands it inline into the detail card, one row at a time; with no drop at all, the empty state
 with Preview with test data and Scan group), the detail card's words
-(`DetailCells.lua`, pure: the item header's chips, the For you and For the looter comparisons, the
+(`DetailCells.lua`, pure: the item header's chips, the look's `New look` or `Look known` among them, the For you and For the looter comparisons, the
 trade estimate box and the actions, each with its reason tooltip), the detail card itself
 (`DetailCard.lua`: the frame edge that paints them under the open row, and the Edit message box
 that fills the ask template in and sends the edited text), the My drops tab's and the Offer
@@ -296,7 +298,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
 - v0.1.0 is the frame of the addon: the feed records and judges drops, the window's shell (title
   bar, restriction badge, Scan group, tabs, filter bar, footer, minimize) is in, and so is the Group
   drops table with its Ask button (DW-31), its detail card (DW-32), and the My drops tab with the
-  Offer panel (DW-33), the history with its History tab (DW-51), and the toast (DW-52)
+  Offer panel (DW-33), the history with its History tab (DW-51), the toast (DW-52), and the
+  transmog-known flag with its opt-in For transmog ask (DW-53)
   ([`scope.md`](scope.md)).
 - Every setting of design spec §12.1 has its row and default (DW-40), and some rows are ahead of
   their reader: `messages.autoAsk.*` waits for auto-ask (DW-54).
@@ -316,6 +319,19 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   the string carries; Pawn keys it does not score (`Dps`, `Armor`, the `Is*` and socket keys) are
   named in the chat line and left out, and a stored weight on a stat key it does not know counts 0,
   logged once per key under `SCORE`.
+- The transmog-known flag (DW-53) settles how it reads design spec §4. Whether you have collected a
+  drop's look is CanIMogIt's `PlayerKnowsTransmog` when that optional addon is loaded (the look
+  known from any source; an item it calls not transmogable has no flag), else
+  `C_TransmogCollection.PlayerHasTransmogByItemInfo`; every CanIMogIt call is in `pcall` and an answer
+  that is not a boolean falls back to the client. The detail card's header shows `New look` or `Look
+  known`; an item with no look (a ring, neck or trinket) or an unknown answer shows no chip. The For
+  transmog ask is opt-in (`messages.transmogAsk`, off): with it on, the Ask button is also offered
+  on a drop that is no gain for you (not an upgrade or a sidegrade) whose look is known to be
+  missing (`false`, never `nil`), and not on one its looter can't trade. It is still an `ask`: the
+  same one-ask key, history outcome and button, filled from `messages.templates.transmog`. A gain
+  always takes the plain ask, the toast (upgrades only) never offers it and auto-ask (DW-54) never
+  sends it. Whether your class can collect that look at all (its armor type) is not checked beyond
+  what CanIMogIt's answer carries (TMOG-1).
 - Five rows settle how they act. **`feed.clearOnBossKill`** empties the live feed at a kill's
   `ENCOUNTER_END` (never a wipe), before the boss's loot arrives, and repaints the window; queued
   asks keep their text and still flush. **`comparison.heirloomProtect`** (on by default) is yours

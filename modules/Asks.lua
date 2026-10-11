@@ -27,6 +27,11 @@ local _, NS = ...
 -- client without a sender fails `noApi`, an announce outside a group fails `noChannel`; a failed
 -- ask may be retried.
 --
+-- THE TRANSMOG ASK (design spec §4 transmog-known). An ask fills the template
+-- NS.Messaging.AskTemplate picks for its drop: `ask` for an upgrade or sidegrade for you, else
+-- `transmog` with `messages.transmogAsk` on and the drop's appearance not collected. It is still an
+-- `ask`: one key per drop and looter, one history outcome, one button.
+--
 -- THE FLUSH. A RestrictionChanged that says chat may be sent, ENCOUNTER_END and
 -- CHALLENGE_MODE_COMPLETED (each refreshing the restriction tracker first, since a lockdown can
 -- lift with no event of its own) start a flush when something is queued: one ask at once, then one
@@ -93,17 +98,28 @@ end
 -- ── settings ────────────────────────────────────────────────────────────────────────────────
 
 --- The `messages.*` settings the edge reads, through the schema seam (NS.Setting):
---- { oneAsk, templates, announceChannel }.
+--- { oneAsk, templates (each of C.MESSAGE_TEMPLATES), announceChannel, transmogAsk }.
 --- @return table
 function A.Settings()
     local templates = {}
-    for _, kind in ipairs(C.MESSAGE_KINDS) do templates[kind] = NS.Setting("messages.templates." .. kind) end
+    for _, name in ipairs(C.MESSAGE_TEMPLATES) do templates[name] = NS.Setting("messages.templates." .. name) end
     local channel = NS.Setting("messages.announceChannel")
     return {
         oneAsk = NS.Setting("messages.oneAsk") ~= false,
         templates = templates,
         announceChannel = CHANNELS[channel] and channel or "auto",
+        transmogAsk = NS.Setting("messages.transmogAsk") == true,
     }
+end
+
+--- The template a request for `kind` on drop record `rec` fills: an ask's is
+--- NS.Messaging.AskTemplate's pick (`ask` when it picks none), any other kind's its own.
+--- @param kind string
+--- @param rec table|nil
+--- @return string
+function A.TemplateFor(kind, rec)
+    if kind ~= "ask" then return kind end
+    return M.AskTemplate(rec, A.Settings().transmogAsk) or "ask"
 end
 
 --- The channel an announce goes to now: the stored one when it names a channel, else (auto)
@@ -298,7 +314,7 @@ function A.Request(kind, target, dropID, opts)
     local who, why = recipient(kind, target, test)
     if not who then return refused(why) end
     local req = { kind = kind, target = who.key, dropID = dropID, text = opts.text,
-        ctx = context(kind, rec, who, opts.ctx) }
+        template = A.TemplateFor(kind, rec), ctx = context(kind, rec, who, opts.ctx) }
     return act(M.Request(store().book, req, coreOpts(test)), test)
 end
 
@@ -314,7 +330,7 @@ function A.Preview(kind, target, dropID, opts)
     local rec = dropID ~= nil and NS.LootFeed.Get(dropID) or nil
     local who, why = recipient(kind, target, isTest(rec))
     if not who then return nil, why end
-    return M.Preview(M.Template(kind, A.Settings().templates), context(kind, rec, who, opts.ctx))
+    return M.Preview(M.Template(A.TemplateFor(kind, rec), A.Settings().templates), context(kind, rec, who, opts.ctx))
 end
 
 -- The registry target a request for `target` was filed under: the target itself when an ask is

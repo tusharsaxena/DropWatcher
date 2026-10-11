@@ -254,11 +254,12 @@ local function messaging(out)
         st.failures, st.refusals, st.flushes, st.flushing)
     local cfg = A.Settings()
     local lengths = {}
-    for i, kind in ipairs(NS.Constants.MESSAGE_KINDS) do
-        lengths[i] = kind .. "=" .. #M.Template(kind, cfg.templates)
+    for i, name in ipairs(NS.Constants.MESSAGE_TEMPLATES) do
+        lengths[i] = name .. "=" .. #M.Template(name, cfg.templates)
     end
     out:joined(TAG, "messaging: template lengths", lengths)
-    out:add(TAG, "messaging: oneAsk=%s announceChannel=%s", cfg.oneAsk, cfg.announceChannel)
+    out:add(TAG, "messaging: oneAsk=%s announceChannel=%s transmogAsk=%s", cfg.oneAsk, cfg.announceChannel,
+        cfg.transmogAsk)
     for _, a in ipairs(A.Queued()) do
         out:add(TAG, "messaging: queued %s to %s, drop %s", a.kind, a.target, a.dropID)
     end
@@ -305,6 +306,7 @@ local function integrations(out)
     local loaded = C_AddOns and C_AddOns.IsAddOnLoaded
     out:add(TAG, "optional: Pawn=%s CanIMogIt=%s", loaded and read(loaded, "Pawn") or false,
         loaded and read(loaded, "CanIMogIt") or false)
+    out:add(TAG, "transmog: source=%s", NS.Compat.TransmogSource())
 end
 
 --- The sections, in report order. Read at RUN time by core/DebugLogSetup.lua's descriptor.

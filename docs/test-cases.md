@@ -839,6 +839,22 @@ Total.
 - test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
 - stand-down: a request is refused, the flush timer is canceled and the queue is dropped
 
+### test_transmog.lua (13)
+
+- transmog compat: CanIMogIt answers first when it is loaded, else the client's collection
+- transmog compat: CanIMogIt's no-appearance answer is nil; a raise or a non-boolean falls back
+- transmog facts: the item facts read the look through CanIMogIt when it is loaded
+- transmog template: the plain ask for a gain; For transmog only when on and the look is missing
+- transmog template: its default text, the owner's own, and a request that names it
+- transmog card: the header's look chip says New look, Look known or nothing
+- transmog ask: offered for a missing look only with transmogAsk on, with its own tooltip
+- transmog edge: with transmogAsk on, an ask for a missing look sends the For transmog text
+- transmog edge: a collected look keeps the plain ask
+- transmog settings: the template and the opt-in are rows, the opt-in off by default
+- transmog settings: the preview sample is a drop whose look you have not collected
+- transmog test mode: one placeholder's look is collected and one's is not
+- transmog diagnostics: the integrations name the look's source, messaging the opt-in
+
 ### test_history.lua (23)
 
 - history: Normalize gives the shape in place and keeps the cap
@@ -1019,6 +1035,7 @@ Total.
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 22 |
+| test_transmog.lua | 13 |
 | test_history.lua | 23 |
 | test_toast.lua | 16 |
 | test_disabled.lua | 9 |
@@ -1030,4 +1047,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **844** |
+| **Total** | **857** |

@@ -19,7 +19,8 @@ local _, NS = ...
 --     ClearInspectPlayer, GetInspectSpecialization, the inventory item id, InspectFrame);
 --   * the loot sources beside chat (C_LootHistory's won drops, a keystone's map name);
 --   * the item readers behind the item facts (info, effective level, stats, specs, uniqueness,
---     transmog, the class restriction line);
+--     transmog through CanIMogIt when it is loaded, else C_TransmogCollection, the class
+--     restriction line);
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
 --   * the trade actions (C_Container.PickupContainerItem, DropItemOnUnit, InitiateTrade) and their
 --     trade-range and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor);
@@ -737,16 +738,57 @@ function Compat.GetItemUniqueness(link)
     return nil, nil
 end
 
---- Whether you have collected this item's appearance: C_TransmogCollection's
---- PlayerHasTransmogByItemInfo. Nil when the API is absent or the answer is secret.
---- @param link string
---- @return boolean|nil
-function Compat.PlayerHasTransmog(link)
+-- CanIMogIt (an optional dependency): its API is called, never copied, each call in pcall so its
+-- error never becomes this addon's. `CanIMogIt:Method(link)`; nil for a missing method, a raise or
+-- an answer that is not a plain boolean.
+local function canIMogIt(method, link)
+    local cimi = CanIMogIt
+    local fn = type(cimi) == "table" and cimi[method]
+    if type(fn) ~= "function" then return nil end
+    local ok, v = pcall(fn, cimi, link)
+    if not ok or Compat.IsSecret(v) or type(v) ~= "boolean" then return nil end
+    return v
+end
+
+-- CanIMogIt's answer: true or false when it knows, nil to ask the client instead. An item it says
+-- has no appearance to collect answers `nil, true`.
+local function transmogFromCanIMogIt(link)
+    if canIMogIt("IsTransmogable", link) == false then return nil, true end
+    return canIMogIt("PlayerKnowsTransmog", link), false
+end
+
+-- The client's answer: C_TransmogCollection.PlayerHasTransmogByItemInfo, nil when absent or secret.
+local function transmogFromClient(link)
     local tc = C_TransmogCollection
-    if not (tc and tc.PlayerHasTransmogByItemInfo and plainString(link)) then return nil end
+    if not (tc and tc.PlayerHasTransmogByItemInfo) then return nil end
     local known = tc.PlayerHasTransmogByItemInfo(link)
     if Compat.IsSecret(known) or type(known) ~= "boolean" then return nil end
     return known
+end
+
+--- Whether you have collected this item's appearance (design spec §4, transmog-known): CanIMogIt's
+--- PlayerKnowsTransmog when that addon is loaded (it knows the appearance from any source), else
+--- C_TransmogCollection's PlayerHasTransmogByItemInfo. Nil when neither answers, the answer is
+--- secret, or CanIMogIt says the item has no appearance to collect.
+--- @param link string
+--- @return boolean|nil
+function Compat.PlayerHasTransmog(link)
+    if not plainString(link) then return nil end
+    local known, noAppearance = transmogFromCanIMogIt(link)
+    if noAppearance then return nil end
+    if known ~= nil then return known end
+    return transmogFromClient(link)
+end
+
+--- Which source answers PlayerHasTransmog now: "CanIMogIt", "C_TransmogCollection" or "none". For
+--- the diagnostics' integrations section.
+--- @return string
+function Compat.TransmogSource()
+    local cimi = CanIMogIt
+    if type(cimi) == "table" and type(cimi.PlayerKnowsTransmog) == "function" then return "CanIMogIt" end
+    local tc = C_TransmogCollection
+    if tc and tc.PlayerHasTransmogByItemInfo then return "C_TransmogCollection" end
+    return "none"
 end
 
 -- Localized class name -> classFile, from the client's LOCALIZED_CLASS_NAMES_MALE and _FEMALE.

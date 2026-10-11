@@ -360,6 +360,10 @@ C.TRADE_RULES = {
 -- The message kinds, in Settings › Messages' display order. Their default templates are
 -- defaults/Profile.lua's `messages.templates`.
 C.MESSAGE_KINDS = { "ask", "offer", "announce" }
+-- The templates, in Settings › Messages' display order: one per kind, plus `transmog`, the ask's
+-- wording for a drop that is no gain for you but whose appearance you have not collected (sent as
+-- an `ask`, filed under the ask's one-ask key; NS.Messaging.AskTemplate picks it).
+C.MESSAGE_TEMPLATES = { "ask", "transmog", "offer", "announce" }
 -- The tokens a template may name, in the token chips' order.
 C.MESSAGE_TOKENS = { "player", "item", "ilvl", "slot", "track", "gain", "mygain" }
 C.MESSAGE_MAX_LEN = 255          -- the chat limit, in bytes of the raw text (a link counts whole)

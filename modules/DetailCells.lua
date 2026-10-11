@@ -11,7 +11,7 @@ local _, NS = ...
 -- modules/DetailCard.lua. The verdict, trade and ask wording is modules/WindowCells.lua's, so the
 -- card and the row it expands never disagree.
 --
---   chip = { text, tip = { title, lines... } }
+--   chip = { text, tone?, tip = { title, lines... } }
 --   side = { title, verdict = { text, tone, tip }, rows = { { key, label, text, tone, tip, link } } }
 --   box  = { chip = { text, tone }, text, meta, tip }
 --   act  = { key, text, icon, enabled, tip }
@@ -135,6 +135,22 @@ local function trackChip(f)
     return chip(text, L["Upgrade track"], L["The upgrade track and rank, then the item level."])
 end
 
+-- The look: `New look` when you have not collected the appearance, `Look known` when you have,
+-- nothing when it is not known or the item has none (design spec §4, transmog-known).
+local function transmogChip(f)
+    if f.transmogKnown == false then
+        local c = chip(L["New look"], L["Transmog"], L["You have not collected this item's appearance."])
+        c.tone = "good"
+        return c
+    end
+    if f.transmogKnown == true then
+        local c = chip(L["Look known"], L["Transmog"], L["You have already collected this item's appearance."])
+        c.tone = "muted"
+        return c
+    end
+    return nil
+end
+
 local function primaryChip(stats)
     local names = {}
     for _, key in ipairs(PRIMARY_ORDER) do
@@ -160,15 +176,16 @@ local function extraChips(stats, out)
     end
 end
 
---- The item header's chips (board 02, callout 1): slot, armor type, bind, track and rank, primary
---- stat, socket and tertiary stats. A chip with nothing to say is left out; the slot always shows.
+--- The item header's chips (board 02, callout 1): slot, armor type, bind, track and rank, the look
+--- (transmog), primary stat, socket and tertiary stats. A chip with nothing to say is left out; the
+--- slot always shows.
 --- @param drop table
 --- @return table list of chips
 function DC.Chips(drop)
     local f = facts(drop)
     local stats = type(f.stats) == "table" and f.stats or {}
     local out = { slotChip(f) }
-    for _, fn in ipairs({ armorChip, bindChip, trackChip }) do
+    for _, fn in ipairs({ armorChip, bindChip, trackChip, transmogChip }) do
         local c = fn(f)
         if c then out[#out + 1] = c end
     end
@@ -462,11 +479,12 @@ end
 --- The card's actions (board 02, callout 6), left to right: Ask, Edit message, Link in chat, Retry
 --- inspect, Trade and Hide this item. A disabled one says why in its tooltip.
 --- @param drop table
---- @param ctx table { askState, askReason, inspect (the looter's entry), now, trade = { ok, reason, text } }
+--- @param ctx table { askState, askReason, inspect (the looter's entry), now, trade = { ok, reason, text },
+--- transmogAsk (the `messages.transmogAsk` setting) }
 --- @return table list of actions
 function DC.Actions(drop, ctx)
     ctx = type(ctx) == "table" and ctx or {}
-    local ask = WC.Ask(drop, ctx.askState, ctx.askReason)
+    local ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk)
     return {
         askAction(drop, ask), editAction(ask), linkAction(drop),
         retryAction(drop, ctx.inspect, ctx.now), tradeAction(drop, ctx.trade), hideAction(),

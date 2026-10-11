@@ -3,10 +3,10 @@ local _, NS = ...
 -- Group drops table, with the full reasoning behind the row's verdicts.
 --
 -- WHAT IT HOLDS, top to bottom: the item header (a real item button, the name in its quality color
--- and the chips: slot, armor type, bind, track and rank, primary stat, socket, tertiary stats); the
--- For you and For the looter boxes side by side (what it replaces, the item-level change, the track
--- change, the stat change, and Pawn's score for you or the looter's spec and the inspect's age, each
--- under a verdict chip); the trade estimate box (the state, the reason in plain words, the rule in
+-- and the chips: slot, armor type, bind, track and rank, the look, primary stat, socket, tertiary
+-- stats); the For you and For the looter boxes side by side (what it replaces, the item-level
+-- change, the track change, the stat change, and Pawn's score for you or the looter's spec and the
+-- inspect's age, each under a verdict chip); the trade estimate box (the state, the reason in plain words, the rule in
 -- force and how fresh the data is); and the actions: Ask, Edit message, Link in chat, Retry inspect,
 -- Trade (disabled with its reason) and Hide this item. Every line and chip has a reason tooltip.
 --
@@ -38,7 +38,7 @@ local L     = NS.L
 
 local max, floor = math.max, math.floor
 
-local MAX_CHIPS = 9
+local MAX_CHIPS = 10
 local MAX_SIDE_ROWS = 5
 local ACTION_KEYS = { "ask", "edit", "link", "retry", "trade", "hide" }
 local ACTION_W = { ask = 92, edit = 100, link = 92, retry = 96, trade = 124, hide = 104 }
@@ -328,7 +328,8 @@ function DCard.Paint(card, drop, width, now)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
     paintTrade(card.trade, DC.TradeBox(drop, situation))
     local state, reason = askState(drop)
-    paintActions(card, drop, { askState = state, askReason = reason, inspect = insp, now = now, trade = tradeGuard(drop) })
+    paintActions(card, drop, { askState = state, askReason = reason, inspect = insp, now = now, trade = tradeGuard(drop),
+        transmogAsk = NS.Setting("messages.transmogAsk") == true })
 end
 
 -- ── the Edit message box ────────────────────────────────────────────────────────────────────

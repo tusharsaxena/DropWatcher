@@ -444,18 +444,17 @@ end
 
 -- ── the Ask button ──────────────────────────────────────────────────────────────────────────
 
-local USEFUL = { upgrade = true, sidegrade = true }
-
--- Why no ask is offered for `drop`, or nil when one is.
-local function noAskReason(drop)
+-- Why no ask is offered for `drop`, or nil when one is; the template it fills when one is
+-- (NS.Messaging.AskTemplate: `ask`, or `transmog` for a look you lack with `transmogAsk` on).
+local function noAskReason(drop, transmogAsk)
     if drop.isMine then return L["Your own drop: offer it from My drops."] end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
         return L["Its looter can't trade it: %s"]:format(WC.TradeReason(drop.trade, looterName(drop)))
     end
-    local v = type(drop.me) == "table" and drop.me.verdict
-    if not USEFUL[v] then return L["It is not an upgrade for you."] end
+    local template = NS.Messaging.AskTemplate(drop, transmogAsk)
+    if not template then return L["It is not an upgrade for you."] end
     if looterName(drop) == "?" then return L["The looter is not known."] end
-    return nil
+    return nil, template
 end
 
 local ASK_LOOK = {
@@ -466,13 +465,17 @@ local ASK_LOOK = {
     failed = { text = L["Retry"], icon = "reset", enabled = true },
 }
 
-local function askTip(state, who, reason)
+local function askTip(state, who, reason, template)
     if state == "queued" then
         return L["Queued"], L["Chat is restricted right now: the ask to %s is sent when it lifts."]:format(who), L["Click to cancel it."]
     end
     if state == "traded" then return L["Traded"], L["A completed trade gave you this item."] end
     if state == "sent" then return L["Asked"], L["You asked %s. One ask per item per looter, so it cannot be sent twice by accident."]:format(who) end
     if state == "failed" then return L["Retry"], L["The ask to %s was not sent: %s."]:format(who, tostring(reason or "?")), L["Click to try again."] end
+    if template == "transmog" then
+        return L["Ask for transmog"], L["Whisper %s your For transmog template: it is no gain for you, but you have not collected its look."]:format(who),
+            L["One ask per item per looter."]
+    end
     return L["Ask"], L["Whisper %s your ask template for this item."]:format(who), L["One ask per item per looter."]
 end
 
@@ -482,14 +485,16 @@ end
 --- @param state string|nil NS.Asks.StateOf's state (`ready`, `queued`, `sent`, `failed`), or
 --- `traded` once the history settled the drop received (NS.History.AskState)
 --- @param reason string|nil its reason
---- @return table { offered, text, icon, enabled, tip, state }
-function WC.Ask(drop, state, reason)
-    local no = state ~= "traded" and noAskReason(drop)
-    if no then return { offered = false, text = DASH, enabled = false, tip = { L["No ask"], no } } end
+--- @param transmogAsk boolean|nil the `messages.transmogAsk` setting: an ask is also offered for a
+--- drop that is no gain for you but whose look you have not collected (`template` "transmog")
+--- @return table { offered, text, icon, enabled, tip, state, template }
+function WC.Ask(drop, state, reason, transmogAsk)
+    local no, template = noAskReason(drop, transmogAsk)
+    if no and state ~= "traded" then return { offered = false, text = DASH, enabled = false, tip = { L["No ask"], no } } end
     local look = ASK_LOOK[state] or ASK_LOOK.ready
     local s = ASK_LOOK[state] and state or "ready"
     return { offered = true, text = look.text, icon = look.icon, enabled = look.enabled,
-        tip = { askTip(s, looterName(drop), reason) }, state = s }
+        tip = { askTip(s, looterName(drop), reason, template) }, state = s, template = template or "ask" }
 end
 
 -- ── the encounter header ────────────────────────────────────────────────────────────────────

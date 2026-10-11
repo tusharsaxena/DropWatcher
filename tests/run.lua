@@ -125,6 +125,7 @@ Kit.run{
         "test_trade_timer",
         "test_trade_helper",
         "test_asks",
+        "test_transmog",
         "test_history",
         "test_toast",
         "test_disabled",

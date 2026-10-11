@@ -8,7 +8,7 @@ local _, NS = ...
 -- the resets and the window see it as they see a checkbox; every widget drawn here has its refresher
 -- on the page's list (options-ui-§11), and nothing is left on a pooled widget's frame (§19).
 --
---   Settings.PageEditors.TemplatesTab  Messages › Templates: token chips, the three editors with
+--   Settings.PageEditors.TemplatesTab  Messages › Templates: token chips, the four editors with
 --                                      their live counters, the live preview and Reset templates.
 --   Settings.PageEditors.WeightsTab    Comparison › Weights: a sub-strip of your class's specs,
 --                                      then one slider per stat and the Pawn scale import box.
@@ -289,11 +289,11 @@ local function resetTemplates(rows)
     if h.RefreshScalars then h.RefreshScalars() end
 end
 
---- Messages › Templates: the token chips, the three editors (Enter commits; the label counts as
+--- Messages › Templates: the token chips, the four editors (Enter commits; the label counts as
 --- you type), the preview of the template last edited over a real drop or a placeholder one, and
 --- Reset templates.
 --- @param ctx table
---- @param rows table the tab's schema rows (the three templates)
+--- @param rows table the tab's schema rows (the four templates)
 function P.TemplatesTab(ctx, rows)
     local h = H()
     -- Per render: the boxes this render drew. The template being edited (the chips' target and the
@@ -311,7 +311,7 @@ function P.TemplatesTab(ctx, rows)
     previewBlock(ctx, st)
     h.InlineButtonPair(ctx, {
         text = L["Reset templates"],
-        tooltip = L["Put the three messages back to the shipped wording."],
+        tooltip = L["Put the four messages back to the shipped wording."],
         onClick = function() resetTemplates(rows or {}) end,
     })
 end

@@ -152,6 +152,13 @@ deprecated global fallback; the announce channel; queueing under a restriction a
 the lift, `ENCOUNTER_END` and `CHALLENGE_MODE_COMPLETED`, one send every 1.5 seconds first in first
 out, stopped by a lockdown mid-flush; cancel by a second press and when the looter leaves, and a
 queued announce once out of a group; test mode printing instead of sending; the stand-down),
+`test_transmog` (the transmog-known flag: CanIMogIt answering first when loaded, its no-appearance
+answer, a raise or a non-boolean falling back to `C_TransmogCollection`, and the source named; the
+item facts reading through it; the ask template picked for a drop (the plain ask for a gain, the For
+transmog ask only with `messages.transmogAsk` on and the look known missing); its default text and a
+request that names it; the detail card's `New look` and `Look known` chips; the Ask button and the
+card's actions offering it; the edge sending its text under the ask's key; its settings rows and
+preview sample; the test mode placeholders; the diagnostics lines),
 `test_history` (the history: the shape made in place with the cap kept, the snapshot kept small,
 the group and drop caps, outcomes moving forward only, an expired trade, declined set and cleared
 by hand, the trade match by partner then item id and your own drops traded away; then the edge on

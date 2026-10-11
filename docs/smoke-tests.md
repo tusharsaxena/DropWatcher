@@ -34,6 +34,7 @@ passed.
 | SCORE-1..2 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50 |
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52 |
+| TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
 ## Before you start
@@ -770,6 +771,22 @@ left); press Ask → the button reads `Queued` or `Asked` and the whisper goes a
 second qualifying drop waits until the first goes. Pull a mob while one is due → nothing shows in
 combat, and it shows when combat ends; with Show in combat on, it shows at once. Result:
 
+## Transmog
+
+**TMOG-1. The look chip and the For transmog ask.** `/dw test`, open the Group drops tab and expand
+`Placeholder Crown` → its header has a gray `Look known` chip; expand `Placeholder Spellblade` → a
+green `New look` chip, and its Ask is a dash (`It is not an upgrade for you.`). Settings › Messages ›
+Sending › Ask for transmog on → the Spellblade's Ask is offered, its tooltip reads `Ask for
+transmog`; press it → chat prints the For transmog template (`… could I have it for transmog? …`),
+not the plain ask. Messages › Templates shows four editors; edit Ask for transmog and its preview
+follows. In a group, on a real drop someone else looted that is no gain for you: `/dump
+C_TransmogCollection.PlayerHasTransmogByItemInfo(link)` → `false` for a look you lack, and the card
+shows `New look`; the Ask whispers the For transmog text. With CanIMogIt installed, `/dw diagnostics`
+→ `transmog: source=CanIMogIt`, and an item whose look you know from another item shows `Look
+known` (CanIMogIt's own tooltip agrees); without it → `source=C_TransmogCollection`. Record a cloth
+or mail drop on a plate character: whether the card says `New look` for a look your class cannot
+collect. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -813,3 +830,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
+| TMOG-1 | DW-53, the transmog-known flag and the For transmog ask | No client pass recorded yet |

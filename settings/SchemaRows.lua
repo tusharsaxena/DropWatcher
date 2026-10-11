@@ -265,6 +265,8 @@ local function messages()
     local templates = { page = "messages", group = L["Templates"], maxLetters = K.MESSAGE_MAX_LEN }
     text("messages.templates.ask", M.templates.ask, L["Ask"],
         L["What you whisper a looter to ask for their drop."], templates)
+    text("messages.templates.transmog", M.templates.transmog, L["Ask for transmog"],
+        L["What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."], templates)
     text("messages.templates.offer", M.templates.offer, L["Offer"],
         L["What you whisper someone your own drop would help."], templates)
     text("messages.templates.announce", M.templates.announce, L["Announce"],
@@ -273,6 +275,9 @@ local function messages()
     local sending = { page = "messages", group = L["Sending"] }
     bool("messages.editFirst", M.editFirst, L["Edit before sending"],
         L["Open the message in an edit box before it is sent."], sending)
+    bool("messages.transmogAsk", M.transmogAsk, L["Ask for transmog"],
+        L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the For transmog template."],
+        sending)
     bool("messages.oneAsk", M.oneAsk, L["Ask once"],
         L["Send each ask or offer for a drop to a player once."], sending)
     pick("messages.announceChannel", M.announceChannel, CHANNELS, L["Announce channel"],

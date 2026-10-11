@@ -72,7 +72,8 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `GetItemStats(link)` | `C_Item.GetItemStats`; every plain string key with a plain number, unknown keys included | `{}` |
 | | `GetItemSpecs(link)` | `C_Item.GetItemSpecInfo`; the list as a set `{ [specID] = true }`, nil for an empty list | `nil` |
 | | `GetItemUniqueness(link)` | `C_Item.GetItemUniquenessByID`'s `(isUnique, name, count, categoryID)`; answers `(categoryID, max)`, categoryID nil for an item unique on its own | `nil, nil` |
-| | `PlayerHasTransmog(link)` | `C_TransmogCollection.PlayerHasTransmogByItemInfo`; a secret answer is nil | `nil` |
+| | `PlayerHasTransmog(link)` | CanIMogIt's `PlayerKnowsTransmog` when that optional addon is loaded (the look known from any source; its `IsTransmogable` false answers nil), each call in `pcall` with a non-boolean answer ignored; else `C_TransmogCollection.PlayerHasTransmogByItemInfo`; a secret answer is nil | `nil` |
+| | `TransmogSource()` | which source answers `PlayerHasTransmog` now: `CanIMogIt`, `C_TransmogCollection` or `none` (the diagnostics' integrations section) | `"none"` |
 | | `ItemClassRestriction(link)` | `C_TooltipInfo.GetHyperlink`'s `RestrictedRaceClass` line read with `ITEM_CLASSES_ALLOWED`, split on `LIST_DELIMITER`, each name mapped to its classFile through `LOCALIZED_CLASS_NAMES_MALE` and `_FEMALE`; a set | `nil` |
 | Pawn | `PawnIsReady()` | the `PawnIsInitialized` global flag (a function spelling is called) | `false` |
 | | `PawnIsLoaded()` | `C_AddOns.IsAddOnLoaded("Pawn")`, ready or not (the scorer picks the Pawn adapter for a loaded Pawn) | `false` |

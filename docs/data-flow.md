@@ -209,7 +209,7 @@ ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
   Compat.GetItemStats ─> stats                 Compat.GetItemSpecs ─> specs
   Compat.GetItemUniqueness ─> unique           Compat.IsItemBindToAccount* ─> warbound
   Compat.ItemClassRestriction ─> classes, isTierToken
-  Compat.PlayerHasTransmog ─> transmogKnown
+  Compat.PlayerHasTransmog ─> transmogKnown  (CanIMogIt when loaded, else C_TransmogCollection)
 
 ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per link:
   NS.Item.LoadItem(id, retry) ─> retry reads again ─> facts: every waiter called back

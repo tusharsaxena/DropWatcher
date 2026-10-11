@@ -10,7 +10,8 @@ local _, NS = ...
 -- no; inspect: fresh, cached, pending, out of range, combat, failed, not in the group; Ask: ready,
 -- queued, asked, retry, traded and the dash) and five of your own covering board 04 (an exact countdown,
 -- one ending soon, an estimated one, a bind-on-equip drop and an expired one, with candidates in
--- every pill: +n UPGRADE, EQUAL, NO UPGRADE, CAN'T USE, CHECKING… and UNAVAILABLE). Every name and
+-- every pill: +n UPGRADE, EQUAL, NO UPGRADE, CAN'T USE, CHECKING… and UNAVAILABLE). The crown's look
+-- is collected and the spellblade's is not, for the look chips and the transmog ask. Every name and
 -- item is invented; nothing names a real player.
 --
 -- THE HOOKS. A placeholder carries its own inspect entry (`testInspect`, read in place of
@@ -49,6 +50,12 @@ local MYTH = { name = "Myth", rank = 1, max = 6 }
 
 local function facts(ilvl, equipLoc, quality, track)
     return { ilvl = ilvl, equipLoc = equipLoc, quality = quality or 4, track = track or HERO }
+end
+
+-- The facts with the look's state (transmog-known): the detail card's New look and Look known chips.
+local function withLook(f, known)
+    f.transmogKnown = known
+    return f
 end
 
 -- An evaluation as NS.Evaluate answers it: the verdict, the change, the worn item's level and the
@@ -102,7 +109,7 @@ local function pack(...) return { ... } end
 -- The other members' drops, board 03 row by row.
 local function othersAtBoss(now)
     return {
-        other("seta", link(990001, L["Placeholder Crown"], 4), facts(311, "INVTYPE_HEAD"),
+        other("seta", link(990001, L["Placeholder Crown"], 4), withLook(facts(311, "INVTYPE_HEAD"), true),
             ev("upgrade", 19, 292), ev("downgrade", -13, 324),
             trade("likely", "notUpgrade", { 311, 324 }, "inspect", 40),
             pack(inspected("seta", "fresh", 40, now, S.HEAD, 324)), nil),
@@ -142,7 +149,7 @@ local function othersInRun(now)
         other("kaelith", link(990012, L["Placeholder Pendant"], 4), facts(297, "INVTYPE_NECK"),
             ev("upgrade", 2, 295), ev("downgrade", -4, 301), trade("no", "warbound", {}, "bind"),
             pack(inspected("kaelith", "cached", 900, now, S.NECK, 301)), nil),
-        other("littlewolf", link(990013, L["Placeholder Spellblade"], 4), facts(296, "INVTYPE_WEAPON"),
+        other("littlewolf", link(990013, L["Placeholder Spellblade"], 4), withLook(facts(296, "INVTYPE_WEAPON"), false),
             ev("doesntWant", nil, nil, "undesired"), nil, trade("unknown", "noInspect", { "combatParked" }),
             pack(inspected("littlewolf", "combatParked", nil, now)), nil),
     }

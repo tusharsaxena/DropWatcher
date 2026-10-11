@@ -7,7 +7,8 @@ local _, NS = ...
 -- sends what Request or Dequeue hands it, and reports the result with MarkSent or MarkFailed. The
 -- defaults are data in core/Constants.lua (C.MESSAGE_*).
 --
---   req  = { kind = "ask" | "offer" | "announce", target, dropID, ctx = token values, text? }
+--   req  = { kind = "ask" | "offer" | "announce", target, dropID, ctx = token values, text?,
+--            template? = the template to fill instead of the kind's (an ask's `transmog`) }
 --   opts = { canSend = true, oneAsk = true, templates = { [kind] = text }, now }
 --
 -- Request answers { action = "send" | "queue" | "refuse", ask, reason, length }. An ask record is
@@ -31,17 +32,40 @@ for _, name in ipairs(C.MESSAGE_TOKENS) do KNOWN[name] = true end
 local KIND = {}
 for _, kind in ipairs(C.MESSAGE_KINDS) do KIND[kind] = true end
 
+local TEMPLATE = {}
+for _, name in ipairs(C.MESSAGE_TEMPLATES) do TEMPLATE[name] = true end
+
 -- ---------------------------------------------------------------------------------------------
 -- Templates and tokens (spec §9.1)
 -- ---------------------------------------------------------------------------------------------
 
---- The template for `kind`: the owner's text in `templates` when it is a non-empty string, else
---- the default (defaults/Profile.lua's `messages.templates`). Nil for an unknown kind.
-function M.Template(kind, templates)
-    if not KIND[kind] then return nil end
-    local own = isTable(templates) and templates[kind] or nil
+--- The template named `name` (a kind, or `transmog`): the owner's text in `templates` when it is
+--- a non-empty string, else the default (defaults/Profile.lua's `messages.templates`). Nil for an
+--- unknown name.
+function M.Template(name, templates)
+    if not TEMPLATE[name] then return nil end
+    local own = isTable(templates) and templates[name] or nil
     if nonEmpty(own) then return own end
-    return NS.C.PROFILE.messages.templates[kind]
+    return NS.C.PROFILE.messages.templates[name]
+end
+
+-- The verdicts for you an ask is offered for, with the plain ask template.
+local USEFUL = { upgrade = true, sidegrade = true }
+
+--- Which template an ask for `drop` fills (design spec §4 transmog-known, §9.1): `ask` when the
+--- drop is an upgrade or a sidegrade for you; else `transmog` when `transmogAsk` is on and you
+--- have not collected its appearance (facts.transmogKnown is false, not merely unknown); else nil,
+--- no ask is offered. Reads the drop record alone.
+--- @param drop table a feed record
+--- @param transmogAsk boolean the `messages.transmogAsk` setting
+--- @return string|nil
+function M.AskTemplate(drop, transmogAsk)
+    if not isTable(drop) then return nil end
+    local v = isTable(drop.me) and drop.me.verdict or nil
+    if USEFUL[v] then return "ask" end
+    local f = isTable(drop.facts) and drop.facts or nil
+    if transmogAsk == true and f and f.transmogKnown == false then return "transmog" end
+    return nil
 end
 
 -- A number with one decimal at most, and none when it is whole ("5", "4.3"); else tostring.
@@ -132,7 +156,8 @@ end
 -- Step 2: the edited text when given, else the template expanded.
 local function messageText(req, opts)
     if nonEmpty(req.text) then return req.text end
-    return (M.Expand(M.Template(req.kind, opts.templates), req.ctx))
+    local name = TEMPLATE[req.template] and req.template or req.kind
+    return (M.Expand(M.Template(name, opts.templates), req.ctx))
 end
 
 local function newAsk(req, key, text, opts)

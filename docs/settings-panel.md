@@ -88,15 +88,18 @@ window closes, Likely tradeable only.
 ## Messages
 
 **Templates** (board 08): the token chips (`{player}` … `{mygain}`, each with what it fills in);
-clicking one puts it at the cursor of the message you last edited and stores it. Then the three
-editors, Ask, Offer and Announce: Enter (or the box's Okay) stores the text through the seam, which
+clicking one puts it at the cursor of the message you last edited and stores it. Then the four
+editors, Ask, Ask for transmog, Offer and Announce: Enter (or the box's Okay) stores the text through the seam, which
 refuses an empty one, and each label counts the template's bytes against 255 as you type. Then the
 preview of the message being edited, written for a real drop when the feed has one that fits (an
-upgrade for you for an ask, your own drop and its best candidate for an offer) and for test mode's
+upgrade for you for an ask, one whose look you have not collected for the transmog ask, your own
+drop and its best candidate for an offer) and for test mode's
 placeholders otherwise: who it goes to, the text as sent, its length, and a red note for a text past
-the limit or an unknown token. Reset templates puts the three back.
+the limit or an unknown token. Reset templates puts the four back.
 
-**Sending:** Edit before sending, Ask once, Announce channel. **Auto-ask:** Ask automatically, then
+**Sending:** Ask for transmog (off: also offer an ask, with the For transmog template, on a drop
+that is no gain for you but whose look you have not collected), Edit before sending, Ask once,
+Announce channel. **Auto-ask:** Ask automatically, then
 its delay and least gain, live only while it is on.
 
 ## Window
