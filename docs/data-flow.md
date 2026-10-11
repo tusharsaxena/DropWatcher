@@ -1,6 +1,26 @@
 # Data flow — Ka0s Drop Watcher
 
-## Today: a setting changes
+## The loot pipeline (design spec §3)
+
+```
+ CHAT_MSG_LOOT ─┐                         ┌─> Window (Group drops / My drops / History)
+ ENCOUNTER_LOOT ├─> LootParser ─> LootFeed ┼─> DetailCard, OfferPanel, Toast
+ LOOT_HISTORY  ─┘                     │    └─> History
+   Situations ──gate──────────────────┤
+   QualityGate ──gate─────────────────┼─> ItemFacts ─> Evaluate ─> verdicts
+                                      │     Roster ─┐      ▲
+                                      │     Inspect ┴─> candidate gear/spec
+                                      │     Gear (me) ┘
+                                      ├─> TradeRules ─> trade estimate
+                                      └─> TradeTimer (own bag items)
+ Restrictions ──> Messaging queue ──> Compat.ChatSender (pcall)   TradeHelper ──> DropItemOnUnit
+```
+
+Modules talk over the `NS.MSG` catalog in `core/Bus.lua`, one sender per message; the UI only
+listens. Each stage is drawn in its own section below. The README's `## How the loot watching works`
+is the same pipeline told for players.
+
+## A setting changes
 
 ```
 panel checkbox ─┐
@@ -11,7 +31,7 @@ launcher entry ─┘                                                   │     
                                                      → Window.ApplySettings)
 ```
 
-## Today: the window's show decision
+## The window's show decision
 
 `Window.UpdateVisibility` reads one ladder: stood down → hidden; `visibility` says no (never, or the
 combat condition fails) → hidden; the player opened it → shown. Turning test mode on opens a closed
@@ -22,7 +42,7 @@ re-reading `UnitAffectingCombat`), on the stand-down and stand-up, and on a prof
 frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibilityListener` listener
 (today the trade timer, which paces its ticker by the window); the window calls no engine module.
 
-## Today: what the window repaints on
+## What the window repaints on
 
 ```
 RestrictionChanged(reason) ─> the badge (`Encounter · n queued`, hidden while reason is nil)
@@ -55,7 +75,7 @@ a Scan group's `DropUpdated` per drop) costs one pass. A player's own click repa
 The tab's body (DW-31, DW-33, DW-51) is handed `Window.TabContext(tab)`: its feed (`test` in test
 mode), its filter state, the controls it honors, `matches(drop)` and `compare(a, b)`.
 
-## Today: the Group drops table
+## The Group drops table
 
 ```
 Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
@@ -79,7 +99,7 @@ row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.e
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
 ```
 
-## Today: test mode (DW-34, spec §11.6)
+## Test mode (design spec §11.6)
 
 ```
 Master controls checkbox ─┐
@@ -100,7 +120,7 @@ A placeholder is never judged, re-estimated or inspected: its verdicts, trade, i
 (`testInspect`) and ask state (`testAsk`) are the data's. The ask state shows only while the
 messaging edge holds none for it, so a click on Ask moves it like a live row's.
 
-## Today: the detail card
+## The detail card
 
 ```
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
@@ -122,7 +142,7 @@ Trade ─────────> NS.TradeWithLooter(id) ─> NS.TradeHelper.Op
 Hide this item ─> WindowGroup.Dismiss(id) ─> State.windowGroup.dismissed, expanded cleared ─> repaint
 ```
 
-## Today: the My drops tab and the Offer panel
+## The My drops tab and the Offer panel
 
 ```
 Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
@@ -155,14 +175,14 @@ Announce to group ─> DetailCard.OpenEditor(id, "announce"); the box's Send ─
 member, { text }) / NS.PressAnnounce(id, { text }) ─> NS.Asks.Press(…, { text })
 ```
 
-## Today: enable and disable
+## Enable and disable
 
 `enabled = false` → `Lifecycle:Set("disabled", true)` → `NS.StandDown`: feature events unregistered,
 tracked bus registrations taken down, test mode ended, each module's teardown, window hidden. The
 stand-up re-registers and re-applies the window from current settings. The perf harness's suspend
 takes the same latch's `perf` hold.
 
-## Today: the situation
+## The situation
 
 ```
 six events (PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA, CHALLENGE_MODE_START,
@@ -178,7 +198,7 @@ six events (PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA, CHALLENGE_MODE_START,
 `profile.situations.<key>`, falling back to the spec defaults. The stand-down clears the key; the
 stand-up re-reads the client and announces where the player is.
 
-## Today: the roster
+## The roster
 
 ```
 GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent ─> DW.OnSituationEvent (above), then
@@ -199,7 +219,7 @@ The roster sends no message: a module that needs the fresh group declares `GROUP
 below `modules/Roster.lua` in the TOC and hears it after the roster's handler. The stand-down drops
 the roster; the stand-up re-reads it.
 
-## Today: the item facts
+## The item facts
 
 ```
 ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
@@ -220,7 +240,7 @@ ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per l
 `TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts. The stand-down drops the
 cache and the loads; a load that answers after it is ignored.
 
-## Today: the gear snapshot
+## The gear snapshot
 
 ```
 PLAYER_EQUIPMENT_CHANGED ─┐
@@ -244,7 +264,7 @@ A link the client has not cached is requested and its slot left out (unknown, no
 arrival arms the same timer. The first read, made lazily by a caller, announces nothing. The
 stand-down cancels the timer and drops the snapshot; the stand-up rebuilds it and announces it.
 
-## Today: the loot parser
+## The loot parser
 
 ```
 CHAT_MSG_LOOT (text, ..., guid) ─> LootParser.Parse   [Perf bucket `parse`]
@@ -262,7 +282,7 @@ CHAT_MSG_LOOT (text, ..., guid) ─> LootParser.Parse   [Perf bucket `parse`]
 
 The counters are kept for the session, across a stand-down; the stand-down unregisters the event.
 
-## Today: inspecting a member
+## Inspecting a member
 
 ```
 Inspect.Request(guid, priority) ─> entry still good (fresh or cached, not stale, < 600s)? ─> answer it
@@ -287,7 +307,7 @@ Inspect.Candidate(guid) ─> { classFile (roster), specID, hand flags, gear (fac
 The state is memory only (`State.inspect`) and is dropped by the stand-down, which also cancels
 every timer and clears an inspect the broker started.
 
-## Today: the feed
+## The feed
 
 ```
 CHAT_MSG_LOOT ─> LootParser sink ─> source `chat` (your own `pushed` lines skipped)
@@ -325,7 +345,7 @@ ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the group
 The stand-down unregisters the events and the bus receivers, cancels the score timer, and drops the
 dedupe window, the context and any drop still loading; the recorded drops are kept for the session.
 
-## Your own drops' trade timer (DW-28, spec §7.4)
+## Your own drops' trade timer (design spec §7.4)
 
 ```
 BAG_UPDATE_DELAYED / LOOT_CLOSED / DropAdded(id) for your own drop
@@ -347,7 +367,7 @@ Window OnShow / OnHide (NS.Window.AddVisibilityListener) ─> the ticker retuned
 The stand-down cancels the ticker and the pending scan and keeps the entries (their warned flags
 with them); the stand-up scans again.
 
-## Handing your drop over (DW-29, spec §4)
+## Handing your drop over (design spec §4)
 
 ```
 a click (My drops tab / Offer panel, DW-33)
@@ -365,7 +385,7 @@ a click (My drops tab / Offer panel, DW-33)
 Nothing is sent on the bus; the trade itself is the client's. Stood down, every call refuses with
 `stoodDown`.
 
-## Asking, offering and announcing (DW-2A, spec §9.2-§9.3)
+## Asking, offering and announcing (design spec §9.2-§9.3)
 
 ```
 a click (row button, Offer panel, DW-33) or auto-ask (DW-54)
@@ -396,7 +416,7 @@ GROUP_ROSTER_UPDATE (after the roster re-read) ─> Asks.OnRosterChanged
 
 The stand-down cancels the flush timer and drops the queued asks; the sent registry is kept.
 
-## Today: the history
+## The history
 
 ```
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
@@ -420,7 +440,7 @@ The History tab's body reads `NS.History.Groups()` (oldest first) through the pu
 into `time()` marks (`WindowHistory.Context`); each entry is painted with the Group drops table's
 cell composers over a drop-shaped copy (`WindowHistory.AsDrop`).
 
-## Today: the toast
+## The toast
 
 ```
 DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet?
@@ -434,7 +454,7 @@ Ask ─> NS.PressAsk(id)    AskStateChanged / DropUpdated of the shown drop ─>
 drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.ResetPosition
 ```
 
-## Today: auto-ask (DW-54, spec §9.4)
+## Auto-ask (design spec §9.4)
 
 ```
 DropAdded(id) / DropUpdated(id) ─> AutoAsk.Consider: messages.autoAsk.enabled? not considered yet?
@@ -449,22 +469,3 @@ cancel: AskStateChanged(id, _, "ask") (you asked)   GROUP_ROSTER_UPDATE (looter 
         the row turned off                           the stand-down
 first turned on ─> one-time notice ─> global.notices.autoAsk = true
 ```
-
-## The design's loot pipeline (spec §3)
-
-```
- CHAT_MSG_LOOT ─┐                         ┌─> Window (Group drops / My drops / History)
- ENCOUNTER_LOOT ├─> LootParser ─> LootFeed ┼─> DetailCard, OfferPanel, Toast
- LOOT_HISTORY  ─┘                     │    └─> History
-   Situations ──gate──────────────────┤
-   QualityGate ──gate─────────────────┼─> ItemFacts ─> Evaluate ─> verdicts
-                                      │     Roster ─┐      ▲
-                                      │     Inspect ┴─> candidate gear/spec
-                                      │     Gear (me) ┘
-                                      ├─> TradeRules ─> trade estimate
-                                      └─> TradeTimer (own bag items)
- Restrictions ──> Messaging queue ──> Compat.ChatSender (pcall)   TradeHelper ──> DropItemOnUnit
-```
-
-Modules talk over the `NS.MSG` catalog in `core/Bus.lua`, one sender per message; the UI only
-listens. Each stage lands with its plan item, and this page grows with it.

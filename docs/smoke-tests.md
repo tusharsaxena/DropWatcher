@@ -18,29 +18,29 @@ passed.
 | PANEL-1..7 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..3 | State | Enable/disable, lock, test mode |
-| COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (lands with DW-20) |
+| COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (DW-20) |
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..15 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, reserved), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31) and the detail card (FEED-13..15, DW-32) |
-| ROSTER-1..2 | Roster | The group's members and the name resolver (lands with DW-22) |
-| ITEM-1..2 | Item facts | The item readers' shapes and the track ids (lands with DW-23) |
-| GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (lands with DW-24) |
+| FEED-1..15 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31) and the detail card (FEED-13..15, DW-32) |
+| ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
+| ITEM-1..2 | Item facts | The item readers' shapes and the track ids (DW-23) |
+| GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
 | INSPECT-1..4 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
 | ASK-1..8 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); the My drops tab, the Offer panel and Post my tradeables (ASK-5..7, DW-33); auto-ask (ASK-8, DW-54) |
-| SIT-1..5 | Situations | Where the addon is active (lands with DW-13) |
-| QUAL-1..4 | Quality | The minimum-quality gate (lands with DW-12) |
+| SIT-1..5 | Situations | Where the addon is active (DW-13) |
+| QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..2 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50 |
 | HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | TOAST-1 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
+| LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
 
 - Install the addon folder as `Interface\AddOns\DropWatcher` and `/reload`.
-- Have a second character or a friend available for the window and trade checks once those land.
+- Have a second character or a friend available for the trade, ask and offer checks.
 - Keep the debug console closed unless a check opens it; `/dw debug` opens it.
 
 ## Install
@@ -262,9 +262,8 @@ The parser's patterns, the rebuild and the secret guards are headless-tested (`t
 and the feed's dedupe, grouping and gate order are too (`test_feed`); FEED-1 confirms the client's
 real lines and FEED-2..6 what the feed makes of the client's real events, read through `/dw debug on`
 and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Group drops table draws them
-(DW-31), and FEED-13..15 the detail card a row expands into (DW-32). Reserved: FEED-7 (a Devourer Demon Hunter looter
-before inspect: a warglaive or one-hander reads as usable and a held off hand as not, matching the
-item's own spec list; the class data of DW-10, judged by DW-11).
+(DW-31), and FEED-13..15 the detail card a row expands into (DW-32). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
+settle.
 
 **FEED-1. The parser on real loot.** `/dw debug on`, in a party with at least one player from
 another realm, and run a dungeon. → For every loot line chat shows, the console shows one `[PARSE]`
@@ -322,6 +321,14 @@ group, bosses included), and `/etrace` shows one `ENCOUNTER_LOOT_RECEIVED` per c
 the first argument (the encounter id) it carries, and whether the chat line and the event both
 arrive (`also reported by encounter`). Loot two minutes after completion falls back to the
 dungeon's name. Result:
+
+**FEED-7. A Devourer looter.** In a group with a Devourer Demon Hunter, once they are inspected
+(`/dw diagnostics`'s `inspect` lines show them with `spec=1480`), `/dw add` a warglaive or a
+one-handed Intellect weapon with their name, then an Intellect held-in-off-hand item. → The Them
+column reads the weapon as usable (an upgrade, sidegrade or downgrade, never `Can't use`) and the
+off-hand item as `Can't use`. Before the inspect, the same Intellect weapon reads `?` (the spec is
+not known and Intellect suits only one Demon Hunter spec). If the item's own spec list disagrees,
+the item wins: record the item and both verdicts. Result:
 
 **FEED-8. The window's shell.** `/dw show` on a clean `/reload` → a window about 940 × 600 with the
 Ka0s edge (a hard black line with a gray line inside it), the logo and the gold `Ka0s Drop Watcher`
@@ -521,7 +528,7 @@ Blizzard's inspect window on the member in flight → no `fresh` line with `slot
 ## Trade
 
 The estimator's decision is headless-tested (`test_trade_rules`); TRADE-1..4 confirm it against the
-game's own trade rules. They run once the feed (DW-27, DW-31) shows trade chips; the rules are the
+game's own trade rules. They read the Trade column's chips; the rules are the
 `trade.rules.<situation>` rows, drawn on Settings › Trade › Rules (and `/dw list`). Read each chip's tooltip, and the `TRADE` debug lines with `/dw debug on`.
 TRADE-5 (the own-item timer, DW-28) and TRADE-6 (the trade helper, DW-29) are below.
 
@@ -685,7 +692,7 @@ its reason. Pull the next boss while one is waiting → nothing goes during the 
 The classifier's truth table is headless-tested (`test_situations`); these checks confirm that the
 real client's answers land in the right row. Each reads the `situation` lines of `/dw diagnostics`,
 with `/dw debug on` for the `[SIT]` change lines. The settings are General › When to show (PANEL-4);
-the `/dw situation` verb lands with DW-42, and its check joins these then.
+the `/dw situation` verb's check is SLASH-5.
 
 **SIT-1. Open world.** Alone in a city → `situation: solo`. Invite a friend → a `[SIT] situation
 solo -> openWorldGroup (GROUP_ROSTER_UPDATE)` line, and the report reads `openWorldGroup`. Leave the
@@ -818,13 +825,25 @@ line. Then repeat FEED-1's loot steps with `/dw debug on` → every loot line ch
 `[PARSE]` line with the right kind, link, quantity and looter, and `/dw diagnostics` shows
 `ignored` counting only roll lines. The failure looks like a raw format token in chat, a missing
 label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: record
-`/dump LOOT_ITEM, LOOT_ITEM_SELF, LOOT_ITEM_MULTIPLE` and the line as chat shows it). Result:
+`/dump LOOT_ITEM, LOOT_ITEM_SELF, LOOT_ITEM_MULTIPLE` and the line as chat shows it). Then the
+trade-time decode: loot a tradeable bind-on-pickup item, open My drops → its countdown is exact (no
+`~`) within a few seconds of the item reaching your bags, and `/dw diagnostics`'s `trade` lines
+show its seconds left close to the tooltip's `… remaining` sentence; an item that stays `~` or reads
+expired while the tooltip still shows the sentence is the failure (record the sentence and `/dump
+INT_SPELL_DURATION_HOURS, INT_SPELL_DURATION_MIN, TIME_UNIT_DELIMITER`). Last, the track names:
+expand a drop that has an upgrade track → the detail card's track chip shows the client's own
+(localized) track name and rank, never an English name; the track change line may be missing on
+this client (Known Limitations), and its absence is not a failure. Result:
 
 ## Pending sign-off
 
 | ID | Origin | Why it is owed |
 |---|---|---|
 | INSTALL-1..3, SLASH-1..3, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-3, DIAG-1..2, DEGRADED-1 | DW-02, the scaffold | No client pass recorded yet |
+| QUAL-1..4 | DW-12, the minimum-quality gate | No client pass recorded yet |
+| SIT-1..5 | DW-13, the situation classifier | No client pass recorded yet |
+| TRADE-1..4 | DW-14, the trade estimator (TRADE-3 is the raid rule, TRADE-4 equipped vs owned) | No client pass recorded yet |
+| FEED-7 | DW-10 / DW-11, the class data and the verdict kernel | No client pass recorded yet |
 | COMPAT-1..3 | DW-20, the compat seam | No client pass recorded yet |
 | DIAG-3 | DW-43, the State and Scoring diagnostics sections | No client pass recorded yet |
 | COMBAT-2 | DW-21, the restriction tracker | No client pass recorded yet |
@@ -837,9 +856,11 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | TRADE-5 | DW-28, the trade timer | No client pass recorded yet |
 | TRADE-6 | DW-29, the trade helper | No client pass recorded yet |
 | ASK-1..4 | DW-2A, the messaging edge | No client pass recorded yet |
+| STATE-3, FEED-8..9 | DW-30 / DW-34, the window shell and test mode | No client pass recorded yet |
 | FEED-10..12 | DW-31, the Group drops table | No client pass recorded yet |
 | FEED-13..15 | DW-32, the detail card | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
+| SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |
 | PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |
 | PANEL-4..6 | DW-41, the settings pages | No client pass recorded yet |
 | PANEL-7 | DW-40 / DW-41 review, the rows that act | No client pass recorded yet |

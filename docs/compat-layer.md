@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Fifty-nine shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `59`). The three
+**Sixty-two shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `62`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -126,19 +126,32 @@ delimiter.
 
 ## Who calls what
 
-The callers land in M2: Restrictions (DW-21) reads the restriction shims, the roster (DW-22)
-`NormalizedRealm`, ItemFacts (DW-23) reads
-the bind helpers, `GetItemUpgradeInfo` and the item readers, the gear snapshot (DW-24) reads
-`PlayerSpecID`, the inventory and bag readers and `InventoryItemLevel`, the loot parser (DW-25) builds its patterns with
-`FormatToPattern` and guards its line and GUID with `IsSecret` and `IsSafeKey`, the inspect broker (DW-26) the inspect shims, `InventoryItemLink` and `InventoryItemLevel`, the feed (DW-27)
-`LootHistoryDrop`, `ChallengeMapName` and the secret guards on every event payload, TradeTimer (DW-28, landed) reads
-`TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount` and `BagItemLink`, the trade helper (DW-29, landed) the trade actions, `InTradeRange`, the cursor shims and `GetBagItemGUID`, `BagSlotCount`, the
-messaging edge (DW-2A, landed: `modules/Asks.lua`) `ChatSender`, `IsSecret` on the recipient, the
-slot name and a raise's message, the Group drops table (DW-31, landed: `modules/WindowGroup.lua`)
-`ItemIcon`, `ClassColor`, `InsertChatLink` and `DressUpItem`, the detail card (DW-32, landed:
-`modules/DetailCard.lua`) `SpecName`, `PawnIsReady`, `InsertChatLink` and the item button's three, and the scorers (DW-50, landed:
-`modules/Scoring.lua`) the Pawn seam, `PawnIsLoaded` and `IsSecret` on the links, the history (DW-51,
-landed: `modules/History.lua`) `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` and
-`IsSecret` on the accept flags, the History tab (DW-51: `modules/WindowHistory.lua`) `ContextMenu`, `ClassColor` and the
-item button's three, and the toast (DW-52, landed: `modules/Toast.lua`) `PlayAlertSound` and the
-item button's three.
+| Caller | Shims |
+|---|---|
+| `modules/Restrictions.lua` | `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive` |
+| `modules/Roster.lua` | `NormalizedRealm` |
+| `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `PlayerHasTransmog` |
+| `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc` |
+| `modules/LootParser.lua` | `FormatToPattern` |
+| `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel` |
+| `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName` |
+| `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
+| `modules/TradeHelper.lua` | `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade`, `InTradeRange`, `CursorHasItem`, `ClearCursor`, `GetBagItemGUID`, `BagSlotCount` |
+| `modules/Asks.lua` | `ChatSender` |
+| `modules/Scoring.lua` | `PawnIsLoaded`, `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
+| `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
+| `modules/WindowGroup.lua` | `ItemIcon`, `ClassColor`, `InsertChatLink`, `DressUpItem` |
+| `modules/DetailCard.lua` | `InsertChatLink`, `SpecName` |
+| `modules/OfferPanel.lua` | `ClassColor` |
+| `modules/WindowHistory.lua` | `ContextMenu`, `ClassColor` |
+| `modules/WindowFooter.lua` | `PawnIsReady` |
+| `modules/Toast.lua` | `PlayAlertSound` |
+| `modules/Diagnostics.lua` | `PawnIsReady`, `PawnScaleForSpec`, `TransmogSource` |
+| `settings/Editors.lua`, `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec) |
+| `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item) |
+
+The secret guards (`IsSecret`, `IsSafeKey`) are read by most of the edges above on every client
+payload. `DecodeDuration`, `ParseTradeTimeRemaining`, `ReadTooltipLine` and `PawnItemData` are
+called inside the seam itself. Item buttons elsewhere (the detail card, the History tab, the toast,
+the Offer panel) reach `ItemIcon`, `InsertChatLink` and `DressUpItem` through
+`modules/WindowGroup.lua`'s shared item button.

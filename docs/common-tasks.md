@@ -3,12 +3,16 @@
 ## Add a setting
 
 1. Add its default to `defaults/Profile.lua` (`NS.C.PROFILE`).
-2. Declare the row in its page file under `settings/` with `path`, `type`, `default`, `page`,
-   `group`, `label` and `tooltip`, and splice it in with `NS.SchemaRuntime.AddRows`.
+2. Declare the row in `settings/SchemaRows.lua` with `path`, `type`, `default` (from `NS.C`, never a
+   literal), `page`, `group` (its tab), `label`, `tooltip` and a `validate` check; the file splices
+   every row in with `NS.SchemaRuntime.AddRows`. A row that only matters when another is on takes a
+   `disabledIf` predicate.
 3. Add every new `label` and `tooltip` string to `locales/enUS.lua`.
 4. React in the row's `onChange` (or in `Settings.REACTIONS` when other surfaces write the same
    path). Never write the profile directly.
-5. Run `lua tests/run.lua`: `test_schema` validates the row against the defaults.
+5. Read it with `NS.Setting(path)` in the module that uses it.
+6. Add it to [`schema.md`](schema.md) and [`settings-panel.md`](settings-panel.md), then run
+   `lua tests/run.lua`: `test_schema` and `test_schema_rows` validate the row against the defaults.
 
 ## Add a slash verb
 

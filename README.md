@@ -12,113 +12,81 @@ sends a polite whisper asking for it.
 It watches what your party or raid receives and compares each item with your gear and with the
 looter's. Your own tradeable drops get a list of their own, with the time left to trade each one and
 the people it would help. Out of the box it stays in its window. Alerts and sounds are opt-in, and
-nothing is whispered unless you click.
-
-**This is an early build.** Version 0.1.0 is the frame of the addon: the window with its Group
-drops table, the settings, the minimap button, the slash command and the test mode. Your own drops,
-offering and trading, and the history arrive in the releases that follow, and this page will grow
-with them.
+nobody gets a whisper unless you click Ask or turn on auto-ask.
 
 ## Usage
 
-Type `/dw show`, or right-click the minimap button and pick **Show window**, to open the window. Drag
-it by its title bar and resize it from the bottom-right corner. Once it sits where you like, lock it
-with `/dw lock` or the **Lock frame** box in the settings, and it stops
-moving. Escape or the close mark puts it away, and the minimize mark folds it down to its title bar,
-where a counter shows how many interesting drops came in meanwhile. Double-click the bar to open it
-back up.
+Type `/dw show`, or right-click the minimap button and pick **Show window**. Drag the window by its
+title bar, resize it from the bottom-right corner, and lock it in place with `/dw lock` or the
+**Lock frame** box once you're happy with it. Escape or the close mark puts it away. The minimize
+mark folds it down to the title bar, which then counts the interesting drops you missed; double-click
+the bar to open it again. In a dungeon, a key or a raid it opens by itself on the first drop worth a look.
 
-Three tabs sit under the title: **Group drops**, **My drops** (with a count of your drops you can
-still trade) and **History**. The filter bar narrows the current tab, and each tab remembers its own
-filters. The footer is a quick health check: how many group members' gear has been read, when the
+The window has three tabs: **Group drops**, **My drops** and **History**. Each keeps its own filters
+in the bar under the tabs. The footer tells you how much of the group's gear has been read, when the
 last loot line came in, where the addon thinks you are, and whether Pawn is loaded. **Scan group**
-reads everyone's gear ahead of the loot. During a boss fight or a key, an orange lock badge in the
-title bar says chat is restricted and how many asks are waiting to go out.
+reads everyone's gear before the loot starts, which saves waiting later. When a boss fight or a key
+blocks addon chat, an orange lock in the title bar says so and counts the asks waiting to go out.
 
-**Group drops** lists every drop, one row each, under a header per boss or key run; click a header
-to fold it away. Each row shows the item, its item level and slot, who looted it, what they wear
-there, and two verdicts: **Me** (is it an upgrade for you?) and **Them** (is it one for the
-looter?), each a signed item-level change with ▲ for an upgrade, ≈ for a sidegrade and ▽ for a
-downgrade. **Trade** says Yes, Likely, Unknown or No. Hover any cell for the reason behind it. Hover
-the item's icon for its tooltip, shift-click it to link it in chat, ctrl-click it to try it on. The
-**Ask** button whispers the looter once; during a boss fight it waits in the queue and goes out when
-the fight ends, and clicking it again cancels it. The × beside it hides the row for the session.
+**Group drops** shows every drop, grouped under the boss or key run it came from. A row gives the
+item, its item level and slot, who looted it and what they wear there, then two verdicts: **Me** (is
+it an upgrade for you?) and **Them** (is it one for the looter?). ▲ means upgrade, ≈ sidegrade, ▽
+downgrade. **Trade** reads Yes, Likely, Unknown or No. Hover any cell to see why. Shift-click the
+icon to link the item, ctrl-click to try it on. **Ask** whispers the looter once; mid-fight the
+whisper waits and goes out when the fight ends, and a second click cancels it. Click the row itself
+and a detail card opens under it with the full reasoning: what the item would replace for you and
+for the looter, the stat and track changes, Pawn's score, and the trade rule behind the estimate.
+From there you can edit the message before it goes, inspect the looter again, or open a trade.
 
-Click a row to open its **detail card** right under it, and click it again to close it. The card
-spells out the reasoning: the item's slot, armor type, bind, upgrade track, primary stat and any
-socket or tertiary stat; side by side, what it would replace **for you** and **for the looter**,
-with the item-level, track and stat changes, Pawn's score for you and the looter's spec; and the
-trade estimate in a sentence, with the rule behind it and how fresh the data is. Its buttons ask the
-looter, let you edit the message before it goes, link the item in chat, inspect the looter again,
-open a trade with them (grayed, with the reason, when they are out of range or you are in combat),
-and hide the item.
+Your own loot goes on **My drops**. Each item shows the time left to trade it (exact once it's in your
+bags, bold with ten minutes to go) and the group members it would help most. If it's an upgrade for
+you, it asks **keep?** and nobody sees it offered until you decide. **Offer…** opens a panel that
+ranks everyone by how much they'd gain, with an **Offer** whisper and a **Trade** button that opens
+the trade with the item already in it. **Post my tradeables** lists all of them in group chat in one
+line.
 
-**My drops** lists your own loot: the item, its item level, whether it is an upgrade for you (an
-upgrade asks **keep?**, and nobody is offered it unless you choose to), the time left to trade it on
-a bar that shortens (read from the item itself once it is in your bags, and bold when ten minutes
-are left), and the group members it would help most. **Announce** posts your announce template to
-the group. **Offer…** opens the **Who could use this?** panel beside the window: every member
-ranked by how much they would gain, with a status pill (`+14 UPGRADE`, `EQUAL`, `NO UPGRADE`,
-`CAN'T USE`, `CHECKING…`), an **Offer** button that whispers them your offer template and a
-**Trade** button that opens the trade window with the item already placed (grayed, with the reason,
-when they are out of range or you are in combat). Under the rows, a line counts your tradeable
-drops and the next one to run out, and **Post my tradeables** posts them all in one line to the
-group.
+The **History** tab remembers what the feed showed, across logouts and across your characters: the last 20
+bosses or key runs by default. Each drop says what became of it: asked, offered, expired, received
+or traded away, the last two once a trade with that item goes through. Right-click a row to mark it
+declined.
 
-**History** keeps what the feed showed after you log out, shared by all your characters: the last
-20 bosses or key runs by default (Settings › Window › Layout), in the same rows as Group drops,
-each with what became of it. A drop reads **Asked** or **Offered** once your whisper went out,
-**Expired** when its trade window passed, and **Received** or **Traded away** when a trade with that
-item goes through (the Group drops row's Ask button then reads **Traded ✓**). Right-click a row to
-mark it **Declined**. **Clear history** empties it, after asking.
+Two extras are off until you turn them on. The **toast** (Settings › Window › Toast) pops up when
+someone else loots a big upgrade for you, 10 item levels or more, that they can probably trade. It
+has an Ask button, goes away after 8 seconds unless your pointer is on it, and keeps out of combat
+unless you let it. **Auto-ask** (Settings › Messages › Auto-ask) whispers the looter for you, 10
+seconds after the boss dies, when a likely tradeable drop is at least 5 item levels better than
+yours. It backs off if you ask first, they leave, you hide the row or the item reaches you.
 
-The **toast** is off until you turn it on (Settings › Window › Toast). Then, when someone else loots
-an item that is a big upgrade for you (10 item levels by default) and likely tradeable, a small
-alert pops up with the item, who looted it and an **Ask** button. It shows one at a time, goes after
-8 seconds (it waits while your pointer is over it), stays out of the way in combat unless you allow
-it, and can play a sound. Turn on test mode to see it and drag it where you want it.
+To see all this without waiting for loot, type `/dw test`. Test mode fills the window with made-up
+drops, shows the toast so you can drag it into place, and prints messages instead of sending them.
+Combat ends it.
 
-**Auto-ask** is off until you turn it on (Settings › Messages › Auto-ask). Then, when someone else
-loots a likely tradeable upgrade for you (5 item levels by default), Drop Watcher whispers them your
-ask template 10 seconds after the boss dies or the item drops, whichever is later. It holds off if
-you ask yourself first, they leave the group, you dismiss the row or the item reaches you. It only
-asks for drops that arrive after you turn it on, and the first time you do, one chat line explains
-it.
-
-Test mode fills the window with placeholder content so you can see it and place it before a real
-drop arrives. `/dw test` turns it on and off, and so does the **Test mode** box. Entering combat ends
-it, since you have better things to look at then.
-
-The **General visibility** setting decides when the window may show at all: always, only in combat,
-only out of combat, or never. Master scale and Master alpha size and fade it.
-
-Everything is configured under **Settings → AddOns → Ka0s Drop Watcher**: General (the master
-controls and when to show the window, situation by situation), Feed (the minimum quality and the
-filters), Comparison (scoring, your stat weights and the item types you never want, per spec),
-Trade, Messages (what Ask, Offer and Announce say, with a live preview), Window and Profiles.
-`/dw help` (or `/dropwatcher help`) prints the full command list.
+Everything else lives under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` (or
+`/dropwatcher help`) lists every command.
 
 ## How the loot watching works
 
-The design, in the order the pieces are being built:
-
-- Loot lines from your group are read as they arrive, along with the boss-loot and loot-history
-  events, and merged into one entry per item.
-- Each drop is compared against what you have in that slot, and against what the looter has once
-  their gear has been inspected.
-- A trade estimate says whether the item can change hands, and why: bind type, the trade window, and
-  whether the item would be an upgrade for the person who got it.
-- Your own tradeable drops get a live countdown and a list of group members they would help.
-- Asking is one click. While Blizzard's encounter restrictions block chat, the whisper waits in a
-  queue and goes out when they lift.
+- Drop Watcher reads your group's loot lines as they come in, along with the boss-loot and
+  loot-history events, and merges the reports of one item into one drop.
+- Drops you don't care about stop there. Where you are (dungeons, keys and raids are watched by
+  default), the minimum quality and the filters decide that before anyone is inspected.
+- Each drop is compared with what you wear in that slot, and with what the looter wears once their
+  gear has been inspected. Inspects go one at a time and never in combat.
+- The trade estimate looks at the bind type, the two-hour trade window and the game's rule that a
+  looter can only trade an item that isn't an upgrade for them by item level.
+- Your own drops get an exact countdown read from the item's tooltip, and a list of who in the group
+  would gain from them.
+- An ask is one whisper per item. While Blizzard's encounter restrictions block addon chat, it waits
+  in a queue and goes out when they lift.
 
 ## FAQ
 
 | Question | Answer |
 |---|---|
-| Does it whisper people on its own? | No. Every whisper is a click, unless you turn on the optional auto-ask (Settings › Messages › Auto-ask). |
-| Does it need Pawn? | No. If Pawn is installed, its scale scores each drop beside the item level; without it, you can enter your own stat weights or import a Pawn scale string in Settings › Comparison, or compare by item level alone. |
-| Will it work in raids? | Yes, it is being built for parties and raids alike. |
+| Does it whisper people on its own? | Only if you turn on auto-ask (Settings › Messages › Auto-ask). Otherwise every whisper is a click. |
+| Does it need Pawn? | No. With Pawn installed, its scale scores each drop next to the item level. Without it you can enter your own stat weights, paste a Pawn scale string in Settings › Comparison, or go by item level alone. |
+| Does it work in raids? | Yes. Dungeons, keys and raids are watched out of the box. Delves, scenarios and the open world are off until you turn them on under General › When to show. |
+| Can it tell me whether I have the look? | Yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. |
 
 ## Troubleshooting
 
@@ -127,6 +95,7 @@ The design, in the order the pieces are being built:
 | The window does not open | Check **General visibility** is not set to Never, and that the addon is enabled (`/dw enable`). |
 | The window will not move | It is locked. Untick **Lock frame** or type `/dw unlock`. |
 | Test mode turned itself off | Combat ends test mode. Turn it back on after the fight. |
+| The Them column shows `?` | The looter's gear hasn't been read yet. Wait a moment, press **Scan group**, or use **Retry inspect** on the detail card. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
 
 ## Reporting a bug
@@ -147,4 +116,4 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The window, its settings, the minimap button, the `/dw` command and test mode |
+| 0.1.0 | Unreleased | - The window with its Group drops, My drops and History tabs, the detail card and the Offer panel<br>- One-click asks, offers and announces, queued while encounter restrictions block chat<br>- Trade estimates and an exact trade countdown on your own drops<br>- Pawn scores, or your own stat weights<br>- The opt-in toast and auto-ask<br>- Settings pages, the minimap button, the `/dw` command and test mode |

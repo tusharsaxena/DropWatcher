@@ -1,7 +1,7 @@
 # Architecture — Ka0s Drop Watcher
 
 The hub: what this addon is, in ten mandated sections, each a summary with a link to its topic doc.
-The design it is being built to is
+The design it was built to is
 [`superpowers/specs/2026-10-10-drop-watcher-v1-design.md`](superpowers/specs/2026-10-10-drop-watcher-v1-design.md);
 this page describes what exists.
 
@@ -42,99 +42,31 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Every file, its kind and its TOC position is in [`module-map.md`](module-map.md). In short: `core/`
-holds the identity, eleven of the setup files, the compat seam (`Compat.lua`: the only caller of
-version-variant, deprecated and optional client APIs, see [`compat-layer.md`](compat-layer.md)), the game-data tables (`Constants.lua` and
-`ClassData.lua`, data plus pure lookups), the session state, the addon object and its lifecycle,
-and the migration runner; `defaults/` the default values; `modules/` the verdict kernel
-(`Evaluate.lua`, pure: plain tables in, a verdict out, no WoW call), the scorers it takes
-(`Scoring.lua`: the Pawn adapter through the Compat seam, your per-spec weights with the Pawn scale
-string import, or none, chosen by `comparison.scorer` and Pawn's presence), the minimum-quality gate
-(`QualityGate.lua`, pure: a drop's quality, the mode and the equipped qualities in, pass or hide
-out), the situation classifier (`Situations.lua`: a pure classifier over the client's instance,
-difficulty and group inputs, and the edge that reads them on six events), the trade estimator
-(`TradeRules.lua`, pure: a drop's bind facts, the looter's verdict and the situation's rule in, a
-yes, likely, unknown or no estimate out), the restriction tracker (`Restrictions.lua`: whether a
-chat message, an inspect or a trade is allowed now, and the reason, from the restriction event, the
-chat lockdown and the combat edges), the roster (`Roster.lua`: the group's members by GUID with
-their Name-Realm, unit token, classFile, specID and online state, and the resolver from a name or a
-GUID to a member), the item facts (`ItemFacts.lua`: a link turned into the facts the kernel
-reads, cached by link, an uncached item loaded and retried through LibKa0s-Item's `LoadItem`), the
-gear snapshot (`Gear.lua`: each slot you wear at its current level and the best item you own per
-slot, bags included, rebuilt behind one throttle on the gear events, and the candidate table the
-verdict kernel takes for you), the loot parser (`LootParser.lua`: a `CHAT_MSG_LOOT` line read with
-the client's own `LOOT_ITEM*` GlobalStrings, rebuilt when another addon rewrites them, into the
-looter, the item, the quantity and the kind, the upgrade and crafting echoes rejected), the inspect
-broker (`Inspect.lua`: another member's worn gear and spec, read through one spaced `NotifyInspect`
-at a time from a priority queue, with the range, identity and ready timeouts, the courtesy hook on
-anyone's inspect, the combat park and a 600-second cache, and the candidate table the verdict kernel
-takes for that member), the feed (`LootFeed.lua`: the orchestrator that takes each drop from chat,
-the encounter loot event and the loot history, merges the reports of one drop, groups drops by
-encounter or keystone run, applies the situation gate, the filters and the quality gate before any
-inspect, judges each drop for you and for its looter, estimates its trade, judges every member for
-your own drops, and sends `DropAdded` and `DropUpdated`), the trade timer (`TradeTimer.lua`: the
-exact trade countdown on your own drops, each one's bag item read for its trade-time tooltip line at
-most once per 2 seconds, keyed by item GUID, on one shared ticker that runs every second while the
-window is shown, every minute while it is hidden and not at all with nothing live, with a warning
-once per item at `trade.warnAt`; it sends `TradeTimerTick` and `TradeTimerExpiring`), the trade
-helper (`TradeHelper.lua`: called only from a click, it hands one of your drops to a member, its bag
-item found by GUID and dropped on them, or opens an empty trade, and refuses with a reason in combat,
-out of range, for a stranger, yourself or an offline member, and for an item gone, expired or a busy
-cursor; no events, no timers, no messages), the messaging core (`Messaging.lua`, pure: a
-template and its tokens in, the text and the ask's next state out; it sends nothing), the messaging
-edge (`Asks.lua`: an ask, offer or announce resolved to its recipient, expanded from the drop's
-tokens (an ask with the template `NS.Messaging.AskTemplate` picks: the plain ask for a gain, or with
-`messages.transmogAsk` on the For transmog ask for a drop whose look you have not collected) and
-sent through `Compat.ChatSender` inside `pcall` with one confirmation line, or queued
-while chat is restricted and flushed one every 1.5 seconds when the restriction lifts, on
-`ENCOUNTER_END` and on `CHALLENGE_MODE_COMPLETED`; a queued ask is canceled by a second click or
-when its looter leaves; test mode prints instead of sending; it sends `AskStateChanged`), the
-history (`History.lua`: every live drop the feed shows, kept across sessions in the account's
-`global.history`, grouped by feed group and session and capped at `global.history.maxGroups`
-groups of 50 drops, each with its outcome: `seen`, `asked` or `offered` when an ask, offer or
-announce is sent, `expired` when its trade window passes, `received` or `tradedAway` when a trade
-completes with a matching item, and `declined` by hand; the trade is read from the trade window's
-events; it sends `HistoryChanged`), the window shell (`Window.lua`:
-the skinned frame with its title bar (logo, gold title, the restriction badge, Scan group,
-minimize, close), the three tabs and their lazily built panes, minimize with its `n new` counter,
-resize, position and `UISpecialFrames`, auto-open on the first interesting drop, and the show
-decision; it repaints on the bus, batched into one pass on the next frame, and tells visibility listeners, the trade timer's ticker, on every
-show and hide), the filter bar (`WindowFilterBar.lua`: View, Quality, Content, Likely tradeable
-only and the search box, one state per tab, and the pure row predicates the tabs' bodies use), the
-footer (`WindowFooter.lua`: a pure composer over inspect freshness, the last loot seen, the
-situation and Pawn, and the tab's Sort), the drop tables' cells (`WindowCells.lua`, pure: a drop
-record in, each column's text, verdict glyph, tone and reason tooltip out, for every verdict,
-trade, inspect and ask state), the Group drops table (`WindowGroup.lua`: pooled rows under
-collapsible encounter headers, the nine columns or the compact preset's five, real item buttons,
-the Ask button and the dismiss mark, ordered and filtered by the tab's filter state; a row click
-expands it inline into the detail card, one row at a time; with no drop at all, the empty state
-with Preview with test data and Scan group), the detail card's words
-(`DetailCells.lua`, pure: the item header's chips, the look's `New look` or `Look known` among them, the For you and For the looter comparisons, the
-trade estimate box and the actions, each with its reason tooltip), the detail card itself
-(`DetailCard.lua`: the frame edge that paints them under the open row, and the Edit message box
-that fills the ask template in and sends the edited text), the My drops tab's and the Offer
-panel's words (`MineCells.lua`, pure: your own drop's countdown, For me with `keep?`, the
-candidates ranked with their status pills, the Offer, Announce and Trade buttons' looks, the
-summary, Post my tradeables' lines cut at the chat limit, and where the panel docks), the My drops
-tab (`WindowMine.lua`: your own drops in pooled rows with the countdown over its bar, Best
-candidates, Offer… and Announce or a dash and Hide, and the summary strip with Post my
-tradeables), the Offer panel (`OfferPanel.lua`: "Who could use this?", docked to the window's right
-edge, each member with a class stripe, `eq → drop`, a status pill and Offer and Trade, and Announce
-to group), the History tab (`WindowHistory.lua`: the kept groups under collapsible headers, read-only
-rows in the Group drops style with an Outcome column, a right-click row menu that marks a drop
-declined, and Clear history behind a confirmation), the toast (`Toast.lua`: opt-in, a drop someone
-else looted that is an upgrade for you by at least `toast.minGain` item levels and likely or surely
-tradeable, one at a time from a queue, gone after `toast.duration` seconds and paused while hovered,
-held in combat unless `toast.inCombat`, with an Ask button and an optional sound; placed by a drag in
-test mode, its position saved), auto-ask (`AutoAsk.lua`: opt-in, the same test with
-`messages.autoAsk.minGain`; the ask is sent through the messaging edge `messages.autoAsk.delay`
-seconds after the later of the drop and `ENCOUNTER_END`, held while an encounter is in progress, and
-canceled when you ask yourself, the looter leaves, the row is dismissed, the item is received or it
-is turned off; a one-time chat notice the first time it is turned on), test mode (`TestMode.lua`: placeholder drops in every verdict, trade, inspect and ask
-state, put in the separate test feed through `NS.LootFeed.AddTest` when test mode turns on and
-cleared when it ends; the window wears a `TEST MODE` chip and banner, and every send is printed)
-and the diagnostics sections; `settings/` the schema (the seam in `Schema.lua`, every hand-written row of design spec §12.1 in `SchemaRows.lua`), the panel pages (the landing page and General in `Panel.lua`, Feed, Comparison, Trade, Messages and Window in `Pages.lua`, each a tab strip over its rows; the pages' own editors, the per-spec weights and unwanted types, the template editors with their counters, chips and preview, and the Quality tab's readout, in `PageEditors.lua` over the pure `Editors.lua`), Profiles, the slash table (`Slash.lua`) and the slash-only feature verbs' handlers (`SlashVerbs.lua`). The design's feature modules
-(spec §4) are added under `modules/` by the plan's later items.
+Sixty-three authored files load from the TOC, in the standard's folder order; every one, its kind,
+its one-line responsibility and why its position is load-bearing or conventional is in
+[`module-map.md`](module-map.md). In short:
+
+- `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
+  seam (`Compat.lua`, the only caller of version-variant, deprecated and optional client APIs), the
+  game-data tables (`Constants.lua`, `ClassData.lua`), the session state, the addon object and its
+  lifecycle (`DropWatcher.lua`, which also holds the host handlers every surface shares), and the
+  migration runner.
+- `defaults/Profile.lua`: every default value (`NS.C`).
+- `modules/`, the engine: four pure kernels (`Evaluate.lua` the verdict, `QualityGate.lua`,
+  `TradeRules.lua` the trade estimate, `Messaging.lua` the templates and the one-ask guard) and the
+  scorers (`Scoring.lua`); the edges that read the client (`Situations.lua`, `Restrictions.lua`,
+  `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
+  `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`); and the
+  recorded and opt-in features (`History.lua`, `Toast.lua`, `AutoAsk.lua`).
+- `modules/`, the window: the shell (`Window.lua`), its filter bar and footer, one body per tab
+  (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
+  their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
+  (`TestMode.lua`) and the diagnostics sections (`Diagnostics.lua`).
+- `settings/`: the schema seam and its rows, the options pages and their editors, the slash table
+  and the slash-only verbs, and Profiles, last.
+
+The window only listens: it reads the engine through read-only accessors and the bus, and every
+button goes through the host handler its slash verb shares.
 
 ## Settings Schema
 
@@ -214,12 +146,9 @@ accessors and never calls an engine action; a button's action goes through the h
 slash verb shares (`NS.ScanGroup`, `NS.SetQualityMode`, `NS.PressAsk`, `NS.SetCompact`, and the
 detail card's `NS.RetryInspect` and `NS.TradeWithLooter`, the row's × and the detail card's Hide
 `NS.DismissDrop` (which also cancels the drop's automatic ask), and the My drops tab's and the Offer
-panel's `NS.PressOffer`, `NS.PressAnnounce`, `NS.GiveDrop` and `NS.PostTradeables`). Every other sender module below is **planned**: it
-does not exist until the item named in its row lands. The payloads and consumers are the design
-intent. The item that first sends a message confirms its payload here, and each item that subscribes
-adds itself as a consumer.
+panel's `NS.PressOffer`, `NS.PressAnnounce`, `NS.GiveDrop` and `NS.PostTradeables`). The payloads and consumers below are the code's.
 
-| `NS.MSG` key | Wire suffix | Sender (planned, item) | Payload | Consumers |
+| `NS.MSG` key | Wire suffix | Sender | Payload | Consumers |
 |---|---|---|---|---|
 | `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`), test mode's placeholders (since DW-34, `AddTest`) one each as they are put in | TradeTimer (since DW-28): your own live drop asks for a bag scan; Window (since DW-30): the first interesting live drop in an auto-open situation opens it, a minimized window counts it (`n new`), and the open window repaints (the `My drops · n` count); History (since DW-51): records the live drop (never a test drop) in `global.history`, before the window repaints; Toast (since DW-52): queues the drop for a toast when it qualifies (each drop once; a test drop too, so test mode can place it); AutoAsk (since DW-54): schedules its automatic ask when it qualifies (each drop once) |
 | `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved), `score` (a pending score retried) or `trade` (the trade estimate moved on the sweep or the trade timer: a drop past its window, your own drop's exact timer). Never for a test drop | Window (since DW-30): the open window repaints its tabs and the active tab's body (since DW-31 the Group drops rows: verdicts, trade, Their eq; since DW-32 the open detail card with them; since DW-33 the My drops rows and the open Offer panel's candidates); History (since DW-51): takes the recorded drop's latest verdicts and trade estimate, and `expired` once the estimate is `no expired`; Toast (since DW-52): a drop not toasted yet is considered again (an inspect can make its trade `likely`), and the toast on screen repaints its Ask; AutoAsk (since DW-54): a drop not scheduled yet is considered again |
@@ -265,7 +194,7 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |
 | `BAG_UPDATE_DELAYED` | `DW.OnGearEvent`, then `DW.OnTradeTimerEvent` (through `DW:OnSharedFeatureEvent`) | the same (a better item may have entered or left the bags), except in combat, where it is noted for the combat's end; a bag-only rebuild keeps the worn slots whose link stayed and reads no worn tooltip; then asks for the trade timer's scan of your own drops' bag items, at most one per 2 seconds (`modules/TradeTimer.lua`) |
 | `PLAYER_SPECIALIZATION_CHANGED` | `DW.OnGearSpecEvent` | the same, for your own unit only (another member's spec change is ignored) |
-| `CHAT_MSG_LOOT` | `DW.OnChatMsgLoot` | parses the line (`modules/LootParser.lua`), counts it, and hands a receipt to every sink the feed adds (DW-27) |
+| `CHAT_MSG_LOOT` | `DW.OnChatMsgLoot` | parses the line (`modules/LootParser.lua`), counts it, and hands a receipt to the feed's sink (`modules/LootFeed.lua`) |
 | `INSPECT_READY` | `DW.OnInspectReadyEvent` | reads the inspected member's slots and spec after 0.15s, for the job in flight or any other group member (`modules/Inspect.lua`); sends `InspectDone` when the job ends |
 | `UNIT_INVENTORY_CHANGED` | `DW.OnInspectInventoryEvent` | marks a group member's inspect read stale and re-queues it as a warm-up job (`modules/Inspect.lua`) |
 | `ENCOUNTER_START` | `DW.OnFeedEncounterStart`, then `DW.OnAutoAskEncounterStart` (through `DW:OnSharedFeatureEvent`) | the encounter in progress, which names the group of the drops that follow (`modules/LootFeed.lua`); then holds the waiting automatic asks until it ends (`modules/AutoAsk.lua`) |
@@ -304,378 +233,37 @@ and nobody took over, so another addon's or the player's inspect is never cleare
 
 ## Known Limitations
 
-- v0.1.0 is the frame of the addon: the feed records and judges drops, the window's shell (title
-  bar, restriction badge, Scan group, tabs, filter bar, footer, minimize) is in, and so is the Group
-  drops table with its Ask button (DW-31), its detail card (DW-32), and the My drops tab with the
-  Offer panel (DW-33), the history with its History tab (DW-51), the toast (DW-52), the
-  transmog-known flag with its opt-in For transmog ask (DW-53), and auto-ask (DW-54)
-  ([`scope.md`](scope.md)).
-- Every setting of design spec §12.1 has its row and default (DW-40), and every row has its reader:
-  the last, `messages.autoAsk.*`, is auto-ask's (DW-54).
-- Scoring (DW-50, `modules/Scoring.lua`) settles how it reads design spec §5.4. The adapter in use
-  can differ from `comparison.scorer`: `auto` takes Pawn when it is **loaded** (ready or not yet
-  initialized, which answers `pending` and is retried), else your weights when any spec has one,
-  else none; `pawn` with Pawn absent is none, and `weights` with no weight set is none. The
-  diagnostics' Scoring section prints both (`scorer=` and `inUse=`). For you, Pawn's "best visible
-  scale" is the one with the highest `PercentUpgrade` for the drop, else your spec's scale when the
-  drop upgrades nothing; the drop and its baseline are both valued on that scale
-  (`PawnGetSingleValueFromItem`), so `scoreDelta` is a value difference, not Pawn's percent. For a
-  looter it is `PawnFindScaleForSpec(classID, specID)`; with no scale for that spec there is no
-  score (item level alone), not a pending one. The kernel hands every scorer the drop beside the
-  item it values (`scorer(facts, candidate, drop)`). Weights are per spec and apply to anyone of
-  that spec, a looter included; a spec without weights is not scored. The Pawn scale string import
-  (the Weights tab's box) replaces the weights of the spec on screen, whatever `Class=` and `Spec=`
-  the string carries; Pawn keys it does not score (`Dps`, `Armor`, the `Is*` and socket keys) are
-  named in the chat line and left out, and a stored weight on a stat key it does not know counts 0,
-  logged once per key under `SCORE`.
-- The transmog-known flag (DW-53) settles how it reads design spec §4. Whether you have collected a
-  drop's look is CanIMogIt's `PlayerKnowsTransmog` when that optional addon is loaded (the look
-  known from any source; an item it calls not transmogable has no flag), else
-  `C_TransmogCollection.PlayerHasTransmogByItemInfo`; every CanIMogIt call is in `pcall` and an answer
-  that is not a boolean falls back to the client. The detail card's header shows `New look` or `Look
-  known`; an item with no look (a ring, neck or trinket) or an unknown answer shows no chip. The For
-  transmog ask is opt-in (`messages.transmogAsk`, off): with it on, the Ask button is also offered
-  on a drop that is no gain for you (not an upgrade or a sidegrade) whose look is known to be
-  missing (`false`, never `nil`), and not on one its looter can't trade. It is still an `ask`: the
-  same one-ask key, history outcome and button, filled from `messages.templates.transmog`. A gain
-  always takes the plain ask, the toast (upgrades only) never offers it and auto-ask (DW-54) never
-  sends it. Whether your class can collect that look at all (its armor type) is not checked beyond
-  what CanIMogIt's answer carries (TMOG-1).
-- Five rows settle how they act. **`feed.clearOnBossKill`** empties the live feed at a kill's
-  `ENCOUNTER_END` (never a wipe), before the boss's loot arrives, and repaints the window; queued
-  asks keep their text and still flush. **`comparison.heirloomProtect`** (on by default) is yours
-  alone: a drop whose baseline is an heirloom reads as a sidegrade for you (reason
-  `heirloomProtected`), while the looter's verdict stays plain, so a real upgrade for them is never
-  read as one they would give away. **`messages.editFirst`** routes every ask, offer and announce
-  press through the Edit message box (the detail card's, now one box for all three kinds); the box's
-  Send goes back through the same handler with the edited text, a press on a queued send still
-  cancels it, a press with the window closed sends as it stands, and Post my tradeables never opens
-  it (its lines are already cut to the chat limit). **`window.rowHeight`** and **`window.fontSize`**
-  size the Group drops table's rows and their cells' text; the headers, the column labels, the
-  buttons and the My drops tab keep their own.
-- The history (DW-51, `modules/History.lua` and the History tab, `modules/WindowHistory.lua`)
-  settles eight cases design spec §10 leaves open. **What is kept** is every live drop the feed
-  shows (it passed the gates), never a test drop, never a hidden one, with its verdicts and trade
-  estimate as last judged while it was in the feed; a group is one feed group of one session, so a
-  boss killed again tomorrow is a new group. **Outcomes** move forward only (seen, then asked or
-  offered, then expired, then received or traded away); an announce counts as `offered`; `declined`
-  is the player's and an automatic move never undoes it, but a completed trade does. **Which entry**
-  a live drop is lives in a session-only index, because drop ids restart each session, so after a
-  reload the old entries take no more outcomes from asks or the trade estimate; a completed trade
-  still matches them by item id. **A completed trade** is the client's "Trade complete."
-  (`UI_INFO_MESSAGE` with `LE_GAME_ERR_TRADE_COMPLETE`, the pattern RCLootCouncil and TradeLog use),
-  before `TRADE_CLOSED` or within 5 seconds after it; `TRADE_CLOSED` alone, even after both sides
-  accepted, is a cancel or a failure (out of range, a full bag) and completes nothing. The items are
-  read on every change and kept as the offer at every `TRADE_ACCEPT_UPDATE` with either side
-  accepted, because the second accept can complete the trade with no both-accepted update and the
-  window is empty by the end; an item change makes both sides accept again, so the last offer is the
-  one traded. The message's order against the close is HIST-1. **The match** for an item you got is the newest drop of that
-  item id that is someone else's and not yet received, the partner's own drop first; for an item you
-  gave, your own drop of that id; one entry per item. **The cap** counts groups, oldest out first,
-  and 50 drops per group; a lower cap trims at once. **The tab** opens on View: All and Content: All
-  the first time each session (Content's This session and This instance then cut by time, and
-  `n days ago` names an older group); it is read-only but for the row menu (right-click: Mark as
-  declined or Clear declined, through the client's `MenuUtil`, or at once without it), and Clear
-  history asks first (a StaticPopup), then empties the log on every character and keeps the cap.
-  **Account-wide:** one log for all your characters, as the cap row says. That the log survives a
-  reload and the row menu opens in game is HIST-2.
-- The toast (DW-52, `modules/Toast.lua`) settles what design spec §11.5 leaves open. **The gain**
-  is the item-level change for you (`me.ilvlDelta`), as the `toast.minGain` row says, whatever the
-  scorer; your own drops never toast. **Once per drop:** a drop is considered on `DropAdded` and on
-  each `DropUpdated` until it has toasted, so one whose trade turns `likely` after the looter's
-  inspect still toasts. **The queue** keeps the newest five; a drop asked for meanwhile, gone from the
-  feed or no longer qualifying is skipped when its turn comes. **Combat** holds the queue until
-  `PLAYER_REGEN_ENABLED`, and a toast on screen when combat starts goes back to the head of the
-  queue with its full duration. **The pause** keeps the seconds left while the pointer is over the
-  toast or its buttons, and resumes with them (at least one). **Test mode**'s placeholders toast
-  like live drops (with `toast.enabled` on); a test drop's toast has no countdown, so it stays to be
-  dragged into place until it is closed or test mode ends. Only in test mode can it be dragged, and
-  the Window's Reset position forgets its point too. **The sound** is SOUNDKIT's
-  `UI_EPICLOOT_TOAST`, else `RAID_WARNING`, on the Master channel (`Compat.PlayAlertSound`). That it
-  shows, pauses, places and sounds right in game is TOAST-1.
-- Auto-ask (DW-54, `modules/AutoAsk.lua`) settles what design spec §9.4 leaves open. **What
-  qualifies** is the toast's own test (`NS.Toast.Qualifies`) with `messages.autoAsk.minGain`: the
-  item-level change for you, whatever the scorer, never your own drop, and an upgrade only, so it
-  always fills the plain `ask` template, never the transmog one. **Once per drop:** a drop is
-  considered on `DropAdded` and on each `DropUpdated` until it is scheduled, so one whose trade turns
-  `likely` after the looter's inspect still qualifies; a drop scheduled, sent or canceled is never
-  scheduled again that session. **Only new drops:** turned on, it counts only the drops the feed
-  records from then on (all of a session's drops when it was on at login), so turning it on never
-  whispers for the drops already in the table. A profile switch, copy or reset runs no row
-  reaction, so `reloadProfile` (core/DropWatcher.lua) calls `NS.AutoAsk.OnProfileReloaded`: an
-  incoming profile that turns it on counts from that moment the same way, one that turns it off
-  cancels the waiting asks, and the one-time notice stays the row's alone. **The timing** is the delay after the later of the
-  drop and the last `ENCOUNTER_END`; while an encounter is in progress (`ENCOUNTER_START` without
-  its end) nothing is due, and the end makes every waiting ask due its delay after that moment. A
-  drop that qualifies once its time has passed is asked at once. A keystone run has no
-  `ENCOUNTER_END` for its chest, so its drops are timed from the drop. **The send** is checked again
-  when due (on, in the feed, qualifying, never asked, not received, its looter in the group) and
-  goes through the messaging edge's `Request`: guarded by the one-ask registry, queued while chat is
-  restricted, confirmed in chat, never through the edit-first box; a refusal is logged under `MSG`,
-  not said in chat. **Canceled** by any move of the drop's ask (a click on Ask, the toast's or the
-  card's), a `GROUP_ROSTER_UPDATE` that leaves its looter out of the group, the row's × or the
-  detail card's Hide (`NS.DismissDrop`), the history's `received`, turning it off, and the
-  stand-down. **Test mode**'s placeholders qualify like live drops and are timed from when test mode
-  put them in; their asks are printed, never sent. **The notice** is said once per account
-  (`global.notices.autoAsk`), the first time the row turns on through the seam (the panel, `/dw
-  set`); a profile switch or reset that turns it on says nothing. That it whispers in game after a
-  boss kill, and holds off on each cancel, is ASK-8.
-- The General page's `When to show` tab draws one block per situation (`Track`, `Auto-open`, then
-  `Quality`, under the situation's name) rather than the design's grid of situations by setting:
-  LibKa0s-Options has no composer for a grid of mixed controls (`ChoiceGrid` is one choice per row
-  over one value list). A LibKa0s issue asking for one is filed at the end of the v1 run (DW-63).
-- The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The
-  tab** lists every drop of yours in the tab's feed, a drop that cannot be traded included (a dash
-  and Hide, board 04's last row); `My drops · n` counts only the tradeable ones, and Hide is
-  session-only. **The countdown** is exact once the trade timer has read the item
-  (`trade.expiresAt`); before that it is estimated from when the item dropped and the two-hour
-  window and reads `~1:48:20`. It repaints on every `TradeTimerTick` (each second while a timer is
-  live and the window shown) and on the footer's 5-second ticker, which is what moves an estimate.
-  At `trade.warnAt` or less it reads `ending soon`, in bold and amber; the chat warning is the
-  trade timer's. A bind-on-equip drop reads `No limit (BoE)`. **Best candidates** of an upgrade for
-  you read `Hidden: an upgrade for you` until you open its Offer panel, which reveals them for the
-  session (AskFlow B2); Offer… stands out (gold) when someone gains and it is not hidden. **The
-  ranking** is upgrades by gain, then EQUAL, NO UPGRADE, CAN'T USE, a judged member whose replaced
-  item was not read (UNAVAILABLE), CHECKING… and UNAVAILABLE, each tie by name; `eq → drop` reads
-  `… → 305` while checking and `– → 305` when nothing it would replace was read. **Offer and Trade**
-  are shown for an upgrade or an equal only; anyone else shows a dash with the reason. Trade is
-  `NS.TradeHelper.Give` (the item placed in the trade), disabled with the helper's reason
-  (combat, range, offline, not in bags, expired, busy cursor), read first through `CanGive`. **The
-  panel** stays open across tabs, repaints with the window, closes with its close mark or when its
-  drop is gone, and docks right, else left, else floats over the window's right half above its
-  rows. **Announce** (a row's and the panel's Announce to group) is one announce per drop, as the
-  messaging edge files it. **Post my tradeables** lists the tradeable drops of yours in the feed on
-  show, whatever the tab's filter, prefixed `Up for trade, whisper me:`, cut at 255 bytes without
-  splitting a link; each line is its own announce, filed under `post:<n>:<i>`, so every press posts
-  again. **Not yet:** a drop of yours traded away is `tradedAway` in the history (DW-51), but its
-  row does not say so (board 04's `Traded to Séta`): once the item leaves your bags the trade timer
-  drops its entry and the row reads as expired.
-- The Group drops table (DW-31) settles five cases the design leaves open. **Group order** is
-  newest first (oldest first under Sort: Oldest), and a group the player never toggled is open
-  when it is the first one shown and collapsed otherwise (board 01); the Sort orders the drops
-  inside each group. The **header** names the group, its situation (the feed's groups carry no
-  difficulty), its age and its count. The **compact preset** changes the columns only (Item and
-  looter, Ilvl, Their eq, Me, Ask); the tab strip, the filter bar and the window's size stay as the
-  player set them. **Their eq** shows both worn items for rings, trinkets and weapons (the hands
-  the drop could go in), read from the looter's inspect entry. A **narrow window** sheds columns
-  rather than clip them: while the fixed columns and the Item column's 150px do not fit the row,
-  Slot goes first, then Looter, Their eq, Ilvl, Them, Trade and Me (My drops: Best candidates, Ilvl,
-  For me, Trade window); Item and Actions never go, and the detail card (or the Offer panel) still
-  says what a shed column would. The **Ask button** asks at once, or, with `messages.editFirst`
-  on, opens the detail card's Edit message box first; it reads `Traded ✓` once the history
-  records the drop received from a completed trade (DW-51), and the detail card's Ask with it.
-- The detail card (DW-32) settles five cases the design leaves open. **Expansion** is session-only
-  and follows the row: a row filtered out or folded under its header hides the card, and it comes
-  back, still open, with the row; Hide this item dismisses the row and closes the card. **Trade** on
-  someone else's drop opens an empty trade with the looter, so they can put the item in; it is off
-  on your own drop (that is My drops' Offer, DW-33) and on a drop its looter can't trade, and
-  otherwise follows the trade helper's guards (combat, range, offline, not in the group), its short
-  reason on the button (`Trade · out of range`). **Retry inspect** is off while the looter's read is
-  still good or already queued, since the broker would not inspect again, and queues them at the
-  looter priority otherwise. **Stats** are the four secondary stats' change against the replaced
-  item, the largest first; the primary stat, stamina, sockets and tertiary stats are the header's
-  chips. The score line is labeled by the scorer in use (**Pawn**, **Weights**, or **Score** with
-  none) and shows its change; without one it says why (not scored yet, or no scorer in use).
-- The window shell (DW-30) settles four cases the design leaves open. **Interesting** (View) is the
-  brainstorm's union (03_FEATURES F1, board 01 note 5): someone else's drop that is an upgrade for
-  you, whatever its trade estimate, or one its looter has no use for (a downgrade, can't use or
-  doesn't want) whose estimate is `yes` or `likely`; and your own drop whose estimate is `yes` or
-  `likely`. **Own loot** stays out of Group drops unless `feed.showOwn` is on (design spec §6.3; it
-  goes to My drops), and then neither auto-opens the window nor counts toward `n new`. **This instance** (Content) is the drops since
-  the situation last changed (`SituationChanged`), so two dungeons of the same kind in a row, with
-  no other situation between them, read as one. **Auto-open** fires once per situation, on the
-  first interesting live drop, only while the window is closed; master `autoOpen` false
-  turns it off. The **Quality** control writes `feed.quality.mode` through the write seam
-  (`NS.SetQualityMode`), the row the Feed page shares.
-- The class tables (`core/ClassData.lua`) are a fallback for a candidate whose spec is not known
-  yet; an item's own spec list wins whenever it exists. Devourer Demon Hunter (spec 1480, from the
-  client's trait-tree data) is recorded as an Intellect dual wielder that takes no held off hand,
-  which is unconfirmed in game (FEED-7).
-- The situation classifier (`modules/Situations.lua`) confirms a difficulty id with
-  `GetDifficultyInfo` before trusting it, so a retired id falls back to the instance type (a party
-  instance reads as `dungeon`). It reads three cases the design leaves open: an instance of a type
-  the design does not name (a housing interior, say) is the open world (`solo` or
-  `openWorldGroup`); the Mythic Keystone difficulty is `mythicPlus` even before
-  `IsChallengeModeActive` turns true; and the delve and follower-dungeon inputs come from the
-  difficulty id. The check lives in the module's edge today; `core/Compat.lua` (DW-20) may take it.
-  The per-situation settings are the `situations.<key>.*` rows, read through `NS.Setting`.
-- The verdict kernel (`modules/Evaluate.lua`) reads a few cases the design leaves open as
-  follows. With the spec unknown, an item whose primary stat suits only some of the class's specs
-  is `unknown`, not `ok`. With a score, the verdict follows spec §5.2 step 4 to the letter: only
-  an ilvl and a score that agree in sign give that sign, so one inside its band and the other
-  outside is a sidegrade (`scoreDisagrees`); the band is in item levels, so the score's band is 0.
-  A candidate whose class is not known yet is `unknown` (`unknownClass`), even for a
-  class-restricted item. The track delta orders tracks by a numeric `tier` from ItemFacts and
-  falls back to the enUS track names, so a localized name with no tier leaves it unset. Bows
-  (`INVTYPE_RANGED`) and guns, crossbows and wands (`INVTYPE_RANGEDRIGHT`) fill both hands, so the
-  off-hand and one-hander plans compare against them as two-handers; a ranged drop compares like a
-  two-hander for hunters and against the main hand for everyone else. A unique-equipped drop at
-  its category's maximum compares against the lowest holder in its own slots when one of them
-  holds the category, else the lowest holder anywhere.
-- The minimum-quality gate (`modules/QualityGate.lua`) reads three cases the design leaves open.
-  A drop whose quality cannot be read passes (`qualityUnknown`), so the feed never hides what it
-  could not judge. With no baseline slot yet, `Dynamic per slot` takes the lowest quality across
-  the drop's slot plan, and the floor when any of those slots is empty. A per-situation `quality`
-  that names no mode (absent, `global` or unknown) means the global mode.
-- The trade estimator (`modules/TradeRules.lua`) reads four cases the design leaves open. The
-  looter check compares item levels (the evaluation's `ilvlDelta`), not the scored verdict, because
-  the game's rule is item level; an equal item level is not an upgrade, a drop the looter cannot use
-  is still judged on item level, and an empty slot on the looter is an upgrade for them. The trade
-  window's expiry is checked after the bind and legacy checks and before the looter check, so a
-  drop past its window is `no expired` whatever the looter's gear; a BoE never expires. BoE means
-  `OnEquip` or `OnUse`, and the account binds count as warbound. An unknown situation takes the
-  `personal` rule. The rule is item level against the looter's equipped gear only; whether the
-  game also counts their bags is TRADE-4. The raid rule is `personal` until TRADE-3 confirms it; the
-  `trade.rules.<situation>` rows default to the design's rule for each situation.
-- The messaging core (`modules/Messaging.lua`) reads five cases the design leaves open. A known
-  token with no value reads `?` rather than an empty gap, and the preview lists it as missing;
-  token names are case-sensitive, so `{Player}` is unknown and left as it is. A gain prints with
-  one decimal at most. The length limit counts the raw bytes, so an item link counts whole. An
-  ask that is queued, or handed to the sender and not yet reported, is never asked twice, even
-  with `messages.oneAsk` off; a failed one may be retried, and a canceled one leaves the registry,
-  so its button is ready again. The `messages.*` settings are rows, read by the edge through
-  `NS.Setting`.
-- The messaging edge (`modules/Asks.lua`) reads six cases the design leaves open. Design spec §4
-  puts the core and the edge in one file; they are two, so the core stays pure and its suite needs
-  no client. An ask is refused before the core when its recipient is not in the group, is you, or
-  is offline (`notInGroup`, `self`, `offline`); the registry files a whisper under the member's
-  Name-Realm, and an announce under `group`, one per drop whatever the channel. A raise inside the
-  sender is the failure's reason (a secret or empty one reads `error`); no sender is `noApi`, and an
-  announce outside a group `noChannel`. The first queued ask goes at once when a flush starts and
-  the rest every 1.5 seconds; a restriction back mid-flush stops it until the next trigger. Test
-  mode, and a test drop, print the text instead of sending, mark the ask sent and never queue it.
-  The stand-down drops the queued asks, because no trigger reaches them while down; the sent
-  registry is kept for the session. The `asked` history outcome (`offered` for an offer or announce) is
-  written by History (`modules/History.lua`) from `AskStateChanged`. The edit-first box is the detail card's Edit message (DW-32): it reads
-  `Preview` (the template filled in, nothing sent or filed) and passes the edited text in; with
-  `messages.editFirst` on, the Offer panel's Offer and Announce open it too. Whether a whisper really is blocked during an encounter is ASK-4.
-- The restriction tracker (`modules/Restrictions.lua`) reads four cases the design leaves open.
-  Chat is stopped by the Encounter, ChallengeMode, PvPMatch and Chat restriction types and by the
-  chat lockdown; combat alone stops inspects and trades, not chat; the Map type, active for the
-  whole of a dungeon, stops nothing; a type the client adds later is reported under its enum name
-  and stops nothing. A type counts as active while the event's last word on it or the client's own
-  answer says so, so a lift counts only once both agree. The badge's reason is the first in effect
-  of encounter, challengeMode, pvpMatch, chat, chatLockdown, combat. Which types really stop a
-  whisper is COMBAT-2.
-- The roster (`modules/Roster.lua`) reads five cases the design leaves open. A bare name is the
-  player's own realm's when that settles it, because chat names a same-realm player without a
-  realm; the classFile narrows a same-name tie first; a tie neither settles resolves to nothing.
-  Names and realms compare without case, and realms with spaces and hyphens dropped on both sides.
-  A unit with a secret or missing GUID is left out, a secret name leaves the member reachable by
-  GUID only, the client's `Unknown` placeholder counts as no name, and a secret online flag reads
-  as online. A failed resolve re-reads the client once. In a raid the player's token is its
-  `raidN`, with `isPlayer` set. The specID is written by the inspect broker (DW-26) through
-  `SetSpec` and kept across re-reads while the GUID stays. Whether chat's realm spelling matches
-  the normalized one is ROSTER-1.
-- The item facts (`modules/ItemFacts.lua`) read six cases the design leaves open. A track's tier
-  comes from its `trackStringID` through `C.TRACK_TIER_BY_STRING_ID`, which stays empty until
-  FEED-5 records the client's ids, so today every tier comes from the enUS track name and a
-  localized client leaves the track delta unset. A tier token is an item that names its classes
-  and has no slot plan; which slot it makes is not read, so its verdict is `unknown` for the slot
-  until the tier-token follow-up (spec §14). An item unique on its own takes `item:<itemID>` as
-  its category. `warbound` is set for warbound and for warbound-until-equipped items alike, with
-  `warboundUntilEquip` telling them apart. Rings, necks and trinkets carry no `transmogKnown`.
-  The cache holds 512 links; when it would pass that, the least recently used quarter is dropped
-  (`NS.ItemFacts.EVICT_SHARE`; a hit or a store marks a link used), so the gear read on every
-  judgment stays and old drops go; an item that has not
-  loaded after five `LoadItem` calls (about two seconds) is given up, with nil to every waiter, and
-  the next request starts afresh. The bonus-roll flag is the loot line's, so the drop record (DW-27)
-  carries it, not the cached facts. Whether `GetItemUpgradeInfo` answers for another player's link
-  is FEED-5; the item readers' shapes are ITEM-1.
-- The gear snapshot (`modules/Gear.lua`) reads five cases the design leaves open. "Best owned per
-  slot" is a per-slot best, not a loadout planner: the slots fill in id order, each with the
-  highest-level item that fits it and is not placed already, so a pair holds your best two and one
-  item never fills two slots, but unique-equipped limits and a two-hander's claim on both hands are
-  not weighed. A one-hander may fill the off hand only for a dual wielder, a two-hander only with
-  Titan's Grip; with the spec unknown, the class answers when every spec agrees, else neither. Only
-  the backpack and the four bags are read: not the reagent bag, the bank or the warband bank. A
-  worn item's level is its tooltip's (scaling included), else its link's. A link the client has
-  not cached leaves its slot out (unknown, not empty) until it arrives; an item given up on stays
-  out until the next gear event. Whether the tooltip level matches the character sheet is GEAR-1.
-- The loot parser (`modules/LootParser.lua`) has no consumer until the feed (DW-27) adds its sink;
-  until then a parsed line shows only as a `PARSE` debug line and in the diagnostics `feed`
-  section. It reads `CHAT_MSG_LOOT` alone: the encounter and loot-history events are the feed's.
-  Roll lines ("selected Need", "won") are not receipts and are ignored, since the item arrives on
-  its own receipt line. A looter the roster cannot place takes the event's twelfth argument as
-  its GUID, which is assumed to be the looter's (FEED-1 confirms it). The `|4` and `|1` grammar
-  tokens are not expanded in loot patterns; no `LOOT_ITEM*` string is known to carry one in the
-  client languages the design names (LOC-1). Whether the line is readable, or arrives secret,
-  mid-encounter is COMBAT-1; a secret line is counted and dropped.
-- The inspect broker (`modules/Inspect.lua`) reads nine cases the design leaves open. `fresh` is a
-  read after an `INSPECT_READY` (ours or anyone's) and `cached` one taken at once because the
-  client already held every link (the fast path, which needs no incomplete slot and an item in each
-  slot only inspect data shows: neck, both rings and both trinkets, `NS.Inspect.HIDDEN_SLOTS`);
-  both are good for 600 seconds. A read after `INSPECT_READY` that finds no item at all, or whose
-  unit token no longer names the GUID, is no data (the inspect was cleared before the read, by
-  Blizzard's inspect window or another addon): it is retried like an incomplete one, then never
-  stored; the job in flight is re-queued like a timeout (`failed (empty)` once its sends are used),
-  and an unasked read is dropped with the entry left as it was. `READY_ATTEMPTS` is two sends in all, so one
-  retry. `CanInspect` answering false waits the range wait, as being out of range does; an
-  offline member or a GUID with no unit waits the identity wait. A slot is incomplete when the
-  client knows its item id but answers no link, or a nameless one; after three retries the read is
-  kept, the slot left out and the entry's reason `incomplete`. A foreign `NotifyInspect` re-queues
-  the job in flight at no cost in attempts, unless its data has already arrived. An
-  `UNIT_INVENTORY_CHANGED` within five seconds of a read is taken for the inspect's own echo and
-  ignored. The waits and the spacing are module constants (`NS.Inspect.SPACING` and its siblings):
-  spec §12.1 has no `inspect` setting. The queue's priority is the caller's to give: the feed
-  (DW-27) asks for looters and the Offer panel (DW-33) for its candidates; `Scan` is the window's
-  Scan group button (DW-30, through `NS.ScanGroup`) and `/dw scan` (DW-42). Whether the fast path, the spec read and the tooltip level hold
-  for an inspected unit in game is INSPECT-1..4.
-- The feed (`modules/LootFeed.lua`) settles ten cases the design leaves open. Reports of one drop
-  merge for 120 seconds (`NS.LootFeed.DEDUPE_WINDOW`) when the item id and the looter match (the
-  GUID, or the name without its realm when a source has no GUID) and the source has not reported
-  it already, so two copies from one source stay two drops. An encounter's group stays open 120
-  seconds after a kill (`LOOT_GRACE`) and none after a wipe; a keystone run's group takes every
-  drop until 120 seconds after it completes, the chest included (whether the chest's
-  `ENCOUNTER_LOOT_RECEIVED` names an encounter is FEED-6). Your own `pushed` lines (quest rewards,
-  containers, purchases) are not drops; a member's are. The relative minimum item level is measured
-  against your average equipped level. A drop once shown stays shown: updates re-judge its verdicts
-  and its trade, never its gates. Your own drop's candidates are inspected (at the Offer panel's
-  priority) only while its trade estimate is not `no`, and asked for when it moves off `no`. The
-  trade estimate is made again over time: one shared ticker every 30 seconds
-  (`NS.LootFeed.TRADE_SWEEP`), alive while a group drop's trade is not `no`, turns a drop past its
-  rule's window `no expired`, and each `TradeTimerTick` re-estimates your own drops, whose estimate
-  folds in the trade timer (`LootFeed.FoldTimer`: `yes` with the `timer` basis and `expiresAt`
-  while the countdown is live, `no expired` once it is gone; a bind answer and a BoE entry keep the
-  rule's). A moved estimate sends `DropUpdated(id, "trade")`. A pending score is retried five times, one
-  second apart, on one shared timer, and a drop that used them up keeps its answer. Each feed keeps
-  200 drops (`MAX_DROPS`), the oldest dropped first; the stand-down keeps the drops and drops the
-  dedupe window, the encounter context and any item still loading. The feed reads its settings,
-  the `feed.*`, `comparison.*` and `trade.rules.*` rows, through `NS.Setting` (`LootFeed.Config`).
-  `/dw add` (DW-42) and `/dw offer` for a bag item the feed never saw reach it through `NS.LootFeed.Add`; `/dw clear` empties the live feed (`NS.LootFeed.Clear`).
-- The trade timer (`modules/TradeTimer.lua`) settles eight cases the design leaves open. A bag item
-  is matched to one of your drops by its exact link first and its item id second, each drop taking
-  one item, so two copies of one drop each keep their own timer; test drops are never timed. A
-  BoE drop (its item facts' bind in `C.TRADE_BOE_BIND`) never carries a trade-time line and has no
-  window: its entry is `permanent`, never expired and never live, and the trade helper gives it. A
-  matched bind-on-pickup item whose tooltip has no trade-time line is `no expired` at once, so an item whose
-  tooltip has not loaded yet reads as expired until the next scan (a later bag event) reads the
-  line. The tooltip shows whole minutes, so a re-read within a minute of the stored expiry keeps
-  it and the countdown does not jump at each scan. An item that leaves the bags (traded, sold, equipped) drops its entry. The ticker runs
-  only while an entry is live: each second while the window is shown, each minute while it is
-  hidden, so the warning may come up to a minute late with the window closed. An item first read
-  with less than `trade.warnAt` left warns at once; `trade.warnAt` 0 turns the warning off, and it
-  is read through `NS.Setting` (600 by default). The stand-down keeps the entries, warned flags included, so
-  enabling again never repeats a warning.
-- The trade helper (`modules/TradeHelper.lua`) settles five cases the design leaves open. The target
-  is a member's GUID, `Name-Realm` or bare name, resolved through the roster, so a stranger is
-  refused (`noTarget`) rather than traded with. The item is found by the trade timer's entry for the
-  drop, so a drop the timer has not matched is `notInBags` and one it read as `no expired` is
-  `expired`, never attempted; the entry's last slot is tried first and a walk of the bags second, so
-  an item moved since the last scan is still found. A busy cursor refuses (`cursorBusy`) instead of
-  being cleared, and a pickup with no `DropItemOnUnit` to follow is put back with `ClearCursor`.
-  `CanGive` and `CanTradeWith` run every guard without acting, for the buttons' disabled state and
-  tooltip (`ReasonText`). Only the calls that act count towards the diagnostics line.
-- The compat seam (`core/Compat.lua`) has its first caller in the restriction tracker; the other M2
-  edge items wire the rest. Three of its
-  readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the
-  shape of the trade-time and item-level tooltip lines (whether the `ItemLevel` line carries a
-  numeric field), and that `PawnIsInitialized` is a boolean flag. A secret chat-lockdown or
-  restriction answer reads as locked, a secret bind answer as not bound ([`midnight-quirks.md`](midnight-quirks.md)).
-- The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
-  mock does not model; PROFILE-1 is its in-game check.
-- The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate
-  the TGAs with the recipe in `DEPENDENCIES.md`).
+What the addon does not do yet, or cannot know without the client. How the code reads every case
+the design leaves open, module by module, is in [`design-readings.md`](design-readings.md).
+
+- **Unconfirmed in game.** Every in-game check in [`smoke-tests.md`](smoke-tests.md) is owed: none
+  has a recorded client pass yet. The readings most at risk are whether `CHAT_MSG_LOOT` is readable
+  mid-encounter (COMBAT-1), whether a whisper goes out during an encounter (ASK-4), the raid trade
+  rule (TRADE-3, `personal` until confirmed) and whether the game counts the looter's bags as well
+  as their worn gear (TRADE-4, worn gear only today).
+- **Localized clients.** Loot lines and the trade-time sentence are read with the client's own
+  GlobalStrings, but an upgrade track's tier comes from its enUS name until FEED-5 records the
+  client's track ids, so a non-English client shows no track change (LOC-1).
+- **Tier tokens** are recognized, but the slot a token makes is not read, so the verdict for one is
+  `unknown` until the tier-token follow-up (design spec §14).
+- **Your gear** is a per-slot best, not a loadout planner: unique-equipped limits and a
+  two-hander's claim on both hands are not weighed, and the reagent bag, the bank and the warband
+  bank are not read.
+- **A drop you traded away** is `tradedAway` in the history, but its My drops row reads as expired
+  rather than `Traded to …`.
+- **After a reload** the kept history takes no more ask or trade-estimate outcomes (drop ids
+  restart each session); a completed trade still matches it by item id.
+- **The trade-time warning** can arrive up to a minute late while the window is closed (the ticker
+  slows to once a minute).
+- **A keystone chest** has no `ENCOUNTER_END`, so auto-ask times its drops from the drop itself.
+- **When to show** draws one block per situation rather than the design's grid of situations by
+  setting: LibKa0s-Options has no grid composer for mixed controls. A LibKa0s issue asking for one
+  is filed at the end of the v1 run (DW-63).
+- **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
+  headless mock does not model; PROFILE-1 is its in-game check.
+- **The logo** is a placeholder generated for the scaffold; the owner may replace the art
+  (regenerate the TGAs with the recipe in `DEPENDENCIES.md`).
+
 
 ## Documentation map
 
@@ -692,7 +280,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order |
 | `schema.md` | The SavedVariables shape, every default, and the migration path |
 | `settings-panel.md` | The `Page \| Covers` table and the page → tab → row tree |
-| `data-flow.md` | How a setting, the show decision and the stand-down flow today, and the design's loot pipeline |
+| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask |
 | `common-tasks.md` | Recipes for the changes made most often here |
 
 ### Conditional (documentation-§3, Tier 2)
@@ -704,7 +292,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 59 addon-specific shims (three or more) |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 62 addon-specific shims (three or more) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 
 ### Verification and record (documentation-§3)
@@ -720,7 +308,9 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 
 ### Addon-specific (documentation-§3, Tier 3)
 
-None.
+| Doc | Covers |
+|---|---|
+| `design-readings.md` | How the code reads every case the design spec leaves open, module by module (spilled from Known Limitations) |
 
 ## Documented deviations
 
