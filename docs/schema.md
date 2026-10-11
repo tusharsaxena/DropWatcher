@@ -92,7 +92,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 |---|---|---|---|
 | `window.columns.<col>` | `true` | Columns | `false` hides that Group drops column (`ilvl`, `slot`, `looter`, `myEq` (since DW-83), `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
 | `window.compact` | `false` | Layout; `NS.SetCompact`, `/dw compact` (DW-42) | the compact preset: Item and looter, Ilvl, Their eq, Me, Ask |
-| `window.rowHeight`, `window.fontSize` | `24`, `12` | Layout | the Group drops table's row height and text size (WindowGroup, at each repaint) |
+| `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on all three tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a My drops row is the row height plus 10 for its countdown bar. Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
 | `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
 

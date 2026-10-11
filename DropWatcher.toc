@@ -248,6 +248,10 @@ modules\WindowFooter.lua
 # Conventional: publishes NS.WindowCells, the drop tables' pure cell composers (each column's text,
 # glyph, tone and reason tooltip); reads NS.Constants and NS.L at load.
 modules\WindowCells.lua
+# Conventional: publishes NS.WindowRows, the drop tables' row height and text size (the pure
+# resolution and the font edge the three tabs share); reads NS.Constants at load and NS.Setting at
+# call time.
+modules\WindowRows.lua
 # Conventional: publishes NS.MineCells, the My drops tab's and the Offer panel's pure composers (the
 # countdown, the candidates and their pills, the buttons, Post my tradeables' lines, the dock);
 # takes NS.WindowCells (above), NS.Constants and NS.L at load.

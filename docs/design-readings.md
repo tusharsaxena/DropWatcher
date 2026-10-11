@@ -453,8 +453,9 @@ press through the Edit message box (the detail card's, now one box for all three
 Send goes back through the same handler with the edited text, a press on a queued send still
 cancels it, a press with the window closed sends as it stands, and Post my tradeables never opens
 it (its lines are already cut to the chat limit). **`window.rowHeight`** and **`window.fontSize`**
-size the Group drops table's rows and their cells' text; the headers, the column labels, the
-buttons and the My drops tab keep their own.
+size the drop tables' rows and their cells' text on all three tabs (feedback-2 spec §8, FB2-9: 18
+pixels and the template's own size by default, like Ka0s Loot History's table; a My drops row adds
+room for its countdown bar); the headers, the column labels and the buttons keep their own.
 
 ## The compat seam
 

@@ -235,7 +235,7 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (41)
+### test_window_group.lua (44)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -255,6 +255,9 @@ Total.
 - table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
 - cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder
 - table: built at the minimum width, the shed columns hide and Ask stays inside the row
+- rows: the pure metrics read Default as the template's size and keep the row height in range
+- rows: a stored row height and font size stay as the player set them
+- rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0
 - table: the Window page's row height and font size lay out and size the drop rows
 - table: built headless, one header and one row per drop, each column painted
 - table: the verdicts wear their tones, the looter their class color, the item its quality
@@ -302,7 +305,7 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_window_mine.lua (32)
+### test_window_mine.lua (33)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -320,6 +323,7 @@ Total.
 - mine: the entries are your own drops that pass the filter and were not hidden, in the tab's order
 - mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps Actions inside it
 - mine tab: built headless, one row per drop of yours, each column painted
+- mine tab: a row is the row height plus its bar's room, in the Font size row's size
 - mine tab: every shown cell has a reason tooltip; nothing is blank
 - mine tab: rows come from the pool and a repaint reuses them
 - mine tab: TradeTimerTick moves the countdown while the tab shows
@@ -984,7 +988,7 @@ Total.
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (28)
+### test_history.lua (29)
 
 - history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -1008,6 +1012,7 @@ Total.
 - history: Clear history asks first, and empties the log only on Yes; the retention row stays
 - history: the diagnostics' feed section reports the history and the trade
 - history tab: kept groups newest first, the first open, each row's outcome painted
+- history tab: rows take the Window page's row height and font size
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
 - history tab: a right-click marks a row declined, through the menu when the client has one
 - history tab: with nothing kept it says what it will hold, and Clear history is off
@@ -1332,9 +1337,9 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 50 |
-| test_window_group.lua | 41 |
+| test_window_group.lua | 44 |
 | test_detail_card.lua | 20 |
-| test_window_mine.lua | 32 |
+| test_window_mine.lua | 33 |
 | test_test_mode.lua | 30 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 9 |
@@ -1361,7 +1366,7 @@ Total.
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 23 |
 | test_transmog.lua | 13 |
-| test_history.lua | 28 |
+| test_history.lua | 29 |
 | test_history_retention.lua | 13 |
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
@@ -1380,4 +1385,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1138** |
+| **Total** | **1143** |

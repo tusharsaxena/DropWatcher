@@ -36,10 +36,17 @@ C.WINDOW = {
     DOUBLE_CLICK = 0.4,   -- seconds between two clicks on the title bar that expand a minimized window
     FOOTER_TICK = 5,      -- seconds between footer repaints while shown ("Last loot 12s ago")
     -- The drop tables (modules/WindowGroup.lua, design spec §11.1-§11.2).
-    ROW_H       = 24,     -- one drop row
+    -- A drop row's height and text size are the Window page's Layout rows, `window.rowHeight` and
+    -- `window.fontSize` (modules/WindowRows.lua; feedback-2 spec §8, FB2-9): 18 pixels and the
+    -- template's own size by default, like Ka0s Loot History's table.
+    ROW_H       = 18,     -- one drop row, by default
+    ROW_H_MIN   = 18,
+    ROW_H_MAX   = 40,
+    FONT_MIN    = 8,      -- the Font size row's least size; 0 is Default (the template's own)
+    FONT_MAX    = 20,
     GROUP_H     = 20,     -- one encounter header row
     COLHEAD_H   = 18,     -- the column labels above the rows
-    ROW_ICON    = 20,     -- a row's item button
+    ROW_ICON    = 20,     -- a row's item button at most; a shorter row takes it 2px under its height
     EQ_ICON     = 16,     -- one worn item in the My eq and Their eq columns
     CELL_GAP    = 6,      -- between two columns
     ITEM_MIN    = 150,    -- the Item column's least width (it takes the slack)
@@ -62,7 +69,7 @@ C.WINDOW = {
     EMPTY_H     = 90,
     -- The My drops tab (modules/WindowMine.lua) and the Offer panel (modules/OfferPanel.lua),
     -- design spec §11.4, board 04.
-    MINE_ROW_H  = 32,     -- one row of your own drops (the countdown sits over its bar)
+    MINE_EXTRA  = 10,     -- a My drops row's height over the row height (its countdown sits over its bar)
     BAR_H       = 3,      -- the trade window's bar
     MINE_FOOT_H = 26,     -- the tab's summary strip, with Post my tradeables
     OFFER_BTN_W = 64,     -- a row's Offer button

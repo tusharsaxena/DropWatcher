@@ -397,6 +397,26 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     end
 end)
 
+-- Feedback-2 spec §8 (FB2-9): History's rows follow the same Layout rows as Group drops.
+test("history tab: rows take the Window page's row height and font size", function()
+    local NS, drawn = shownTab()
+    local r = drawn.rows[1]
+    assertEqual(r:GetHeight(), 18); assertEqual(r.cells.outcome:GetHeight(), 18)
+    assertEqual(r.cells.item.button:GetWidth(), 16)
+    local _, size = r.cells.outcome.text:GetFont()
+    assertEqual(size, 10, "the template's own size by default")
+    NS.SchemaRuntime.Set("window.rowHeight", 30)
+    NS.SchemaRuntime.Set("window.fontSize", 13)
+    drawn = NS.WindowHistory.Drawn()
+    r = drawn.rows[1]
+    assertEqual(r:GetHeight(), 30)
+    _, size = r.cells.outcome.text:GetFont()
+    assertEqual(size, 13)
+    local _, _, _, _, y1 = drawn.rows[1]:GetPoint(1)
+    local _, _, _, _, y2 = drawn.rows[2]:GetPoint(1)
+    assertEqual(math.abs(y2 - y1), 30, "the next row starts one row height down")
+end)
+
 test("history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions", function()
     local NS = shownTab()
     NS.WindowHistory.ToggleGroup("old", true)

@@ -88,7 +88,10 @@ its one-line responsibility and why its position is load-bearing or conventional
   every click through the typed verb; sim feedback spec §1).
 - `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
-  their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
+  their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), the three tables'
+  shared row height and text size (`WindowRows.lua`: `window.rowHeight` and `window.fontSize`,
+  18-pixel rows and the template's own size by default, like Ka0s Loot History's table; a My drops
+  row adds its countdown bar's room; feedback-2 spec §8, FB2-9), test mode
   (`TestData.lua`, its pure sample drops and History groups over real items from the simulator's
   item pool, and `TestMode.lua`, its edge; ui spec §4) and the diagnostics sections
   (`Diagnostics.lua`). Every item tooltip (the three tabs, the equipment columns, the detail card,

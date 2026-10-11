@@ -9,6 +9,8 @@ local _, NS = ...
 -- Trade and Me, in that order (NS.WindowGroup.Fit); Item and Outcome stay. The cells are
 -- modules/WindowCells.lua's composers over each entry turned into a drop-shaped record (AsDrop);
 -- this file adds the Outcome cell and a header that reads days for an old group. Nothing is blank.
+-- A row's height, item button and text size are the Group drops rows' (modules/WindowRows.lua, the
+-- Window page's Layout rows; feedback-2 spec §8, FB2-9).
 --
 -- READ-ONLY. No row asks, offers or expands. A right-click on a row opens its menu (core/Compat.lua's
 -- ContextMenu): Mark as declined, or Clear declined; a client without the menu toggles it at once.
@@ -333,14 +335,14 @@ end
 
 local TEXT_INSET = { item = K.ROW_ICON + 5, me = 16, them = 16 }
 
-local function placeCells(row, layout)
+local function placeCells(row, layout, height)
     for key, f in pairs(row.cells) do
         local at = layout[key]
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
             f:SetPoint("LEFT", row, "LEFT", at.x, 0)
-            f:SetSize(at.w, K.ROW_H)
+            f:SetSize(at.w, height)
             f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10))
         end
     end
@@ -357,9 +359,12 @@ end
 
 local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade, them = WH.Them, outcome = WH.Outcome }
 
-local function paintRow(row, drop, layout)
+local function paintRow(row, drop, layout, metrics)
     row.entry = drop.entry
-    placeCells(row, layout)
+    row:SetHeight(metrics.height)
+    placeCells(row, layout, metrics.height)
+    NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
+    NS.WindowRows.ApplyRowIcon(row, metrics.icon)
     local cells = row.cells
     paintText(cells.item, WC.Item(drop))
     tone(cells.item.text, qualityColor(drop.facts.quality))
@@ -488,9 +493,9 @@ local function rowWidth(pane)
 end
 
 local function drawEntries(pane, entries, layout, width, now)
-    local y = 0
+    local y, metrics = 0, NS.WindowRows.Metrics()
     for i, e in ipairs(entries) do
-        local pool, make, h = pane.rowPool, newRow, K.ROW_H
+        local pool, make, h = pane.rowPool, newRow, metrics.height
         if e.kind == "header" then pool, make, h = pane.headPool, newHeader, K.GROUP_H end
         local f = NS.Pool.Acquire(pool, function() return make(pane.content) end)
         f:ClearAllPoints()
@@ -500,7 +505,7 @@ local function drawEntries(pane, entries, layout, width, now)
             paintHeader(f, e, now)
         else
             f.stripe:SetShown(i % 2 == 0)
-            paintRow(f, e.drop, layout)
+            paintRow(f, e.drop, layout, metrics)
         end
         y = y + h
     end

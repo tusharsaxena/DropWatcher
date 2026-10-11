@@ -12,7 +12,9 @@ local _, NS = ...
 --
 -- THE ROWS. Pooled through LibKa0s-Pool-1.0 (NS.Pool), released and re-acquired in order on every
 -- repaint. The entries (pure): your own drops in the tab's feed that pass the tab's filter
--- (Window.TabContext: Content, search and Sort) and were not hidden, in the tab's order.
+-- (Window.TabContext: Content, search and Sort) and were not hidden, in the tab's order. A row is
+-- the Window page's row height plus the room its countdown bar needs, in the Group drops rows' text
+-- size (modules/WindowRows.lua; feedback-2 spec §8, FB2-9).
 --
 -- THE UI LISTENS. Window.lua repaints it on the bus (TradeTimerTick moves the countdowns each second
 -- while a timer is live) and on its footer ticker while the tab is shown. It reads the feed
@@ -203,7 +205,7 @@ local BUILDERS = { item = itemCell, forMe = forMeCell, trade = tradeCell, action
 
 local function newRow(content)
     local row = CreateFrame("Frame", nil, content)
-    row:SetHeight(K.MINE_ROW_H)
+    row:SetHeight(NS.WindowRows.MineRowHeight(K.ROW_H))
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)
@@ -241,10 +243,13 @@ local function paintForMe(f, drop)
     f.sub:SetShown(c.sub ~= nil)
 end
 
-local function paintTrade(f, drop, now, warnAt)
+-- The countdown's face follows its urgency; SetFontObject puts the template's size back, so the
+-- Font size row's size goes on again after it.
+local function paintTrade(f, drop, now, warnAt, size)
     local c = MC.TradeWindow(drop, now, warnAt)
     paintText(f, c)
     f.text:SetFontObject(c.bold and "GameFontNormalSmall" or "GameFontHighlightSmall")
+    if size then NS.WindowRows.SetFontSize(f.text, size) end
     setTone(f.text, c.tone)
     local w = max((f:GetWidth() or 0) - 6, 0)
     f.fraction = c.fraction or 0
@@ -279,27 +284,29 @@ end
 
 local TEXT_INSET = { item = K.ROW_ICON + 5, forMe = 16 }
 
-local function placeCells(row, layout)
+local function placeCells(row, layout, height)
     for key, f in pairs(row.cells) do
         local at = layout[key]
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
             f:SetPoint("LEFT", row, "LEFT", at.x, 0)
-            f:SetSize(at.w, K.MINE_ROW_H)
+            f:SetSize(at.w, height)
             if f.text then f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10)) end
         end
     end
 end
 
-local function paintRow(row, drop, layout, now, warnAt)
+local function paintRow(row, drop, layout, now, warnAt, metrics)
     row.dropId = drop.id
-    placeCells(row, layout)
+    row:SetHeight(metrics.mineHeight)
+    placeCells(row, layout, metrics.mineHeight)
+    NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
     local cells = row.cells
     paintItem(cells.item, drop)
     paintText(cells.ilvl, NS.WindowCells.Ilvl(drop))
     paintForMe(cells.forMe, drop)
-    paintTrade(cells.trade, drop, now, warnAt)
+    paintTrade(cells.trade, drop, now, warnAt, metrics.fontSize)
     local best = MC.BestCandidates(drop, WM.IsRevealed(drop.id))
     paintText(cells.best, best)
     paintActions(cells.actions, drop, best)
@@ -385,7 +392,7 @@ local function rowWidth(pane)
 end
 
 local function drawRows(pane, entries, layout, width, now)
-    local warnAt = NS.TradeTimer.WarnAt()
+    local warnAt, metrics = NS.TradeTimer.WarnAt(), NS.WindowRows.Metrics()
     local y = 0
     for i, d in ipairs(entries) do
         local r = NS.Pool.Acquire(pane.rowPool, function() return newRow(pane.content) end)
@@ -393,8 +400,8 @@ local function drawRows(pane, entries, layout, width, now)
         r:SetPoint("TOPLEFT", pane.content, "TOPLEFT", 0, -y)
         r:SetWidth(width)
         r.stripe:SetShown(i % 2 == 0)
-        paintRow(r, d, layout, now, warnAt)
-        y = y + K.MINE_ROW_H
+        paintRow(r, d, layout, now, warnAt, metrics)
+        y = y + metrics.mineHeight
     end
     pane.content:SetSize(width, max(y, 1))
 end

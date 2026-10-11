@@ -320,8 +320,13 @@ local function window()
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }
     bool("window.compact", W.compact, L["Compact"],
         L["Show Item and looter, Ilvl, Their eq, Me and Ask only."], layout)
-    slider("window.rowHeight", W.rowHeight, 18, 40, 1, L["Row height"], L["The height of one row in the Group drops table."], layout)
-    slider("window.fontSize", W.fontSize, 8, 20, 1, L["Font size"], L["The size of the Group drops table's text."], layout)
+    slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
+        L["The height of one row in the drop tables: Group drops, My drops and History. A My drops row adds room for its countdown bar."], layout)
+    -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table
+    -- (feedback-2 spec §8, FB2-9); 1 to 7 read as the least size (modules/WindowRows.lua).
+    slider("window.fontSize", W.fontSize, 0, K.WINDOW.FONT_MAX, 1, L["Font size"],
+        L["The size of the drop tables' text, on all three tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
+        with(layout, { zeroText = L["Default"] }))
 
     local T = P.toast
     local toast = { page = "window", group = L["Toast"] }

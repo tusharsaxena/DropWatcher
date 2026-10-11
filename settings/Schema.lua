@@ -186,14 +186,19 @@ local function countKeys(t)
 end
 
 --- How `/dw list|get|set|reset` render a value: a `map` row as its entry count (its editor is the
---- panel's), every other row through the library's own formatter.
+--- panel's), a row with a `zeroText` names what its 0 means (`window.fontSize`'s `0 (Default)`),
+--- every other row through the library's own formatter.
 --- @param row table
 --- @param v any
 --- @param format function the library's FormatValue
 --- @return string
 function Settings.FormatValue(row, v, format)
-    if type(row) == "table" and row.type == "map" and type(v) == "table" then
+    if type(row) ~= "table" then return format(row, v) end
+    if row.type == "map" and type(v) == "table" then
         return ("{%d}"):format(countKeys(v))
+    end
+    if row.zeroText and v == 0 then
+        return ("%s (%s)"):format(format(row, v), row.zeroText)
     end
     return format(row, v)
 end
