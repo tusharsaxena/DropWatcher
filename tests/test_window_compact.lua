@@ -301,6 +301,79 @@ test("compact: the player's own toggle during a run lets the override go", funct
     assertEqual(NS.WindowCompact.Mode(), "full"); assertEqual(f:GetWidth(), 1000)
 end)
 
+-- An enabled addon in a running Mythic+ key: difficulty 8, the key active.
+local function inKey()
+    local NS, _, m = T.enableAddon()
+    m.__context.inInstance, m.__context.instanceType, m.__context.inGroup = true, "party", true
+    m.instance.difficultyID, m.challengeModeActive = 8, true
+    m.__fire("CHALLENGE_MODE_START")
+    assertEqual(NS.Situations.Current(), "mythicPlus")
+    return NS, m
+end
+
+-- The key completes; the client still reports difficulty 8, so the situation stays mythicPlus.
+local function complete(NS, m)
+    m.challengeModeActive = false
+    m.__fire("CHALLENGE_MODE_COMPLETED")
+    assertEqual(NS.Situations.Current(), "mythicPlus", "a completed key still reads as mythicPlus")
+end
+
+-- The completed key's chest grace runs out.
+local function graceOut(NS, m) m.advance(NS.LootFeed.LOOT_GRACE + 1) end
+
+test("compact: the chest after a key completes still belongs to the run, so its auto-open is compact", function()
+    local NS, m = inKey()
+    complete(NS, m)
+    announce(NS, drop(1))   -- the chest: the window's first open in this key
+    assertTrue(NS.IsWindowShown())
+    assertTrue(NS.WindowCompact.InRun()); assertEqual(NS.Window.Frame():GetWidth(), 380)
+end)
+
+test("compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it", function()
+    local NS, m = inKey()
+    announce(NS, drop(1))
+    local f = NS.Window.Frame()
+    complete(NS, m)
+    graceOut(NS, m)
+    assertTrue(NS.WindowCompact.InRun(), "shown: the layout does not jump under the player")
+    assertEqual(f:GetWidth(), 380)
+    close(NS)
+    assertFalse(NS.WindowCompact.InRun())
+    announce(NS, drop(2))   -- a late drop, same instance, still mythicPlus
+    assertTrue(NS.IsWindowShown())
+    assertFalse(NS.WindowCompact.InRun(), "a completed key never re-arms the override")
+    assertEqual(f:GetWidth(), 1000)
+end)
+
+test("compact: a key's grace running out with the window hidden lets go at once", function()
+    local NS, m = inKey()
+    announce(NS, drop(1))
+    close(NS)
+    complete(NS, m)
+    assertTrue(NS.WindowCompact.InRun(), "within the grace: still the run's")
+    graceOut(NS, m)
+    assertFalse(NS.WindowCompact.InRun())
+    NS.ShowWindow()
+    assertEqual(NS.Window.Frame():GetWidth(), 1000)
+end)
+
+test("compact: the completion latch clears on leaving, so the next run opens compact again", function()
+    local NS, m = inKey()
+    announce(NS, drop(1))
+    close(NS)
+    complete(NS, m)
+    graceOut(NS, m)
+    assertEqual(NS.State.compactRunSpent, "mythicPlus")
+    leave(NS, m)
+    assertEqual(NS.State.compactRunSpent, nil)
+    m.challengeModeActive = true
+    m.instance.difficultyID = 8
+    m.__context.inInstance, m.__context.instanceType = true, "party"
+    m.__fire("CHALLENGE_MODE_START")
+    announce(NS, drop(2))
+    assertTrue(NS.WindowCompact.InRun()); assertEqual(NS.Window.Frame():GetWidth(), 380)
+end)
+
 test("compact: a window the player opened is never switched by a drop", function()
     local NS = inDungeon()
     NS.ShowWindow()

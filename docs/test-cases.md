@@ -242,7 +242,7 @@ Total.
 - filter bar tooltip: AboveFits is true when the screen has room over the control, else false
 - filter bar tooltip: near the top of the screen it opens below the control, never over it
 
-### test_window_compact.lua (21)
+### test_window_compact.lua (25)
 
 - compact: the layout in force is the stored one, compact while a run holds it, full for junk
 - compact: a run is a dungeon, raid, key or delve, and nothing else
@@ -263,6 +263,10 @@ Total.
 - compact: a parent's hide (Alt-Z) is not the window closing, so the run's layout stays
 - compact: with Open in compact view during a run off, an auto-open keeps the stored layout
 - compact: the player's own toggle during a run lets the override go
+- compact: the chest after a key completes still belongs to the run, so its auto-open is compact
+- compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it
+- compact: a key's grace running out with the window hidden lets go at once
+- compact: the completion latch clears on leaving, so the next run opens compact again
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
@@ -1545,7 +1549,7 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 57 |
-| test_window_compact.lua | 21 |
+| test_window_compact.lua | 25 |
 | test_compact_cards.lua | 29 |
 | test_compact_group.lua | 14 |
 | test_compact_mine.lua | 16 |
@@ -1603,4 +1607,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1321** |
+| **Total** | **1325** |

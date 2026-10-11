@@ -23,6 +23,12 @@ State.sim = nil
 -- marks a run that ended while the window was shown: it lets go when the window is next hidden.
 State.compactRun = nil
 
+-- The situation a Mythic+ key ended in, LOOT_GRACE seconds after it completed
+-- (modules/WindowCompact.lua): no auto-open there re-arms the run override, since a completed key
+-- still reads as mythicPlus until the player leaves. nil otherwise; the situation moving or a new
+-- key clears it.
+State.compactRunSpent = nil
+
 -- Whether the player has the main window open this session. The window's own show decision
 -- (modules/Window.lua) combines it with the General visibility setting and the stand-down latch.
 State.windowOpen = false

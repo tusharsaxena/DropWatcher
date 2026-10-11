@@ -1337,8 +1337,10 @@ bar and Sort back in the footer, each at its place. Result:
 
 **COMPACT-6. Open in compact view during a run (DW-C0).** With the Layout on Full and Settings →
 Window → Open in compact view during a run on (the default), close the window and start a Mythic+
-key → the first drop opens the window compact; the Layout setting still reads Full. Complete the key
-with the window still open → it stays compact; close it and reopen it (`/dw show`) → it opens full.
+key → the first drop (the chest, right after the key completes) opens the window compact; the
+Layout setting still reads Full. Keep it open past two minutes after the completion → it stays
+compact; close it and reopen it (`/dw show`) → it opens full, and a later drop in the same instance
+opens it full too.
 Close it inside a dungeon run, let a drop open it → compact; click the toggle → full at once, and it
 stays the player's choice. Turn the option off → an auto-open in a run keeps the Layout. Result:
 

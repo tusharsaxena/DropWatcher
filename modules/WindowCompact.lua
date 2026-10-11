@@ -16,11 +16,15 @@ local _, NS = ...
 --
 -- THE RUN OVERRIDE (`window.compactInRuns`, on by default). An auto-open inside a dungeon, raid,
 -- Mythic+ key or delve (RUN below) opens the compact layout whatever the stored mode
--- (NS.State.compactRun = { key }). The run ends when the situation moves off the one it began in:
--- CHALLENGE_MODE_COMPLETED (the situation edge re-reads a key as a dungeon) or leaving the
--- instance. A hidden window lets go at once; a shown one keeps its layout and lets go when it is
--- next hidden, so it returns to the stored mode the next time it opens. The player's own choice
--- (NS.SetWindowMode) lets go at once.
+-- (NS.State.compactRun = { key }). The run ends when the situation moves off the one it began in
+-- (leaving the instance), or LOOT_GRACE seconds after CHALLENGE_MODE_COMPLETED: a completed key
+-- still reads as mythicPlus (difficulty 8 stays until the player leaves), so completion is its own
+-- edge, and the chest's loot, which arrives after it, still belongs to the run (the feed groups it
+-- the same way, modules/LootFeed.lua). When the grace runs out the situation is latched
+-- (NS.State.compactRunSpent): no later auto-open there re-arms the override, until the situation
+-- moves or a new key starts. A hidden window lets go at once; a shown one keeps its layout and
+-- lets go when it is next hidden, so it returns to the stored mode the next time it opens. The
+-- player's own choice (NS.SetWindowMode) lets go at once.
 --
 -- PURE: ValidMode, IsRun, Effective, DefaultSize, Bounds, ClampSize, CornerPoint. The edge: the
 -- reads through NS.Setting and the profile, Apply (the frame's bounds, size and point), and the
@@ -262,6 +266,7 @@ end
 --- @return boolean held whether the override holds now
 function WC.OnAutoOpen(key)
     if not WC.IsRun(key) or NS.Setting("window.compactInRuns") == false then return false end
+    if NS.State.compactRunSpent == key then return false end
     NS.State.compactRun = { key = key }
     NS.Debug(TAG, "auto-open in %s: compact for the run", tostring(key))
     WC.Apply()
@@ -275,17 +280,60 @@ local function release()
     WC.Apply()
 end
 
---- The situation moved to `key`: off the run's situation, the run has ended. A hidden window lets
---- go now; a shown one when it is next hidden.
---- @param key string|nil
-function WC.OnSituationChanged(key)
+-- The run has ended: a hidden window lets go now; a shown one when it is next hidden.
+local function endRun()
     local run = NS.State.compactRun
-    if not run or run.ended or key == run.key then return end
+    if not run or run.ended then return end
     if NS.Window.IsShown() then
         run.ended = true
         return
     end
     release()
+end
+
+-- The completion's grace timer (a C_Timer handle), nil when none runs.
+local graceTimer
+
+local function cancelGrace()
+    if graceTimer then graceTimer:Cancel() end
+    graceTimer = nil
+end
+
+--- The situation moved to `key`: the completion latch and its timer clear, and off the run's
+--- situation the run has ended.
+--- @param key string|nil
+function WC.OnSituationChanged(key)
+    if NS.State.compactRunSpent ~= key then NS.State.compactRunSpent = nil end
+    local run = NS.State.compactRun
+    if run and key ~= run.key then
+        cancelGrace()
+        endRun()
+    end
+end
+
+--- The completed key's grace ran out in situation `key`: the run is over, and that situation is
+--- latched so no later auto-open in the same instance re-arms the override.
+--- @param key string the situation the key completed in
+function WC.OnRunGraceEnded(key)
+    graceTimer = nil
+    if NS.Situations.Current() ~= key then return end
+    NS.State.compactRunSpent = key
+    NS.Debug(TAG, "key over in %s: no compact until the situation moves", tostring(key))
+    endRun()
+end
+
+--- CHALLENGE_MODE_COMPLETED: the key is over, though the situation still reads mythicPlus until the
+--- player leaves. The chest's loot is still the run's: the run ends LOOT_GRACE seconds from now.
+function WC.OnRunCompleted()
+    cancelGrace()
+    local key = NS.Situations.Current()
+    graceTimer = C_Timer.NewTimer(NS.LootFeed.LOOT_GRACE, function() WC.OnRunGraceEnded(key) end)
+end
+
+--- CHALLENGE_MODE_START: a new key is a new run, so the completion latch and its timer clear.
+function WC.OnRunStarted()
+    cancelGrace()
+    NS.State.compactRunSpent = nil
 end
 
 -- Hidden by the player or the ladder (not a parent's hide: the frame's own flag is still set):
@@ -295,6 +343,14 @@ NS.Window.AddVisibilityListener(function(shown)
     if shown or not (run and run.ended) or NS.Window.IsShown() then return end
     release()
 end)
+
+-- CHALLENGE_MODE_START and CHALLENGE_MODE_COMPLETED are shared with modules/Situations.lua and
+-- modules/LootFeed.lua (core/DropWatcher.lua's dispatcher); the situation's rows come first, so
+-- Situations.Current is fresh here.
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHALLENGE_MODE_START", "OnCompactRunStart" }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHALLENGE_MODE_COMPLETED", "OnCompactRunEnd" }
+function NS.addon.OnCompactRunStart() WC.OnRunStarted() end
+function NS.addon.OnCompactRunEnd() WC.OnRunCompleted() end
 
 -- Tracked, so the stand-down takes it down and the stand-up replays it (Window.lua's pattern).
 local target = NS.Bus:NewTarget()
@@ -307,6 +363,8 @@ listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     NS.State.compactRun = nil
+    NS.State.compactRunSpent = nil
+    cancelGrace()
     if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
