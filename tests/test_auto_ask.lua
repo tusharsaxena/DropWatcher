@@ -170,6 +170,39 @@ test("auto-ask edge: a loading screen out of an encounter lets the held asks go 
     assertEqual(whispers(m), 1)
 end)
 
+test("auto-ask edge: the restriction lifting after the loading screen ends the hold (M6 review)", function()
+    local NS, m, make = party()
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    m.__fire("ENCOUNTER_START", 2902, "Boss", 16, 20)
+    m.restrictionStates[RT.Encounter] = RS.Active
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Active)
+    make(); added(NS, 1)
+    -- A hearth out mid-fight: the world events come while the hint still says Encounter.
+    m.__fire("PLAYER_ENTERING_WORLD", false, false)
+    m.__fire("ZONE_CHANGED_NEW_AREA")
+    assertTrue(NS.AutoAsk.Stats().inEncounter, "the restriction still holds")
+    -- red under: an AutoAsk that never re-checks on RESTRICTION_CHANGED (modules/AutoAsk.lua listen)
+    m.restrictionStates[RT.Encounter] = nil
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Inactive)
+    assertFalse(NS.AutoAsk.Stats().inEncounter, "the lifting ends the hold")
+    m.advance(10.1)
+    assertEqual(whispers(m), 1)
+end)
+
+test("auto-ask edge: a restriction change with no world event never ends a held encounter", function()
+    local NS, m, make = party()
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    m.__fire("ENCOUNTER_START", 2902, "Boss", 16, 20)
+    m.restrictionStates[RT.Encounter] = RS.Active
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Active)
+    make(); added(NS, 1)
+    m.restrictionStates[RT.Encounter] = nil
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Inactive)
+    assertTrue(NS.AutoAsk.Stats().inEncounter, "only ENCOUNTER_END or a world event ends it")
+    m.advance(60)
+    assertEqual(whispers(m), 0)
+end)
+
 test("auto-ask edge: a zone change with no encounter restriction ends a held encounter too", function()
     local NS, m, make = party()
     m.__fire("ENCOUNTER_START", 2902, "Boss", 16, 20)

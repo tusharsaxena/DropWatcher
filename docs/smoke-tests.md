@@ -689,8 +689,9 @@ its reason. Pull the next boss while one is waiting → nothing goes during the 
 
 **ASK-9. Auto-ask after leaving an encounter (DW-62).** Auto-ask on, `/dw debug on`, in a dungeon
 group. Pull a boss, then hearth out (or release and run out) before it dies. After the loading
-screen the console reads `[MSG] auto-ask: left the encounter without its end; …` (only when one
-was held) and `/dw diagnostics` shows auto-ask `inEncounter=false`. Have a member loot a likely
+screen (or a moment later, when the client reports the Encounter restriction lifted after it;
+M6 review) the console reads `[MSG] auto-ask: left the encounter without its end; …` (only when
+one was held) and `/dw diagnostics` shows auto-ask `inEncounter=false`. Have a member loot a likely
 tradeable upgrade for you (or `/dw add` one naming them) → the whisper goes after the delay, not at
 the next boss or `/reload`. Back inside, pull a boss and cross into another part of the instance
 during the fight → nothing is asked until the boss dies. Result:

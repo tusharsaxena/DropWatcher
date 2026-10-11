@@ -183,7 +183,8 @@ qualifying drop whispered after the delay once with the ask template, the delay 
 read from the rows, an upgrade into an empty slot asked for whatever the least gain, a sidegrade,
 your own drop or an unknown trade left alone and a later `likely`
 scheduled, held through an encounter and due after its end, a loading screen or a new zone ending
-a hold with no Encounter restriction left (and keeping it while one is), an encounter ending after
+a hold with no Encounter restriction left (and keeping it while one is, until its lifting after the
+world event; a lifting with no world event keeping it), an encounter ending after
 the drop pushing it back, each cancel rule (your own ask, the looter leaving, the row dismissed, the item
 received, a drop gone or no longer qualifying when due, turning it off, the stand-down), only drops
 from after it was turned on, the one-time notice, test mode printing instead of sending and the

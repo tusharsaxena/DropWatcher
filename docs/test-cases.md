@@ -919,7 +919,7 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
-### test_auto_ask.lua (23)
+### test_auto_ask.lua (25)
 
 - auto-ask: DueAt is the delay after the later of the drop and the encounter's end
 - auto-ask: ClampDelay keeps the delay inside 3..30 and defaults to 10
@@ -930,6 +930,8 @@ Total.
 - auto-ask edge: a sidegrade, your own drop or an unknown trade is not asked for; a later likely is
 - auto-ask edge: held while an encounter is in progress, then due the delay after its end
 - auto-ask edge: a loading screen out of an encounter lets the held asks go (DW-62)
+- auto-ask edge: the restriction lifting after the loading screen ends the hold (M6 review)
+- auto-ask edge: a restriction change with no world event never ends a held encounter
 - auto-ask edge: a zone change with no encounter restriction ends a held encounter too
 - auto-ask edge: an encounter that ends after the drop pushes the ask back
 - auto-ask edge: asking yourself cancels it
@@ -1083,7 +1085,7 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 28 |
 | test_toast.lua | 24 |
-| test_auto_ask.lua | 23 |
+| test_auto_ask.lua | 25 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1093,4 +1095,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **899** |
+| **Total** | **901** |

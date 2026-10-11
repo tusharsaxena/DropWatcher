@@ -16,7 +16,9 @@ local _, NS = ...
 -- encounter's end schedules them again from that moment. A player who leaves mid-fight (a hearth,
 -- a release, a teleport) may never hear that ENCOUNTER_END, so a loading screen or a new zone
 -- (PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA) ends the hold too, unless the restriction tracker
--- still reports the Encounter restriction (a zone line crossed inside the fight). A drop that qualifies after its time has
+-- still reports the Encounter restriction (a zone line crossed inside the fight); then the
+-- restriction's lifting (RESTRICTION_CHANGED) ends it, since the client may report that after the
+-- loading screen. A drop that qualifies after its time has
 -- passed is asked at once. A test drop is timed from when it is considered, since its age is made up.
 --
 -- THE SEND. When it is due the drop is checked again (still on, still in the feed, still
@@ -92,6 +94,7 @@ local considered = {}    -- [drop id] = true: scheduled, sent or canceled once; 
 local enabledAt = 0      -- GetTime() when auto-ask was last turned on (0: at load)
 local wasOn              -- the last `enabled` seen (nil until first read)
 local inEncounter = false
+local movedWhileHeld = false -- a world event came while the Encounter restriction still held
 local endedAt            -- GetTime() of the last ENCOUNTER_END
 local counts = { scheduled = 0, sent = 0, canceled = 0 }
 
@@ -263,22 +266,43 @@ end
 
 --- ENCOUNTER_START: the waiting asks are held until the encounter ends.
 function AA.OnEncounterStart()
-    inEncounter = true
+    inEncounter, movedWhileHeld = true, false
     for _, p in pairs(pending) do stopTimer(p) end
 end
 
 --- ENCOUNTER_END: every waiting ask is due its delay after now.
 function AA.OnEncounterEnd()
-    inEncounter, endedAt = false, now()
+    inEncounter, movedWhileHeld, endedAt = false, false, now()
     for id in pairs(pending) do arm(id) end
 end
 
---- PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA: an encounter held with no Encounter
---- restriction left in force is over for this player, so it ends as ENCOUNTER_END would.
-function AA.OnWorldChanged()
-    if not inEncounter or NS.Restrictions.ActiveSet().encounter then return end
+local function encounterRestricted()
+    return NS.Restrictions.ActiveSet().encounter == true
+end
+
+local function leaveEncounter()
     NS.Debug(TAG, "auto-ask: left the encounter without its end; the waiting asks are due")
     AA.OnEncounterEnd()
+end
+
+--- PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA: an encounter held with no Encounter
+--- restriction left in force is over for this player, so it ends as ENCOUNTER_END would. While the
+--- restriction still holds (a zone line crossed inside the fight, or its lifting not yet heard) the
+--- move is remembered, and the restriction's lifting ends the hold then (OnRestrictionChanged).
+function AA.OnWorldChanged()
+    if not inEncounter then return end
+    if encounterRestricted() then
+        movedWhileHeld = true
+        return
+    end
+    leaveEncounter()
+end
+
+--- RESTRICTION_CHANGED: after a world event that came while the Encounter restriction held, its
+--- lifting ends the hold (the client may report it after the loading screen).
+function AA.OnRestrictionChanged()
+    if not (inEncounter and movedWhileHeld) or encounterRestricted() then return end
+    leaveEncounter()
 end
 
 --- GROUP_ROSTER_UPDATE: a waiting ask to a looter who left is canceled.
@@ -339,12 +363,13 @@ local function listen()
         if kind == "ask" and pending[id] then AA.Cancel(id, "asked") end
     end)
     target:RegisterMessage(M.HISTORY_CHANGED, function() AA.OnHistoryChanged() end)
+    target:RegisterMessage(M.RESTRICTION_CHANGED, function() AA.OnRestrictionChanged() end)
 end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     cancelAll("disabled")
-    inEncounter = false
+    inEncounter, movedWhileHeld = false, false
     if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()

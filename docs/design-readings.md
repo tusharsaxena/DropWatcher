@@ -339,7 +339,10 @@ drop and the last `ENCOUNTER_END`; while an encounter is in progress (`ENCOUNTER
 its end) nothing is due, and the end makes every waiting ask due its delay after that moment. A
 player who leaves mid-fight may never hear that end, so a loading screen or a new zone
 (`PLAYER_ENTERING_WORLD`, `ZONE_CHANGED_NEW_AREA`) ends the hold the same way, unless the
-restriction tracker still reports the Encounter restriction (DW-62). A
+restriction tracker still reports the Encounter restriction (DW-62); then the restriction's
+lifting (`RestrictionChanged`) ends it, since the client may report that after the loading screen
+(M6 review). A restriction change alone, with no world event since the encounter began, never
+ends a hold. A
 drop that qualifies once its time has passed is asked at once. A keystone run has no
 `ENCOUNTER_END` for its chest, so its drops are timed from the drop. **The send** is checked again
 when due (on, in the feed, qualifying, never asked, not received, its looter in the group) and
