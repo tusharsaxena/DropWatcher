@@ -279,6 +279,25 @@ test("chrome: the test-mode strip keeps its tooltip with shorter words that may 
     assertEqual(f.banner:GetHeight(), NS.Constants.WINDOW.BANNER_H - 4)
 end)
 
+-- Retail bounds GetStringWidth by the width the strip's anchors give its words (the window's less
+-- the insets and the art), so only the unbounded width tells a wrap.
+test("chrome: the compact strip takes a second line exactly when its words wrap at the window's width", function()
+    local NS, f, m = shown("compact")
+    local K, CC = NS.Constants.WINDOW, NS.CompactChrome
+    NS.SetTestMode(true)
+    m.textCharWidth = 5   -- the compact words, 72 characters: 360 wide on one line
+    local function at(width)
+        f:SetWidth(width)
+        f.banner.text.__boundWidth = width - 2 * K.INSET - 30
+        NS.Window.Refresh()
+        return CC.BannerH()
+    end
+    assertEqual(at(380), K.BANNER_H + CC.WRAP_H, "380 wide: the words wrap")
+    assertEqual(f.banner:GetHeight(), K.BANNER_H + CC.WRAP_H - 4)
+    assertEqual(at(520), K.BANNER_H, "520 wide: one line")
+    assertEqual(f.banner:GetHeight(), K.BANNER_H - 4)
+end)
+
 test("chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included", function()
     local NS = shown("compact")
     local segs = NS.WindowFooter.Parts()

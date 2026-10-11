@@ -350,7 +350,7 @@ Total.
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
 
-### test_compact_chrome.lua (19)
+### test_compact_chrome.lua (20)
 
 - chrome: the tabs' compact labels are Group, Mine · n and History; full keeps its own
 - chrome: TEST MODE and SIMULATION shorten to TEST and SIM
@@ -369,6 +369,7 @@ Total.
 - chrome: the panel closes when the window hides, minimizes or goes back to full
 - chrome: the full layout takes every control back to its place on the bar and in the footer
 - chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
+- chrome: the compact strip takes a second line exactly when its words wrap at the window's width
 - chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
 - chrome: switching the chrome keeps every tab's filter state and builds no second window
 
@@ -1554,7 +1555,7 @@ Total.
 | test_compact_group.lua | 14 |
 | test_compact_mine.lua | 16 |
 | test_compact_history.lua | 9 |
-| test_compact_chrome.lua | 19 |
+| test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
@@ -1607,4 +1608,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1325** |
+| **Total** | **1326** |

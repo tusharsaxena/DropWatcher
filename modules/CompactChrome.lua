@@ -461,15 +461,26 @@ function CC.Paint(f)
     if compact then paintFilters() end
 end
 
+-- A font string's width on one line. On Retail since 10.0 GetStringWidth is bounded by the width
+-- the anchors give it, so a wrapped string never reads wider than its room; GetUnboundedStringWidth
+-- is the unwrapped width.
+local function unwrappedWidth(fs)
+    local measure = fs.GetUnboundedStringWidth or fs.GetStringWidth
+    local w = measure and measure(fs)
+    return type(w) == "number" and w > 0 and w or nil
+end
+
 --- The test-mode strip's height in the layout in force: one line full; compact two when its words
---- do not fit the window's width.
+--- do not fit on one line (their unwrapped width against the room their anchors give them).
 --- @return number
 function CC.BannerH()
     local f = NS.Window.Frame()
     if not (f and f.chromeCompact) then return K.BANNER_H end
-    local w = f.banner.text.GetStringWidth and f.banner.text:GetStringWidth()
-    local room = (f:GetWidth() or 0) - 2 * K.INSET - 30
-    if type(w) == "number" and w > 0 and room > 0 and w <= room then return K.BANNER_H end
+    local fs = f.banner.text
+    local w = unwrappedWidth(fs)
+    local room = fs.GetWidth and fs:GetWidth()
+    if type(room) ~= "number" or room <= 0 then room = (f:GetWidth() or 0) - 2 * K.INSET - 30 end
+    if w and room > 0 and w <= room then return K.BANNER_H end
     return K.BANNER_H + CC.WRAP_H
 end
 
