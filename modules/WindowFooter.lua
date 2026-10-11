@@ -171,7 +171,7 @@ local function buildSort(host)
     dd.onSelect = function(v) FB.Set(NS.Window.ActiveTab(), "sort", v) end
     NS.Window.AttachTooltip(dd, function()
         return L["Sort"], L["The order of the rows on this tab."]
-    end)
+    end, "above")
     return dd
 end
 

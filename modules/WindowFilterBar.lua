@@ -510,7 +510,7 @@ local function viewDropdown(host, width)
     dd.onMultiSelect = function(set)
         if not syncing then FB.Set(activeTab(), "view", copySet(set)) end
     end
-    NS.Window.AttachTooltip(dd, function() return unpack(FB.ViewTip(activeTab())) end)
+    NS.Window.AttachTooltip(dd, function() return unpack(FB.ViewTip(activeTab())) end, "above")
     return dd
 end
 
@@ -554,7 +554,7 @@ local function charDropdown(host, width)
     dd.onMultiSelect = function(set)
         if not syncing then FB.Set(activeTab(), "char", copySet(set)) end
     end
-    NS.Window.AttachTooltip(dd, grayedTip("char", TIPS.char))
+    NS.Window.AttachTooltip(dd, grayedTip("char", TIPS.char), "above")
     return dd
 end
 
@@ -563,7 +563,7 @@ local function pickDropdown(host, key, width)
     if not dd then return nil end
     dd:SetOptions(options(key))
     dd.onSelect = function(v) FB.Set(activeTab(), key, v) end
-    NS.Window.AttachTooltip(dd, grayedTip(key, TIPS[key]))
+    NS.Window.AttachTooltip(dd, grayedTip(key, TIPS[key]), "above")
     return dd
 end
 
@@ -580,7 +580,7 @@ local function qualityDropdown(host, width)
     NS.Window.AttachTooltip(dd, function()
         if not FB.HONORS[activeTab()].quality then return L["Quality"], GRAYED end
         return qualityTip()
-    end)
+    end, "above")
     return dd
 end
 
@@ -628,7 +628,7 @@ local function buildSearch(host)
     eb:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     eb:SetScript("OnEditFocusGained", function(self) lineColor(self, FLAT.hover) end)
     eb:SetScript("OnEditFocusLost", function(self) lineColor(self, FLAT.line) end)
-    NS.Window.AttachTooltip(eb, grayedTip("search", TIPS.search))
+    NS.Window.AttachTooltip(eb, grayedTip("search", TIPS.search), "above")
     return eb
 end
 

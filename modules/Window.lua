@@ -111,13 +111,60 @@ local function feedName() return NS.State.testMode == true and "test" or "live" 
 
 -- ── tooltips ────────────────────────────────────────────────────────────────────────────────
 
+-- ABOVE THE CONTROL (feedback-3 spec §1, DW-B1). A filter-bar control's tooltip (the bar's
+-- dropdowns, its search box and the footer's Sort) never covers the control or the menu it opens
+-- below: its BOTTOMLEFT sits on the control's TOPRIGHT (ANCHOR_RIGHT's place), or, when the screen
+-- has no room on the right, its BOTTOMRIGHT on the control's TOPLEFT (ANCHOR_LEFT's). Placed by
+-- hand after Show, so the room is measured on the tooltip's real width, at each frame's scale.
+
+local function num(v) return type(v) == "number" and v or nil end
+
+local function geom(f, method)
+    local fn = f and f[method]
+    return fn and num(fn(f)) or nil
+end
+
+local function scaleOf(f) return geom(f, "GetEffectiveScale") or 1 end
+
+--- Which side above a control its tooltip goes, in screen pixels: `right` when the tooltip fits
+--- between the control's right edge and the screen's, else `left`. Unknown geometry answers `right`.
+--- @param controlRight number|nil
+--- @param tipWidth number|nil
+--- @param screenWidth number|nil
+--- @return string
+function Window.AboveSide(controlRight, tipWidth, screenWidth)
+    controlRight, tipWidth, screenWidth = num(controlRight), num(tipWidth), num(screenWidth)
+    if not (controlRight and tipWidth and screenWidth) then return "right" end
+    return controlRight + tipWidth <= screenWidth and "right" or "left"
+end
+
+--- Place a shown tooltip above `widget`, at its top right, else its top left. Answers the side.
+--- @param tip table a GameTooltip, shown
+--- @param widget table the hovered control
+--- @return string
+function Window.PlaceAbove(tip, widget)
+    local right = geom(widget, "GetRight")
+    local screen = geom(UIParent, "GetWidth")
+    local side = Window.AboveSide(right and right * scaleOf(widget),
+        (geom(tip, "GetWidth") or 0) * scaleOf(tip), screen and screen * scaleOf(UIParent))
+    tip:ClearAllPoints()
+    if side == "right" then
+        tip:SetPoint("BOTTOMLEFT", widget, "TOPRIGHT", 0, 0)
+    else
+        tip:SetPoint("BOTTOMRIGHT", widget, "TOPLEFT", 0, 0)
+    end
+    return side
+end
+
 local function showTooltip(self)
     local lines = { self.tooltip() }
     if #lines == 0 or not GameTooltip then return end
-    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    local above = self.tipPlace == "above"
+    GameTooltip:SetOwner(self, above and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
     GameTooltip:SetText(lines[1], C.GOLD.r, C.GOLD.g, C.GOLD.b)
     for i = 2, #lines do GameTooltip:AddLine(lines[i], 1, 1, 1, true) end
     GameTooltip:Show()
+    if above then Window.PlaceAbove(GameTooltip, self) end
 end
 
 local function hideTooltip()
@@ -127,10 +174,14 @@ end
 --- Give `widget` a tooltip: `fn()` answers the title, then each line. Read on every hover, so it is
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
 --- Hooked rather than set, so a library widget keeps its own hover tint.
+--- `place` is nil (below the widget, ANCHOR_BOTTOM) or `above` (Window.PlaceAbove: a filter-bar
+--- control, DW-B1).
 --- @param widget table
 --- @param fn function
-function Window.AttachTooltip(widget, fn)
+--- @param place string|nil
+function Window.AttachTooltip(widget, fn, place)
     widget.tooltip = fn
+    widget.tipPlace = place
     if widget.EnableMouse then widget:EnableMouse(true) end
     widget:HookScript("OnEnter", showTooltip)
     widget:HookScript("OnLeave", hideTooltip)

@@ -336,6 +336,67 @@ test("shell: the View tooltip lists every value as a bullet, and grays the ones 
     assertTrue(tip[5]:find("not on this tab", 1, true) == nil)
 end)
 
+-- Feedback-3 spec §1 (DW-B1): a filter-bar control's tooltip sits above it, never over it or its menu.
+test("filter bar tooltip: AboveSide is right when the screen has room past the control, else left", function()
+    local NS = T.newAddon()
+    local side = NS.Window.AboveSide
+    assertEqual(side(1000, 300, 1920), "right")
+    assertEqual(side(1620, 300, 1920), "right", "exactly fits")
+    assertEqual(side(1621, 300, 1920), "left")
+    assertEqual(side(nil, 300, 1920), "right", "unknown geometry: ANCHOR_RIGHT")
+    assertEqual(side(1000, 300, nil), "right")
+end)
+
+local function hoverAbove(m, w, right, tipWidth)
+    w.GetRight = function() return right end
+    m.UIParent.GetWidth = function() return 1920 end
+    m.GameTooltip.GetWidth = function() return tipWidth end
+    w:__fire("OnEnter")
+    local point, rel, relPoint, x, y = m.GameTooltip:GetPoint(1)
+    return tostring(point) .. ">" .. tostring(relPoint), rel, x, y
+end
+
+test("filter bar tooltip: every bar control and the footer's Sort open above the control, top right", function()
+    local NS, _, m = shown()
+    local c = NS.WindowFilterBar.Controls()
+    local _, sort = NS.WindowFooter.Parts()
+    for _, key in ipairs({ "view", "quality", "content", "char", "search", "sort" }) do
+        local w = key == "sort" and sort or c[key]
+        assertTrue(w ~= nil, key .. " is built")
+        local pts, rel, x, y = hoverAbove(m, w, 900, 300)
+        assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", key)
+        assertEqual(pts, "BOTTOMLEFT>TOPRIGHT", key .. ": its bottom left on the control's top right")
+        assertTrue(rel == w, key .. ": anchored to the control")
+        assertEqual(x, 0); assertEqual(y, 0)
+        assertEqual(#m.GameTooltip.__points, 1, key .. ": one point")
+    end
+end)
+
+test("filter bar tooltip: with no room on the right it opens above the control, top left", function()
+    local NS, _, m = shown()
+    local _, sort = NS.WindowFooter.Parts()
+    local pts, rel = hoverAbove(m, sort, 1800, 300)
+    assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
+    assertTrue(rel == sort)
+    pts = hoverAbove(m, NS.WindowFilterBar.Controls().view, 1800, 300)
+    assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
+end)
+
+test("filter bar tooltip: the room is measured in screen pixels, at each frame's scale", function()
+    local NS, _, m = shown()
+    local view = NS.WindowFilterBar.Controls().view
+    view.GetEffectiveScale = function() return 0.5 end
+    assertEqual((hoverAbove(m, view, 3000, 300)), "BOTTOMLEFT>TOPRIGHT", "3000 units at 0.5 is 1500 px")
+    m.GameTooltip.GetEffectiveScale = function() return 2 end
+    assertEqual((hoverAbove(m, view, 3000, 300)), "BOTTOMRIGHT>TOPLEFT", "a 600 px tooltip does not fit")
+end)
+
+test("filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)", function()
+    local _, f, m = shown()
+    f.tabs.group:__fire("OnEnter")
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_BOTTOM")
+end)
+
 -- Ka0s Loot History's filter bar look (ui spec §2, FB-5): ../LootHistory/modules/BrowserFilterBar.lua.
 local LH_FILL, LH_LINE = { 0.1, 0.1, 0.12, 0.9 }, { 0.24, 0.24, 0.27, 0.9 }
 

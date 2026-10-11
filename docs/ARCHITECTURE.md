@@ -108,7 +108,11 @@ its one-line responsibility and why its position is load-bearing or conventional
   headers as the other two tabs, every group open until toggled (DW-A9). The tables' entries in
   order are `WindowCells.Entries` (pure); a Group drops header counts your own drops it leaves to
   My drops (`· 1 yours on My drops`), and the tab reads `My drops · n` for every drop of yours, its
-  tooltip naming how many you can still trade (feedback-3 spec §0, DW-B0).
+  tooltip naming how many you can still trade (feedback-3 spec §0, DW-B0). A filter-bar control's
+  tooltip (View, Quality, Content, Character, the search box and the footer's Sort) opens above the
+  control, never over it or its menu: its `BOTTOMLEFT` on the control's `TOPRIGHT`, or its
+  `BOTTOMRIGHT` on the `TOPLEFT` when the screen has no room on the right (`Window.AttachTooltip`'s
+  `above` placement, `Window.PlaceAbove`; feedback-3 spec §1, DW-B1).
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
 

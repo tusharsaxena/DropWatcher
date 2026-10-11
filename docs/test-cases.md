@@ -182,7 +182,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (50)
+### test_window_shell.lua (55)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -203,6 +203,11 @@ Total.
 - shell: the View is multi-select: its values combine, the label counts them, and All clears them
 - shell: each tab grays the View values it does not use, and a grayed value does not toggle
 - shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use
+- filter bar tooltip: AboveSide is right when the screen has room past the control, else left
+- filter bar tooltip: every bar control and the footer's Sort open above the control, top right
+- filter bar tooltip: with no room on the right it opens above the control, top left
+- filter bar tooltip: the room is measured in screen pixels, at each frame's scale
+- filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)
 - shell: the search box is Loot History's flat, square box
 - shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
 - shell: each tab keeps its own filter state, and grays what it does not use
@@ -1359,7 +1364,7 @@ Total.
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 50 |
+| test_window_shell.lua | 55 |
 | test_window_group.lua | 46 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1409,4 +1414,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1163** |
+| **Total** | **1168** |
