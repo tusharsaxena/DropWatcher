@@ -43,3 +43,9 @@ DW-71	M7	DropWatcher	Sim item pool from the Encounter Journal (own-items fallbac
 DW-72	M7	DropWatcher	Sim event drivers: loot lines, encounters, restrictions/combat, inspect replies, trade windows, sim trade	DW-71	M	SIM-4 SIM-5	sim §2
 DW-73	M7	DropWatcher	Sim scenarios + timeline, /dw sim verbs, SIM chip/footer, diagnostics, SIM debug tag, end-to-end suite	DW-72	M	SIM-2 SIM-3 SIM-7	sim §4 §6 §7
 DW-74	M7	DropWatcher	M7 docs sync + automated-test bundle	DW-73	S		sim §7 §8
+DW-80	M8	DropWatcher	BUG-1 wrong item read (root cause, best link, exact bag read, drops diagnostics, ItemRead for LibKa0s) + BUG-2 real game tooltip	DW-74	M	FEED-10	ui §0
+DW-81	M8	DropWatcher	Header like Loot History (no logo, centered title, red TEST MODE/SIMULATION text)	DW-80	S	PANEL	ui §1
+DW-82	M8	DropWatcher	Filter bar widgets styled like Loot History	DW-81	S	PANEL	ui §2
+DW-83	M8	DropWatcher	My eq column, Their eq icons+levels, Usable by me / Upgrade for me, open on every eligible drop	DW-82	M	FEED	ui §3
+DW-84	M8	DropWatcher	Test mode with real items, History test data, no trailing ellipses	DW-83	M	STATE	ui §4
+DW-85	M8	DropWatcher	M8 docs sync + automated-test bundle	DW-84	S		ui §5

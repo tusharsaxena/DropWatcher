@@ -251,5 +251,42 @@
     "notes": "README Usage (how to simulate), ARCHITECTURE, module-map, slash-dispatch, compat-layer, smoke-tests SIM theme (owed, never passed), test-cases regenerated; ~/.claude/dev-copilot/bin/ka0s-bounded tests/_kit/run-automated-tests.sh green, CCN <= 15, no authored file over 1000 lines."
    }
   ]
+ },
+ "M8": {
+  "milestone": "M8",
+  "base": "<M7 checkpoint commit>",
+  "extra": "M8 is the owner's in-game feedback (2026-10-11). Read docs/superpowers/specs/2026-10-11-drop-watcher-ui-feedback-design.md (governing for M8; its sections 0-5) and LOOK AT the screenshots in docs/superpowers/research/2026-10-11-ui-feedback/ with the Read tool, then docs/ARCHITECTURE.md. The reference for look and feel is ../LootHistory (modules/Browser.lua, modules/BrowserFilterBar.lua): read it. FILE SIZES: core/Compat.lua is at 999 lines and modules/LootFeed.lua at 996; before adding to either, move pure code out of it into a new or existing pure module (as DW-61 did with core/TextParse.lua: no client call outside core/Compat.lua, compat-sec1), so every authored file stays under 1000 lines. The simulator (M7, /dw sim, modules/Sim*.lua, core/SimSeam.lua) exists: keep it working, and use its pool (NS.SimPool) for test mode's real items. No GitHub writes: drafts go in docs/superpowers/plans/2026-10-10-drop-watcher-v1/issues-to-file.md.",
+  "items": [
+   {
+    "id": "DW-80",
+    "title": "BUG-1 the wrong item read + BUG-2 the real game tooltip everywhere",
+    "notes": "Spec section 0, in full. Systematic debugging: reproduce headless with realistic 12.x links per loot source BEFORE fixing; prove or refute each hypothesis and say which in the commit body. core/ItemRead.lua shaped for LibKa0s-Item-1.0; draft the LibKa0s promotion issue (item read + loot-line parser; adopters LootHistory, BankLedger, DropWatcher)."
+   },
+   {
+    "id": "DW-81",
+    "title": "Header like Loot History: no logo, centered title, red TEST MODE and SIMULATION text, yellow strip kept",
+    "notes": "Spec section 1 (FB-1..FB-4)."
+   },
+   {
+    "id": "DW-82",
+    "title": "Filter bar widgets styled like Loot History",
+    "notes": "Spec section 2 (FB-5)."
+   },
+   {
+    "id": "DW-83",
+    "title": "My eq column, Their eq icons and levels, Usable by me / Upgrade for me filters, open on every eligible drop",
+    "notes": "Spec section 3 (FB-6..FB-8, FB-12)."
+   },
+   {
+    "id": "DW-84",
+    "title": "Test mode with real items from the simulator pool, History test data, no trailing ellipses",
+    "notes": "Spec section 4 (FB-9..FB-11)."
+   },
+   {
+    "id": "DW-85",
+    "title": "M8 docs sync + automated-test bundle",
+    "notes": "Spec section 5. README, ARCHITECTURE, module-map, schema (new rows), settings-panel, smoke-tests (owed, never passed), test-cases regenerated; ka0s-bounded tests/_kit/run-automated-tests.sh green, CCN <= 15, no authored file over 1000 lines."
+   }
+  ]
  }
 }
