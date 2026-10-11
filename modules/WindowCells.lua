@@ -595,20 +595,74 @@ local KIND_LINE = {
     area = L["Drops from this area, outside any boss encounter."],
 }
 
---- An encounter header's text and tooltip: `Label · Situation · 2m ago · 4 drops`.
+-- At most this many hidden drops are named in a header's tooltip; the rest are counted.
+WC.HIDDEN_TIP_LINES = 8
+
+--- A group header's count (feedback-2 spec §0): every drop the group holds for the tab, and, while
+--- a filter hides some, how many are shown: `2 drops · 1 shown`.
+--- @param shown number the drops shown under it
+--- @param hidden table|nil { { drop, why }, ... } the ones the filter hid
+--- @return string
+function WC.DropCount(shown, hidden)
+    local nHidden = type(hidden) == "table" and #hidden or 0
+    local total = (tonumber(shown) or 0) + nHidden
+    local text = total == 1 and L["1 drop"] or L["%d drops"]:format(total)
+    if nHidden > 0 then text = text .. " · " .. L["%d shown"]:format(shown) end
+    return text
+end
+
+--- A header tooltip's lines for the drops a filter hid: each drop, its looter and the filter that
+--- hid it (FB.ReasonLabel), the first WC.HIDDEN_TIP_LINES of them, then how many more.
+--- @param hidden table|nil { { drop, why }, ... }
+--- @param filter table|nil the tab's filter state
+--- @return table lines (empty when nothing is hidden)
+function WC.HiddenLines(hidden, filter)
+    local out = {}
+    if type(hidden) ~= "table" or #hidden == 0 then return out end
+    out[1] = L["Hidden by the filters:"]
+    for i, h in ipairs(hidden) do
+        if i > WC.HIDDEN_TIP_LINES then
+            out[#out + 1] = L["and %d more"]:format(#hidden - WC.HIDDEN_TIP_LINES)
+            break
+        end
+        local who = type(h.drop.looter) == "table" and h.drop.looter.name or nil
+        out[#out + 1] = L["%s (%s): %s"]:format(WC.ItemName(h.drop.link) or "?", WC.ShortName(who),
+            NS.WindowFilterBar.ReasonLabel(h.why, filter))
+    end
+    return out
+end
+
+--- A header tooltip: the title, the kind's line, the hidden drops' lines, then the click hint.
+--- @param title string
+--- @param line string
+--- @param hidden table|nil
+--- @param filter table|nil
+--- @param collapsed boolean
+--- @return table
+function WC.HeaderTip(title, line, hidden, filter, collapsed)
+    local tip = { title, line }
+    for _, l in ipairs(WC.HiddenLines(hidden, filter)) do tip[#tip + 1] = l end
+    tip[#tip + 1] = collapsed and L["Click to expand this group."] or L["Click to collapse this group."]
+    return tip
+end
+
+--- An encounter header's text and tooltip: `Label · Situation · 2m ago · 4 drops`, or
+--- `... · 2 drops · 1 shown` while the filter hides some, the tooltip naming each hidden drop.
 --- @param group table a feed group { key, label, kind, situation, at }
 --- @param shown number the drops shown under it
 --- @param now number|nil GetTime()
 --- @param situationLabel string|nil the group's situation, in words
 --- @param collapsed boolean
+--- @param hidden table|nil { { drop, why }, ... } the group's drops the filter hid
+--- @param filter table|nil the tab's filter state, to name the filters
 --- @return table { text, tip }
-function WC.Header(group, shown, now, situationLabel, collapsed)
+function WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     local parts = { tostring(group.label or "?") }
     if situationLabel then parts[#parts + 1] = situationLabel end
     if num(group.at) and num(now) then parts[#parts + 1] = L["%s ago"]:format(WC.Duration(now - group.at)) end
-    parts[#parts + 1] = shown == 1 and L["1 drop"] or L["%d drops"]:format(shown)
+    parts[#parts + 1] = WC.DropCount(shown, hidden)
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
-    local click = collapsed and L["Click to expand this group."] or L["Click to collapse this group."]
-    return { text = text, tip = { tostring(group.label or "?"), KIND_LINE[group.kind] or KIND_LINE.area, click } }
+    local title = tostring(group.label or "?")
+    return { text = text, tip = WC.HeaderTip(title, KIND_LINE[group.kind] or KIND_LINE.area, hidden, filter, collapsed) }
 end

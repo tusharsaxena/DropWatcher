@@ -124,6 +124,7 @@ Kit.run{
         "test_loot_parser",
         "test_inspect",
         "test_feed",
+        "test_feed_counts",
         "test_trade_timer",
         "test_trade_helper",
         "test_asks",

@@ -143,6 +143,9 @@ modules\FeedFilter.lua
 # overlay; peeled out of modules\LootFeed.lua); read by the feed at call time only. NS.ItemRead
 # (core\, above) is read at call time.
 modules\FeedRecords.lua
+# Conventional: publishes NS.FeedCounts, the feed's hidden and refused receipts counted by reason
+# (peeled out of modules\LootFeed.lua); read by the feed and the diagnostics at call time only.
+modules\FeedCounts.lua
 # Conventional: publishes NS.Messaging, the pure messaging core (templates, the one-ask guard and
 # the send queue); read by the messaging edge at call time only, and itself reads NS.Constants
 # (core\, above) at load.

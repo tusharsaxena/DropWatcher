@@ -133,35 +133,43 @@ function WH.Ago(seconds)
     return days == 1 and L["1 day ago"] or L["%d days ago"]:format(days)
 end
 
---- A kept group's header: `Label · Situation · 2 days ago · 4 drops`, and its tooltip.
+--- A kept group's header: `Label · Situation · 2 days ago · 4 drops` (`... · 4 drops · 3 shown`
+--- while the filter hides some, feedback-2 spec §0), and its tooltip naming each hidden drop.
 --- @param group table { label, kind, situation, at }
 --- @param shown number
 --- @param now number time()
 --- @param situationLabel string|nil
 --- @param collapsed boolean
+--- @param hidden table|nil { { drop, why }, ... }
+--- @param filter table|nil the tab's filter state
 --- @return table { text, tip }
-function WH.Header(group, shown, now, situationLabel, collapsed)
+function WH.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     local parts = { tostring(group.label or "?") }
     if situationLabel then parts[#parts + 1] = situationLabel end
     if type(group.at) == "number" and type(now) == "number" then parts[#parts + 1] = WH.Ago(now - group.at) end
-    parts[#parts + 1] = shown == 1 and L["1 drop"] or L["%d drops"]:format(shown)
+    parts[#parts + 1] = WC.DropCount(shown, hidden)
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
-    local click = collapsed and L["Click to expand this group."] or L["Click to collapse this group."]
-    return { text = text, tip = { tostring(group.label or "?"), L["Kept in the history across sessions."], click } }
+    return { text = text, tip = WC.HeaderTip(tostring(group.label or "?"), L["Kept in the history across sessions."],
+        hidden, filter, collapsed) }
 end
 
 local function visibleDrops(group, ctx, base)
-    local out = {}
+    local shown, hidden = {}, {}
     for i, e in ipairs(group.drops or {}) do
         local d = WH.AsDrop(e, base + i)
-        if ctx.matches(d) then out[#out + 1] = d end
+        if ctx.matches(d) then
+            shown[#shown + 1] = d
+        else
+            hidden[#hidden + 1] = { drop = d, why = ctx.hiddenBy and ctx.hiddenBy(d) or "filter" }
+        end
     end
-    table.sort(out, ctx.compare)
-    return out
+    table.sort(shown, ctx.compare)
+    return shown, hidden
 end
 
---- The tab's entries, top to bottom: { kind = "header", group, count, collapsed } and
+--- The tab's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
+--- collapsed } (as WG.Entries') and
 --- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest); a group with no
 --- entry passing the filter is left out; a group never toggled is open when it is the first shown.
 --- @param groups table NS.History.Groups(), oldest first
@@ -176,13 +184,14 @@ function WH.Entries(groups, ctx, state)
     local out, first, base = {}, true, 0
     for i = from, to, step do
         local g = groups[i]
-        local drops = visibleDrops(g, ctx, base)
+        local drops, hidden = visibleDrops(g, ctx, base)
         base = base + #(g.drops or {})
         if #drops > 0 then
             local c = collapsed[g.key]
             if c == nil then c = not first end
             first = false
-            out[#out + 1] = { kind = "header", group = g, count = #drops, collapsed = c }
+            out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
+                hidden = hidden, filter = ctx.filter, collapsed = c }
             if not c then
                 for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
             end
@@ -197,7 +206,7 @@ end
 --- @param nowEpoch number time()
 --- @param nowClock number GetTime()
 --- @param sessionSince number|nil
---- @return table { filter, matches, compare }
+--- @return table { filter, matches, hiddenBy, compare }
 function WH.Context(tc, nowEpoch, nowClock, sessionSince)
     local FB = NS.WindowFilterBar
     local since = tc.ctx and tc.ctx.instanceSince
@@ -206,6 +215,7 @@ function WH.Context(tc, nowEpoch, nowClock, sessionSince)
     return {
         filter = tc.filter,
         matches = function(d) return FB.Matches(d, tc.filter, ctx, tc.honors) end,
+        hiddenBy = function(d) return FB.HiddenBy(d, tc.filter, ctx, tc.honors) end,
         compare = FB.Comparator(tc.filter.sort),
     }
 end
@@ -350,7 +360,8 @@ end
 
 local function paintHeader(h, e, now)
     local g = e.group
-    local hd = WH.Header(g, e.count, now, NS.WindowFooter.SITUATION_LABEL[g.situation], e.collapsed)
+    local hd = WH.Header(g, e.count, now, NS.WindowFooter.SITUATION_LABEL[g.situation], e.collapsed, e.hidden,
+        e.filter)
     h.groupKey, h.collapsed = g.key, e.collapsed
     h.text:SetText(hd.text)
     h.tipLines = hd.tip

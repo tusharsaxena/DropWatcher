@@ -207,14 +207,23 @@ function WG.Layout(cols, total)
     return out, kept
 end
 
+-- A group's drops for the tab, split into those shown and those its filter hid ({ drop, why },
+-- why the control's key, else `filter`). A dismissed drop and one not the tab's (`ctx.belongs`:
+-- your own, without `feed.showOwn`) are in neither.
 local function visibleDrops(group, get, ctx, dismissed)
-    local out = {}
+    local shown, hidden = {}, {}
     for _, id in ipairs(group.drops or {}) do
         local d = get(id)
-        if d and not dismissed[id] and ctx.matches(d) then out[#out + 1] = d end
+        if d and not dismissed[id] and (not ctx.belongs or ctx.belongs(d)) then
+            if ctx.matches(d) then
+                shown[#shown + 1] = d
+            else
+                hidden[#hidden + 1] = { drop = d, why = ctx.hiddenBy and ctx.hiddenBy(d) or "filter" }
+            end
+        end
     end
-    table.sort(out, ctx.compare)
-    return out
+    table.sort(shown, ctx.compare)
+    return shown, hidden
 end
 
 local function collapsedOf(collapsed, key, first)
@@ -223,12 +232,15 @@ local function collapsedOf(collapsed, key, first)
     return v
 end
 
---- The table's entries, top to bottom: { kind = "header", group, count, collapsed } and
---- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest), a group with no
+--- The table's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
+--- collapsed }
+--- and { kind = "drop", drop }. `count` is the drops shown, `total` every drop of the group the tab
+--- lists, `hidden` the ones the filter hid ({ drop, why }), so the header can say `2 drops · 1 shown`
+--- (feedback-2 spec §0). Groups newest first (oldest first under Sort: Oldest), a group with no
 --- drop passing the filter left out, a collapsed group's drops left out.
 --- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
 --- @param get function id -> drop (NS.LootFeed.Get)
---- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort } }
+--- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy }
 --- @param state table|nil { collapsed, dismissed } (NS.State.windowGroup)
 --- @return table
 function WG.Entries(groups, get, ctx, state)
@@ -240,11 +252,12 @@ function WG.Entries(groups, get, ctx, state)
     local out, first = {}, true
     for i = from, to, step do
         local g = groups[i]
-        local drops = visibleDrops(g, get, ctx, dismissed)
+        local drops, hidden = visibleDrops(g, get, ctx, dismissed)
         if #drops > 0 then
             local c = collapsedOf(collapsed, g.key, first)
             first = false
-            out[#out + 1] = { kind = "header", group = g, count = #drops, collapsed = c }
+            out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
+                hidden = hidden, filter = ctx.filter, collapsed = c }
             if not c then
                 for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
             end
@@ -655,7 +668,7 @@ end
 local function paintHeader(h, e, now)
     local g = e.group
     local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
-    local hd = WC.Header(g, e.count, now, sit, e.collapsed)
+    local hd = WC.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter)
     h.groupKey, h.collapsed = g.key, e.collapsed
     h.text:SetText(hd.text)
     h.tipLines = hd.tip

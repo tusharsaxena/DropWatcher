@@ -43,7 +43,9 @@ local _, NS = ...
 -- item facts (loaded through ItemFacts.Request when uncached; the drop waits), spec §6.3's filters
 -- (NS.FeedFilter.Filter, pure, modules/FeedFilter.lua), the verdict for you (your gear only),
 -- the quality gate with that verdict for its upgrade override, then the inspect request for the
--- looter, the looter's verdict and the trade estimate. A hidden drop costs no inspect; it is counted by reason and logged once. Manual drops
+-- looter, the looter's verdict and the trade estimate. A hidden drop costs no inspect; it is
+-- counted by reason and logged under FEED (modules/FeedCounts.lua), as is every receipt a door
+-- refuses (no item, no looter, your own pushed line, a history drop seen or without a winner). Manual drops
 -- skip the situation gate; test drops skip every gate and ask for no inspect.
 --
 -- UPDATES. InspectDone(guid) re-judges the drops that looter received and your own drops'
@@ -107,7 +109,7 @@ local function store()
     local s = State.feed
     if not s then
         s = { seq = 0, live = newFeed(), test = newFeed(), recent = {}, ctx = {}, names = {},
-            history = {}, merged = 0, hidden = {} }
+            history = {}, merged = 0, hidden = {}, refused = {} }
         State.feed = s
     end
     return s
@@ -484,18 +486,15 @@ local function add(rec)
     return rec.id, "added"
 end
 
+-- Counted by reason and logged under FEED (modules/FeedCounts.lua): nothing is hidden or refused
+-- silently.
 local function hide(rec, why)
-    rec.state, rec.hidden = "hidden", why
-    local s = store()
-    s.hidden[why] = (s.hidden[why] or 0) + 1
-    if why == "quality" then
-        local q = rec.quality
-        NS.Debug("QUAL", "hidden %s: quality %s below %s (%s, %s)", rec.link,
-            tostring(rec.facts and rec.facts.quality), tostring(q.threshold), q.mode, q.reason)
-    else
-        NS.Debug(TAG, "hidden %s by %s: %s", rec.link, tostring(rec.looter.name), why)
-    end
+    NS.FeedCounts.Hide(store(), rec, why)
     return nil, why
+end
+
+local function refuse(why, what)
+    return NS.FeedCounts.Refuse(store(), why, what)
 end
 
 local start
@@ -566,9 +565,7 @@ end
 -- hidden count given back. A loading one loads the new link (start's callback); a shown one is
 -- re-judged (LF.Refresh).
 local function rerun(rec)
-    local s = store()
-    s.hidden[rec.hidden] = (s.hidden[rec.hidden] or 1) - 1
-    rec.hidden = nil
+    NS.FeedCounts.Unhide(store(), rec)
     return start(rec)
 end
 
@@ -607,9 +604,9 @@ end
 
 -- One receipt: { link, qty, kind, source, looter, encounterID, force, test }.
 local function receive(r)
-    if stoodDown() then return nil, "stoodDown" end
+    if stoodDown() then return refuse("stoodDown", r.link) end
     local link, itemID = validItem(r.link)
-    if not itemID or type(r.looter) ~= "table" then return nil, "notItem" end
+    if not itemID or type(r.looter) ~= "table" then return refuse("notItem", r.link) end
     r.link, r.itemID = link, itemID
     local s = store()
     prune(s)
@@ -624,7 +621,7 @@ end
 
 --- Take one receipt into the feed. Answers the drop's id and `added`, `loading` (its item facts
 --- are loading; DropAdded follows once it passes) or `merged`; or nil and why not (`stoodDown`,
---- `notItem`, `notTracking`, a filter's reason, or `quality`).
+--- `notItem`, `notTracking`, a filter's reason, or `quality`), each counted by reason.
 --- @param r table { link, qty, kind, source, looter = { name, guid, classFile, isSelf }, encounterID }
 --- @return number|nil id, string status
 function LF.Receive(r)
@@ -725,24 +722,11 @@ function LF.RemoveWhere(pred, resetContext)
     return n
 end
 
---- The counts the diagnostics report shows: { group, mine, test, groups, merged, hidden, loading,
---- encounter (label or nil), run (label or nil) }. Reads stored state only.
---- @return table
+--- The counts the diagnostics report shows (NS.FeedCounts.Stats): { group, mine, test, groups,
+--- merged, hidden, refused, loading, encounter, run }. Reads stored state only.
+--- @return table|nil
 function LF.Stats()
-    local s = State.feed
-    if not s then return nil end
-    local out = { group = 0, mine = 0, test = #s.test.drops, groups = #s.live.groups, merged = s.merged,
-        hidden = s.hidden, loading = 0 }
-    for _, rec in ipairs(s.live.drops) do
-        if rec.isMine then out.mine = out.mine + 1 else out.group = out.group + 1 end
-    end
-    for _, rec in ipairs(s.recent) do
-        if rec.state == "loading" then out.loading = out.loading + 1 end
-    end
-    local t = now()
-    local enc, run = NS.FeedRecords.ActiveEncounter(s.ctx, t, LF.LOOT_GRACE), NS.FeedRecords.ActiveRun(s.ctx, t, LF.LOOT_GRACE)
-    out.encounter, out.run = enc and enc.label, run and run.label
-    return out
+    return NS.FeedCounts.Stats(State.feed, now(), LF.LOOT_GRACE)
 end
 
 --- The score retry's state (diagnostics): drops still retrying a pending score, drops that used
@@ -902,7 +886,7 @@ end
 --- The loot parser's sink: one CHAT_MSG_LOOT receipt.
 --- @param loot table the parser's { looterName, looterGUID, link, qty, kind, isSelf }
 function LF.OnChatLoot(loot)
-    if loot.isSelf and loot.kind == "pushed" then return nil, "pushed" end
+    if loot.isSelf and loot.kind == "pushed" then return refuse("pushed", loot.link) end
     local who = resolveLooter(loot.looterName, loot.looterGUID, nil)
     if loot.isSelf then who.isSelf = true end
     return LF.Receive({ link = loot.link, qty = loot.qty, kind = loot.kind, source = "chat", looter = who })
@@ -911,7 +895,7 @@ end
 --- ENCOUNTER_LOOT_RECEIVED(encounterID, itemID, itemLink, quantity, playerName, classFile).
 function LF.OnEncounterLoot(encounterID, _, link, qty, playerName, classFile)
     local name = plainString(playerName)
-    if not name then return nil, "noLooter" end
+    if not name then return refuse("noLooter", link) end
     local who = resolveLooter(name, nil, plainString(classFile))
     return LF.Receive({ link = link, qty = plainNumber(qty), kind = "loot", source = "encounter",
         looter = who, encounterID = plainNumber(encounterID) })
@@ -920,10 +904,10 @@ end
 --- LOOT_HISTORY_UPDATE_DROP(encounterID, lootListID): a group-loot drop, taken once it has a winner.
 function LF.OnLootHistoryDrop(encounterID, lootListID)
     local drop = NS.Compat.LootHistoryDrop(encounterID, lootListID)
-    if not drop then return nil, "noWinner" end
+    if not drop then return refuse("noWinner", lootListID) end
     local key = encounterID .. ":" .. lootListID
     local seen = store().history
-    if seen[key] then return nil, "seen" end
+    if seen[key] then return refuse("seen", drop.link) end
     seen[key] = true
     local who = resolveLooter(drop.name, drop.guid, drop.classFile)
     if drop.isSelf then who.isSelf = true end

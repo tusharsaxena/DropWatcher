@@ -321,7 +321,7 @@ local function report(NS)
                 local args = { ... }
                 for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
                 lines[#lines + 1] = fmt:format(unpack(args))
-            end })
+            end, joined = function() end })    -- the counts by reason: tests/test_feed_counts.lua
         end
     end
     return lines

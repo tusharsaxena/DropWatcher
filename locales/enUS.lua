@@ -295,3 +295,10 @@ L["%s - Simulation"] = "%s - Simulation"
 L["The timeline is not playing: /dw sim run plays it."] = "The timeline is not playing: /dw sim run plays it."
 L["The timeline is not paused."] = "The timeline is not paused."
 L["  |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r (the step panel)"] = "  |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r (the step panel)"
+
+-- A group header's count and the drops its filter hid (modules/WindowCells.lua, feedback-2 spec §0)
+L["%d shown"] = "%d shown"
+L["Hidden by the filters:"] = "Hidden by the filters:"
+L["%s (%s): %s"] = "%s (%s): %s"
+L["and %d more"] = "and %d more"
+L["the filters"] = "the filters"

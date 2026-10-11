@@ -17,7 +17,7 @@ local _, NS = ...
 -- §6.2), and choosing a mode goes through NS.SetQualityMode (core/DropWatcher.lua), the handler the
 -- settings row shares. It is the same on every tab, and only the Group drops tab honors it.
 --
--- PURE: IsInteresting, IsTradeableMine, Matches and Comparator take plain tables and read nothing
+-- PURE: IsInteresting, IsTradeableMine, Matches, HiddenBy and Comparator take plain tables and read nothing
 -- else, so test_window drives them case by case. Build, Sync and Layout are the frame edge.
 -- DEGRADED (no LibKa0s-Widgets-1.0): the three dropdowns are not drawn (core/WidgetsSetup.lua);
 -- the checkbox and the search box still filter.
@@ -231,19 +231,45 @@ local CHECKS = {
     { key = "search", pass = function(d, st) return matchesSearch(d, st.search) end },
 }
 
---- Whether a drop passes a tab's filter. Only the controls the tab honors apply.
+--- The first control of a tab's filter that hides a drop (its state key: `view`, `likelyOnly`,
+--- `usableOnly`, `upgradeOnly`, `content` or `search`), or nil when the drop passes them all. Only
+--- the controls the tab honors apply; anything not a drop answers `invalid`.
 --- @param drop table
 --- @param st table|nil the tab's state (DEFAULTS when nil)
 --- @param ctx table|nil { instanceSince, sessionSince } (GetTime() seconds)
 --- @param honors table|nil the tab's FB.HONORS row (every control when nil)
---- @return boolean
-function FB.Matches(drop, st, ctx, honors)
-    if type(drop) ~= "table" then return false end
+--- @return string|nil
+function FB.HiddenBy(drop, st, ctx, honors)
+    if type(drop) ~= "table" then return "invalid" end
     st, honors = st or DEFAULTS, honors or ALL
     for _, c in ipairs(CHECKS) do
-        if honors[c.key] and not c.pass(drop, st, ctx) then return false end
+        if honors[c.key] and not c.pass(drop, st, ctx) then return c.key end
     end
-    return true
+    return nil
+end
+
+--- Whether a drop passes a tab's filter (FB.HiddenBy answers nil).
+--- @param drop table
+--- @param st table|nil
+--- @param ctx table|nil
+--- @param honors table|nil
+--- @return boolean
+function FB.Matches(drop, st, ctx, honors)
+    return FB.HiddenBy(drop, st, ctx, honors) == nil
+end
+
+--- The filter a FB.HiddenBy key names, as the bar shows it (`View: Interesting`, `Usable by me`, ...),
+--- for a group header's tooltip.
+--- @param key string|nil
+--- @param st table|nil the tab's state
+--- @return string
+function FB.ReasonLabel(key, st)
+    st = type(st) == "table" and st or DEFAULTS
+    local byValue = FB.LABELS[key]
+    if byValue and byValue[st[key]] then return byValue[st[key]] end
+    local tip = TIPS[key]
+    if tip then return tip[1] end
+    return L["the filters"]
 end
 
 local function num(v) return type(v) == "number" and v or nil end

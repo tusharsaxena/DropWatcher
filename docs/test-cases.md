@@ -843,6 +843,19 @@ Total.
 - secrets: a secret link, name or encounter id is never used
 - stand-down: timers and pending loads are dropped, the drops kept
 
+### test_feed_counts.lua (10)
+
+- two yokes: both Yokes are separate drops with the right looters, the accented name resolved
+- two yokes: the reagent and the altar are hidden by the gear-only rule and counted, not lost
+- two yokes: with gear-only off, the common reagent is hidden by the quality rule
+- two yokes: each hidden drop is logged with its reason under the FEED tag
+- refused: every receipt the feed turns away is counted by reason and logged under FEED
+- refused: a C_LootHistory drop already taken is counted as seen
+- diagnostics: the drops section reports the hidden and the refused counts by reason
+- header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`
+- header: your own drop, listed in My drops, is not counted as hidden in Group drops
+- header: History names its hidden drops too, and a long list is cut with a count
+
 ### test_trade_timer.lua (16)
 
 - read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
@@ -1272,6 +1285,7 @@ Total.
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
 | test_feed.lua | 44 |
+| test_feed_counts.lua | 10 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 23 |
@@ -1294,4 +1308,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1068** |
+| **Total** | **1078** |

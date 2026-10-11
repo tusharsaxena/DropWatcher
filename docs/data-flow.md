@@ -86,6 +86,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   ├─> WindowGroup.Layout(columns, the rows' width)                          (pure)
   ├─> WindowGroup.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
   │                       NS.State.windowGroup)                              first, filtered, sorted)
+  │     each header: the shown drops, every drop the tab lists (ctx.belongs), and the hidden ones with
+  │     the control that hid each (ctx.hiddenBy = WindowFilterBar.HiddenBy) ─> WindowCells.Header:
+  │     `2 drops · 1 shown`, the tooltip naming each hidden drop and its filter (feedback-2 spec §0)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / MyEq / TheirEq / Me / Them / Trade / Ask
                   reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's
@@ -411,7 +414,7 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`]   ─> drop.me
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
   QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`]
-    ─> hidden `quality` (one QUAL debug line), before any inspect
+    ─> hidden `quality` (one FEED line with the reason, one QUAL line with the threshold), before any inspect
   someone else's drop: Inspect.Request(looter, looter priority)
       ─> Evaluate(facts, Inspect.Candidate(looter)) once read ─> drop.them
       ─> TradeRules.Estimate(bind facts + bonus roll, drop.them, situation rule) ─> drop.trade

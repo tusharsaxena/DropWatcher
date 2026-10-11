@@ -66,7 +66,8 @@ its one-line responsibility and why its position is load-bearing or conventional
   feed's record logic, `Messaging.lua` the templates and the one-ask guard) and the
   scorers (`Scoring.lua`); the edges that read the client (`Situations.lua`, `Restrictions.lua`,
   `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
-  `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`); and the
+  `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`, with
+  `FeedCounts.lua` counting every receipt it hides or refuses by reason); and the
   recorded and opt-in features (`History.lua`, `Toast.lua`, `AutoAsk.lua`).
 - `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the

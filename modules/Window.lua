@@ -441,7 +441,10 @@ end
 --- The view a tab's body draws: its feed, its filter state, the controls it honors and the row
 --- predicate and order that apply them (modules/WindowFilterBar.lua).
 --- @param tab string|nil the active tab when nil
---- @return table { tab, feed, filter, honors, ctx, matches = fn(drop), compare = fn(a, b) }
+--- `belongs` says whether a drop is the tab's at all (Group drops: your own only with `feed.showOwn`),
+--- `hiddenBy` which control hides one that is (FB.HiddenBy), so a header counts every drop.
+--- @return table { tab, feed, filter, honors, ctx, matches = fn(drop), belongs = fn(drop),
+---   hiddenBy = fn(drop), compare = fn(a, b) }
 function Window.TabContext(tab)
     tab = tab or activeTab
     local FB = NS.WindowFilterBar
@@ -454,6 +457,8 @@ function Window.TabContext(tab)
     return {
         tab = tab, feed = feed, filter = st, honors = honors, ctx = ctx,
         matches = function(drop) return FB.InGroup(drop, own) and FB.Matches(drop, st, ctx, honors) end,
+        belongs = function(drop) return FB.InGroup(drop, own) end,
+        hiddenBy = function(drop) return FB.HiddenBy(drop, st, ctx, honors) end,
         compare = FB.Comparator(st.sort),
     }
 end

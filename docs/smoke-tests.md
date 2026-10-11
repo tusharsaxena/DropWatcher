@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..18 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83) |
+| FEED-1..19 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -486,6 +486,19 @@ minimized and its `n new` count rises. Untick General › When to show › Dunge
 no longer open it; tick it back. Enter combat with the window closed and let an item drop → it opens
 with no Lua error and no "Interface action blocked" message. `/dw sim start key` with the window
 closed → the simulator's first drop opens it. Result:
+
+**FEED-19. Every drop counted: the two-Yoke regression (DW-A0, feedback-2 spec §0).** In a Mythic+
+dungeon with a cross-realm group, `/dw debug on`, View: Interesting. Let two members loot the same
+item, one for whom it is an equal (sidegrade) and one for whom it is a downgrade, while it is a
+downgrade for you (the owner's run: two Yokes of the Charging Bear, `Bùnian-Azralon` and
+`Keghunt-Thrall`) → the debug console has an `[FEED] drop n: ... by Bùnian-Azralon` line for
+each, both looters spelled as in chat; the group header reads `<run> · Mythic+ · <age> · 2 drops ·
+1 shown`; hover it → the tooltip lists `Yoke of the Charging Bear (Bùnian): View: Interesting`.
+Switch View to All → both rows show and the header reads `2 drops`. A reagent and a non-gear item
+(a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notGear` line each, no
+row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
+`/dw diagnostics` → its `drops` section reads `drops: hidden notGear=2` (plus any others) and
+`drops: refused pushed=1`. Result:
 
 ## Roster
 

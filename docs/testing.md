@@ -140,7 +140,13 @@ settings and a situation's mode; the pure filters row by row and the relative it
 still loading and one that never loads; your own drop with its trade by your verdict and every
 member a candidate, no inspects for an untradeable one, pushed items; `GearChanged`; the score
 retry and its limit; `Add`, the test feed and `Clear`; the cap; secret payloads; and the
-stand-down), `test_trade_timer` (your own drops' trade timer: the `TradeTimeRemaining` line read
+stand-down), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
+real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
+altar hidden by the gear-only rule and the reagent by the quality rule with it off, the currency
+and money lines never read as loot; every hidden and refused receipt counted by reason, logged
+under FEED and reported in the `drops` diagnostics section; the group headers' `2 drops · 1 shown`
+and the tooltip naming each hidden drop and its filter, on Group drops and History),
+`test_trade_timer` (your own drops' trade timer: the `TradeTimeRemaining` line read
 by its type and keyed by item GUID, a line of another type ignored, the localized sentence decoded
 from deDE-shaped globals without the line type, no line read as `no expired`; the match by exact
 link then item id, one item per drop, a stranger's item, a member's drop and a test drop untimed,
