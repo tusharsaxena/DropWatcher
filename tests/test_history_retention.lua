@@ -120,12 +120,26 @@ test("retention: No writes the last agreed window back and deletes nothing", fun
     assertTrue(NS.SchemaRuntime.Set(PATH, 7))
     local shown = m.popupsShown[#m.popupsShown]
     local popup = m.StaticPopupDialogs[NS.HistoryRetention.POPUP]
+    assertEqual(NS.addon.db.global.history.retentionDays, 30, "the store keeps the agreed window while asking")
     popup.OnCancel(nil, shown[4], "override")
-    assertEqual(NS.addon.db.global.history.retentionDays, 7, "an override is not the player's No")
+    assertEqual(#m.popupsShown, 1, "an override is not the player's No")
     popup.OnCancel(nil, shown[4], "clicked")
     assertEqual(NS.addon.db.global.history.retentionDays, 30, "the confirmed window is back")
     assertEqual(keys(NS), "old,mid,new")
     assertEqual(#m.popupsShown, 1, "the write-back asks nothing")
+end)
+
+test("retention: an unanswered popup (a /reload with it open) leaves nothing to prune at the next login", function()
+    local NS, m = withLog()
+    assertTrue(NS.SchemaRuntime.Set(PATH, 7))
+    assertEqual(m.popupsShown[#m.popupsShown][1], NS.HistoryRetention.POPUP)
+    -- red under: the shorter window stays stored until the popup is answered
+    assertEqual(NS.addon.db.global.history.retentionDays, 30, "nothing unconfirmed is stored")
+    -- the next session: Sync at OnInitialize, then the deferred login prune
+    NS.HistoryRetention.Sync()
+    m.__fire("PLAYER_ENTERING_WORLD", true, false)
+    m.advance(NS.HistoryRetention.CLEANUP_DELAY)
+    assertEqual(keys(NS), "mid,new", "only what the agreed 30 days put out of reach")
 end)
 
 test("retention: headless (no popup), a shorter window prunes at once", function()

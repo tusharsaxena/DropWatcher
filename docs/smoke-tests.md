@@ -946,7 +946,9 @@ Layout › Keep history for lists 7, 14, 30, 60, 90 and 180 days and Never delet
 once, no question. With a group older than 7 days kept (or `/dw test`, whose `Placeholder boss
 (alt)` is ten days old), pick 7 days → a confirmation, `This deletes n groups (m drops) older than 7
 days.`; No → the dropdown reads 90 again, chat says nothing was deleted, and every group stays; pick
-7 again and Yes → the older groups leave the tab at once. Never delete → the footer reads `kept
+7 again and Yes → the older groups leave the tab at once. Pick 7 days with an older group kept and
+`/reload` while the confirmation is still open → after the login the dropdown reads the window
+agreed before, and no group leaves the tab (an unanswered confirmation deletes nothing). Never delete → the footer reads `kept
 forever`. `/reload` with a group older than the window kept → about five seconds after the login it
 leaves the tab (`/dw debug on` shows `history: login prune`). Log on to an alt → the same window and
 the same groups (account-wide); switch profile → the window does not change. `/dw diagnostics` →

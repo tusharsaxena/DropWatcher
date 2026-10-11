@@ -126,7 +126,8 @@ Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared `wri
 host verbs still land on a load where the composers are hollow (options-ui-§1 route (a)). The
 global closure rows are the Minimap button (`global.minimap.shown`, onto LibDBIcon's `hide`) and
 Keep history for (onto `global.history.retentionDays`, whose change to a shorter window asks before
-it deletes anything, `modules/HistoryRetention.lua`). Shape, defaults and migrations:
+it deletes anything, `modules/HistoryRetention.lua`; until the player answers, its onChange writes
+the agreed window back, so an unanswered confirmation never leaves an unconfirmed window stored). Shape, defaults and migrations:
 [`schema.md`](schema.md); the panel: [`settings-panel.md`](settings-panel.md).
 
 **State written outside the seam** (architecture-§5): `profile.window.point`, `.width` and `.height`

@@ -16,9 +16,13 @@ local _, NS = ...
 -- window that would delete something, once the player confirms it.
 --
 -- THE CONFIRMATION. A change that would delete anything asks first ("This deletes n groups (m
--- drops) older than X days."); the popup takes preferredIndex 3. Yes prunes; No writes back the
--- value the player last agreed to (`confirmed`, seeded by Sync at OnInitialize), so nothing is
--- deleted at the next login either. A change that deletes nothing is taken at once. The count and
+-- drops) older than X days."); the popup takes preferredIndex 3. The schema seam stores the new
+-- value before the row's onChange runs, so OnChanged writes the last agreed window (`confirmed`,
+-- seeded by Sync at OnInitialize) straight back and the asked-for one lives only in the popup's
+-- data: an unanswered popup (a /reload, a logout, a popup hidden by another) leaves nothing
+-- unconfirmed in the store, and the next login prunes nothing the player did not agree to. Yes
+-- writes the asked-for window and prunes; No keeps the agreed one. A change that deletes nothing
+-- is taken at once. The count and
 -- the prune cover the account's log and, while test mode or a simulation shows its own session-only
 -- log (NS.History.Log), that one too, so test mode's older sample group can be pruned without
 -- touching the account's.
@@ -228,6 +232,8 @@ local function writeQuietly(days)
     local ok, err = pcall(NS.SchemaRuntime.Set, R.PATH, days)
     restoring = false
     if not ok then error(err, 0) end
+    local helpers = NS.addon.Settings and NS.addon.Settings.Helpers
+    if helpers and helpers.RefreshAll then helpers.RefreshAll() end   -- an open panel re-reads it
 end
 
 local function ensurePopup()
@@ -247,7 +253,8 @@ local function ensurePopup()
 end
 
 --- The row's onChange: a window that deletes nothing is taken at once; one that would delete asks
---- first (prunes at once when nothing can ask).
+--- first (prunes at once when nothing can ask), and until it is answered the store keeps the agreed
+--- window, so a popup that is never answered deletes nothing, now or at the next login.
 --- @param days number
 function R.OnChanged(days)
     if restoring then return end
@@ -258,13 +265,14 @@ function R.OnChanged(days)
         confirmed = days
         return
     end
+    writeQuietly(confirmed or R.DEFAULT_DAYS)
     ensurePopup()
     local what = L["%d groups (%d drops)"]:format(groups, drops)
     StaticPopup_Show(R.POPUP, what, R.Label(days), { days = days })
 end
 
---- The confirmation's two answers. Yes stores the window agreed to (the store may have moved while
---- the popup was open) and prunes to it; No writes back the last confirmed window and says so.
+--- The confirmation's two answers. Yes stores the window agreed to and prunes to it; No keeps (and
+--- writes back) the last confirmed window and says so.
 --- @param days number
 --- @param accepted boolean
 function R.Confirm(days, accepted)

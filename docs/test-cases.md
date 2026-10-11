@@ -1014,7 +1014,7 @@ Total.
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
 
-### test_history_retention.lua (12)
+### test_history_retention.lua (13)
 
 - retention: the labels, the choices and the footer
 - retention: a group's age is its newest entry's, else its own
@@ -1023,6 +1023,7 @@ Total.
 - retention: a longer window, or one that deletes nothing, is taken at once
 - retention: a shorter window that deletes asks first; Yes prunes
 - retention: No writes the last agreed window back and deletes nothing
+- retention: an unanswered popup (a /reload with it open) leaves nothing to prune at the next login
 - retention: headless (no popup), a shorter window prunes at once
 - retention: the login prune runs once, deferred off the login, over the account's log
 - retention: the stand-down takes the pending prune back; the stand-up arms it again
@@ -1355,7 +1356,7 @@ Total.
 | test_asks.lua | 23 |
 | test_transmog.lua | 13 |
 | test_history.lua | 28 |
-| test_history_retention.lua | 12 |
+| test_history_retention.lua | 13 |
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
 | test_sim_core.lua | 25 |
@@ -1373,4 +1374,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1131** |
+| **Total** | **1132** |
