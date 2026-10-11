@@ -758,9 +758,11 @@ them (they put the item in), both accept → with `/dw debug on`, the console sh
 with <name> completed: gave 0, got 1` and `history: <item> received`; the Group drops row's Ask
 button reads `Traded ✓` and the History tab's row `Received`. Then trade one of your own drops away
 (My drops › Offer… › Trade, both accept) → its History row reads `Traded away`. Cancel a trade
-before both accept → nothing changes. If no `completed` line appears after a real trade, the client
-did not send the both-accepted `TRADE_ACCEPT_UPDATE` before closing: record what `/etrace` shows for
-`TRADE_ACCEPT_UPDATE`, `TRADE_CLOSED` and `UI_INFO_MESSAGE` around the accept. Result:
+before both accept → nothing changes. Then a trade that fails after both accept (the partner's bags
+full, or one of you walks out of range as the second accept lands) → no `completed` line and the
+History row keeps its outcome. If no `completed` line appears after a real trade, record what
+`/etrace` shows for `TRADE_ACCEPT_UPDATE`, `TRADE_CLOSED` and `UI_INFO_MESSAGE` (its message type
+beside `/dump LE_GAME_ERR_TRADE_COMPLETE`) around the accept, and in which order. Result:
 
 **HIST-2. The History tab.** After a few drops, `/reload` and `/dw history` → the tab opens on View:
 All and Content: All, the drops are under their encounter's header (the newest open), each row

@@ -334,7 +334,7 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a placeholder's own state only while the edge holds none
 
-### test_compat.lua (67)
+### test_compat.lua (68)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -401,6 +401,7 @@ Total.
 - compat: SpecName reads GetSpecializationInfoByID's name, else nil
 - compat: TradeItemLinks reads slots 1-6 of both sides, plain links only
 - compat: TradePartnerName names the trade window's partner, with a realm when given
+- compat: IsTradeCompleteMessage knows the client's "Trade complete.", by type, else by text
 - compat: ContextMenu builds one button per entry through MenuUtil, else answers false
 - compat: no other shipped file names a seam-only client API in code
 
@@ -855,7 +856,7 @@ Total.
 - transmog test mode: one placeholder's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (23)
+### test_history.lua (25)
 
 - history: Normalize gives the shape in place and keeps the cap
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -869,8 +870,10 @@ Total.
 - history edge: DropUpdated refreshes the entry; an expired trade makes it `expired`
 - history edge: a sent ask is `asked`, a sent offer or announce `offered`; other states nothing
 - history trade: a completed trade marks the drop you got `received`, and the Ask button `Traded`
+- history trade: "Trade complete." before the close completes it too
+- history trade: a close after both accepted with no "Trade complete." completes nothing
 - history trade: an item you gave marks your drop `tradedAway`
-- history trade: no both-accepted state, or an item moved after it, completes nothing
+- history trade: a canceled trade completes nothing; the offer is the last one accepted
 - history: lowering the cap row trims the stored log at once
 - history: Clear history asks first, and empties the log only on Yes; the cap stays
 - history: the diagnostics' feed section reports the history and the trade
@@ -1040,7 +1043,7 @@ Total.
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
 | test_test_mode.lua | 18 |
-| test_compat.lua | 67 |
+| test_compat.lua | 68 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 34 |
@@ -1060,7 +1063,7 @@ Total.
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 22 |
 | test_transmog.lua | 13 |
-| test_history.lua | 23 |
+| test_history.lua | 25 |
 | test_toast.lua | 17 |
 | test_auto_ask.lua | 20 |
 | test_disabled.lua | 9 |
@@ -1072,4 +1075,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **878** |
+| **Total** | **881** |

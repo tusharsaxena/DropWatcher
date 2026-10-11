@@ -190,18 +190,26 @@ test("history edge: a sent ask is `asked`, a sent offer or announce `offered`; o
     NS.addon:SendMessage(M, "post:1:1", "sent", "announce", "group")
 end)
 
--- A trade with Brakk (party1's name) in which you get `got` and give `gave`.
+local function complete(m)
+    m.__fire("UI_INFO_MESSAGE", m.LE_GAME_ERR_TRADE_COMPLETE, m.ERR_TRADE_COMPLETE)
+end
+
+-- A trade with Brakk (party1's name) in which you get `got` and give `gave`. Brakk accepts, then
+-- your accept completes it with no both-accepted update; the window empties and closes (twice),
+-- then "Trade complete." arrives, unless `finish` is false (a cancel) or "before" (it comes first).
 local function trade(m, got, gave, finish)
     m.units.NPC = { name = "Brakk" }
     m.__fire("TRADE_SHOW")
     m.tradeItems.target = got or {}
     m.tradeItems.player = gave or {}
     m.__fire("TRADE_TARGET_ITEM_CHANGED", 1)
-    if finish ~= false then m.__fire("TRADE_ACCEPT_UPDATE", 1, 1) end
-    -- The links are gone by the time the window closes; the client sends TRADE_CLOSED twice.
+    m.__fire("TRADE_ACCEPT_UPDATE", 0, 1)
+    if finish == "before" then complete(m) end
     m.tradeItems.target, m.tradeItems.player = {}, {}
+    m.__fire("TRADE_TARGET_ITEM_CHANGED", 1)
     m.__fire("TRADE_CLOSED")
     m.__fire("TRADE_CLOSED")
+    if finish == nil then complete(m) end
 end
 
 test("history trade: a completed trade marks the drop you got `received`, and the Ask button `Traded`", function()
@@ -218,6 +226,28 @@ test("history trade: a completed trade marks the drop you got `received`, and th
     assertNil(NS.History.OpenTrade(), "nothing is left open")
 end)
 
+test("history trade: \"Trade complete.\" before the close completes it too", function()
+    local NS, m = enabled({ rec() })
+    added(NS, 1)
+    trade(m, { link(500) }, nil, "before")
+    assertEqual(NS.History.OutcomeOf(1), "received")
+end)
+
+test("history trade: a close after both accepted with no \"Trade complete.\" completes nothing", function()
+    local NS, m = enabled({ rec() })
+    added(NS, 1)
+    m.units.NPC = { name = "Brakk" }
+    m.__fire("TRADE_SHOW")
+    m.tradeItems.target = { link(500) }
+    m.__fire("TRADE_ACCEPT_UPDATE", 1, 1)
+    m.__fire("TRADE_CLOSED")
+    m.__fire("UI_INFO_MESSAGE", 1, "Some other message.")
+    assertEqual(NS.History.OutcomeOf(1), "seen", "a failed trade (a full bag, out of range)")
+    m.advance(NS.History.CLOSED_GRACE + 1)
+    complete(m)
+    assertEqual(NS.History.OutcomeOf(1), "seen", "a late message belongs to no trade")
+end)
+
 test("history trade: an item you gave marks your drop `tradedAway`", function()
     local NS, m = enabled({ rec({ isMine = true }) })
     added(NS, 1)
@@ -225,19 +255,24 @@ test("history trade: an item you gave marks your drop `tradedAway`", function()
     assertEqual(NS.History.OutcomeOf(1), "tradedAway")
 end)
 
-test("history trade: no both-accepted state, or an item moved after it, completes nothing", function()
-    local NS, m = enabled({ rec() })
-    added(NS, 1)
+test("history trade: a canceled trade completes nothing; the offer is the last one accepted", function()
+    local NS, m = enabled({ rec(), rec({ id = 2, itemID = 501, link = link(501) }) })
+    added(NS, 1); added(NS, 2)
     trade(m, { link(500) }, nil, false)
-    assertEqual(NS.History.OutcomeOf(1), "seen", "canceled before both accepted")
+    assertEqual(NS.History.OutcomeOf(1), "seen", "canceled: no \"Trade complete.\"")
     m.units.NPC = { name = "Brakk" }
     m.__fire("TRADE_SHOW")
     m.tradeItems.target = { link(500) }
-    m.__fire("TRADE_ACCEPT_UPDATE", 1, 1)
-    m.__fire("TRADE_TARGET_ITEM_CHANGED", 1)
     m.__fire("TRADE_ACCEPT_UPDATE", 1, 0)
+    m.tradeItems.target = { link(501) }
+    m.__fire("TRADE_TARGET_ITEM_CHANGED", 1)
+    m.__fire("TRADE_ACCEPT_UPDATE", 0, 0)
+    m.__fire("TRADE_ACCEPT_UPDATE", 0, 1)
+    m.tradeItems.target = {}
     m.__fire("TRADE_CLOSED")
-    assertEqual(NS.History.OutcomeOf(1), "seen", "the accept was withdrawn when the items moved")
+    complete(m)
+    assertEqual(NS.History.OutcomeOf(1), "seen", "swapped out before the final accept")
+    assertEqual(NS.History.OutcomeOf(2), "received")
 end)
 
 test("history: lowering the cap row trims the stored log at once", function()

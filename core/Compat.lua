@@ -25,7 +25,8 @@ local _, NS = ...
 --   * the trade actions (C_Container.PickupContainerItem, DropItemOnUnit, InitiateTrade) and their
 --     trade-range and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor);
 --   * the trade window's contents and partner (GetTradePlayerItemLink, GetTradeTargetItemLink,
---     UnitName("NPC")) for the history's trade completion, and a row's context menu (MenuUtil);
+--     UnitName("NPC")) and the trade-complete info message (LE_GAME_ERR_TRADE_COMPLETE,
+--     ERR_TRADE_COMPLETE) for the history's trade completion, and a row's context menu (MenuUtil);
 --   * the drop tables' item buttons and class colors (C_Item.GetItemIconByID, C_ClassColor and
 --     RAID_CLASS_COLORS, the chat link and the dressing room), and a spec's name for the detail
 --     card (GetSpecializationInfoByID);
@@ -987,6 +988,19 @@ end
 --- @return table given, table received
 function Compat.TradeItemLinks()
     return tradeLinks(GetTradePlayerItemLink), tradeLinks(GetTradeTargetItemLink)
+end
+
+--- Whether a UI_INFO_MESSAGE(messageType, message) is the client's "Trade complete.": its type is
+--- LE_GAME_ERR_TRADE_COMPLETE, or (a client without that constant) its text is ERR_TRADE_COMPLETE.
+--- False for a secret value, any other message, or neither global.
+--- @param messageType any
+--- @param message any
+--- @return boolean
+function Compat.IsTradeCompleteMessage(messageType, message)
+    local id = plainNumber(LE_GAME_ERR_TRADE_COMPLETE)
+    if id then return plainNumber(messageType) == id end
+    local text = plainString(ERR_TRADE_COMPLETE)
+    return text ~= nil and plainString(message) == text
 end
 
 --- Whom you are trading with (UnitName("NPC"), the trade window's partner unit), as `Name-Realm`

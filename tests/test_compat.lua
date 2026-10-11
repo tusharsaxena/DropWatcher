@@ -893,6 +893,19 @@ test("compat: TradePartnerName names the trade window's partner, with a realm wh
     assertNil(Compat.TradePartnerName(), "no API")
 end)
 
+test("compat: IsTradeCompleteMessage knows the client's \"Trade complete.\", by type, else by text", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    assertTrue(Compat.IsTradeCompleteMessage(m.LE_GAME_ERR_TRADE_COMPLETE, m.ERR_TRADE_COMPLETE))
+    assertFalse(Compat.IsTradeCompleteMessage(1, m.ERR_TRADE_COMPLETE), "the type decides when it exists")
+    assertFalse(Compat.IsTradeCompleteMessage(T.secret(m.LE_GAME_ERR_TRADE_COMPLETE), "x"), "a secret type")
+    m.LE_GAME_ERR_TRADE_COMPLETE = nil
+    assertTrue(Compat.IsTradeCompleteMessage(1, "Trade complete."), "no constant: the text")
+    assertFalse(Compat.IsTradeCompleteMessage(1, "Other."))
+    m.ERR_TRADE_COMPLETE = nil
+    assertFalse(Compat.IsTradeCompleteMessage(1, "Trade complete."), "neither global")
+end)
+
 test("compat: ContextMenu builds one button per entry through MenuUtil, else answers false", function()
     local Compat, m = fresh()
     local owner, hit = {}, 0

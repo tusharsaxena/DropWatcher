@@ -30,13 +30,15 @@ local _, NS = ...
 -- away); `declined` is the player's and stands until they clear it, unless a trade then completes.
 --
 -- TRADE COMPLETION (spec §10). TRADE_SHOW opens a trade with its partner (UnitName("NPC")); every
--- TRADE_PLAYER_ITEM_CHANGED / TRADE_TARGET_ITEM_CHANGED and a TRADE_ACCEPT_UPDATE with both sides
--- accepted re-read the window's items (core/Compat.lua, TradeItemLinks), since they are gone by
--- the time it closes; an item change or a withdrawn accept clears the both-accepted state. The
--- TRADE_CLOSED that follows a both-accepted state completes it: each item you got marks the most
--- recent matching drop (its item id, someone else's drop, not yet received; the partner's own drop
--- first) `received`, each item you gave marks your own matching drop `tradedAway`. The second
--- TRADE_CLOSED the client sends finds nothing open.
+-- TRADE_PLAYER_ITEM_CHANGED / TRADE_TARGET_ITEM_CHANGED re-reads the window's items (core/Compat.lua,
+-- TradeItemLinks), and every TRADE_ACCEPT_UPDATE with either side accepted re-reads them and keeps
+-- them as the offer, since the window is empty by the time the trade ends and any later item change
+-- makes both sides accept again. Only the client's "Trade complete." (UI_INFO_MESSAGE,
+-- Compat.IsTradeCompleteMessage) completes it, whether it comes before TRADE_CLOSED or within
+-- CLOSED_GRACE seconds after it: each item you got in the offer marks the most recent matching drop
+-- (its item id, someone else's drop, not yet received; the partner's own drop first) `received`,
+-- each item you gave marks your own matching drop `tradedAway`. TRADE_CLOSED alone is a cancel or a
+-- failure (out of range, a full bag) and completes nothing.
 --
 -- PURE: Normalize, Snapshot, Refresh, Record, Trim, Advance, SetDeclined and MatchTrade take plain
 -- tables and the clock as arguments and read nothing else; test_history drives them. The edge
@@ -256,7 +258,7 @@ end
 
 local index = {}        -- [live drop id] = its entry, this session only
 local sessionStart      -- time() at the first recording: today's group keys carry it
-local trade             -- the open trade: { partner, accepted, given, received } or nil
+local trade             -- the trade: { partner, accepted, given, received, offer, closedAt } or nil
 
 local function clock() return time() end
 
@@ -399,18 +401,31 @@ function H.OnTradeShow()
     readItems()
 end
 
+-- How long a closed trade waits for its "Trade complete." message, in seconds.
+H.CLOSED_GRACE = 5
+
+local function openTrade()
+    if trade and not trade.closedAt then return trade end
+    return nil
+end
+
 --- TRADE_PLAYER_ITEM_CHANGED / TRADE_TARGET_ITEM_CHANGED: the items moved, so any accept is off.
 function H.OnTradeItems()
-    if not trade then return end
-    trade.accepted = false
+    local t = openTrade()
+    if not t then return end
+    t.accepted = false
     readItems()
 end
 
---- TRADE_ACCEPT_UPDATE(playerAccepted, targetAccepted).
+--- TRADE_ACCEPT_UPDATE(playerAccepted, targetAccepted): either side's accept keeps the items as
+--- the offer a completion settles.
 function H.OnTradeAccept(playerAccepted, targetAccepted)
-    if not trade then return end
-    trade.accepted = accepted(playerAccepted) and accepted(targetAccepted)
-    if trade.accepted then readItems() end
+    local t = openTrade()
+    if not t then return end
+    t.accepted = accepted(playerAccepted) or accepted(targetAccepted)
+    if not t.accepted then return end
+    readItems()
+    t.offer = { given = t.given, received = t.received }
 end
 
 local function settle(t)
@@ -425,18 +440,36 @@ local function settle(t)
     return n
 end
 
---- TRADE_CLOSED: after a both-accepted state, the trade completed.
+--- TRADE_CLOSED: the window is gone, completed or not; the trade waits CLOSED_GRACE seconds for
+--- its "Trade complete." message. The client's second TRADE_CLOSED changes nothing.
 function H.OnTradeClosed()
-    local t = trade
-    trade = nil
-    if not (t and t.accepted) then return end
-    NS.Debug("TRADE", "trade with %s completed: gave %d, got %d", tostring(t.partner), #t.given, #t.received)
-    if settle(t) > 0 then changed() end
+    if trade and not trade.closedAt then trade.closedAt = GetTime() end
 end
 
---- The open trade, for the diagnostics report: { partner, accepted, given, received } or nil.
+local function completable()
+    local t = trade
+    if not t then return nil end
+    if t.closedAt and GetTime() - t.closedAt > H.CLOSED_GRACE then return nil end
+    return t
+end
+
+--- UI_INFO_MESSAGE(messageType, message): the client's "Trade complete." completes the trade.
+function H.OnInfoMessage(messageType, message)
+    if not (trade and NS.Compat.IsTradeCompleteMessage(messageType, message)) then return end
+    local t = completable()
+    trade = nil
+    if not t then return end
+    local offer = t.offer or t
+    local done = { partner = t.partner, given = offer.given, received = offer.received }
+    NS.Debug("TRADE", "trade with %s completed: gave %d, got %d", tostring(t.partner), #done.given,
+        #done.received)
+    if settle(done) > 0 then changed() end
+end
+
+--- The open trade, for the diagnostics report: { partner, accepted, given, received } or nil
+--- (nil once its window has closed).
 --- @return table|nil
-function H.OpenTrade() return trade end
+function H.OpenTrade() return openTrade() end
 
 --- The counts the diagnostics report shows: { groups, drops, cap, tracked }.
 --- @return table
@@ -456,6 +489,7 @@ local EVENTS = {
     { "TRADE_TARGET_ITEM_CHANGED", "OnHistoryTradeItems", H.OnTradeItems },
     { "TRADE_ACCEPT_UPDATE", "OnHistoryTradeAccept", H.OnTradeAccept },
     { "TRADE_CLOSED", "OnHistoryTradeClosed", H.OnTradeClosed },
+    { "UI_INFO_MESSAGE", "OnHistoryInfoMessage", H.OnInfoMessage },
 }
 for _, row in ipairs(EVENTS) do
     local fn = row[3]

@@ -275,8 +275,9 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `LOOT_HISTORY_UPDATE_DROP` | `DW.OnFeedLootHistory` | a group-loot drop, taken once it has a winner (`C_LootHistory` through `core/Compat.lua`); merged with the other reports |
 | `TRADE_SHOW` | `DW.OnHistoryTradeShow` | a trade opened: its partner (`UnitName("NPC")`) and the window's items are read (`modules/History.lua`, through `core/Compat.lua`) |
 | `TRADE_PLAYER_ITEM_CHANGED`, `TRADE_TARGET_ITEM_CHANGED` | `DW.OnHistoryTradeItems` | the items moved: re-read, and any both-accepted state is off |
-| `TRADE_ACCEPT_UPDATE` | `DW.OnHistoryTradeAccept` | both sides accepted: the items are read once more, since they are gone by the close |
-| `TRADE_CLOSED` | `DW.OnHistoryTradeClosed` | after a both-accepted state the trade completed: the items you got mark the matching drops `received`, the items you gave your own `tradedAway`; sends `HistoryChanged`. The client's second `TRADE_CLOSED` finds nothing open |
+| `TRADE_ACCEPT_UPDATE` | `DW.OnHistoryTradeAccept` | either side accepted: the items are read once more and kept as the offer, since they are gone by the end |
+| `TRADE_CLOSED` | `DW.OnHistoryTradeClosed` | the window closed, completed or not: the trade waits `CLOSED_GRACE` (5) seconds for its "Trade complete."; alone it is a cancel or a failure and completes nothing. The client's second `TRADE_CLOSED` changes nothing |
+| `UI_INFO_MESSAGE` | `DW.OnHistoryInfoMessage` | the client's "Trade complete." (`Compat.IsTradeCompleteMessage`), before the close or within the grace after it, completes the trade: the offer's items you got mark the matching drops `received`, the items you gave your own `tradedAway`; sends `HistoryChanged`. Any other message, or no trade, returns at once |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -361,11 +362,14 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   is the player's and an automatic move never undoes it, but a completed trade does. **Which entry**
   a live drop is lives in a session-only index, because drop ids restart each session, so after a
   reload the old entries take no more outcomes from asks or the trade estimate; a completed trade
-  still matches them by item id. **A completed trade** is `TRADE_CLOSED` after a
-  `TRADE_ACCEPT_UPDATE` with both sides accepted and no item moved since (an item change clears it);
-  the items are read on every change and at the both-accepted update, since they are gone by the
-  close. Whether the client sends that both-accepted update before a completion, rather than going
-  straight to the close, is HIST-1. **The match** for an item you got is the newest drop of that
+  still matches them by item id. **A completed trade** is the client's "Trade complete."
+  (`UI_INFO_MESSAGE` with `LE_GAME_ERR_TRADE_COMPLETE`, the pattern RCLootCouncil and TradeLog use),
+  before `TRADE_CLOSED` or within 5 seconds after it; `TRADE_CLOSED` alone, even after both sides
+  accepted, is a cancel or a failure (out of range, a full bag) and completes nothing. The items are
+  read on every change and kept as the offer at every `TRADE_ACCEPT_UPDATE` with either side
+  accepted, because the second accept can complete the trade with no both-accepted update and the
+  window is empty by the end; an item change makes both sides accept again, so the last offer is the
+  one traded. The message's order against the close is HIST-1. **The match** for an item you got is the newest drop of that
   item id that is someone else's and not yet received, the partner's own drop first; for an item you
   gave, your own drop of that id; one entry per item. **The cap** counts groups, oldest out first,
   and 50 drops per group; a lower cap trims at once. **The tab** opens on View: All and Content: All

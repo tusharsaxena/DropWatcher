@@ -89,6 +89,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `ClearCursor()` | `ClearCursor`, which puts the cursor's item back where it came from | `false` |
 | Trade window | `TradeItemLinks()` | `GetTradePlayerItemLink(i)` and `GetTradeTargetItemLink(i)` over slots 1-6 (slot 7 is not traded): answers `given, received`, two lists of links, a secret or empty answer left out | `{}, {}` |
 | | `TradePartnerName()` | `UnitName("NPC")`, the trade window's partner, as `Name-Realm` when a realm is named, else `Name`; a secret or empty name is nil | `nil` |
+| | `IsTradeCompleteMessage(messageType, message)` | whether a `UI_INFO_MESSAGE` is the client's "Trade complete.": its type is `LE_GAME_ERR_TRADE_COMPLETE`, or, without that constant, its text is `ERR_TRADE_COMPLETE`; a secret value is no match | `false` |
 | Row menu | `ContextMenu(owner, entries)` | `MenuUtil.CreateContextMenu(owner, generator)`, one `CreateButton(text, fn)` per entry; `true` when built | `false` (the caller acts at once) |
 | Drop tables | `ItemIcon(item)` | `C_Item.GetItemIconByID` (an id or a link; needs no item cache); a secret or non-texture answer is nil | `nil` |
 | | `ClassColor(classFile)` | `C_ClassColor.GetClassColor` → the `RAID_CLASS_COLORS` table; answers `r, g, b`; a secret answer is nil | `nil` |
@@ -137,7 +138,7 @@ slot name and a raise's message, the Group drops table (DW-31, landed: `modules/
 `ItemIcon`, `ClassColor`, `InsertChatLink` and `DressUpItem`, the detail card (DW-32, landed:
 `modules/DetailCard.lua`) `SpecName`, `PawnIsReady`, `InsertChatLink` and the item button's three, and the scorers (DW-50, landed:
 `modules/Scoring.lua`) the Pawn seam, `PawnIsLoaded` and `IsSecret` on the links, the history (DW-51,
-landed: `modules/History.lua`) `TradeItemLinks`, `TradePartnerName` and `IsSecret` on the accept
-flags, the History tab (DW-51: `modules/WindowHistory.lua`) `ContextMenu`, `ClassColor` and the
+landed: `modules/History.lua`) `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` and
+`IsSecret` on the accept flags, the History tab (DW-51: `modules/WindowHistory.lua`) `ContextMenu`, `ClassColor` and the
 item button's three, and the toast (DW-52, landed: `modules/Toast.lua`) `PlayAlertSound` and the
 item button's three.

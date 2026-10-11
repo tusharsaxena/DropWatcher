@@ -403,8 +403,10 @@ DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec
                           (live drops only)        group = feed group @ session, cap = maxGroups)
 DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
 AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)
-TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TRADE_ACCEPT_UPDATE(1, 1)
-          ─> TRADE_CLOSED ─> MatchTrade: got ─> received, gave ─> tradedAway
+TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TRADE_ACCEPT_UPDATE(either
+          side 1: the offer) ─> UI_INFO_MESSAGE "Trade complete." (before TRADE_CLOSED, or within
+          5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
+          TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
 Clear history ─> StaticPopup ─> History.Clear        cap row ─> History.ApplyCap
 every change ─> HistoryChanged ─> WindowHistory: one Window.Refresh next frame

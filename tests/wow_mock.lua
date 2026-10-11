@@ -65,7 +65,8 @@
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
 --   SOUNDKIT, sounds  the alert sound's SOUNDKIT entries; sounds records every PlaySound(id, channel)
 --   tradeItems     the open trade window: tradeItems.player[i] / tradeItems.target[i] are
---                  GetTradePlayerItemLink(i) / GetTradeTargetItemLink(i); units.NPC is the partner
+--                  GetTradePlayerItemLink(i) / GetTradeTargetItemLink(i); units.NPC is the partner;
+--                  LE_GAME_ERR_TRADE_COMPLETE / ERR_TRADE_COMPLETE the completion message
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -560,7 +561,11 @@ end
 -- The trade window's contents (core/Compat.lua's TradeItemLinks, the history's trade completion):
 -- tradeItems.player[i] and tradeItems.target[i] are GetTradePlayerItemLink(i) and
 -- GetTradeTargetItemLink(i). The partner is units.NPC (UnitName("NPC")), seeded by the case.
+-- UI_INFO_MESSAGE's "Trade complete." is LE_GAME_ERR_TRADE_COMPLETE (a made-up number: the real
+-- one is the client's) with ERR_TRADE_COMPLETE's text.
 local function installTrade(M)
+    M.LE_GAME_ERR_TRADE_COMPLETE = 238
+    M.ERR_TRADE_COMPLETE = "Trade complete."
     M.tradeItems = { player = {}, target = {} }
     M.GetTradePlayerItemLink = function(i) return M.tradeItems.player[i] end
     M.GetTradeTargetItemLink = function(i) return M.tradeItems.target[i] end
