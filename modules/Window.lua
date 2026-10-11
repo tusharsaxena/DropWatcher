@@ -109,6 +109,10 @@ end
 local function isMinimized() return geometry().minimized == true end
 local function feedName() return NS.State.testMode == true and "test" or "live" end
 
+--- The feed the window shows: `test` in test mode, else `live`.
+--- @return string
+function Window.FeedName() return feedName() end
+
 --- What the window shows: its feed (`test` in test mode, else `live`) and whether Group drops lists
 --- your own drops too (`feed.showOwn`). The simulator's report places its drops by it (SimReport).
 --- @return table { feed, showOwn }
@@ -556,7 +560,7 @@ function Window.TabContext(tab)
     local own = tab ~= "group" or showOwn()
     return {
         tab = tab, feed = feed, filter = st, honors = honors, ctx = ctx,
-        onMine = tab == "group" and not own and NS.WindowMine.Lister() or nil,
+        onMine = tab == "group" and not own and NS.WindowMine.ListsNow or nil,
         matches = function(drop) return FB.InGroup(drop, own) and FB.Matches(drop, st, ctx, honors) end,
         belongs = function(drop) return FB.InGroup(drop, own) end,
         hiddenBy = function(drop) return FB.HiddenBy(drop, st, ctx, honors) end,
@@ -575,7 +579,7 @@ local function refreshActive()
 end
 
 local function paintTabs()
-    local mine = NS.WindowMine.TabTally().listed
+    local mine = NS.WindowMine.ListedCount()
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
         local c = active and C.GOLD or C.IDLE

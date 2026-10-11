@@ -91,9 +91,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     `2 drops · 1 shown`, the tooltip naming each hidden drop and its filter (feedback-2 spec §0);
   │     a group the View hid whole keeps its header, `n drops · 0 shown`; one Search, Content or a
   │     Character choice hid whole is left out (WindowCells.KeepsHeader); your own drops the tab
-  │     leaves to My drops (no `feed.showOwn`) and My drops lists (ctx.onMine = WindowMine.Lister:
+  │     leaves to My drops (no `feed.showOwn`) and My drops lists (ctx.onMine = WindowMine.ListsNow:
   │     not hidden with Hide nor by My drops' filters) are counted, `· 1 yours on My drops`
-  │     (feedback-3 §0, §5); the tab label `My drops · n` counts the same (WindowMine.TabTally)
+  │     (feedback-3 §0, §5); the tab label `My drops · n` counts the same (WindowMine.ListedCount)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / MyEq / TheirEq / Me / Them / Trade / Ask
                   reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's

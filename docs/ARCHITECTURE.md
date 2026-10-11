@@ -120,7 +120,7 @@ its one-line responsibility and why its position is load-bearing or conventional
   My drops (`· 1 yours on My drops`), and the tab reads `My drops · n`, its tooltip naming how many
   you can still trade (feedback-3 spec §0, DW-B0). Both count only the drops My drops actually
   lists: not the ones hidden with Hide nor the ones its own filters hide (`WindowMine.Lists`,
-  `Tally`, `Lister`), and the tab's tooltip names those it leaves out (feedback-3 spec §5, DW-B5). A filter-bar control's
+  `Tally`, `ListedCount`, `ListsNow`), and the tab's tooltip names those it leaves out (feedback-3 spec §5, DW-B5). A filter-bar control's
   tooltip (View, Quality, Content, Character, the search box and the footer's Sort) opens above the
   control, never over it or its menu: its `BOTTOMLEFT` on the control's `TOPRIGHT`, or its
   `BOTTOMRIGHT` on the `TOPLEFT` when the screen has no room on the right (`Window.AttachTooltip`'s

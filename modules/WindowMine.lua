@@ -187,12 +187,30 @@ function WM.TabTally()
     return t
 end
 
---- A predicate answering whether the tab lists a drop now (WM.Lists over its own filters and Hide),
---- for the Group drops headers' `· n yours on My drops`.
---- @return function fn(drop) -> boolean
-function WM.Lister()
-    local ctx, state = NS.Window.TabContext("mine"), view()
-    return function(d) return WM.Lists(d, ctx, state) end
+--- Whether the tab lists drop `d` now (WM.Lists over its own filters and Hide), for the Group drops
+--- headers' `· n yours on My drops`. Asked only of your own drops Group drops leaves to My drops, so
+--- a repaint with none of them builds no context (the refresh pair's allocation ceiling).
+--- @param d table
+--- @return boolean
+function WM.ListsNow(d)
+    return WM.Lists(d, NS.Window.TabContext("mine"), view())
+end
+
+--- How many drops the tab lists now (the tab label's `My drops · n`): WM.Tally's `listed`, without
+--- its tables, and without the tab's context while the feed on show holds no drop of yours.
+--- @return number
+function WM.ListedCount()
+    local drops = NS.LootFeed.Drops(NS.Window.FeedName())
+    local any = false
+    for _, d in ipairs(drops) do
+        if d.isMine then any = true; break end
+    end
+    if not any then return 0 end
+    local ctx, state, n = NS.Window.TabContext("mine"), view(), 0
+    for _, d in ipairs(drops) do
+        if WM.Lists(d, ctx, state) then n = n + 1 end
+    end
+    return n
 end
 
 -- The ids the feed's groups hold.
