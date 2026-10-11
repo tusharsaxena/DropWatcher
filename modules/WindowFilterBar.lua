@@ -521,12 +521,16 @@ end
 local NO_GROUPS = {}
 local charRows = {}     -- [scope] = { key, groups, rows }
 
+-- A tab's Character scope and the log its rows come from: `session` lists you alone.
+local function charSource(tab)
+    if (FB.HONORS[tab] or ALL).charScope == "session" then return "session", NO_GROUPS end
+    return "history", NS.History.Groups()
+end
+
 local function charOptions(tab)
     local me = CF.Recorder()
     local key, class = me and me.key, me and me.class
-    local session = (FB.HONORS[tab] or ALL).charScope == "session"
-    local scope = session and "session" or "history"
-    local groups = session and NO_GROUPS or NS.History.Groups()
+    local scope, groups = charSource(tab)
     local c = charRows[scope]
     if c and c.key == key and c.groups == groups then return c.rows end
     local rows = CF.Options(CF.Characters(groups, key, class), key, NS.Compat.ClassColor)
