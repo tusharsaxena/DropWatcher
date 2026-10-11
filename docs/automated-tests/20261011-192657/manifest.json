@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "addon": "DropWatcher",
+  "addonVersion": "0.1.0",
+  "run": "20261011-192657",
+  "startedAt": "2026-10-11T19:26:57+05:30",
+  "durationMs": 23931,
+  "label": "M10 DW-A9 review leftovers",
+  "release": null,
+  "git": { "sha": "8fcfe45cedfec119e36ba002ec678ece03ddea3a", "branch": "feat/2026-10-11-drop-watcher-feedback-2", "dirty": false },
+  "host": { "lua": "Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio", "luacheck": "Luacheck: 1.2.0", "lizard": "1.24.0", "timingSource": "date +%s%3N" },
+  "suites": {
+    "lint": { "status": "pass", "durationMs": 4057, "warnings": 0, "errors": 0, "files": 142, "gating": true, "gates": { "commit": true, "release": true } },
+    "tests": { "status": "pass", "durationMs": 15021, "passed": 1150, "failed": 0, "skipped": 1, "total": 1151, "gating": true, "gates": { "commit": true, "release": true } },
+    "perf": { "status": "pass", "durationMs": 593, "scenarios": 5, "gating": false, "gates": { "commit": false, "release": true } },
+    "complexity": { "status": "pass", "durationMs": 3142, "warnings": 0, "maxCcn": 13, "nloc": 34430, "functions": 4487, "avgCcn": 2.4, "avgNloc": 7.1, "avgToken": 68.2, "warnFunRatio": 0.00, "warnNlocRatio": 0.00, "bandFiles": 0, "overCapFiles": 0, "blindFiles": 0, "gating": false, "gates": { "commit": false, "release": true } }
+  },
+  "verdict": "green"
+}
