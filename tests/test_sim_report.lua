@@ -394,3 +394,49 @@ test("sim report: with feed.showOwn on, the owner's step lists yours on Group dr
     assertEqual(shown, c.group); assertEqual(c.group + c.hidden, c.total)
     assertEqual(yoursOnHeaders(NS), 0, "no suffix while Group drops lists yours")
 end)
+
+test("sim report: a drop of yours My drops leaves out (its Hide, its own filters) is not counted as on My drops", function()
+    local R = T.newAddon().SimReport
+    local feed = {}
+    local function get(id) return feed[id] end
+    local mine, group = rec(1, { isMine = true, feed = "live" }), rec(2, { feed = "live" })
+    feed[1], feed[2] = mine, group
+    local function leftOut(d) return d.id == 1 and "you hid it" or nil end
+    local view = { feed = "live", mineLeftOut = leftOut }
+    local place, why = R.Place(mine, get, view)
+    assertEqual(place, "notListed"); assertEqual(why, "you hid it")
+    assertEqual(R.Place(group, get, view), "group")
+    local report = { sent = 2, merged = 0, drops = { mine, group } }
+    assertEqual(R.Summarize(report, get, view).text, "2 drops (1 not on My drops)")
+    assertEqual(R.TipLines(report, get, view)[1], "Item 1 (you): not on My drops: you hid it")
+    view.showOwn = true
+    assertEqual(R.Place(mine, get, view), "group", "Group drops still lists it")
+    assertEqual(R.TipLines(report, get, view)[1], "Item 1 (you): Group drops")
+    assertEqual(R.Summarize(report, get, { feed = "live", mineLeftOut = function() return nil end }).text,
+        "2 drops (1 yours)")
+end)
+
+test("sim report: the owner's step agrees with the tabs after Hide and after a search My drops fails", function()
+    local NS = addon(600)
+    NS.SimScenario.Start("key", nil, { seed = 1 })
+    local step = toLoot(NS)
+    local own = NS.LootFeed.Drops("live")[1]
+    NS.Window.SelectTab("group"); NS.Window.Refresh()
+    assertEqual(panelRow(NS, step).label, "Loot: 2 drops (1 yours)")
+    NS.WindowMine.Dismiss(own.id); NS.Window.Refresh()
+    -- red under DW-B5: the tab read `My drops` while the row still said `1 yours`
+    assertEqual(NS.Window.Frame().tabs.mine.label:GetText(), "My drops")
+    local row = panelRow(NS, step)
+    assertEqual(row.label, "Loot: 2 drops (1 not on My drops)")
+    assertEqual(row.tip[3], "Item 101081 (you): not on My drops: you hid it")
+    NS.State.windowMine.dismissed[own.id] = nil
+    NS.WindowFilterBar.State("mine").search = "zzz"
+    NS.Window.Refresh()
+    assertEqual(NS.Window.Frame().tabs.mine.label:GetText(), "My drops")
+    row = panelRow(NS, step)
+    assertEqual(row.label, "Loot: 2 drops (1 not on My drops)")
+    assertEqual(row.tip[3], "Item 101081 (you): not on My drops: Search")
+    NS.WindowFilterBar.State("mine").search = ""
+    NS.Window.Refresh()
+    assertEqual(panelRow(NS, step).label, "Loot: 2 drops (1 yours)")
+end)

@@ -1243,7 +1243,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_report.lua (19)
+### test_sim_report.lua (21)
 
 - sim report: the owner's key run: the second drop is yours, on My drops, nothing lost
 - sim report: the step's chat line says where its drops went
@@ -1264,6 +1264,8 @@ Total.
 - sim report: a place honors feed.showOwn and the feed the window shows
 - sim report: View reads feed.showOwn and the feed the window shows
 - sim report: with feed.showOwn on, the owner's step lists yours on Group drops, and the tabs agree
+- sim report: a drop of yours My drops leaves out (its Hide, its own filters) is not counted as on My drops
+- sim report: the owner's step agrees with the tabs after Hide and after a search My drops fails
 
 ### test_sim_panel.lua (19)
 
@@ -1439,7 +1441,7 @@ Total.
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
 | test_sim_e2e.lua | 12 |
-| test_sim_report.lua | 19 |
+| test_sim_report.lua | 21 |
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
@@ -1450,4 +1452,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1196** |
+| **Total** | **1198** |

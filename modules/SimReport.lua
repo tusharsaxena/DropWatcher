@@ -15,7 +15,8 @@ local _, NS = ...
 -- the feed's reader and the window's view, View): Group drops, My drops, hidden by a gate (its
 -- reason), loading, cleared from the feed since, or not shown while test mode is on. It honors
 -- `feed.showOwn` (a drop of yours is then on Group drops, and My drops too) and the feed the window
--- shows (feedback-3 spec §5, DW-B5). Summarize counts the places (pure) and words the step's detail: `2 drops (1
+-- shows, and a drop of yours My drops leaves out (its Hide or its own filters) is `not on My drops`,
+-- so the step agrees with the tab's label and the Group drops suffix (feedback-3 spec §5, DW-B5). Summarize counts the places (pure) and words the step's detail: `2 drops (1
 -- yours)`, `3 drops (1 yours, 1 hidden)`; TipLines names each drop, its looter and its place, for the
 -- panel row's tooltip. The panel reads the report again on every repaint, so a drop that was still
 -- loading when the step ran is placed once it lands.
@@ -38,7 +39,8 @@ local GATE = {
 
 -- The extras a detail lists after the count, in order, and their words.
 local EXTRAS = {
-    { key = "mine", fmt = L["%d yours"] }, { key = "hidden", fmt = L["%d hidden"] },
+    { key = "mine", fmt = L["%d yours"] }, { key = "notListed", fmt = L["%d not on My drops"] },
+    { key = "hidden", fmt = L["%d hidden"] },
     { key = "loading", fmt = L["%d loading"] }, { key = "merged", fmt = L["%d merged"] },
     { key = "cleared", fmt = L["%d cleared"] }, { key = "offscreen", fmt = L["%d not shown in test mode"] },
     { key = "refused", fmt = L["%d refused"] },
@@ -79,18 +81,31 @@ function R.Loot(n, who)
 end
 
 --- What the window shows (the edge): its feed and `feed.showOwn` (NS.Window.FeedView), so a place
---- honors them (feedback-3 spec §5, DW-B5).
---- @return table { feed, showOwn }
-function R.View() return NS.Window.FeedView() end
+--- honors them, and `mineLeftOut` (NS.WindowMine.LeftOutNow: why My drops leaves a drop of yours
+--- out, its Hide or its own filters, else nil), so a place agrees with the tab's label and the Group
+--- drops suffix beyond the defaults (feedback-3 spec §5, DW-B5).
+--- @return table { feed, showOwn, mineLeftOut }
+function R.View()
+    local v = NS.Window.FeedView()
+    v.mineLeftOut = NS.WindowMine.LeftOutNow
+    return v
+end
+
+-- Why My drops leaves drop `rec` of yours out (view.mineLeftOut), else nil.
+local function leftOut(rec, view)
+    if not rec.isMine or type(view.mineLeftOut) ~= "function" then return nil end
+    return view.mineLeftOut(rec)
+end
 
 --- Where one drop is now (pure, given `get`, the feed's reader, and `view`, the window's R.View;
---- nil is the live feed with `feed.showOwn` off): `group`, `mine`, `hidden` (and the gate's reason),
---- `loading`, `cleared` (taken out of the feed since) or `offscreen` (in a feed the window does not
---- show: test mode is on). With `feed.showOwn` on, a drop of yours is `group` (Group drops lists it,
---- and My drops too).
+--- nil is the live feed with `feed.showOwn` off): `group`, `mine`, `notListed` (yours, but My drops
+--- leaves it out: its Hide or its own filters, and why), `hidden` (and the gate's reason), `loading`,
+--- `cleared` (taken out of the feed since) or `offscreen` (in a feed the window does not show: test
+--- mode is on). With `feed.showOwn` on, a drop of yours is `group` (Group drops lists it, and My
+--- drops too unless it leaves it out).
 --- @param rec table
 --- @param get function|nil id -> drop (NS.LootFeed.Get)
---- @param view table|nil { feed, showOwn }
+--- @param view table|nil { feed, showOwn, mineLeftOut }
 --- @return string place, string|nil why
 function R.Place(rec, get, view)
     view = view or {}
@@ -98,12 +113,16 @@ function R.Place(rec, get, view)
     if rec.state ~= "added" then return "loading" end
     if get and get(rec.id) ~= rec then return "cleared" end
     if (rec.feed or "live") ~= (view.feed or "live") then return "offscreen" end
-    if rec.isMine and not view.showOwn then return "mine" end
+    if rec.isMine and not view.showOwn then
+        local why = leftOut(rec, view)
+        if why then return "notListed", why end
+        return "mine"
+    end
     return "group"
 end
 
 --- A report's counts and its detail (pure, given `get` and `view`, as R.Place's): { total, group,
---- mine, hidden, loading, merged, cleared, offscreen, refused, text }. `text` is `2 drops (1 yours,
+--- mine, notListed, hidden, loading, merged, cleared, offscreen, refused, text }. `text` is `2 drops (1 yours,
 --- 1 hidden)`, the count alone when every drop is on Group drops.
 --- @param report table
 --- @param get function|nil
@@ -112,8 +131,8 @@ end
 function R.Summarize(report, get, view)
     report = type(report) == "table" and report or {}
     local drops = report.drops or {}
-    local c = { total = tonumber(report.sent) or #drops, group = 0, mine = 0, hidden = 0, loading = 0, cleared = 0,
-        offscreen = 0, merged = tonumber(report.merged) or 0 }
+    local c = { total = tonumber(report.sent) or #drops, group = 0, mine = 0, notListed = 0, hidden = 0, loading = 0,
+        cleared = 0, offscreen = 0, merged = tonumber(report.merged) or 0 }
     for _, rec in ipairs(drops) do
         local place = R.Place(rec, get, view)
         c[place] = c[place] + 1
@@ -135,7 +154,8 @@ local PLACE_WORDS = { group = L["Group drops"], mine = L["My drops"], loading = 
 local function where(rec, get, view)
     local place, why = R.Place(rec, get, view)
     if place == "hidden" then return L["hidden: %s"]:format(GATE[why] or tostring(why)) end
-    if place == "group" and rec.isMine then return L["Group drops and My drops"] end
+    if place == "notListed" then return L["not on My drops: %s"]:format(tostring(why)) end
+    if place == "group" and rec.isMine and not leftOut(rec, view or {}) then return L["Group drops and My drops"] end
     return PLACE_WORDS[place]
 end
 

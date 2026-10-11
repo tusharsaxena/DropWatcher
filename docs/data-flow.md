@@ -199,7 +199,8 @@ the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receip
                    in chat and `Loot: 2 drops (1 yours)` on the panel row, TipLines (pure) ─> the
                    row's tooltip: each drop, its looter, its tab or the gate that hid it (feedback-3 §0);
                    each place honors `feed.showOwn` and the feed the window shows (SimReport.View =
-                   Window.FeedView: yours on Group drops too, or not shown in test mode; §5)
+                   Window.FeedView + WindowMine.LeftOutNow: yours on Group drops too, not on My drops when its
+                   Hide or its own filters leave it out, or not shown in test mode; §5)
 /dw sim run ─> a step now, then one every SimScenario.StepDelay() seconds (`sim.stepDelay`, 2 by
                    default, read as each next step is set) on NS.Sim.After (the stop ends it)
 /dw sim pause | resume | restart ─> NS.SimScenario.Pause (the timer canceled) | Resume (Run) | Restart

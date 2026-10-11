@@ -1246,7 +1246,9 @@ Group drops and My drops`; Group drops shows both drops and its header has no `y
 `/dw set feed.showOwn false` → the row reads `Loot: 2 drops (1 yours)` again on the next repaint.
 Turn test mode on (`/dw test`) with the step played → the row reads `Loot: 2 drops (2 not shown in
 test mode)` and its tooltip `… not shown while test mode is on`; turn test mode off → the places come
-back. Result:
+back. On My drops, Hide your drop → the tab reads `My drops`, and the row `Loot: 2 drops (1 not on My
+drops)` with the tooltip `… (you): not on My drops: you hid it`; type a search your drop fails on
+My drops instead → the same, the tooltip ending `not on My drops: Search`. Result:
 
 ## Non-English client
 
@@ -1340,4 +1342,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-10 | DW-91, the simulation step panel | No client pass recorded yet |
 | SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet |
 | SIM-12 | DW-B0, the loot step says where its drops went; the tabs reconcile | No client pass recorded yet |
-| SIM-13 | DW-B5, the loot step honors `feed.showOwn` and test mode's feed | No client pass recorded yet |
+| SIM-13 | DW-B5, the loot step honors `feed.showOwn`, test mode's feed and My drops' Hide and filters | No client pass recorded yet |

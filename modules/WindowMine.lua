@@ -157,6 +157,16 @@ function WM.Tally(drops, ctx, state)
     return t
 end
 
+--- The words for why the tab leaves a drop of yours out (pure): `you hid it`, or the filter
+--- (FB.ReasonLabel).
+--- @param why string `dismissed` or a filter key (excludedWhy's)
+--- @param filter table|nil the tab's filter state
+--- @return string
+function WM.WhyLabel(why, filter)
+    if why == "dismissed" then return L["you hid it"] end
+    return NS.WindowFilterBar.ReasonLabel(why, filter)
+end
+
 --- The tab tooltip's lines for your drops it leaves out (pure): `Not listed here:`, then each drop
 --- and why (`you hid it`, or the filter: FB.ReasonLabel), the first WC.HIDDEN_TIP_LINES of them.
 --- @param excluded table|nil WM.Tally's
@@ -171,8 +181,7 @@ function WM.ExcludedLines(excluded, filter)
             out[#out + 1] = L["and %d more"]:format(#excluded - WC.HIDDEN_TIP_LINES)
             break
         end
-        local why = x.why == "dismissed" and L["you hid it"] or NS.WindowFilterBar.ReasonLabel(x.why, filter)
-        out[#out + 1] = L["%s: %s"]:format(WC.ItemName(x.drop.link) or "?", why)
+        out[#out + 1] = L["%s: %s"]:format(WC.ItemName(x.drop.link) or "?", WM.WhyLabel(x.why, filter))
     end
     return out
 end
@@ -194,6 +203,17 @@ end
 --- @return boolean
 function WM.ListsNow(d)
     return WM.Lists(d, NS.Window.TabContext("mine"), view())
+end
+
+--- Why the tab leaves drop `d` of yours out now (its Hide or its own filters, in WM.WhyLabel's
+--- words), else nil: the sim report's `not on My drops` (modules/SimReport.lua, feedback-3 spec §5).
+--- Asked only of your own drops, so a repaint with none of them builds no context.
+--- @param d table
+--- @return string|nil
+function WM.LeftOutNow(d)
+    local ctx, st = NS.Window.TabContext("mine"), view()
+    if WM.Lists(d, ctx, st) then return nil end
+    return WM.WhyLabel(excludedWhy(d, ctx, st), ctx.filter)
 end
 
 --- How many drops the tab lists now (the tab label's `My drops · n`): WM.Tally's `listed`, without
