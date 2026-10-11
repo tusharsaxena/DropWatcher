@@ -102,5 +102,5 @@ its delay and least gain, live only while it is on.
 ## Window
 
 **Columns:** a checkbox per optional column. **Layout:** Compact, Row height, Font size, Groups kept
-in history (account-wide). **Toast:** Show a toast, then its least gain, duration, combat and sound
+in history (account-wide; a lower cap trims the history at once). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.

@@ -63,6 +63,8 @@
 --                  IsControlKeyDown; chatLinks and dressUps record ChatEdit_InsertLink and
 --                  DressUpItemLink; tooltipLinks every GameTooltip:SetHyperlink (the drop tables);
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
+--   tradeItems     the open trade window: tradeItems.player[i] / tradeItems.target[i] are
+--                  GetTradePlayerItemLink(i) / GetTradeTargetItemLink(i); units.NPC is the partner
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -551,6 +553,15 @@ local function installTableSurface(M)
     end
 end
 
+-- The trade window's contents (core/Compat.lua's TradeItemLinks, the history's trade completion):
+-- tradeItems.player[i] and tradeItems.target[i] are GetTradePlayerItemLink(i) and
+-- GetTradeTargetItemLink(i). The partner is units.NPC (UnitName("NPC")), seeded by the case.
+local function installTrade(M)
+    M.tradeItems = { player = {}, target = {} }
+    M.GetTradePlayerItemLink = function(i) return M.tradeItems.player[i] end
+    M.GetTradeTargetItemLink = function(i) return M.tradeItems.target[i] end
+end
+
 local function build()
     local M = base()
     M._G = M
@@ -614,6 +625,7 @@ local function build()
     installInspect(M)
     installClock(M)
     installTableSurface(M)
+    installTrade(M)
 
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)

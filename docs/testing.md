@@ -74,7 +74,8 @@ by combat and by the stand-down; the window built headless with every placeholde
 every cell, the chip and banner, the My drops count; Ask and Post my tradeables printed, never
 sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
-tooltip line reader and each shim's fallback with its API absent), `test_constants` and
+tooltip line reader, the trade window's items and partner, the row menu, and each shim's fallback
+with its API absent), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups), `test_evaluate` (the verdict kernel, table-driven over
 every slot plan and every equippability path, plus nil and garbage inputs), `test_scoring` (the
@@ -151,6 +152,15 @@ deprecated global fallback; the announce channel; queueing under a restriction a
 the lift, `ENCOUNTER_END` and `CHALLENGE_MODE_COMPLETED`, one send every 1.5 seconds first in first
 out, stopped by a lockdown mid-flush; cancel by a second press and when the looter leaves, and a
 queued announce once out of a group; test mode printing instead of sending; the stand-down),
+`test_history` (the history: the shape made in place with the cap kept, the snapshot kept small,
+the group and drop caps, outcomes moving forward only, an expired trade, declined set and cleared
+by hand, the trade match by partner then item id and your own drops traded away; then the edge on
+the bus: a live drop recorded and a test drop never, `DropUpdated`, a sent ask, offer or announce;
+a completed trade marking `received` and the Ask button `Traded`, one given away, and an
+unfinished or changed trade marking nothing; the cap row trimming at once; Clear history behind its
+confirmation; the diagnostics line; and the History tab built headless: kept groups newest first,
+the outcome column, a reason on every cell, a header toggle, Content's This session, the row menu
+with and without the client's menu, the empty line and `HistoryChanged`'s repaint),
 `test_diagnostics`. Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

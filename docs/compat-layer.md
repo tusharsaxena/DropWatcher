@@ -6,8 +6,8 @@ globals for this one file only, and `test_compat`'s last case fails if any other
 one in code. It loads in `# Core` right after `core/CoreSetup.lua`, needs only `LibStub` at load,
 and is read inside functions only.
 
-**Fifty-five shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `55`). The three
+**Fifty-nine shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `59`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -86,6 +86,9 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |
 | | `CursorHasItem()` | `CursorHasItem`; a secret answer reads as empty | `false` |
 | | `ClearCursor()` | `ClearCursor`, which puts the cursor's item back where it came from | `false` |
+| Trade window | `TradeItemLinks()` | `GetTradePlayerItemLink(i)` and `GetTradeTargetItemLink(i)` over slots 1-6 (slot 7 is not traded): answers `given, received`, two lists of links, a secret or empty answer left out | `{}, {}` |
+| | `TradePartnerName()` | `UnitName("NPC")`, the trade window's partner, as `Name-Realm` when a realm is named, else `Name`; a secret or empty name is nil | `nil` |
+| Row menu | `ContextMenu(owner, entries)` | `MenuUtil.CreateContextMenu(owner, generator)`, one `CreateButton(text, fn)` per entry; `true` when built | `false` (the caller acts at once) |
 | Drop tables | `ItemIcon(item)` | `C_Item.GetItemIconByID` (an id or a link; needs no item cache); a secret or non-texture answer is nil | `nil` |
 | | `ClassColor(classFile)` | `C_ClassColor.GetClassColor` → the `RAID_CLASS_COLORS` table; answers `r, g, b`; a secret answer is nil | `nil` |
 | | `InsertChatLink(link)` | `ChatFrameUtil.InsertLink`, the newer spelling → the `ChatEdit_InsertLink` global (an item button's shift-click); `true` when called | `false` |
@@ -131,4 +134,7 @@ messaging edge (DW-2A, landed: `modules/Asks.lua`) `ChatSender`, `IsSecret` on t
 slot name and a raise's message, the Group drops table (DW-31, landed: `modules/WindowGroup.lua`)
 `ItemIcon`, `ClassColor`, `InsertChatLink` and `DressUpItem`, the detail card (DW-32, landed:
 `modules/DetailCard.lua`) `SpecName`, `PawnIsReady`, `InsertChatLink` and the item button's three, and the scorers (DW-50, landed:
-`modules/Scoring.lua`) the Pawn seam, `PawnIsLoaded` and `IsSecret` on the links.
+`modules/Scoring.lua`) the Pawn seam, `PawnIsLoaded` and `IsSecret` on the links, the history (DW-51,
+landed: `modules/History.lua`) `TradeItemLinks`, `TradePartnerName` and `IsSecret` on the accept
+flags, and the History tab (DW-51: `modules/WindowHistory.lua`) `ContextMenu`, `ClassColor` and the
+item button's three.

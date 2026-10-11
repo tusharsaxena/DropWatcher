@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-802%2F802_passing-green)
+![Tests](https://img.shields.io/badge/Tests-828%2F828_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -64,6 +64,13 @@ ranked by how much they would gain, with a status pill (`+14 UPGRADE`, `EQUAL`, 
 when they are out of range or you are in combat). Under the rows, a line counts your tradeable
 drops and the next one to run out, and **Post my tradeables** posts them all in one line to the
 group.
+
+**History** keeps what the feed showed after you log out, shared by all your characters: the last
+20 bosses or key runs by default (Settings › Window › Layout), in the same rows as Group drops,
+each with what became of it. A drop reads **Asked** or **Offered** once your whisper went out,
+**Expired** when its trade window passed, and **Received** or **Traded away** when a trade with that
+item goes through (the Group drops row's Ask button then reads **Traded ✓**). Right-click a row to
+mark it **Declined**. **Clear history** empties it, after asking.
 
 Test mode fills the window with placeholder content so you can see it and place it before a real
 drop arrives. `/dw test` turns it on and off, and so does the **Test mode** box. Entering combat ends

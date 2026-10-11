@@ -8,7 +8,7 @@ local _, NS = ...
 -- two groups (a boss and a key run), eleven drops of other members covering board 03 (Me and Them:
 -- upgrade, sidegrade, downgrade, can't use, doesn't want, unknown; Trade: yes, likely, unknown,
 -- no; inspect: fresh, cached, pending, out of range, combat, failed, not in the group; Ask: ready,
--- queued, asked, retry and the dash) and five of your own covering board 04 (an exact countdown,
+-- queued, asked, retry, traded and the dash) and five of your own covering board 04 (an exact countdown,
 -- one ending soon, an estimated one, a bind-on-equip drop and an expired one, with candidates in
 -- every pill: +n UPGRADE, EQUAL, NO UPGRADE, CAN'T USE, CHECKING… and UNAVAILABLE). Every name and
 -- item is invented; nothing names a real player.
@@ -127,7 +127,7 @@ local function othersAtBoss(now)
         other("mistveil", link(990007, L["Placeholder Mantle"], 4), facts(302, "INVTYPE_SHOULDER"),
             ev("upgrade", 6, 296), ev("cantUse", nil, nil, "armorType"),
             trade("likely", "notUpgrade", { 302, 310 }, "inspect", 20),
-            pack(inspected("mistveil", "fresh", 20, now, S.SHOULDER, 310)), nil),
+            pack(inspected("mistveil", "fresh", 20, now, S.SHOULDER, 310)), { state = "traded" }),
         other("dawnfeather", link(990008, L["Placeholder Treads"], 3), facts(289, "INVTYPE_FEET", 3),
             ev("sidegrade", -1, 290), nil, trade("unknown", "noInspect", { "unavailable" }),
             pack(inspected("dawnfeather", "unavailable", nil, now, nil, nil, "notInGroup")), nil),

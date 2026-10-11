@@ -396,6 +396,26 @@ GROUP_ROSTER_UPDATE (after the roster re-read) ─> Asks.OnRosterChanged
 
 The stand-down cancels the flush timer and drops the queued asks; the sent registry is kept.
 
+## Today: the history
+
+```
+DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
+                          (live drops only)        group = feed group @ session, cap = maxGroups)
+DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
+AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)
+TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TRADE_ACCEPT_UPDATE(1, 1)
+          ─> TRADE_CLOSED ─> MatchTrade: got ─> received, gave ─> tradedAway
+row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
+Clear history ─> StaticPopup ─> History.Clear        cap row ─> History.ApplyCap
+every change ─> HistoryChanged ─> WindowHistory: one Window.Refresh next frame
+                                   (the History tab; a received drop's Ask reads Traded)
+```
+
+The History tab's body reads `NS.History.Groups()` (oldest first) through the pure
+`WindowHistory.Entries`, filtered by the tab's state with This instance and This session turned
+into `time()` marks (`WindowHistory.Context`); each entry is painted with the Group drops table's
+cell composers over a drop-shaped copy (`WindowHistory.AsDrop`).
+
 ## The design's loot pipeline (spec §3)
 
 ```

@@ -334,7 +334,7 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a placeholder's own state only while the edge holds none
 
-### test_compat.lua (64)
+### test_compat.lua (67)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -399,6 +399,9 @@ Total.
 - compat: InsertChatLink prefers ChatFrameUtil.InsertLink, then ChatEdit_InsertLink
 - compat: DressUpItem calls DressUpItemLink, then DressUpLink
 - compat: SpecName reads GetSpecializationInfoByID's name, else nil
+- compat: TradeItemLinks reads slots 1-6 of both sides, plain links only
+- compat: TradePartnerName names the trade window's partner, with a realm when given
+- compat: ContextMenu builds one button per entry through MenuUtil, else answers false
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_constants.lua (12)
@@ -836,6 +839,32 @@ Total.
 - test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
 - stand-down: a request is refused, the flush timer is canceled and the queue is dropped
 
+### test_history.lua (23)
+
+- history: Normalize gives the shape in place and keeps the cap
+- history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
+- history: Record groups by key, newest last; the caps drop the oldest first
+- history: an automatic outcome only moves forward
+- history: Refresh takes the latest verdicts, and an expired trade makes it `expired`
+- history: declined is set by hand, and clearing it puts back what it replaced
+- history: a completed trade matches the partner's drop first, then any, one entry per item
+- history: an item you gave marks your own drop traded away, never someone else's
+- history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the cap
+- history edge: DropUpdated refreshes the entry; an expired trade makes it `expired`
+- history edge: a sent ask is `asked`, a sent offer or announce `offered`; other states nothing
+- history trade: a completed trade marks the drop you got `received`, and the Ask button `Traded`
+- history trade: an item you gave marks your drop `tradedAway`
+- history trade: no both-accepted state, or an item moved after it, completes nothing
+- history: lowering the cap row trims the stored log at once
+- history: Clear history asks first, and empties the log only on Yes; the cap stays
+- history: the diagnostics' feed section reports the history and the trade
+- history tab: kept groups newest first, the first open, each row's outcome painted
+- history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
+- history tab: a right-click marks a row declined, through the menu when the client has one
+- history tab: with nothing kept it says what it will hold, and Clear history is off
+- history tab: HistoryChanged repaints the shown window on the next frame
+- history tab: the pure Ago reads seconds, hours, then days
+
 ### test_disabled.lua (9)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -952,7 +981,7 @@ Total.
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
 | test_test_mode.lua | 18 |
-| test_compat.lua | 64 |
+| test_compat.lua | 67 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 34 |
@@ -971,6 +1000,7 @@ Total.
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 22 |
+| test_history.lua | 23 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -980,4 +1010,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **802** |
+| **Total** | **828** |

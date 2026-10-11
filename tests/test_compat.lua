@@ -862,6 +862,53 @@ test("compat: SpecName reads GetSpecializationInfoByID's name, else nil", functi
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- The trade window's contents and a row's menu (the history, spec §10)
+-- ---------------------------------------------------------------------------------------------
+
+test("compat: TradeItemLinks reads slots 1-6 of both sides, plain links only", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    m.tradeItems.player = { ITEM_LINK, nil, ITEM_LINK }
+    m.tradeItems.target = { [2] = ITEM_LINK, [4] = T.secret(ITEM_LINK), [5] = "", [7] = ITEM_LINK }
+    local given, received = Compat.TradeItemLinks()
+    assertEqual(#given, 2, "the gap is skipped")
+    assertEqual(#received, 1, "a secret, an empty answer and slot 7 (not traded) are left out")
+    assertEqual(received[1], ITEM_LINK)
+    m.GetTradePlayerItemLink, m.GetTradeTargetItemLink = nil, nil
+    given, received = Compat.TradeItemLinks()
+    assertEqual(#given + #received, 0, "no API")
+end)
+
+test("compat: TradePartnerName names the trade window's partner, with a realm when given", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    assertNil(Compat.TradePartnerName(), "no trade partner")
+    m.units.NPC = { name = "Brakk" }
+    assertEqual(Compat.TradePartnerName(), "Brakk")
+    m.units.NPC = { name = "Lyra", realm = "Area52" }
+    assertEqual(Compat.TradePartnerName(), "Lyra-Area52")
+    m.units.NPC = { name = T.secret("Lyra") }
+    assertNil(Compat.TradePartnerName(), "a secret name")
+    m.UnitName = nil
+    assertNil(Compat.TradePartnerName(), "no API")
+end)
+
+test("compat: ContextMenu builds one button per entry through MenuUtil, else answers false", function()
+    local Compat, m = fresh()
+    local owner, hit = {}, 0
+    assertFalse(Compat.ContextMenu(owner, { { text = "A", fn = function() end } }), "no MenuUtil")
+    local made = {}
+    m.MenuUtil = { CreateContextMenu = function(o, gen)
+        local root = { CreateButton = function(_, text, fn) made[#made + 1] = { text = text, fn = fn } end }
+        gen(o, root)
+    end }
+    assertTrue(Compat.ContextMenu(owner, { { text = "Mark", fn = function() hit = hit + 1 end } }))
+    assertEqual(#made, 1); assertEqual(made[1].text, "Mark")
+    made[1].fn()
+    assertEqual(hit, 1)
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
 
@@ -874,7 +921,8 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "NotifyInspect", "ClearInspectPlayer", "GetInspectSpecialization", "CheckInteractDistance",
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "GetMapUIInfo", "CursorHasItem", "ClearCursor", "GetItemIconByID", "C_ClassColor", "RAID_CLASS_COLORS",
-    "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink" }
+    "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink", "GetTradePlayerItemLink",
+    "GetTradeTargetItemLink", "MenuUtil" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

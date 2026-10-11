@@ -169,6 +169,12 @@ modules\TradeHelper.lua
 # after modules\Situations.lua's and modules\LootFeed.lua's. NS.Restrictions, NS.Roster and
 # NS.LootFeed (above) are read at call time.
 modules\Asks.lua
+# Conventional: publishes NS.History, the capped account-wide log of the feed's drops and their
+# outcomes; appends its TRADE_* rows to NS.FEATURE_EVENTS and NS.STAND_DOWN / NS.STAND_UP and its
+# handlers to NS.addon (core\DropWatcher.lua) at load, and registers its DropAdded, DropUpdated and
+# AskStateChanged receivers on a NS.Bus target at load. NS.LootFeed, NS.Compat and NS.Setting
+# (settings\Schema.lua, below) are read at call time.
+modules\History.lua
 # Conventional (vs. the settings files): publishes NS.Window; reads NS.Perf, NS.L, NS.Constants,
 # NS.Bus and NS.MSG, and appends its rows to NS.STAND_DOWN / NS.STAND_UP, all published above, at
 # load, and registers its bus receivers (RestrictionChanged, AskStateChanged, SituationChanged,
@@ -212,6 +218,11 @@ modules\WindowMine.lua
 # NS.Constants, NS.L and NS.State at load. NS.Window, NS.WindowGroup, NS.WindowMine, the feed, the
 # asks, the trade helper and the host handlers are read at call time: it is built on its first Open.
 modules\OfferPanel.lua
+# LOAD-BEARING: publishes NS.WindowHistory and registers the History body through Window.RegisterTab
+# (modules\Window.lua, above) at load, and its HistoryChanged receiver on a NS.Bus target; takes
+# NS.WindowCells, NS.Constants, NS.L and NS.State at load. NS.History, NS.WindowGroup's item button
+# and layout, NS.WindowFilterBar and NS.WindowFooter (above) are read at call time.
+modules\WindowHistory.lua
 # Conventional: publishes NS.TestMode, test mode's placeholder drops and the hooks the drop tables
 # read (InspectOf, AskState); appends its row to NS.STAND_DOWN at load and reads NS.Constants and
 # NS.L at load. NS.LootFeed, NS.WindowFilterBar, NS.Inspect (above) are read at call time;

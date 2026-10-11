@@ -68,7 +68,7 @@ local QUALITY_MODE_LABEL = {
 }
 local TIPS = {
     view = { L["View"], L["Interesting shows the drops that are an upgrade for you and that their looter may still trade, and your own drops you can trade. All shows everything."] },
-    content = { L["Content"], L["This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All includes the history."] },
+    content = { L["Content"], L["This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."] },
     likelyOnly = { L["Likely tradeable only"], L["Hide the drops whose trade estimate is Unknown or No."] },
     search = { L["Search"], L["Show only the drops whose item or looter name contains this text."] },
 }
@@ -190,8 +190,9 @@ local function matchesSearch(drop, text)
     return type(looter) == "string" and looter:lower():find(needle, 1, true) ~= nil
 end
 
--- `instance`: the drops since the situation last changed (ctx.instanceSince); `session` and `all`
--- pass every live drop (History, DW-51, tells its earlier sessions apart with ctx.sessionSince).
+-- `instance`: the drops since the situation last changed (ctx.instanceSince); `session` the drops
+-- since ctx.sessionSince, which only the History tab sets (modules/WindowHistory.lua: a live feed
+-- holds this session's drops alone); `all` passes every drop.
 local function matchesContent(drop, content, ctx)
     local since
     if content == "instance" then since = ctx and ctx.instanceSince end

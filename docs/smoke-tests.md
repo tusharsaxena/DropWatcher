@@ -32,6 +32,7 @@ passed.
 | SIT-1..5 | Situations | Where the addon is active (lands with DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (lands with DW-12) |
 | SCORE-1..2 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50 |
+| HIST-1..2 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51 |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
 ## Before you start
@@ -733,6 +734,27 @@ Paste `hello` → chat says it is not a Pawn scale string and nothing changes. `
 `scorer=weights inUse=weights`. `/dw add` two drops of one slot whose stats differ → the score line, labeled **Weights**,
 shows the weighted score's change and the verdict follows it as SCORE-1 describes. Result:
 
+## History
+
+**HIST-1. A completed trade.** Needs a group member and a tradeable drop. In a dungeon, let a
+member loot an item that is a downgrade for them and an upgrade for you; press its Ask. Trade with
+them (they put the item in), both accept → with `/dw debug on`, the console shows `[TRADE] trade
+with <name> completed: gave 0, got 1` and `history: <item> received`; the Group drops row's Ask
+button reads `Traded ✓` and the History tab's row `Received`. Then trade one of your own drops away
+(My drops › Offer… › Trade, both accept) → its History row reads `Traded away`. Cancel a trade
+before both accept → nothing changes. If no `completed` line appears after a real trade, the client
+did not send the both-accepted `TRADE_ACCEPT_UPDATE` before closing: record what `/etrace` shows for
+`TRADE_ACCEPT_UPDATE`, `TRADE_CLOSED` and `UI_INFO_MESSAGE` around the accept. Result:
+
+**HIST-2. The History tab.** After a few drops, `/reload` and `/dw history` → the tab opens on View:
+All and Content: All, the drops are under their encounter's header (the newest open), each row
+with its Outcome; a header of an older day reads `n days ago`. Right-click a row → a menu with
+`Mark as declined`; choose it → the row reads `Declined`; right-click again → `Clear declined`
+puts the earlier outcome back. Content: This session → only today's drops. Settings › Window ›
+Layout › Groups kept in history to 1 → the tab keeps only the newest group at once. Clear history →
+a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
+reads `History cleared.` Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -774,3 +796,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | PANEL-4..6 | DW-41, the settings pages | No client pass recorded yet |
 | PANEL-7 | DW-40 / DW-41 review, the rows that act | No client pass recorded yet |
 | SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |
+| HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |

@@ -40,8 +40,11 @@ Trade and Hide this item buttons. The My drops tab lists your own drops with the
 each (exact once the item is in your bags), whether you would keep it, the best candidates and the
 Offer… and Announce buttons, with a summary and Post my tradeables under them; Offer… opens the
 "Who could use this?" panel beside the window, every member ranked by their gain with a status pill
-and Offer and Trade buttons, and Announce to group. The History table and the settings that tune
-the feed arrive with the plan's later items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
+and Offer and Trade buttons, and Announce to group. The History tab keeps every drop the feed
+showed across sessions, on every character, grouped by boss or run (the newest 20 groups by
+default), each with what became of it: seen, asked, offered, received or traded away (read from a
+completed trade), expired, or declined (set from the row's right-click menu); Clear history asks
+first. The toast and auto-ask arrive with the plan's later items ([`superpowers/plans/2026-10-10-drop-watcher-v1.md`](superpowers/plans/2026-10-10-drop-watcher-v1.md)).
 The messaging edge behind the coming ask buttons is in: it whispers the looter (or a candidate, or
 announces to the group) with one confirmation line, queues while chat is restricted and sends the
 queue when the restriction lifts or the boss dies, and in test mode prints instead of sending.

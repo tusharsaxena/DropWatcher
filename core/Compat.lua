@@ -23,6 +23,8 @@ local _, NS = ...
 --   * the Pawn seam (an optional dependency, every call behind PawnIsInitialized and pcall);
 --   * the trade actions (C_Container.PickupContainerItem, DropItemOnUnit, InitiateTrade) and their
 --     trade-range and cursor reads (CheckInteractDistance index 2, CursorHasItem, ClearCursor);
+--   * the trade window's contents and partner (GetTradePlayerItemLink, GetTradeTargetItemLink,
+--     UnitName("NPC")) for the history's trade completion, and a row's context menu (MenuUtil);
 --   * the drop tables' item buttons and class colors (C_Item.GetItemIconByID, C_ClassColor and
 --     RAID_CLASS_COLORS, the chat link and the dressing room), and a spec's name for the detail
 --     card (GetSpecializationInfoByID).
@@ -915,6 +917,58 @@ end
 function Compat.ClearCursor()
     if not ClearCursor then return false end
     ClearCursor()
+    return true
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- The trade window's contents (the history's trade completion, design spec §10)
+-- ---------------------------------------------------------------------------------------------
+
+-- The trade window's item slots that change hands: 1-6 (slot 7 is "will not be traded").
+local TRADE_SLOTS = 6
+
+-- The links one side's getter answers over the traded slots, plain strings only, in slot order.
+local function tradeLinks(fn)
+    local out = {}
+    if not fn then return out end
+    for i = 1, TRADE_SLOTS do
+        local link = plainString(fn(i))
+        if link and link ~= "" then out[#out + 1] = link end
+    end
+    return out
+end
+
+--- The items in the open trade window: what you give (GetTradePlayerItemLink) and what you get
+--- (GetTradeTargetItemLink), slots 1-6, as lists of links. A secret, empty or absent answer is
+--- left out; with no API both lists are empty.
+--- @return table given, table received
+function Compat.TradeItemLinks()
+    return tradeLinks(GetTradePlayerItemLink), tradeLinks(GetTradeTargetItemLink)
+end
+
+--- Whom you are trading with (UnitName("NPC"), the trade window's partner unit), as `Name-Realm`
+--- when the client names a realm, else `Name`. Nil for a secret or missing name.
+--- @return string|nil
+function Compat.TradePartnerName()
+    if not UnitName then return nil end
+    local name, realm = UnitName("NPC")
+    name, realm = plainString(name), plainString(realm)
+    if not name or name == "" then return nil end
+    if realm and realm ~= "" then return name .. "-" .. realm end
+    return name
+end
+
+--- Opens a context menu on `owner` with one button per entry ({ text, fn }), through
+--- MenuUtil.CreateContextMenu. False when the client has no MenuUtil, so the caller acts directly.
+--- @param owner table
+--- @param entries table { { text = string, fn = function }, ... }
+--- @return boolean
+function Compat.ContextMenu(owner, entries)
+    local fn = MenuUtil and MenuUtil.CreateContextMenu
+    if not fn or type(entries) ~= "table" then return false end
+    fn(owner, function(_, root)
+        for _, e in ipairs(entries) do root:CreateButton(e.text, e.fn) end
+    end)
     return true
 end
 

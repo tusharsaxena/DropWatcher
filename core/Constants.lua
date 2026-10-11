@@ -69,6 +69,7 @@ C.WINDOW = {
     OFFER_BTN_W = 64,     -- a row's Offer… button
     ANNOUNCE_W  = 76,     -- a row's Announce button
     POST_W      = 140,    -- Post my tradeables
+    CLEAR_W     = 124,    -- the History tab's Clear history (its strip is MINE_FOOT_H tall)
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
     OFFER_FOOT_H = 32,    -- its Announce to group strip

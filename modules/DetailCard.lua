@@ -277,10 +277,11 @@ local function paintTrade(t, model)
     t.tipLines = { model.tip[1], model.text, model.meta, model.tip[2] }
 end
 
+-- The ask's state; `traded` once the history settled the drop received (modules/History.lua).
 local function askState(drop)
     local target = NS.AskTargetOf(drop)
-    if not target then return "ready" end
-    return NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", target, drop.id))
+    if not target then return NS.History.AskState(drop, "ready") end
+    return NS.History.AskState(drop, NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", target, drop.id)))
 end
 
 local function tradeGuard(drop)

@@ -55,7 +55,7 @@ test("test mode data: every trade estimate, inspect state and ask state is there
     end
     hasAll(trade, { "yes", "likely", "unknown", "no" }, "trade")
     hasAll(insp, { "fresh", "cached", "pending", "outOfRange", "combatParked", "failed", "unavailable" }, "inspect")
-    hasAll(ask, { "ready", "queued", "sent", "failed" }, "ask")
+    hasAll(ask, { "ready", "queued", "sent", "failed", "traded" }, "ask")
 end)
 
 test("test mode data: your own drops cover every countdown and every candidate pill (board 04)", function()

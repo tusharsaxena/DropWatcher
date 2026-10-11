@@ -13,15 +13,19 @@ local PINNED = {
     "CHAT_MSG_LOOT", "ENCOUNTER_END", "ENCOUNTER_LOOT_RECEIVED", "ENCOUNTER_START",
     "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_UPDATE_DROP", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
     "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_SPECIALIZATION_CHANGED",
+    "TRADE_ACCEPT_UPDATE", "TRADE_CLOSED", "TRADE_PLAYER_ITEM_CHANGED", "TRADE_SHOW", "TRADE_TARGET_ITEM_CHANGED",
     "TRANSMOG_COLLECTION_UPDATED", "UNIT_INVENTORY_CHANGED", "ZONE_CHANGED_NEW_AREA",
 }
 
 -- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down),
 -- one entry per receiver: a message two modules hear is listed twice (the window, DW-30, hears
 -- DropAdded with the trade timer, InspectDone with the feed and RestrictionChanged with the asks;
--- DW-33 added its TradeTimerTick, beside the feed's, and TradeTimerExpiring for the My drops tab).
-local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_DropAdded",
-    "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_GearChanged",
+-- DW-33 added its TradeTimerTick, beside the feed's, and TradeTimerExpiring for the My drops tab;
+-- DW-51's history hears DropAdded, DropUpdated and AskStateChanged, and its tab HistoryChanged).
+local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
+    "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
+    "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
     "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_SituationChanged", "Ka0s_DropWatcher_TradeTimerExpiring",

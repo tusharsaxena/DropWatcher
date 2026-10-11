@@ -460,6 +460,7 @@ end
 
 local ASK_LOOK = {
     ready  = { text = L["Ask"], enabled = true },
+    traded = { text = L["Traded"], icon = "confirm", enabled = false },
     queued = { text = L["Queued"], icon = "clock", enabled = true },
     sent   = { text = L["Asked"], icon = "confirm", enabled = false },
     failed = { text = L["Retry"], icon = "reset", enabled = true },
@@ -469,6 +470,7 @@ local function askTip(state, who, reason)
     if state == "queued" then
         return L["Queued"], L["Chat is restricted right now: the ask to %s is sent when it lifts."]:format(who), L["Click to cancel it."]
     end
+    if state == "traded" then return L["Traded"], L["A completed trade gave you this item."] end
     if state == "sent" then return L["Asked"], L["You asked %s. One ask per item per looter, so it cannot be sent twice by accident."]:format(who) end
     if state == "failed" then return L["Retry"], L["The ask to %s was not sent: %s."]:format(who, tostring(reason or "?")), L["Click to try again."] end
     return L["Ask"], L["Whisper %s your ask template for this item."]:format(who), L["One ask per item per looter."]
@@ -477,11 +479,12 @@ end
 --- The Ask button's look: `offered` false shows a dash with the reason; else the label, the
 --- catalog mark (`clock` queued, `confirm` asked, `reset` retry) and whether it can be clicked.
 --- @param drop table
---- @param state string|nil NS.Asks.StateOf's state (`ready`, `queued`, `sent`, `failed`)
+--- @param state string|nil NS.Asks.StateOf's state (`ready`, `queued`, `sent`, `failed`), or
+--- `traded` once the history settled the drop received (NS.History.AskState)
 --- @param reason string|nil its reason
 --- @return table { offered, text, icon, enabled, tip, state }
 function WC.Ask(drop, state, reason)
-    local no = noAskReason(drop)
+    local no = state ~= "traded" and noAskReason(drop)
     if no then return { offered = false, text = DASH, enabled = false, tip = { L["No ask"], no } } end
     local look = ASK_LOOK[state] or ASK_LOOK.ready
     local s = ASK_LOOK[state] and state or "ready"

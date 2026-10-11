@@ -86,7 +86,13 @@ edge (`Asks.lua`: an ask, offer or announce resolved to its recipient, expanded 
 tokens and sent through `Compat.ChatSender` inside `pcall` with one confirmation line, or queued
 while chat is restricted and flushed one every 1.5 seconds when the restriction lifts, on
 `ENCOUNTER_END` and on `CHALLENGE_MODE_COMPLETED`; a queued ask is canceled by a second click or
-when its looter leaves; test mode prints instead of sending; it sends `AskStateChanged`), the window shell (`Window.lua`:
+when its looter leaves; test mode prints instead of sending; it sends `AskStateChanged`), the
+history (`History.lua`: every live drop the feed shows, kept across sessions in the account's
+`global.history`, grouped by feed group and session and capped at `global.history.maxGroups`
+groups of 50 drops, each with its outcome: `seen`, `asked` or `offered` when an ask, offer or
+announce is sent, `expired` when its trade window passes, `received` or `tradedAway` when a trade
+completes with a matching item, and `declined` by hand; the trade is read from the trade window's
+events; it sends `HistoryChanged`), the window shell (`Window.lua`:
 the skinned frame with its title bar (logo, gold title, the restriction badge, Scan group,
 minimize, close), the three tabs and their lazily built panes, minimize with its `n new` counter,
 resize, position and `UISpecialFrames`, auto-open on the first interesting drop, and the show
@@ -112,7 +118,9 @@ tab (`WindowMine.lua`: your own drops in pooled rows with the countdown over its
 candidates, Offer… and Announce or a dash and Hide, and the summary strip with Post my
 tradeables), the Offer panel (`OfferPanel.lua`: "Who could use this?", docked to the window's right
 edge, each member with a class stripe, `eq → drop`, a status pill and Offer and Trade, and Announce
-to group), test mode (`TestMode.lua`: placeholder drops in every verdict, trade, inspect and ask
+to group), the History tab (`WindowHistory.lua`: the kept groups under collapsible headers, read-only
+rows in the Group drops style with an Outcome column, a right-click row menu that marks a drop
+declined, and Clear history behind a confirmation), test mode (`TestMode.lua`: placeholder drops in every verdict, trade, inspect and ask
 state, put in the separate test feed through `NS.LootFeed.AddTest` when test mode turns on and
 cleared when it ends; the window wears a `TEST MODE` chip and banner, and every send is printed)
 and the diagnostics sections; `settings/` the schema (the seam in `Schema.lua`, every hand-written row of design spec §12.1 in `SchemaRows.lua`), the panel pages (the landing page and General in `Panel.lua`, Feed, Comparison, Trade, Messages and Window in `Pages.lua`, each a tab strip over its rows; the pages' own editors, the per-spec weights and unwanted types, the template editors with their counters, chips and preview, and the Quality tab's readout, in `PageEditors.lua` over the pure `Editors.lua`), Profiles, the slash table (`Slash.lua`) and the slash-only feature verbs' handlers (`SlashVerbs.lua`). The design's feature modules
@@ -159,7 +167,10 @@ when it ends (`modules/TestMode.lua`). The
 Group drops table's collapsed groups, dismissed rows and the one expanded row (the detail card)
 are session-only too (`NS.State.windowGroup`), and so are the My drops tab's hidden rows and the
 upgrades whose candidates you chose to see (`NS.State.windowMine`) and the Offer panel's drop
-(`NS.State.offerPanel`).
+(`NS.State.offerPanel`), and so are the History tab's collapsed groups (`NS.State.windowHistory`).
+`global.history.v` and `global.history.groups` are the history's own record, written by
+`modules/History.lua` alone (on a recorded drop, an outcome, a completed trade, the cap and Clear
+history); it never replaces `global.history` whole, since the cap row's value lives in it.
 `global.minimap.minimapPos` is LibDBIcon's own
 write into the table the launcher hands it. The load pass is `NS:RunMigrations`
 (`core/Database.lua`), whose step 2 (`NS.RepairStoredSettings`) drops a stored value a row now
@@ -175,9 +186,11 @@ factory, and `NS.Bus.tracked` (the seam's one answer, false there) tells each re
 unregister and re-register its own receivers in its stand-down and stand-up steps; no module
 resolves the library itself.
 
-Nine messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
-`INSPECT_DONE`, `DROP_ADDED`, `DROP_UPDATED`, `TRADE_TIMER_TICK`, `TRADE_TIMER_EXPIRING` and
-`ASK_STATE_CHANGED`; the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE`, `GEAR_CHANGED` and `TRADE_TIMER_TICK`,
+All ten messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GEAR_CHANGED`,
+`INSPECT_DONE`, `DROP_ADDED`, `DROP_UPDATED`, `TRADE_TIMER_TICK`, `TRADE_TIMER_EXPIRING`,
+`ASK_STATE_CHANGED` and `HISTORY_CHANGED`; the history (`modules/History.lua`) receives `DROP_ADDED`,
+`DROP_UPDATED` and `ASK_STATE_CHANGED`, the History tab (`modules/WindowHistory.lua`)
+`HISTORY_CHANGED`, the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE`, `GEAR_CHANGED` and `TRADE_TIMER_TICK`,
 the trade timer (`modules/TradeTimer.lua`) `DROP_ADDED`, the messaging edge (`modules/Asks.lua`)
 `RESTRICTION_CHANGED`, and the window (`modules/Window.lua`) `RESTRICTION_CHANGED`,
 `ASK_STATE_CHANGED`, `SITUATION_CHANGED`, `DROP_ADDED`, `DROP_UPDATED`, `INSPECT_DONE`,
@@ -192,16 +205,16 @@ adds itself as a consumer.
 
 | `NS.MSG` key | Wire suffix | Sender (planned, item) | Payload | Consumers |
 |---|---|---|---|---|
-| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`), test mode's placeholders (since DW-34, `AddTest`) one each as they are put in | TradeTimer (since DW-28): your own live drop asks for a bag scan; Window (since DW-30): the first interesting live drop in an auto-open situation opens it, a minimized window counts it (`n new`), and the open window repaints (the `My drops · n` count); Toast (DW-52), History (DW-51) |
-| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved), `score` (a pending score retried) or `trade` (the trade estimate moved on the sweep or the trade timer: a drop past its window, your own drop's exact timer). Never for a test drop | Window (since DW-30): the open window repaints its tabs and the active tab's body (since DW-31 the Group drops rows: verdicts, trade, Their eq; since DW-32 the open detail card with them; since DW-33 the My drops rows and the open Offer panel's candidates) |
+| `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`), test mode's placeholders (since DW-34, `AddTest`) one each as they are put in | TradeTimer (since DW-28): your own live drop asks for a bag scan; Window (since DW-30): the first interesting live drop in an auto-open situation opens it, a minimized window counts it (`n new`), and the open window repaints (the `My drops · n` count); History (since DW-51): records the live drop (never a test drop) in `global.history`, before the window repaints; Toast (DW-52) |
+| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved), `score` (a pending score retried) or `trade` (the trade estimate moved on the sweep or the trade timer: a drop past its window, your own drop's exact timer). Never for a test drop | Window (since DW-30): the open window repaints its tabs and the active tab's body (since DW-31 the Group drops rows: verdicts, trade, Their eq; since DW-32 the open detail card with them; since DW-33 the My drops rows and the open Offer panel's candidates); History (since DW-51): takes the recorded drop's latest verdicts and trade estimate, and `expired` once the estimate is `no expired` |
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (sent since DW-26) | `guid`. Sent once per job when it ends: after a read (`fresh` or `cached`), once the read items' facts have loaded or been given up on; at once for `outOfRange` and `failed`. `NS.Inspect.Get(guid)` says which | LootFeed (since DW-27): re-judges the drops that looter received and your own drops' candidate of that GUID; Window (since DW-30): the footer's inspect freshness |
 | `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (since DW-27): re-judges you on every drop; the quality gate's dynamic threshold reads the snapshot at the next drop |
 | `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (since DW-2A, `modules/Asks.lua`): `canSendChat` true starts a flush of the queued asks; Window (since DW-30): the restriction badge, shown while `reason` is not nil |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | Window (since DW-30): re-arms auto-open for the new situation, marks where "This instance" starts, and repaints the footer and the Quality label. LootFeed reads `NS.Situations.Current()` at each receipt for its gate and subscribes to nothing |
-| `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Asks.lua` (sent since DW-2A) | `dropId`, `state` (`queued`, `sent`, `failed`, or `ready` after a cancel), `kind` (`ask`, `offer` or `announce`), `target` (the Name-Realm, or `group` for an announce), `reason` (a failure's reason, or `canceled` / `left` after a cancel). Sent on every move of one ask; `NS.Asks.StateOf(kind, target, dropId)` reads it back | Window (since DW-30): the restriction badge's queued count, and (since DW-31) a repaint of the active tab, so each Group drops row's Ask button follows its ask, and (since DW-32) the open detail card's Ask and Edit message, and (since DW-33) the My drops rows' Announce and the Offer panel's Offer and Announce to group; History (DW-51): the `asked` outcome |
+| `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Asks.lua` (sent since DW-2A) | `dropId`, `state` (`queued`, `sent`, `failed`, or `ready` after a cancel), `kind` (`ask`, `offer` or `announce`), `target` (the Name-Realm, or `group` for an announce), `reason` (a failure's reason, or `canceled` / `left` after a cancel). Sent on every move of one ask; `NS.Asks.StateOf(kind, target, dropId)` reads it back | Window (since DW-30): the restriction badge's queued count, and (since DW-31) a repaint of the active tab, so each Group drops row's Ask button follows its ask, and (since DW-32) the open detail card's Ask and Edit message, and (since DW-33) the My drops rows' Announce and the Offer panel's Offer and Announce to group; History (since DW-51): `sent` makes the drop's outcome `asked` (an ask) or `offered` (an offer or announce) |
 | `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (sent since DW-28) | none. Sent on every tick of the shared ticker (each second while the window is shown, each minute while it is hidden, never with nothing live) and after a scan that found your own drops or dropped the last entries; `NS.TradeTimer.ForDrop(dropId)` and `Remaining(entry)` are the countdown | LootFeed (since the DW-27 review): re-estimates your own drops' trade with the timer folded in; Window (since DW-33): repaints the My drops tab while it is active and the Offer panel while it is open, nothing else |
 | `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (sent since DW-28) | `dropId`, `itemGUID`, `remaining` (seconds). Sent once per item, when its remaining time first falls to `trade.warnAt` (600s) or less; the module prints the chat warning itself, and the entry's `warned` is set | Window (since DW-33): one whole repaint, batched; the countdown reads `ending soon` in bold from its own clock, so a repaint carries it |
-| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (DW-51) | none | History tab (DW-51) |
+| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (sent since DW-51) | none. Sent when a drop is recorded or refreshed, an outcome moves (an ask sent, declined set or cleared, a completed trade), the cap trims the log, or Clear history empties it; `NS.History.Groups()` is the log | History tab (since DW-51, `modules/WindowHistory.lua`): one repaint of the shown window on the next frame, the Group drops rows included (a received drop's Ask button reads `Traded`) |
 
 ## Slash Commands
 
@@ -244,6 +257,10 @@ TOC order of the modules). `NS.FeatureEventNames()` is the declared list with ea
 | `ENCOUNTER_LOOT_RECEIVED` | `DW.OnFeedEncounterLoot` | a drop reported by the encounter, with its encounter id; merged with the chat line of the same drop |
 | `LOOT_CLOSED` | `DW.OnTradeTimerEvent` | asks for the trade timer's scan: the items just looted are in the bags (`modules/TradeTimer.lua`) |
 | `LOOT_HISTORY_UPDATE_DROP` | `DW.OnFeedLootHistory` | a group-loot drop, taken once it has a winner (`C_LootHistory` through `core/Compat.lua`); merged with the other reports |
+| `TRADE_SHOW` | `DW.OnHistoryTradeShow` | a trade opened: its partner (`UnitName("NPC")`) and the window's items are read (`modules/History.lua`, through `core/Compat.lua`) |
+| `TRADE_PLAYER_ITEM_CHANGED`, `TRADE_TARGET_ITEM_CHANGED` | `DW.OnHistoryTradeItems` | the items moved: re-read, and any both-accepted state is off |
+| `TRADE_ACCEPT_UPDATE` | `DW.OnHistoryTradeAccept` | both sides accepted: the items are read once more, since they are gone by the close |
+| `TRADE_CLOSED` | `DW.OnHistoryTradeClosed` | after a both-accepted state the trade completed: the items you got mark the matching drops `received`, the items you gave your own `tradedAway`; sends `HistoryChanged`. The client's second `TRADE_CLOSED` finds nothing open |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -273,11 +290,10 @@ and nobody took over, so another addon's or the player's inspect is never cleare
 - v0.1.0 is the frame of the addon: the feed records and judges drops, the window's shell (title
   bar, restriction badge, Scan group, tabs, filter bar, footer, minimize) is in, and so is the Group
   drops table with its Ask button (DW-31), its detail card (DW-32), and the My drops tab with the
-  Offer panel (DW-33); the History tab says what it will hold until it lands (DW-51)
+  Offer panel (DW-33), and the history with its History tab (DW-51)
   ([`scope.md`](scope.md)).
 - Every setting of design spec §12.1 has its row and default (DW-40), and some rows are ahead of
-  their reader: `global.history.maxGroups` waits for History (DW-51), `toast.*` for the toast (DW-52)
-  and `messages.autoAsk.*` for auto-ask (DW-54).
+  their reader: `toast.*` waits for the toast (DW-52) and `messages.autoAsk.*` for auto-ask (DW-54).
 - Scoring (DW-50, `modules/Scoring.lua`) settles how it reads design spec §5.4. The adapter in use
   can differ from `comparison.scorer`: `auto` takes Pawn when it is **loaded** (ready or not yet
   initialized, which answers `pending` and is retried), else your weights when any spec has one,
@@ -306,6 +322,29 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   it (its lines are already cut to the chat limit). **`window.rowHeight`** and **`window.fontSize`**
   size the Group drops table's rows and their cells' text; the headers, the column labels, the
   buttons and the My drops tab keep their own.
+- The history (DW-51, `modules/History.lua` and the History tab, `modules/WindowHistory.lua`)
+  settles eight cases design spec §10 leaves open. **What is kept** is every live drop the feed
+  shows (it passed the gates), never a test drop, never a hidden one, with its verdicts and trade
+  estimate as last judged while it was in the feed; a group is one feed group of one session, so a
+  boss killed again tomorrow is a new group. **Outcomes** move forward only (seen, then asked or
+  offered, then expired, then received or traded away); an announce counts as `offered`; `declined`
+  is the player's and an automatic move never undoes it, but a completed trade does. **Which entry**
+  a live drop is lives in a session-only index, because drop ids restart each session, so after a
+  reload the old entries take no more outcomes from asks or the trade estimate; a completed trade
+  still matches them by item id. **A completed trade** is `TRADE_CLOSED` after a
+  `TRADE_ACCEPT_UPDATE` with both sides accepted and no item moved since (an item change clears it);
+  the items are read on every change and at the both-accepted update, since they are gone by the
+  close. Whether the client sends that both-accepted update before a completion, rather than going
+  straight to the close, is HIST-1. **The match** for an item you got is the newest drop of that
+  item id that is someone else's and not yet received, the partner's own drop first; for an item you
+  gave, your own drop of that id; one entry per item. **The cap** counts groups, oldest out first,
+  and 50 drops per group; a lower cap trims at once. **The tab** opens on View: All and Content: All
+  the first time each session (Content's This session and This instance then cut by time, and
+  `n days ago` names an older group); it is read-only but for the row menu (right-click: Mark as
+  declined or Clear declined, through the client's `MenuUtil`, or at once without it), and Clear
+  history asks first (a StaticPopup), then empties the log on every character and keeps the cap.
+  **Account-wide:** one log for all your characters, as the cap row says. That the log survives a
+  reload and the row menu opens in game is HIST-2.
 - The General page's `When to show` tab draws one block per situation (`Track`, `Auto-open`, then
   `Quality`, under the situation's name) rather than the design's grid of situations by setting:
   LibKa0s-Options has no composer for a grid of mixed controls (`ChoiceGrid` is one choice per row
@@ -333,7 +372,9 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   messaging edge files it. **Post my tradeables** lists the tradeable drops of yours in the feed on
   show, whatever the tab's filter, prefixed `Up for trade, whisper me:`, cut at 255 bytes without
   splitting a link; each line is its own announce, filed under `post:<n>:<i>`, so every press posts
-  again. **Not yet:** `Traded ✓` waits for a trade the engine records (History, DW-51).
+  again. **Not yet:** a drop of yours traded away is `tradedAway` in the history (DW-51), but its
+  row does not say so (board 04's `Traded to Séta`): once the item leaves your bags the trade timer
+  drops its entry and the row reads as expired.
 - The Group drops table (DW-31) settles five cases the design leaves open. **Group order** is
   newest first (oldest first under Sort: Oldest), and a group the player never toggled is open
   when it is the first one shown and collapsed otherwise (board 01); the Sort orders the drops
@@ -346,8 +387,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   Slot goes first, then Looter, Their eq, Ilvl, Them, Trade and Me (My drops: Best candidates, Ilvl,
   For me, Trade window); Item and Actions never go, and the detail card (or the Offer panel) still
   says what a shed column would. The **Ask button** asks at once, or, with `messages.editFirst`
-  on, opens the detail card's Edit message box first; the `Traded ✓` state waits for a
-  trade the engine can see (none records one yet), so a received drop stays `Asked`.
+  on, opens the detail card's Edit message box first; it reads `Traded ✓` once the history
+  records the drop received from a completed trade (DW-51), and the detail card's Ask with it.
 - The detail card (DW-32) settles five cases the design leaves open. **Expansion** is session-only
   and follows the row: a row filtered out or folded under its header hides the card, and it comes
   back, still open, with the row; Hide this item dismisses the row and closes the card. **Trade** on
@@ -429,8 +470,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   the rest every 1.5 seconds; a restriction back mid-flush stops it until the next trigger. Test
   mode, and a test drop, print the text instead of sending, mark the ask sent and never queue it.
   The stand-down drops the queued asks, because no trigger reaches them while down; the sent
-  registry is kept for the session. The `asked` history outcome is written by History (DW-51) from
-  `AskStateChanged`. The edit-first box is the detail card's Edit message (DW-32): it reads
+  registry is kept for the session. The `asked` history outcome (`offered` for an offer or announce) is
+  written by History (`modules/History.lua`) from `AskStateChanged`. The edit-first box is the detail card's Edit message (DW-32): it reads
   `Preview` (the template filled in, nothing sent or filed) and passes the edited text in; with
   `messages.editFirst` on, the Offer panel's Offer and Announce open it too. Whether a whisper really is blocked during an encounter is ASK-4.
 - The restriction tracker (`modules/Restrictions.lua`) reads four cases the design leaves open.
@@ -588,7 +629,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 55 addon-specific shims (three or more) |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 59 addon-specific shims (three or more) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 
 ### Verification and record (documentation-§3)

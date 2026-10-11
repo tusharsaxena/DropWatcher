@@ -323,7 +323,10 @@ end
 local function history()
     local row = slider(Settings.HISTORY_CAP_PATH, NS.C.GLOBAL_DEFAULTS.history.maxGroups, 1, 100, 1,
         L["Groups kept in history"], L["How many groups (encounters or runs) the History tab keeps, on every character."],
-        { page = "window", group = L["Layout"] })
+        { page = "window", group = L["Layout"], onChange = function()
+            -- A lower cap applies at once (modules/History.lua), not at the next drop.
+            if NS.History then NS.History.ApplyCap() end
+        end })
     Settings.StampClosureRows({ row })
 end
 

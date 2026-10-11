@@ -113,7 +113,34 @@ The toast's position (design spec §11.5) joins them with the toast (DW-52).
 | `schemaVersion` | `0` | the migration stamp; the runner owns it |
 | `minimap.hide` | `false` | LibDBIcon's own key; the Minimap button row inverts onto it, and no `shown` twin exists (launcher-§3) |
 | `minimap.minimapPos` | absent | LibDBIcon's own write |
-| `history.maxGroups` | `20` | the History tab's cap, 1 to 100; the `global.history.maxGroups` row (Window › Layout) stores here through its own closures. The history itself (`history.v`, `history.groups`) is History's (DW-51), which never replaces the table whole |
+| `history.maxGroups` | `20` | the History tab's cap, 1 to 100; the `global.history.maxGroups` row (Window › Layout) stores here through its own closures, and a change trims the log at once (`NS.History.ApplyCap`) |
+| `history.v` | absent until the first drop is recorded | the history's own shape stamp, `1` (`NS.History.VERSION`); `NS.History.Normalize` sets it and makes `groups` a list, in place |
+| `history.groups` | absent until the first drop is recorded | the kept drops, below; written by `modules/History.lua` alone, never through the seam |
+
+### The history (design spec §10)
+
+`modules/History.lua` owns `history.v` and `history.groups` and never replaces `global.history`
+whole, because the cap row lives in the same table. It is account-wide: every character adds to one
+log and sees it.
+
+```lua
+history = { maxGroups = 20, v = 1, groups = {
+    { key, label, kind, situation, at, drops = {
+        { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality,
+          me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
+          trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
+```
+
+- A group is one feed group of one session: its `key` is the feed group's key and the session's
+  start (`enc:<id>:<t>@<time()>`), its `label` the encounter, run or area name, `kind` `encounter`,
+  `run` or `area`, `situation` the situation key and `at` its first drop's time.
+- `at` is `time()` (seconds since the epoch), so it reads the same after a reload; `looter` is the
+  Name-Realm and `class` its classFile; `me`, `them` and `trade` are the verdicts and the trade
+  estimate as last judged while the drop was in the feed, plain fields only.
+- `outcome` is `seen`, `asked`, `offered`, `received`, `tradedAway`, `expired` or `declined`;
+  `before` is the outcome a hand-set `declined` replaced.
+- The cap: `history.maxGroups` groups (the oldest go first) and 50 drops per group (the oldest go
+  first). No migration step is involved: the history's shape has its own stamp, `v`.
 
 ## Session-only (never saved)
 
@@ -123,6 +150,8 @@ The toast's position (design spec §11.5) joins them with the toast (DW-52).
 `NS.State.windowGroup` (the Group drops table's collapsed groups, dismissed rows and the row whose detail card is open),
 `NS.State.windowMine` (the My drops tab's hidden rows and the upgrades whose candidates you chose to see),
 `NS.State.offerPanel` (the drop the Offer panel shows),
+`NS.State.windowHistory` (the History tab's collapsed groups, and whether this session already put
+View: All and Content: All on it),
 `NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
 came from; nil while stood down). The Debug console
 and Test mode rows are `sessionOnly` and store through their own closures.
