@@ -1291,6 +1291,31 @@ open → the same row is open there. Click × → the card goes for the session.
 size 14 → the cards grow with the text. Run `/dw sim start` and step it → the cards fill the same
 way. Result:
 
+**COMPACT-3. My drops cards, the countdown, Offer and Announce (DW-C3).** Turn test mode on and
+switch to the compact layout, then open My drops → each drop of yours is a three-line card under a
+one-line header. Line 1: the icon, the name in its quality color, the item level and `Offer` (gold
+when someone would gain from it), or a dash whose tooltip says why on a drop that cannot be traded.
+Line 2: `For you ▲ +49 (keep?)`-style, then the countdown and a short bar after it on the right,
+amber with `ending soon` under ten minutes, `Not tradeable` with no bar on a dead drop, `No limit
+(BoE)` with a full bar on a bind-on-equip one. Line 3: the best candidates in their class colors
+(`Seta +14 · Butterz +6`), then `Announce`, or `Hide` on a drop that cannot be traded. The countdown
+moves every second. Click Announce → the template goes to the group and the button reads
+Announced. Click Hide → the card goes for the session. The strip under the cards reads `n tradeable ·
+next 0:08:41` with a `Post` button whose tooltip is Post my tradeables'. Click Offer → the Offer
+panel opens beside the compact window at its usual width, on the right; drag the window to the
+screen's right edge → it moves to the left side; make the window short → the panel keeps a usable
+height. Switch to full → the strip and the table are back as before. Run `/dw sim start` and step it
+→ your own drops fill the cards the same way. Result:
+
+**COMPACT-4. History cards and their outcomes (DW-C3).** In the compact layout, open History → each
+kept group is a one-line header (`Boss · Dungeon · 2m · 2 · <you>`, `3d` once a day old) and each
+entry a three-line card: the item and its level with the outcome on the right in its tone (Seen,
+Asked, Offered, Received, Traded away, Expired, Declined); the looter in class color (⊕ from another
+realm), slot, trade and the time on the right (`17:02`, or `Oct 9` past a day); `You` and `Them`
+verdicts. Right-click a card → Mark as declined; its outcome reads Declined; right-click again →
+Clear declined. The strip's button reads `Clear` with the Clear history tooltip, and it still asks
+first. Switch to full → `Clear history` again. Result:
+
 **COMPACT-7. Card tooltips at the card's top right (DW-C2).** In the compact layout, hover each piece
 of a card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn
 levels, Ask and ×) and a header → each tooltip rises from the card's top-right corner, just outside
@@ -1400,3 +1425,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-13 | DW-B5, the loot step honors `feed.showOwn`, test mode's feed and My drops' Hide and filters | No client pass recorded yet |
 | COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
 | COMPACT-2, COMPACT-7 | DW-C2, compact Group drops cards, the stacked detail card and the card tooltips | No client pass recorded yet |
+| COMPACT-3, COMPACT-4 | DW-C3, compact My drops and History cards, the countdown, Offer and Announce, the docked Offer panel | No client pass recorded yet |

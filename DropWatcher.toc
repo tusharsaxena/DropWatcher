@@ -306,6 +306,14 @@ modules\CompactCards.lua
 # NS.CompactCards, NS.DetailCard, NS.WindowRows and the host handlers are read at call time: WindowGroup's
 # refresh hands it the entries.
 modules\CompactGroup.lua
+# Conventional: publishes NS.CompactMine, the My drops tab's compact layout (three-line cards with
+# the countdown's bar, Offer, Announce or Hide; the strip shortened); takes NS.Constants and NS.L
+# at load. NS.CompactGroup's kit, NS.CompactCards and the handlers are read at call time.
+modules\CompactMine.lua
+# Conventional: publishes NS.CompactHistory, the History tab's compact layout (three-line cards
+# with the outcome, the row menu on a right-click); takes NS.Constants and NS.L at load.
+# NS.CompactGroup's kit, NS.CompactCards and NS.WindowHistory are read at call time.
+modules\CompactHistory.lua
 # Conventional: publishes NS.TestData, test mode's pure sample data (the drops and the History
 # groups over pool items); takes NS.Constants and NS.L at load. NS.Item is read at call time.
 modules\TestData.lua

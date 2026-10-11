@@ -67,6 +67,16 @@ scroll carry-over, the stacked detail card's action flow and height, pure; then 
 headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
 reason tooltip, every tooltip at the card's top right, the stacked detail card inline, Ask and ×,
 the ask states and the dash, the text size, the pool's reuse, and the collapsing headers),
+`test_compact_mine` (the My drops tab in the compact layout and the Offer panel beside it, DW-C3: the
+candidates' class-colored line, the short summary and the panel's least height, pure; then the cards
+built headless: one pooled card per drop of yours under a one-line header, each line what
+CompactCards says, the countdown's bar and its warning, the dash and Hide, Announce through the
+shared handler, TradeTimerTick, every tooltip at the card's top right, the strip shortened and put
+back, the text size, and the panel docked right, left or floating centered at its own width),
+`test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
+under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
+repainting, the collapsing headers, every tooltip at the card's top right, Clear shortened and put
+back, the text size and test mode's samples),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,

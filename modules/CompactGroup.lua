@@ -40,6 +40,13 @@ local _, NS = ...
 --
 -- SWITCHING keeps the expanded card (NS.State.windowGroup is shared) and carries the scroll offset
 -- over as a fraction of the scroll range (CarryScroll), as near as the two layouts allow.
+--
+-- THE SHARED KIT. My drops and History draw their cards the same way (modules/CompactMine.lua and
+-- modules/CompactHistory.lua, DW-C3), so the frame pieces live here once and are exported: the
+-- pieces and their hit frames (Piece, FontString, MonoString, Background), line 2 and line 3's
+-- halves (BuildLineTwo/PaintLineTwo, BuildHalf/PaintHalf), the pane's own scroll view (BuildView),
+-- the layout switch (Swap, Settle) and the draw loop over a tab's entries (Draw, driven by a
+-- per-tab `spec` table built once at load: no closure per repaint).
 
 NS.CompactGroup = NS.CompactGroup or {}
 local CG = NS.CompactGroup
@@ -109,6 +116,7 @@ local function setTone(fs, tone)
     local c = C.TONE[tone] or C.TONE.plain
     fs:SetTextColor(c.r, c.g, c.b)
 end
+CG.SetTone = setTone
 
 local function tipOf(f) return unpack(f.tipLines or {}) end
 
@@ -116,6 +124,7 @@ local function at(region, ...)
     region:ClearAllPoints()
     region:SetPoint(...)
 end
+CG.At = at
 
 local function qualityColor(drop)
     local q = type(drop.facts) == "table" and drop.facts.quality
@@ -124,10 +133,18 @@ local function qualityColor(drop)
     local p = C.TONE.plain
     return p.r, p.g, p.b
 end
+CG.QualityColor = qualityColor
 
--- A click on a piece is a click on its card (the pieces take the mouse for their tooltips).
+-- A click on a piece is a click on its card (the pieces take the mouse for their tooltips): the
+-- card's own `onPiece(card, button)`, when it has one.
 local function pieceClick(self, button)
-    if button == "LeftButton" and self.card then NS.WindowGroup.ToggleExpand(self.card.dropId) end
+    local card = self.card
+    if card and card.onPiece then card.onPiece(card, button) end
+end
+
+-- A Group drops card's click expands its detail card (a piece's too).
+local function groupPiece(card, button)
+    if button == "LeftButton" then NS.WindowGroup.ToggleExpand(card.dropId) end
 end
 
 -- A hit frame over `first`..`last` (font strings on the card) carrying their tooltip.
@@ -147,12 +164,14 @@ local function fontString(card, template)
     fs:SetWordWrap(false)
     return fs
 end
+CG.FontString = fontString
 
 local function monoString(card)
     local fs = card:CreateFontString(nil, "OVERLAY")
     fs:SetFont(C.FONT_MONO, 12, "")
     return fs
 end
+CG.MonoString = monoString
 
 -- A text piece: `card.cells[key] = { text, hit }` (NS.WindowRows.ApplyRowFont sizes `text`).
 local function piece(card, key)
@@ -161,6 +180,7 @@ local function piece(card, key)
     card.cells[key] = cell
     return cell
 end
+CG.Piece = piece
 
 -- ── building a card ─────────────────────────────────────────────────────────────────────────
 
@@ -176,6 +196,7 @@ local function buildBackground(card)
     card.quality:SetPoint("TOPLEFT", card, "TOPLEFT", 0, 0)
     card.quality:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 0, 0)
 end
+CG.Background = buildBackground
 
 local function buildAsk(card)
     local W = NS.Window
@@ -208,7 +229,11 @@ local function buildLineOne(card)
     buildAsk(card)
 end
 
-local function buildLineTwo(card)
+--- Line 2's pieces: looter (and its ⊕), slot, trade, then `right` (right-aligned: Group drops'
+--- inspect freshness, History's time).
+--- @param card table
+--- @param right string the right piece's key
+function CG.BuildLineTwo(card, right)
     local looter = piece(card, "looter")
     looter.glyph = monoString(card)
     looter.glyph:SetPoint("LEFT", looter.text, "RIGHT", 2, 0)
@@ -217,12 +242,12 @@ local function buildLineTwo(card)
     slot.text:SetPoint("LEFT", looter.glyph, "RIGHT", 4, 0)
     local trade = piece(card, "trade")
     trade.text:SetPoint("LEFT", slot.text, "RIGHT", 4, 0)
-    piece(card, "fresh")
+    piece(card, right)
 end
 
 -- One half of line 3: the label (`cells[key .. "Label"]`), then the verdict's glyph and change
 -- (`cells[key]`, one tooltip over the three) and the worn levels (`cells[key .. "Eq"]`).
-local function buildHalf(card, key)
+function CG.BuildHalf(card, key)
     local label = { text = fontString(card) }
     local verdict = { glyph = monoString(card), text = fontString(card) }
     verdict.glyph:SetPoint("LEFT", label.text, "RIGHT", 3, 0)
@@ -237,11 +262,12 @@ local function newCard(content)
     local card = CreateFrame("Button", nil, content)
     card.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
     card.cells = {}
+    card.onPiece = groupPiece
     buildBackground(card)
     buildLineOne(card)
-    buildLineTwo(card)
-    buildHalf(card, "you")
-    buildHalf(card, "them")
+    CG.BuildLineTwo(card, "fresh")
+    CG.BuildHalf(card, "you")
+    CG.BuildHalf(card, "them")
     card:SetScript("OnClick", function(self) NS.WindowGroup.ToggleExpand(self.dropId) end)
     return card
 end
@@ -271,6 +297,7 @@ local function paintText(cell, c, prefix)
     setTone(cell.text, c.tone)
     cell.hit.tipLines = c.tip
 end
+CG.PaintText = paintText
 
 -- The Ask button in the full table's states (WindowGroup's paintActions, the same cell), or the
 -- dash with its reason where no ask is offered.
@@ -304,7 +331,11 @@ local function paintLineOne(card, drop, cc)
     card.dismiss.tipLines = cc.dismiss.tip
 end
 
-local function paintLineTwo(card, cc)
+--- Line 2 painted from a card model: the looter in class color, its ⊕, slot, trade and `right`.
+--- @param card table
+--- @param cc table a CompactCards card
+--- @param right string the right piece's key (`fresh` or `time`)
+function CG.PaintLineTwo(card, cc, right)
     local c = card.cells
     paintText(c.looter, cc.looter)
     local r, g, b = NS.Compat.ClassColor(cc.looter.classFile)
@@ -313,10 +344,14 @@ local function paintLineTwo(card, cc)
     setTone(c.looter.glyph, "muted")
     paintText(c.slot, cc.slot, SEP)
     paintText(c.trade, cc.trade, SEP)
-    paintText(c.fresh, cc.fresh)
+    paintText(c[right], cc[right])
 end
 
-local function paintHalf(card, key, half)
+--- One half of line 3 painted (CompactCards.Half's): its label, the verdict and the worn levels.
+--- @param card table
+--- @param key string `you` or `them`
+--- @param half table
+function CG.PaintHalf(card, key, half)
     local c = card.cells
     local v, eq = c[key], c[key .. "Eq"]
     c[key .. "Label"].text:SetText(half.label)
@@ -355,17 +390,19 @@ local function paintCard(card, drop, width, m, shared)
     local cc = NS.CompactCards.Group(drop, cardCtx(drop, shared))
     card.model = cc
     paintLineOne(card, drop, cc)
-    paintLineTwo(card, cc)
-    paintHalf(card, "you", cc.you)
+    CG.PaintLineTwo(card, cc, "fresh")
+    CG.PaintHalf(card, "you", cc.you)
     at(card.cells.themLabel.text, "LEFT", card, "TOPLEFT", CG.HalfX(width, m), CG.LineY(m, 3))
-    paintHalf(card, "them", cc.them)
+    CG.PaintHalf(card, "them", cc.them)
 end
 
-local function paintHeader(h, e, now, width)
-    local g = e.group
-    local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
-    local hd = NS.CompactCards.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter, e.yours)
-    h.groupKey, h.collapsed = g.key, e.collapsed
+--- A one-line header painted with a short form (`hd`, CompactCards.Header's or HistoryHeader's).
+--- @param h table a header button (NS.WindowGroup.NewHeader's)
+--- @param e table the header entry
+--- @param hd table { text, tip }
+--- @param width number
+function CG.PaintHeader(h, e, hd, width)
+    h.groupKey, h.collapsed = e.group.key, e.collapsed
     h.text:SetText(hd.text)
     h.text:SetWidth(max(width - 24, 20))
     h.text:SetWordWrap(false)
@@ -375,24 +412,36 @@ end
 
 -- ── the pane ────────────────────────────────────────────────────────────────────────────────
 
-local function build(pane)
+--- A pane's compact view: its own scroll frame over the pane (above a strip `bottom` pixels tall),
+--- hidden until the first compact repaint, and the card and header pools.
+--- @param pane table
+--- @param bottom number|nil the strip under the cards (My drops' summary, History's Clear history)
+--- @return table cv { scroll, content, cardPool, headPool }
+function CG.BuildView(pane, bottom)
     local cv = {}
     local scroll = CreateFrame("ScrollFrame", nil, pane, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", pane, "TOPLEFT", 0, 0)
-    scroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -K.SCROLL_W, 0)
+    scroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -K.SCROLL_W, bottom or 0)
     local content = CreateFrame("Frame", nil, scroll)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
     scroll:Hide()
     cv.scroll, cv.content = scroll, content
     cv.cardPool, cv.headPool = NS.Pool.New(), NS.Pool.New()
-    cv.card = NS.DetailCard.Build(content, true)
     pane.compactView = cv
     return cv
 end
 
--- The cards' width: the pane's, less the scroll bar's gutter; the window's before the first layout.
-local function cardWidth(pane)
+local function build(pane)
+    local cv = CG.BuildView(pane)
+    cv.card = NS.DetailCard.Build(cv.content, true)
+    return cv
+end
+
+--- The cards' width: the pane's, less the scroll bar's gutter; the window's before the first layout.
+--- @param pane table
+--- @return number
+function CG.CardWidth(pane)
     local w = pane:GetWidth()
     if not w or w <= 0 then
         local f = NS.Window.Frame()
@@ -405,40 +454,6 @@ local function place(frame, content, y, width)
     frame:ClearAllPoints()
     frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
     frame:SetWidth(width)
-end
-
--- The open card's detail card under it, stacked; answers the height it takes.
-local function drawDetail(cv, drop, y, width, now)
-    place(cv.card, cv.content, y, width)
-    local h = NS.DetailCard.Paint(cv.card, drop, width, now)
-    cv.card:Show()
-    cv.cardDropId = drop.id
-    return h + CG.GAP
-end
-
-local function drawEntries(cv, entries, width)
-    local now, y = GetTime(), 0
-    local m = CG.Metrics(NS.WindowRows.FontSize(NS.Setting("window.fontSize")))
-    local shared, Pool = sharedCtx(now), NS.Pool
-    local expanded = NS.WindowGroup.Expanded()
-    cv.card:Hide()
-    cv.cardDropId = nil
-    for i, e in ipairs(entries) do
-        if e.kind == "header" then
-            local h = Pool.Acquire(cv.headPool, function() return NS.WindowGroup.NewHeader(cv.content) end)
-            place(h, cv.content, y, width)
-            paintHeader(h, e, now, width)
-            y = y + K.GROUP_H
-        else
-            local card = Pool.Acquire(cv.cardPool, function() return newCard(cv.content) end)
-            place(card, cv.content, y, width)
-            card.stripe:SetShown(i % 2 == 0)
-            paintCard(card, e.drop, width, m, shared)
-            y = y + m.height + CG.GAP
-            if e.drop.id == expanded then y = y + drawDetail(cv, e.drop, y, width, now) end
-        end
-    end
-    cv.content:SetSize(width, max(y, 1))
 end
 
 local function num(v) return type(v) == "number" and v or nil end
@@ -456,27 +471,112 @@ local function carry(from, to)
     to:SetVerticalScroll(CG.CarryScroll(offset, rangeOf(from), rangeOf(to)))
 end
 
---- Draw the compact layout's cards for `entries` (WindowGroup's refresh, every repaint), or, in the
---- full layout, hide them (carrying the scroll offset over to the table on the way out).
---- @param pane table the Group drops pane
---- @param entries table NS.WindowCells.Entries' answer
---- @param compact boolean whether the compact layout is in force
-function CG.Refresh(pane, entries, compact)
+--- The layout switch for a pane: in the full layout, hide the compact view (carrying its scroll
+--- offset over to the table's `pane.scroll`) and answer nil; in the compact one, build the view on
+--- the first call, release its pools and answer it, ready to draw. CG.Settle follows the draw.
+--- @param pane table
+--- @param compact boolean
+--- @param builder function pane -> cv (CG.BuildView, or a tab's own)
+--- @return table|nil cv
+function CG.Swap(pane, compact, builder)
     local cv = pane.compactView
     if not compact then
         if cv and cv.scroll:IsShown() then
             cv.scroll:Hide()
             carry(cv.scroll, pane.scroll)
         end
-        return
+        return nil
     end
-    cv = cv or build(pane)
-    local entering = not cv.scroll:IsShown()
+    cv = cv or builder(pane)
+    cv.entering = not cv.scroll:IsShown()
     NS.Pool.ReleaseAll(cv.cardPool)
     NS.Pool.ReleaseAll(cv.headPool)
     cv.scroll:Show()
-    drawEntries(cv, entries, cardWidth(pane))
-    if entering then carry(pane.scroll, cv.scroll) end
+    return cv
+end
+
+--- After the first compact draw: the table's scroll offset carried over to the cards.
+--- @param pane table
+--- @param cv table
+function CG.Settle(pane, cv)
+    if cv.entering then carry(pane.scroll, cv.scroll) end
+    cv.entering = nil
+end
+
+-- The pools' factories, made once per view (a repaint allocates no closure).
+local function factories(cv, spec)
+    if cv.makeCard then return end
+    cv.makeCard = function() return spec.newCard(cv.content) end
+    cv.makeHeader = function()
+        local h = NS.WindowGroup.NewHeader(cv.content)
+        if spec.toggle then h:SetScript("OnClick", spec.toggle) end
+        return h
+    end
+end
+
+--- Draw a tab's entries as headers and cards (every repaint). `spec` is the tab's, built once:
+--- { newCard = fn(content), paint = fn(card, drop, width, m, st), header = fn(e, st) -> { text, tip },
+---   toggle = OnClick for its headers (nil keeps Group drops'), after = fn(cv, drop, y, width, st) ->
+---   extra height under a card (the detail card) }; `st` is the repaint's shared state.
+--- @param cv table
+--- @param entries table
+--- @param width number
+--- @param spec table
+--- @param st table|nil
+function CG.Draw(cv, entries, width, spec, st)
+    local m = CG.Metrics(NS.WindowRows.FontSize(NS.Setting("window.fontSize")))
+    local y, Pool = 0, NS.Pool
+    factories(cv, spec)
+    for i, e in ipairs(entries) do
+        if e.kind == "header" then
+            local h = Pool.Acquire(cv.headPool, cv.makeHeader)
+            place(h, cv.content, y, width)
+            CG.PaintHeader(h, e, spec.header(e, st), width)
+            y = y + K.GROUP_H
+        else
+            local card = Pool.Acquire(cv.cardPool, cv.makeCard)
+            place(card, cv.content, y, width)
+            card.stripe:SetShown(i % 2 == 0)
+            spec.paint(card, e.drop, width, m, st)
+            y = y + m.height + CG.GAP
+            if spec.after then y = y + spec.after(cv, e.drop, y, width, st) end
+        end
+    end
+    cv.content:SetSize(width, max(y, 1))
+end
+
+-- The open card's detail card under it, stacked; answers the height it takes (0 for another card).
+local function drawDetail(cv, drop, y, width, st)
+    if drop.id ~= st.expanded then return 0 end
+    place(cv.card, cv.content, y, width)
+    local h = NS.DetailCard.Paint(cv.card, drop, width, st.now)
+    cv.card:Show()
+    cv.cardDropId = drop.id
+    return h + CG.GAP
+end
+
+local function groupHeader(e, st)
+    local g = e.group
+    local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
+    return NS.CompactCards.Header(g, e.count, st.now, sit, e.collapsed, e.hidden, e.filter, e.yours)
+end
+
+local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader, after = drawDetail }
+
+--- Draw the compact layout's cards for `entries` (WindowGroup's refresh, every repaint), or, in the
+--- full layout, hide them (carrying the scroll offset over to the table on the way out).
+--- @param pane table the Group drops pane
+--- @param entries table NS.WindowCells.Entries' answer
+--- @param compact boolean whether the compact layout is in force
+function CG.Refresh(pane, entries, compact)
+    local cv = CG.Swap(pane, compact, build)
+    if not cv then return end
+    local st = sharedCtx(GetTime())
+    st.expanded = NS.WindowGroup.Expanded()
+    cv.card:Hide()
+    cv.cardDropId = nil
+    CG.Draw(cv, entries, CG.CardWidth(pane), GROUP_SPEC, st)
+    CG.Settle(pane, cv)
 end
 
 --- The drawn compact pane, for the suites (WindowGroup.Drawn's shape in the compact layout):

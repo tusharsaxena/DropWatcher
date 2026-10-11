@@ -14,7 +14,10 @@ local _, NS = ...
 --
 -- THE DOCK. The panel is a child of the main window, so it hides, scales and fades with it. It is
 -- docked to the window's right edge, else its left when the screen has no room on the right, else
--- floats over the window's right half (MineCells.DockSide), re-placed on every repaint.
+-- floats over the window's right half (MineCells.DockSide), re-placed on every repaint. Beside the
+-- compact window (compact spec §3, DW-C3) its width is unchanged and it takes the side with room
+-- the same way; it keeps its own least height (OP.CompactHeight) rather than the short window's,
+-- and floating, it is centered over the narrower window.
 --
 -- THE UI LISTENS. One panel, built on its first Open; NS.State.offerPanel.dropId names the drop it
 -- shows. The window repaints it with the active tab (Window.Refresh), so the bus reaches it: the
@@ -226,11 +229,33 @@ local function edge(frame, method)
     return type(v) == "number" and v or nil
 end
 
+--- The panel's height beside the compact window: the window's, but never under OFFER_MIN_H (the
+--- header, a few candidates and the foot).
+--- @param winHeight number|nil
+--- @return number
+function OP.CompactHeight(winHeight)
+    return max(type(winHeight) == "number" and winHeight or 0, K.OFFER_MIN_H)
+end
+
+-- Beside the compact window: top-aligned at its own least height; floating, centered over it.
+local function dockCompact(p, win, side)
+    if side == "right" then
+        p:SetPoint("TOPLEFT", win, "TOPRIGHT", K.DOCK_GAP, 0)
+    elseif side == "left" then
+        p:SetPoint("TOPRIGHT", win, "TOPLEFT", -K.DOCK_GAP, 0)
+    else
+        p:SetPoint("TOP", win, "TOP", 0, -K.TITLE_H)
+    end
+    p:SetHeight(OP.CompactHeight(edge(win, "GetHeight")))
+end
+
 local function dock(p)
     local win = NS.Window.Frame()
     local side = MC.DockSide(edge(win, "GetLeft"), edge(win, "GetRight"), K.OFFER_W, screenWidth(), K.DOCK_GAP)
     p:ClearAllPoints()
-    if side == "right" then
+    if NS.WindowGroup.IsCompact() then
+        dockCompact(p, win, side)
+    elseif side == "right" then
         p:SetPoint("TOPLEFT", win, "TOPRIGHT", K.DOCK_GAP, 0)
         p:SetPoint("BOTTOMLEFT", win, "BOTTOMRIGHT", K.DOCK_GAP, 0)
     elseif side == "left" then

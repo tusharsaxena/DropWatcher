@@ -291,6 +291,21 @@ Announce to group ─> DetailCard.OpenEditor(id, "announce"); the box's Send ─
 member, { text }) / NS.PressAnnounce(id, { text }) ─> NS.Asks.Press(…, { text })
 ```
 
+In the compact layout (compact spec §3, DW-C3) the same refresh computes the same rows and summary
+and hands the rows over instead of drawing the table; the Offer panel docks beside the compact
+window by the same side rule:
+
+```
+WindowMine refresh ─> CompactMine.Refresh(pane, rows, compact)   (the table's scroll hidden)
+  ├─> the summary strip shortened: CompactMine.SummaryText(MineCells.Summary), `Post`
+  ├─> CompactGroup.Swap / Draw / Settle (the shared kit: pools, headers, scroll carry-over)
+  ├─> each header: WindowGroup.NewHeader (click: WindowMine.ToggleGroup), CompactCards.Header
+  └─> each card: CompactCards.Mine(drop, { now, TradeTimer.WarnAt(), WindowMine.IsRevealed(id),
+                  NS.Asks.StateOf("announce", nil, id) }) ─> three lines; the countdown's bar
+card Offer / Announce / Hide ─> the same handlers as the table's row
+OfferPanel.Refresh ─> compact: MineCells.DockSide, then top-aligned, OfferPanel.CompactHeight(window)
+```
+
 ## Enable and disable
 
 `enabled = false` → `Lifecycle:Set("disabled", true)` → `NS.StandDown`: feature events unregistered,
@@ -580,7 +595,10 @@ every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint:
 The History tab's body reads `NS.History.Groups()` (oldest first) through the pure
 `WindowHistory.Entries`, filtered by the tab's state with This instance and This session turned
 into `time()` marks (`WindowHistory.Context`); each entry is painted with the Group drops table's
-cell composers over a drop-shaped copy (`WindowHistory.AsDrop`).
+cell composers over a drop-shaped copy (`WindowHistory.AsDrop`). In the compact layout the same
+entries go to `CompactHistory.Refresh(pane, entries, compact)` (DW-C3): `CompactCards.History(drop,
+{ time(), date, Compat.NormalizedRealm() })` per card through `CompactGroup`'s kit, headers by
+`CompactCards.HistoryHeader`, a right-click on a card to `WindowHistory.OpenMenu`.
 
 ## The toast
 

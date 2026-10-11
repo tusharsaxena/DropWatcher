@@ -380,3 +380,7 @@ L["range"] = "range"
 L["Them"] = "Them"
 L["When"] = "When"
 L["The time it dropped was not kept."] = "The time it dropped was not kept."
+-- Compact mode's My drops and History strips (modules/CompactMine.lua, modules/CompactHistory.lua)
+L["next %s"] = "next %s"
+L["Post"] = "Post"
+L["Clear"] = "Clear"

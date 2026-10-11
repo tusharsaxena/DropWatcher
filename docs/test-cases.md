@@ -315,6 +315,37 @@ Total.
 - compact group: a header click collapses its group, and the filters' line and empty state still show
 - compact group: test mode fills a card for every sample, no piece blank, and each opens its card
 
+### test_compact_mine.lua (16)
+
+- compact mine: the candidates read in class colors, then +n more; nobody named keeps the cell's text
+- compact mine: the strip's summary is shortened
+- compact mine: the Offer panel keeps its own least height beside the compact window
+- compact mine: one pooled card per drop of yours under a one-line header, each line what CompactCards says
+- compact mine: the countdown's bar follows the time left and turns amber when it warns
+- compact mine: a drop that cannot be traded shows the dash and Hide; Hide takes it off for the session
+- compact mine: Announce goes through the shared handler and shows the ask's state
+- compact mine: TradeTimerTick moves the countdown on the card
+- compact mine: every piece keeps its full-view reason tooltip
+- compact mine: every tooltip opens at the card's top right, just outside the window
+- compact mine: the strip is shortened in the compact layout and put back in the full one
+- compact mine: cards are pooled and follow the Font size row
+- compact mine: a header click collapses its group; the empty line still shows
+- compact mine: Offer opens the panel docked beside the compact window, its width unchanged
+- compact mine: the panel goes on the side with room, and floats centered when neither has
+- compact mine: test mode fills a card for every sample of yours, no piece blank
+
+### test_compact_history.lua (9)
+
+- compact history: kept groups as one-line headers, the newest open, each entry a three-line card
+- compact history: the outcome is in its tone, and every piece keeps its full-view tooltip
+- compact history: a right-click on a card, or on any piece of it, opens the row menu
+- compact history: marking an entry declined repaints its card
+- compact history: a header click opens a collapsed group
+- compact history: every tooltip opens at the card's top right, just outside the window
+- compact history: Clear history is shortened in the compact layout and put back in the full one
+- compact history: cards are pooled and follow the Font size row
+- compact history: test mode's kept samples fill a card each, no piece blank
+
 ### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
@@ -1478,6 +1509,8 @@ Total.
 | test_window_compact.lua | 21 |
 | test_compact_cards.lua | 29 |
 | test_compact_group.lua | 14 |
+| test_compact_mine.lua | 16 |
+| test_compact_history.lua | 9 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1529,4 +1562,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1263** |
+| **Total** | **1288** |

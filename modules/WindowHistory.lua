@@ -23,6 +23,8 @@ local _, NS = ...
 -- on View: All and Content: All the first time it is shown in a session: it is a record of earlier
 -- sessions, not a feed to act on.
 --
+-- THE COMPACT LAYOUT draws the same entries as cards: modules/CompactHistory.lua (DW-C3).
+--
 -- THE UI LISTENS. HistoryChanged repaints the shown window on the next frame, the Group drops rows
 -- included (their Ask button reads `Traded` once a trade settles the drop). Collapsed groups are
 -- session-only (NS.State.windowHistory).
@@ -307,21 +309,10 @@ local function newRow(content)
     return row
 end
 
+-- A kept group's header: the Group drops tab's own button (WindowGroup.NewHeader), toggling this tab's.
 local function newHeader(content)
-    local h = CreateFrame("Button", nil, content)
-    h:SetHeight(K.GROUP_H)
-    h.tipRow = true
-    h.fill = h:CreateTexture(nil, "BACKGROUND")
-    h.fill:SetAllPoints(h)
-    h.fill:SetColorTexture(1, 1, 1, 0.06)
-    h.chevron = h:CreateTexture(nil, "ARTWORK")
-    h.chevron:SetSize(10, 10)
-    h.chevron:SetPoint("LEFT", h, "LEFT", 4, 0)
-    h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
-    h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    local h = NS.WindowGroup.NewHeader(content)
     h:SetScript("OnClick", function(self) WH.ToggleGroup(self.groupKey, self.collapsed) end)
-    NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")
     return h
 end
 
@@ -521,26 +512,35 @@ local function paintStrip(pane, groups)
     pane.strip.clear:SetAlpha(#groups > 0 and 1 or 0.5)
 end
 
-local function paintEmpty(pane, entries, groups)
+local function paintEmpty(pane, entries, groups, compact)
     local none = #entries == 0
     pane.placeholder:SetShown(none)
     if none then pane.placeholder:SetText(#groups == 0 and NO_HISTORY or NO_MATCH) end
-    pane.colHead:SetShown(not none)
+    pane.colHead:SetShown(not (none or compact))
 end
 
-local function refresh(pane, tc)
+local function drawTable(pane, entries)
     local width = rowWidth(pane)
     local layout, kept = NS.WindowGroup.Layout(WH.COLUMNS, width)
+    paintHeads(pane, layout)
+    drawEntries(pane, entries, layout, width, time())
+    pane.columns = kept
+end
+
+-- The table, or (compact) the cards over the same entries (modules/CompactHistory.lua, DW-C3).
+local function refresh(pane, tc)
     local groups = NS.History.Groups()
     local ctx = WH.Context(tc, time(), GetTime(), NS.History.SessionStart())
     local entries = WH.Entries(groups, ctx, view())
-    paintHeads(pane, layout)
+    local compact = NS.WindowGroup.IsCompact()
     NS.Pool.ReleaseAll(pane.rowPool)
     NS.Pool.ReleaseAll(pane.headPool)
-    drawEntries(pane, entries, layout, width, time())
-    pane.entries, pane.columns = entries, kept
+    pane.scroll:SetShown(not compact)
+    if not compact then drawTable(pane, entries) end
+    pane.entries = entries
     paintStrip(pane, groups)
-    paintEmpty(pane, entries, groups)
+    NS.CompactHistory.Refresh(pane, entries, compact)
+    paintEmpty(pane, entries, groups, compact)
 end
 
 --- The drawn pane, for the suites: { rows, headers, entries, columns, pane, strip } or nil.
@@ -549,6 +549,7 @@ function WH.Drawn()
     local f = NS.Window.Frame()
     local pane = f and f.panes.history
     if not (pane and pane.rowPool) then return nil end
+    if NS.WindowGroup.IsCompact() then return NS.CompactHistory.Drawn(pane) end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
         columns = pane.columns, pane = pane, strip = pane.strip }
 end

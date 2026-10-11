@@ -18,9 +18,9 @@ local _, NS = ...
 -- NS.WindowCells.Entries with only your drops counted: newest group first, every group open until
 -- the player collapses it (an older run's drops are the ones whose trade windows end first), and a
 -- drop in no group listed last, so none is lost. The summary counts every entry, collapsed or not.
--- A row is
--- the Window page's row height plus the room its countdown bar needs, in the Group drops rows' text
--- size (modules/WindowRows.lua; feedback-2 spec §8, FB2-9).
+-- A row is the Window page's row height plus the room its countdown bar needs, in the Group drops
+-- rows' text size (modules/WindowRows.lua; FB2-9). The compact layout draws the same rows as cards
+-- (modules/CompactMine.lua, DW-C3).
 --
 -- THE UI LISTENS. Window.lua repaints it on the bus (TradeTimerTick moves the countdowns each second
 -- while a timer is live) and on its footer ticker while the tab is shown. It reads the feed
@@ -364,22 +364,10 @@ end
 
 local BUILDERS = { item = itemCell, forMe = forMeCell, trade = tradeCell, actions = actionsCell }
 
--- A group's header: the same look as the Group drops tab's (modules/WindowGroup.lua).
+-- A group's header: the Group drops tab's own button (WindowGroup.NewHeader), toggling this tab's.
 local function newHeader(content)
-    local h = CreateFrame("Button", nil, content)
-    h:SetHeight(K.GROUP_H)
-    h.tipRow = true
-    h.fill = h:CreateTexture(nil, "BACKGROUND")
-    h.fill:SetAllPoints(h)
-    h.fill:SetColorTexture(1, 1, 1, 0.06)
-    h.chevron = h:CreateTexture(nil, "ARTWORK")
-    h.chevron:SetSize(10, 10)
-    h.chevron:SetPoint("LEFT", h, "LEFT", 4, 0)
-    h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
-    h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    local h = NS.WindowGroup.NewHeader(content)
     h:SetScript("OnClick", function(self) WM.ToggleGroup(self.groupKey, self.collapsed) end)
-    attach(h)
     return h
 end
 
@@ -619,7 +607,7 @@ local function paintSummary(pane, entries, now)
     pane.summaryData = s
 end
 
-local function paintEmpty(pane, entries, ctx)
+local function paintEmpty(pane, entries, ctx, compact)
     local none = #entries == 0
     local ph = pane.placeholder
     ph:SetShown(none)
@@ -630,24 +618,28 @@ local function paintEmpty(pane, entries, ctx)
         end
         ph:SetText(anyMine and NO_MATCH or NO_DROPS)
     end
-    pane.colHead:SetShown(not none)
+    pane.colHead:SetShown(not (none or compact))
 end
 
+-- The table, or (compact) the cards over the same rows; the other one is released and hidden.
 local function refresh(pane, ctx)
-    local width = rowWidth(pane)
-    local layout = NS.WindowGroup.Layout(WM.COLUMNS, width)
-    local LF = NS.LootFeed
+    local LF, compact, now = NS.LootFeed, NS.WindowGroup.IsCompact(), GetTime()
     local drops = LF.Drops(ctx.feed)
     local entries = WM.Entries(drops, ctx, view())
     local items = WM.Rows(LF.Groups(ctx.feed), drops, LF.Get, ctx, view())
-    local now = GetTime()
-    paintHeads(pane, layout)
     NS.Pool.ReleaseAll(pane.rowPool)
     NS.Pool.ReleaseAll(pane.headPool)
-    drawRows(pane, items, layout, width, now)
+    pane.scroll:SetShown(not compact)
+    if not compact then
+        local width = rowWidth(pane)
+        local layout = NS.WindowGroup.Layout(WM.COLUMNS, width)
+        paintHeads(pane, layout)
+        drawRows(pane, items, layout, width, now)
+    end
     pane.entries, pane.items = entries, items
     paintSummary(pane, entries, now)
-    paintEmpty(pane, entries, ctx)
+    NS.CompactMine.Refresh(pane, items, compact)
+    paintEmpty(pane, entries, ctx, compact)
 end
 
 --- The drawn pane, for the suites: { rows, headers, entries (your drops, flat), items (the
@@ -657,6 +649,7 @@ function WM.Drawn()
     local f = NS.Window.Frame()
     local pane = f and f.panes.mine
     if not (pane and pane.rowPool) then return nil end
+    if NS.WindowGroup.IsCompact() then return NS.CompactMine.Drawn(pane) end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
         items = pane.items, pane = pane, summary = pane.summaryData }
 end
