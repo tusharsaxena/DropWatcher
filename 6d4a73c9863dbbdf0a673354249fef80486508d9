@@ -1,0 +1,17 @@
+M12 independent review (DW-C0..DW-C6, ccac0e6..76f6db9, feat/2026-10-11-drop-watcher-compact)
+
+Reviewers (3):
+1. Spec conformance: gate green (1321 passed / 0 failed / 1 skipped; luacheck 0/0 in 161 files). All files under 1000 lines, and no host file grew. Conforms to the compact-mode spec on layouts, geometry, migration, toggle, /dw compact|full, pooling, tooltips, detail/Offer docking, tests, and docs. One real gap: the run override did not end at CHALLENGE_MODE_COMPLETED. Two minor spec departures.
+2. Standard compliance: no critical, high or medium findings, two low. TOC, events, shared-code reuse, single window, no chat or protected calls, saved-variable schema step 5, prose and docs, and icons all pass. Smoke checks COMPACT-1..7 are owed, not marked passed.
+3. API and runtime: gate re-run through ka0s-bounded and green. API use, the run override wiring, load order, pooling and refresh, moved controls and combat cost are correct. One real problem: the test-mode strip height in the compact layout.
+
+Findings: 2 medium (fixed), 4 low (recorded, not fixed), 0 rejected.
+- DW-C0 (medium), FIXED in 2d5ddcc: the run override now ends after CHALLENGE_MODE_COMPLETED plus a 120 s LOOT_GRACE, so the end chest still opens compact. A per-instance latch (NS.State.compactRunSpent) stops re-arming. 4 new tests. The 120 s grace reads spec section 1 and is recorded in ARCHITECTURE.md for the owner to confirm.
+- DW-C4 (medium), FIXED in 3302dc8: CC.BannerH now uses GetUnboundedStringWidth, because Retail caps GetStringWidth, so the banner always measured one line. The mock gains opt-in text measurement. A new test failed before the fix.
+Low, not fixed:
+- CompactChrome: the Filters panel reparents the four dropdowns instead of the spec's one menu with submenus. The departure is recorded only in a code comment.
+- CompactChrome: CC.IsActive('quality') counts a situation QualityOverride as off its default.
+- WindowCompact: the override releases on any situation-key change inside a run (dungeon -> mythicPlus while hidden).
+- CompactMine: INFO_W = 320 duplicates the WindowMine.lua:531 literal.
+
+Gate after fixes: 1326 passed / 0 failed / 1 skipped; luacheck 0 warnings / 0 errors (161 files). Nothing pushed.
