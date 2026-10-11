@@ -104,6 +104,7 @@ Kit.run{
         "test_window_shell",
         "test_window_compact",
         "test_compact_cards",
+        "test_compact_group",
         "test_window_group",
         "test_detail_card",
         "test_window_mine",

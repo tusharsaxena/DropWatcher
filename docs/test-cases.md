@@ -298,6 +298,23 @@ Total.
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the long form
 
+### test_compact_group.lua (14)
+
+- compact group: a card is three lines at the text size, about 50 pixels at Default, the icon spanning them
+- compact group: switching layouts carries the scroll offset over as a fraction of the range
+- compact group: the stacked detail card flows its actions into lines and grows by them
+- compact group: one pooled card per drop under a one-line header, each line what CompactCards says
+- compact group: the pieces are colored by quality, class and tone, the worn levels dimmed
+- compact group: every piece keeps its full-view reason tooltip
+- compact group: every tooltip opens at the card's top right, just outside the window
+- compact group: a card click opens the stacked detail card under it; the cards below move down
+- compact group: Ask presses the ask, the × dismisses the card for the session
+- compact group: an ask in flight shows the full table's state; no ask offered shows the dash and why
+- compact group: the text follows the Font size row and the card's height follows the text
+- compact group: cards are pooled: a repaint reuses them and builds none
+- compact group: a header click collapses its group, and the filters' line and empty state still show
+- compact group: test mode fills a card for every sample, no piece blank, and each opens its card
+
 ### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
@@ -312,7 +329,7 @@ Total.
 - cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you
 - cells: Item, Ilvl, Slot and Looter are never blank, each with a reason tooltip
 - cells: an encounter header reads `Label · Situation · age · n drops`
-- table: the default columns, the compact preset's, and a column the profile turns off
+- table: the default columns, and a column the profile turns off
 - table: the Item column takes the slack, never less than its minimum
 - table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order
 - table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
@@ -334,7 +351,7 @@ Total.
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
 - table: a drop with no ask offered shows a dash with its reason
 - table: the × dismisses a row for the session
-- table: the compact layout keeps the retired preset's Item and looter, Ilvl, Their eq, Me and Ask
+- table: the compact layout draws cards instead of the table, and the full layout the table again
 - table: a column the profile turns off is not drawn
 - table: the filter bar filters the rows, and the empty line says why nothing shows
 - table: with no drop at all the empty state says so, with Preview with test data and Scan group
@@ -1460,6 +1477,7 @@ Total.
 | test_window_shell.lua | 57 |
 | test_window_compact.lua | 21 |
 | test_compact_cards.lua | 29 |
+| test_compact_group.lua | 14 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1511,4 +1529,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1249** |
+| **Total** | **1263** |

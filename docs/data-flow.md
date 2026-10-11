@@ -82,7 +82,7 @@ mode), its filter state, the controls it honors, `matches(drop)` and `compare(a,
 
 ```
 Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
-  ├─> WindowGroup.Columns(WindowGroup.IsCompact(), profile.window.columns)  (pure; the layout)
+  ├─> WindowGroup.Columns(profile.window.columns)                          (pure; the layout)
   ├─> WindowGroup.Layout(columns, the rows' width)                          (pure)
   ├─> WindowCells.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
   │                       NS.State.windowGroup)                              first, filtered, sorted)
@@ -112,6 +112,21 @@ row hover ─────> a cell, button or header: Window.AttachTooltip ("row"
 NS.SetWindowMode ─> SchemaRuntime.Set("window.mode") ─> WindowCompact.OnModeChanged ─> Apply
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
+```
+
+In the compact layout (`WindowGroup.IsCompact()`, compact spec §2) the same refresh computes the
+same entries and hands them over instead of drawing the table:
+
+```
+WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the table's scroll hidden)
+  ├─> CompactGroup.Metrics(WindowRows.FontSize(window.fontSize))     (pure: line, card height, icon)
+  ├─> NS.Pool.ReleaseAll(cards), ReleaseAll(headers) ─> Acquire in order (each card built once)
+  ├─> each header: WindowGroup.NewHeader, painted with CompactCards.Header (the short form)
+  └─> each card: CompactCards.Group(drop, { now, your gear, the looter's gear, WindowGroup.AskState,
+                  messages.transmogAsk, Compat.NormalizedRealm }) ─> three lines of pieces
+card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
+piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
+switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)
 ```
 
 ## Test mode (design spec §11.6, ui spec §4)

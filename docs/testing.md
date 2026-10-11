@@ -62,11 +62,16 @@ Layout row, and the run override taken on an auto-open and let go when the run e
 `test_compact_cards` (compact mode's cards, DW-C1, pure: each Group drops, My drops and History card's
 three lines in every verdict, trade, inspect, ask, countdown and outcome state, each piece's tone and
 tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
+`test_compact_group` (the Group drops tab in the compact layout, DW-C2: the card's metrics and the
+scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
+headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
+reason tooltip, every tooltip at the card's top right, the stacked detail card inline, Ask and ×,
+the ask states and the dash, the text size, the pool's reuse, and the collapsing headers),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
 the item tooltip at the row's top right, else its top left,
-the Ask button and its repaint, the dismiss mark, the compact layout's narrow columns, the filters, the empty
+the Ask button and its repaint, the dismiss mark, the hand-off to the compact cards, the filters, the empty
 state and its two buttons, and the filters' empty line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action

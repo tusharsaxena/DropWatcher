@@ -403,9 +403,8 @@ is on top and open, the first one collapsed with a right chevron and `(collapsed
 header → it opens or collapses. Hover an item icon → the game's item tooltip with a `Shift-click to
 link it in chat; ctrl-click to try it on.` line; shift-click it with the chat box open → the link is
 inserted; ctrl-click it → the dressing room shows it. Click a row's `×` → the row goes for the
-session. Switch to the compact layout (`/dw compact`; until the compact cards land, DW-C2, it
-draws this table narrowed, and at its widest, 520) → the labels read `Item / looter`, `Ilvl`, `Their eq`, `Me`, `Ask`, the item
-cell names the looter, and the other columns are gone; set it back. Resize the window → the Item
+session. Switch to the compact layout (`/dw compact`) → the table gives way to cards (COMPACT-2);
+set it back. Resize the window → the Item
 column takes the width. Scroll with the mouse wheel when the rows pass the bottom. Result:
 
 **FEED-12. The table's Ask button.** In a party, on a drop that is an upgrade for you and Likely
@@ -1275,6 +1274,29 @@ the choice and switching it there moves the window too. `/reload` → the window
 it was in, each at its own place; Reset position puts both back. An account that had the old compact
 preset on opens compact after the update. Result:
 
+**COMPACT-2. Group drops cards (DW-C2).** Turn test mode on (`/dw test`) and switch to the compact
+layout (`/dw compact`) → each drop is a three-line card about 50 pixels tall under a one-line header
+(`Instance · Boss · Difficulty · 3m · 2 · <you>`, no `ago` and no `drops`; its tooltip has the long
+form and any hidden drops). Line 1: the icon spans the three lines, the item name in its quality
+color with a thin bar of that color at the left edge, the item level right-aligned, `Ask` and the ×.
+Line 2: the looter in class color (⊕ on one from another realm, the realm in its tooltip), the slot,
+the trade state in its tone and the inspect freshness dimmed on the right (`2m`, `cached`, `…`,
+`range`). Line 3: `You ▲ +19 (292)`-style and `Them ▽ -13 (…)`-style halves, `⊘ Can't use` for a
+worded verdict. Check every test-mode state: the Ask button reads Ask, Queued, Asked, Retry or
+Traded as on the full table, and a drop with no ask shows a dash whose tooltip says why. Hover the
+icon or the name → the game's own item tooltip. Click a card → the detail card opens right under
+it at the compact width, For you, For the looter and the trade box one under another, the actions on
+two or three lines, nothing cut off on the right; click it again → it closes; switch to full with it
+open → the same row is open there. Click × → the card goes for the session. Settings → Window → Font
+size 14 → the cards grow with the text. Run `/dw sim start` and step it → the cards fill the same
+way. Result:
+
+**COMPACT-7. Card tooltips at the card's top right (DW-C2).** In the compact layout, hover each piece
+of a card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn
+levels, Ask and ×) and a header → each tooltip rises from the card's top-right corner, just outside
+the window's right edge (or its left edge when the window sits against the right of the screen),
+never over the cards. Result:
+
 **COMPACT-6. Open in compact view during a run (DW-C0).** With the Layout on Full and Settings →
 Window → Open in compact view during a run on (the default), close the window and start a Mythic+
 key → the first drop opens the window compact; the Layout setting still reads Full. Complete the key
@@ -1377,3 +1399,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-12 | DW-B0, the loot step says where its drops went; the tabs reconcile | No client pass recorded yet |
 | SIM-13 | DW-B5, the loot step honors `feed.showOwn`, test mode's feed and My drops' Hide and filters | No client pass recorded yet |
 | COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
+| COMPACT-2, COMPACT-7 | DW-C2, compact Group drops cards, the stacked detail card and the card tooltips | No client pass recorded yet |

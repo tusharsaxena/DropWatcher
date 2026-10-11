@@ -14,6 +14,12 @@ local _, NS = ...
 -- that paints it. modules/WindowGroup.lua owns the expansion (which row is open, where the card
 -- goes) and calls Build once per pane and Paint on every repaint while a row is open.
 --
+-- STACKED (compact spec §2, DW-C2). The compact layout's card (modules/CompactGroup.lua builds it
+-- with `stacked`) is the same card at the compact width: For you, For the looter and the trade box
+-- one under another at the card's full width, the header's chips that do not fit left out (they
+-- are all in the full view), and the actions flowed into as many lines as the width needs
+-- (FlowActions, pure). Its height follows (StackedHeight); the full card keeps CARD_H.
+--
 -- THE UI LISTENS. The card is repainted with the table, on the bus. It reads the looter's inspect
 -- entry (NS.Inspect.Get), the ask's state (NS.Asks.StateOf), the message preview (NS.Asks.Preview),
 -- the trade guard (NS.TradeHelper.CanTradeWith) and the client through NS.Compat (the spec's name,
@@ -208,23 +214,87 @@ local function buildActions(card)
     end
 end
 
---- The card's frame, built once per pane inside `content` (the table's scroll child), hidden.
---- @param content table
---- @return table card
-function DCard.Build(content)
-    local card = box(content)
-    card:SetHeight(K.CARD_H)
-    buildHeader(card)
-    card.me, card.them = newSide(card), newSide(card)
+-- Side by side (the full card): For you on the left, For the looter on the right, the trade box
+-- under both.
+local function placeSideBySide(card)
     local P = K.CARD_PAD
     card.me:SetPoint("TOPLEFT", card, "TOPLEFT", P, -(2 * P + K.CARD_ICON))
     card.them:SetPoint("TOPRIGHT", card, "TOPRIGHT", -P, -(2 * P + K.CARD_ICON))
-    buildTrade(card)
     card.trade:SetPoint("TOPLEFT", card.me, "BOTTOMLEFT", 0, -P)
     card.trade:SetPoint("TOPRIGHT", card.them, "BOTTOMRIGHT", 0, -P)
+end
+
+-- Stacked (compact): For you, then For the looter, then the trade box, each the card's width.
+local function placeStacked(card)
+    local P = K.CARD_PAD
+    card.me:SetPoint("TOPLEFT", card, "TOPLEFT", P, -(2 * P + K.CARD_ICON))
+    card.me:SetPoint("TOPRIGHT", card, "TOPRIGHT", -P, -(2 * P + K.CARD_ICON))
+    card.them:SetPoint("TOPLEFT", card.me, "BOTTOMLEFT", 0, -P)
+    card.them:SetPoint("TOPRIGHT", card.me, "BOTTOMRIGHT", 0, -P)
+    card.trade:SetPoint("TOPLEFT", card.them, "BOTTOMLEFT", 0, -P)
+    card.trade:SetPoint("TOPRIGHT", card.them, "BOTTOMRIGHT", 0, -P)
+end
+
+--- The card's frame, built once per pane inside `content` (the table's scroll child), hidden.
+--- `stacked` builds the compact layout's card: its boxes one under another (compact spec §2).
+--- @param content table
+--- @param stacked boolean|nil
+--- @return table card
+function DCard.Build(content, stacked)
+    local card = box(content)
+    card:SetHeight(K.CARD_H)
+    card.stacked = stacked and true or nil
+    buildHeader(card)
+    card.me, card.them = newSide(card), newSide(card)
+    buildTrade(card)
+    if card.stacked then placeStacked(card) else placeSideBySide(card) end
     buildActions(card)
     card:Hide()
     return card
+end
+
+-- ── the stacked layout (pure) ───────────────────────────────────────────────────────────────
+
+local ACTION_GAP, ACTION_LINE_GAP = 6, 4
+
+--- The actions flowed into lines `avail` pixels wide, in their order (Ask, Edit message, Link in
+--- chat, Retry inspect, Trade, Hide this item): a button that does not fit after the last one on a
+--- line starts the next. Each one's x and line (0 first), and the number of lines.
+--- @param avail number
+--- @return table { [key] = { x, line } }, number lines
+function DCard.FlowActions(avail)
+    local out, x, line = {}, 0, 0
+    for _, key in ipairs(ACTION_KEYS) do
+        local w = ACTION_W[key]
+        if x > 0 and x + w > avail then x, line = 0, line + 1 end
+        out[key] = { x = x, line = line }
+        x = x + w + ACTION_GAP
+    end
+    return out, line + 1
+end
+
+--- The stacked card's height at `width`: the header, the two comparison boxes and the trade box one
+--- under another, then the actions' lines.
+--- @param width number
+--- @return number
+function DCard.StackedHeight(width)
+    local P = K.CARD_PAD
+    local _, lines = DCard.FlowActions(width - 2 * P)
+    local boxes = 2 * K.SIDE_H + K.TRADE_BOX_H + 3 * P
+    return P + K.CARD_ICON + P + boxes + lines * K.ACTION_H + (lines - 1) * ACTION_LINE_GAP + P
+end
+
+--- How many of `widths` (the chips, left to right, 4 pixels apart) fit `avail` pixels.
+--- @param widths table
+--- @param avail number
+--- @return number
+function DCard.ChipsThatFit(widths, avail)
+    local x = 0
+    for i, w in ipairs(widths) do
+        x = x + w + (i > 1 and 4 or 0)
+        if x > avail then return i - 1 end
+    end
+    return #widths
 end
 
 -- ── painting ────────────────────────────────────────────────────────────────────────────────
@@ -235,7 +305,20 @@ local function qualityTone(fs, drop)
     if qc then fs:SetTextColor(qc.r, qc.g, qc.b) else setTone(fs, "plain") end
 end
 
-local function paintHeader(card, drop)
+-- A stacked card's chips: the ones past its width are left out (the name is cut short too).
+local function fitChips(card, width)
+    local avail = width - 3 * K.CARD_PAD - K.CARD_ICON
+    card.name:SetWidth(avail)
+    card.name:SetWordWrap(false)
+    local widths = {}
+    for i, c in ipairs(card.chips) do
+        if not c:IsShown() then break end
+        widths[i] = c:GetWidth()
+    end
+    for i = DCard.ChipsThatFit(widths, avail) + 1, #widths do card.chips[i]:Hide() end
+end
+
+local function paintHeader(card, drop, width)
     local name = NS.WindowCells.ItemName(drop.link) or "?"
     NS.WindowGroup.SetItem(card.icon, drop.link, NS.WindowGroup.Where(drop))
     card.name:SetText(name)
@@ -247,6 +330,7 @@ local function paintHeader(card, drop)
         c:SetShown(chip ~= nil)
         if chip then paintChip(c, chip) end
     end
+    if card.stacked then fitChips(card, width) end
 end
 
 local function paintSideRow(r, line, width)
@@ -312,18 +396,37 @@ local function paintActions(card, drop, ctx)
     end
 end
 
---- Paint the card for `drop`, `width` pixels wide.
+-- A stacked card's actions, flowed into lines from its bottom-left corner up.
+local function placeStackedActions(card, width)
+    local P = K.CARD_PAD
+    local flow, lines = DCard.FlowActions(width - 2 * P)
+    for key, at in pairs(flow) do
+        local b = card.actions[key]
+        b:ClearAllPoints()
+        local up = (lines - 1 - at.line) * (K.ACTION_H + ACTION_LINE_GAP)
+        b:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", P + at.x, P + up)
+    end
+end
+
+--- Paint the card for `drop`, `width` pixels wide; answers its height (CARD_H, or the stacked
+--- card's, DCard.StackedHeight).
 --- @param card table DCard.Build's answer
 --- @param drop table the feed record
 --- @param width number
 --- @param now number GetTime()
+--- @return number height
 function DCard.Paint(card, drop, width, now)
     card.dropId = drop.id
-    card:SetSize(width, K.CARD_H)
-    paintHeader(card, drop)
+    local height = card.stacked and DCard.StackedHeight(width) or K.CARD_H
+    card:SetSize(width, height)
+    paintHeader(card, drop, width)
     local insp = inspectOf(drop)
     local specName = insp and NS.Compat.SpecName(insp.specID) or nil
     local sideW = max(floor((width - 3 * K.CARD_PAD) / 2), 120)
+    if card.stacked then
+        sideW = width - 2 * K.CARD_PAD
+        placeStackedActions(card, width)
+    end
     paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse()), sideW)
     paintSide(card.them, DC.ForLooter(drop, insp, specName, now), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
@@ -331,6 +434,7 @@ function DCard.Paint(card, drop, width, now)
     local state, reason = askState(drop)
     paintActions(card, drop, { askState = state, askReason = reason, inspect = insp, now = now, trade = tradeGuard(drop),
         transmogAsk = NS.Setting("messages.transmogAsk") == true })
+    return height
 end
 
 -- ── the Edit message box ────────────────────────────────────────────────────────────────────

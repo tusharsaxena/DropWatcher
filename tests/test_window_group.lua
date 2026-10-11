@@ -2,7 +2,7 @@
 -- 06): every cell's text, glyph, tone and reason tooltip (modules/WindowCells.lua, pure), the
 -- column sets and the entry order (modules/WindowGroup.lua's pure halves), then the table built
 -- headless under the mock: pooled rows, encounter headers that collapse, item buttons, the Ask
--- button, the dismiss mark, the compact preset, the filters and the empty state.
+-- button, the dismiss mark, the compact layout's hand-off, the filters and the empty state.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -242,20 +242,19 @@ local function keys(cols)
     return table.concat(out, ",")
 end
 
-test("table: the default columns, the compact preset's, and a column the profile turns off", function()
+test("table: the default columns, and a column the profile turns off", function()
     local WG = T.newAddon().WindowGroup
-    assertEqual(keys(WG.Columns(false)), "item,ilvl,slot,looter,myEq,theirEq,me,them,trade,actions")
-    assertEqual(keys(WG.Columns(true)), "item,ilvl,theirEq,me,actions")
-    assertEqual(keys(WG.Columns(false, { slot = false, item = false, them = true })),
+    assertEqual(keys(WG.Columns()), "item,ilvl,slot,looter,myEq,theirEq,me,them,trade,actions")
+    assertEqual(keys(WG.Columns({ slot = false, item = false, them = true })),
         "item,ilvl,looter,myEq,theirEq,me,them,trade,actions", "Item never hides")
-    assertEqual(keys(WG.Columns(false, { myEq = false })),
+    assertEqual(keys(WG.Columns({ myEq = false })),
         "item,ilvl,slot,looter,theirEq,me,them,trade,actions", "`window.columns.myEq` turns My eq off")
 end)
 
 test("table: the Item column takes the slack, never less than its minimum", function()
     local NS = T.newAddon()
     local WG, K = NS.WindowGroup, NS.Constants.WINDOW
-    local cols = WG.Columns(true)
+    local cols = WG.Columns({ slot = false, looter = false, myEq = false, them = false, trade = false })
     local wide = WG.Layout(cols, 600)
     local fixed = 40 + 84 + 70 + 96 + 5 * K.CELL_GAP
     assertEqual(wide.item.w, 600 - fixed)
@@ -645,23 +644,21 @@ test("table: the × dismisses a row for the session", function()
     assertTrue(NS.State.windowGroup.dismissed[1])
 end)
 
-test("table: the compact layout keeps the retired preset's Item and looter, Ilvl, Their eq, Me and Ask", function()
+test("table: the compact layout draws cards instead of the table, and the full layout the table again", function()
     local NS = shownTable()
-    -- compact at its widest (until the cards land, DW-C2, it draws this table)
-    NS.addon.db.profile.window.geometry = { compact = { width = NS.Constants.WINDOW.COMPACT_MAX_W } }
     NS.SetWindowMode("compact")
-    assertEqual(NS.addon.db.profile.window.mode, "compact")
     assertTrue(NS.WindowGroup.IsCompact())
     local drawn = NS.WindowGroup.Drawn()
-    assertEqual(keys(drawn.columns), "item,ilvl,theirEq,me,actions")
-    local c = rowFor(drawn, 1).cells
-    assertEqual(textOf(c.item.text), "Seta", "the item cell names the looter")
-    assertFalse(c.slot:IsShown()); assertFalse(c.trade:IsShown())
-    assertEqual(textOf(drawn.pane.colHead.labels.item.text), "Item / looter")
-    assertEqual(textOf(drawn.pane.colHead.labels.actions.text), "Ask")
-    assertEqual(NS.Window.TooltipOf(c.item)[1], "Crown of Roaring Storms")
+    assertTrue(drawn.compact == true, "the compact pane (modules/CompactGroup.lua)")
+    assertEqual(#drawn.rows, 2, "a card per drop")
+    assertFalse(drawn.pane.scroll:IsShown(), "the table's scroll frame hides")
+    assertFalse(drawn.pane.colHead:IsShown(), "and its column labels")
+    assertEqual(#NS.WindowGroup.Drawn().entries, 3, "the same entries")
     NS.ToggleWindowMode()
-    assertEqual(#NS.WindowGroup.Drawn().columns, 10)
+    drawn = NS.WindowGroup.Drawn()
+    assertTrue(drawn.compact == nil)
+    assertEqual(#drawn.columns, 10)
+    assertTrue(drawn.pane.scroll:IsShown()); assertFalse(drawn.pane.compactView.scroll:IsShown())
 end)
 
 test("table: a column the profile turns off is not drawn", function()

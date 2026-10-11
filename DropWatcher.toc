@@ -301,6 +301,11 @@ modules\WindowHistory.lua
 # lines, tones and tooltips for the three tabs, and the header's short form); takes NS.WindowCells,
 # NS.MineCells and NS.L at load. NS.WindowHistory (above) is read at call time.
 modules\CompactCards.lua
+# Conventional: publishes NS.CompactGroup, the Group drops tab's compact layout (pooled three-line
+# cards, one-line headers, the stacked detail card); takes NS.Constants at load. NS.WindowGroup,
+# NS.CompactCards, NS.DetailCard, NS.WindowRows and the host handlers are read at call time: WindowGroup's
+# refresh hands it the entries.
+modules\CompactGroup.lua
 # Conventional: publishes NS.TestData, test mode's pure sample data (the drops and the History
 # groups over pool items); takes NS.Constants and NS.L at load. NS.Item is read at call time.
 modules\TestData.lua
