@@ -1120,6 +1120,14 @@ position on the Window page → it docks beside the window again. Close the wind
 `/dw sim start raid 30` on a fresh login (the journal still loading) → once the window opens the
 panel moves beside it, not over it. Result:
 
+**SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** The headless `test_sim_scenario`
+and `test_sim_panel` (`sim step delay`) cover the same ground. Settings › General › Simulation →
+`Simulation step delay` reads 2 and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`,
+hover Run all → `one every 2 seconds`; Run all → the steps come about two seconds apart. Set the
+slider to 6 while it plays → the step already waiting keeps its time, and the next ones come about
+six seconds apart; hover Run all → `one every 6 seconds`. `/dw set sim.stepDelay 1.5` → the steps
+speed up from the next one, and `/dw get sim.stepDelay` reads 1.5. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -1203,3 +1211,4 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet |
 | SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet |
 | SIM-10 | DW-91, the simulation step panel | No client pass recorded yet |
+| SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet |

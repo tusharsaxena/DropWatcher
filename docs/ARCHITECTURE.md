@@ -110,7 +110,8 @@ and the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or
 before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
 composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
 §12.1 (`settings/SchemaRows.lua`): General's `When to show` (master `autoOpen` and
-`situations.<key>.track|autoOpen|quality`), Feed (`feed.quality.*`, the filters and the filter bar's
+`situations.<key>.track|autoOpen|quality`) and `Simulation` (`sim.stepDelay`, feedback-2 spec §8,
+DW-A7), Feed (`feed.quality.*`, the filters and the filter bar's
 seeds, the View set `feed.view.<value>` since DW-A1), Comparison (`comparison.*`), Trade (`trade.rules.<situation>`, `trade.warnAt`), Messages (`messages.*`), Window (`window.columns.<col>`, `window.compact`,
 `rowHeight`, `fontSize`, `toast.*`) and the account-wide `Keep history for`,
 `global.history.retentionDays` (feedback-2 spec §5, DW-A5; it replaced the group cap).

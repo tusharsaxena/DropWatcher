@@ -12,7 +12,7 @@ predicate, `settings/SchemaRows.lua`), never hidden, and keeps its value.
 | Page | Covers |
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `When to show` |
+| General | `Master controls`, `When to show`, `Simulation` |
 | Feed | `Quality`, `Filters` |
 | Comparison | `Scoring`, `Weights`, `Preferences` |
 | Trade | `Rules`, `Timers` |
@@ -52,6 +52,14 @@ situation's `Auto-open` is dimmed while the master row is off. The design's grid
 setting) has no LibKa0s composer: `ChoiceGrid` draws one choice per row over one value list, and a
 situation's line holds two checkboxes and a dropdown. So the tab draws one block per situation, as
 the plan's fallback says, and a LibKa0s issue asking for a grid composer is filed as [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
+
+## General → Simulation
+
+One slider, `Simulation step delay` (`sim.stepDelay`, feedback-2 spec §8, DW-A7): the seconds the
+simulator's automatic run (`/dw sim run`, the simulation panel's Run all) waits between steps, 0.5
+to 10 in steps of 0.5, 2 by default. `/dw set sim.stepDelay <n>` reaches it too (the slash parser
+clamps a number outside the range to it). A change takes effect from the next step of a running
+timeline, and the panel's Run all tooltip names the current delay.
 
 ## Feed
 

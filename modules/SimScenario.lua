@@ -16,7 +16,8 @@ local _, NS = ...
 -- starts the run first, plays its bosses without loot, and ends with the completion:
 --   runStart, (pull, kill) x bosses, lockdownOn, runEnd, loot, lockdownOff
 -- Step plays the next step and prints its line (StepLine); Run plays them all, one every
--- STEP_DELAY seconds, on the session's timers (NS.Sim.After), so the stop ends it. Nothing here
+-- StepDelay() seconds (the `sim.stepDelay` setting, read as each next step is set, so a change takes
+-- effect from the next step), on the session's timers (NS.Sim.After), so the stop ends it. Nothing here
 -- sets a verdict, a trade estimate or an inspect state: each step is an event driver, and the
 -- engine computes the rest.
 --
@@ -33,8 +34,36 @@ local L = NS.L
 
 local TAG = "SIM"
 
---- Seconds between two steps while the timeline plays.
-SC.STEP_DELAY = 3
+--- Seconds between two steps while the timeline plays, by default (the `sim.stepDelay` setting's
+--- default, defaults/Profile.lua), and the setting's range and step (feedback-2 spec §8).
+SC.STEP_DELAY = NS.C.PROFILE.sim.stepDelay
+SC.STEP_DELAY_MIN, SC.STEP_DELAY_MAX, SC.STEP_DELAY_STEP = 0.5, 10, 0.5
+
+--- Whether `v` is a step delay the setting takes (pure): a number from 0.5 to 10, in steps of 0.5.
+--- @param v any
+--- @return boolean
+function SC.ValidStepDelay(v)
+    if type(v) ~= "number" or v ~= v or v < SC.STEP_DELAY_MIN or v > SC.STEP_DELAY_MAX then return false end
+    local n = v / SC.STEP_DELAY_STEP
+    return n == math.floor(n)
+end
+
+--- The seconds an automatic run waits between steps now: the setting, or the default when it is
+--- not a value the setting takes.
+--- @return number
+function SC.StepDelay()
+    local v = NS.Setting and NS.Setting("sim.stepDelay")
+    if SC.ValidStepDelay(v) then return v end
+    return SC.STEP_DELAY
+end
+
+--- A delay as the tooltip says it (pure): a whole number without its point, else one decimal.
+--- @param v number
+--- @return string
+function SC.DelayText(v)
+    if v == math.floor(v) then return ("%d"):format(v) end
+    return ("%.1f"):format(v)
+end
 
 --- name -> { situation, kind, bosses, keystone, burst (loot lines per burst; nil: 1 to 3 at
 --- random), band (the members' item-level offsets around the content's level; nil: the roster's
@@ -158,7 +187,7 @@ tick = function(t)
     t.playing = nil
     if timeline() ~= t then return end
     if t.steps[t.pos + 2] then
-        t.playing = Sim.After(SC.STEP_DELAY, function() tick(t) end)
+        t.playing = Sim.After(SC.StepDelay(), function() tick(t) end)
     end
     SC.Step()
     if not t.playing then
@@ -168,7 +197,7 @@ tick = function(t)
     end
 end
 
---- Play the rest of the timeline, one step now and one every STEP_DELAY seconds. Answers true, or
+--- Play the rest of the timeline, one step now and one every StepDelay() seconds. Answers true, or
 --- false and why: `notRunning`, `building`, `done`, `playing`.
 --- @return boolean, string|nil
 function SC.Run()

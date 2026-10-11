@@ -231,6 +231,58 @@ test("sim run: plays every step a few seconds apart, each with its line, then sa
     assertEqual(printed(m, "The simulation's timeline has finished."), 2)
 end)
 
+-- ── the step delay (feedback-2 spec §8, FB2-8) ──────────────────────────────────────────────
+
+test("sim step delay: two seconds by default, read from `sim.stepDelay`; a bad value falls back", function()
+    local NS = addon()
+    local SC = NS.SimScenario
+    assertEqual(SC.STEP_DELAY, 2)
+    assertEqual(NS.C.PROFILE.sim.stepDelay, SC.STEP_DELAY, "the default is the profile's")
+    assertEqual(SC.StepDelay(), 2)
+    NS.addon.db.profile.sim.stepDelay = 4.5
+    assertEqual(SC.StepDelay(), 4.5)
+    NS.addon.db.profile.sim.stepDelay = 0.2
+    assertEqual(SC.StepDelay(), 2, "out of range: the default")
+    NS.addon.db.profile.sim.stepDelay = "fast"
+    assertEqual(SC.StepDelay(), 2, "not a number: the default")
+end)
+
+test("sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5; DelayText drops a whole number's point", function()
+    local SC = T.newAddon().SimScenario
+    for _, v in ipairs({ 0.5, 1, 2, 7.5, 10 }) do assertTrue(SC.ValidStepDelay(v), tostring(v)) end
+    for _, v in ipairs({ 0, 0.4, 1.3, 10.5, 0 / 0, "2" }) do assertFalse(SC.ValidStepDelay(v), tostring(v)) end
+    assertEqual(SC.DelayText(2), "2"); assertEqual(SC.DelayText(1.5), "1.5"); assertEqual(SC.DelayText(10), "10")
+end)
+
+test("sim step delay: `/dw set sim.stepDelay` takes a half step, clamps to the range, refuses a quarter step", function()
+    local NS = addon()
+    slash(NS, "set sim.stepDelay 11")
+    assertEqual(NS.addon.db.profile.sim.stepDelay, 10, "the slash parser clamps to the row's range")
+    slash(NS, "set sim.stepDelay 1.5")
+    assertEqual(NS.addon.db.profile.sim.stepDelay, 1.5)
+    slash(NS, "set sim.stepDelay 1.2")
+    assertEqual(NS.addon.db.profile.sim.stepDelay, 1.5, "not a half step")
+    local row = NS.SchemaRuntime.FindRow("sim.stepDelay")
+    assertEqual(row.label, "Simulation step delay")
+    assertEqual(row.page, "general"); assertEqual(row.group, "Simulation")
+    assertEqual(row.min, 0.5); assertEqual(row.max, 10); assertEqual(row.step, 0.5)
+end)
+
+test("sim step delay: a run waits the set delay, and a change takes effect from the next step", function()
+    local NS, m = addon()
+    slash(NS, "set sim.stepDelay 5")
+    slash(NS, "sim start world")
+    slash(NS, "sim run")
+    assertEqual(NS.SimScenario.Status().pos, 1)
+    m.advance(4.5)
+    assertEqual(NS.SimScenario.Status().pos, 1, "five seconds, not the default two")
+    slash(NS, "set sim.stepDelay 1")
+    m.advance(0.5)
+    assertEqual(NS.SimScenario.Status().pos, 2, "the step already set keeps its five seconds")
+    m.advance(1)
+    assertEqual(NS.SimScenario.Status().pos, 3, "the next step waits the new one second")
+end)
+
 test("sim stop: ends a playing timeline and its timers", function()
     local NS, m = addon()
     slash(NS, "sim start dungeon")

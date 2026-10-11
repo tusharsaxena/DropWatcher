@@ -1160,7 +1160,7 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
-### test_sim_scenario.lua (16)
+### test_sim_scenario.lua (20)
 
 - sim verbs: Parse reads every verb and its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
@@ -1171,6 +1171,10 @@ Total.
 - sim start: a raid takes its size; a party is always four
 - sim step: the timeline waits for the pool, then plays one step at a time
 - sim run: plays every step a few seconds apart, each with its line, then says it has finished
+- sim step delay: two seconds by default, read from `sim.stepDelay`; a bad value falls back
+- sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5; DelayText drops a whole number's point
+- sim step delay: `/dw set sim.stepDelay` takes a half step, clamps to the range, refuses a quarter step
+- sim step delay: a run waits the set delay, and a change takes effect from the next step
 - sim stop: ends a playing timeline and its timers
 - sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
 - sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating
@@ -1194,7 +1198,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_panel.lua (18)
+### test_sim_panel.lua (19)
 
 - sim panel: a key's preview names every step, with its command, before a run
 - sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states
@@ -1209,6 +1213,7 @@ Total.
 - sim panel: clicking a completed step does nothing, and its tooltip says when it ran
 - sim panel: a typed `/dw sim step` moves the panel too
 - sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on
+- sim panel: Run all's tooltip names the current step delay (feedback-2 spec §8, FB2-8)
 - sim panel: the typed pause, resume and restart answer as the buttons do
 - sim panel: Restart stops the scenario and starts the same one again; Stop ends it
 - sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel
@@ -1363,9 +1368,9 @@ Total.
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 19 |
 | test_sim_events.lua | 21 |
-| test_sim_scenario.lua | 16 |
+| test_sim_scenario.lua | 20 |
 | test_sim_e2e.lua | 12 |
-| test_sim_panel.lua | 18 |
+| test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
@@ -1375,4 +1380,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1133** |
+| **Total** | **1138** |

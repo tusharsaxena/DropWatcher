@@ -125,6 +125,11 @@ NS.C = {
             inCombat = false,
             sound    = false,
         },
+
+        -- The simulator (feedback-2 spec §8): the seconds an automatic run waits between steps.
+        sim = {
+            stepDelay = 2,
+        },
     },
 
     -- schemaVersion is 0, never the current version (savedvariables-§1).

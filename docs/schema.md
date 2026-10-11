@@ -30,6 +30,7 @@ Every module reads a setting through `NS.Setting(path)`.
 | `situations.<key>.track` | per design spec §6.1 | When to show | loot is watched in that situation |
 | `situations.<key>.autoOpen` | per design spec §6.1 | When to show | every drop added to the feed there opens a hidden window (since DW-83; it was the first interesting drop, once per situation) |
 | `situations.<key>.quality` | `"global"` | When to show | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
+| `sim.stepDelay` | `2` | Simulation | the seconds the simulator's automatic run (`/dw sim run`, the panel's Run all) waits between steps, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7); read as each next step is set, so a change takes effect from the next step |
 
 `<key>` is each of `mythicPlus`, `dungeon`, `followerDungeon`, `raidLFR`, `raid`, `delve`,
 `scenario`, `pvp`, `openWorldGroup` and `solo`; `track` and `autoOpen` default on for Mythic+,

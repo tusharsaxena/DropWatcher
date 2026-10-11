@@ -351,7 +351,18 @@ local function history()
     Settings.StampClosureRows({ row })
 end
 
+-- ── General › Simulation (feedback-2 spec §8): the simulator's automatic run ─────────────────
+
+local function simulation()
+    local SC = NS.SimScenario
+    slider("sim.stepDelay", P.sim.stepDelay, SC.STEP_DELAY_MIN, SC.STEP_DELAY_MAX, SC.STEP_DELAY_STEP,
+        L["Simulation step delay"],
+        L["How many seconds the simulator's automatic run (Run all, `/dw sim run`) waits between steps. A change takes effect from the next step."],
+        { page = "general", group = L["Simulation"], validate = SC.ValidStepDelay })
+end
+
 whenToShow()
+simulation()
 feed()
 comparison()
 trade()

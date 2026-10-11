@@ -480,7 +480,10 @@ local function buildPicker(f)
 end
 
 local CONTROLS = {
-    { key = "run", label = L["Run all"], tip = L["Plays every step left, one every few seconds, as `/dw sim run` does."] },
+    { key = "run", label = L["Run all"], tip = function()
+        return L["Plays every step left, one every %s seconds, as `/dw sim run` does."]:format(
+            NS.SimScenario.DelayText(NS.SimScenario.StepDelay()))
+    end },
     { key = "pause", label = L["Pause"], tip = L["Pause holds the next step; Resume plays on from it."] },
     { key = "restart", label = L["Restart"], tip = L["Stops this scenario and starts the same one again."] },
     { key = "stop", label = L["Stop"], tip = STOP_TIP },
@@ -497,7 +500,10 @@ local function buildControls(f)
     bar:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", PAD, PAD)
     for i, c in ipairs(CONTROLS) do
         local b = button(bar, BUTTON_W, c.label, function() verb(controlVerb(c.key)) end,
-            function() return c.label, c.tip, L["Typed: %s"]:format(slashOf(controlVerb(c.key))) end)
+            function()
+                local tip = type(c.tip) == "function" and c.tip() or c.tip
+                return c.label, tip, L["Typed: %s"]:format(slashOf(controlVerb(c.key)))
+            end)
         b:SetPoint("LEFT", bar, "LEFT", (i - 1) * (BUTTON_W + BUTTON_GAP), 0)
         bar[c.key] = b
     end

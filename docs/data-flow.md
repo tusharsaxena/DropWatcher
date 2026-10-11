@@ -187,7 +187,8 @@ NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item c
 /dw sim step ─> NS.SimScenario.Step ─> the next step's driver: RunStart, Pull, SetLockdown(on), Kill,
                    Loot(burst), SetLockdown(off), RunEnd (waits while the pool builds) ─> its chat
                    line (StepLine), typed or played
-/dw sim run ─> a step now, then one every STEP_DELAY seconds on NS.Sim.After (the stop ends it)
+/dw sim run ─> a step now, then one every SimScenario.StepDelay() seconds (`sim.stepDelay`, 2 by
+                   default, read as each next step is set) on NS.Sim.After (the stop ends it)
 /dw sim pause | resume | restart ─> NS.SimScenario.Pause (the timer canceled) | Resume (Run) | Restart
                    (NS.Sim.Stop, then Start with the same scenario and size)
 every move of the timeline (start, ready, step, run, pause, the end, the stop) ─> NS.SimScenario.Notify
