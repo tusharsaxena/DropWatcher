@@ -126,6 +126,7 @@ Kit.run{
         "test_feed",
         "test_feed_counts",
         "test_group_roster",
+        "test_char_filter",
         "test_trade_timer",
         "test_trade_helper",
         "test_asks",

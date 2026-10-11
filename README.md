@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1100%2F1100_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1117%2F1117_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -55,7 +55,9 @@ line.
 The **History** tab remembers what the feed showed, across logouts and across your characters: the last 20
 bosses or key runs by default. Each drop says what became of it: asked, offered, expired, received
 or traded away, the last two once a trade with that item goes through. Right-click a row to mark it
-declined.
+declined. The **Character** dropdown in the bar starts on **Current**, the character you're playing;
+on History it lists every character that saw a drop, with its class icon, so pick another, several,
+or **All** (the only choice that shows drops kept before Drop Watcher noted who saw them).
 
 Two extras are off until you turn them on. The **toast** (Settings › Window › Toast) pops up when
 someone else loots a big upgrade for you, 10 item levels or more, that they can probably trade. It
@@ -66,8 +68,8 @@ yours. It backs off if you ask first, they leave, you hide the row or the item r
 
 To see all this without waiting for loot, type `/dw test`. Test mode fills the window with sample
 drops of real items from this season's dungeons (your own gear if the Encounter Journal has none),
-looted by made-up players, in every state the window can show. The History tab gets two sample
-groups of its own, which never touch your real history. Test mode shows the toast so you can drag it
+looted by made-up players, in every state the window can show. The History tab gets sample groups
+of its own, one of them seen by a made-up alt, which never touch your real history. Test mode shows the toast so you can drag it
 into place, and prints messages instead of sending them. Combat ends it.
 
 To try the whole thing with a group that isn't there, simulate one. Out of a group, outside any

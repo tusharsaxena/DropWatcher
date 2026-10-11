@@ -29,7 +29,9 @@ local function rec(over)
 end
 
 local function entry(over)
-    local e = { itemLink = link(500), itemID = 500, looter = "Brakk-Testrealm", outcome = "seen", at = 1 }
+    -- Seen by you (the mock's player), so the Character dropdown's Current shows it (feedback-2 §4).
+    local e = { itemLink = link(500), itemID = 500, looter = "Brakk-Testrealm", outcome = "seen", at = 1,
+        seenBy = "Testchar-Testrealm" }
     for k, v in pairs(over or {}) do e[k] = v end
     return e
 end

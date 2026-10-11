@@ -165,6 +165,10 @@ modules\Roster.lua
 # its Grow to NS.Roster's change sinks (above) at load and reads NS.L at load. NS.Compat,
 # NS.LootFeed, NS.History and NS.Window (below) are read at call time.
 modules\GroupRoster.lua
+# LOAD-BEARING: publishes NS.CharFilter, the Character dropdown's recorder, rows and predicate
+# (feedback-2 spec §4), which modules\WindowFilterBar.lua (below) takes as a load-time upvalue;
+# reads NS.L at load. NS.Compat is read at call time.
+modules\CharFilter.lua
 # Conventional: publishes NS.ItemFacts, the cached item facts; appends its row to NS.FEATURE_EVENTS
 # and NS.STAND_DOWN and its handler to NS.addon (core\DropWatcher.lua, above) at load, and reads
 # NS.Constants and NS.State at load. NS.Compat, NS.Item and NS.Debug are read at call time.

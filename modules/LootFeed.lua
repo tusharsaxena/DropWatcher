@@ -543,13 +543,14 @@ local function newRecord(s, r)
     s.seq = s.seq + 1
     local t = now()
     local sim, situation = origin()
-    return {
+    -- Stamped with who saw it (seenBy, seenByClass: the Character dropdown, feedback-2 spec §4).
+    return NS.CharFilter.Stamp({
         id = s.seq, feed = r.test and "test" or "live", test = r.test, force = r.force, link = r.link,
         itemID = r.itemID, qty = r.qty or 1, kind = r.kind or "loot", bonusRoll = r.kind == "bonus",
         looter = r.looter, isMine = r.looter.isSelf == true, at = t, situation = situation,
         encounterID = r.encounterID, sources = { [r.source] = 1 }, source = r.source,
         group = groupSpec(s, r.encounterID, t), state = "new", sim = sim,
-    }
+    })
 end
 
 -- ── dedupe ──────────────────────────────────────────────────────────────────────────────────
@@ -659,7 +660,7 @@ function LF.AddTest(spec)
     if not itemID or type(spec.looter) ~= "table" or type(spec.group) ~= "table" then return nil, "notItem" end
     local s = store()
     s.seq = s.seq + 1
-    return add(NS.FeedRecords.TestRecord(s.seq, spec, link, itemID, now()))
+    return add(NS.CharFilter.Stamp(NS.FeedRecords.TestRecord(s.seq, spec, link, itemID, now())))
 end
 
 -- ── reading the feed ────────────────────────────────────────────────────────────────────────

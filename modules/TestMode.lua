@@ -86,7 +86,8 @@ local function you()
     local Compat = NS.Compat
     local name = Compat.UnitName("player")
     local _, classFile = Compat.UnitClass("player")
-    return { name = name or L["You"], guid = Compat.UnitGUID("player"), classFile = classFile, isSelf = true }
+    return { name = name or L["You"], guid = Compat.UnitGUID("player"), classFile = classFile, isSelf = true,
+        seenBy = NS.CharFilter.CurrentKey() }
 end
 
 -- An entry's facts: the item cache's, else the pool's level and slot with the link's quality.

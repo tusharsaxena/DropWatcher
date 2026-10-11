@@ -70,7 +70,10 @@ its one-line responsibility and why its position is load-bearing or conventional
   `FeedCounts.lua` counting every receipt it hides or refuses by reason, and `GroupRoster.lua`
   keeping who was in each group: a snapshot taken by its first drop, grown by every later drop and
   by a roster change, copied into the History group, and named class-colored, you first, in the
-  Group drops and History headers; feedback-2 spec §3); and the
+  Group drops and History headers; feedback-2 spec §3; and `CharFilter.lua`, the Character
+  dropdown's recorder: every drop record and History entry says who saw it, `seenBy` (Name-Realm)
+  and `seenByClass`, and the filter bar's Character dropdown, Current by default, filters History by
+  it; feedback-2 spec §4); and the
   recorded and opt-in features (`History.lua`, `Toast.lua`, `AutoAsk.lua`).
 - `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the

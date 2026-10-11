@@ -345,7 +345,7 @@ Total.
 - test mode data: worn items are other pool items of the slot, nearest the level the change implies
 - test mode data: the trade reason's two levels are the drop's and the looter's worn item's
 - test mode data: an empty pool gives no sample, and a pool short of a slot borrows a real item
-- test mode data: the History sample has two groups and every outcome, oldest first
+- test mode data: the History sample has your two groups, every outcome, and an alt's, oldest first
 - feed: AddTest puts a sample in the test feed as given, never in the live one
 - feed: AddTest refuses a spec with no item, no looter or no group, and while stood down
 - test mode: on fills the test feed from the item pool, off empties it; the live feed is never touched
@@ -881,6 +881,26 @@ Total.
 - group header: a raid's header names the first five and +n; its tooltip names all
 - history header: a kept roster is named; an older group with none names nobody
 
+### test_char_filter.lua (17)
+
+- char filter: a recorder key is Name-Realm; a name that carries its realm is kept
+- char filter: the class icon is the classicon atlas as inline markup, nothing with no class
+- char filter: All passes everything; a recorder passes when chosen; none passes only All
+- char filter: Canonical swaps the sentinel for your key once it is known, in a fresh set
+- char filter: the label reads All, Current, the one character, or n selected
+- char filter: the characters are every recorder in the log once, you always, sorted by name
+- char filter: the menu is All, Current, then each character with its class icon and color
+- recorder: you are Name-Realm and your class, read live and kept
+- recorder: unknown while the client has no realm yet, then known
+- recorder: every drop record and its History entry say who saw it
+- recorder: a test placeholder is stamped too, and a stamp already there is kept
+- filter bar: the Character dropdown sits after Content, multi-select, Current by default
+- filter bar: the session tabs list All, Current and you alone; History every recorder
+- filter bar: History shows your drops under Current, every recorder chosen, and unknown only under All
+- filter bar: a drop the Character filter hides is named in the header's reason
+- filter bar: a Character selection is a set of keys; anything else is refused
+- filter bar: Group drops keeps every drop under any Character choice it offers
+
 ### test_trade_timer.lua (16)
 
 - read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
@@ -1312,6 +1332,7 @@ Total.
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
+| test_char_filter.lua | 17 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 23 |
@@ -1334,4 +1355,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1100** |
+| **Total** | **1117** |

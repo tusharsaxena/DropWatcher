@@ -13,7 +13,9 @@ local _, NS = ...
 -- READ-ONLY. No row asks, offers or expands. A right-click on a row opens its menu (core/Compat.lua's
 -- ContextMenu): Mark as declined, or Clear declined; a client without the menu toggles it at once.
 --
--- THE FILTER. The tab honors View, Content, the search box and Sort (modules/WindowFilterBar.lua).
+-- THE FILTER. The tab honors View, Character, Content, the search box and Sort
+-- (modules/WindowFilterBar.lua). History is account-wide, so Character (Current by default, feedback-2
+-- spec §4) filters it by who saw each drop; an entry kept before that was recorded shows only under All.
 -- An entry's `at` is time(), so This instance and This session are the window's GetTime() marks
 -- turned into time() (ctx: instanceSince, sessionSince = NS.History.SessionStart()). The tab opens
 -- on View: All and Content: All the first time it is shown in a session: it is a record of earlier
@@ -96,7 +98,7 @@ end
 function WH.AsDrop(e, id)
     return {
         id = id, link = e.itemLink, at = e.at, isMine = e.isMine == true, outcome = e.outcome, entry = e,
-        looter = { name = e.looter, classFile = e.class },
+        looter = { name = e.looter, classFile = e.class }, seenBy = e.seenBy, seenByClass = e.seenByClass,
         facts = { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = e.quality },
         me = e.me, them = e.them, trade = e.trade,
     }
@@ -212,7 +214,7 @@ end
 function WH.Context(tc, nowEpoch, nowClock, sessionSince)
     local FB = NS.WindowFilterBar
     local since = tc.ctx and tc.ctx.instanceSince
-    local ctx = { sessionSince = sessionSince,
+    local ctx = { sessionSince = sessionSince, current = tc.ctx and tc.ctx.current,
         instanceSince = type(since) == "number" and nowEpoch - (nowClock - since) or nil }
     return {
         filter = tc.filter,

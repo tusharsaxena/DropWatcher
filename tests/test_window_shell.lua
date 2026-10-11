@@ -18,7 +18,7 @@ end
 local function drop(over)
     local d = { id = 1, at = 100, link = "|cffa335ee|Hitem:1::|h[Crown of Roaring Storms]|h|r",
         looter = { name = "Seta-Realm" }, me = { verdict = "upgrade", ilvlDelta = 19 },
-        trade = { state = "likely" }, facts = { ilvl = 311 } }
+        trade = { state = "likely" }, facts = { ilvl = 311 }, seenBy = "Testchar-Testrealm" }
     for k, v in pairs(over or {}) do d[k] = v end
     return d
 end

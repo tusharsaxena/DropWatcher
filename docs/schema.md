@@ -131,7 +131,7 @@ log and sees it.
 ```lua
 history = { maxGroups = 20, v = 1, groups = {
     { key, label, kind, situation, at, roster = { { name, realm, class, me }, ... }, drops = {
-        { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality,
+        { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
           me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
           trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
 ```
@@ -147,6 +147,11 @@ history = { maxGroups = 20, v = 1, groups = {
   `me` on the recorder's own entry, the recorder first. Every recorded drop merges the feed group's
   snapshot in, and a mid-run joiner is added; it only grows. A group kept before DW-A3 has none and
   its header names nobody. No migration step: the field is optional.
+- `seenBy` is the character that saw the drop, its Name-Realm, and `seenByClass` that character's
+  classFile (feedback-2 spec §4, `modules/CharFilter.lua`): the feed stamps every drop record with
+  them and the entry copies them. The History tab's Character dropdown (Current by default) filters
+  by `seenBy`. An entry kept before DW-A4 has neither: it is "unknown", which only `Character: All`
+  shows. No migration step: the fields are optional.
 - `outcome` is `seen`, `asked`, `offered`, `received`, `tradedAway`, `expired` or `declined`;
   `before` is the outcome a hand-set `declined` replaced.
 - The cap: `history.maxGroups` groups (the oldest go first) and 50 drops per group (the oldest go
@@ -155,9 +160,10 @@ history = { maxGroups = 20, v = 1, groups = {
 ## Session-only (never saved)
 
 `NS.State.debug` (the logging flag), `NS.State.testMode`, `NS.State.windowOpen`,
-`NS.State.windowFilters` (the filter bar's state per tab, `{ view = { [value] = true }, content,
-search, sort }`, seeded from the `feed.view.<value>`, `feed.content` and `feed.sort` rows when they
-hold a valid value),
+`NS.State.windowFilters` (the filter bar's state per tab, `{ view = { [value] = true },
+char = { [Name-Realm] = true }, content, search, sort }`, seeded from the `feed.view.<value>`,
+`feed.content` and `feed.sort` rows when they hold a valid value; `char` starts on Current, your
+key, or the `current` sentinel until your key is known),
 `NS.State.windowGroup` (the Group drops table's collapsed groups, dismissed rows and the row whose detail card is open),
 `NS.State.windowMine` (the My drops tab's hidden rows and the upgrades whose candidates you chose to see),
 `NS.State.offerPanel` (the drop the Offer panel shows),

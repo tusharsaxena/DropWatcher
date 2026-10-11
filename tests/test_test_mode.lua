@@ -14,7 +14,8 @@ local function hasAll(seen, want, what)
     for _, k in ipairs(want) do assertTrue(seen[k] == true, what .. ": " .. tostring(k)) end
 end
 
-local YOU = { name = "Tester", guid = "Player-1-00000001", classFile = "MAGE", isSelf = true }
+local YOU = { name = "Tester", guid = "Player-1-00000001", classFile = "MAGE", isSelf = true,
+    seenBy = "Tester-Testrealm" }
 
 local SLOTS = { "INVTYPE_HEAD", "INVTYPE_NECK", "INVTYPE_SHOULDER", "INVTYPE_CLOAK", "INVTYPE_CHEST",
     "INVTYPE_WRIST", "INVTYPE_HAND", "INVTYPE_WAIST", "INVTYPE_LEGS", "INVTYPE_FEET", "INVTYPE_FINGER",
@@ -193,12 +194,21 @@ test("test mode data: an empty pool gives no sample, and a pool short of a slot 
     for _, s in ipairs(specs) do assertTrue(ids[idOf(s.link)] == true) end
 end)
 
-test("test mode data: the History sample has two groups and every outcome, oldest first", function()
+test("test mode data: the History sample has your two groups, every outcome, and an alt's, oldest first", function()
     local NS = T.newAddon()
     local src, ids = source(NS)
-    local log = NS.TestData.History(100000, YOU, src)
-    assertEqual(#log.groups, 2)
-    assertTrue(log.groups[1].at < log.groups[2].at, "oldest first")
+    local log = NS.TestData.History(200000, YOU, src)
+    assertEqual(#log.groups, 3)
+    assertTrue(log.groups[1].at < log.groups[2].at and log.groups[2].at < log.groups[3].at, "oldest first")
+    -- The Character dropdown (feedback-2 spec §4): the oldest group is the alt's, on your realm.
+    local alt = log.groups[1]
+    assertEqual(alt.label, "Placeholder boss (alt)")
+    assertEqual(alt.drops[1].seenBy, "Emberwick-Testrealm"); assertEqual(alt.drops[1].seenByClass, "WARLOCK")
+    assertEqual(alt.roster[1].name, "Emberwick", "the alt's roster names the alt first")
+    assertEqual(alt.drops[2].looter, "Emberwick", "the alt's own drop")
+    for i = 2, 3 do
+        for _, e in ipairs(log.groups[i].drops) do assertEqual(e.seenBy, "Tester-Testrealm") end
+    end
     local outcomes, mine = {}, 0
     for _, g in ipairs(log.groups) do
         for _, e in ipairs(g.drops) do
@@ -354,7 +364,7 @@ test("history: test mode shows its sample groups, every outcome, and never write
     local H = NS.History
     NS.SetTestMode(true)
     local groups, outcomes = H.Groups(), {}
-    assertEqual(#groups, 2)
+    assertEqual(#groups, 3, "yours and the alt's")
     for _, g in ipairs(groups) do
         for _, e in ipairs(g.drops) do outcomes[e.outcome] = true end
     end
@@ -363,8 +373,14 @@ test("history: test mode shows its sample groups, every outcome, and never write
     NS.Window.SelectTab("history")
     NS.Window.Refresh()
     local drawn = NS.WindowHistory.Drawn()
-    assertEqual(#drawn.headers, 2)
+    assertEqual(#drawn.headers, 2, "Character: Current hides the alt's group (feedback-2 spec §4)")
     assertTrue(#drawn.rows >= 1)
+    local dd = NS.WindowFilterBar.Controls().char
+    local listed = {}
+    for _, o in ipairs(dd._options) do listed[#listed + 1] = o.value end
+    assertEqual(table.concat(listed, ","), "all,current,Emberwick-Testrealm,Testchar-Testrealm")
+    dd:ToggleSelected("all"); dd.onMultiSelect(dd._selected)
+    assertEqual(#NS.WindowHistory.Drawn().headers, 3, "All shows it")
     H.Clear()
     assertEqual(#H.Groups(), 0, "Clear history clears the samples")
     assertEqual(#H.Store().groups, 0)
@@ -380,8 +396,8 @@ test("history: the account's kept groups come back when test mode ends", functio
         { itemLink = "|cnIQ4:|Hitem:1::::::::90:::::|h[Old]|h|r", outcome = "seen", at = 1 } } }
     H.Store().groups = { kept }
     NS.SetTestMode(true)
-    assertEqual(#H.Groups(), 2)
-    assertEqual(H.Groups()[1].label, "Placeholder key run")
+    assertEqual(#H.Groups(), 3)
+    assertEqual(H.Groups()[1].label, "Placeholder boss (alt)")
     NS.SetTestMode(false)
     assertEqual(#H.Groups(), 1)
     assertTrue(H.Groups()[1] == kept)

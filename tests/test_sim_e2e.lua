@@ -152,13 +152,16 @@ local function assertSoloWorld(NS)
     assertEqual(NS.Situations.Current(), "solo")
 end
 
--- The window's filters are the defaults: View All, Content This instance, Quality Rare+.
+-- The window's filters are the defaults: View All, Character Current, Content This instance,
+-- Quality Rare+.
 local function assertDefaultFilters(NS)
     local FB = NS.WindowFilterBar
-    for _, tab in ipairs({ "group", "mine" }) do
+    for _, tab in ipairs({ "group", "mine", "history" }) do
         local st = FB.State(tab)
         assertEqual(next(st.view), nil, "View: All"); assertEqual(st.content, "instance")
         assertEqual(st.search, "")
+        assertTrue(st.char["Testchar-Testrealm"] == true and next(st.char, next(st.char)) == nil,
+            "Character: Current (feedback-2 spec §4)")
     end
     local mode, threshold = FB.QualityReadout()
     assertEqual(mode, "fixed"); assertEqual(threshold, 3)
@@ -213,6 +216,22 @@ local function assertRosters(NS, label)
     end
 end
 
+-- Every simulated drop, and its entry in the simulation's history, is seen by you, the real player
+-- (the simulator never answers for "player"), so Character: Current shows the run on every tab
+-- (feedback-2 spec §4).
+local function assertRecorder(NS, label)
+    local me = "Testchar-Testrealm"
+    for _, rec in ipairs(NS.LootFeed.Drops("live")) do
+        assertEqual(rec.seenBy, me, label .. ": drop " .. rec.id .. " says who saw it")
+    end
+    for _, g in ipairs(NS.History.Log().groups) do
+        for _, e in ipairs(g.drops) do assertEqual(e.seenBy, me, label .. ": its history entry too") end
+    end
+    NS.Window.SelectTab("history")
+    NS.Window.Refresh()
+    assertTrue(#NS.WindowHistory.Drawn().headers > 0, label .. ": History shows the run under Current")
+end
+
 local function runScenario(sc, ilvl, seed)
     local label = ("%s at %d, seed %d"):format(sc.name, ilvl, seed)
     local NS, m = addon(ilvl)
@@ -231,6 +250,7 @@ local function runScenario(sc, ilvl, seed)
     assertFooter(NS, sc, label)
     assertWindow(NS, label)
     assertRosters(NS, label)
+    assertRecorder(NS, label)
     NS.Sim.Stop("stop")
     assertEqual(NS.Situations.Current(), "solo", label .. ": the real world again")
 end

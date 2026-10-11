@@ -5,7 +5,7 @@ local _, NS = ...
 --
 --   history = { maxGroups (the schema row's), v = 1, groups = {
 --       { key, label, kind, situation, at, roster = { { name, realm, class, me }, ... }, drops = {
---           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality,
+--           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
 --             me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
 --             trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
 --
@@ -13,6 +13,9 @@ local _, NS = ...
 -- `roster` is who was in the group (feedback-2 spec §3, modules/GroupRoster.lua): copied from the
 -- feed group's snapshot by every recorded drop and grown with it; a group kept before it existed
 -- has none.
+-- `seenBy` is the character that saw the drop (Name-Realm) and `seenByClass` its classFile, for the
+-- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
+-- has neither.
 -- `looter` is the Name-Realm and `class` its classFile. `before` is the outcome a hand-set
 -- `declined` replaced, so clearing it puts that back. The table is the account's: History never
 -- replaces `global.history` whole (the cap row lives in it), only its `groups` list.
@@ -127,6 +130,7 @@ function H.Snapshot(rec, now)
         itemLink = rec.link, itemID = itemIDOf(rec), looter = who.name, class = who.classFile,
         isMine = rec.isMine == true or nil, ilvl = num(facts.ilvl), equipLoc = facts.equipLoc,
         quality = num(facts.quality), outcome = "seen", at = now, sim = rec.sim == true or nil,
+        seenBy = rec.seenBy, seenByClass = rec.seenByClass,
     }
     H.Refresh(e, rec)
     return e

@@ -306,3 +306,12 @@ L["the filters"] = "the filters"
 -- A group header's roster (modules/GroupRoster.lua, feedback-2 spec §3)
 L["+%d"] = "+%d"
 L["In the group (%d):"] = "In the group (%d):"
+
+-- The Character dropdown (modules/CharFilter.lua, feedback-2 spec §4)
+L["Character: All"] = "Character: All"
+L["Character: Current"] = "Character: Current"
+L["Character: %s"] = "Character: %s"
+L["Character: %d selected"] = "Character: %d selected"
+L["Character"] = "Character"
+L["Show only the drops these characters saw. History is kept for every character on the account; Group drops and My drops hold this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] = "Show only the drops these characters saw. History is kept for every character on the account; Group drops and My drops hold this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."
+L["Placeholder boss (alt)"] = "Placeholder boss (alt)"

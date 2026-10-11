@@ -155,6 +155,14 @@ class-colored) and `TipLines`; a feed group taking the party with its first drop
 joiner on the roster event or with the next drop, its History group keeping it; the Group drops
 and History headers, and an older History group naming nobody; test mode's sample rosters are
 `test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
+`test_char_filter` (feedback-2 spec §4: the Character dropdown's pure core, `Key`, `IconMarkup`,
+`Passes` (All passes everything, a drop with no recorder only All, the session sentinel is you),
+`Canonical`, `Label` and `IsCurrent`, `Characters` and `Options`; your recorder read live and
+unknown until the realm is; every drop record, test placeholder and History entry stamped with who
+saw it; the dropdown after Content on every tab, multi-select and Current by default, the session
+tabs listing you alone and History every recorder; History filtered by it, unknown only under All;
+`HiddenBy`'s `char` reason and its label; test mode's alt group is `test_test_mode`'s and a
+simulated run's recorder `test_sim_e2e`'s),
 `test_trade_timer` (your own drops' trade timer: the `TradeTimeRemaining` line read
 by its type and keyed by item GUID, a line of another type ignored, the localized sentence decoded
 from deDE-shaped globals without the line type, no line read as `no expired`; the match by exact

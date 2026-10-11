@@ -450,8 +450,9 @@ function Window.TabContext(tab)
     local FB = NS.WindowFilterBar
     local st, honors = FB.State(tab), FB.HONORS[tab]
     local feed = feedName()
-    -- The placeholders ignore the situation, so This instance does not cut them (spec §11.6).
-    local ctx = { instanceSince = feed ~= "test" and instanceSince or nil }
+    -- The placeholders ignore the situation, so This instance does not cut them (spec §11.6). The
+    -- Character dropdown reads your recorder key (modules/CharFilter.lua).
+    local ctx = { instanceSince = feed ~= "test" and instanceSince or nil, current = NS.CharFilter.CurrentKey() }
     -- Group drops lists your own loot only with `feed.showOwn` on; it goes to My drops.
     local own = tab ~= "group" or showOwn()
     return {
