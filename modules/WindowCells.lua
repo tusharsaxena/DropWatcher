@@ -67,6 +67,7 @@ local EVAL_REASON = {
     vsTwoHand = L["Compared with the two-hander it would replace."],
     scorePending = L["The score is not ready yet; it is retried."],
     scoreDisagrees = L["Item level and score disagree, so it is a sidegrade."],
+    heirloomProtected = L["The slot holds an heirloom you protect, so it is a sidegrade."],
     undesired = L["You marked this item type as not wanted for your spec."],
     badFacts = L["The item's details have not loaded."],
     badCandidate = L["No gear to compare with."],

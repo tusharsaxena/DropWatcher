@@ -77,7 +77,8 @@ local WINDOW_NAME = "DropWatcherWindow"
 -- A frame is decorated when it is the window, or when its parent is decorated (`__dwTree`), so the
 -- whole tree is, and nothing outside it changes.
 
--- Text, color, texture and check state, recorded on any widget or region of the tree.
+-- Text, color, font, texture and check state, recorded on any widget or region of the tree (a font
+-- string never given a font answers the game's default face at 10 points).
 local function decorateText(f)
     f.SetText = function(self, t) self.__text = t; return self end
     f.GetText = function(self) return self.__text end
@@ -89,6 +90,11 @@ local function decorateText(f)
     end
     f.SetTexture = function(self, tex) self.__texture = tex; return self end
     f.GetTexture = function(self) return self.__texture end
+    f.SetFont = function(self, file, size, flags) self.__font = { file, size, flags }; return self end
+    f.GetFont = function(self)
+        local font = self.__font or { "Fonts\\FRIZQT__.TTF", 10, "" }
+        return font[1], font[2], font[3]
+    end
     f.SetChecked = function(self, v) self.__checked = not not v; return self end
     f.GetChecked = function(self) return self.__checked == true end
     return f

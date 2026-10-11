@@ -355,6 +355,26 @@ test("card: Edit message opens the box with the ask filled in; Send asks with th
     assertTrue(#NS.Window.TooltipOf(e.send) >= 2 and #NS.Window.TooltipOf(e.cancel) >= 2)
 end)
 
+test("card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels", function()
+    local NS = shownTable()
+    local pressed = {}
+    NS.Asks.Preview = function() return { text = "Hi Seta, could I have it?", length = 25 } end
+    NS.Asks.Press = function(kind, _, _, opts) pressed[#pressed + 1] = { kind = kind, opts = opts }; return "sent" end
+    assertEqual(NS.PressAsk(1), "sent", "off by default: the press sends")
+    NS.SchemaRuntime.Set("messages.editFirst", true)
+    assertEqual(NS.PressAsk(1), "editing")
+    assertEqual(#pressed, 1, "nothing sent yet")
+    local e = NS.DetailCard.Editor()
+    assertTrue(e:IsShown()); assertEqual(textOf(e.title), "Edit message to Seta")
+    e.send:__fire("OnClick")
+    assertEqual(#pressed, 2); assertEqual(pressed[2].opts.text, "Hi Seta, could I have it?")
+    assertFalse(e:IsShown(), "the box's own send does not open it again")
+    NS.Asks.StateOf = function() return "queued" end
+    NS.PressAsk(1)
+    assertEqual(#pressed, 3, "a queued ask is pressed through, to cancel it")
+    assertTrue(pressed[3].opts == nil)
+end)
+
 test("card: the Edit message box says why when the ask would be refused, and Cancel closes it", function()
     local NS = shownTable()
     NS.Asks.Preview = function() return nil, "offline" end

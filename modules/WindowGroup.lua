@@ -15,7 +15,9 @@ local _, NS = ...
 -- THE ROWS. Pooled through LibKa0s-Pool-1.0 (NS.Pool), one pool for the drop rows and one for the
 -- headers, released and re-acquired in order on every repaint (Pool v3 hands them back in their
 -- order). Each row builds every column's cell once; a repaint shows, places and paints the ones
--- the column set keeps.
+-- the column set keeps. A drop row's height and its cells' text size are the Window page's Layout
+-- rows (`window.rowHeight`, `window.fontSize`), read through the schema seam at each repaint; the
+-- headers, the column labels and the buttons keep their own.
 --
 -- THE ORDER. Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
 -- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
@@ -250,6 +252,29 @@ end
 local function setTone(fs, tone)
     local c = C.TONE[tone] or C.TONE.plain
     fs:SetTextColor(c.r, c.g, c.b)
+end
+
+-- A font string's size, keeping its face and flags (the template's, or the monospace face's).
+local function setFontSize(fs, size)
+    local file, _, flags = fs:GetFont()
+    if type(file) == "string" then fs:SetFont(file, size, flags or "") end
+end
+
+-- The row's text cells at `size` points, once per change.
+local function applyFontSize(row, size)
+    if row.fontSize == size then return end
+    row.fontSize = size
+    for _, f in pairs(row.cells) do
+        if f.text then setFontSize(f.text, size) end
+        if f.glyph then f.glyph:SetFont(C.FONT_MONO, size, "") end
+    end
+end
+
+--- The drop rows' metrics, from the Window page's Layout rows through the schema seam:
+--- { height = `window.rowHeight`, fontSize = `window.fontSize` }.
+--- @return table
+function WG.RowMetrics()
+    return { height = NS.Setting("window.rowHeight"), fontSize = NS.Setting("window.fontSize") }
 end
 
 local function tipOf(frame)
@@ -504,14 +529,14 @@ end
 -- the next column: the item button, the verdict glyph and the worn items take their share.
 local TEXT_INSET = { item = K.ROW_ICON + 5, me = 16, them = 16, theirEq = 2 * (K.EQ_ICON + 2) + 4 }
 
-local function placeCells(row, layout)
+local function placeCells(row, layout, height)
     for key, f in pairs(row.cells) do
         local at = layout[key]
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
             f:SetPoint("LEFT", row, "LEFT", at.x, 0)
-            f:SetSize(at.w, K.ROW_H)
+            f:SetSize(at.w, height)
             if f.text then f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10)) end
         end
     end
@@ -519,12 +544,14 @@ end
 
 local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade }
 
-local function paintRow(row, drop, layout, compact, now)
+local function paintRow(row, drop, layout, compact, now, metrics)
     row.dropId = drop.id
     local open = view().expanded == drop.id
     row.selected:SetShown(open)
     row.expander:SetShown(open)
-    placeCells(row, layout)
+    row:SetHeight(metrics.height)
+    placeCells(row, layout, metrics.height)
+    applyFontSize(row, metrics.fontSize)
     local cells = row.cells
     paintItem(cells.item, drop, compact)
     cells.item.button.dropId = drop.id
@@ -656,7 +683,7 @@ local function drawCard(pane, drop, y, width, now)
 end
 
 local function drawEntries(pane, entries, layout, compact, width)
-    local now, y = GetTime(), 0
+    local now, y, metrics = GetTime(), 0, WG.RowMetrics()
     local Pool = NS.Pool
     local expanded = view().expanded
     pane.card:Hide()
@@ -671,8 +698,8 @@ local function drawEntries(pane, entries, layout, compact, width)
             local r = Pool.Acquire(pane.rowPool, function() return newRow(pane.content) end)
             place(r, pane.content, y, width)
             r.stripe:SetShown(i % 2 == 0)
-            paintRow(r, e.drop, layout, compact, now)
-            y = y + K.ROW_H
+            paintRow(r, e.drop, layout, compact, now, metrics)
+            y = y + metrics.height
             if e.drop.id == expanded then y = y + drawCard(pane, e.drop, y, width, now) end
         end
     end

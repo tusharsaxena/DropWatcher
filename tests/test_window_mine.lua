@@ -493,6 +493,30 @@ test("offer panel: minimizing the window closes the panel and the Edit message b
     assertFalse(NS.OfferPanel.IsShown(), "the expand does not bring it back by itself")
 end)
 
+test("offer panel: with Edit before sending on, Offer and Announce open the box for their kind", function()
+    local NS, p = openPanel()
+    local calls = {}
+    NS.Asks.Preview = function(kind, target) return { text = kind .. " to " .. tostring(target), length = 10 } end
+    NS.Asks.Press = function(kind, target, id, opts)
+        calls[#calls + 1] = { kind, tostring(target), id, opts and opts.text or "-" }
+        return "sent"
+    end
+    NS.SchemaRuntime.Set("messages.editFirst", true)
+    p.rows[1].offer:__fire("OnClick")
+    local e = NS.DetailCard.Editor()
+    assertTrue(e:IsShown()); assertEqual(#calls, 0)
+    assertEqual(textOf(e.title), "Edit offer to Seta")
+    assertEqual(e.box:GetText(), "offer to " .. p.rows[1].offer.target)
+    e.send:__fire("OnClick")
+    assertEqual(table.concat(calls[1], ","), "offer," .. p.rows[1].offer.target .. ",1,offer to " .. p.rows[1].offer.target)
+    p.panel.announce:__fire("OnClick")
+    assertEqual(textOf(e.title), "Edit the announcement")
+    e.box:SetText("Bracers up for grabs")
+    e.box:__fire("OnTextChanged")
+    e.send:__fire("OnClick")
+    assertEqual(table.concat(calls[2], ","), "announce,nil,1,Bracers up for grabs")
+end)
+
 test("offer panel: Announce to group announces the drop", function()
     local NS, p = openPanel()
     local calls = {}

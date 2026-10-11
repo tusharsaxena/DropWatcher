@@ -25,6 +25,9 @@ local _, NS = ...
 -- ask template filled in for this drop, with a byte counter against the chat limit, Send and
 -- Cancel (design spec §9.2's edit-before-sending popup). Send asks through NS.PressAsk with the
 -- edited text; Escape or Cancel closes it. One box, shared by every card, built on its first use.
+-- With `messages.editFirst` on, the host handlers open it for every ask, offer and announce
+-- (OpenEditor's `kind`), and its Send goes back through NS.PressAsk, NS.PressOffer or
+-- NS.PressAnnounce with the edited text.
 
 NS.DetailCard = NS.DetailCard or {}
 local DCard = NS.DetailCard
@@ -46,6 +49,12 @@ local editor   -- the Edit message box, built on its first use
 local EDIT_REFUSAL = {
     notInGroup = L["the looter is not in your group"], offline = L["the looter is offline"],
     self = L["that is your own drop"], noTarget = L["the looter is not known"], disabled = L["the addon is disabled"],
+}
+
+-- An offer's refusals name the member, not the looter.
+local OFFER_REFUSAL = {
+    notInGroup = L["that member is not in your group"], offline = L["that member is offline"],
+    self = L["you cannot offer it to yourself"], noTarget = L["that member is not known"],
 }
 
 -- ── small painting helpers ──────────────────────────────────────────────────────────────────
@@ -338,18 +347,31 @@ local function refreshEditor(e)
     e.send:SetAlpha(ok and 1 or 0.5)
 end
 
+-- Send, by the box's kind: back through the host handler with the edited text.
+local SENDERS = {
+    ask = function(e, opts) NS.PressAsk(e.dropId, opts) end,
+    offer = function(e, opts) NS.PressOffer(e.dropId, e.target, opts) end,
+    announce = function(e, opts) NS.PressAnnounce(e.dropId, opts) end,
+}
+
+local SEND_TIP = {
+    ask = L["Whisper the looter this text. One ask per item per looter."],
+    offer = L["Whisper this member this text. One offer per item per member."],
+    announce = L["Post this text to the group's channel."],
+}
+
 local function sendEditor(e)
     local text = textOf(e)
     if #text == 0 or #text > C.MESSAGE_MAX_LEN then return end
     e:Hide()
-    NS.PressAsk(e.dropId, { text = text })
+    SENDERS[e.kind](e, { text = text })
 end
 
 local function editorButtons(e)
     e.send = NS.Window.TextButton(e, 80, "chat", L["Send"], function() sendEditor(e) end)
     e.send:SetPoint("BOTTOMRIGHT", e, "BOTTOMRIGHT", -10, 10)
     NS.Window.AttachTooltip(e.send, function()
-        return L["Send"], L["Whisper the looter this text. One ask per item per looter."]
+        return L["Send"], SEND_TIP[e.kind]
     end)
     e.cancel = NS.Window.TextButton(e, 80, "cancel", L["Cancel"], function() e:Hide() end)
     e.cancel:SetPoint("RIGHT", e.send, "LEFT", -6, 0)
@@ -392,23 +414,43 @@ local function buildEditor()
     return e
 end
 
---- Open the Edit message box for drop `dropID`: the ask template filled in for its looter, ready
---- to change and send. Says in the box why nothing can be sent when the ask would be refused.
+-- The box's title and its refusal line, by kind.
+local function editorTitle(kind, target)
+    if kind == "announce" then return L["Edit the announcement"] end
+    local who = NS.WindowCells.ShortName(target)
+    if kind == "offer" then return L["Edit offer to %s"]:format(who) end
+    return L["Edit message to %s"]:format(who)
+end
+
+local REFUSAL_LINE = { ask = L["Can't ask: %s."], offer = L["Can't offer: %s."], announce = L["Can't announce: %s."] }
+
+-- What the box opens with: the template filled in for `target`, or nil and why it would be refused.
+local function previewFor(kind, target, dropID)
+    if kind ~= "announce" and not target then return nil, "noTarget" end
+    return NS.Asks.Preview(kind, target, dropID)
+end
+
+--- Open the Edit message box for drop `dropID`: the `kind` template (`ask` by default, to the
+--- drop's looter; `offer` to `target`; `announce` to the group) filled in, ready to change and
+--- send. Says in the box why nothing can be sent when the send would be refused.
 --- @param dropID number
+--- @param kind string|nil "ask" (default), "offer" or "announce"
+--- @param target string|nil the offer's member (an ask's is the drop's looter)
 --- @return table|nil the box, or nil before the window is built
-function DCard.OpenEditor(dropID)
+function DCard.OpenEditor(dropID, kind, target)
     if not NS.Window.Frame() then return nil end
     editor = editor or buildEditor()
-    local rec = NS.LootFeed.Get(dropID)
-    local target = NS.AskTargetOf(rec)
-    local who = NS.WindowCells.ShortName(target)
-    local preview, why = nil, "noTarget"
-    if target then preview, why = NS.Asks.Preview("ask", target, dropID) end
-    editor.dropId = dropID
-    editor.title:SetText(L["Edit message to %s"]:format(who))
+    kind = SENDERS[kind] and kind or "ask"
+    if kind == "ask" then target = NS.AskTargetOf(NS.LootFeed.Get(dropID)) end
+    local preview, why = previewFor(kind, target, dropID)
+    editor.dropId, editor.kind, editor.target = dropID, kind, target
+    editor.title:SetText(editorTitle(kind, target))
     editor.box:SetText(preview and preview.text or "")
     refreshEditor(editor)
-    if not preview then editor.counter:SetText(L["Can't ask: %s."]:format(EDIT_REFUSAL[why] or tostring(why))) end
+    if not preview then
+        local words = (kind == "offer" and OFFER_REFUSAL[why]) or EDIT_REFUSAL[why] or tostring(why)
+        editor.counter:SetText(REFUSAL_LINE[kind]:format(words))
+    end
     editor:Show()
     return editor
 end

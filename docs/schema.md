@@ -47,7 +47,7 @@ dungeons and raids, `track` alone for Raid Finder, and off elsewhere.
 | `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Filters | armor, weapons, jewelry and trinkets only; tier tokens too |
 | `feed.minIlvlMode` | `"off"` | Filters | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.showOwn` | `false` | Filters | your own loot in Group drops too (then it auto-opens and counts toward `n new`) |
-| `feed.clearOnBossKill` | `false` | Filters | clear the session's drops at each boss kill (no reader yet) |
+| `feed.clearOnBossKill` | `false` | Filters | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 
 ### Comparison
 
@@ -56,7 +56,7 @@ dungeons and raids, `track` alone for Raid Finder, and off elsewhere.
 | `comparison.scorer` | `"auto"` | Scoring | `auto`, `pawn`, `weights` or `none` (read from DW-50) |
 | `comparison.sidegradeBand` | `0` | Scoring | item levels either side of equal that read as a sidegrade, 0 to 20 |
 | `comparison.compareOwned` | `false` | Scoring | judge against the best of worn and carried |
-| `comparison.heirloomProtect` | `true` | Scoring | a slot holding an heirloom is not called an upgrade (no reader yet) |
+| `comparison.heirloomProtect` | `true` | Scoring | a slot holding an heirloom is not called an upgrade for you (LootFeed → Evaluate's `heirloomProtect`) |
 | `comparison.weights` | `{}` | Weights (`map`) | `{ [specID] = { STAT_KEY = weight } }` (read from DW-50) |
 | `comparison.undesired` | `{}` | Preferences (`map`) | `{ [specID] = { ["<classID>:<subClassID>"] = true } }`, the item types a spec never wants |
 
@@ -77,7 +77,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | Key | Default | Tab | What it is |
 |---|---|---|---|
 | `messages.templates.<kind>` | design spec §9.1's text | Templates | the `ask`, `offer` and `announce` templates; an empty one is refused |
-| `messages.editFirst` | `false` | Sending | open the edit box before a send (no reader yet) |
+| `messages.editFirst` | `false` | Sending | open the Edit message box before an ask, offer or announce (the host handlers) |
 | `messages.oneAsk` | `true` | Sending | each (drop, target, kind) is sent once |
 | `messages.announceChannel` | `"auto"` | Sending | `auto`, `INSTANCE_CHAT`, `RAID` or `PARTY`; never say or yell |
 | `messages.autoAsk.enabled` | `false` | Auto-ask | ask on your behalf (read from DW-54) |
@@ -90,7 +90,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 |---|---|---|---|
 | `window.columns.<col>` | `true` | Columns | `false` hides that Group drops column (`ilvl`, `slot`, `looter`, `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
 | `window.compact` | `false` | Layout; `NS.SetCompact`, `/dw compact` (DW-42) | the compact preset: Item and looter, Ilvl, Their eq, Me, Ask |
-| `window.rowHeight`, `window.fontSize` | `24`, `12` | Layout | the table's row height and text size (no reader yet) |
+| `window.rowHeight`, `window.fontSize` | `24`, `12` | Layout | the Group drops table's row height and text size (WindowGroup, at each repaint) |
 | `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (read from DW-52) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
 

@@ -220,12 +220,25 @@ function NS.AskTargetOf(drop)
     return who.name or who.guid
 end
 
+-- Edit before sending (`messages.editFirst`, design spec §9.2): a fresh press opens the detail
+-- card's Edit message box (modules/DetailCard.lua, read at call time) prefilled for this send, in
+-- place of sending; the box's Send comes back here with `opts.text`, so it is not opened twice. A
+-- press on a queued send still cancels it, and with the window closed (the box lives in it) the send
+-- goes as it stands. True when the box opened.
+local function editFirst(kind, target, dropID, opts)
+    if opts ~= nil or NS.Setting("messages.editFirst") ~= true or not NS.IsWindowShown() then return false end
+    if NS.Asks.StateOf(kind, target, dropID) == "queued" then return false end
+    return NS.DetailCard.OpenEditor(dropID, kind, target) ~= nil
+end
+
 --- Ask a drop's looter for it (design spec §9.2): the Group drops row's Ask button and the detail
 --- card's, through the messaging edge's Press, so a queued ask is canceled by a second click. A
 --- refusal is said in chat; a send confirms itself (modules/Asks.lua). Refused while stood down.
+--- With `messages.editFirst` on, a press without `opts` opens the Edit message box instead
+--- (state `editing`).
 --- @param dropID number
 --- @param opts table|nil { text = the edited message } (the detail card's Edit message box)
---- @return string state, string|nil reason (as NS.Asks.Press)
+--- @return string state, string|nil reason (as NS.Asks.Press, or `editing`)
 function NS.PressAsk(dropID, opts)
     local L = NS.L
     local rec = NS.LootFeed.Get(dropID)
@@ -235,6 +248,8 @@ function NS.PressAsk(dropID, opts)
         state, reason = "refused", "disabled"
     elseif not target then
         state, reason = "refused", rec and "self" or "noDrop"
+    elseif editFirst("ask", target, dropID, opts) then
+        state = "editing"
     else
         state, reason = NS.Asks.Press("ask", target, dropID, opts)
     end
@@ -314,18 +329,22 @@ end
 
 --- Offer one of your drops to a member (design spec §9.2, §11.4): the Offer panel's Offer button,
 --- through the messaging edge's Press, so a queued offer is canceled by a second click. A refusal is
---- said in chat. Refused while stood down.
+--- said in chat. Refused while stood down. With `messages.editFirst` on, a press without `opts`
+--- opens the Edit message box instead (state `editing`).
 --- @param dropID number
 --- @param target string the member's "Name-Realm", name or GUID
---- @return string state, string|nil reason (as NS.Asks.Press)
-function NS.PressOffer(dropID, target)
+--- @param opts table|nil { text = the edited message } (the Edit message box's Send)
+--- @return string state, string|nil reason (as NS.Asks.Press, or `editing`)
+function NS.PressOffer(dropID, target, opts)
     local state, reason
     if NS.IsStoodDown() then
         state, reason = "refused", "disabled"
     elseif not mineOf(dropID) then
         state, reason = "refused", "noDrop"
+    elseif editFirst("offer", target, dropID, opts) then
+        state = "editing"
     else
-        state, reason = NS.Asks.Press("offer", target, dropID)
+        state, reason = NS.Asks.Press("offer", target, dropID, opts)
     end
     if state == "refused" then
         NS.Print(NS.L["Not offered: %s"]:format(sendRefusal("offer", reason, target)))
@@ -335,17 +354,22 @@ end
 
 --- Announce one of your drops to the group (design spec §9.2, §11.4): a My drops row's Announce and
 --- the Offer panel's Announce to group, through the messaging edge's Press. A refusal is said in
---- chat. Refused while stood down.
+--- chat. Refused while stood down. With `messages.editFirst` on, a press without `opts` opens the
+--- Edit message box instead (state `editing`). Post my tradeables never does: its lines are cut to
+--- fit the chat limit, so they are sent as they stand.
 --- @param dropID number
---- @return string state, string|nil reason (as NS.Asks.Press)
-function NS.PressAnnounce(dropID)
+--- @param opts table|nil { text = the edited message } (the Edit message box's Send)
+--- @return string state, string|nil reason (as NS.Asks.Press, or `editing`)
+function NS.PressAnnounce(dropID, opts)
     local state, reason
     if NS.IsStoodDown() then
         state, reason = "refused", "disabled"
     elseif not mineOf(dropID) then
         state, reason = "refused", "noDrop"
+    elseif editFirst("announce", nil, dropID, opts) then
+        state = "editing"
     else
-        state, reason = NS.Asks.Press("announce", nil, dropID)
+        state, reason = NS.Asks.Press("announce", nil, dropID, opts)
     end
     if state == "refused" then
         NS.Print(NS.L["Not announced: %s"]:format(sendRefusal("announce", reason)))

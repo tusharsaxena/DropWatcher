@@ -792,3 +792,23 @@ test("evaluate: an internal failure is caught and reported as unknown", function
     assertEqual(res.verdict, "unknown")
     assertTrue(hasReason(res, "error"))
 end)
+
+test("evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade", function()
+    local E, C = load()
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(580, "INVTYPE_HEAD", A.PLATE, { quality = C.QUALITY.HEIRLOOM })
+    local helm = armor(650, "INVTYPE_HEAD", A.PLATE)
+    -- Off (the kernel's default): a plain upgrade.
+    assertEqual(E.Evaluate(helm, c).verdict, "upgrade")
+    -- On: a sidegrade, with the reason.
+    local res = E.Evaluate(helm, c, { heirloomProtect = true })
+    assertEqual(res.verdict, "sidegrade")
+    assertTrue(hasReason(res, "heirloomProtected"))
+    assertEqual(res.ilvlDelta, 70)
+    -- A downgrade stays one; a slot without an heirloom is not protected; an empty slot neither.
+    assertEqual(E.Evaluate(armor(500, "INVTYPE_HEAD", A.PLATE), c, { heirloomProtect = true }).verdict, "downgrade")
+    c.gear[S.HEAD].quality = C.QUALITY.EPIC
+    assertEqual(E.Evaluate(helm, c, { heirloomProtect = true }).verdict, "upgrade")
+    c.gear[S.HEAD] = false
+    assertEqual(E.Evaluate(helm, c, { heirloomProtect = true }).verdict, "upgrade")
+end)

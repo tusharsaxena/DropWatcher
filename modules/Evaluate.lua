@@ -11,7 +11,11 @@ local _, NS = ...
 --                 unique = { cat, max }, isTierToken, classes = { [classFile] = true } }
 --   candidate = { classFile, specID, dualWield, titanGrip, gear = { [slot] = facts | false },
 --                 owned = { [slot] = facts }, prefs = { undesired = { [SubClassKey] = true } } }
---   opts      = { sidegradeBand = 0, compareOwned = false, scorer = function(facts, candidate) }
+--   opts      = { sidegradeBand = 0, compareOwned = false, heirloomProtect = false,
+--                 scorer = function(facts, candidate) }
+--
+-- With `heirloomProtect`, a drop whose baseline is an heirloom is never called an upgrade: what
+-- would be one reads as a sidegrade, with the reason `heirloomProtected`.
 --
 -- In `gear`, false is an empty slot and nil a slot nobody has read yet. A tier token's equipLoc is
 -- the slot the token makes. A scorer answers a number, "pending" (Pawn not ready), or nil.
@@ -425,6 +429,21 @@ local function compare(out, facts, candidate, opts)
     return base
 end
 
+-- Heirloom protection (opts.heirloomProtect): a slot that holds an heirloom is kept, so a drop
+-- that would be an upgrade over it reads as a sidegrade. An empty slot holds no heirloom.
+local function heirloomHeld(base)
+    for _, f in ipairs(base and base.items or {}) do
+        if isTable(f) and f.quality == C.QUALITY.HEIRLOOM then return true end
+    end
+    return false
+end
+
+local function protect(out, base, opts)
+    if out.verdict ~= "upgrade" or opts.heirloomProtect ~= true or not heirloomHeld(base) then return end
+    addReason(out.reasons, "heirloomProtected")
+    out.verdict = "sidegrade"
+end
+
 local function run(facts, candidate, opts)
     local out = { verdict = "unknown", equip = "unknown", reasons = {} }
     if not isTable(facts) then
@@ -441,6 +460,7 @@ local function run(facts, candidate, opts)
     if why then addReason(out.reasons, why) end
     local base = compare(out, facts, candidate, opts)
     out.verdict = verdictOf(out, base, math.abs(num(opts.sidegradeBand) or 0))
+    protect(out, base, opts)
     return out
 end
 

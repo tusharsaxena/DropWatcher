@@ -15,7 +15,7 @@ passed.
 |---|---|---|
 | INSTALL-1..3 | Install | Load, reload, first run, the logo |
 | SLASH-1..6 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42) |
-| PANEL-1..6 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41 |
+| PANEL-1..7 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..3 | State | Enable/disable, lock, test mode |
 | COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (lands with DW-20) |
@@ -122,6 +122,16 @@ back. Click into Offer, then click `{item}` → it lands at the cursor and is st
 all three back to the shipped wording. With test mode on, Ask in the window sends the text you
 stored (printed). Sending and Auto-ask: Auto-ask's delay and least gain are dimmed until Ask
 automatically is ticked. Window › Toast: its rows dim until Show a toast is ticked. Result:
+
+**PANEL-7. Rows that act.** Feed › Filters: tick Clear on boss kill, loot some trash in a dungeon,
+then kill a boss → the trash drops leave the table at the kill and the boss's loot fills its own
+group; a wipe clears nothing. Comparison › Scoring: wearing an heirloom in a slot, a higher drop for
+that slot reads `≈` for you, its reason "The slot holds an heirloom you protect, so it is a
+sidegrade."; untick Protect heirlooms → it reads `▲`. Messages › Sending: tick Edit before sending,
+press a row's Ask → the Edit message box opens with the ask filled in and nothing is sent until you
+press Send; an Offer panel's Offer and Announce to group open the box with the offer's and the
+announcement's text; Post my tradeables still posts at once. Window › Layout: drag Row height to 32
+and Font size to 15 → the Group drops rows grow and their text with them, at once. Result:
 
 ## Profiles
 
@@ -742,3 +752,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
 | PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |
 | PANEL-4..6 | DW-41, the settings pages | No client pass recorded yet |
+| PANEL-7 | DW-40 / DW-41 review, the rows that act | No client pass recorded yet |

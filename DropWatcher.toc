@@ -140,8 +140,8 @@ modules\Inspect.lua
 # appends its rows to NS.FEATURE_EVENTS (CHALLENGE_MODE_START and CHALLENGE_MODE_COMPLETED after
 # modules\Situations.lua's, so the situation is fresh) and NS.STAND_DOWN / NS.STAND_UP at load, and
 # registers its InspectDone, GearChanged and TradeTimerTick receivers on a NS.Bus target at load;
-# takes NS.Perf as a load-time upvalue. Every module above, and NS.TradeTimer (below), is read at
-# call time.
+# takes NS.Perf as a load-time upvalue. Every module above, and NS.TradeTimer and NS.Window (below),
+# are read at call time.
 modules\LootFeed.lua
 # Conventional: publishes NS.TradeTimer, the own-item trade countdown; appends its rows to
 # NS.FEATURE_EVENTS (BAG_UPDATE_DELAYED after modules\Gear.lua's) and NS.STAND_DOWN / NS.STAND_UP

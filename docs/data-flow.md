@@ -112,6 +112,7 @@ the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, w
                                   NS.TradeHelper.CanTradeWith(looter) })                  (pure)
 
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press ─> AskStateChanged ─> repaint
+                 (messages.editFirst on, window shown, not queued: ─> DetailCard.OpenEditor(id, "ask"))
 Edit message ──> DetailCard.OpenEditor(id) ─> NS.Asks.Preview("ask", looter, id) (nothing sent)
                    Send ─> NS.PressAsk(id, { text = edited }) ─> NS.Asks.Press
 Link in chat ──> Compat.InsertChatLink(link)
@@ -148,6 +149,10 @@ panel Offer ───────> NS.PressOffer(id, member) ─> NS.Asks.Press(
 panel Trade ───────> NS.GiveDrop(id, member) ─> NS.TradeHelper.Give (its guards; a refusal printed)
 Announce to group ─> NS.PressAnnounce(id)
 close mark ────────> OfferPanel.Close() ─> State.offerPanel = nil
+
+messages.editFirst on: panel Offer ─> DetailCard.OpenEditor(id, "offer", member), Announce and
+Announce to group ─> DetailCard.OpenEditor(id, "announce"); the box's Send ─> NS.PressOffer(id,
+member, { text }) / NS.PressAnnounce(id, { text }) ─> NS.Asks.Press(…, { text })
 ```
 
 ## Today: enable and disable

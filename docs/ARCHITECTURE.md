@@ -276,10 +276,21 @@ and nobody took over, so another addon's or the player's inspect is never cleare
 - Every setting of design spec §12.1 has its row and default (DW-40), and some rows are ahead of
   their reader: `comparison.scorer` and `comparison.weights` wait for the scoring adapters (DW-50),
   `global.history.maxGroups` for History (DW-51), `toast.*` for the toast (DW-52) and
-  `messages.autoAsk.*` for auto-ask (DW-54); `messages.editFirst`, `feed.clearOnBossKill`,
-  `comparison.heirloomProtect`, `window.rowHeight` and `window.fontSize` are stored and settable
-  but read by no module yet. The Comparison page's Weights tab edits `comparison.weights`, which no
-  scorer reads until DW-50 adds the weights adapter and its import string.
+  `messages.autoAsk.*` for auto-ask (DW-54). The Comparison page's Weights tab edits
+  `comparison.weights`, which no scorer reads until DW-50 adds the weights adapter and its import
+  string.
+- Five rows settle how they act. **`feed.clearOnBossKill`** empties the live feed at a kill's
+  `ENCOUNTER_END` (never a wipe), before the boss's loot arrives, and repaints the window; queued
+  asks keep their text and still flush. **`comparison.heirloomProtect`** (on by default) is yours
+  alone: a drop whose baseline is an heirloom reads as a sidegrade for you (reason
+  `heirloomProtected`), while the looter's verdict stays plain, so a real upgrade for them is never
+  read as one they would give away. **`messages.editFirst`** routes every ask, offer and announce
+  press through the Edit message box (the detail card's, now one box for all three kinds); the box's
+  Send goes back through the same handler with the edited text, a press on a queued send still
+  cancels it, a press with the window closed sends as it stands, and Post my tradeables never opens
+  it (its lines are already cut to the chat limit). **`window.rowHeight`** and **`window.fontSize`**
+  size the Group drops table's rows and their cells' text; the headers, the column labels, the
+  buttons and the My drops tab keep their own.
 - The General page's `When to show` tab draws one block per situation (`Track`, `Auto-open`, then
   `Quality`, under the situation's name) rather than the design's grid of situations by setting:
   LibKa0s-Options has no composer for a grid of mixed controls (`ChoiceGrid` is one choice per row
@@ -307,8 +318,7 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   messaging edge files it. **Post my tradeables** lists the tradeable drops of yours in the feed on
   show, whatever the tab's filter, prefixed `Up for trade, whisper me:`, cut at 255 bytes without
   splitting a link; each line is its own announce, filed under `post:<n>:<i>`, so every press posts
-  again. **Not yet:** `messages.editFirst` (a row since DW-40) does not route Offer through an edit
-  box, and `Traded ✓` waits for a trade the engine records (History, DW-51).
+  again. **Not yet:** `Traded ✓` waits for a trade the engine records (History, DW-51).
 - The Group drops table (DW-31) settles five cases the design leaves open. **Group order** is
   newest first (oldest first under Sort: Oldest), and a group the player never toggled is open
   when it is the first one shown and collapsed otherwise (board 01); the Sort orders the drops
@@ -320,9 +330,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   rather than clip them: while the fixed columns and the Item column's 150px do not fit the row,
   Slot goes first, then Looter, Their eq, Ilvl, Them, Trade and Me (My drops: Best candidates, Ilvl,
   For me, Trade window); Item and Actions never go, and the detail card (or the Offer panel) still
-  says what a shed column would. The **Ask button** asks at once:
-  the edit-first box is the detail card's Edit message (DW-32), and `messages.editFirst` routing the
-  row's Ask button through it is not wired (the row exists since DW-40; nothing reads it); the `Traded ✓` state waits for a
+  says what a shed column would. The **Ask button** asks at once, or, with `messages.editFirst`
+  on, opens the detail card's Edit message box first; the `Traded ✓` state waits for a
   trade the engine can see (none records one yet), so a received drop stays `Asked`.
 - The detail card (DW-32) settles five cases the design leaves open. **Expansion** is session-only
   and follows the row: a row filtered out or folded under its header hides the card, and it comes
@@ -406,8 +415,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   The stand-down drops the queued asks, because no trigger reaches them while down; the sent
   registry is kept for the session. The `asked` history outcome is written by History (DW-51) from
   `AskStateChanged`. The edit-first box is the detail card's Edit message (DW-32): it reads
-  `Preview` (the template filled in, nothing sent or filed) and passes the edited text in; the Offer
-  panel (DW-33) sends the template as it stands; `messages.editFirst` has a row but no reader yet. Whether a whisper really is blocked during an encounter is ASK-4.
+  `Preview` (the template filled in, nothing sent or filed) and passes the edited text in; with
+  `messages.editFirst` on, the Offer panel's Offer and Announce open it too. Whether a whisper really is blocked during an encounter is ASK-4.
 - The restriction tracker (`modules/Restrictions.lua`) reads four cases the design leaves open.
   Chat is stopped by the Encounter, ChallengeMode, PvPMatch and Chat restriction types and by the
   chat lockdown; combat alone stops inspects and trades, not chat; the Map type, active for the

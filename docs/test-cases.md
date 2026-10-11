@@ -218,7 +218,7 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (32)
+### test_window_group.lua (33)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -236,6 +236,7 @@ Total.
 - table: a row too narrow for every column sheds Slot, Looter, Their eq and Ilvl, in that order
 - table: groups newest first, the first open and older ones collapsed, empty ones left out
 - table: built at the minimum width, the shed columns hide and Ask stays inside the row
+- table: the Window page's row height and font size lay out and size the drop rows
 - table: built headless, one header and one row per drop, each column painted
 - table: the verdicts wear their tones, the looter their class color, the item its quality
 - table: every shown cell has a reason tooltip; nothing is blank
@@ -253,7 +254,7 @@ Total.
 - table: the empty state's buttons turn test mode on and scan the group
 - table: PressAsk says why it asked nobody: your own drop, a gone drop, the addon disabled
 
-### test_detail_card.lua (19)
+### test_detail_card.lua (20)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
@@ -272,10 +273,11 @@ Total.
 - card: Hide this item dismisses the row and takes the card with it
 - card: a filtered-out or collapsed row hides its card; it comes back with the row
 - card: Edit message opens the box with the ask filled in; Send asks with the edited text
+- card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_window_mine.lua (31)
+### test_window_mine.lua (32)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -305,6 +307,7 @@ Total.
 - offer panel: opening an upgrade for you reveals its Best candidates
 - offer panel: the close mark closes it, and it closes itself when its drop is gone
 - offer panel: minimizing the window closes the panel and the Edit message box
+- offer panel: with Edit before sending on, Offer and Announce open the box for their kind
 - offer panel: Announce to group announces the drop
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
@@ -427,7 +430,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (33)
+### test_evaluate.lua (34)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -462,6 +465,7 @@ Total.
 - evaluate: nil and garbage inputs never throw and answer unknown with a reason
 - evaluate: garbage inside the tables never throws
 - evaluate: an internal failure is caught and reported as unknown
+- evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
 
 ### test_quality_gate.lua (24)
 
@@ -704,7 +708,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (40)
+### test_feed.lua (43)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -720,6 +724,7 @@ Total.
 - history: your own won drop is yours
 - groups: trash, a boss kill's loot window, then trash again
 - groups: a wipe opens no loot window
+- groups: clear on boss kill empties the live feed at a kill, not at a wipe
 - groups: loot naming an earlier encounter joins that encounter's group
 - groups: a keystone run gathers every drop, the chest after completion included
 - groups: outside an instance the area is the open world
@@ -727,6 +732,8 @@ Total.
 - gates: below the quality threshold a downgrade for you is hidden, and costs no inspect
 - gates: the upgrade override shows an upgrade for you below the threshold
 - gates: the stored quality settings and the situation's override are read
+- comparison: heirloom protection (on by default) calls your upgrade over an heirloom a sidegrade
+- comparison: heirloom protection is yours alone; the looter's verdict is plain
 - gates: the filters run after the situation and before the verdict
 - filter: every rule of spec §6.3 (pure)
 - gates: the relative minimum item level reads your average equipped level
@@ -922,14 +929,14 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 37 |
-| test_window_group.lua | 32 |
-| test_detail_card.lua | 19 |
-| test_window_mine.lua | 31 |
+| test_window_group.lua | 33 |
+| test_detail_card.lua | 20 |
+| test_window_mine.lua | 32 |
 | test_test_mode.lua | 18 |
 | test_compat.lua | 64 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
-| test_evaluate.lua | 33 |
+| test_evaluate.lua | 34 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
@@ -940,7 +947,7 @@ Total.
 | test_gear.lua | 20 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 32 |
-| test_feed.lua | 40 |
+| test_feed.lua | 43 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
 | test_asks.lua | 22 |
@@ -953,4 +960,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **779** |
+| **Total** | **786** |

@@ -302,8 +302,8 @@ local function window()
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }
     bool("window.compact", W.compact, L["Compact"],
         L["Show Item and looter, Ilvl, Their eq, Me and Ask only."], layout)
-    slider("window.rowHeight", W.rowHeight, 18, 40, 1, L["Row height"], L["The height of one drop row."], layout)
-    slider("window.fontSize", W.fontSize, 8, 20, 1, L["Font size"], L["The size of the table's text."], layout)
+    slider("window.rowHeight", W.rowHeight, 18, 40, 1, L["Row height"], L["The height of one row in the Group drops table."], layout)
+    slider("window.fontSize", W.fontSize, 8, 20, 1, L["Font size"], L["The size of the Group drops table's text."], layout)
 
     local T = P.toast
     local toast = { page = "window", group = L["Toast"] }

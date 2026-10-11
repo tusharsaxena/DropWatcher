@@ -295,6 +295,24 @@ test("groups: a wipe opens no loot window", function()
     assertEqual(labels(LF), "area:The Rookery=1")
 end)
 
+test("groups: clear on boss kill empties the live feed at a kill, not at a wipe", function()
+    local NS, m, LF = party()
+    for id = 300, 303 do m.addItem(link(id), ring(620)) end
+    brakkLoots(m, 300)
+    m.__fire("ENCOUNTER_START", 2900, "Speaker Brokk", 2, 5)
+    m.__fire("ENCOUNTER_END", 2900, "Speaker Brokk", 2, 5, 1)
+    assertEqual(#LF.Drops(), 1, "off by default: the kill keeps the drops")
+    NS.addon.db.profile.feed = { clearOnBossKill = true }
+    m.__fire("ENCOUNTER_START", 2901, "Ikyra", 2, 5)
+    m.__fire("ENCOUNTER_END", 2901, "Ikyra", 2, 5, 0)
+    assertEqual(#LF.Drops(), 1, "a wipe clears nothing")
+    m.__fire("ENCOUNTER_START", 2901, "Ikyra", 2, 5)
+    m.__fire("ENCOUNTER_END", 2901, "Ikyra", 2, 5, 1)
+    assertEqual(#LF.Drops(), 0, "the kill cleared the session's drops")
+    brakkLoots(m, 301)
+    assertEqual(labels(LF), "encounter:Ikyra=1", "the boss's own loot lands in its group after the clear")
+end)
+
 test("groups: loot naming an earlier encounter joins that encounter's group", function()
     local _, m, LF = party()
     m.addItem(link(300), ring(620)); m.addItem(link(301), ring(620))
@@ -383,6 +401,33 @@ test("gates: the stored quality settings and the situation's override are read",
     brakkLoots(m, 301)
     assertEqual(#LF.Drops(), 1, "your gear is Epic: a Rare downgrade is hidden")
     assertEqual(LF.Stats().hidden.quality, 2)
+end)
+
+test("comparison: heirloom protection (on by default) calls your upgrade over an heirloom a sidegrade", function()
+    local NS, m, LF = party()
+    m.addItem(link(100), ring(600, { quality = 7 }))
+    NS.addon.db.profile.feed = { quality = { mode = "fixed", fixed = 2 } }
+    m.addItem(link(300), ring(620))
+    brakkLoots(m, 300)
+    local rec = only(LF)
+    assertEqual(rec.me.verdict, "sidegrade", "your ring slot holds an heirloom")
+    NS.addon.db.profile.comparison = { heirloomProtect = false }
+    LF.OnGearChanged()
+    assertEqual(rec.me.verdict, "upgrade", "protection off")
+end)
+
+test("comparison: heirloom protection is yours alone; the looter's verdict is plain", function()
+    local NS, m, LF = party()
+    NS.addon.db.profile.feed = { quality = { mode = "fixed", fixed = 2 } }
+    m.addItem(link(300), ring(620))
+    brakkLoots(m, 300)
+    brakkWears(m, 600)
+    m.addItem(link(200), ring(600, { quality = 7 }))
+    m.addItem(link(201), ring(600, { quality = 7 }))
+    m.advance(0)    -- the fast path: every link readable without an inspect
+    local rec = only(LF)
+    assertEqual(rec.them.verdict, "upgrade", "Brakk's heirloom rings are not protected")
+    assertFalse(rec.them.reasons[1] ~= nil and rec.them.reasons[1].key == "heirloomProtected")
 end)
 
 test("gates: the filters run after the situation and before the verdict", function()

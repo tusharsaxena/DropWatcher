@@ -129,7 +129,7 @@ local function tradeRules()
 end
 
 --- The settings the feed reads: `feed.*`, `comparison.*` and `trade.rules.*`, each through the
---- schema seam.
+--- schema seam (`feed.clearOnBossKill` is read at each kill instead).
 --- @return table cfg
 function LF.Config()
     return {
@@ -139,7 +139,8 @@ function LF.Config()
         qualityMode = get("feed.quality.mode"), fixed = get("feed.quality.fixed"),
         floor = get("feed.quality.floor"), upgradeOverride = get("feed.quality.upgradeOverride"),
         sidegradeBand = get("comparison.sidegradeBand"), compareOwned = get("comparison.compareOwned"),
-        undesired = get("comparison.undesired"), rules = tradeRules(),
+        undesired = get("comparison.undesired"), heirloomProtect = get("comparison.heirloomProtect"),
+        rules = tradeRules(),
     }
 end
 
@@ -311,8 +312,12 @@ local function myCandidate(cfg)
     return cand
 end
 
+-- Heirloom protection (`comparison.heirloomProtect`) is yours alone: a looter's heirloom slot is
+-- judged plainly, so a real upgrade for them never reads as one they would give away.
 local function judgeMe(rec, cfg)
-    rec.me = evaluate(rec.facts, myCandidate(cfg), evalOpts(cfg))
+    local opts = evalOpts(cfg)
+    opts.heirloomProtect = cfg.heirloomProtect == true
+    rec.me = evaluate(rec.facts, myCandidate(cfg), opts)
 end
 
 -- Your average equipped item level (shirt and tabard aside), or nil.
@@ -868,12 +873,27 @@ function LF.OnEncounterStart(encounterID, encounterName)
         startedAt = t }
 end
 
---- ENCOUNTER_END: a kill opens the loot window for LOOT_GRACE seconds; a wipe closes it.
+local function isKill(success)
+    return not NS.Compat.IsSecret(success) and (success == 1 or success == true)
+end
+
+-- Clear on boss kill (`feed.clearOnBossKill`): a kill empties the live feed before its loot
+-- arrives, so the table starts over with that boss's drops. The window repaints at once.
+local function clearOnKill()
+    if get("feed.clearOnBossKill") ~= true or #store().live.drops == 0 then return end
+    LF.Clear("live")
+    if NS.Window then NS.Window.Refresh() end
+end
+
+--- ENCOUNTER_END: a kill opens the loot window for LOOT_GRACE seconds (and, with
+--- `feed.clearOnBossKill` on, first empties the live feed); a wipe closes it.
 function LF.OnEncounterEnd(encounterID, _, _, _, success)
+    local kill = isKill(success)
+    if kill then clearOnKill() end
     local enc, id = store().ctx.encounter, plainNumber(encounterID)
     if not enc or (id and enc.id and id ~= enc.id) then return end
     enc.endedAt = now()
-    enc.success = not NS.Compat.IsSecret(success) and (success == 1 or success == true)
+    enc.success = kill
 end
 
 --- CHALLENGE_MODE_START: a keystone run, named for its group.
