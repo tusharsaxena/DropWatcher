@@ -1,0 +1,23 @@
+M10b independent review (DW-A7, DW-A8, DW-A9), range 8866d68..5ca2d0c on feat/2026-10-11-drop-watcher-feedback-2
+
+Three independent reviewers. All ran the gate: lua tests/run.lua 1150 passed / 0 failed / 1 skipped; luacheck 0 warnings / 0 errors (142 files); largest authored file core/Compat.lua 995 lines.
+
+Reviewer 1: every FB2-8/9/10 point implemented (2 s step delay with sim.stepDelay slider; Default font size and 18 px rows via modules/WindowRows.lua; My drops group headers, stale History-cap wording, prune on late enable, tooltip beside docked Offer panel, stale retention popup guarded). No critical/high/medium; 3 low.
+Reviewer 2: layout/TOC, events, popup, secrets/combat/taint, saved variables and docs all sound. 1 medium (row-height default 18 written twice), 2 low (L["Default"] missing from enUS; stale SIM-1..10 smoke summary row).
+Reviewer 3: no critical/high. Found My drops rows cramped (28 px, ignores Font size), ~3x repaint work per tick in My drops, fixed History/Group text inset and stripe parity counting header rows.
+
+Findings: 0 critical, 0 high, 2 fixed (DW-A8), 7 low recorded, 0 rejected.
+
+Fixed in 43735ca (DW-A8: fix review):
+1. Row height default only in defaults/Profile.lua; C.WINDOW.ROW_H removed, WR.ROW_H read from NS.C.PROFILE at load; tests assert K.ROW_H is nil.
+2. My drops rows fit their text: WR.MineRowHeight = max(height + 14, 2 x fontSize + 12) -> 32 px at Default, 40 px at 14, 52 px at 20; new tests; FEED-24 smoke updated (still owed).
+Gate after fix: 1150 / 0 / 1; luacheck 0 / 0. Nothing pushed.
+
+Low, not fixed (recorded):
+- SimScenario: a step already scheduled keeps the old delay when the delay is changed mid-run.
+- Font size slider 1..7 clamps to FONT_MIN 8, so the shown value differs from the rendered size.
+- WindowHistory/WindowGroup text inset fixed at K.ROW_ICON + 5 while icon is 16 px at 18 px rows.
+- L["Default"] missing from locales/enUS.lua.
+- docs/smoke-tests.md summary row still SIM-1..10 (SIM-11 added).
+- WindowMine refresh does ~3x work per TradeTimerTick (Entries twice, group headers, tooltips), in combat too.
+- WindowMine.lua:820 stripe parity counts header rows.
