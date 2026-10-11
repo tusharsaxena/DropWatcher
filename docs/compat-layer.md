@@ -3,8 +3,7 @@
 `core/Compat.lua` is the only file that names a version-variant, deprecated or optional client API
 (compat; design spec §4). It is the root of the addon's compat family: `core/CompatWorld.lua` and
 `core/CompatItem.lua` add stable reads to the same `NS.Compat` (below), and the root's header names
-both. The family is the standard's v2.79.0 rule, not yet on its master: until it is, the split is a
-row in `ARCHITECTURE.md`'s Documented deviations. Feature modules call `NS.Compat.X`; `luacheck` declares those client
+both. The family follows compat's family rule (standard v2.79.0). Feature modules call `NS.Compat.X`; `luacheck` declares those client
 globals for this one file only, and `test_compat`'s last case fails if any other shipped file names
 one in code. It loads in `# Core` right after `core/TextParse.lua`, needs `LibStub` and `NS.TextParse` at
 load, and is read inside functions only.

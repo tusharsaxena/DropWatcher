@@ -52,3 +52,5 @@ DW-85	M8	DropWatcher	M8 docs sync + automated-test bundle	DW-84	S		ui §5
 DW-90	M9	DropWatcher	A sim run fills the window: seam every read the sim answers; e2e regression all scenarios; footer/chat report	DW-85	M	SIM	simfb §0
 DW-91	M9	DropWatcher	Simulation step panel (PerfPanel look, clickable steps, run controls, scenario picker)	DW-90	M	SIM	simfb §1
 DW-92	M9	DropWatcher	M9 docs sync + automated-test bundle	DW-91	S		simfb §3
+DW-93	M9	WowAddonStandards	Standard v2.79.0: allow a core/Compat*.lua family (owner decision)		S		compat-§1
+DW-94	M9	DropWatcher	Adopt the compat family rule (deviation row retired)	DW-93	S		compat-§1
