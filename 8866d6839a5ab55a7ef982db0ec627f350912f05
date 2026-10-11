@@ -1,0 +1,20 @@
+M10 independent review (DW-A0..DW-A6, be88873..e6ebd1c, feat/2026-10-11-drop-watcher-feedback-2)
+
+Reviewers (3): spec conformance, standards compliance, correctness/WoW API.
+All three: gate green (1131 passed / 0 failed / 1 skipped; luacheck 0/0 in 141 files; largest file core/Compat.lua 995 lines). No critical or high findings.
+
+Findings fixed: 4 (rejected: 0)
+- DW-A5 "Keep history for" saved the shorter window before confirmation; an unanswered popup or /reload led to unconfirmed pruning (medium, reported by all three). FIXED 8af37f1: R.OnChanged writes the agreed window back before the popup; only Yes saves and prunes. New regression test.
+- DW-A0/DW-A4 groups whose drops were all filtered out vanished silently (all older History under Character: Current). FIXED 8866d68: WindowCells.KeepsHeader keeps a "n drops · 0 shown" header when View hid the drops or Character hid recorder-less entries; Search/Content/deliberate Character still omit (deliberate narrowing).
+Post-fix gate: 1133 passed / 0 failed / 1 skipped; luacheck 0/0 in 141 files; largest touched file modules/WindowGroup.lua 931 lines. Not pushed.
+
+Low findings recorded, not fixed (9):
+- Row tooltip can cover the Offer panel docked on the window's right (WindowGroup tipHostOf/sideOf).
+- My drops tab has no roster headers; spec says all three tabs; deviation not recorded.
+- Session prune skipped when the addon starts disabled (loginSeen never set).
+- WindowFilterBar reads undocumented dd._options from LibKa0s Widgets.
+- docs/data-flow.md:536 and DropWatcher.toc:218 still describe the retired History cap.
+- Stale retention popup can re-apply an older choice after a later non-deleting change.
+- GroupRoster.Merge O(n*m) with string allocs per compare; heavy in 40-player raids.
+- PlaceItemTooltip side chosen before uncached tooltip grows; ignores docked panel; 'float' forced to 'left'.
+- LootFeed refused counts measure LOOT_HISTORY_UPDATE_DROP events, not receipts.
