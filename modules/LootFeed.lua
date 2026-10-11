@@ -118,41 +118,28 @@ end
 
 -- ── the settings ────────────────────────────────────────────────────────────────────────────
 
-local function section(name)
-    local p = NS.db and NS.db.profile
-    local t = p and p[name]
-    if type(t) == "table" then return t end
-    return nil
+-- One setting, through the schema seam (NS.Setting): the stored value, or its default.
+local function get(path) return NS.Setting(path) end
+
+-- The per-situation trade rules (`trade.rules.<situation>`) as the map TradeRules reads.
+local function tradeRules()
+    local rules = {}
+    for _, s in ipairs(C.SITUATIONS) do rules[s.key] = get("trade.rules." .. s.key) end
+    return rules
 end
 
--- t[key] when it has the default's type, else the default.
-local function pick(t, key, default)
-    local v = t and t[key]
-    if v == nil or type(v) ~= type(default) then return default end
-    return v
-end
-
-local function tableAt(t, key)
-    local v = t and t[key]
-    if type(v) == "table" then return v end
-    return nil
-end
-
---- The settings the feed reads, from `profile.feed`, `profile.comparison` and `profile.trade`
---- (the rows DW-40 adds), with C.FEED_DEFAULT and the spec defaults for anything not stored.
+--- The settings the feed reads: `feed.*`, `comparison.*` and `trade.rules.*`, each through the
+--- schema seam.
 --- @return table cfg
 function LF.Config()
-    local D, Q = C.FEED_DEFAULT, C.QUALITY_DEFAULT
-    local f, cmp = section("feed"), section("comparison")
-    local q = tableAt(f, "quality")
     return {
-        gearOnly = pick(f, "gearOnly", D.gearOnly), includeTokens = pick(f, "includeTokens", D.includeTokens),
-        minIlvlMode = pick(f, "minIlvlMode", D.minIlvlMode), minIlvl = pick(f, "minIlvl", D.minIlvl),
-        relativeIlvl = pick(f, "relativeIlvl", D.relativeIlvl),
-        qualityMode = pick(q, "mode", D.qualityMode), fixed = pick(q, "fixed", Q.FIXED),
-        floor = pick(q, "floor", Q.FLOOR), upgradeOverride = pick(q, "upgradeOverride", D.upgradeOverride),
-        sidegradeBand = pick(cmp, "sidegradeBand", 0), compareOwned = pick(cmp, "compareOwned", false),
-        undesired = tableAt(cmp, "undesired"), rules = tableAt(section("trade"), "rules"),
+        gearOnly = get("feed.gearOnly"), includeTokens = get("feed.includeTokens"),
+        minIlvlMode = get("feed.minIlvlMode"), minIlvl = get("feed.minIlvl"),
+        relativeIlvl = get("feed.relativeIlvl"),
+        qualityMode = get("feed.quality.mode"), fixed = get("feed.quality.fixed"),
+        floor = get("feed.quality.floor"), upgradeOverride = get("feed.quality.upgradeOverride"),
+        sidegradeBand = get("comparison.sidegradeBand"), compareOwned = get("comparison.compareOwned"),
+        undesired = get("comparison.undesired"), rules = tradeRules(),
     }
 end
 

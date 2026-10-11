@@ -10,9 +10,9 @@ local cached
 local function load()
     if not cached then
         local NS = T.newAddon()
-        cached = { M = NS.Messaging, C = NS.Constants }
+        cached = { M = NS.Messaging, C = NS.Constants, D = NS.C.PROFILE.messages }
     end
-    return cached.M, cached.C
+    return cached.M, cached.C, cached.D
 end
 
 local LINK = "|cffa335ee|Hitem:12345::::::::80:::::|h[Signet of the Tides]|h|r"
@@ -41,22 +41,22 @@ local HOLD = { canSend = false, now = 100 }
 -- ---------------------------------------------------------------------------------------------
 
 test("messaging: the default templates are the spec §9.1 text, one per kind", function()
-    local _, C = load()
+    local _, C, D = load()
     assertEqual(#C.MESSAGE_KINDS, 3)
-    assertEqual(C.MESSAGE_TEMPLATES.ask,
+    assertEqual(D.templates.ask,
         "Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!")
-    assertEqual(C.MESSAGE_TEMPLATES.offer, "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?")
-    assertEqual(C.MESSAGE_TEMPLATES.announce, "{item} is up for grabs, whisper me.")
+    assertEqual(D.templates.offer, "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?")
+    assertEqual(D.templates.announce, "{item} is up for grabs, whisper me.")
     assertEqual(C.MESSAGE_MAX_LEN, 255)
     assertEqual(C.MESSAGE_FLUSH_INTERVAL, 1.5)
     assertEqual(#C.MESSAGE_TOKENS, 7)
 end)
 
 test("messaging: Template takes the owner's text, and the default for an empty or absent one", function()
-    local M, C = load()
-    assertEqual(M.Template("ask", nil), C.MESSAGE_TEMPLATES.ask)
-    assertEqual(M.Template("ask", { ask = "" }), C.MESSAGE_TEMPLATES.ask)
-    assertEqual(M.Template("ask", { ask = 42 }), C.MESSAGE_TEMPLATES.ask)
+    local M, _, D = load()
+    assertEqual(M.Template("ask", nil), D.templates.ask)
+    assertEqual(M.Template("ask", { ask = "" }), D.templates.ask)
+    assertEqual(M.Template("ask", { ask = 42 }), D.templates.ask)
     assertEqual(M.Template("offer", { offer = "yours? {item}" }), "yours? {item}")
     assertNil(M.Template("shout", { shout = "x" }))
 end)
@@ -94,8 +94,8 @@ test("messaging: a value with pattern characters is inserted literally", functio
 end)
 
 test("messaging: Preview gives the text, its length and the too-long flag", function()
-    local M, C = load()
-    local p = M.Preview(C.MESSAGE_TEMPLATES.announce, tokens())
+    local M, _, D = load()
+    local p = M.Preview(D.templates.announce, tokens())
     assertEqual(p.text, LINK .. " is up for grabs, whisper me.")
     assertEqual(p.length, #p.text)
     assertFalse(p.tooLong)

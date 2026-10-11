@@ -167,18 +167,9 @@ C.QUALITY = fromEnum(Enum.ItemQuality, {
     HEIRLOOM  = { "Heirloom", 7 },
 })
 
--- Minimum quality (design spec §6.2): the modes in display order, and the two defaults.
+-- Minimum quality (design spec §6.2): the modes in display order. Their settings' defaults are
+-- defaults/Profile.lua's `feed.quality`.
 C.QUALITY_MODES = { "fixed", "dynamicSlot", "dynamicCharacter" }
-C.QUALITY_DEFAULT = { FIXED = C.QUALITY.RARE, FLOOR = C.QUALITY.UNCOMMON }
-
--- The feed's filters and gates (design spec §6.2, §6.3), as modules/LootFeed.lua reads them until
--- the settings rows of DW-40 store a value: gear only, tier tokens in, no item-level floor
--- (`minIlvlMode` off, absolute or relative; `relativeIlvl` is how far below your average equipped
--- level a drop may be), the global quality mode with the upgrade override on.
-C.FEED_DEFAULT = {
-    gearOnly = true, includeTokens = true, minIlvlMode = "off", minIlvl = 0, relativeIlvl = 10,
-    qualityMode = "fixed", upgradeOverride = true,
-}
 
 -- Upgrade tracks in ascending order (design spec §5.2, step 3). The evaluation kernel compares a
 -- track's numeric `tier` first; ItemFacts fills it from the track's string id where the client has
@@ -265,18 +256,12 @@ C.BAG_IDS = { 0, 1, 2, 3, 4 }
 -- Situations and difficulties (design spec §6.1)
 -- ---------------------------------------------------------------------------------------------
 
--- Every situation key in display order, with its default `track` and `autoOpen`.
+-- Every situation key in display order. Each one's `track`, `autoOpen` and `quality` defaults are
+-- defaults/Profile.lua's `situations`.
 C.SITUATIONS = {
-    { key = "mythicPlus",      track = true,  autoOpen = true },
-    { key = "dungeon",         track = true,  autoOpen = true },
-    { key = "followerDungeon", track = false, autoOpen = false },
-    { key = "raidLFR",         track = true,  autoOpen = false },
-    { key = "raid",            track = true,  autoOpen = true },
-    { key = "delve",           track = false, autoOpen = false },
-    { key = "scenario",        track = false, autoOpen = false },
-    { key = "pvp",             track = false, autoOpen = false },
-    { key = "openWorldGroup",  track = false, autoOpen = false },
-    { key = "solo",            track = false, autoOpen = false },
+    { key = "mythicPlus" }, { key = "dungeon" }, { key = "followerDungeon" }, { key = "raidLFR" },
+    { key = "raid" }, { key = "delve" }, { key = "scenario" }, { key = "pvp" },
+    { key = "openWorldGroup" }, { key = "solo" },
 }
 C.SITUATION = {}
 for _, s in ipairs(C.SITUATIONS) do C.SITUATION[s.key] = s end
@@ -332,8 +317,8 @@ C.DIFFICULTY_KIND = {
 }
 
 -- ---------------------------------------------------------------------------------------------
--- Trade rules (design spec §7.2). modules/TradeRules.lua reads them; Settings › Trade overrides
--- CONTENT_RULE per situation, and a reset restores these.
+-- Trade rules (design spec §7.2). modules/TradeRules.lua reads them; the rule each situation takes
+-- is the `trade.rules.<situation>` setting (defaults/Profile.lua holds its default).
 -- ---------------------------------------------------------------------------------------------
 
 -- Enum.ItemBind. ItemFacts reports a drop's bindType; TradeRules reads it through the two sets below.
@@ -355,7 +340,6 @@ C.TRADE_ACCOUNT_BIND = {
 }
 
 C.TRADE_WINDOW = 7200   -- seconds a tradeable drop stays tradeable
-C.TRADE_WARN_AT = 600   -- trade.warnAt's default: seconds left when your own item's timer warns (spec §7.4)
 
 -- The rule names in Settings › Trade's display order, and the rule an unknown situation takes.
 C.TRADE_RULE_NAMES = { "personal", "group", "legacy" }
@@ -367,25 +351,14 @@ C.TRADE_RULES = {
     legacy   = { tradeable = false },
 }
 
--- situation -> rule. `raid` is the conservative `personal` until smoke check TRADE-3 confirms it.
-C.CONTENT_RULE = {
-    mythicPlus = "personal", dungeon = "personal", followerDungeon = "legacy", raid = "personal",
-    raidLFR = "personal", delve = "personal", scenario = "personal", openWorldGroup = "personal",
-    solo = "personal", pvp = "legacy",
-}
-
 -- ---------------------------------------------------------------------------------------------
--- Messaging (design spec §9.1-§9.2). modules/Messaging.lua reads them; Settings › Messages edits
--- the templates (`messages.templates.<kind>`), and an empty one falls back to these.
+-- Messaging (design spec §9.1-§9.2). modules/Messaging.lua reads them; the templates are the
+-- `messages.templates.<kind>` settings (defaults/Profile.lua holds their defaults).
 -- ---------------------------------------------------------------------------------------------
 
--- The message kinds, in Settings › Messages' display order, and their default templates.
+-- The message kinds, in Settings › Messages' display order. Their default templates are
+-- defaults/Profile.lua's `messages.templates`.
 C.MESSAGE_KINDS = { "ask", "offer", "announce" }
-C.MESSAGE_TEMPLATES = {
-    ask      = "Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!",
-    offer    = "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?",
-    announce = "{item} is up for grabs, whisper me.",
-}
 -- The tokens a template may name, in the token chips' order.
 C.MESSAGE_TOKENS = { "player", "item", "ilvl", "slot", "track", "gain", "mygain" }
 C.MESSAGE_MAX_LEN = 255          -- the chat limit, in bytes of the raw text (a link counts whole)

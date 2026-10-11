@@ -3,9 +3,9 @@ local _, NS = ...
 --
 -- PURE. It takes plain tables and makes no WoW API call, reads no saved variable and keeps no
 -- state, so the headless suite drives it row by row (test_trade_rules). The rule tables are data
--- in core/Constants.lua (C.TRADE_RULES, C.CONTENT_RULE); the owner's per-situation overrides
--- (Settings › Trade, `trade.rules.<situation>`, rows from DW-40) reach it as the plain `ctx.rules`
--- map, and a reset empties that map.
+-- in core/Constants.lua (C.TRADE_RULES); the rule each situation takes by default is the
+-- `trade.rules` defaults (defaults/Profile.lua), and the owner's per-situation settings (Settings ›
+-- Trade, the `trade.rules.<situation>` rows) reach it as the plain `ctx.rules` map.
 --
 --   facts      = { ilvl, bindType = Enum.ItemBind, warbound = bool, bonusRoll = bool }  -- ItemFacts
 --   looterEval = Evaluate's output for the looter, or nil while they are not inspected
@@ -25,6 +25,9 @@ local _, NS = ...
 NS.TradeRules = NS.TradeRules or {}
 local TR = NS.TradeRules
 local C = NS.Constants
+
+-- The rule each situation takes when `ctx.rules` names none (design spec §7.2).
+local DEFAULT_RULES = NS.C.PROFILE.trade.rules
 
 local function isTable(v) return type(v) == "table" end
 
@@ -48,11 +51,11 @@ function TR.IsRule(name)
 end
 
 local function defaultRule(situation)
-    return C.CONTENT_RULE[situation] or C.TRADE_RULE_DEFAULT
+    return DEFAULT_RULES[situation] or C.TRADE_RULE_DEFAULT
 end
 
 --- The rule in force in `situation`: the override in `rules` when it names a rule, else the
---- CONTENT_RULE default (an unknown situation takes C.TRADE_RULE_DEFAULT). The second answer is
+--- situation's default rule (an unknown situation takes C.TRADE_RULE_DEFAULT). The second answer is
 --- true only when an override changes the default.
 function TR.RuleFor(situation, rules)
     local default = defaultRule(situation)

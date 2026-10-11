@@ -5,6 +5,8 @@ local T = _G.DW_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
 
 local function C() return (T.newAddon()).Constants end
+-- The setting defaults (defaults/Profile.lua), where the spec's default values live.
+local function D() return (T.newAddon()).C.PROFILE end
 
 local function keysOf(t)
     local out = {}
@@ -62,9 +64,10 @@ test("constants: with Enum present the ids are read from it, not from the litera
 end)
 
 test("constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)", function()
-    local c = C()
-    assertEqual(c.QUALITY_DEFAULT.FIXED, c.QUALITY.RARE)
-    assertEqual(c.QUALITY_DEFAULT.FLOOR, c.QUALITY.UNCOMMON)
+    local c, q = C(), D().feed.quality
+    assertEqual(q.fixed, c.QUALITY.RARE)
+    assertEqual(q.floor, c.QUALITY.UNCOMMON)
+    assertEqual(q.mode, c.QUALITY_MODES[1])
     assertEqual(c.QUALITY_MODES[1], "fixed")
     assertEqual(c.QUALITY_MODES[2], "dynamicSlot")
     assertEqual(c.QUALITY_MODES[3], "dynamicCharacter")
@@ -163,7 +166,7 @@ test("constants: universal and armor-typed equip locations partition the armor p
 end)
 
 test("constants: every situation key is listed once, in order, with the spec §6.1 defaults", function()
-    local c = C()
+    local c, d = C(), D().situations
     local want = {
         { "mythicPlus", true, true }, { "dungeon", true, true }, { "followerDungeon", false, false },
         { "raidLFR", true, false }, { "raid", true, true }, { "delve", false, false },
@@ -171,11 +174,13 @@ test("constants: every situation key is listed once, in order, with the spec §6
         { "solo", false, false },
     }
     assertEqual(#c.SITUATIONS, #want)
+    assertEqual(#keysOf(d), #want)
     for i, row in ipairs(want) do
         local s = c.SITUATIONS[i]
         assertEqual(s.key, row[1], "position " .. i)
-        assertEqual(s.track, row[2], row[1] .. " track")
-        assertEqual(s.autoOpen, row[3], row[1] .. " autoOpen")
+        assertEqual(d[row[1]].track, row[2], row[1] .. " track")
+        assertEqual(d[row[1]].autoOpen, row[3], row[1] .. " autoOpen")
+        assertEqual(d[row[1]].quality, "global", row[1] .. " quality")
         assertTrue(c.SITUATION[row[1]] == s, row[1] .. " is indexed by key")
     end
 end)
@@ -207,7 +212,7 @@ test("constants: every difficulty id maps to a situation kind the classifier kno
 end)
 
 test("constants: the trade rules are the spec §7.2 table, and every situation has a rule", function()
-    local c = C()
+    local c, rules = C(), D().trade.rules
     assertEqual(c.TRADE_RULES.personal.window, 7200)
     assertEqual(c.TRADE_RULES.personal.ilvlRule, "notUpgradeForLooter")
     assertEqual(c.TRADE_RULES.personal.tradeable, true)
@@ -215,14 +220,14 @@ test("constants: the trade rules are the spec §7.2 table, and every situation h
     assertEqual(c.TRADE_RULES.group.ilvlRule, "none")
     assertEqual(c.TRADE_RULES.legacy.tradeable, false)
     for _, s in ipairs(c.SITUATIONS) do
-        local rule = c.CONTENT_RULE[s.key]
+        local rule = rules[s.key]
         assertTrue(c.TRADE_RULES[rule] ~= nil, s.key .. " -> " .. tostring(rule))
     end
-    assertEqual(#keysOf(c.CONTENT_RULE), #c.SITUATIONS)
-    assertEqual(c.CONTENT_RULE.raid, "personal")
-    assertEqual(c.CONTENT_RULE.followerDungeon, "legacy")
-    assertEqual(c.CONTENT_RULE.pvp, "legacy")
-    assertEqual(c.CONTENT_RULE.mythicPlus, "personal")
+    assertEqual(#keysOf(rules), #c.SITUATIONS)
+    assertEqual(rules.raid, "personal")
+    assertEqual(rules.followerDungeon, "legacy")
+    assertEqual(rules.pvp, "legacy")
+    assertEqual(rules.mythicPlus, "personal")
 end)
 
 test("constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds", function()

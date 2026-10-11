@@ -74,7 +74,7 @@ header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed �
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id) ─> AskStateChanged ─> repaint
 item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
                  ctrl-click: Compat.DressUpItem; a plain click expands the row
-NS.SetCompact ─> profile.window.compact (the seam once DW-40's row exists) ─> repaint
+NS.SetCompact ─> SchemaRuntime.Set("window.compact") ─> the row's repaint
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
 ```

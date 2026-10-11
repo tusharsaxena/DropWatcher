@@ -16,7 +16,7 @@ passed.
 | INSTALL-1..3 | Install | Load, reload, first run, the logo |
 | SLASH-1..3 | Slash | `/dw` and `/dropwatcher`, help, the window verbs |
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
-| PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
+| PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..3 | State | Enable/disable, lock, test mode |
 | COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (lands with DW-20) |
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
@@ -81,6 +81,14 @@ create a profile, change the scale, switch back → each profile keeps its own s
 
 **PROFILE-2. The profile verb.** `/dw profile` lists the profiles; `/dw profile <name>` switches,
 and works while the addon is disabled. Result:
+
+**PROFILE-3. The settings rows.** `/dw list` → every setting of design spec §12.1 listed under its
+page (general, feed, comparison, trade, messages, window), the two Comparison maps as `{0}`.
+`/dw set feed.quality.fixed 4` → the filter bar reads `Quality: Epic+`; `/dw set feed.quality.mode
+bogus` and `/dw set messages.announceChannel SAY` are refused and change nothing. `/reload` →
+`/dw get feed.quality.fixed` still reads 4. Switch to a new profile → it reads 3; switch back → 4.
+`/dw set global.history.maxGroups 30`, switch profile → still 30 (it is account-wide). On the
+first login on this build, `/dw debug on` → one held `[Migrate] v1 -> v2` line. Result:
 
 ## State
 
@@ -444,8 +452,8 @@ Blizzard's inspect window on the member in flight → no `fresh` line with `slot
 ## Trade
 
 The estimator's decision is headless-tested (`test_trade_rules`); TRADE-1..4 confirm it against the
-game's own trade rules. They run once the feed (DW-27, DW-31) shows trade chips and Settings › Trade
-(DW-40) lists the rules. Read each chip's tooltip, and the `TRADE` debug lines with `/dw debug on`.
+game's own trade rules. They run once the feed (DW-27, DW-31) shows trade chips; the rules are the
+`trade.rules.<situation>` rows (`/dw list`), drawn on Settings › Trade once it lands (DW-41). Read each chip's tooltip, and the `TRADE` debug lines with `/dw debug on`.
 TRADE-5 (the own-item timer, DW-28) and TRADE-6 (the trade helper, DW-29) are below.
 
 **TRADE-1. Binds.** A BoE drop shows `Yes` (BoE) whatever the looter's gear. A warbound or
@@ -481,8 +489,7 @@ with players that were also eligible to loot this item for the next …"). With 
 and `/dw diagnostics` shows `trade: timers live=1` and a `trade: drop … left=…s` line whose seconds
 match the tooltip's time to the minute. Move the item to another bag slot → the same line, the same
 `guid`. With the window closed `ticker=60s`; `/dw show` → `ticker=1s`; close it again → `60s`. For
-the warning, wait until ten minutes are left (or, once DW-40 adds the row, `/dw set trade.warnAt
-7200` and loot the item) → one chat line `[item]: 10 min left to trade it.` (or the minutes left),
+the warning, wait until ten minutes are left (or `/dw set trade.warnAt 1800` and loot the item) → one chat line `[item]: 10 min left to trade it.` (or the minutes left),
 once only, with no second line after a bag move or `/dw disable` then `/dw enable` (a `/reload`
 forgets the warning, and warns again once).
 Loot an upgrade you equip or an item with no trade line → `expired=true`, no countdown. Loot a
@@ -621,7 +628,8 @@ disabled. Result:
 ## Quality
 
 The gate's decision is headless-tested (`test_quality_gate`); these checks confirm it on real loot.
-They run once the feed (DW-27, DW-31) and the Feed › Quality settings (DW-40) land.
+They run once the feed (DW-27, DW-31) and the Feed › Quality page (DW-41) land; until then the
+`feed.quality.*` rows are set with `/dw set`.
 
 **QUAL-1. Fixed.** Feed › Quality mode `Fixed` at Rare, upgrade override off. In a dungeon, an
 Uncommon drop for another player is not listed and a Rare or Epic one is; the filter bar reads
@@ -676,3 +684,4 @@ label, or a loot line with no `[PARSE]` line (its GlobalString did not compile: 
 | FEED-10..12 | DW-31, the Group drops table | No client pass recorded yet |
 | FEED-13..15 | DW-32, the detail card | No client pass recorded yet |
 | ASK-5..7 | DW-33, the My drops tab, the Offer panel and Post my tradeables | No client pass recorded yet |
+| PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |

@@ -189,28 +189,14 @@ local function isQualityMode(mode)
     return false
 end
 
--- The profile path the feed reads (NS.LootFeed.Config), written directly until DW-40's row exists.
-local function storeQualityMode(mode)
-    local p = DW.db and DW.db.profile
-    if not p then return false end
-    if type(p.feed) ~= "table" then p.feed = {} end
-    if type(p.feed.quality) ~= "table" then p.feed.quality = {} end
-    p.feed.quality.mode = mode
-    NS.Debug("Set", "feed.quality.mode = %s", mode)
-    return true
-end
-
 --- Set the feed's minimum-quality mode (design spec §6.2): the filter bar's Quality control, and
---- the settings row that shares the path. Written through the schema seam once that row exists
---- (DW-40); until then onto the profile path the feed reads. A new mode applies to the drops that
---- arrive after it.
+--- the Feed page's row that shares the path, through the write seam. A new mode applies to the drops
+--- that arrive after it; the row's reaction repaints the open window.
 --- @param mode string one of NS.Constants.QUALITY_MODES
 --- @return boolean changed
 function NS.SetQualityMode(mode)
     if not isQualityMode(mode) then return false end
-    local S, path = NS.SchemaRuntime, "feed.quality.mode"
-    if not (S and S.FindRow and S.FindRow(path)) then return storeQualityMode(mode) end
-    local ok, err = S.Set(path, mode)
+    local ok, err = NS.SchemaRuntime.Set("feed.quality.mode", mode)
     if ok == false then NS.Print(tostring(err)) end
     return ok ~= false
 end
@@ -417,27 +403,15 @@ function NS.PostTradeables()
 end
 
 --- Turn the Group drops table's compact preset on or off (design spec §11.1): `window.compact`,
---- through the write seam once the Window page's row exists (DW-40), until then onto the profile
---- path the table reads. `/dw compact` (DW-42) shares it.
+--- through the write seam; the row's reaction repaints the open window. `/dw compact` (DW-42)
+--- shares it.
 --- @param on boolean
 function NS.SetCompact(on)
-    on = on and true or false
-    local S, path = NS.SchemaRuntime, "window.compact"
-    if S and S.FindRow and S.FindRow(path) then
-        S.Set(path, on)
-    else
-        local p = DW.db and DW.db.profile
-        if not p then return end
-        if type(p.window) ~= "table" then p.window = {} end
-        p.window.compact = on
-        NS.Debug("Set", "window.compact = %s", tostring(on))
-    end
-    if NS.Window and NS.Window.IsShown() then NS.Window.Refresh() end
+    NS.SchemaRuntime.Set("window.compact", on and true or false)
 end
 
 function NS.ToggleCompact()
-    local p = DW.db and DW.db.profile
-    NS.SetCompact(not (p and type(p.window) == "table" and p.window.compact == true))
+    NS.SetCompact(NS.Setting("window.compact") ~= true)
 end
 
 -- Combat ends test mode (preview-mode), both combat edges re-run the window's show decision

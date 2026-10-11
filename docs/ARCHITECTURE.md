@@ -113,16 +113,30 @@ edge, each member with a class stripe, `eq → drop`, a status pill and Offer an
 to group), test mode (`TestMode.lua`: placeholder drops in every verdict, trade, inspect and ask
 state, put in the separate test feed through `NS.LootFeed.AddTest` when test mode turns on and
 cleared when it ends; the window wears a `TEST MODE` chip and banner, and every send is printed)
-and the diagnostics sections; `settings/` the schema, the panel pages and the slash table. The design's feature modules
+and the diagnostics sections; `settings/` the schema (the seam in `Schema.lua`, every hand-written row of design spec §12.1 in `SchemaRows.lua`), the panel pages and the slash table. The design's feature modules
 (spec §4) are added under `modules/` by the plan's later items.
 
 ## Settings Schema
 
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher
-and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema` array, today the
-composed Master controls rows. The reactions every surface shares are `Settings.REACTIONS`. Paths
-`enabled` and `locked` are declared `writeThrough` so the host verbs still land on a load where the
-composers are hollow (options-ui-§1 route (a)). Shape, defaults and migrations:
+and the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or the row's default
+before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
+composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
+§12.1 (`settings/SchemaRows.lua`): General's `When to show` (master `autoOpen` and
+`situations.<key>.track|autoOpen|quality`), Feed (`feed.quality.*`, the filters and the filter bar's
+seeds), Comparison (`comparison.*`), Trade (`trade.rules.<situation>`, `trade.warnAt`,
+`trade.likelyOnly`), Messages (`messages.*`), Window (`window.columns.<col>`, `window.compact`,
+`rowHeight`, `fontSize`, `toast.*`) and the account-wide history cap `global.history.maxGroups`.
+Each row's `group` is its tab on its page (design spec §12.2), its `default` references
+`defaults/Profile.lua`, and its `validate` refuses a value outside its list or range before the
+seam stores it. `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by
+specID (architecture-§5's value route: a membership change is a whole write through the seam),
+drawn by their own editors (`skipRender`); the CLI shows them as their entry count. The reactions
+every surface shares are `Settings.REACTIONS` (Master controls) and the window repaint on the
+Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared `writeThrough` so the
+host verbs still land on a load where the composers are hollow (options-ui-§1 route (a)). The
+global closure rows are the Minimap button (`global.minimap.shown`, onto LibDBIcon's `hide`) and
+the history cap (onto `global.history.maxGroups`). Shape, defaults and migrations:
 [`schema.md`](schema.md); the panel: [`settings-panel.md`](settings-panel.md).
 
 **State written outside the seam** (architecture-§5): `profile.window.point`, `.width` and `.height`
@@ -130,15 +144,12 @@ are geometry only a drag or a resize sets. Their one owner is `modules/Window.lu
 are `savePoint` (title-bar drag stop and the resize grip's release), `saveSize` (the resize grip's
 release, saved together with the point) and
 `Window.ResetPosition` (the Reset position button); `profile.window.minimized` is the minimize
-button's, written by `Window.SetMinimized` alone. `profile.window.compact` (the Group drops
-table's compact preset) is written by `NS.SetCompact` (core/DropWatcher.lua) onto the profile path
-until the Window page's row exists (DW-40), after which the same handler goes through the seam;
-`profile.window.columns` is read only (`columns[key] = false` hides a column), and its rows land
-with DW-40. `profile.feed.quality.mode` is written by
-`NS.SetQualityMode` (core/DropWatcher.lua, the filter bar's Quality control) onto the path the feed
-reads until the Feed page's row exists (DW-40), after which the same handler goes through the seam.
-The filter bar's per-tab state is session-only (`NS.State.windowFilters`), seeded from
-`feed.view`, `feed.content`, `feed.sort` and `trade.likelyOnly` when they hold a valid value;
+button's remembered view, written by `Window.SetMinimized` alone. Every other setting the window and
+the feed read is a row: the Group drops table's compact preset (`NS.SetCompact`, the Window page's
+row and `/dw compact`) and the filter bar's Quality control (`NS.SetQualityMode`, the Feed page's
+row) both write through the seam. The filter bar's per-tab state is session-only
+(`NS.State.windowFilters`), seeded from the `feed.view`, `feed.content`, `feed.sort` and
+`trade.likelyOnly` rows when they hold a valid value;
 test mode sets the Group drops tab's View to All while it is on and puts the player's value back
 when it ends (`modules/TestMode.lua`). The
 Group drops table's collapsed groups, dismissed rows and the one expanded row (the detail card)
@@ -146,7 +157,9 @@ are session-only too (`NS.State.windowGroup`), and so are the My drops tab's hid
 upgrades whose candidates you chose to see (`NS.State.windowMine`) and the Offer panel's drop
 (`NS.State.offerPanel`).
 `global.minimap.minimapPos` is LibDBIcon's own
-write into the table the launcher hands it. No structural registry exists yet.
+write into the table the launcher hands it. The load pass is `NS:RunMigrations`
+(`core/Database.lua`), whose step 2 (`NS.RepairStoredSettings`) drops a stored value a row now
+refuses, in every stored profile. No structural registry exists yet.
 
 ## Message Bus
 
@@ -256,6 +269,14 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   drops table with its Ask button (DW-31), its detail card (DW-32), and the My drops tab with the
   Offer panel (DW-33); the History tab says what it will hold until it lands (DW-51)
   ([`scope.md`](scope.md)).
+- Every setting of design spec §12.1 has its row and default (DW-40), and some rows are ahead of
+  their reader: `comparison.scorer` and `comparison.weights` wait for the scoring adapters (DW-50),
+  `global.history.maxGroups` for History (DW-51), `toast.*` for the toast (DW-52) and
+  `messages.autoAsk.*` for auto-ask (DW-54); `messages.editFirst`, `feed.clearOnBossKill`,
+  `comparison.heirloomProtect`, `window.rowHeight` and `window.fontSize` are stored and settable
+  but read by no module yet. Until the settings pages land (DW-41) only the General page draws, and
+  its `When to show` tab lists each situation's three rows under the situation's name rather than as
+  a grid.
 - The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The
   tab** lists every drop of yours in the tab's feed, a drop that cannot be traded included (a dash
   and Hide, board 04's last row); `My drops · n` counts only the tradeable ones, and Hide is
@@ -279,8 +300,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   messaging edge files it. **Post my tradeables** lists the tradeable drops of yours in the feed on
   show, whatever the tab's filter, prefixed `Up for trade, whisper me:`, cut at 255 bytes without
   splitting a link; each line is its own announce, filed under `post:<n>:<i>`, so every press posts
-  again. **Not yet:** `messages.editFirst` does not route Offer through an edit box (DW-40 adds the
-  row), and `Traded ✓` waits for a trade the engine records (History, DW-51).
+  again. **Not yet:** `messages.editFirst` (a row since DW-40) does not route Offer through an edit
+  box, and `Traded ✓` waits for a trade the engine records (History, DW-51).
 - The Group drops table (DW-31) settles five cases the design leaves open. **Group order** is
   newest first (oldest first under Sort: Oldest), and a group the player never toggled is open
   when it is the first one shown and collapsed otherwise (board 01); the Sort orders the drops
@@ -294,7 +315,7 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   For me, Trade window); Item and Actions never go, and the detail card (or the Offer panel) still
   says what a shed column would. The **Ask button** asks at once:
   the edit-first box is the detail card's Edit message (DW-32), and `messages.editFirst` routing the
-  row's Ask button through it waits for its settings row (DW-40); the `Traded ✓` state waits for a
+  row's Ask button through it is not wired (the row exists since DW-40; nothing reads it); the `Traded ✓` state waits for a
   trade the engine can see (none records one yet), so a received drop stays `Asked`.
 - The detail card (DW-32) settles five cases the design leaves open. **Expansion** is session-only
   and follows the row: a row filtered out or folded under its header hides the card, and it comes
@@ -315,9 +336,9 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   goes to My drops), and then neither auto-opens the window nor counts toward `n new`. **This instance** (Content) is the drops since
   the situation last changed (`SituationChanged`), so two dungeons of the same kind in a row, with
   no other situation between them, read as one. **Auto-open** fires once per situation, on the
-  first interesting live drop, only while the window is closed; master `autoOpen` (DW-40) false
-  turns it off. The **Quality** control writes `feed.quality.mode` straight onto the profile path
-  the feed reads until DW-40's row exists (Settings Schema, above).
+  first interesting live drop, only while the window is closed; master `autoOpen` false
+  turns it off. The **Quality** control writes `feed.quality.mode` through the write seam
+  (`NS.SetQualityMode`), the row the Feed page shares.
 - The class tables (`core/ClassData.lua`) are a fallback for a candidate whose spec is not known
   yet; an item's own spec list wins whenever it exists. Devourer Demon Hunter (spec 1480, from the
   client's trait-tree data) is recorded as an Intellect dual wielder that takes no held off hand,
@@ -329,7 +350,7 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   `openWorldGroup`); the Mythic Keystone difficulty is `mythicPlus` even before
   `IsChallengeModeActive` turns true; and the delve and follower-dungeon inputs come from the
   difficulty id. The check lives in the module's edge today; `core/Compat.lua` (DW-20) may take it.
-  The per-situation settings have no rows until DW-40, so each situation takes its spec default.
+  The per-situation settings are the `situations.<key>.*` rows, read through `NS.Setting`.
 - The verdict kernel (`modules/Evaluate.lua`) reads a few cases the design leaves open as
   follows. With the spec unknown, an item whose primary stat suits only some of the class's specs
   is `unknown`, not `ok`. With a score, the verdict follows spec §5.2 step 4 to the letter: only
@@ -356,15 +377,16 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   drop past its window is `no expired` whatever the looter's gear; a BoE never expires. BoE means
   `OnEquip` or `OnUse`, and the account binds count as warbound. An unknown situation takes the
   `personal` rule. The rule is item level against the looter's equipped gear only; whether the
-  game also counts their bags is TRADE-4. The raid rule is `personal` until TRADE-3 confirms it, and
-  the `trade.rules.<situation>` overrides have no row until DW-40.
+  game also counts their bags is TRADE-4. The raid rule is `personal` until TRADE-3 confirms it; the
+  `trade.rules.<situation>` rows default to the design's rule for each situation.
 - The messaging core (`modules/Messaging.lua`) reads five cases the design leaves open. A known
   token with no value reads `?` rather than an empty gap, and the preview lists it as missing;
   token names are case-sensitive, so `{Player}` is unknown and left as it is. A gain prints with
   one decimal at most. The length limit counts the raw bytes, so an item link counts whole. An
   ask that is queued, or handed to the sender and not yet reported, is never asked twice, even
   with `messages.oneAsk` off; a failed one may be retried, and a canceled one leaves the registry,
-  so its button is ready again. The `messages.*` settings have no row until DW-40.
+  so its button is ready again. The `messages.*` settings are rows, read by the edge through
+  `NS.Setting`.
 - The messaging edge (`modules/Asks.lua`) reads six cases the design leaves open. Design spec §4
   puts the core and the edge in one file; they are two, so the core stays pure and its suite needs
   no client. An ask is refused before the core when its recipient is not in the group, is you, or
@@ -378,7 +400,7 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   registry is kept for the session. The `asked` history outcome is written by History (DW-51) from
   `AskStateChanged`. The edit-first box is the detail card's Edit message (DW-32): it reads
   `Preview` (the template filled in, nothing sent or filed) and passes the edited text in; the Offer
-  panel (DW-33) sends the template as it stands until `messages.editFirst` has its row (DW-40). Whether a whisper really is blocked during an encounter is ASK-4.
+  panel (DW-33) sends the template as it stands; `messages.editFirst` has a row but no reader yet. Whether a whisper really is blocked during an encounter is ASK-4.
 - The restriction tracker (`modules/Restrictions.lua`) reads four cases the design leaves open.
   Chat is stopped by the Encounter, ChallengeMode, PvPMatch and Chat restriction types and by the
   chat lockdown; combat alone stops inspects and trades, not chat; the Map type, active for the
@@ -470,10 +492,9 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   rule's). A moved estimate sends `DropUpdated(id, "trade")`. A pending score is retried five times, one
   second apart, on one shared timer, and a drop that used them up keeps its answer. Each feed keeps
   200 drops (`MAX_DROPS`), the oldest dropped first; the stand-down keeps the drops and drops the
-  dedupe window, the encounter context and any item still loading. Until the settings rows land
-  (DW-40) the feed reads `profile.feed`, `profile.comparison` and `profile.trade` when present and
-  `C.FEED_DEFAULT` otherwise. `/dw add` and test mode reach it through `NS.LootFeed.Add` once their
-  verbs land (DW-42, DW-34).
+  dedupe window, the encounter context and any item still loading. The feed reads its settings,
+  the `feed.*`, `comparison.*` and `trade.rules.*` rows, through `NS.Setting` (`LootFeed.Config`).
+  `/dw add` and test mode reach it through `NS.LootFeed.Add` once their verbs land (DW-42, DW-34).
 - The trade timer (`modules/TradeTimer.lua`) settles eight cases the design leaves open. A bag item
   is matched to one of your drops by its exact link first and its item id second, each drop taking
   one item, so two copies of one drop each keep their own timer; test drops are never timed. A
@@ -485,9 +506,8 @@ and nobody took over, so another addon's or the player's inspect is never cleare
   it and the countdown does not jump at each scan. An item that leaves the bags (traded, sold, equipped) drops its entry. The ticker runs
   only while an entry is live: each second while the window is shown, each minute while it is
   hidden, so the warning may come up to a minute late with the window closed. An item first read
-  with less than `trade.warnAt` left warns at once; `trade.warnAt` 0 turns the warning off, and
-  until its settings row lands (DW-40) it is read from `profile.trade.warnAt` when stored and
-  `C.TRADE_WARN_AT` (600) otherwise. The stand-down keeps the entries, warned flags included, so
+  with less than `trade.warnAt` left warns at once; `trade.warnAt` 0 turns the warning off, and it
+  is read through `NS.Setting` (600 by default). The stand-down keeps the entries, warned flags included, so
   enabling again never repeats a warning.
 - The trade helper (`modules/TradeHelper.lua`) settles five cases the design leaves open. The target
   is a member's GUID, `Name-Realm` or bare name, resolved through the roster, so a stranger is

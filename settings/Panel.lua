@@ -5,8 +5,8 @@ local addonName, NS = ...
 -- draws no tab strip (options-ui-§5/§13). The General page renders through the tabbed renderer, its
 -- first tab `Master controls`, composed from one declaration with the canonical rows in canonical
 -- order (options-ui-§15): the window is positionable, so every frame row is present, plus the
--- Minimap button and Test mode rows. The design spec's other pages and the General page's `When to
--- show` tab (design spec §12.2) are added by the settings items.
+-- Minimap button and Test mode rows. The General page's second tab, `When to show`, draws the rows
+-- settings/SchemaRows.lua declares for it; the design spec's other pages (§12.2) are DW-41's.
 
 local DW       = NS.addon
 local Settings = DW.Settings

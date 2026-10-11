@@ -7,8 +7,8 @@ local _, NS = ...
 -- keeps its own state (NS.State.windowFilters[tab], session-only), and selecting a tab puts its
 -- state on the bar (Sync). A control a tab does not honor is grayed rather than hidden, so the bar
 -- never reflows between tabs (Ka0s Loot History's pattern). A fresh tab's state is seeded from the
--- profile's `feed.view`, `feed.content`, `feed.sort` and `trade.likelyOnly` when they hold a valid
--- value (the rows DW-40 adds), else from DEFAULTS.
+-- `feed.view`, `feed.content`, `feed.sort` and `trade.likelyOnly` rows (through the schema seam)
+-- when they hold a valid value, else from DEFAULTS, which are those rows' defaults.
 --
 -- THE QUALITY CONTROL IS NOT A VIEW FILTER: it shows the feed's minimum-quality mode in force (the
 -- situation's override, else `feed.quality.mode`) with its threshold, `Quality: Rare+` (design spec
@@ -42,13 +42,15 @@ FB.HONORS = {
     history = { view = true, content = true, search = true, sort = true },
 }
 
-local DEFAULTS = { view = "interesting", content = "instance", likelyOnly = false, search = "", sort = "newest" }
+local P = NS.C.PROFILE
+local DEFAULTS = {
+    view = P.feed.view, content = P.feed.content, likelyOnly = P.trade.likelyOnly, search = "", sort = P.feed.sort,
+}
 FB.DEFAULTS = DEFAULTS
 
--- Where a fresh tab's state is seeded from: { profile section, key }.
+-- Where a fresh tab's state is seeded from: the setting's path.
 local SEED = {
-    view = { "feed", "view" }, content = { "feed", "content" }, sort = { "feed", "sort" },
-    likelyOnly = { "trade", "likelyOnly" },
+    view = "feed.view", content = "feed.content", sort = "feed.sort", likelyOnly = "trade.likelyOnly",
 }
 
 FB.LABELS = {
@@ -88,20 +90,13 @@ local function valid(key, v)
     return FB.VALUES[key] ~= nil and inList(FB.VALUES[key], v)
 end
 
-local function stored(section, key)
-    local p = NS.db and NS.db.profile
-    local t = p and p[section]
-    if type(t) ~= "table" then return nil end
-    return t[key]
-end
-
 --- A fresh tab's state: DEFAULTS, overridden by each seed the profile holds a valid value for.
 --- @return table
 function FB.Defaults()
     local d = {}
     for k, v in pairs(DEFAULTS) do d[k] = v end
     for k, path in pairs(SEED) do
-        local v = stored(path[1], path[2])
+        local v = NS.Setting(path)
         if valid(k, v) then d[k] = v end
     end
     return d

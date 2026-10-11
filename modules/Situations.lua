@@ -5,7 +5,7 @@ local _, NS = ...
 -- TWO HALVES. The classifier, Classify(inputs) -> key, is PURE: a plain table in, one of the
 -- C.SITUATIONS keys out, no WoW call, never throws (test_situations drives it as a truth table).
 -- Resolve(key, stored) is pure too: a situation's `track`, `autoOpen` and `quality` from its stored
--- row, with the spec defaults (C.SITUATIONS) for anything absent or malformed.
+-- row, with the defaults (defaults/Profile.lua) for anything absent or malformed.
 --
 -- The edge, ReadInputs, is the only place this module touches the client: GetInstanceInfo,
 -- IsInInstance, C_ChallengeMode.IsChallengeModeActive, IsInGroup / IsInRaid and GetDifficultyInfo.
@@ -15,9 +15,9 @@ local _, NS = ...
 --   inputs = { inInstance, instanceType, difficultyID, isChallengeModeActive, isDelve,
 --              isFollowerDungeon, inGroup, inRaid, isPvP }
 --
--- The settings are read from `profile.situations.<key>` (DW-40 adds the rows); until a row is
--- stored, the spec defaults apply. Test mode ignores the situation gate: that bypass is the
--- consumer's (LootFeed), so IsTracking always answers for the situation itself.
+-- The settings are the `situations.<key>.*` rows, read through the schema seam. Test mode ignores
+-- the situation gate: that bypass is the consumer's (LootFeed), so IsTracking always answers for
+-- the situation itself.
 
 NS.Situations = NS.Situations or {}
 local Sit = NS.Situations
@@ -30,6 +30,10 @@ local QUALITY_MODE = {}
 for _, mode in ipairs(C.QUALITY_MODES) do QUALITY_MODE[mode] = true end
 
 local PVP_TYPE = { pvp = true, arena = true }
+
+-- Each situation's defaults (defaults/Profile.lua), and what an unknown key takes.
+local DEFAULTS = NS.C.PROFILE.situations
+local NONE = { track = false, autoOpen = false }
 
 -- ── the classifier (pure) ───────────────────────────────────────────────────────────────────
 
@@ -85,7 +89,7 @@ end
 --- @param stored table|nil the stored `profile.situations[key]` row
 --- @return table settings { track, autoOpen, quality }
 function Sit.Resolve(key, stored)
-    local def = C.SITUATION[key] or { track = false, autoOpen = false }
+    local def = DEFAULTS[key] or NONE
     local q = type(stored) == "table" and stored.quality
     return {
         track    = flag(stored, "track", def.track),
@@ -152,10 +156,14 @@ function Sit.Current()
     return State.situation or Sit.Classify(Sit.ReadInputs())
 end
 
+-- A situation's three settings through the schema seam (NS.Setting); nil for an unknown key.
 local function storedRow(key)
-    local p = NS.db and NS.db.profile
-    local rows = p and p.situations
-    return type(rows) == "table" and rows[key] or nil
+    if not C.SITUATION[key] then return nil end
+    local base = "situations." .. key .. "."
+    return {
+        track = NS.Setting(base .. "track"), autoOpen = NS.Setting(base .. "autoOpen"),
+        quality = NS.Setting(base .. "quality"),
+    }
 end
 
 --- A situation's resolved settings, the current one when `key` is nil.

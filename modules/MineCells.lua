@@ -84,7 +84,7 @@ end
 
 -- Whether `left` seconds is at or under the warning threshold (0 or less turns it off).
 local function endingSoon(left, warnAt)
-    local w = num(warnAt) or C.TRADE_WARN_AT
+    local w = num(warnAt) or NS.C.PROFILE.trade.warnAt
     return w > 0 and left <= w
 end
 
@@ -124,7 +124,7 @@ end
 --- bind-on-equip drop. `fraction` is how much of the bar is filled; `bold` marks ending soon.
 --- @param drop table
 --- @param now number GetTime()
---- @param warnAt number|nil seconds (C.TRADE_WARN_AT when nil)
+--- @param warnAt number|nil seconds (the `trade.warnAt` default when nil)
 --- @return table cell, with `fraction`, `bold` and `soon`
 function MC.TradeWindow(drop, now, warnAt)
     local t = tradeOf(drop)

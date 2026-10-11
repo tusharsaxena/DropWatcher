@@ -4,7 +4,7 @@ local _, NS = ...
 -- PURE. It takes plain tables and makes no WoW API call, reads no saved variable and keeps no
 -- state, so the headless suite can drive it exhaustively (test_evaluate). Its inputs are built by
 -- the edges: ItemFacts (the drop and every gear entry), Gear (your own snapshot), Inspect (another
--- player's) and Scoring (the scorer). Settings reach it as plain `opts` (DW-40 wires the rows).
+-- player's) and Scoring (the scorer). Settings reach it as plain `opts` (LootFeed reads the rows).
 --
 --   facts     = { itemID, ilvl, equipLoc, classID, subClassID, quality, specs = { [specID] = true },
 --                 stats = { [STAT_KEY] = n }, track = { name, rank, max, tier },

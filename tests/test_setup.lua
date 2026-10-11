@@ -258,5 +258,8 @@ test("options: the degraded load completes, and the panel says once that it is u
     end
     assertEqual(n, 1)
     D.addon:OnSlashCommand("config")
-    assertTrue(#D.addon.Settings.Schema == 0, "the composers are hollow ({}), never a host copy")
+    local S = D.SchemaRuntime
+    assertTrue(S.FindRow("enabled") == nil and S.FindRow("visibility") == nil and S.FindRow("state.testMode") == nil,
+        "the composers are hollow ({}), never a host copy")
+    assertTrue(S.FindRow("feed.quality.mode") ~= nil, "the hand-written rows stand without the library")
 end)

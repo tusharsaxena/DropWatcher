@@ -97,6 +97,7 @@ Kit.run{
         "test_setup",
         "test_database",
         "test_schema",
+        "test_schema_rows",
         "test_slash",
         "test_window",
         "test_window_shell",

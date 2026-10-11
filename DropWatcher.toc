@@ -82,7 +82,8 @@ core\Database.lua
 core\LauncherSetup.lua
 
 # Defaults
-# LOAD-BEARING: publishes NS.C, which settings\Schema.lua and settings\Panel.lua take at load.
+# LOAD-BEARING: publishes NS.C, which settings\Schema.lua, settings\SchemaRows.lua and settings\Panel.lua
+# take at load; the modules below read it at call time.
 defaults\Profile.lua
 
 # Modules
@@ -216,6 +217,10 @@ settings\SchemaSetup.lua
 # LOAD-BEARING: publishes Settings.Schema and NS.SchemaRuntime; settings\OptionsSetup.lua,
 # settings\Panel.lua and settings\Slash.lua read NS.SchemaRuntime at load.
 settings\Schema.lua
+# LOAD-BEARING: appends every hand-written row to NS.SchemaRuntime at file scope; reads NS.C,
+# NS.Constants, Settings.StampClosureRows and NS.QualityGate, NS.WindowFooter, NS.WindowGroup
+# (modules\, above) at load.
+settings\SchemaRows.lua
 # LOAD-BEARING: publishes the LibKa0s-Options instance as Settings.Helpers; settings\Panel.lua calls
 # Helpers.MasterControls at file scope.
 settings\OptionsSetup.lua

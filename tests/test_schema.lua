@@ -32,8 +32,11 @@ end)
 
 test("schema: the Master controls rows are the canonical set, in the canonical order", function()
     local NS = T.newAddon()
-    local paths = {}
-    for i, row in ipairs(NS.addon.Settings.Schema) do paths[i] = row.path end
+    local rows, paths = NS.addon.Settings.Schema, {}
+    -- The Master controls tab is the first group; the hand-written rows follow it.
+    for _, row in ipairs(rows) do
+        if row.group == rows[1].group then paths[#paths + 1] = row.path end
+    end
     assertEqual(table.concat(paths, ","),
         "enabled,visibility,scale,alpha,locked,state.debugConsole,global.minimap.shown,state.testMode")
 end)

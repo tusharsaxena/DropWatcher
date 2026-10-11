@@ -29,7 +29,7 @@ local _, NS = ...
 -- OnHide), so showing the window moves it to FAST at once and hiding it back to SLOW.
 --
 -- THE WARNING. Once per item, when its remaining time first falls to `trade.warnAt` seconds or
--- less (C.TRADE_WARN_AT when not stored; 0 turns it off): TradeTimerExpiring(dropID, guid,
+-- less (the `trade.warnAt` row; 0 turns it off): TradeTimerExpiring(dropID, guid,
 -- remaining) is sent, and one line is printed to chat.
 --
 -- Stood down, the ticker and the throttle timer are canceled; the entries are kept (their warned
@@ -115,15 +115,13 @@ function TT.Entries()
     return store().timers
 end
 
---- The warning threshold in seconds: `profile.trade.warnAt` when stored (DW-40 adds the row),
---- else C.TRADE_WARN_AT. 0 or less turns the warning off.
+--- The warning threshold in seconds: the `trade.warnAt` row, through the schema seam. 0 or less
+--- turns the warning off.
 --- @return number
 function TT.WarnAt()
-    local p = NS.db and NS.db.profile
-    local t = p and p.trade
-    local v = type(t) == "table" and t.warnAt or nil
+    local v = NS.Setting("trade.warnAt")
     if type(v) == "number" and v == v then return v end
-    return C.TRADE_WARN_AT
+    return NS.C.PROFILE.trade.warnAt
 end
 
 --- The ticker's period in seconds, or nil while no ticker runs.

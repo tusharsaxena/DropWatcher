@@ -4,7 +4,7 @@ local _, NS = ...
 --
 -- PURE. The decision functions take plain values and tables and make no WoW API call, read no saved
 -- variable and keep no state, so the headless suite drives them table by table
--- (test_quality_gate). The settings reach it as plain `ctx` fields (DW-40 wires the rows); Gear
+-- (test_quality_gate). The settings reach it as plain `ctx` fields (LootFeed reads the rows); Gear
 -- supplies the equipped qualities and Evaluate (the verdict for me) the baseline slot and the
 -- verdict, both read by LootFeed before the inspect request (spec §6.2, Ordering).
 --
@@ -28,6 +28,8 @@ local C = NS.Constants
 local L = NS.L
 
 local DEFAULT_MODE = C.QUALITY_MODES[1]
+-- The `feed.quality` defaults (defaults/Profile.lua), for a ctx that carries no number.
+local DEFAULT = NS.C.PROFILE.feed.quality
 local MODES = {}
 for _, mode in ipairs(C.QUALITY_MODES) do MODES[mode] = true end
 
@@ -52,7 +54,7 @@ local function ctxOf(ctx)
     return {}
 end
 
-local function floorOf(ctx) return num(ctx.floor) or C.QUALITY_DEFAULT.FLOOR end
+local function floorOf(ctx) return num(ctx.floor) or DEFAULT.floor end
 
 --- `mode` when it is one of C.QUALITY_MODES, else the default `fixed`.
 function Q.NormalizeMode(mode)
@@ -121,7 +123,7 @@ local function floored(q, ctx, source, missing)
 end
 
 local THRESHOLDS = {
-    fixed = function(ctx) return num(ctx.fixed) or C.QUALITY_DEFAULT.FIXED, "fixed" end,
+    fixed = function(ctx) return num(ctx.fixed) or DEFAULT.fixed, "fixed" end,
     dynamicSlot = function(ctx) return floored(slotQuality(ctx), ctx, "slot", "emptySlot") end,
     dynamicCharacter = function(ctx)
         return floored(Q.CharacterQuality(ctx.gear), ctx, "character", "noGear")
@@ -164,5 +166,5 @@ function Q.ThresholdLabel(mode, threshold)
         if not t then return L["Quality: Match gear"] end
         return L["Quality: Match gear (%s+)"]:format(Q.QualityName(t))
     end
-    return L["Quality: %s+"]:format(Q.QualityName(t or C.QUALITY_DEFAULT.FIXED))
+    return L["Quality: %s+"]:format(Q.QualityName(t or DEFAULT.fixed))
 end

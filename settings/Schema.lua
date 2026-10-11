@@ -56,6 +56,16 @@ local function minimapStore()
     local db = DW.db
     return db and db.global and db.global.minimap
 end
+-- The History tab's cap (design spec §10, §12.1) is account-wide: `global.history.maxGroups`.
+local HISTORY_CAP_PATH = "global.history.maxGroups"
+Settings.HISTORY_CAP_PATH = HISTORY_CAP_PATH
+local function historyStore(create)
+    local g = DW.db and DW.db.global
+    if not g then return nil end
+    if create and type(g.history) ~= "table" then g.history = {} end
+    return type(g.history) == "table" and g.history or nil
+end
+
 local GLOBAL = {
     [MINIMAP_PATH] = {
         get = function()
@@ -63,10 +73,23 @@ local GLOBAL = {
             return not (t and t.hide)
         end,
         set = function(v)
+            v = v and true or false
             local t = minimapStore()
             if t then t.hide = not v end
-            if NS.Launcher then NS.Launcher:SetShown(v and true or false) end
+            if NS.Launcher then NS.Launcher:SetShown(v) end
         end,
+        backing = { "minimap", "hide" },
+    },
+    [HISTORY_CAP_PATH] = {
+        get = function()
+            local h = historyStore(false)
+            return h and h.maxGroups
+        end,
+        set = function(v)
+            local h = historyStore(true)
+            if h then h.maxGroups = v end
+        end,
+        backing = { "history", "maxGroups" },
     },
 }
 
@@ -78,7 +101,7 @@ function Settings.StampClosureRows(rows)
         local spec = SESSION[path] or GLOBAL[path]
         if spec then
             row.get = spec.get
-            row.set = function(v) spec.set(v and true or false) end
+            row.set = spec.set
         end
     end
 end
@@ -133,7 +156,38 @@ Helpers.Get, Helpers.Set, Helpers.FindSchema, Helpers.ApplyDefault =
     S.Get, S.Set, S.FindRow, S.ApplyDefault
 Settings.ConsumeResetCount = S.ConsumeResetCount
 
-local VALID_TYPES = { bool = true, number = true, string = true }
+--- A setting's value through the seam: the stored one, or the row's default (defaults/Profile.lua)
+--- while there is no database yet. The one read every module's settings go through.
+--- @param path string
+--- @return any
+function NS.Setting(path)
+    local v = S.Get(path)
+    if v == nil then v = S.Default(path) end
+    return v
+end
+
+local function countKeys(t)
+    local n = 0
+    for _ in pairs(t) do n = n + 1 end
+    return n
+end
+
+--- How `/dw list|get|set|reset` render a value: a `map` row as its entry count (its editor is the
+--- panel's), every other row through the library's own formatter.
+--- @param row table
+--- @param v any
+--- @param format function the library's FormatValue
+--- @return string
+function Settings.FormatValue(row, v, format)
+    if type(row) == "table" and row.type == "map" and type(v) == "table" then
+        return ("{%d}"):format(countKeys(v))
+    end
+    return format(row, v)
+end
+
+-- `map` is a whole-value table row (architecture-§5's value route): the per-spec weights and
+-- undesired-type sets, validated and written whole through the seam, drawn by their own editors.
+local VALID_TYPES = { bool = true, number = true, string = true, map = true }
 
 -- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
 -- path: answering nil makes the library skip the resolution check for it (the session rows, and
@@ -146,13 +200,22 @@ local function defaultsRootFor(profileDefaults)
     end
 end
 
--- The Minimap button row's backing key is LibDBIcon's `hide` in the GLOBAL defaults (launcher-§3).
-local function minimapBackingMissing(defaults)
-    local mm = defaults.global and defaults.global.minimap
-    if type(mm) == "table" and mm.hide ~= nil then return 0 end
-    pout("|cffff0000schema error|r: " .. MINIMAP_PATH .. ": backing key `global.minimap.hide` "
-        .. "does not resolve against the defaults")
-    return 1
+-- Each global closure row's backing key must resolve in the GLOBAL defaults: the Minimap button
+-- row's is LibDBIcon's `hide` (launcher-§3), the history cap's its own key.
+local function globalBackingMissing(defaults)
+    local missing = 0
+    for path, spec in pairs(GLOBAL) do
+        local node = defaults.global
+        for _, seg in ipairs(spec.backing) do
+            if type(node) == "table" then node = node[seg] else node = nil end
+        end
+        if node == nil then
+            pout("|cffff0000schema error|r: " .. path .. ": backing key `global."
+                .. table.concat(spec.backing, ".") .. "` does not resolve against the defaults")
+            missing = missing + 1
+        end
+    end
+    return missing
 end
 
 --- Validate every row; returns the error count plus the paths that do not resolve against the
@@ -165,7 +228,7 @@ function Helpers.ValidateSchema()
         types        = VALID_TYPES,
         defaultsRoot = defaultsRootFor(defaults.profile),
     }
-    errors = errors + (missing or 0) + minimapBackingMissing(defaults)
+    errors = errors + (missing or 0) + globalBackingMissing(defaults)
     for i, def in ipairs(Schema) do
         if type(def) == "table" and type(def.label) ~= "string" then
             pout("|cffff0000schema error|r: row #" .. i .. " (" .. tostring(def.path or "<no path>")

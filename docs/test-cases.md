@@ -63,11 +63,14 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (4)
+### test_database.lua (7)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
-- database: every step up to the target exists
+- database: the steps rise one by one, and the target is the highest step
+- database: a step that raises leaves the stamp at the last completed step
+- database: step 2 reaches a stored profile that is not the active one
+- database: step 2 passes a fresh default profile through unchanged
 - database: the profile defaults carry every Master controls value, and no debug flag
 
 ### test_schema.lua (11)
@@ -83,6 +86,21 @@ Total.
 - schema: a write to `scale` reaches the window through the row's reaction
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
+
+### test_schema_rows.lua (12)
+
+- rows: every spec §12.1 setting has a row
+- rows: every hand-written row names its page, tab, label and a type the schema knows
+- rows: every default is defaults/Profile.lua's, and passes the row's own check
+- rows: NS.Setting answers the default before the database, and the stored value after
+- rows: a value outside a row's list or range is refused and stores nothing
+- rows: the per-spec maps take keyed values whole, and refuse a malformed one
+- rows: the feed, the situations and the messaging edge read the rows
+- rows: the filter bar seeds a fresh tab from the rows
+- rows: the Quality control and the compact preset write through the seam (handoff from M3)
+- rows: the history cap is account-wide, and a profile reset leaves it
+- rows: `/dw set` reaches a hand-written row
+- rows: degraded, the hand-written rows still read, write and refuse
 
 ### test_slash.lua (10)
 
@@ -459,7 +477,7 @@ Total.
 - trade rules: at exactly the window the drop has not expired
 - trade rules: with no clock or no drop time there is no expiry check
 - trade rules: binds and legacy are decided before the window
-- trade rules: each situation's default rule is CONTENT_RULE, raid conservatively personal
+- trade rules: each situation's default rule is its `trade.rules` default, raid conservatively personal
 - trade rules: the override map replaces a situation's rule
 - trade rules: an override naming no rule, or equal to the default, is not an override
 - trade rules: an unknown or missing situation takes the default personal rule
@@ -848,8 +866,9 @@ Total.
 | test_harness.lua | 10 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 18 |
-| test_database.lua | 4 |
+| test_database.lua | 7 |
 | test_schema.lua | 11 |
+| test_schema_rows.lua | 12 |
 | test_slash.lua | 10 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 37 |
@@ -884,4 +903,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **718** |
+| **Total** | **733** |

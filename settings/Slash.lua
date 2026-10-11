@@ -165,6 +165,7 @@ else
         bulkBegin    = NS.SchemaRuntime.BulkBegin,
         bulkEnd      = NS.SchemaRuntime.BulkEnd,
         groupKey     = function(row) return row.page or "general" end,
+        format       = function(row, v) return DW.Settings.FormatValue(row, v, lib.FormatValue) end,
     })
     NS.SlashCommands = Sl
 end

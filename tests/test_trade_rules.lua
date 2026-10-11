@@ -10,9 +10,9 @@ local cached
 local function load()
     if not cached then
         local NS = T.newAddon()
-        cached = { TR = NS.TradeRules, C = NS.Constants }
+        cached = { TR = NS.TradeRules, C = NS.Constants, rules = NS.C.PROFILE.trade.rules }
     end
-    return cached.TR, cached.C
+    return cached.TR, cached.C, cached.rules
 end
 
 local _, C0 = load()
@@ -191,11 +191,11 @@ end)
 -- the rule per situation and the owner override (spec §7.3)
 -- ---------------------------------------------------------------------------------------------
 
-test("trade rules: each situation's default rule is CONTENT_RULE, raid conservatively personal", function()
-    local TR, C = load()
+test("trade rules: each situation's default rule is its `trade.rules` default, raid conservatively personal", function()
+    local TR, C, rules = load()
     for _, s in ipairs(C.SITUATIONS) do
         local rule, overridden = TR.RuleFor(s.key, nil)
-        assertEqual(rule, C.CONTENT_RULE[s.key], s.key)
+        assertEqual(rule, rules[s.key], s.key)
         assertFalse(overridden, s.key)
     end
     assertEqual(TR.RuleFor("raid"), "personal")
@@ -235,12 +235,12 @@ test("trade rules: an unknown or missing situation takes the default personal ru
 end)
 
 test("trade rules: Rules lists every situation in order with its rule, default and override flag", function()
-    local TR, C = load()
+    local TR, C, rules = load()
     local list = TR.Rules({ raid = "group", dungeon = "bogus" })
     assertEqual(#list, #C.SITUATIONS)
     for i, s in ipairs(C.SITUATIONS) do
         assertEqual(list[i].situation, s.key)
-        assertEqual(list[i].default, C.CONTENT_RULE[s.key])
+        assertEqual(list[i].default, rules[s.key])
     end
     local byKey = {}
     for _, row in ipairs(list) do byKey[row.situation] = row end

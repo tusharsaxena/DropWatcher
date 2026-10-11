@@ -36,12 +36,12 @@ for _, kind in ipairs(C.MESSAGE_KINDS) do KIND[kind] = true end
 -- ---------------------------------------------------------------------------------------------
 
 --- The template for `kind`: the owner's text in `templates` when it is a non-empty string, else
---- the default (C.MESSAGE_TEMPLATES). Nil for an unknown kind.
+--- the default (defaults/Profile.lua's `messages.templates`). Nil for an unknown kind.
 function M.Template(kind, templates)
     if not KIND[kind] then return nil end
     local own = isTable(templates) and templates[kind] or nil
     if nonEmpty(own) then return own end
-    return C.MESSAGE_TEMPLATES[kind]
+    return NS.C.PROFILE.messages.templates[kind]
 end
 
 -- A number with one decimal at most, and none when it is whole ("5", "4.3"); else tostring.

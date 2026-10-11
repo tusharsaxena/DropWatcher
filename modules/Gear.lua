@@ -18,7 +18,7 @@ local _, NS = ...
 -- THE CANDIDATE. Candidate() answers spec §5.1's candidate for you: classFile (UnitClass), specID
 -- (NS.Compat.PlayerSpecID), dualWield and titanGrip (NS.ClassData for that spec, else for the
 -- class when every spec agrees, else nil), `gear` = equipped and `owned`. `prefs` is left for the
--- feed to add from the settings (DW-40).
+-- feed to add from the `comparison.undesired` setting.
 --
 -- OWNED. A bag item is first read for its equip location (NS.Compat.ItemEquipLoc, no item cache
 -- needed), and only one with a slot plan is requested from the item facts, so reagents and

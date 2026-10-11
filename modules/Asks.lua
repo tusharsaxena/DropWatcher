@@ -92,21 +92,17 @@ end
 
 -- ── settings ────────────────────────────────────────────────────────────────────────────────
 
-local function messages()
-    local p = NS.db and NS.db.profile
-    local m = p and p.messages
-    return type(m) == "table" and m or {}
-end
-
---- The `messages.*` settings the edge reads (DW-40 adds the rows; until then the spec defaults):
+--- The `messages.*` settings the edge reads, through the schema seam (NS.Setting):
 --- { oneAsk, templates, announceChannel }.
 --- @return table
 function A.Settings()
-    local m = messages()
+    local templates = {}
+    for _, kind in ipairs(C.MESSAGE_KINDS) do templates[kind] = NS.Setting("messages.templates." .. kind) end
+    local channel = NS.Setting("messages.announceChannel")
     return {
-        oneAsk = m.oneAsk ~= false,
-        templates = type(m.templates) == "table" and m.templates or {},
-        announceChannel = CHANNELS[m.announceChannel] and m.announceChannel or "auto",
+        oneAsk = NS.Setting("messages.oneAsk") ~= false,
+        templates = templates,
+        announceChannel = CHANNELS[channel] and channel or "auto",
     }
 end
 

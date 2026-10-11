@@ -42,7 +42,11 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
 `test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
-`test_database`, `test_schema`, `test_slash`, `test_window`, `test_window_shell` (the window's
+`test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
+reaching a stored profile that is not the active one), `test_schema`, `test_schema_rows` (every
+spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
+the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
+through the seam, the account-wide history cap, the CLI and the degraded load), `test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
 panes, the filter bar's per-tab state, the footer's composer, minimize, auto-open, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
