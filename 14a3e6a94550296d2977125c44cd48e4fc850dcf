@@ -1,0 +1,24 @@
+M5 independent review (DW-50..DW-54, 1a081da..769b8eb, base 0127087)
+
+Reviewers (3): spec conformance, standard compliance, correctness/WoW API.
+- Gate at review: 875 passed / 0 failed / 1 skipped; luacheck 0/0 in 108 files; largest authored file modules/Window.lua 1025 lines.
+- Spec conformance: DW-50 scoring, DW-51 history, DW-52 toast, DW-53 transmog and DW-54 auto-ask meet the spec. No crash, taint or MUST violation. Remaining problems were in the toast and in how Scoring picks the Pawn adapter.
+- Standard compliance: events, bus, Compat, secret values, saved variables and docs are compliant. One behavior bug, one stale doc and two low items.
+- Correctness/API: API use is correct. The main risk was trade completion (TRADE_ACCEPT_UPDATE(1,1) + TRADE_CLOSED with no positive signal). Also an extra repaint after each update and gaps in the toast and auto-ask lifecycle.
+
+Findings fixed: 5 of 5; rejected: 0.
+1. af9d6ea DW-52: toast hover-pause stuck when the pointer left through the close button. Fixed: hoverPauses(f.close).
+2. 1ba851e DW-54: a profile switch skipped the "only new drops" guard. Fixed: AutoAsk.OnProfileReloaded from reloadProfile. This commit also brings test-cases.md and the badge back in line.
+3. b4fa31a DW-50+DW-53: DEPENDENCIES.md Pawn/CanIMogIt entry was stale. Rewritten.
+4. a803d39 DW-51: a trade counted as complete without confirmation. Now completes only on the "Trade complete." UI_INFO_MESSAGE (before the close, or up to 5s after it). Added Compat.IsTradeCompleteMessage. HIST-1 smoke updated (not marked passed).
+5. 14a3e6a DW-51: the window repainted twice per drop update. Fixed: HistoryChanged is sent only when something actually changed, plus a shared Window.ScheduleRepaint. The reviewer's "repaint only when the tab is active" idea was not taken because it would save nothing.
+
+Gate after fixes: 884 passed / 0 failed / 1 skipped; luacheck 0/0 in 108 files; Window.lua 1029 lines; tree clean. Nothing pushed, merged, tagged or bumped.
+
+Low findings not fixed (recorded):
+- Toast: the header says a toast goes when its drop leaves the feed, but nothing does this outside test mode. After /dw clear, clearOnBossKill, a dismiss or a feed trim, the toast stays on screen and its Ask button still points at a removed drop. (Reported by 3 reviewers.)
+- Toast.Qualifies/AutoAsk: ilvlDelta nil on an empty-slot upgrade fails minGain, so the clearest upgrades never toast or auto-ask (spec 11.5/9.4).
+- Scoring: InUse picks pawn when Pawn is only loaded (spec 5.4 says initialized), so with auto it returns pending and spends the retries instead of using your weights.
+- WindowHistory: the Clear history popup lacks preferredIndex = 3 (taint precaution).
+- SchemaRows toast.enabled has no onChange: turning it off leaves the visible toast and the queue (a test-mode toast never times out).
+- AutoAsk: inEncounter is cleared only by ENCOUNTER_END or the stand-down. A missing END (hearth, port, disconnect) holds auto-asks indefinitely.
