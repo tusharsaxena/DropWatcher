@@ -2,7 +2,7 @@
 -- the caps, the outcomes moving forward only, declined by hand, the trade-completion match), the
 -- edge on the bus (DropAdded records a live drop, DropUpdated refreshes it, AskStateChanged moves
 -- its outcome), the trade window's events (a completed trade marks a drop received or traded away;
--- an unfinished one marks nothing), the cap row, Clear history behind its confirmation, and the
+-- an unfinished one marks nothing), Clear history behind its confirmation, and the
 -- History tab built headless: kept groups under their headers, the outcome column, the row menu,
 -- the filter and the empty line.
 

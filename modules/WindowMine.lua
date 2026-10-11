@@ -12,7 +12,13 @@ local _, NS = ...
 --
 -- THE ROWS. Pooled through LibKa0s-Pool-1.0 (NS.Pool), released and re-acquired in order on every
 -- repaint. The entries (pure): your own drops in the tab's feed that pass the tab's filter
--- (Window.TabContext: Content, search and Sort) and were not hidden, in the tab's order. A row is
+-- (Window.TabContext: Content, search and Sort) and were not hidden, in the tab's order. They sit
+-- under the same collapsible header per run or encounter as the other two tabs (M10 review,
+-- FB2-10; WC.Header: the place, the age, `n drops · m shown`, the party in class color), through
+-- NS.WindowGroup.Entries with only your drops counted: newest group first, every group open until
+-- the player collapses it (an older run's drops are the ones whose trade windows end first), and a
+-- drop in no group listed last, so none is lost. The summary counts every entry, collapsed or not.
+-- A row is
 -- the Window page's row height plus the room its countdown bar needs, in the Group drops rows' text
 -- size (modules/WindowRows.lua; feedback-2 spec §8, FB2-9).
 --
@@ -60,6 +66,7 @@ local function view()
         v = { dismissed = {}, revealed = {} }
         State.windowMine = v
     end
+    v.collapsed = v.collapsed or {}
     return v
 end
 
@@ -72,6 +79,15 @@ end
 function WM.Dismiss(id)
     view().dismissed[id] = true
     NS.Debug("UI", "my drop %s hidden", tostring(id))
+    repaint()
+end
+
+--- Collapse or expand one group's rows for the session (its header's click).
+--- @param key string the group's key
+--- @param collapsedNow boolean
+function WM.ToggleGroup(key, collapsedNow)
+    view().collapsed[key] = not collapsedNow
+    NS.Debug("UI", "my drops group %s %s", tostring(key), collapsedNow and "expanded" or "collapsed")
     repaint()
 end
 
@@ -101,6 +117,37 @@ function WM.Entries(drops, ctx, state)
         if d.isMine and not dismissed[d.id] and ctx.matches(d) then out[#out + 1] = d end
     end
     table.sort(out, ctx.compare)
+    return out
+end
+
+-- The ids the feed's groups hold.
+local function groupedIds(groups)
+    local out = {}
+    for _, g in ipairs(groups) do
+        for _, id in ipairs(g.drops or {}) do out[id] = true end
+    end
+    return out
+end
+
+--- The table's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
+--- collapsed } and { kind = "drop", drop }, as NS.WindowGroup.Entries' over your own drops only, every
+--- group open until toggled; then any entry of WM.Entries that no group holds, with no header.
+--- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
+--- @param drops table the feed's drops (NS.LootFeed.Drops)
+--- @param get function id -> drop (NS.LootFeed.Get)
+--- @param ctx table Window.TabContext's { matches, compare, filter, belongs, hiddenBy }
+--- @param state table|nil { collapsed, dismissed } (NS.State.windowMine)
+--- @return table
+function WM.Rows(groups, drops, get, ctx, state)
+    state, groups = state or {}, groups or {}
+    local mine = { matches = ctx.matches, compare = ctx.compare, filter = ctx.filter, hiddenBy = ctx.hiddenBy,
+        belongs = function(d) return d.isMine == true and (not ctx.belongs or ctx.belongs(d)) end }
+    local out = NS.WindowGroup.Entries(groups, get, mine,
+        { collapsed = state.collapsed, dismissed = state.dismissed, allOpen = true })
+    local grouped = groupedIds(groups)
+    for _, d in ipairs(WM.Entries(drops, ctx, state)) do
+        if not grouped[d.id] then out[#out + 1] = { kind = "drop", drop = d } end
+    end
     return out
 end
 
@@ -202,6 +249,34 @@ local function actionsCell(row)
 end
 
 local BUILDERS = { item = itemCell, forMe = forMeCell, trade = tradeCell, actions = actionsCell }
+
+-- A group's header: the same look as the Group drops tab's (modules/WindowGroup.lua).
+local function newHeader(content)
+    local h = CreateFrame("Button", nil, content)
+    h:SetHeight(K.GROUP_H)
+    h.fill = h:CreateTexture(nil, "BACKGROUND")
+    h.fill:SetAllPoints(h)
+    h.fill:SetColorTexture(1, 1, 1, 0.06)
+    h.chevron = h:CreateTexture(nil, "ARTWORK")
+    h.chevron:SetSize(10, 10)
+    h.chevron:SetPoint("LEFT", h, "LEFT", 4, 0)
+    h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
+    h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    h:SetScript("OnClick", function(self) WM.ToggleGroup(self.groupKey, self.collapsed) end)
+    attach(h)
+    return h
+end
+
+local function paintHeader(h, e, now)
+    local g = e.group
+    local hd = NS.WindowCells.Header(g, e.count, now, NS.WindowFooter.SITUATION_LABEL[g.situation], e.collapsed,
+        e.hidden, e.filter)
+    h.groupKey, h.collapsed = g.key, e.collapsed
+    h.text:SetText(hd.text)
+    h.tipLines = hd.tip
+    h.chevron:SetTexture(NS.Icon(e.collapsed and "chevron-right" or "chevron-down"))
+end
 
 local function newRow(content)
     local row = CreateFrame("Frame", nil, content)
@@ -366,8 +441,8 @@ local function build(pane)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
     pane.scroll, pane.content = scroll, content
-    pane.rowPool = NS.Pool.New()
-    pane.entries = {}
+    pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
+    pane.entries, pane.items = {}, {}
 end
 
 local function paintHeads(pane, layout)
@@ -391,17 +466,28 @@ local function rowWidth(pane)
     return w - K.SCROLL_W
 end
 
-local function drawRows(pane, entries, layout, width, now)
+local function place(f, content, y, width)
+    f:ClearAllPoints()
+    f:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
+    f:SetWidth(width)
+end
+
+local function drawRows(pane, items, layout, width, now)
     local warnAt, metrics = NS.TradeTimer.WarnAt(), NS.WindowRows.Metrics()
     local y = 0
-    for i, d in ipairs(entries) do
-        local r = NS.Pool.Acquire(pane.rowPool, function() return newRow(pane.content) end)
-        r:ClearAllPoints()
-        r:SetPoint("TOPLEFT", pane.content, "TOPLEFT", 0, -y)
-        r:SetWidth(width)
-        r.stripe:SetShown(i % 2 == 0)
-        paintRow(r, d, layout, now, warnAt, metrics)
-        y = y + metrics.mineHeight
+    for i, e in ipairs(items) do
+        if e.kind == "header" then
+            local h = NS.Pool.Acquire(pane.headPool, function() return newHeader(pane.content) end)
+            place(h, pane.content, y, width)
+            paintHeader(h, e, now)
+            y = y + K.GROUP_H
+        else
+            local r = NS.Pool.Acquire(pane.rowPool, function() return newRow(pane.content) end)
+            place(r, pane.content, y, width)
+            r.stripe:SetShown(i % 2 == 0)
+            paintRow(r, e.drop, layout, now, warnAt, metrics)
+            y = y + metrics.mineHeight
+        end
     end
     pane.content:SetSize(width, max(y, 1))
 end
@@ -434,23 +520,29 @@ end
 local function refresh(pane, ctx)
     local width = rowWidth(pane)
     local layout = NS.WindowGroup.Layout(WM.COLUMNS, width)
-    local entries = WM.Entries(NS.LootFeed.Drops(ctx.feed), ctx, view())
+    local LF = NS.LootFeed
+    local drops = LF.Drops(ctx.feed)
+    local entries = WM.Entries(drops, ctx, view())
+    local items = WM.Rows(LF.Groups(ctx.feed), drops, LF.Get, ctx, view())
     local now = GetTime()
     paintHeads(pane, layout)
     NS.Pool.ReleaseAll(pane.rowPool)
-    drawRows(pane, entries, layout, width, now)
-    pane.entries = entries
+    NS.Pool.ReleaseAll(pane.headPool)
+    drawRows(pane, items, layout, width, now)
+    pane.entries, pane.items = entries, items
     paintSummary(pane, entries, now)
     paintEmpty(pane, entries, ctx)
 end
 
---- The drawn pane's rows, for the suites: { rows, entries, pane, summary } or nil before the build.
+--- The drawn pane, for the suites: { rows, headers, entries (your drops, flat), items (the
+--- headers and rows, in order), pane, summary } or nil before the build.
 --- @return table|nil
 function WM.Drawn()
     local f = NS.Window.Frame()
     local pane = f and f.panes.mine
     if not (pane and pane.rowPool) then return nil end
-    return { rows = pane.rowPool.active, entries = pane.entries, pane = pane, summary = pane.summaryData }
+    return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
+        items = pane.items, pane = pane, summary = pane.summaryData }
 end
 
 NS.Window.RegisterTab("mine", { build = build, refresh = refresh })

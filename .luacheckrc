@@ -23,7 +23,7 @@ read_globals = {
   "_G", "LibStub", "C_AddOns", "C_Item", "C_Timer",
   "CreateFrame", "UIParent", "UISpecialFrames", "STANDARD_TEXT_FONT", "ITEM_QUALITY_COLORS",
   "InCombatLockdown", "UnitAffectingCombat", "debugprofilestop", "tinsert",
-  "Settings", "StaticPopup_Show", "YES", "NO",
+  "Settings", "StaticPopup_Show", "StaticPopup_Hide", "YES", "NO",
   "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
   "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected", "UNKNOWNOBJECT",
   "GetTime", "time", "LE_PARTY_CATEGORY_INSTANCE", "GameTooltip", "IsShiftKeyDown", "IsControlKeyDown",

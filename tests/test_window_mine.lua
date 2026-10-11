@@ -241,14 +241,57 @@ test("mine: the entries are your own drops that pass the filter and were not hid
     assertEqual(#WM.Entries(drops, ctx, { dismissed = { [3] = true } }), 1)
 end)
 
+-- M10 review (FB2-10): My drops groups its rows under the same headers as the other two tabs.
+local function groupOf(key, at, ids, roster)
+    return { key = key, label = key, kind = "encounter", at = at, drops = ids, roster = roster }
+end
+
+local function rowsCtx(over)
+    local ctx = { matches = function() return true end, compare = function(a, b) return a.at > b.at end,
+        hiddenBy = function() return "view" end, filter = {} }
+    for k, v in pairs(over or {}) do ctx[k] = v end
+    return ctx
+end
+
+local function shape(list)
+    local out = {}
+    for _, e in ipairs(list) do
+        out[#out + 1] = e.kind == "header" and ("[" .. e.group.key .. ":" .. e.count .. "/" .. e.total .. "]")
+            or tostring(e.drop.id)
+    end
+    return table.concat(out, " ")
+end
+
+test("mine: rows sit under their run's or encounter's header, newest group first, every group open", function()
+    local NS = T.newAddon()
+    local WM = NS.WindowMine
+    local drops = { drop({ id = 1, at = 10 }), drop({ id = 2, at = 30, isMine = false }), drop({ id = 3, at = 20 }),
+        drop({ id = 4, at = 40 }), drop({ id = 5, at = 50 }) }
+    local byId = {}
+    for _, d in ipairs(drops) do byId[d.id] = d end
+    local get = function(id) return byId[id] end
+    local groups = { groupOf("Boss A", 5, { 1, 2, 3 }), groupOf("Others", 25, { 2 }), groupOf("Boss B", 35, { 4 }) }
+    -- red under: one flat list, no header
+    assertEqual(shape(WM.Rows(groups, drops, get, rowsCtx(), {})), "[Boss B:1/1] 4 [Boss A:2/2] 3 1 5",
+        "a group with none of yours has no header; a drop in no group is still listed, last")
+    local ctx = rowsCtx({ matches = function(d) return d.id ~= 3 end })
+    assertEqual(shape(WM.Rows(groups, drops, get, ctx, {})), "[Boss B:1/1] 4 [Boss A:1/2] 1 5",
+        "a drop the filter hid is counted under its header")
+    assertEqual(shape(WM.Rows(groups, drops, get, rowsCtx(), { collapsed = { ["Boss B"] = true } })),
+        "[Boss B:1/1] [Boss A:2/2] 3 1 5", "a collapsed group keeps its header only")
+    assertEqual(shape(WM.Rows(groups, drops, get, rowsCtx(), { dismissed = { [4] = true } })), "[Boss A:2/2] 3 1 5")
+end)
+
 -- ── the tab, headless ───────────────────────────────────────────────────────────────────────
 
-local function seed(NS, drops)
+local ROSTER = { { name = "Me", class = "PALADIN", me = true }, { name = "Seta", class = "PRIEST" } }
+
+local function seed(NS, drops, groups)
     local byId = {}
     for _, d in ipairs(drops) do byId[d.id] = d end
     NS.LootFeed.Get = function(id) return byId[id] end
     NS.LootFeed.Drops = function() return drops end
-    NS.LootFeed.Groups = function() return {} end
+    NS.LootFeed.Groups = function() return groups or {} end
 end
 
 -- Board 04's four rows.
@@ -271,7 +314,7 @@ end
 local function shownMine()
     local NS, _, m = T.enableAddon()
     m.__now = NOW
-    seed(NS, boardDrops())
+    seed(NS, boardDrops(), { groupOf("Den of Nalorakk", NOW - 3000, { 1, 2, 3, 4 }, ROSTER) })
     NS.Asks.StateOf = function() return "ready" end
     NS.TradeHelper.CanGive = function() return false, "range" end
     NS.ShowWindow()
@@ -377,6 +420,24 @@ test("mine tab: rows come from the pool and a repaint reuses them", function()
     assertTrue(drawn.rows[1] == first)
     local free, active = NS.Pool.Counts(drawn.pane.rowPool)
     assertEqual(free .. "/" .. active, "0/4")
+end)
+
+test("mine tab: the rows sit under a header naming the party; a click collapses the group", function()
+    local NS, drawn = shownMine()
+    assertEqual(#drawn.headers, 1)
+    local h = drawn.headers[1]
+    local text = textOf(h.text)
+    assertTrue(text:find("Den of Nalorakk", 1, true) == 1, text)
+    assertTrue(text:find("4 drops", 1, true) ~= nil, text)
+    assertTrue(text:find("Seta", 1, true) ~= nil, "the roster, as on the other tabs: " .. text)
+    assertTrue(#NS.Window.TooltipOf(h) >= 3)
+    h:__fire("OnClick")
+    drawn = NS.WindowMine.Drawn()
+    assertEqual(#drawn.rows, 0, "collapsed")
+    assertTrue(textOf(drawn.headers[1].text):find("(collapsed)", 1, true) ~= nil)
+    assertEqual(drawn.summary.text, "3 tradeable · next expiry 0:08:41", "the summary still counts them")
+    drawn.headers[1]:__fire("OnClick")
+    assertEqual(#NS.WindowMine.Drawn().rows, 4)
 end)
 
 test("mine tab: TradeTimerTick moves the countdown while the tab shows", function()

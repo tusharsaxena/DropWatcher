@@ -4,7 +4,7 @@ local _, NS = ...
 -- Two scopes, each one AceDB defaults table (settings/Schema.lua's Settings.BuildDefaults assembles
 -- them with the schema rows' own defaults, which reference these values):
 --   profile  every setting of design spec §12.1 and the window's geometry;
---   global   the schema stamp, LibDBIcon's table and the history cap.
+--   global   the schema stamp, LibDBIcon's table and the History's Keep history for.
 --
 -- The Master controls rows are composed by LibKa0s-Options-1.0, so their values live here too: with
 -- the library absent the schema has no `enabled` row, and a schema-only defaults tree would hand

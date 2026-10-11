@@ -12,7 +12,8 @@ local _, NS = ...
 -- WHAT IS PRUNED. A group whose newest entry (its latest `at`; the group's own `at` when it has no
 -- entry) is older than the window, whole. The prune runs once per session, CLEANUP_DELAY seconds
 -- after the first PLAYER_ENTERING_WORLD (off the login spike, on a cancelable timer the stand-down
--- takes back), over the account's log (NS.History.Store), and again when the setting changes to a
+-- takes back) or, when the addon started disabled, after it is enabled later in the session (the
+-- stand-up), over the account's log (NS.History.Store), and again when the setting changes to a
 -- window that would delete something, once the player confirms it.
 --
 -- THE CONFIRMATION. A change that would delete anything asks first ("This deletes n groups (m
@@ -22,7 +23,8 @@ local _, NS = ...
 -- data: an unanswered popup (a /reload, a logout, a popup hidden by another) leaves nothing
 -- unconfirmed in the store, and the next login prunes nothing the player did not agree to. Yes
 -- writes the asked-for window and prunes; No keeps the agreed one. A change that deletes nothing
--- is taken at once. The count and
+-- is taken at once. Only the latest pending choice is answered (R.Answer): a later change retires
+-- the open popup, so an old popup never re-applies an older window. The count and
 -- the prune cover the account's log and, while test mode or a simulation shows its own session-only
 -- log (NS.History.Log), that one too, so test mode's older sample group can be pruned without
 -- touching the account's.
@@ -146,6 +148,7 @@ end
 local confirmed       -- the stored window the player last agreed to (Sync seeds it)
 local restoring = false
 local timer           -- the login prune's pending timer
+local pending         -- the open popup's data: the only choice an answer may act on
 local loginSeen, loginDone = false, false
 
 local function clock() return time() end
@@ -243,13 +246,34 @@ local function ensurePopup()
         button1 = YES or "Yes", button2 = NO or "No",
         timeout = 0, whileDead = true, hideOnEscape = true, showAlert = true,
         preferredIndex = 3,   -- clear of the slots Blizzard's own popups take first
-        OnAccept = function(_, data) R.Confirm(data and data.days, true) end,
+        OnAccept = function(_, data) R.Answer(data, true) end,
         -- A newer change re-shows the popup with reason "override": not the player's No.
         OnCancel = function(_, data, reason)
             if reason == "override" then return end
-            R.Confirm(data and data.days, false)
+            R.Answer(data, false)
         end,
     }
+end
+
+-- Retire the open popup's choice: a later change superseded it (the popup is taken down, and an
+-- answer it still gets acts on nothing).
+local function retirePending()
+    if not pending then return end
+    pending = nil
+    if type(StaticPopup_Hide) == "function" then StaticPopup_Hide(R.POPUP) end
+end
+
+--- The popup's answer, acted on only when `data` is the latest pending choice: a popup left open
+--- across a later change (one that deleted nothing, or a newer one that asks again) never
+--- re-applies its older window.
+--- @param data table|nil the popup's data
+--- @param accepted boolean
+--- @return boolean acted
+function R.Answer(data, accepted)
+    if data == nil or data ~= pending then return false end
+    pending = nil
+    R.Confirm(data.days, accepted)
+    return true
 end
 
 --- The row's onChange: a window that deletes nothing is taken at once; one that would delete asks
@@ -259,6 +283,7 @@ end
 function R.OnChanged(days)
     if restoring then return end
     local groups, drops = R.CountAll(days)
+    retirePending()
     if groups == 0 then confirmed = days; return end
     if type(StaticPopup_Show) ~= "function" then
         R.PruneAll(days)
@@ -268,7 +293,8 @@ function R.OnChanged(days)
     writeQuietly(confirmed or R.DEFAULT_DAYS)
     ensurePopup()
     local what = L["%d groups (%d drops)"]:format(groups, drops)
-    StaticPopup_Show(R.POPUP, what, R.Label(days), { days = days })
+    pending = { days = days }
+    StaticPopup_Show(R.POPUP, what, R.Label(days), pending)
 end
 
 --- The confirmation's two answers. Yes stores the window agreed to and prunes to it; No keeps (and
@@ -296,9 +322,17 @@ function NS.addon.OnRetentionWorldEvent()
     R.OnEnteringWorld()
 end
 
+--- The stand-up: arm the session's prune if it never ran. A stand-up only comes from releasing the
+--- latch, which OnEnable (PLAYER_LOGIN) takes first, so the world has been entered by now: an addon
+--- that started disabled never heard the session's PLAYER_ENTERING_WORLD, and is pruned from here.
+function R.OnStandUp()
+    loginSeen = true
+    schedule()
+end
+
 -- The stand-down takes the pending prune back; the stand-up arms it again if it never ran.
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if timer then timer:Cancel() end
     timer = nil
 end
-NS.STAND_UP[#NS.STAND_UP + 1] = schedule
+NS.STAND_UP[#NS.STAND_UP + 1] = R.OnStandUp

@@ -14,6 +14,7 @@
 --   loadedAddons   the names C_AddOns.IsAddOnLoaded answers true for (this addon's own folder is in)
 --   prints         every line handed to the Lua global `print` (the printer's sink)
 --   popupsShown    every StaticPopup_Show(which, ...) call, in order
+--   popupsHidden   every StaticPopup_Hide(which) call's `which`, in order
 --   ldbObjects     LibDataBroker objects by name; minimapButtons LibDBIcon registrations by name
 --   fireEvent      fireEvent(name, ...) dispatches a game event to AceEvent handlers
 --   instance       GetInstanceInfo's name and difficultyID; the instance type and inInstance are
@@ -748,6 +749,7 @@ local function build()
     M.inCombat     = false
     M.prints       = {}
     M.popupsShown  = {}
+    M.popupsHidden = {}
     M.loadedAddons = { DropWatcher = true }
 
     M.InCombatLockdown    = function() return M.inCombat == true end
@@ -770,6 +772,7 @@ local function build()
     end
 
     M.StaticPopup_Show = function(which, ...) M.popupsShown[#M.popupsShown + 1] = { which, ... } end
+    M.StaticPopup_Hide = function(which) M.popupsHidden[#M.popupsHidden + 1] = which end
 
     -- Where the player is (modules/Situations.lua). Outside an instance the client answers type
     -- "none" and difficulty 0; GetDifficultyInfo answers a name for any positive id not retired.

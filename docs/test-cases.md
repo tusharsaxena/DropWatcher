@@ -235,7 +235,7 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (44)
+### test_window_group.lua (46)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -269,6 +269,8 @@ Total.
 - item tooltip: it opens on the window's left when the screen has no room on the right
 - item tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
 - item tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
+- item tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
+- item tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
 - item tooltip: a row's item button opens the game's tooltip beside the window, else on its own right
 - table: Their eq shows the looter's worn item from their inspect read
 - table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
@@ -305,7 +307,7 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_window_mine.lua (33)
+### test_window_mine.lua (35)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -321,11 +323,13 @@ Total.
 - mine cells: the Offer panel docks right, else left, else floats
 - mine cells: the panel's header reads your change, the item level and the trade window
 - mine: the entries are your own drops that pass the filter and were not hidden, in the tab's order
+- mine: rows sit under their run's or encounter's header, newest group first, every group open
 - mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps Actions inside it
 - mine tab: built headless, one row per drop of yours, each column painted
 - mine tab: a row is the row height plus its bar's room, in the Font size row's size
 - mine tab: every shown cell has a reason tooltip; nothing is blank
 - mine tab: rows come from the pool and a repaint reuses them
+- mine tab: the rows sit under a header naming the party; a click collapses the group
 - mine tab: TradeTimerTick moves the countdown while the tab shows
 - mine tab: Hide takes a dead row off the tab for the session
 - mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
@@ -1020,7 +1024,7 @@ Total.
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
 
-### test_history_retention.lua (13)
+### test_history_retention.lua (16)
 
 - retention: the labels, the choices and the footer
 - retention: a group's age is its newest entry's, else its own
@@ -1030,9 +1034,12 @@ Total.
 - retention: a shorter window that deletes asks first; Yes prunes
 - retention: No writes the last agreed window back and deletes nothing
 - retention: an unanswered popup (a /reload with it open) leaves nothing to prune at the next login
+- retention: a later change that deletes nothing retires the open popup; its Yes does nothing
+- retention: of two deleting changes, only the latest popup's answer counts
 - retention: headless (no popup), a shorter window prunes at once
 - retention: the login prune runs once, deferred off the login, over the account's log
 - retention: the stand-down takes the pending prune back; the stand-up arms it again
+- retention: enabled later in a session that started disabled, the prune still runs once
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
@@ -1337,9 +1344,9 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 50 |
-| test_window_group.lua | 44 |
+| test_window_group.lua | 46 |
 | test_detail_card.lua | 20 |
-| test_window_mine.lua | 33 |
+| test_window_mine.lua | 35 |
 | test_test_mode.lua | 30 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 9 |
@@ -1367,7 +1374,7 @@ Total.
 | test_asks.lua | 23 |
 | test_transmog.lua | 13 |
 | test_history.lua | 29 |
-| test_history_retention.lua | 13 |
+| test_history_retention.lua | 16 |
 | test_toast.lua | 24 |
 | test_auto_ask.lua | 25 |
 | test_sim_core.lua | 25 |
@@ -1385,4 +1392,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1143** |
+| **Total** | **1150** |

@@ -233,7 +233,10 @@ Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
   ├─> WindowGroup.Layout(WindowMine.COLUMNS, the rows' width)              (pure)
   ├─> WindowMine.Entries(NS.LootFeed.Drops(feed), ctx, NS.State.windowMine) (pure: your own drops,
   │                                                                           filtered, sorted)
-  ├─> NS.Pool.ReleaseAll(rows) ─> Acquire in order (each row built once)
+  ├─> WindowMine.Rows(Groups, Drops, Get, ctx, NS.State.windowMine) (pure: WindowGroup.Entries over
+  │     your drops, every group open until toggled; a drop in no group last, with no header)
+  ├─> NS.Pool.ReleaseAll(rows, headers) ─> Acquire in order (each built once); each header:
+  │     WindowCells.Header(group, shown, now, …): `Label · Situation · 6m ago · n drops · party`
   ├─> each row: WindowCells.Item / Ilvl, MineCells.ForMe / TradeWindow(drop, now, TradeTimer.WarnAt())
   │             / BestCandidates(drop, revealed) / Actions(drop, best, AnnounceButton(…))
   │               reads: NS.Asks.StateOf("announce", nil, id)
@@ -524,10 +527,13 @@ The stand-down cancels the flush timer and drops the queued asks; the sent regis
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
                           (live drops only)        group = feed group @ session; Trim: 50 a group,
                                                    CEILING 5,000 drops in all, the oldest first)
-first PLAYER_ENTERING_WORLD ─> 5s (canceled by the stand-down) ─> HistoryRetention.LoginPrune:
+first PLAYER_ENTERING_WORLD, or the stand-up after a disabled start
+                          ─> 5s (canceled by the stand-down) ─> HistoryRetention.LoginPrune:
                           groups whose newest entry is older than retentionDays ─> HistoryChanged
 Keep history for row ─> HistoryRetention.OnChanged ─> deletes nothing: taken | deletes: StaticPopup
                           ─> Yes: PruneAll (account + shown session log) | No: the agreed value back
+                          (HistoryRetention.Answer: only the latest pending choice; a later change
+                          retires the open popup)
 DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
                           (HistoryChanged only when the entry changed)
 AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)
@@ -536,7 +542,7 @@ TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TR
           5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
-Clear history ─> StaticPopup ─> History.Clear        cap row ─> History.ApplyCap
+Clear history ─> StaticPopup ─> History.Clear
 every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint: one pass next frame,
                                    shared with DropUpdated's
                                    (the History tab; a received drop's Ask reads Traded)

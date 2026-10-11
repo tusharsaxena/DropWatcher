@@ -538,7 +538,8 @@ end)
 
 -- A plain frame for PlaceItemTooltip: its edges, width, scale and parent, and the points it is given.
 local function box(t)
-    local f = { pts = {}, tipHost = t.tipHost }
+    local f = { pts = {}, tipHost = t.tipHost, dock = t.dock, tipDocked = t.tipDocked }
+    if t.shown ~= nil then function f.IsShown() return t.shown end end
     function f.GetLeft() return t.left end
     function f.GetRight() return t.right end
     function f.GetTop() return t.top end
@@ -605,6 +606,55 @@ test("item tooltip: unknown geometry places nothing; a marked panel is the frame
     local row = box({ top = 800, parent = panel })
     assertEqual(placed(NS, m, 1920, row, tip), "right")
     assertTrue(tip.pts[1][2] == panel, "the Offer panel's own edge, not the window's under it")
+end)
+
+-- M10 review (FB2-10): with the Offer panel docked beside the window, a tooltip opens beside the
+-- pair, never over the panel (a window row) or over the window (a panel row).
+local function dockedPair(side, shown)
+    local win = box({ left = 500, right = 1300, top = 900 })
+    local panel = side == "right"
+        and box({ left = 1304, right = 1744, top = 900, parent = win, tipHost = true, dock = side, shown = shown })
+        or box({ left = 56, right = 496, top = 900, parent = win, tipHost = true, dock = side, shown = shown })
+    win.tipDocked = panel
+    return win, panel
+end
+
+test("item tooltip: a window row's tooltip goes beside the docked Offer panel, not over it", function()
+    local NS, _, m = T.newAddon()
+    local gap = NS.Constants.WINDOW.TIP_GAP
+    local win, panel = dockedPair("right", true)
+    local row = box({ top = 700, parent = win })
+    local tip = box({ width = 150 })
+    -- red under: the window's own right edge (1300), under the panel
+    assertEqual(placed(NS, m, 1920, row, tip), "right")
+    assertTrue(tip.pts[1][2] == panel, "beyond the panel's right edge")
+    assertEqual(tip.pts[1][4], gap); assertEqual(tip.pts[1][5], -200)
+    -- no room right of the panel: the window's other side
+    tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, row, tip), "left")
+    assertTrue(tip.pts[1][2] == win)
+    -- a panel docked on the left: the tooltip's left side starts at the panel
+    local win2, left = dockedPair("left", true)
+    tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1700, box({ top = 700, parent = win2 }), tip), "right")
+    assertTrue(tip.pts[1][2] == win2)
+    assertEqual(placed(NS, m, 1310, box({ top = 700, parent = win2 }), tip), "left")
+    assertTrue(tip.pts[1][2] == left, "beyond the panel's left edge")
+end)
+
+test("item tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored", function()
+    local NS, _, m = T.newAddon()
+    local win, panel = dockedPair("right", true)
+    local tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = panel }), tip), "left")
+    assertTrue(tip.pts[1][2] == win, "beyond the window's left edge, not over it")
+    win = dockedPair("right", false)
+    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = win }), tip), "right")
+    assertTrue(tip.pts[1][2] == win, "a hidden panel takes no room")
+    win, panel = dockedPair("right", true)
+    panel.dock = "float"
+    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = win }), tip), "right")
+    assertTrue(tip.pts[1][2] == win, "a floating panel sits inside the window")
 end)
 
 test("item tooltip: a row's item button opens the game's tooltip beside the window, else on its own right", function()

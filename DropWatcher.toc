@@ -215,7 +215,7 @@ modules\TradeHelper.lua
 # after modules\Situations.lua's and modules\LootFeed.lua's. NS.Restrictions, NS.Roster and
 # NS.LootFeed (above) are read at call time.
 modules\Asks.lua
-# Conventional: publishes NS.History, the capped account-wide log of the feed's drops and their
+# Conventional: publishes NS.History, the account-wide log (kept by days) of the feed's drops and their
 # outcomes; appends its TRADE_* rows to NS.FEATURE_EVENTS and NS.STAND_DOWN / NS.STAND_UP and its
 # handlers to NS.addon (core\DropWatcher.lua) at load, and registers its DropAdded, DropUpdated and
 # AskStateChanged receivers on a NS.Bus target at load. NS.LootFeed, NS.Compat and NS.Setting

@@ -238,9 +238,9 @@ local function appendGroup(out, g, drops, hidden, filter, c)
     for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
 end
 
-local function collapsedOf(collapsed, key, first)
+local function collapsedOf(collapsed, key, first, allOpen)
     local v = collapsed[key]
-    if v == nil then return not first end
+    if v == nil then return not (first or allOpen) end
     return v
 end
 
@@ -250,11 +250,12 @@ end
 --- lists, `hidden` the ones the filter hid ({ drop, why }), so the header can say `2 drops · 1 shown`
 --- (feedback-2 spec §0). Groups newest first (oldest first under Sort: Oldest); a group with no
 --- drop passing the filter keeps an open header with count 0 unless WC.KeepsHeader says no, and
---- does not take the first group's open default; a collapsed group's drops left out.
+--- does not take the first group's open default; a collapsed group's drops left out. With
+--- `state.allOpen` every group never toggled is open (My drops, modules/WindowMine.lua).
 --- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
 --- @param get function id -> drop (NS.LootFeed.Get)
 --- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy }
---- @param state table|nil { collapsed, dismissed } (NS.State.windowGroup)
+--- @param state table|nil { collapsed, dismissed, allOpen } (NS.State.windowGroup)
 --- @return table
 function WG.Entries(groups, get, ctx, state)
     state = state or {}
@@ -267,7 +268,7 @@ function WG.Entries(groups, get, ctx, state)
         local g = groups[i]
         local drops, hidden = visibleDrops(g, get, ctx, dismissed)
         if #drops > 0 then
-            local c = collapsedOf(collapsed, g.key, first)
+            local c = collapsedOf(collapsed, g.key, first, state.allOpen)
             first = false
             appendGroup(out, g, drops, hidden, ctx.filter, c)
         elseif WC.KeepsHeader(0, hidden) then
@@ -364,6 +365,9 @@ end
 -- its left when the screen has no room on the right (Loot History's row tooltip, ANCHOR_RIGHT on a
 -- row as wide as its window). That frame is the nearest ancestor marked `tipHost` (the Offer
 -- panel, docked beside the window), else the outermost one under UIParent (the window, the toast).
+-- With the Offer panel docked beside the window (its `dock` right or left, shown), the two count as
+-- one span (M10 review, FB2-10): the tooltip goes beside the pair, never over the panel from a window
+-- row nor over the window from a panel row. The window names its panel as `tipDocked`.
 
 local function num(v) return type(v) == "number" and v or nil end
 
@@ -392,18 +396,53 @@ local function tipHostOf(owner)
     return f
 end
 
--- Which side of `host` the tooltip goes, measured in screen pixels (each edge at its frame's
--- effective scale): right when it fits, else left.
-local function sideOf(host, tip, gap)
-    local hs, ts = scaleOf(host), scaleOf(tip)
+-- A frame's left and right edges in screen pixels, or nil when it is unplaced.
+local function edgesPx(f)
+    local l, r, s = geom(f, "GetLeft"), geom(f, "GetRight"), scaleOf(f)
+    if not (l and r and geom(f, "GetTop")) then return nil end
+    return l * s, r * s
+end
+
+local function dockedBeside(panel)
+    return panel.dock == "right" or panel.dock == "left"
+end
+
+-- The frame docked beside `host` that the tooltip must not cover: the window's shown, docked panel,
+-- or, for a docked panel, the window it hangs off.
+local function companionOf(host)
+    local panel = host.tipDocked
+    if panel then
+        local shown = panel.IsShown and panel:IsShown()
+        return (shown and dockedBeside(panel)) and panel or nil
+    end
+    if host.tipHost and dockedBeside(host) then return parentOf(host) end
+    return nil
+end
+
+-- The span the tooltip goes beside, in screen pixels, and the frame at each end of it.
+local function spanOf(host)
+    local l, r = edgesPx(host)
+    local outL, outR = host, host
+    local c = companionOf(host)
+    local cl, cr
+    if c then cl, cr = edgesPx(c) end
+    if cl and cl < l then l, outL = cl, c end
+    if cr and cr > r then r, outR = cr, c end
+    return l, r, outL, outR
+end
+
+-- Which side of the span the tooltip goes, in screen pixels: right when it fits, else left.
+local function sideOf(l, r, tip, gap)
+    local ts = scaleOf(tip)
     local screen = geom(UIParent, "GetWidth")
-    local side = NS.MineCells.DockSide(geom(host, "GetLeft") * hs, geom(host, "GetRight") * hs,
-        (geom(tip, "GetWidth") or 0) * ts, screen and screen * scaleOf(UIParent), gap * ts)
+    local side = NS.MineCells.DockSide(l, r, (geom(tip, "GetWidth") or 0) * ts,
+        screen and screen * scaleOf(UIParent), gap * ts)
     return side == "right" and "right" or "left"
 end
 
---- Place a shown item tooltip beside the frame `owner` sits in (the window, a docked panel),
---- top-aligned with `owner`: on its right, or its left when the screen has no room on the right.
+--- Place a shown item tooltip beside the frame `owner` sits in (the window, a docked panel, and the
+--- one docked beside it), top-aligned with `owner`: on the right, or the left when the screen has no
+--- room on the right.
 --- Measured after Show (the tooltip's width), at each frame's effective scale. Answers `right` or
 --- `left`, or nil when the geometry is unknown (nothing is placed; the caller anchors it).
 --- @param tip table a GameTooltip, shown
@@ -411,16 +450,18 @@ end
 --- @return string|nil
 function WG.PlaceItemTooltip(tip, owner)
     local host = tipHostOf(owner)
-    local top, rowTop = geom(host, "GetTop"), geom(owner, "GetTop")
-    if not (top and rowTop and geom(host, "GetLeft") and geom(host, "GetRight")) then return nil end
+    local rowTop = geom(owner, "GetTop")
+    if not (rowTop and edgesPx(host)) then return nil end
     local gap = K.TIP_GAP
-    local side = sideOf(host, tip, gap)
-    local dy = (rowTop * scaleOf(owner) - top * scaleOf(host)) / scaleOf(tip)
+    local l, r, outL, outR = spanOf(host)
+    local side = sideOf(l, r, tip, gap)
+    local anchor = side == "right" and outR or outL
+    local dy = (rowTop * scaleOf(owner) - geom(anchor, "GetTop") * scaleOf(anchor)) / scaleOf(tip)
     tip:ClearAllPoints()
     if side == "right" then
-        tip:SetPoint("TOPLEFT", host, "TOPRIGHT", gap, dy)
+        tip:SetPoint("TOPLEFT", anchor, "TOPRIGHT", gap, dy)
     else
-        tip:SetPoint("TOPRIGHT", host, "TOPLEFT", -gap, dy)
+        tip:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -gap, dy)
     end
     return side
 end

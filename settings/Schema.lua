@@ -219,7 +219,7 @@ local function defaultsRootFor(profileDefaults)
 end
 
 -- Each global closure row's backing key must resolve in the GLOBAL defaults: the Minimap button
--- row's is LibDBIcon's `hide` (launcher-§3), the history cap's its own key.
+-- row's is LibDBIcon's `hide` (launcher-§3), Keep history for's its own key.
 local function globalBackingMissing(defaults)
     local missing = 0
     for path, spec in pairs(GLOBAL) do

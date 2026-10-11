@@ -70,13 +70,14 @@ its one-line responsibility and why its position is load-bearing or conventional
   `FeedCounts.lua` counting every receipt it hides or refuses by reason, and `GroupRoster.lua`
   keeping who was in each group: a snapshot taken by its first drop, grown by every later drop and
   by a roster change, copied into the History group, and named class-colored, you first, in the
-  Group drops and History headers; feedback-2 spec §3; and `CharFilter.lua`, the Character
+  headers of all three tabs (My drops since DW-A9); feedback-2 spec §3; and `CharFilter.lua`, the Character
   dropdown's recorder: every drop record and History entry says who saw it, `seenBy` (Name-Realm)
   and `seenByClass`, and the filter bar's Character dropdown, Current by default, filters History by
   it; feedback-2 spec §4); and the
   recorded and opt-in features (`History.lua`, with `HistoryRetention.lua` keeping it by days:
-  Keep history for, confirmed before a shorter window deletes, pruned once per session; feedback-2
-  spec §5; `Toast.lua`, `AutoAsk.lua`).
+  Keep history for, confirmed before a shorter window deletes (only the latest pending choice is
+  answered), pruned once per session, also when the addon is enabled later in a session that
+  started disabled; feedback-2 spec §5, §8; `Toast.lua`, `AutoAsk.lua`).
 - `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
   client answers about its world (`SimWorld.lua`: the group, the place, the inspect replies, your
@@ -99,7 +100,10 @@ its one-line responsibility and why its position is load-bearing or conventional
   right, or the left when the screen has no room on the right, measured after `Show()` at each
   frame's effective scale (`WindowGroup.PlaceItemTooltip`, beside `SetItemTooltip`; feedback-2
   spec §2). The frame is the nearest ancestor marked `tipHost` (the docked Offer panel), else the
-  outermost one under UIParent (the window, the toast).
+  outermost one under UIParent (the window, the toast). While the Offer panel is docked beside the
+  window, the two are one span: a tooltip goes beside the pair, never over the panel nor over the
+  window (`tipDocked`; feedback-2 spec §8, FB2-10). My drops sits under the same collapsible group
+  headers as the other two tabs, every group open until toggled (DW-A9).
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
 
@@ -156,15 +160,15 @@ test mode sets the Group drops tab's View to All while it is on and puts the pla
 when it ends (`modules/TestMode.lua`). The
 Group drops table's collapsed groups, dismissed rows and the one expanded row (the detail card)
 are session-only too (`NS.State.windowGroup`), and so are the My drops tab's hidden rows and the
-upgrades whose candidates you chose to see (`NS.State.windowMine`) and the Offer panel's drop
+upgrades whose candidates you chose to see and its collapsed groups (`NS.State.windowMine`) and the Offer panel's drop
 (`NS.State.offerPanel`), and so are the History tab's collapsed groups (`NS.State.windowHistory`).
 `global.notices.autoAsk` is auto-ask's one-time notice, set by `modules/AutoAsk.lua` alone the first
 time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once per
 account. `global.history.v` and `global.history.groups` are the history's own record, written by
 `modules/History.lua` alone (on a recorded drop, an outcome, a completed trade, the safety ceiling
 and Clear history), and by `modules/HistoryRetention.lua`, which deletes the groups older than Keep
-history for (once per session, five seconds after the first `PLAYER_ENTERING_WORLD`, and on a
-confirmed shorter window); neither replaces `global.history` whole, since the retention row's value
+history for (once per session, five seconds after the first `PLAYER_ENTERING_WORLD`, or after the
+stand-up when the addon started disabled, and on a confirmed shorter window); neither replaces `global.history` whole, since the retention row's value
 lives in it. While a simulation
 runs, History writes a simulated drop (`sim = true`) and a simulated trade to the simulation's
 session-only log instead (`NS.Sim.HistoryLog`, `modules/Sim.lua`), never `global.history`, and the

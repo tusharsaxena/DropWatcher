@@ -142,6 +142,37 @@ test("retention: an unanswered popup (a /reload with it open) leaves nothing to 
     assertEqual(keys(NS), "mid,new", "only what the agreed 30 days put out of reach")
 end)
 
+-- M10 review (FB2-10): a popup left open while the player changes the window again answers for
+-- that older choice only if it is still the one pending.
+test("retention: a later change that deletes nothing retires the open popup; its Yes does nothing", function()
+    local NS, m = withLog()
+    assertTrue(NS.SchemaRuntime.Set(PATH, 7))
+    local stale = m.popupsShown[#m.popupsShown]
+    local popup = m.StaticPopupDialogs[NS.HistoryRetention.POPUP]
+    assertTrue(NS.SchemaRuntime.Set(PATH, 60))
+    assertEqual(m.popupsHidden[#m.popupsHidden], NS.HistoryRetention.POPUP, "the stale popup is taken down")
+    -- red under: the old popup's Yes re-applies 7 days after the player chose 60
+    popup.OnAccept(nil, stale[4])
+    assertEqual(NS.addon.db.global.history.retentionDays, 60, "the latest choice stands")
+    assertEqual(keys(NS), "old,mid,new", "nothing deleted")
+    popup.OnCancel(nil, stale[4], "clicked")
+    assertEqual(NS.addon.db.global.history.retentionDays, 60, "a stale No writes nothing back")
+end)
+
+test("retention: of two deleting changes, only the latest popup's answer counts", function()
+    local NS, m = withLog()
+    assertTrue(NS.SchemaRuntime.Set(PATH, 7))
+    local first = m.popupsShown[#m.popupsShown]
+    assertTrue(NS.SchemaRuntime.Set(PATH, 14))
+    local latest = m.popupsShown[#m.popupsShown]
+    local popup = m.StaticPopupDialogs[NS.HistoryRetention.POPUP]
+    popup.OnAccept(nil, first[4])
+    assertEqual(keys(NS), "old,mid,new", "the superseded choice deletes nothing")
+    popup.OnAccept(nil, latest[4])
+    assertEqual(keys(NS), "new")
+    assertEqual(NS.addon.db.global.history.retentionDays, 14)
+end)
+
 test("retention: headless (no popup), a shorter window prunes at once", function()
     local NS, m = withLog()
     m.StaticPopup_Show = nil
@@ -175,6 +206,29 @@ test("retention: the stand-down takes the pending prune back; the stand-up arms 
     NS.addon:OnSlashCommand("enable")
     m.advance(NS.HistoryRetention.CLEANUP_DELAY)
     assertEqual(keys(NS), "mid,new")
+end)
+
+-- M10 review (FB2-10): an addon that starts disabled never hears the session's first
+-- PLAYER_ENTERING_WORLD, so the prune must arm when it is enabled later in the session.
+test("retention: enabled later in a session that started disabled, the prune still runs once", function()
+    local NS, _, m = T.bootAddon()
+    NS.addon.db.profile.enabled = false
+    NS.addon:OnEnable()
+    local now = m.time()
+    NS.History.Store().groups = { group("old", now, { 40 }), group("new", now, { 0 }) }
+    m.__fire("PLAYER_ENTERING_WORLD", true, false)
+    m.advance(NS.HistoryRetention.CLEANUP_DELAY + 1)
+    assertEqual(keys(NS), "old,new", "nothing written while disabled")
+    NS.addon:OnSlashCommand("enable")
+    assertEqual(keys(NS), "old,new", "deferred, not on the stand-up itself")
+    m.advance(NS.HistoryRetention.CLEANUP_DELAY)
+    -- red under: loginSeen only from PLAYER_ENTERING_WORLD (the old group outlives the session)
+    assertEqual(keys(NS), "new")
+    NS.History.Store().groups[1] = group("older", m.time(), { 99 })
+    NS.addon:OnSlashCommand("disable")
+    NS.addon:OnSlashCommand("enable")
+    m.advance(NS.HistoryRetention.CLEANUP_DELAY)
+    assertEqual(keys(NS), "older", "still once per session")
 end)
 
 test("retention: Never delete keeps every group at login", function()
