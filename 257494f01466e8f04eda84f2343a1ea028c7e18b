@@ -1,0 +1,20 @@
+M6 independent review (DW-60..DW-63, 14a3e6a..c48eee5), branch feat/2026-10-10-drop-watcher-v1
+
+Reviewers (3):
+- Spec reviewer: gate green (898 passed / 0 failed / 1 skipped; luacheck 0/0 in 110 files; max file core/Compat.lua 1097 lines; test-cases.md matches --list; badge 898). DW-60 README bug section verbatim; DW-61 bundle green (max CCN 13, blindFiles 0, perf re-pin justified); DW-62 fixes (toast follow/forget/enable/profile, Pawn gated on PawnIsInitialized, auto-ask hold release on world change, StaticPopup preferredIndex 3, FeedFilter/WindowTitleBar peels, docs) verified; DW-63 issues I01..I11 drafted not filed. 1 finding: empty-slot gain whispers the whole item level.
+- Standards reviewer: no critical/high/medium. Commits, line endings, TOC, events via NS.FEATURE_EVENTS, restriction reads, toast sink, Pawn, popups, docs, README, no GitHub writes all compliant. 2 low findings.
+- Correctness/WoW API reviewer: title bar and FeedFilter moves faithful; toast, empty-slot kernel handling, Pawn gating, popups sound. 1 medium (auto-ask hold release can miss a stale restriction hint, nothing re-checks) + 2 low.
+
+Findings: 1 medium + 1 real issue (empty-slot gain) fixed; 0 rejected; 5 low recorded, not fixed.
+
+Fixed (2):
+- 12ea596 DW-62: empty-slot gain is words ("an empty-slot upgrade"), never the item level; Messaging.Expand drops '+' before a word-valued token.
+- 257494f DW-62: auto-ask sets movedWhileHeld and ends the hold on RESTRICTION_CHANGED once the Encounter restriction lifts after a move; flag cleared on ENCOUNTER_START/END and stand-down.
+Gate after fixes: 901 passed / 0 failed / 1 skipped (902); luacheck 0 warnings / 0 errors in 110 files.
+
+Low, not fixed (for the record):
+- AutoAsk one-time notice and toast/autoAsk minGain tooltips do not mention empty-slot upgrades firing regardless of minGain (spec 9.4).
+- Toast fallback close "x" glyph (audit DRW-01) neither fixed nor registered as a documented deviation.
+- issues-to-file.md "After filing" swap phrase no longer matches ARCHITECTURE.md:330-333 deviation rows.
+- Asks.lua empty-slot gain = whole item level (superseded by fix 12ea596).
+- Scoring: drops judged before PawnIsInitialized keep an ilvl-only verdict; nothing re-judges (small login window).
