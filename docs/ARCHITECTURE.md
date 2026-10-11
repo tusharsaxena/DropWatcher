@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker and LibDBIcon are vendored under `libs/`, and so is the whole
-LibKa0s v1.71.0 payload, of which fourteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.71.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -30,8 +30,10 @@ lists the toolchain):
 | Schema | `settings/SchemaSetup.lua` | the write seam's runtime |
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
+| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`) and the shared `NS.CloseMenu` |
 
-The Widgets majors are vendored and not wired yet. Each setup file holds a
+Without LibKa0s-Widgets-1.0 the window draws no dropdown at all (`NS.MakeDropdown` answers nil and
+the checkbox and search box still filter), and `NS.CloseMenu` is a no-op. Each setup file holds a
 descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live
 surface.
 
