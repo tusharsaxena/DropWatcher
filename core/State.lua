@@ -1,0 +1,91 @@
+local _, NS = ...
+-- core/State.lua — session-only runtime state; reset every /reload and never in SavedVariables.
+
+NS.State = NS.State or {}
+local State = NS.State
+
+-- The debug-logging flag (debug-logging-§5): default off, independent of the console window.
+-- `/dw debug on|off` and the console's own toggle write it through the DebugLog seam.
+State.debug = false
+
+-- Test mode (preview-mode, options-ui-§15): placeholder content, on until turned off, ended by
+-- combat. The Master controls checkbox, the launcher entry and `/dw test` share one handler,
+-- NS.SetTestMode (core/DropWatcher.lua).
+State.testMode = false
+
+-- The simulator's session (modules/Sim.lua, simulator spec §1, §5): nil while no simulation runs.
+-- Never saved: a /reload or a logout ends a simulation. NS.Sim.active (core/SimSeam.lua) says the
+-- same in one boolean, read on every Compat call.
+State.sim = nil
+
+-- Whether the player has the main window open this session. The window's own show decision
+-- (modules/Window.lua) combines it with the General visibility setting and the stand-down latch.
+State.windowOpen = false
+
+-- The window's filter bar, one state per tab (modules/WindowFilterBar.lua, design spec §11.1):
+-- { [tab] = { view, content, likelyOnly, search, sort } }, each seeded on the tab's first use.
+State.windowFilters = nil
+
+-- The Group drops table's view state (modules/WindowGroup.lua, design spec §11.1-§11.2):
+-- { collapsed = { [groupKey] = true | false }, dismissed = { [dropId] = true }, expanded = dropId }.
+-- A group the player never toggled follows the default (the newest shown group open, older ones
+-- collapsed); a dismissed drop (its row's × or its card's Hide this item) stays out of the table for
+-- the session; `expanded` is the one row whose detail card is open (design spec §11.3), or nil.
+State.windowGroup = nil
+
+-- The My drops tab's view state (modules/WindowMine.lua, design spec §11.4): { dismissed =
+-- { [dropId] = true }, revealed = { [dropId] = true } }. A dismissed drop (its row's Hide) stays off
+-- the tab for the session; a revealed one is an upgrade for you whose Offer panel you opened, so its
+-- Best candidates are no longer hidden.
+State.windowMine = nil
+
+-- The Offer panel (modules/OfferPanel.lua, design spec §11.4): { dropId } while it is open for one
+-- of your drops, else nil.
+State.offerPanel = nil
+
+-- The current situation key and the classifier inputs it came from (modules/Situations.lua,
+-- design spec §6.1). Nil until the first re-evaluation event, and again while stood down.
+State.situation = nil
+State.situationInputs = nil
+
+-- The restriction tracker's memory (modules/Restrictions.lua, design spec §4): the per-type hints
+-- ADDON_RESTRICTION_STATE_CHANGED gave ({ [type value] = true }), the last PLAYER_REGEN edge (true
+-- fighting, false not, nil before the first) and the answers last announced. All dropped while
+-- stood down.
+State.restrictionHints = nil
+State.combatEdge = nil
+State.restrictionSignature = nil
+
+-- The group as modules/Roster.lua last read it (design spec §4): { byGUID, list, signature }, nil
+-- until the first read and again while stood down.
+State.roster = nil
+
+-- The item facts cache (modules/ItemFacts.lua, design spec §4): { cache = { [link] = facts }, count,
+-- loads = { [link] = job } }, created on first use and dropped while stood down.
+State.itemFacts = nil
+
+-- The player's gear snapshot (modules/Gear.lua, design spec §4): { equipped, owned, classFile,
+-- specID, dualWield, titanGrip, loading, signature }, nil until the first read and again while
+-- stood down.
+State.gear = nil
+
+-- The loot parser's counters since login (modules/LootParser.lua, design spec §13): { hits, ignored,
+-- rejected, secret, lastAt, lastKind, lastLooter }, created on the first line and kept across a
+-- stand-down.
+State.lootParser = nil
+
+-- The inspect broker (modules/Inspect.lua, design spec §8): { entries = { [guid] = entry }, queue,
+-- seq, inFlight, lastNotifyAt, parked }, created on first use and dropped while stood down. Memory
+-- only, as the spec asks.
+State.inspect = nil
+
+-- The feed (modules/LootFeed.lua, design spec §3): { seq, live, test (each { drops, byId, groups,
+-- groupByKey }), recent (the dedupe window), ctx (the encounter and the keystone run), names,
+-- history, merged, hidden }, created on the first receipt. The stand-down drops the dedupe window
+-- and the context and keeps the drops for the session.
+State.feed = nil
+
+-- The trade timer (modules/TradeTimer.lua, design spec §7.4): { timers = { [itemGUID] = entry },
+-- scans, lastScanAt }, created on the first scan and kept across a stand-down (the warned flags
+-- with it); the stand-up scans again.
+State.tradeTimer = nil

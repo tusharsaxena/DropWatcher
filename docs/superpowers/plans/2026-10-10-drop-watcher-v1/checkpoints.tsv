@@ -1,0 +1,7 @@
+when	checkpoint	evidence
+2026-10-10	M0 Foundation COMPLETE (DW-00..03), reviewed (5 medium+ fixed)	DropWatcher 8654455: 143 passed/0 failed/1 skipped, luacheck 0/0 in 39 files, first automated bundle 20261010-232937 green (max CCN 10); WowAddonStandards c1f1cdc (v2.78.3, check-standard ok); Ka0sAddonsCommonTasks 928cdff
+2026-10-11	M1 pure kernels COMPLETE (DW-10..15), reviewed (4 medium+ fixed, 10 low noted)	DropWatcher 6c96336: 287 passed, 0 failed, 1 skipped, 288 total; Total: 0 warnings / 0 errors in 52 files
+2026-10-11	M2–M6 complete (DW-20..63), reviewed; pushes held through M2–M5 per owner	DropWatcher 9def3b0: 909 passed, 0 failed, 1 skipped, 910 total; Total: 0 warnings / 0 errors in 112 files
+2026-10-11	M7 simulator COMPLETE (DW-70..74), reviewed (5 medium+ fixed, 11 low noted)	DropWatcher 703c6ea: 988 passed, 0 failed, 1 skipped, 989 total; Total: 0 warnings / 0 errors in 125 files
+2026-10-11	M8 owner UI feedback COMPLETE (DW-80..85), reviewed (2 medium+ fixed, 9 low noted)	DropWatcher 2b3facd: 1036 passed, 0 failed, 1 skipped, 1037 total; Total: 0 warnings / 0 errors in 130 files
+2026-10-11	M9 sim feedback COMPLETE (DW-90..92) + compat family (DW-93 WAS v2.79.0, DW-94), reviewed (4 medium+ fixed, 1 low noted)	DropWatcher 84cfbe0: 1068 passed, 0 failed, 1 skipped, 1069 total; Total: 0 warnings / 0 errors in 133 files

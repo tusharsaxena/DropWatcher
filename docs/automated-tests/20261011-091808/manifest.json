@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "addon": "DropWatcher",
+  "addonVersion": "0.1.0",
+  "run": "20261011-091808",
+  "startedAt": "2026-10-11T09:18:08+05:30",
+  "durationMs": 13998,
+  "label": null,
+  "release": null,
+  "git": { "sha": "eb7aafbf10a076236a5f8e04ea5493644de38ef6", "branch": "feat/2026-10-10-drop-watcher-v1", "dirty": false },
+  "host": { "lua": "Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio", "luacheck": "Luacheck: 1.2.0", "lizard": "1.24.0", "timingSource": "date +%s%3N" },
+  "suites": {
+    "lint": { "status": "pass", "durationMs": 2320, "warnings": 0, "errors": 0, "files": 109, "gating": true, "gates": { "commit": true, "release": true } },
+    "tests": { "status": "pass", "durationMs": 8372, "passed": 886, "failed": 0, "skipped": 1, "total": 887, "gating": true, "gates": { "commit": true, "release": true } },
+    "perf": { "status": "pass", "durationMs": 389, "scenarios": 5, "gating": false, "gates": { "commit": false, "release": true } },
+    "complexity": { "status": "pass", "durationMs": 2169, "warnings": 0, "maxCcn": 13, "nloc": 25529, "functions": 3369, "avgCcn": 2.4, "avgNloc": 7.0, "avgToken": 66.5, "warnFunRatio": 0.00, "warnNlocRatio": 0.00, "bandFiles": 1, "overCapFiles": 0, "blindFiles": 0, "gating": false, "gates": { "commit": false, "release": true } }
+  },
+  "verdict": "green"
+}

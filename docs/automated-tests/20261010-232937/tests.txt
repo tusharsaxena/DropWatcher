@@ -1,0 +1,140 @@
+  PASS  harness: the addon's file list is the TOC's, Namespace first and Profiles last
+  PASS  harness: every LibKa0s file comes from LibKa0s.xml, in its order
+  PASS  harness: every adopted LibKa0s module is the live library, not its stub
+  PASS  toc: the fixed field order, a single Retail Interface line and the X-Standard field
+  PASS  toc: the icon is the 128x128 logo, and the file exists
+  PASS  toc: OptionalDeps names Pawn and CanIMogIt, and no hard Dependencies
+  PASS  repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
+  PASS  repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
+  PASS  repo: every authored file opens with the bootstrap and a comment naming its path
+  PASS  repo: the .pkgmeta has no externals and ignores the dev-only entries
+  PASS  parity: the degraded load really is library-absent, and the live one is not
+  PASS  parity: the Core seam's namespace surface survives the library's absence
+  PASS  parity: the DebugLog stub carries the whole live surface
+  PASS  parity: the Slash stub carries the whole live surface
+  PASS  parity: the Slash stub's one library string is the library's, byte for byte
+  PASS  parity: the Options helpers stub carries the whole live surface
+  PASS  parity: the Schema host stub's instance carries the whole live instance surface
+  PASS  parity: the Schema host stub carries the library's own members
+  PASS  parity: the Launcher stub carries the whole live surface
+  PASS  parity: the Lifecycle stand-in carries every member of the live latch
+  PASS  parity: the Bus stand-in carries every member of the live bus
+  PASS  parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
+  PASS  parity: the Item stub carries the whole LibKa0s-Item-1.0 surface
+  PASS  parity: the Perf stub carries every Perf member the addon reaches
+  PASS  parity: the Env seam publishes the same NS members on both paths
+  PASS  parity: the Media seam publishes the same NS members on both paths
+  PASS  core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
+  PASS  core: the printer tags every line with the cyan [DW] prefix
+  PASS  core: the close-button wrapper passes the addon folder as the third argument
+  PASS  core: no file but the wrapper calls a close-button factory directly
+  PASS  media: FONT_MONO is the shipped face live, and a real client font degraded
+  PASS  bus: the catalog holds the ten messages of the design, each Ka0s_DropWatcher_<Event>
+  PASS  bus: a tracked target's registrations come down with the stand-down and back with the stand-up
+  PASS  perf: every declared bucket is reached by a real bracket
+  PASS  perf: with capture off the bracket notes nothing
+  PASS  perf: the `perf` hold stands the addon down, and the verbs keep answering
+  PASS  perf: the descriptor's SavedVariables global is declared in the TOC
+  PASS  launcher: one object, labeled with the brand, the logo as its icon, registered on enable
+  PASS  launcher: the right-click menu is Enabled, Locked, Test mode, Show window, in that order
+  PASS  launcher: each menu entry calls the same handler its verb and its row call
+  PASS  options: the category registers eagerly, with the General page under it
+  PASS  options: the General page's first group is exactly `Master controls`
+  PASS  options: the degraded load completes, and the panel says once that it is unavailable
+  PASS  database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
+  PASS  database: the runner is idempotent, and a stored stamp at the target runs no step
+  PASS  database: every step up to the target exists
+  PASS  database: the profile defaults carry every Master controls value, and no debug flag
+  PASS  schema: every row validates against the defaults
+  PASS  schema: the Master controls rows are the canonical set, in the canonical order
+  PASS  schema: an unknown path is refused and stores nothing
+  PASS  schema: the Minimap button row inverts onto LibDBIcon's own hide, with no shown key
+  PASS  schema: neither reset touches the minimap button (launcher-§3)
+  PASS  schema: Reset all asks first, through the confirmation popup
+  PASS  schema: a write to `scale` reaches the window through the row's reaction
+  PASS  schema: degraded, `enabled` and `locked` are written through and still react
+  PASS  schema: degraded, a row-less path not in the list is still refused
+  PASS  slash: NS.COMMANDS is positional triples, every reserved verb present
+  PASS  slash: `diagnostics` has no alias of any kind (debug-logging-§14)
+  PASS  slash: both chat commands are registered through AceConsole, and both dispatch
+  PASS  slash: the bare command opens the settings panel
+  PASS  slash: lock and unlock write `locked` through the seam
+  PASS  slash: show, hide and toggle drive the window
+  PASS  slash: `test` toggles test mode through the shared handler
+  PASS  slash: `perf` is the addon's verb and prints the harness's lines
+  PASS  slash: `reset` with no path explains itself rather than resetting everything
+  PASS  slash: degraded, the host verbs still work and the CLI names the missing library
+  PASS  window: built lazily, on the first show, and not before
+  PASS  window: Escape closes it (UISpecialFrames) and it wears the shared close mark
+  PASS  window: General visibility `never` keeps it hidden even when opened
+  PASS  window: `inCombat` shows it only in combat, re-read on both combat edges
+  PASS  window: a drag stores the point, and Reset position forgets it
+  PASS  window: locked, a drag does not start
+  PASS  window: resizable from the corner grip, with the design's minimum size
+  PASS  window: test mode shows the banner and hides the empty-state text
+  PASS  window: combat ends test mode, and test mode cannot start in combat
+  PASS  disabled 1: enabled, the addon registers exactly the events it declares
+  PASS  disabled 2: through /dw disable, nothing is registered, scheduled or shown
+  PASS  disabled 2: through the write seam, nothing is registered, scheduled or shown
+  PASS  disabled 3: no SavedVariables write from a game event while disabled
+  PASS  disabled 4: every reserved verb keeps answering while disabled
+  PASS  disabled 5: a feature verb answers with the one refusal line and does nothing
+  PASS  disabled 6: the stand-up re-registers from current state and the window comes back
+  PASS  disabled 7: a disabled profile loads stood down, with nothing registered
+  PASS  disabled 8: the launcher's menu grays every entry but Enabled
+  PASS  diagnostics: the sections are the addon's, in report order
+  PASS  diagnostics: the report names the schema, the profile, the holds and the window decision
+  PASS  diagnostics: it runs while stood down and says so, without acting
+  PASS  diagnostics: a non-default setting is listed, and `enabled` always is
+  PASS  libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
+  PASS  tests/_kit is the test kit that shipped with that release
+  PASS  the automated-test runner is recorded executable (100755)
+  PASS  eol: every tracked file carries the terminator .gitattributes declares for it
+  PASS  eol: .gitattributes is line-endings-§5's canonical body for this repo kind
+  PASS  prose: no authored file carries a British spelling from localization-§5's published list
+  PASS  prose: the gate carries localization-§5's two lists whole, and nothing of its own
+  PASS  prose self-test: the carve-out suppresses the named generated folder, and only it
+  PASS  prose self-test: a path the carve-out does not name is not covered by one that looks like it
+  PASS  prose self-test: a carve-out that is not a set of path strings is a failure, not a silence
+  PASS  prose self-test: a TOC's file lines are read as paths, and its directives and comments are not
+  PASS  prose self-test: a .pkgmeta's ignore block is read, and the keys around it are not
+  PASS  prose self-test: an ignore entry covers a path exactly, by folder, and by wildcard
+  PASS  prose self-test: the carve-out admits a generated dump and refuses a file the TOC loads
+  PASS  prose self-test: a waiver-file exclusion meets the same two refusals as the carve-out
+  PASS  prose self-test: each list is refused on the matching rule its own scan uses
+  PASS  prose self-test: the scan and the refusals read the added exclusions through one reader
+  PASS  prose self-test: a narrowing is refused by what it suppresses, not by how it is written
+  PASS  prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
+  PASS  prose self-test: a malformed waived is a failure, not a silence
+  PASS  layoutcap: every authored file over the 1500-line cap is named in the census
+  PASS  layoutcap: no census row outlives the breach it records
+  PASS  layoutcap: every over-cap census row carries one of layout-§1's three terminal states
+  PASS  layoutcap: the census and the exempt set agree about which paths were exempted
+  PASS  layoutcap: an empty census is written as a result rather than left standing empty
+  PASS  layoutcap self-test: the parser reads the census nested under the register, and stops there
+  PASS  layoutcap self-test: a census outside its register, or at the wrong level, is not read
+  PASS  layoutcap self-test: an over-cap file missing from the census is reported, and an exempt one is not
+  PASS  layoutcap self-test: a census row that outlives its breach is reported
+  PASS  layoutcap self-test: an over-cap row that names no terminal state is reported
+  PASS  layoutcap self-test: the census and the exempt set are held to naming the same paths
+  PASS  layoutcap self-test: a census that states nothing is told apart from one that states none
+  PASS  layoutcap self-test: the exempt set takes folders as well as paths
+  PASS  diagnostics contract: both forms run the report
+  PASS  diagnostics contract: the debug word is matched in any case
+  PASS  diagnostics contract: both markers carry the brand and the end counts the report
+  PASS  diagnostics contract: the report appends after what the console already holds
+  PASS  diagnostics contract: the report lands with logging off and turns it on for the session
+  SKIP  diagnostics contract: an addon that opts out lands the report and leaves logging off — this addon keeps the default (Kit.diagnostics.enablesLogging is not false), so its report turns logging on; the case above holds it
+  PASS  diagnostics contract: with logging already on, the report writes no second enable line
+  PASS  diagnostics contract: both forms run while the addon is disabled
+  PASS  diagnostics contract: no other name runs the report
+  PASS  lizard sighted: every hazard lizard loses a function over is neutralized
+  PASS  lizard sighted: fields, strings, comments and look-alike names come through unchanged
+  PASS  lizard sighted: a method definition is rewritten to its dot form with self
+  PASS  lizard sighted: no line is added or removed, CRLF included
+  PASS  lizard sighted: countFunctions counts the keyword, not strings, comments or longer names
+  PASS  lizard sighted: listedCounts reads the per-file table, once per file
+  PASS  lizard sighted: parity names every file whose counts differ, and only those
+  PASS  lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
+
+137 passed, 0 failed, 1 skipped, 138 total

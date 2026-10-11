@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drop Watcher settings general page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.wf{font-family:'IBM Plex Sans',sans-serif;color:#1F1F1F}
+.mono{font-family:'IBM Plex Mono',monospace}
+.win{background:#FFFFFF;border:1.5px solid #1F1F1F;box-shadow:6px 6px 0 #D4D4D0}
+.ph{background:#D9D9D5;border:1px solid #9C9C97;box-sizing:border-box}
+.btn{font:500 12px 'IBM Plex Sans',sans-serif;border:1px solid #1F1F1F;background:#FFFFFF;color:#1F1F1F;padding:4px 12px;border-radius:2px;white-space:nowrap}
+.nav{font-size:13px;padding:5px 12px;color:#4A4A46}
+.navsel{background:#ECECE8;color:#1F1F1F;font-weight:600;border-left:3px solid #C9A227}
+.ctl{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.box{width:14px;height:14px;border:1.5px solid #1F1F1F;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:none}
+.slider{height:4px;background:#BDBDB8;position:relative;width:220px}
+.dot{width:24px;height:24px;border-radius:50%;background:#1D4ED8;color:#FFFFFF;font:600 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.pin{position:absolute}
+.note{font-size:14px;line-height:1.45;color:#2B2B28}
+.note b{font-weight:600}
+</style>
+</helmet>
+<div class="wf" style="width: 1440px; height: 900px; box-sizing: border-box; background: #F4F4F2; padding: 48px; display: flex; gap: 44px">
+  <div style="display: flex; flex-direction: column; gap: 16px; flex: none">
+    <div class="mono" style="font-size: 13px; color: #5E5E5A">07 · Game Menu › Options › AddOns › Ka0s Drop Watcher › General (also /dw config)</div>
+    <div style="position: relative">
+      <div class="win" style="width: 960px; height: 640px; display: flex">
+        <div style="width: 210px; border-right: 1px solid #1F1F1F; background: #FAFAF8; padding: 12px 0; display: flex; flex-direction: column">
+          <div class="mono" style="font-size: 11px; color: #6B6B66; padding: 4px 12px 8px">ADDONS</div>
+          <div class="nav">[Other addon]</div>
+          <div class="nav" style="font-weight: 600; color: #1F1F1F">▾ Ka0s Drop Watcher</div>
+          <sc-for list="{{pages}}" as="p" hint-placeholder-count="7"><div class="nav {{p.cls}}" style="padding-left: 30px">{{p.name}}</div></sc-for>
+          <div class="nav">[Other addon]</div>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; padding: 18px 24px; gap: 14px; min-width: 0">
+          <div style="font-size: 22px; font-weight: 600">Ka0s Drop Watcher <span style="color: #8A8A85">▸</span> General</div>
+          <div style="display: flex; gap: 4px; border-bottom: 1px solid #BDBDB8">
+            <div style="padding: 0 14px 6px; font-weight: 600; font-size: 13px; color: #7A5A00; border-bottom: 2px solid #C9A227">Master controls</div>
+            <div style="padding: 0 14px 6px; font-size: 13px; color: #6B6B66">When to show</div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 40px; padding-top: 6px">
+            <div class="ctl"><label style="display: flex; gap: 8px; align-items: center"><span class="box">✓</span>Enable</label><span style="font-size: 11px; color: #6B6B66">Off stops all listening, inspecting and timers</span></div>
+            <div class="ctl"><label style="display: flex; gap: 8px; align-items: center"><span class="box">✓</span>General visibility</label><span style="font-size: 11px; color: #6B6B66">Show the window when its conditions match</span></div>
+            <div class="ctl">Scale <span class="mono" style="font-size: 11px">1.00</span><div class="slider"><div style="position: absolute; left: 45%; top: -5px; width: 8px; height: 14px; background: #1F1F1F"></div></div></div>
+            <div class="ctl">Alpha <span class="mono" style="font-size: 11px">0.95</span><div class="slider"><div style="position: absolute; left: 90%; top: -5px; width: 8px; height: 14px; background: #1F1F1F"></div></div></div>
+            <div class="ctl"><label style="display: flex; gap: 8px; align-items: center"><span class="box"></span>Lock frame</label></div>
+            <div class="ctl"><label style="display: flex; gap: 8px; align-items: center"><span class="box"></span>Debug console</label></div>
+            <div class="ctl"><label style="display: flex; gap: 8px; align-items: center"><span class="box">✓</span>Minimap button</label></div>
+            <div class="ctl"><label style="display: flex; gap: 8px; align-items: center"><span class="box"></span>Test mode</label><span style="font-size: 11px; color: #6B6B66">This session only, and ends when combat starts</span></div>
+            <div class="ctl"><span class="btn" style="align-self: flex-start">Reset position</span></div>
+            <div class="ctl"><span class="btn" style="align-self: flex-start">Reset all settings</span></div>
+          </div>
+          <div style="flex: 1"></div>
+          <div style="border: 1px dashed #9C9C97; padding: 10px 12px; font-size: 12px; color: #4A4A46">The <b>When to show</b> tab has these toggles: Party, Raid, LFR, Delves and Open world, plus Auto-open on first interesting drop and Mute when solo.</div>
+        </div>
+      </div>
+      <span class="dot pin" style="left: 6px; top: 62px">1</span>
+      <span class="dot pin" style="left: 520px; top: 14px">2</span>
+      <span class="dot pin" style="left: 380px; top: 58px">3</span>
+      <span class="dot pin" style="left: 470px; top: 100px">4</span>
+    </div>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding-top: 30px">
+    <div style="font-weight: 600; font-size: 20px">Settings follow the Ka0s Options layout</div>
+    <div style="display: flex; gap: 10px"><span class="dot">1</span><div class="note"><b>Pages.</b> The landing page shows the logo, notes and slash commands. Then General, Feed, Comparison, Trade, Messages, Window and Profiles.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">2</span><div class="note"><b>Header.</b> A "Ka0s X ▸ Page" breadcrumb. The panel cannot be opened in combat.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">3</span><div class="note"><b>Tabs on every page.</b> One tab per settings group, with a gold underline on the active tab.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">4</span><div class="note"><b>Master controls.</b> The standard ten controls in their fixed order. Test mode is a checkbox, not a button.</div></div>
+    <div class="note" style="color: #5E5E5A; margin-top: 8px"><b>What the other pages hold:</b><br>Feed: quality, ilvl floor, gear only, view mode, clear on boss kill, sort.<br>Comparison: Pawn, weights or none; sidegrade band; compare against owned items; undesired types per spec.<br>Trade: rule table (raid or M+), countdown warning.<br>Window: columns, compact preset, row height, toast.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const names = ['General', 'Feed', 'Comparison', 'Trade', 'Messages', 'Window', 'Profiles'];
+    return { pages: names.map((n) => ({ name: n, cls: n === 'General' ? 'navsel' : '' })) };
+  }
+}
+</script>
+</body>
+</html>

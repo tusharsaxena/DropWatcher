@@ -1,0 +1,22 @@
+package-as: DropWatcher
+
+# Every library is vendored under libs/ and committed to git: NO externals: block (packaging,
+# library-stack-§3). The packager ships the repo as-is, minus the dev-only entries below.
+
+ignore:
+  - .luacheckrc
+  - .pkgmeta         # dev-only: this file configures the packager; it is not part of the package
+  - .gitignore
+  - .gitattributes   # dev-only: the repo's line-ending policy (line-endings)
+  # - .claude        # ONLY once the repo HAS a .claude/ (packaging); it has none today
+  # - .superpowers   # ONLY once the repo HAS a .superpowers/; it has none today
+  - docs             # holds docs/audits/, docs/reviews/, docs/revendor/ and docs/superpowers/ too
+  - tests
+  # - tools          # ONLY once the repo HAS a tools/ (layout-§1); it has none today
+  - CLAUDE.md        # contributor documentation; README.md and LICENSE ship
+  - DEPENDENCIES.md
+  - media/logos/*.png   # the editable logo source (layout-§4): committed, never loadable, never shipped
+  - media/logos/*.jpg   # a JPEG copy of that source, for the project page; same reason
+  - media/screenshots   # project-page images, not loaded by the addon
+  - _dev
+  - "*.bak"

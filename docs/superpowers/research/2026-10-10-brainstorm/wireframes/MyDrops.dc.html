@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drop Watcher my drops and offer panel wireframe</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.wf{font-family:'IBM Plex Sans',sans-serif;color:#1F1F1F}
+.mono{font-family:'IBM Plex Mono',monospace}
+.win{background:#FFFFFF;border:1.5px solid #1F1F1F;box-shadow:6px 6px 0 #D4D4D0}
+.ph{background:#D9D9D5;border:1px solid #9C9C97;box-sizing:border-box}
+.dot{width:24px;height:24px;border-radius:50%;background:#1D4ED8;color:#FFFFFF;font:600 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.pin{position:absolute}
+.btn{font:500 12px 'IBM Plex Sans',sans-serif;border:1px solid #1F1F1F;background:#FFFFFF;color:#1F1F1F;padding:3px 10px;border-radius:2px;white-space:nowrap}
+.btnfill{background:#1F1F1F;color:#FFFFFF}
+.chip{font:500 11px 'IBM Plex Mono',monospace;border:1px solid #6B6B66;padding:1px 6px;border-radius:2px;white-space:nowrap}
+.mcols{display:grid;grid-template-columns:210px 44px 72px 130px minmax(0,1fr) 150px;column-gap:10px;align-items:center}
+.ocols{display:grid;grid-template-columns:4px 104px 92px 112px minmax(0,1fr);column-gap:8px;align-items:center}
+.th{font:600 11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:#4A4A46}
+.note{font-size:14px;line-height:1.45;color:#2B2B28}
+.note b{font-weight:600}
+</style>
+</helmet>
+<div class="wf" style="width: 1440px; height: 900px; box-sizing: border-box; background: #F4F4F2; padding: 48px; display: flex; flex-direction: column; gap: 22px">
+  <div class="mono" style="font-size: 13px; color: #5E5E5A">04 · My drops tab, then Offer… opens the Offer panel (the "Who could use this?" panel), docked to the window's right edge</div>
+  <div style="position: relative; height: 470px">
+    <div class="win" style="position: absolute; left: 0; top: 0; width: 900px; height: 440px; display: flex; flex-direction: column">
+      <div style="height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: #ECECE8; border-bottom: 1px solid #1F1F1F">
+        <div class="ph" style="width: 20px; height: 20px"></div><div style="font-weight: 600; font-size: 15px; color: #7A5A00">Ka0s Drop Watcher</div><div style="flex: 1"></div><span class="btn">–</span><span class="btn">×</span>
+      </div>
+      <div style="height: 30px; display: flex; align-items: flex-end; gap: 4px; padding: 0 12px; border-bottom: 1px solid #BDBDB8">
+        <div style="padding: 0 14px 6px; font-size: 13px; color: #6B6B66">Group drops</div>
+        <div style="padding: 0 14px 6px; font-weight: 600; font-size: 13px; color: #7A5A00; border-bottom: 2px solid #C9A227">My drops · 2</div>
+        <div style="padding: 0 14px 6px; font-size: 13px; color: #9C9C97; font-style: italic">History (v1)</div>
+      </div>
+      <div class="mcols th" style="padding: 8px 12px; margin-top: 10px; border-top: 1px solid #1F1F1F; border-bottom: 1px solid #1F1F1F; background: #F4F4F2">
+        <div>Item</div><div>Ilvl</div><div>For me</div><div>Trade window</div><div>Best candidates</div><div style="text-align: right">Actions</div>
+      </div>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+        <div class="mcols" style="padding: 0 12px; height: 46px; border-bottom: 1px solid #E4E4E0; font-size: 13px; background: {{r.bg}}">
+          <div style="display: flex; align-items: center; gap: 8px; min-width: 0"><div class="ph" style="width: 22px; height: 22px; flex: none; border-width: 2px; border-color: #6B6B66"></div><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.item}}</span></div>
+          <div class="mono">{{r.ilvl}}</div>
+          <div class="mono">{{r.me}}</div>
+          <div style="display: flex; flex-direction: column; gap: 3px"><span class="mono" style="font-size: 12px; font-weight: {{r.tw}}">{{r.timer}}</span><div style="height: 4px; background: #E4E4E0; width: 110px"><div style="height: 4px; background: #1F1F1F; width: {{r.bar}}"></div></div></div>
+          <div style="font-size: 12px; color: #2B2B28">{{r.cands}}</div>
+          <div style="display: flex; justify-content: flex-end; gap: 6px"><span class="btn {{r.c1}}">{{r.a1}}</span><span class="btn">{{r.a2}}</span></div>
+        </div>
+      </sc-for>
+      <div style="flex: 1"></div>
+      <div class="mono" style="height: 28px; display: flex; align-items: center; gap: 16px; padding: 0 12px; border-top: 1px solid #1F1F1F; font-size: 11px; color: #4A4A46; background: #F4F4F2"><span>2 tradeable · next expiry 0:08:41</span><div style="flex: 1"></div><span class="btn" style="font-size: 11px">Post my tradeables</span></div>
+    </div>
+    <div class="win" style="position: absolute; left: 920px; top: 0; width: 470px; height: 470px; display: flex; flex-direction: column">
+      <div style="height: 32px; display: flex; align-items: center; padding: 0 12px; background: #ECECE8; border-bottom: 1px solid #1F1F1F"><span style="font-weight: 600; font-size: 13px; color: #7A5A00">Who could use this?</span><span class="mono" style="font-size: 11px; color: #5E5E5A; margin-left: 8px">YOUR DROP</span><div style="flex: 1"></div><span class="btn">×</span></div>
+      <div style="display: flex; gap: 12px; align-items: center; padding: 12px; border-bottom: 1px solid #D4D4D0">
+        <div class="ph" style="width: 40px; height: 40px; border-width: 2px; border-color: #6B6B66"></div>
+        <div style="display: flex; flex-direction: column; gap: 3px"><b style="font-size: 14px">[Bracers name]</b><span class="mono" style="font-size: 12px; color: #4A4A46">You: −5 ilvl · 305 · Trade window 1:47:12</span></div>
+      </div>
+      <div class="ocols th" style="padding: 8px 12px; border-bottom: 1px solid #1F1F1F"><div></div><div>Member</div><div>Eq → drop</div><div>Status</div><div style="text-align: right">Actions</div></div>
+      <sc-for list="{{cands}}" as="c" hint-placeholder-count="5">
+        <div class="ocols" style="padding: 0 12px; height: 40px; border-bottom: 1px solid #E4E4E0; font-size: 13px; color: {{c.fg}}">
+          <div style="width: 4px; height: 22px; background: #6B6B66"></div>
+          <div>{{c.name}}</div>
+          <div class="mono" style="font-size: 12px">{{c.eq}}</div>
+          <div><span class="chip" style="{{c.cs}}">{{c.status}}</span></div>
+          <div style="display: flex; justify-content: flex-end; gap: 5px"><sc-if value="{{c.act}}" hint-placeholder-val="{{true}}"><span class="btn">Offer</span><span class="btn btnfill">Trade</span></sc-if></div>
+        </div>
+      </sc-for>
+      <div style="flex: 1"></div>
+      <div style="display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #1F1F1F; background: #F4F4F2"><span class="btn">Announce to group</span><div style="flex: 1"></div><span class="mono" style="font-size: 11px; color: #5E5E5A; align-self: center">raid: list scrolls · sorted by gain</span></div>
+    </div>
+    <span class="dot pin" style="left: 210px; top: 40px">1</span>
+    <span class="dot pin" style="left: 300px; top: 110px">2</span>
+    <span class="dot pin" style="left: 440px; top: 110px">3</span>
+    <span class="dot pin" style="left: 828px; top: 110px">4</span>
+    <span class="dot pin" style="left: 1150px; top: 4px">5</span>
+    <span class="dot pin" style="left: 1240px; top: 116px">6</span>
+    <span class="dot pin" style="left: 1340px; top: 116px">7</span>
+    <span class="dot pin" style="left: 790px; top: 412px">8</span>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 28px">
+    <div style="display: flex; gap: 10px"><span class="dot">1</span><div class="note"><b>Tab badge.</b> Counts your drops that are still tradeable. The tab shows only your own loot.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">2</span><div class="note"><b>For me.</b> The usual verdict. If it is an upgrade, the row asks whether to keep it, and nobody is offered it by default.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">3</span><div class="note"><b>Trade window.</b> The exact countdown, read from the item. At 10 minutes (configurable) it shows bold and raises a warning.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">4</span><div class="note"><b>Offer… and Announce.</b> Offer… opens the panel on the right. Announce posts your template to the group or raid.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">5</span><div class="note"><b>Offer panel.</b> Your drop compared against each member's inspected gear. It works in raids too, where the list scrolls.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">6</span><div class="note"><b>Status.</b> UPGRADE +n, EQUAL, NO UPGRADE, CAN'T USE, CHECKING… or UNAVAILABLE.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">7</span><div class="note"><b>Offer and Trade.</b> Offer whispers the offer template. Trade opens the trade window with the item already placed, when in range and out of combat.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">8</span><div class="note"><b>Post my tradeables.</b> One line listing everything you can give away.</div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      rows: [
+        { item: '[Bracers name]', ilvl: '305', me: '−5 ▽', timer: '1:47:12', tw: '400', bar: '89%', cands: 'Séta +14 · Butterz +6 · +1 more', a1: 'Offer…', c1: 'btnfill', a2: 'Announce', bg: '#F7F7F4' },
+        { item: '[Ring name]', ilvl: '298', me: '+3 ▲  keep?', timer: '1:30:05', tw: '400', bar: '75%', cands: 'Hidden: an upgrade for you', a1: 'Offer…', c1: '', a2: 'Announce', bg: '#FFFFFF' },
+        { item: '[Trinket name]', ilvl: '305', me: '−11 ▽', timer: '0:08:41  ending soon', tw: '600', bar: '7%', cands: 'Littlewolfe +9', a1: 'Offer…', c1: 'btnfill', a2: 'Announce', bg: '#FFFFFF' },
+        { item: '[Boots name]', ilvl: '311', me: '+6 ▲', timer: 'Not tradeable: bonus roll', tw: '400', bar: '0%', cands: '—', a1: '—', c1: '', a2: 'Hide', bg: '#FFFFFF' }
+      ],
+      cands: [
+        { name: 'Séta', eq: '291 → 305', status: '+14 UPGRADE', cs: 'border-color: #1F1F1F; font-weight: 600', act: true, fg: '#1F1F1F' },
+        { name: 'Butterz', eq: '299 → 305', status: '+6 UPGRADE', cs: 'border-color: #1F1F1F', act: true, fg: '#1F1F1F' },
+        { name: 'Littlewolfe', eq: '305 → 305', status: 'EQUAL', cs: '', act: false, fg: '#4A4A46' },
+        { name: 'Uniquerogue', eq: '— → 305', status: "CAN'T USE", cs: 'color: #8A8A85', act: false, fg: '#8A8A85' },
+        { name: '[Member 5]', eq: '… → 305', status: 'CHECKING…', cs: 'border-style: dashed', act: false, fg: '#4A4A46' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

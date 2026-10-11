@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drop Watcher expanded row wireframe</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.wf{font-family:'IBM Plex Sans',sans-serif;color:#1F1F1F}
+.mono{font-family:'IBM Plex Mono',monospace}
+.win{background:#FFFFFF;border:1.5px solid #1F1F1F;box-shadow:6px 6px 0 #D4D4D0}
+.ph{background:#D9D9D5;border:1px solid #9C9C97;box-sizing:border-box}
+.dot{width:24px;height:24px;border-radius:50%;background:#1D4ED8;color:#FFFFFF;font:600 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.pin{position:absolute}
+.btn{font:500 12px 'IBM Plex Sans',sans-serif;border:1px solid #1F1F1F;background:#FFFFFF;color:#1F1F1F;padding:3px 10px;border-radius:2px;white-space:nowrap}
+.btnfill{background:#1F1F1F;color:#FFFFFF}
+.btnoff{border-style:dashed;color:#8A8A85;border-color:#8A8A85}
+.chip{font:500 11px 'IBM Plex Mono',monospace;border:1px solid #6B6B66;padding:1px 6px;border-radius:2px;white-space:nowrap}
+.cols{display:grid;grid-template-columns:230px 46px 62px 112px 96px 74px 74px 76px minmax(0,1fr);column-gap:8px;align-items:center}
+.lbl{font:600 11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:#4A4A46}
+.kv{display:grid;grid-template-columns:96px minmax(0,1fr);row-gap:7px;column-gap:10px;font-size:13px;align-items:center}
+.kv .k{color:#5E5E5A;font-size:12px}
+.note{font-size:14px;line-height:1.45;color:#2B2B28}
+.note b{font-weight:600}
+</style>
+</helmet>
+<div class="wf" style="width: 1440px; height: 900px; box-sizing: border-box; background: #F4F4F2; padding: 48px; display: flex; gap: 48px">
+  <div style="display: flex; flex-direction: column; gap: 16px; flex: none">
+    <div class="mono" style="font-size: 13px; color: #5E5E5A">02 · Click a row to expand it in place. Click again, or press ▴, to collapse it.</div>
+    <div style="position: relative; width: 940px">
+      <div class="win" style="width: 940px; display: flex; flex-direction: column">
+        <div class="cols" style="padding: 0 12px; height: 34px; border-bottom: 1px solid #E4E4E0; font-size: 13px; background: #F7F7F4; color: #8A8A85">
+          <div style="display: flex; align-items: center; gap: 8px"><div class="ph" style="width: 22px; height: 22px"></div>[Previous row]</div><div class="mono">305</div><div>Waist</div><div>Littlewolfe</div><div></div><div class="mono">−2 ▽</div><div class="mono">+8 ▲</div><div><span class="chip">No</span></div><div></div>
+        </div>
+        <div class="cols" style="padding: 0 12px; height: 34px; font-size: 13px; background: #FFFFFF; border-top: 2px solid #1F1F1F">
+          <div style="display: flex; align-items: center; gap: 8px"><div class="ph" style="width: 22px; height: 22px; border-width: 2px; border-color: #6B6B66"></div><b>Crown of Roaring Storms</b></div>
+          <div class="mono">311</div><div style="color: #4A4A46">Head</div>
+          <div style="display: flex; align-items: center; gap: 6px"><div style="width: 3px; height: 16px; background: #6B6B66"></div>Séta</div>
+          <div style="display: flex; align-items: center; gap: 4px"><div class="ph" style="width: 20px; height: 20px"></div><span class="mono" style="font-size: 10px; color: #6B6B66">40s</span></div>
+          <div class="mono" style="font-weight: 600">+19 ▲</div><div class="mono" style="color: #4A4A46">−13 ▽</div><div><span class="chip">Likely</span></div>
+          <div style="display: flex; justify-content: flex-end; gap: 6px; align-items: center"><span class="btn btnfill">Ask</span><span style="font-size: 13px">▴</span></div>
+        </div>
+        <div style="padding: 16px 16px 18px 46px; background: #FAFAF8; border-bottom: 2px solid #1F1F1F; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; gap: 14px; align-items: center">
+            <div class="ph" style="width: 44px; height: 44px; border-width: 2px; border-color: #6B6B66"></div>
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <div style="font-weight: 600; font-size: 15px">Crown of Roaring Storms</div>
+              <div style="display: flex; gap: 6px"><span class="chip">Head</span><span class="chip">Cloth</span><span class="chip">BoP</span><span class="chip">Hero 2/6 · 311</span><span class="chip">Int</span><span class="chip">Socket</span></div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+            <div style="border: 1px solid #1F1F1F; background: #FFFFFF; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl">For you</span><span class="chip" style="border-color: #1F1F1F; font-weight: 600">UPGRADE ▲</span></div>
+              <div class="kv">
+                <div class="k">Replaces</div><div style="display: flex; gap: 6px; align-items: center"><div class="ph" style="width: 18px; height: 18px"></div>[Your helm] · 292</div>
+                <div class="k">Item level</div><div class="mono">292 → 311 · <b>+19</b></div>
+                <div class="k">Track</div><div class="mono">Champion 6/6 → Hero 2/6 ▲</div>
+                <div class="k">Stats</div><div class="mono">+130 Haste  −119 Mastery</div>
+                <div class="k">Pawn</div><div class="mono">+2.4% · [Your scale]</div>
+              </div>
+            </div>
+            <div style="border: 1px solid #1F1F1F; background: #FFFFFF; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl">For Séta (looter)</span><span class="chip">DOWNGRADE ▽</span></div>
+              <div class="kv">
+                <div class="k">Replaces</div><div style="display: flex; gap: 6px; align-items: center"><div class="ph" style="width: 18px; height: 18px"></div>[Their helm] · 324</div>
+                <div class="k">Item level</div><div class="mono">324 → 311 · <b>−13</b></div>
+                <div class="k">Track</div><div class="mono">Myth 1/6 → Hero 2/6 ▽</div>
+                <div class="k">Stats</div><div class="mono">−80 Crit  +95 Haste</div>
+                <div class="k">Spec</div><div class="mono">[Their spec] · inspected 40s ago</div>
+              </div>
+            </div>
+          </div>
+          <div style="border: 1px dashed #1F1F1F; padding: 10px 12px; display: flex; gap: 12px; align-items: flex-start; background: #FFFFFF">
+            <span class="chip" style="border-color: #1F1F1F; font-weight: 600">LIKELY TRADEABLE</span>
+            <div style="font-size: 13px; line-height: 1.45">BoP personal loot. 311 is not an upgrade over the 324 helm Séta owns, so Séta can probably trade it for up to 2 h. <span style="color: #5E5E5A">Rule: personal loot, M+ · Basis: inspect 40s ago</span></div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+            <span class="btn btnfill">Ask Séta</span>
+            <span class="btn">Edit message ▾</span>
+            <span class="btn">Link in chat</span>
+            <span class="btn">Retry inspect</span>
+            <span class="btn btnoff">Trade · out of range</span>
+            <div style="flex: 1"></div>
+            <span class="btn">Hide this item</span>
+          </div>
+        </div>
+        <div class="cols" style="padding: 0 12px; height: 34px; font-size: 13px; color: #8A8A85">
+          <div style="display: flex; align-items: center; gap: 8px"><div class="ph" style="width: 22px; height: 22px"></div>[Next row]</div><div class="mono">298</div><div>Trinket</div><div>Littlewolfe</div><div></div><div class="mono">+4 ≈</div><div class="mono">+12 ▲</div><div><span class="chip">No</span></div><div></div>
+        </div>
+      </div>
+      <span class="dot pin" style="left: 2px; top: 50px">1</span>
+      <span class="dot pin" style="left: 470px; top: 118px">2</span>
+      <span class="dot pin" style="left: 2px; top: 150px">3</span>
+      <span class="dot pin" style="left: 470px; top: 150px">4</span>
+      <span class="dot pin" style="left: 2px; top: 340px">5</span>
+      <span class="dot pin" style="left: 2px; top: 400px">6</span>
+    </div>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding-top: 30px">
+    <div style="font-weight: 600; font-size: 20px">Detail card: the full reasoning</div>
+    <div class="note" style="color: #5E5E5A">This holds the information WhoGotLoots puts on its cards, inside the compact table. Only one row is expanded at a time, and the other rows move down.</div>
+    <div style="display: flex; gap: 10px"><span class="dot">1</span><div class="note"><b>Item header.</b> Facts as chips: slot, armour type, bind, upgrade track and rank, primary stat, socket or tertiary stat.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">2</span><div class="note"><b>For you.</b> The item it replaces (lowest ring or trinket, or main hand plus off hand for a 2H), the ilvl change, the track change (shown even within one track), the stat change and the Pawn %.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">3</span><div class="note"><b>Verdict chip.</b> Upgrade, Sidegrade, Downgrade, Can't use or Doesn't want. Sidegrade means the same ilvl with a better score, or the reverse.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">4</span><div class="note"><b>For the looter.</b> The same comparison against their inspected gear and spec. WhoGotLoots only compares against your gear.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">5</span><div class="note"><b>Trade estimate.</b> The state, the reason in plain language, the rule used (raid or M+) and how fresh the data is.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">6</span><div class="note"><b>Actions.</b> Ask (with an optional message edit before sending), link the item, re-inspect, and Trade (enabled only in range and out of combat). Disabled buttons say why.</div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

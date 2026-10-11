@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drop Watcher ask and offer flows</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.wf{font-family:'IBM Plex Sans',sans-serif;color:#1F1F1F}
+.mono{font-family:'IBM Plex Mono',monospace}
+.frame{width:236px;flex:none;display:flex;flex-direction:column;gap:10px}
+.sketch{height:170px;background:#FFFFFF;border:1.5px solid #1F1F1F;box-shadow:4px 4px 0 #D4D4D0;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px}
+.sl{font:400 11px 'IBM Plex Mono',monospace;color:#4A4A46;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid #EDEDEA;padding-bottom:4px}
+.hl{font:600 11px 'IBM Plex Mono',monospace;color:#1F1F1F;border:1.5px solid #1D4ED8;background:#EEF3FF;padding:3px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step{font:600 11px 'IBM Plex Mono',monospace;color:#1D4ED8;letter-spacing:.05em}
+.arrow{width:30px;flex:none;display:flex;align-items:center;justify-content:center;padding-top:60px}
+.cap{font-size:13px;line-height:1.45;color:#2B2B28}
+.lane{font-weight:600;font-size:18px}
+.sub{font-size:13px;color:#5E5E5A}
+</style>
+</helmet>
+<div class="wf" style="width: 1440px; height: 900px; box-sizing: border-box; background: #F4F4F2; padding: 44px 48px; display: flex; flex-direction: column; gap: 26px">
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: baseline; gap: 14px"><div class="lane">A · Ask for someone else's drop</div><div class="sub">Groupmate loots something you want. You ask once, safely, at the right moment.</div></div>
+    <div style="display: flex; align-items: flex-start">
+      <sc-for list="{{ask}}" as="f" hint-placeholder-count="5">
+        <div style="display: flex; align-items: flex-start">
+          <div class="frame">
+            <div class="step">{{f.step}}</div>
+            <div class="sketch">
+              <sc-for list="{{f.lines}}" as="l" hint-placeholder-count="3"><div class="sl">{{l}}</div></sc-for>
+              <div class="hl">{{f.hl}}</div>
+              <sc-for list="{{f.after}}" as="l" hint-placeholder-count="1"><div class="sl">{{l}}</div></sc-for>
+            </div>
+            <div class="cap"><b>{{f.title}}</b> {{f.cap}}</div>
+          </div>
+          <sc-if value="{{f.more}}" hint-placeholder-val="{{true}}">
+            <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M1 7h19M14 1l6 6-6 6" fill="none" stroke="#1F1F1F" stroke-width="1.5"></path></svg></div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="height: 1px; background: #BDBDB8"></div>
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: baseline; gap: 14px"><div class="lane">B · Offer your own drop</div><div class="sub">You loot something you don't need. Drop Watcher finds who it helps and places it in the trade window.</div></div>
+    <div style="display: flex; align-items: flex-start">
+      <sc-for list="{{offer}}" as="f" hint-placeholder-count="5">
+        <div style="display: flex; align-items: flex-start">
+          <div class="frame">
+            <div class="step">{{f.step}}</div>
+            <div class="sketch">
+              <sc-for list="{{f.lines}}" as="l" hint-placeholder-count="3"><div class="sl">{{l}}</div></sc-for>
+              <div class="hl">{{f.hl}}</div>
+              <sc-for list="{{f.after}}" as="l" hint-placeholder-count="1"><div class="sl">{{l}}</div></sc-for>
+            </div>
+            <div class="cap"><b>{{f.title}}</b> {{f.cap}}</div>
+          </div>
+          <sc-if value="{{f.more}}" hint-placeholder-val="{{true}}">
+            <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M1 7h19M14 1l6 6-6 6" fill="none" stroke="#1F1F1F" stroke-width="1.5"></path></svg></div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      ask: [
+        { step: 'A1 · DROP', title: 'A row appears.', cap: 'The feed stays quiet and does not pop up. An opt-in toast fires only for a big upgrade or a wishlist item.', lines: ['▾ [BOSS 3] · Heroic', '[Helm] 305 · Butterz'], hl: '+ [Crown] 311 · Séta · +19 ▲ · Likely', after: ['inspecting Séta…'], more: true },
+        { step: 'A2 · DECIDE', title: 'Verdicts fill in.', cap: 'Once the inspect returns: Them −13 ▽, trade Likely. Hover any cell for the reason, or click the row for the full card.', lines: ['[Crown] 311 · Séta', 'Me +19 ▲   Them −13 ▽'], hl: 'Trade: Likely · eq 324 · 40s', after: ['[Ask]  ×'], more: true },
+        { step: 'A3 · ASK', title: 'Click Ask.', cap: 'Sends the template right away, or opens a small editor first if "Edit before sending" is on. The message is checked to fit 255 characters.', lines: ['To: Séta-[Realm]'], hl: 'Hi Séta, if you don’t need [Crown]…', after: ['98/255   [Send]  [Cancel]'], more: true },
+        { step: 'A4 · LOCKED?', title: 'Mid-encounter: queued.', cap: 'Chat is restricted during the encounter, so the ask waits. The title-bar badge shows the count. Click again to cancel.', lines: ['title badge: [lock] Encounter · 1 queued'], hl: '[Queued ⏱]  sends after encounter', after: ['tooltip: Encounter in progress'], more: true },
+        { step: 'A5 · SENT', title: 'Sent once.', cap: 'Sent when the encounter ends, or the key completes. A chat line confirms it. A failed send becomes Retry with the reason.', lines: ['ENCOUNTER_END → queue flushed', '[DW] Whispered Séta: [Crown]'], hl: '[Asked ✓]', after: ['later: [Traded ✓] when received'], more: false }
+      ],
+      offer: [
+        { step: 'B1 · LOOT', title: 'You loot it.', cap: 'Your drop goes to My drops. The tab badge increments, and the trade countdown starts from the item’s own timer.', lines: ['tabs: Group drops | My drops · 2'], hl: '[Bracers] 305 · −5 ▽ · 1:59:40', after: ['candidates: checking…'], more: true },
+        { step: 'B2 · CANDIDATES', title: 'Who could use it.', cap: 'Each member’s gear is checked. Best candidates appear inline. An upgrade for you is not offered unless you choose to.', lines: ['[Bracers] 305 · −5 ▽'], hl: 'Séta +14 · Butterz +6 · +1', after: ['[Offer…]  [Announce]'], more: true },
+        { step: 'B3 · OFFER PANEL', title: 'Offer… opens the panel.', cap: 'Members are sorted by gain, with status pills. Raid lists scroll. Whisper an offer to one person, or announce to the group.', lines: ['Who could use this? YOUR DROP'], hl: 'Séta 291→305 +14 UPGRADE [Offer][Trade]', after: ['Butterz 299→305 +6 UPGRADE'], more: true },
+        { step: 'B4 · TRADE', title: 'Click Trade.', cap: 'Needs range and no combat. The trade window opens with the item already placed, found by its ID in your bags. Otherwise the button says why it is disabled.', lines: ['in range ✓  out of combat ✓'], hl: 'Trade window: [Bracers] placed', after: ['you confirm in the trade window'], more: true },
+        { step: 'B5 · DONE', title: 'Marked done.', cap: 'The row reads Traded to Séta, and History (v1) records it. Without a trade, a warning fires at 10 minutes left and the row expires.', lines: ['[Bracers] → Séta'], hl: '[Traded ✓]  removed from tab count', after: ['or: ! 0:09:59 left on [Trinket]'], more: false }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

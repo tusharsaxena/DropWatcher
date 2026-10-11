@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drop Watcher main window wireframe</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.wf{font-family:'IBM Plex Sans',sans-serif;color:#1F1F1F}
+.mono{font-family:'IBM Plex Mono',monospace}
+.win{background:#FFFFFF;border:1.5px solid #1F1F1F;box-shadow:6px 6px 0 #D4D4D0}
+.ph{background:#D9D9D5;border:1px solid #9C9C97;box-sizing:border-box}
+.dot{width:24px;height:24px;border-radius:50%;background:#1D4ED8;color:#FFFFFF;font:600 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.pin{position:absolute}
+.btn{font:500 12px 'IBM Plex Sans',sans-serif;border:1px solid #1F1F1F;background:#FFFFFF;color:#1F1F1F;padding:3px 10px;border-radius:2px}
+.btnfill{background:#1F1F1F;color:#FFFFFF}
+.chip{font:500 11px 'IBM Plex Mono',monospace;border:1px solid #6B6B66;padding:1px 6px;border-radius:2px;white-space:nowrap}
+.cols{display:grid;grid-template-columns:230px 46px 62px 112px 96px 74px 74px 76px minmax(0,1fr);column-gap:8px;align-items:center}
+.th{font:600 11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:#4A4A46}
+.note{font-size:14px;line-height:1.45;color:#2B2B28}
+.note b{font-weight:600}
+</style>
+</helmet>
+<div class="wf" style="width: 1440px; height: 900px; box-sizing: border-box; background: #F4F4F2; padding: 48px; display: flex; gap: 48px">
+  <div style="display: flex; flex-direction: column; gap: 16px; flex: none">
+    <div class="mono" style="font-size: 13px; color: #5E5E5A">01 · /dw show · Group drops tab · default size 940 × 600</div>
+    <div style="position: relative; width: 940px">
+      <div class="win" style="width: 940px; height: 600px; display: flex; flex-direction: column">
+        <div style="height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: #ECECE8; border-bottom: 1px solid #1F1F1F">
+          <div class="ph" style="width: 20px; height: 20px"></div>
+          <div style="font-weight: 600; font-size: 15px; color: #7A5A00">Ka0s Drop Watcher</div>
+          <div style="flex: 1"></div>
+          <div class="chip" style="display: flex; align-items: center; gap: 5px; border-color: #1F1F1F">
+            <svg width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><rect x="1" y="5" width="9" height="6.5" fill="none" stroke="#1F1F1F" stroke-width="1.3"></rect><path d="M3 5V3.5a2.5 2.5 0 0 1 5 0V5" fill="none" stroke="#1F1F1F" stroke-width="1.3"></path></svg>
+            <span>Encounter · 2 queued</span>
+          </div>
+          <button class="btn" type="button" style="display: flex; align-items: center; gap: 5px">
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M10 6a4 4 0 1 1-1.2-2.85M10 1.5V4H7.5" fill="none" stroke="#1F1F1F" stroke-width="1.3"></path></svg>
+            Scan group
+          </button>
+          <button class="btn" type="button" aria-label="Minimise" style="padding: 3px 8px">–</button>
+          <button class="btn" type="button" aria-label="Close" style="padding: 3px 8px">×</button>
+        </div>
+        <div style="height: 30px; display: flex; align-items: flex-end; gap: 4px; padding: 0 12px; border-bottom: 1px solid #BDBDB8">
+          <div style="padding: 0 14px 6px; font-weight: 600; font-size: 13px; color: #7A5A00; border-bottom: 2px solid #C9A227">Group drops</div>
+          <div style="padding: 0 14px 6px; font-size: 13px; color: #6B6B66">My drops · 2</div>
+          <div style="padding: 0 14px 6px; font-size: 13px; color: #9C9C97; font-style: italic">History (v1)</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px 12px 10px">
+          <div class="btn" style="display: flex; gap: 6px">View: <b>Interesting</b> ▾</div>
+          <div class="btn">Quality: Rare+ ▾</div>
+          <div class="btn">Content: This instance ▾</div>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px"><input type="checkbox" checked> Likely tradeable only</label>
+          <div style="flex: 1"></div>
+          <div class="ph" style="width: 180px; height: 24px; background: #FFFFFF; font-size: 12px; color: #6B6B66; padding: 3px 8px">Filter looter or item…</div>
+        </div>
+        <div class="cols th" style="padding: 6px 12px; border-top: 1px solid #1F1F1F; border-bottom: 1px solid #1F1F1F; background: #F4F4F2">
+          <div>Item</div><div>Ilvl</div><div>Slot</div><div>Looter</div><div>Their eq</div><div>Me</div><div>Them</div><div>Trade</div><div style="text-align: right">Actions</div>
+        </div>
+        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column">
+          <div class="mono" style="font-size: 11px; color: #4A4A46; padding: 6px 12px; background: #ECECE8; border-bottom: 1px solid #D4D4D0">▾ [BOSS 3] · Heroic · 2 min ago · 4 drops</div>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+            <div class="cols" style="padding: 0 12px; height: 34px; border-bottom: 1px solid #E4E4E0; font-size: 13px; background: {{r.bg}}">
+              <div style="display: flex; align-items: center; gap: 8px; min-width: 0"><div class="ph" style="width: 22px; height: 22px; flex: none; border-width: 2px; border-color: #6B6B66"></div><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.item}}</span></div>
+              <div class="mono">{{r.ilvl}}</div>
+              <div style="color: #4A4A46">{{r.slot}}</div>
+              <div style="display: flex; align-items: center; gap: 6px"><div style="width: 3px; height: 16px; background: #6B6B66"></div>{{r.looter}}</div>
+              <div style="display: flex; align-items: center; gap: 4px"><div class="ph" style="width: 20px; height: 20px"></div><sc-if value="{{r.two}}" hint-placeholder-val="{{false}}"><div class="ph" style="width: 20px; height: 20px"></div></sc-if><span class="mono" style="font-size: 10px; color: #6B6B66">{{r.age}}</span></div>
+              <div class="mono" style="font-weight: 600">{{r.me}}</div>
+              <div class="mono" style="color: #4A4A46">{{r.them}}</div>
+              <div><span class="chip">{{r.trade}}</span></div>
+              <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px"><span class="btn {{r.askClass}}">{{r.ask}}</span><span style="font-size: 15px; color: #6B6B66">×</span></div>
+            </div>
+          </sc-for>
+          <div class="mono" style="font-size: 11px; color: #4A4A46; padding: 6px 12px; background: #ECECE8; border-bottom: 1px solid #D4D4D0">▸ [BOSS 2] · Heroic · 9 min ago · 5 drops (collapsed)</div>
+          <div class="mono" style="font-size: 11px; color: #4A4A46; padding: 6px 12px; background: #ECECE8; border-bottom: 1px solid #D4D4D0">▸ Trash · 2 drops (collapsed)</div>
+        </div>
+        <div class="mono" style="height: 28px; display: flex; align-items: center; gap: 16px; padding: 0 12px; border-top: 1px solid #1F1F1F; font-size: 11px; color: #4A4A46; background: #F4F4F2">
+          <span>Inspect 4/5 fresh · 1 out of range</span><span>Last loot 12s ago</span><span>Pawn: on</span><div style="flex: 1"></div><span>Sort: Newest ▾</span><span>◢</span>
+        </div>
+      </div>
+      <span class="dot pin" style="left: 132px; top: 6px">1</span>
+      <span class="dot pin" style="left: 586px; top: 6px">2</span>
+      <span class="dot pin" style="left: 680px; top: 6px">3</span>
+      <span class="dot pin" style="left: 368px; top: 40px">4</span>
+      <span class="dot pin" style="left: 562px; top: 74px">5</span>
+      <span class="dot pin" style="left: 300px; top: 146px">6</span>
+      <span class="dot pin" style="left: 2px; top: 190px">7</span>
+      <span class="dot pin" style="left: 456px; top: 112px">8</span>
+      <span class="dot pin" style="left: 580px; top: 112px">9</span>
+      <span class="dot pin" style="left: 744px; top: 112px">10</span>
+      <span class="dot pin" style="left: 900px; top: 112px">11</span>
+      <span class="dot pin" style="left: 380px; top: 574px">12</span>
+    </div>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; padding-top: 30px">
+    <div style="font-weight: 600; font-size: 20px">Group drops: every drop, one row each</div>
+    <div class="note" style="color: #5E5E5A">The layout follows the Loot History window: a 30 px title bar that drags the window, a tab strip with a gold underline on the active tab, a filter bar, the table and a footer. The skin is Ka0s (dark background, 1 px border, gold title). The wireframe is shown in greyscale.</div>
+    <div style="display: flex; gap: 10px"><span class="dot">1</span><div class="note"><b>Title bar.</b> Drag to move. The window resizes from the corner and Esc closes it.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">2</span><div class="note"><b>Restriction badge.</b> Shown only during an encounter or an active key. The tooltip says which restriction is active and lists the queued asks.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">3</span><div class="note"><b>Scan group.</b> Inspects every member out of combat, one at a time.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">4</span><div class="note"><b>Tabs.</b> A badge counts your tradeable drops. History arrives in v1.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">5</span><div class="note"><b>Filter bar.</b> Interesting shows upgrades for you and drops the looter can likely trade. All shows everything.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">6</span><div class="note"><b>Encounter header.</b> Drops are grouped by boss or key run, and each group collapses.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">7</span><div class="note"><b>Item icon.</b> A real item button: hover shows the tooltip, shift-click links the item and ctrl-click opens dress-up. <b>Clicking the row opens the detail card (02).</b></div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">8</span><div class="note"><b>Their eq.</b> The looter's equipped item. Two icons appear for rings, trinkets and dual wield, with the inspect age beside them.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">9</span><div class="note"><b>Me and Them.</b> Signed ilvl change with ▲ upgrade, ≈ sidegrade or ▽ downgrade. Colours are inverted for Them. With Pawn on, hovering shows %.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">10</span><div class="note"><b>Trade.</b> Yes, Likely, Unknown or No, with the reason on hover (03).</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">11</span><div class="note"><b>Ask.</b> One ask per item per looter. The button changes to Queued, then Asked ✓. × dismisses the row.</div></div>
+    <div style="display: flex; gap: 10px"><span class="dot">12</span><div class="note"><b>Footer.</b> A quick health check showing inspect freshness, the last loot seen and Pawn status.</div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      rows: [
+        { item: 'Crown of Roaring Storms', ilvl: '311', slot: 'Head', looter: 'Séta', two: false, age: '40s', me: '+19 ▲', them: '−13 ▽', trade: 'Likely', ask: 'Ask', askClass: 'btnfill', bg: '#FFFFFF' },
+        { item: "Blazebinder's Hoof", ilvl: '298', slot: 'Trinket', looter: 'Littlewolfe', two: true, age: '2m', me: '+4 ≈', them: '+12 ▲', trade: 'No', ask: '—', askClass: '', bg: '#FFFFFF' },
+        { item: '[Ring name]', ilvl: '305', slot: 'Finger', looter: 'Uniquerogue', two: true, age: '?', me: '+9 ▲', them: '?', trade: 'Unknown', ask: 'Queued ⏱', askClass: '', bg: '#F7F7F4' },
+        { item: '[Cloak name]', ilvl: '305', slot: 'Back', looter: 'Butterz', two: false, age: '1m', me: '+6 ▲', them: '−3 ▽', trade: 'Likely', ask: 'Asked ✓', askClass: '', bg: '#FFFFFF' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
