@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| FEED-1..20 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1) |
+| FEED-1..21 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Group drops table (FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2) |
 | ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -514,6 +514,15 @@ feed.view.likely` → `false`; `/dw set feed.view.usable true`, `/reload`, `/dw 
 Group drops tab reads `Usable by me`; `/dw set feed.view.usable false`. On a character that had
 ticked Usable by me or Likely tradeable only in the old settings (or `View: All` saved), the first
 load of this version → the same choices show as View values. Result:
+
+**FEED-21. Item tooltips beside the window (DW-A2, feedback-2 spec §2).** `/dw test`, window in the
+middle of the screen. Hover an item in each place: a Group drops row (icon and name), My eq and Their
+eq, the detail card's icon, name and Replaces rows, a My drops row, the Offer panel's icon and name,
+and a History row → each tooltip opens to the RIGHT of the window, its top level with the hovered
+row, and covers none of the table (the Offer panel's opens to the right of the panel). Drag the
+window to the screen's right edge and hover again → each opens on the LEFT of the window instead.
+Set the UI scale low (or the window's Scale to 0.7) and repeat near the right edge → still beside
+the window, never over it, never off screen. Hover the toast's icon → beside the toast. Result:
 
 ## Roster
 

@@ -83,7 +83,12 @@ its one-line responsibility and why its position is load-bearing or conventional
   their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`), test mode
   (`TestData.lua`, its pure sample drops and History groups over real items from the simulator's
   item pool, and `TestMode.lua`, its edge; ui spec §4) and the diagnostics sections
-  (`Diagnostics.lua`).
+  (`Diagnostics.lua`). Every item tooltip (the three tabs, the equipment columns, the detail card,
+  the Offer panel, the toast) opens beside its frame, top-aligned with the hovered row: on the
+  right, or the left when the screen has no room on the right, measured after `Show()` at each
+  frame's effective scale (`WindowGroup.PlaceItemTooltip`, beside `SetItemTooltip`; feedback-2
+  spec §2). The frame is the nearest ancestor marked `tipHost` (the docked Offer panel), else the
+  outermost one under UIParent (the window, the toast).
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
 

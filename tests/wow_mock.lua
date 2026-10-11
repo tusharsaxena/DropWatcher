@@ -64,6 +64,8 @@
 --                  DressUpItemLink; tooltipLinks every GameTooltip:SetHyperlink (the drop tables);
 --                  tooltipSets every GameTooltip setter as "link:<link>", "bag:<bag>:<slot>" or
 --                  "inventory:<unit>:<slot>" (the real game tooltip, in order);
+--                  GameTooltip's SetOwner is recorded as `__owner` / `__anchor`, and its
+--                  ClearAllPoints / SetPoint / GetPoint as on a window frame (where it is placed);
 --                  bagItemReads["bag:slot"] = { ilvl, quality } is C_Item.GetCurrentItemLevel's and
 --                  C_Item.GetItemQuality's answer on that bag slot's ItemLocation;
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
@@ -151,6 +153,10 @@ local function decorateGeometry(M, f)
         local pt = self.__points[i or 1]
         if pt then return pt[1], pt[2], pt[3], pt[4], pt[5] end
     end
+    -- The parent CreateFrame was given (the kit records it as `__parent`), and a reparent: the item
+    -- tooltip walks up to the window it goes beside (modules/WindowGroup.lua, PlaceItemTooltip).
+    f.GetParent = function(self) return self.__parent end
+    f.SetParent = function(self, p) self.__parent = p; return self end
     f.SetSize = function(self, w, h) self.__width, self.__height = w, h; return self end
     f.SetWidth = function(self, w) self.__width = w; return self end
     f.SetHeight = function(self, h) self.__height = h; return self end
@@ -582,6 +588,21 @@ local function installTableSurface(M)
     M.ChatEdit_InsertLink = function(link) M.chatLinks[#M.chatLinks + 1] = link; return true end
     M.DressUpItemLink = function(link) M.dressUps[#M.dressUps + 1] = link; return true end
     M.tooltipLinks, M.tooltipSets = {}, {}
+    local tip = M.GameTooltip
+    tip.__points = {}
+    tip.SetOwner = function(self, owner, anchor)
+        self.__owner, self.__anchor, self.__points = owner, anchor, {}
+        return self
+    end
+    tip.ClearAllPoints = function(self) self.__points = {}; return self end
+    tip.SetPoint = function(self, point, rel, relPoint, x, y)
+        self.__points[#self.__points + 1] = { point, rel, relPoint, x, y }
+        return self
+    end
+    tip.GetPoint = function(self, i)
+        local pt = self.__points[i or 1]
+        if pt then return pt[1], pt[2], pt[3], pt[4], pt[5] end
+    end
     M.GameTooltip.SetHyperlink = function(self, link)
         M.tooltipLinks[#M.tooltipLinks + 1] = link
         M.tooltipSets[#M.tooltipSets + 1] = "link:" .. tostring(link)

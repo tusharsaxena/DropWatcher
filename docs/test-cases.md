@@ -234,7 +234,7 @@ Total.
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
 
-### test_window_group.lua (35)
+### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -260,6 +260,11 @@ Total.
 - table: rows come from the pool: a repaint reuses them, fewer drops park the rest
 - table: a header click collapses its group, and a second expands it
 - table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
+- item tooltip: it opens on the window's right, top-aligned with the hovered row
+- item tooltip: it opens on the window's left when the screen has no room on the right
+- item tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
+- item tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
+- item tooltip: a row's item button opens the game's tooltip beside the window, else on its own right
 - table: Their eq shows the looter's worn item from their inspect read
 - table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
@@ -1266,7 +1271,7 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 50 |
-| test_window_group.lua | 35 |
+| test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 32 |
 | test_test_mode.lua | 29 |
@@ -1311,4 +1316,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1081** |
+| **Total** | **1086** |

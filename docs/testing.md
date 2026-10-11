@@ -59,6 +59,8 @@ every control, the build without the Widgets library, and the pure row predicate
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
+the item tooltip beside the window (right, else left at the UI scale, top-aligned with the row, the
+docked Offer panel's own edge, and the fallback on unknown geometry),
 the Ask button and its repaint, the dismiss mark, the compact preset, the filters, the empty
 state and its two buttons, and the filters' empty line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that

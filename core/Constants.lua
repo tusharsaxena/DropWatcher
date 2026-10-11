@@ -76,6 +76,7 @@ C.WINDOW = {
     PILL_W      = 96,     -- a status pill
     PANEL_BTN_W = 52,     -- a candidate's Offer or Trade button
     DOCK_GAP    = 4,      -- between the window and the docked panel
+    TIP_GAP     = 2,      -- between the window (or a docked panel) and an item tooltip beside it
     -- Where a fresh profile, and Reset position, put the window.
     POINT       = { "CENTER", "CENTER", 0, 0 },
 }

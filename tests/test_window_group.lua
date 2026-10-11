@@ -475,6 +475,106 @@ test("table: an item button shows the game's tooltip, shift-click links it and c
     assertTrue(b.art:GetTexture() ~= nil, "the item's own icon")
 end)
 
+-- ── the item tooltip beside the window (feedback-2 spec §2, FB2-4) ──────────────────────────
+
+-- A plain frame for PlaceItemTooltip: its edges, width, scale and parent, and the points it is given.
+local function box(t)
+    local f = { pts = {}, tipHost = t.tipHost }
+    function f.GetLeft() return t.left end
+    function f.GetRight() return t.right end
+    function f.GetTop() return t.top end
+    function f.GetWidth() return t.width end
+    function f.GetEffectiveScale() return t.scale or 1 end
+    function f.GetParent() return t.parent end
+    function f.ClearAllPoints(self) self.pts = {} end
+    function f.SetPoint(self, ...) self.pts[#self.pts + 1] = { ... } end
+    return f
+end
+
+local function placed(NS, m, screen, row, tip)
+    m.UIParent.GetWidth = function() return screen end
+    return NS.WindowGroup.PlaceItemTooltip(tip, row)
+end
+
+test("item tooltip: it opens on the window's right, top-aligned with the hovered row", function()
+    local NS, _, m = T.newAddon()
+    local gap = NS.Constants.WINDOW.TIP_GAP
+    local win = box({ left = 400, right = 1400, top = 900 })
+    local row = box({ top = 700, parent = box({ top = 720, parent = win }) })
+    local tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, row, tip), "right")
+    assertEqual(#tip.pts, 1)
+    local p = tip.pts[1]
+    assertEqual(p[1] .. ">" .. p[3], "TOPLEFT>TOPRIGHT")
+    assertTrue(p[2] == win, "beside the window, not the row")
+    assertEqual(p[4], gap); assertEqual(p[5], -200)
+end)
+
+test("item tooltip: it opens on the window's left when the screen has no room on the right", function()
+    local NS, _, m = T.newAddon()
+    local gap = NS.Constants.WINDOW.TIP_GAP
+    local win = box({ left = 600, right = 1700, top = 900 })
+    local row = box({ top = 850, parent = win })
+    local tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, row, tip), "left")
+    local p = tip.pts[1]
+    assertEqual(p[1] .. ">" .. p[3], "TOPRIGHT>TOPLEFT")
+    assertTrue(p[2] == win)
+    assertEqual(p[4], -gap); assertEqual(p[5], -50)
+end)
+
+test("item tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)", function()
+    local NS, _, m = T.newAddon()
+    -- 2000 window units at 0.64 is 1280 px: 300 px of tooltip fit in 1920.
+    local win = box({ left = 500, right = 2000, top = 1200, scale = 0.64 })
+    local row = box({ top = 1000, scale = 0.64, parent = win })
+    local tip = box({ width = 300 })
+    assertEqual(placed(NS, m, 1920, row, tip), "right")
+    assertEqual(tip.pts[1][5], -128, "the row's top in the tooltip's own units")
+    -- The tooltip at 2.2: 300 units are 660 px, and 1280 + 660 is past 1920.
+    local big = box({ width = 300, scale = 2.2 })
+    assertEqual(placed(NS, m, 1920, row, big), "left")
+end)
+
+test("item tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside", function()
+    local NS, _, m = T.newAddon()
+    local tip = box({ width = 300 })
+    assertTrue(placed(NS, m, 1920, box({ top = 10 }), tip) == nil)
+    assertEqual(#tip.pts, 0, "left to the caller's fallback")
+    local win = box({ left = 100, right = 900, top = 900 })
+    local panel = box({ left = 904, right = 1344, top = 900, parent = win, tipHost = true })
+    local row = box({ top = 800, parent = panel })
+    assertEqual(placed(NS, m, 1920, row, tip), "right")
+    assertTrue(tip.pts[1][2] == panel, "the Offer panel's own edge, not the window's under it")
+end)
+
+test("item tooltip: a row's item button opens the game's tooltip beside the window, else on its own right", function()
+    local NS, drawn, m = shownTable()
+    local b = rowFor(drawn, 1).cells.item.button
+    b:__fire("OnEnter")
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE")
+    local point, rel, relPoint = m.GameTooltip:GetPoint(1)
+    assertEqual(point .. ">" .. relPoint, "BOTTOMLEFT>TOPRIGHT", "no geometry: on the button's right")
+    assertTrue(rel == b)
+    local win = NS.Window.Frame()
+    win.GetLeft = function() return 200 end
+    win.GetRight = function() return 1200 end
+    win.GetTop = function() return 800 end
+    b.GetTop = function() return 600 end
+    m.UIParent.GetWidth = function() return 1920 end
+    m.GameTooltip.GetWidth = function() return 320 end
+    b:__fire("OnEnter")
+    point, rel, relPoint = m.GameTooltip:GetPoint(1)
+    assertEqual(point .. ">" .. relPoint, "TOPLEFT>TOPRIGHT")
+    assertTrue(rel == win, "beside the window")
+    assertEqual(select(5, m.GameTooltip:GetPoint(1)), -200)
+    m.UIParent.GetWidth = function() return 1400 end
+    b:__fire("OnEnter")
+    point, rel, relPoint = m.GameTooltip:GetPoint(1)
+    assertEqual(point .. ">" .. relPoint, "TOPRIGHT>TOPLEFT", "no room on the right")
+    assertTrue(rel == win)
+end)
+
 test("table: Their eq shows the looter's worn item from their inspect read", function()
     local NS, _, m = T.enableAddon()
     m.__now = 100

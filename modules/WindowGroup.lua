@@ -371,13 +371,83 @@ function WG.SetItemTooltip(tip, b)
     return "link"
 end
 
+-- BESIDE THE WINDOW (feedback-2 spec §2, FB2-4). An item tooltip never covers the table: it opens
+-- beside the frame the hovered item sits in, top-aligned with the hovered row, on its right, or on
+-- its left when the screen has no room on the right (Loot History's row tooltip, ANCHOR_RIGHT on a
+-- row as wide as its window). That frame is the nearest ancestor marked `tipHost` (the Offer
+-- panel, docked beside the window), else the outermost one under UIParent (the window, the toast).
+
+local function num(v) return type(v) == "number" and v or nil end
+
+-- A geometry read, a number or nil (an unplaced frame answers nil).
+local function geom(frame, method)
+    local fn = frame and frame[method]
+    return fn and num(fn(frame)) or nil
+end
+
+local function scaleOf(frame) return geom(frame, "GetEffectiveScale") or 1 end
+
+local function parentOf(frame)
+    local p = frame.GetParent and frame:GetParent()
+    if type(p) ~= "table" or p == frame or p == UIParent then return nil end
+    return p
+end
+
+local function tipHostOf(owner)
+    local f = owner
+    for _ = 1, 32 do
+        if f.tipHost then return f end
+        local p = parentOf(f)
+        if not p then return f end
+        f = p
+    end
+    return f
+end
+
+-- Which side of `host` the tooltip goes, measured in screen pixels (each edge at its frame's
+-- effective scale): right when it fits, else left.
+local function sideOf(host, tip, gap)
+    local hs, ts = scaleOf(host), scaleOf(tip)
+    local screen = geom(UIParent, "GetWidth")
+    local side = NS.MineCells.DockSide(geom(host, "GetLeft") * hs, geom(host, "GetRight") * hs,
+        (geom(tip, "GetWidth") or 0) * ts, screen and screen * scaleOf(UIParent), gap * ts)
+    return side == "right" and "right" or "left"
+end
+
+--- Place a shown item tooltip beside the frame `owner` sits in (the window, a docked panel),
+--- top-aligned with `owner`: on its right, or its left when the screen has no room on the right.
+--- Measured after Show (the tooltip's width), at each frame's effective scale. Answers `right` or
+--- `left`, or nil when the geometry is unknown (nothing is placed; the caller anchors it).
+--- @param tip table a GameTooltip, shown
+--- @param owner table the hovered frame
+--- @return string|nil
+function WG.PlaceItemTooltip(tip, owner)
+    local host = tipHostOf(owner)
+    local top, rowTop = geom(host, "GetTop"), geom(owner, "GetTop")
+    if not (top and rowTop and geom(host, "GetLeft") and geom(host, "GetRight")) then return nil end
+    local gap = K.TIP_GAP
+    local side = sideOf(host, tip, gap)
+    local dy = (rowTop * scaleOf(owner) - top * scaleOf(host)) / scaleOf(tip)
+    tip:ClearAllPoints()
+    if side == "right" then
+        tip:SetPoint("TOPLEFT", host, "TOPRIGHT", gap, dy)
+    else
+        tip:SetPoint("TOPRIGHT", host, "TOPLEFT", -gap, dy)
+    end
+    return side
+end
+
 -- `owner` is the hovered frame: the button, or a name beside it (WG.ItemHover).
 local function itemEnter(self, owner)
     if not (self.link and GameTooltip) then return end
-    GameTooltip:SetOwner(owner or self, "ANCHOR_RIGHT")
+    owner = owner or self
+    GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     WG.SetItemTooltip(GameTooltip, self)
     GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], C.IDLE.r, C.IDLE.g, C.IDLE.b)
     GameTooltip:Show()
+    if WG.PlaceItemTooltip(GameTooltip, owner) then return end
+    GameTooltip:ClearAllPoints()   -- unknown geometry: on the hovered frame's right, as before
+    GameTooltip:SetPoint("BOTTOMLEFT", owner, "TOPRIGHT", 0, 0)
 end
 
 --- An item button's click: shift links the item in chat, ctrl tries it on (design spec §11.1); a
