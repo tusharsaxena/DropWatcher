@@ -242,6 +242,13 @@ modules\Window.lua
 # and icon buttons); reads NS.Constants and NS.L at load, and NS.Window (above), NS.Asks and the
 # host handlers at call time.
 modules\WindowTitleBar.lua
+# Conventional: publishes NS.WindowCompact (compact mode's switch: the layout in force, each
+# layout's geometry, the run override); reads NS.Constants at load, appends its rows to
+# NS.FEATURE_EVENTS (CHALLENGE_MODE_START / _COMPLETED, after modules\Situations.lua's) and
+# NS.STAND_DOWN / NS.STAND_UP, adds a visibility listener to NS.Window (above) and registers its
+# SituationChanged receiver on its own NS.Bus target at load. NS.Setting, NS.WindowFilterBar,
+# NS.Situations, NS.LootFeed and NS.State are read at call time.
+modules\WindowCompact.lua
 # Conventional: publishes NS.WindowFilterBar (the filter bar, each tab's filter state and the row
 # predicates); reads NS.Constants, NS.L, NS.State and NS.C (defaults\, above) at load, and NS.Window
 # (above) at call time.
@@ -291,6 +298,28 @@ modules\OfferPanel.lua
 # NS.WindowCells, NS.Constants, NS.L and NS.State at load. NS.History, NS.WindowGroup's item button
 # and layout, NS.WindowFilterBar and NS.WindowFooter (above) are read at call time.
 modules\WindowHistory.lua
+# Conventional: publishes NS.CompactCards, compact mode's pure card composers (each card's three
+# lines, tones and tooltips for the three tabs, and the header's short form); takes NS.WindowCells,
+# NS.MineCells and NS.L at load. NS.WindowHistory (above) is read at call time.
+modules\CompactCards.lua
+# Conventional: publishes NS.CompactGroup, the Group drops tab's compact layout (pooled three-line
+# cards, one-line headers, the stacked detail card); takes NS.Constants at load. NS.WindowGroup,
+# NS.CompactCards, NS.DetailCard, NS.WindowRows and the host handlers are read at call time: WindowGroup's
+# refresh hands it the entries.
+modules\CompactGroup.lua
+# Conventional: publishes NS.CompactMine, the My drops tab's compact layout (three-line cards with
+# the countdown's bar, Offer, Announce or Hide; the strip shortened); takes NS.Constants and NS.L
+# at load. NS.CompactGroup's kit, NS.CompactCards and the handlers are read at call time.
+modules\CompactMine.lua
+# Conventional: publishes NS.CompactHistory, the History tab's compact layout (three-line cards
+# with the outcome, the row menu on a right-click); takes NS.Constants and NS.L at load.
+# NS.CompactGroup's kit, NS.CompactCards and NS.WindowHistory are read at call time.
+modules\CompactHistory.lua
+# Conventional: publishes NS.CompactChrome, the window's chrome in the compact layout (the short
+# title and words, the badge, the icon Scan group, the short tabs, the one-row filter bar and its
+# Filters panel, the strip and the one-line footer); takes NS.Constants and NS.L at load and adds a
+# visibility listener to NS.Window (above). Everything else is read at call time.
+modules\CompactChrome.lua
 # Conventional: publishes NS.TestData, test mode's pure sample data (the drops and the History
 # groups over pool items); takes NS.Constants and NS.L at load. NS.Item is read at call time.
 modules\TestData.lua

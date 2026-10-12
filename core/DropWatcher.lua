@@ -442,16 +442,18 @@ function NS.PostTradeables()
     return posted
 end
 
---- Turn the Group drops table's compact preset on or off (design spec §11.1): `window.compact`,
---- through the write seam; the row's reaction repaints the open window. `/dw compact` (DW-42)
---- shares it.
---- @param on boolean
-function NS.SetCompact(on)
-    NS.SchemaRuntime.Set("window.compact", on and true or false)
+--- Show the window in one layout, `full` or `compact` (compact spec §1): `window.mode` through the
+--- write seam. The row's reaction (NS.WindowCompact.OnModeChanged) lets a run's compact override go,
+--- since the player chose, and lays the window out. The title-bar toggle, the Window page's Layout
+--- row, `/dw compact` and `/dw full` share it.
+--- @param mode string
+function NS.SetWindowMode(mode)
+    NS.SchemaRuntime.Set("window.mode", mode)
 end
 
-function NS.ToggleCompact()
-    NS.SetCompact(NS.Setting("window.compact") ~= true)
+--- Switch to the other layout from the one in force (the title-bar toggle, `/dw compact`).
+function NS.ToggleWindowMode()
+    NS.SetWindowMode(NS.WindowCompact.Mode() == "compact" and "full" or "compact")
 end
 
 -- Combat ends test mode (preview-mode), both combat edges re-run the window's show decision

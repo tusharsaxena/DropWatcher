@@ -35,6 +35,13 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   its Trade button, Post my tradeables) and History (every drop the feed showed, kept across sessions
   on every character, with its outcome), plus the filter bar, the footer's health line, the
   restriction badge, Scan group, minimize, test mode and auto-open.
+- **Compact mode** (M12, [`superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md`](superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md)).
+  The same window in a second layout, about 380 pixels wide: each drop a three-line card on all
+  three tabs, a one-row filter bar with a Filters menu, a short title and a one-line footer. It reads
+  the same feed, filters and engine, so it never changes what is recorded, judged or sent. The
+  title-bar toggle, the Layout setting, `/dw compact` and `/dw full` switch it, each layout keeps its
+  own size and place, and an auto-open inside a run opens it compact until the run ends (on by
+  default).
 - **Opt-in extras.** The upgrade toast and auto-ask, both off by default.
 - **The standard surfaces.** The settings pages (General, Feed, Comparison, Trade, Messages, Window
   and Profiles), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the

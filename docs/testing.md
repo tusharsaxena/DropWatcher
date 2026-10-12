@@ -56,11 +56,49 @@ preview, token chips and Reset templates, each page's Defaults, and the editors'
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
 panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values, label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
+`test_window_compact` (compact mode's switch, DW-C0: the pure layout, run, size, bounds and corner
+reads, schema step 5, the title-bar toggle, each layout's own size and point on the one frame, the
+Layout row, and the run override taken on an auto-open and let go when the run ends),
+`test_compact_cards` (compact mode's cards, DW-C1, pure: each Group drops, My drops and History card's
+three lines in every verdict, trade, inspect, ask, countdown and outcome state, each piece's tone and
+tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
+`test_compact_group` (the Group drops tab in the compact layout, DW-C2: the card's metrics and the
+scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
+headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
+reason tooltip, every tooltip at the card's top right, the stacked detail card inline, Ask and ×,
+the ask states and the dash, the text size, the pool's reuse, and the collapsing headers),
+`test_compact_mine` (the My drops tab in the compact layout and the Offer panel beside it, DW-C3: the
+candidates' class-colored line, the short summary and the panel's least height, pure; then the cards
+built headless: one pooled card per drop of yours under a one-line header, each line what
+CompactCards says, the countdown's bar and its warning, the dash and Hide, Announce through the
+shared handler, TradeTimerTick, every tooltip at the card's top right, the strip shortened and put
+back, the text size, and the panel docked right, left or floating centered at its own width),
+`test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
+under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
+repainting, the collapsing headers, every tooltip at the card's top right, Clear shortened and put
+back, the text size and test mode's samples),
+`test_compact_chrome` (the window's chrome in the compact layout, DW-C4: the short tab labels, `TEST`
+and `SIM`, the badge's count, the footer's one line and its tooltip, the Filters count, label and
+tooltip, pure; then headless: the short title centered with its word, the badge at the left with its
+tooltip, Scan group as an icon button, the short tabs at their width with the full names in their
+tooltips, View, the search box and Filters on one row with Quality, Content, Character and Sort
+moved into the Filters panel and filtering as on the full bar, the panel closing on hide, minimize
+and the switch, the full layout taking every control back, the shortened strip, the one-line footer
+under the ticker, and the filter state kept across a switch),
+`test_compact_modes` (the two layouts over one engine, DW-C5, compact spec §5: the same drop set, the
+full table and the compact cards drawing the same drops and headers in the same order on every tab,
+for test mode's samples and a simulated dungeon and open-world run, under every View, Content,
+Character, search and Sort, with a group collapsed, a drop dismissed and your own drops shown;
+switching back and forth on every tab leaving every verdict, trade state, inspect status, feed
+count, history entry and send as it was; and every test-mode state on a compact card saying what
+its full row says: the verdicts, trade words, ask states, inspect freshness and worn levels on Group
+drops, every countdown with Offer or its dash and Announce or Hide on My drops, and every outcome on
+History),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
 the item tooltip at the row's top right, else its top left,
-the Ask button and its repaint, the dismiss mark, the compact preset, the filters, the empty
+the Ask button and its repaint, the dismiss mark, the hand-off to the compact cards, the filters, the empty
 state and its two buttons, and the filters' empty line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
@@ -291,7 +329,10 @@ outgearing it, with drops in the feed, your verdict and the looter's, a chat lin
 footer's `Simulating` and `Inspect n/n`, and rows in Group drops and My drops under the default
 filters, and the History footer's `kept for 30 days` with a shorter window that deletes nothing of
 the fresh run and so asks nothing; the combat flags during and after the simulated fight, the loot lines written from the
-GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat),
+GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat;
+every scenario runs once in each layout, DW-C5: the full table with Open in compact view during a
+run off, and the compact cards with no piece of any card blank; and a simulated key's auto-open is
+compact by default and full with the option off, the stored layout back once the run is stopped),
 `test_sim_report` (the owner's `Loot: 2 drops` with one drop shown, DW-B0, feedback-3 spec §0: the
 root cause reproduced, your own drop on My drops and nothing lost; the pure `Place`, `Summarize` and
 `TipLines`; the panel row, its tooltip, the chat line, the `· n yours on My drops` header and the

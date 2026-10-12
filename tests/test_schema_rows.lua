@@ -29,7 +29,7 @@ local function specPaths()
         "messages.templates.ask", "messages.templates.offer", "messages.templates.announce",
         "messages.editFirst", "messages.oneAsk", "messages.announceChannel", "messages.autoAsk.enabled",
         "messages.autoAsk.delay", "messages.autoAsk.minGain",
-        "window.compact", "window.rowHeight", "window.fontSize",
+        "window.mode", "window.compactInRuns", "window.rowHeight", "window.fontSize",
         "toast.enabled", "toast.minGain", "toast.duration", "toast.inCombat", "toast.sound",
         "global.history.retentionDays",
     }
@@ -158,7 +158,7 @@ test("rows: the filter bar seeds a fresh tab from the rows", function()
     assertEqual(d.content, "instance")
 end)
 
-test("rows: the Quality control and the compact preset write through the seam (handoff from M3)", function()
+test("rows: the Quality control and the window's layout write through the seam (handoff from M3)", function()
     local NS = T.enableAddon()
     local p = NS.addon.db.profile
     -- red under: write the profile path directly (a refused value would then be stored)
@@ -169,11 +169,13 @@ test("rows: the Quality control and the compact preset write through the seam (h
     local repaints = 0
     local real = NS.Window.Refresh
     NS.Window.Refresh = function(...) repaints = repaints + 1; return real(...) end
-    NS.ToggleCompact()
-    assertEqual(p.window.compact, true)
+    NS.ToggleWindowMode()
+    assertEqual(p.window.mode, "compact")
     assertTrue(repaints >= 1, "the row's reaction repaints the open window")
-    NS.ToggleCompact()
-    assertEqual(p.window.compact, false)
+    NS.ToggleWindowMode()
+    assertEqual(p.window.mode, "full")
+    assertFalse(NS.SchemaRuntime.Set("window.mode", "tiny"), "a layout the row does not list is refused")
+    assertEqual(NS.Setting("window.compact"), nil, "the compact preset's row is retired")
     NS.SchemaRuntime.Set("window.columns.slot", false)
     NS.Window.Refresh = real
     assertTrue(repaints >= 3)

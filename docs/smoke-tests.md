@@ -36,6 +36,7 @@ passed.
 | TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the tabs reconciling with it (SIM-12, DW-B0), the loot step honoring `feed.showOwn` and test mode (SIM-13, DW-B5) |
+| COMPACT-1..7 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Group drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); My drops cards, the countdown, Offer and Announce, the Offer panel docked beside (COMPACT-3, DW-C3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
 
 ## Before you start
@@ -75,8 +76,9 @@ is on Group drops under that member; `/dw add <item> Nobody` → it shows, with 
 stay. Result:
 
 **SLASH-5. View verbs.** `/dw history` and `/dw mine` → the window opens on that tab, expanded even
-when it was minimized. `/dw compact` → `Compact preset on.` and the Group drops table narrows; again →
-`Compact preset off.`; the Window page's Compact box follows. `/dw situation` in a Heroic dungeon →
+when it was minimized. `/dw compact` → `Compact view.` and the window narrows to its compact layout
+(COMPACT-1); again → `Full view.`; `/dw full` → `Full view.` and stays full; the Window page's
+Layout choice follows. `/dw situation` in a Heroic dungeon →
 three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
 party, difficulty 2); outdoors alone → `Solo (solo)`. Result:
 
@@ -401,10 +403,8 @@ is on top and open, the first one collapsed with a right chevron and `(collapsed
 header → it opens or collapses. Hover an item icon → the game's item tooltip with a `Shift-click to
 link it in chat; ctrl-click to try it on.` line; shift-click it with the chat box open → the link is
 inserted; ctrl-click it → the dressing room shows it. Click a row's `×` → the row goes for the
-session. Turn the compact preset on (`/dw compact` once DW-42 lands; until then
-`/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").db.profile.window.compact = true` and
-`/reload`) → the labels read `Item / looter`, `Ilvl`, `Their eq`, `Me`, `Ask`, the item
-cell names the looter, and the other columns are gone; set it back. Resize the window → the Item
+session. Switch to the compact layout (`/dw compact`) → the table gives way to cards (COMPACT-2);
+set it back. Resize the window → the Item
 column takes the width. Scroll with the mouse wheel when the rows pass the bottom. Result:
 
 **FEED-12. The table's Ask button.** In a party, on a drop that is an upgrade for you and Likely
@@ -1261,6 +1261,95 @@ back. On My drops, Hide your drop → the tab reads `My drops`, and the row `Loo
 drops)` with the tooltip `… (you): not on My drops: you hid it`; type a search your drop fails on
 My drops instead → the same, the tooltip ending `not on My drops: Search`. Result:
 
+## Compact
+
+**COMPACT-1. The layout switch (DW-C0).** With the window open in its full layout, hover the
+title bar's new mark between Scan group and minimize → `Compact view`, naming the Layout setting.
+Click it → the same window narrows to 380 x 460 with its top-right corner where the full window's
+was, and the mark turns to the enlarge mark (`Full view`). Drag it somewhere else and size it from
+the corner → it stops at 320 and 520 wide (220 and 900 tall). Click the mark → the full window comes
+back at its own size and place; click again → compact returns where you left it. `/dw compact` and
+`/dw full` do the same and print `Compact view.` / `Full view.`; Settings → Window → Layout shows
+the choice and switching it there moves the window too. `/reload` → the window opens in the layout
+it was in, each at its own place; Reset position puts both back. An account that had the old compact
+preset on opens compact after the update. Result:
+
+**COMPACT-2. Group drops cards (DW-C2).** Turn test mode on (`/dw test`) and switch to the compact
+layout (`/dw compact`) → each drop is a three-line card about 50 pixels tall under a one-line header
+(`Instance · Boss · Difficulty · 3m · 2 · <you>`, no `ago` and no `drops`; its tooltip has the long
+form and any hidden drops). Line 1: the icon spans the three lines, the item name in its quality
+color with a thin bar of that color at the left edge, the item level right-aligned, `Ask` and the ×.
+Line 2: the looter in class color (⊕ on one from another realm, the realm in its tooltip), the slot,
+the trade state in its tone and the inspect freshness dimmed on the right (`2m`, `cached`, `…`,
+`range`). Line 3: `You ▲ +19 (292)`-style and `Them ▽ -13 (…)`-style halves, `⊘ Can't use` for a
+worded verdict. Check every test-mode state: the Ask button reads Ask, Queued, Asked, Retry or
+Traded as on the full table, and a drop with no ask shows a dash whose tooltip says why. Hover the
+icon or the name → the game's own item tooltip. Click a card → the detail card opens right under
+it at the compact width, For you, For the looter and the trade box one under another, the actions on
+two or three lines, nothing cut off on the right; click it again → it closes; switch to full with it
+open → the same row is open there. Click × → the card goes for the session. Settings → Window → Font
+size 14 → the cards grow with the text. Run `/dw sim start` and step it → the cards fill the same
+way. On each tab, switch to full and back → the same drops under the same headers, in the same
+order, and the same counts on the tabs (DW-C5). With the defaults, `/dw sim start key`, close the
+window and `/dw sim run` → the next drop opens it compact; stop the simulation, close the window and
+open it → the full layout. Result:
+
+**COMPACT-3. My drops cards, the countdown, Offer and Announce (DW-C3).** Turn test mode on and
+switch to the compact layout, then open My drops → each drop of yours is a three-line card under a
+one-line header. Line 1: the icon, the name in its quality color, the item level and `Offer` (gold
+when someone would gain from it), or a dash whose tooltip says why on a drop that cannot be traded.
+Line 2: `For you ▲ +49 (keep?)`-style, then the countdown and a short bar after it on the right,
+amber with `ending soon` under ten minutes, `Not tradeable` with no bar on a dead drop, `No limit
+(BoE)` with a full bar on a bind-on-equip one. Line 3: the best candidates in their class colors
+(`Seta +14 · Butterz +6`), then `Announce`, or `Hide` on a drop that cannot be traded. The countdown
+moves every second. Click Announce → the template goes to the group and the button reads
+Announced. Click Hide → the card goes for the session. The strip under the cards reads `n tradeable ·
+next 0:08:41` with a `Post` button whose tooltip is Post my tradeables'. Click Offer → the Offer
+panel opens beside the compact window at its usual width, on the right; drag the window to the
+screen's right edge → it moves to the left side; make the window short → the panel keeps a usable
+height. Switch to full → the strip and the table are back as before. Run `/dw sim start` and step it
+→ your own drops fill the cards the same way. Result:
+
+**COMPACT-4. History cards and their outcomes (DW-C3).** In the compact layout, open History → each
+kept group is a one-line header (`Boss · Dungeon · 2m · 2 · <you>`, `3d` once a day old) and each
+entry a three-line card: the item and its level with the outcome on the right in its tone (Seen,
+Asked, Offered, Received, Traded away, Expired, Declined); the looter in class color (⊕ from another
+realm), slot, trade and the time on the right (`17:02`, or `Oct 9` past a day); `You` and `Them`
+verdicts. Right-click a card → Mark as declined; its outcome reads Declined; right-click again →
+Clear declined. The strip's button reads `Clear` with the Clear history tooltip, and it still asks
+first. Switch to full → `Clear history` again. Result:
+
+**COMPACT-5. The compact chrome and the Filters ▾ menu (DW-C4).** Switch to the compact layout →
+the title reads `Drop Watcher`, centered; turn test mode on → `TEST` in red beside it, the two
+centered together, and the yellow strip's shorter text, on two lines if the window is narrow; run
+`/dw sim start` → `SIM` in cyan instead. Scan group is an icon button with its tooltip; the layout
+toggle, minimize and close sit at the right. Start a boss encounter with an ask queued → the badge
+at the bar's left is its lock and `1`, its tooltip the full reason and queue. The tabs read `Group`,
+`Mine · n` and `History`, and their tooltips the full names. The filter bar is one row: View, the
+search box reading `Filter…`, and `Filters` on the right. Click Filters → a small panel under it
+holds Quality, Content, Character and Sort; open each → the same choices as the full bar and the
+footer's Sort, Character still multi-select with Current. Pick Content: All and Character: All →
+the button reads `Filters · 2`, and its tooltip lists every value with a dot on those two. Pick a
+Sort → the cards reorder, and the count does not change. Click Filters again, minimize, close or
+switch to full → the panel closes. The footer is one line, `Inspect 4/4 · Mythic+`-style, and its
+tooltip lists the last loot, the situation and Pawn. Switch to full → every control is back on the
+bar and Sort back in the footer, each at its place. Result:
+
+**COMPACT-6. Open in compact view during a run (DW-C0).** With the Layout on Full and Settings →
+Window → Open in compact view during a run on (the default), close the window and start a Mythic+
+key → the first drop (the chest, right after the key completes) opens the window compact; the
+Layout setting still reads Full. Keep it open past two minutes after the completion → it stays
+compact; close it and reopen it (`/dw show`) → it opens full, and a later drop in the same instance
+opens it full too.
+Close it inside a dungeon run, let a drop open it → compact; click the toggle → full at once, and it
+stays the player's choice. Turn the option off → an auto-open in a run keeps the Layout. Result:
+
+**COMPACT-7. Card tooltips at the card's top right (DW-C2).** In the compact layout, hover each piece
+of a card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn
+levels, Ask and ×) and a header → each tooltip rises from the card's top-right corner, just outside
+the window's right edge (or its left edge when the window sits against the right of the screen),
+never over the cards. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -1355,3 +1444,7 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet |
 | SIM-12 | DW-B0, the loot step says where its drops went; the tabs reconcile | No client pass recorded yet |
 | SIM-13 | DW-B5, the loot step honors `feed.showOwn`, test mode's feed and My drops' Hide and filters | No client pass recorded yet |
+| COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
+| COMPACT-2, COMPACT-7 | DW-C2, compact Group drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
+| COMPACT-3, COMPACT-4 | DW-C3, compact My drops and History cards, the countdown, Offer and Announce, the docked Offer panel | No client pass recorded yet |
+| COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |

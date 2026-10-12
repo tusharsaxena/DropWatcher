@@ -375,6 +375,7 @@ end)
 
 test("BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's", function()
     local NS, m = party()
+    NS.SchemaRuntime.Set("window.compactInRuns", false)   -- the table first; the compact card below
     local id = NS.LootFeed.Add(FULL)
     m.bags[0][1], m.bagGUIDs["0:1"], m.tooltips.bag["0:1"] = BAGGED, "Item-1-0001", { lines = {} }
     m.advance(0)
@@ -398,6 +399,15 @@ test("BUG-2: a row's item button and its name show the real tooltip, the addon's
     assertEqual(table.concat(order, ","), "game,line")
     row.cells.item:__fire("OnEnter")
     assertEqual(m.tooltipSets[#m.tooltipSets], "bag:0:1", "the name too")
+    NS.SetWindowMode("compact")
+    local card = NS.WindowMine.Drawn().rows[1]
+    assertEqual(card.dropId, id)
+    m.tooltipSets[#m.tooltipSets + 1] = "reset"
+    card.icon:__fire("OnEnter")
+    assertEqual(m.tooltipSets[#m.tooltipSets], "bag:0:1", "the compact card's icon")
+    m.tooltipSets[#m.tooltipSets + 1] = "reset"
+    card.cells.item.hit:__fire("OnEnter")
+    assertEqual(m.tooltipSets[#m.tooltipSets], "bag:0:1", "and its name")
 end)
 
 test("BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's", function()

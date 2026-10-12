@@ -1,0 +1,2 @@
+date	milestone	evidence
+2026-10-11	M12 compact mode COMPLETE (DW-C0..C6), reviewed (2 medium fixed, 4 low noted)	DropWatcher 3302dc8: 1326 passed, 0 failed, 1 skipped; luacheck 0/0 in 161 files; bundle 20261011-230412 green

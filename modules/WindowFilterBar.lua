@@ -33,6 +33,8 @@ local _, NS = ...
 -- the frame edge.
 -- DEGRADED (no LibKa0s-Widgets-1.0): the four dropdowns are not drawn (core/WidgetsSetup.lua);
 -- the search box still filters.
+-- THE COMPACT LAYOUT (compact spec §4) keeps View and the search box on one row and moves Quality,
+-- Content and Character into the Filters panel (modules/CompactChrome.lua); FB.Anchor puts them back.
 
 NS.WindowFilterBar = NS.WindowFilterBar or {}
 local FB    = NS.WindowFilterBar
@@ -648,23 +650,37 @@ function FB.Build(host)
     controls.content = pickDropdown(host, "content", WIDTH.content)
     controls.char = charDropdown(host, WIDTH.char)
     controls.search = buildSearch(host)
+    FB.Anchor()
+end
+
+--- Put every control at its place on the bar, left to right, the search box on the right with its
+--- full hint (the build, and the full layout taking them back from the compact Filters panel,
+--- modules/CompactChrome.lua).
+function FB.Anchor()
+    local host = controls.host
+    if not host then return end
     local prev
     for _, key in ipairs(ROW) do
         local w = controls[key]
         if w then
+            w:SetParent(host)
+            w:ClearAllPoints()
+            w:SetWidth(WIDTH[key])
             if prev then w:SetPoint("LEFT", prev, "RIGHT", GAP, 0) else w:SetPoint("LEFT", host, "LEFT", 0, 0) end
             prev = w
         end
     end
+    controls.search:ClearAllPoints()
     controls.search:SetPoint("RIGHT", host, "RIGHT", 0, 0)
+    controls.search.hint:SetText(L["Filter looter or item…"])
 end
 
 --- Fit the bar to the window's width: the search box takes what the controls leave, and hides when
---- that is too little to type in.
+--- that is too little to type in. The compact layout's anchors size it there instead.
 --- @param width number|nil the window's width
 function FB.Layout(width)
     local eb = controls.search
-    if not eb then return end
+    if not eb or NS.WindowCompact.Mode() == "compact" then return end
     local used = 2 * K.INSET
     for _, key in ipairs(ROW) do
         if controls[key] then used = used + GAP + WIDTH[key] end

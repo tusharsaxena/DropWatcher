@@ -6,10 +6,9 @@ local _, NS = ...
 -- (what you wear in that slot, from your gear snapshot), Their eq (what the looter wears there, from
 -- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
 -- verdicts: the signed item-level change beside ▲ ≈ ▽, the Them column's tones inverted), Trade
--- (Yes, Likely, Unknown or No) and Actions (the Ask button and the × that dismisses the row). The
--- compact preset (`profile.window.compact`, NS.SetCompact) keeps Item and looter, Ilvl, Their eq,
--- Me and Ask; `profile.window.columns[key] = false` hides a column (Item never hides). A row too
--- narrow for them all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
+-- (Yes, Likely, Unknown or No) and Actions (the Ask button and the × that dismisses the row).
+-- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
+-- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
 -- cell says, and its reason tooltip, is modules/WindowCells.lua's (pure); this file is the frame
 -- edge that paints it. Nothing is ever blank.
 --
@@ -37,6 +36,7 @@ local _, NS = ...
 -- card's height. Only one row is expanded at a time (NS.State.windowGroup.expanded); a second click
 -- on it, or on another row, collapses or moves the card. A row filtered out, collapsed under its
 -- header or dismissed takes its card with it.
+-- THE COMPACT LAYOUT (WG.IsCompact) draws the same entries as cards: modules/CompactGroup.lua.
 --
 -- THE UI LISTENS. Window.lua repaints it on the bus; it reads the feed (NS.LootFeed.Groups, Get),
 -- the looter's inspect entry (NS.Inspect.Get) and the ask's state (NS.Asks.StateOf), all read-only.
@@ -59,7 +59,7 @@ local max = math.max
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
 -- also on the row's detail card. Item and Actions never go.
 WG.COLUMNS = {
-    { key = "item", label = L["Item"], compactLabel = L["Item / looter"], flex = true,
+    { key = "item", label = L["Item"], flex = true,
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
     { key = "ilvl", label = L["Ilvl"], width = 40, shed = 5, tip = L["The drop's item level."] },
     { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
@@ -73,10 +73,9 @@ WG.COLUMNS = {
     { key = "them", label = L["Them"], width = 70, shed = 6,
       tip = L["The drop judged for its looter. The colors are inverted: their upgrade is amber, their downgrade green."] },
     { key = "trade", label = L["Trade"], width = 70, shed = 7, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
-    { key = "actions", label = L["Actions"], compactLabel = L["Ask"], width = 96,
+    { key = "actions", label = L["Actions"], width = 96,
       tip = L["Ask the looter for it, once. The × hides the row for this session."] },
 }
-local COMPACT = { item = true, ilvl = true, theirEq = true, me = true, actions = true }
 local GLYPH_COLS = { me = true, them = true }
 
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
@@ -100,11 +99,10 @@ local function profileWindow()
     return type(w) == "table" and w or nil
 end
 
---- Whether the compact preset is on (`profile.window.compact`).
+--- Whether the window is in its compact layout (modules/WindowCompact.lua): cards, not the table.
 --- @return boolean
 function WG.IsCompact()
-    local w = profileWindow()
-    return w ~= nil and w.compact == true
+    return NS.WindowCompact.Mode() == "compact"
 end
 
 local function repaint()
@@ -147,17 +145,15 @@ function WG.Expanded() return view().expanded end
 
 -- ── the pure halves ─────────────────────────────────────────────────────────────────────────
 
---- The columns shown: the compact preset's, or the default ones, less each one the profile turns
---- off (`columns[key] = false`); Item always stays.
---- @param compact boolean
+--- The columns shown: the default ones less each one the profile turns off (`columns[key] =
+--- false`); Item always stays.
 --- @param hidden table|nil `profile.window.columns`
 --- @return table the column definitions, left to right
-function WG.Columns(compact, hidden)
+function WG.Columns(hidden)
     local out = {}
     hidden = type(hidden) == "table" and hidden or {}
     for _, col in ipairs(WG.COLUMNS) do
-        local on = (not compact or COMPACT[col.key]) and (col.key == "item" or hidden[col.key] ~= false)
-        if on then out[#out + 1] = col end
+        if col.key == "item" or hidden[col.key] ~= false then out[#out + 1] = col end
     end
     return out
 end
@@ -464,6 +460,7 @@ local function newHeader(content)
     NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")
     return h
 end
+WG.NewHeader = newHeader   -- the compact cards' headers are the same button (modules/CompactGroup.lua)
 
 -- ── painting a row ──────────────────────────────────────────────────────────────────────────
 
@@ -488,20 +485,12 @@ local function classTone(fs, classFile)
     if r then fs:SetTextColor(r, g, b) end
 end
 
-local function paintItem(f, drop, compact)
-    local c = WC.Item(drop)
+local function paintItem(f, drop)
     setItem(f.button, drop.link, WG.Where(drop))
-    f.showItem = not compact
-    if not compact then
-        paintText(f, c)
-        f.tipLines = nil   -- the real item tooltip instead (WG.ItemHover)
-        qualityTone(f.text, drop)
-        return
-    end
-    local lc = WC.Looter(drop)
-    paintText(f, lc)
-    f.tipLines = { c.text, lc.tip[2], c.tip[2] }
-    classTone(f.text, lc.classFile)
+    f.showItem = true
+    paintText(f, WC.Item(drop))
+    f.tipLines = nil   -- the real item tooltip instead (WG.ItemHover)
+    qualityTone(f.text, drop)
 end
 
 -- The looter's worn gear: their inspect entry's (a test mode placeholder's own).
@@ -529,15 +518,15 @@ local function paintEq(f, c, unit)
     if last then f.text:SetPoint("LEFT", last, "RIGHT", 4, 0) else f.text:SetPoint("LEFT", f, "LEFT", 0, 0) end
 end
 
--- The ask's state; `traded` once the history settled the drop received (modules/History.lua).
-local function askState(drop)
+--- The ask's state and reason; `traded` once the history settled the drop received (History.lua).
+function WG.AskState(drop)
     local target = NS.AskTargetOf(drop)
     if not target then return NS.History.AskState(drop, "ready") end
     return NS.History.AskState(drop, NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", target, drop.id)))
 end
 
 local function paintActions(f, drop)
-    local state, reason = askState(drop)
+    local state, reason = WG.AskState(drop)
     local a = WC.Ask(drop, state, reason, NS.Setting("messages.transmogAsk") == true)
     f.ask.dropId, f.dismiss.dropId = drop.id, drop.id
     f.ask:SetShown(a.offered)
@@ -575,7 +564,7 @@ end
 
 local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade }
 
-local function paintRow(row, drop, layout, compact, now, metrics)
+local function paintRow(row, drop, layout, now, metrics)
     row.dropId = drop.id
     local open = view().expanded == drop.id
     row.selected:SetShown(open)
@@ -585,7 +574,7 @@ local function paintRow(row, drop, layout, compact, now, metrics)
     NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
     NS.WindowRows.ApplyRowIcon(row, metrics.icon)
     local cells = row.cells
-    paintItem(cells.item, drop, compact)
+    paintItem(cells.item, drop)
     cells.item.button.dropId = drop.id
     for key, fn in pairs(SIMPLE) do paintText(cells[key], fn(drop)) end
     local lc = WC.Looter(drop)
@@ -673,7 +662,7 @@ local function build(pane)
     pane.entries = {}
 end
 
-local function paintHeads(pane, cols, layout, compact)
+local function paintHeads(pane, cols, layout)
     for key, f in pairs(pane.colHead.labels) do
         local at = layout[key]
         f:SetShown(at ~= nil)
@@ -685,7 +674,7 @@ local function paintHeads(pane, cols, layout, compact)
     end
     for _, col in ipairs(cols) do
         local f = pane.colHead.labels[col.key]
-        f.label = compact and col.compactLabel or col.label
+        f.label = col.label
         f.text:SetText(f.label)
     end
 end
@@ -715,7 +704,7 @@ local function drawCard(pane, drop, y, width, now)
     return K.CARD_H
 end
 
-local function drawEntries(pane, entries, layout, compact, width)
+local function drawEntries(pane, entries, layout, width)
     local now, y, metrics = GetTime(), 0, NS.WindowRows.Metrics()
     local Pool = NS.Pool
     local expanded = view().expanded
@@ -731,7 +720,7 @@ local function drawEntries(pane, entries, layout, compact, width)
             local r = Pool.Acquire(pane.rowPool, function() return newRow(pane.content) end)
             place(r, pane.content, y, width)
             r.stripe:SetShown(i % 2 == 0)
-            paintRow(r, e.drop, layout, compact, now, metrics)
+            paintRow(r, e.drop, layout, now, metrics)
             y = y + metrics.height
             if e.drop.id == expanded then y = y + drawCard(pane, e.drop, y, width, now) end
         end
@@ -742,30 +731,38 @@ end
 -- Nothing drawn: the empty state when the feed holds no drop at all, else the line saying the
 -- filters hide them. The window is never a blank table.
 -- In test mode an empty test feed is still gathering its items, or found none (ui spec §4).
-local function paintEmpty(pane, entries, ctx)
+local function paintEmpty(pane, entries, ctx, compact)
     local none = #entries == 0
     local nothing = none and #NS.LootFeed.Drops(ctx.feed) == 0
     local test = nothing and ctx.feed == "test"
     pane.emptyState:SetShown(nothing and not test)
     pane.placeholder:SetShown(none and (test or not nothing))
     pane.placeholder:SetText(not test and NO_MATCH or NS.TestMode.IsLoading() and TEST_LOADING or TEST_NONE)
-    pane.colHead:SetShown(not none)
+    pane.colHead:SetShown(not (none or compact))
 end
 
-local function refresh(pane, ctx)
-    local compact = WG.IsCompact()
+local function drawTable(pane, entries)
     local w = profileWindow()
-    local cols = WG.Columns(compact, w and w.columns)
+    local cols = WG.Columns(w and w.columns)
     local width = rowWidth(pane)
     local layout, kept = WG.Layout(cols, width)
+    paintHeads(pane, cols, layout)
+    drawEntries(pane, entries, layout, width)
+    pane.columns = kept
+end
+
+-- The table, or (compact) the cards over the same entries; the other one is released and hidden.
+local function refresh(pane, ctx)
     local LF = NS.LootFeed
     local entries = WC.Entries(LF.Groups(ctx.feed), LF.Get, ctx, view())
-    paintHeads(pane, cols, layout, compact)
+    local compact = WG.IsCompact()
     NS.Pool.ReleaseAll(pane.rowPool)
     NS.Pool.ReleaseAll(pane.headPool)
-    drawEntries(pane, entries, layout, compact, width)
-    pane.entries, pane.columns = entries, kept
-    paintEmpty(pane, entries, ctx)
+    pane.scroll:SetShown(not compact)
+    if not compact then drawTable(pane, entries) end
+    NS.CompactGroup.Refresh(pane, entries, compact)
+    pane.entries = entries
+    paintEmpty(pane, entries, ctx, compact)
 end
 
 --- The drawn pane's rows and headers, in order, for the suites: { headers, rows, entries, columns,
@@ -776,6 +773,7 @@ function WG.Drawn()
     local f = NS.Window.Frame()
     local pane = f and f.panes.group
     if not (pane and pane.rowPool) then return nil end
+    if WG.IsCompact() then return NS.CompactGroup.Drawn(pane) end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
         columns = pane.columns, pane = pane, card = pane.card, cardDropId = pane.cardDropId,
         empty = pane.emptyState }

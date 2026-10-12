@@ -100,7 +100,7 @@ Total.
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
 - rows: the feed, the situations and the messaging edge read the rows
 - rows: the filter bar seeds a fresh tab from the rows
-- rows: the Quality control and the compact preset write through the seam (handoff from M3)
+- rows: the Quality control and the window's layout write through the seam (handoff from M3)
 - rows: Keep history for is account-wide, and a profile reset leaves it
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
@@ -159,7 +159,7 @@ Total.
 - slash: `clear` closes an Offer panel whose drop it took
 - slash: `history` and `mine` open the window on that tab, expanded
 - slash: a tab verb the Visibility setting keeps hidden says so
-- slash: `compact` toggles the preset through the seam and prints the new state
+- slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it
 - slash: `situation` prints the situation, its settings and the classifier's inputs
 - slash: `offer` opens the panel on your newest drop of that item
 - slash: `offer` of a bag item the feed never saw adds it as yours first
@@ -242,6 +242,147 @@ Total.
 - filter bar tooltip: AboveFits is true when the screen has room over the control, else false
 - filter bar tooltip: near the top of the screen it opens below the control, never over it
 
+### test_window_compact.lua (25)
+
+- compact: the layout in force is the stored one, compact while a run holds it, full for junk
+- compact: a run is a dungeon, raid, key or delve, and nothing else
+- compact: each layout's default size and bounds; a stored size is kept within them
+- compact: CornerPoint puts compact's top right on the full window's, whatever its anchor
+- compact: step 5 maps the retired preset to the compact layout and moves the geometry
+- compact: step 5 runs for every stored profile on load
+- compact: a fresh profile stores the full layout, and opens in a run compact by default
+- compact: the title-bar toggle sits between Scan group and minimize, with a catalog mark
+- compact: the toggle swaps the layout: compact is 380 x 460 at the full window's top right
+- compact: each layout remembers its own size and position
+- compact: switching keeps the tab, the minimized state, and builds no second window
+- compact: the Layout row lays the window out, and the stored layout is the next build's
+- compact: the toggle's tooltip names the layout it switches to and the setting
+- compact: an auto-open inside a run opens compact, and the stored layout is untouched
+- compact: the run ending lets go when the window is next hidden, so the next open is full
+- compact: a run ending while the window is hidden lets go at once
+- compact: a parent's hide (Alt-Z) is not the window closing, so the run's layout stays
+- compact: with Open in compact view during a run off, an auto-open keeps the stored layout
+- compact: the player's own toggle during a run lets the override go
+- compact: the chest after a key completes still belongs to the run, so its auto-open is compact
+- compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it
+- compact: a key's grace running out with the window hidden lets go at once
+- compact: the completion latch clears on leaving, so the next run opens compact again
+- compact: a window the player opened is never switched by a drop
+- compact: the diagnostics report names the layout, the override and each layout's geometry
+
+### test_compact_cards.lua (29)
+
+- compact cards: Truncate cuts by characters, not bytes, and marks the cut with …
+- compact cards: Age is the short duration, then whole days
+- compact cards: a verdict reads glyph then change; a worded one takes ⊘
+- compact cards: the worn levels sit in parentheses, dimmed; none where the full view has a dash
+- compact cards: a cross-realm looter takes ⊕ and the realm in the tooltip
+- compact cards: inspect freshness reads its age or state, dimmed, and the tooltip says why
+- compact cards: the Group drops card reads the spec's three lines
+- compact cards: the Group drops card's pieces keep the full view's tones and tooltips
+- compact cards: every trade state keeps its short word and tone on line 2
+- compact cards: the Ask button keeps its states, and a drop you cannot ask for shows a dash
+- compact cards: your own drop on Group drops reads a dash for Them and no worn levels
+- compact cards: an unread looter says `?` for Them, and the tooltip says why
+- compact cards: a different upgrade track is in the verdict's tooltip, not on line 3
+- compact cards: a drop whose details have not loaded is never blank
+- compact cards: the My drops card reads the spec's three lines
+- compact cards: the countdown keeps its bar fraction, its warning and its estimate
+- compact cards: a drop that cannot be traded shows Not tradeable, a dash for Offer and Hide
+- compact cards: an upgrade for you hides its candidates until you choose to offer it
+- compact cards: the candidates are class-colored parts, the top three and `+n more`
+- compact cards: Announce follows the ask's lifecycle
+- compact cards: the History card reads the spec's three lines
+- compact cards: every History outcome keeps its word and tone
+- compact cards: an older kept drop reads its day, and one with no time `?`
+- compact cards: a kept drop whose looter was never read, and your own kept drop
+- compact cards: the header's short form drops `ago` and `drops`
+- compact cards: a filter that hides drops reads `1 of 2`, the hidden ones in the tooltip
+- compact cards: a long instance name is cut, the full name in the tooltip
+- compact cards: a group with no time or recorder, and the open world's area header
+- compact cards: the History header reads days once a day old, its tooltip the long form
+
+### test_compact_group.lua (14)
+
+- compact group: a card is three lines at the text size, about 50 pixels at Default, the icon spanning them
+- compact group: switching layouts carries the scroll offset over as a fraction of the range
+- compact group: the stacked detail card flows its actions into lines and grows by them
+- compact group: one pooled card per drop under a one-line header, each line what CompactCards says
+- compact group: the pieces are colored by quality, class and tone, the worn levels dimmed
+- compact group: every piece keeps its full-view reason tooltip
+- compact group: every tooltip opens at the card's top right, just outside the window
+- compact group: a card click opens the stacked detail card under it; the cards below move down
+- compact group: Ask presses the ask, the × dismisses the card for the session
+- compact group: an ask in flight shows the full table's state; no ask offered shows the dash and why
+- compact group: the text follows the Font size row and the card's height follows the text
+- compact group: cards are pooled: a repaint reuses them and builds none
+- compact group: a header click collapses its group, and the filters' line and empty state still show
+- compact group: test mode fills a card for every sample, no piece blank, and each opens its card
+
+### test_compact_mine.lua (16)
+
+- compact mine: the candidates read in class colors, then +n more; nobody named keeps the cell's text
+- compact mine: the strip's summary is shortened
+- compact mine: the Offer panel keeps its own least height beside the compact window
+- compact mine: one pooled card per drop of yours under a one-line header, each line what CompactCards says
+- compact mine: the countdown's bar follows the time left and turns amber when it warns
+- compact mine: a drop that cannot be traded shows the dash and Hide; Hide takes it off for the session
+- compact mine: Announce goes through the shared handler and shows the ask's state
+- compact mine: TradeTimerTick moves the countdown on the card
+- compact mine: every piece keeps its full-view reason tooltip
+- compact mine: every tooltip opens at the card's top right, just outside the window
+- compact mine: the strip is shortened in the compact layout and put back in the full one
+- compact mine: cards are pooled and follow the Font size row
+- compact mine: a header click collapses its group; the empty line still shows
+- compact mine: Offer opens the panel docked beside the compact window, its width unchanged
+- compact mine: the panel goes on the side with room, and floats centered when neither has
+- compact mine: test mode fills a card for every sample of yours, no piece blank
+
+### test_compact_history.lua (9)
+
+- compact history: kept groups as one-line headers, the newest open, each entry a three-line card
+- compact history: the outcome is in its tone, and every piece keeps its full-view tooltip
+- compact history: a right-click on a card, or on any piece of it, opens the row menu
+- compact history: marking an entry declined repaints its card
+- compact history: a header click opens a collapsed group
+- compact history: every tooltip opens at the card's top right, just outside the window
+- compact history: Clear history is shortened in the compact layout and put back in the full one
+- compact history: cards are pooled and follow the Font size row
+- compact history: test mode's kept samples fill a card each, no piece blank
+
+### test_compact_chrome.lua (20)
+
+- chrome: the tabs' compact labels are Group, Mine · n and History; full keeps its own
+- chrome: TEST MODE and SIMULATION shorten to TEST and SIM
+- chrome: the compact badge shows the queued count beside its lock, or nothing
+- chrome: the footer's one line is inspect freshness and the situation
+- chrome: the footer's tooltip carries every full segment
+- chrome: the Filters count is Quality, Content and Character off their default, on a tab that honors them
+- chrome: the Filters label counts, and its tooltip lists each value with a dot on the active ones
+- chrome: compact shows the short title, TEST beside it, the title and the word centered together
+- chrome: a simulation reads SIM in compact, in its cyan
+- chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
+- chrome: Scan group becomes an icon button, with its tooltip and its click
+- chrome: the tabs keep three at a reduced width, short labels, full names in their tooltips
+- chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
+- chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does
+- chrome: the panel closes when the window hides, minimizes or goes back to full
+- chrome: the full layout takes every control back to its place on the bar and in the footer
+- chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
+- chrome: the compact strip takes a second line exactly when its words wrap at the window's width
+- chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
+- chrome: switching the chrome keeps every tab's filter state and builds no second window
+
+### test_compact_modes.lua (7)
+
+- modes: test mode's samples are the same drops in both layouts, on every tab, under every filter
+- modes: a collapsed group, a dismissed drop and your own drops shown are the same in both layouts
+- modes: a simulated run is the same drops in both layouts, on every tab, under every filter
+- modes: switching layouts on every tab changes nothing the engine recorded, judged or sent
+- modes: test mode's Group drops cards show every state, each saying what its full row says
+- modes: test mode's My drops cards show every countdown, Offer and Announce state, as the full rows
+- modes: test mode's History cards show every outcome, each saying what its full row says
+
 ### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
@@ -256,7 +397,7 @@ Total.
 - cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you
 - cells: Item, Ilvl, Slot and Looter are never blank, each with a reason tooltip
 - cells: an encounter header reads `Label · Situation · age · n drops`
-- table: the default columns, the compact preset's, and a column the profile turns off
+- table: the default columns, and a column the profile turns off
 - table: the Item column takes the slack, never less than its minimum
 - table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order
 - table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
@@ -278,7 +419,7 @@ Total.
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
 - table: a drop with no ask offered shows a dash with its reason
 - table: the × dismisses a row for the session
-- table: the compact preset keeps Item and looter, Ilvl, Their eq, Me and Ask
+- table: the compact layout draws cards instead of the table, and the full layout the table again
 - table: a column the profile turns off is not drawn
 - table: the filter bar filters the rows, and the empty line says why nothing shows
 - table: with no drop at all the empty state says so, with Preview with test data and Scan group
@@ -1229,16 +1370,23 @@ Total.
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
 - sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
 
-### test_sim_e2e.lua (12)
+### test_sim_e2e.lua (19)
 
 - sim e2e: no module reads the world the simulator answers except through NS.Compat
 - sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
-- sim e2e key: a run fills Group drops and My drops under the default filters
-- sim e2e dungeon: a run fills Group drops and My drops under the default filters
-- sim e2e raid: a run fills Group drops and My drops under the default filters
-- sim e2e lfr: a run fills Group drops and My drops under the default filters
-- sim e2e delve: a run fills Group drops and My drops under the default filters
-- sim e2e world: a run fills Group drops and My drops under the default filters
+- sim e2e key, full: a run fills Group drops and My drops under the default filters
+- sim e2e dungeon, full: a run fills Group drops and My drops under the default filters
+- sim e2e raid, full: a run fills Group drops and My drops under the default filters
+- sim e2e lfr, full: a run fills Group drops and My drops under the default filters
+- sim e2e delve, full: a run fills Group drops and My drops under the default filters
+- sim e2e world, full: a run fills Group drops and My drops under the default filters
+- sim e2e key, compact: a run fills Group drops and My drops under the default filters
+- sim e2e dungeon, compact: a run fills Group drops and My drops under the default filters
+- sim e2e raid, compact: a run fills Group drops and My drops under the default filters
+- sim e2e lfr, compact: a run fills Group drops and My drops under the default filters
+- sim e2e delve, compact: a run fills Group drops and My drops under the default filters
+- sim e2e world, compact: a run fills Group drops and My drops under the default filters
+- sim e2e: a simulated key's auto-open is compact by default, full with the option off, then the stored layout
 - sim e2e: the combat flags answer the simulated fight, and the client's again after it
 - sim e2e: the loot lines are written from the GlobalStrings Compat reads
 - sim e2e: in a raid, raid1 is you, online, for every unit read
@@ -1402,6 +1550,13 @@ Total.
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
 | test_window_shell.lua | 57 |
+| test_window_compact.lua | 25 |
+| test_compact_cards.lua | 29 |
+| test_compact_group.lua | 14 |
+| test_compact_mine.lua | 16 |
+| test_compact_history.lua | 9 |
+| test_compact_chrome.lua | 20 |
+| test_compact_modes.lua | 7 |
 | test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
@@ -1441,7 +1596,7 @@ Total.
 | test_sim_pool.lua | 19 |
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
-| test_sim_e2e.lua | 12 |
+| test_sim_e2e.lua | 19 |
 | test_sim_report.lua | 21 |
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
@@ -1453,4 +1608,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1199** |
+| **Total** | **1326** |

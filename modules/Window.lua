@@ -14,10 +14,9 @@ local _, NS = ...
 -- THE SPLIT. modules/WindowTitleBar.lua owns the title bar (its controls, the badge's words and
 -- the window's flat and icon buttons), modules/WindowFilterBar.lua the filter bar (its controls,
 -- each tab's filter state and the pure row predicates), modules/WindowFooter.lua the footer (its
--- pure composer and its reads). The tabs' bodies are the feature items' (WindowGroup, WindowMine,
--- WindowHistory): each calls Window.RegisterTab(key, { build, refresh }) and is built on its tab's
--- first show. A tab with no body yet shows a line saying what it will hold, so the window is never
--- blank.
+-- pure composer and its reads), modules/CompactChrome.lua all of it in the compact layout. The tabs'
+-- bodies (WindowGroup, WindowMine, WindowHistory) each call Window.RegisterTab(key, { build,
+-- refresh }) and are built on the tab's first show; a tab with no body says what it will hold.
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
 -- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
@@ -36,8 +35,8 @@ local _, NS = ...
 -- Test mode never pins the window open: Close, Toggle and Escape always win. Turning test mode on
 -- opens a closed window and remembers that it did; turning it off closes the window again only
 -- when test mode was what opened it.
--- Geometry (profile.window: point, width, height, minimized) is written here and nowhere else: by
--- a drag, a resize, the minimize button and Reset position.
+-- Geometry is written here (by a drag, a resize, the minimize button and Reset position) and by
+-- modules/WindowCompact.lua: each layout's point and size (its Geometry), and the shared minimized.
 
 NS.Window = NS.Window or {}
 local Window = NS.Window
@@ -289,17 +288,16 @@ end
 
 local function savePoint()
     local point, _, relativePoint, x, y = frame:GetPoint(1)
-    if point then geometry().point = { point, relativePoint, x, y } end
+    if point then NS.WindowCompact.Geometry(nil, true).point = { point, relativePoint, x, y } end
 end
 
 local function saveSize(width, height)
-    local g = geometry()
+    local g = NS.WindowCompact.Geometry(nil, true)
     g.width, g.height = width, height
 end
 
 local function applyPoint()
-    local pt = geometry().point
-    if type(pt) ~= "table" then pt = K.POINT end
+    local pt = NS.WindowCompact.Point()
     frame:ClearAllPoints()
     frame:SetPoint(pt[1], UIParent, pt[2], pt[3] or 0, pt[4] or 0)
 end
@@ -316,11 +314,11 @@ local function anchorTopLeft()
     savePoint()
 end
 
--- Minimized, the window is its title bar alone; the stored height is kept for the expand.
+-- The layout's bounds and size (modules/WindowCompact.lua). Minimized, the window is its title bar
+-- alone; the stored height is kept for the expand.
 local function applySize()
-    local g = geometry()
-    local height = isMinimized() and (K.TITLE_H + 2) or (g.height or K.HEIGHT)
-    frame:SetSize(g.width or K.WIDTH, height)
+    local width, height = NS.WindowCompact.Fit(frame)
+    frame:SetSize(width, isMinimized() and (K.TITLE_H + 2) or height)
 end
 
 local function applyLook()
@@ -459,7 +457,7 @@ end
 
 -- The panes fill between the filter bar (and the banner, in test mode) and the footer.
 local function layoutPanes()
-    local top = K.TAB_H + 4 + K.FILTER_H + (NS.State.testMode == true and K.BANNER_H or 0)
+    local top = K.TAB_H + 4 + K.FILTER_H + (NS.State.testMode == true and NS.CompactChrome.BannerH() or 0)
     for _, pane in pairs(frame.panes) do
         pane:ClearAllPoints()
         pane:SetPoint("TOPLEFT", frame.body, "TOPLEFT", K.INSET, -top)
@@ -468,9 +466,9 @@ local function layoutPanes()
 end
 
 local function makeResizable(f)
+    local minW, minH, maxW, maxH = NS.WindowCompact.Bounds(NS.WindowCompact.Mode())
     NS.MakeResizable(f, {
-        minWidth     = K.MIN_WIDTH,
-        minHeight    = K.MIN_HEIGHT,
+        minWidth = minW, minHeight = minH, maxWidth = maxW, maxHeight = maxH,
         canResize    = function() return not isLocked() and not isMinimized() end,
         -- The anchor is saved with the size: sizing from the corner moves the frame's anchor, and a
         -- later ApplySettings re-anchors the stored size at the stored point.
@@ -583,7 +581,7 @@ local function paintTabs()
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
         local c = active and C.GOLD or C.IDLE
-        tab.label:SetText(Window.TabLabel(key, mine))
+        tab.label:SetText(NS.CompactChrome.TabText(key, mine))
         tab.label:SetTextColor(c.r, c.g, c.b)
         tab.underline:SetShown(active)
     end
@@ -604,6 +602,7 @@ function Window.Refresh()
     local TB = NS.WindowTitleBar
     TB.PaintBadge(frame)
     TB.PaintModeText(frame)
+    NS.CompactChrome.Paint(frame)   -- the compact layout's chrome (compact spec §4)
     paintMinimized()
     if not isMinimized() then
         frame.banner:SetShown(NS.State.testMode == true)
@@ -809,23 +808,23 @@ function Window.OnTestModeChanged(on)
     Window.Refresh()
 end
 
---- Scale, alpha, geometry and the minimized state from the current profile, then the show
---- decision. Run at stand-up, on a profile change and by the Master controls rows' reactions.
+--- Scale, alpha, the layout's geometry and the minimized state, with no show decision (WC.Apply).
+function Window.ApplyLayout()
+    if frame then applyLook(); applySize(); applyPoint() end
+end
+
+--- Window.ApplyLayout, then the show decision. Run at stand-up, on a profile change and by the
+--- Master controls rows' reactions.
 function Window.ApplySettings()
-    if frame then
-        applyLook()
-        applySize()
-        applyPoint()
-    end
+    Window.ApplyLayout()
     Window.UpdateVisibility()
 end
 
---- Reset position: forget the stored point and size, and put the window back where it started;
---- the toast's and the simulation panel's saved positions go too (modules/Toast.lua,
+--- Reset position: forget both layouts' stored point and size, and put the window back where it
+--- started; the toast's and the simulation panel's saved positions go too (modules/Toast.lua,
 --- modules/SimPanel.lua).
 function Window.ResetPosition()
-    local g = geometry()
-    g.point, g.width, g.height = nil, nil, nil
+    NS.WindowCompact.ResetGeometry()
     if frame then
         applySize()
         applyPoint()
@@ -860,6 +859,7 @@ local function maybeAutoOpen(rec)
     local key = Sit.Current()
     if not Sit.ShouldAutoOpen(key) then return end
     NS.Debug(TAG, "auto-open: drop %s added in %s", tostring(rec.id), tostring(key))
+    NS.WindowCompact.OnAutoOpen(key)   -- compact during a run (`window.compactInRuns`)
     Window.Open()
     openedByTestMode = rec.test == true
 end

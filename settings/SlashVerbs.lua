@@ -1,8 +1,9 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the handlers of the design spec's feature verbs (§12.3) that only the
 -- slash surface reaches: `clear`, `history`, `mine`, `situation`, `offer <link>` and
--- `add <link> [player]`, plus `compact`'s confirmation line around the shared toggle. The verbs
--- another surface shares (`show`, `hide`, `toggle`, `test`, `scan`, `compact`) call the host
+-- `add <link> [player]`, plus the confirmation line `compact` and `full` print around the shared
+-- layout handlers. The verbs another surface shares (`show`, `hide`, `toggle`, `test`, `scan`,
+-- `compact`, `full`) call the host
 -- handlers in core/DropWatcher.lua, so each surface runs the same function. settings/Slash.lua lists every verb in NS.COMMANDS; this file only answers them.
 --
 -- SplitLink is PURE (test_slash drives it). The handlers read the feed, the situation edge and the
@@ -43,13 +44,24 @@ function V.Clear()
     NS.Print(L["Cleared this session's drops."])
 end
 
--- ── compact ─────────────────────────────────────────────────────────────────────────────────
+-- ── compact, full ───────────────────────────────────────────────────────────────────────────
 
---- `/dw compact`: the shared toggle (NS.ToggleCompact, over the `window.compact` row), then the new state,
---- since the window may be closed and show nothing.
+-- The layout now, since the window may be closed and show nothing.
+local function printLayout()
+    NS.Print(NS.WindowCompact.Mode() == "compact" and L["Compact view."] or L["Full view."])
+end
+
+--- `/dw compact`: the shared toggle (NS.ToggleWindowMode, over the `window.mode` row), then the
+--- layout now (compact spec §1).
 function V.Compact()
-    NS.ToggleCompact()
-    NS.Print(NS.Setting("window.compact") == true and L["Compact preset on."] or L["Compact preset off."])
+    NS.ToggleWindowMode()
+    printLayout()
+end
+
+--- `/dw full`: back to the full layout (NS.SetWindowMode), then the layout now.
+function V.Full()
+    NS.SetWindowMode("full")
+    printLayout()
 end
 
 -- ── history, mine ───────────────────────────────────────────────────────────────────────────

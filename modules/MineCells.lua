@@ -260,14 +260,28 @@ local function upgradesOf(list)
     return ups
 end
 
-local function topText(ups)
+--- The upgrades of a ranked candidate list that Best candidates names (the first three), each as
+--- { text = `Seta +14`, entry }, and the `+n more` word for the rest (nil when none is left out).
+--- Compact mode's My drops card colors each name by class (modules/CompactCards.lua).
+--- @param list table MC.Candidates' answer
+--- @return table parts, string|nil more
+function MC.TopUpgrades(list)
+    local ups = upgradesOf(list)
     local parts = {}
     for i = 1, min(TOP_N, #ups) do
         local e = ups[i]
-        parts[i] = e.gain and ("%s %s"):format(e.short, WC.Signed(e.gain)) or e.short
+        parts[i] = { text = e.gain and ("%s %s"):format(e.short, WC.Signed(e.gain)) or e.short, entry = e }
     end
-    if #ups > TOP_N then parts[#parts + 1] = L["+%d more"]:format(#ups - TOP_N) end
-    return table.concat(parts, " · ")
+    local more = #ups > TOP_N and L["+%d more"]:format(#ups - TOP_N) or nil
+    return parts, more
+end
+
+local function topText(list)
+    local parts, more = MC.TopUpgrades(list)
+    local words = {}
+    for i, p in ipairs(parts) do words[i] = p.text end
+    words[#words + 1] = more
+    return table.concat(words, " · ")
 end
 
 -- The cell when no one is an upgrade: still checking, or nobody's.
@@ -305,7 +319,7 @@ function MC.BestCandidates(drop, revealed)
         if #ups == 0 then
             c = noUpgradeCell(list)
         else
-            c = { text = topText(ups), tone = "good", tip = rankedTip(list) }
+            c = { text = topText(list), tone = "good", tip = rankedTip(list) }
         end
     end
     c.list = list

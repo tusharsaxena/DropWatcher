@@ -51,10 +51,10 @@ test("window: a drag stores the point, and Reset position forgets it", function(
     f:ClearAllPoints()
     f:SetPoint("TOPLEFT", nil, "TOPLEFT", 40, -60)
     f.titleBar:GetScript("OnDragStop")(f.titleBar)
-    local pt = NS.addon.db.profile.window.point
+    local pt = NS.addon.db.profile.window.geometry.full.point
     assertEqual(table.concat(pt, ","), "TOPLEFT,TOPLEFT,40,-60")
     NS.Window.ResetPosition()
-    assertTrue(NS.addon.db.profile.window.point == nil)
+    assertTrue(NS.addon.db.profile.window.geometry == nil)
     assertEqual(f:GetPoint(1), "CENTER")
 end)
 
@@ -156,7 +156,7 @@ test("window: a resize saves the anchor with the size, so a settings repaint doe
     f:SetPoint("TOPLEFT", nil, "BOTTOMLEFT", 300, 700)
     f:SetSize(640, 400)
     f.resizeGrip:__fire("OnMouseUp", "LeftButton")
-    local g = NS.addon.db.profile.window
+    local g = NS.addon.db.profile.window.geometry.full
     assertEqual(g.width, 640)
     assertEqual(table.concat(g.point, ","), "TOPLEFT,BOTTOMLEFT,300,700")
     NS.SetLocked(true)

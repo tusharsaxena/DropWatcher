@@ -8,8 +8,8 @@
 -- isolated by a full collect on either side with the collector stopped inside it. Timings are
 -- printed for orientation only: compare scenarios within a run, never across runs or machines.
 --
--- The scenarios grow with the hot paths: the window's repaint (the scaffold) and the loot parser's
--- line (DW-25). The questions are performance-§9's: does each bracket cost nothing with capture off
+-- The scenarios grow with the hot paths: the window's repaint (the scaffold; in the compact layout
+-- too, DW-C5) and the loot parser's line (DW-25). The questions are performance-§9's: does each bracket cost nothing with capture off
 -- (zero overhead), and is the stood-down show decision free.
 --
 -- CEILINGS (measured 2026-10-10, Lua 5.1.5). Pinned hard at 0 bytes: the stood-down early return
@@ -28,17 +28,24 @@
 -- rebuilt its View and Character rows and selections on every sync; those are now built once and
 -- written only on change, which leaves 14168, the M10 work itself (a group header's hidden-drop
 -- predicates, DW-A0, and the Character dropdown's context, DW-A4) over the M9 figure of 13680.
+-- The compact refresh pair (DW-C5, compact spec §5) is the same pass in the compact layout: the
+-- same window, the cards' pane in place of the table, its chrome (the short title, the Filters
+-- button's count and tooltip, the one-line footer). Measured 2026-10-11 at 11065 bytes in both, under
+-- the full pass's 14249 (no column labels or table to lay out); its ceiling is that work, and
+-- the pair holds the same zero-overhead rule, paired.
 local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,
-    parseCaptureOff = 700, parseCaptureOn = 700 }
+    parseCaptureOff = 700, parseCaptureOn = 700, refreshCompactCaptureOff = 11500,
+    refreshCompactCaptureOn = 11500 }
 -- Each bracketed path measured off and on: [off] = on. The bracket with capture off is one upvalue
 -- read and one boolean test, so the off run allocates no more than the on run; the on run adds at
 -- most PAIR_SLACK bytes (the note itself) per iteration. PAIR_NOISE absorbs the two loops'
 -- incidental spread (a fraction of a byte per iteration, measured), nothing more.
-local PAIRS = { refreshCaptureOff = "refreshCaptureOn", parseCaptureOff = "parseCaptureOn" }
+local PAIRS = { refreshCaptureOff = "refreshCaptureOn", parseCaptureOff = "parseCaptureOn",
+    refreshCompactCaptureOff = "refreshCompactCaptureOn" }
 local PAIR_SLACK = 64
 local PAIR_NOISE = 1
 local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0,
-    parseCaptureOff = 0, parseCaptureOn = 1 }
+    parseCaptureOff = 0, parseCaptureOn = 1, refreshCompactCaptureOff = 0, refreshCompactCaptureOn = 1 }
 
 local N = 1000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
@@ -81,15 +88,24 @@ end
 
 local results = {}
 
+-- The warm-up and the measured loop run through this one function, so both call `fn` at the same
+-- stack depth: the measured loop never grows the Lua stack past the warm-up's high-water mark,
+-- which once billed a one-time stack reallocation (about 1.8 KB) to whichever scenario ran first
+-- (bisected 2026-10-11 to DW-C2's deeper refresh path; the refresh pair read 14249.9 off against
+-- 14248.1 on, the off run's first iteration alone 1.8 KB over).
+local function loop(n, fn)
+    for _ = 1, n do fn() end
+end
+
 --- Run `fn` n times after a warm-up, the collector stopped inside the loop.
 local function measure(name, n, fn)
-    for _ = 1, 50 do fn() end
+    loop(50, fn)
     notes = 0
     collectgarbage("collect"); collectgarbage("collect")
     collectgarbage("stop")
     local before = collectgarbage("count")
     local t0 = os.clock()
-    for _ = 1, n do fn() end
+    loop(n, fn)
     local t1 = os.clock()
     local after = collectgarbage("count")
     collectgarbage("restart")
@@ -115,6 +131,17 @@ measure("refreshCaptureOff", N, NS.Window.Refresh)
 NS.Perf.on = true
 measure("refreshCaptureOn", N, NS.Window.Refresh)
 NS.Perf.on = false
+
+-- The same pair in the compact layout (compact spec §5): the same window repainting its cards'
+-- pane and its compact chrome; the bracket is the same one, so the pair holds the same rule.
+NS.SetWindowMode("compact")
+check(NS.WindowCompact.Mode() == "compact", "the window did not switch to the compact layout")
+NS.Perf.on = false
+measure("refreshCompactCaptureOff", N, NS.Window.Refresh)
+NS.Perf.on = true
+measure("refreshCompactCaptureOn", N, NS.Window.Refresh)
+NS.Perf.on = false
+NS.SetWindowMode("full")
 
 -- The stood-down show decision: step 0 of the ladder returns before any work.
 NS.Lifecycle:Hold(NS.HOLD_PERF)

@@ -111,7 +111,7 @@ end)
 
 -- ── the feature verbs (design spec §12.3) ───────────────────────────────────────────────────
 
-local FEATURE = { "show", "hide", "toggle", "test", "scan", "clear", "history", "mine", "compact",
+local FEATURE = { "show", "hide", "toggle", "test", "scan", "clear", "history", "mine", "compact", "full",
     "situation", "offer", "add" }
 
 local function itemLink(id, name)
@@ -243,15 +243,23 @@ test("slash: a tab verb the Visibility setting keeps hidden says so", function()
     assertTrue(printed(m, "Visibility setting"), tostring(m.prints[1]))
 end)
 
-test("slash: `compact` toggles the preset through the seam and prints the new state", function()
+test("slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it", function()
     local NS, _, m = T.enableAddon()
-    local before = NS.Setting("window.compact") == true
+    assertEqual(NS.Setting("window.mode"), "full")
     m.prints = {}
     NS.addon:OnSlashCommand("compact")
-    assertEqual(NS.addon.db.profile.window.compact == true, not before)
-    assertTrue(printed(m, before and "Compact preset off." or "Compact preset on."))
+    assertEqual(NS.addon.db.profile.window.mode, "compact")
+    assertTrue(printed(m, "Compact view."), tostring(m.prints[1]))
     NS.addon:OnSlashCommand("compact")
-    assertEqual(NS.Setting("window.compact") == true, before)
+    assertEqual(NS.Setting("window.mode"), "full", "compact toggles")
+    assertTrue(printed(m, "Full view."))
+    NS.addon:OnSlashCommand("compact")
+    m.prints = {}
+    NS.addon:OnSlashCommand("full")
+    assertEqual(NS.Setting("window.mode"), "full")
+    assertTrue(printed(m, "Full view."))
+    NS.addon:OnSlashCommand("full")
+    assertEqual(NS.Setting("window.mode"), "full", "full only sets, never toggles")
 end)
 
 test("slash: `situation` prints the situation, its settings and the classifier's inputs", function()
@@ -300,7 +308,7 @@ end)
 test("slash: every feature verb is refused while disabled", function()
     local NS, m = equipped()
     NS.addon:OnSlashCommand("disable")
-    for _, verb in ipairs({ "scan", "clear", "history", "mine", "compact", "situation", "offer", "add" }) do
+    for _, verb in ipairs({ "scan", "clear", "history", "mine", "compact", "full", "situation", "offer", "add" }) do
         m.prints = {}
         NS.addon:OnSlashCommand(verb .. " " .. BAND)
         assertTrue(m.prints[1] ~= nil and m.prints[1]:find("is disabled", 1, true) ~= nil, verb)

@@ -696,7 +696,7 @@ test("shell: minimized, the corner grip does not resize and the stored size is k
     f.resizeGrip:__fire("OnMouseDown", "LeftButton")
     f:SetSize(700, 32)
     f.resizeGrip:__fire("OnMouseUp", "LeftButton")
-    assertTrue(NS.addon.db.profile.window.width == nil, "nothing saved")
+    assertTrue(NS.addon.db.profile.window.geometry == nil, "nothing saved")
 end)
 
 test("shell: a minimized window comes back minimized after a settings repaint", function()
@@ -715,7 +715,7 @@ test("shell: minimize and expand keep the title bar in place, whatever point it 
     NS.Window.SetMinimized(true)
     local point, _, relPoint, x, y = f:GetPoint(1)
     assertEqual(table.concat({ point, relPoint, x, y }, ","), "TOPLEFT,BOTTOMLEFT,460,840")
-    assertEqual(table.concat(NS.addon.db.profile.window.point, ","), "TOPLEFT,BOTTOMLEFT,460,840", "and kept")
+    assertEqual(table.concat(NS.addon.db.profile.window.geometry.full.point, ","), "TOPLEFT,BOTTOMLEFT,460,840", "and kept")
     assertEqual(f:GetHeight(), 32)
     NS.Window.SetMinimized(false)
     assertEqual(table.concat({ f:GetPoint(1) }, ",", 3, 5), "BOTTOMLEFT,460,840", "the expand grows downward")

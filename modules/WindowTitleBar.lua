@@ -2,14 +2,17 @@ local _, NS = ...
 -- modules/WindowTitleBar.lua — the main window's title bar (design spec §11.1, boards 01, 06 A and
 -- 06 E, as the owner's feedback spec §1 reshaped it to match Ka0s Loot History): the centered gold
 -- title (no logo: the launcher and the TOC keep it), test mode's bright-red `TEST MODE` text, the
--- simulator's `SIMULATION` text in its own color (simulator spec §6), the `n new` counter, the restriction badge, Scan group, minimize and the close mark, plus
+-- simulator's `SIMULATION` text in its own color (simulator spec §6), the `n new` counter, the
+-- restriction badge, Scan group, the layout
+-- toggle (compact spec §1: between Scan group and minimize), minimize and the close mark, plus
 -- the window's flat and icon buttons, which other frames borrow through NS.Window.TextButton.
 --
 -- Peeled out of modules/Window.lua (layout-§1's 1000-line notice band). The shell keeps everything
 -- that writes state: geometry (the drag's start and stop come in as `host` callbacks), the
 -- minimized flag, the `n new` count and the restriction reason, each read here through NS.Window's
 -- public accessors at call time. BadgeText is PURE. Build and the Paint* functions are the frame
--- edge, called from the shell's build and its one repaint pass.
+-- edge, called from the shell's build and its one repaint pass. The compact layout's title, words,
+-- badge and Scan group are modules/CompactChrome.lua's (compact spec §4), over these same controls.
 
 NS.WindowTitleBar = NS.WindowTitleBar or {}
 local TB = NS.WindowTitleBar
@@ -75,6 +78,20 @@ local function minimizeTip()
         return L["Expand"], L["Show the whole window again. Double-clicking the title bar does the same."]
     end
     return L["Minimize"], L["Collapse the window to its title bar. Its position is kept, and a counter shows the drops that arrive meanwhile."]
+end
+
+-- The layout toggle's tooltip: what a click switches to, and the setting that stores it.
+local function modeTip()
+    local WC = NS.WindowCompact
+    local compact = WC.Mode() == "compact"
+    local lines = compact
+        and { L["Full view"], L["Show the full window again, with every column of the drop tables. /dw full does the same."] }
+        or { L["Compact view"], L["Show the window narrow, each drop a short card, so it stays out of the way. /dw compact does the same."] }
+    lines[#lines + 1] = L["Stored as the Layout setting on the Window settings page."]
+    if WC.InRun() then
+        lines[#lines + 1] = L["Open in compact view during a run is holding it compact until this run ends."]
+    end
+    return unpack(lines)
 end
 
 local function scanTip()
@@ -230,15 +247,19 @@ local function buildControls(f, bar)
     f.minimizeButton = iconButton(bar, "minimise", "-", function() W.ToggleMinimized() end)
     f.minimizeButton:SetPoint("RIGHT", right, rightPoint, -4, 0)
     W.AttachTooltip(f.minimizeButton, minimizeTip)
+    -- The layout toggle (compact spec §1); its mark follows the layout in force (PaintMinimized).
+    f.modeButton = iconButton(bar, "fullscreen-exit", "><", function() NS.ToggleWindowMode() end)
+    f.modeButton:SetPoint("RIGHT", f.minimizeButton, "LEFT", -4, 0)
+    W.AttachTooltip(f.modeButton, modeTip)
     f.scanButton = TB.TextButton(bar, 96, "people", L["Scan group"], function() NS.ScanGroup() end)
-    f.scanButton:SetPoint("RIGHT", f.minimizeButton, "LEFT", -6, 0)
+    f.scanButton:SetPoint("RIGHT", f.modeButton, "LEFT", -6, 0)
     W.AttachTooltip(f.scanButton, scanTip)
     f.badge = buildBadge(bar)
     f.badge:SetPoint("RIGHT", f.scanButton, "LEFT", -8, 0)
 end
 
 --- Build the title bar into the window frame `f` (f.titleBar, f.title, f.testText, f.simText,
---- f.newChip, f.closeButton, f.minimizeButton, f.scanButton, f.badge, f.divider). The drag goes
+--- f.newChip, f.closeButton, f.minimizeButton, f.modeButton, f.scanButton, f.badge, f.divider). The drag goes
 --- through `host`, the shell, which owns the geometry it writes.
 --- @param f table the window frame
 --- @param host table { onDragStart = fn, onDragStop = fn }
@@ -272,10 +293,13 @@ end
 
 -- ── painting ────────────────────────────────────────────────────────────────────────────────
 
---- The restriction badge: the current reason and the queued asks' count, hidden when free.
+--- The restriction badge: the current reason and the queued asks' count, hidden when free. In the
+--- compact layout its lock and the count alone (NS.CompactChrome.BadgeShort; the same tooltip).
 --- @param f table the window frame
 function TB.PaintBadge(f)
-    local text = TB.BadgeText(NS.Window.RestrictionReason(), #queuedAsks())
+    local queued = #queuedAsks()
+    local text = TB.BadgeText(NS.Window.RestrictionReason(), queued)
+    if text and NS.WindowCompact.Mode() == "compact" then text = NS.CompactChrome.BadgeShort(queued) end
     f.badge.text:SetText(text or "")
     f.badge:SetShown(text ~= nil)
 end
@@ -292,12 +316,18 @@ function TB.PaintModeText(f)
     f.newChip:SetPoint("LEFT", (test and f.testText) or (sim and f.simText) or f.title, "RIGHT", 8, 0)
 end
 
---- The minimize mark (minus, or plus while minimized) and the `n new` counter, shown minimized only.
+--- The minimize mark (minus, or plus while minimized), the layout toggle's mark (shrink in the full
+--- layout, enlarge in compact) and the `n new` counter, shown minimized only.
 --- @param f table the window frame
 --- @param minimized boolean
 --- @param newCount number
 function TB.PaintMinimized(f, minimized, newCount)
     if minimized then setMark(f.minimizeButton, "add", "+") else setMark(f.minimizeButton, "minimise", "-") end
+    if NS.WindowCompact.Mode() == "compact" then
+        setMark(f.modeButton, "fullscreen-enter", "<>")
+    else
+        setMark(f.modeButton, "fullscreen-exit", "><")
+    end
     f.newChip.text:SetText(L["%d new"]:format(newCount))
     f.newChip:SetShown(minimized and newCount > 0)
 end

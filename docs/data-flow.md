@@ -40,7 +40,8 @@ Close, Toggle and Escape always win over test mode. It runs on every open and cl
 on both combat edges (`PLAYER_REGEN_DISABLED` / `_ENABLED`, which pass the edge itself rather than
 re-reading `UnitAffectingCombat`), on the stand-down and stand-up, and on a profile change. The
 frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibilityListener` listener
-(today the trade timer, which paces its ticker by the window); the window calls no engine module.
+(the trade timer, which paces its ticker by the window; compact mode's run override; and the compact
+Filters panel, which closes with the window); the window calls no engine module.
 
 ## What the window repaints on
 
@@ -82,7 +83,7 @@ mode), its filter state, the controls it honors, `matches(drop)` and `compare(a,
 
 ```
 Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
-  ├─> WindowGroup.Columns(profile.window.compact, profile.window.columns)   (pure)
+  ├─> WindowGroup.Columns(profile.window.columns)                          (pure; the layout)
   ├─> WindowGroup.Layout(columns, the rows' width)                          (pure)
   ├─> WindowCells.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
   │                       NS.State.windowGroup)                              first, filtered, sorted)
@@ -109,9 +110,24 @@ item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.Inse
 row hover ─────> a cell, button or header: Window.AttachTooltip ("row") ─> GameTooltip:Show() ─>
                  RowTooltip.Place: BOTTOMLEFT at the row's top, outside the window's right edge (else
                  BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2)
-NS.SetCompact ─> SchemaRuntime.Set("window.compact") ─> the row's repaint
+NS.SetWindowMode ─> SchemaRuntime.Set("window.mode") ─> WindowCompact.OnModeChanged ─> Apply
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
+```
+
+In the compact layout (`WindowGroup.IsCompact()`, compact spec §2) the same refresh computes the
+same entries and hands them over instead of drawing the table:
+
+```
+WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the table's scroll hidden)
+  ├─> CompactGroup.Metrics(WindowRows.FontSize(window.fontSize))     (pure: line, card height, icon)
+  ├─> NS.Pool.ReleaseAll(cards), ReleaseAll(headers) ─> Acquire in order (each card built once)
+  ├─> each header: WindowGroup.NewHeader, painted with CompactCards.Header (the short form)
+  └─> each card: CompactCards.Group(drop, { now, your gear, the looter's gear, WindowGroup.AskState,
+                  messages.transmogAsk, Compat.NormalizedRealm }) ─> three lines of pieces
+card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
+piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
+switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)
 ```
 
 ## Test mode (design spec §11.6, ui spec §4)
@@ -274,6 +290,21 @@ close mark ────────> OfferPanel.Close() ─> State.offerPanel = 
 messages.editFirst on: panel Offer ─> DetailCard.OpenEditor(id, "offer", member), Announce and
 Announce to group ─> DetailCard.OpenEditor(id, "announce"); the box's Send ─> NS.PressOffer(id,
 member, { text }) / NS.PressAnnounce(id, { text }) ─> NS.Asks.Press(…, { text })
+```
+
+In the compact layout (compact spec §3, DW-C3) the same refresh computes the same rows and summary
+and hands the rows over instead of drawing the table; the Offer panel docks beside the compact
+window by the same side rule:
+
+```
+WindowMine refresh ─> CompactMine.Refresh(pane, rows, compact)   (the table's scroll hidden)
+  ├─> the summary strip shortened: CompactMine.SummaryText(MineCells.Summary), `Post`
+  ├─> CompactGroup.Swap / Draw / Settle (the shared kit: pools, headers, scroll carry-over)
+  ├─> each header: WindowGroup.NewHeader (click: WindowMine.ToggleGroup), CompactCards.Header
+  └─> each card: CompactCards.Mine(drop, { now, TradeTimer.WarnAt(), WindowMine.IsRevealed(id),
+                  NS.Asks.StateOf("announce", nil, id) }) ─> three lines; the countdown's bar
+card Offer / Announce / Hide ─> the same handlers as the table's row
+OfferPanel.Refresh ─> compact: MineCells.DockSide, then top-aligned, OfferPanel.CompactHeight(window)
 ```
 
 ## Enable and disable
@@ -565,7 +596,10 @@ every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint:
 The History tab's body reads `NS.History.Groups()` (oldest first) through the pure
 `WindowHistory.Entries`, filtered by the tab's state with This instance and This session turned
 into `time()` marks (`WindowHistory.Context`); each entry is painted with the Group drops table's
-cell composers over a drop-shaped copy (`WindowHistory.AsDrop`).
+cell composers over a drop-shaped copy (`WindowHistory.AsDrop`). In the compact layout the same
+entries go to `CompactHistory.Refresh(pane, entries, compact)` (DW-C3): `CompactCards.History(drop,
+{ time(), date, Compat.NormalizedRealm() })` per card through `CompactGroup`'s kit, headers by
+`CompactCards.HistoryHeader`, a right-click on a card to `WindowHistory.OpenMenu`.
 
 ## The toast
 

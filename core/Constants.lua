@@ -23,6 +23,14 @@ C.WINDOW = {
     HEIGHT      = 600,
     MIN_WIDTH   = 520,
     MIN_HEIGHT  = 260,
+    -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
+    -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
+    COMPACT_WIDTH  = 380,
+    COMPACT_HEIGHT = 460,
+    COMPACT_MIN_W  = 320,
+    COMPACT_MAX_W  = 520,
+    COMPACT_MIN_H  = 220,
+    COMPACT_MAX_H  = 900,
     TITLE_H     = 30,
     TAB_H       = 26,
     TAB_W       = 118,    -- one tab button; the strip's pitch adds TAB_GAP
@@ -81,6 +89,7 @@ C.WINDOW = {
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
     OFFER_FOOT_H = 32,    -- its Announce to group strip
     OFFER_ROW_H = 26,     -- one candidate
+    OFFER_MIN_H = 320,    -- its least height beside the compact window (head, six candidates, foot)
     PILL_W      = 96,     -- a status pill
     PANEL_BTN_W = 52,     -- a candidate's Offer or Trade button
     DOCK_GAP    = 4,      -- between the window and the docked panel

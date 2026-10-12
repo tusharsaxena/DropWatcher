@@ -36,7 +36,8 @@ local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
     "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_RestrictionChanged",
-    "Ka0s_DropWatcher_SituationChanged", "Ka0s_DropWatcher_TradeTimerExpiring",
+    "Ka0s_DropWatcher_SituationChanged", "Ka0s_DropWatcher_SituationChanged",
+    "Ka0s_DropWatcher_TradeTimerExpiring",
     "Ka0s_DropWatcher_TradeTimerTick", "Ka0s_DropWatcher_TradeTimerTick" }
 
 -- What is registered, every kind, or one kind ("event", "message").

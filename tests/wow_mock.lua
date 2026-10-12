@@ -73,6 +73,9 @@
 --                  bagItemReads["bag:slot"] = { ilvl, quality } is C_Item.GetCurrentItemLevel's and
 --                  C_Item.GetItemQuality's answer on that bag slot's ItemLocation;
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
+--   textCharWidth  opt-in measured text: a window font string's GetUnboundedStringWidth is its
+--                  length times this, and GetStringWidth that bounded by `__boundWidth` (its
+--                  anchored width, set by a case) or SetWidth's; nil (the default) answers nil
 --   SOUNDKIT, sounds  the alert sound's SOUNDKIT entries; sounds records every PlaySound(id, channel)
 --   tradeItems     the open trade window: tradeItems.player[i] / tradeItems.target[i] are
 --                  GetTradePlayerItemLink(i) / GetTradeTargetItemLink(i); units.NPC is the partner;
@@ -126,6 +129,23 @@ local function decorateText(f)
     return f
 end
 
+-- Measured text on a font string, opt-in: with M.textCharWidth set, its one-line width is its text's
+-- length times that (GetUnboundedStringWidth), and GetStringWidth is that bounded by the width its
+-- anchors give it (`__boundWidth`, which a case sets, else SetWidth's), as on Retail since 10.0.
+-- Unset, both answer nil, as a font not yet loaded does.
+local function measureText(M, r)
+    r.GetUnboundedStringWidth = function(s)
+        local cw = M.textCharWidth
+        return cw and #(s.__text or "") * cw or nil
+    end
+    r.GetStringWidth = function(s)
+        local w = s:GetUnboundedStringWidth()
+        local bound = s.__boundWidth or s.__width
+        if w and bound and bound > 0 then return math.min(w, bound) end
+        return w
+    end
+end
+
 local function decorateGeometry(M, f)
     f.__dwTree = true
     -- Regions are objects of their own here: the base answers CreateFontString with the frame
@@ -139,6 +159,7 @@ local function decorateGeometry(M, f)
             r.__layer, r.__template = layer, template
             self.__regions[#self.__regions + 1] = r
             decorateText(r)
+            if kind == "FontString" then measureText(M, r) end
             r.__points = {}
             r.SetPoint = function(s, ...) s.__points[#s.__points + 1] = { ... }; return s end
             r.ClearAllPoints = function(s) s.__points = {}; return s end

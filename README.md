@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1199%2F1199_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1326%2F1326_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -69,6 +69,19 @@ declined. The **Character** dropdown in the bar starts on **Current**, the chara
 on History it lists every character that saw a drop, with its class icon, so pick another, several,
 or **All** (the only choice that shows drops kept before Drop Watcher noted who saw them).
 
+There is also a compact view: a narrow window, 380 pixels wide, where each drop is a small card of
+three lines instead of a table row. The top line has the item, its level and Ask. The middle one
+says who looted it, the slot and whether they can trade it, and the bottom one gives the Me and Them
+verdicts with the item levels each of you wears there. My drops cards carry the trade countdown as
+a bar, and History cards show what became of the drop. Quality, Content, Character and Sort fold
+into a **Filters** button beside View. Hovering still explains everything, and clicking a Group drops card
+opens the same detail card. The button next to minimize switches views, as do `/dw compact` and
+`/dw full`, and each view remembers its own size and place. When a drop opens the window by itself
+in a dungeon, key, raid or delve, it opens compact, then goes back to your usual view the next time
+it opens after the run. If you'd rather keep the full window in runs too, untick **Open in compact
+view during a run** under Settings › Window › Layout, where **Layout** picks the view you normally
+get.
+
 Two extras are off until you turn them on. The **toast** (Settings › Window › Toast) pops up when
 someone else loots a big upgrade for you, 10 item levels or more, that they can probably trade. It
 has an Ask button, goes away after 8 seconds unless your pointer is on it, and keeps out of combat
@@ -131,6 +144,7 @@ Everything else lives under **Settings → AddOns → Ka0s Drop Watcher**, and `
 | The window will not move | It is locked. Untick **Lock frame** or type `/dw unlock`. |
 | Test mode turned itself off | Combat ends test mode. Turn it back on after the fight. |
 | A simulation will not start | It refuses in a group, inside an instance, in combat and while test mode is on, and says which. Leave the group or instance, or wait out the fight. |
+| The window opens small in a key or raid | That's the compact view for runs. Click the button next to minimize for the full window, or untick **Open in compact view during a run** under Settings › Window › Layout. |
 | The Them column shows `?` | The looter's gear hasn't been read yet. Wait a moment, press **Scan group**, or use **Retry inspect** on the detail card. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
 
@@ -152,4 +166,4 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The window with its Group drops, My drops and History tabs, the detail card and the Offer panel<br>- One-click asks, offers and announces, queued while encounter restrictions block chat<br>- Trade estimates and an exact trade countdown on your own drops<br>- Pawn scores, or your own stat weights<br>- The opt-in toast and auto-ask<br>- Settings pages, the minimap button, the `/dw` command and test mode |
+| 0.1.0 | Unreleased | - The window with its Group drops, My drops and History tabs, the detail card and the Offer panel<br>- One-click asks, offers and announces, queued while encounter restrictions block chat<br>- Trade estimates and an exact trade countdown on your own drops<br>- Pawn scores, or your own stat weights<br>- The opt-in toast and auto-ask<br>- A compact view of the same window, which it opens in during a run<br>- Settings pages, the minimap button, the `/dw` command and test mode |
