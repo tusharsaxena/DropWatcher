@@ -59,8 +59,7 @@ every control, the build without the Widgets library, and the pure row predicate
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
-the item tooltip beside the window (right, else left at the UI scale, top-aligned with the row, the
-docked Offer panel's own edge, and the fallback on unknown geometry),
+the item tooltip at the row's top right, else its top left,
 the Ask button and its repaint, the dismiss mark, the compact preset, the filters, the empty
 state and its two buttons, and the filters' empty line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
@@ -70,7 +69,12 @@ Offer panel: the countdown, exact and estimated, `ending soon`, For me's `keep?`
 ranked with their pills, Best candidates hidden for your upgrade, the buttons' lifecycles, the
 summary, Post my tradeables' lines and the dock, then the tab and the panel built headless: pooled
 rows, a reason on every cell, the countdown moved by `TradeTimerTick`, Hide, Announce, the row's
-and the panel's Offer, Trade and Post my tradeables through their host handlers), `test_test_mode`
+and the panel's Offer, Trade and Post my tradeables through their host handlers),
+`test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
+top just outside the window, else its bottom right outside the left edge, at the UI scale, the row
+a cell sits in, the docked Offer panel as part of the window, the fallback on unknown geometry, then
+every cell, button and header of the three tabs placed by it, the column labels and tabs not),
+`test_test_mode`
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
 and candidate pill covered by the data, over pool items that keep their slot and level, the worn
 items the nearest of their slot, an empty pool giving none; the History sample with every outcome;
@@ -150,11 +154,18 @@ and money lines never read as loot; every hidden and refused receipt counted by 
 under FEED and reported in the `drops` diagnostics section; the group headers' `2 drops · 1 shown`
 and the tooltip naming each hidden drop and its filter, on Group drops and History),
 `test_group_roster` (feedback-2 spec §3: the roster snapshot's pure core, `Entry`, `Merge` (it
-only grows, you first, never the same character twice), `Copy`, `Names` (five names then `+n`,
-class-colored) and `TipLines`; a feed group taking the party with its first drop and a mid-run
-joiner on the roster event or with the next drop, its History group keeping it; the Group drops
-and History headers, and an older History group naming nobody; test mode's sample rosters are
-`test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
+only grows, you first, never the same character twice), `Copy`, `Names` (ten names then `+n`,
+class-colored, the realm when not yours) and `TipLine` (the tooltip's one `Group: ...` line); a feed
+group taking the party with its first drop and a mid-run joiner on the roster event or with the
+next drop, its History group keeping it; the Group drops and History headers naming only the
+recorder (feedback-3 spec §4), and an older History group with no `Group:` line; test mode's sample
+rosters are `test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
+`test_group_place` (feedback-3 spec §4, DW-B4: `GroupPlace`'s pure `DifficultyName`, `Parts` and
+`Who`; Compat's `DifficultyName` and `KeystoneLevel`; the owner's Timewalking drop through the real
+feed, its header `Gate of the Setting Sun · Commander Ri'mok · Timewalking · 1 drop · Testchar` and
+its History group keeping the place and the recorder; a group keeping the place it opened in; a
+key's end chest reading `Mythic+ <level>` after the run completed; the open world's situation-word
+fallback; test mode's and the simulator's realistic instance and difficulty names),
 `test_char_filter` (feedback-2 spec §4: the Character dropdown's pure core, `Key`, `IconMarkup`,
 `Passes` (All passes everything, a drop with no recorder only All, the session sentinel is you),
 `Canonical`, `Label` and `IsCurrent`, `Characters` and `Options`; your recorder read live and
@@ -281,6 +292,14 @@ footer's `Simulating` and `Inspect n/n`, and rows in Group drops and My drops un
 filters, and the History footer's `kept for 30 days` with a shorter window that deletes nothing of
 the fresh run and so asks nothing; the combat flags during and after the simulated fight, the loot lines written from the
 GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat),
+`test_sim_report` (the owner's `Loot: 2 drops` with one drop shown, DW-B0, feedback-3 spec §0: the
+root cause reproduced, your own drop on My drops and nothing lost; the pure `Place`, `Summarize` and
+`TipLines`; the panel row, its tooltip, the chat line, the `· n yours on My drops` header and the
+`My drops · n` tab; `/dw sim loot`'s line; and the regression over every scenario: each loot step's
+drops on Group drops, on My drops and hidden add up to its count, the minimum item level gate hiding
+them all included; then the M11 review leftovers, DW-B5, feedback-3 spec §5: the `My drops · n` label
+and the `· n yours on My drops` suffix count only what My drops lists, a drop hidden with Hide or by
+its filters named in the tab's tooltip, and the report honoring `feed.showOwn` and test mode's feed),
 `test_sim_panel` (the simulation step panel, DW-91: the rows, their PerfPanel states and commands
 before and during a run, the controls following the timeline, `/dw sim`, `start` and `panel`
 opening or toggling it beside the window, a click on the next step running it and one ahead running

@@ -144,7 +144,11 @@ adds the stable reads of the group, a unit and the instance to `NS.Compat`: `Gro
 (`GetNumGroupMembers`), `InRaid`, `InGroup(category)`, `InstanceGroupCategory`
 (`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`,
 `InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`), `DifficultyKnown`
-(`GetDifficultyInfo`) and `ChallengeModeActive` (`C_ChallengeMode.IsChallengeModeActive`); and,
+(`GetDifficultyInfo`) and `ChallengeModeActive` (`C_ChallengeMode.IsChallengeModeActive`); since
+DW-B4 (feedback-3 spec §4) `DifficultyName` (`GetDifficultyInfo`'s name, plain, else nil) and
+`KeystoneLevel` (`C_ChallengeMode.GetActiveKeystoneInfo`'s level, else
+`C_ChallengeMode.GetChallengeCompletionInfo().level` while a completed run's chest is looted, else
+nil), which name a group header's difficulty; and,
 since DW-90 (sim feedback §0), whether you are fighting, `InCombatLockdown` and `PlayerInCombat`
 (`UnitAffectingCombat("player")`), each a plain boolean. (`GlobalString(name)` is the root's, in the
 table above: a GlobalString read is not a world read.) None is version-variant, so the compat rule
@@ -162,7 +166,7 @@ answers the inspect members (`NotifyInspect`, guarded, schedules the reply; `Inv
 `InventoryItemID`, `InventoryItemLevel` (the roster's worn level) and `InspectSpecID` answer until
 `ClearInspectPlayer`),
 the bag members for your simulated drops (`BagSlotCount`, `BagItemLink`, `GetBagItemGUID`,
-`TradeTimeRemaining`, and `core/CompatItem.lua`'s `BagItemLevelQuality` and `TooltipBagItem`), `InTradeRange`, `ChallengeMapName` and the trade window's members
+`TradeTimeRemaining`, and `core/CompatItem.lua`'s `BagItemLevelQuality` and `TooltipBagItem`), `InTradeRange`, `ChallengeMapName`, `KeystoneLevel` (the simulated run's level) and the trade window's members
 (`TradePartnerName`, `TradeItemLinks`, `IsTradeCompleteMessage`). `test_sim_events` holds these.
 
 ## The item reads at a location and the tooltip setters
@@ -220,6 +224,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/LootParser.lua` | `FormatToPattern`, `GlobalString`; `UnitName`, `UnitGUID` (`core/CompatWorld.lua`) |
 | `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |
 | `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo`, `UnitName` (`core/CompatWorld.lua`) |
+| `modules/GroupPlace.lua` | `IsSecret`; `InstanceState`, `InstanceInfo`, `DifficultyName`, `KeystoneLevel` (`core/CompatWorld.lua`: a group's instance and difficulty name) |
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade`, `InTradeRange`, `CursorHasItem`, `ClearCursor`, `GetBagItemGUID`, `BagSlotCount` |
 | `modules/Asks.lua` | `ChatSender`, `GlobalString`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |

@@ -193,8 +193,11 @@ end
 
 function DO.stop() return NS.Sim.Stop("stop") end
 
+-- The burst says where its drops went, as the timeline's loot step does (feedback-3 spec §0).
 function DO.loot(c)
-    local n, code = NS.SimEvents.Loot(c.n, c.who)
+    local R = NS.SimReport
+    local n, code, report = R.Loot(c.n, c.who)
+    if n > 0 then NS.Print(L["Simulated loot: %s."]:format(R.Summarize(report, NS.LootFeed.Get, R.View()).text)) end
     return answered(n > 0, code)
 end
 

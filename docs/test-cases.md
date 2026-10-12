@@ -182,7 +182,7 @@ Total.
 - window: the combat edge decides, even while the player's combat flag lags it
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 
-### test_window_shell.lua (50)
+### test_window_shell.lua (57)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -196,13 +196,18 @@ Total.
 - shell: Scan group is refused while the addon is disabled
 - shell: three tabs, Group drops active in gold with its underline, the others gray
 - shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused
-- shell: My drops counts your tradeable drops in its label
+- shell: My drops counts all your drops in its label, the tradeable ones in its tooltip
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
 - shell: a tab with no body says what it will hold, never a blank pane
 - shell: the filter bar holds View, Quality, Content and the search box, and no checkbox
 - shell: the View is multi-select: its values combine, the label counts them, and All clears them
 - shell: each tab grays the View values it does not use, and a grayed value does not toggle
 - shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use
+- filter bar tooltip: AboveSide is right when the screen has room past the control, else left
+- filter bar tooltip: every bar control and the footer's Sort open above the control, top right
+- filter bar tooltip: with no room on the right it opens above the control, top left
+- filter bar tooltip: the room is measured in screen pixels, at each frame's scale
+- filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)
 - shell: the search box is Loot History's flat, square box
 - shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
 - shell: each tab keeps its own filter state, and grays what it does not use
@@ -234,8 +239,10 @@ Total.
 - shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
+- filter bar tooltip: AboveFits is true when the screen has room over the control, else false
+- filter bar tooltip: near the top of the screen it opens below the control, never over it
 
-### test_window_group.lua (46)
+### test_window_group.lua (40)
 
 - cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -265,13 +272,7 @@ Total.
 - table: rows come from the pool: a repaint reuses them, fewer drops park the rest
 - table: a header click collapses its group, and a second expands it
 - table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
-- item tooltip: it opens on the window's right, top-aligned with the hovered row
-- item tooltip: it opens on the window's left when the screen has no room on the right
-- item tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
-- item tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
-- item tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
-- item tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
-- item tooltip: a row's item button opens the game's tooltip beside the window, else on its own right
+- item tooltip: a row's item button opens the game's tooltip at the row's top right, else on its own
 - table: Their eq shows the looter's worn item from their inspect read
 - table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
@@ -329,7 +330,7 @@ Total.
 - mine tab: a row is the row height plus its bar's room, in the Font size row's size
 - mine tab: every shown cell has a reason tooltip; nothing is blank
 - mine tab: rows come from the pool and a repaint reuses them
-- mine tab: the rows sit under a header naming the party; a click collapses the group
+- mine tab: the rows sit under a header naming the place and you; a click collapses the group
 - mine tab: TradeTimerTick moves the countdown while the tab shows
 - mine tab: Hide takes a dead row off the tab for the session
 - mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
@@ -344,6 +345,22 @@ Total.
 - offer panel: Announce to group announces the drop
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
+
+### test_row_tooltip.lua (13)
+
+- row tooltip: it rises from the row's top right, just outside the window
+- row tooltip: with no room on the right it rises from the row's top left, outside the window
+- row tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
+- row tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
+- row tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
+- row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
+- row tooltip: a cell, a button or an icon in a marked row opens at the row's top, not its own
+- row tooltip: unknown geometry falls back to the hovered frame's top right
+- row tooltip: Group drops, every cell, Ask, the dismiss mark and the header open at the row's top right
+- row tooltip: with no room on the right a row tooltip rises from the row's top left, outside the window
+- row tooltip: My drops rows, their Offer and Announce buttons and the headers open at the row's top right
+- row tooltip: History rows and headers open at the row's top right
+- row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
 ### test_test_mode.lua (30)
 
@@ -370,7 +387,7 @@ Total.
 - window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Their eq state and every trade chip
 - window: a sample's Their eq shows its own worn item, and its detail card its own inspect
-- window: the My drops tab counts your tradeable samples and draws them all
+- window: the My drops tab counts your samples, the tradeable ones in its tooltip, and draws them all
 - window: the empty state comes back once test mode ends with nothing in the live feed
 - labels: My drops says Offer, and no cell of its rows ends in an ellipsis
 - labels: no button the addon builds is labeled with a trailing ellipsis
@@ -881,15 +898,32 @@ Total.
 - roster merge: the snapshot only grows, you first, the same character never twice
 - roster merge and copy: the entries are copied, never shared
 - roster names: the first few, class-colored, then +n; none for no roster
-- roster tooltip: everyone, with the realm when it is not yours, class-colored
+- roster tooltip: one Group line, the realm when it is not yours, class-colored (fb3 §4)
 - feed roster: the group takes everyone in it when its first drop makes it, you first
 - feed roster: someone who joins mid-run is added on the roster event, and to the History group
 - feed roster: a joiner is also taken by the next drop, with no roster event between
 - feed roster: a roster event with no group open yet changes nothing and raises nothing
 - history roster: Record copies the group's roster in and merges it with each entry
-- group header: the party's names after the count, class-colored; the tooltip lists everyone
-- group header: a raid's header names the first five and +n; its tooltip names all
-- history header: a kept roster is named; an older group with none names nobody
+- group header: you alone after the count, class-colored; the tooltip's Group line names the party
+- group header: a raid's party is not in the header; its tooltip line names ten and +n
+- history header: the recorder alone; an older group with no place and no roster keeps its label
+
+### test_group_place.lua (14)
+
+- group place: a keystone's difficulty reads Mythic+ and its level; any other is the client's name
+- group place: an encounter names its instance, its boss, then its difficulty
+- group place: a key run's and an area's label is the instance, named once
+- group place: with no difficulty name the situation word stands in; an older group keeps its label
+- group place: Who names the recorder alone, its short name class-colored; History falls back to an entry
+- compat: DifficultyName answers the client's name, nil for an unknown id or no API
+- compat: KeystoneLevel answers the active key, else the completed run's, else nil
+- feed: the owner's Timewalking drop names the instance, the boss, Timewalking and you (07)
+- feed: GetInstanceInfo's own difficulty name wins over GetDifficultyInfo's; an empty one falls back
+- feed: a group keeps the place it opened in
+- feed: a key run's end chest reads Mythic+ and the completed run's level
+- feed: in the open world no place is read and the situation word stands in
+- test mode: the sample groups carry real instance names and realistic difficulties
+- sim: a dungeon boss and a key run name the pool's instance and the client's difficulty
 
 ### test_char_filter.lua (18)
 
@@ -1210,6 +1244,30 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
+### test_sim_report.lua (21)
+
+- sim report: the owner's key run: the second drop is yours, on My drops, nothing lost
+- sim report: the step's chat line says where its drops went
+- sim report: /dw sim loot says where its drops went
+- sim report: each drop's place: Group drops, My drops, hidden by its gate, loading, cleared
+- sim report: the detail counts the drops and says which are yours, hidden or otherwise placed
+- sim report: the tooltip names each drop, its looter and its tab or gate
+- sim report: a Group drops header counts the drops of yours it leaves to My drops
+- sim report regression key: Group drops + My drops + hidden = every loot step's drops
+- sim report regression dungeon: Group drops + My drops + hidden = every loot step's drops
+- sim report regression raid: Group drops + My drops + hidden = every loot step's drops
+- sim report regression lfr: Group drops + My drops + hidden = every loot step's drops
+- sim report regression delve: Group drops + My drops + hidden = every loot step's drops
+- sim report regression world: Group drops + My drops + hidden = every loot step's drops
+- tab counts: My drops tallies the drops it lists and names the ones you hid or its filters hide
+- tab counts: a drop you hid leaves the My drops count and the Group drops suffix, and the tooltip names it
+- tab counts: a drop My drops' own filters hide leaves both counts, and the tooltip names the filter
+- sim report: a place honors feed.showOwn and the feed the window shows
+- sim report: View reads feed.showOwn and the feed the window shows
+- sim report: with feed.showOwn on, the owner's step lists yours on Group drops, and the tabs agree
+- sim report: a drop of yours My drops leaves out (its Hide, its own filters) is not counted as on My drops
+- sim report: the owner's step agrees with the tabs after Hide and after a search My drops fails
+
 ### test_sim_panel.lua (19)
 
 - sim panel: a key's preview names every step, with its command, before a run
@@ -1343,10 +1401,11 @@ Total.
 | test_settings_pages.lua | 29 |
 | test_slash.lua | 26 |
 | test_window.lua | 13 |
-| test_window_shell.lua | 50 |
-| test_window_group.lua | 46 |
+| test_window_shell.lua | 57 |
+| test_window_group.lua | 40 |
 | test_detail_card.lua | 20 |
 | test_window_mine.lua | 35 |
+| test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 30 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 9 |
@@ -1368,6 +1427,7 @@ Total.
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
+| test_group_place.lua | 14 |
 | test_char_filter.lua | 18 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 16 |
@@ -1382,6 +1442,7 @@ Total.
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
 | test_sim_e2e.lua | 12 |
+| test_sim_report.lua | 21 |
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
@@ -1392,4 +1453,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1150** |
+| **Total** | **1199** |

@@ -14,7 +14,8 @@ local _, NS = ...
 --
 -- WHERE. The session's situation answers IsInInstance, GetInstanceInfo (the journal instance the
 -- pool came from, its type and the situation's difficulty) and the keystone state (a run in
--- progress, modules/SimEvents.lua's). The real world is read with NS.Sim.Live, never through here.
+-- progress, modules/SimEvents.lua's, and its level). The difficulty's name is the client's
+-- (GetDifficultyInfo of the situation's real difficulty id), so a header reads as a real one. The real world is read with NS.Sim.Live, never through here.
 --
 -- INSPECT REPLIES. A member's worn gear is unknown to the client until an inspect of it answers,
 -- so the broker's fast path never fires for it and every read goes through the broker's real queue:
@@ -361,6 +362,13 @@ function P.ChallengeModeActive(live)
     if not p then return live() end
     local run = NS.SimEvents and NS.SimEvents.Run()
     return run ~= nil and not run.ended
+end
+
+function P.KeystoneLevel(live)
+    local p = W.Place()
+    if not p then return live() end
+    local run = NS.SimEvents and NS.SimEvents.Run()
+    return run and run.level or nil
 end
 
 function P.ChallengeMapName(live, mapID)

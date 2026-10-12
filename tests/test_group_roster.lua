@@ -1,5 +1,5 @@
 -- tests/test_group_roster.lua — group headers name the party (feedback-2 spec §3, FB2-5): the
--- roster snapshot's pure core (modules/GroupRoster.lua: Entry, Merge, Names, TipLines); a feed
+-- roster snapshot's pure core (modules/GroupRoster.lua: Entry, Merge, Names, TipLine); a feed
 -- group taking the members when its first drop makes it and growing when someone joins mid-run,
 -- between drops or with the next one; the History group keeping the roster across the log; the
 -- headers on Group drops and History naming everyone class-colored, you first, a raid's cut to
@@ -70,25 +70,25 @@ test("roster names: the first few, class-colored, then +n; none for no roster", 
     local GR = gr()
     local function colorOf(class) if class == "MAGE" then return 0.25, 0.78, 0.92 end end
     local list = {}
-    for i = 1, 8 do list[i] = { name = "M" .. i, class = i == 1 and "MAGE" or "ROGUE" } end
+    for i = 1, 12 do list[i] = { name = "M" .. i, class = i == 1 and "MAGE" or "ROGUE" } end
     list[1].me = true
     local text = GR.Names(list, 5, colorOf)
-    assertEqual(uncolored(text), "M1, M2, M3, M4, M5, +3")
+    assertEqual(uncolored(text), "M1, M2, M3, M4, M5, +7")
     assertTrue(text:find("|cff40c7ebM1|r", 1, true) ~= nil, text)
     assertTrue(text:find("M2", 1, true) == text:find(", M2", 1, true) + 2, "an unknown color is plain")
     assertEqual(GR.Names({ list[1], list[2] }, 5, colorOf):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""), "M1, M2")
-    assertEqual(uncolored(GR.Names(list, nil, nil)), "M1, M2, M3, M4, M5, +3", "the default is HEADER_NAMES")
-    assertEqual(GR.HEADER_NAMES, 5, "a party of five shows everyone")
+    assertEqual(uncolored(GR.Names(list, nil, nil)), "M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, +2",
+        "the default is TIP_NAMES")
+    assertEqual(GR.TIP_NAMES, 10)
     assertNil(GR.Names({})); assertNil(GR.Names(nil))
 end)
 
-test("roster tooltip: everyone, with the realm when it is not yours, class-colored", function()
+test("roster tooltip: one Group line, the realm when it is not yours, class-colored (fb3 §4)", function()
     local GR = gr()
-    local lines = GR.TipLines({ { name = "Tiamât", class = "MAGE", me = true },
+    local line = GR.TipLine({ { name = "Tiamât", class = "MAGE", me = true },
         { name = "Bùnian", realm = "Azralon", class = "PALADIN" } }, function(c) if c == "MAGE" then return 1, 0, 0 end end)
-    assertEqual(lines[1], "In the group (2):")
-    assertEqual(lines[2], "|cffff0000Tiamât|r"); assertEqual(lines[3], "Bùnian-Azralon")
-    assertEqual(#GR.TipLines(nil), 0)
+    assertEqual(line, "Group: |cffff0000Tiamât|r, Bùnian-Azralon")
+    assertNil(GR.TipLine(nil)); assertNil(GR.TipLine({}))
     assertEqual(GR.Colored("x", nil), "x")
 end)
 
@@ -190,32 +190,34 @@ local function raid(n)
     return list
 end
 
-test("group header: the party's names after the count, class-colored; the tooltip lists everyone", function()
+test("group header: you alone after the count, class-colored; the tooltip's Group line names the party", function()
     local NS = T.newAddon()
-    local hd = NS.WindowCells.Header({ label = "Den of Nalorakk", kind = "run", roster = raid(5) }, 2, nil,
+    local hd = NS.WindowCells.Header({ label = "Den of Nalorakk", kind = "run", roster = raid(5),
+        instance = "Den of Nalorakk", difficulty = "Mythic+ 12", seenBy = "You-Realm", seenByClass = "MAGE" }, 2, nil,
         "Mythic+", false)
-    assertEqual(uncolored(hd.text), "Den of Nalorakk · Mythic+ · 2 drops · You, R2, R3, R4, R5")
+    assertEqual(uncolored(hd.text), "Den of Nalorakk · Mythic+ 12 · 2 drops · You")
     assertTrue(hd.text:find("|cff40c7ebYou|r", 1, true) ~= nil, "you in your class color")
-    local tip = table.concat(hd.tip, "\n")
-    assertTrue(tip:find("In the group (5):", 1, true) ~= nil, tip)
+    local tip = uncolored(table.concat(hd.tip, "\n"))
+    assertTrue(tip:find("Group: You, R2, R3, R4, R5", 1, true) ~= nil, tip)
     assertTrue(tip:find("Click to collapse this group.", 1, true) ~= nil, "the click hint stays last")
 end)
 
-test("group header: a raid's header names the first five and +n; its tooltip names all", function()
+test("group header: a raid's party is not in the header; its tooltip line names ten and +n", function()
     local NS = T.newAddon()
     local hd = NS.WindowCells.Header({ label = "The Spire", kind = "encounter", roster = raid(20) }, 3, nil, nil, false)
-    assertEqual(uncolored(hd.text), "The Spire · 3 drops · You, R2, R3, R4, R5, +15")
+    assertEqual(uncolored(hd.text), "The Spire · 3 drops")
     local tip = uncolored(table.concat(hd.tip, "\n"))
-    assertTrue(tip:find("In the group (20):", 1, true) ~= nil); assertTrue(tip:find("\nR20\n", 1, true) ~= nil, tip)
+    assertTrue(tip:find("Group: You, R2, R3, R4, R5, R6, R7, R8, R9, R10, +10", 1, true) ~= nil, tip)
 end)
 
-test("history header: a kept roster is named; an older group with none names nobody", function()
+test("history header: the recorder alone; an older group with no place and no roster keeps its label", function()
     local NS = T.newAddon()
     local WH = NS.WindowHistory
-    local hd = WH.Header({ label = "Boss", kind = "encounter", roster = raid(3) }, 1, nil, nil, false)
-    assertEqual(uncolored(hd.text), "Boss · 1 drop · You, R2, R3")
-    assertTrue(table.concat(hd.tip, "\n"):find("In the group (3):", 1, true) ~= nil)
-    local old = WH.Header({ label = "Boss", kind = "encounter" }, 1, nil, nil, false)
-    assertEqual(old.text, "Boss · 1 drop")
-    assertFalse(table.concat(old.tip, "\n"):find("In the group", 1, true) ~= nil)
+    local hd = WH.Header({ label = "Boss", kind = "encounter", roster = raid(3), instance = "The Spire",
+        difficulty = "Heroic", seenBy = "Alt-Other", seenByClass = "WARLOCK" }, 1, nil, "Raid", false)
+    assertEqual(uncolored(hd.text), "The Spire · Boss · Heroic · 1 drop · Alt")
+    assertTrue(table.concat(hd.tip, "\n"):find("Group: ", 1, true) ~= nil)
+    local old = WH.Header({ label = "Boss", kind = "encounter" }, 1, nil, "Raid", false)
+    assertEqual(old.text, "Boss · Raid · 1 drop")
+    assertFalse(table.concat(old.tip, "\n"):find("Group: ", 1, true) ~= nil)
 end)

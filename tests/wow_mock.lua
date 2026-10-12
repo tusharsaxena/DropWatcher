@@ -23,7 +23,10 @@
 --                  the keystone dungeon's name C_ChallengeMode.GetMapUIInfo answers
 --   lootHistory    C_LootHistory.GetSortedInfoForDrop's answers, keyed "encounterID:lootListID"
 --                  ({ itemHyperlink, winner = { playerName, playerGUID, playerClass, isSelf } })
---   unknownDifficulties  ids GetDifficultyInfo answers nil for (a retired or renumbered difficulty)
+--   unknownDifficulties  ids GetDifficultyInfo answers nil for (a retired or renumbered difficulty);
+--                  difficultyNames[id] is the name it answers for the rest (`Difficulty <id>` unlisted)
+--   keystoneLevel  C_ChallengeMode.GetActiveKeystoneInfo()'s level (0: no active key);
+--                  completionLevel is GetChallengeCompletionInfo().level (nil answers 0)
 --   tooltips       C_TooltipInfo's answers: .bag["bag:slot"], .inventory["unit:slot"], .hyperlink[link]
 --   chatSent       every C_ChatInfo.SendChatMessage call; chatLockdown is InChatMessagingLockdown()
 --   instanceGroup  IsInGroup(LE_PARTY_CATEGORY_INSTANCE)'s answer (an instance group); IsInGroup()
@@ -155,7 +158,7 @@ local function decorateGeometry(M, f)
         if pt then return pt[1], pt[2], pt[3], pt[4], pt[5] end
     end
     -- The parent CreateFrame was given (the kit records it as `__parent`), and a reparent: the item
-    -- tooltip walks up to the window it goes beside (modules/WindowGroup.lua, PlaceItemTooltip).
+    -- tooltip walks up to the window it goes beside (modules/RowTooltip.lua, Place).
     f.GetParent = function(self) return self.__parent end
     f.SetParent = function(self, p) self.__parent = p; return self end
     f.SetSize = function(self, w, h) self.__width, self.__height = w, h; return self end
@@ -780,16 +783,23 @@ local function build()
     M.challengeModeActive = false
     M.unknownDifficulties = {}
     M.GetInstanceInfo = function()
-        return M.instance.name, M.__context.instanceType, M.instance.difficultyID
+        return M.instance.name, M.__context.instanceType, M.instance.difficultyID, M.instance.difficultyName
     end
+    M.difficultyNames = { [1] = "Normal", [2] = "Heroic", [8] = "Mythic Keystone", [14] = "Normal",
+        [15] = "Heroic", [16] = "Mythic", [17] = "Looking For Raid", [23] = "Mythic", [24] = "Timewalking",
+        [33] = "Timewalking", [205] = "Follower", [208] = "Delves" }
     M.GetDifficultyInfo = function(id)
         if type(id) ~= "number" or id <= 0 or M.unknownDifficulties[id] then return nil end
-        return "Difficulty " .. id
+        return M.difficultyNames[id] or ("Difficulty " .. id)
     end
     M.challengeMaps = {}
+    M.keystoneLevel = 0
+    M.completionLevel = nil
     M.C_ChallengeMode = {
         IsChallengeModeActive = function() return M.challengeModeActive == true end,
         GetMapUIInfo = function(mapID) return M.challengeMaps[mapID], mapID end,
+        GetActiveKeystoneInfo = function() return M.keystoneLevel, {}, false end,
+        GetChallengeCompletionInfo = function() return { level = M.completionLevel or 0 } end,
     }
 
     -- C_LootHistory: lootHistory["encounterID:lootListID"] is GetSortedInfoForDrop's answer.

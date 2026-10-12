@@ -222,7 +222,7 @@ test("sim run: plays every step a few seconds apart, each with its line, then sa
     assertEqual(st.pos, st.steps); assertFalse(st.playing)
     assertEqual(printed(m, "The simulation's timeline has finished."), 1)
     -- red under: the M7 run, which printed no step it played itself (sim feedback §0)
-    for _, line in ipairs({ "2 of 5: lockdownOn.", "3 of 5: kill (Warden Ashvane).", "4 of 5: loot (3 drops).",
+    for _, line in ipairs({ "2 of 5: lockdownOn.", "3 of 5: kill (Warden Ashvane).", "4 of 5: loot: 3 drops",
         "5 of 5: lockdownOff." }) do
         assertEqual(printed(m, "Simulation step " .. line), 1, line)
     end

@@ -161,10 +161,14 @@ modules\Restrictions.lua
 # above) at load, and reads NS.State at load. A module declaring the event below it hears it after
 # the roster is fresh.
 modules\Roster.lua
-# Conventional: publishes NS.GroupRoster, each group's roster snapshot and the header's names; adds
+# Conventional: publishes NS.GroupRoster, each group's roster snapshot and its tooltip line; adds
 # its Grow to NS.Roster's change sinks (above) at load and reads NS.L at load. NS.Compat,
 # NS.LootFeed, NS.History and NS.Window (below) are read at call time.
 modules\GroupRoster.lua
+# Conventional: publishes NS.GroupPlace, where a group dropped (its instance and difficulty name) and
+# who saw it, for the headers (feedback-3 spec §4); reads NS.Constants and NS.L at load. NS.Compat
+# and NS.GroupRoster (above) are read at call time; modules\LootFeed.lua (below) stamps through it.
+modules\GroupPlace.lua
 # LOAD-BEARING: publishes NS.CharFilter, the Character dropdown's recorder, rows and predicate
 # (feedback-2 spec §4), which modules\WindowFilterBar.lua (below) takes as a load-time upvalue;
 # reads NS.L at load. NS.Compat is read at call time.
@@ -256,6 +260,10 @@ modules\WindowRows.lua
 # countdown, the candidates and their pills, the buttons, Post my tradeables' lines, the dock);
 # takes NS.WindowCells (above), NS.Constants and NS.L at load.
 modules\MineCells.lua
+# Conventional: publishes NS.RowTooltip, the one placement of a table row's tooltips (the row's top
+# right, like Ka0s Loot History; feedback-3 spec §2, DW-B2); takes NS.Constants at load. NS.MineCells
+# (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
+modules\RowTooltip.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Group drops body through
 # Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells (above), NS.Constants,
 # NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
@@ -326,8 +334,12 @@ modules\SimWorld.lua
 # NS.Sim (modules\Sim.lua) at load. NS.SimWorld, NS.SimPool, NS.Roster, NS.LootFeed and NS.Compat
 # are read at call time.
 modules\SimEvents.lua
+# Conventional: publishes NS.SimReport, where a simulated loot burst's drops went; reads NS.L at
+# load. NS.State, NS.SimEvents (above), NS.LootFeed and NS.WindowCells are read at call time.
+modules\SimReport.lua
 # Conventional: publishes NS.SimScenario, the simulator's scenarios and timeline; reads NS.L at
-# load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents and NS.Window are read at call time.
+# load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents, NS.SimReport and NS.Window are read at call
+# time.
 modules\SimScenario.lua
 # Conventional: publishes NS.SimPanel, the simulation step panel; adds its repaint to
 # NS.SimScenario's listeners (above) and its step to NS.STAND_DOWN at load, and reads NS.L and

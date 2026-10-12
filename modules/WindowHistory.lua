@@ -137,10 +137,11 @@ function WH.Ago(seconds)
     return days == 1 and L["1 day ago"] or L["%d days ago"]:format(days)
 end
 
---- A kept group's header: `Label · Situation · 2 days ago · 4 drops · You, Seta, ...` (`... · 4 drops
---- · 3 shown` while the filter hides some, feedback-2 spec §0; the kept roster, class-colored, when
---- the group has one, §3), and its tooltip listing everyone and naming each hidden drop.
---- @param group table { label, kind, situation, at, roster }
+--- A kept group's header: `Instance · Boss · Difficulty · 2 days ago · 4 drops · Recorder` (the
+--- place and the character that saw it, class-colored, feedback-3 spec §4; a group kept before them
+--- reads `Label · Situation`; `... · 4 drops · 3 shown` while the filter hides some, feedback-2 spec
+--- §0), and its tooltip naming the kept party on one line and each hidden drop.
+--- @param group table { label, kind, situation, at, instance, difficulty, seenBy, seenByClass, roster }
 --- @param shown number
 --- @param now number time()
 --- @param situationLabel string|nil
@@ -149,11 +150,10 @@ end
 --- @param filter table|nil the tab's filter state
 --- @return table { text, tip }
 function WH.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
-    local parts = { tostring(group.label or "?") }
-    if situationLabel then parts[#parts + 1] = situationLabel end
+    local parts, who = WC.Place(group, situationLabel)
     if type(group.at) == "number" and type(now) == "number" then parts[#parts + 1] = WH.Ago(now - group.at) end
     parts[#parts + 1] = WC.DropCount(shown, hidden)
-    parts[#parts + 1] = WC.RosterNames(group.roster)
+    parts[#parts + 1] = who
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
     return { text = text, tip = WC.HeaderTip(tostring(group.label or "?"), L["Kept in the history across sessions."],
@@ -183,7 +183,7 @@ local function appendGroup(out, g, drops, hidden, filter, c)
 end
 
 --- The tab's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
---- collapsed } (as WG.Entries') and
+--- collapsed } (as NS.WindowCells.Entries') and
 --- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest); a group with no
 --- entry passing the filter keeps an open header with count 0 while the View filter hid them, or
 --- Character hid entries with no recorder (kept before the Character dropdown); it is left out
@@ -268,7 +268,7 @@ local function textCell(row, key)
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
-    NS.Window.AttachTooltip(f, function() return tipOf(f) end)
+    NS.Window.AttachTooltip(f, function() return tipOf(f) end, "row")
     return f
 end
 
@@ -294,6 +294,7 @@ end
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
     row:SetHeight(NS.WindowRows.ROW_H)
+    row.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)
@@ -309,6 +310,7 @@ end
 local function newHeader(content)
     local h = CreateFrame("Button", nil, content)
     h:SetHeight(K.GROUP_H)
+    h.tipRow = true
     h.fill = h:CreateTexture(nil, "BACKGROUND")
     h.fill:SetAllPoints(h)
     h.fill:SetColorTexture(1, 1, 1, 0.06)
@@ -319,7 +321,7 @@ local function newHeader(content)
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
     h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
     h:SetScript("OnClick", function(self) WH.ToggleGroup(self.groupKey, self.collapsed) end)
-    NS.Window.AttachTooltip(h, function() return tipOf(h) end)
+    NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")
     return h
 end
 

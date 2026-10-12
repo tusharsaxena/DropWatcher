@@ -42,7 +42,7 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Eighty authored files load from the TOC, in the standard's folder order; every one, its kind,
+Eighty-six authored files load from the TOC, in the standard's folder order; every one, its kind,
 its one-line responsibility and why its position is load-bearing or conventional is in
 [`module-map.md`](module-map.md). In short:
 
@@ -69,8 +69,12 @@ its one-line responsibility and why its position is load-bearing or conventional
   `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`, with
   `FeedCounts.lua` counting every receipt it hides or refuses by reason, and `GroupRoster.lua`
   keeping who was in each group: a snapshot taken by its first drop, grown by every later drop and
-  by a roster change, copied into the History group, and named class-colored, you first, in the
-  headers of all three tabs (My drops since DW-A9); feedback-2 spec §3; and `CharFilter.lua`, the Character
+  by a roster change, copied into the History group, and named class-colored, you first, on the
+  one `Group: ...` line of the headers' tooltips on all three tabs; feedback-2 spec §3, and since
+  DW-B4 no longer in the header itself; `GroupPlace.lua` naming where each group dropped, its
+  instance and the client's difficulty name (`Mythic+ <level>` for a key), captured when the group
+  opens and kept on it and its History group, and the character that saw it, the only name a header
+  shows; feedback-3 spec §4; and `CharFilter.lua`, the Character
   dropdown's recorder: every drop record and History entry says who saw it, `seenBy` (Name-Realm)
   and `seenByClass`, and the filter bar's Character dropdown, Current by default, filters History by
   it; feedback-2 spec §4); and the
@@ -82,7 +86,10 @@ its one-line responsibility and why its position is load-bearing or conventional
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
   client answers about its world (`SimWorld.lua`: the group, the place, the inspect replies, your
   simulated bag items and the trade window), its event drivers (`SimEvents.lua`: loot lines,
-  pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3) and its
+  pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3), where a loot
+  burst's drops went (`SimReport.lua`: Group drops, My drops, or the gate that hid each, so the
+  loot step reads `Loot: 2 drops (1 yours)` and reconciles with the tabs; feedback-3 spec §0; it
+  honors `feed.showOwn` and the feed the window shows, `Window.FeedView`, §5) and its
   scenarios and timeline (`SimScenario.lua`: what `/dw sim start` builds and `run` and `step`
   play, with `pause`, `resume` and `restart`; simulator spec §4) and its step panel (`SimPanel.lua`:
   PerfPanel's look, the timeline as clickable steps, the run controls and the scenario picker,
@@ -95,15 +102,31 @@ its one-line responsibility and why its position is load-bearing or conventional
   row adds its countdown bar's room; feedback-2 spec §8, FB2-9), test mode
   (`TestData.lua`, its pure sample drops and History groups over real items from the simulator's
   item pool, and `TestMode.lua`, its edge; ui spec §4) and the diagnostics sections
-  (`Diagnostics.lua`). Every item tooltip (the three tabs, the equipment columns, the detail card,
-  the Offer panel, the toast) opens beside its frame, top-aligned with the hovered row: on the
-  right, or the left when the screen has no room on the right, measured after `Show()` at each
-  frame's effective scale (`WindowGroup.PlaceItemTooltip`, beside `SetItemTooltip`; feedback-2
-  spec §2). The frame is the nearest ancestor marked `tipHost` (the docked Offer panel), else the
-  outermost one under UIParent (the window, the toast). While the Offer panel is docked beside the
-  window, the two are one span: a tooltip goes beside the pair, never over the panel nor over the
-  window (`tipDocked`; feedback-2 spec §8, FB2-10). My drops sits under the same collapsible group
-  headers as the other two tabs, every group open until toggled (DW-A9).
+  (`Diagnostics.lua`). Every tooltip raised from a table row (the item tooltip, every cell's
+  reason, the Ask, Offer, Announce and Hide buttons, the dismiss mark and the group headers, on the
+  three tabs and the Offer panel, and the item tooltip of the equipment columns, the detail card and
+  the toast) has one placement, like Ka0s Loot History's `ANCHOR_RIGHT` on a full-width row: the
+  tooltip's `BOTTOMLEFT` at the row's top, just outside the right edge of the frame the row sits
+  in, or its `BOTTOMRIGHT` outside the left edge when the screen has no room on the right, measured
+  after `Show()` at each frame's effective scale (`RowTooltip.lua`: `RowTooltip.Place`, which
+  `Window.AttachTooltip`'s `row` placement and the item buttons share; feedback-3 spec §2, DW-B2,
+  after DW-A2's beside-the-window placement). The row is the nearest ancestor marked `tipRow`; the
+  frame is the nearest ancestor marked `tipHost` (the docked Offer panel), else the outermost one
+  under UIParent (the window, the toast). While the Offer panel is docked beside the window, the two
+  are one span: a tooltip goes beside the pair, never over the panel nor over the window
+  (`tipDocked`; feedback-2 spec §8, FB2-10). My drops sits under the same collapsible group
+  headers as the other two tabs, every group open until toggled (DW-A9). The tables' entries in
+  order are `WindowCells.Entries` (pure); a Group drops header counts your own drops it leaves to
+  My drops (`· 1 yours on My drops`), and the tab reads `My drops · n`, its tooltip naming how many
+  you can still trade (feedback-3 spec §0, DW-B0). Both count only the drops My drops actually
+  lists: not the ones hidden with Hide nor the ones its own filters hide (`WindowMine.Lists`,
+  `Tally`, `ListedCount`, `ListsNow`), and the tab's tooltip names those it leaves out (feedback-3 spec §5, DW-B5). A filter-bar control's
+  tooltip (View, Quality, Content, Character, the search box and the footer's Sort) opens above the
+  control, never over it or its menu: its `BOTTOMLEFT` on the control's `TOPRIGHT`, or its
+  `BOTTOMRIGHT` on the `TOPLEFT` when the screen has no room on the right (`Window.AttachTooltip`'s
+  `above` placement, `Window.PlaceAbove`; feedback-3 spec §1, DW-B1). Near the top of the screen,
+  with no room above, it opens below instead: its `TOPLEFT` on the control's `BOTTOMRIGHT`, else its
+  `TOPRIGHT` on the `BOTTOMLEFT` (`Window.AboveFits`; feedback-3 spec §5, DW-B5).
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
 
@@ -324,6 +347,10 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
   offline: the headless reproduction shows that a first report without bonus data read the drop at
   its base level and quality, and the fix keeps the most complete link and reads your own drops from
   their bag item whatever the source. ITEM-3 and the `drops` diagnostics line record it in game.
+- **A delve's tier** is not in its group header: the header names the difficulty as the client
+  gives it (GetInstanceInfo's difficultyName, else GetDifficultyInfo's), and neither is known to
+  name the tier, so a delve reads `Delves` (feedback-3 spec §4 names `a delve tier`). FEED-30 records
+  what the client gives.
 - **Tier tokens** are recognized, but the slot a token makes is not read, so the verdict for one is
   `unknown` until the tier-token follow-up (design spec §14).
 - **Your gear** is a per-slot best, not a loadout planner: unique-equipped limits and a

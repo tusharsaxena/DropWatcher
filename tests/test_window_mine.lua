@@ -243,7 +243,8 @@ end)
 
 -- M10 review (FB2-10): My drops groups its rows under the same headers as the other two tabs.
 local function groupOf(key, at, ids, roster)
-    return { key = key, label = key, kind = "encounter", at = at, drops = ids, roster = roster }
+    return { key = key, label = key, kind = "encounter", at = at, drops = ids, roster = roster,
+        instance = "Zul'Aman", difficulty = "Heroic", seenBy = "Me-Realm", seenByClass = "PALADIN" }
 end
 
 local function rowsCtx(over)
@@ -368,7 +369,8 @@ test("mine tab: built headless, one row per drop of yours, each column painted",
     assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:41")
     assertTrue(drawn.pane.summary.post:IsEnabled())
     assertFalse(drawn.pane.placeholder:IsShown())
-    assertEqual(textOf(NS.Window.Frame().tabs.mine.label), "My drops · 3")
+    -- Every drop of yours, the bonus roll too (feedback-3 spec §0, DW-B0); the tooltip says how many trade.
+    assertEqual(textOf(NS.Window.Frame().tabs.mine.label), "My drops · 4")
 end)
 
 -- Feedback-2 spec §8 (FB2-9): the row height plus room for the countdown bar, in the tables' text size,
@@ -423,15 +425,17 @@ test("mine tab: rows come from the pool and a repaint reuses them", function()
     assertEqual(free .. "/" .. active, "0/4")
 end)
 
-test("mine tab: the rows sit under a header naming the party; a click collapses the group", function()
+test("mine tab: the rows sit under a header naming the place and you; a click collapses the group", function()
     local NS, drawn = shownMine()
     assertEqual(#drawn.headers, 1)
     local h = drawn.headers[1]
-    local text = textOf(h.text)
-    assertTrue(text:find("Den of Nalorakk", 1, true) == 1, text)
+    local text = textOf(h.text):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    assertTrue(text:find("Zul'Aman · Den of Nalorakk · Heroic · ", 1, true) == 1, text)
     assertTrue(text:find("4 drops", 1, true) ~= nil, text)
-    assertTrue(text:find("Seta", 1, true) ~= nil, "the roster, as on the other tabs: " .. text)
-    assertTrue(#NS.Window.TooltipOf(h) >= 3)
+    assertTrue(text:find("· Me", 1, true) ~= nil, "you, as on the other tabs: " .. text)
+    assertTrue(text:find("Seta", 1, true) == nil, "the party is not in the header (fb3 §4): " .. text)
+    local tip = table.concat(NS.Window.TooltipOf(h), "\n")
+    assertTrue(tip:find("Group: ", 1, true) ~= nil and tip:find("Seta", 1, true) ~= nil, tip)
     h:__fire("OnClick")
     drawn = NS.WindowMine.Drawn()
     assertEqual(#drawn.rows, 0, "collapsed")

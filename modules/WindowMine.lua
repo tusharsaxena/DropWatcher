@@ -15,7 +15,7 @@ local _, NS = ...
 -- (Window.TabContext: Content, search and Sort) and were not hidden, in the tab's order. They sit
 -- under the same collapsible header per run or encounter as the other two tabs (M10 review,
 -- FB2-10; WC.Header: the place, the age, `n drops · m shown`, the party in class color), through
--- NS.WindowGroup.Entries with only your drops counted: newest group first, every group open until
+-- NS.WindowCells.Entries with only your drops counted: newest group first, every group open until
 -- the player collapses it (an older run's drops are the ones whose trade windows end first), and a
 -- drop in no group listed last, so none is lost. The summary counts every entry, collapsed or not.
 -- A row is
@@ -111,13 +111,126 @@ function WM.IsRevealed(id) return view().revealed[id] == true end
 --- @param state table|nil { dismissed } (NS.State.windowMine)
 --- @return table drops
 function WM.Entries(drops, ctx, state)
-    local dismissed = state and state.dismissed or {}
     local out = {}
     for _, d in ipairs(drops or {}) do
-        if d.isMine and not dismissed[d.id] and ctx.matches(d) then out[#out + 1] = d end
+        if WM.Lists(d, ctx, state) then out[#out + 1] = d end
     end
     table.sort(out, ctx.compare)
     return out
+end
+
+--- Whether the tab lists drop `d`: yours, not hidden with its row's Hide and passing the tab's own
+--- filters. The tab's label and the Group drops headers' `· n yours on My drops` count with it, so
+--- they agree with what the tab lists (feedback-3 spec §5, DW-B5).
+--- @param d table
+--- @param ctx table { matches = fn(drop) }
+--- @param state table|nil { dismissed }
+--- @return boolean
+function WM.Lists(d, ctx, state)
+    local dismissed = state and state.dismissed or {}
+    return type(d) == "table" and d.isMine == true and not dismissed[d.id] and ctx.matches(d) == true
+end
+
+-- Why the tab leaves one of your drops out: `dismissed` (its row's Hide), else the filter's key.
+local function excludedWhy(d, ctx, state)
+    if state and state.dismissed and state.dismissed[d.id] then return "dismissed" end
+    return ctx.hiddenBy and ctx.hiddenBy(d) or "filter"
+end
+
+--- Your drops in `drops`, tallied the way the tab lists them (pure): `listed` (WM.Lists), how many
+--- of those you can still trade, and the ones left out ({ drop, why }, why `dismissed` or the
+--- filter's key) for the tab's tooltip (feedback-3 spec §5).
+--- @param drops table|nil
+--- @param ctx table { matches = fn(drop), hiddenBy = fn(drop) }
+--- @param state table|nil { dismissed }
+--- @return table { listed, tradeable, excluded }
+function WM.Tally(drops, ctx, state)
+    local FB, t = NS.WindowFilterBar, { listed = 0, tradeable = 0, excluded = {} }
+    for _, d in ipairs(drops or {}) do
+        if WM.Lists(d, ctx, state) then
+            t.listed = t.listed + 1
+            if FB.IsTradeableMine(d) then t.tradeable = t.tradeable + 1 end
+        elseif type(d) == "table" and d.isMine then
+            t.excluded[#t.excluded + 1] = { drop = d, why = excludedWhy(d, ctx, state) }
+        end
+    end
+    return t
+end
+
+--- The words for why the tab leaves a drop of yours out (pure): `you hid it`, or the filter
+--- (FB.ReasonLabel).
+--- @param why string `dismissed` or a filter key (excludedWhy's)
+--- @param filter table|nil the tab's filter state
+--- @return string
+function WM.WhyLabel(why, filter)
+    if why == "dismissed" then return L["you hid it"] end
+    return NS.WindowFilterBar.ReasonLabel(why, filter)
+end
+
+--- The tab tooltip's lines for your drops it leaves out (pure): `Not listed here:`, then each drop
+--- and why (`you hid it`, or the filter: FB.ReasonLabel), the first WC.HIDDEN_TIP_LINES of them.
+--- @param excluded table|nil WM.Tally's
+--- @param filter table|nil the tab's filter state
+--- @return table lines (empty when none is left out)
+function WM.ExcludedLines(excluded, filter)
+    local WC, out = NS.WindowCells, {}
+    if type(excluded) ~= "table" or #excluded == 0 then return out end
+    out[1] = L["Not listed here:"]
+    for i, x in ipairs(excluded) do
+        if i > WC.HIDDEN_TIP_LINES then
+            out[#out + 1] = L["and %d more"]:format(#excluded - WC.HIDDEN_TIP_LINES)
+            break
+        end
+        out[#out + 1] = L["%s: %s"]:format(WC.ItemName(x.drop.link) or "?", WM.WhyLabel(x.why, filter))
+    end
+    return out
+end
+
+--- The tab's tally over the feed the window shows, through its own filters and Hide (the edge
+--- the tab label and its tooltip read).
+--- @return table WM.Tally's, plus `filter` (the tab's filter state)
+function WM.TabTally()
+    local ctx = NS.Window.TabContext("mine")
+    local t = WM.Tally(NS.LootFeed.Drops(ctx.feed), ctx, view())
+    t.filter = ctx.filter
+    return t
+end
+
+--- Whether the tab lists drop `d` now (WM.Lists over its own filters and Hide), for the Group drops
+--- headers' `· n yours on My drops`. Asked only of your own drops Group drops leaves to My drops, so
+--- a repaint with none of them builds no context (the refresh pair's allocation ceiling).
+--- @param d table
+--- @return boolean
+function WM.ListsNow(d)
+    return WM.Lists(d, NS.Window.TabContext("mine"), view())
+end
+
+--- Why the tab leaves drop `d` of yours out now (its Hide or its own filters, in WM.WhyLabel's
+--- words), else nil: the sim report's `not on My drops` (modules/SimReport.lua, feedback-3 spec §5).
+--- Asked only of your own drops, so a repaint with none of them builds no context.
+--- @param d table
+--- @return string|nil
+function WM.LeftOutNow(d)
+    local ctx, st = NS.Window.TabContext("mine"), view()
+    if WM.Lists(d, ctx, st) then return nil end
+    return WM.WhyLabel(excludedWhy(d, ctx, st), ctx.filter)
+end
+
+--- How many drops the tab lists now (the tab label's `My drops · n`): WM.Tally's `listed`, without
+--- its tables, and without the tab's context while the feed on show holds no drop of yours.
+--- @return number
+function WM.ListedCount()
+    local drops = NS.LootFeed.Drops(NS.Window.FeedName())
+    local any = false
+    for _, d in ipairs(drops) do
+        if d.isMine then any = true; break end
+    end
+    if not any then return 0 end
+    local ctx, state, n = NS.Window.TabContext("mine"), view(), 0
+    for _, d in ipairs(drops) do
+        if WM.Lists(d, ctx, state) then n = n + 1 end
+    end
+    return n
 end
 
 -- The ids the feed's groups hold.
@@ -130,7 +243,7 @@ local function groupedIds(groups)
 end
 
 --- The table's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
---- collapsed } and { kind = "drop", drop }, as NS.WindowGroup.Entries' over your own drops only, every
+--- collapsed } and { kind = "drop", drop }, as NS.WindowCells.Entries' over your own drops only, every
 --- group open until toggled; then any entry of WM.Entries that no group holds, with no header.
 --- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
 --- @param drops table the feed's drops (NS.LootFeed.Drops)
@@ -142,7 +255,7 @@ function WM.Rows(groups, drops, get, ctx, state)
     state, groups = state or {}, groups or {}
     local mine = { matches = ctx.matches, compare = ctx.compare, filter = ctx.filter, hiddenBy = ctx.hiddenBy,
         belongs = function(d) return d.isMine == true and (not ctx.belongs or ctx.belongs(d)) end }
-    local out = NS.WindowGroup.Entries(groups, get, mine,
+    local out = NS.WindowCells.Entries(groups, get, mine,
         { collapsed = state.collapsed, dismissed = state.dismissed, allOpen = true })
     local grouped = groupedIds(groups)
     for _, d in ipairs(WM.Entries(drops, ctx, state)) do
@@ -160,8 +273,9 @@ end
 
 local function tipOf(frame) return unpack(frame.tipLines or {}) end
 
+-- Every tooltip attached here is a row's (a cell, a button, a header): the row's top right.
 local function attach(frame)
-    NS.Window.AttachTooltip(frame, function() return tipOf(frame) end)
+    NS.Window.AttachTooltip(frame, function() return tipOf(frame) end, "row")
 end
 
 local function textCell(row, key)
@@ -254,6 +368,7 @@ local BUILDERS = { item = itemCell, forMe = forMeCell, trade = tradeCell, action
 local function newHeader(content)
     local h = CreateFrame("Button", nil, content)
     h:SetHeight(K.GROUP_H)
+    h.tipRow = true
     h.fill = h:CreateTexture(nil, "BACKGROUND")
     h.fill:SetAllPoints(h)
     h.fill:SetColorTexture(1, 1, 1, 0.06)
@@ -281,6 +396,7 @@ end
 local function newRow(content)
     local row = CreateFrame("Frame", nil, content)
     row:SetHeight(NS.WindowRows.MineRowHeight(NS.WindowRows.ROW_H))
+    row.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)

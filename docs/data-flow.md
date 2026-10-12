@@ -84,13 +84,16 @@ mode), its filter state, the controls it honors, `matches(drop)` and `compare(a,
 Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   ├─> WindowGroup.Columns(profile.window.compact, profile.window.columns)   (pure)
   ├─> WindowGroup.Layout(columns, the rows' width)                          (pure)
-  ├─> WindowGroup.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
+  ├─> WindowCells.Entries(NS.LootFeed.Groups(feed), NS.LootFeed.Get, ctx,   (pure: groups newest
   │                       NS.State.windowGroup)                              first, filtered, sorted)
   │     each header: the shown drops, every drop the tab lists (ctx.belongs), and the hidden ones with
   │     the control that hid each (ctx.hiddenBy = WindowFilterBar.HiddenBy) ─> WindowCells.Header:
   │     `2 drops · 1 shown`, the tooltip naming each hidden drop and its filter (feedback-2 spec §0);
   │     a group the View hid whole keeps its header, `n drops · 0 shown`; one Search, Content or a
-  │     Character choice hid whole is left out (WindowCells.KeepsHeader)
+  │     Character choice hid whole is left out (WindowCells.KeepsHeader); your own drops the tab
+  │     leaves to My drops (no `feed.showOwn`) and My drops lists (ctx.onMine = WindowMine.ListsNow:
+  │     not hidden with Hide nor by My drops' filters) are counted, `· 1 yours on My drops`
+  │     (feedback-3 §0, §5); the tab label `My drops · n` counts the same (WindowMine.ListedCount)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / MyEq / TheirEq / Me / Them / Trade / Ask
                   reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's
@@ -103,6 +106,9 @@ header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed �
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id) ─> AskStateChanged ─> repaint
 item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
                  ctrl-click: Compat.DressUpItem; a plain click expands the row
+row hover ─────> a cell, button or header: Window.AttachTooltip ("row") ─> GameTooltip:Show() ─>
+                 RowTooltip.Place: BOTTOMLEFT at the row's top, outside the window's right edge (else
+                 BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2)
 NS.SetCompact ─> SchemaRuntime.Set("window.compact") ─> the row's repaint
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
@@ -187,6 +193,14 @@ NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item c
 /dw sim step ─> NS.SimScenario.Step ─> the next step's driver: RunStart, Pull, SetLockdown(on), Kill,
                    Loot(burst), SetLockdown(off), RunEnd (waits while the pool builds) ─> its chat
                    line (StepLine), typed or played
+the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receipt sequence and merge
+                   count) ─> SimEvents.Loot ─> Collect (the records made since: added, loading or
+                   hidden by a gate) ─> kept on the step; Summarize (pure) ─> `loot: 2 drops (1 yours)`
+                   in chat and `Loot: 2 drops (1 yours)` on the panel row, TipLines (pure) ─> the
+                   row's tooltip: each drop, its looter, its tab or the gate that hid it (feedback-3 §0);
+                   each place honors `feed.showOwn` and the feed the window shows (SimReport.View =
+                   Window.FeedView + WindowMine.LeftOutNow: yours on Group drops too, not on My drops when its
+                   Hide or its own filters leave it out, or not shown in test mode; §5)
 /dw sim run ─> a step now, then one every SimScenario.StepDelay() seconds (`sim.stepDelay`, 2 by
                    default, read as each next step is set) on NS.Sim.After (the stop ends it)
 /dw sim pause | resume | restart ─> NS.SimScenario.Pause (the timer canceled) | Resume (Run) | Restart
@@ -233,10 +247,10 @@ Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
   ├─> WindowGroup.Layout(WindowMine.COLUMNS, the rows' width)              (pure)
   ├─> WindowMine.Entries(NS.LootFeed.Drops(feed), ctx, NS.State.windowMine) (pure: your own drops,
   │                                                                           filtered, sorted)
-  ├─> WindowMine.Rows(Groups, Drops, Get, ctx, NS.State.windowMine) (pure: WindowGroup.Entries over
+  ├─> WindowMine.Rows(Groups, Drops, Get, ctx, NS.State.windowMine) (pure: WindowCells.Entries over
   │     your drops, every group open until toggled; a drop in no group last, with no header)
   ├─> NS.Pool.ReleaseAll(rows, headers) ─> Acquire in order (each built once); each header:
-  │     WindowCells.Header(group, shown, now, …): `Label · Situation · 6m ago · n drops · party`
+  │     WindowCells.Header(group, shown, now, …): `Instance · Boss · Difficulty · 6m ago · n drops · You`
   ├─> each row: WindowCells.Item / Ilvl, MineCells.ForMe / TradeWindow(drop, now, TradeTimer.WarnAt())
   │             / BestCandidates(drop, revealed) / Actions(drop, best, AnnounceButton(…))
   │               reads: NS.Asks.StateOf("announce", nil, id)

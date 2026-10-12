@@ -132,7 +132,8 @@ log and sees it.
 
 ```lua
 history = { retentionDays = 30, v = 1, groups = {
-    { key, label, kind, situation, at, roster = { { name, realm, class, me }, ... }, drops = {
+    { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
+      roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
           me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
           trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
@@ -148,7 +149,14 @@ history = { retentionDays = 30, v = 1, groups = {
   `name`, the normalized `realm` only when it is not the recorder's, the `class` (classFile) and
   `me` on the recorder's own entry, the recorder first. Every recorded drop merges the feed group's
   snapshot in, and a mid-run joiner is added; it only grows. A group kept before DW-A3 has none and
-  its header names nobody. No migration step: the field is optional.
+  its tooltip has no `Group:` line; since DW-B4 the header itself never names the party. No migration
+  step: the field is optional.
+- `instance` and `difficulty` say where the group dropped (feedback-3 spec §4, `modules/GroupPlace.lua`):
+  the instance's name and the client's difficulty name (`Timewalking`, `Heroic`, `Mythic+ 12` for a
+  key), captured when the feed group opened, nil outside an instance. `seenBy` and `seenByClass` on
+  the group are the character that saw its first drop, the one name its header shows. A group kept
+  before DW-B4 has none of the four: its header reads `Label · Situation`, and its recorder is its
+  first entry's. No migration step: the fields are optional.
 - `seenBy` is the character that saw the drop, its Name-Realm, and `seenByClass` that character's
   classFile (feedback-2 spec §4, `modules/CharFilter.lua`): the feed stamps every drop record with
   them and the entry copies them. The History tab's Character dropdown (Current by default) filters

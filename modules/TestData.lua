@@ -292,12 +292,40 @@ local function roster(you, keys)
     return out
 end
 
--- `group` with its roster, a fresh table each call (the samples' are shared).
-local function withRoster(group, you, keys)
+-- The key run's level the samples name.
+TD.KEY_LEVEL = 10
+
+-- The `n`th instance the pool's drops come from (the journal's real dungeons), else the first, else
+-- nil (a pool of your own gear names none).
+local function instanceOf(src, n)
+    local seen, list = {}, {}
+    for _, e in ipairs(src.drops) do
+        local name = type(e.instance) == "string" and e.instance ~= "" and e.instance or nil
+        if name and not seen[name] then seen[name], list[#list + 1] = true, name end
+    end
+    return list[n] or list[1]
+end
+
+-- Where a sample group dropped, with realistic names (feedback-3 spec §4): a key run is the pool's
+-- first dungeon at `Mythic+ 10` (its label the dungeon's name), a boss sits in the pool's second
+-- at Heroic. Sets the group's instance and difficulty (and a run's label) in place.
+local function withPlace(g, src)
+    if g.kind == "run" then
+        local name = instanceOf(src, 1)
+        g.label = name or g.label
+        g.instance, g.difficulty = name, L["Mythic+ %d"]:format(TD.KEY_LEVEL)
+    else
+        g.instance, g.difficulty = instanceOf(src, 2), L["Heroic"]
+    end
+    return g
+end
+
+-- `group` with its roster and place, a fresh table each call (the samples' are shared).
+local function withRoster(group, you, keys, src)
     local g = {}
     for k, v in pairs(group) do g[k] = v end
     g.roster = roster(you, keys)
-    return g
+    return withPlace(g, src)
 end
 
 -- Each row of `rows` made by `make`, placed in `group` at `situation` (`ago` unless its own).
@@ -321,7 +349,7 @@ function TD.Placeholders(now, you, src)
     local out = {}
     local function theirs(row) return other(src, now, row) end
     local function yours(row) return mine(src, now, you, row) end
-    local run, boss = withRoster(RUN, you, RUN_PARTY), withRoster(BOSS, you, RAID)
+    local run, boss = withRoster(RUN, you, RUN_PARTY, src), withRoster(BOSS, you, RAID, src)
     place(out, YOURS_IN_RUN, yours, run, "mythicPlus")
     place(out, OTHERS_IN_RUN, theirs, run, "mythicPlus", 3600)
     place(out, OTHERS_AT_BOSS, theirs, boss, "raid", 120)
@@ -402,8 +430,9 @@ function TD.History(nowEpoch, you, src)
     local log = { v = 1, groups = {} }
     for _, g in ipairs(HISTORY) do
         local at, seer = nowEpoch - g.ago, g.alt and altSeer(you) or you
-        local group = { key = g.group.key, label = g.group.label, kind = g.group.kind,
-            situation = g.group.situation, at = at, roster = roster(seer, g.party), drops = {} }
+        local group = withPlace({ key = g.group.key, label = g.group.label, kind = g.group.kind,
+            situation = g.group.situation, at = at, roster = roster(seer, g.party), drops = {},
+            seenBy = seer.seenBy, seenByClass = seer.classFile }, src)
         for i, row in ipairs(g.drops) do
             group.drops[#group.drops + 1] = historyEntry(src, seer, row, at + i * 30)
         end

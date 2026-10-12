@@ -79,9 +79,9 @@ test("test mode data: each sample group names who was in it, you first; the boss
         sizes[s.group.kind] = #r
     end
     assertEqual(sizes.run, 5, "the key run: a party of five")
-    assertEqual(sizes.encounter, 8, "the boss: a raid, longer than a header names")
-    local text = NS.WindowCells.RosterNames(specs[#specs].group.roster):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-    assertEqual(text, "Tester, Seta, Littlewolf, Uniquerogue, Butterz, +3")
+    assertEqual(sizes.encounter, 8, "the boss: a raid")
+    local text = NS.GroupRoster.TipLine(specs[#specs].group.roster):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    assertEqual(text, "Group: Tester, Seta, Littlewolf, Uniquerogue, Butterz, Kaelith, Mistveil, Dawnfeather")
     local src = source(NS)
     for _, g in ipairs(NS.TestData.History(1000, YOU, src).groups) do
         assertTrue(g.roster ~= nil and g.roster[1].me == true, g.key .. ": the sample history keeps a roster")
@@ -497,11 +497,12 @@ test("window: a sample's Their eq shows its own worn item, and its detail card i
     assertEqual(NS.WindowGroup.Drawn().cardDropId, crown.dropId)
 end)
 
-test("window: the My drops tab counts your tradeable samples and draws them all", function()
+test("window: the My drops tab counts your samples, the tradeable ones in its tooltip, and draws them all", function()
     local NS = shownTest()
     NS.Window.SelectTab("mine")
     local f = NS.Window.Frame()
-    assertEqual(textOf(f.tabs.mine.label), "My drops · 4")
+    assertEqual(textOf(f.tabs.mine.label), "My drops · 5")
+    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[3], "4 of them you can still trade.")
     local drawn = NS.WindowMine.Drawn()
     assertEqual(#drawn.rows, 5)
 end)
