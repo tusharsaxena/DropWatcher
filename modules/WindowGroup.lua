@@ -78,6 +78,7 @@ WG.COLUMNS = {
       tip = L["Ask the looter for it, once. The × hides the row for this session."] },
 }
 local GLYPH_COLS = { me = true, them = true }
+local WHITE = { r = 1, g = 1, b = 1 }   -- an untoned button's label (GameFontHighlightSmall)
 
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
 local TEST_LOADING = L["Gathering real items for test mode."]
@@ -262,6 +263,19 @@ function WG.PlaceGlyph(f, glyph)
     else
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     end
+end
+
+--- Color an action button's label and mark by whose move it is (feedback-4 spec §1): red your
+--- move, yellow waiting on someone else, green done (WindowCells.ActionTone); white for a state that
+--- is none of them. Every Ask, Offer and Announce button goes through here, in both layouts.
+--- @param b table a Window.TextButton (`b.label`, `b.art`)
+--- @param state string|nil the button's state (WindowCells.ActionTone's key)
+function WG.ToneButton(b, state)
+    local tone = NS.WindowCells.ActionTone(state)
+    local c = tone and C.TONE[tone] or WHITE
+    b.label:SetTextColor(c.r, c.g, c.b)
+    if b.art then b.art:SetVertexColor(c.r, c.g, c.b) end
+    b.tone = tone
 end
 
 -- ── the item button ─────────────────────────────────────────────────────────────────────────
@@ -558,6 +572,7 @@ local function paintActions(f, drop)
     f.ask:SetAlpha(a.enabled and 1 or 0.6)
     f.ask.tipLines, f.dashTip.tipLines = a.tip, a.tip
     f.ask.state = a.state
+    WG.ToneButton(f.ask, a.state)
 end
 
 -- What a cell's text may take of its width, so a long name is cut short rather than spilling into

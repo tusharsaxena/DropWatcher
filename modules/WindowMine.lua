@@ -337,8 +337,20 @@ local function setButtonLook(b, look)
     b:SetEnabled(look.enabled)
     b:SetAlpha(look.enabled and 1 or 0.6)
     b.tipLines, b.state = look.tip, look.state
+    NS.WindowGroup.ToneButton(b, look.toneState or look.state)   -- whose move it is (feedback-4 spec §1)
 end
 WM.SetButtonLook = setButtonLook
+
+--- The state drop `drop`'s My drops buttons are toned by (feedback-4 spec §1): the row's Offer by
+--- the furthest offer sent for it, its Announce by its own state; both `tradedAway` once you traded
+--- it away (MineCells.ToneState).
+--- @param drop table
+--- @return string offer, string announce
+function WM.ToneStates(drop)
+    local outcome = NS.History.OutcomeOf(drop.id)
+    return MC.ToneState(outcome, NS.Asks.FurthestStateOf("offer", drop.id)),
+        MC.ToneState(outcome, NS.Asks.StateOf("announce", nil, drop.id))
+end
 
 local function actionsCell(row)
     local f = CreateFrame("Frame", nil, row)
@@ -458,8 +470,9 @@ local function paintActions(f, drop, best)
         return
     end
     f.offer.tipLines, f.offer.primary = a.offer.tip, a.offer.primary
-    local tone = a.offer.primary and C.GOLD or C.TONE.plain
-    f.offer.label:SetTextColor(tone.r, tone.g, tone.b)
+    local offerTone, announceTone = WM.ToneStates(drop)
+    NS.WindowGroup.ToneButton(f.offer, offerTone)
+    a.announce.toneState = announceTone
     setButtonLook(f.announce, a.announce)
 end
 

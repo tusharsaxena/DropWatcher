@@ -316,6 +316,7 @@ local function paintAsk(card, a, id)
     b:SetAlpha(a.enabled and 1 or 0.6)
     b.tipLines, card.dashTip.tipLines = a.tip, a.tip
     b.state = a.state
+    NS.WindowGroup.ToneButton(b, a.state)   -- whose move it is (feedback-4 spec §1)
 end
 
 local function paintLineOne(card, drop, cc)

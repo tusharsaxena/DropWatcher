@@ -739,3 +739,30 @@ test("table: PressAsk says why it asked nobody: your own drop, a gone drop, the 
     NS.PressAsk(1)
     assertTrue(m.prints[#m.prints]:find("You already asked Seta%-Realm for it") ~= nil)
 end)
+
+-- ── whose move it is (feedback-4 spec §1) ───────────────────────────────────────────────────
+
+test("cells: ActionTone is red for your move, yellow while waiting, green once done", function()
+    local W = WC()
+    assertEqual(W.ActionTone("ready"), "red"); assertEqual(W.ActionTone("failed"), "red")
+    assertEqual(W.ActionTone("queued"), "yellow"); assertEqual(W.ActionTone("sent"), "yellow")
+    assertEqual(W.ActionTone("traded"), "good"); assertEqual(W.ActionTone("tradedAway"), "good")
+    assertTrue(W.ActionTone(nil) == nil); assertTrue(W.ActionTone("other") == nil)
+end)
+
+test("table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded", function()
+    local NS, drawn = shownTable()
+    local R, Y, G = NS.Constants.TONE.red, NS.Constants.TONE.yellow, NS.Constants.TONE.good
+    local ask = rowFor(drawn, 1).cells.actions.ask
+    assertEqual(ask.tone, "red"); assertEqual(select(1, ask.label:GetTextColor()), R.r)
+    NS.Asks.StateOf = function() return "sent" end
+    NS.Window.Refresh()
+    ask = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions.ask
+    assertEqual(textOf(ask.label), "Asked"); assertEqual(ask.tone, "yellow")
+    assertEqual(select(2, ask.label:GetTextColor()), Y.g)
+    NS.History.OutcomeOf = function() return "received" end
+    NS.Window.Refresh()
+    ask = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions.ask
+    assertEqual(textOf(ask.label), "Traded"); assertEqual(ask.tone, "good")
+    assertEqual(select(2, ask.label:GetTextColor()), G.g)
+end)

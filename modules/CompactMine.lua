@@ -172,8 +172,7 @@ local function paintLineOne(card, drop, cc)
     card.dashTip:SetShown(o.dash == true)
     card.dash:SetText(o.text)
     card.offer.tipLines, card.dashTip.tipLines, card.offer.primary = o.tip, o.tip, o.primary
-    local tone = o.primary and C.GOLD or C.TONE.plain
-    card.offer.label:SetTextColor(tone.r, tone.g, tone.b)
+    NS.WindowGroup.ToneButton(card.offer, (NS.WindowMine.ToneStates(drop)))   -- feedback-4 spec §1
 end
 
 local function paintForYou(card, fy)
@@ -216,6 +215,7 @@ local function paintLineThree(card, drop, cc)
     if a.hide then
         card.hide.tipLines = a.tip
     else
+        a.toneState = select(2, NS.WindowMine.ToneStates(drop))
         NS.WindowMine.SetButtonLook(card.announce, a)
     end
 end

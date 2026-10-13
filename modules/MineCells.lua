@@ -363,6 +363,16 @@ local function look(tbl, state)
     return { text = l.text, icon = l.icon, enabled = l.enabled, state = s }
 end
 
+--- The state a My drops button is toned by (feedback-4 spec §1; WindowCells.ActionTone): green
+--- `tradedAway` once you traded the drop away, else the button's own state (`ready` for none).
+--- @param outcome string|nil the drop's History outcome
+--- @param state string|nil the button's ask state, or the furthest offer for the drop
+--- @return string
+function MC.ToneState(outcome, state)
+    if outcome == "tradedAway" then return "tradedAway" end
+    return state or "ready"
+end
+
 --- The Offer button of one candidate, by its ask state.
 --- @param state string|nil NS.Asks.StateOf's state
 --- @param reason string|nil

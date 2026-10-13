@@ -645,3 +645,28 @@ test("handlers: Offer, Announce and Trade say why they did nothing", function()
     assertEqual(select(2, NS.PressAnnounce(1)), "disabled")
     assertEqual(NS.PostTradeables(), 0)
 end)
+
+-- ── whose move it is (feedback-4 spec §1) ───────────────────────────────────────────────────
+
+test("mine cells: ToneState is the button's own state, or tradedAway once you traded the drop away", function()
+    local M = MC()
+    assertEqual(M.ToneState(nil, nil), "ready"); assertEqual(M.ToneState("offered", "sent"), "sent")
+    assertEqual(M.ToneState("tradedAway", "ready"), "tradedAway")
+end)
+
+test("mine tab: Offer and Announce are red until sent, yellow once an offer or announce is out, green once traded away", function()
+    local NS, drawn, m = shownMine()
+    local a = rowFor(drawn, 1).cells.actions
+    assertEqual(a.offer.tone, "red"); assertEqual(a.announce.tone, "red")
+    NS.Asks.FurthestStateOf = function(kind) return kind == "offer" and "sent" or "ready" end
+    NS.Asks.StateOf = function(kind) return kind == "announce" and "queued" or "ready" end
+    NS.Window.Refresh(); m.advance(0)
+    a = rowFor(NS.WindowMine.Drawn(), 1).cells.actions
+    assertEqual(a.offer.tone, "yellow", "an offer to a member is out")
+    assertEqual(a.announce.tone, "yellow", "the announce waits for chat to lift")
+    NS.History.OutcomeOf = function() return "tradedAway" end
+    NS.Window.Refresh(); m.advance(0)
+    a = rowFor(NS.WindowMine.Drawn(), 1).cells.actions
+    assertEqual(a.offer.tone, "good"); assertEqual(a.announce.tone, "good")
+    assertEqual(select(2, a.offer.label:GetTextColor()), NS.Constants.TONE.good.g)
+end)

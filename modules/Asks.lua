@@ -366,6 +366,15 @@ function A.StateOf(kind, target, dropID)
     return M.StateOf(store().book, kind, key, dropID)
 end
 
+--- The furthest state any `kind` ask for drop `dropID` has reached, whoever it went to
+--- (Messaging.FurthestState): `sent`, `queued`, `failed` or `ready`.
+--- @param kind string
+--- @param dropID any
+--- @return string
+function A.FurthestStateOf(kind, dropID)
+    return M.FurthestState(store().book, kind, dropID)
+end
+
 --- Cancel a queued ask (spec §9.2 step 6). Answers true when one was queued.
 --- @return boolean
 function A.Cancel(kind, target, dropID)

@@ -393,6 +393,8 @@ local function paintActions(card, drop, ctx)
         b:SetAlpha(a.enabled and 1 or 0.5)
         b.tipLines = a.tip
         b.enabled = a.enabled
+        -- The Ask takes its state's tone, as the row's does (feedback-4 spec §1); the rest stay white.
+        NS.WindowGroup.ToneButton(b, a.key == "ask" and a.state or nil)
     end
 end
 

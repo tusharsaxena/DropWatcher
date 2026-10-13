@@ -567,6 +567,21 @@ local ASK_LOOK = {
     failed = { text = L["Retry"], icon = "reset", enabled = true },
 }
 
+-- WHOSE MOVE IT IS (feedback-4 spec §1): an action button's tone by its state. Your move is red
+-- (Ask, Retry, an Offer or Announce not yet sent), waiting on someone else yellow (Asked, Queued,
+-- Offered, Announced), done green (Traded, traded away).
+local ACTION_TONE = {
+    ready = "red", failed = "red", queued = "yellow", sent = "yellow", traded = "good", tradedAway = "good",
+}
+
+--- An action button's tone for its state: `red` your move, `yellow` waiting, `good` done; nil for
+--- a state that is none of them (the button keeps its own color).
+--- @param state string|nil an ask state (`ready`, `queued`, `sent`, `failed`), `traded` or `tradedAway`
+--- @return string|nil a key of C.TONE
+function WC.ActionTone(state)
+    return ACTION_TONE[state]
+end
+
 local function askTip(state, who, reason, template)
     if state == "queued" then
         return L["Queued"], L["Chat is restricted right now: the ask to %s is sent when it lifts."]:format(who), L["Click to cancel it."]
