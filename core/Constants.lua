@@ -19,10 +19,15 @@ C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEX
 -- tab's body and a footer.
 C.WINDOW = {
     NAME        = "DropWatcherWindow",
-    -- The default width is the least (feedback-4 spec §4): the Drops table's every column at
-    -- its width, the Item column at ITEM_MIN, a drop row's indent and chevron lead (ROW_INDENT +
-    -- CHEVRON_X + ROW_CHEVRON + CHEVRON_GAP), the scroll gutter and both insets (1068 + 30 + 22 +
-    -- 12; the columns include Trade window, feedback-5 spec §1).
+    -- The default width is the least (feedback-4 spec §4, recomputed by feedback-5 spec §4): the Drops
+    -- table's every column at its width with a CELL_GAP after each, the Item column at ITEM_MIN, a drop
+    -- row's indent and chevron lead, the scroll gutter and both insets:
+    --   columns  Ilvl 40 + Slot 72 + Type 64 + Looter 104 + My eq 84 + Their eq 84 + Me 70 + Them 70
+    --            + Trade 70 + Trade window 104 + Actions 84 (ASK_W) = 846, + 12 gaps x 6 = 918,
+    --            + Item 150 (ITEM_MIN) = 1068
+    --   lead     ROW_INDENT 12 + CHEVRON_X 4 + ROW_CHEVRON 10 + CHEVRON_GAP 4 = 30 (WindowGroup.LEAD)
+    --   chrome   SCROLL_W 22 + 2 x INSET 6 = 34
+    --   1068 + 30 + 34 = 1132. History's columns (no lead) fit with room to spare.
     -- tests/test_window_group.lua pins that no tab sheds a column there and the filter bar fits.
     WIDTH       = 1132,
     HEIGHT      = 600,
@@ -30,9 +35,13 @@ C.WINDOW = {
     MIN_HEIGHT  = 260,
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
-    COMPACT_WIDTH  = 380,
+    -- The compact least width (feedback-5 spec §4) fits a Drops card's fullest line 2: a twelve-letter
+    -- looter, its realm mark, slot, type and a counted trade (about 220px at the small template's 5px a
+    -- character) before the countdown and its bar (40 + 6 + CG.BAR_W), past the indent, chevron, icon,
+    -- insets and scroll gutter (tests/test_compact_group.lua measures it). 380 cut it by about 57px.
+    COMPACT_WIDTH  = 440,
     COMPACT_HEIGHT = 460,
-    COMPACT_MIN_W  = 380,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
+    COMPACT_MIN_W  = 440,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
     COMPACT_MAX_W  = 520,
     COMPACT_MIN_H  = 220,
     COMPACT_MAX_H  = 900,

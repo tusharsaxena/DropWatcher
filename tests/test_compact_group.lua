@@ -2,7 +2,7 @@
 -- the card's metrics and the scroll carry-over (pure), the stacked detail card's flow (pure), then
 -- the cards drawn headless under the mock: pooled three-line cards that say what NS.CompactCards
 -- says, the one-line headers, the stacked detail card inline, Ask, the text size, and
--- every tooltip at the card's top right.
+-- every tooltip at the card's top right; last, line 2 at its fullest fits the least width.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -387,4 +387,51 @@ test("compact group: the countdown moves each second on the card", function()
     m.__now = m.__now + 10
     NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
     assertEqual(textOf(cardFor(NS.WindowGroup.Drawn(), 1).cells.countdown.text), "~1:59:49")
+end)
+
+-- ── the least width (feedback-5 spec §4) ────────────────────────────────────────────────────
+
+-- Line 2 at its fullest: a twelve-letter looter (the game's longest name) with slot, type and trade on
+-- the left, the countdown and its bar on the right. Measured at 5px a character (the small template's
+-- average; a color code takes no room), the left pieces end a gap before the countdown at
+-- COMPACT_MIN_W, on another player's two-hander from another realm and on your own counted drop.
+local function cand(name, gain)
+    return { guid = "Player-1-" .. name, name = name .. "-Testrealm", classFile = "MAGE", status = "ready",
+        eval = { verdict = "upgrade", ilvlDelta = gain, baseline = { ilvl = 280 }, reasons = {} } }
+end
+
+local FULLEST = {
+    theirs = { looter = { name = "Bloodthornxx-Otherrealm", guid = "Player-1-0000000A", classFile = "WARRIOR" },
+        facts = { ilvl = 311, equipLoc = "INVTYPE_2HWEAPON", quality = 4 } },
+    yours = { isMine = true, looter = { name = "Bloodthornyy-Testrealm", guid = "Player-1-ME", classFile = "PALADIN",
+        isSelf = true }, facts = { ilvl = 311, equipLoc = "INVTYPE_SHOULDER", quality = 4, classID = 4,
+        subClassID = 4 }, me = { verdict = "downgrade", ilvlDelta = -9, reasons = {} },
+        candidates = { a = cand("Seta", 4), b = cand("Butterz", 11), c = cand("Vaela", 2) } },
+}
+
+test("compact group: at the least width line 2's pieces end before the countdown and its bar", function()
+    for which, over in pairs(FULLEST) do
+        local NS, _, m = T.enableAddon()
+        local K, CG = NS.Constants.WINDOW, NS.CompactGroup
+        m.__now = 100
+        m.normalizedRealm = "Testrealm"
+        m.textCharWidth = 5
+        seed(NS, { GROUP }, { drop(over) })
+        NS.WindowFilterBar.Set("group", "view", "all")
+        NS.SetWindowMode("compact")
+        NS.ShowWindow()
+        assertEqual(NS.Window.Frame():GetWidth(), K.COMPACT_MIN_W)
+        local card = cardFor(NS.WindowGroup.Drawn(), 1)
+        local c = card.cells
+        local function w(fs)   -- the visible characters' width (a UTF-8 glyph is one)
+            local s = (fs:GetText() or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("[\128-\191]", "")
+            return #s * m.textCharWidth
+        end
+        assertTrue(c.countdown.text:IsShown(), which .. ": the countdown shows")
+        local leftEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + w(c.looter.text) + 2 + w(c.looter.glyph)
+            + 4 + w(c.slot.text) + 4 + w(c.armorType.text) + 4 + w(c.trade.text)
+        local rightStart = card:GetWidth() - CG.PAD - CG.BAR_W - 6 - w(c.countdown.text)
+        assertTrue(leftEnd + 4 <= rightStart,
+            ("%s: line 2 ends at %d, the countdown starts at %d"):format(which, leftEnd, rightStart))
+    end
 end)

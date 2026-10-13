@@ -163,3 +163,18 @@ test("window: a resize saves the anchor with the size, so a settings repaint doe
     local point, _, rel, x, y = f:GetPoint(1)
     assertEqual(table.concat({ point, rel, x, y }, ","), "TOPLEFT,BOTTOMLEFT,300,700")
 end)
+
+test("window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4)", function()
+    local NS = T.newAddon()
+    local K, WG = NS.Constants.WINDOW, NS.WindowGroup
+    local cols, fixed = WG.COLUMNS, 0
+    for _, col in ipairs(cols) do fixed = fixed + (col.width or 0) + K.CELL_GAP end
+    assertEqual(fixed, 918, "eleven fixed columns (Trade window 104, Actions 84) and twelve gaps")
+    assertEqual(WG.LEAD, K.ROW_INDENT + K.CHEVRON_X + K.ROW_CHEVRON + K.CHEVRON_GAP)
+    assertEqual(K.MIN_WIDTH, fixed + K.ITEM_MIN + WG.LEAD + K.SCROLL_W + 2 * K.INSET)
+    assertEqual(K.MIN_WIDTH, 1132); assertEqual(K.WIDTH, 1132)
+    local byKey = {}
+    for _, col in ipairs(cols) do byKey[col.key] = col end
+    assertEqual(byKey.tradeWindow.width, 104); assertEqual(byKey.actions.width, 84)
+    assertEqual(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH), 426, "the search box keeps its room")
+end)
