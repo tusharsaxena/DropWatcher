@@ -1,2 +1,3 @@
 date	milestone	evidence
 2026-10-13	M14	plan written: spec, items DW-E0..E5, branch cut from feedback-4
+2026-10-13	M14	DW-E0..E5 landed; review (10 low findings) fixed in 5b9b61b; bundle 20261013-141937 green (1335/1/1336, lint 0/0 in 164); pushed; awaiting owner merge go-ahead

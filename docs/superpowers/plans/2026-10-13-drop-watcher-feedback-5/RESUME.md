@@ -8,3 +8,4 @@ DW-E4 and DW-E5. Never merge without the owner's go-ahead; after the merge, dele
 (`feat/2026-10-13-drop-watcher-feedback-4` and `-5`, local and origin), stashes and worktrees.
 
 ## Log
+- 2026-10-13 14:25 — all items landed and pushed; bundle 20261013-141937 green. Next: owner merge go-ahead, in-game FEED-31..47, then delete feedback-4/-5 branches.
