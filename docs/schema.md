@@ -89,10 +89,10 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
-| `window.columns.<col>` | `true` | Columns | `false` hides that Group drops column (`ilvl`, `slot`, `armorType` (the Type column, since DW-D3, feedback-4 spec §3; AceDB's default fills it in for a stored profile, no migration step), `looter`, `myEq` (since DW-83), `theirEq`, `me`, `them`, `trade`, `actions`); Item never hides |
+| `window.columns.<col>` | `true` | Columns | `false` hides that Drops column (`ilvl`, `slot`, `armorType` (the Type column, since DW-D3, feedback-4 spec §3; AceDB's default fills it in for a stored profile, no migration step), `looter`, `myEq` (since DW-83), `theirEq`, `me`, `them`, `trade`, `tradeWindow` (Trade window, since DW-E1, feedback-5 spec §1; AceDB's default fills it in for a stored profile, no migration step), `actions`); Item never hides |
 | `window.mode` | `"full"` | Layout; `NS.SetWindowMode`, the title-bar toggle, `/dw compact`, `/dw full` (DW-C0) | the window's layout, `full` or `compact` (compact spec §1, `modules/WindowCompact.lua`); its reaction lets a run override go and lays the window out. Replaced the compact preset `window.compact` (DW-42), which step 5 maps here |
 | `window.compactInRuns` | `true` | Layout (DW-C0) | Open in compact view during a run: an auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever `window.mode`, until the situation leaves that run (the override itself is session-only, `NS.State.compactRun`) |
-| `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on all three tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a My drops row is the row height plus 10 for its countdown bar. Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
+| `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on both tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a Drops row is taller by its countdown bar's room while the Trade window column shows (feedback-5 spec §1). Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
 | `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
 
@@ -176,10 +176,10 @@ history = { retentionDays = 30, v = 1, groups = {
 char = { [Name-Realm] = true }, content, search, sort }`, seeded from the `feed.view.<value>`,
 `feed.content` and `feed.sort` rows when they hold a valid value; `char` starts on Current, your
 key, or the `current` sentinel until your key is known),
-`NS.State.windowGroup` (the Group drops table's collapsed groups and the row whose detail card is open; no
+`NS.State.windowGroup` (the Drops table's collapsed groups and the row whose detail card is open; no
 drop is dismissed since DW-D2, feedback-4 spec §2),
-`NS.State.windowMine` (the My drops tab's collapsed groups and the upgrades whose candidates you chose to
-see; no drop is hidden since DW-D2),
+`NS.State.windowOwn` (your own drops that are upgrades for you whose Offer panel you opened, so Drops
+draws who they would help; feedback-5 spec §2, DW-E2, where `NS.State.windowMine` was My drops'),
 `NS.State.offerPanel` (the drop the Offer panel shows),
 `NS.State.windowHistory` (the History tab's collapsed groups, and whether this session already put
 View: All and Content: All on it),

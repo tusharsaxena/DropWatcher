@@ -71,8 +71,9 @@ when its own setting overrides the feed's mode. It repaints with every write.
 **Filters:** View: Interesting, View: Likely tradeable, View: Usable by me and View: Upgrade for me
 (the View a fresh tab opens on, one checkbox per value; all unticked is View: All, the default,
 DW-A1), Content and Sort (what a fresh tab starts with), Gear only, Tier tokens, Minimum item level
-with its absolute and relative values (each live in its mode only), Show my own loot in Group drops,
-Clear on boss kill.
+with its absolute and relative values (each live in its mode only), Clear on boss kill. (Show my own
+loot in Group drops is retired: Drops always lists your own drops, feedback-5 spec §2; schema step 6
+removes the stored value.)
 
 ## Comparison
 
@@ -115,8 +116,8 @@ prints auto-ask's one-time notice; turning it off cancels the asks waiting to go
 
 ## Window
 
-**Columns:** a checkbox per optional Group drops column, generated from its column list (My eq among them since DW-83, Type since DW-D3, feedback-4 spec §3), for the full layout's Group drops table (My drops and History show every column); the compact cards carry every fact on their three lines and ignore them. **Layout:** Layout (Full or Compact, compact spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`), Open in compact view during a run (on by default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends), Row height (18 by default, all three
-tabs of the full layout; the compact layout's cards size from their text), Font size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact spec §5), Keep history
+**Columns:** a checkbox per optional Drops column, generated from its column list (My eq among them since DW-83, Type since DW-D3, feedback-4 spec §3, Trade window since DW-E1, feedback-5 spec §1), for the full layout's Drops table (History shows every column); the compact cards carry every fact on their three lines and ignore them. **Layout:** Layout (Full or Compact, compact spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`), Open in compact view during a run (on by default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends), Row height (18 by default, both
+tabs of the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the compact layout's cards size from their text), Font size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact spec §5), Keep history
 for (7 to 180 days or Never delete, default 30; account-wide; a shorter time that would delete groups
 asks first, and No puts the previous time back). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.

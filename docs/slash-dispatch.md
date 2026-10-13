@@ -20,11 +20,11 @@ The bare command opens the settings panel.
 | `test` | window | no | `NS.ToggleTestMode` |
 | `scan` | feature | no | `NS.ScanGroup`, the window's Scan group button |
 | `clear` | feature | no | `SlashVerbs.Clear`: empties the live feed (`NS.LootFeed.Clear("live")`) and repaints; the test feed and the history stay |
-| `history` / `mine` | feature | no | `SlashVerbs.OpenTab`: opens the window, expands it when minimized and selects the tab |
+| `history` / `mine` | feature | no | `SlashVerbs.OpenTab`: opens the window, expands it when minimized and selects the tab; `mine` selects Drops, where your own drops are listed since the My drops tab was retired (feedback-5 spec §3) |
 | `compact` | feature | no | `SlashVerbs.Compact`: `NS.ToggleWindowMode` (the `window.mode` row through the seam, the title-bar toggle's handler), then prints the layout, `Compact view.` or `Full view.` (compact spec §1) |
 | `full` | feature | no | `SlashVerbs.Full`: `NS.SetWindowMode("full")`, then prints `Full view.` |
 | `situation` | feature | no | `SlashVerbs.Situation`: three lines, the situation with its Track, Auto-open and Quality, then the classifier's inputs, read live |
-| `offer <link>` | feature | no | `SlashVerbs.Offer`: your newest live drop of that item, or the bag item added as your drop (`NS.LootFeed.Add`); then the My drops tab and `NS.OfferPanel.Open` |
+| `offer <link>` | feature | no | `SlashVerbs.Offer`: your newest live drop of that item, or the bag item added as your drop (`NS.LootFeed.Add`); then the Drops tab and `NS.OfferPanel.Open` |
 | `add <link> [player]` | feature | no | `SlashVerbs.Add`: `NS.LootFeed.Add(link, player)`, you when no player is named; prints the drop's id, that it is loading, or why the feed refused it |
 | `sim [verb]` | feature | no | `SimVerbs.Run` (simulator spec §4): `sim` alone prints the status and the usage and opens the step panel (`NS.SimPanel`, sim feedback spec §1); `start <key\|dungeon\|raid\|lfr\|delve\|world> [size]` (`NS.SimScenario.Start`, refused per the simulator's safety rules), `run` / `step` (`NS.SimScenario.Run` / `Step`), `pull` / `kill` (`NS.SimEvents.Pull` / `Kill`), `loot [n] [player\|me]` (`NS.SimEvents.Loot`), `lockdown on\|off` (`NS.Sim.SetLockdown`), `trade <dropID>` (`NS.SimEvents.Trade`), `pause` / `resume` / `restart` (`NS.SimScenario.Pause` / `Resume` / `Restart`), `stop` (`NS.Sim.Stop`), `panel` (`NS.SimPanel.Toggle`); a start or a restart opens the panel |
 

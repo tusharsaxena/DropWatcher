@@ -30,14 +30,15 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
 - **The sends.** Ask, offer and announce, each one click and one confirmation line, guarded by the
   one-ask registry, queued while chat is restricted and sent when the restriction lifts; an
   edit-first box when wanted; never SAY or YELL.
-- **The window.** Group drops (rows under collapsible boss headers, with a detail card that expands
-  inline), My drops (the countdown, the best candidates, the "Who could use this?" Offer panel with
-  its Trade button, Post my tradeables) and History (every drop the feed showed, kept across sessions
+- **The window.** Drops (every drop, your own included, in rows under collapsible boss headers, with
+  a detail card that expands inline and a trade countdown on every row; on your own drops the
+  upgrade count, who it would help and Offer, which opens the "Who could use this?" panel with its
+  Trade button, and a strip with Post my tradeables) and History (every drop the feed showed, kept across sessions
   on every character, with its outcome), plus the filter bar, the footer's health line, the
   restriction badge, Scan group, minimize, test mode and auto-open.
 - **Compact mode** (M12, [`superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md`](superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md)).
-  The same window in a second layout, about 380 pixels wide: each drop a three-line card on all
-  three tabs, a one-row filter bar with a Filters menu, a short title and a one-line footer. It reads
+  The same window in a second layout, about 440 pixels wide: each drop a three-line card on both
+  tabs, a one-row filter bar with a Filters menu, a short title and a one-line footer. It reads
   the same feed, filters and engine, so it never changes what is recorded, judged or sent. The
   title-bar toggle, the Layout setting, `/dw compact` and `/dw full` switch it, each layout keeps its
   own size and place, and an auto-open inside a run opens it compact until the run ends (on by

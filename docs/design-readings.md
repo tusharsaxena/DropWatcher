@@ -375,6 +375,10 @@ protected frame, so it opens in combat too. **Usable by me** hides the drops who
 is can't use or doesn't want; a drop not judged yet stays. **Upgrade for me** keeps only the
 drops whose verdict for you is an upgrade. Both are the Group drops tab's alone. The **Quality** control writes `feed.quality.mode` through the write seam
 (`NS.SetQualityMode`), the row the Feed page shares.
+**Superseded by feedback-5 (2026-10-13)** (feedback-5 spec §2-§3, DW-E2, DW-E3): own loot is always
+listed. The window has two tabs, Drops (the Group drops tab renamed, its key still `group`) and
+History; `feed.showOwn` is retired (schema step 6 removes it), and a stored active tab of `mine`
+opens Drops.
 
 ## The Group drops table
 
@@ -400,6 +404,13 @@ the arrow before the number; the Ask is red while the move is yours, yellow whil
 traded; no row can be dismissed (its × is gone, and Actions holds only Ask); a Type column sits beside Slot;
 the column labels are gold; and the window cannot be sized narrower than its default, 972 (compact 380), the
 width where no tab sheds a column.
+**Superseded by feedback-5 (2026-10-13)** (feedback-5 spec §0-§4, DW-E0..DW-E4): the table is Drops and lists
+your own drops too; a Trade window column (104px, `window.columns.tradeWindow`, between Trade and Actions)
+gives every drop its countdown over a bar, an estimate from when it dropped for another player's (`~1:42:10`),
+and sheds after Their eq and before Them; Actions is 84px; every row is indented 12px under its header with a
+muted-white chevron at its left (down, up while its detail card is open), and the header's chevron is gold;
+on your own drop Trade counts its upgrades (`Yes (2)`), Them and Their eq read `(Multiple)` and Actions is
+Offer. The least width is now 1132 (compact 440).
 
 ## The detail card
 
@@ -409,7 +420,9 @@ the row; Hide this item dismissed the row and closed the card until 2026-10-13, 
 (feedback-4 spec §2, DW-D2). **Trade** on someone else's drop opens an empty trade with the looter, so they
 can put the item in; it is off on your own drop (that is My drops' Offer, DW-33) and on a drop its looter
 can't trade, and otherwise follows the trade helper's guards (combat, range, offline, not in the group), its
-short reason on the button (`Trade · out of range`). **Retry inspect** is off while the looter's read is
+short reason on the button (`Trade · out of range`). **Superseded by feedback-5 (2026-10-13)**
+(feedback-5 spec §2): on your own drop the card's Ask is Offer, which opens the Offer panel, and its Them row
+reads `(Multiple)`; My drops is retired. **Retry inspect** is off while the looter's read is
 still good or already queued, since the broker would not inspect again, and queues them at the looter
 priority otherwise. **Stats** are the four secondary stats' change against the replaced item, the largest
 first; the primary stat, stamina, sockets and tertiary stats are the header's chips. The score line is
@@ -417,6 +430,15 @@ labeled by the scorer in use (**Pawn**, **Weights**, or **Score** with none) and
 one it says why (not scored yet, or no scorer in use).
 
 ## The My drops tab and the Offer panel
+
+**Superseded by feedback-5 (2026-10-13)** (feedback-5 spec §1-§3, DW-E1..DW-E3): the My drops tab is retired
+and the readings below about the tab stand as history. Your own drops are Drops rows: the countdown is the
+Trade window column every row has (`ending soon` is no longer drawn in the cell, only its amber, bold tone,
+its amber bar and the tooltip's `Ending soon: …`), and it moves each second; Best candidates became Trade's
+upgrade count and the `(Multiple)` tooltip, `Hidden` until the Offer panel is opened (the keep? rule); the
+row's Offer opens the panel and there is no Announce in the table (Announce to group stays in the panel); the
+summary and Post my tradeables are the strip under Drops, shown while one of your listed drops can be traded.
+The Offer panel's readings hold.
 
 The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The tab** lists
 every drop of yours in the tab's feed, a drop that cannot be traded included (a dash and Hide, board 04's
@@ -461,6 +483,8 @@ it (its lines are already cut to the chat limit). **`window.rowHeight`** and **`
 size the drop tables' rows and their cells' text on all three tabs (feedback-2 spec §8, FB2-9: 18
 pixels and the template's own size by default, like Ka0s Loot History's table; a My drops row adds
 room for its countdown bar); the headers, the column labels and the buttons keep their own.
+**Superseded by feedback-5 (2026-10-13):** two tabs, Drops and History; a Drops row adds the countdown
+bar's room while the Trade window column shows.
 
 ## The compat seam
 
@@ -484,3 +508,8 @@ from its font (`window.fontSize`). **The Filters menu** is a small panel under t
 the full bar's own Quality, Content and Character dropdowns and the footer's Sort, moved rather than copied,
 so their choices and multi-select behavior cannot differ; it closes on a second click, minimize, close or a
 switch to full, which puts each control back.
+**Superseded by feedback-5 (2026-10-13)** (feedback-5 spec §0-§4): the tabs are Drops and History (no My drops
+cards); a Drops card is indented under its header with the row's muted-white chevron before the item button,
+its line 2 ends in the countdown and its bar for a drop with one (else the inspect freshness), your own card
+carries Offer, the upgrade count and `(Multiple)`, the strip under the cards is shortened (`2 tradeable · next
+0:08:41`, `Post`), and the least compact width is 440 so line 2's countdown is never cut.

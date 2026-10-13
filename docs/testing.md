@@ -44,7 +44,7 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
 reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
-into the View set, step 4 retiring the History's group cap and pruning nothing), `test_schema`, `test_schema_rows` (every
+into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load), `test_settings_pages` (the settings
@@ -56,27 +56,23 @@ preview, token chips and Reset templates, each page's Defaults, and the editors'
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
 panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values,
 label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, the
-default size, 972 x 600, as the least width, a tooltip on
+default size, 1132 x 600, as the least width, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
 `test_window_compact` (compact mode's switch, DW-C0: the pure layout, run, size, bounds and corner
 reads, schema step 5, the title-bar toggle, each layout's own size and point on the one frame, the
 Layout row, and the run override taken on an auto-open and let go when the run ends),
-`test_compact_cards` (compact mode's cards, DW-C1, pure: each Group drops, My drops and History card's
-three lines in every verdict, trade, inspect, ask, countdown and outcome state, each piece's tone and
+`test_compact_cards` (compact mode's cards, DW-C1, pure: each Drops and History card's
+three lines in every verdict, trade, inspect, ask, countdown and outcome state (line 2's countdown
+and its bar, your own card's Offer, upgrade count and `(Multiple)`, feedback-5 spec §1-§2), each piece's tone and
 tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
-`test_compact_group` (the Group drops tab in the compact layout, DW-C2: the card's metrics and the
+`test_compact_group` (the Drops tab in the compact layout, DW-C2: the card's metrics and the
 scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
 headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
 reason tooltip, every tooltip at the card's top right, the stacked detail card inline, Ask in its
-state's tone and no card dismissable, the ask states and the dash, the text size, the pool's reuse, and the
-collapsing headers),
-`test_compact_mine` (the My drops tab in the compact layout and the Offer panel beside it, DW-C3: the
-candidates' class-colored line, the short summary and the panel's least height, pure; then the cards
-built headless: one pooled card per drop of yours under a one-line header, each line what
-CompactCards says, the countdown's bar and its warning, the dash with no Announce and nothing hiding
-it, Announce through the shared handler, TradeTimerTick, every tooltip at the card's top right, the strip
-shortened and put
-back, the text size, and the panel docked right, left or floating centered at its own width),
+state's tone and no card dismissable, the ask states and the dash, the text size, the pool's reuse, the
+collapsing headers; each card indented under its header with the muted-white chevron, line 2's
+countdown and its bar moving each second, and the least compact width, 440, at which line 2's
+fullest pieces and the countdown are never cut, feedback-5 spec §0, §1, §4),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
 repainting, the collapsing headers, every tooltip at the card's top right, Clear shortened and put
@@ -95,33 +91,48 @@ for test mode's samples and a simulated dungeon and open-world run, under every 
 Character, search and Sort, with a group collapsed, a drop expanded and your own drops shown;
 switching back and forth on every tab leaving every verdict, trade state, inspect status, feed
 count, history entry and send as it was; and every test-mode state on a compact card saying what
-its full row says: the verdicts, trade words, ask states, inspect freshness and worn levels on Group
-drops, every countdown with Offer or its dash and Announce on My drops, and every outcome on
+its full row says: the verdicts, trade words, ask states, inspect freshness, worn levels and
+countdowns on Drops, your own drops' Offer, count and `(Multiple)` among them, and every outcome on
 History),
-`test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
+`test_window_group` (the Drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state (one tone per verdict in Me and Them, the arrow first;
 `ActionTone`; the Type column's every value; feedback-4 spec §0, §1, §3), My eq and Their eq's worn levels,
 the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
 the item tooltip at the row's top right, else its top left,
 the Ask button, its repaint and its tone by state, no row dismissable, the Type column after Slot,
-the shed order, every column shown at the least width and none of the three tabs shedding there,
-the search box spanning from Character to the bar's edge, the gold column labels, the hand-off to
-the compact cards, the filters, the empty
-state and its two buttons, and the filters' empty line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
+the shed order (Trade window among it), the Trade window column on every drop (another player's an
+estimate, its bar, the row taller by the bar's room, the countdown moving each second, feedback-5
+spec §1), the hand-off to the compact cards, the filters, the empty
+state and its two buttons, and the filters' empty line), `test_drops_layout` (the Drops table's
+geometry, split from `test_window_group`: every column shown at the least width, 1132, and neither
+tab shedding there, the search box spanning from Character to the bar's edge, the gold column
+labels, the 84px Actions, each drop row's muted-white chevron and indent under its header and the
+header's gold chevron, feedback-4 spec §4, feedback-5 spec §0, §4), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
-through its host handler, no Hide this item, and the Edit message box), `test_window_mine` (the My drops tab and the
-Offer panel: the countdown, exact and estimated, `ending soon`, For me's `keep?`, the candidates
-ranked with their pills, Best candidates hidden for your upgrade, the buttons' lifecycles, the
-summary, Post my tradeables' lines and the dock, then the tab and the panel built headless: pooled
-rows, a reason on every cell, the countdown moved by `TradeTimerTick`, a dead row staying listed,
-Offer and Announce toned by whose move it is (`ToneState`, `ToneStates`), Announce, the row's
-and the panel's Offer, Trade and Post my tradeables through their host handlers),
+through its host handler, no Hide this item, the card indented with its row, Offer and `(Multiple)` on
+your own drop, and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
+the Trade window cell, exact and estimated, another player's naming its looter, ending soon in tone
+and tooltip only; the candidates ranked with their pills, the buttons' lifecycles and tones
+(`ToneState`), the strip's summary and its short compact form, Post my tradeables' lines, the
+Offer panel's header and its dock), `test_own_drops` (your own drops on Drops, feedback-5 spec §2,
+DW-E2: always listed; Trade's upgrade count, Them and Their eq's `(Multiple)` and its tooltip ranked
+by gain, the keep? rule's `Hidden` until the Offer panel is opened, Offer toned by the furthest offer
+sent and its dash with the reason; then the table, the detail card and the compact card painted
+headless), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
+the strip under the table or the cards counting your listed tradeable drops, its filters applied,
+collapsed or not, hidden while none can be traded, its next expiry moving each second and keeping
+the ticker running, Post my tradeables through its handler, and the compact strip shortened and put
+back; feedback-5 spec §3, DW-E3), `test_offer_panel` (the Offer panel opened from your own drop's
+Offer, built headless: docked beside the full or compact window on the side with room, the
+candidates ranked with their pills, every part's reason tooltip, Offer, Trade and Announce to group
+through their host handlers and toned by whose move it is, the Edit message box, closing; then the
+host handlers Post my tradeables, Offer, Announce and Trade),
 `test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
 top just outside the window, else its bottom right outside the left edge, at the UI scale, the row
 a cell sits in, the docked Offer panel as part of the window, the fallback on unknown geometry, then
-every cell, button and header of the three tabs placed by it, the column labels and tabs not),
+every cell, button and header of both tabs placed by it, the column labels and tabs not),
 `test_test_mode`
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
 and candidate pill covered by the data, over pool items that keep their slot and level, the worn
@@ -129,8 +140,8 @@ items the nearest of their slot, an empty pool giving none; the History sample w
 `AddTest` and the test feed filled from the mock journal's pool (`seedGearJournal`) and emptied
 with test mode, while the pool loads, with no pool at all, by combat and by the stand-down; the
 History tab's samples never written to `global.history`; the window built headless with every
-sample drawn with a real icon, a reason on every cell, the TEST MODE text and banner, the My drops
-count; no button label or My drops cell ending in an ellipsis; Ask and Post my tradeables printed,
+sample drawn with a real icon, a reason on every cell, the TEST MODE text and banner, your own
+samples on Drops; no button label or Trade window cell ending in an ellipsis; Ask and Post my tradeables printed,
 never sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader, the trade window's items and partner, the row menu, and each shim's fallback
@@ -201,12 +212,12 @@ real parser and feed, the accented cross-realm looter, both Yokes kept apart, th
 altar hidden by the gear-only rule and the reagent by the quality rule with it off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged
 under FEED and reported in the `drops` diagnostics section; the group headers' `2 drops · 1 shown`
-and the tooltip naming each hidden drop and its filter, on Group drops and History),
+and the tooltip naming each hidden drop and its filter, on Drops and History),
 `test_group_roster` (feedback-2 spec §3: the roster snapshot's pure core, `Entry`, `Merge` (it
 only grows, you first, never the same character twice), `Copy`, `Names` (ten names then `+n`,
 class-colored, the realm when not yours) and `TipLine` (the tooltip's one `Group: ...` line); a feed
 group taking the party with its first drop and a mid-run joiner on the roster event or with the
-next drop, its History group keeping it; the Group drops and History headers naming only the
+next drop, its History group keeping it; the Drops and History headers naming only the
 recorder (feedback-3 spec §4), and an older History group with no `Group:` line; test mode's sample
 rosters are `test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
 `test_group_place` (feedback-3 spec §4, DW-B4: `GroupPlace`'s pure `DifficultyName`, `Parts` and
@@ -337,7 +348,7 @@ session's log, saved history untouched and the real chat sender, inspect and tra
 global the simulator answers, the seam wrapping every world read, the combat flags and the
 GlobalStrings; every scenario run in the real solo, out-of-instance world, at the content's level and
 outgearing it, with drops in the feed, your verdict and the looter's, a chat line per step, the
-footer's `Simulating` and `Inspect n/n`, and rows in Group drops and My drops under the default
+footer's `Simulating` and `Inspect n/n`, and rows on Drops, yours among them, under the default
 filters, and the History footer's `kept for 30 days` with a shorter window that deletes nothing of
 the fresh run and so asks nothing; the combat flags during and after the simulated fight, the loot lines written from the
 GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat;
@@ -345,13 +356,11 @@ every scenario runs once in each layout, DW-C5: the full table with Open in comp
 run off, and the compact cards with no piece of any card blank; and a simulated key's auto-open is
 compact by default and full with the option off, the stored layout back once the run is stopped),
 `test_sim_report` (the owner's `Loot: 2 drops` with one drop shown, DW-B0, feedback-3 spec §0: the
-root cause reproduced, your own drop on My drops and nothing lost; the pure `Place`, `Summarize` and
-`TipLines`; the panel row, its tooltip, the chat line, the `· n yours on My drops` header and the
-`My drops · n` tab; `/dw sim loot`'s line; and the regression over every scenario: each loot step's
-drops on Group drops, on My drops and hidden add up to its count, the minimum item level gate hiding
-them all included; then the M11 review leftovers, DW-B5, feedback-3 spec §5: the `My drops · n` label
-and the `· n yours on My drops` suffix count only what My drops lists, a drop hidden by
-its filters named in the tab's tooltip, and the report honoring `feed.showOwn` and test mode's feed),
+root cause reproduced, your own drop on Drops and nothing lost; the pure `Place`, `Summarize` and
+`TipLines`; the panel row, its tooltip and the chat line; a Drops header no longer counting drops of
+yours apart; `/dw sim loot`'s line; and the regression over every scenario: each loot step's drops on
+Drops and hidden add up to its count, the minimum item level gate hiding them all included; and the
+report honoring test mode's feed, `feed.showOwn` retired, feedback-5 spec §2-§3),
 `test_sim_panel` (the simulation step panel, DW-91: the rows, their PerfPanel states and commands
 before and during a run, the controls following the timeline, `/dw sim`, `start` and `panel`
 opening or toggling it beside the window, a click on the next step running it and one ahead running
