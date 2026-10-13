@@ -203,13 +203,23 @@ local PLACERS = {
     row = function(tip, w) NS.RowTooltip.PlaceOrFallback(tip, w) end,
 }
 
+-- One line under the title: a string wraps at the tooltip's width; `{ text, wrap = false }`
+-- (NS.TipMarks.NoWrap, feedback-6 spec §3) does not, so the tooltip grows to fit it.
+local function addTipLine(line)
+    if type(line) == "table" then
+        GameTooltip:AddLine(line.text, 1, 1, 1, line.wrap ~= false)
+    else
+        GameTooltip:AddLine(line, 1, 1, 1, true)
+    end
+end
+
 local function showTooltip(self)
     local lines = { self.tooltip() }
     if #lines == 0 or not GameTooltip then return end
     local placer = PLACERS[self.tipPlace]
     GameTooltip:SetOwner(self, placer and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
     GameTooltip:SetText(lines[1], C.GOLD.r, C.GOLD.g, C.GOLD.b)
-    for i = 2, #lines do GameTooltip:AddLine(lines[i], 1, 1, 1, true) end
+    for i = 2, #lines do addTipLine(lines[i]) end
     GameTooltip:Show()
     if placer then placer(GameTooltip, self) end
 end
@@ -218,7 +228,8 @@ local function hideTooltip()
     if GameTooltip then GameTooltip:Hide() end
 end
 
---- Give `widget` a tooltip: `fn()` answers the title, then each line. Read on every hover, so it is
+--- Give `widget` a tooltip: `fn()` answers the title, then each line (a string, which wraps, or
+--- `{ text, wrap = false }`, which does not: NS.TipMarks.NoWrap). Read on every hover, so it is
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
 --- Hooked rather than set, so a library widget keeps its own hover tint.
 --- `place` is nil (below the widget, ANCHOR_BOTTOM), `above` (Window.PlaceAbove: a filter-bar

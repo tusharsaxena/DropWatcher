@@ -9,7 +9,8 @@ local _, NS = ...
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
 -- with its `expiresAt`, `me`) and plain inputs (the clock, the warning threshold, an ask's state)
--- and answers a plain table; nothing here reads a module, the client or a saved variable, so
+-- and answers a plain table; nothing here reads a module, the client or a saved variable (only
+-- (Details)' tooltip lines take the class and quality colors, through NS.TipMarks), so
 -- test_mine_cells drives each state case by case. The frame edges that paint them are
 -- modules/WindowGroup.lua, modules/CompactGroup.lua and modules/DetailCard.lua (the Trade window
 -- column, the compact card's countdown and your own drop's cells, through modules/WindowOwn.lua),
@@ -34,17 +35,20 @@ local _, NS = ...
 --
 -- YOUR OWN DROP ON DROPS (feedback-5 spec §2). Trade appends how many members it upgrades
 -- (`Yes (2)`, the bare word with none); Them reads `(Details)` (NS.SideCells.Them), green with at
--- least one upgrade, muted otherwise, its tooltip naming each upgrade by gain (`Butterz ▲ +11 · wears
--- 276 (Bloodthorn Treads)`). The keep? rule holds: while it is an upgrade for you and not revealed,
--- the count is not drawn and (Details) reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's
--- shape), toned by the furthest offer sent (cyan while it is your move, feedback-6 spec §2); a dash
--- with the reason when it cannot be traded.
+-- least one upgrade, muted otherwise, its tooltip naming each upgrade by gain, one line each that
+-- never wraps (`Butterz wears 276 Bloodthorn Treads [arrow]11`: the name in its class color, the item in
+-- its quality color, the arrow an inline texture, NS.TipMarks; feedback-6 spec §3). The keep?
+-- rule holds: while it is an upgrade for you and not revealed, the count is not drawn and (Details)
+-- reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's shape), toned by the furthest
+-- offer sent (cyan while it is your move, feedback-6 spec §2); a dash with the reason when it
+-- cannot be traded.
 
 NS.MineCells = NS.MineCells or {}
 local MC = NS.MineCells
 local C  = NS.Constants
 local L  = NS.L
 local WC = NS.WindowCells
+local TM = NS.TipMarks
 
 local floor, max, min = math.floor, math.max, math.min
 
@@ -317,16 +321,24 @@ function MC.OwnTrade(drop, revealed)
     return c
 end
 
--- One upgrade's tooltip line: `Butterz ▲ +11 · wears 276 (Bloodthorn Treads)`.
+-- One upgrade's tooltip line (feedback-6 spec §3), never wrapped: `Butterz wears 276 Bloodthorn
+-- Treads [arrow]11`, the name in its class color, the worn item's name in its quality color, the arrow an
+-- inline texture tinted green (NS.TipMarks: the tooltip's face has no ▲) and the gain unsigned. The
+-- worn item is the one the drop is judged against, so of two (rings, trinkets, one-hand weapons)
+-- the lower, the one it would replace (NS.Evaluate's baseline).
 local function upgradeLine(e)
-    local head = e.short .. " " .. WC.GLYPH.upgrade
-    if e.gain then head = head .. " " .. WC.Signed(e.gain) end
+    local who = TM.ClassName(e.short, e.classFile)
     local base = e.baseline
-    if not (base and num(base.ilvl)) then return head .. " · " .. L["nothing worn there"] end
-    local worn = L["wears %d"]:format(round(base.ilvl))
-    local name = base.name or WC.ItemName(base.link)
-    if name then worn = ("%s (%s)"):format(worn, name) end
-    return head .. " · " .. worn
+    local worn
+    if not (base and num(base.ilvl)) then
+        worn = L["%s wears nothing there"]:format(who)
+    else
+        local name = base.name or WC.ItemName(base.link)
+        worn = name and L["%s wears %d %s"]:format(who, round(base.ilvl), TM.ItemName(name, base.quality, base.link))
+            or L["%s wears %d"]:format(who, round(base.ilvl))
+    end
+    local gain = e.gain and tostring(round(math.abs(e.gain))) or ""
+    return TM.NoWrap(worn .. " " .. TM.Mark("upgrade") .. gain)
 end
 
 --- Them on your own drop: `(Details)`, green when it upgrades at least one member

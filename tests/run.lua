@@ -113,6 +113,7 @@ Kit.run{
         "test_side_cells",
         "test_detail_card",
         "test_own_drops",
+        "test_tip_marks",
         "test_drops_strip",
         "test_offer_panel",
         "test_mine_cells",

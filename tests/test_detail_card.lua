@@ -126,7 +126,8 @@ test("cells: For the looter compares their inspected gear and names their spec a
 end)
 
 test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (Details)", function()
-    local D = DC()
+    local NS = T.newAddon()
+    local D = NS.DetailCells
     local function cand(name, gain, base)
         return { guid = "G-" .. name, name = name .. "-Realm", status = "ready",
             eval = { verdict = "upgrade", ilvlDelta = gain, baseline = base, reasons = {} } }
@@ -139,8 +140,10 @@ test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (
     assertEqual(mine.rows[1].tip[2], "Your own drop: Offer shows who it would help.")
     local them = byKey(mine.rows, "them")
     assertEqual(them.text, "(Details)"); assertEqual(them.label, "Them")
-    assertEqual(them.tip[2], "Butterz ▲ +11 · wears 300 (Bloodthorn Treads)", "ranked by gain")
-    assertEqual(them.tip[3], "Seta ▲ +4 · wears 307")
+    -- One non-wrapping line per upgrade (feedback-6 spec §3); no class read, so the names are plain.
+    local arrow = ("|T%s:0:0:0:0:64:64:0:64:0:64:77:217:102|t"):format(NS.Icon("arrow-up"))
+    assertEqual(them.tip[2].text, "Butterz wears 300 Bloodthorn Treads " .. arrow .. "11", "ranked by gain")
+    assertEqual(them.tip[3].text, "Seta wears 307 " .. arrow .. "4"); assertEqual(them.tip[3].wrap, false)
     -- The keep? rule: an upgrade for you reads Hidden until revealed.
     local kept = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100)
     assertEqual(byKey(kept.rows, "them").text, "Hidden")

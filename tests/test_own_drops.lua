@@ -1,7 +1,7 @@
 -- tests/test_own_drops.lua — your own drops on the Drops tab (feedback-5 spec §2, DW-E2):
 -- always listed (`feed.showOwn` retired); Trade counts the members a drop upgrades (`Yes (2)`); Them
 -- reads `(Details)` (renamed from `(Multiple)`, feedback-6 spec §3) with each upgrade ranked by gain in
--- the tooltip; the keep? rule hides both until the Offer panel is opened; Actions is Offer, toned by the furthest offer sent.
+-- the tooltip, one non-wrapping line each; the keep? rule hides both until the Offer panel is opened; Actions is Offer, toned by the furthest offer sent.
 -- The pure composers (modules/MineCells.lua), the reveal state and click (modules/WindowOwn.lua),
 -- then the table, the detail card and the compact card painted headless.
 
@@ -53,6 +53,22 @@ local function MC() return T.newAddon().MineCells end
 
 local function joined(tip) return table.concat(tip, " | ") end
 
+-- One (Details) line as feedback-6 spec §3 draws it, built here from its parts so the suite pins the
+-- format rather than reading it back from NS.TipMarks: a mage's name in the class color, `wears`,
+-- the worn item, then the green arrow texture (LibKa0s media `arrow-up`, its 64x64 canvas whole,
+-- tinted C.TONE.good as 0..255) and the unsigned gain.
+local function detailsLine(NS, who, worn, gain)
+    local arrow = ("|T%s:0:0:0:0:64:64:0:64:0:64:77:217:102|t"):format(NS.Icon("arrow-up"))
+    return ("|cff40c7eb%s|r wears %s %s%d"):format(who, worn, arrow, gain)
+end
+
+-- A non-wrapping tooltip line's text (NS.TipMarks.NoWrap), checking that it does not wrap.
+local function noWrap(line)
+    assertEqual(type(line), "table", "a (Details) line is a non-wrapping line")
+    assertEqual(line.wrap, false)
+    return line.text
+end
+
 -- ── the pure cells ──────────────────────────────────────────────────────────────────────────
 
 test("own drops: Trade appends the upgrade count, the bare word with none, and says so in its tooltip", function()
@@ -81,16 +97,18 @@ test("own drops: the keep? rule: an upgrade for you draws no count until its Off
 end)
 
 test("own drops: Them reads (Details), green with an upgrade, each one ranked by gain", function()
-    local M = MC()
+    local NS = T.newAddon()
+    local M = NS.MineCells
     local c = M.Multiple(own(), false, "For the group")
     assertEqual(c.text, "(Details)"); assertEqual(c.tone, "good"); assertEqual(c.upgrades, 2)
     assertEqual(c.tip[1], "For the group", "the caller's title")
-    assertEqual(c.tip[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
-    assertEqual(c.tip[3], "Seta ▲ +4 · wears 283")
+    assertEqual(noWrap(c.tip[2]), detailsLine(NS, "Butterz", "276 Bloodthorn Treads", 11))
+    assertEqual(noWrap(c.tip[3]), detailsLine(NS, "Seta", "283", 4), "no item name read: the level alone")
     assertEqual(#c.tip, 3, "a downgrade is not listed")
     assertEqual(M.Multiple(own()).tip[1], "Them", "Them by default")
     local empty = M.Multiple(own({ candidates = { x = cand("Seta", "ready", up(30)) } }))
-    assertEqual(empty.tip[2], "Seta ▲ +30 · nothing worn there")
+    assertEqual(noWrap(empty.tip[2]), detailsLine(NS, "Seta", "nothing there", 30),
+        "nothing worn in the slot")
 end)
 
 test("own drops: (Details) with no upgrade is muted and says why: nobody's, checking, solo", function()
@@ -196,7 +214,7 @@ test("own drops table: listed with the others: Trade's count, (Details) in Them,
     assertEqual(textOf(r.cells.them.text), "(Details)")
     local g = NS.Constants.TONE.good
     assertEqual(select(1, r.cells.them.text:GetTextColor()), g.r)
-    assertEqual(NS.Window.TooltipOf(r.cells.them)[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
+    assertEqual(noWrap(NS.Window.TooltipOf(r.cells.them)[2]), detailsLine(NS, "Butterz", "276 Bloodthorn Treads", 11))
     assertFalse(r.cells.them.icons[1]:IsShown(), "no worn icons on your own drop")
     assertEqual(textOf(r.cells.them.level), "", "no gear part"); assertEqual(textOf(r.cells.them.glyph), "")
     assertEqual(NS.Window.TooltipOf(r.cells.them)[1], "Them")
@@ -260,7 +278,7 @@ test("own drops: the detail card shows Offer in place of Ask and (Details) for T
     local them
     for _, row in ipairs(drawn.card.them.rows) do if row.key == "them" then them = row end end
     assertEqual(textOf(them.value), "(Details)")
-    assertEqual(them.tipLines[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
+    assertEqual(noWrap(them.tipLines[2]), detailsLine(NS, "Butterz", "276 Bloodthorn Treads", 11))
     local opened
     NS.OfferPanel.Open = function(id) opened = id end
     b:__fire("OnClick")
@@ -278,7 +296,7 @@ test("own drops compact: line 1's Offer, line 2's count and line 3's (Details) w
     assertEqual(rowFor(drawn, 2).ask.tone, "red", "another player's Ask stays red")
     assertEqual(textOf(card.cells.trade.text):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^· ", ""), "Likely (2)")
     assertEqual(textOf(card.cells.them.text), "(Details)")
-    assertEqual(card.cells.them.hit.tipLines[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
+    assertEqual(noWrap(card.cells.them.hit.tipLines[2]), detailsLine(NS, "Butterz", "276 Bloodthorn Treads", 11))
     local opened
     NS.OfferPanel.Open = function(id) opened = id end
     card.ask:__fire("OnClick")

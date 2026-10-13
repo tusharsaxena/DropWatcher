@@ -12,6 +12,7 @@ local _, NS = ...
 -- Me and Them read as the Drops table's (NS.SideCells, feedback-6 spec §1: the glyph and the
 -- unsigned difference, `▲6`, or a word), but a kept entry holds no worn items, so they are the
 -- verdict alone, never the gear the Drops table shows before it.
+-- Them's column tooltip draws the verdict marks as NS.TipMarks' inline textures (feedback-6 spec §3).
 -- A row's height, item button and text size are the Drops rows' (modules/WindowRows.lua, the
 -- Window page's Layout rows; feedback-2 spec §8, FB2-9).
 --
@@ -40,6 +41,7 @@ local L     = NS.L
 local State = NS.State
 local WC    = NS.WindowCells
 local SC    = NS.SideCells
+local TM    = NS.TipMarks
 
 local max, floor = math.max, math.floor
 
@@ -54,7 +56,8 @@ WH.COLUMNS = {
     { key = "me", label = L["Me"], width = 70, shed = 6,
       tip = L["The drop judged for you, as it was last judged while it was in the feed."] },
     { key = "them", label = L["Them"], width = 70, shed = 3,
-      tip = L["The drop judged for its looter, as it was last judged. In the same colors as Me: ▲ green, ≈ yellow, ▽ red."] },
+      tip = L["The drop judged for its looter, as it was last judged. In the same colors as Me: %s green, %s yellow, %s red."]:format(
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
     { key = "trade", label = L["Trade"], width = 70, shed = 5, tip = L["The last trade estimate: Yes, Likely, Unknown or No."] },
     { key = "outcome", label = L["Outcome"], width = 92,
       tip = L["What became of it: seen, asked, offered, received, traded away, expired or declined. Right-click a row to mark it declined."] },

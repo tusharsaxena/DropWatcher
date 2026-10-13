@@ -18,7 +18,8 @@ local _, NS = ...
 -- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
 -- cell says, and its reason tooltip, is modules/WindowCells.lua's and modules/SideCells.lua's
--- (pure); this file is the frame edge that paints it. Nothing is ever blank.
+-- (pure); this file is the frame edge that paints it. Nothing is ever blank. A column tooltip draws
+-- the verdict marks as NS.TipMarks' inline textures (the tooltip's face has no ▲ ≈ ▽).
 --
 -- THE ROWS. Pooled through LibKa0s-Pool-1.0 (NS.Pool), one pool for the drop rows and one for the
 -- headers, released and re-acquired in order on every repaint (Pool v3 hands them back in their
@@ -79,6 +80,7 @@ local L     = NS.L
 local State = NS.State
 local WC    = NS.WindowCells
 local SC    = NS.SideCells
+local TM    = NS.TipMarks
 
 local max = math.max
 
@@ -109,7 +111,8 @@ WG.COLUMNS = {
       tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
     { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
     { key = "me", label = L["Me"], width = 127, shed = 7,
-      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: ▲ upgrade (green), ≈ sidegrade (yellow) or ▽ downgrade (red) and the item-level difference. Hover an icon for the item."] },
+      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
     { key = "them", label = L["Them"], width = 127, shed = 5,
       tip = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, (Details) lists who it would help."] },
     { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
