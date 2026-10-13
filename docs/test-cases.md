@@ -186,7 +186,7 @@ Total.
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
-- shell: the default size is 1000 x 600 (board 01's 940, widened for My eq and two filters)
+- shell: the default size is 972 x 600, the least width every column fits (feedback-4 spec §4)
 - shell: Escape and every close path close the dropdowns' shared menu too
 - shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
 - shell: minimized, the title bar wears the plus mark and the `n new` counter; expanded, neither
@@ -288,7 +288,7 @@ Total.
 - compact cards: a drop whose details have not loaded is never blank
 - compact cards: the My drops card reads the spec's three lines
 - compact cards: the countdown keeps its bar fraction, its warning and its estimate
-- compact cards: a drop that cannot be traded shows Not tradeable, a dash for Offer and Hide
+- compact cards: a drop that cannot be traded shows Not tradeable and a dash for Offer, and no Hide
 - compact cards: an upgrade for you hides its candidates until you choose to offer it
 - compact cards: the candidates are class-colored parts, the top three and `+n more`
 - compact cards: Announce follows the ask's lifecycle
@@ -312,7 +312,7 @@ Total.
 - compact group: every piece keeps its full-view reason tooltip
 - compact group: every tooltip opens at the card's top right, just outside the window
 - compact group: a card click opens the stacked detail card under it; the cards below move down
-- compact group: Ask presses the ask, the × dismisses the card for the session
+- compact group: Ask presses the ask; no card can be dismissed
 - compact group: an ask in flight shows the full table's state; no ask offered shows the dash and why
 - compact group: the text follows the Font size row and the card's height follows the text
 - compact group: cards are pooled: a repaint reuses them and builds none
@@ -326,7 +326,7 @@ Total.
 - compact mine: the Offer panel keeps its own least height beside the compact window
 - compact mine: one pooled card per drop of yours under a one-line header, each line what CompactCards says
 - compact mine: the countdown's bar follows the time left and turns amber when it warns
-- compact mine: a drop that cannot be traded shows the dash and Hide; Hide takes it off for the session
+- compact mine: a drop that cannot be traded shows the dash and no Announce; nothing hides it
 - compact mine: Announce goes through the shared handler and shows the ask's state
 - compact mine: TradeTimerTick moves the countdown on the card
 - compact mine: every piece keeps its full-view reason tooltip
@@ -376,18 +376,18 @@ Total.
 ### test_compact_modes.lua (7)
 
 - modes: test mode's samples are the same drops in both layouts, on every tab, under every filter
-- modes: a collapsed group, a dismissed drop and your own drops shown are the same in both layouts
+- modes: a collapsed group, an expanded drop and your own drops shown are the same in both layouts
 - modes: a simulated run is the same drops in both layouts, on every tab, under every filter
 - modes: switching layouts on every tab changes nothing the engine recorded, judged or sent
 - modes: test mode's Group drops cards show every state, each saying what its full row says
 - modes: test mode's My drops cards show every countdown, Offer and Announce state, as the full rows
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (40)
+### test_window_group.lua (47)
 
-- cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade
+- cells: Me shows ▲ ≈ ▽ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
-- cells: the Them column inverts the tones: their upgrade is amber, their downgrade green
+- cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray
 - cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
 - cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
 - cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip
@@ -399,10 +399,10 @@ Total.
 - cells: an encounter header reads `Label · Situation · age · n drops`
 - table: the default columns, and a column the profile turns off
 - table: the Item column takes the slack, never less than its minimum
-- table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order
+- table: a row too narrow for every column sheds Type, Slot, Looter, My eq, Their eq and Ilvl, in that order
 - table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
 - cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder
-- table: built at the minimum width, the shed columns hide and Ask stays inside the row
+- table: built at the least width, every column shows and Ask stays inside the row (feedback-4 §4)
 - rows: the pure metrics read Default as the template's size and keep the row height in range
 - rows: a stored row height and font size stay as the player set them
 - rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0
@@ -418,13 +418,20 @@ Total.
 - table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
 - table: a drop with no ask offered shows a dash with its reason
-- table: the × dismisses a row for the session
+- table: no row can be dismissed: no ×, no handler, no dismissed state (feedback-4 spec §2)
 - table: the compact layout draws cards instead of the table, and the full layout the table again
 - table: a column the profile turns off is not drawn
 - table: the filter bar filters the rows, and the empty line says why nothing shows
 - table: with no drop at all the empty state says so, with Preview with test data and Scan group
 - table: the empty state's buttons turn test mode on and scan the group
 - table: PressAsk says why it asked nobody: your own drop, a gone drop, the addon disabled
+- cells: ActionTone is red for your move, yellow while waiting, green once done
+- table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded
+- cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why
+- table: the Type column sits after Slot and is painted on every row
+- layout: at the least width no tab sheds a column, and one pixel less would shed on Group drops
+- layout: the search box spans from the bar's gap after Character to the bar's right edge
+- layout: the column labels are gold on all three full tables
 
 ### test_detail_card.lua (20)
 
@@ -442,14 +449,14 @@ Total.
 - card: one row at a time; a click on a cell or the item button opens it too
 - card: the header, both comparisons and the trade box are painted, each with a reason
 - card: the actions go through their host handlers; Trade is off with its reason
-- card: Hide this item dismisses the row and takes the card with it
+- card: the card has no Hide this item; its row stays
 - card: a filtered-out or collapsed row hides its card; it comes back with the row
 - card: Edit message opens the box with the ask filled in; Send asks with the edited text
 - card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_window_mine.lua (35)
+### test_window_mine.lua (37)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -459,12 +466,12 @@ Total.
 - mine cells: Best candidates shows the top three, `+n more`, or why there are none
 - mine cells: an upgrade for you hides its candidates until you choose to offer it
 - mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabled with its reason
-- mine cells: a tradeable row offers Offer and Announce; a dead one a dash and Hide
+- mine cells: a tradeable row offers Offer and Announce; a dead one a dash with its reason
 - mine cells: the summary counts the tradeable drops and names the next expiry
 - mine cells: Post my tradeables lists every link, cut at the chat limit without splitting one
 - mine cells: the Offer panel docks right, else left, else floats
 - mine cells: the panel's header reads your change, the item level and the trade window
-- mine: the entries are your own drops that pass the filter and were not hidden, in the tab's order
+- mine: the entries are your own drops that pass the filter, in the tab's order
 - mine: rows sit under their run's or encounter's header, newest group first, every group open
 - mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps Actions inside it
 - mine tab: built headless, one row per drop of yours, each column painted
@@ -473,7 +480,7 @@ Total.
 - mine tab: rows come from the pool and a repaint reuses them
 - mine tab: the rows sit under a header naming the place and you; a click collapses the group
 - mine tab: TradeTimerTick moves the countdown while the tab shows
-- mine tab: Hide takes a dead row off the tab for the session
+- mine tab: a dead row stays listed; nothing hides it (feedback-4 spec §2)
 - mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
 - mine tab: with no drop of yours the empty line says so; a filter that hides them says that
 - offer panel: Offer opens it docked right, the candidates ranked with their pills
@@ -486,6 +493,8 @@ Total.
 - offer panel: Announce to group announces the drop
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
 - handlers: Offer, Announce and Trade say why they did nothing
+- mine cells: ToneState is the button's own state, or tradedAway once you traded the drop away
+- mine tab: Offer and Announce are red until sent, yellow once an offer or announce is out, green once traded away
 
 ### test_row_tooltip.lua (13)
 
@@ -497,7 +506,7 @@ Total.
 - row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
 - row tooltip: a cell, a button or an icon in a marked row opens at the row's top, not its own
 - row tooltip: unknown geometry falls back to the hovered frame's top right
-- row tooltip: Group drops, every cell, Ask, the dismiss mark and the header open at the row's top right
+- row tooltip: Group drops, every cell, Ask and the header open at the row's top right
 - row tooltip: with no room on the right a row tooltip rises from the row's top left, outside the window
 - row tooltip: My drops rows, their Offer and Announce buttons and the headers open at the row's top right
 - row tooltip: History rows and headers open at the row's top right
@@ -775,7 +784,7 @@ Total.
 - trade rules: nil and garbage inputs never throw
 - trade rules: bad facts are unknown badFacts
 
-### test_messaging.lua (25)
+### test_messaging.lua (26)
 
 - messaging: the default templates are the spec §9.1 text, one per kind
 - messaging: Template takes the owner's text, and the default for an empty or absent one
@@ -802,6 +811,7 @@ Total.
 - messaging: a looter leaving drops every ask queued to them, and only theirs
 - messaging: Counts reports the registry for diagnostics
 - messaging: garbage never throws
+- messaging: FurthestState is the furthest state any ask of a kind reached for one drop (feedback-4 §1)
 
 ### test_restrictions.lua (15)
 
@@ -1218,7 +1228,7 @@ Total.
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
-### test_toast.lua (24)
+### test_toast.lua (23)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose reads board 06 C: the title, the item and Looted by · gain · trade
@@ -1237,7 +1247,6 @@ Total.
 - toast edge: test mode's placeholder toasts and stays until test mode ends
 - toast edge: a drop that leaves the feed takes its toast and its place in the queue
 - toast edge: the cap's trim takes the trimmed drop's toast, through the real feed
-- toast edge: dismissing the row forgets its toast, shown or waiting
 - toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing
 - toast edge: turning the toast off takes it down and empties the queue; on again, new drops toast
 - toast edge: a test toast goes when the toast is turned off, though it has no countdown
@@ -1245,7 +1254,7 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
-### test_auto_ask.lua (25)
+### test_auto_ask.lua (24)
 
 - auto-ask: DueAt is the delay after the later of the drop and the encounter's end
 - auto-ask: ClampDelay keeps the delay inside 3..30 and defaults to 10
@@ -1262,7 +1271,6 @@ Total.
 - auto-ask edge: an encounter that ends after the drop pushes the ask back
 - auto-ask edge: asking yourself cancels it
 - auto-ask edge: the looter leaving the group cancels it
-- auto-ask edge: dismissing the row cancels it for good
 - auto-ask edge: receiving the item cancels it
 - auto-ask edge: a drop gone from the feed, or no longer qualifying, is dropped when due
 - auto-ask edge: turning it off cancels the waiting asks; turned on, older drops do not count
@@ -1392,7 +1400,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_report.lua (21)
+### test_sim_report.lua (20)
 
 - sim report: the owner's key run: the second drop is yours, on My drops, nothing lost
 - sim report: the step's chat line says where its drops went
@@ -1407,14 +1415,13 @@ Total.
 - sim report regression lfr: Group drops + My drops + hidden = every loot step's drops
 - sim report regression delve: Group drops + My drops + hidden = every loot step's drops
 - sim report regression world: Group drops + My drops + hidden = every loot step's drops
-- tab counts: My drops tallies the drops it lists and names the ones you hid or its filters hide
-- tab counts: a drop you hid leaves the My drops count and the Group drops suffix, and the tooltip names it
+- tab counts: My drops tallies the drops it lists and names the ones its filters hide
 - tab counts: a drop My drops' own filters hide leaves both counts, and the tooltip names the filter
 - sim report: a place honors feed.showOwn and the feed the window shows
 - sim report: View reads feed.showOwn and the feed the window shows
 - sim report: with feed.showOwn on, the owner's step lists yours on Group drops, and the tabs agree
-- sim report: a drop of yours My drops leaves out (its Hide, its own filters) is not counted as on My drops
-- sim report: the owner's step agrees with the tabs after Hide and after a search My drops fails
+- sim report: a drop of yours My drops' own filters leave out is not counted as on My drops
+- sim report: the owner's step agrees with the tabs after a search My drops fails
 
 ### test_sim_panel.lua (19)
 
@@ -1557,9 +1564,9 @@ Total.
 | test_compact_history.lua | 9 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 40 |
+| test_window_group.lua | 47 |
 | test_detail_card.lua | 20 |
-| test_window_mine.lua | 35 |
+| test_window_mine.lua | 37 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 30 |
 | test_compat.lua | 68 |
@@ -1571,7 +1578,7 @@ Total.
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
-| test_messaging.lua | 25 |
+| test_messaging.lua | 26 |
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 18 |
@@ -1590,14 +1597,14 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 29 |
 | test_history_retention.lua | 16 |
-| test_toast.lua | 24 |
-| test_auto_ask.lua | 25 |
+| test_toast.lua | 23 |
+| test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 19 |
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
 | test_sim_e2e.lua | 19 |
-| test_sim_report.lua | 21 |
+| test_sim_report.lua | 20 |
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 9 |
 | test_diagnostics.lua | 15 |
@@ -1608,4 +1615,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1326** |
+| **Total** | **1333** |

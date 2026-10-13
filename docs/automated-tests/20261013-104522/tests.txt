@@ -1,0 +1,1336 @@
+  PASS  harness: the addon's file list is the TOC's, Namespace first and Profiles last
+  PASS  harness: every LibKa0s file comes from LibKa0s.xml, in its order
+  PASS  harness: every adopted LibKa0s module is the live library, not its stub
+  PASS  toc: the fixed field order, a single Retail Interface line and the X-Standard field
+  PASS  toc: the icon is the 128x128 logo, and the file exists
+  PASS  toc: OptionalDeps names Pawn and CanIMogIt, and no hard Dependencies
+  PASS  repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
+  PASS  repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
+  PASS  repo: every authored file opens with the bootstrap and a comment naming its path
+  PASS  repo: the .pkgmeta has no externals and ignores the dev-only entries
+  PASS  parity: the degraded load really is library-absent, and the live one is not
+  PASS  parity: the Core seam's namespace surface survives the library's absence
+  PASS  parity: the DebugLog stub carries the whole live surface
+  PASS  parity: the Slash stub carries the whole live surface
+  PASS  parity: the Slash stub's one library string is the library's, byte for byte
+  PASS  parity: the Options helpers stub carries the whole live surface
+  PASS  parity: the Schema host stub's instance carries the whole live instance surface
+  PASS  parity: the Schema host stub carries the library's own members
+  PASS  parity: the Launcher stub carries the whole live surface
+  PASS  parity: the Lifecycle stand-in carries every member of the live latch
+  PASS  parity: the Bus stand-in carries every member of the live bus
+  PASS  parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
+  PASS  parity: the Item stub carries the whole LibKa0s-Item-1.0 surface
+  PASS  parity: the Perf stub carries every Perf member the addon reaches
+  PASS  parity: the Env seam publishes the same NS members on both paths
+  PASS  parity: the Media seam publishes the same NS members on both paths
+  PASS  parity: the Compat seam carries every library member it wires
+  PASS  parity: the Compat seam publishes the same members on both load paths
+  PASS  core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
+  PASS  core: the printer tags every line with the cyan [DW] prefix
+  PASS  core: the close-button wrapper passes the addon folder as the third argument
+  PASS  core: no file but the wrapper calls a close-button factory directly
+  PASS  media: FONT_MONO is the shipped face live, and a real client font degraded
+  PASS  bus: the catalog holds the ten messages of the design, each Ka0s_DropWatcher_<Event>
+  PASS  bus: a tracked target's registrations come down with the stand-down and back with the stand-up
+  PASS  bus: the seam answers tracked once; without the library the modules take their receivers down
+  PASS  perf: every declared bucket is reached by a real bracket
+  PASS  perf: with capture off the bracket notes nothing
+  PASS  perf: the `perf` hold stands the addon down, and the verbs keep answering
+  PASS  perf: the descriptor's SavedVariables global is declared in the TOC
+  PASS  launcher: one object, labeled with the brand, the logo as its icon, registered on enable
+  PASS  launcher: the right-click menu is Enabled, Locked, Test mode, Show window, in that order
+  PASS  launcher: each menu entry calls the same handler its verb and its row call
+  PASS  options: the category registers eagerly, with the General page under it
+  PASS  options: the General page's first group is exactly `Master controls`
+  PASS  options: the degraded load completes, and the panel says once that it is unavailable
+  PASS  database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
+  PASS  database: the runner is idempotent, and a stored stamp at the target runs no step
+  PASS  database: the steps rise one by one, and the target is the highest step
+  PASS  database: a step that raises leaves the stamp at the last completed step
+  PASS  database: step 2 reaches a stored profile that is not the active one
+  PASS  database: step 2 passes a fresh default profile through unchanged
+  PASS  database: step 3 folds the View and the three checkboxes into the View set, per profile
+  PASS  database: step 3 passes a profile already in the new shape through unchanged
+  PASS  database: the profile defaults carry every Master controls value, and no debug flag
+  PASS  database: step 4 retires the History's group cap and prunes nothing
+  PASS  schema: every row validates against the defaults
+  PASS  schema: a stored row whose path has no default is counted, not passed vacuously
+  PASS  schema: the Minimap button row's backing key resolves against the global defaults
+  PASS  schema: the Master controls rows are the canonical set, in the canonical order
+  PASS  schema: an unknown path is refused and stores nothing
+  PASS  schema: the Minimap button row inverts onto LibDBIcon's own hide, with no shown key
+  PASS  schema: neither reset touches the minimap button (launcher-§3)
+  PASS  schema: Reset all asks first, through the confirmation popup
+  PASS  schema: a write to `scale` reaches the window through the row's reaction
+  PASS  schema: degraded, `enabled` and `locked` are written through and still react
+  PASS  schema: degraded, a row-less path not in the list is still refused
+  PASS  rows: every spec §12.1 setting has a row
+  PASS  rows: every hand-written row names its page, tab, label and a type the schema knows
+  PASS  rows: every default is defaults/Profile.lua's, and passes the row's own check
+  PASS  rows: NS.Setting answers the default before the database, and the stored value after
+  PASS  rows: a value outside a row's list or range is refused and stores nothing
+  PASS  rows: the per-spec maps take keyed values whole, and refuse a malformed one
+  PASS  rows: the feed, the situations and the messaging edge read the rows
+  PASS  rows: the filter bar seeds a fresh tab from the rows
+  PASS  rows: the Quality control and the window's layout write through the seam (handoff from M3)
+  PASS  rows: Keep history for is account-wide, and a profile reset leaves it
+  PASS  rows: `/dw set` reaches a hand-written row
+  PASS  rows: degraded, the hand-written rows still read, write and refuse
+  PASS  pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
+  PASS  pages: each page's strip is its own tabs, one per group, in declaration order
+  PASS  pages: a page's rows are the rows whose page is its key
+  PASS  pages: every schema row with a page but the Profiles page's is drawn by one of these pages
+  PASS  when to show: one block per situation, Track and Auto-open then Quality, under its name
+  PASS  when to show: an untracked situation's Auto-open and Quality are dimmed, and so is every Auto-open with the master off
+  PASS  feed: the Quality tab closes with the threshold in force now, repainted on a write
+  PASS  feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only
+  PASS  feed: the readout names the situation whose own quality setting is in force
+  PASS  comparison: Weights draws your class's specs as a sub-strip and one slider per stat
+  PASS  comparison: a weight slider writes the whole map through the seam, for the spec on screen
+  PASS  comparison: the Pawn import box replaces the spec on screen's weights and says what came in
+  PASS  comparison: Preferences lists the class's weapon types and marks one unwanted per spec
+  PASS  messages: three editors whose labels count the template's bytes against 255
+  PASS  messages: typing repaints the counter and the preview live, and stores nothing until Enter
+  PASS  messages: the preview flags an unknown token and a text past the chat limit
+  PASS  messages: an empty template is refused by the seam and the box shows the stored one again
+  PASS  messages: a token chip goes into the template last edited and is stored at once
+  PASS  messages: Reset templates puts the three back and repaints the boxes
+  PASS  pages: a page's Defaults resets that page's rows and no other page's
+  PASS  editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
+  PASS  editors: a spec's stats are its primary stat, Stamina and the four secondaries
+  PASS  editors: unwanted types are the class's weapons, then shields where a spec carries one
+  PASS  editors: an unwanted mark is a fresh map, and the last one cleared drops the spec
+  PASS  editors: the spec strip keeps the remembered spec, else yours, else the first
+  PASS  editors: the counter label counts bytes and turns red past the limit
+  PASS  editors: the preview's drop is the newest that fits its template, an upgrade for you first
+  PASS  editors: the preview's lines name who it goes to, the length and what is wrong
+  PASS  asks: TokenContext fills the tokens from a drop for who it goes to
+  PASS  slash: NS.COMMANDS is positional triples, every reserved verb present
+  PASS  slash: `diagnostics` has no alias of any kind (debug-logging-§14)
+  PASS  slash: both chat commands are registered through AceConsole, and both dispatch
+  PASS  slash: the bare command opens the settings panel
+  PASS  slash: lock and unlock write `locked` through the seam
+  PASS  slash: show, hide and toggle drive the window
+  PASS  slash: `test` toggles test mode through the shared handler
+  PASS  slash: `perf` is the addon's verb and prints the harness's lines
+  PASS  slash: `reset` with no path explains itself rather than resetting everything
+  PASS  slash: degraded, the host verbs still work and the CLI names the missing library
+  PASS  slash: every verb of spec §12.3 is in the table, after the reserved ones
+  PASS  slash: SplitLink takes a whole link, spaces and all, and leaves the rest
+  PASS  slash: `scan` is the window's Scan group handler
+  PASS  slash: `add` injects a drop for you, or for a named player, and says what happened
+  PASS  slash: `add` with no link prints its usage; a refused drop says why
+  PASS  slash: `add` of an item still loading says it shows once it loads
+  PASS  slash: `clear` empties this session's feed and leaves the test feed alone
+  PASS  slash: `clear` closes an Offer panel whose drop it took
+  PASS  slash: `history` and `mine` open the window on that tab, expanded
+  PASS  slash: a tab verb the Visibility setting keeps hidden says so
+  PASS  slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it
+  PASS  slash: `situation` prints the situation, its settings and the classifier's inputs
+  PASS  slash: `offer` opens the panel on your newest drop of that item
+  PASS  slash: `offer` of a bag item the feed never saw adds it as yours first
+  PASS  slash: `offer` refuses an item not in your bags, and prints its usage without a link
+  PASS  slash: every feature verb is refused while disabled
+  PASS  window: built lazily, on the first show, and not before
+  PASS  window: Escape closes it (UISpecialFrames) and it wears the shared close mark
+  PASS  window: General visibility `never` keeps it hidden even when opened
+  PASS  window: `inCombat` shows it only in combat, re-read on both combat edges
+  PASS  window: a drag stores the point, and Reset position forgets it
+  PASS  window: locked, a drag does not start
+  PASS  window: resizable from the corner grip, with the design's minimum size
+  PASS  window: test mode shows the banner and the TEST MODE text, and its rows replace the empty state
+  PASS  window: combat ends test mode, and test mode cannot start in combat
+  PASS  window: with test mode on, Close and Toggle still change what is shown
+  PASS  window: turning test mode off closes the window only when test mode opened it
+  PASS  window: the combat edge decides, even while the player's combat flag lags it
+  PASS  window: a resize saves the anchor with the size, so a settings repaint does not move it
+  PASS  shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
+  PASS  shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
+  PASS  shell: the default size is 972 x 600, the least width every column fits (feedback-4 spec §4)
+  PASS  shell: Escape and every close path close the dropdowns' shared menu too
+  PASS  shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
+  PASS  shell: minimized, the title bar wears the plus mark and the `n new` counter; expanded, neither
+  PASS  shell: BadgeText names the restriction and counts the queued asks
+  PASS  shell: RestrictionChanged shows the badge, AskStateChanged counts the queue, its tooltip lists it
+  PASS  shell: Scan group asks the inspect broker through the shared handler, and says what it did
+  PASS  shell: Scan group is refused while the addon is disabled
+  PASS  shell: three tabs, Group drops active in gold with its underline, the others gray
+  PASS  shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused
+  PASS  shell: My drops counts all your drops in its label, the tradeable ones in its tooltip
+  PASS  shell: a tab's body is built on its first show, and refreshed with the tab's view
+  PASS  shell: a tab with no body says what it will hold, never a blank pane
+  PASS  shell: the filter bar holds View, Quality, Content and the search box, and no checkbox
+  PASS  shell: the View is multi-select: its values combine, the label counts them, and All clears them
+  PASS  shell: each tab grays the View values it does not use, and a grayed value does not toggle
+  PASS  shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use
+  PASS  filter bar tooltip: AboveSide is right when the screen has room past the control, else left
+  PASS  filter bar tooltip: every bar control and the footer's Sort open above the control, top right
+  PASS  filter bar tooltip: with no room on the right it opens above the control, top left
+  PASS  filter bar tooltip: the room is measured in screen pixels, at each frame's scale
+  PASS  filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)
+  PASS  shell: the search box is Loot History's flat, square box
+  PASS  shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
+  PASS  shell: each tab keeps its own filter state, and grays what it does not use
+  PASS  shell: a filter change redraws the active tab with the new state
+  PASS  shell: a fresh tab's state is seeded from the profile's feed settings when valid
+  PASS  shell: the Quality control shows the mode in force and sets it through the shared handler
+  PASS  shell: IsInteresting is an upgrade for you, or a drop its looter has no use for and can trade
+  PASS  shell: InGroup keeps your own drops out of Group drops unless showOwn is on
+  PASS  shell: Matches applies only the controls a tab honors
+  PASS  shell: Usable by me hides what you can't use or don't want; Upgrade for me keeps your upgrades
+  PASS  shell: Comparator orders newest, oldest, by item level and by your gain
+  PASS  shell: the footer composer says inspect freshness, last loot, the situation and Pawn
+  PASS  shell: the live footer reads the client, and its Sort follows the active tab
+  PASS  shell: the footer's ticker runs only while the whole window is on screen
+  PASS  shell: minimize collapses to the title bar, keeps the size, and counts every drop added
+  PASS  shell: a double-click on the title bar expands a minimized window
+  PASS  shell: minimized, the corner grip does not resize and the stored size is kept
+  PASS  shell: a minimized window comes back minimized after a settings repaint
+  PASS  shell: minimize and expand keep the title bar in place, whatever point it was saved at
+  PASS  shell: a parent's hide (Alt-Z, a cinematic) is not the player closing the window
+  PASS  shell: a burst of bus messages repaints once, on the next frame
+  PASS  shell: a countdown tick on the Group drops tab repaints nothing of the window
+  PASS  shell: every drop added in an auto-open situation opens the window, each time it is closed
+  PASS  shell: your own drop opens the window too, whatever showOwn says, and counts as new
+  PASS  shell: a minimized window the player closed opens minimized, its count rising
+  PASS  shell: a test placeholder opens the window while test mode is on, and a live drop does not then
+  PASS  shell: in a dungeon, turning test mode off closes the window its drops opened
+  PASS  shell: a test drop that reopens a window the player closed in test mode closes with test mode
+  PASS  shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off
+  PASS  shell: every control on the chrome has a tooltip with a reason
+  PASS  shell: without the Widgets library the window builds with no dead dropdown
+  PASS  filter bar tooltip: AboveFits is true when the screen has room over the control, else false
+  PASS  filter bar tooltip: near the top of the screen it opens below the control, never over it
+  PASS  compact: the layout in force is the stored one, compact while a run holds it, full for junk
+  PASS  compact: a run is a dungeon, raid, key or delve, and nothing else
+  PASS  compact: each layout's default size and bounds; a stored size is kept within them
+  PASS  compact: CornerPoint puts compact's top right on the full window's, whatever its anchor
+  PASS  compact: step 5 maps the retired preset to the compact layout and moves the geometry
+  PASS  compact: step 5 runs for every stored profile on load
+  PASS  compact: a fresh profile stores the full layout, and opens in a run compact by default
+  PASS  compact: the title-bar toggle sits between Scan group and minimize, with a catalog mark
+  PASS  compact: the toggle swaps the layout: compact is 380 x 460 at the full window's top right
+  PASS  compact: each layout remembers its own size and position
+  PASS  compact: switching keeps the tab, the minimized state, and builds no second window
+  PASS  compact: the Layout row lays the window out, and the stored layout is the next build's
+  PASS  compact: the toggle's tooltip names the layout it switches to and the setting
+  PASS  compact: an auto-open inside a run opens compact, and the stored layout is untouched
+  PASS  compact: the run ending lets go when the window is next hidden, so the next open is full
+  PASS  compact: a run ending while the window is hidden lets go at once
+  PASS  compact: a parent's hide (Alt-Z) is not the window closing, so the run's layout stays
+  PASS  compact: with Open in compact view during a run off, an auto-open keeps the stored layout
+  PASS  compact: the player's own toggle during a run lets the override go
+  PASS  compact: the chest after a key completes still belongs to the run, so its auto-open is compact
+  PASS  compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it
+  PASS  compact: a key's grace running out with the window hidden lets go at once
+  PASS  compact: the completion latch clears on leaving, so the next run opens compact again
+  PASS  compact: a window the player opened is never switched by a drop
+  PASS  compact: the diagnostics report names the layout, the override and each layout's geometry
+  PASS  compact cards: Truncate cuts by characters, not bytes, and marks the cut with …
+  PASS  compact cards: Age is the short duration, then whole days
+  PASS  compact cards: a verdict reads glyph then change; a worded one takes ⊘
+  PASS  compact cards: the worn levels sit in parentheses, dimmed; none where the full view has a dash
+  PASS  compact cards: a cross-realm looter takes ⊕ and the realm in the tooltip
+  PASS  compact cards: inspect freshness reads its age or state, dimmed, and the tooltip says why
+  PASS  compact cards: the Group drops card reads the spec's three lines
+  PASS  compact cards: the Group drops card's pieces keep the full view's tones and tooltips
+  PASS  compact cards: every trade state keeps its short word and tone on line 2
+  PASS  compact cards: the Ask button keeps its states, and a drop you cannot ask for shows a dash
+  PASS  compact cards: your own drop on Group drops reads a dash for Them and no worn levels
+  PASS  compact cards: an unread looter says `?` for Them, and the tooltip says why
+  PASS  compact cards: a different upgrade track is in the verdict's tooltip, not on line 3
+  PASS  compact cards: a drop whose details have not loaded is never blank
+  PASS  compact cards: the My drops card reads the spec's three lines
+  PASS  compact cards: the countdown keeps its bar fraction, its warning and its estimate
+  PASS  compact cards: a drop that cannot be traded shows Not tradeable and a dash for Offer, and no Hide
+  PASS  compact cards: an upgrade for you hides its candidates until you choose to offer it
+  PASS  compact cards: the candidates are class-colored parts, the top three and `+n more`
+  PASS  compact cards: Announce follows the ask's lifecycle
+  PASS  compact cards: the History card reads the spec's three lines
+  PASS  compact cards: every History outcome keeps its word and tone
+  PASS  compact cards: an older kept drop reads its day, and one with no time `?`
+  PASS  compact cards: a kept drop whose looter was never read, and your own kept drop
+  PASS  compact cards: the header's short form drops `ago` and `drops`
+  PASS  compact cards: a filter that hides drops reads `1 of 2`, the hidden ones in the tooltip
+  PASS  compact cards: a long instance name is cut, the full name in the tooltip
+  PASS  compact cards: a group with no time or recorder, and the open world's area header
+  PASS  compact cards: the History header reads days once a day old, its tooltip the long form
+  PASS  compact group: a card is three lines at the text size, about 50 pixels at Default, the icon spanning them
+  PASS  compact group: switching layouts carries the scroll offset over as a fraction of the range
+  PASS  compact group: the stacked detail card flows its actions into lines and grows by them
+  PASS  compact group: one pooled card per drop under a one-line header, each line what CompactCards says
+  PASS  compact group: the pieces are colored by quality, class and tone, the worn levels dimmed
+  PASS  compact group: every piece keeps its full-view reason tooltip
+  PASS  compact group: every tooltip opens at the card's top right, just outside the window
+  PASS  compact group: a card click opens the stacked detail card under it; the cards below move down
+  PASS  compact group: Ask presses the ask; no card can be dismissed
+  PASS  compact group: an ask in flight shows the full table's state; no ask offered shows the dash and why
+  PASS  compact group: the text follows the Font size row and the card's height follows the text
+  PASS  compact group: cards are pooled: a repaint reuses them and builds none
+  PASS  compact group: a header click collapses its group, and the filters' line and empty state still show
+  PASS  compact group: test mode fills a card for every sample, no piece blank, and each opens its card
+  PASS  compact mine: the candidates read in class colors, then +n more; nobody named keeps the cell's text
+  PASS  compact mine: the strip's summary is shortened
+  PASS  compact mine: the Offer panel keeps its own least height beside the compact window
+  PASS  compact mine: one pooled card per drop of yours under a one-line header, each line what CompactCards says
+  PASS  compact mine: the countdown's bar follows the time left and turns amber when it warns
+  PASS  compact mine: a drop that cannot be traded shows the dash and no Announce; nothing hides it
+  PASS  compact mine: Announce goes through the shared handler and shows the ask's state
+  PASS  compact mine: TradeTimerTick moves the countdown on the card
+  PASS  compact mine: every piece keeps its full-view reason tooltip
+  PASS  compact mine: every tooltip opens at the card's top right, just outside the window
+  PASS  compact mine: the strip is shortened in the compact layout and put back in the full one
+  PASS  compact mine: cards are pooled and follow the Font size row
+  PASS  compact mine: a header click collapses its group; the empty line still shows
+  PASS  compact mine: Offer opens the panel docked beside the compact window, its width unchanged
+  PASS  compact mine: the panel goes on the side with room, and floats centered when neither has
+  PASS  compact mine: test mode fills a card for every sample of yours, no piece blank
+  PASS  compact history: kept groups as one-line headers, the newest open, each entry a three-line card
+  PASS  compact history: the outcome is in its tone, and every piece keeps its full-view tooltip
+  PASS  compact history: a right-click on a card, or on any piece of it, opens the row menu
+  PASS  compact history: marking an entry declined repaints its card
+  PASS  compact history: a header click opens a collapsed group
+  PASS  compact history: every tooltip opens at the card's top right, just outside the window
+  PASS  compact history: Clear history is shortened in the compact layout and put back in the full one
+  PASS  compact history: cards are pooled and follow the Font size row
+  PASS  compact history: test mode's kept samples fill a card each, no piece blank
+  PASS  chrome: the tabs' compact labels are Group, Mine · n and History; full keeps its own
+  PASS  chrome: TEST MODE and SIMULATION shorten to TEST and SIM
+  PASS  chrome: the compact badge shows the queued count beside its lock, or nothing
+  PASS  chrome: the footer's one line is inspect freshness and the situation
+  PASS  chrome: the footer's tooltip carries every full segment
+  PASS  chrome: the Filters count is Quality, Content and Character off their default, on a tab that honors them
+  PASS  chrome: the Filters label counts, and its tooltip lists each value with a dot on the active ones
+  PASS  chrome: compact shows the short title, TEST beside it, the title and the word centered together
+  PASS  chrome: a simulation reads SIM in compact, in its cyan
+  PASS  chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
+  PASS  chrome: Scan group becomes an icon button, with its tooltip and its click
+  PASS  chrome: the tabs keep three at a reduced width, short labels, full names in their tooltips
+  PASS  chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
+  PASS  chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does
+  PASS  chrome: the panel closes when the window hides, minimizes or goes back to full
+  PASS  chrome: the full layout takes every control back to its place on the bar and in the footer
+  PASS  chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
+  PASS  chrome: the compact strip takes a second line exactly when its words wrap at the window's width
+  PASS  chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
+  PASS  chrome: switching the chrome keeps every tab's filter state and builds no second window
+  PASS  modes: test mode's samples are the same drops in both layouts, on every tab, under every filter
+  PASS  modes: a collapsed group, an expanded drop and your own drops shown are the same in both layouts
+  PASS  modes: a simulated run is the same drops in both layouts, on every tab, under every filter
+  PASS  modes: switching layouts on every tab changes nothing the engine recorded, judged or sent
+  PASS  modes: test mode's Group drops cards show every state, each saying what its full row says
+  PASS  modes: test mode's My drops cards show every countdown, Offer and Announce state, as the full rows
+  PASS  modes: test mode's History cards show every outcome, each saying what its full row says
+  PASS  cells: Me shows ▲ ≈ ▽ and the signed change, green up, yellow side, red down (feedback-4 §0)
+  PASS  cells: a verdict with no glyph says a word, and every verdict's tooltip says why
+  PASS  cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray
+  PASS  cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
+  PASS  cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
+  PASS  cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip
+  PASS  cells: My eq shows what you wear in the drop's slot, both rings for a ring, and empty slot
+  PASS  cells: Their eq says pending, range, combat or failed beside the icons, and a dash on your own
+  PASS  cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure
+  PASS  cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you
+  PASS  cells: Item, Ilvl, Slot and Looter are never blank, each with a reason tooltip
+  PASS  cells: an encounter header reads `Label · Situation · age · n drops`
+  PASS  table: the default columns, and a column the profile turns off
+  PASS  table: the Item column takes the slack, never less than its minimum
+  PASS  table: a row too narrow for every column sheds Type, Slot, Looter, My eq, Their eq and Ilvl, in that order
+  PASS  table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
+  PASS  cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder
+  PASS  table: built at the least width, every column shows and Ask stays inside the row (feedback-4 §4)
+  PASS  rows: the pure metrics read Default as the template's size and keep the row height in range
+  PASS  rows: a stored row height and font size stay as the player set them
+  PASS  rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0
+  PASS  table: the Window page's row height and font size lay out and size the drop rows
+  PASS  table: built headless, one header and one row per drop, each column painted
+  PASS  table: the verdicts wear their tones, the looter their class color, the item its quality
+  PASS  table: every shown cell has a reason tooltip; nothing is blank
+  PASS  table: rows come from the pool: a repaint reuses them, fewer drops park the rest
+  PASS  table: a header click collapses its group, and a second expands it
+  PASS  table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
+  PASS  item tooltip: a row's item button opens the game's tooltip at the row's top right, else on its own
+  PASS  table: Their eq shows the looter's worn item from their inspect read
+  PASS  table: My eq shows your worn item from the gear snapshot, its icon showing your own slot
+  PASS  table: the Ask button asks through the shared handler, and AskStateChanged repaints it
+  PASS  table: a drop with no ask offered shows a dash with its reason
+  PASS  table: no row can be dismissed: no ×, no handler, no dismissed state (feedback-4 spec §2)
+  PASS  table: the compact layout draws cards instead of the table, and the full layout the table again
+  PASS  table: a column the profile turns off is not drawn
+  PASS  table: the filter bar filters the rows, and the empty line says why nothing shows
+  PASS  table: with no drop at all the empty state says so, with Preview with test data and Scan group
+  PASS  table: the empty state's buttons turn test mode on and scan the group
+  PASS  table: PressAsk says why it asked nobody: your own drop, a gone drop, the addon disabled
+  PASS  cells: ActionTone is red for your move, yellow while waiting, green once done
+  PASS  table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded
+  PASS  cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why
+  PASS  table: the Type column sits after Slot and is painted on every row
+  PASS  layout: at the least width no tab sheds a column, and one pixel less would shed on Group drops
+  PASS  layout: the search box spans from the bar's gap after Character to the bar's right edge
+  PASS  layout: the column labels are gold on all three full tables
+  PASS  cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
+  PASS  cells: StatChange lists the secondary stats gained and lost, the largest first
+  PASS  cells: For you shows what it replaces, the ilvl, track and stat change, and Pawn's score
+  PASS  cells: For you without a score says why: no scorer, Pawn or your weights not scored yet
+  PASS  cells: an empty slot and an unread baseline each say so, never blank
+  PASS  cells: For the looter compares their inspected gear and names their spec and the read's age
+  PASS  cells: the trade box says the state, the reason, the rule in force and how fresh the data is
+  PASS  cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
+  PASS  cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
+  PASS  cells: on your own drop Ask, Edit, Retry and Trade are off, each with its reason
+  PASS  card: a row click expands it inline; the rows below move down by the card's height
+  PASS  card: one row at a time; a click on a cell or the item button opens it too
+  PASS  card: the header, both comparisons and the trade box are painted, each with a reason
+  PASS  card: the actions go through their host handlers; Trade is off with its reason
+  PASS  card: the card has no Hide this item; its row stays
+  PASS  card: a filtered-out or collapsed row hides its card; it comes back with the row
+  PASS  card: Edit message opens the box with the ask filled in; Send asks with the edited text
+  PASS  card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels
+  PASS  card: the Edit message box says why when the ask would be refused, and Cancel closes it
+  PASS  card: RetryInspect and TradeWithLooter say why they did nothing
+  PASS  mine cells: Clock reads h:mm:ss
+  PASS  mine cells: the countdown is exact from the item's timer, estimated from the drop before it
+  PASS  mine cells: the Trade window says the countdown, ending soon, not tradeable or no limit
+  PASS  mine cells: For me asks `keep?` under an upgrade for you
+  PASS  mine cells: the candidates are ranked upgrades first by gain, each with its pill and eq → drop
+  PASS  mine cells: Best candidates shows the top three, `+n more`, or why there are none
+  PASS  mine cells: an upgrade for you hides its candidates until you choose to offer it
+  PASS  mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabled with its reason
+  PASS  mine cells: a tradeable row offers Offer and Announce; a dead one a dash with its reason
+  PASS  mine cells: the summary counts the tradeable drops and names the next expiry
+  PASS  mine cells: Post my tradeables lists every link, cut at the chat limit without splitting one
+  PASS  mine cells: the Offer panel docks right, else left, else floats
+  PASS  mine cells: the panel's header reads your change, the item level and the trade window
+  PASS  mine: the entries are your own drops that pass the filter, in the tab's order
+  PASS  mine: rows sit under their run's or encounter's header, newest group first, every group open
+  PASS  mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps Actions inside it
+  PASS  mine tab: built headless, one row per drop of yours, each column painted
+  PASS  mine tab: a row is the row height plus its bar's room, in the Font size row's size
+  PASS  mine tab: every shown cell has a reason tooltip; nothing is blank
+  PASS  mine tab: rows come from the pool and a repaint reuses them
+  PASS  mine tab: the rows sit under a header naming the place and you; a click collapses the group
+  PASS  mine tab: TradeTimerTick moves the countdown while the tab shows
+  PASS  mine tab: a dead row stays listed; nothing hides it (feedback-4 spec §2)
+  PASS  mine tab: Announce goes through the shared handler, and AskStateChanged repaints it
+  PASS  mine tab: with no drop of yours the empty line says so; a filter that hides them says that
+  PASS  offer panel: Offer opens it docked right, the candidates ranked with their pills
+  PASS  offer panel: every part has a reason tooltip; Trade is disabled with the trade helper's reason
+  PASS  offer panel: Offer whispers through the shared handler; Trade hands the item over
+  PASS  offer panel: opening an upgrade for you reveals its Best candidates
+  PASS  offer panel: the close mark closes it, and it closes itself when its drop is gone
+  PASS  offer panel: minimizing the window closes the panel and the Edit message box
+  PASS  offer panel: with Edit before sending on, Offer and Announce open the box for their kind
+  PASS  offer panel: Announce to group announces the drop
+  PASS  handlers: Post my tradeables announces every tradeable drop of yours, line by line
+  PASS  handlers: Offer, Announce and Trade say why they did nothing
+  PASS  mine cells: ToneState is the button's own state, or tradedAway once you traded the drop away
+  PASS  mine tab: Offer and Announce are red until sent, yellow once an offer or announce is out, green once traded away
+  PASS  row tooltip: it rises from the row's top right, just outside the window
+  PASS  row tooltip: with no room on the right it rises from the row's top left, outside the window
+  PASS  row tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
+  PASS  row tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
+  PASS  row tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
+  PASS  row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
+  PASS  row tooltip: a cell, a button or an icon in a marked row opens at the row's top, not its own
+  PASS  row tooltip: unknown geometry falls back to the hovered frame's top right
+  PASS  row tooltip: Group drops, every cell, Ask and the header open at the row's top right
+  PASS  row tooltip: with no room on the right a row tooltip rises from the row's top left, outside the window
+  PASS  row tooltip: My drops rows, their Offer and Announce buttons and the headers open at the row's top right
+  PASS  row tooltip: History rows and headers open at the row's top right
+  PASS  row tooltip: the column labels and the tabs keep their own anchor (rows only)
+  PASS  test mode data: each sample group names who was in it, you first; the boss is a raid's (fb2 §3)
+  PASS  test mode data: the other members' drops cover every Me and Them verdict (board 03)
+  PASS  test mode data: every trade estimate, inspect state and ask state is there
+  PASS  test mode data: your own drops cover every countdown and every candidate pill (board 04)
+  PASS  test mode data: two groups, a boss and a key run, every item a pool item that keeps its slot
+  PASS  test mode data: worn items are other pool items of the slot, nearest the level the change implies
+  PASS  test mode data: the trade reason's two levels are the drop's and the looter's worn item's
+  PASS  test mode data: an empty pool gives no sample, and a pool short of a slot borrows a real item
+  PASS  test mode data: the History sample has your two groups, every outcome, and an alt's, oldest first
+  PASS  feed: AddTest puts a sample in the test feed as given, never in the live one
+  PASS  feed: AddTest refuses a spec with no item, no looter or no group, and while stood down
+  PASS  test mode: on fills the test feed from the item pool, off empties it; the live feed is never touched
+  PASS  test mode: while the pool loads the tab says so and holds no drop; the drops fill in when it is ready
+  PASS  test mode: turned off while the pool loads, nothing arrives later
+  PASS  test mode: with no journal and no gear of your own there is no sample, and it says so
+  PASS  test mode: combat and the stand-down both empty the test feed
+  PASS  test mode: the Group drops tab shows View: All while on, and the player's View comes back
+  PASS  history: test mode shows its sample groups, every outcome, and never writes the account's history
+  PASS  history: the account's kept groups come back when test mode ends
+  PASS  window: test mode draws every sample, under the boss and the key run, with real icons
+  PASS  window: every cell of every sample row says something and has a reason
+  PASS  window: the rows show every ask state, every Their eq state and every trade chip
+  PASS  window: a sample's Their eq shows its own worn item, and its detail card its own inspect
+  PASS  window: the My drops tab counts your samples, the tradeable ones in its tooltip, and draws them all
+  PASS  window: the empty state comes back once test mode ends with nothing in the live feed
+  PASS  labels: My drops says Offer, and no cell of its rows ends in an ellipsis
+  PASS  labels: no button the addon builds is labeled with a trailing ellipsis
+  PASS  sends: Ask on a sample prints the text and sends nothing; its state is the edge's from then on
+  PASS  sends: Post my tradeables in test mode prints its lines and sends nothing
+  PASS  hooks: AskState shows a sample's own state only while the edge holds none
+  PASS  compat: the secret guards are the library's members on a live load
+  PASS  compat: the guards answer the library's answers under the same fixture, on both load paths
+  PASS  compat: with canaccessvalue present the degraded CanAccess asks it
+  PASS  compat: ChatSender prefers C_ChatInfo.SendChatMessage
+  PASS  compat: ChatSender falls back to the global, then to nil
+  PASS  compat: FormatToPattern captures %s and %d and escapes every magic character
+  PASS  compat: DecodeDuration reads every enUS unit and their sums
+  PASS  compat: DecodeDuration refuses anything that is not wholly a duration
+  PASS  compat: DecodeDuration never touches a secret
+  PASS  compat: DecodeDuration reads the client's own language (deDE, with a two-form plural)
+  PASS  compat: DecodeDuration reads a three-form plural and a multi-character delimiter
+  PASS  compat: DecodeDuration answers nil when the client has no duration globals
+  PASS  compat: ParseTradeTimeRemaining reads the whole trade line and nothing else
+  PASS  compat: TradeTimeRemaining reads the TradeTimeRemaining line of a bag item
+  PASS  compat: with the line type known, a line of that type is read before any other
+  PASS  compat: the enum member exists but the line carries another type: the text still reads
+  PASS  compat: without the enum member the reader falls back to the localized text
+  PASS  compat: the tooltip reader skips a secret line and survives a malformed answer
+  PASS  compat: InventoryItemLevel prefers the line's number, then its text
+  PASS  compat: GetItemUpgradeInfo takes the API's table, plain fields only
+  PASS  compat: GetItemUpgradeInfo falls back to the ItemUpgradeLevel tooltip line
+  PASS  compat: GetItemUpgradeInfo answers nil with no track, no API and a secret answer
+  PASS  compat: InChatMessagingLockdown reads the client, a secret as locked, absent as open
+  PASS  compat: IsRestrictionActive asks the client, falling back to the state
+  PASS  compat: IsRestrictionStateActive reads the state by the enum's Inactive
+  PASS  compat: IsRestrictionStateActive takes the event's boolean payload as it is
+  PASS  compat: RestrictionTypes is the enum, or an empty table
+  PASS  compat: the account-bind helpers read C_Item and answer false without it
+  PASS  compat: a secret bind answer reads as not bound
+  PASS  compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slot or no API
+  PASS  compat: GetItemInfo copies the cached fields, nil while uncached or without a link
+  PASS  compat: GetItemInfo answers nil without C_Item.GetItemInfo; the dead global is never read
+  PASS  compat: a secret item answer is never copied
+  PASS  compat: ItemEquipLoc reads the instant info with no cache; nil when secret or absent
+  PASS  compat: GetDetailedItemLevel reads the effective level, nil without the API
+  PASS  compat: GetItemStats copies every key, unknown ones too, and is empty without an answer
+  PASS  compat: GetItemSpecs is a set, nil for an empty list or no API
+  PASS  compat: GetItemUniqueness reads the category and the item's own uniqueness
+  PASS  compat: PlayerHasTransmog answers the collection, nil when absent or secret
+  PASS  compat: ItemClassRestriction reads the classes line by type, else by text
+  PASS  compat: CanRequestItemLoad needs the load request and a timer
+  PASS  compat: without Pawn every reader answers nil and nothing raises
+  PASS  compat: Pawn loaded but not initialized is not ready
+  PASS  compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached
+  PASS  compat: an error inside Pawn reads as not ready, never as this addon's error
+  PASS  compat: a function-spelled PawnIsInitialized is called
+  PASS  compat: PickupBagItem calls C_Container, and reports false without it
+  PASS  compat: DropItemOnUnit and InitiateTrade call through, and report false when absent
+  PASS  compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
+  PASS  compat: CursorHasItem and ClearCursor call through, and answer false when absent
+  PASS  compat: NormalizedRealm reads the normalized realm, then the plain one stripped
+  PASS  compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library
+  PASS  compat: InventoryItemLink reads the worn link, nil when empty, secret or absent
+  PASS  compat: the bag readers call C_Container, guard a secret answer, and answer empty without it
+  PASS  compat: the inspect gates answer plain booleans; a secret answer or no API is the safe side
+  PASS  compat: the inspect calls, the spec, the item id, the inspect window and the hook
+  PASS  compat: LootHistoryDrop answers a won drop's plain fields, else nil
+  PASS  compat: ChallengeMapName answers a keystone dungeon's name, else nil
+  PASS  compat: ItemIcon answers C_Item.GetItemIconByID's texture, else nil
+  PASS  compat: ClassColor reads C_ClassColor first, then RAID_CLASS_COLORS
+  PASS  compat: InsertChatLink prefers ChatFrameUtil.InsertLink, then ChatEdit_InsertLink
+  PASS  compat: DressUpItem calls DressUpItemLink, then DressUpLink
+  PASS  compat: SpecName reads GetSpecializationInfoByID's name, else nil
+  PASS  compat: TradeItemLinks reads slots 1-6 of both sides, plain links only
+  PASS  compat: TradePartnerName names the trade window's partner, with a realm when given
+  PASS  compat: IsTradeCompleteMessage knows the client's "Trade complete.", by type, else by text
+  PASS  compat: ContextMenu builds one button per entry through MenuUtil, else answers false
+  PASS  compat: no other shipped file names a seam-only client API in code
+  PASS  textparse: the module is pure — it names no client global and reads no _G
+  PASS  textparse: EscapePattern makes every magic character literal
+  PASS  textparse: FormatToPattern captures %s and %d, positional forms included
+  PASS  textparse: ExpandPlural spells out two- and three-form grammars, and leaves plain text alone
+  PASS  textparse: DecodeDuration sums the terms it is given and refuses leftovers
+  PASS  textparse: TradeTimeRemaining reads only the whole trade line
+  PASS  textparse: ItemLevel and UpgradeLine read their lines and nothing else
+  PASS  textparse: ClassSet maps the listed names and asks for the map only on a match
+  PASS  textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed
+  PASS  constants: without Enum the item ids fall back to the documented literals
+  PASS  constants: with Enum present the ids are read from it, not from the literals
+  PASS  constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
+  PASS  constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
+  PASS  constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use
+  PASS  constants: every slot plan has a known kind and real slot ids
+  PASS  constants: the slot plan maps each equip location to the spec §5.2 kind
+  PASS  constants: universal and armor-typed equip locations partition the armor plans
+  PASS  constants: every situation key is listed once, in order, with the spec §6.1 defaults
+  PASS  constants: every difficulty id maps to a situation kind the classifier knows
+  PASS  constants: the trade rules are the spec §7.2 table, and every situation has a rule
+  PASS  constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
+  PASS  classdata: thirteen classes with their client classIDs, each with an armor type
+  PASS  classdata: every spec row is well-formed and its class lists it
+  PASS  classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder
+  PASS  classdata: dual wield and Titan's Grip are the right specs
+  PASS  classdata: dual wield and Titan's Grip by spec, or by class when every spec agrees
+  PASS  classdata: shields go to Protection, Holy, Elemental and Restoration Shaman only
+  PASS  classdata: held off hands go to the caster and healer specs
+  PASS  classdata: a spec of another class is not trusted over the class
+  PASS  classdata: armor type is exact, and an unknown class or subclass cannot tell
+  PASS  classdata: weapon proficiencies by class
+  PASS  classdata: primary stat is the spec's, or the class's when every spec shares one
+  PASS  classdata: lookups never throw on junk input
+  PASS  evaluate: every equip location in SLOT_PLAN compares against its slot
+  PASS  evaluate: an equip location with no plan is unknown (not gear)
+  PASS  evaluate: pair compares against the lower of the two slots
+  PASS  evaluate: an empty slot is an upgrade with the emptySlot reason
+  PASS  evaluate: a slot that is not known is unknown, never an upgrade
+  PASS  evaluate: a one-hander compares against the main hand only, unless the candidate dual wields
+  PASS  evaluate: a dual wielder holding a two-hander compares a one-hander against the two-hander
+  PASS  evaluate: a two-hander compares against the average of both hands
+  PASS  evaluate: Titan's Grip compares a two-hander as a pair over both hands
+  PASS  evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot
+  PASS  evaluate: ranged weapons are two-handers for hunters and main hand for wand users
+  PASS  evaluate: a gun, crossbow or wand in the main hand is a two-hander for off hands and one-handers
+  PASS  evaluate: a unique-equipped drop compares against the item holding its category
+  PASS  evaluate: a unique drop whose own slot holds the category replaces that item
+  PASS  evaluate: compareOwned takes the better of equipped and owned per slot
+  PASS  evaluate: a known spec is judged by the item's own spec list
+  PASS  evaluate: spec unknown falls back to ClassData for armor, jewelry, shields and off hands
+  PASS  evaluate: a known spec with no item spec list uses the spec's own class data
+  PASS  evaluate: the primary stat decides when every spec agrees, and is ambiguous otherwise
+  PASS  evaluate: an unknown class cannot be judged
+  PASS  evaluate: tier tokens are judged by their class list
+  PASS  evaluate: a class-restricted item refuses other classes
+  PASS  evaluate: an undesired subclass is doesntWant, but only when the item is usable
+  PASS  evaluate: the sidegrade band splits upgrade, sidegrade and downgrade
+  PASS  evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign
+  PASS  evaluate: the scorer is optional, may be pending, and may fail without harm
+  PASS  evaluate: a two-hander's score baseline is the average of both hands' scores
+  PASS  evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison
+  PASS  evaluate: the track delta orders tracks by tier, then rank
+  PASS  evaluate: the output carries every field of spec 5.2 step 5
+  PASS  evaluate: nil and garbage inputs never throw and answer unknown with a reason
+  PASS  evaluate: garbage inside the tables never throws
+  PASS  evaluate: an internal failure is caught and reported as unknown
+  PASS  evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
+  PASS  scoring: a Pawn v1 string imports its stats under GetItemStats' keys
+  PASS  scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
+  PASS  scoring: ImportInto replaces one spec's weights in a fresh map and keeps the others
+  PASS  scoring: a weights score is the sum of stat times weight
+  PASS  scoring: a weight on an unknown stat key counts 0 and is logged once per key
+  PASS  scoring: HasWeights is true once any spec has a weight
+  PASS  scoring: Resolve picks the adapter for every setting, Pawn presence and weights
+  PASS  scoring: InUse and Scorer follow the settings and whether Pawn is initialized
+  PASS  scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale
+  PASS  scoring: for you, a drop that upgrades no scale is valued on your spec's scale
+  PASS  scoring: for a looter, Pawn uses the scale for their class and spec
+  PASS  scoring: Pawn answers pending while it is not ready or has not read the item
+  PASS  scoring: the kernel hands the scorer the drop beside each item
+  PASS  scoring: with weights, a higher item level that scores lower is a sidegrade
+  PASS  scoring: the feed judges your drop with your weights once they are set
+  PASS  quality gate: fixed passes at or above the threshold and hides below it
+  PASS  quality gate: fixed defaults to Rare, and the floor does not apply to it
+  PASS  quality gate: no mode or an unknown mode is the default fixed mode
+  PASS  quality gate: dynamicSlot uses the baseline slot's equipped quality
+  PASS  quality gate: dynamicSlot is floored, Uncommon by default
+  PASS  quality gate: dynamicSlot with an empty or unread baseline slot uses the floor
+  PASS  quality gate: dynamicSlot without a baseline slot takes the lower of the plan's slots
+  PASS  quality gate: gear entries may be item facts carrying a quality
+  PASS  quality gate: dynamicCharacter uses the most common equipped quality
+  PASS  quality gate: dynamicCharacter ties go to the lower quality
+  PASS  quality gate: dynamicCharacter ignores shirt, tabard and empty slots
+  PASS  quality gate: dynamicCharacter is floored, and with no gear uses the floor
+  PASS  quality gate: the upgrade override shows a below-threshold upgrade for me, on by default
+  PASS  quality gate: the override needs an upgrade verdict, nothing less
+  PASS  quality gate: a drop at the threshold passes on quality, not on the override
+  PASS  quality gate: the override applies in the dynamic modes too
+  PASS  quality gate: a situation's quality setting overrides the global mode
+  PASS  quality gate: absent, global or unknown situation quality falls back to the global mode
+  PASS  quality gate: the resolved situation mode decides the drop
+  PASS  quality gate: Threshold answers the threshold and where it came from
+  PASS  quality gate: the filter bar label for each mode
+  PASS  quality gate: every quality id has a display name
+  PASS  quality gate: an unknown drop quality passes, so the feed never hides what it cannot read
+  PASS  quality gate: nil and garbage inputs never throw
+  PASS  situations: the classifier truth table
+  PASS  situations: the truth table reaches every situation key
+  PASS  situations: garbage inputs classify as solo and never throw
+  PASS  situations: with nothing stored, every key takes the spec's track and auto-open
+  PASS  situations: a stored row overrides, and a malformed field falls back to the default
+  PASS  situations: an unknown key tracks nothing
+  PASS  situations: each re-evaluation event classifies and announces a change once
+  PASS  situations: an event that changes nothing sends nothing
+  PASS  situations: the edge's inputs are what the client says
+  PASS  situations: a difficulty the client does not know falls back to the instance type
+  PASS  situations: a client with no C_ChallengeMode still classifies
+  PASS  situations: Current classifies live before the first event, without a message
+  PASS  situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
+  PASS  situations: stood down, the events are gone; the stand-up announces where the player is
+  PASS  trade rules: a warbound or account-bound drop is no warbound
+  PASS  trade rules: a bonus roll is no bonusRoll, and warbound wins over it
+  PASS  trade rules: a BoE or BoU drop is yes boe, in any situation and past the window
+  PASS  trade rules: the legacy rule is no legacy (follower dungeons and PvP)
+  PASS  trade rules: the group rule (ilvlRule none) is likely groupLoot without inspect
+  PASS  trade rules: personal, the looter's evaluation known and not an upgrade, is likely notUpgrade
+  PASS  trade rules: personal, an upgrade for the looter, is no upgradeForLooter
+  PASS  trade rules: the item level decides, not the scored verdict (the game's rule is ilvl)
+  PASS  trade rules: an empty slot on the looter is an upgrade for them
+  PASS  trade rules: the looter unknown is unknown noInspect, carrying the inspect reason
+  PASS  trade rules: an estimate has no expiresAt; only the own-item timer sets one
+  PASS  trade rules: past the rule's window the drop is no expired
+  PASS  trade rules: at exactly the window the drop has not expired
+  PASS  trade rules: with no clock or no drop time there is no expiry check
+  PASS  trade rules: binds and legacy are decided before the window
+  PASS  trade rules: each situation's default rule is its `trade.rules` default, raid conservatively personal
+  PASS  trade rules: the override map replaces a situation's rule
+  PASS  trade rules: an override naming no rule, or equal to the default, is not an override
+  PASS  trade rules: an unknown or missing situation takes the default personal rule
+  PASS  trade rules: Rules lists every situation in order with its rule, default and override flag
+  PASS  trade rules: Reset clears the override map in place, restoring the defaults
+  PASS  trade rules: IsRule knows the three rule names and nothing else
+  PASS  trade rules: nil and garbage inputs never throw
+  PASS  trade rules: bad facts are unknown badFacts
+  PASS  messaging: the default templates are the spec §9.1 text, one per kind
+  PASS  messaging: Template takes the owner's text, and the default for an empty or absent one
+  PASS  messaging: Expand fills every token, and formats the gains as numbers
+  PASS  messaging: unknown tokens are left as they are, and reported once each in order
+  PASS  messaging: a known token with no value reads as ?, and is reported as missing
+  PASS  messaging: a + before a worded gain is dropped; before a number or a missing one it stays
+  PASS  messaging: a value with pattern characters is inserted literally
+  PASS  messaging: Preview gives the text, its length and the too-long flag
+  PASS  messaging: a request that can send answers send, with the expanded text, state ready
+  PASS  messaging: the owner's template and an edited text override the default
+  PASS  messaging: the one-ask guard refuses a repeat once sent, alreadyAsked
+  PASS  messaging: with oneAsk off a sent ask can be repeated; an ask in flight never can
+  PASS  messaging: a message over 255 characters is refused tooLong, with its length
+  PASS  messaging: the guard runs before the length check
+  PASS  messaging: a malformed request is refused badRequest
+  PASS  messaging: under restriction a request is queued, state queued
+  PASS  messaging: a failed send is failed with its reason, and a retry is allowed
+  PASS  messaging: MarkSent and MarkFailed act only on an ask that is ready
+  PASS  messaging: the flush hands back queued asks first in, first out, each ready to send
+  PASS  messaging: the flush triggers are a lift to can-send, ENCOUNTER_END and CHALLENGE_MODE_COMPLETED
+  PASS  messaging: cancel drops a queued ask, which the flush then skips
+  PASS  messaging: a canceled ask can be asked again
+  PASS  messaging: a looter leaving drops every ask queued to them, and only theirs
+  PASS  messaging: Counts reports the registry for diagnostics
+  PASS  messaging: garbage never throws
+  PASS  messaging: FurthestState is the furthest state any ask of a kind reached for one drop (feedback-4 §1)
+  PASS  restrictions: nothing restricted, everything allowed and nothing announced
+  PASS  restrictions: an encounter stops chat and is the reason; its lift is announced
+  PASS  restrictions: a lift the client does not confirm yet keeps the restriction
+  PASS  restrictions: the event's boolean payload is read too
+  PASS  restrictions: each type gives its reason; Map blocks nothing
+  PASS  restrictions: the reason is the highest in priority
+  PASS  restrictions: a type the client adds later is reported by name and blocks nothing
+  PASS  restrictions: the chat lockdown stops chat, a secret answer too
+  PASS  restrictions: the combat edges stop inspect and trade, ahead of the client's flag
+  PASS  restrictions: before any edge, the client's combat flag decides
+  PASS  restrictions: combat under an encounter announces the change of what is allowed
+  PASS  restrictions: a secret payload never raises; a secret state reads as active
+  PASS  restrictions: a client without the restriction APIs restricts nothing but combat
+  PASS  restrictions: Refresh announces a lift no event reported
+  PASS  restrictions: stood down, nothing is heard; the stand-up announces what is in effect
+  PASS  roster: solo, the player alone, read lazily
+  PASS  roster: a party, in unit order, keyed by GUID, with realm, class and online
+  PASS  roster: a raid reads raid1..N, the player among them
+  PASS  roster: Resolve by GUID, by Name-Realm and by a bare same-realm name, without case
+  PASS  roster: a bare name two members share is settled by classFile, else unresolved
+  PASS  roster: a bare name prefers the member on the player's own realm
+  PASS  roster: GROUP_ROSTER_UPDATE re-reads the group; the specID survives
+  PASS  roster: the event fans out to the situation edge and the roster both
+  PASS  roster: a miss re-reads the client once, so a name still Unknown at the event resolves
+  PASS  roster: secret answers never raise; a secret GUID drops the unit, a secret name hides it
+  PASS  roster: garbage queries answer nil
+  PASS  roster: NormalizeRealm drops spaces and hyphens
+  PASS  roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
+  PASS  item facts: a cached ring reads every field of spec §5.1
+  PASS  item facts: a chest reads its appearance, account binds and no specs or track
+  PASS  item facts: the track tier, by string id first, then by enUS name, else unset
+  PASS  item facts: the track falls back to the tooltip's upgrade line
+  PASS  item facts: an item unique on its own takes its item id as the category
+  PASS  item facts: a token naming classes is a tier token; class gear carries classes only
+  PASS  item facts: the quality falls back to the link's color
+  PASS  item facts: the facts feed the verdict kernel
+  PASS  item facts: Get caches by link until invalidated
+  PASS  item facts: at its cap the cache drops its least recently used quarter, never the whole
+  PASS  item facts: garbage links answer nil and never raise
+  PASS  item facts: learning an appearance re-reads the flag on the cached facts
+  PASS  item facts: Request answers a cached item at once and never calls back
+  PASS  item facts: an uncached item loads, and every waiter is called back once
+  PASS  item facts: the callback retries until the item arrives
+  PASS  item facts: an item that never arrives is given up after MAX_LOAD_TRIES, with nil
+  PASS  item facts: a client that cannot load items answers unavailable
+  PASS  item facts: stood down, the cache and the loads are dropped and a late answer is ignored
+  PASS  BUG-1 repro: chat first, the drop reads 311 Epic
+  PASS  BUG-1 repro: the encounter's bare link first, then chat's complete one: the complete link wins
+  PASS  BUG-1 repro: a complete link first is never replaced by a later bare one
+  PASS  BUG-1 repro: a merge while the first link is still loading judges the complete link
+  PASS  BUG-1 hypothesis 2: ItemFacts reads a complete link right and a bare one at the base
+  PASS  BUG-1 hypothesis 3: an own drop recorded from a bare link reads level and quality from its bag item
+  PASS  BUG-1: the history entry takes the complete link, 311 and Epic when chat merges in
+  PASS  BUG-1: the history entry takes the bag item's link, level and quality
+  PASS  BUG-1: the history's Refresh never trades a complete link for a bare one
+  PASS  BUG-1: a drop the bare link's base quality hid comes back when the complete link merges in
+  PASS  ItemRead: LinkDetail reads the bonus ids, the modifiers, the context and how complete a link is
+  PASS  ItemRead: BetterLink keeps the more complete link, the first on a tie, and never a non-item
+  PASS  ItemRead: the identity is the item and its bonus ids; unique id, level, spec and modifiers do not count
+  PASS  ItemRead: EffectiveItemLevel answers gear's detailed level, else its base, and nothing for non-gear
+  PASS  ItemRead: a bag location answers the exact level and quality; an empty slot answers nothing
+  PASS  ItemRead: QualityOf answers the client's quality for the link, else the link's color
+  PASS  ItemFacts: the level and quality say where they came from
+  PASS  FeedRecords: a merge keeps the more complete link, chat's on a tie
+  PASS  trade timer: two own copies of one item id each match the bag item of their own identity
+  PASS  diagnostics: one drops line per drop names its sources, link, level and quality with their sources, and the bag match
+  PASS  BUG-2: your own drop matched to its bag item shows the bag item; moved away, its link
+  PASS  BUG-2: an item you wear shows your inventory slot; someone else's item its link
+  PASS  BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
+  PASS  BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
+  PASS  gear: each worn slot is a copy of its facts at the current level; an empty slot is false
+  PASS  gear: the candidate carries the class, the spec and the hand flags from ClassData
+  PASS  gear: a spec the class flags disagree on leaves the hand flag unknown
+  PASS  gear: the qualities are per worn slot, false for an empty one
+  PASS  gear: a better bag item you can wear is owned for its slot; one you cannot is not
+  PASS  gear: a worn item better than any bag item is its own slot's owned best
+  PASS  gear: a pair gets your best two rings, one ring never fills both
+  PASS  gear: a dual wielder's one-handers fill both hands, each once
+  PASS  gear: a one-hander fills the main hand only for a spec that does not dual wield
+  PASS  gear: with Titan's Grip a two-hander can fill the off hand too
+  PASS  gear: a bag item with no slot plan (a reagent, a potion) is never asked of the item facts
+  PASS  gear: a tier token and a secret bag link are not owned gear
+  PASS  gear: the candidate judges a drop against the worn item, and against the bags with compareOwned
+  PASS  gear: the gear events share one throttled rebuild, which announces a change once
+  PASS  gear: a bag event in combat arms nothing; the combat's end rebuilds once
+  PASS  gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again
+  PASS  gear: the player's spec change rebuilds; another unit's does not
+  PASS  gear: the first lazy read announces nothing
+  PASS  gear: an item still loading leaves its slot unknown, and its arrival rebuilds
+  PASS  gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
+  PASS  loot parser: loot (self) x1
+  PASS  loot parser: loot (self) x3
+  PASS  loot parser: bonus (self) x1
+  PASS  loot parser: bonus (self) x2
+  PASS  loot parser: pushed (self) x1
+  PASS  loot parser: pushed (self) x5
+  PASS  loot parser: loot (other) x1
+  PASS  loot parser: loot (other) x4
+  PASS  loot parser: bonus (other) x1
+  PASS  loot parser: bonus (other) x2
+  PASS  loot parser: pushed (other) x1
+  PASS  loot parser: pushed (other) x12
+  PASS  loot parser: a cross-realm looter resolves to the member
+  PASS  loot parser: a player hyperlink or color around the name is stripped
+  PASS  loot parser: a looter the roster cannot place keeps the name and the event's GUID
+  PASS  loot parser: the roster's member wins over the event's GUID
+  PASS  loot parser: the upgrade echo and the crafting echoes are rejected
+  PASS  loot parser: a line that is not a receipt, a non-item link and an empty line are ignored
+  PASS  loot parser: secret text is dropped before any pattern touches it
+  PASS  loot parser: a secret event GUID is not used
+  PASS  loot parser: a secret, empty or absent GlobalString is left out of the set
+  PASS  loot parser: a GlobalString rewritten at runtime (PrettyChat) is rebuilt on the next line
+  PASS  loot parser: a deDE client reads its own lines
+  PASS  loot parser: positional arguments are read in the locale's order
+  PASS  loot parser: CHAT_MSG_LOOT hands each receipt to every sink and counts the lines
+  PASS  loot parser: the event's twelfth argument is the GUID it uses
+  PASS  loot parser: stood down, CHAT_MSG_LOOT reaches nothing; the counters survive
+  PASS  inspect: a request sends one NotifyInspect, and the ready read stores gear and spec
+  PASS  inspect: a slot's level comes from its tooltip, else from the link
+  PASS  inspect: one in flight at a time, spaced SPACING seconds apart
+  PASS  inspect: looters first, then offer candidates, then warm-up; a later ask can raise a job
+  PASS  inspect: no INSPECT_READY in 2.5s retries once, then the job fails with a timeout
+  PASS  inspect: out of range waits without using an attempt, then sends once in range
+  PASS  inspect: 25s out of range ends the job as outOfRange; CanInspect false waits the same way
+  PASS  inspect: a GUID with no unit fails after 10s; an offline member waits the same way
+  PASS  inspect: an incomplete link is read again, 0.3s apart, and completes when it arrives
+  PASS  inspect: still incomplete after three retries, the read is kept and says so
+  PASS  inspect: every link already readable completes at once, cached, with no inspect
+  PASS  inspect: a foreign inspect re-queues the job in flight, free, and resets the spacing
+  PASS  inspect: a foreign inspect after the data arrived lets the read finish, and clears nothing
+  PASS  inspect: anyone's INSPECT_READY for a group member is read, completing its queued job
+  PASS  inspect: the fast path needs neck, rings and trinkets; visible slots alone send the inspect
+  PASS  inspect: an INSPECT_READY whose data is gone by the read is never stored as fresh
+  PASS  inspect: the data arriving within the retries is read; a moved unit token is no data
+  PASS  inspect: an empty read nobody asked for is dropped, and the entry kept as it was
+  PASS  inspect: combat parks the queue, the job in flight still finishes, and its end resumes
+  PASS  inspect: the queue waits while the inspect window is open
+  PASS  inspect: with the old data still held, a request completes on the fast path
+  PASS  inspect: a read is good for 600s; after that a request inspects again
+  PASS  inspect: UNIT_INVENTORY_CHANGED marks a group member stale and re-queues it
+  PASS  inspect: the roster event drops the entries of members who left
+  PASS  inspect: 2s after a roster update in a tracked situation, the idle queue warms up
+  PASS  inspect: entering an instance warms up too; untracked or busy, nothing is queued
+  PASS  inspect: Scan queues every other member that has no good read
+  PASS  inspect: the candidate carries the roster's class, the read spec and the hand flags
+  PASS  inspect: InspectDone waits for the read's items to load
+  PASS  inspect: one debug line per job
+  PASS  inspect: secret GUIDs, units and specs are never used
+  PASS  inspect: the stand-down clears this broker's inspect, every timer and the state
+  PASS  feed: a member's loot is added once, judged for you, and asks for the looter's inspect
+  PASS  feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
+  PASS  feed: an upgrade for the looter cannot be traded under the personal rule
+  PASS  feed: a bonus roll is never tradeable
+  PASS  dedupe: chat, the encounter loot event and the loot history report one drop
+  PASS  dedupe: the encounter event first, chat second, merges the same way
+  PASS  dedupe: a looter the roster cannot place is matched by name without the realm
+  PASS  dedupe: a GUID learned from a second source asks for the looter's inspect
+  PASS  dedupe: two copies from one source are two drops; another looter's copy is its own
+  PASS  dedupe: a report after the window is a new drop
+  PASS  history: a drop is taken once it has a winner, and only once
+  PASS  history: your own won drop is yours
+  PASS  groups: trash, a boss kill's loot window, then trash again
+  PASS  groups: a wipe opens no loot window
+  PASS  groups: clear on boss kill empties the live feed at a kill, not at a wipe
+  PASS  groups: loot naming an earlier encounter joins that encounter's group
+  PASS  groups: a keystone run gathers every drop, the chest after completion included
+  PASS  groups: outside an instance the area is the open world
+  PASS  gates: an untracked situation hides the drop before its item is even loaded
+  PASS  gates: below the quality threshold a downgrade for you is hidden, and costs no inspect
+  PASS  gates: the upgrade override shows an upgrade for you below the threshold
+  PASS  gates: the stored quality settings and the situation's override are read
+  PASS  comparison: heirloom protection (on by default) calls your upgrade over an heirloom a sidegrade
+  PASS  comparison: heirloom protection is yours alone; the looter's verdict is plain
+  PASS  gates: the filters run after the situation and before the verdict
+  PASS  filter: every rule of spec §6.3 (pure)
+  PASS  gates: the relative minimum item level reads your average equipped level
+  PASS  load: an uncached item waits for its facts; a second source merges meanwhile
+  PASS  load: an item that never loads is shown, judged unknown
+  PASS  own: your drop is judged for you, its trade by your verdict, and every member a candidate
+  PASS  own: an upgrade for you cannot trade, so no candidate is inspected for it
+  PASS  own: an item pushed to you (a quest reward, a purchase) is not a drop
+  PASS  update: GearChanged re-judges you on every drop
+  PASS  update: a pending score is retried on one shared timer, five times at most
+  PASS  trade: a group drop past its rule's window turns no expired on the sweep
+  PASS  trade: your own drop takes the timer's exact read: yes with expiresAt, then no expired
+  PASS  trade: your own drop the rule called no, with a live timer, asks for its candidates then
+  PASS  trade: a BoE own drop keeps the bind's answer; the timer folds nothing in
+  PASS  add: injects a drop past the situation gate; a stranger is judged without an inspect
+  PASS  add: the test feed skips every gate and every inspect, and stays apart
+  PASS  cap: the oldest drop goes first, and an emptied group with it
+  PASS  removal: the sinks hear every clear and every trim, with the feed's name (DW-62)
+  PASS  secrets: a secret link, name or encounter id is never used
+  PASS  stand-down: timers and pending loads are dropped, the drops kept
+  PASS  two yokes: both Yokes are separate drops with the right looters, the accented name resolved
+  PASS  two yokes: the reagent and the altar are hidden by the gear-only rule and counted, not lost
+  PASS  two yokes: with gear-only off, the common reagent is hidden by the quality rule
+  PASS  two yokes: each hidden drop is logged with its reason under the FEED tag
+  PASS  refused: every receipt the feed turns away is counted by reason and logged under FEED
+  PASS  refused: a C_LootHistory drop already taken is counted as seen
+  PASS  diagnostics: the drops section reports the hidden and the refused counts by reason
+  PASS  header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`
+  PASS  header: your own drop, listed in My drops, is not counted as hidden in Group drops
+  PASS  header: History names its hidden drops too, and a long list is cut with a count
+  PASS  roster entry: the short name, the realm only when it is not yours, the class, you marked
+  PASS  roster merge: the snapshot only grows, you first, the same character never twice
+  PASS  roster merge and copy: the entries are copied, never shared
+  PASS  roster names: the first few, class-colored, then +n; none for no roster
+  PASS  roster tooltip: one Group line, the realm when it is not yours, class-colored (fb3 §4)
+  PASS  feed roster: the group takes everyone in it when its first drop makes it, you first
+  PASS  feed roster: someone who joins mid-run is added on the roster event, and to the History group
+  PASS  feed roster: a joiner is also taken by the next drop, with no roster event between
+  PASS  feed roster: a roster event with no group open yet changes nothing and raises nothing
+  PASS  history roster: Record copies the group's roster in and merges it with each entry
+  PASS  group header: you alone after the count, class-colored; the tooltip's Group line names the party
+  PASS  group header: a raid's party is not in the header; its tooltip line names ten and +n
+  PASS  history header: the recorder alone; an older group with no place and no roster keeps its label
+  PASS  group place: a keystone's difficulty reads Mythic+ and its level; any other is the client's name
+  PASS  group place: an encounter names its instance, its boss, then its difficulty
+  PASS  group place: a key run's and an area's label is the instance, named once
+  PASS  group place: with no difficulty name the situation word stands in; an older group keeps its label
+  PASS  group place: Who names the recorder alone, its short name class-colored; History falls back to an entry
+  PASS  compat: DifficultyName answers the client's name, nil for an unknown id or no API
+  PASS  compat: KeystoneLevel answers the active key, else the completed run's, else nil
+  PASS  feed: the owner's Timewalking drop names the instance, the boss, Timewalking and you (07)
+  PASS  feed: GetInstanceInfo's own difficulty name wins over GetDifficultyInfo's; an empty one falls back
+  PASS  feed: a group keeps the place it opened in
+  PASS  feed: a key run's end chest reads Mythic+ and the completed run's level
+  PASS  feed: in the open world no place is read and the situation word stands in
+  PASS  test mode: the sample groups carry real instance names and realistic difficulties
+  PASS  sim: a dungeon boss and a key run name the pool's instance and the client's difficulty
+  PASS  char filter: a recorder key is Name-Realm; a name that carries its realm is kept
+  PASS  char filter: the class icon is the classicon atlas as inline markup, nothing with no class
+  PASS  char filter: All passes everything; a recorder passes when chosen; none passes only All
+  PASS  char filter: Canonical swaps the sentinel for your key once it is known, in a fresh set
+  PASS  char filter: the label reads All, Current, the one character, or n selected
+  PASS  char filter: the characters are every recorder in the log once, you always, sorted by name
+  PASS  char filter: the menu is All, Current, then each character with its class icon and color
+  PASS  recorder: you are Name-Realm and your class, read live and kept
+  PASS  recorder: unknown while the client has no realm yet, then known
+  PASS  recorder: every drop record and its History entry say who saw it
+  PASS  recorder: a test placeholder is stamped too, and a stamp already there is kept
+  PASS  filter bar: the Character dropdown sits after Content, multi-select, Current by default
+  PASS  filter bar: the session tabs list All, Current and you alone; History every recorder
+  PASS  filter bar: History shows your drops under Current, every recorder chosen, and unknown only under All
+  PASS  filter bar: a drop the Character filter hides is named in the header's reason
+  PASS  filter bar: a Character selection is a set of keys; anything else is refused
+  PASS  filter bar: Group drops keeps every drop under any Character choice it offers
+  PASS  filter bar: each sync reuses the Character and View rows; HistoryChanged rebuilds History's
+  PASS  read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
+  PASS  read: the sentence on a line of another type is still the timer (the text fallback)
+  PASS  decoder: without the line type, the localized sentence is decoded with the client's globals
+  PASS  read: no timer line (bound, or the window gone) means no: expired, never live
+  PASS  read: a BoE drop has no timer line and no window: permanent, never expired, never live
+  PASS  match: by exact link first, then by item id; each drop takes one item
+  PASS  match: an item that is none of your drops, and another member's drop, are not timed
+  PASS  match: test drops are never timed
+  PASS  match: an item that left the bags drops its entry; a moved one keeps it
+  PASS  scan: BAG_UPDATE_DELAYED, LOOT_CLOSED and your DropAdded ask for it; once per 2 seconds
+  PASS  ticker: slow while the window is hidden, fast while it is shown, off when nothing is live
+  PASS  ticker: a second live item shares the one ticker
+  PASS  warn: once per item at the threshold, with TradeTimerExpiring and one chat line
+  PASS  warn: an item first read below the threshold warns at once; warnAt 0 turns it off
+  PASS  secrets: a secret bag link, GUID or tooltip text is never used
+  PASS  stand-down: the ticker and the scan stop, the entries are kept; the stand-up scans again
+  PASS  give: the drop's bag item is picked up by GUID and dropped on the member
+  PASS  give: the target may be a name or a Name-Realm as well as a GUID
+  PASS  give: an item moved since the last scan is found by a walk of the bags
+  PASS  give: FindBagSlot takes the hinted slot first and refuses a missing or secret GUID
+  PASS  give: an item gone from the bags, or a drop never matched, is notInBags
+  PASS  give: an item whose trade window has passed is expired
+  PASS  give: a BoE drop has no trade-time line, and is given all the same
+  PASS  give: a busy cursor is never swapped away
+  PASS  give: with no DropItemOnUnit the pickup is put back, and the reason is noApi
+  PASS  give: CanGive answers every guard and touches nothing
+  PASS  guards: combat refuses before the range is read
+  PASS  guards: a stranger, yourself, an offline member and one out of range are refused
+  PASS  guards: stood down, nothing is traded
+  PASS  guards: every reason has its tooltip line, and none has none
+  PASS  open: InitiateTrade with the member's unit; noApi without it
+  PASS  diagnostics: the trade section reports the helper's counts once it has been used
+  PASS  send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
+  PASS  send: every token comes from the drop: item, ilvl, slot, track and both gains
+  PASS  send: into an empty slot the gain reads as words, never the item level or a ? (DW-62)
+  PASS  send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again
+  PASS  send: an edited text over 255 bytes is refused tooLong and nothing is sent
+  PASS  send: a stranger, yourself, an offline member and a missing target are refused
+  PASS  preview: the template filled in for the drop, with its length; nothing sent or filed
+  PASS  send: an offer whispers the candidate, named in {player}
+  PASS  fail: a raising sender fails with its message, prints nothing, and may be retried
+  PASS  fail: a secret or empty error reads as error; no sender at all is noApi
+  PASS  fail: the deprecated global sender is the fallback
+  PASS  announce: auto picks INSTANCE_CHAT, then RAID, then PARTY, and never SAY or YELL
+  PASS  announce: outside a group it fails noChannel
+  PASS  queue: under a restriction the ask is queued, and the lift sends it at once
+  PASS  flush: one send every 1.5 seconds, first in first out
+  PASS  flush: a restriction back mid-flush stops it; the rest wait for the next trigger
+  PASS  flush: ENCOUNTER_END and CHALLENGE_MODE_COMPLETED re-read a lockdown that lifted silently
+  PASS  flush: a trigger with nothing queued, or while chat is still restricted, sends nothing
+  PASS  cancel: pressing a queued ask cancels it; the lift sends nothing and the button is ready
+  PASS  cancel: an ask queued to a looter who leaves is dropped; others stay
+  PASS  cancel: a queued announce is dropped once you leave the group
+  PASS  test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
+  PASS  stand-down: a request is refused, the flush timer is canceled and the queue is dropped
+  PASS  transmog compat: CanIMogIt answers first when it is loaded, else the client's collection
+  PASS  transmog compat: CanIMogIt's no-appearance answer is nil; a raise or a non-boolean falls back
+  PASS  transmog facts: the item facts read the look through CanIMogIt when it is loaded
+  PASS  transmog template: the plain ask for a gain; For transmog only when on and the look is missing
+  PASS  transmog template: its default text, the owner's own, and a request that names it
+  PASS  transmog card: the header's look chip says New look, Look known or nothing
+  PASS  transmog ask: offered for a missing look only with transmogAsk on, with its own tooltip
+  PASS  transmog edge: with transmogAsk on, an ask for a missing look sends the For transmog text
+  PASS  transmog edge: a collected look keeps the plain ask
+  PASS  transmog settings: the template and the opt-in are rows, the opt-in off by default
+  PASS  transmog settings: the preview sample is a drop whose look you have not collected
+  PASS  transmog test mode: one sample's look is collected and one's is not
+  PASS  transmog diagnostics: the integrations name the look's source, messaging the opt-in
+  PASS  history: Normalize gives the shape in place and keeps the retention row
+  PASS  history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
+  PASS  history: Record groups by key, newest last; no group cap, 50 drops a group
+  PASS  history: the safety ceiling drops the oldest drops first, and an emptied group goes
+  PASS  history: an automatic outcome only moves forward
+  PASS  history: Refresh takes the latest verdicts, and an expired trade makes it `expired`
+  PASS  history: Refresh's second answer says whether anything it stores changed
+  PASS  history: declined is set by hand, and clearing it puts back what it replaced
+  PASS  history: a completed trade matches the partner's drop first, then any, one entry per item
+  PASS  history: an item you gave marks your own drop traded away, never someone else's
+  PASS  history edge: DropAdded records a live drop in DB.global, never a test drop, and keeps the retention row
+  PASS  history edge: DropUpdated refreshes the entry; an expired trade makes it `expired`
+  PASS  history edge: a DropUpdated that changes nothing kept sends no HistoryChanged
+  PASS  history edge: a sent ask is `asked`, a sent offer or announce `offered`; other states nothing
+  PASS  history trade: a completed trade marks the drop you got `received`, and the Ask button `Traded`
+  PASS  history trade: "Trade complete." before the close completes it too
+  PASS  history trade: a close after both accepted with no "Trade complete." completes nothing
+  PASS  history trade: an item you gave marks your drop `tradedAway`
+  PASS  history trade: a canceled trade completes nothing; the offer is the last one accepted
+  PASS  history: Clear history asks first, and empties the log only on Yes; the retention row stays
+  PASS  history: the diagnostics' feed section reports the history and the trade
+  PASS  history tab: kept groups newest first, the first open, each row's outcome painted
+  PASS  history tab: rows take the Window page's row height and font size
+  PASS  history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
+  PASS  history tab: a right-click marks a row declined, through the menu when the client has one
+  PASS  history tab: with nothing kept it says what it will hold, and Clear history is off
+  PASS  history tab: HistoryChanged repaints the shown window on the next frame
+  PASS  history tab: a DropUpdated that changes the history still repaints the window once
+  PASS  history tab: the pure Ago reads seconds, hours, then days
+  PASS  retention: the labels, the choices and the footer
+  PASS  retention: a group's age is its newest entry's, else its own
+  PASS  retention: Count says what a window deletes, and deletes nothing; Prune deletes it
+  PASS  retention row: account-wide, on the Window page, the listed windows only
+  PASS  retention: a longer window, or one that deletes nothing, is taken at once
+  PASS  retention: a shorter window that deletes asks first; Yes prunes
+  PASS  retention: No writes the last agreed window back and deletes nothing
+  PASS  retention: an unanswered popup (a /reload with it open) leaves nothing to prune at the next login
+  PASS  retention: a later change that deletes nothing retires the open popup; its Yes does nothing
+  PASS  retention: of two deleting changes, only the latest popup's answer counts
+  PASS  retention: headless (no popup), a shorter window prunes at once
+  PASS  retention: the login prune runs once, deferred off the login, over the account's log
+  PASS  retention: the stand-down takes the pending prune back; the stand-up arms it again
+  PASS  retention: enabled later in a session that started disabled, the prune still runs once
+  PASS  retention: Never delete keeps every group at login
+  PASS  retention: in test mode a shorter window prunes test mode's older sample, not the account's
+  PASS  toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
+  PASS  toast: Compose reads board 06 C: the title, the item and Looted by · gain · trade
+  PASS  toast edge: off by default; nothing is built or shown
+  PASS  toast edge: a qualifying drop shows at once, painted, and goes after its duration
+  PASS  toast edge: one at a time; the next waits its turn, and each drop toasts once
+  PASS  toast edge: the queue keeps the newest MAX_QUEUE drops
+  PASS  toast edge: a drop that turns likely later toasts on its DropUpdated
+  PASS  toast edge: a hover pauses the countdown, and leaving resumes it with the time left
+  PASS  toast edge: leaving through the close button resumes the countdown
+  PASS  toast edge: not shown in combat; held until it ends, unless toast.inCombat
+  PASS  toast edge: a drop asked for, or gone from the feed, is skipped when its turn comes
+  PASS  toast edge: Ask goes through the shared host handler, and the button follows its state
+  PASS  toast edge: toast.sound plays the client's alert from SOUNDKIT
+  PASS  toast edge: only test mode drags it; the position is saved and Reset position forgets it
+  PASS  toast edge: test mode's placeholder toasts and stays until test mode ends
+  PASS  toast edge: a drop that leaves the feed takes its toast and its place in the queue
+  PASS  toast edge: the cap's trim takes the trimmed drop's toast, through the real feed
+  PASS  toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing
+  PASS  toast edge: turning the toast off takes it down and empties the queue; on again, new drops toast
+  PASS  toast edge: a test toast goes when the toast is turned off, though it has no countdown
+  PASS  toast edge: a profile switch to one with the toast off takes it down
+  PASS  toast edge: the stand-down empties the queue and takes the toast down
+  PASS  toast: the diagnostics' window section reports the toast
+  PASS  auto-ask: DueAt is the delay after the later of the drop and the encounter's end
+  PASS  auto-ask: ClampDelay keeps the delay inside 3..30 and defaults to 10
+  PASS  auto-ask edge: off by default; a qualifying drop is never asked for
+  PASS  auto-ask edge: a qualifying drop is whispered for after the delay, once, with the ask template
+  PASS  auto-ask edge: the delay and the least gain are the settings'
+  PASS  auto-ask edge: an upgrade into an empty slot is asked for, whatever the least gain (DW-62)
+  PASS  auto-ask edge: a sidegrade, your own drop or an unknown trade is not asked for; a later likely is
+  PASS  auto-ask edge: held while an encounter is in progress, then due the delay after its end
+  PASS  auto-ask edge: a loading screen out of an encounter lets the held asks go (DW-62)
+  PASS  auto-ask edge: the restriction lifting after the loading screen ends the hold (M6 review)
+  PASS  auto-ask edge: a restriction change with no world event never ends a held encounter
+  PASS  auto-ask edge: a zone change with no encounter restriction ends a held encounter too
+  PASS  auto-ask edge: an encounter that ends after the drop pushes the ask back
+  PASS  auto-ask edge: asking yourself cancels it
+  PASS  auto-ask edge: the looter leaving the group cancels it
+  PASS  auto-ask edge: receiving the item cancels it
+  PASS  auto-ask edge: a drop gone from the feed, or no longer qualifying, is dropped when due
+  PASS  auto-ask edge: turning it off cancels the waiting asks; turned on, older drops do not count
+  PASS  auto-ask edge: a profile switch that turns it on never asks for the drops already there
+  PASS  auto-ask edge: a profile switch that turns it off cancels the waiting asks
+  PASS  auto-ask edge: the first time it is turned on, a one-time notice explains it
+  PASS  auto-ask edge: the stand-down cancels every waiting ask
+  PASS  auto-ask edge: in test mode a placeholder's ask is printed, never sent
+  PASS  auto-ask: the diagnostics' messaging section reports auto-ask
+  PASS  sim seam: every Compat member that answers for the client is wrapped; the pure ones are not
+  PASS  sim seam: a provider answers only while a simulation runs; Live reads the client again
+  PASS  sim seam: the sender prints [sim] with the channel and the target, and sends nothing
+  PASS  sim seam: an ask goes through the real messaging edge and is printed, never whispered
+  PASS  sim seam: no real inspect and no real trade while a simulation runs
+  PASS  sim start: refused while stood down, and it says which
+  PASS  sim start: refused while test mode is on, and it says which
+  PASS  sim start: refused in combat, and it says which
+  PASS  sim start: refused inside an instance, and it says which
+  PASS  sim start: refused in a real group, and it says which
+  PASS  sim start: a second start is refused; test mode is refused while one runs
+  PASS  sim fire: an event reaches the handlers its registration calls, with its payload
+  PASS  sim restrictions: Encounter and the lockdown are answered by the client seam and stop the sends
+  PASS  sim timers: run while the simulation does, and never after its stop
+  PASS  sim history: drops go to the session log, never to DropWatcherDB.global.history
+  PASS  sim history: a real drop while a simulation runs is real: saved, and it survives the stop
+  PASS  sim history: a real trade while a simulation runs settles against the saved history
+  PASS  sim fire: a handler that raises never unwinds into the driver; the later handlers run
+  PASS  sim stop: a step that raises never skips the rest of the cleanup
+  PASS  sim stop: its drops, groups, inspect entries, restrictions and lockdown go; real drops stay
+  PASS  sim stop: a queued ask is canceled before the lift, so it never goes out
+  PASS  sim stop: the situation is classified from the real client again
+  PASS  sim auto-stop: joining a real group ends the simulation
+  PASS  sim auto-stop: entering an instance ends the simulation
+  PASS  sim stand-down: disabling the addon stops the simulation and leaves no timer
+  PASS  compat journal: the selection is read whole, the frame's part only once it loads
+  PASS  compat journal: Select applies the selection in the journal's order and resets the filters
+  PASS  compat journal: Instances lists the tier's dungeons or raids; Loot answers the loaded and the pending
+  PASS  sim pool: each situation reads its side and difficulty; the class filter is yours or none
+  PASS  sim pool: a read takes every instance of the newest tier at every difficulty and restores the selection
+  PASS  sim pool: the selection is restored even when a read raises
+  PASS  sim pool: the journal is not read while its frame is shown
+  PASS  sim pool: a frame shown the whole time ends in the fallback at the timeout
+  PASS  sim pool: entries still loading are awaited through EJ_LOOT_DATA_RECIEVED
+  PASS  sim pool: at the timeout the build keeps what has loaded
+  PASS  sim pool: loot for me sets the journal's class filter to yours; any lists every class
+  PASS  sim pool: an empty journal falls back to your own gear, reported once
+  PASS  sim pool: without the journal API the fallback answers at once
+  PASS  sim pool: the stop ends a waiting build, and a late event does nothing
+  PASS  sim roster: the random source replays a seed and stays in range
+  PASS  sim roster: a party has four members, a raid nine to nineteen, each distinct and whole
+  PASS  sim roster: gear is what the class can wear, worn at a level inside the band; the rest stays empty
+  PASS  sim roster: the content's level is the median of the pool's drops
+  PASS  sim roster: Create draws the group from the session's pool and the stop forgets it
+  PASS  sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
+  PASS  sim lines: a locale that reorders its arguments is written in its own order
+  PASS  sim lines: a burst has one to three lines, your own when asked, and a looter from another realm
+  PASS  sim world: the roster, the situation and the announce channel read the invented party
+  PASS  sim world: in a raid you are raid1 and the members raid2 onward; the channel is RAID
+  PASS  sim world: the stop puts the real world back
+  PASS  sim loot: a member's line goes through the parser into the feed, under their GUID
+  PASS  sim loot: n random lines, and nothing without a running simulation or a pool
+  PASS  sim inspect: a looter is read through the broker's queue after the reply, never the fast path
+  PASS  sim inspect: a failing member times out; a member out of range waits and gives up
+  PASS  sim inspect: the reply delay is the session's seeded random source
+  PASS  sim encounter: a pull raises combat and the lockdown; the ask waits and goes out after the kill
+  PASS  sim encounter: loot after a kill joins the boss's group, named by the pull
+  PASS  sim encounter: a keystone run groups its loot and holds the ChallengeMode restriction
+  PASS  sim combat: the stop ends a combat edge it raised
+  PASS  sim own drops: they land in your bags with a trade window the trade timer counts down
+  PASS  sim own drops: read at their bag slot from their link, and their tooltip is their link's (DW-80)
+  PASS  sim own drops: the scenario sets the window and the ending-soon count
+  PASS  sim trade: your drop traded away and another's received land in the session's history log
+  PASS  sim trade: refused for an unknown drop, a real one and an expired own drop
+  PASS  sim stop: your simulated bag items leave the gear snapshot and the trade timer
+  PASS  sim verbs: Parse reads every verb and its arguments
+  PASS  sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
+  PASS  sim verbs: `/dw sim` prints the status and the usage; the verbs need a running simulation
+  PASS  sim verbs: refused while the addon is disabled, like every feature verb
+  PASS  sim start: refused in combat and with test mode on, each with its line
+  PASS  sim start: the scenario's pool, group and situation, and the window open
+  PASS  sim start: a raid takes its size; a party is always four
+  PASS  sim step: the timeline waits for the pool, then plays one step at a time
+  PASS  sim run: plays every step a few seconds apart, each with its line, then says it has finished
+  PASS  sim step delay: two seconds by default, read from `sim.stepDelay`; a bad value falls back
+  PASS  sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5; DelayText drops a whole number's point
+  PASS  sim step delay: `/dw set sim.stepDelay` takes a half step, clamps to the range, refuses a quarter step
+  PASS  sim step delay: a run waits the set delay, and a change takes effect from the next step
+  PASS  sim stop: ends a playing timeline and its timers
+  PASS  sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
+  PASS  sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating
+  PASS  sim diagnostics: the section reads the session, the pool, the timeline and the sends
+  PASS  sim debug: the SIM tag logs every injected event and every step
+  PASS  sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
+  PASS  sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
+  PASS  sim e2e: no module reads the world the simulator answers except through NS.Compat
+  PASS  sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
+  PASS  sim e2e key, full: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e dungeon, full: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e raid, full: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e lfr, full: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e delve, full: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e world, full: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e key, compact: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e dungeon, compact: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e raid, compact: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e lfr, compact: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e delve, compact: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e world, compact: a run fills Group drops and My drops under the default filters
+  PASS  sim e2e: a simulated key's auto-open is compact by default, full with the option off, then the stored layout
+  PASS  sim e2e: the combat flags answer the simulated fight, and the client's again after it
+  PASS  sim e2e: the loot lines are written from the GlobalStrings Compat reads
+  PASS  sim e2e: in a raid, raid1 is you, online, for every unit read
+  PASS  sim e2e: Raid Finder is an instance group, so asks announce in instance chat
+  PASS  sim report: the owner's key run: the second drop is yours, on My drops, nothing lost
+  PASS  sim report: the step's chat line says where its drops went
+  PASS  sim report: /dw sim loot says where its drops went
+  PASS  sim report: each drop's place: Group drops, My drops, hidden by its gate, loading, cleared
+  PASS  sim report: the detail counts the drops and says which are yours, hidden or otherwise placed
+  PASS  sim report: the tooltip names each drop, its looter and its tab or gate
+  PASS  sim report: a Group drops header counts the drops of yours it leaves to My drops
+  PASS  sim report regression key: Group drops + My drops + hidden = every loot step's drops
+  PASS  sim report regression dungeon: Group drops + My drops + hidden = every loot step's drops
+  PASS  sim report regression raid: Group drops + My drops + hidden = every loot step's drops
+  PASS  sim report regression lfr: Group drops + My drops + hidden = every loot step's drops
+  PASS  sim report regression delve: Group drops + My drops + hidden = every loot step's drops
+  PASS  sim report regression world: Group drops + My drops + hidden = every loot step's drops
+  PASS  tab counts: My drops tallies the drops it lists and names the ones its filters hide
+  PASS  tab counts: a drop My drops' own filters hide leaves both counts, and the tooltip names the filter
+  PASS  sim report: a place honors feed.showOwn and the feed the window shows
+  PASS  sim report: View reads feed.showOwn and the feed the window shows
+  PASS  sim report: with feed.showOwn on, the owner's step lists yours on Group drops, and the tabs agree
+  PASS  sim report: a drop of yours My drops' own filters leave out is not counted as on My drops
+  PASS  sim report: the owner's step agrees with the tabs after a search My drops fails
+  PASS  sim panel: a key's preview names every step, with its command, before a run
+  PASS  sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states
+  PASS  sim panel: before the pool is ready the start is current and nothing else is clickable
+  PASS  sim panel: the controls follow the timeline: Run all, Pause or Resume, Restart, Stop
+  PASS  sim panel: StartCommand carries a raid's size and leaves a random one out
+  PASS  sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds PerfPanel's three columns
+  PASS  sim panel: `/dw sim start` opens it beside the window, its rows tracking the timeline
+  PASS  sim panel: opened before the window, it docks beside the window once a slow pool opens it
+  PASS  sim panel: a dragged panel stays where it was put when the window opens later
+  PASS  sim panel: clicking the next step runs it; clicking a later one runs every step in between
+  PASS  sim panel: clicking a completed step does nothing, and its tooltip says when it ran
+  PASS  sim panel: a typed `/dw sim step` moves the panel too
+  PASS  sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on
+  PASS  sim panel: Run all's tooltip names the current step delay (feedback-2 spec §8, FB2-8)
+  PASS  sim panel: the typed pause, resume and restart answer as the buttons do
+  PASS  sim panel: Restart stops the scenario and starts the same one again; Stop ends it
+  PASS  sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel
+  PASS  sim panel: the picker starts the chosen scenario, with a raid's member count
+  PASS  sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it
+  PASS  disabled 1: enabled, the addon registers exactly the events it declares
+  PASS  disabled 2: through /dw disable, nothing is registered, scheduled or shown
+  PASS  disabled 2: through the write seam, nothing is registered, scheduled or shown
+  PASS  disabled 3: no SavedVariables write from a game event while disabled
+  PASS  disabled 4: every reserved verb keeps answering while disabled
+  PASS  disabled 5: a feature verb answers with the one refusal line and does nothing
+  PASS  disabled 6: the stand-up re-registers from current state and the window comes back
+  PASS  disabled 7: a disabled profile loads stood down, with nothing registered
+  PASS  disabled 8: the launcher's menu grays every entry but Enabled
+  PASS  diagnostics: the sections are the addon's, in report order
+  PASS  diagnostics: the report names the schema, the profile, the holds and the window decision
+  PASS  diagnostics: the situation section names the key, its settings and the inputs
+  PASS  diagnostics: it runs while stood down and says so, without acting
+  PASS  diagnostics: a non-default setting is listed, and `enabled` always is
+  PASS  diagnostics: the restrictions section names the answers, the reasons and the last announced
+  PASS  diagnostics: the roster section lists the stored members without reading the client
+  PASS  diagnostics: the gear section lists the stored slots without reading the client
+  PASS  diagnostics: the feed section counts the parser's lines and names the last loot
+  PASS  diagnostics: the feed section counts the drops, the hidden ones and the context
+  PASS  diagnostics: the trade section shows the timers, the ticker and each entry
+  PASS  diagnostics: the inspect section shows the queue and each member's entry
+  PASS  diagnostics: the messaging section counts the registry, the sends and lists each queued ask
+  PASS  diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue
+  PASS  diagnostics: the scoring section names the scorer, the one in use, Pawn and the pending retries
+  PASS  libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
+  PASS  tests/_kit is the test kit that shipped with that release
+  PASS  the automated-test runner is recorded executable (100755)
+  PASS  eol: every tracked file carries the terminator .gitattributes declares for it
+  PASS  eol: .gitattributes is line-endings-§5's canonical body for this repo kind
+  PASS  prose: no authored file carries a British spelling from localization-§5's published list
+  PASS  prose: the gate carries localization-§5's two lists whole, and nothing of its own
+  PASS  prose self-test: the carve-out suppresses the named generated folder, and only it
+  PASS  prose self-test: a path the carve-out does not name is not covered by one that looks like it
+  PASS  prose self-test: a carve-out that is not a set of path strings is a failure, not a silence
+  PASS  prose self-test: a TOC's file lines are read as paths, and its directives and comments are not
+  PASS  prose self-test: a .pkgmeta's ignore block is read, and the keys around it are not
+  PASS  prose self-test: an ignore entry covers a path exactly, by folder, and by wildcard
+  PASS  prose self-test: the carve-out admits a generated dump and refuses a file the TOC loads
+  PASS  prose self-test: a waiver-file exclusion meets the same two refusals as the carve-out
+  PASS  prose self-test: each list is refused on the matching rule its own scan uses
+  PASS  prose self-test: the scan and the refusals read the added exclusions through one reader
+  PASS  prose self-test: a narrowing is refused by what it suppresses, not by how it is written
+  PASS  prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
+  PASS  prose self-test: a malformed waived is a failure, not a silence
+  PASS  layoutcap: every authored file over the 1500-line cap is named in the census
+  PASS  layoutcap: no census row outlives the breach it records
+  PASS  layoutcap: every over-cap census row carries one of layout-§1's three terminal states
+  PASS  layoutcap: the census and the exempt set agree about which paths were exempted
+  PASS  layoutcap: an empty census is written as a result rather than left standing empty
+  PASS  layoutcap self-test: the parser reads the census nested under the register, and stops there
+  PASS  layoutcap self-test: a census outside its register, or at the wrong level, is not read
+  PASS  layoutcap self-test: an over-cap file missing from the census is reported, and an exempt one is not
+  PASS  layoutcap self-test: a census row that outlives its breach is reported
+  PASS  layoutcap self-test: an over-cap row that names no terminal state is reported
+  PASS  layoutcap self-test: the census and the exempt set are held to naming the same paths
+  PASS  layoutcap self-test: a census that states nothing is told apart from one that states none
+  PASS  layoutcap self-test: the exempt set takes folders as well as paths
+  PASS  diagnostics contract: both forms run the report
+  PASS  diagnostics contract: the debug word is matched in any case
+  PASS  diagnostics contract: both markers carry the brand and the end counts the report
+  PASS  diagnostics contract: the report appends after what the console already holds
+  PASS  diagnostics contract: the report lands with logging off and turns it on for the session
+  SKIP  diagnostics contract: an addon that opts out lands the report and leaves logging off — this addon keeps the default (Kit.diagnostics.enablesLogging is not false), so its report turns logging on; the case above holds it
+  PASS  diagnostics contract: with logging already on, the report writes no second enable line
+  PASS  diagnostics contract: both forms run while the addon is disabled
+  PASS  diagnostics contract: no other name runs the report
+  PASS  lizard sighted: every hazard lizard loses a function over is neutralized
+  PASS  lizard sighted: fields, strings, comments and look-alike names come through unchanged
+  PASS  lizard sighted: a method definition is rewritten to its dot form with self
+  PASS  lizard sighted: no line is added or removed, CRLF included
+  PASS  lizard sighted: countFunctions counts the keyword, not strings, comments or longer names
+  PASS  lizard sighted: listedCounts reads the per-file table, once per file
+  PASS  lizard sighted: parity names every file whose counts differ, and only those
+  PASS  lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
+
+1333 passed, 0 failed, 1 skipped, 1334 total
