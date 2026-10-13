@@ -331,7 +331,17 @@ like live drops (with `toast.enabled` on); a test drop's toast has no countdown,
 dragged into place until it is closed or test mode ends. Only in test mode can it be dragged, and
 the Window's Reset position forgets its point too. **The sound** is SOUNDKIT's
 `UI_EPICLOOT_TOAST`, else `RAID_WARNING`, on the Master channel (`Compat.PlayAlertSound`). That it
-shows, pauses, places and sounds right in game is TOAST-1.
+shows, pauses, places and sounds right in game is TOAST-1. The toast read as three lines: the
+title, the item, and `Looted by Seta · +19 ▲ · Likely tradeable` (the `▲` an `NS.TipMarks` texture
+since DW-F5). **Superseded by feedback-9 (2026-10-13)** (feedback-9 spec §0, DW-I0): the toast is
+four rows beside a four-row icon (56 pixels; the toast 350 wide): the title with Ask and the close
+mark; the item name in its quality color and its item level after it, smaller and muted, never cut;
+`Looted by Seta · You ▲19 · Them ▽13`, the looter in class color and each verdict as the table's Me
+and Them cells draw it (the monospace glyph and the unsigned difference in the verdict tone, `empty`
+for an empty slot, or the word); and the trade word in the Trade cell's tone with a short reason,
+muted, cut at the inset, the full reason in the toast's tooltip. The signed gain and the texture
+mark are gone from it, and a right-click anywhere on it closes it as the close mark does. That it
+reads right in game is FEED-66.
 
 ## Auto-ask
 

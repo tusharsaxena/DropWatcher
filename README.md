@@ -100,9 +100,11 @@ view the next time it opens after the run. If you'd rather keep the full window 
 view you normally get.
 
 Two extras are off until you turn them on. The **toast** (Settings › Window › Toast) pops up when
-someone else loots a big upgrade for you, 10 item levels or more, that they can probably trade. It
-has an Ask button, goes away after 8 seconds unless your pointer is on it, and keeps out of combat
-unless you let it. **Auto-ask** (Settings › Messages › Auto-ask) whispers the looter for you, 10
+someone else loots a big upgrade for you, 10 item levels or more, that they can probably trade.
+Beside the item's icon it names the item in its quality color with its item level, the looter in
+their class color, how the drop compares for you and for them (`You ▲19 · Them ▽13`), and why they
+can likely trade it. It has an Ask button, goes away after 8 seconds unless your pointer is on it (a
+right-click closes it), and keeps out of combat unless you let it. **Auto-ask** (Settings › Messages › Auto-ask) whispers the looter for you, 10
 seconds after the boss dies, when a likely tradeable drop is at least 5 item levels better than
 yours. It backs off if you ask first, they leave or the item reaches you.
 

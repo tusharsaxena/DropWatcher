@@ -656,8 +656,13 @@ DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted 
     ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain (or into an empty
        slot, whatever minGain), trade likely / yes
     ─> queue (newest 5) ─> Pump: nothing on screen, not held (combat without toast.inCombat)
-    ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose, sound?
+    ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose (the four rows'
+       parts, feedback-9 spec §0) ─> paint: title; item (quality color) + item level; Looted by
+       <looter> (class color) · You <glyph n> · Them <glyph n> (segments, mono glyphs, toned);
+       trade word (Trade tone) + short reason (muted, cut at the inset); tooltip = Trade cell's
+       ─> sound?
     ─> C_Timer toast.duration (none for a test drop) ─> Dismiss ─> Pump
+close mark / right-click anywhere on it ─> Dismiss (not asked, never toasts again) ─> Pump
 hover ─> Pause (seconds left kept)      leave ─> Resume
 PLAYER_REGEN_DISABLED ─> the shown toast back to the queue's head   PLAYER_REGEN_ENABLED ─> Pump
 Ask ─> NS.PressAsk(id) (a drop already gone: the toast goes, nothing asked)

@@ -81,7 +81,9 @@ its one-line responsibility and why its position is load-bearing or conventional
   recorded and opt-in features (`History.lua`, with `HistoryRetention.lua` keeping it by days:
   Keep history for, confirmed before a shorter window deletes (only the latest pending choice is
   answered), pruned once per session, also when the addon is enabled later in a session that
-  started disabled; feedback-2 spec §5, §8; `Toast.lua`, `AutoAsk.lua`).
+  started disabled; feedback-2 spec §5, §8; `Toast.lua`, the toast as four rows beside a
+  four-row icon, the drop judged for you and for the looter, the trade reason, a right-click
+  closes it, feedback-9 spec §0; `AutoAsk.lua`).
 - `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
   item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
   client answers about its world (`SimWorld.lua`: the group, the place, the inspect replies, your
@@ -136,8 +138,9 @@ its one-line responsibility and why its position is load-bearing or conventional
   (its upgrade count moved to the tooltip by feedback-7 spec §2: `Yes`, not `Yes (2)`),
   `Upgrade for N` (`No upgrades` with none; `(Details)` until feedback-7 spec §2, `(Multiple)` until
   feedback-6 spec §3) and Offer, §2; the strip's summary and the
-  Offer panel's parts; `TipMarks.lua`: what text in the default face (a tooltip, the toast, the
-  detail card, the Offer panel) draws for a verdict mark or an arrow, an inline texture (LibKa0s
+  Offer panel's parts; `TipMarks.lua`: what text in the default face (a tooltip, the detail
+  card, the Offer panel; the toast until feedback-9, whose verdicts are the table's monospace
+  glyphs since DW-I0) draws for a verdict mark or an arrow, an inline texture (LibKa0s
   media `arrow-up`, `transfer`, `arrow-down`, `arrow-right`, tinted; DW-F5 beyond tooltips) and
   never a font glyph the face lacks, the non-wrapping `{ text, wrap = false }` line `Window.AttachTooltip` grows to fit,
   feedback-6 spec §3, DW-F3, and the gear grid described as data (`{ grid = rows }`, `GearRows`,
