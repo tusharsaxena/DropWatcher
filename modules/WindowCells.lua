@@ -615,13 +615,15 @@ local function noAskReason(drop, transmogAsk)
     return nil, template
 end
 
+-- Every state carries an icon (feedback-7 spec §1): `chat` for Ask, a whisper to the looter.
 local ASK_LOOK = {
-    ready  = { text = L["Ask"], enabled = true },
+    ready  = { text = L["Ask"], icon = "chat", enabled = true },
     traded = { text = L["Traded"], icon = "confirm", enabled = false },
     queued = { text = L["Queued"], icon = "clock", enabled = true },
     sent   = { text = L["Asked"], icon = "confirm", enabled = false },
     failed = { text = L["Retry"], icon = "reset", enabled = true },
 }
+WC.ASK_LOOK = ASK_LOOK   -- read by the suites: every state has an icon
 
 -- WHOSE MOVE IT IS (feedback-4 spec §1): an action button's tone by its state. Your move is red
 -- (Ask, Retry, an Announce not yet sent), waiting on someone else yellow (Asked, Queued, Offered,
@@ -658,7 +660,8 @@ local function askTip(state, who, reason, template)
 end
 
 --- The Ask button's look: `offered` false shows a dash with the reason; else the label, the
---- catalog mark (`clock` queued, `confirm` asked, `reset` retry) and whether it can be clicked.
+--- catalog mark (`chat` ask, `clock` queued, `confirm` asked or traded, `reset` retry) and whether
+--- it can be clicked.
 --- @param drop table
 --- @param state string|nil NS.Asks.StateOf's state (`ready`, `queued`, `sent`, `failed`), or
 --- `traded` once the history settled the drop received (NS.History.AskState)

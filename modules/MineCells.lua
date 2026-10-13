@@ -350,13 +350,15 @@ function MC.Details(drop, revealed, title)
     return c
 end
 
--- Your own drop's Offer button, by the furthest offer sent for it (WindowOwn's ToneStates).
+-- Your own drop's Offer button, by the furthest offer sent for it (WindowOwn's ToneStates). Every
+-- state carries an icon (feedback-7 spec §1): `export` while it reads Offer, handing the item out.
 local OWN_OFFER_LOOK = {
-    ready = { text = L["Offer"] }, failed = { text = L["Offer"] },
+    ready = { text = L["Offer"], icon = "export" }, failed = { text = L["Offer"], icon = "export" },
     queued = { text = L["Queued"], icon = "clock", line = L["An offer of it is queued until chat allows it."] },
     sent = { text = L["Offered"], icon = "confirm", line = L["You offered it: the panel shows to whom."] },
     tradedAway = { text = L["Traded"], icon = "confirm", line = L["You traded it away."] },
 }
+MC.OWN_OFFER_LOOK = OWN_OFFER_LOOK   -- read by the suites: every state has an icon
 
 --- Actions on your own drop (feedback-5 spec §2), in WindowCells.Ask's shape with `offer` true:
 --- Offer, which opens the Offer panel (always clickable), labeled and toned by `toneState` (cyan
@@ -382,17 +384,19 @@ end
 -- ── the buttons ─────────────────────────────────────────────────────────────────────────────
 
 -- One message button's look per ask state (modules/Asks.lua): label, catalog mark, clickable.
-local function lookTable(ready, sent)
+-- Every state carries a mark (feedback-7 spec §1); `readyIcon` is the one it wears while ready.
+local function lookTable(ready, sent, readyIcon)
     return {
-        ready  = { text = ready, enabled = true },
+        ready  = { text = ready, icon = readyIcon, enabled = true },
         queued = { text = L["Queued"], icon = "clock", enabled = true },
         sent   = { text = sent, icon = "confirm", enabled = false },
         failed = { text = L["Retry"], icon = "reset", enabled = true },
     }
 end
 
-local OFFER_LOOK = lookTable(L["Offer"], L["Offered"])
-local ANNOUNCE_LOOK = lookTable(L["Announce"], L["Announced"])
+local OFFER_LOOK = lookTable(L["Offer"], L["Offered"], "export")            -- handing the item out
+local ANNOUNCE_LOOK = lookTable(L["Announce"], L["Announced"], "speech-bubble") -- a post to the group
+MC.OFFER_LOOK, MC.ANNOUNCE_LOOK = OFFER_LOOK, ANNOUNCE_LOOK   -- read by the suites: every state has an icon
 
 local QUEUED_LINE = L["Chat is restricted right now: it is sent when it lifts."]
 

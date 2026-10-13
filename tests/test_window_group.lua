@@ -179,7 +179,7 @@ end)
 test("cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure", function()
     local W = WC()
     local ready = W.Ask(drop(), "ready")
-    assertTrue(ready.offered and ready.enabled); assertEqual(ready.text, "Ask"); assertTrue(ready.icon == nil)
+    assertTrue(ready.offered and ready.enabled); assertEqual(ready.text, "Ask"); assertEqual(ready.icon, "chat", "a whisper to the looter (feedback-7 spec §1)")
     assertTrue(ready.tip[2]:find("Whisper Seta") ~= nil)
     local queued = W.Ask(drop(), "queued")
     assertEqual(queued.text, "Queued"); assertEqual(queued.icon, "clock"); assertTrue(queued.enabled, "a click cancels it")
@@ -628,6 +628,7 @@ test("table: the Ask button asks through the shared handler, and AskStateChanged
     NS.Asks.Press = function(kind, target, id) calls[#calls + 1] = { kind, target, id }; state = "queued"; return "queued" end
     NS.Asks.StateOf = function() return state end
     local ask = rowFor(drawn, 1).cells.actions.ask
+    assertTrue(ask.art:IsShown() and ask.art:GetTexture() == NS.Icon("chat"), "Ask wears chat (feedback-7 spec §1)")
     ask:__fire("OnClick")
     assertEqual(table.concat(calls[1], ","), "ask,Seta-Realm,1")
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "queued", "ask", "Seta-Realm")

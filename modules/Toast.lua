@@ -225,7 +225,7 @@ local function build()
     f.icon = NS.WindowGroup.ItemButton(f, Toast.ICON)
     f.icon:SetPoint("LEFT", f, "LEFT", 9, 0)
     f.close = buildClose(f)
-    f.ask = NS.Window.TextButton(f, 64, nil, L["Ask"], function() Toast.Ask() end)
+    f.ask = NS.Window.TextButton(f, 64, "chat", L["Ask"], function() Toast.Ask() end)
     f.ask:SetPoint("RIGHT", f.close, "LEFT", -6, 0)
     buildTexts(f)
     hoverPauses(f.icon)
@@ -243,10 +243,16 @@ local function askState(rec)
     return NS.Asks.StateOf("ask", target, rec.id)
 end
 
+-- The Ask in the row's look: its state's word and mark (feedback-7 spec §1: `chat`, `clock`, ...).
 local function paintAsk(rec)
     local a = NS.WindowCells.Ask(rec, askState(rec))
-    frame.ask.label:SetText(a.text)
-    frame.ask:SetEnabled(a.enabled == true)
+    local b = frame.ask
+    b.label:SetText(a.text)
+    b.art:SetTexture(a.icon and NS.Icon(a.icon) or nil)
+    b.art:SetShown(a.icon ~= nil)
+    b.label:ClearAllPoints()
+    b.label:SetPoint("CENTER", b, "CENTER", a.icon and 7 or 0, 0)
+    b:SetEnabled(a.enabled == true)
 end
 
 local function paint(rec)

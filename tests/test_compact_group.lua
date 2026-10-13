@@ -256,6 +256,8 @@ end)
 
 test("compact group: an ask in flight shows the full table's state; no ask offered shows the dash and why", function()
     local NS, _ = shownCards()
+    local ready = cardFor(NS.WindowGroup.Drawn(), 1).ask
+    assertTrue(ready.art:IsShown() and ready.art:GetTexture() == NS.Icon("chat"), "Ask wears chat (feedback-7 spec §1)")
     NS.Asks.StateOf = function() return "sent" end
     NS.Window.Refresh()
     local card = cardFor(NS.WindowGroup.Drawn(), 1)

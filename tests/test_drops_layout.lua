@@ -155,6 +155,30 @@ test("layout: Actions is 84 pixels, the Ask button's width, so every state's ico
     end
 end)
 
+-- A TextButton's mark spans 6..18 from its left; its label is centered 7 right of the button's center.
+-- A word fits when it clears the mark by 2 and the right edge by 4, at a conservative 6 per character.
+local function fitsWithIcon(width, text)
+    local w = #text * 6
+    local left, right = width / 2 + 7 - w / 2, width / 2 + 7 + w / 2
+    return left >= 20 and right <= width - 4
+end
+
+test("layout: every action button's icon and word fit its width (feedback-7 spec §1)", function()
+    local NS = T.newAddon()
+    local K, WC, MC = NS.Constants.WINDOW, NS.WindowCells, NS.MineCells
+    local sets = {
+        { K.ASK_W, WC.ASK_LOOK, "Ask (row and compact card)" },
+        { K.ASK_W, MC.OWN_OFFER_LOOK, "your own drop's Offer" },
+        { K.PANEL_BTN_W, MC.OFFER_LOOK, "the Offer panel's Offer" },
+    }
+    for _, set in ipairs(sets) do
+        for state, l in pairs(set[2]) do
+            assertTrue(l.icon ~= nil and fitsWithIcon(set[1], l.text), set[3] .. " " .. state .. ": " .. l.text)
+        end
+    end
+    assertTrue(K.PANEL_BTN_W > 52, "the panel's button grew for Offered and Queued with an icon")
+end)
+
 test("rows: each row draws the header's chevron at its left, muted white, down while closed and up while open", function()
     local NS, drawn = shownTable()
     local K, C = NS.Constants.WINDOW, NS.Constants

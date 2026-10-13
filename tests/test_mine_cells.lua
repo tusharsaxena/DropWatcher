@@ -140,6 +140,51 @@ test("mine cells: Offer and Announce follow the ask's lifecycle; the Trade butto
     assertTrue(M.TradeButton == nil, "the Offer panel's Trade button went with feedback-7 spec §0")
 end)
 
+-- An icon of the LibKa0s catalog: resolvable through NS.Icon and shipped in the vendored payload.
+local function shipped(NS, icon, where)
+    assertTrue(type(icon) == "string", where .. ": an icon")
+    assertTrue(NS.Icon(icon) ~= nil, where .. ": " .. icon .. " is in the catalog")
+    local f = io.open("libs/LibKa0s/media/icons/" .. icon .. ".tga", "rb")
+    assertTrue(f ~= nil, where .. ": " .. icon .. ".tga ships")
+    if f then f:close() end
+end
+
+test("action icons: every state of every action button's look table carries a shipped icon (feedback-7 spec §1)", function()
+    local NS = T.newAddon()
+    local tables = {
+        ask = NS.WindowCells.ASK_LOOK, ownOffer = NS.MineCells.OWN_OFFER_LOOK,
+        offer = NS.MineCells.OFFER_LOOK, announce = NS.MineCells.ANNOUNCE_LOOK,
+    }
+    for name, tbl in pairs(tables) do
+        assertTrue(type(tbl) == "table" and tbl.ready ~= nil, name .. " is exposed")
+        for state, l in pairs(tbl) do shipped(NS, l.icon, name .. "." .. state) end
+    end
+    assertEqual(tables.ask.ready.icon, "chat", "Ask: a whisper to the looter")
+    assertEqual(tables.ownOffer.ready.icon, "export", "Offer: handing the item out")
+    assertEqual(tables.offer.ready.icon, "export")
+    assertEqual(tables.announce.ready.icon, "speech-bubble", "Announce to group keeps its mark")
+end)
+
+test("action icons: the detail card's actions wear their state's icon, Ask and Offer as on the row", function()
+    local NS = T.newAddon()
+    local DC = NS.DetailCells
+    local other = drop({ isMine = false, looter = { name = "Seta-Realm", guid = "Player-1-SETA", classFile = "PRIEST" },
+        me = { verdict = "upgrade", ilvlDelta = 10, reasons = {} } })
+    assertTrue(DC.Actions(other, { askState = "ready", now = NOW })[1].enabled, "an ask is offered")
+    local want = { ready = "chat", queued = "clock", sent = "confirm", failed = "reset" }
+    for state, icon in pairs(want) do
+        local acts = DC.Actions(other, { askState = state, now = NOW })
+        for _, a in ipairs(acts) do shipped(NS, a.icon, state .. " " .. a.key) end
+        assertEqual(acts[1].icon, icon, "Ask " .. state)
+    end
+    local own = { ready = "export", failed = "export", queued = "clock", sent = "confirm", tradedAway = "confirm" }
+    for tone, icon in pairs(own) do
+        local acts = DC.Actions(drop(), { offerTone = tone, now = NOW })
+        for _, a in ipairs(acts) do shipped(NS, a.icon, tone .. " " .. a.key) end
+        assertEqual(acts[1].icon, icon, "Offer " .. tone)
+    end
+end)
+
 -- ── the summary, the post, the dock ─────────────────────────────────────────────────────────
 
 test("mine cells: the summary counts the tradeable drops and names the next expiry", function()

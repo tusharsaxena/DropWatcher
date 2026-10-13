@@ -91,7 +91,7 @@ end
 
 local function rowButtons(row)
     local W = NS.Window
-    row.offer = W.TextButton(row, K.PANEL_BTN_W, nil, L["Offer"], function(b) NS.PressOffer(b.dropId, b.target) end)
+    row.offer = W.TextButton(row, K.PANEL_BTN_W, "export", L["Offer"], function(b) NS.PressOffer(b.dropId, b.target) end)
     row.offer:SetPoint("LEFT", row, "LEFT", COLS[3].x, 0)
     attach(row.offer, "row")
     row.dash = tipFrame(row, "row")

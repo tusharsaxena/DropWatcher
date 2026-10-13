@@ -166,12 +166,17 @@ test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Annou
     local TONE = NS.Constants.TONE
     local b = p.rows[1].offer
     assertEqual(textOf(b.label), "Offer"); assertEqual(b.tone, "cyan")
+    assertTrue(b.art:IsShown() and b.art:GetTexture() == NS.Icon("export"), "Offer wears export (feedback-7 spec §1)")
+    assertEqual(b:GetWidth(), NS.Constants.WINDOW.PANEL_BTN_W)
+    local ann = p.panel.announce
+    assertTrue(ann.art:IsShown() and ann.art:GetTexture() == NS.Icon("speech-bubble"), "Announce to group keeps its mark")
     assertEqual(select(3, b.label:GetTextColor()), TONE.cyan.b)
     assertEqual(p.panel.announce.tone, "red", "Announce keeps its red (feedback-6 spec §2)")
     NS.Asks.StateOf = function(kind) return kind == "offer" and "sent" or "ready" end
     NS.Window.Refresh()
     b = NS.OfferPanel.Drawn().rows[1].offer
     assertEqual(textOf(b.label), "Offered"); assertEqual(b.tone, "yellow")
+    assertTrue(b.art:IsShown() and b.art:GetTexture() == NS.Icon("confirm"), "Offered wears confirm")
     NS.Asks.StateOf = function(kind) return kind == "offer" and "failed" or "ready" end
     NS.Window.Refresh()
     b = NS.OfferPanel.Drawn().rows[1].offer

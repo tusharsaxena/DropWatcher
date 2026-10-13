@@ -99,6 +99,7 @@ test("toast edge: a qualifying drop shows at once, painted, and goes after its d
     assertEqual(f.item:GetText(), "Item 500")
     assertEqual(T.marks(f.line:GetText()), "Looted by Seta · +19 [arrow-up] · Likely tradeable")
     assertEqual(f.ask.label:GetText(), "Ask"); assertTrue(f.ask:IsEnabled())
+    assertTrue(f.ask.art:IsShown() and f.ask.art:GetTexture() == NS.Icon("chat"), "Ask wears chat (feedback-7 spec §1)")
     assertEqual(#m.sounds, 0, "no sound unless asked for")
     local pt = { f:GetPoint(1) }
     assertEqual(pt[1], "TOP"); assertEqual(pt[5], -160)
@@ -220,6 +221,7 @@ test("toast edge: Ask goes through the shared host handler, and the button follo
     f.ask:GetScript("OnClick")(f.ask)
     assertEqual(pressed[1], 1)
     assertEqual(f.ask.label:GetText(), "Queued")
+    assertTrue(f.ask.art:GetTexture() == NS.Icon("clock"), "Queued wears clock")
     NS.Asks.StateOf = function() return "sent" end
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "sent", "ask", "Seta-Testrealm")
     assertEqual(f.ask.label:GetText(), "Asked"); assertFalse(f.ask:IsEnabled())

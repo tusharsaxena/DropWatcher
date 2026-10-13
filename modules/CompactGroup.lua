@@ -217,7 +217,7 @@ CG.Background = buildBackground
 
 local function buildAsk(card)
     local W = NS.Window
-    card.ask = W.TextButton(card, K.ASK_W, nil, NS.L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
+    card.ask = W.TextButton(card, K.ASK_W, "chat", NS.L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     W.AttachTooltip(card.ask, function() return tipOf(card.ask) end, "row")
     card.dash = fontString(card, "GameFontDisableSmall")
     card.dash:SetPoint("CENTER", card.ask, "CENTER", 0, 0)

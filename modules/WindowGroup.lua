@@ -483,7 +483,7 @@ WG.SideCell = sideCell
 local function actionsCell(row)
     local f = CreateFrame("Frame", nil, row)
     f.key = "actions"
-    f.ask = NS.Window.TextButton(f, K.ASK_W, nil, L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
+    f.ask = NS.Window.TextButton(f, K.ASK_W, "chat", L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     f.ask:SetPoint("LEFT", f, "LEFT", 0, 0)
     NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end, "row")
     f.dash = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")

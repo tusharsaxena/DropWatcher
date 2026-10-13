@@ -411,18 +411,20 @@ local function act(key, text, icon, enabled, title, ...)
     return { key = key, text = text, icon = icon, enabled = enabled and true or false, tip = { title, ... } }
 end
 
--- Your own drop's Offer in the Ask's place (feedback-5 spec §2): it opens the Offer panel.
+-- Your own drop's Offer in the Ask's place (feedback-5 spec §2): it opens the Offer panel. Its mark
+-- is its state's (feedback-7 spec §1: `export` while it reads Offer), as on the row.
 local function offerAction(o)
-    local a = act("ask", o.offered and o.text or L["Offer"], "chat", o.offered, unpack(o.tip))
+    local a = act("ask", o.offered and o.text or L["Offer"], o.icon or "export", o.offered, unpack(o.tip))
     a.state, a.offer, a.kind = o.state, true, o.kind
     return a
 end
 
+-- The Ask, its mark its state's (feedback-7 spec §1: `chat`, `clock`, `confirm`, `reset`), as on the row.
 local function askAction(drop, ask)
     local who = looterName(drop)
     if not ask.offered then return act("ask", L["Ask"], "chat", false, L["Ask"], ask.tip[2]) end
     local text = ask.state == "ready" and L["Ask %s"]:format(who) or ask.text
-    local a = act("ask", text, "chat", ask.enabled, unpack(ask.tip))
+    local a = act("ask", text, ask.icon or "chat", ask.enabled, unpack(ask.tip))
     a.state = ask.state
     return a
 end
