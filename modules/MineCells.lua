@@ -24,7 +24,8 @@ local _, NS = ...
 -- false`) is always that estimate, and its tooltip names the looter rather than your bags. A
 -- bind-on-equip drop has no window. At `trade.warnAt` seconds or less the countdown is ending soon
 -- (spec §7.4): amber and bold, its bar amber, the words `Ending soon: …` in its tooltip only
--- (feedback-5 spec §1: the cell is 104 pixels and never says it).
+-- (feedback-5 spec §1: the cell is never wide enough to say it; feedback-6 spec §0 sizes it to its
+-- widest answer).
 --
 -- THE CANDIDATES (spec §11.4). Every other member, judged for your drop by the feed: upgrades first
 -- by their gain, then EQUAL, NO UPGRADE, CAN'T USE, CHECKING and UNAVAILABLE, each tie by name. An
@@ -111,6 +112,9 @@ local NO_SHORT = {
 }
 -- Another player's drop says whose upgrade it is in the same room.
 local NO_SHORT_THEIRS = { upgradeForLooter = L["Their upgrade"] }
+-- Both read-only, for the test that sizes the Trade window column to its widest answer
+-- (feedback-6 spec §0, tests/test_drops_layout.lua).
+MC.NO_SHORT, MC.NO_SHORT_THEIRS = NO_SHORT, NO_SHORT_THEIRS
 
 -- Whose drop it is, for the tooltips: nil for yours (or a record that does not say), else the
 -- looter's short name.

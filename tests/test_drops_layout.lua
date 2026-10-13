@@ -79,6 +79,49 @@ test("layout: at the least width no tab sheds a column, and one pixel less would
     assertTrue(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH) >= 200, "the search box has room to type")
 end)
 
+-- Every answer the Trade window cell can give (MineCells.TradeWindow): each short reason in
+-- NO_SHORT on your drop and another player's, the reason it has no short word for, bind on
+-- equip, not estimated yet, and the longest countdown, exact and estimated.
+local function tradeWindowAnswers(MC, C)
+    local now, texts = 1000, {}
+    local function add(over) texts[#texts + 1] = MC.TradeWindow(drop(over), now, 600).text end
+    local keys = {}
+    for key in pairs(MC.NO_SHORT) do keys[#keys + 1] = key end
+    for key in pairs(MC.NO_SHORT_THEIRS) do keys[#keys + 1] = key end
+    keys[#keys + 1] = "someReasonWithNoShortWord"
+    for _, key in ipairs(keys) do
+        for _, mine in ipairs({ true, false }) do
+            add({ isMine = mine, trade = { state = "no", reasonKey = key, basis = "rule", args = { 311 } } })
+        end
+    end
+    add({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } })
+    add({ trade = NONE })
+    add({ isMine = true, at = now, trade = { state = "yes", reasonKey = "timer", basis = "timer",
+        expiresAt = now + C.TRADE_WINDOW } })
+    add({ at = now })
+    return texts
+end
+
+test("layout: the Trade window column is its widest answer plus its bar's padding (feedback-6 spec §0)", function()
+    local NS = T.newAddon()
+    local WG, MC, CHAR = NS.WindowGroup, NS.MineCells, 5   -- the harness's character measure
+    local seen, widest, widestText = {}, 0, nil
+    for _, text in ipairs(tradeWindowAnswers(MC, NS.Constants)) do
+        seen[text] = true
+        if #text * CHAR > widest then widest, widestText = #text * CHAR, text end
+    end
+    for _, want in ipairs({ "~2:00:00", "2:00:00", "Their upgrade", "Your upgrade", "No limit (BoE)", "Bonus roll",
+        "Window passed", "Legacy loot", "Warbound", "Not loaded", "Checking", "Not tradeable" }) do
+        assertTrue(seen[want], want .. " is one of its answers")
+    end
+    assertEqual(widestText, "No limit (BoE)", "the widest answer")
+    for _, col in ipairs(WG.COLUMNS) do
+        if col.key == "tradeWindow" then
+            assertEqual(col.width, widest + WG.TRADE_WINDOW_PAD, "no empty margin, nothing cut")
+        end
+    end
+end)
+
 test("layout: the search box spans from the bar's gap after Character to the bar's right edge", function()
     local NS = shownTable()
     local FB, K = NS.WindowFilterBar, NS.Constants.WINDOW

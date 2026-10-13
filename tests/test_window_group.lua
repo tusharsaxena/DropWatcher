@@ -707,6 +707,7 @@ end)
 local function recordBar(bar)
     local seen = {}
     rawset(bar, "SetColorTexture", function(self, r, g, b) seen[#seen + 1] = { r, g, b }; return self end)
+    rawset(bar, "SetWidth", function(self, w) seen.width = w; return self end)
     return seen
 end
 
@@ -728,10 +729,11 @@ test("table: Trade window paints every drop's countdown over its bar; the row gr
     NS.Window.Refresh()
     drawn = NS.WindowGroup.Drawn()
     f = rowFor(drawn, 1).cells.tradeWindow
-    assertTrue(f:IsShown()); assertEqual(f:GetWidth(), 104)
+    assertTrue(f:IsShown()); assertEqual(f:GetWidth(), 76)
     assertEqual(textOf(f.text), "~2:00:00", "another player's drop: the estimate from when it dropped")
     assertTrue(joined(f.tipLines):find("left for Seta") ~= nil, joined(f.tipLines))
     assertTrue(f.bar:IsShown()); assertEqual(f.fraction, 1); assertEqual(colors[#colors][1], C.TONE.good.r)
+    assertEqual(colors.width, 76 - NS.WindowGroup.TRADE_WINDOW_PAD, "a full bar spans the column but its padding")
     assertFalse(f.bold)
     assertEqual(rowFor(drawn, 1):GetHeight(), WR.CountdownRowHeight(WR.ROW_H), "the row height plus the bar's room")
     assertEqual(f:GetHeight(), WR.CountdownRowHeight(WR.ROW_H))

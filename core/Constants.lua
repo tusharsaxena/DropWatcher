@@ -23,15 +23,16 @@ C.WINDOW = {
     -- table's every column at its width with a CELL_GAP after each, the Item column at ITEM_MIN, a drop
     -- row's indent and chevron lead, the scroll gutter and both insets:
     --   columns  Ilvl 40 + Slot 72 + Type 64 + Looter 104 + My eq 84 + Their eq 84 + Me 70 + Them 70
-    --            + Trade 70 + Trade window 104 + Actions 84 (ASK_W) = 846, + 12 gaps x 6 = 918,
-    --            + Item 150 (ITEM_MIN) = 1068
+    --            + Trade 70 + Trade window 76 + Actions 84 (ASK_W) = 818, + 12 gaps x 6 = 890,
+    --            + Item 150 (ITEM_MIN) = 1040 (Trade window is its widest answer plus its bar's
+    --            padding, feedback-6 spec §0)
     --   lead     ROW_INDENT 12 + CHEVRON_X 4 + ROW_CHEVRON 10 + CHEVRON_GAP 4 = 30 (WindowGroup.LEAD)
     --   chrome   SCROLL_W 22 + 2 x INSET 6 = 34
-    --   1068 + 30 + 34 = 1132. History's columns (no lead) fit with room to spare.
+    --   1040 + 30 + 34 = 1104. History's columns (no lead) fit with room to spare.
     -- tests/test_window_group.lua pins that no tab sheds a column there and the filter bar fits.
-    WIDTH       = 1132,
+    WIDTH       = 1104,
     HEIGHT      = 600,
-    MIN_WIDTH   = 1132,   -- = WIDTH: sized wider and back, never narrower than a new profile's
+    MIN_WIDTH   = 1104,   -- = WIDTH: sized wider and back, never narrower than a new profile's
     MIN_HEIGHT  = 260,
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.

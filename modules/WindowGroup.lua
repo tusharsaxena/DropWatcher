@@ -86,6 +86,10 @@ local max = math.max
 -- is not a column: no label, no toggle, never shed.
 WG.CHEVRON_LEAD = K.CHEVRON_X + K.ROW_CHEVRON + K.CHEVRON_GAP
 WG.LEAD = K.ROW_INDENT + WG.CHEVRON_LEAD
+-- The Trade window cell's own padding: its bar stops this far short of the cell's right edge, and
+-- the column is its widest answer (`No limit (BoE)`) plus this (feedback-6 spec §0; measured over
+-- every MineCells.TradeWindow answer by tests/test_drops_layout.lua).
+WG.TRADE_WINDOW_PAD = 6
 
 -- The default columns, left to right (design spec §11.1). `flex` takes the width the others leave.
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
@@ -107,7 +111,7 @@ WG.COLUMNS = {
     { key = "them", label = L["Them"], width = 70, shed = 7,
       tip = L["The drop judged for its looter, in the same colors: ▲ upgrade green, ≈ sidegrade yellow, ▽ downgrade red."] },
     { key = "trade", label = L["Trade"], width = 70, shed = 8, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
-    { key = "tradeWindow", label = L["Trade window"], width = 104, shed = 5,
+    { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 5,
       tip = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] },
     { key = "actions", label = L["Actions"], width = K.ASK_W,
       tip = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."] },
@@ -471,7 +475,7 @@ local function tradeWindowCell(row)
     f.barBg:SetColorTexture(1, 1, 1, 0.12)
     f.barBg:SetHeight(K.BAR_H)
     f.barBg:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 0, 5)
-    f.barBg:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -6, 5)
+    f.barBg:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -WG.TRADE_WINDOW_PAD, 5)
     f.bar = f:CreateTexture(nil, "ARTWORK")
     f.bar:SetHeight(K.BAR_H)
     f.bar:SetPoint("BOTTOMLEFT", f.barBg, "BOTTOMLEFT", 0, 0)
@@ -661,7 +665,7 @@ local function paintTradeWindow(f, drop, now, warnAt, size)
     f.text:SetFontObject(c.bold and "GameFontNormalSmall" or "GameFontHighlightSmall")
     if size then NS.WindowRows.SetFontSize(f.text, size) end
     setTone(f.text, c.tone)
-    local w = max((f:GetWidth() or 0) - 6, 0)
+    local w = max((f:GetWidth() or 0) - WG.TRADE_WINDOW_PAD, 0)
     f.fraction = c.fraction or 0
     f.bar:SetWidth(max(w * f.fraction, 0.01))
     f.bar:SetShown(f.fraction > 0)
