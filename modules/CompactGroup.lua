@@ -23,7 +23,7 @@ local _, NS = ...
 --           freshness: `2m`, `cached`, `…`)
 --   line 3  You 321/308 ▽13                     Them 298/296 ⊘ Can't use
 --           (the full table's Me and Them cells without their icons, feedback-6 spec §1; your own
---           drop: line 2's trade carries its upgrade count, `Yes (2)`, and Them reads `(Details)`,
+--           drop: line 2's looter reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2),
 --           every member it upgrades in the tooltip)
 --
 -- Every piece is a font string with a hit frame over it that carries its tooltip, placed by the
@@ -238,14 +238,16 @@ local function buildLineOne(card)
     buildAsk(card)
 end
 
---- Line 2's pieces: looter (and its ⊕), slot, type (feedback-4 spec §3), trade, then `right`
---- (right-aligned: Drops' inspect freshness, History's time).
+--- Line 2's pieces: looter (and its ⊕, or its gold ` [YOU]` mark on your own drop: feedback-7 spec
+--- §2), slot, type (feedback-4 spec §3), trade, then `right` (right-aligned: Drops' inspect
+--- freshness, History's time).
 --- @param card table
 --- @param right string the right piece's key
 function CG.BuildLineTwo(card, right)
     local looter = piece(card, "looter")
     looter.glyph = monoString(card)
     looter.glyph:SetPoint("LEFT", looter.text, "RIGHT", 2, 0)
+    looter.mark = NS.WindowRows.NewMark(card, looter.glyph)
     looter.hit:SetPoint("BOTTOMRIGHT", looter.glyph, "BOTTOMRIGHT", 0, 0)
     local slot = piece(card, "slot")
     slot.text:SetPoint("LEFT", looter.glyph, "RIGHT", 4, 0)
@@ -359,7 +361,8 @@ local function paintLineOne(card, drop, cc)
     paintAsk(card, cc.ask, drop.id)
 end
 
---- Line 2 painted from a card model: the looter in class color, its ⊕, slot, type, trade and `right`.
+--- Line 2 painted from a card model: the looter in class color, its ⊕ or ` [YOU]`, slot, type, trade
+--- and `right`. Slot (and the looter's tooltip) follows the mark while it shows.
 --- @param card table
 --- @param cc table a CompactCards card
 --- @param right string the right piece's key (`fresh` or `time`)
@@ -370,6 +373,11 @@ function CG.PaintLineTwo(card, cc, right)
     if r then c.looter.text:SetTextColor(r, g, b) end
     c.looter.glyph:SetText(cc.looter.mark or "")
     setTone(c.looter.glyph, "muted")
+    c.looter.mark:SetText(cc.looter.you or "")
+    c.looter.mark:SetShown(cc.looter.you ~= nil)
+    local last = cc.looter.you and c.looter.mark or c.looter.glyph
+    at(c.slot.text, "LEFT", last, "RIGHT", 4, 0)
+    c.looter.hit:SetPoint("BOTTOMRIGHT", last, "BOTTOMRIGHT", 0, 0)
     paintText(c.slot, cc.slot, SEP)
     paintText(c.armorType, cc.armorType, SEP)
     paintText(c.trade, cc.trade, SEP)
@@ -440,7 +448,7 @@ local function cardCtx(drop, shared)
     local insp = NS.TestMode.InspectOf(drop)
     local ctx = { now = shared.now, equipped = shared.equipped, gear = insp and insp.gear, askState = state,
         askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm, warnAt = shared.warnAt }
-    if drop.isMine then   -- your own drop's Offer and (Details) (feedback-5 spec §2)
+    if drop.isMine then   -- your own drop's Offer and Upgrade for N (feedback-5 spec §2)
         local WO = NS.WindowOwn
         ctx.revealed, ctx.offerTone = WO.IsRevealed(drop.id), (WO.ToneStates(drop))
     end

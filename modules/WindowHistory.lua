@@ -3,7 +3,8 @@ local _, NS = ...
 -- sessions (modules/History.lua), under a collapsible header per encounter or run, in the Drops
 -- table's row style, read-only, with Clear history behind a confirmation.
 --
--- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color), Me,
+-- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color; ` [YOU]`
+-- in gold after your own name, feedback-7 spec §2), Me,
 -- Them, Trade (each as it was last judged while the drop was in the feed) and Outcome (seen, asked,
 -- offered, received, traded away, expired or declined). A narrow row sheds Slot, Looter, Them, Ilvl,
 -- Trade and Me, in that order (NS.WindowGroup.Fit); Item and Outcome stay. The cells are
@@ -315,6 +316,7 @@ local function newRow(content)
         local make = (col.key == "item" and itemCell) or (GLYPH_COLS[col.key] and glyphCell) or textCell
         row.cells[col.key] = make(row, col.key)
     end
+    NS.WindowRows.MarkedCell(row.cells.looter)   -- ` [YOU]` after your own name (feedback-7 spec §2)
     row:SetScript("OnMouseUp", onMouseUp)
     return row
 end
@@ -389,6 +391,7 @@ local function paintRow(row, drop, layout, metrics)
     local lc = WC.Looter(drop)
     paintText(cells.looter, lc)
     tone(cells.looter.text, NS.Compat.ClassColor(lc.classFile))
+    NS.WindowRows.PaintMark(cells.looter, lc.you, layout.looter)
 end
 
 local function paintHeader(h, e, now)

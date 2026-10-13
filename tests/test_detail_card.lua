@@ -125,7 +125,7 @@ test("cells: For the looter compares their inspected gear and names their spec a
     assertTrue(byKey(unread.rows, "spec").tip[2]:find("not been inspected") ~= nil)
 end)
 
-test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (Details)", function()
+test("cells: on your own drop the looter's side is FOR THE GROUP, its Looter row Name [YOU], its Them row Upgrade for N", function()
     local NS = T.newAddon()
     local D = NS.DetailCells
     local function cand(name, gain, base)
@@ -136,10 +136,14 @@ test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (
     local down = { verdict = "downgrade", ilvlDelta = -5, reasons = {} }
     local mine = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = list }), nil, nil, 100)
     assertEqual(mine.title, "FOR THE GROUP")
-    assertEqual(mine.verdict.text, "(Details)"); assertEqual(mine.verdict.tone, "good")
+    assertEqual(mine.verdict.text, "Upgrade for 2"); assertEqual(mine.verdict.tone, "good")
     assertEqual(mine.rows[1].tip[2], "Your own drop: Offer shows who it would help.")
+    -- Your own name in your class color, then ` [YOU]` in gold (feedback-7 spec §2), not a muted `you`.
+    local looter = byKey(mine.rows, "mine")
+    assertEqual(looter.text, "Seta"); assertEqual(looter.you, "[YOU]"); assertEqual(looter.tone, "plain")
+    assertEqual(looter.classFile, "PRIEST")
     local them = byKey(mine.rows, "them")
-    assertEqual(them.text, "(Details)"); assertEqual(them.label, "Them")
+    assertEqual(them.text, "Upgrade for 2"); assertEqual(them.label, "Them")
     -- One non-wrapping line per upgrade (feedback-6 spec §3); no class read, so the names are plain.
     local arrow = ("|T%s:0:0:0:0:64:64:0:64:0:64:77:217:102|t"):format(NS.Icon("arrow-up"))
     assertEqual(them.tip[2].text, "Butterz wears 300 Bloodthorn Treads " .. arrow .. "11", "ranked by gain")
@@ -148,7 +152,9 @@ test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (
     local kept = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100)
     assertEqual(byKey(kept.rows, "them").text, "Hidden")
     local revealed = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100, true)
-    assertEqual(byKey(revealed.rows, "them").text, "(Details)")
+    assertEqual(byKey(revealed.rows, "them").text, "Upgrade for 2")
+    local nobody = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = {} }), nil, nil, 100)
+    assertEqual(nobody.verdict.text, "No upgrades"); assertEqual(nobody.verdict.tone, "muted")
 end)
 
 -- ── the trade box ───────────────────────────────────────────────────────────────────────────
@@ -165,7 +171,7 @@ test("cells: the trade box says the state, the reason, the rule in force and how
     local none = D.TradeBox(drop({ trade = NONE }), nil)
     assertEqual(none.chip.text, "TRADE UNKNOWN"); assertEqual(none.text, "Not estimated yet.")
     local no = D.TradeBox(drop({ trade = { state = "no", reasonKey = "legacy", basis = "rule", rule = "legacy" } }), "PvP")
-    assertEqual(no.chip.tone, "bad"); assertEqual(no.meta, "Rule: legacy loot, PvP · Basis: the content's rule")
+    assertEqual(no.chip.tone, "red", "No in the palette's red (feedback-7 spec §2)"); assertEqual(no.meta, "Rule: legacy loot, PvP · Basis: the content's rule")
 end)
 
 -- ── the actions ─────────────────────────────────────────────────────────────────────────────

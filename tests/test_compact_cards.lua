@@ -220,7 +220,7 @@ test("compact cards: every trade state keeps its short word and tone on line 2",
         { { state = "yes", reasonKey = "boe", basis = "bind" }, "Yes", "good" },
         { { state = "likely", reasonKey = "notUpgrade", args = {} }, "Likely", "good" },
         { { state = "unknown", reasonKey = "noInspect", args = { "pending" } }, "Unknown", "muted" },
-        { { state = "no", reasonKey = "warbound" }, "No", "bad" },
+        { { state = "no", reasonKey = "warbound" }, "No", "red" },
         { NONE, "Unknown", "muted" },
     }
     for _, c in ipairs(cases) do
@@ -245,32 +245,33 @@ test("compact cards: the Ask button keeps its states, and a drop you cannot ask 
     assertTrue(has(no.ask.tip, "not an upgrade for you"))
 end)
 
-test("compact cards: your own drop on Drops reads (Details) for Them and offers it", function()
+test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Them, and offers it", function()
     local C = CC()
     local me = { name = "Me-Realm", classFile = "PALADIN" }
     local card = C.Group(groupDrop({ isMine = true, them = NONE, looter = me }), groupCtx())
     local lines = C.Plain(card)
     assertEqual(lines[1], "Vile Vial of Volatile Venom  295  Offer", "line 1's button is Offer (feedback-5 spec §2)")
     assertTrue(card.ask.offer and card.ask.offered)
-    assertEqual(lines[3], "You 321/308 ▽13  Them (Details)")
+    assertEqual(lines[3], "You 321/308 ▽13  Them No upgrades")
     assertEqual(card.them.tone, "muted", "nobody's upgrade")
     assertTrue(has(card.them.tip, "Nobody else in your group."))
-    assertEqual(lines[2], "Me · Trinket · Trinkets · Likely  ~1:59:50", "the bare word with no upgrade")
+    assertEqual(lines[2], "Me [YOU] · Trinket · Trinkets · Likely  ~1:59:50", "your own name marked (feedback-7 spec §2)")
+    assertEqual(card.looter.you, "[YOU]"); assertEqual(card.looter.text, "Me")
     local dead = C.Group(groupDrop({ isMine = true, them = NONE, looter = me,
         trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), groupCtx())
-    assertEqual(C.Plain(dead)[2], "Me · Trinket · Trinkets · No  –", "no countdown: the freshness, a dash on yours")
+    assertEqual(C.Plain(dead)[2], "Me [YOU] · Trinket · Trinkets · No  –", "no countdown: the freshness, a dash on yours")
     assertEqual(C.Plain(dead)[1], "Vile Vial of Volatile Venom  295  –", "a dash where it cannot be traded")
     assertTrue(has(dead.ask.tip, "Bonus roll loot"))
 end)
 
-test("compact cards: your own drop's trade counts its upgrades and Them names them, unless kept", function()
+test("compact cards: your own drop's trade tooltip counts its upgrades and Them names them, unless kept", function()
     local C = CC()
     local me = { name = "Me-Realm", classFile = "PALADIN" }
     local card = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, candidates = candidates(2) }),
         groupCtx({ offerTone = "sent" }))
-    assertEqual(card.trade.text, "Likely (2)")
+    assertEqual(card.trade.text, "Likely", "the count is in the tooltip, not the cell (feedback-7 spec §2)")
     assertTrue(has(card.trade.tip, "Upgrades 2 members: Offer shows who."))
-    assertEqual(card.them.text, "(Details)"); assertEqual(card.them.tone, "good")
+    assertEqual(card.them.text, "Upgrade for 2"); assertEqual(card.them.tone, "good")
     assertTrue(has(card.them.tip, "|cffffffffSeta|r wears 169 |T"), "a priest's name in white, the arrow a texture")
     assertEqual(card.ask.text, "Offered"); assertEqual(card.ask.state, "sent")
     -- An upgrade for you (the keep? rule): no count and Hidden until its Offer panel is opened.
@@ -281,7 +282,7 @@ test("compact cards: your own drop's trade counts its upgrades and Them names th
     assertTrue(has(kept.them.tip, "nobody is offered it unless you choose to"))
     local shown = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, me = up, candidates = candidates(2) }),
         groupCtx({ revealed = true }))
-    assertEqual(shown.trade.text, "Likely (2)"); assertEqual(shown.them.text, "(Details)")
+    assertEqual(shown.trade.text, "Likely"); assertEqual(shown.them.text, "Upgrade for 2")
 end)
 
 test("compact cards: an unread looter's Them says why in the gear's place, and the tooltip too", function()

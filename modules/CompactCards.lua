@@ -17,12 +17,12 @@ local _, NS = ...
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
 --   Drops        line 1: item (quality color), ilvl (right), ask (Offer on your own drop)
---                line 2: looter (class color, ⊕ when cross-realm), slot, type, trade (with the count
---                        of members it upgrades on your own drop); countdown (right, with its bar:
+--                line 2: looter (class color, ⊕ when cross-realm, ` [YOU]` in gold on your own drop:
+--                        feedback-7 spec §2), slot, type, trade; countdown (right, with its bar:
 --                        MineCells.TradeWindow's, for a drop with a countdown, feedback-5 spec §1) or
 --                        else fresh (right, dimmed)
 --                line 3: you and them, each a half: the label, then the full table's Me or Them
---                        cell without its icons (`(Details)` on your own drop, feedback-5 spec §2)
+--                        cell without its icons (`Upgrade for N` on your own drop, feedback-7 spec §2)
 --   History      line 1: item, ilvl (right), outcome (right, in its tone)
 --                line 2: looter, slot, type, trade; time (right, dimmed)
 --                line 3: you, them
@@ -30,7 +30,7 @@ local _, NS = ...
 -- LINE 3 (feedback-6 spec §1) reads as the full table's merged Me and Them cells (NS.SideCells), the
 -- icons left out: the label, the worn item level (plain; `empty`, `…`, `range` muted), then the glyph
 -- and the unsigned difference in the verdict's tone: `You 321/308 ▽8`, `Them 276 ▲12`, `Them
--- (Details)` on your own drop. A verdict the full view says in a word keeps compact mode's ⊘
+-- Upgrade for 2` on your own drop. A verdict the full view says in a word keeps compact mode's ⊘
 -- (`You 321 ⊘ Can't use`). One tooltip over the half: the gear's lines, then the verdict's. Glyphs, ⊘
 -- and ⊕ are drawn in the monospace face (JetBrains Mono carries all three).
 --
@@ -141,7 +141,7 @@ function CC.Half(label, side)
     return h
 end
 
---- A half's plain text: `You 321/308 ▽8`, `Them range`, `Them (Details)`.
+--- A half's plain text: `You 321/308 ▽8`, `Them range`, `Them Upgrade for 2`.
 --- @param h table CC.Half's answer
 --- @return string
 function CC.HalfText(h)
@@ -186,11 +186,11 @@ function CC.CrossRealm(name, ownRealm)
     return a ~= b, realm
 end
 
---- The looter piece: the full view's Looter cell (short name, class color), with ⊕ (`mark`) and a
---- tooltip line naming the realm when the looter is from another realm.
+--- The looter piece: the full view's Looter cell (short name, class color, `you` on your own drop),
+--- with ⊕ (`mark`) and a tooltip line naming the realm when the looter is from another realm.
 --- @param drop table
 --- @param ownRealm string|nil
---- @return table cell, with `classFile`, `mark` and `crossRealm`
+--- @return table cell, with `classFile`, `you`, `mark` and `crossRealm`
 function CC.Looter(drop, ownRealm)
     local c = WC.Looter(drop)
     local who = type(drop.looter) == "table" and drop.looter.name or nil
@@ -243,7 +243,7 @@ local function groupCountdown(drop, now, warnAt)
 end
 
 -- Line 1's action, line 2's trade and line 3's Them: the looter's, or on your own drop its Offer,
--- its upgrade count and `(Details)` (feedback-5 spec §2: the full table's cells).
+-- its trade word and `Upgrade for N` (feedback-5 spec §2: the full table's cells).
 local function sides(drop, ctx, now)
     local them = CC.Half(L["Them"], SC.Them(drop, ctx.gear, now, ctx.revealed))
     if drop.isMine then
@@ -323,7 +323,10 @@ end
 
 -- ── the plain text of a card (tests, and the simulator's report) ────────────────────────────
 
-local function looterText(c) return c.mark and (c.text .. " " .. c.mark) or c.text end
+local function looterText(c)
+    local t = c.you and (c.text .. " " .. c.you) or c.text
+    return c.mark and (t .. " " .. c.mark) or t
+end
 
 local function lineTwo(card, right)
     return ("%s · %s · %s · %s  %s"):format(looterText(card.looter), card.slot.text, card.armorType.text,

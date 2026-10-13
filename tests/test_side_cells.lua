@@ -1,7 +1,7 @@
 -- tests/test_side_cells.lua — the Me and Them cells (feedback-6 spec §1, DW-F1): My eq merged into
 -- Me and Their eq into Them, `[icon(s)] [item level] [glyph][difference]`. The pure composers
 -- (modules/SideCells.lua) case by case: every verdict kind, two worn items, an empty slot, every
--- inspect state, your own drop's `(Details)`, the merged tooltip and History's verdict alone, and
+-- inspect state, your own drop's `Upgrade for N`, the merged tooltip and History's verdict alone, and
 -- the Offer panel's Their eq cell (feedback-7 spec §0, SC.Candidate); then the columns' widths
 -- measured over every kind at the harness's character measure (the Offer panel's Their eq too), the
 -- shed order, and the cells painted headless on the Drops table.
@@ -133,7 +133,7 @@ test("side cells: the tooltip is the gear's lines, then the verdict's, a shared 
     assertTrue(has(range.tip, "For Seta: Unknown"))
 end)
 
-test("side cells: your own drop's Them is (Details), in its tones, with every upgrade in the tooltip", function()
+test("side cells: your own drop's Them is Upgrade for N or No upgrades, in its tones, with every upgrade in the tooltip", function()
     local S = SC()
     local function cand(name, gain)
         return { guid = "Player-1-" .. name, name = name .. "-Realm", classFile = "MAGE", status = "ready",
@@ -142,16 +142,16 @@ test("side cells: your own drop's Them is (Details), in its tones, with every up
     local own = drop({ isMine = true, me = { verdict = "downgrade", ilvlDelta = -9, reasons = {} },
         candidates = { a = cand("Butterz", 11) } })
     local c = S.Them(own, HERS, 100, false)
-    assertEqual(c.text, "(Details)"); assertEqual(c.tone, "good"); assertTrue(c.level == nil)
+    assertEqual(c.text, "Upgrade for 1"); assertEqual(c.tone, "good"); assertTrue(c.level == nil)
     assertEqual(#c.items, 0, "no worn icons on your own drop"); assertEqual(c.upgrades, 1)
     assertEqual(c.tip[1], "Them")
     local none = S.Them(drop({ isMine = true, me = { verdict = "downgrade", ilvlDelta = -9, reasons = {} },
         candidates = {} }), nil, 100)
-    assertEqual(none.text, "(Details)"); assertEqual(none.tone, "muted")
+    assertEqual(none.text, "No upgrades"); assertEqual(none.tone, "muted")
     local kept = S.Them(drop({ isMine = true, candidates = { a = cand("Butterz", 11) } }), nil, 100, false)
     assertEqual(kept.text, "Hidden"); assertTrue(kept.hidden)
     assertEqual(S.Them(drop({ isMine = true, candidates = { a = cand("Butterz", 11) } }), nil, 100, true).text,
-        "(Details)", "revealed")
+        "Upgrade for 1", "revealed")
     assertEqual(S.Me(own, MINE).level, "292", "your own drop's Me still shows what you wear")
 end)
 

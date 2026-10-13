@@ -12,8 +12,8 @@ local _, NS = ...
 -- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
 -- NS.MineCells.TradeWindow, feedback-5 spec §1) and Actions (the Ask button; no drop is ever
 -- dismissed, feedback-4 spec §2). YOUR OWN DROPS are listed too (feedback-5 spec §2;
--- modules/WindowOwn.lua): Trade counts the members it upgrades (`Yes (2)`), Them reads
--- `(Details)` with each upgrade in the tooltip (`Hidden` while it is an upgrade for you that you
+-- modules/WindowOwn.lua): Looter reads `Name [YOU]`, Them reads `Upgrade for N` (feedback-7
+-- spec §2) with each upgrade in the tooltip (`Hidden` while it is an upgrade for you that you
 -- have not offered), and Actions is Offer, which opens the Offer panel (no Announce in the table).
 -- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
@@ -114,7 +114,7 @@ WG.COLUMNS = {
       tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
           TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
     { key = "them", label = L["Them"], width = 127, shed = 5,
-      tip = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, (Details) lists who it would help."] },
+      tip = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."] },
     { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
     { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3,
       tip = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] },
@@ -511,7 +511,8 @@ local function tradeWindowCell(row)
     return f
 end
 
-local BUILDERS = { item = itemCell, me = sideCell, them = sideCell, actions = actionsCell, tradeWindow = tradeWindowCell }
+local BUILDERS = { item = itemCell, me = sideCell, them = sideCell, actions = actionsCell, tradeWindow = tradeWindowCell,
+    looter = function(row, key) return NS.WindowRows.MarkedCell(textCell(row, key)) end }
 
 --- A drop row's (or compact card's) expand indicator: the header's chevron texture, ROW_CHEVRON
 --- square, muted white (C.CHEVRON_ROW); the caller anchors it. WG.PaintChevron sets its state.
@@ -707,7 +708,7 @@ end
 local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType }
 
 --- The Them cell for any drop (NS.SideCells.Them): what the looter wears and their verdict, or on
---- your own drop `(Details)` (or `Hidden`, by the session's reveal state: NS.WindowOwn).
+--- your own drop `Upgrade for N` (or `Hidden`, by the session's reveal state: NS.WindowOwn).
 --- @param drop table
 --- @param gear table|nil the looter's inspect gear
 --- @param now number|nil
@@ -733,6 +734,7 @@ local function paintRow(row, drop, layout, now, metrics)
     local lc = WC.Looter(drop)
     paintText(cells.looter, lc)
     classTone(cells.looter.text, lc.classFile)
+    NS.WindowRows.PaintMark(cells.looter, lc.you, layout.looter)   -- ` [YOU]` (feedback-7 spec §2)
     paintText(cells.trade, NS.WindowOwn.Trade(drop))
     paintSide(cells.me, SC.Me(drop, myGear()), "player")
     paintSide(cells.them, WG.ThemCell(drop, inspectGear(drop), now))

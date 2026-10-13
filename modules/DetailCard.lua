@@ -9,8 +9,8 @@ local _, NS = ...
 -- inspect's age, each under a verdict chip); the trade estimate box (the state, the reason in plain words, the rule in
 -- force and how fresh the data is); and the actions: Ask, Edit message, Link in chat, Retry inspect,
 -- and Trade (disabled with its reason). Every line and chip has a reason tooltip. On your own drop
--- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Them row `(Details)` with every
--- member it upgrades in the tooltip, and Offer takes the Ask's place: it opens the Offer panel
+-- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Looter row `Name [YOU]` and its Them
+-- row `Upgrade for N` (feedback-7 spec §2) with every member it upgrades in the tooltip, and Offer takes the Ask's place: it opens the Offer panel
 -- (NS.WindowOwn: the reveal state, the offer's tone and the click).
 --
 -- THE SPLIT. What each part says is modules/DetailCells.lua's (pure); this file is the frame edge
@@ -154,6 +154,7 @@ local function newSideRow(side, i)
     r.value = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     r.value:SetJustifyH("LEFT")
     r.value:SetWordWrap(false)
+    r.mark = NS.WindowRows.NewMark(r, r.value)   -- your own drop's ` [YOU]` (feedback-7 spec §2)
     attach(r)
     return r
 end
@@ -346,7 +347,9 @@ local function paintSideRow(r, line, width)
     r.value:ClearAllPoints()
     local x = K.SIDE_LABEL + (line.link and K.SIDE_ROW_H + 2 or 0)
     r.value:SetPoint("LEFT", r, "LEFT", x, 0)
-    r.value:SetWidth(max(width - 20 - x, 20))
+    local cr, cg, cb = NS.Compat.ClassColor(line.classFile)
+    if cr then r.value:SetTextColor(cr, cg, cb) end
+    NS.WindowRows.PlaceMark(r.value, r.mark, line.you, max(width - 20 - x, 20))
 end
 
 local function paintSide(side, model, width)

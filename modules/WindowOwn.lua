@@ -5,14 +5,14 @@ local _, NS = ...
 -- paint.
 --
 -- ALWAYS LISTED. Drops lists every drop, your own included (`feed.showOwn` is retired; a
--- stored value is ignored). On your own drop the Trade cell counts the members it upgrades
--- (`Yes (2)`), Them reads `(Details)` with every upgrade in its tooltip, and Actions
+-- stored value is ignored). On your own drop the Trade cell's tooltip counts the members it
+-- upgrades, Them reads `Upgrade for N` with every upgrade in its tooltip (feedback-7 spec §2), and Actions
 -- is Offer, which opens the Offer panel (modules/OfferPanel.lua) and reveals the drop. What each
 -- says is NS.MineCells' (pure: OwnTrade, Details, OwnOffer; NS.SideCells.Them takes Details into
 -- the Them cell); this file reads the state they take.
 --
 -- THE KEEP? RULE. An upgrade for you is offered to nobody until you open its Offer panel: until then
--- its count is not drawn and (Details) reads `Hidden`. Opening the panel reveals it for the session
+-- its count is not said and Them reads `Hidden`. Opening the panel reveals it for the session
 -- (WO.Reveal, NS.State.windowOwn).
 --
 -- THE TONES (feedback-4 spec §1). Offer is toned by the furthest offer sent for the drop (cyan

@@ -4,14 +4,14 @@ local _, NS = ...
 -- ranked for the Offer panel (feedback-7 spec §0: their Their eq cell is NS.SideCells.Candidate's),
 -- the Offer panel's buttons, header and dock, the Drops strip's
 -- summary line and Post my tradeables' lines; and what your own drop says on Drops (feedback-5
--- spec §2): Trade with its upgrade count (`Yes (2)`), Them as `(Details)` (renamed from `(Multiple)`
--- by feedback-6 spec §3) with every member it upgrades in the tooltip, and the Offer button.
+-- spec §2): Trade's word, Them as `Upgrade for N` (feedback-7 spec §2; `(Details)` before, and
+-- `(Multiple)` before that) with every member it upgrades in the tooltip, and the Offer button.
 -- Nothing is ever blank: an unknown value says `?`, `–` or `Checking` and its tooltip says why.
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
 -- with its `expiresAt`, `me`) and plain inputs (the clock, the warning threshold, an ask's state)
 -- and answers a plain table; nothing here reads a module, the client or a saved variable (only
--- NS.TipMarks: (Details)' tooltip lines take the class and quality colors), so test_mine_cells drives each state case by case. The frame edges that paint them are
+-- NS.TipMarks: Upgrade for N's tooltip lines take the class and quality colors), so test_mine_cells drives each state case by case. The frame edges that paint them are
 -- modules/WindowGroup.lua, modules/CompactGroup.lua and modules/DetailCard.lua (the Trade window
 -- column, the compact card's countdown and your own drop's cells, through modules/WindowOwn.lua),
 -- modules/DropsStrip.lua (the strip) and modules/OfferPanel.lua (the panel). The shared verdict
@@ -33,15 +33,15 @@ local _, NS = ...
 -- carries its judgment (`eval`) and a line explaining its status (`explain`), which the Offer
 -- panel's Their eq cell draws in the Drops table's Them look (NS.SideCells.Candidate; the status
 -- pills and the `eq -> drop` text went with feedback-7 spec §0). An
--- upgrade for you is not offered by default: its count and (Details) read `Hidden` until you open
+-- upgrade for you is not offered by default: Them reads `Hidden` until you open
 -- the Offer panel yourself (AskFlow B2).
 --
--- YOUR OWN DROP ON DROPS (feedback-5 spec §2). Trade appends how many members it upgrades
--- (`Yes (2)`, the bare word with none); Them reads `(Details)` (NS.SideCells.Them), green with at
--- least one upgrade, muted otherwise, its tooltip naming each upgrade by gain, one line each that
+-- YOUR OWN DROP ON DROPS (feedback-5 spec §2; feedback-7 spec §2). Trade reads its word alone
+-- (`Yes`, not `Yes (2)`), its tooltip saying how many members it upgrades; Them reads `Upgrade for N`
+-- (NS.SideCells.Them), green, or `No upgrades`, muted, its tooltip naming each upgrade by gain, one line each that
 -- never wraps (`Butterz wears 276 Bloodthorn Treads [arrow]11`: the name in its class color, the item in
 -- its quality color, the arrow an inline texture, NS.TipMarks; feedback-6 spec §3). The keep?
--- rule holds: while it is an upgrade for you and not revealed, the count is not drawn and (Details)
+-- rule holds: while it is an upgrade for you and not revealed, the count is not said and Them
 -- reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's shape), toned by the furthest
 -- offer sent (cyan while it is your move, feedback-6 spec §2); a dash with the reason when it
 -- cannot be traded.
@@ -274,9 +274,9 @@ end
 --- @return number
 function MC.UpgradeCount(drop) return #upgradesOf(MC.Candidates(drop)) end
 
---- The Trade column on your own drop: WindowCells.Trade's word with the count of members it
---- upgrades (`Yes (2)`, `Likely (1)`; the bare word with none) and a tooltip line saying so. Not
---- counted on a drop that cannot be traded, nor under the keep? rule (its tooltip says why).
+--- The Trade column on your own drop: WindowCells.Trade's word alone (`Yes`, `Likely`: feedback-7
+--- spec §2 dropped the count from the cell) and a tooltip line saying how many members it upgrades.
+--- Not counted on a drop that cannot be traded, nor under the keep? rule (its tooltip says why).
 --- @param drop table one of your drops
 --- @param revealed boolean|nil its Offer panel was opened this session
 --- @return table cell, with `state` and `upgrades` (nil when not counted)
@@ -290,7 +290,6 @@ function MC.OwnTrade(drop, revealed)
     local n = MC.UpgradeCount(drop)
     c.upgrades = n
     if n > 0 then
-        c.text = ("%s (%d)"):format(c.text, n)
         c.tip[#c.tip + 1] = n == 1 and L["Upgrades 1 member: Offer shows who."]
             or L["Upgrades %d members: Offer shows who."]:format(n)
     end
@@ -317,9 +316,9 @@ local function upgradeLine(e)
     return TM.NoWrap(worn .. " " .. TM.Mark("upgrade") .. gain)
 end
 
---- Them on your own drop: `(Details)`, green when it upgrades at least one member
---- and muted when it upgrades none; its tooltip lists each upgrade ranked by gain, else says why
---- there is none (nobody's whose gear was read, `n checking`, nobody else in the group). `Hidden`
+--- Them on your own drop (feedback-7 spec §2): `Upgrade for N`, green, N the members it upgrades;
+--- `No upgrades`, muted, when it upgrades none. Its tooltip lists each upgrade ranked by gain, else
+--- says why there is none (nobody's whose gear was read, `n checking`, nobody else in the group). `Hidden`
 --- under the keep? rule; a dash on a drop that cannot be traded.
 --- @param drop table one of your drops
 --- @param revealed boolean|nil
@@ -337,7 +336,7 @@ function MC.Details(drop, revealed, title)
     end
     local list = MC.Candidates(drop)
     local ups = upgradesOf(list)
-    local c = cell(L["(Details)"], #ups > 0 and "good" or "muted", title)
+    local c = #ups > 0 and cell(L["Upgrade for %d"]:format(#ups), "good", title) or cell(L["No upgrades"], "muted", title)
     c.upgrades = #ups
     if #list == 0 then
         c.tip[2] = L["Nobody else in your group."]

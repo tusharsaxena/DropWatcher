@@ -115,7 +115,10 @@ test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", fu
     assertTrue(reason({ state = "unknown", reasonKey = "noInspect", args = { "outOfRange" } }):find("out of range") ~= nil)
     local none = W.Trade(drop({ trade = NONE }))
     assertEqual(none.text, "Unknown"); assertEqual(none.tip[2], "Not estimated yet.")
-    assertEqual(W.Trade(drop({ trade = { state = "no", reasonKey = "legacy" } })).tone, "bad")
+    assertEqual(W.Trade(drop({ trade = { state = "no", reasonKey = "legacy" } })).tone, "red",
+        "No in the palette's red, not the gray `bad` (feedback-7 spec §2)")
+    assertEqual(W.Trade(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } })).tone, "good")
+    assertEqual(none.tone, "muted")
 end)
 
 -- ── the gear halves (WC.TheirEq, WC.MyEq; NS.SideCells puts them before the verdict) ────────

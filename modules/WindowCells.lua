@@ -18,7 +18,7 @@ local _, NS = ...
 --
 -- THE TONES (C.TONE; feedback-4 spec §0). One tone per verdict, in the Me and the Them column
 -- alike: an upgrade `good` (green), a sidegrade `yellow`, a downgrade `red`; an item that cannot be
--- used or is not wanted `bad` (gray) and an unknown one `muted`.
+-- used or is not wanted `bad` (gray) and an unknown one `muted`. Trade's No is `red` too.
 
 NS.WindowCells = NS.WindowCells or {}
 local WC = NS.WindowCells
@@ -78,7 +78,10 @@ local EVAL_REASON = {
 }
 
 local TRADE_LABEL = { yes = L["Yes"], likely = L["Likely"], unknown = L["Unknown"], no = L["No"] }
-local TRADE_TONE = { yes = "good", likely = "good", unknown = "muted", no = "bad" }
+-- Trade's tones: Yes and Likely green, Unknown muted, No the palette's red (feedback-7 spec §2:
+-- not the gray `bad` tone). The detail card's trade chip reads this table too.
+local TRADE_TONE = { yes = "good", likely = "good", unknown = "muted", no = "red" }
+WC.TRADE_TONE = TRADE_TONE
 
 -- An inspect failure's reason, in words.
 local FAILED_WORD = {
@@ -242,7 +245,7 @@ local function inspectWhy(insp, who, now)
 end
 
 --- The Them verdict: the drop judged for its looter (the Me verdict's tones), `–` on your own drop
---- (the Drops table shows MineCells.Details's `(Details)` there instead: feedback-5 spec §2), `?`
+--- (the Drops table shows MineCells.Details's `Upgrade for N` there instead: feedback-5 spec §2), `?`
 --- while their gear is not read. NS.SideCells puts it after the looter's worn gear.
 --- @param drop table
 --- @param now number|nil GetTime()
@@ -584,9 +587,10 @@ end
 
 local SOURCE_WORD = { chat = L["chat"], encounter = L["the encounter"], history = L["the loot history"], manual = L["/dw add"] }
 
---- The Looter column: the short name (the edge colors it by class).
+--- The Looter column: the short name (the edge colors it by class) and, on your own drop, `you`:
+--- the ` [YOU]` mark the edge draws after the name in gold, never cut (feedback-7 spec §2).
 --- @param drop table
---- @return table cell, with `classFile`
+--- @return table cell, with `classFile` and `you` (nil on another player's drop)
 function WC.Looter(drop)
     local who = type(drop.looter) == "table" and drop.looter or {}
     local name = WC.ShortName(who.name)
@@ -597,6 +601,7 @@ function WC.Looter(drop)
     local c = cell(name, "plain", name, line)
     if #from > 0 then c.tip[#c.tip + 1] = L["Reported by %s."]:format(table.concat(from, ", ")) end
     c.classFile = who.classFile
+    if drop.isMine then c.you = L["[YOU]"] end
     return c
 end
 

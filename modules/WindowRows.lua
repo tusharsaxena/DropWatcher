@@ -15,6 +15,8 @@ local _, NS = ...
 -- PURE: FontSize, RowHeight, IconSize, CountdownRowHeight. The frame edge: Metrics reads the two rows
 -- through the schema seam (NS.Setting) once per repaint; SetFontSize and ApplyRowFont set a font
 -- string's size, keeping its face and flags, and put the template's own size back for Default.
+-- NewMark and PlaceMark draw a gold mark after a cell's text that is never cut (feedback-7 spec §2:
+-- ` [YOU]` after your own name on every looter text): the text is cut first.
 
 NS.WindowRows = NS.WindowRows or {}
 local WR = NS.WindowRows
@@ -88,9 +90,9 @@ function WR.SetFontSize(fs, size)
     fs:SetFont(base[1], size or base[2], base[3])
 end
 
-local PARTS = { "text", "glyph", "sub", "level" }
+local PARTS = { "text", "glyph", "sub", "level", "mark" }
 
---- Every text of a row's cells (`row.cells[key].text`, `.glyph`, `.sub`, `.level`) at `size`, once
+--- Every text of a row's cells (`row.cells[key].text`, `.glyph`, `.sub`, `.level`, `.mark`) at `size`, once
 --- per change.
 --- @param row table
 --- @param size number|nil
@@ -113,4 +115,66 @@ function WR.ApplyRowIcon(row, size)
     row.dwIcon = size
     local b = row.cells.item and row.cells.item.button
     if b then b:SetSize(size, size) end
+end
+
+-- ── a mark after a cell's text (feedback-7 spec §2) ─────────────────────────────────────────
+
+--- The gap between a cell's text and its mark, in pixels.
+WR.MARK_GAP = 3
+
+--- A gold mark drawn right after `text` (hidden until WR.PlaceMark gives it a word).
+--- @param parent table the frame that owns `text`
+--- @param text table the FontString the mark follows
+--- @return table the mark's FontString
+function WR.NewMark(parent, text)
+    local C = NS.Constants
+    local m = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    m:SetPoint("LEFT", text, "RIGHT", WR.MARK_GAP, 0)
+    m:SetWordWrap(false)
+    m:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    m:Hide()
+    return m
+end
+
+--- The width `text` may take beside a mark of `markWidth` in `width`: its own width (`full`) when
+--- that fits, else what is left after the mark and the gap (never under 10), so the text is cut
+--- and the mark is not. With no mark the text keeps `width`. Pure.
+--- @param width number the room for both
+--- @param full number|nil the text's own width, unbounded (nil when not known)
+--- @param markWidth number|nil the mark's width (nil: no mark)
+--- @return number
+function WR.MarkedWidth(width, full, markWidth)
+    if not markWidth then return width end
+    local room = max(width - markWidth - WR.MARK_GAP, 10)
+    return full and min(full + 1, room) or room
+end
+
+--- Show `word` in `mark` after `text`, or hide it (nil). `text` already holds its text; it is given
+--- WR.MarkedWidth's width out of `width`.
+--- @param text table FontString
+--- @param mark table FontString (WR.NewMark's)
+--- @param word string|nil
+--- @param width number the room for both
+function WR.PlaceMark(text, mark, word, width)
+    mark:SetText(word or "")
+    mark:SetShown(word ~= nil)
+    local full = text.GetUnboundedStringWidth and text:GetUnboundedStringWidth() or nil
+    local mw = word and (mark:GetStringWidth() or 0) or nil
+    text:SetWidth(WR.MarkedWidth(width, full, mw))
+end
+
+--- Give a table cell (`f.text`) its mark (`f.mark`, WR.NewMark's): the Looter column's builder.
+--- @param f table the cell
+--- @return table the cell
+function WR.MarkedCell(f)
+    f.mark = WR.NewMark(f, f.text)
+    return f
+end
+
+--- Paint a marked cell's mark for this repaint (`at` its layout entry, nil while the column is shed).
+--- @param f table the cell (WR.MarkedCell's)
+--- @param word string|nil
+--- @param at table|nil { x, w }
+function WR.PaintMark(f, word, at)
+    if at then WR.PlaceMark(f.text, f.mark, word, at.w) end
 end

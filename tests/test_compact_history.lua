@@ -183,3 +183,25 @@ test("compact history: test mode's kept samples fill a card each, no piece blank
         end
     end
 end)
+
+test("history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)", function()
+    local NS, drawn = shownCompact()
+    local G = NS.Constants.GOLD
+    local mine, theirs = cardWith(drawn, "Expired"), cardWith(drawn, "Asked")
+    assertEqual(textOf(mine.cells.looter.text), "Testchar")
+    assertTrue(mine.cells.looter.mark:IsShown()); assertEqual(textOf(mine.cells.looter.mark), "[YOU]")
+    assertEqual(select(2, mine.cells.looter.mark:GetTextColor()), G.g)
+    assertFalse(theirs.cells.looter.mark:IsShown())
+    NS.SetWindowMode("full")
+    local full = NS.WindowHistory.Drawn()
+    local marked = 0
+    for _, r in ipairs(full.rows) do
+        local l = r.cells and r.cells.looter
+        if l and l.mark:IsShown() then
+            marked = marked + 1
+            assertEqual(textOf(l.text), "Testchar"); assertEqual(textOf(l.mark), "[YOU]")
+        end
+    end
+    assertEqual(marked, 1, "only your own entry is marked")
+end)
+

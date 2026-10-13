@@ -14,7 +14,7 @@ local _, NS = ...
 -- side, red down); `Can't use` and `Not wanted` stay words (gray). An unknown verdict's `?` is left
 -- out when the gear part already says why (a state word), and shown when it does not. A dash in the
 -- gear part goes when the verdict part has something to say.
--- YOUR OWN DROP'S THEM is MineCells.Details's `(Details)` (or `Hidden`), its tones and its tooltip.
+-- YOUR OWN DROP'S THEM is MineCells.Details's `Upgrade for N` (or `No upgrades`, `Hidden`), its tones and its tooltip.
 -- History keeps no worn items, so its cells are the verdict part alone (SC.Merge with no gear).
 -- THE OFFER PANEL'S THEIR EQ (feedback-7 spec §0) is the same cell for one candidate (SC.Candidate):
 -- what they wear from their inspect read (else the worn item their verdict was judged against), and
@@ -105,7 +105,7 @@ function SC.Me(drop, equipped)
 end
 
 --- The Them cell: what the looter wears there (their inspect read's) and the drop judged for them;
---- on your own drop `(Details)` (MineCells.Details), every member it upgrades in the tooltip.
+--- on your own drop `Upgrade for N` (MineCells.Details), every member it upgrades in the tooltip.
 --- @param drop table
 --- @param gear table|nil the looter's inspect gear
 --- @param now number|nil GetTime()
