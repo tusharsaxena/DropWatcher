@@ -86,7 +86,7 @@ test("toast: Compose keeps the table's words, the empty slot and each trade reas
     assertEqual(t.them.text, "Not wanted"); assertEqual(t.them.tone, "bad")
     t = C(drop({ me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))
     assertEqual(t.me.text, "empty", "an empty slot reads as the Me column does, never 0")
-    assertEqual(t.me.tone, "good")
+    assertEqual(t.me.glyph, "▲"); assertEqual(t.me.tone, "good")
     t = C(drop({ trade = { state = "yes", reasonKey = "boe" } }))
     assertEqual(t.trade, "Tradeable"); assertEqual(t.tradeTone, "good"); assertEqual(t.reason, "bind on equip")
     t = C(drop({ trade = { state = "likely", reasonKey = "groupLoot" } }))
@@ -99,8 +99,18 @@ end)
 
 -- Rough widths in the client's GameFontHighlightSmall: under 5 pixels a character (the owner's
 -- screenshot 01 draws `Looted by Seta · +19 ↑ · Likely trad…`, 37 characters, in about 170 of the
--- toast's 340), and a 12-point monospace glyph about 7.
+-- toast's then 340), and a 12-point monospace glyph about 7.
 local CHAR_W, GLYPH_W = 5, 7
+
+-- Row 3's drawn width: the looter's segment, then each verdict's glyph (when it has one) and text.
+local function row3Width(NS, t)
+    local TM, G, S = NS.TipMarks, NS.Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
+    local function verdict(part)
+        return G + (part.glyph and GLYPH_W + S or 0) + TM.Chars(part.text) * CHAR_W
+    end
+    return TM.Chars(("Looted by %s · You"):format(t.looterText)) * CHAR_W + verdict(t.me)
+        + G + TM.Chars("· Them") * CHAR_W + verdict(t.them)
+end
 
 test("toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec §0)", function()
     local NS = T.newAddon()
@@ -108,13 +118,17 @@ test("toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec �
     local long = drop({ looter = { name = "Abcdefghijkl-Realm", classFile = "PRIEST" },
         me = { verdict = "upgrade", ilvlDelta = 19 }, them = { verdict = "downgrade", ilvlDelta = -13 } })
     local t = Toast.Compose(long)
-    local G, S = Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
-    local row3 = TM.Chars(("Looted by %s · You"):format(t.looterText)) * CHAR_W
-        + G + GLYPH_W + S + #t.me.text * CHAR_W + G + TM.Chars("· Them") * CHAR_W
-        + G + GLYPH_W + S + #t.them.text * CHAR_W
-    local row4 = TM.Chars(t.trade) * CHAR_W + G + TM.Chars("· " .. t.reason) * CHAR_W
-    assertEqual(Toast.WIDTH, 340)
+    local row4 = TM.Chars(t.trade) * CHAR_W + Toast.SEG_GAP + TM.Chars("· " .. t.reason) * CHAR_W
+    assertEqual(Toast.WIDTH, 350)
+    local row3 = row3Width(NS, t)
     assertTrue(row3 <= Toast.RowWidth(), ("row 3: %d > %d"):format(row3, Toast.RowWidth()))
+    -- red under: WIDTH 340 (an empty slot, `▲ empty`, then a Them word; 267 > 258)
+    for _, them in ipairs({ { verdict = "cantUse" }, { verdict = "doesntWant" } }) do
+        t = Toast.Compose(drop({ looter = long.looter, them = them,
+            me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))
+        row3 = row3Width(NS, t)
+        assertTrue(row3 <= Toast.RowWidth(), ("row 3, %s: %d > %d"):format(them.verdict, row3, Toast.RowWidth()))
+    end
     assertTrue(row4 <= Toast.RowWidth(), ("row 4: %d > %d"):format(row4, Toast.RowWidth()))
     assertEqual(Toast.HEIGHT, Toast.ICON + 2 * Toast.INSET, "the icon spans the rows; the frame keeps its insets")
 end)
@@ -181,6 +195,8 @@ test("toast edge: the four rows beside a four-row icon, painted (feedback-9 spec
     assertEqual(f.themLabel:GetText(), "· Them"); assertEqual(f.themLabel.__points[1][2], f.meText)
     assertEqual(f.themGlyph:GetText(), "▽"); assertEqual(f.themGlyph.__font[1], C.FONT_MONO)
     assertEqual(f.themText:GetText(), "13"); assertEqual(f.themText.__textColor[1], C.TONE.red.r)
+    local last = f.themText.__points[2]
+    assertEqual(last[1], "RIGHT"); assertEqual(last[2], f); assertEqual(last[4], -NS.Toast.INSET, "cut at the inset")
     -- Row 4: the trade word in its tone, the reason muted and running to the right inset.
     assertEqual(f.trade:GetText(), "Likely tradeable"); assertEqual(f.trade.__textColor[2], C.TONE.good.g)
     assertEqual(f.reason:GetText(), "· not an upgrade for Seta")
@@ -206,6 +222,14 @@ test("toast edge: a verdict in a word takes no glyph's room", function()
     local f = NS.Toast.Frame()
     assertFalse(f.themGlyph:IsShown()); assertEqual(f.themText:GetText(), "Can't use")
     assertEqual(f.themText.__points[1][2], f.themLabel)
+end)
+
+test("toast edge: a looter of unknown class is a plain name in row 3's muted tone", function()
+    local NS = enabled({ drop({ looter = { name = "Seta" } }) })
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    assertEqual(f.looted:GetText(), "Looted by Seta · You")
+    assertEqual(f.looted.__textColor[1], NS.Constants.TONE.muted.r)
 end)
 
 test("toast edge: a right-click anywhere closes it as the close mark does; the left button does not", function()

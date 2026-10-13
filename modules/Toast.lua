@@ -68,7 +68,9 @@ Toast.NAME = "DropWatcherToast"
 Toast.MAX_QUEUE = 5
 -- The icon spans the four rows; the frame keeps INSET all round (feedback-9 spec §0). TEXT_GAP is
 -- between the icon and the rows, ROW_Y each row's top under the icon's (row 4 sits on its bottom).
-Toast.WIDTH, Toast.ICON, Toast.INSET, Toast.TEXT_GAP = 340, 56, 9, 8
+-- WIDTH is 350, not the spec's first 340: row 3 with a 12-character looter, an empty slot and a Them
+-- word (`Not wanted`) needs 267 of the rows' width (test_toast).
+Toast.WIDTH, Toast.ICON, Toast.INSET, Toast.TEXT_GAP = 350, 56, 9, 8
 Toast.HEIGHT = Toast.ICON + 2 * Toast.INSET
 Toast.ROW_Y = { 0, -15, -30 }
 -- Between row 3's and row 4's segments (a verdict after its label, a reason after its word).
@@ -285,7 +287,8 @@ local function buildTop(f)
 end
 
 -- Row 3: `Looted by Seta · You`, the Me verdict, `· Them`, the Them verdict (the segments are
--- placed on each paint: a verdict with no glyph takes no glyph's room).
+-- placed on each paint: a verdict with no glyph takes no glyph's room; the last runs to the right
+-- inset and is cut there, as row 4's reason is).
 local function buildVerdicts(f)
     f.looted = text(f, "GameFontHighlightSmall", "muted")
     atRow(f.looted, f, 3)
@@ -381,6 +384,7 @@ local function paintRows(t)
     frame.themLabel:SetPoint("LEFT", last, "RIGHT", Toast.SEG_GAP, 0)
     frame.themLabel:SetText(L["· Them"])
     paintVerdict(frame.themLabel, frame.themGlyph, frame.themText, t.them)
+    frame.themText:SetPoint("RIGHT", frame, "RIGHT", -Toast.INSET, 0)
     frame.trade:SetText(t.trade)
     setTone(frame.trade, t.tradeTone)
     frame.reason:SetText(t.reason ~= "" and ("· " .. t.reason) or "")

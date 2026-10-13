@@ -5,8 +5,9 @@
 -- grid (feedback-7 spec §3: TM.Grid, TM.GearRows, TM.ArrowCell; painted by modules/TipGrid.lua),
 -- Upgrade for N's rows on your own drop, and an audit: no tooltip on either tab, in either layout,
 -- carries → ▲ ▽ ≈ ⊘ or ⊕ outside a grid's glyph cell (drawn in the monospace face). Then the arrow between two values (TM.Arrow) and the drawn-width count
--- (TM.Chars), and the same audit over every text drawn in the default face (DW-F5): the toast, the
--- detail card's chips and rows and the Offer panel take textures; only monospace text keeps glyphs.
+-- (TM.Chars), and the same audit over every text drawn in the default face (DW-F5): the detail card's
+-- chips and rows and the Offer panel take textures (the toast's default-face audit is in test_toast);
+-- only monospace text keeps glyphs.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -360,7 +361,7 @@ test("tip marks: Chars counts what a text draws: an escape two, a color code non
     assertEqual(TM.Chars(nil), 0)
 end)
 
--- Every frame the window, the toast and the Offer panel build from here on (the mock's CreateFrame).
+-- Every frame the window and the Offer panel build from here on (the mock's CreateFrame).
 local function collected(m)
     local frames = {}
     local create = m.CreateFrame

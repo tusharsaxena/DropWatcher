@@ -260,8 +260,8 @@ modules\WindowFooter.lua
 # glyph, tone and reason tooltip); reads NS.Constants and NS.L at load.
 modules\WindowCells.lua
 # Conventional: publishes NS.TipMarks, what text in the default face draws for a verdict mark or an
-# arrow (an inline texture, never a font glyph: tooltips, the toast, the detail card, the Offer
-# panel), a tooltip's non-wrapping line and its gear grid's rows; reads NS.Constants, NS.L and
+# arrow (an inline texture, never a font glyph: tooltips, the detail card, the Offer panel)
+# and a name's quality or class color (the toast), a tooltip's non-wrapping line and its gear grid's rows; reads NS.Constants, NS.L and
 # NS.WindowCells (above) at load, and NS.Icon, NS.Compat and NS.GroupRoster at call time. Above modules\MineCells.lua, modules\DetailCells.lua and
 # modules\OfferPanel.lua (which take it at load), modules\WindowGroup.lua and
 # modules\WindowHistory.lua (whose column tooltips call it at load).
