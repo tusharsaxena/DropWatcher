@@ -20,11 +20,12 @@ C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEX
 C.WINDOW = {
     NAME        = "DropWatcherWindow",
     -- The default width is the least (feedback-4 spec §4): the Group drops table's every column at
-    -- its width, the Item column at ITEM_MIN, the scroll gutter and both insets (938 + 22 + 12).
+    -- its width, the Item column at ITEM_MIN, a drop row's indent and chevron lead (ROW_INDENT +
+    -- CHEVRON_X + ROW_CHEVRON + CHEVRON_GAP), the scroll gutter and both insets (958 + 30 + 22 + 12).
     -- tests/test_window_group.lua pins that no tab sheds a column there and the filter bar fits.
-    WIDTH       = 972,
+    WIDTH       = 1022,
     HEIGHT      = 600,
-    MIN_WIDTH   = 972,    -- = WIDTH: sized wider and back, never narrower than a new profile's
+    MIN_WIDTH   = 1022,   -- = WIDTH: sized wider and back, never narrower than a new profile's
     MIN_HEIGHT  = 260,
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
@@ -61,7 +62,17 @@ C.WINDOW = {
     CELL_GAP    = 6,      -- between two columns
     ITEM_MIN    = 150,    -- the Item column's least width (it takes the slack)
     SCROLL_W    = 22,     -- the scroll bar's gutter on the right of the rows
-    ASK_W       = 64,     -- the Ask button
+    -- The Ask button, and the Actions column it fills: every state's icon and word (Ask, Asked,
+    -- Queued, Retry, Traded) fits with room on both sides (feedback-5 spec §0). Compact's is the same.
+    ASK_W       = 84,
+    -- The expand indicator (feedback-5 spec §0): a drop row is indented ROW_INDENT from its header's
+    -- left edge, and draws the header's chevron (ROW_CHEVRON square) CHEVRON_X into the row, as the
+    -- header does its own; the Item column starts CHEVRON_GAP after it. A compact card is indented
+    -- the same, its chevron before the item button.
+    ROW_INDENT  = 12,
+    ROW_CHEVRON = 10,
+    CHEVRON_X   = 4,
+    CHEVRON_GAP = 4,
     -- The detail card, expanded inline under its row (modules/DetailCard.lua, design spec §11.3).
     CARD_H      = 248,    -- the whole card
     CARD_PAD    = 8,      -- its margin, and the gap between its boxes
@@ -105,6 +116,10 @@ C.WINDOW = {
 -- an idle tab and the footer's text.
 C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
 C.IDLE = { r = 0.62, g = 0.62, b = 0.64 }
+
+-- A drop row's chevron (feedback-5 spec §0): muted white, as its vertex color, and the same on hover.
+-- A group header's chevron is C.GOLD, as its text.
+C.CHEVRON_ROW = { r = 1.0, g = 1.0, b = 1.0, a = 0.55 }
 
 -- The drop tables' tones (design spec §11.2; feedback-4 spec §0 and §1): `good` an upgrade, a
 -- tradeable estimate or an action done, `bad` gray (can't use, not tradeable), `warn` amber (a trade

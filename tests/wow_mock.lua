@@ -106,8 +106,8 @@ local SIM_PANEL_NAME = "DropWatcherSimPanel"
 -- A frame is decorated when it is the window, the toast or the simulation panel, or when its parent
 -- is decorated (`__dwTree`), so the whole tree is, and nothing outside it changes.
 
--- Text, color, font, texture and check state, recorded on any widget or region of the tree (a font
--- string never given a font answers the game's default face at 10 points).
+-- Text, color, font, texture, vertex color and check state, recorded on any widget or region of
+-- the tree (a font string never given a font answers the game's default face at 10 points).
 local function decorateText(f)
     f.SetText = function(self, t) self.__text = t; return self end
     f.GetText = function(self) return self.__text end
@@ -119,6 +119,12 @@ local function decorateText(f)
     end
     f.SetTexture = function(self, tex) self.__texture = tex; return self end
     f.GetTexture = function(self) return self.__texture end
+    -- A texture's vertex color (a chevron's tint, feedback-5 spec §0); unset answers white.
+    f.SetVertexColor = function(self, r, g, b, a) self.__vertex = { r, g, b, a or 1 }; return self end
+    f.GetVertexColor = function(self)
+        local c = self.__vertex or { 1, 1, 1, 1 }
+        return c[1], c[2], c[3], c[4]
+    end
     f.SetFont = function(self, file, size, flags) self.__font = { file, size, flags }; return self end
     f.GetFont = function(self)
         local font = self.__font or { "Fonts\\FRIZQT__.TTF", 10, "" }

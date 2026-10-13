@@ -39,6 +39,14 @@ local _, NS = ...
 -- card's height. Only one row is expanded at a time (NS.State.windowGroup.expanded); a second click
 -- on it, or on another row, collapses or moves the card. A row filtered out or collapsed under its
 -- header takes its card with it.
+--
+-- THE EXPAND INDICATOR (feedback-5 spec §0). Every drop row draws the header's chevron at its left
+-- edge, before the Item column: chevron-down while collapsed, chevron-up while its card is open,
+-- muted white (C.CHEVRON_ROW) and the same on hover. The rows read as their header's children: each
+-- row (stripe, chevron, every cell) and its detail card is indented K.ROW_INDENT from the header's
+-- left edge, and the column labels move with them (WG.LEAD, the indent and the chevron's lead, is
+-- what the columns lose of the pane's width). A header's own chevron is gold, as its text, on every
+-- tab and in both layouts (they all build it here, WG.NewHeader).
 -- THE COMPACT LAYOUT (WG.IsCompact) draws the same entries as cards: modules/CompactGroup.lua.
 --
 -- THE UI LISTENS. Window.lua repaints it on the bus; it reads the feed (NS.LootFeed.Groups, Get),
@@ -56,6 +64,12 @@ local State = NS.State
 local WC    = NS.WindowCells
 
 local max = math.max
+
+-- Where a drop row's Item column starts, from the header's left edge (feedback-5 spec §0): the
+-- row's indent, then its chevron (CHEVRON_X in, ROW_CHEVRON wide) and the gap after it. The chevron
+-- is not a column: no label, no toggle, never shed.
+WG.CHEVRON_LEAD = K.CHEVRON_X + K.ROW_CHEVRON + K.CHEVRON_GAP
+WG.LEAD = K.ROW_INDENT + WG.CHEVRON_LEAD
 
 -- The default columns, left to right (design spec §11.1). `flex` takes the width the others leave.
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
@@ -431,6 +445,26 @@ end
 
 local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = actionsCell }
 
+--- A drop row's (or compact card's) expand indicator: the header's chevron texture, ROW_CHEVRON
+--- square, muted white (C.CHEVRON_ROW); the caller anchors it. WG.PaintChevron sets its state.
+--- @param parent table the row or card
+--- @return table the texture
+function WG.RowChevron(parent)
+    local t = parent:CreateTexture(nil, "ARTWORK")
+    t:SetSize(K.ROW_CHEVRON, K.ROW_CHEVRON)
+    local c = C.CHEVRON_ROW
+    t:SetVertexColor(c.r, c.g, c.b, c.a)
+    t:SetTexture(NS.Icon("chevron-down"))
+    return t
+end
+
+--- Point a row's chevron down while it is collapsed and up while its detail card is open.
+--- @param t table WG.RowChevron's texture
+--- @param open boolean
+function WG.PaintChevron(t, open)
+    t:SetTexture(NS.Icon(open and "chevron-up" or "chevron-down"))
+end
+
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
     row:SetHeight(NS.WindowRows.ROW_H)
@@ -441,10 +475,8 @@ local function newRow(content)
     row.selected = row:CreateTexture(nil, "BACKGROUND")
     row.selected:SetAllPoints(row)
     row.selected:SetColorTexture(C.GOLD.r, C.GOLD.g, C.GOLD.b, 0.08)
-    row.expander = row:CreateTexture(nil, "ARTWORK")
-    row.expander:SetSize(10, 10)
-    row.expander:SetPoint("RIGHT", row, "RIGHT", -1, 0)
-    row.expander:SetTexture(NS.Icon("chevron-up"))
+    row.chevron = WG.RowChevron(row)
+    row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
     for _, col in ipairs(WG.COLUMNS) do
         local make = BUILDERS[col.key] or (GLYPH_COLS[col.key] and glyphCell) or textCell
@@ -463,7 +495,8 @@ local function newHeader(content)
     h.fill:SetColorTexture(1, 1, 1, 0.06)
     h.chevron = h:CreateTexture(nil, "ARTWORK")
     h.chevron:SetSize(10, 10)
-    h.chevron:SetPoint("LEFT", h, "LEFT", 4, 0)
+    h.chevron:SetPoint("LEFT", h, "LEFT", K.CHEVRON_X, 0)
+    h.chevron:SetVertexColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as its text (feedback-5 spec §0)
     h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
     h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
@@ -568,7 +601,7 @@ local function placeCells(row, layout, height)
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
-            f:SetPoint("LEFT", row, "LEFT", at.x, 0)
+            f:SetPoint("LEFT", row, "LEFT", WG.CHEVRON_LEAD + at.x, 0)
             f:SetSize(at.w, height)
             if f.text then f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10)) end
         end
@@ -581,7 +614,7 @@ local function paintRow(row, drop, layout, now, metrics)
     row.dropId = drop.id
     local open = view().expanded == drop.id
     row.selected:SetShown(open)
-    row.expander:SetShown(open)
+    WG.PaintChevron(row.chevron, open)
     row:SetHeight(metrics.height)
     placeCells(row, layout, metrics.height)
     NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
@@ -681,7 +714,7 @@ local function paintHeads(pane, cols, layout)
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
-            f:SetPoint("LEFT", pane.colHead, "LEFT", at.x, 0)
+            f:SetPoint("LEFT", pane.colHead, "LEFT", WG.LEAD + at.x, 0)   -- over their cells
             f:SetSize(at.w, K.COLHEAD_H)
         end
     end
@@ -702,16 +735,17 @@ local function rowWidth(pane)
     return w - K.SCROLL_W
 end
 
-local function place(frame, content, y, width)
+-- `x` indents a drop row and its detail card (K.ROW_INDENT); a header takes the full width.
+local function place(frame, content, y, width, x)
     frame:ClearAllPoints()
-    frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
-    frame:SetWidth(width)
+    frame:SetPoint("TOPLEFT", content, "TOPLEFT", x or 0, -y)
+    frame:SetWidth(width - (x or 0))
 end
 
--- The open row's detail card under it; answers the height it takes.
+-- The open row's detail card under it, indented with its row; answers the height it takes.
 local function drawCard(pane, drop, y, width, now)
-    place(pane.card, pane.content, y, width)
-    NS.DetailCard.Paint(pane.card, drop, width, now)
+    place(pane.card, pane.content, y, width, K.ROW_INDENT)
+    NS.DetailCard.Paint(pane.card, drop, width - K.ROW_INDENT, now)
     pane.card:Show()
     pane.cardDropId = drop.id
     return K.CARD_H
@@ -731,7 +765,7 @@ local function drawEntries(pane, entries, layout, width)
             y = y + K.GROUP_H
         else
             local r = Pool.Acquire(pane.rowPool, function() return newRow(pane.content) end)
-            place(r, pane.content, y, width)
+            place(r, pane.content, y, width, K.ROW_INDENT)
             r.stripe:SetShown(i % 2 == 0)
             paintRow(r, e.drop, layout, now, metrics)
             y = y + metrics.height
@@ -758,7 +792,7 @@ local function drawTable(pane, entries)
     local w = profileWindow()
     local cols = WG.Columns(w and w.columns)
     local width = rowWidth(pane)
-    local layout, kept = WG.Layout(cols, width)
+    local layout, kept = WG.Layout(cols, width - WG.LEAD)   -- the columns start after the indent and chevron
     paintHeads(pane, cols, layout)
     drawEntries(pane, entries, layout, width)
     pane.columns = kept

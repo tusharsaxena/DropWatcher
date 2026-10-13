@@ -312,3 +312,36 @@ test("compact group: test mode fills a card for every sample, no piece blank, an
     for _, card in ipairs(drawn.rows) do NS.WindowGroup.ToggleExpand(card.dropId) end
     assertTrue(NS.WindowGroup.Drawn().card:IsShown(), "the last one opened")
 end)
+
+-- ── the expand indicator and the indent (feedback-5 spec §0) ────────────────────────────────
+
+local function xOf(frame) return select(4, frame:GetPoint(1)) end
+
+test("compact group: each card is indented under its header and draws the row chevron on line 1, before the icon", function()
+    local NS, drawn = shownCards()
+    local K, C, CG = NS.Constants.WINDOW, NS.Constants, NS.CompactGroup
+    local card, h = cardFor(drawn, 1), drawn.headers[1]
+    assertEqual(xOf(h), 0); assertEqual(xOf(card), K.ROW_INDENT)
+    assertEqual(card:GetWidth(), h:GetWidth() - K.ROW_INDENT)
+    local ch = card.chevron
+    assertEqual(ch:GetTexture(), NS.Icon("chevron-down"))
+    local m = CG.Metrics(nil)
+    local p = ch.__points[1]
+    assertEqual(p[1] .. "," .. p[3], "LEFT,TOPLEFT"); assertEqual(p[2], card)
+    assertEqual(p[4], CG.PAD + CG.QUALITY_W, "after the quality bar"); assertEqual(p[5], CG.LineY(m, 1), "centered on line 1")
+    assertEqual(select(4, card.icon:GetPoint(1)), p[4] + K.ROW_CHEVRON + K.CHEVRON_GAP, "the icon after it and a gap")
+    assertEqual(select(4, ch:GetVertexColor()), C.CHEVRON_ROW.a, "muted white")
+    assertEqual(CG.TextLeft(m, CG.LEAD), CG.TextLeft(m) + K.ROW_CHEVRON + K.CHEVRON_GAP)
+    assertEqual(card.ask:GetWidth(), K.ASK_W, "the full table's Ask width")
+end)
+
+test("compact group: the open card's chevron points up and its detail card indents with it; the header chevron is gold", function()
+    local NS, drawn = shownCards()
+    local K, G = NS.Constants.WINDOW, NS.Constants.GOLD
+    assertEqual(select(2, drawn.headers[1].chevron:GetVertexColor()), G.g, "gold header chevron")
+    cardFor(drawn, 2):__fire("OnClick", "LeftButton")
+    drawn = NS.WindowGroup.Drawn()
+    assertEqual(cardFor(drawn, 2).chevron:GetTexture(), NS.Icon("chevron-up"))
+    assertEqual(cardFor(drawn, 1).chevron:GetTexture(), NS.Icon("chevron-down"))
+    assertEqual(xOf(drawn.card), K.ROW_INDENT)
+end)

@@ -238,7 +238,8 @@ test("card: a row click expands it inline; the rows below move down by the card'
     assertEqual(NS.WindowGroup.Expanded(), top)
     assertEqual(yOf(drawn.card), yOf(rowFor(drawn, top)) - NS.WindowRows.ROW_H, "right under its row")
     assertEqual(yOf(rowFor(drawn, below)), before - K.CARD_H, "the next row moves down")
-    assertTrue(rowFor(drawn, top).expander:IsShown(), "the open row shows its collapse mark")
+    assertEqual(rowFor(drawn, top).chevron:GetTexture(), NS.Icon("chevron-up"), "the open row's chevron points up")
+    assertEqual(rowFor(drawn, below).chevron:GetTexture(), NS.Icon("chevron-down"), "a closed row's points down")
     rowFor(drawn, top):__fire("OnClick", "LeftButton")
     drawn = NS.WindowGroup.Drawn()
     assertFalse(drawn.card:IsShown()); assertNil(NS.WindowGroup.Expanded())
@@ -252,7 +253,7 @@ test("card: one row at a time; a click on a cell or the item button opens it too
     rowFor(NS.WindowGroup.Drawn(), 2).cells.item.button:__fire("OnClick", "LeftButton")
     drawn = NS.WindowGroup.Drawn()
     assertEqual(drawn.cardDropId, 2, "the card moves: one row at a time")
-    assertFalse(rowFor(drawn, 1).expander:IsShown())
+    assertEqual(rowFor(drawn, 1).chevron:GetTexture(), NS.Icon("chevron-down"), "the row it left points down again")
 end)
 
 test("card: the header, both comparisons and the trade box are painted, each with a reason", function()

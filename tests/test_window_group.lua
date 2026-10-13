@@ -371,8 +371,8 @@ test("table: built at the least width, every column shows and Ask stays inside t
     local c = rowFor(drawn, 1).cells
     assertTrue(c.slot:IsShown()); assertTrue(c.looter:IsShown()); assertTrue(c.theirEq:IsShown())
     assertTrue(c.actions:IsShown())
-    local _, _, _, x = c.actions:GetPoint(1)
-    assertTrue(x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
+    local _, _, _, x = c.actions:GetPoint(1)   -- from the row's left edge, itself indented
+    assertTrue(K.ROW_INDENT + x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
 end)
 
 -- Feedback-2 spec §8 (FB2-9): the tables read like Ka0s Loot History's, 18-pixel rows and the
@@ -819,11 +819,14 @@ test("layout: at the least width no tab sheds a column, and one pixel less would
     assertEqual(K.MIN_WIDTH, K.WIDTH, "the least width is a new profile's width")
     assertEqual(K.COMPACT_MIN_W, K.COMPACT_WIDTH, "in both layouts")
     local row = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
+    -- Group drops' columns start after the row's indent and chevron (feedback-5 spec §0).
+    local lead = { WindowGroup = NS.WindowGroup.LEAD, WindowMine = 0, WindowHistory = 0 }
     for _, tab in ipairs({ "WindowGroup", "WindowMine", "WindowHistory" }) do
         local cols = NS[tab].COLUMNS
-        assertEqual(#NS.WindowGroup.Fit(cols, row), #cols, tab .. " keeps every column")
+        assertEqual(#NS.WindowGroup.Fit(cols, row - lead[tab]), #cols, tab .. " keeps every column")
     end
-    assertTrue(#NS.WindowGroup.Fit(NS.WindowGroup.COLUMNS, row - 1) < #NS.WindowGroup.COLUMNS,
+    local groupRow = row - NS.WindowGroup.LEAD
+    assertTrue(#NS.WindowGroup.Fit(NS.WindowGroup.COLUMNS, groupRow - 1) < #NS.WindowGroup.COLUMNS,
         "the least width is the tightest that fits Group drops")
     assertTrue(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH) >= 200, "the search box has room to type")
 end)
@@ -848,4 +851,77 @@ test("layout: the column labels are gold on all three full tables", function()
     assertTrue(gold(NS.Window.Frame().panes.mine.colHead.labels.item), "My drops")
     NS.Window.SelectTab("history")
     assertTrue(gold(NS.Window.Frame().panes.history.colHead.labels.item), "History")
+end)
+
+-- ── the expand indicator, the indent and the Actions width (feedback-5 spec §0) ─────────────
+
+local function xOf(frame) return select(4, frame:GetPoint(1)) end
+
+test("layout: Actions is 84 pixels, the Ask button's width, so every state's icon and word fits", function()
+    local NS = T.newAddon()
+    local K = NS.Constants.WINDOW
+    assertEqual(K.ASK_W, 84)
+    for _, col in ipairs(NS.WindowGroup.COLUMNS) do
+        if col.key == "actions" then assertEqual(col.width, K.ASK_W, "the column is the button's width") end
+    end
+end)
+
+test("rows: each row draws the header's chevron at its left, muted white, down while closed and up while open", function()
+    local NS, drawn = shownTable()
+    local K, C = NS.Constants.WINDOW, NS.Constants
+    local row = rowFor(drawn, 1)
+    assertTrue(row.expander == nil, "the right-edge mark is gone")
+    local ch = row.chevron
+    assertEqual(ch:GetTexture(), NS.Icon("chevron-down"), "collapsed")
+    assertEqual(ch.__points[1][1], "LEFT"); assertEqual(ch.__points[1][2], row)
+    assertEqual(ch.__points[1][4], K.CHEVRON_X, "at the row's left edge, as the header's")
+    local r, g, b, a = ch:GetVertexColor()
+    assertEqual(table.concat({ r, g, b, a }, ","), table.concat({ C.CHEVRON_ROW.r, C.CHEVRON_ROW.g,
+        C.CHEVRON_ROW.b, C.CHEVRON_ROW.a }, ","))
+    assertTrue(r == 1 and g == 1 and b == 1 and a > 0.4 and a < 0.7, "white at about 55%")
+    row:__fire("OnClick", "LeftButton")
+    ch = rowFor(NS.WindowGroup.Drawn(), 1).chevron
+    assertEqual(ch:GetTexture(), NS.Icon("chevron-up"), "open")
+    assertEqual(select(4, ch:GetVertexColor()), C.CHEVRON_ROW.a, "the same tint while open")
+end)
+
+test("rows: the Item cell starts after the chevron and a 4px gap; the chevron is no column", function()
+    local NS, drawn = shownTable()
+    local K, WG = NS.Constants.WINDOW, NS.WindowGroup
+    assertEqual(WG.CHEVRON_LEAD, K.CHEVRON_X + K.ROW_CHEVRON + 4)
+    assertEqual(WG.LEAD, K.ROW_INDENT + WG.CHEVRON_LEAD)
+    assertEqual(xOf(rowFor(drawn, 1).cells.item), WG.CHEVRON_LEAD)
+    for _, col in ipairs(WG.COLUMNS) do assertTrue(col.key ~= "chevron", "not a column") end
+    assertTrue(drawn.pane.colHead.labels.chevron == nil, "no label")
+end)
+
+test("rows: every drop row and its detail card sit ROW_INDENT in from the header; the labels shift over their cells", function()
+    local NS, drawn = shownTable()
+    local K = NS.Constants.WINDOW
+    assertEqual(K.ROW_INDENT, 12)
+    local h = drawn.headers[1]
+    assertEqual(xOf(h), 0, "the header keeps the full width")
+    local row = rowFor(drawn, 1)
+    assertEqual(xOf(row), K.ROW_INDENT)
+    assertEqual(row:GetWidth(), h:GetWidth() - K.ROW_INDENT, "the row ends where the header does")
+    local labels = drawn.pane.colHead.labels
+    for _, key in ipairs({ "item", "slot", "looter", "trade", "actions" }) do
+        assertEqual(xOf(labels[key]), K.ROW_INDENT + xOf(row.cells[key]), key .. "'s label over its cell")
+    end
+    NS.WindowGroup.ToggleExpand(1)
+    drawn = NS.WindowGroup.Drawn()
+    assertEqual(xOf(drawn.card), K.ROW_INDENT, "the detail card indents with its row")
+    assertEqual(drawn.card:GetWidth(), rowFor(drawn, 1):GetWidth())
+end)
+
+test("headers: a group header's chevron is gold, as its text, collapsed or open", function()
+    local NS, drawn = shownTable()
+    local G = NS.Constants.GOLD
+    local h = drawn.headers[1]
+    local r, g, b = h.chevron:GetVertexColor()
+    assertEqual(table.concat({ r, g, b }, ","), table.concat({ G.r, G.g, G.b }, ","))
+    h:__fire("OnClick", "LeftButton")
+    h = NS.WindowGroup.Drawn().headers[1]
+    assertEqual(h.chevron:GetTexture(), NS.Icon("chevron-right"), "collapsed")
+    assertEqual(select(2, h.chevron:GetVertexColor()), G.g, "still gold")
 end)

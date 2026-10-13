@@ -484,3 +484,13 @@ test("history tab: the pure Ago reads seconds, hours, then days", function()
     assertEqual(WH.Ago(86400), "1 day ago")
     assertEqual(WH.Ago(3 * 86400 + 5), "3 days ago")
 end)
+
+test("history tab: rows do not expand, so they draw no chevron and are not indented; the headers' chevrons are gold", function()
+    local NS, drawn = shownTab()
+    local G = NS.Constants.GOLD
+    for _, r in ipairs(drawn.rows) do
+        assertTrue(r.chevron == nil, "no chevron")
+        assertEqual(select(4, r:GetPoint(1)), 0, "no indent")
+    end
+    assertEqual(select(2, drawn.headers[1].chevron:GetVertexColor()), G.g)
+end)

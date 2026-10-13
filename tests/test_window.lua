@@ -77,7 +77,7 @@ test("window: resizable from the corner grip, with the design's minimum size", f
     local f = NS.Window.Frame()
     assertTrue(f:IsResizable())
     local minW, minH = f:GetResizeBounds()
-    assertEqual(minW, 972, "the least width is the default width (feedback-4 spec §4)")
+    assertEqual(minW, 1022, "the least width is the default width (feedback-4 spec §4)")
     assertEqual(minH, 260)
 end)
 

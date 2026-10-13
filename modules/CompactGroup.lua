@@ -10,7 +10,10 @@ local _, NS = ...
 --
 -- THE CARD. Three lines, the item button spanning them (NS.WindowGroup.ItemButton: the game's own
 -- tooltip, shift-click links, ctrl-click tries on), a thin bar in the item's quality color at the
--- left edge. What each piece says, its tone and its reason tooltip are NS.CompactCards.Group's
+-- left edge, and between the two the full table's expand indicator (NS.WindowGroup.RowChevron:
+-- chevron-down, chevron-up while the card's detail card is open, muted white) centered on line 1.
+-- Like the full table's rows, each card and its detail card are indented K.ROW_INDENT under their
+-- header (feedback-5 spec §0; GROUP_SPEC.indent). What each piece says, its tone and its reason tooltip are NS.CompactCards.Group's
 -- (pure, built from the full view's cells):
 --
 --   line 1  item (quality color, the game's tooltip) · ilvl · Ask (the full table's states)
@@ -60,6 +63,7 @@ CG.GAP = 2             -- between two cards, and around the detail card
 CG.LINE_EXTRA = 4      -- a line's height over its text size
 CG.ICON_MIN, CG.ICON_MAX = 24, 48
 CG.QUALITY_W = 2       -- the quality bar at a card's left edge
+CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Group drops card's chevron and the gap before its icon
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
 local SEP = "|cff9e9ea3·|r "
@@ -84,17 +88,20 @@ end
 --- @return number
 function CG.LineY(m, i) return -(CG.PAD + (i - 0.5) * m.line) end
 
---- Where the text starts: after the quality bar and the icon.
+--- Where the text starts: after the quality bar, the chevron's lead (`lead`, CG.LEAD on a Group
+--- drops card, 0 where a card has no chevron) and the icon.
 --- @param m table
+--- @param lead number|nil
 --- @return number
-function CG.TextLeft(m) return CG.PAD + CG.QUALITY_W + m.icon + 6 end
+function CG.TextLeft(m, lead) return CG.PAD + CG.QUALITY_W + (lead or 0) + m.icon + 6 end
 
 --- Where line 3's second half (Them) starts on a card `width` pixels wide: halfway across the text.
 --- @param width number
 --- @param m table
+--- @param lead number|nil as CG.TextLeft's
 --- @return number
-function CG.HalfX(width, m)
-    local x = CG.TextLeft(m)
+function CG.HalfX(width, m, lead)
+    local x = CG.TextLeft(m, lead)
     return x + floor(max(0, width - x - CG.PAD) / 2)
 end
 
@@ -210,8 +217,9 @@ end
 
 local function buildLineOne(card)
     local WG = NS.WindowGroup
+    card.chevron = WG.RowChevron(card)   -- placed on line 1 (layout)
     card.icon = WG.ItemButton(card, K.ROW_ICON)
-    card.icon:SetPoint("LEFT", card, "LEFT", CG.PAD + CG.QUALITY_W, 0)
+    card.icon:SetPoint("LEFT", card, "LEFT", CG.PAD + CG.QUALITY_W + CG.LEAD, 0)
     local item = piece(card, "item")
     item.hit.showItem = true   -- the game's own tooltip (WindowGroup.ItemHover)
     WG.ItemHover(item.hit, card.icon)
@@ -268,9 +276,10 @@ end
 local function layout(card, m)
     if card.dwLine == m.line then return end
     card.dwLine = m.line
-    local x, P, c = CG.TextLeft(m), CG.PAD, card.cells
+    local x, P, c = CG.TextLeft(m, CG.LEAD), CG.PAD, card.cells
     local y1 = CG.LineY(m, 1)
     card.icon:SetSize(m.icon, m.icon)
+    at(card.chevron, "LEFT", card, "TOPLEFT", P + CG.QUALITY_W, y1)
     at(card.ask, "RIGHT", card, "TOPRIGHT", -P, y1)
     card.ask:SetHeight(m.line + 2)
     at(c.ilvl.text, "RIGHT", card.ask, "LEFT", -6, 0)
@@ -378,13 +387,15 @@ local function paintCard(card, drop, width, m, shared)
     card:SetHeight(m.height)
     layout(card, m)
     NS.WindowRows.ApplyRowFont(card, m.fontSize)
-    card.selected:SetShown(NS.WindowGroup.Expanded() == drop.id)
+    local open = NS.WindowGroup.Expanded() == drop.id
+    card.selected:SetShown(open)
+    NS.WindowGroup.PaintChevron(card.chevron, open)
     local cc = NS.CompactCards.Group(drop, cardCtx(drop, shared))
     card.model = cc
     paintLineOne(card, drop, cc)
     CG.PaintLineTwo(card, cc, "fresh")
     CG.PaintHalf(card, "you", cc.you)
-    at(card.cells.themLabel.text, "LEFT", card, "TOPLEFT", CG.HalfX(width, m), CG.LineY(m, 3))
+    at(card.cells.themLabel.text, "LEFT", card, "TOPLEFT", CG.HalfX(width, m, CG.LEAD), CG.LineY(m, 3))
     CG.PaintHalf(card, "them", cc.them)
 end
 
@@ -442,9 +453,10 @@ function CG.CardWidth(pane)
     return w - K.SCROLL_W
 end
 
-local function place(frame, content, y, width)
+-- `x` indents a card (and its detail card) under its header; the header takes the full width.
+local function place(frame, content, y, width, x)
     frame:ClearAllPoints()
-    frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
+    frame:SetPoint("TOPLEFT", content, "TOPLEFT", x or 0, -y)
     frame:SetWidth(width)
 end
 
@@ -509,7 +521,8 @@ end
 --- Draw a tab's entries as headers and cards (every repaint). `spec` is the tab's, built once:
 --- { newCard = fn(content), paint = fn(card, drop, width, m, st), header = fn(e, st) -> { text, tip },
 ---   toggle = OnClick for its headers (nil keeps Group drops'), after = fn(cv, drop, y, width, st) ->
----   extra height under a card (the detail card) }; `st` is the repaint's shared state.
+---   extra height under a card (the detail card), indent = how far a card sits in from its header
+---   (nil none) }; `st` is the repaint's shared state. A card's `width` is the view's less its indent.
 --- @param cv table
 --- @param entries table
 --- @param width number
@@ -518,6 +531,8 @@ end
 function CG.Draw(cv, entries, width, spec, st)
     local m = CG.Metrics(NS.WindowRows.FontSize(NS.Setting("window.fontSize")))
     local y, Pool = 0, NS.Pool
+    local indent = spec.indent or 0
+    local cardW = width - indent
     factories(cv, spec)
     for i, e in ipairs(entries) do
         if e.kind == "header" then
@@ -527,20 +542,21 @@ function CG.Draw(cv, entries, width, spec, st)
             y = y + K.GROUP_H
         else
             local card = Pool.Acquire(cv.cardPool, cv.makeCard)
-            place(card, cv.content, y, width)
+            place(card, cv.content, y, cardW, indent)
             card.stripe:SetShown(i % 2 == 0)
-            spec.paint(card, e.drop, width, m, st)
+            spec.paint(card, e.drop, cardW, m, st)
             y = y + m.height + CG.GAP
-            if spec.after then y = y + spec.after(cv, e.drop, y, width, st) end
+            if spec.after then y = y + spec.after(cv, e.drop, y, cardW, st) end
         end
     end
     cv.content:SetSize(width, max(y, 1))
 end
 
--- The open card's detail card under it, stacked; answers the height it takes (0 for another card).
+-- The open card's detail card under it, stacked and indented with it; answers the height it takes
+-- (0 for another card). `width` is the card's.
 local function drawDetail(cv, drop, y, width, st)
     if drop.id ~= st.expanded then return 0 end
-    place(cv.card, cv.content, y, width)
+    place(cv.card, cv.content, y, width, K.ROW_INDENT)
     local h = NS.DetailCard.Paint(cv.card, drop, width, st.now)
     cv.card:Show()
     cv.cardDropId = drop.id
@@ -553,7 +569,8 @@ local function groupHeader(e, st)
     return NS.CompactCards.Header(g, e.count, st.now, sit, e.collapsed, e.hidden, e.filter, e.yours)
 end
 
-local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader, after = drawDetail }
+local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader, after = drawDetail,
+    indent = K.ROW_INDENT }
 
 --- Draw the compact layout's cards for `entries` (WindowGroup's refresh, every repaint), or, in the
 --- full layout, hide them (carrying the scroll offset over to the table on the way out).
