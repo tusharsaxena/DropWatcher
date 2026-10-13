@@ -1,23 +1,32 @@
 local _, NS = ...
 -- modules/DropsStrip.lua — the Drops tab's summary strip (feedback-5 spec §3, DW-E3): how many of
--- your drops the tab lists you can still trade, the next of their trade windows to run out, and
--- Post my tradeables, under the table (or the compact cards) and above the footer.
+-- your drops the tab lists you can still trade, the next of their trade windows to run out, Post my
+-- tradeables and (full layout) Scan group, under the table (or the compact cards) and above the
+-- footer.
 --
--- SHOWN ONLY WHEN IT HAS SOMETHING TO SAY: while at least one of your drops the tab lists can be
--- traded. It counts your drops the tab lists (DS.Own: yours and passing the tab's filters, through
--- Window.TabContext's `matches`), collapsed under their header or not; with none tradeable it is
--- hidden and the table (or the cards) takes its room back. What it says is
+-- WHEN IT SHOWS. The full layout always shows it on Drops (feedback-7 spec §4, DW-G4): Scan group
+-- lives there, so the strip stays even with nothing tradeable, its summary empty and Post hidden. The
+-- compact layout shows it only while at least one of your drops the tab lists can be traded (its
+-- Scan group stays the title bar's icon); with none it is hidden and the cards take its room back.
+-- It counts your drops the tab lists (DS.Own: yours and passing the tab's filters, through
+-- Window.TabContext's `matches`), collapsed under their header or not. What it says is
 -- NS.MineCells.Summary's (pure): `2 tradeable · next expiry 0:08:41`.
 --
--- BOTH LAYOUTS. The full layout draws the summary and Post my tradeables; the compact layout
--- shortens both: `2 tradeable · next 0:08:41`
--- (DS.SummaryText) and a narrower `Post` button, with the same tooltip and the same handler.
+-- THE FULL LAYOUT'S BUTTONS (feedback-7 spec §4). Post my tradeables is the footer's Sort dropdown's
+-- size (NS.WindowFooter.SORT_W, the control height) with its right edge on Sort's
+-- (NS.WindowFooter.SORT_INSET from the right: the pane and the footer share their side edges), so it
+-- sits directly above Sort. Scan group sits DS.GAP left of it; while Post is hidden (nothing of yours
+-- can be traded) Scan group slides into Post's slot. DS.Slots is that placement, pure.
+--
+-- THE COMPACT LAYOUT shortens the summary: `2 tradeable · next 0:08:41` (DS.SummaryText) and a
+-- narrower `Post` button at the strip's right, with the same tooltip and the same handler.
 --
 -- THE FRAME EDGE. modules/WindowGroup.lua builds it with the pane (DS.Build) and repaints it on every
 -- refresh (DS.Paint, after the table or the cards are drawn: it moves the scroll frames' bottom edge
 -- up over it, or back down) and on each countdown tick (DS.Tick: the text alone). Post my tradeables
 -- goes through the host handler NS.PostTradeables (core/DropWatcher.lua), which posts every drop of
--- yours you can still trade.
+-- yours you can still trade; Scan group through NS.ScanGroup, as the title bar's and the empty
+-- state's do.
 
 NS.DropsStrip = NS.DropsStrip or {}
 local DS = NS.DropsStrip
@@ -29,6 +38,7 @@ local max = math.max
 
 DS.POST_W = 64     -- the compact layout's shortened Post button
 DS.INFO_W = 320    -- the summary's width in the full layout
+DS.GAP    = 8      -- between Scan group and Post my tradeables (full layout)
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
@@ -51,6 +61,19 @@ function DS.SummaryText(s)
     local text = s.count == 1 and L["1 tradeable"] or L["%d tradeable"]:format(s.count or 0)
     if s.next then text = text .. " · " .. L["next %s"]:format(NS.MineCells.Clock(s.next)) end
     return text
+end
+
+--- Where the full layout's two buttons go (pure): each one's right edge, in pixels left of the
+--- strip's right edge. Post my tradeables sits above Sort (`sortInset`); Scan group `gap` left of it,
+--- or in Post's slot while Post is hidden.
+--- @param postShown boolean
+--- @param sortInset number Sort's right edge left of the footer's
+--- @param postW number Post's width
+--- @param gap number
+--- @return table { post = number|nil (nil: hidden), scan = number }
+function DS.Slots(postShown, sortInset, postW, gap)
+    if not postShown then return { scan = sortInset } end
+    return { post = sortInset, scan = sortInset + postW + gap }
 end
 
 -- ── the frame ───────────────────────────────────────────────────────────────────────────────
@@ -83,9 +106,13 @@ function DS.Build(pane)
     info:SetSize(DS.INFO_W, K.STRIP_H)
     W.AttachTooltip(info, function() return tipOf(info) end, "row")
     strip.info = info
-    strip.post = W.TextButton(strip, K.POST_W, "speech-bubble", L["Post my tradeables"], function() NS.PostTradeables() end)
+    strip.post = W.TextButton(strip, NS.WindowFooter.SORT_W, "speech-bubble", L["Post my tradeables"], function() NS.PostTradeables() end)
     strip.post:SetPoint("RIGHT", strip, "RIGHT", 0, 0)
     W.AttachTooltip(strip.post, postTip)
+    strip.scan = W.TextButton(strip, K.SCAN_W, "people", L["Scan group"], function() NS.ScanGroup() end)
+    strip.scan:SetPoint("RIGHT", strip, "RIGHT", 0, 0)
+    W.AttachTooltip(strip.scan, NS.WindowTitleBar.ScanTip)
+    strip.scan:Hide()
     strip:Hide()
     pane.summary = strip
 end
@@ -105,22 +132,47 @@ local function infoWidth(pane, postW)
     return max(w - postW - 8, 40)
 end
 
--- The summary's text and the Post button's look in the layout in force.
+-- One button at `inset` pixels left of the strip's right edge, or hidden (inset nil).
+local function place(strip, b, inset)
+    b:SetShown(inset ~= nil)
+    if inset == nil then return end
+    b:ClearAllPoints()
+    b:SetPoint("RIGHT", strip, "RIGHT", -inset, 0)
+end
+
+-- The buttons in the layout in force: compact Post at the strip's right and no Scan group; full
+-- DS.Slots' (Post above Sort, Scan group beside it or in its slot).
+local function placeButtons(strip, tradeable, compact)
+    if compact then
+        place(strip, strip.post, 0)
+        place(strip, strip.scan, nil)
+        return
+    end
+    local WF = NS.WindowFooter
+    local slots = DS.Slots(tradeable, WF.SORT_INSET, WF.SORT_W, DS.GAP)
+    place(strip, strip.post, slots.post)
+    place(strip, strip.scan, slots.scan)
+end
+
+-- The summary's text and the Post button's look in the layout in force; nothing to say (the full
+-- layout with nothing tradeable) leaves the summary empty, with no tooltip.
 local function paintText(pane, s, compact)
     local strip = pane.summary
     local info = strip.info
-    info.text:SetText(compact and DS.SummaryText(s) or s.text)
+    local tradeable = s.count > 0
+    info.text:SetText(not tradeable and "" or compact and DS.SummaryText(s) or s.text)
     local tone = C.TONE.muted
     info.text:SetTextColor(tone.r, tone.g, tone.b)
-    info.tipLines = s.tip
-    local postW = compact and DS.POST_W or K.POST_W
+    info.tipLines = tradeable and s.tip or nil
+    local postW = compact and DS.POST_W or NS.WindowFooter.SORT_W
     strip.post:SetWidth(postW)
     strip.post.label:SetText(compact and L["Post"] or L["Post my tradeables"])
     info:SetWidth(compact and infoWidth(pane, postW) or DS.INFO_W)
 end
 
 --- Repaint the strip for the tab's view (every refresh, after the table or the cards are drawn):
---- shown while at least one of your drops the tab lists can be traded, the scroll frames above it.
+--- shown always in the full layout (Scan group lives there; Post my tradeables only while one of
+--- your drops the tab lists can be traded), in compact only while one can, the scroll frames above it.
 --- @param pane table the Drops pane
 --- @param ctx table Window.TabContext's
 --- @param compact boolean the compact layout is in force
@@ -129,10 +181,14 @@ function DS.Paint(pane, ctx, compact)
     if not strip then return end
     pane.ownDrops = DS.Own(NS.LootFeed.Drops(ctx.feed), ctx.matches)
     local s = NS.MineCells.Summary(pane.ownDrops, GetTime())
-    local shown = s.count > 0
+    local tradeable = s.count > 0
+    local shown = tradeable or not compact
     strip:SetShown(shown)
-    pane.summaryData = shown and s or nil
-    if shown then paintText(pane, s, compact) end
+    pane.summaryData = tradeable and s or nil
+    if shown then
+        paintText(pane, s, compact)
+        placeButtons(strip, tradeable, compact)
+    end
     local bottom = shown and K.STRIP_H or 0
     setBottom(pane.scroll, pane, pane.colHead, -2, bottom)
     local cv = pane.compactView
@@ -140,13 +196,13 @@ function DS.Paint(pane, ctx, compact)
 end
 
 --- Move the strip's next expiry on to the clock (WindowGroup.TickCountdowns): the text alone, over
---- the drops the last repaint counted.
+--- the drops the last repaint counted, while it shows a summary.
 --- @param pane table the Drops pane
 --- @param compact boolean
 function DS.Tick(pane, compact)
     local strip = pane.summary
-    if not (strip and strip:IsShown() and pane.ownDrops) then return end
+    if not (strip and strip:IsShown() and pane.summaryData and pane.ownDrops) then return end
     local s = NS.MineCells.Summary(pane.ownDrops, GetTime())
-    pane.summaryData = s
+    pane.summaryData = s.count > 0 and s or nil
     paintText(pane, s, compact)
 end

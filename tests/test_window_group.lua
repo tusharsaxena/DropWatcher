@@ -850,6 +850,24 @@ test("table: with no drop at all the empty state says so, with Preview with test
     assertEqual(NS.Window.TooltipOf(e.scan)[1], "Scan group")
 end)
 
+test("table: the empty state's two buttons are centered as a pair under its text", function()
+    local NS = T.enableAddon()
+    NS.ShowWindow()
+    local K = NS.Constants.WINDOW
+    local e = NS.WindowGroup.Drawn().empty
+    local point, rel, relPoint, x = e.pair:GetPoint(1)
+    assertEqual(point, "TOP"); assertTrue(rel == e.text); assertEqual(relPoint, "BOTTOM"); assertEqual(x, 0)
+    local gap = e.pair:GetWidth() - e.preview:GetWidth() - e.scan:GetWidth()
+    assertEqual(gap, 8, "a fixed gap between them")
+    assertEqual(e.scan:GetWidth(), K.SCAN_W)
+    local p1, r1 = e.preview:GetPoint(1)
+    assertEqual(p1, "LEFT"); assertTrue(r1 == e.pair)
+    local p2, r2 = e.scan:GetPoint(1)
+    assertEqual(p2, "RIGHT"); assertTrue(r2 == e.pair)
+    NS.SetWindowMode("compact")
+    assertTrue(NS.WindowGroup.Drawn().empty == e, "the compact layout's empty state is the same frame")
+end)
+
 test("table: the empty state's buttons turn test mode on and scan the group", function()
     local NS, _, m = T.enableAddon()
     m.seedGearJournal()

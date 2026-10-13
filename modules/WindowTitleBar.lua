@@ -3,9 +3,11 @@ local _, NS = ...
 -- 06 E, as the owner's feedback spec §1 reshaped it to match Ka0s Loot History): the centered gold
 -- title (no logo: the launcher and the TOC keep it), test mode's bright-red `TEST MODE` text, the
 -- simulator's `SIMULATION` text in its own color (simulator spec §6), the `n new` counter, the
--- restriction badge, Scan group, the layout
--- toggle (compact spec §1: between Scan group and minimize), minimize and the close mark, plus
--- the window's flat and icon buttons, which other frames borrow through NS.Window.TextButton.
+-- restriction badge, the compact layout's Scan group icon, the layout toggle (compact spec §1),
+-- minimize and the close mark, plus the window's flat and icon buttons, which other frames borrow
+-- through NS.Window.TextButton. The full layout's Scan group is the Drops strip's
+-- (modules/DropsStrip.lua, feedback-7 spec §4): the title bar's button is built here and shown in
+-- compact only (modules/CompactChrome.lua), and the badge anchors to the layout toggle.
 --
 -- Peeled out of modules/Window.lua (layout-§1's 1000-line notice band). The shell keeps everything
 -- that writes state: geometry (the drag's start and stop come in as `host` callbacks), the
@@ -94,7 +96,8 @@ local function modeTip()
     return unpack(lines)
 end
 
-local function scanTip()
+--- Scan group's tooltip: the title bar's, the Drops strip's and the empty state's.
+function TB.ScanTip()
     return L["Scan group"], L["Inspects every other member of your group, one at a time and out of combat, so each drop can be judged for its looter."]
 end
 
@@ -251,11 +254,13 @@ local function buildControls(f, bar)
     f.modeButton = iconButton(bar, "fullscreen-exit", "><", function() NS.ToggleWindowMode() end)
     f.modeButton:SetPoint("RIGHT", f.minimizeButton, "LEFT", -4, 0)
     W.AttachTooltip(f.modeButton, modeTip)
-    f.scanButton = TB.TextButton(bar, 96, "people", L["Scan group"], function() NS.ScanGroup() end)
+    -- Compact's Scan group icon (CompactChrome shapes it, and hides it in the full layout).
+    f.scanButton = TB.TextButton(bar, K.ICON + 4, "people", L["Scan group"], function() NS.ScanGroup() end)
     f.scanButton:SetPoint("RIGHT", f.modeButton, "LEFT", -6, 0)
-    W.AttachTooltip(f.scanButton, scanTip)
+    W.AttachTooltip(f.scanButton, TB.ScanTip)
+    f.scanButton:Hide()
     f.badge = buildBadge(bar)
-    f.badge:SetPoint("RIGHT", f.scanButton, "LEFT", -8, 0)
+    f.badge:SetPoint("RIGHT", f.modeButton, "LEFT", -8, 0)
 end
 
 --- Build the title bar into the window frame `f` (f.titleBar, f.title, f.testText, f.simText,

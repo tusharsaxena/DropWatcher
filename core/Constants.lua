@@ -111,7 +111,9 @@ C.WINDOW = {
     COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
     STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Clear history)
-    POST_W      = 140,    -- Post my tradeables
+    -- Post my tradeables is the footer's Sort size in the full layout (NS.WindowFooter.SORT_W,
+    -- feedback-7 spec §4); Scan group, beside it on the strip and in the empty state, is SCAN_W.
+    SCAN_W      = 110,
     CLEAR_W     = 124,    -- the History tab's Clear history (its strip is STRIP_H tall)
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels

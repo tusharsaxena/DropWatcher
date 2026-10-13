@@ -6,7 +6,8 @@ local _, NS = ...
 --
 --   title bar   `Drop Watcher` centered, `TEST` / `SIM` beside it in their red and cyan; the
 --               restriction badge its lock and the queued count, at the left; Scan group an icon
---               button; the layout toggle, minimize and close at the right
+--               button (the full layout hides it: its Scan group is the Drops strip's); the layout
+--               toggle, minimize and close at the right
 --   tabs        `Drops`, `History` at a reduced width (their tooltips say what each holds)
 --   filter bar  View, the search box (`Filter…`) and Filters ▾ on the right. The Filters menu holds
 --               the full bar's Quality, Content and Character dropdowns and the footer's Sort, the
@@ -324,16 +325,15 @@ local function fitWord(m, word)
     m:SetWidth(w)
 end
 
+-- The title bar's Scan group: an icon button in compact; hidden in full, where Scan group is the
+-- Drops strip's (feedback-7 spec §4, modules/DropsStrip.lua).
 local function layoutScan(b, compact)
+    b:SetShown(compact)
+    if not compact then return end
+    b:SetWidth(K.ICON + 4)
     b.art:ClearAllPoints()
-    if compact then
-        b:SetWidth(K.ICON + 4)
-        b.art:SetPoint("CENTER", b, "CENTER", 0, 0)
-    else
-        b:SetWidth(96)
-        b.art:SetPoint("LEFT", b, "LEFT", 6, 0)
-    end
-    b.label:SetShown(not compact)
+    b.art:SetPoint("CENTER", b, "CENTER", 0, 0)
+    b.label:Hide()
 end
 
 local function layoutTitleBar(f, compact)
@@ -347,7 +347,7 @@ local function layoutTitleBar(f, compact)
         f.badge:SetPoint("LEFT", f.titleBar, "LEFT", 6, 0)
     else
         f.badge:SetWidth(170)
-        f.badge:SetPoint("RIGHT", f.scanButton, "LEFT", -8, 0)
+        f.badge:SetPoint("RIGHT", f.modeButton, "LEFT", -8, 0)
     end
 end
 

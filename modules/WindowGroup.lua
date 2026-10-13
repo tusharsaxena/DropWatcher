@@ -31,9 +31,11 @@ local _, NS = ...
 -- buttons keep their own. While the Trade window column is shown a row is the room its countdown
 -- bar needs taller (WindowRows' countdownHeight), so the text and the bar never overlap.
 --
--- THE STRIP (feedback-5 spec §3). Under the table (or the compact cards), above the footer, while at
--- least one of your drops the tab lists can be traded: `n tradeable · next expiry 0:08:41` and Post
--- my tradeables (modules/DropsStrip.lua, built with the pane and repainted with it).
+-- THE STRIP (feedback-5 spec §3, feedback-7 spec §4). Under the table (or the compact cards), above
+-- the footer: `n tradeable · next expiry 0:08:41`, Post my tradeables (while one of your drops the
+-- tab lists can be traded) and, in the full layout, Scan group, so there it is always shown; compact
+-- shows it only while one can be traded (modules/DropsStrip.lua, built with the pane and repainted
+-- with it).
 --
 -- THE COUNTDOWNS MOVE each second while a shown row or the strip has one (feedback-5 spec §1;
 -- the strip counts your drops under a collapsed header too): Window.lua's
@@ -758,11 +760,11 @@ local function previewTip()
     return L["Preview with test data"], L["Turns test mode on: sample drops of real items in every state, so the window can be checked anywhere. Nothing is whispered, and combat ends it."]
 end
 
-local function scanTip()
-    return L["Scan group"], L["Inspects every other member of your group, one at a time and out of combat, so each drop can be judged for its looter."]
-end
+local PREVIEW_W, PAIR_GAP = 160, 8
 
--- No drop at all yet: what the table will hold, and the two ways to fill it now.
+-- No drop at all yet: what the table will hold, and the two ways to fill it now, centered as a pair
+-- under the text (feedback-7 spec §4) in both layouts: they sit in one frame as wide as both and
+-- their gap, centered on the text, so the wider Preview does not push the pair left.
 local function buildEmpty(pane)
     local e = CreateFrame("Frame", nil, pane)
     e:SetSize(K.EMPTY_W, K.EMPTY_H)
@@ -774,12 +776,15 @@ local function buildEmpty(pane)
     e.text:SetPoint("TOP", e.title, "BOTTOM", 0, -8)
     e.text:SetText(L["Loot your group receives appears here, grouped by boss."])
     local W = NS.Window
-    e.preview = W.TextButton(e, 160, "eye", L["Preview with test data"], function() NS.SetTestMode(true) end)
-    e.preview:SetPoint("TOPRIGHT", e.text, "BOTTOM", -4, -12)
+    e.pair = CreateFrame("Frame", nil, e)
+    e.pair:SetSize(PREVIEW_W + PAIR_GAP + K.SCAN_W, K.CONTROL_H)
+    e.pair:SetPoint("TOP", e.text, "BOTTOM", 0, -12)
+    e.preview = W.TextButton(e.pair, PREVIEW_W, "eye", L["Preview with test data"], function() NS.SetTestMode(true) end)
+    e.preview:SetPoint("LEFT", e.pair, "LEFT", 0, 0)
     W.AttachTooltip(e.preview, previewTip)
-    e.scan = W.TextButton(e, 110, "people", L["Scan group"], function() NS.ScanGroup() end)
-    e.scan:SetPoint("TOPLEFT", e.text, "BOTTOM", 4, -12)
-    W.AttachTooltip(e.scan, scanTip)
+    e.scan = W.TextButton(e.pair, K.SCAN_W, "people", L["Scan group"], function() NS.ScanGroup() end)
+    e.scan:SetPoint("RIGHT", e.pair, "RIGHT", 0, 0)
+    W.AttachTooltip(e.scan, NS.WindowTitleBar.ScanTip)
     e:Hide()
     return e
 end
@@ -977,7 +982,7 @@ end
 
 --- The drawn pane's rows and headers, in order, for the suites: { headers, rows, entries, columns,
 --- pane, card, cardDropId, empty, summary } (`cardDropId` nil while no card is open on screen;
---- `empty` the empty state's frame; `summary` the strip's MineCells.Summary, nil while it is hidden).
+--- `empty` the empty state's frame; `summary` the strip's MineCells.Summary, nil while nothing is tradeable).
 --- @return table|nil
 function WG.Drawn()
     local f = NS.Window.Frame()

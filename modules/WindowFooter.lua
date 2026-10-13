@@ -160,10 +160,13 @@ local function buildSegment(host, key, prev)
     return s
 end
 
-local SORT_W = 150
+--- The Sort control's width, and its right edge's inset from the footer's right edge. The Drops
+--- strip's Post my tradeables takes both, so it sits directly above Sort (feedback-7 spec §4).
+WF.SORT_W = 150
+WF.SORT_INSET = 16
 
 local function buildSort(host)
-    local dd = NS.MakeDropdown(host, SORT_W)
+    local dd = NS.MakeDropdown(host, WF.SORT_W)
     if not dd then return nil end
     local opts = {}
     local FB = NS.WindowFilterBar
@@ -194,8 +197,8 @@ function WF.AnchorSort()
     if not (dd and host) then return end
     dd:SetParent(host)
     dd:ClearAllPoints()
-    dd:SetPoint("RIGHT", host, "RIGHT", -16, 0)
-    dd:SetWidth(SORT_W)
+    dd:SetPoint("RIGHT", host, "RIGHT", -WF.SORT_INSET, 0)
+    dd:SetWidth(WF.SORT_W)
 end
 
 --- Repaint every segment from a fresh read, and the Sort control from the active tab's state. The

@@ -142,10 +142,10 @@ test("chrome: the badge collapses to its lock and the queued count at the left, 
     assertEqual(tip[1], "Encounter"); assertEqual(tip[3], "Queued: Ask to Seta-Realm")
     NS.SetWindowMode("full")
     assertEqual(textOf(f.badge.text), "Encounter · 2 queued")
-    assertEqual(f.badge.__points[1][2], f.scanButton, "back beside Scan group")
+    assertEqual(f.badge.__points[1][2], f.modeButton, "back beside the layout toggle (Scan group is the strip's)")
 end)
 
-test("chrome: Scan group becomes an icon button, with its tooltip and its click", function()
+test("chrome: Scan group is an icon button in compact, with its tooltip and its click; full hides it", function()
     local NS, f = shown("compact")
     local b = f.scanButton
     assertEqual(b:GetWidth(), NS.Constants.WINDOW.ICON + 4)
@@ -156,8 +156,12 @@ test("chrome: Scan group becomes an icon button, with its tooltip and its click"
     NS.ScanGroup = function() scanned = scanned + 1 end
     b:__fire("OnClick")
     assertEqual(scanned, 1)
+    assertTrue(b:IsShown())
     NS.SetWindowMode("full")
-    assertEqual(b:GetWidth(), 96); assertTrue(b.label:IsShown()); assertEqual(b.art.__points[1][1], "LEFT")
+    assertFalse(b:IsShown(), "the full layout's Scan group is the Drops strip's (feedback-7 spec §4)")
+    assertTrue(NS.WindowGroup.Drawn().pane.summary.scan:IsShown())
+    NS.SetWindowMode("compact")
+    assertTrue(b:IsShown()); assertEqual(b:GetWidth(), NS.Constants.WINDOW.ICON + 4)
 end)
 
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────

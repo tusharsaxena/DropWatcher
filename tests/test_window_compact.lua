@@ -117,7 +117,9 @@ test("compact: the title-bar toggle sits between Scan group and minimize, with a
     assertTrue(b ~= nil)
     local pt = b.__points[1]
     assertEqual(pt[1], "RIGHT"); assertEqual(pt[2], f.minimizeButton); assertEqual(pt[3], "LEFT")
-    assertEqual(f.scanButton.__points[1][2], b, "Scan group sits left of it")
+    assertEqual(f.scanButton.__points[1][2], b, "compact's Scan group sits left of it")
+    assertFalse(f.scanButton:IsShown(), "full: Scan group is on the Drops strip instead")
+    assertEqual(f.badge.__points[1][2], b, "the badge anchors to the toggle")
     assertEqual(b.mark, "fullscreen-exit", "full: the shrink mark")
     assertTrue(b.art:IsShown() and not b.glyph:IsShown(), "the catalog mark, not the glyph")
 end)
