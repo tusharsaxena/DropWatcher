@@ -9,8 +9,10 @@ local _, NS = ...
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
 -- specID (architecture-§5's value route): written whole through the seam, drawn by their own
--- editors (`skipRender`). The window's geometry, its minimized flag and the toast's position have
--- no row: they are named non-setting state (docs/ARCHITECTURE.md -> Settings Schema).
+-- editors (`skipRender`). General › When to show's per-situation rows (`situations.<key>.track`,
+-- `.autoOpen`, `.quality`) are `skipRender` too: its table draws them, one line per situation. The
+-- window's geometry, its minimized flag and the toast's position have no row: they are named
+-- non-setting state (docs/ARCHITECTURE.md -> Settings Schema).
 
 local DW       = NS.addon
 local Settings = DW.Settings
@@ -181,7 +183,9 @@ local function whenToShow()
     for _, s in ipairs(K.SITUATIONS) do
         local key, d = s.key, P.situations[s.key]
         local base = "situations." .. key .. "."
-        local sit = { page = "general", group = L["When to show"], subgroup = NS.WindowFooter.SituationLabel(key) }
+        -- Drawn by When to show's table (settings/PageEditors.lua SituationTable), one table row per
+        -- situation: still schema rows, so the CLI, the resets and profiles reach them as before.
+        local sit = { page = "general", group = L["When to show"], skipRender = true }
         local untracked = unless(base .. "track", true)
         bool(base .. "track", d.track, L["Track"],
             L["Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."], sit)

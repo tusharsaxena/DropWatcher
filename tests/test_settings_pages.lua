@@ -1,8 +1,8 @@
 -- tests/test_settings_pages.lua — the settings pages of design spec §12.2: the page list and each
--- page's strip, the rows each page draws, the dimmed rows, the Feed page's "in force now" readout,
--- the Comparison page's per-spec editors, the Messages page's template editors (live counters,
--- token chips, preview, Reset templates), each page's Defaults button, and the pure halves of the
--- editors (settings/Editors.lua). Built headless under the kit's AceGUI recorder: a page's body is
+-- page's strip, the rows each page draws, the dimmed rows, General › When to show's table, the Feed
+-- page's "in force now" readout, the Comparison page's per-spec editors, the Messages page's
+-- template editors (live counters, token chips, preview, Reset templates), each page's Defaults
+-- button, and the pure halves of the editors (settings/Editors.lua). Built headless under the kit's AceGUI recorder: a page's body is
 -- drawn on its first OnShow, and a tab is reached by clicking the strip's button.
 
 local T = _G.DW_TEST
@@ -118,38 +118,161 @@ end)
 
 -- ── General › When to show ──────────────────────────────────────────────────────────────────
 
-test("when to show: one block per situation, Track and Auto-open then Quality, under its name", function()
-    local NS, _, m = T.enableAddon()
+-- The When to show tab drawn with its table's frames recorded: a panel marked as the window's tree
+-- has its children decorated by the mock (tests/wow_mock.lua), so the table's text and stripes
+-- can be read back. Answers the ctx, the tab's widgets and the table.
+local function whenToShow(NS, m)
     local ctx = open(NS, m, "general")
+    ctx.panel.__dwTree = true
     local drawn = tab(m, ctx, "When to show")
+    return ctx, drawn, ctx.dwSituations
+end
+
+test("when to show: the global Auto-open row, then one table line per situation and no per-situation rows", function()
+    local NS, _, m = T.enableAddon()
+    local _, drawn, t = whenToShow(NS, m)
     assertTrue(find(drawn, "CheckBox", "Auto-open the window") ~= nil, "the master auto-open first")
-    local headings, tracks = 0, 0
     for _, w in ipairs(drawn) do
-        if w.type == "Heading" then headings = headings + 1 end
-        if w.type == "CheckBox" and w.labelText == "Track" then tracks = tracks + 1 end
+        -- red under: the rows still drawn by the flow engine, a heading and three widgets apiece
+        assertFalse(w.type == "Heading", "no per-situation heading: " .. tostring(w.labelText or w.text))
+        assertFalse(w.labelText == "Track" or w.labelText == "Quality", "no per-situation row")
     end
-    assertEqual(headings, #NS.Constants.SITUATIONS)
-    assertEqual(tracks, #NS.Constants.SITUATIONS)
-    assertTrue(find(drawn, "Heading", "Mythic+") ~= nil)
+    assertTrue(t ~= nil, "the table is drawn")
+    local S = NS.Constants.SITUATIONS
+    assertEqual(#t.rows, #S)
+    for i, s in ipairs(S) do
+        assertEqual(t.rows[i].label:GetText(), NS.WindowFooter.SituationLabel(s.key), s.key)
+    end
+end)
+
+test("when to show: four gold, left-aligned column headers, and a stripe on every second line", function()
+    local NS, _, m = T.enableAddon()
+    local _, _, t = whenToShow(NS, m)
+    local names = {}
+    for i, fs in ipairs(t.headers) do
+        names[i] = fs:GetText()
+        assertEqual(fs.__template, "GameFontNormalSmall")
+        local r, g, b = fs:GetTextColor()
+        assertTrue(r > 0.8 and g > 0.7 and b < 0.5, "gold")
+    end
+    assertEqual(table.concat(names, "|"), "Situation|Track|Auto-open|Quality")
+    for i, r in ipairs(t.rows) do
+        assertEqual(r.stripe:IsShown() == true, i % 2 == 0, "stripe on line " .. i)
+        assertEqual(r.label.__template, "GameFontHighlightSmall")
+    end
+end)
+
+test("when to show: each cell paints its stored value, and a toggle writes its path", function()
+    local NS, _, m = T.enableAddon()
+    local _, _, t = whenToShow(NS, m)
+    local delve = t.rows[6]   -- K.SITUATIONS order: delve is sixth, untracked by default
+    assertEqual(delve.track.value, false)
+    assertEqual(t.rows[1].track.value, true, "Mythic+ is tracked by default")
+    assertEqual(t.rows[1].quality.value, "global")
+    assertEqual(t.rows[1].quality.list.global, "Use global", "the row's own value list")
+    delve.track:__fire("OnValueChanged", true)
+    assertEqual(NS.addon.db.profile.situations.delve.track, true)
+    t.rows[1].quality:__fire("OnValueChanged", "dynamicSlot")
+    assertEqual(NS.addon.db.profile.situations.mythicPlus.quality, "dynamicSlot")
+    t.rows[1].autoOpen:__fire("OnValueChanged", false)
+    assertEqual(NS.addon.db.profile.situations.mythicPlus.autoOpen, false)
+    NS.SchemaRuntime.Set("situations.raid.track", false)
+    assertEqual(t.rows[5].track.value, false, "a write from elsewhere repaints it")
 end)
 
 test("when to show: an untracked situation's Auto-open and Quality are dimmed, and so is every Auto-open with the master off", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
-    local ctx = open(NS, m, "general")
-    local drawn = tab(m, ctx, "When to show")
-    local autoOpens = {}
-    for _, w in ipairs(drawn) do
-        if w.type == "CheckBox" and w.labelText == "Auto-open" then autoOpens[#autoOpens + 1] = w end
-    end
-    -- Mythic+ is tracked by default; delve is not.
-    assertFalse(autoOpens[1].disabled == true, "mythicPlus auto-open live")
-    assertTrue(autoOpens[6].disabled == true, "delve (untracked) auto-open dimmed")
+    local _, _, t = whenToShow(NS, m)
+    local mp, delve = t.rows[1], t.rows[6]
+    assertFalse(mp.autoOpen.disabled == true, "mythicPlus auto-open live")
+    assertFalse(mp.quality.disabled == true)
+    assertFalse(delve.track.disabled == true, "Track is always live")
+    assertTrue(delve.autoOpen.disabled == true, "delve (untracked) auto-open dimmed")
+    assertTrue(delve.quality.disabled == true, "and its quality")
+    assertEqual(select(1, delve.label:GetTextColor()), 0.5, "its label dims")
     Set("situations.delve.track", true)
-    assertFalse(autoOpens[6].disabled == true, "tracking it lights it")
+    assertFalse(delve.autoOpen.disabled == true, "tracking it lights it")
+    assertFalse(delve.quality.disabled == true)
+    assertEqual(select(1, delve.label:GetTextColor()), 0.86)
     Set("autoOpen", false)
-    -- red under: a disabledIf that reads the situation's track alone
-    assertTrue(autoOpens[1].disabled == true, "the master off dims every situation's")
+    -- red under: a disabled rule that reads the situation's track alone
+    assertTrue(mp.autoOpen.disabled == true, "the master off dims every situation's")
+    assertFalse(mp.quality.disabled == true, "but not its quality")
+end)
+
+test("when to show: Defaults repaints the table", function()
+    local NS, _, m = T.enableAddon()
+    local Set = NS.SchemaRuntime.Set
+    local _, _, t = whenToShow(NS, m)
+    Set("situations.delve.track", true)
+    Set("situations.mythicPlus.quality", "fixed")
+    assertEqual(t.rows[6].track.value, true)
+    NS.addon.Settings.Helpers.RestoreAllDefaults()
+    assertEqual(t.rows[6].track.value, false)
+    assertEqual(t.rows[1].quality.value, "global")
+    assertTrue(t.rows[6].autoOpen.disabled == true)
+end)
+
+test("when to show: the table is built once, parked when the tab goes, and re-hosted when it comes back", function()
+    local NS, _, m = T.enableAddon()
+    local ctx, _, t = whenToShow(NS, m)
+    local slot = t.rows[1]
+    assertTrue(t.host:IsShown() == true)
+    tab(m, ctx, "Simulation")
+    -- red under: a host left on the placeholder the tab switch handed back to AceGUI's pool
+    assertFalse(t.host:IsShown() == true, "parked off the released placeholder")
+    assertEqual(t.host:GetParent(), ctx.panel)
+    local drawn = tab(m, ctx, "When to show")
+    assertTrue(ctx.dwSituations == t and t.rows[1] == slot, "the same slots")
+    -- the render drew no second set of cells
+    local checks = 0
+    for _, w in ipairs(drawn) do if w.type == "CheckBox" and w.labelText == "" then checks = checks + 1 end end
+    assertEqual(checks, 0)
+    assertTrue(t.host:IsShown() == true)
+    NS.SchemaRuntime.Set("situations.solo.track", true)
+    assertEqual(t.rows[10].track.value, true, "repainted after the re-host")
+end)
+
+test("when to show: the per-situation rows are still schema rows, skipRender, with no subsection", function()
+    local NS = T.enableAddon()
+    for _, s in ipairs(NS.Constants.SITUATIONS) do
+        for _, f in ipairs({ "track", "autoOpen", "quality" }) do
+            local row = NS.SchemaRuntime.FindRow("situations." .. s.key .. "." .. f)
+            assertTrue(row ~= nil, s.key .. "." .. f)
+            assertTrue(row.skipRender == true, s.key .. "." .. f .. " is the table's")
+            assertTrue(row.subgroup == nil, "no heading of its own")
+            assertEqual(row.group, "When to show")
+        end
+    end
+    assertFalse(NS.SchemaRuntime.FindRow("autoOpen").skipRender == true, "the global row is drawn")
+end)
+
+test("when to show: the pure rows carry each situation's label, values and live cells", function()
+    local NS = T.enableAddon()
+    local E = NS.addon.Settings.Editors
+    local Set = NS.SchemaRuntime.Set
+    local function rows() return E.SituationRows(NS.SchemaRuntime.FindRow, NS.Setting, NS.WindowFooter.SituationLabel) end
+    local list = rows()
+    assertEqual(#list, #NS.Constants.SITUATIONS)
+    assertEqual(list[1].key, "mythicPlus")
+    assertEqual(list[1].label, "Mythic+")
+    assertEqual(list[1].track.path, "situations.mythicPlus.track")
+    assertEqual(list[1].quality.value, "global")
+    assertTrue(list[1].active and list[1].autoOpen.enabled and list[1].quality.enabled)
+    -- track x global auto-open: Auto-open is live only with both on; Quality with the track on.
+    local cases = { { true, true, true, true }, { true, false, false, true },
+                    { false, true, false, false }, { false, false, false, false } }
+    for _, c in ipairs(cases) do
+        Set("situations.dungeon.track", c[1])
+        Set("autoOpen", c[2])
+        local d = rows()[2]
+        local tag = tostring(c[1]) .. "/" .. tostring(c[2])
+        assertEqual(d.active, c[1], tag)
+        assertTrue(d.track.enabled, tag .. " track always live")
+        assertEqual(d.autoOpen.enabled, c[3], tag .. " auto-open")
+        assertEqual(d.quality.enabled, c[4], tag .. " quality")
+    end
 end)
 
 -- ── Feed › Quality ──────────────────────────────────────────────────────────────────────────

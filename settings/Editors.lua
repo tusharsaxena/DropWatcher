@@ -1,12 +1,13 @@
 local _, NS = ...
 -- settings/Editors.lua — the pure halves of the settings pages' own editors (design spec §12.2).
 --
--- Every page draws its rows through the library's flow engine. Four things on them have no row to
+-- Every page draws its rows through the library's flow engine. Five things on them are not its to
 -- draw: the Comparison page's per-spec weights and unwanted item types (two whole-value `map` rows,
--- `skipRender`), the Messages page's template editors (their live counters, the token chips and the
--- preview) and the Feed page's "in force now" readout. Their widgets are settings/PageEditors.lua's;
--- what they show and what they write is decided here, with no widget and no client call, so the
--- suites can pin it. A map write is always a fresh table: the seam stores what it is handed, and an
+-- `skipRender`), General › When to show's table (the per-situation rows, `skipRender`, one table
+-- row per situation), the Messages page's template editors (their live counters, the token chips
+-- and the preview) and the Feed page's "in force now" readout. Their widgets are
+-- settings/PageEditors.lua's; what they show and what they write is decided here, with no widget
+-- and no client call, so the suites can pin it. A map write is always a fresh table: the seam stores what it is handed, and an
 -- edit made in place on the stored table would skip the seam's check and its announce.
 
 local DW       = NS.addon
@@ -337,6 +338,39 @@ function E.PreviewLines(kind, template, ctx, to)
     }
 end
 
+-- ── General › When to show ──────────────────────────────────────────────────────────────────
+
+--- The table's three setting columns, in order: each one a field of `situations.<key>`.
+E.SITUATION_FIELDS = { "track", "autoOpen", "quality" }
+
+-- One cell: its schema row, the value stored at its path, and whether it is live. Live unless the
+-- row's own `disabledIf` says otherwise (settings/SchemaRows.lua), so the table dims exactly what
+-- the row dims and the rule has one home.
+local function situationCell(findRow, read, path)
+    local row = findRow(path)
+    local off = row and type(row.disabledIf) == "function" and row.disabledIf() or false
+    return { path = path, row = row, value = read(path), enabled = not off }
+end
+
+--- General › When to show's table: one entry per situation, in K.SITUATIONS order, carrying its
+--- key, its label, whether it is tracked (`active`: an untracked row's label dims) and a cell per
+--- E.SITUATION_FIELDS field.
+--- @param findRow function path -> schema row (NS.SchemaRuntime.FindRow)
+--- @param read function path -> stored value (NS.Setting)
+--- @param labelOf function situation key -> display name (WindowFooter.SituationLabel)
+--- @return table
+function E.SituationRows(findRow, read, labelOf)
+    local out = {}
+    for _, s in ipairs(K.SITUATIONS) do
+        local entry = { key = s.key, label = labelOf(s.key) }
+        for _, field in ipairs(E.SITUATION_FIELDS) do
+            entry[field] = situationCell(findRow, read, ("situations.%s.%s"):format(s.key, field))
+        end
+        entry.active = entry.track.value == true
+        out[#out + 1] = entry
+    end
+    return out
+end
 
 -- ── Feed › Quality ──────────────────────────────────────────────────────────────────────────
 
