@@ -111,7 +111,8 @@ end)
 
 -- ── the feature verbs (design spec §12.3) ───────────────────────────────────────────────────
 
--- `mine` went with its tab (feedback-5 spec §3): your own drops are on Drops.
+-- `mine` stays as an alias that opens Drops, where your own drops now are (feedback-5 spec §3); it is
+-- tested on its own below.
 local FEATURE = { "show", "hide", "toggle", "test", "scan", "clear", "history", "compact", "full",
     "situation", "offer", "add" }
 
