@@ -54,7 +54,9 @@ weights and unwanted types written whole through the seam, the Messages page's l
 preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
-panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values, label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, a tooltip on
+panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values,
+label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, the
+default size, 972 x 600, as the least width, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
 `test_window_compact` (compact mode's switch, DW-C0: the pure layout, run, size, bounds and corner
 reads, schema step 5, the title-bar toggle, each layout's own size and point on the one frame, the
@@ -65,13 +67,15 @@ tooltip checked against the full view's composer, the cross-realm mark, and the 
 `test_compact_group` (the Group drops tab in the compact layout, DW-C2: the card's metrics and the
 scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
 headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
-reason tooltip, every tooltip at the card's top right, the stacked detail card inline, Ask and ×,
-the ask states and the dash, the text size, the pool's reuse, and the collapsing headers),
+reason tooltip, every tooltip at the card's top right, the stacked detail card inline, Ask in its
+state's tone and no card dismissable, the ask states and the dash, the text size, the pool's reuse, and the
+collapsing headers),
 `test_compact_mine` (the My drops tab in the compact layout and the Offer panel beside it, DW-C3: the
 candidates' class-colored line, the short summary and the panel's least height, pure; then the cards
 built headless: one pooled card per drop of yours under a one-line header, each line what
-CompactCards says, the countdown's bar and its warning, the dash and Hide, Announce through the
-shared handler, TradeTimerTick, every tooltip at the card's top right, the strip shortened and put
+CompactCards says, the countdown's bar and its warning, the dash with no Announce and nothing hiding
+it, Announce through the shared handler, TradeTimerTick, every tooltip at the card's top right, the strip
+shortened and put
 back, the text size, and the panel docked right, left or floating centered at its own width),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
@@ -88,25 +92,31 @@ under the ticker, and the filter state kept across a switch),
 `test_compact_modes` (the two layouts over one engine, DW-C5, compact spec §5: the same drop set, the
 full table and the compact cards drawing the same drops and headers in the same order on every tab,
 for test mode's samples and a simulated dungeon and open-world run, under every View, Content,
-Character, search and Sort, with a group collapsed, a drop dismissed and your own drops shown;
+Character, search and Sort, with a group collapsed, a drop expanded and your own drops shown;
 switching back and forth on every tab leaving every verdict, trade state, inspect status, feed
 count, history entry and send as it was; and every test-mode state on a compact card saying what
 its full row says: the verdicts, trade words, ask states, inspect freshness and worn levels on Group
-drops, every countdown with Offer or its dash and Announce or Hide on My drops, and every outcome on
+drops, every countdown with Offer or its dash and Announce on My drops, and every outcome on
 History),
 `test_window_group` (the Group drops table: every cell's text, glyph, tone and reason tooltip for
-each verdict, trade, inspect and ask state, My eq and Their eq's worn levels, the column sets and the entry order, then the table
+each verdict, trade, inspect and ask state (one tone per verdict in Me and Them, the arrow first;
+`ActionTone`; the Type column's every value; feedback-4 spec §0, §1, §3), My eq and Their eq's worn levels,
+the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
 the item tooltip at the row's top right, else its top left,
-the Ask button and its repaint, the dismiss mark, the hand-off to the compact cards, the filters, the empty
+the Ask button, its repaint and its tone by state, no row dismissable, the Type column after Slot,
+the shed order, every column shown at the least width and none of the three tabs shedding there,
+the search box spanning from Character to the bar's edge, the gold column labels, the hand-off to
+the compact cards, the filters, the empty
 state and its two buttons, and the filters' empty line), `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
-through its host handler, and the Edit message box), `test_window_mine` (the My drops tab and the
+through its host handler, no Hide this item, and the Edit message box), `test_window_mine` (the My drops tab and the
 Offer panel: the countdown, exact and estimated, `ending soon`, For me's `keep?`, the candidates
 ranked with their pills, Best candidates hidden for your upgrade, the buttons' lifecycles, the
 summary, Post my tradeables' lines and the dock, then the tab and the panel built headless: pooled
-rows, a reason on every cell, the countdown moved by `TradeTimerTick`, Hide, Announce, the row's
+rows, a reason on every cell, the countdown moved by `TradeTimerTick`, a dead row staying listed,
+Offer and Announce toned by whose move it is (`ToneState`, `ToneStates`), Announce, the row's
 and the panel's Offer, Trade and Post my tradeables through their host handlers),
 `test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
 top just outside the window, else its bottom right outside the left edge, at the UI scale, the row
@@ -138,7 +148,8 @@ and their spec defaults, the six re-evaluation events and the stand-down), `test
 trade estimator: every row of the Estimate table in order, the trade window, the rule per situation
 and the owner's override map), `test_messaging` (the messaging core: token expansion, the length
 limit, the one-ask guard, queueing under restriction, the flush order, cancel and a failed send's
-retry), `test_restrictions` (the restriction tracker: each restriction type's reason and what it
+retry, and `FurthestState`, the furthest state any ask of a kind reached for one drop), `test_restrictions`
+(the restriction tracker: each restriction type's reason and what it
 blocks, the priority order, the chat lockdown, the combat edges ahead of the client's flag, the
 event's numeric, boolean and secret payloads, `RestrictionChanged` and the stand-down), `test_roster` (the roster: solo, party and raid
 tokens, the realm normalization, resolving by GUID, Name-Realm and bare name, the same-name tie
@@ -265,8 +276,8 @@ the edge: off by default, a qualifying drop shown and painted and gone after its
 time with each drop once, the queue's cap, a drop that turns likely on its `DropUpdated`, the hover
 pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the
 Ask button through the host handler, the sound, the drag only in test mode with the point saved and
-Reset position, test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim) or
-dismissed taking its toast and its place in the queue, an Ask on a gone drop, turning the toast off
+Reset position, test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim)
+taking its toast and its place in the queue, an Ask on a gone drop, turning the toast off
 or switching to a profile with it off, the stand-down and the diagnostics line),
 `test_auto_ask` (auto-ask: the pure `DueAt` and the delay's clamp; then the edge: off by default, a
 qualifying drop whispered after the delay once with the ask template, the delay and least gain
@@ -275,7 +286,7 @@ your own drop or an unknown trade left alone and a later `likely`
 scheduled, held through an encounter and due after its end, a loading screen or a new zone ending
 a hold with no Encounter restriction left (and keeping it while one is, until its lifting after the
 world event; a lifting with no world event keeping it), an encounter ending after
-the drop pushing it back, each cancel rule (your own ask, the looter leaving, the row dismissed, the item
+the drop pushing it back, each cancel rule (your own ask, the looter leaving, the item
 received, a drop gone or no longer qualifying when due, turning it off, the stand-down), only drops
 from after it was turned on, the one-time notice, test mode printing instead of sending and the
 diagnostics lines),
@@ -339,7 +350,7 @@ root cause reproduced, your own drop on My drops and nothing lost; the pure `Pla
 `My drops · n` tab; `/dw sim loot`'s line; and the regression over every scenario: each loot step's
 drops on Group drops, on My drops and hidden add up to its count, the minimum item level gate hiding
 them all included; then the M11 review leftovers, DW-B5, feedback-3 spec §5: the `My drops · n` label
-and the `· n yours on My drops` suffix count only what My drops lists, a drop hidden with Hide or by
+and the `· n yours on My drops` suffix count only what My drops lists, a drop hidden by
 its filters named in the tab's tooltip, and the report honoring `feed.showOwn` and test mode's feed),
 `test_sim_panel` (the simulation step panel, DW-91: the rows, their PerfPanel states and commands
 before and during a run, the controls following the timeline, `/dw sim`, `start` and `panel`

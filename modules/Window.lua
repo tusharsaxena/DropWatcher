@@ -249,7 +249,7 @@ function Window.BadgeText(reason, queued)
 end
 
 --- A tab's label: `My drops · 2` counts the drops of yours the tab lists (the feed on show, less
---- the ones hidden with Hide or by its own filters), so it reconciles with what it lists, the
+--- the ones its own filters hide), so it reconciles with what it lists, the
 --- simulator's loot step and the Group drops headers (feedback-3 spec §0 and §5).
 --- @param key string
 --- @param mine number|nil
@@ -263,7 +263,7 @@ end
 -- ── reads ───────────────────────────────────────────────────────────────────────────────────
 
 -- A tab's tooltip: My drops says how many of the drops it lists you can still trade, then names
--- your drops it leaves out (hidden with Hide or by its filters; feedback-3 spec §5).
+-- your drops it leaves out (hidden by its filters; feedback-3 spec §5).
 local function tabTip(key)
     if key ~= "mine" then return TAB_LABEL[key], TAB_TIP[key] end
     local t = NS.WindowMine.TabTally()

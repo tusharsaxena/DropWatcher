@@ -324,40 +324,37 @@ shows, pauses, places and sounds right in game is TOAST-1.
 
 ## Auto-ask
 
-Auto-ask (DW-54, `modules/AutoAsk.lua`) settles what design spec §9.4 leaves open. **What
-qualifies** is the toast's own test (`NS.Toast.Qualifies`) with `messages.autoAsk.minGain`: the
-item-level change for you, whatever the scorer (an empty slot clears any least gain, and the ask's
-`{mygain}` then reads `an empty-slot upgrade`, never the drop's item level, which is no gain), never your own drop, and an upgrade only, so it
-always fills the plain `ask` template, never the transmog one. **Once per drop:** a drop is
-considered on `DropAdded` and on each `DropUpdated` until it is scheduled, so one whose trade turns
-`likely` after the looter's inspect still qualifies; a drop scheduled, sent or canceled is never
-scheduled again that session. **Only new drops:** turned on, it counts only the drops the feed
-records from then on (all of a session's drops when it was on at login), so turning it on never
-whispers for the drops already in the table. A profile switch, copy or reset runs no row
-reaction, so `reloadProfile` (core/DropWatcher.lua) calls `NS.AutoAsk.OnProfileReloaded`: an
-incoming profile that turns it on counts from that moment the same way, one that turns it off
-cancels the waiting asks, and the one-time notice stays the row's alone. **The timing** is the delay after the later of the
-drop and the last `ENCOUNTER_END`; while an encounter is in progress (`ENCOUNTER_START` without
-its end) nothing is due, and the end makes every waiting ask due its delay after that moment. A
-player who leaves mid-fight may never hear that end, so a loading screen or a new zone
-(`PLAYER_ENTERING_WORLD`, `ZONE_CHANGED_NEW_AREA`) ends the hold the same way, unless the
-restriction tracker still reports the Encounter restriction (DW-62); then the restriction's
-lifting (`RestrictionChanged`) ends it, since the client may report that after the loading screen
-(M6 review). A restriction change alone, with no world event since the encounter began, never
-ends a hold. A
-drop that qualifies once its time has passed is asked at once. A keystone run has no
-`ENCOUNTER_END` for its chest, so its drops are timed from the drop. **The send** is checked again
-when due (on, in the feed, qualifying, never asked, not received, its looter in the group) and
-goes through the messaging edge's `Request`: guarded by the one-ask registry, queued while chat is
-restricted, confirmed in chat, never through the edit-first box; a refusal is logged under `MSG`,
-not said in chat. **Canceled** by any move of the drop's ask (a click on Ask, the toast's or the
-card's), a `GROUP_ROSTER_UPDATE` that leaves its looter out of the group, the row's × or the
-detail card's Hide (`NS.DismissDrop`), the history's `received`, turning it off, and the
-stand-down. **Test mode**'s placeholders qualify like live drops and are timed from when test mode
-put them in; their asks are printed, never sent. **The notice** is said once per account
-(`global.notices.autoAsk`), the first time the row turns on through the seam (the panel, `/dw
-set`); a profile switch or reset that turns it on says nothing. That it whispers in game after a
-boss kill, and holds off on each cancel, is ASK-8.
+Auto-ask (DW-54, `modules/AutoAsk.lua`) settles what design spec §9.4 leaves open. **What qualifies** is the
+toast's own test (`NS.Toast.Qualifies`) with `messages.autoAsk.minGain`: the item-level change for you,
+whatever the scorer (an empty slot clears any least gain, and the ask's `{mygain}` then reads
+`an empty-slot upgrade`, never the drop's item level, which is no gain), never your own drop, and an upgrade
+only, so it always fills the plain `ask` template, never the transmog one. **Once per drop:** a drop is
+considered on `DropAdded` and on each `DropUpdated` until it is scheduled, so one whose trade turns `likely`
+after the looter's inspect still qualifies; a drop scheduled, sent or canceled is never scheduled again that
+session. **Only new drops:** turned on, it counts only the drops the feed records from then on (all of a
+session's drops when it was on at login), so turning it on never whispers for the drops already in the
+table. A profile switch, copy or reset runs no row reaction, so `reloadProfile` (core/DropWatcher.lua) calls
+`NS.AutoAsk.OnProfileReloaded`: an incoming profile that turns it on counts from that moment the same way,
+one that turns it off cancels the waiting asks, and the one-time notice stays the row's alone. **The
+timing** is the delay after the later of the drop and the last `ENCOUNTER_END`; while an encounter is in
+progress (`ENCOUNTER_START` without its end) nothing is due, and the end makes every waiting ask due its
+delay after that moment. A player who leaves mid-fight may never hear that end, so a loading screen or a new
+zone (`PLAYER_ENTERING_WORLD`, `ZONE_CHANGED_NEW_AREA`) ends the hold the same way, unless the restriction
+tracker still reports the Encounter restriction (DW-62); then the restriction's lifting
+(`RestrictionChanged`) ends it, since the client may report that after the loading screen (M6 review). A
+restriction change alone, with no world event since the encounter began, never ends a hold. A drop that
+qualifies once its time has passed is asked at once. A keystone run has no `ENCOUNTER_END` for its chest, so
+its drops are timed from the drop. **The send** is checked again when due (on, in the feed, qualifying,
+never asked, not received, its looter in the group) and goes through the messaging edge's `Request`: guarded
+by the one-ask registry, queued while chat is restricted, confirmed in chat, never through the edit-first
+box; a refusal is logged under `MSG`, not said in chat. **Canceled** by any move of the drop's ask (a click
+on Ask, the toast's or the card's), a `GROUP_ROSTER_UPDATE` that leaves its looter out of the group, the
+history's `received`, turning it off, and the stand-down (until 2026-10-13 a dismissed row canceled it too;
+feedback-4 spec §2, DW-D2, removed every dismiss). **Test mode**'s placeholders qualify like live drops and
+are timed from when test mode put them in; their asks are printed, never sent. **The notice** is said once
+per account (`global.notices.autoAsk`), the first time the row turns on through the seam (the panel,
+`/dw set`); a profile switch or reset that turns it on says nothing. That it whispers in game after a boss
+kill, and holds off on each cancel, is ASK-8.
 
 ## The window shell
 
@@ -381,67 +378,73 @@ drops whose verdict for you is an upgrade. Both are the Group drops tab's alone.
 
 ## The Group drops table
 
-The Group drops table (DW-31) settles five cases the design leaves open. **Group order** is
-newest first (oldest first under Sort: Oldest), and a group the player never toggled is open
-when it is the first one shown and collapsed otherwise (board 01); the Sort orders the drops
-inside each group. The **header** names the group, its situation (the feed's groups carry no
-difficulty), its age and its count. The M3 **compact preset**, which changed the columns only, is
-retired: compact mode (M12) is a second layout of the whole window, with its own size and
-cards in place of rows (see Compact mode below). **My eq** and **Their eq** (DW-83, feedback spec §3) show both worn items for
-rings, trinkets and weapons (the hands the drop could go in) as icons with their item levels
-(`300/296`), My eq read from your gear snapshot, Their eq from the looter's inspect entry; a slot
-read as empty says `empty slot`, and Their eq's inspect age is in its tooltip (`Inspected 2m ago.`,
-`From the inspect cache, read 6m ago.`), the cell keeping only a no-data state's word. A **narrow
-window** sheds columns rather than clip them: while the fixed columns and the Item column's 150px
-do not fit the row, Slot goes first, then Looter, My eq, Their eq, Ilvl, Them, Trade and Me (My drops: Best candidates, Ilvl,
-For me, Trade window); Item and Actions never go, and the detail card (or the Offer panel) still
-says what a shed column would. The **Ask button** asks at once, or, with `messages.editFirst`
-on, opens the detail card's Edit message box first; it reads `Traded ✓` once the history
-records the drop received from a completed trade (DW-51), and the detail card's Ask with it.
+The Group drops table (DW-31) settles five cases the design leaves open. **Group order** is newest first
+(oldest first under Sort: Oldest), and a group the player never toggled is open when it is the first one
+shown and collapsed otherwise (board 01); the Sort orders the drops inside each group. The **header** names
+the group, its situation (the feed's groups carry no difficulty), its age and its count. The M3 **compact
+preset**, which changed the columns only, is retired: compact mode (M12) is a second layout of the whole
+window, with its own size and cards in place of rows (see Compact mode below). **My eq** and **Their eq**
+(DW-83, feedback spec §3) show both worn items for rings, trinkets and weapons (the hands the drop could go
+in) as icons with their item levels (`300/296`), My eq read from your gear snapshot, Their eq from the
+looter's inspect entry; a slot read as empty says `empty slot`, and Their eq's inspect age is in its tooltip
+(`Inspected 2m ago.`, `From the inspect cache, read 6m ago.`), the cell keeping only a no-data state's word.
+A **narrow window** sheds columns rather than clip them: while the fixed columns and the Item column's 150px
+do not fit the row, Type goes first (since DW-D3), then Slot, Looter, My eq, Their eq, Ilvl, Them, Trade and
+Me (My drops: Best candidates, Ilvl, For me, Trade window); Item and Actions never go, and the detail card
+(or the Offer panel) still says what a shed column would. The **Ask button** asks at once, or, with
+`messages.editFirst` on, opens the detail card's Edit message box first; it reads `Traded ✓` once the
+history records the drop received from a completed trade (DW-51), and the detail card's Ask with it.
+**Superseded 2026-10-13** (feedback-4 spec §0-§4, DW-D0..DW-D4): the Me and Them columns share one tone per
+verdict (green upgrade, yellow sidegrade, red downgrade, gray can't use; Them is no longer inverted) with
+the arrow before the number; the Ask is red while the move is yours, yellow while it waits and green once
+traded; no row can be dismissed (its × is gone, and Actions holds only Ask); a Type column sits beside Slot;
+the column labels are gold; and the window cannot be sized narrower than its default, 972 (compact 380), the
+width where no tab sheds a column.
 
 ## The detail card
 
-The detail card (DW-32) settles five cases the design leaves open. **Expansion** is session-only
-and follows the row: a row filtered out or folded under its header hides the card, and it comes
-back, still open, with the row; Hide this item dismisses the row and closes the card. **Trade** on
-someone else's drop opens an empty trade with the looter, so they can put the item in; it is off
-on your own drop (that is My drops' Offer, DW-33) and on a drop its looter can't trade, and
-otherwise follows the trade helper's guards (combat, range, offline, not in the group), its short
-reason on the button (`Trade · out of range`). **Retry inspect** is off while the looter's read is
-still good or already queued, since the broker would not inspect again, and queues them at the
-looter priority otherwise. **Stats** are the four secondary stats' change against the replaced
-item, the largest first; the primary stat, stamina, sockets and tertiary stats are the header's
-chips. The score line is labeled by the scorer in use (**Pawn**, **Weights**, or **Score** with
-none) and shows its change; without one it says why (not scored yet, or no scorer in use).
+The detail card (DW-32) settles five cases the design leaves open. **Expansion** is session-only and follows
+the row: a row filtered out or folded under its header hides the card, and it comes back, still open, with
+the row; Hide this item dismissed the row and closed the card until 2026-10-13, when it was removed
+(feedback-4 spec §2, DW-D2). **Trade** on someone else's drop opens an empty trade with the looter, so they
+can put the item in; it is off on your own drop (that is My drops' Offer, DW-33) and on a drop its looter
+can't trade, and otherwise follows the trade helper's guards (combat, range, offline, not in the group), its
+short reason on the button (`Trade · out of range`). **Retry inspect** is off while the looter's read is
+still good or already queued, since the broker would not inspect again, and queues them at the looter
+priority otherwise. **Stats** are the four secondary stats' change against the replaced item, the largest
+first; the primary stat, stamina, sockets and tertiary stats are the header's chips. The score line is
+labeled by the scorer in use (**Pawn**, **Weights**, or **Score** with none) and shows its change; without
+one it says why (not scored yet, or no scorer in use).
 
 ## The My drops tab and the Offer panel
 
-The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The
-tab** lists every drop of yours in the tab's feed, a drop that cannot be traded included (a dash
-and Hide, board 04's last row); `My drops · n` counts only the tradeable ones, and Hide is
-session-only. **The countdown** is exact once the trade timer has read the item
-(`trade.expiresAt`); before that it is estimated from when the item dropped and the two-hour
-window and reads `~1:48:20`. It repaints on every `TradeTimerTick` (each second while a timer is
-live and the window shown) and on the footer's 5-second ticker, which is what moves an estimate.
-At `trade.warnAt` or less it reads `ending soon`, in bold and amber; the chat warning is the
-trade timer's. A bind-on-equip drop reads `No limit (BoE)`. **Best candidates** of an upgrade for
-you read `Hidden: an upgrade for you` until you open its Offer panel, which reveals them for the
-session (AskFlow B2); Offer… stands out (gold) when someone gains and it is not hidden. **The
-ranking** is upgrades by gain, then EQUAL, NO UPGRADE, CAN'T USE, a judged member whose replaced
-item was not read (UNAVAILABLE), CHECKING… and UNAVAILABLE, each tie by name; `eq → drop` reads
-`… → 305` while checking and `– → 305` when nothing it would replace was read. **Offer and Trade**
-are shown for an upgrade or an equal only; anyone else shows a dash with the reason. Trade is
-`NS.TradeHelper.Give` (the item placed in the trade), disabled with the helper's reason
-(combat, range, offline, not in bags, expired, busy cursor), read first through `CanGive`. **The
-panel** stays open across tabs, repaints with the window, closes with its close mark or when its
-drop is gone, and docks right, else left, else floats over the window's right half above its
-rows. **Announce** (a row's and the panel's Announce to group) is one announce per drop, as the
-messaging edge files it. **Post my tradeables** lists the tradeable drops of yours in the feed on
-show, whatever the tab's filter, prefixed `Up for trade, whisper me:`, cut at 255 bytes without
-splitting a link; each line is its own announce, filed under `post:<n>:<i>`, so every press posts
-again. **Not yet:** a drop of yours traded away is `tradedAway` in the history (DW-51), but its
-row does not say so (board 04's `Traded to Séta`): once the item leaves your bags the trade timer
-drops its entry and the row reads as expired.
+The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The tab** lists
+every drop of yours in the tab's feed, a drop that cannot be traded included (a dash and Hide, board 04's
+last row); `My drops · n` counts only the tradeable ones, and Hide is session-only. Since 2026-10-13
+(feedback-4 spec §2, DW-D2) there is no Hide: such a row shows the dash with its reason, and every drop of
+yours stays listed. **The countdown** is exact once the trade timer has read the item (`trade.expiresAt`);
+before that it is estimated from when the item dropped and the two-hour window and reads `~1:48:20`. It
+repaints on every `TradeTimerTick` (each second while a timer is live and the window shown) and on the
+footer's 5-second ticker, which is what moves an estimate. At `trade.warnAt` or less it reads `ending soon`,
+in bold and amber; the chat warning is the trade timer's. A bind-on-equip drop reads `No limit (BoE)`.
+**Best candidates** of an upgrade for you read `Hidden: an upgrade for you` until you open its Offer panel,
+which reveals them for the session (AskFlow B2); Offer… stands out (gold) when someone gains and it is not
+hidden. Since 2026-10-13 (feedback-4 spec §1, DW-D1) the gold is gone: Offer and Announce are red while the
+move is yours, yellow once an offer or the announce is out, green once the drop was traded away. **The
+ranking** is upgrades by gain, then EQUAL, NO UPGRADE, CAN'T USE, a judged member whose replaced item was
+not read (UNAVAILABLE), CHECKING… and UNAVAILABLE, each tie by name; `eq → drop` reads `… → 305` while
+checking and `– → 305` when nothing it would replace was read. **Offer and Trade** are shown for an upgrade
+or an equal only; anyone else shows a dash with the reason. Trade is `NS.TradeHelper.Give` (the item placed
+in the trade), disabled with the helper's reason (combat, range, offline, not in bags, expired, busy
+cursor), read first through `CanGive`. **The panel** stays open across tabs, repaints with the window,
+closes with its close mark or when its drop is gone, and docks right, else left, else floats over the
+window's right half above its rows. **Announce** (a row's and the panel's Announce to group) is one announce
+per drop, as the messaging edge files it. **Post my tradeables** lists the tradeable drops of yours in the
+feed on show, whatever the tab's filter, prefixed `Up for trade, whisper me:`, cut at 255 bytes without
+splitting a link; each line is its own announce, filed under `post:<n>:<i>`, so every press posts again.
+**Not yet:** a drop of yours traded away is `tradedAway` in the history (DW-51), but its row does not say so
+(board 04's `Traded to Séta`): once the item leaves your bags the trade timer drops its entry and the row
+reads as expired.
 
 ## Five settings rows
 
@@ -469,15 +472,15 @@ restriction answer reads as locked, a secret bind answer as not bound ([`midnigh
 
 ## Compact mode
 
-Compact mode (M12, compact spec) settles four cases its spec leaves open. **The switch** carries the
-scroll offset as the same fraction of the scroll range (`CompactGroup.CarryScroll`), since a card and
-a row differ in height; the expanded detail card, the collapsed groups and the hidden rows are the
-session tables both layouts read, so they carry exactly. **The run override** ends on the situation
-edge, not on `CHALLENGE_MODE_COMPLETED` alone: a key's completion re-reads the situation as a
-dungeon, and leaving the instance ends the rest; a shown window keeps its layout until it is next
-hidden, so a run's end never resizes the window under the player. **The columns** (the Columns rows
-and Row height) shape the full layout's tables only; a card carries every fact on its three lines
-and sizes from its font (`window.fontSize`). **The Filters menu** is a small panel under the
-`Filters` button holding the full bar's own Quality, Content and Character dropdowns and the
-footer's Sort, moved rather than copied, so their choices and multi-select behavior cannot differ;
-it closes on a second click, minimize, close or a switch to full, which puts each control back.
+Compact mode (M12, compact spec) settles four cases its spec leaves open. **The switch** carries the scroll
+offset as the same fraction of the scroll range (`CompactGroup.CarryScroll`), since a card and a row differ
+in height; the expanded detail card and the collapsed groups are the session tables both layouts read, so
+they carry exactly (the hidden rows were too, until feedback-4 spec §2, DW-D2, removed them). **The run
+override** ends on the situation edge, not on `CHALLENGE_MODE_COMPLETED` alone: a key's completion re-reads
+the situation as a dungeon, and leaving the instance ends the rest; a shown window keeps its layout until it
+is next hidden, so a run's end never resizes the window under the player. **The columns** (the Columns rows
+and Row height) shape the full layout's tables only; a card carries every fact on its three lines and sizes
+from its font (`window.fontSize`). **The Filters menu** is a small panel under the `Filters` button holding
+the full bar's own Quality, Content and Character dropdowns and the footer's Sort, moved rather than copied,
+so their choices and multi-select behavior cannot differ; it closes on a second click, minimize, close or a
+switch to full, which puts each control back.

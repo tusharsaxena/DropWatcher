@@ -106,9 +106,9 @@ C.WINDOW = {
 C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
 C.IDLE = { r = 0.62, g = 0.62, b = 0.64 }
 
--- The drop tables' tones (design spec §11.2, board 03): `good` is news in your favor (an upgrade for
--- you, the looter's downgrade, a tradeable estimate), `bad` the opposite, `warn` the looter's own
--- upgrade (amber: the Them column is inverted), `plain` a sidegrade, `muted` what is not known yet.
+-- The drop tables' tones (design spec §11.2; feedback-4 spec §0 and §1): `good` an upgrade, a
+-- tradeable estimate or an action done, `bad` gray (can't use, not tradeable), `warn` amber (a trade
+-- window ending soon), `plain` plain text, `muted` what is not known yet; `yellow` and `red` below.
 C.TONE = {
     good  = { r = 0.30, g = 0.85, b = 0.40 },
     bad   = { r = 0.55, g = 0.55, b = 0.58 },

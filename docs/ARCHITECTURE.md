@@ -97,18 +97,25 @@ its one-line responsibility and why its position is load-bearing or conventional
 - `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, compact
   mode's switch (`WindowCompact.lua`: two layouts, `full` and `compact`, over the one frame, each
   with its own size and point, compact 380 x 460 by default at the full window's top right and
-  sized 320 to 520 wide; the title-bar toggle, the Layout row, `/dw compact` and `/dw full`; and the
-  run override, `window.compactInRuns`, which opens an auto-open inside a dungeon, raid, key or
+  sized 380 to 520 wide, the full window 972 x 600 and never narrower than that (the least width is
+  the default, a stored width under it raised on load; feedback-4 spec §4, DW-D4); the title-bar
+  toggle, the Layout row, `/dw compact` and `/dw full`; and the run override,
+  `window.compactInRuns`, which opens an auto-open inside a dungeon, raid, key or
   delve compact until the run ends, a key's 120 seconds after it completes so the chest is still
   the run's; compact spec §1, DW-C0), one body per tab
   (`WindowGroup.lua`, `WindowMine.lua`, `WindowHistory.lua`), the detail card and the Offer panel,
-  their pure composers (`WindowCells.lua`, `DetailCells.lua`, `MineCells.lua`, and compact mode's
+  their pure composers (`WindowCells.lua`: every cell's words and tone, one tone per verdict in Me
+  and Them alike, green upgrade, yellow sidegrade, red downgrade, gray can't use, the arrow before
+  the number, feedback-4 spec §0; `ActionTone`, an action button's tone by whose move it is, red
+  yours, yellow waiting, green done, §1; `ArmorType`, the Type column beside Slot, §3;
+  `DetailCells.lua`, `MineCells.lua`, and compact mode's
   `CompactCards.lua`: each card's three lines, tones and tooltips and the header's short form, over
   the same composers; compact spec §2-§3, DW-C1), compact mode's per-tab bodies (`CompactGroup.lua`:
   the Group drops tab's pooled three-line cards under one-line headers in the same pane, handed
   `WindowGroup`'s entries, the detail card stacked at the compact width; compact spec §2, DW-C2;
   `CompactMine.lua` and `CompactHistory.lua`: My drops' cards with the countdown's bar, Offer and
-  Announce or Hide, and History's with the outcome and the row menu, drawn through `CompactGroup`'s
+  Announce (a dash with its reason on a drop that cannot be traded), and History's with the outcome and the
+  row menu, drawn through `CompactGroup`'s
   shared kit, the Offer panel docked beside the compact window; compact spec §3, DW-C3), compact
   mode's chrome (`CompactChrome.lua`: the short title with `TEST` or `SIM`, the badge's lock and
   count, the icon Scan group, the short tabs, the one-row filter bar whose `Filters ▾` panel holds the
@@ -121,7 +128,7 @@ its one-line responsibility and why its position is load-bearing or conventional
   (`TestData.lua`, its pure sample drops and History groups over real items from the simulator's
   item pool, and `TestMode.lua`, its edge; ui spec §4) and the diagnostics sections
   (`Diagnostics.lua`). Every tooltip raised from a table row (the item tooltip, every cell's
-  reason, the Ask, Offer, Announce and Hide buttons, the dismiss mark and the group headers, on the
+  reason, the Ask, Offer and Announce buttons and the group headers, on the
   three tabs and the Offer panel, and the item tooltip of the equipment columns, the detail card and
   the toast) has one placement, like Ka0s Loot History's `ANCHOR_RIGHT` on a full-width row: the
   tooltip's `BOTTOMLEFT` at the row's top, just outside the right edge of the frame the row sits
@@ -137,7 +144,7 @@ its one-line responsibility and why its position is load-bearing or conventional
   order are `WindowCells.Entries` (pure); a Group drops header counts your own drops it leaves to
   My drops (`· 1 yours on My drops`), and the tab reads `My drops · n`, its tooltip naming how many
   you can still trade (feedback-3 spec §0, DW-B0). Both count only the drops My drops actually
-  lists: not the ones hidden with Hide nor the ones its own filters hide (`WindowMine.Lists`,
+  lists: not the ones its own filters hide (`WindowMine.Lists`,
   `Tally`, `ListedCount`, `ListsNow`), and the tab's tooltip names those it leaves out (feedback-3 spec §5, DW-B5). A filter-bar control's
   tooltip (View, Quality, Content, Character, the search box and the footer's Sort) opens above the
   control, never over it or its menu: its `BOTTOMLEFT` on the control's `TOPRIGHT`, or its
@@ -202,8 +209,8 @@ values combine as AND, All is the empty set and the default, and each tab grays 
 not use (`FB.HONORS[tab].views`);
 test mode sets the Group drops tab's View to All while it is on and puts the player's value back
 when it ends (`modules/TestMode.lua`). The
-Group drops table's collapsed groups, dismissed rows and the one expanded row (the detail card)
-are session-only too (`NS.State.windowGroup`), and so are the My drops tab's hidden rows and the
+Group drops table's collapsed groups and the one expanded row (the detail card)
+are session-only too (`NS.State.windowGroup`), and so are the My drops tab's
 upgrades whose candidates you chose to see and its collapsed groups (`NS.State.windowMine`) and the Offer panel's drop
 (`NS.State.offerPanel`), and so are the History tab's collapsed groups (`NS.State.windowHistory`)
 and compact mode's run override (`NS.State.compactRun`, `{ key, ended }` while an auto-open inside a
@@ -211,7 +218,8 @@ run holds the window compact, and `NS.State.compactRunSpent`, the situation a co
 grace ran out in, where no auto-open re-arms it until the situation moves or a key starts;
 `modules/WindowCompact.lua`). Compact mode keeps no state of its own
 beyond it: the cards read the same session tables as the rows, so a switch keeps the tab, the
-filters, the collapsed groups, the hidden rows and the expanded detail card.
+filters, the collapsed groups and the expanded detail card. No drop is dismissed or hidden on any
+tab (feedback-4 spec §2, DW-D2).
 `global.notices.autoAsk` is auto-ask's one-time notice, set by `modules/AutoAsk.lua` alone the first
 time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once per
 account. `global.history.v` and `global.history.groups` are the history's own record, written by
@@ -257,8 +265,7 @@ the trade timer (`modules/TradeTimer.lua`) `DROP_ADDED`, the messaging edge (`mo
 mode's switch (`modules/WindowCompact.lua`) `SITUATION_CHANGED` on its own (DW-C0). The window only listens: it reads records through the engine's read-only
 accessors and never calls an engine action; a button's action goes through the host handler its
 slash verb shares (`NS.ScanGroup`, `NS.SetQualityMode`, `NS.PressAsk`, `NS.ToggleWindowMode`, and the
-detail card's `NS.RetryInspect` and `NS.TradeWithLooter`, the row's × and the detail card's Hide
-`NS.DismissDrop` (which also cancels the drop's automatic ask and forgets its toast), and the My drops tab's and the Offer
+detail card's `NS.RetryInspect` and `NS.TradeWithLooter`, and the My drops tab's and the Offer
 panel's `NS.PressOffer`, `NS.PressAnnounce`, `NS.GiveDrop` and `NS.PostTradeables`). Drops leaving a
 feed are not a message: `LF.Clear` and the cap's trim call the feed's removal sinks
 (`NS.LootFeed.AddRemovalSink`, the loot parser's `AddSink` shape), and the toast's sink lets a toast

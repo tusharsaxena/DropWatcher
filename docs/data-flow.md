@@ -67,7 +67,10 @@ footer ticker (5s) ────────> shown and expanded: the footer ("La
 filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
-resize (grip released) ────> the whole repaint (the table's columns take the new width)
+resize (grip released) ────> the whole repaint (the table's columns take the new width); never
+                             under the layout's least width, its default (full 972, compact 380;
+                             feedback-4 §4); the search box, anchored 8px after Character and to
+                             the bar's right edge, tracks it live (WindowFilterBar.SearchWidth)
 minimize ──────────────────> the Offer panel and the Edit message box close; the anchor moves to
                              the top-left corner first, so the title bar stays where it is
 ```
@@ -93,17 +96,19 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     a group the View hid whole keeps its header, `n drops · 0 shown`; one Search, Content or a
   │     Character choice hid whole is left out (WindowCells.KeepsHeader); your own drops the tab
   │     leaves to My drops (no `feed.showOwn`) and My drops lists (ctx.onMine = WindowMine.ListsNow:
-  │     not hidden with Hide nor by My drops' filters) are counted, `· 1 yours on My drops`
+  │     not left out by My drops' filters) are counted, `· 1 yours on My drops`
   │     (feedback-3 §0, §5); the tab label `My drops · n` counts the same (WindowMine.ListedCount)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
-  └─> each row: NS.WindowCells.Item / Ilvl / Slot / Looter / MyEq / TheirEq / Me / Them / Trade / Ask
+  └─> each row: NS.WindowCells.Item / Ilvl / Slot / ArmorType / Looter / MyEq / TheirEq / Me / Them /
+                  Trade / Ask; the Ask's tone: WindowCells.ActionTone(state) ─> WindowGroup.ToneButton
+                  (red your move, yellow waiting, green Traded; feedback-4 §1); the verdicts one tone
+                  each, the arrow first (WindowGroup.PlaceGlyph; §0)
                   reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's
                   own tooltip), NS.TestMode.InspectOf(drop).gear (Their eq: NS.Inspect.Get(looter guid),
                   or a sample's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
 
 header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint
-× ─────────────> WindowGroup.Dismiss ─> State.windowGroup.dismissed ─> repaint
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id) ─> AskStateChanged ─> repaint
 item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
                  ctrl-click: Compat.DressUpItem; a plain click expands the row
@@ -124,7 +129,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   ├─> NS.Pool.ReleaseAll(cards), ReleaseAll(headers) ─> Acquire in order (each card built once)
   ├─> each header: WindowGroup.NewHeader, painted with CompactCards.Header (the short form)
   └─> each card: CompactCards.Group(drop, { now, your gear, the looter's gear, WindowGroup.AskState,
-                  messages.transmogAsk, Compat.NormalizedRealm }) ─> three lines of pieces
+                  messages.transmogAsk, Compat.NormalizedRealm }) ─> three lines of pieces (line 2:
+                  looter · slot · type · trade); the Ask toned by WindowGroup.ToneButton as the row's
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
 piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
 switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)
@@ -216,7 +222,7 @@ the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receip
                    row's tooltip: each drop, its looter, its tab or the gate that hid it (feedback-3 §0);
                    each place honors `feed.showOwn` and the feed the window shows (SimReport.View =
                    Window.FeedView + WindowMine.LeftOutNow: yours on Group drops too, not on My drops when its
-                   Hide or its own filters leave it out, or not shown in test mode; §5)
+                   own filters leave it out, or not shown in test mode; §5)
 /dw sim run ─> a step now, then one every SimScenario.StepDelay() seconds (`sim.stepDelay`, 2 by
                    default, read as each next step is set) on NS.Sim.After (the stop ends it)
 /dw sim pause | resume | restart ─> NS.SimScenario.Pause (the timer canceled) | Resume (Run) | Restart
@@ -238,7 +244,8 @@ the simulator are exclusive: each refuses while the other is on.
 
 ```
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
-  ├─> DetailCells.Chips(drop)                                   (pure: the header's chips)
+  ├─> DetailCells.Chips(drop)                                   (pure: the header's chips; Type is
+  │                                                               WindowCells.ArmorType's, §3)
   ├─> DetailCells.ForYou(drop, Scoring.InUse())                 (pure)
   ├─> DetailCells.ForLooter(drop, NS.Inspect.Get(guid), Compat.SpecName(specID), now)   (pure)
   ├─> DetailCells.TradeBox(drop, the situation's label)         (pure)
@@ -253,7 +260,6 @@ Link in chat ──> Compat.InsertChatLink(link)
 Retry inspect ─> NS.RetryInspect(id) ─> NS.Inspect.Request(looter guid, PRIORITY.looter)
                    ─> InspectDone ─> LootFeed re-judges ─> DropUpdated ─> repaint
 Trade ─────────> NS.TradeWithLooter(id) ─> NS.TradeHelper.Open(looter) (its guards; a refusal printed)
-Hide this item ─> WindowGroup.Dismiss(id) ─> State.windowGroup.dismissed, expanded cleared ─> repaint
 ```
 
 ## The My drops tab and the Offer panel
@@ -261,7 +267,7 @@ Hide this item ─> WindowGroup.Dismiss(id) ─> State.windowGroup.dismissed, ex
 ```
 Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
   ├─> WindowGroup.Layout(WindowMine.COLUMNS, the rows' width)              (pure)
-  ├─> WindowMine.Entries(NS.LootFeed.Drops(feed), ctx, NS.State.windowMine) (pure: your own drops,
+  ├─> WindowMine.Entries(NS.LootFeed.Drops(feed), ctx)                      (pure: your own drops,
   │                                                                           filtered, sorted)
   ├─> WindowMine.Rows(Groups, Drops, Get, ctx, NS.State.windowMine) (pure: WindowCells.Entries over
   │     your drops, every group open until toggled; a drop in no group last, with no header)
@@ -270,16 +276,20 @@ Window.Refresh ─> the mine body's refresh(pane, TabContext("mine"))
   ├─> each row: WindowCells.Item / Ilvl, MineCells.ForMe / TradeWindow(drop, now, TradeTimer.WarnAt())
   │             / BestCandidates(drop, revealed) / Actions(drop, best, AnnounceButton(…))
   │               reads: NS.Asks.StateOf("announce", nil, id)
+  │             the buttons' tones: WindowMine.ToneStates(drop): NS.Asks.FurthestStateOf("offer", id)
+  │               (Messaging.FurthestState: sent, else queued, else failed, else ready) and the
+  │               announce's state, each through MineCells.ToneState(NS.History.OutcomeOf(id), state)
+  │               (tradedAway wins) ─> WindowGroup.ToneButton (feedback-4 §1)
   └─> MineCells.Summary(rows, now) ─> the summary strip; Post my tradeables enabled when any
   └─> then OfferPanel.Refresh() (open: its drop, else nothing)
         ├─> MineCells.DockSide(window left, right, panel width, screen width)   (pure)
         ├─> MineCells.PanelHeader(drop, now, warnAt), MineCells.Candidates(drop)   (pure)
-        └─> each candidate: MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)),
+        └─> each candidate: MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)), toned by
+                            MineCells.ToneState(NS.History.OutcomeOf(id), its state),
                             MineCells.TradeButton(NS.TradeHelper.CanGive(id, member))
 
 Offer ────────────> OfferPanel.Open(id) ─> State.offerPanel.dropId, WindowMine.Reveal(id) ─> repaint
 Announce ──────────> NS.PressAnnounce(id) ─> NS.Asks.Press("announce", nil, id) ─> AskStateChanged
-Hide ──────────────> WindowMine.Dismiss(id) ─> State.windowMine.dismissed ─> repaint
 Post my tradeables ─> NS.PostTradeables() ─> MineCells.PostLines(your tradeable links)
                         ─> NS.Asks.Request("announce", nil, "post:<n>:<i>", { text }) per line
 panel Offer ───────> NS.PressOffer(id, member) ─> NS.Asks.Press("offer", member, id) ─> AskStateChanged
@@ -303,7 +313,7 @@ WindowMine refresh ─> CompactMine.Refresh(pane, rows, compact)   (the table's 
   ├─> each header: WindowGroup.NewHeader (click: WindowMine.ToggleGroup), CompactCards.Header
   └─> each card: CompactCards.Mine(drop, { now, TradeTimer.WarnAt(), WindowMine.IsRevealed(id),
                   NS.Asks.StateOf("announce", nil, id) }) ─> three lines; the countdown's bar
-card Offer / Announce / Hide ─> the same handlers as the table's row
+card Offer / Announce ─> the same handlers and tones as the table's row (WindowMine.ToneStates)
 OfferPanel.Refresh ─> compact: MineCells.DockSide, then top-aligned, OfferPanel.CompactHeight(window)
 ```
 
@@ -616,7 +626,6 @@ Ask ─> NS.PressAsk(id) (a drop already gone: the toast goes, nothing asked)
 AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
 LootFeed.Clear / the cap's trim ─> removal sink ─> Toast.Prune: gone drops leave the queue, a gone
     shown drop's toast goes ─> Pump
-NS.DismissDrop(id) (row ×, card Hide) ─> Toast.Forget(id): out of the queue, off the screen
 toast.enabled off (the row's reaction) / a profile with it off ─> the toast goes, the queue empties
 drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.ResetPosition
 ```
@@ -633,7 +642,7 @@ PLAYER_ENTERING_WORLD / ZONE_CHANGED_NEW_AREA, held, no Encounter restriction �
 due ─> AutoAsk.Fire: checked again (on, in the feed, qualifying, never asked, not received, looter in
        the group) ─> Asks.Request("ask", looter, id)   (guard, queue under a restriction, send, confirm)
 cancel: AskStateChanged(id, _, "ask") (you asked)   GROUP_ROSTER_UPDATE (looter left)
-        NS.DismissDrop(id) (row ×, card Hide)        HistoryChanged + received
-        the row turned off                           the stand-down
+        HistoryChanged + received                    the row turned off
+        the stand-down
 first turned on ─> one-time notice ─> global.notices.autoAsk = true
 ```

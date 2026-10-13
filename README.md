@@ -38,18 +38,22 @@ long ago, then counts its drops: `2 drops · 1 shown` means the filters hide one
 drop the View hides still shows its header, `· 0 shown`), and it ends with the character that saw
 it, in class color. Hovering the header names the party on one `Group:` line and lists what the
 filters hid and why. My drops uses the same headers, and History keeps the place, the character and
-the party with each group. A row gives the item, its item level and slot, who looted it, what you wear there (**My eq**) and what they wear
-there (**Their eq**), each as icons with item levels, then two verdicts: **Me** (is
-it an upgrade for you?) and **Them** (is it one for the looter?). ▲ means upgrade, ≈ sidegrade, ▽
-downgrade. **Trade** reads Yes, Likely, Unknown or No. Hover any cell to see why; hover Their eq for
-how old the read of the looter's gear is. The **View** dropdown starts on All; pick **Interesting**,
-**Likely tradeable**, **Usable by me** or **Upgrade for me** to narrow it, several at once if you
-like (a drop must pass each), and All again to clear them. Shift-click the
-icon to link the item, ctrl-click to try it on. **Ask** whispers the looter once; mid-fight the
-whisper waits and goes out when the fight ends, and a second click cancels it. Click the row itself
-and a detail card opens under it with the full reasoning: what the item would replace for you and
-for the looter, the stat and track changes, Pawn's score, and the trade rule behind the estimate.
-From there you can edit the message before it goes, inspect the looter again, or open a trade.
+the party with each group. A row gives the item, its item level, its slot and its type (Cloth,
+Leather, Mail, Plate, Jewelry, Trinkets, Cloak or Weapons), who looted it, what you wear there (**My
+eq**) and what they wear there (**Their eq**), each as icons with item levels, then two verdicts:
+**Me** (is it an upgrade for you?) and **Them** (is it one for the looter?). ▲ means upgrade
+(green), ≈ sidegrade (yellow), ▽ downgrade (red), the same in both columns. **Trade** reads Yes,
+Likely, Unknown or No. Hover any cell to see why; hover Their eq for how old the read of the
+looter's gear is. The **View** dropdown starts on All; pick **Interesting**, **Likely tradeable**,
+**Usable by me** or **Upgrade for me** to narrow it, several at once if you like (a drop must pass
+each), and All again to clear them. Shift-click the icon to link the item, ctrl-click to try it on.
+**Ask** whispers the looter once; mid-fight the whisper waits and goes out when the fight ends, and
+a second click cancels it. The button is red while the move is yours (Ask, Retry), yellow while it
+waits on someone else (Asked, Queued) and green once the item is traded; My drops' Offer and
+Announce follow the same colors. Click the row itself and a detail card opens under it with the full
+reasoning: what the item would replace for you and for the looter, the stat and track changes,
+Pawn's score, and the trade rule behind the estimate. From there you can edit the message before it
+goes, inspect the looter again, or open a trade.
 
 Your own loot goes on **My drops**. Each item shows the time left to trade it (exact once it's in your
 bags, bold with ten minutes to go) and the group members it would help most. If it's an upgrade for
@@ -57,7 +61,7 @@ you, it asks **keep?** and nobody sees it offered until you decide. **Offer** op
 ranks everyone by how much they'd gain, with an **Offer** whisper and a **Trade** button that opens
 the trade with the item already in it. **Post my tradeables** lists all of them in group chat in one
 line. The tab's label, `My drops · 2`, counts the drops it lists, and a Group drops header's `· 1
-yours on My drops` counts the same way, so a drop you hid or filtered out leaves both. Hover the
+yours on My drops` counts the same way, so a drop you filtered out leaves both. Hover the
 tab to see which of yours it leaves out, and why.
 
 The **History** tab remembers what the feed showed, across logouts and across your characters, for
@@ -71,7 +75,7 @@ or **All** (the only choice that shows drops kept before Drop Watcher noted who 
 
 There is also a compact view: a narrow window, 380 pixels wide, where each drop is a small card of
 three lines instead of a table row. The top line has the item, its level and Ask. The middle one
-says who looted it, the slot and whether they can trade it, and the bottom one gives the Me and Them
+says who looted it, the slot, the type and whether they can trade it, and the bottom one gives the Me and Them
 verdicts with the item levels each of you wears there. My drops cards carry the trade countdown as
 a bar, and History cards show what became of the drop. Quality, Content, Character and Sort fold
 into a **Filters** button beside View. Hovering still explains everything, and clicking a Group drops card
@@ -87,7 +91,7 @@ someone else loots a big upgrade for you, 10 item levels or more, that they can 
 has an Ask button, goes away after 8 seconds unless your pointer is on it, and keeps out of combat
 unless you let it. **Auto-ask** (Settings › Messages › Auto-ask) whispers the looter for you, 10
 seconds after the boss dies, when a likely tradeable drop is at least 5 item levels better than
-yours. It backs off if you ask first, they leave, you hide the row or the item reaches you.
+yours. It backs off if you ask first, they leave or the item reaches you.
 
 To see all this without waiting for loot, type `/dw test`. Test mode fills the window with sample
 drops of real items from this season's dungeons (your own gear if the Encounter Journal has none),
