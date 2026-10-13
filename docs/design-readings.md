@@ -411,6 +411,18 @@ and sheds after Their eq and before Them; Actions is 84px; every row is indented
 muted-white chevron at its left (down, up while its detail card is open), and the header's chevron is gold;
 on your own drop Trade counts its upgrades (`Yes (2)`), Them and Their eq read `(Multiple)` and Actions is
 Offer. The least width is now 1132 (compact 440).
+**Superseded by feedback-6 (2026-10-13)** (feedback-6 spec §0-§3, DW-F0..DW-F3): the Trade window column is
+76px, its widest answer (`No limit (BoE)`) plus its bar's padding; My eq is merged into Me and Their eq into
+Them, each cell `[icon(s)] [item level] [glyph][difference]` (`321/308 ▽8`, the difference unsigned, the
+glyph and number in the verdict's tone, the item level plain; `Can't use` and `Not wanted` stay words; an empty
+slot reads `empty`; a `?` is left out when the gear part already says why), 127px each, the tooltip the gear
+lines then the verdict's; the `myEq` and `theirEq` toggles are retired (schema step 7); the shed order is
+Type, Slot, Looter, Trade window, Ilvl, Them, Trade, Me; History's Me and Them are the verdict alone in the
+unsigned form, since a kept entry holds no worn items. On your own drop Them reads `(Details)` (renamed from
+`(Multiple)`), its tooltip one non-wrapping line per member it upgrades, ranked by gain: the name in class
+color, `wears`, the item level and item in its quality color, a green arrow texture and the unsigned gain,
+naming the lower of two worn items. Offer is cyan while it is your move. A verdict mark in any tooltip is an
+inline texture, never a font glyph. The least width is now 1038 (compact 440).
 
 ## The detail card
 
@@ -422,7 +434,8 @@ can put the item in; it is off on your own drop (that is My drops' Offer, DW-33)
 can't trade, and otherwise follows the trade helper's guards (combat, range, offline, not in the group), its
 short reason on the button (`Trade · out of range`). **Superseded by feedback-5 (2026-10-13)**
 (feedback-5 spec §2): on your own drop the card's Ask is Offer, which opens the Offer panel, and its Them row
-reads `(Multiple)`; My drops is retired. **Retry inspect** is off while the looter's read is
+reads `(Multiple)`; My drops is retired. **Superseded by feedback-6 (2026-10-13)** (feedback-6 spec §2-§3): the
+Them row reads `(Details)` and the Offer is cyan while it is your move. **Retry inspect** is off while the looter's read is
 still good or already queued, since the broker would not inspect again, and queues them at the looter
 priority otherwise. **Stats** are the four secondary stats' change against the replaced item, the largest
 first; the primary stat, stamina, sockets and tertiary stats are the header's chips. The score line is
@@ -439,6 +452,11 @@ upgrade count and the `(Multiple)` tooltip, `Hidden` until the Offer panel is op
 row's Offer opens the panel and there is no Announce in the table (Announce to group stays in the panel); the
 summary and Post my tradeables are the strip under Drops, shown while one of your listed drops can be traded.
 The Offer panel's readings hold.
+**Superseded by feedback-6 (2026-10-13)** (feedback-6 spec §2-§3, DW-F2, DW-F3): `(Multiple)` is `(Details)`,
+its tooltip one line per member it upgrades (name in class color, the worn item level and item in its quality
+color, a green arrow texture and the unsigned gain), never wrapping; Offer, on the row and each candidate's in
+the panel, is cyan while it is your move (Offered yellow, Traded green, Retry red); Announce to group is
+unchanged.
 
 The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The tab** lists
 every drop of yours in the tab's feed, a drop that cannot be traded included (a dash and Hide, board 04's
@@ -513,3 +531,7 @@ cards); a Drops card is indented under its header with the row's muted-white che
 its line 2 ends in the countdown and its bar for a drop with one (else the inspect freshness), your own card
 carries Offer, the upgrade count and `(Multiple)`, the strip under the cards is shortened (`2 tradeable · next
 0:08:41`, `Post`), and the least compact width is 440 so line 2's countdown is never cut.
+**Superseded by feedback-6 (2026-10-13)** (feedback-6 spec §1-§3): line 3 reads as the table's merged Me and
+Them without icons, `You 321/308 ▽8` and `Them 276 ▲12`, `Them (Details)` on your own card (History's cards
+the verdict alone); Offer is cyan while it is your move; the least compact width stays 440, line 3's fullest
+halves ending about 46px short of the card's edge.

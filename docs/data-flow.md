@@ -57,7 +57,7 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
                                ├─> minimized: stays minimized, `n new` counts it
                                └─> shown: tabs, filter bar, footer, active body
 DropUpdated ───────────────> shown: the same repaint
-GearChanged ───────────────> shown: the same repaint (the My eq column; DW-83)
+GearChanged ───────────────> shown: the same repaint (the Me cells' gear, My eq until DW-F1; DW-83)
 InspectDone ───────────────> shown: the footer's inspect freshness
 TradeTimerTick ────────────> shown and expanded: the Drops tab's countdowns while it is active
                              (WindowGroup.TickCountdowns: the Trade window cells, the compact
@@ -73,8 +73,8 @@ filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, 
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
 resize (grip released) ────> the whole repaint (the table's columns take the new width); never
-                             under the layout's least width, its default (full 1132, compact 440;
-                             feedback-4 §4, recomputed by feedback-5 §4); the search box, anchored 8px after Character and to
+                             under the layout's least width, its default (full 1038, compact 440;
+                             feedback-4 §4, recomputed by feedback-5 §4 and feedback-6 §0-§1); the search box, anchored 8px after Character and to
                              the bar's right edge, tracks it live (WindowFilterBar.SearchWidth)
 minimize ──────────────────> the Offer panel and the Edit message box close; the anchor moves to
                              the top-left corner first, so the title bar stays where it is
@@ -105,20 +105,25 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   ├─> each row, indented K.ROW_INDENT, its chevron first (WindowGroup.PaintChevron: down, up while
   │     its card is open, C.CHEVRON_ROW; feedback-5 §0), then the cells after WindowGroup.CHEVRON_LEAD:
-  │     NS.WindowCells.Item / Ilvl / Slot / ArmorType / Looter / MyEq / Me;
+  │     NS.WindowCells.Item / Ilvl / Slot / ArmorType / Looter;
+  │     Me: SideCells.Me(drop, your gear) ─> WindowCells.MyEq + WindowCells.Me merged (SideCells.Merge:
+  │       `[icons] 321/308 ▽8`, the difference unsigned; feedback-6 §1, DW-F1);
   │     Trade: WindowOwn.Trade (your own drop: MineCells.OwnTrade, `Yes (2)`; else WindowCells.Trade);
-  │     Them, Their eq: WindowGroup.ThemCells (your own drop: WindowOwn.Multiple ─> MineCells.Multiple,
-  │       `(Multiple)` with each upgrade from MineCells.Candidates, `Hidden` while unrevealed;
-  │       else WindowCells.Them / TheirEq);
+  │     Them: WindowGroup.ThemCell ─> SideCells.Them (your own drop: MineCells.Details, `(Details)`,
+  │       its tooltip one non-wrapping line per upgrade from MineCells.Candidates, ranked by gain,
+  │       the arrow a TipMarks texture (feedback-6 §3, DW-F3), `Hidden` while unrevealed; else
+  │       WindowCells.TheirEq + WindowCells.Them merged); each painted by paintSide and placed by
+  │       WindowGroup.PlaceSide (icons, plain level, the glyph and difference in the verdict's tone);
   │     Trade window: MineCells.TradeWindow(drop, now, TradeTimer.WarnAt()) ─> the countdown over its
   │       bar (an estimate from drop.at for another player's drop), the row WindowRows.CountdownRowHeight
   │       tall while the column shows (feedback-5 §1);
   │     Actions: WindowGroup.Action (your own drop: WindowOwn.Offer ─> MineCells.OwnOffer, toned by
-  │       WindowOwn.ToneStates' offer half; else WindowCells.Ask), the tone: WindowCells.ActionTone(state)
-  │       ─> WindowGroup.ToneButton (red your move, yellow waiting, green Traded; feedback-4 §1); the
+  │       WindowOwn.ToneStates' offer half; else WindowCells.Ask), the tone: WindowCells.ActionTone(state,
+  │       kind) ─> WindowGroup.ToneButton (red your move, cyan for an Offer, yellow waiting, green
+  │       Traded; feedback-4 §1, feedback-6 §2); the
   │       verdicts one tone each, the arrow first (WindowGroup.PlaceGlyph; §0)
-                  reads: NS.Gear.Snapshot().equipped (My eq; its icons show your inventory slot's
-                  own tooltip), NS.TestMode.InspectOf(drop).gear (Their eq: NS.Inspect.Get(looter guid),
+                  reads: NS.Gear.Snapshot().equipped (Me's gear; its icons show your inventory slot's
+                  own tooltip), NS.TestMode.InspectOf(drop).gear (Them's gear: NS.Inspect.Get(looter guid),
                   or a sample's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
@@ -135,7 +140,10 @@ item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.Inse
                  ctrl-click: Compat.DressUpItem; a plain click expands the row
 row hover ─────> a cell, button or header: Window.AttachTooltip ("row") ─> GameTooltip:Show() ─>
                  RowTooltip.Place: BOTTOMLEFT at the row's top, outside the window's right edge (else
-                 BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2)
+                 BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2);
+                 a line given as `{ text, wrap = false }` (TipMarks.NoWrap) is added unwrapped, so the
+                 tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
+                 a font glyph (feedback-6 §3, DW-F3)
 NS.SetWindowMode ─> SchemaRuntime.Set("window.mode") ─> WindowCompact.OnModeChanged ─> Apply
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
 no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
@@ -154,7 +162,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     messages.transmogAsk, Compat.NormalizedRealm, TradeTimer.WarnAt(); your own drop: its
   │     WindowOwn.IsRevealed and offer tone }) ─> three lines of pieces (line 2: looter · slot · type
   │     · trade, the count on your own; the countdown and its bar on the right, CompactGroup.PaintCountdown,
-  │     else the inspect freshness; line 3's Them `(Multiple)` on your own); the Ask or Offer toned by
+  │     else the inspect freshness; line 3 SideCells' Me and Them without icons, `You 321/308 ▽8`, `Them (Details)` on your
+  │     own; feedback-6 §1); the Ask or Offer toned by
   │     WindowGroup.ToneButton as the row's
   └─> DropsStrip.Paint(pane, ctx, true): the strip shortened, DropsStrip.SummaryText, `Post`
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
@@ -277,7 +286,7 @@ the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, w
   └─> DetailCells.Actions(drop, { NS.Asks.StateOf("ask", …), the inspect entry,
                                   NS.TradeHelper.CanTradeWith(looter) })                  (pure)
   (your own drop: Offer in place of Ask, toned as the row's, and the For the looter Them row
-   `(Multiple)` with the row's tooltip: MineCells.OwnOffer / Multiple; feedback-5 §2)
+   `(Details)` with the row's tooltip: MineCells.OwnOffer / Details; feedback-5 §2, feedback-6 §3)
 
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press ─> AskStateChanged ─> repaint
                  (messages.editFirst on, window shown, not queued: ─> DetailCard.OpenEditor(id, "ask"))
@@ -292,17 +301,18 @@ Trade ─────────> NS.TradeWithLooter(id) ─> NS.TradeHelper.Op
 ## Your own drops and the Offer panel
 
 Your own drops are Drops rows like any other (above; feedback-5 §2, DW-E2): Trade counts their
-upgrades, Them and Their eq read `(Multiple)`, Actions is Offer. What is theirs alone is the reveal
+upgrades, Them reads `(Details)` (feedback-6 §1, §3), Actions is Offer (cyan while your move, §2). What is theirs alone is the reveal
 state and the Offer panel:
 
 ```
 Offer (row, card, detail card) ─> WindowOwn.PressAction ─> OfferPanel.Open(id)
       ─> State.offerPanel.dropId, WindowOwn.Reveal(id) (State.windowOwn.revealed) ─> repaint
-         (the count and (Multiple) drawn from now on: the keep? rule, MineCells.OwnTrade / Multiple)
+         (the count and (Details) drawn from now on: the keep? rule, MineCells.OwnTrade / Details)
 Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
   ├─> MineCells.DockSide(window left, right, panel width, screen width)   (pure)
   ├─> MineCells.PanelHeader(drop, now, warnAt), MineCells.Candidates(drop)   (pure)
-  └─> each candidate: MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)), toned by
+  └─> each candidate: MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)) (kind `offer`,
+                      cyan while it reads Offer; Retry red; feedback-6 §2), toned by
                       MineCells.ToneState(NS.History.OutcomeOf(id), its state),
                       MineCells.TradeButton(NS.TradeHelper.CanGive(id, member));
       Announce to group: MineCells.AnnounceButton, WindowOwn.SetButtonLook, toned by
@@ -614,7 +624,9 @@ every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint:
 The History tab's body reads `NS.History.Groups()` (oldest first) through the pure
 `WindowHistory.Entries`, filtered by the tab's state with This instance and This session turned
 into `time()` marks (`WindowHistory.Context`); each entry is painted with the Drops table's
-cell composers over a drop-shaped copy (`WindowHistory.AsDrop`). In the compact layout the same
+cell composers over a drop-shaped copy (`WindowHistory.AsDrop`); its Me and Them are the merged
+cells' verdict part alone (`WindowHistory.MeCell` / `ThemCell` over `SideCells.Merge`, `▽4`), since
+a kept entry holds no worn items (feedback-6 §1). In the compact layout the same
 entries go to `CompactHistory.Refresh(pane, entries, compact)` (DW-C3): `CompactCards.History(drop,
 { time(), date, Compat.NormalizedRealm() })` per card through `CompactGroup`'s kit, headers by
 `CompactCards.HistoryHeader`, a right-click on a card to `WindowHistory.OpenMenu`.

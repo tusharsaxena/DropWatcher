@@ -30,8 +30,8 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
 - **The sends.** Ask, offer and announce, each one click and one confirmation line, guarded by the
   one-ask registry, queued while chat is restricted and sent when the restriction lifts; an
   edit-first box when wanted; never SAY or YELL.
-- **The window.** Drops (every drop, your own included, in rows under collapsible boss headers, with
-  a detail card that expands inline and a trade countdown on every row; on your own drops the
+- **The window.** Drops (every drop, your own included, in rows under collapsible boss headers, each
+  row's Me and Them showing the worn gear beside the verdict, with a detail card that expands inline and a trade countdown on every row; on your own drops the
   upgrade count, who it would help and Offer, which opens the "Who could use this?" panel with its
   Trade button, and a strip with Post my tradeables) and History (every drop the feed showed, kept across sessions
   on every character, with its outcome), plus the filter bar, the footer's health line, the

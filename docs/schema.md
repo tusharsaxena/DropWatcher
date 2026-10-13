@@ -89,7 +89,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
-| `window.columns.<col>` | `true` | Columns | `false` hides that Drops column (`ilvl`, `slot`, `armorType` (the Type column, since DW-D3, feedback-4 spec §3; AceDB's default fills it in for a stored profile, no migration step), `looter`, `myEq` (since DW-83), `theirEq`, `me`, `them`, `trade`, `tradeWindow` (Trade window, since DW-E1, feedback-5 spec §1; AceDB's default fills it in for a stored profile, no migration step), `actions`); Item never hides |
+| `window.columns.<col>` | `true` | Columns | `false` hides that Drops column (`ilvl`, `slot`, `armorType` (the Type column, since DW-D3, feedback-4 spec §3; AceDB's default fills it in for a stored profile, no migration step), `looter`, `me` and `them` (since DW-F1, feedback-6 spec §1, the merged cells: the worn gear and the verdict; the `myEq` and `theirEq` toggles DW-83 added are retired by step 7), `trade`, `tradeWindow` (Trade window, since DW-E1, feedback-5 spec §1; AceDB's default fills it in for a stored profile, no migration step), `actions`); Item never hides |
 | `window.mode` | `"full"` | Layout; `NS.SetWindowMode`, the title-bar toggle, `/dw compact`, `/dw full` (DW-C0) | the window's layout, `full` or `compact` (compact spec §1, `modules/WindowCompact.lua`); its reaction lets a run override go and lays the window out. Replaced the compact preset `window.compact` (DW-42), which step 5 maps here |
 | `window.compactInRuns` | `true` | Layout (DW-C0) | Open in compact view during a run: an auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever `window.mode`, until the situation leaves that run (the override itself is session-only, `NS.State.compactRun`) |
 | `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on both tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a Drops row is taller by its countdown bar's room while the Trade window column shows (feedback-5 spec §1). Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
@@ -190,7 +190,7 @@ and Test mode rows are `sessionOnly` and store through their own closures.
 ## Migrations
 
 `core/Database.lua`: `NS.MIGRATIONS` is a list of steps `{ to, run, perProfile }`, and
-`NS.SCHEMA_VERSION` is the highest step's `to` (today 6). The runner runs in `OnInitialize` straight
+`NS.SCHEMA_VERSION` is the highest step's `to` (today 7). The runner runs in `OnInitialize` straight
 after `AceDB:New`, before anything reads the profile, and again on every profile event. It owns the
 stamp: a step's `to` is stored only after the step returned, so a step that raises is retried on the
 next load. A `perProfile` step runs for every stored profile in the raw SavedVariables, not only the
@@ -204,5 +204,6 @@ active one. The default stays `0`.
 | 4 | 3 → 4, global: the History is kept by days (DW-A5, feedback-2 spec §5). The retired group cap, `global.history.maxGroups`, is removed; nothing is pruned by the step, and Keep history for starts on its default, 30 days, which the session's prune applies (`NS.RetireHistoryCap`) |
 | 5 | 4 → 5, per profile: compact mode (DW-C0, compact spec §1). The retired compact preset, `window.compact = true`, becomes `window.mode = "compact"` (the preset wins over a `mode` the defaults answer), and the key goes; the single-layout geometry `window.point`, `.width` and `.height` moves into `window.geometry.full`, keeping any value already there. A profile already in the new shape passes through (`NS.MigrateWindowMode`) |
 | 6 | 5 → 6, per profile: own drops are always listed on Drops (DW-E2, feedback-5 spec §2). The retired switch `feed.showOwn` (Show my own loot in Group drops) is removed; nothing else changes (`NS.RetireShowOwn`) |
+| 7 | 6 → 7, per profile: My eq merged into Me and Their eq into Them (DW-F1, feedback-6 spec §1). The retired `window.columns.myEq` and `window.columns.theirEq` toggles are removed, since `me` and `them` now toggle the cells that show the worn gear; only the two keys go (`NS.RetireEqColumns`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.
