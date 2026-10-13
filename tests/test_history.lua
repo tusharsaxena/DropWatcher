@@ -397,7 +397,7 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     end
 end)
 
--- Feedback-2 spec §8 (FB2-9): History's rows follow the same Layout rows as Group drops.
+-- Feedback-2 spec §8 (FB2-9): History's rows follow the same Layout rows as Drops.
 test("history tab: rows take the Window page's row height and font size", function()
     local NS, drawn = shownTab()
     local r = drawn.rows[1]

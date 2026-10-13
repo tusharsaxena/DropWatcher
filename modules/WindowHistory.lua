@@ -9,7 +9,7 @@ local _, NS = ...
 -- Trade and Me, in that order (NS.WindowGroup.Fit); Item and Outcome stay. The cells are
 -- modules/WindowCells.lua's composers over each entry turned into a drop-shaped record (AsDrop);
 -- this file adds the Outcome cell and a header that reads days for an old group. Nothing is blank.
--- A row's height, item button and text size are the Group drops rows' (modules/WindowRows.lua, the
+-- A row's height, item button and text size are the Drops rows' (modules/WindowRows.lua, the
 -- Window page's Layout rows; feedback-2 spec §8, FB2-9).
 --
 -- READ-ONLY. No row asks, offers or expands. A right-click on a row opens its menu (core/Compat.lua's
@@ -25,7 +25,7 @@ local _, NS = ...
 --
 -- THE COMPACT LAYOUT draws the same entries as cards: modules/CompactHistory.lua (DW-C3).
 --
--- THE UI LISTENS. HistoryChanged repaints the shown window on the next frame, the Group drops rows
+-- THE UI LISTENS. HistoryChanged repaints the shown window on the next frame, the Drops rows
 -- included (their Ask button reads `Traded` once a trade settles the drop). Collapsed groups are
 -- session-only (NS.State.windowHistory).
 
@@ -120,7 +120,7 @@ function WH.Outcome(drop)
     return { text = o[1], tone = o[2], tip = { L["Outcome: %s"]:format(o[1]), o[3], hint } }
 end
 
---- The Them column: as the Group drops table says it, except that a looter whose gear was never
+--- The Them column: as the Drops table says it, except that a looter whose gear was never
 --- read says so plainly (the inspect is long over).
 --- @param drop table
 --- @return table cell
@@ -311,7 +311,7 @@ local function newRow(content)
     return row
 end
 
--- A kept group's header: the Group drops tab's own button (WindowGroup.NewHeader), toggling this tab's.
+-- A kept group's header: the Drops tab's own button (WindowGroup.NewHeader), toggling this tab's.
 local function newHeader(content)
     local h = NS.WindowGroup.NewHeader(content)
     h:SetScript("OnClick", function(self) WH.ToggleGroup(self.groupKey, self.collapsed) end)

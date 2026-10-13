@@ -325,11 +325,11 @@ local function window()
         L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
-        L["The height of one row in the drop tables: Group drops, My drops and History. A My drops row adds room for its countdown bar."], layout)
+        L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."], layout)
     -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table
     -- (feedback-2 spec §8, FB2-9); 1 to 7 read as the least size (modules/WindowRows.lua).
     slider("window.fontSize", W.fontSize, 0, K.WINDOW.FONT_MAX, 1, L["Font size"],
-        L["The size of the drop tables' text, on all three tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
+        L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
         with(layout, { zeroText = L["Default"] }))
 
     local T = P.toast

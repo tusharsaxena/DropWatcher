@@ -37,20 +37,16 @@ State.windowOpen = false
 -- { [tab] = { view = { [value] = true }, content, search, sort } }, each seeded on the tab's first use.
 State.windowFilters = nil
 
--- The Group drops table's view state (modules/WindowGroup.lua, design spec §11.1-§11.2):
+-- The Drops table's view state (modules/WindowGroup.lua, design spec §11.1-§11.2):
 -- { collapsed = { [groupKey] = true | false }, expanded = dropId }. A group the player never toggled
 -- follows the default (the newest shown group open, older ones collapsed); `expanded` is the one row
 -- whose detail card is open (design spec §11.3), or nil. No drop is ever dismissed (feedback-4 spec
 -- §2).
 State.windowGroup = nil
 
--- The My drops tab's view state (modules/WindowMine.lua, design spec §11.4): { collapsed }. No drop
--- is ever hidden from the tab (feedback-4 spec §2).
-State.windowMine = nil
-
 -- Your own drops' reveal state (modules/WindowOwn.lua, feedback-5 spec §2): { revealed = { [dropId]
 -- = true } }. A revealed drop is an upgrade for you whose Offer panel you opened, so who it would
--- help is no longer hidden (Group drops' count and (Multiple), My drops' Best candidates).
+-- help is no longer hidden (Drops' count and (Multiple)).
 State.windowOwn = nil
 
 -- The Offer panel (modules/OfferPanel.lua, design spec §11.4): { dropId } while it is open for one

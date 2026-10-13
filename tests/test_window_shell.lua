@@ -182,48 +182,42 @@ end)
 
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────
 
-test("shell: three tabs, Group drops active in gold with its underline, the others gray", function()
+test("shell: two tabs, Drops active in gold with its underline, History gray", function()
     local NS, f = shown()
-    assertEqual(table.concat(NS.Window.TABS, ","), "group,mine,history")
+    assertEqual(table.concat(NS.Window.TABS, ","), "group,history")
     assertEqual(NS.Window.ActiveTab(), "group")
-    assertEqual(textOf(f.tabs.group.label), "Group drops")
-    assertEqual(textOf(f.tabs.mine.label), "My drops")
+    assertEqual(textOf(f.tabs.group.label), "Drops")
     assertEqual(textOf(f.tabs.history.label), "History")
     local r, g = f.tabs.group.label:GetTextColor()
     assertEqual(r .. "," .. g, "1,0.82")
     assertTrue(f.tabs.group.underline:IsShown())
-    assertFalse(f.tabs.mine.underline:IsShown())
-    assertTrue(f.panes.group:IsShown() and not f.panes.mine:IsShown())
+    assertFalse(f.tabs.history.underline:IsShown())
+    assertTrue(f.panes.group:IsShown() and not f.panes.history:IsShown())
 end)
 
 test("shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused", function()
     local NS, f = shown()
-    f.tabs.mine:__fire("OnClick")
-    assertEqual(NS.Window.ActiveTab(), "mine")
-    assertTrue(f.panes.mine:IsShown() and not f.panes.group:IsShown())
-    assertTrue(f.tabs.mine.underline:IsShown() and not f.tabs.group.underline:IsShown())
+    f.tabs.history:__fire("OnClick")
+    assertEqual(NS.Window.ActiveTab(), "history")
+    assertTrue(f.panes.history:IsShown() and not f.panes.group:IsShown())
+    assertTrue(f.tabs.history.underline:IsShown() and not f.tabs.group.underline:IsShown())
     assertFalse(NS.Window.SelectTab("nope"))
-    assertEqual(NS.Window.ActiveTab(), "mine")
+    assertEqual(NS.Window.ActiveTab(), "history")
 end)
 
--- Feedback-3 spec §0 (DW-B0): the label counts every drop of yours, so it reconciles with the
--- simulator's loot step and the Group drops headers; the tooltip says how many you can still trade.
-test("shell: My drops counts all your drops in its label, the tradeable ones in its tooltip", function()
+-- Feedback-5 spec §3 (DW-E3): the label counts nothing (the Drops strip says what you can trade),
+-- and the tooltip says what the tab holds.
+test("shell: the tab labels carry no count; their tooltips say what each holds", function()
     local NS, f = shown()
     NS.LootFeed.Drops = function()
-        return { drop({ isMine = true, trade = { state = "yes" } }), drop({ isMine = true, trade = { state = "no" } }),
-            drop({ isMine = true, trade = { state = "likely" } }), drop() }
+        return { drop({ isMine = true, trade = { state = "yes" } }), drop({ isMine = true, trade = { state = "likely" } }), drop() }
     end
     NS.Window.Refresh()
-    -- red under: the M10 label, which counted the tradeable two only (the owner's `My drops` with no count)
-    assertEqual(textOf(f.tabs.mine.label), "My drops · 3")
-    local tip = NS.Window.TooltipOf(f.tabs.mine)
-    assertEqual(tip[1], "My drops · 3"); assertEqual(tip[3], "2 of them you can still trade.")
-    NS.LootFeed.Drops = function() return { drop({ isMine = true, trade = { state = "no" } }) } end
-    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[3], "None of them can be traded now.")
-    NS.LootFeed.Drops = function() return { drop() } end
-    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[3], nil, "no drop of yours, no count")
-    assertEqual(NS.Window.TabLabel("mine", 0), "My drops")
+    assertEqual(textOf(f.tabs.group.label), "Drops")
+    local tip = NS.Window.TooltipOf(f.tabs.group)
+    assertEqual(tip[1], "Drops"); assertEqual(#tip, 2)
+    assertEqual(NS.Window.TooltipOf(f.tabs.history)[1], "History")
+    assertEqual(NS.Window.TabLabel("group"), "Drops")
 end)
 
 test("shell: a tab's body is built on its first show, and refreshed with the tab's view", function()
@@ -247,11 +241,11 @@ end)
 
 test("shell: a tab with no body says what it will hold, never a blank pane", function()
     local _, f = shown()
-    for _, key in ipairs({ "group", "mine", "history" }) do
+    for _, key in ipairs({ "group", "history" }) do
         local text = textOf(f.panes[key].placeholder)
         assertTrue(type(text) == "string" and #text > 10, key)
     end
-    -- The Group drops body has drawn itself: with no drop, its empty state (board 06 D).
+    -- The Drops body has drawn itself: with no drop, its empty state (board 06 D).
     assertTrue(f.panes.group.emptyState:IsShown())
 end)
 
@@ -309,11 +303,10 @@ test("shell: each tab grays the View values it does not use, and a grayed value 
     assertEqual(next(FB.State("history").view), nil, "a grayed value neither toggles nor filters")
     pick(c.view, "upgrade")
     assertTrue(FB.State("history").view.upgrade)
-    NS.Window.SelectTab("mine")
-    assertFalse(c.view:IsEnabled(), "My drops does not use the View")
     NS.Window.SelectTab("group")
-    for _, o in ipairs(c.view._options) do assertTrue(o.color == nil, o.value .. " is used on Group drops") end
-    assertEqual(textOf(c.view.text), "View: All", "the Group drops state comes back")
+    assertTrue(c.view:IsEnabled(), "Drops uses the View")
+    for _, o in ipairs(c.view._options) do assertTrue(o.color == nil, o.value .. " is used on Drops") end
+    assertEqual(textOf(c.view.text), "View: All", "the Drops state comes back")
 end)
 
 -- FB2-3: the View tooltip is a bullet list, one line per value.
@@ -328,7 +321,7 @@ test("shell: the View tooltip lists every value as a bullet, and grays the ones 
     assertTrue(tip[4]:find("^• Likely tradeable: ") ~= nil)
     assertTrue(tip[5]:find("^• Usable by me: ") ~= nil)
     assertTrue(tip[6]:find("^• Upgrade for me: ") ~= nil)
-    for i = 2, 6 do assertTrue(tip[i]:find("not on this tab", 1, true) == nil, "Group drops uses them all") end
+    for i = 2, 6 do assertTrue(tip[i]:find("not on this tab", 1, true) == nil, "Drops uses them all") end
     NS.Window.SelectTab("history")
     tip = W.TooltipOf(c.view)
     assertTrue(tip[4]:find("(not on this tab)", 1, true) ~= nil and tip[4]:find("^|cff") ~= nil,
@@ -446,14 +439,15 @@ test("shell: each tab keeps its own filter state, and grays what it does not use
     local FB, c = NS.WindowFilterBar, NS.WindowFilterBar.Controls()
     pick(c.view, "interesting")
     assertTrue(FB.State("group").view.interesting)
-    NS.Window.SelectTab("mine")
-    assertEqual(next(FB.State("mine").view), nil, "a separate state")
-    assertFalse(c.view:IsEnabled(), "My drops does not use View: grayed, not hidden")
-    assertTrue(c.view:IsShown())
+    NS.Window.SelectTab("history")
+    assertEqual(next(FB.State("history").view), nil, "a separate state")
+    assertEqual(NS.Window.TooltipOf(c.quality)[2], "This tab does not use this filter.",
+        "History does not use Quality: grayed, not hidden")
+    assertTrue(c.quality:IsShown())
     assertTrue(c.search:IsEnabled())
     c.search:SetText("crown")
     c.search:__fire("OnTextChanged", true)
-    assertEqual(FB.State("mine").search, "crown")
+    assertEqual(FB.State("history").search, "crown")
     NS.Window.SelectTab("group")
     assertEqual(textOf(c.view.text), "Interesting", "the tab's own state comes back onto the bar")
     assertEqual(c.search:GetText(), "")
@@ -523,12 +517,13 @@ test("shell: IsInteresting is an upgrade for you, or a drop its looter has no us
     assertFalse(FB.IsTradeableMine(drop()))
 end)
 
-test("shell: Group drops lists your own drops; a stored feed.showOwn is ignored", function()
+test("shell: Drops lists your own drops; a stored feed.showOwn is ignored", function()
     local NS = T.enableAddon()
     assertTrue(NS.WindowFilterBar.InGroup == nil, "retired with feed.showOwn (feedback-5 spec §2)")
     NS.addon.db.profile.feed.showOwn = false
     local ctx = NS.Window.TabContext("group")
     assertTrue(ctx.belongs == nil and ctx.onMine == nil)
+    assertTrue(NS.WindowFilterBar.HONORS.mine == nil, "no row for the retired tab (feedback-5 spec §3)")
     assertTrue(ctx.matches(drop({ isMine = true })), "your own drop passes the default filters")
     assertTrue(ctx.matches(drop()))
     assertFalse(ctx.matches(nil))
@@ -542,7 +537,6 @@ test("shell: Matches applies only the controls a tab honors", function()
     assertEqual(FB.HiddenBy(dull, st, nil, FB.HONORS.group), "interesting", "not interesting, the first value")
     st.view = { likely = true }
     assertEqual(FB.HiddenBy(dull, st, nil, FB.HONORS.group), "likely", "not likely tradeable")
-    assertTrue(FB.Matches(dull, st, nil, FB.HONORS.mine), "My drops uses neither")
     assertTrue(FB.Matches(dull, st, nil, FB.HONORS.history), "History has no Likely tradeable")
     st.view = {}
     assertTrue(FB.Matches(dull, st, { instanceSince = 50 }, FB.HONORS.group))
@@ -559,7 +553,7 @@ test("shell: Matches applies only the controls a tab honors", function()
 end)
 
 -- Feedback spec §3 (FB-8), now View values (feedback-2 spec §1): Usable by me hides can't use and
--- doesn't want; Upgrade for me keeps only your upgrades. My drops uses neither.
+-- doesn't want; Upgrade for me keeps only your upgrades.
 test("shell: Usable by me hides what you can't use or don't want; Upgrade for me keeps your upgrades", function()
     local FB = T.newAddon().WindowFilterBar
     local st = { view = { usable = true }, content = "all", search = "", sort = "newest" }
@@ -570,7 +564,6 @@ test("shell: Usable by me hides what you can't use or don't want; Upgrade for me
     assertTrue(FB.Matches(v(nil), st, nil, FB.HONORS.group), "not judged yet: kept")
     assertFalse(FB.Matches(v("cantUse"), st, nil, FB.HONORS.group))
     assertFalse(FB.Matches(v("doesntWant"), st, nil, FB.HONORS.group), "your own preferences")
-    assertTrue(FB.Matches(v("cantUse"), st, nil, FB.HONORS.mine), "My drops does not use it")
     st.view = { upgrade = true }
     assertTrue(FB.Matches(v("upgrade"), st, nil, FB.HONORS.group))
     for _, verdict in ipairs({ "sidegrade", "downgrade", "cantUse", "doesntWant", "unknown" }) do
@@ -578,7 +571,6 @@ test("shell: Usable by me hides what you can't use or don't want; Upgrade for me
     end
     assertFalse(FB.Matches(v(nil), st, nil, FB.HONORS.group), "not judged yet: not an upgrade")
     assertFalse(FB.Matches(v("downgrade"), st, nil, FB.HONORS.history), "History uses it")
-    assertTrue(FB.Matches(v("downgrade"), st, nil, FB.HONORS.mine), "My drops does not")
     st.view = { usable = true, upgrade = true }
     assertEqual(FB.HiddenBy(v("cantUse"), st, nil, FB.HONORS.group), "usable", "AND: the first value that fails")
     assertEqual(FB.HiddenBy(v("sidegrade"), st, nil, FB.HONORS.group), "upgrade")
@@ -637,8 +629,8 @@ test("shell: the live footer reads the client, and its Sort follows the active t
     assertEqual(textOf(sort.text), "Sort: Newest")
     sort.onSelect("gain")
     assertEqual(NS.WindowFilterBar.State("group").sort, "gain")
-    NS.Window.SelectTab("mine")
-    assertEqual(textOf(sort.text), "Sort: Newest", "My drops keeps its own order")
+    NS.Window.SelectTab("history")
+    assertEqual(textOf(sort.text), "Sort: Newest", "History keeps its own order")
 end)
 
 test("shell: the footer's ticker runs only while the whole window is on screen", function()
@@ -757,7 +749,7 @@ test("shell: a burst of bus messages repaints once, on the next frame", function
     assertEqual(n, 1, "and nothing more queued")
 end)
 
-test("shell: a countdown tick on the Group drops tab repaints nothing of the window", function()
+test("shell: a countdown tick on the Drops tab repaints nothing of the window", function()
     local NS, _, m = shown()
     local W, n = NS.Window, 0
     local refresh = W.Refresh
@@ -869,15 +861,15 @@ test("shell: every control on the chrome has a tooltip with a reason", function(
     local W, c = NS.Window, NS.WindowFilterBar.Controls()
     local segs, sort = NS.WindowFooter.Parts()
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
-    local widgets = { f.scanButton, f.minimizeButton, f.badge, f.newChip, f.tabs.group, f.tabs.mine,
+    local widgets = { f.scanButton, f.minimizeButton, f.badge, f.newChip, f.tabs.group,
         f.tabs.history, c.view, c.quality, c.content, c.search, sort,
         segs.inspect, segs.loot, segs.situation, segs.pawn }
     for i, w in ipairs(widgets) do
         local tip = W.TooltipOf(w)
         assertTrue(#tip >= 2 and type(tip[1]) == "string" and type(tip[2]) == "string", "widget " .. i)
     end
-    NS.Window.SelectTab("mine")
-    assertEqual(W.TooltipOf(c.view)[2], "This tab does not use this filter.", "a grayed control says why")
+    NS.Window.SelectTab("history")
+    assertEqual(W.TooltipOf(c.quality)[2], "This tab does not use this filter.", "a grayed control says why")
 end)
 
 -- ── degraded ────────────────────────────────────────────────────────────────────────────────

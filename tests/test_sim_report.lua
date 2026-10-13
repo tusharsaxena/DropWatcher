@@ -1,13 +1,12 @@
--- tests/test_sim_report.lua — the simulator's loot step says where its drops went, and the tabs
--- reconcile with it (feedback-3 spec §0, DW-B0; modules/SimReport.lua). The owner's run read
--- `Loot: 2 drops` while Group drops showed one drop under `1 drop` and the My drops tab no count.
--- Reproduced here first: the second drop was yours, on My drops, and the tab's label counted only
--- your tradeable drops (an upgrade for you is not one). Since feedback-5 spec §2 Group drops lists
--- your own drops too (`feed.showOwn` is retired), so the step's drops are all on Group drops. Then:
--- the pure report (Place, Summarize, TipLines), the owner's case end to end (the panel row, its
+-- tests/test_sim_report.lua — the simulator's loot step says where its drops went, and the window
+-- reconciles with it (feedback-3 spec §0, DW-B0; modules/SimReport.lua). The owner's run read
+-- `Loot: 2 drops` while the window showed one drop under `1 drop`: the second drop was yours, and
+-- was listed apart from the others. Since feedback-5 spec §2 and §3 Drops lists your own drops too
+-- (`feed.showOwn` and the separate tab are retired), so the step's drops are all on Drops. Then: the
+-- pure report (Place, Summarize, TipLines), the owner's case end to end (the panel row, its
 -- tooltip, the chat line, the header and the tab), `/dw sim loot`'s line, and the regression over
--- every scenario: the drops on Group drops and hidden add up to each loot step's count, and My
--- drops lists the step's drops of yours.
+-- every scenario: the drops on Drops and hidden add up to each loot step's count, and Drops lists
+-- the step's drops of yours.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
@@ -84,7 +83,7 @@ end
 -- The owner's case, reproduced before the fix
 -- ---------------------------------------------------------------------------------------------
 
-test("sim report: the owner's key run: the second drop is yours, on Group drops and My drops, nothing lost", function()
+test("sim report: the owner's key run: the second drop is yours, on Drops, nothing lost", function()
     local NS = addon(600)
     assertTrue(NS.SimScenario.Start("key", nil, { seed = 1 }))
     local step = toLoot(NS)
@@ -97,21 +96,19 @@ test("sim report: the owner's key run: the second drop is yours, on Group drops 
     NS.Window.SelectTab("group"); NS.Window.Refresh()
     local header = NS.WindowGroup.Drawn().headers[1]
     assertEqual(NS.WindowCells.Entries(NS.LootFeed.Groups("live"), NS.LootFeed.Get, NS.Window.TabContext("group"),
-        {})[1].count, 2, "Group drops shows both, yours too (feedback-5 spec §2)")
-    NS.Window.SelectTab("mine"); NS.Window.Refresh()
-    assertEqual(#NS.WindowMine.Drawn().entries, 1, "My drops shows yours")
+        {})[1].count, 2, "Drops shows both, yours too (feedback-5 spec §2)")
     -- What says so: the step, the panel row and its tooltip, the chat line, the header, the tab.
     assertEqual(step.detail, "2 drops")
     local row = panelRow(NS, step)
     assertEqual(row.label, "Loot: 2 drops")
-    assertEqual(row.tip[3], "Item 101081 (you): Group drops and My drops")
-    assertEqual(row.tip[4], "Item 101081 (Kaelis): Group drops")
+    assertEqual(row.tip[3], "Item 101081 (you): Drops")
+    assertEqual(row.tip[4], "Item 101081 (Kaelis): Drops")
     assertTrue(header ~= nil)
     NS.Window.SelectTab("group"); NS.Window.Refresh()
     local text = NS.WindowGroup.Drawn().headers[1].text:GetText()
     assertTrue(text:find("· 2 drops ·", 1, true) ~= nil, text)
-    assertTrue(text:find("yours", 1, true) == nil, "no `yours on My drops` suffix: " .. text)
-    assertEqual(NS.Window.Frame().tabs.mine.label:GetText(), "My drops · 1")
+    assertTrue(text:find("yours", 1, true) == nil, "no `yours` suffix: " .. text)
+    assertEqual(NS.Window.Frame().tabs.group.label:GetText(), "Drops", "no tab label count (feedback-5 spec §3)")
 end)
 
 test("sim report: the step's chat line says where its drops went", function()
@@ -129,7 +126,7 @@ test("sim report: /dw sim loot says where its drops went", function()
     NS.addon:OnSlashCommand("sim loot 1 " .. member.name)
     assertEqual(printed(m, "Simulated loot: 1 drop."), 1)
     NS.addon:OnSlashCommand("sim loot 1 me")
-    assertEqual(printed(m, "Simulated loot: 1 drop."), 2, "yours is on Group drops too")
+    assertEqual(printed(m, "Simulated loot: 1 drop."), 2, "yours is on Drops too")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -142,7 +139,7 @@ local function rec(id, over)
     return r
 end
 
-test("sim report: each drop's place: Group drops (yours too), hidden by its gate, loading, cleared", function()
+test("sim report: each drop's place: Drops (yours too), hidden by its gate, loading, cleared", function()
     local R = T.newAddon().SimReport
     local feed = {}
     local function get(id) return feed[id] end
@@ -169,7 +166,7 @@ test("sim report: the detail counts the drops and says which are hidden or other
         get)
     assertEqual(c.text, "3 drops (1 hidden)")
     assertEqual(c.group + c.hidden, c.total)
-    assertEqual(c.mine, nil, "no My drops place any more")
+    assertEqual(c.mine, nil, "no place of its own for yours")
     c = R.Summarize(report(4, { rec(7, { state = "loading" }), rec(11) }, 1), get)
     assertEqual(c.text, "4 drops (1 loading, 1 merged, 1 cleared, 1 refused)")
     assertEqual(R.Summarize(report(0, {}), get).text, "0 drops")
@@ -183,15 +180,15 @@ test("sim report: the tooltip names each drop, its looter and its tab or gate", 
     feed[1], feed[2] = mine, group
     local lines = R.TipLines({ sent = 5, merged = 1, drops = { mine, group,
         rec(3, { state = "hidden", hidden = "minIlvl", looter = { name = "Vaela" } }) } }, get)
-    assertEqual(lines[1], "Item 1 (you): Group drops and My drops")
-    assertEqual(lines[2], "Item 2 (Seta): Group drops")
+    assertEqual(lines[1], "Item 1 (you): Drops")
+    assertEqual(lines[2], "Item 2 (Seta): Drops")
     assertEqual(lines[3], "Item 3 (Vaela): hidden: below the minimum item level")
     assertEqual(lines[4], "1 merged into an earlier drop")
     assertEqual(lines[5], "1 refused by the feed")
     assertEqual(#lines, 5)
 end)
 
-test("sim report: a Group drops header no longer counts drops of yours left to My drops", function()
+test("sim report: a Drops header no longer counts drops of yours apart", function()
     local WC = T.newAddon().WindowCells
     local g = { label = "Altar of Fangs", kind = "run" }
     assertEqual(WC.Header(g, 1, nil, nil, false, nil, nil, 1).text, "Altar of Fangs · 1 drop", "an extra argument is ignored")
@@ -210,7 +207,7 @@ local function inReport(report)
     return set
 end
 
--- The step's drops on Group drops: the shown count of each header whose group holds them (one loot
+-- The step's drops on Drops: the shown count of each header whose group holds them (one loot
 -- step per group in every scenario), collapsed or not.
 local function groupShown(NS, report)
     local keys = {}
@@ -225,7 +222,7 @@ local function groupShown(NS, report)
     return n
 end
 
--- The step's drops of yours the feed took (each on My drops under the defaults).
+-- The step's drops of yours the feed took (each on Drops under the defaults).
 local function yoursAdded(report)
     local n = 0
     for _, d in ipairs(report.drops) do
@@ -234,10 +231,11 @@ local function yoursAdded(report)
     return n
 end
 
+-- The step's drops of yours Drops lists (its filters applied, collapsed or not: what its strip counts).
 local function mineShown(NS, report)
     local set, n = inReport(report), 0
-    NS.Window.SelectTab("mine"); NS.Window.Refresh()
-    for _, d in ipairs(NS.WindowMine.Drawn().entries) do
+    local ctx = NS.Window.TabContext("group")
+    for _, d in ipairs(NS.DropsStrip.Own(NS.LootFeed.Drops("live"), ctx.matches)) do
         if set[d] then n = n + 1 end
     end
     return n
@@ -250,9 +248,9 @@ local function assertReconciles(NS, step, label)
     local mine = mineShown(NS, report)
     assertEqual(c.merged, 0, label .. ": no line merged"); assertEqual(c.refused, 0, label .. ": none refused")
     assertEqual(c.loading, 0, label .. ": none loading")
-    assertEqual(shown + c.hidden, c.total, label .. ": Group drops + hidden = " .. step.detail)
-    assertEqual(shown, c.group, label .. ": Group drops shows the step's drops, yours too")
-    assertEqual(mine, yoursAdded(report), label .. ": My drops shows the step's drops of yours")
+    assertEqual(shown + c.hidden, c.total, label .. ": Drops + hidden = " .. step.detail)
+    assertEqual(shown, c.group, label .. ": Drops shows the step's drops, yours too")
+    assertEqual(mine, yoursAdded(report), label .. ": Drops lists the step's drops of yours")
 end
 
 local function runAll(name, size, seed, ilvl, hideAll)
@@ -280,7 +278,7 @@ local function runAll(name, size, seed, ilvl, hideAll)
 end
 
 for _, sc in ipairs(SCENARIOS) do
-    test("sim report regression " .. sc[1] .. ": Group drops + hidden = every loot step's drops", function()
+    test("sim report regression " .. sc[1] .. ": Drops + hidden = every loot step's drops", function()
         for _, ilvl in ipairs({ 600, 660 }) do
             for seed = 1, 3 do runAll(sc[1], sc[2], seed, ilvl) end
         end
@@ -292,51 +290,13 @@ end
 -- M11 review leftovers (feedback-3 spec §5, DW-B5): the tabs and the panel agree beyond the defaults
 -- ---------------------------------------------------------------------------------------------
 
-test("tab counts: My drops tallies the drops it lists and names the ones its filters hide", function()
-    local NS = T.newAddon()
-    local WM = NS.WindowMine
-    local a = rec(1, { isMine = true, trade = { state = "yes" } })
-    local b, c = rec(2, { isMine = true }), rec(3, { isMine = true })
-    local ctx = { matches = function(d) return d.id ~= 3 end,
-        hiddenBy = function(d) return d.id == 3 and "search" or nil end }
-    local t = WM.Tally({ a, b, c, rec(4) }, ctx)
-    assertEqual(t.listed, 2, "the filtered one is not listed; a member's drop is not yours")
-    assertEqual(t.tradeable, 1)
-    assertEqual(#t.excluded, 1)
-    assertEqual(t.excluded[1].why, "search")
-    assertTrue(WM.Lists(a, ctx) and WM.Lists(b, ctx) and not WM.Lists(c, ctx) and not WM.Lists(rec(4), ctx))
-    local lines = WM.ExcludedLines(t.excluded, NS.WindowFilterBar.Defaults())
-    assertEqual(lines[1], "Not listed here:")
-    assertEqual(lines[2], "Item 3: Search")
-    assertEqual(#WM.ExcludedLines({}, nil), 0, "nothing excluded, no lines")
-    assertEqual(WM.Tally(nil, ctx).listed, 0)
-end)
-
-local function mineTip(NS)
-    return table.concat(NS.Window.TooltipOf(NS.Window.Frame().tabs.mine), " | ")
-end
-
-test("tab counts: a drop My drops' own filters hide leaves both counts, and the tooltip names the filter", function()
-    local NS = addon(600)
-    NS.SimScenario.Start("key", nil, { seed = 1 })
-    toLoot(NS)
-    NS.WindowFilterBar.State("mine").search = "zzzz"
-    NS.Window.SelectTab("group"); NS.Window.Refresh()
-    assertEqual(NS.Window.Frame().tabs.mine.label:GetText(), "My drops")
-    assertTrue(mineTip(NS):find("Item 101081: Search", 1, true) ~= nil, mineTip(NS))
-    NS.WindowFilterBar.State("mine").search = ""
-    NS.Window.Refresh()
-    assertEqual(NS.Window.Frame().tabs.mine.label:GetText(), "My drops · 1")
-    assertTrue(mineTip(NS):find("Not listed here", 1, true) == nil)
-end)
-
-test("sim report: a place lists yours on Group drops and honors the feed the window shows", function()
+test("sim report: a place lists yours on Drops and honors the feed the window shows", function()
     local R = T.newAddon().SimReport
     local feed = {}
     local function get(id) return feed[id] end
     local mine, group = rec(1, { isMine = true, feed = "live" }), rec(2, { feed = "live" })
     feed[1], feed[2] = mine, group
-    assertEqual(R.Place(mine, get, { feed = "live" }), "group", "Group drops lists yours (feedback-5 spec §2)")
+    assertEqual(R.Place(mine, get, { feed = "live" }), "group", "Drops lists yours (feedback-5 spec §2)")
     assertEqual(R.Place(mine, get, { feed = "live", showOwn = false }), "group", "a stale showOwn is ignored")
     assertEqual(R.Place(group, get, { feed = "test" }), "offscreen", "test mode shows its own feed")
     assertEqual(R.Place(mine, get, { feed = "test" }), "offscreen")
@@ -344,8 +304,8 @@ test("sim report: a place lists yours on Group drops and honors the feed the win
     assertEqual(R.Summarize(report, get, { feed = "live" }).text, "2 drops")
     assertEqual(R.Summarize(report, get, { feed = "test" }).text, "2 drops (2 not shown in test mode)")
     local lines = R.TipLines(report, get, { feed = "live" })
-    assertEqual(lines[1], "Item 1 (you): Group drops and My drops")
-    assertEqual(lines[2], "Item 2 (Seta): Group drops")
+    assertEqual(lines[1], "Item 1 (you): Drops")
+    assertEqual(lines[2], "Item 2 (Seta): Drops")
     lines = R.TipLines(report, get, { feed = "test" })
     assertEqual(lines[2], "Item 2 (Seta): not shown while test mode is on")
 end)
@@ -362,49 +322,15 @@ test("sim report: View reads the feed the window shows; feed.showOwn is retired"
     NS.State.testMode = false
 end)
 
-test("sim report: the owner's step lists yours on Group drops, and the tabs agree", function()
+test("sim report: the owner's step lists yours on Drops, and the tabs agree", function()
     local NS = addon(600)
     NS.SimScenario.Start("key", nil, { seed = 1 })
     local step = toLoot(NS)
     assertEqual(step.detail, "2 drops")
     local row = panelRow(NS, step)
     assertEqual(row.label, "Loot: 2 drops")
-    assertEqual(row.tip[3], "Item 101081 (you): Group drops and My drops")
+    assertEqual(row.tip[3], "Item 101081 (you): Drops")
     local c = NS.SimReport.Summarize(step.report, NS.LootFeed.Get, NS.SimReport.View())
     local shown = groupShown(NS, step.report)
     assertEqual(shown, c.group); assertEqual(c.group + c.hidden, c.total)
-end)
-
-test("sim report: a drop of yours My drops' own filters leave out is on Group drops alone", function()
-    local R = T.newAddon().SimReport
-    local feed = {}
-    local function get(id) return feed[id] end
-    local mine, group = rec(1, { isMine = true, feed = "live" }), rec(2, { feed = "live" })
-    feed[1], feed[2] = mine, group
-    local function leftOut(d) return d.id == 1 and "Search" or nil end
-    local view = { feed = "live", mineLeftOut = leftOut }
-    assertEqual(R.Place(mine, get, view), "group", "Group drops still lists it")
-    assertEqual(R.Place(group, get, view), "group")
-    local report = { sent = 2, merged = 0, drops = { mine, group } }
-    assertEqual(R.Summarize(report, get, view).text, "2 drops")
-    assertEqual(R.TipLines(report, get, view)[1], "Item 1 (you): Group drops")
-    assertEqual(R.TipLines(report, get, { feed = "live", mineLeftOut = function() return nil end })[1],
-        "Item 1 (you): Group drops and My drops")
-end)
-
-test("sim report: the owner's step agrees with the tabs after a search My drops fails", function()
-    local NS = addon(600)
-    NS.SimScenario.Start("key", nil, { seed = 1 })
-    local step = toLoot(NS)
-    NS.Window.SelectTab("group"); NS.Window.Refresh()
-    assertEqual(panelRow(NS, step).label, "Loot: 2 drops")
-    NS.WindowFilterBar.State("mine").search = "zzz"
-    NS.Window.Refresh()
-    assertEqual(NS.Window.Frame().tabs.mine.label:GetText(), "My drops")
-    local row = panelRow(NS, step)
-    assertEqual(row.label, "Loot: 2 drops")
-    assertEqual(row.tip[3], "Item 101081 (you): Group drops")
-    NS.WindowFilterBar.State("mine").search = ""
-    NS.Window.Refresh()
-    assertEqual(panelRow(NS, step).tip[3], "Item 101081 (you): Group drops and My drops")
 end)

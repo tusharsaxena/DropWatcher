@@ -1,4 +1,4 @@
--- tests/test_own_drops.lua — your own drops on the Group drops tab (feedback-5 spec §2, DW-E2):
+-- tests/test_own_drops.lua — your own drops on the Drops tab (feedback-5 spec §2, DW-E2):
 -- always listed (`feed.showOwn` retired); Trade counts the members a drop upgrades (`Yes (2)`); Them
 -- and Their eq read `(Multiple)` with each upgrade ranked by gain in the tooltip; the keep? rule
 -- hides both until the Offer panel is opened; Actions is Offer, toned by the furthest offer sent.
@@ -140,8 +140,7 @@ test("own drops: Reveal is session state; the tone states read the offer and ann
     assertFalse(WO.IsRevealed(1)); assertFalse(WO.IsRevealed(nil))
     WO.Reveal(1); WO.Reveal(nil)
     assertTrue(WO.IsRevealed(1)); assertTrue(NS.State.windowOwn.revealed[1])
-    assertTrue(NS.WindowMine.Reveal == nil and NS.WindowMine.IsRevealed == nil and NS.WindowMine.ToneStates == nil,
-        "moved off the My drops tab")
+    assertTrue(NS.WindowMine == nil, "the tab that held them is retired (feedback-5 spec §3)")
     NS.History.OutcomeOf = function() return nil end
     NS.Asks.FurthestStateOf = function() return "sent" end
     NS.Asks.StateOf = function() return "queued" end

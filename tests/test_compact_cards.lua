@@ -1,5 +1,5 @@
 -- tests/test_compact_cards.lua — compact mode's cards (compact spec §2 and §3, DW-C1): each card's
--- three lines of text, tones and tooltips for Group drops, My drops and History, in every state a
+-- three lines of text, tones and tooltips for Drops and History, in every state a
 -- drop can be in, and the group header's short form (modules/CompactCards.lua, pure). The words,
 -- tones and reason tooltips are the full view's composers' (modules/WindowCells.lua,
 -- modules/MineCells.lua), so each case also checks that the compact piece agrees with its column.
@@ -10,7 +10,6 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 local LINK = "|cffa335ee|Hitem:212::|h[Vile Vial of Volatile Venom]|h|r"
 local OLD1 = "|cffa335ee|Hitem:300::|h[Old Vial]|h|r"
 local OLD2 = "|cffa335ee|Hitem:301::|h[Older Vial]|h|r"
-local BRACERS = "|cffa335ee|Hitem:220::|h[Leggings of the Frenzy]|h|r"
 local YOKE = "|cffa335ee|Hitem:230::|h[Yoke of the Charging Bear]|h|r"
 
 local NONE = {}
@@ -23,7 +22,7 @@ local function with(d, over)
     return d
 end
 
--- The spec's Group drops card: a trinket Lysandra looted, a downgrade for you (you wear 321 and
+-- The spec's Drops card: a trinket Lysandra looted, a downgrade for you (you wear 321 and
 -- 308), unusable for her, likely tradeable, inspected two minutes before NOW.
 local function groupDrop(over)
     return with({
@@ -58,19 +57,6 @@ local function candidates(n)
     local out = {}
     for i = 1, n or 2 do out[list[i].guid] = list[i] end
     return out
-end
-
--- The spec's My drops card: your leggings, an upgrade for you (+49), 1:44:46 left on the item's
--- own timer, an upgrade for Seta (+14) and Butterz (+6).
-local function mineDrop(over)
-    return with({
-        id = 3, at = NOW - 700, link = BRACERS, isMine = true, sources = { chat = 1 },
-        looter = { name = "Me-Realm", guid = "Player-1-ME", classFile = "PALADIN", isSelf = true },
-        facts = { ilvl = 183, equipLoc = "INVTYPE_LEGS", quality = 4 },
-        me = { verdict = "upgrade", ilvlDelta = 49, reasons = {} },
-        trade = { state = "yes", reasonKey = "timer", basis = "timer", args = { 6286 }, expiresAt = NOW + 6286 },
-        candidates = candidates(2),
-    }, over)
 end
 
 local function CC() return T.newAddon().CompactCards end
@@ -167,9 +153,9 @@ test("compact cards: inspect freshness reads its age or state, dimmed, and the t
     assertEqual(mine.text, "–"); assertTrue(has(mine.tip, "always current"))
 end)
 
--- ── the Group drops card ────────────────────────────────────────────────────────────────────
+-- ── the Drops card ──────────────────────────────────────────────────────────────────────────
 
-test("compact cards: the Group drops card reads the spec's three lines", function()
+test("compact cards: the Drops card reads the spec's three lines", function()
     local C = CC()
     local card = C.Group(groupDrop(), groupCtx())
     local lines = C.Plain(card)
@@ -203,7 +189,7 @@ test("compact cards: line 2 shows the countdown for a drop with one, else the in
     assertTrue(C.Group(groupDrop({ trade = NONE }), groupCtx()).countdown == nil, "not estimated yet")
 end)
 
-test("compact cards: the Group drops card's pieces keep the full view's tones and tooltips", function()
+test("compact cards: the Drops card's pieces keep the full view's tones and tooltips", function()
     local NS = T.newAddon()
     local C, W = NS.CompactCards, NS.WindowCells
     local d = groupDrop()
@@ -250,7 +236,7 @@ test("compact cards: the Ask button keeps its states, and a drop you cannot ask 
     assertTrue(has(no.ask.tip, "not an upgrade for you"))
 end)
 
-test("compact cards: your own drop on Group drops reads (Multiple) for Them and offers it", function()
+test("compact cards: your own drop on Drops reads (Multiple) for Them and offers it", function()
     local C = CC()
     local me = { name = "Me-Realm", classFile = "PALADIN" }
     local card = C.Group(groupDrop({ isMine = true, them = NONE, looter = me }), groupCtx())
@@ -314,77 +300,6 @@ test("compact cards: a drop whose details have not loaded is never blank", funct
     assertEqual(lines[1], "?  ?  –")
     assertEqual(lines[2], "Lysandra · – · – · Unknown  …")
     assertEqual(lines[3], "You ?  Them ?")
-end)
-
--- ── the My drops card ───────────────────────────────────────────────────────────────────────
-
-test("compact cards: the My drops card reads the spec's three lines", function()
-    local C = CC()
-    local card = C.Mine(mineDrop(), { now = NOW, revealed = true })
-    local lines = C.Plain(card)
-    assertEqual(lines[1], "Leggings of the Frenzy  183  Offer")
-    assertEqual(lines[2], "For you ▲ +49 (keep?)  1:44:46")
-    assertEqual(lines[3], "Seta +14 · Butterz +6  Announce")
-    assertTrue(card.tradeable); assertEqual(card.kind, "mine")
-end)
-
-test("compact cards: the countdown keeps its bar fraction, its warning and its estimate", function()
-    local C = CC()
-    local card = C.Mine(mineDrop(), { now = NOW })
-    assertTrue(card.trade.fraction > 0.8 and card.trade.fraction <= 1, tostring(card.trade.fraction))
-    assertEqual(card.trade.tone, "plain")
-    local soon = C.Mine(mineDrop({ trade = { state = "yes", reasonKey = "timer", basis = "timer", args = { 300 },
-        expiresAt = NOW + 300 } }), { now = NOW, warnAt = 600 })
-    assertEqual(soon.trade.text, "0:05:00"); assertEqual(soon.trade.tone, "warn"); assertTrue(soon.trade.bold)
-    local est = C.Mine(mineDrop({ trade = { state = "likely", reasonKey = "groupLoot" } }), { now = NOW })
-    assertEqual(est.trade.text:sub(1, 1), "~", "an estimate says so")
-    local boe = C.Mine(mineDrop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), { now = NOW })
-    assertEqual(boe.trade.text, "No limit (BoE)"); assertEqual(boe.trade.fraction, 1)
-end)
-
-test("compact cards: a drop that cannot be traded shows Not tradeable and a dash for Offer, and no Hide", function()
-    local C = CC()
-    local card = C.Mine(mineDrop({ trade = { state = "no", reasonKey = "bonusRoll" } }), { now = NOW })
-    local lines = C.Plain(card)
-    assertEqual(lines[1], "Leggings of the Frenzy  183  –")
-    assertEqual(lines[2], "For you ▲ +49 (keep?)  Not tradeable")
-    assertEqual(lines[3], "–")
-    assertFalse(card.tradeable); assertTrue(card.offer.dash); assertTrue(card.action == nil, "nothing hides it")
-    assertEqual(card.trade.tone, "bad"); assertTrue(has(card.trade.tip, "Bonus roll loot can't be traded."))
-    assertTrue(has(card.offer.tip, "Not tradeable"))
-end)
-
-test("compact cards: an upgrade for you hides its candidates until you choose to offer it", function()
-    local C = CC()
-    local hidden = C.Mine(mineDrop(), { now = NOW, revealed = false })
-    assertTrue(hidden.candidates.hidden); assertEqual(#hidden.candidates.parts, 0)
-    assertEqual(C.Plain(hidden)[3], "Hidden: an upgrade for you  Announce")
-    assertFalse(hidden.offer.primary, "Offer is not the call to action while hidden")
-    local down = C.Mine(mineDrop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }), { now = NOW })
-    assertEqual(C.Plain(down)[2], "For you ▽ -5  1:44:46"); assertTrue(down.forYou.sub == nil)
-    assertTrue(down.offer.primary)
-end)
-
-test("compact cards: the candidates are class-colored parts, the top three and `+n more`", function()
-    local C = CC()
-    local d = mineDrop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} }, candidates = candidates(4) })
-    local c = C.Mine(d, { now = NOW }).candidates
-    assertEqual(#c.parts, 3)
-    assertEqual(c.parts[1].text, "Seta +14"); assertEqual(c.parts[1].classFile, "PRIEST")
-    assertEqual(c.parts[2].classFile, "MAGE"); assertEqual(c.more, "+1 more")
-    assertEqual(c.text, "Seta +14 · Butterz +6 · Littlewolf +3 · +1 more", "the full view's cell agrees")
-    local nobody = C.Mine(mineDrop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} }, candidates = {} }),
-        { now = NOW }).candidates
-    assertEqual(nobody.text, "Nobody else in your group"); assertEqual(#nobody.parts, 0)
-end)
-
-test("compact cards: Announce follows the ask's lifecycle", function()
-    local C = CC()
-    local states = { ready = "Announce", queued = "Queued", sent = "Announced", failed = "Retry" }
-    for state, text in pairs(states) do
-        local card = C.Mine(mineDrop(), { now = NOW, announceState = state, announceReason = "busy" })
-        assertEqual(card.action.text, text, state)
-    end
 end)
 
 -- ── the History card ────────────────────────────────────────────────────────────────────────
@@ -486,7 +401,7 @@ test("compact cards: a filter that hides drops reads `1 of 2`, the hidden ones i
     assertTrue(stripColor(h.text):find(" · 3m · 1 of 2 · ", 1, true) ~= nil, h.text)
     assertTrue(has(h.tip, "Hidden by the filters:"))
     assertTrue(has(h.tip, "2 drops · 1 shown"), "the reconciling counts in the long form")
-    assertFalse(has(h.tip, "yours"), "no `yours on My drops` (feedback-5 spec §2)")
+    assertFalse(has(h.tip, "yours"), "no `yours` count (feedback-5 spec §2)")
     assertEqual(C.Count(0, nil), "0"); assertEqual(C.Count(3, {}), "3")
 end)
 

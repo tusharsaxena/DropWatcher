@@ -1,19 +1,19 @@
 local _, NS = ...
--- modules/MineCells.lua — what the My drops tab and the Offer panel say (design spec §11.4, board
--- 04): each column's text, tone and reason tooltip for your own drops, the candidates ranked with
--- their status pills, the tab's summary line, the Post my tradeables lines and where the Offer
--- panel docks; the Trade window cell every drop shows on Group drops (feedback-5 spec §1); and what
--- your own drop says there (feedback-5 spec §2): Trade with its upgrade count (`Yes (2)`), Them
--- and Their eq as `(Multiple)` with every member it upgrades in the tooltip, and the Offer button.
+-- modules/MineCells.lua — what your own drops and the Offer panel say (design spec §11.4, board
+-- 04; feedback-5 spec §1-§3): the Trade window cell every drop shows on Drops, the candidates
+-- ranked with their status pills, the Offer panel's buttons, header and dock, the Drops strip's
+-- summary line and Post my tradeables' lines; and what your own drop says on Drops (feedback-5
+-- spec §2): Trade with its upgrade count (`Yes (2)`), Them and Their eq as `(Multiple)` with every
+-- member it upgrades in the tooltip, and the Offer button.
 -- Nothing is ever blank: an unknown value says `?`, `–` or `Checking` and its tooltip says why.
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
 -- with its `expiresAt`, `me`) and plain inputs (the clock, the warning threshold, an ask's state)
 -- and answers a plain table; nothing here reads a module, the client or a saved variable, so
--- test_window_mine drives each state case by case. The frame edges that paint them are
--- modules/WindowMine.lua (the tab), modules/WindowGroup.lua, modules/CompactGroup.lua and
--- modules/DetailCard.lua (the Trade window column, the compact card's countdown and your own drop's
--- cells, through modules/WindowOwn.lua) and modules/OfferPanel.lua (the panel). The shared verdict
+-- test_mine_cells drives each state case by case. The frame edges that paint them are
+-- modules/WindowGroup.lua, modules/CompactGroup.lua and modules/DetailCard.lua (the Trade window
+-- column, the compact card's countdown and your own drop's cells, through modules/WindowOwn.lua),
+-- modules/DropsStrip.lua (the strip) and modules/OfferPanel.lua (the panel). The shared verdict
 -- and trade wording is modules/WindowCells.lua's.
 --
 --   cell = { text, glyph, tone = key of C.TONE, tip = { title, lines... } }
@@ -28,10 +28,10 @@ local _, NS = ...
 --
 -- THE CANDIDATES (spec §11.4). Every other member, judged for your drop by the feed: upgrades first
 -- by their gain, then EQUAL, NO UPGRADE, CAN'T USE, CHECKING and UNAVAILABLE, each tie by name. An
--- upgrade for you is not offered by default: the Best candidates cell says `Hidden: an upgrade for
--- you` until you open the Offer panel yourself (AskFlow B2).
+-- upgrade for you is not offered by default: its count and (Multiple) read `Hidden` until you open
+-- the Offer panel yourself (AskFlow B2).
 --
--- YOUR OWN DROP ON GROUP DROPS (feedback-5 spec §2). Trade appends how many members it upgrades
+-- YOUR OWN DROP ON DROPS (feedback-5 spec §2). Trade appends how many members it upgrades
 -- (`Yes (2)`, the bare word with none); Them and Their eq read `(Multiple)`, green with at least one
 -- upgrade, muted otherwise, their tooltip naming each upgrade by gain (`Butterz ▲ +11 · wears 276
 -- (Bloodthorn Treads)`). The keep? rule holds: while it is an upgrade for you and not revealed, the
@@ -47,7 +47,6 @@ local WC = NS.WindowCells
 local floor, max, min = math.floor, math.max, math.min
 
 local DASH = "–"
-local TOP_N = 3
 
 local function num(v)
     if type(v) == "number" and v == v then return v end
@@ -120,20 +119,7 @@ local function othersName(drop)
     return WC.ShortName(type(drop.looter) == "table" and drop.looter.name or nil)
 end
 
--- ── the My drops columns ────────────────────────────────────────────────────────────────────
-
---- The For me column: the verdict, with `keep?` under an upgrade (board 04 note 2).
---- @param drop table
---- @return table cell, with `keep`
-function MC.ForMe(drop)
-    local c = WC.Me(drop)
-    c.keep = c.verdict == "upgrade"
-    if c.keep then
-        c.sub = L["keep?"]
-        c.tip[#c.tip + 1] = L["An upgrade for you: keep it, or offer it anyway. Nobody is offered it unless you choose to."]
-    end
-    return c
-end
+-- ── the Trade window column ─────────────────────────────────────────────────────────────────
 
 -- `who` is the looter's short name on another player's drop, nil on yours.
 local function windowTip(cd, soon, who)
@@ -283,85 +269,13 @@ local function countChecking(list)
     return n
 end
 
-local function rankedTip(list)
-    local tip = { L["Best candidates"] }
-    for _, e in ipairs(list) do tip[#tip + 1] = ("%s: %s (%s)"):format(e.short, e.pill.text, e.eq) end
-    return tip
-end
-
 local function upgradesOf(list)
     local ups = {}
     for _, e in ipairs(list) do if e.status == "upgrade" then ups[#ups + 1] = e end end
     return ups
 end
 
---- The upgrades of a ranked candidate list that Best candidates names (the first three), each as
---- { text = `Seta +14`, entry }, and the `+n more` word for the rest (nil when none is left out).
---- Compact mode's My drops card colors each name by class (modules/CompactCards.lua).
---- @param list table MC.Candidates' answer
---- @return table parts, string|nil more
-function MC.TopUpgrades(list)
-    local ups = upgradesOf(list)
-    local parts = {}
-    for i = 1, min(TOP_N, #ups) do
-        local e = ups[i]
-        parts[i] = { text = e.gain and ("%s %s"):format(e.short, WC.Signed(e.gain)) or e.short, entry = e }
-    end
-    local more = #ups > TOP_N and L["+%d more"]:format(#ups - TOP_N) or nil
-    return parts, more
-end
-
-local function topText(list)
-    local parts, more = MC.TopUpgrades(list)
-    local words = {}
-    for i, p in ipairs(parts) do words[i] = p.text end
-    words[#words + 1] = more
-    return table.concat(words, " · ")
-end
-
--- The cell when no one is an upgrade: still checking, or nobody's.
-local function noUpgradeCell(list)
-    local checking = countChecking(list)
-    local c
-    if checking > 0 then
-        c = { text = L["%d checking"]:format(checking), tone = "muted", tip = rankedTip(list) }
-        c.tip[#c.tip + 1] = L["Their gear is being inspected; the list fills in as each read lands."]
-    else
-        c = { text = L["Nobody's upgrade"], tone = "muted", tip = rankedTip(list) }
-        c.tip[#c.tip + 1] = L["It is not an upgrade for anyone whose gear was read. Announce still offers it to the group."]
-    end
-    return c
-end
-
---- The Best candidates column: the top three upgrades (`Seta +14 · Butterz +6 · +1 more`), or why
---- there are none. Hidden for an upgrade for you until you choose to offer it (`revealed`).
---- @param drop table
---- @param revealed boolean|nil the player opened its Offer panel this session
---- @return table cell, with `list` (MC.Candidates' answer) and `hidden`
-function MC.BestCandidates(drop, revealed)
-    local list = MC.Candidates(drop)
-    local c
-    if tradeOf(drop).state == "no" then
-        c = cell(DASH, "muted", L["Best candidates"], L["Not tradeable, so nobody can be offered it."])
-    elseif #list == 0 then
-        c = cell(L["Nobody else in your group"], "muted", L["Best candidates"], L["Join a group to see who it would help."])
-    elseif type(drop.me) == "table" and drop.me.verdict == "upgrade" and not revealed then
-        c = cell(L["Hidden: an upgrade for you"], "muted", L["Best candidates"],
-            L["It is an upgrade for you, so nobody is offered it unless you choose to. Offer shows who it would help."])
-        c.hidden = true
-    else
-        local ups = upgradesOf(list)
-        if #ups == 0 then
-            c = noUpgradeCell(list)
-        else
-            c = { text = topText(list), tone = "good", tip = rankedTip(list) }
-        end
-    end
-    c.list = list
-    return c
-end
-
--- ── your own drop on Group drops (feedback-5 spec §2) ───────────────────────────────────────
+-- ── your own drop on Drops (feedback-5 spec §2) ─────────────────────────────────────────────
 
 local HIDDEN_LINE = L["An upgrade for you: nobody is offered it unless you choose to. Offer shows who it would help."]
 
@@ -443,7 +357,7 @@ function MC.Multiple(drop, revealed, title)
     return c
 end
 
--- Your own drop's Offer button, by the furthest offer sent for it (WindowMine's ToneStates).
+-- Your own drop's Offer button, by the furthest offer sent for it (WindowOwn's ToneStates).
 local OWN_OFFER_LOOK = {
     ready = { text = L["Offer"] }, failed = { text = L["Offer"] },
     queued = { text = L["Queued"], icon = "clock", line = L["An offer of it is queued until chat allows it."] },
@@ -509,7 +423,7 @@ local function look(tbl, state)
     return { text = l.text, icon = l.icon, enabled = l.enabled, state = s }
 end
 
---- The state a My drops button is toned by (feedback-4 spec §1; WindowCells.ActionTone): green
+--- The state an Offer or Announce button is toned by (feedback-4 spec §1; WindowCells.ActionTone): green
 --- `tradedAway` once you traded the drop away, else the button's own state (`ready` for none).
 --- @param outcome string|nil the drop's History outcome
 --- @param state string|nil the button's ask state, or the furthest offer for the drop
@@ -552,29 +466,11 @@ function MC.TradeButton(ok, why, who)
     return { enabled = false, tip = { L["Trade: not now"], why or L["The trade cannot be opened now."] } }
 end
 
---- A row's actions (board 04 note 4): Offer and Announce while it may be traded; a dash with the
---- reason when it cannot (nothing hides a drop, feedback-4 spec §2).
---- @param drop table
---- @param best table MC.BestCandidates' answer
---- @param announce table MC.AnnounceButton's answer
---- @return table { tradeable, offer = { primary, tip }, announce, dash = { tip } }
-function MC.Actions(drop, best, announce)
-    local t = tradeOf(drop)
-    if t.state == "no" then
-        return { tradeable = false,
-            dash = { tip = { L["No offer"], L["Not tradeable: %s"]:format(WC.TradeReason(t, L["you"])) } } }
-    end
-    local ups = upgradesOf(best.list or {})
-    local primary = #ups > 0 and not best.hidden
-    return { tradeable = true, announce = announce,
-        offer = { primary = primary, tip = { L["Offer"], L["Open the panel of who could use it, ranked by their gain, with Offer and Trade for each."] } } }
-end
-
 -- ── the summary and Post my tradeables ──────────────────────────────────────────────────────
 
---- The tab's summary line (board 04's footer): how many of your drops may be traded and the next
---- countdown to run out.
---- @param drops table your own drops on the tab
+--- The Drops strip's summary line (board 04's footer; feedback-5 spec §3): how many of your drops
+--- may be traded and the next countdown to run out.
+--- @param drops table your own drops the tab lists
 --- @param now number GetTime()
 --- @return table { count, next, text, tip }
 function MC.Summary(drops, now)

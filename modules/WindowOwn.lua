@@ -1,9 +1,10 @@
 local _, NS = ...
--- modules/WindowOwn.lua — your own drops on the Group drops tab (feedback-5 spec §2): the session's
--- reveal state, the tone states of a drop's Offer and Announce, and the reads that turn your own
--- drop's cells into what the table, the compact card and the detail card paint.
+-- modules/WindowOwn.lua — your own drops on the Drops tab (feedback-5 spec §2): the session's
+-- reveal state, the tone states of a drop's Offer and Announce, the message buttons' look, and the
+-- reads that turn your own drop's cells into what the table, the compact card and the detail card
+-- paint.
 --
--- ALWAYS LISTED. Group drops lists every drop, your own included (`feed.showOwn` is retired; a
+-- ALWAYS LISTED. Drops lists every drop, your own included (`feed.showOwn` is retired; a
 -- stored value is ignored). On your own drop the Trade cell counts the members it upgrades
 -- (`Yes (2)`), Them and Their eq read `(Multiple)` with every upgrade in their tooltip, and Actions
 -- is Offer, which opens the Offer panel (modules/OfferPanel.lua) and reveals the drop. What each
@@ -11,11 +12,14 @@ local _, NS = ...
 --
 -- THE KEEP? RULE. An upgrade for you is offered to nobody until you open its Offer panel: until then
 -- its count is not drawn and (Multiple) reads `Hidden`. Opening the panel reveals it for the session
--- (WO.Reveal, NS.State.windowOwn); the My drops tab's Best candidates honor the same state.
+-- (WO.Reveal, NS.State.windowOwn).
 --
 -- THE TONES (feedback-4 spec §1). Offer is toned by the furthest offer sent for the drop, Announce
 -- by its own state; both green once you traded the drop away (MineCells.ToneState). WO.ToneStates
--- answers both, for the Drops table, the detail card, the compact card and the My drops tab.
+-- answers both, for the Drops table, the detail card, the compact card and the Offer panel.
+--
+-- THE BUTTONS' LOOK. WO.SetButtonLook paints a message button (the Offer panel's Offer and
+-- Announce to group) by its ask state: label, catalog mark, whether it clicks, and its tone.
 --
 -- THE CLICK. Every action button that may be an Ask or an Offer goes through WO.PressAction: Offer
 -- (`b.offer`) opens the panel, anything else is the Ask (NS.PressAsk).
@@ -77,6 +81,23 @@ end
 --- @return table WindowCells.Ask's shape, with `offer` true
 function WO.Offer(drop)
     return MC.OwnOffer(drop, (WO.ToneStates(drop)))
+end
+
+--- A flat button whose look follows an ask's state (MineCells.OfferButton's or AnnounceButton's):
+--- label, catalog mark, whether it clicks, its tooltip and its tone (`look.toneState`, else the
+--- state: whose move it is, feedback-4 spec §1).
+--- @param b table a Window.TextButton
+--- @param look table { text, icon, enabled, tip, state, toneState }
+function WO.SetButtonLook(b, look)
+    b.label:SetText(look.text)
+    b.art:SetTexture(look.icon and NS.Icon(look.icon) or nil)
+    b.art:SetShown(look.icon ~= nil)
+    b.label:ClearAllPoints()
+    b.label:SetPoint("CENTER", b, "CENTER", look.icon and 7 or 0, 0)
+    b:SetEnabled(look.enabled)
+    b:SetAlpha(look.enabled and 1 or 0.6)
+    b.tipLines, b.state = look.tip, look.state
+    NS.WindowGroup.ToneButton(b, look.toneState or look.state)
 end
 
 --- An action button's click: Offer opens the Offer panel (`b.offer`), else it is the Ask.

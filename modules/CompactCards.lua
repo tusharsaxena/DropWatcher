@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/CompactCards.lua — what compact mode's cards say (compact spec §2 and §3, DW-C1): each
--- card's three lines of text, their tones and their tooltips, for all three tabs, and the group
+-- card's three lines of text, their tones and their tooltips, for both tabs, and the group
 -- header's short form. The same data as the full tables: every piece is a full-view composer's
 -- cell (modules/WindowCells.lua, modules/MineCells.lua, modules/WindowHistory.lua), reshaped, so
 -- the words, the tones and the reason tooltips never differ between the two layouts.
@@ -15,16 +15,13 @@ local _, NS = ...
 -- THE CARDS. A card is three lines; each line's pieces are named fields, left to right, and the
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
---   Group drops  line 1: item (quality color), ilvl (right), ask (Offer on your own drop)
+--   Drops        line 1: item (quality color), ilvl (right), ask (Offer on your own drop)
 --                line 2: looter (class color, ⊕ when cross-realm), slot, type, trade (with the count
 --                        of members it upgrades on your own drop); countdown (right, with its bar:
 --                        MineCells.TradeWindow's, for a drop with a countdown, feedback-5 spec §1) or
 --                        else fresh (right, dimmed)
 --                line 3: you = { label, verdict, eq }, them = { label, verdict, eq } (`(Multiple)`
 --                        on your own drop, feedback-5 spec §2)
---   My drops     line 1: item, ilvl (right), offer (or a dash on a drop that cannot be traded)
---                line 2: forYou = { label, verdict, sub }, trade (the countdown and its bar, right)
---                line 3: candidates (class-colored parts), announce (none on a drop that cannot be traded)
 --   History      line 1: item, ilvl (right), outcome (right, in its tone)
 --                line 2: looter, slot, type, trade; time (right, dimmed)
 --                line 3: you, them
@@ -238,9 +235,9 @@ function CC.Freshness(drop, now)
         tip = { L["Inspect of %s"]:format(who), WC.InspectLine(drop.inspect, who, now) } }
 end
 
--- ── the Group drops card (spec §2) ──────────────────────────────────────────────────────────
+-- ── the Drops card (spec §2) ────────────────────────────────────────────────────────────────
 
--- Line 2's countdown on a Group drops card: the Trade window cell for a drop with a countdown (your
+-- Line 2's countdown on a Drops card: the Trade window cell for a drop with a countdown (your
 -- own or another player's estimate), nil for one with none (not tradeable, bind on equip, not
 -- estimated), which keeps the inspect freshness there.
 local function groupCountdown(drop, now, warnAt)
@@ -259,7 +256,7 @@ local function sides(drop, ctx, now)
         CC.Half(L["Them"], WC.Them(drop, now), WC.TheirEq(drop, ctx.gear, now))
 end
 
---- A Group drops card.
+--- A Drops card.
 --- @param drop table
 --- @param ctx table { now, equipped (your gear snapshot's), gear (the looter's inspect gear),
 ---   askState, askReason, transmogAsk, ownRealm, warnAt (the trade.warnAt default when nil); on your
@@ -281,67 +278,6 @@ function CC.Group(drop, ctx)
         -- line 3
         you = CC.Half(L["You"], WC.Me(drop), WC.MyEq(drop, ctx.equipped)),
         them = them,
-    }
-end
-
--- ── the My drops card (spec §3) ─────────────────────────────────────────────────────────────
-
--- Line 2's countdown: MC.TradeWindow's, but a drop that cannot be traded says so in two words (the
--- reason stays in the tooltip).
-local function countdown(drop, now, warnAt)
-    local c = MC.TradeWindow(drop, now, warnAt)
-    if type(drop.trade) == "table" and drop.trade.state == "no" then c.text = L["Not tradeable"] end
-    return c
-end
-
-local function forYou(drop)
-    local c = MC.ForMe(drop)
-    local sub = c.sub and ("(%s)"):format(c.sub) or nil
-    return { label = L["For you"], verdict = CC.Verdict(c), sub = sub, keep = c.keep }
-end
-
--- Line 3's candidates: the full view's Best candidates cell, with each named upgrade as its own
--- part so the edge can color it by class.
-local function candidates(best)
-    local c = { text = best.text, tone = best.tone, tip = copyTip(best.tip), hidden = best.hidden, parts = {} }
-    if best.tone ~= "good" then return c end
-    local parts, more = MC.TopUpgrades(best.list or {})
-    for i, p in ipairs(parts) do c.parts[i] = { text = p.text, classFile = p.entry.classFile } end
-    c.more = more
-    return c
-end
-
--- Line 1's Offer, or the dash a drop that cannot be traded shows instead.
-local function offerOf(actions)
-    if actions.tradeable then
-        return { text = L["Offer"], primary = actions.offer.primary, enabled = true, tip = copyTip(actions.offer.tip) }
-    end
-    return { text = DASH, dash = true, enabled = false, tip = copyTip(actions.dash.tip) }
-end
-
--- Line 3's Announce; nil on a drop that cannot be traded (line 1's dash says why).
-local function lineThreeAction(actions)
-    if actions.tradeable then return actions.announce end
-    return nil
-end
-
---- A My drops card.
---- @param drop table one of your drops
---- @param ctx table { now, warnAt, revealed (its Offer panel was opened this session),
----   announceState, announceReason }
---- @return table card
-function CC.Mine(drop, ctx)
-    ctx = ctx or {}
-    local best = MC.BestCandidates(drop, ctx.revealed)
-    local actions = MC.Actions(drop, best, MC.AnnounceButton(ctx.announceState, ctx.announceReason))
-    return {
-        kind = "mine", id = drop.id, link = drop.link, tradeable = actions.tradeable,
-        -- line 1
-        item = CC.Item(drop), ilvl = WC.Ilvl(drop), offer = offerOf(actions),
-        -- line 2
-        forYou = forYou(drop), trade = countdown(drop, ctx.now, ctx.warnAt),
-        -- line 3
-        candidates = candidates(best), action = lineThreeAction(actions),
     }
 end
 
@@ -398,25 +334,11 @@ local function lineTwo(card, right)
         card.trade.text, right.text)
 end
 
-local function candidatesText(c)
-    if #c.parts == 0 then return c.text end
-    local words = {}
-    for i, p in ipairs(c.parts) do words[i] = p.text end
-    words[#words + 1] = c.more
-    return table.concat(words, " · ")
-end
-
 local PLAIN = {
     group = function(card)
         local ask = card.ask.offered and card.ask.text or DASH
         return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, ask), lineTwo(card, card.countdown or card.fresh),
             CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) }
-    end,
-    mine = function(card)
-        local fy = card.forYou
-        local two = fy.label .. " " .. CC.VerdictText(fy.verdict) .. (fy.sub and (" " .. fy.sub) or "")
-        return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, card.offer.text),
-            two .. "  " .. card.trade.text, candidatesText(card.candidates) .. (card.action and ("  " .. card.action.text) or "") }
     end,
     history = function(card)
         return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, card.outcome.text), lineTwo(card, card.time),
@@ -425,7 +347,7 @@ local PLAIN = {
 }
 
 --- A card's three lines as plain text, each piece in order (two spaces before a right-aligned one).
---- @param card table CC.Group's, CC.Mine's or CC.History's answer
+--- @param card table CC.Group's or CC.History's answer
 --- @return table { line1, line2, line3 }
 function CC.Plain(card)
     return PLAIN[card.kind](card)
@@ -468,7 +390,7 @@ local function shortHeader(group, shown, age, situationLabel, hidden, full)
     return { text = table.concat(parts, " · "), tip = shortTip(full), cut = cut }
 end
 
---- A Group drops or My drops header's short form (compact spec §2): `Instance · Boss · Difficulty ·
+--- A Drops header's short form (compact spec §2): `Instance · Boss · Difficulty ·
 --- 3m · 2 · Recorder`, its tooltip the long form (WC.Header) and its lines. The chevron says whether
 --- it is collapsed, so the text does not.
 --- @param group table a feed group

@@ -1,5 +1,5 @@
 local _, NS = ...
--- modules/CompactGroup.lua — the Group drops tab in the compact layout (compact spec §2, DW-C2):
+-- modules/CompactGroup.lua — the Drops tab in the compact layout (compact spec §2, DW-C2):
 -- the same entries as the full table, each drop a three-line card under a one-line header.
 --
 -- ONE PANE, TWO LAYOUTS. modules/WindowGroup.lua builds the tab and computes its entries (the
@@ -53,8 +53,8 @@ local _, NS = ...
 -- SWITCHING keeps the expanded card (NS.State.windowGroup is shared) and carries the scroll offset
 -- over as a fraction of the scroll range (CarryScroll), as near as the two layouts allow.
 --
--- THE SHARED KIT. My drops and History draw their cards the same way (modules/CompactMine.lua and
--- modules/CompactHistory.lua, DW-C3), so the frame pieces live here once and are exported: the
+-- THE SHARED KIT. History draws its cards the same way (modules/CompactHistory.lua, DW-C3), so the
+-- frame pieces live here once and are exported: the
 -- pieces and their hit frames (Piece, FontString, MonoString, Background), line 2 and line 3's
 -- halves (BuildLineTwo/PaintLineTwo, BuildHalf/PaintHalf), the pane's own scroll view (BuildView),
 -- the layout switch (Swap, Settle) and the draw loop over a tab's entries (Draw, driven by a
@@ -72,8 +72,8 @@ CG.GAP = 2             -- between two cards, and around the detail card
 CG.LINE_EXTRA = 4      -- a line's height over its text size
 CG.ICON_MIN, CG.ICON_MAX = 24, 48
 CG.QUALITY_W = 2       -- the quality bar at a card's left edge
-CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Group drops card's chevron and the gap before its icon
-CG.BAR_W = 56          -- line 2's countdown bar (as compact My drops drew it)
+CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Drops card's chevron and the gap before its icon
+CG.BAR_W = 56          -- line 2's countdown bar
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
 local SEP = "|cff9e9ea3·|r "
@@ -158,7 +158,7 @@ local function pieceClick(self, button)
     if card and card.onPiece then card.onPiece(card, button) end
 end
 
--- A Group drops card's click expands its detail card (a piece's too).
+-- A Drops card's click expands its detail card (a piece's too).
 local function groupPiece(card, button)
     if button == "LeftButton" then NS.WindowGroup.ToggleExpand(card.dropId) end
 end
@@ -238,7 +238,7 @@ local function buildLineOne(card)
 end
 
 --- Line 2's pieces: looter (and its ⊕), slot, type (feedback-4 spec §3), trade, then `right`
---- (right-aligned: Group drops' inspect freshness, History's time).
+--- (right-aligned: Drops' inspect freshness, History's time).
 --- @param card table
 --- @param right string the right piece's key
 function CG.BuildLineTwo(card, right)
@@ -475,7 +475,8 @@ end
 --- A pane's compact view: its own scroll frame over the pane (above a strip `bottom` pixels tall),
 --- hidden until the first compact repaint, and the card and header pools.
 --- @param pane table
---- @param bottom number|nil the strip under the cards (My drops' summary, History's Clear history)
+--- @param bottom number|nil the strip under the cards (History's Clear history; the Drops strip
+---   moves the view's bottom edge itself, modules/DropsStrip.lua)
 --- @return table cv { scroll, content, cardPool, headPool }
 function CG.BuildView(pane, bottom)
     local cv = {}
@@ -577,7 +578,7 @@ end
 
 --- Draw a tab's entries as headers and cards (every repaint). `spec` is the tab's, built once:
 --- { newCard = fn(content), paint = fn(card, drop, width, m, st), header = fn(e, st) -> { text, tip },
----   toggle = OnClick for its headers (nil keeps Group drops'), after = fn(cv, drop, y, width, st) ->
+---   toggle = OnClick for its headers (nil keeps Drops'), after = fn(cv, drop, y, width, st) ->
 ---   extra height under a card (the detail card), indent = how far a card sits in from its header
 ---   (nil none) }; `st` is the repaint's shared state. A card's `width` is the view's less its indent.
 --- @param cv table
@@ -631,7 +632,7 @@ local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader,
 
 --- Draw the compact layout's cards for `entries` (WindowGroup's refresh, every repaint), or, in the
 --- full layout, hide them (carrying the scroll offset over to the table on the way out).
---- @param pane table the Group drops pane
+--- @param pane table the Drops pane
 --- @param entries table NS.WindowCells.Entries' answer
 --- @param compact boolean whether the compact layout is in force
 function CG.Refresh(pane, entries, compact)
@@ -647,7 +648,7 @@ end
 
 --- Move the drawn cards' countdowns on to the clock (WindowGroup.TickCountdowns, each second): a
 --- card painted with a countdown repaints it alone.
---- @param pane table the Group drops pane
+--- @param pane table the Drops pane
 function CG.TickCountdowns(pane)
     local cv = pane.compactView
     if not (cv and cv.scroll:IsShown()) then return end
@@ -661,12 +662,13 @@ function CG.TickCountdowns(pane)
 end
 
 --- The drawn compact pane, for the suites (WindowGroup.Drawn's shape in the compact layout):
---- { compact = true, rows (the cards), headers, entries, pane, card, cardDropId, empty }.
+--- { compact = true, rows (the cards), headers, entries, pane, card, cardDropId, empty, scroll, summary }.
 --- @param pane table
 --- @return table|nil
 function CG.Drawn(pane)
     local cv = pane.compactView
     if not cv then return nil end
     return { compact = true, rows = cv.cardPool.active, headers = cv.headPool.active, entries = pane.entries,
-        pane = pane, card = cv.card, cardDropId = cv.cardDropId, empty = pane.emptyState, scroll = cv.scroll }
+        pane = pane, card = cv.card, cardDropId = cv.cardDropId, empty = pane.emptyState, scroll = cv.scroll,
+        summary = pane.summaryData }
 end

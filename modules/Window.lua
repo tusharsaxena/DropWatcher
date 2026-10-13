@@ -15,15 +15,19 @@ local _, NS = ...
 -- the window's flat and icon buttons), modules/WindowFilterBar.lua the filter bar (its controls,
 -- each tab's filter state and the pure row predicates), modules/WindowFooter.lua the footer (its
 -- pure composer and its reads), modules/CompactChrome.lua all of it in the compact layout. The tabs'
--- bodies (WindowGroup, WindowMine, WindowHistory) each call Window.RegisterTab(key, { build,
--- refresh }) and are built on the tab's first show; a tab with no body says what it will hold.
+-- bodies (WindowGroup, WindowHistory) each call Window.RegisterTab(key, { build, refresh }) and are
+-- built on the tab's first show; a tab with no body says what it will hold.
+--
+-- TWO TABS: Drops and History (feedback-5 spec §3). The Drops tab's key stays `group`, so its
+-- filter state and the suites keep their key; the retired third tab's key, `mine`, opens Drops
+-- (Window.SelectTab), and your own drops, with their summary strip, are on Drops now.
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
 -- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
 -- many messages arrive; InspectDone repaints the footer alone; TradeTimerTick, its own footer
--- ticker and (while Group drops shows a countdown still running: WindowGroup.LiveCountdown) a
--- countdown ticker every K.COUNTDOWN_TICK second repaint only what shows a countdown: the Group
--- drops tab's Trade window cells (WindowGroup.TickCountdowns, feedback-5 spec §1), the My drops tab
+-- ticker and (while Drops shows a countdown still running: WindowGroup.LiveCountdown) a countdown
+-- ticker every K.COUNTDOWN_TICK second repaint only what shows a countdown: the Drops tab's Trade
+-- window cells and its strip's next expiry (WindowGroup.TickCountdowns, feedback-5 spec §1 and §3)
 -- and the Offer panel. It reads records
 -- through the engine's read-only accessors and never calls an engine action. A button's action goes
 -- through the host handler its slash verb shares (NS.ScanGroup, NS.SetQualityMode,
@@ -49,19 +53,19 @@ local Perf   = NS.Perf
 
 local TAG = "UI"
 
--- The tabs, in strip order (design spec §11.1).
-Window.TABS = { "group", "mine", "history" }
-local TAB_SET = { group = true, mine = true, history = true }
-local TAB_LABEL = { group = L["Group drops"], mine = L["My drops"], history = L["History"] }
+-- The tabs, in strip order (design spec §11.1; feedback-5 spec §3 retired the third, `mine`).
+Window.TABS = { "group", "history" }
+local TAB_SET = { group = true, history = true }
+-- A retired tab's key opens the tab that took its drops.
+local TAB_ALIAS = { mine = "group" }
+local TAB_LABEL = { group = L["Drops"], history = L["History"] }
 local TAB_TIP = {
-    group   = L["Every drop your group receives, one row each, grouped by boss or key run."],
-    mine    = L["Your own drops, with the time left to trade them and who each would help."],
+    group   = L["Every drop your group receives, your own included, one row each, grouped by boss or key run."],
     history = L["Drops from earlier encounters, kept across sessions."],
 }
 -- What a tab with no body yet says, so the window is never blank.
 local TAB_PLACEHOLDER = {
     group   = L["No drops yet. Loot your group receives appears here."],
-    mine    = L["Your tradeable drops appear here, with who each would help."],
     history = L["Drops from earlier encounters appear here."],
 }
 
@@ -75,7 +79,7 @@ local restrictionReason          -- RestrictionChanged's last `reason` (nil: not
 local restrictionSeen = false    -- a RestrictionChanged has arrived since the stand-up
 local instanceSince              -- GetTime() of the last situation change: "This instance"
 local footerTicker
-local countdownTicker            -- each second while Group drops shows a running countdown
+local countdownTicker            -- each second while Drops shows a running countdown
 local repaintPending = false     -- a bus repaint is queued for the next frame
 local repaintCountdown           -- the countdowns' own repaint (defined with the repaints below)
 local syncCountdownTicker        -- starts or stops the countdown ticker (defined with it)
@@ -112,7 +116,7 @@ local function feedName() return NS.State.testMode == true and "test" or "live" 
 function Window.FeedName() return feedName() end
 
 --- What the window shows: its feed (`test` in test mode, else `live`). The simulator's report
---- places its drops by it (SimReport). Group drops lists every drop, your own included
+--- places its drops by it (SimReport). Drops lists every drop, your own included
 --- (feedback-5 spec §2: `feed.showOwn` is retired).
 --- @return table { feed }
 function Window.FeedView() return { feed = feedName() } end
@@ -248,32 +252,19 @@ function Window.BadgeText(reason, queued)
     return NS.WindowTitleBar.BadgeText(reason, queued)
 end
 
---- A tab's label: `My drops · 2` counts the drops of yours the tab lists (the feed on show, less
---- the ones its own filters hide), so it reconciles with what it lists, the
---- simulator's loot step and the Group drops headers (feedback-3 spec §0 and §5).
+--- A tab's label in the full layout: `Drops` or `History`. No count: the Drops tab's strip says
+--- how many of your drops you can still trade (feedback-5 spec §3).
 --- @param key string
---- @param mine number|nil
 --- @return string
-function Window.TabLabel(key, mine)
-    local n = tonumber(mine) or 0
-    if key == "mine" and n > 0 then return L["My drops · %d"]:format(n) end
+function Window.TabLabel(key)
     return TAB_LABEL[key] or tostring(key)
 end
 
 -- ── reads ───────────────────────────────────────────────────────────────────────────────────
 
--- A tab's tooltip: My drops says how many of the drops it lists you can still trade, then names
--- your drops it leaves out (hidden by its filters; feedback-3 spec §5).
+-- A tab's tooltip: its label and what it holds.
 local function tabTip(key)
-    if key ~= "mine" then return TAB_LABEL[key], TAB_TIP[key] end
-    local t = NS.WindowMine.TabTally()
-    local out = { Window.TabLabel(key, t.listed), TAB_TIP[key] }
-    if t.listed > 0 then
-        out[3] = t.tradeable > 0 and L["%d of them you can still trade."]:format(t.tradeable)
-            or L["None of them can be traded now."]
-    end
-    for _, line in ipairs(NS.WindowMine.ExcludedLines(t.excluded, t.filter)) do out[#out + 1] = line end
-    return unpack(out)
+    return TAB_LABEL[key], TAB_TIP[key]
 end
 
 --- RestrictionChanged's last reason; before the first one, the tracker's own answer. Nil while
@@ -363,7 +354,7 @@ local function onDragStop()
     savePoint()
 end
 
---- A flat button in the window's look (the Scan group button's, and each Group drops row's Ask):
+--- A flat button in the window's look (the Scan group button's, and each Drops row's Ask):
 --- the skin's fill and inner line, a catalog mark at the left (`icon` may be nil) and a centered
 --- label (`b.label`, `b.art`). `onClick(b)` runs on a click. Built by modules/WindowTitleBar.lua.
 --- @return table
@@ -543,7 +534,7 @@ end
 --- The view a tab's body draws: its feed, its filter state, the controls it honors and the row
 --- predicate and order that apply them (modules/WindowFilterBar.lua).
 --- @param tab string|nil the active tab when nil
---- Every drop is the tab's (Group drops lists your own too: feedback-5 spec §2); `hiddenBy` says
+--- Every drop is the tab's (Drops lists your own too: feedback-5 spec §2); `hiddenBy` says
 --- which control hides one (FB.HiddenBy), so a header counts every drop.
 --- @return table { tab, feed, filter, honors, ctx, matches = fn(drop), hiddenBy = fn(drop),
 ---   compare = fn(a, b) }
@@ -574,11 +565,10 @@ local function refreshActive()
 end
 
 local function paintTabs()
-    local mine = NS.WindowMine.ListedCount()
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
         local c = active and C.GOLD or C.IDLE
-        tab.label:SetText(NS.CompactChrome.TabText(key, mine))
+        tab.label:SetText(NS.CompactChrome.TabText(key))
         tab.label:SetTextColor(c.r, c.g, c.b)
         tab.underline:SetShown(active)
     end
@@ -638,9 +628,9 @@ end
 Window.ScheduleRepaint = scheduleRepaint
 
 -- A countdown moved (TradeTimerTick, the footer ticker, the countdown ticker): only what shows one
--- repaints, Group drops' Trade window cells or the My drops tab while it is the active tab and the
--- Offer panel while it is open; the rest of the table, the filter bar and the footer are left alone.
--- The countdown ticker runs while the shown, expanded window's Group drops tab has a countdown
+-- repaints, Drops' Trade window cells and its strip while it is the active tab and the Offer panel
+-- while it is open; the rest of the table, the filter bar and the footer are left alone.
+-- The countdown ticker runs while the shown, expanded window's Drops tab has a countdown
 -- still running (WindowGroup.LiveCountdown), and stops with the last one.
 syncCountdownTicker = function()
     local want = frame and frame:IsShown() and not isMinimized() and activeTab == "group"
@@ -656,17 +646,18 @@ end
 repaintCountdown = function()
     if not (frame and frame:IsShown()) or isMinimized() then return syncCountdownTicker() end
     if activeTab == "group" then NS.WindowGroup.TickCountdowns() end
-    if activeTab == "mine" then refreshActive() end
     if NS.OfferPanel and NS.OfferPanel.IsShown() then NS.OfferPanel.Refresh() end
     syncCountdownTicker()
 end
 
 -- ── tabs ────────────────────────────────────────────────────────────────────────────────────
 
---- Show one tab: its pane is built on its first show, and the filter bar takes its state.
---- @param key string `group`, `mine` or `history`
+--- Show one tab: its pane is built on its first show, and the filter bar takes its state. The
+--- retired `mine` opens Drops (`group`; feedback-5 spec §3).
+--- @param key string `group` or `history`
 --- @return boolean changed false for an unknown tab
 function Window.SelectTab(key)
+    key = TAB_ALIAS[key] or key
     if not TAB_SET[key] then return false end
     activeTab = key
     if not frame then return true end
@@ -680,7 +671,7 @@ end
 --- @return string
 function Window.ActiveTab() return activeTab end
 
---- A feature item's body for one tab (WindowGroup, WindowMine, WindowHistory): `spec.build(pane)`
+--- A feature item's body for one tab (WindowGroup, WindowHistory): `spec.build(pane)`
 --- runs on the tab's first show, `spec.refresh(pane, Window.TabContext(tab))` on every repaint
 --- while it is the active tab.
 --- @param key string
@@ -919,7 +910,7 @@ local function listen()
     -- The My eq column reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).
     target:RegisterMessage(M.GEAR_CHANGED, function() scheduleRepaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)
-    -- The My drops tab's and the Offer panel's countdowns (modules/TradeTimer.lua).
+    -- The Drops tab's and the Offer panel's countdowns (modules/TradeTimer.lua).
     target:RegisterMessage(M.TRADE_TIMER_TICK, function() repaintCountdown() end)
     -- A drop nearing its end changes the tab's count and the rows' tones: one whole pass.
     target:RegisterMessage(M.TRADE_TIMER_EXPIRING, function() scheduleRepaint() end)

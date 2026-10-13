@@ -19,14 +19,12 @@ local function textOf(region) return region and region:GetText() end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
-test("chrome: the tabs' compact labels are Group, Mine · n and History; full keeps its own", function()
+test("chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)", function()
     local CC = T.newAddon().CompactChrome
-    assertEqual(CC.TabText("group", 0, true), "Group")
-    assertEqual(CC.TabText("mine", 3, true), "Mine · 3")
-    assertEqual(CC.TabText("mine", 0, true), "Mine")
-    assertEqual(CC.TabText("history", 9, true), "History")
-    assertEqual(CC.TabText("group", 0, false), "Group drops")
-    assertEqual(CC.TabText("mine", 2, false), "My drops · 2")
+    assertEqual(CC.TabText("group", true), "Drops")
+    assertEqual(CC.TabText("history", true), "History")
+    assertEqual(CC.TabText("group", false), "Drops")
+    assertEqual(CC.TabText("history", false), "History")
 end)
 
 test("chrome: TEST MODE and SIMULATION shorten to TEST and SIM", function()
@@ -164,19 +162,18 @@ end)
 
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────
 
-test("chrome: the tabs keep three at a reduced width, short labels, full names in their tooltips", function()
+test("chrome: the two tabs keep a reduced width, their names in their tooltips", function()
     local NS, f = shown("compact")
     local CC = NS.CompactChrome
-    assertEqual(textOf(f.tabs.group.label), "Group")
-    assertEqual(textOf(f.tabs.mine.label), "Mine")
+    assertEqual(textOf(f.tabs.group.label), "Drops")
     assertEqual(textOf(f.tabs.history.label), "History")
-    assertEqual(f.tabs.mine:GetWidth(), CC.TAB_W)
-    assertEqual(f.tabs.history.__points[1][4], 2 * (CC.TAB_W + NS.Constants.WINDOW.TAB_GAP))
-    assertEqual(NS.Window.TooltipOf(f.tabs.group)[1], "Group drops")
-    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[1], "My drops")
+    assertEqual(f.tabs.group:GetWidth(), CC.TAB_W)
+    assertEqual(f.tabs.history.__points[1][4], CC.TAB_W + NS.Constants.WINDOW.TAB_GAP)
+    assertEqual(NS.Window.TooltipOf(f.tabs.group)[1], "Drops")
+    assertEqual(NS.Window.TooltipOf(f.tabs.history)[1], "History")
     NS.SetWindowMode("full")
-    assertEqual(textOf(f.tabs.group.label), "Group drops")
-    assertEqual(f.tabs.mine:GetWidth(), NS.Constants.WINDOW.TAB_W)
+    assertEqual(textOf(f.tabs.group.label), "Drops")
+    assertEqual(f.tabs.group:GetWidth(), NS.Constants.WINDOW.TAB_W)
 end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
@@ -224,8 +221,8 @@ test("chrome: Filters opens the panel of the full bar's own dropdowns, and a pic
     assertEqual(textOf(p.filters.label), "Filters · 2", "Sort is not counted")
     p.filters:__fire("OnClick")
     assertFalse(p.panel:IsShown(), "a second click closes it")
-    NS.Window.SelectTab("mine")
-    assertEqual(textOf(p.filters.label), "Filters", "My drops starts from its own state")
+    NS.Window.SelectTab("history")
+    assertEqual(textOf(p.filters.label), "Filters · 1", "History starts from its own state (Content: All)")
     assertTrue(f:IsShown())
 end)
 

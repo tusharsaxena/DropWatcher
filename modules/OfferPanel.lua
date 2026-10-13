@@ -310,7 +310,7 @@ local function paintButtons(row, e, drop)
     row.trade.dropId, row.trade.target = drop.id, e.name
     local look = MC.OfferButton(NS.Asks.StateOf("offer", e.name, drop.id), nil, e.short)
     look.toneState = MC.ToneState(NS.History.OutcomeOf(drop.id), look.state)
-    NS.WindowMine.SetButtonLook(row.offer, look)
+    NS.WindowOwn.SetButtonLook(row.offer, look)
     local ok, reason = NS.TradeHelper.CanGive(drop.id, e.name)
     local tb = MC.TradeButton(ok, NS.TradeHelper.ReasonText(reason), e.short)
     row.trade:SetEnabled(tb.enabled)
@@ -353,7 +353,7 @@ local function paintFoot(p, drop, n)
     local look = MC.AnnounceButton(state, reason)
     look.toneState = MC.ToneState(NS.History.OutcomeOf(drop.id), look.state)
     local tradeable = drop.trade and drop.trade.state ~= "no"
-    NS.WindowMine.SetButtonLook(p.announce, look)
+    NS.WindowOwn.SetButtonLook(p.announce, look)
     p.announce.label:SetText(look.state == "ready" and L["Announce to group"] or look.text)
     if not tradeable then
         p.announce:SetEnabled(false)

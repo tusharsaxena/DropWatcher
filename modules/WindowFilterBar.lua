@@ -20,13 +20,13 @@ local _, NS = ...
 -- THE CHARACTER DROPDOWN (feedback-2 spec §4, FB2-6), like Loot History's: All, Current, then each
 -- character Drop Watcher has a record for (modules/CharFilter.lua builds the rows and the
 -- predicate). Multi-select, Current by default, on every tab. History filters its kept drops by who
--- saw them; Group drops and My drops list only you, and every drop on them is yours (`charScope`
--- `session`), so their filter never hides one.
+-- saw them; Drops lists only you, and every drop on it is yours (`charScope` `session`), so its
+-- filter never hides one.
 --
 -- THE QUALITY CONTROL IS NOT A VIEW FILTER: it shows the feed's minimum-quality mode in force (the
 -- situation's override, else `feed.quality.mode`) with its threshold, `Quality: Rare+` (design spec
 -- §6.2), and choosing a mode goes through NS.SetQualityMode (core/DropWatcher.lua), the handler the
--- settings row shares. It is the same on every tab, and only the Group drops tab honors it.
+-- settings row shares. It is the same on every tab, and only the Drops tab honors it.
 --
 -- PURE: IsInteresting, IsTradeableMine, Matches, HiddenBy, ViewLabel and Comparator take plain
 -- tables and read nothing else, so the suites drive them case by case. Build, Sync and Layout are
@@ -62,7 +62,6 @@ local ALL = { view = true, quality = true, content = true, search = true, sort =
     charScope = "session", views = ALL_VIEWS }
 FB.HONORS = {
     group   = ALL,
-    mine    = { content = true, search = true, sort = true, char = true, charScope = "session", views = {} },
     history = { view = true, content = true, search = true, sort = true, char = true,
                 views = { interesting = true, usable = true, upgrade = true } },
 }
@@ -108,7 +107,7 @@ local VIEW_TIP = {
 local TIPS = {
     content = { L["Content"], L["This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."] },
     search = { L["Search"], L["Show only the drops whose item or looter name contains this text."] },
-    char = { L["Character"], L["Show only the drops these characters saw. History is kept for every character on the account; Group drops and My drops hold this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] },
+    char = { L["Character"], L["Show only the drops these characters saw. History is kept for every character on the account; Drops holds this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] },
 }
 local GRAYED = L["This tab does not use this filter."]
 local GRAY = { 0.5, 0.5, 0.5 }
@@ -272,7 +271,7 @@ function FB.IsInteresting(drop)
     return LOOTER_GIVES[verdictOf(drop.them)] == true and TRADEABLE[state] == true
 end
 
---- Your own drop whose trade estimate is `yes` or `likely` (the `My drops · n` count).
+--- Your own drop whose trade estimate is `yes` or `likely` (what Post my tradeables posts).
 --- @param drop table
 --- @return boolean
 function FB.IsTradeableMine(drop)

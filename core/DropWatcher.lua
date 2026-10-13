@@ -236,7 +236,7 @@ local function editFirst(kind, target, dropID, opts)
     return NS.DetailCard.OpenEditor(dropID, kind, target) ~= nil
 end
 
---- Ask a drop's looter for it (design spec §9.2): the Group drops row's Ask button and the detail
+--- Ask a drop's looter for it (design spec §9.2): the Drops row's Ask button and the detail
 --- card's, through the messaging edge's Press, so a queued ask is canceled by a second click. A
 --- refusal is said in chat; a send confirms itself (modules/Asks.lua). Refused while stood down.
 --- With `messages.editFirst` on, a press without `opts` opens the Edit message box instead
@@ -357,8 +357,8 @@ function NS.PressOffer(dropID, target, opts)
     return state, reason
 end
 
---- Announce one of your drops to the group (design spec §9.2, §11.4): a My drops row's Announce and
---- the Offer panel's Announce to group, through the messaging edge's Press. A refusal is said in
+--- Announce one of your drops to the group (design spec §9.2, §11.4): the Offer panel's Announce to
+--- group, through the messaging edge's Press. A refusal is said in
 --- chat. Refused while stood down. With `messages.editFirst` on, a press without `opts` opens the
 --- Edit message box instead (state `editing`). Post my tradeables never does: its lines are cut to
 --- fit the chat limit, so they are sent as they stand.

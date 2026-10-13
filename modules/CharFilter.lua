@@ -17,9 +17,9 @@ local _, NS = ...
 -- your key once it is.
 --
 -- THE TABS. History is account-wide, so its menu lists every recorder in the log and its filter
--- hides the others' drops. Group drops and My drops hold this session's drops, which are only ever
--- yours: their menu lists you alone beside All and Current, and every drop on them counts as yours
--- (`session` scope), so their filter never hides one.
+-- hides the others' drops. Drops holds this session's drops, which are only ever yours: its menu
+-- lists you alone beside All and Current, and every drop on it counts as yours (`session` scope), so
+-- its filter never hides one.
 --
 -- PURE: Key, IconMarkup, Canonical, Passes, IsCurrent, Label, Characters and Options take plain
 -- tables and read nothing else; test_char_filter drives them. Recorder, CurrentKey and Stamp are the

@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/TradeHelper.lua — hands one of your drops to a group member, or opens a trade with one
--- (design spec §4). Called only from a click (the My drops tab and the Offer panel, DW-33); it
+-- (design spec §4). Called only from a click (the Offer panel's Trade, DW-33); it
 -- registers no event and keeps no timer.
 --
 -- GIVE. Give(dropID, target) finds the drop's bag item by its GUID (the trade timer's entry,

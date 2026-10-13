@@ -20,7 +20,7 @@ local PINNED = {
 -- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down),
 -- one entry per receiver: a message two modules hear is listed twice (the window, DW-30, hears
 -- DropAdded with the trade timer, InspectDone with the feed and RestrictionChanged with the asks;
--- DW-33 added its TradeTimerTick, beside the feed's, and TradeTimerExpiring for the My drops tab;
+-- DW-33 added its TradeTimerTick, beside the feed's, and TradeTimerExpiring for the tab of your drops;
 -- DW-51's history hears DropAdded, DropUpdated and AskStateChanged, and its tab HistoryChanged;
 -- DW-52's toast hears the same three as the history; DW-54's auto-ask hears those three,
 -- HistoryChanged and, since the M6 review, RestrictionChanged; DW-83's window hears GearChanged,

@@ -1,14 +1,14 @@
 local _, NS = ...
--- modules/WindowRows.lua — the drop tables' row metrics and text size, shared by all three tabs
--- (feedback-2 spec §8, FB2-9): Group drops, My drops and History read their rows' height and font
+-- modules/WindowRows.lua — the drop tables' row metrics and text size, shared by both tabs
+-- (feedback-2 spec §8, FB2-9): Drops and History read their rows' height and font
 -- from the Window page's Layout rows, `window.rowHeight` and `window.fontSize`.
 --
 -- LIKE KA0S LOOT HISTORY. Its table draws `GameFontHighlightSmall` at the template's own size in
 -- 18-pixel rows (../LootHistory/modules/BrowserTable.lua, ROW_H_DEFAULT). So `window.fontSize`'s
 -- default is 0, "Default": the cells keep their template's own size, and a size from FONT_MIN to
 -- FONT_MAX replaces it (a stored 1 to 7 reads as FONT_MIN). The row height defaults to 18; the item
--- button is ROW_ICON at most and 2 pixels under a shorter row's height. A My drops row, and a Group
--- drops row while its Trade window column shows (feedback-5 spec §1), is MINE_EXTRA taller than the
+-- button is ROW_ICON at most and 2 pixels under a shorter row's height. A Drops row while its Trade
+-- window column shows (feedback-5 spec §1) is MINE_EXTRA taller than the
 -- row height (its countdown bar sits under the text), and tall enough for its two lines of text at
 -- the chosen size.
 --
@@ -51,7 +51,8 @@ function WR.IconSize(height)
     return min(K.ROW_ICON, height - 2)
 end
 
---- A My drops row's height: the row height plus the room its countdown bar needs, and never less
+--- A Drops row's height while its Trade window column shows: the row height plus the room its
+--- countdown bar needs, and never less
 --- than its two lines of text at `fontSize` (nil = Default, the template's MINE_FONT) need.
 --- @param height number
 --- @param fontSize number|nil

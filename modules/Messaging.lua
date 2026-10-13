@@ -144,7 +144,7 @@ function M.StateOf(book, kind, target, dropID)
 end
 
 --- The furthest state any `kind` ask for one drop has reached, whoever it went to: `sent`, else
---- `queued`, else `failed`, else `ready` (My drops' Offer button: whether an offer is out;
+--- `queued`, else `failed`, else `ready` (your own drop's Offer button: whether an offer is out;
 --- feedback-4 spec §1).
 --- @param book table
 --- @param kind string

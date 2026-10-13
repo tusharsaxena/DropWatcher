@@ -8,7 +8,7 @@
 --     trade state, the feed's counts, the history and the sends exactly as they were.
 --   * EVERY STATE RENDERED: test mode puts every state on a compact card, and each card says what the
 --     full row says (the verdicts, the trade word, the ask, the outcome; the trade reason in its
---     tooltip), across Group drops, My drops and History.
+--     tooltip), across Drops (your own drops' countdowns and Offer among them) and History.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
@@ -30,7 +30,7 @@ local function sameList(a, b, what)
     for i = 1, math.max(#a, #b) do assertEqual(b[i], a[i], what .. ": item " .. i) end
 end
 
-local DRAWN = { group = "WindowGroup", mine = "WindowMine", history = "WindowHistory" }
+local DRAWN = { group = "WindowGroup", history = "WindowHistory" }
 
 -- A drawn row's identity: its drop id, or on History its kept entry (the same table in both
 -- layouts; History's full rows carry no drop id).
@@ -86,8 +86,8 @@ end
 -- Every tab under every filter: the same drops in both layouts. Answers how many drops each tab
 -- showed under some filter, so a case knows it compared something.
 local function sweep(NS, what)
-    local shown = { group = 0, mine = 0, history = 0 }
-    for _, tab in ipairs({ "group", "mine", "history" }) do
+    local shown = { group = 0, history = 0 }
+    for _, tab in ipairs({ "group", "history" }) do
         for _, f in ipairs(FILTERS) do
             resetFilters(NS)
             if f[2] ~= nil then NS.WindowFilterBar.Set(tab, f[1], f[2]) end
@@ -119,8 +119,7 @@ end
 test("modes: test mode's samples are the same drops in both layouts, on every tab, under every filter", function()
     local NS = testWindow()
     local shown = sweep(NS, "test mode")
-    assertTrue(shown.group >= 6, "Group drops compared " .. shown.group)
-    assertTrue(shown.mine >= 1, "My drops compared " .. shown.mine)
+    assertTrue(shown.group >= 6, "Drops compared " .. shown.group)
     assertTrue(shown.history >= 1, "History compared " .. shown.history)
 end)
 
@@ -132,8 +131,6 @@ test("modes: a collapsed group, an expanded drop and your own drops shown are th
     NS.WindowGroup.ToggleGroup(groups[1].key, true)
     assertSameSet(NS, "group", "expanded")
     assertSameSet(NS, "group", "your own drops listed")   -- always (feedback-5 spec §2)
-    NS.WindowMine.ToggleGroup(groups[1].key, false)
-    assertSameSet(NS, "mine", "collapsed")
     NS.Window.SelectTab("history")
     local hist = NS.WindowHistory.Drawn()
     NS.WindowHistory.ToggleGroup(hist.headers[1].groupKey, hist.headers[1].collapsed)
@@ -184,8 +181,7 @@ test("modes: a simulated run is the same drops in both layouts, on every tab, un
     for _, name in ipairs({ "dungeon", "world" }) do
         local NS = simRun(name)
         local shown = sweep(NS, "sim " .. name)
-        assertTrue(shown.group > 0, name .. ": Group drops compared " .. shown.group)
-        assertTrue(shown.mine > 0, name .. ": My drops compared " .. shown.mine)
+        assertTrue(shown.group > 0, name .. ": Drops compared " .. shown.group)
         assertTrue(shown.history > 0, name .. ": History compared " .. shown.history)
     end
 end)
@@ -216,7 +212,7 @@ test("modes: switching layouts on every tab changes nothing the engine recorded,
         if case[1] == "test" then NS, m = testWindow() else NS, m = simRun(case[2]) end
         local before = snapshot(NS, m, case[1])
         for _ = 1, 3 do
-            for _, tab in ipairs({ "group", "mine", "history" }) do
+            for _, tab in ipairs({ "group", "history" }) do
                 drawnIn(NS, "compact", tab)
                 drawnIn(NS, "full", tab)
             end
@@ -249,7 +245,7 @@ local function askWord(a, dash)
     return textOf(dash)
 end
 
-test("modes: test mode's Group drops cards show every state, each saying what its full row says", function()
+test("modes: test mode's Drops cards show every state, each saying what its full row says", function()
     local NS = testWindow()
     local full = fullPieces(NS, "group", function(c)
         return { me = textOf(c.me.text), them = textOf(c.them.text), trade = textOf(c.trade.text),
@@ -282,36 +278,34 @@ test("modes: test mode's Group drops cards show every state, each saying what it
     hasAll(seen.eq, { "(…)", "(range)", "(combat)", "(!)", "(290)", "(300)" }, "their worn levels")
 end)
 
-test("modes: test mode's My drops cards show every countdown, Offer and Announce state, as the full rows", function()
+test("modes: test mode's own drops on Drops show their countdown and Offer as the full rows", function()
     local NS = testWindow()
-    NS.WindowFilterBar.Set("mine", "view", {})
-    local full = fullPieces(NS, "mine", function(c)
-        return { forMe = textOf(c.forMe.text), best = textOf(c.best.text), trade = textOf(c.trade.text),
-            tradeTip = c.trade.tipLines }
+    NS.WindowFilterBar.Set("group", "view", {})
+    local full = fullPieces(NS, "group", function(c, r)
+        return { mine = r.drop.isMine == true, window = textOf(c.tradeWindow.text),
+            windowTip = c.tradeWindow.tipLines, offer = askWord(c.actions.ask, c.actions.dash),
+            isOffer = c.actions.ask.offer == true }
     end)
-    local seen = { trade = {}, offer = {}, action = {} }
-    local cards = compactCards(NS, "mine")
-    assertEqual(#cards, 5, "every sample of yours")
-    for _, card in ipairs(cards) do
-        local c, f = card.cells, full[card.dropId]
-        local what = "card " .. tostring(card.dropId)
-        assertEqual(textOf(c.forYou.text), f.forMe, what .. ": For you")
-        assertEqual(plain(textOf(c.candidates.text)), f.best, what .. ": candidates")
-        local trade = textOf(c.trade.text)
-        if card.dash:IsShown() then
-            assertEqual(trade, "Not tradeable", what .. ": a dead drop says so")
-        else
-            assertEqual(trade, f.trade, what .. ": countdown")
+    local seen = { window = {}, offer = {} }
+    local n = 0
+    for _, card in ipairs(compactCards(NS, "group")) do
+        local f = full[card.dropId]
+        if f and f.mine then
+            n = n + 1
+            local what = "card " .. tostring(card.dropId)
+            assertEqual(askWord(card.ask, card.dash), f.offer, what .. ": Offer")
+            assertEqual(card.ask.offer == true, f.isOffer, what .. ": your own drop's button is Offer")
+            if card.cells.countdown.text:IsShown() then
+                assertEqual(textOf(card.cells.countdown.text), f.window, what .. ": countdown")
+                assertEqual(card.cells.countdown.hit.tipLines[1], f.windowTip[1], what .. ": the countdown's reason")
+            end
+            seen.window[f.window:gsub("%d", "9")] = true
+            seen.offer[f.offer] = true
         end
-        assertEqual(c.trade.hit.tipLines[1], f.tradeTip[1], what .. ": the countdown's reason")
-        seen.trade[trade:gsub("%d", "9")] = true
-        seen.offer[card.offer:IsShown() and "offer" or "dash"] = true
-        seen.action[card.announce:IsShown() and "announce" or "none"] = true
     end
-    hasAll(seen.trade, { "9:99:99", "~9:99:99", "No limit (BoE)", "Not tradeable" },
-        "countdown")
-    hasAll(seen.offer, { "offer", "dash" }, "Offer")
-    hasAll(seen.action, { "announce", "none" }, "Announce, or nothing on a dead drop")
+    assertEqual(n, 5, "every sample of yours")
+    hasAll(seen.window, { "9:99:99", "~9:99:99", "No limit (BoE)" }, "Trade window")
+    hasAll(seen.offer, { "Offer", "–" }, "Offer, or the dash of a dead drop")
 end)
 
 test("modes: test mode's History cards show every outcome, each saying what its full row says", function()

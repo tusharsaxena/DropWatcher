@@ -1,4 +1,4 @@
--- tests/test_compact_group.lua — the Group drops tab in the compact layout (compact spec §2, DW-C2):
+-- tests/test_compact_group.lua — the Drops tab in the compact layout (compact spec §2, DW-C2):
 -- the card's metrics and the scroll carry-over (pure), the stacked detail card's flow (pure), then
 -- the cards drawn headless under the mock: pooled three-line cards that say what NS.CompactCards
 -- says, the one-line headers, the stacked detail card inline, Ask, the text size, and

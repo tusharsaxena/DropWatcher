@@ -219,14 +219,12 @@ test("filter bar: the Character dropdown sits after Content, multi-select, Curre
     assertEqual(NS.Window.TooltipOf(c.char)[1], "Character")
 end)
 
-test("filter bar: the session tabs list All, Current and you alone; History every recorder", function()
+test("filter bar: Drops lists All, Current and you alone; History every recorder", function()
     local NS = shown()
     seedHistory(NS)
     local c = NS.WindowFilterBar.Controls()
     assertEqual(values(c.char), "all,current," .. ME)
-    NS.Window.SelectTab("mine")
-    assertTrue(c.char:IsEnabled(), "My drops honors it")
-    assertEqual(values(c.char), "all,current," .. ME)
+    assertTrue(c.char:IsEnabled(), "Drops honors it")
     NS.Window.SelectTab("history")
     assertEqual(values(c.char), "all,current,Alt-Testrealm," .. ME, "unknown is not listed")
     local alt = c.char._options[3]
@@ -267,7 +265,7 @@ test("filter bar: a drop the Character filter hides is named in the header's rea
     assertEqual(FB.HiddenBy({}, st, ctx, FB.HONORS.history), "char", "no recorder: hidden under Current")
     assertNil(FB.HiddenBy({ seenBy = ME }, st, ctx, FB.HONORS.history))
     assertNil(FB.HiddenBy({ seenBy = "Alt-Testrealm" }, st, ctx, FB.HONORS.group), "a session tab's drops are yours")
-    assertEqual(FB.HiddenBy({}, { char = { ["Alt-Testrealm"] = true } }, ctx, FB.HONORS.mine), "char",
+    assertEqual(FB.HiddenBy({}, { char = { ["Alt-Testrealm"] = true } }, ctx, FB.HONORS.group), "char",
         "a session tab's drop is yours, never an alt's")
     assertEqual(FB.ReasonLabel("char", st), "Character: Current")
 end)
@@ -285,7 +283,7 @@ test("filter bar: a Character selection is a set of keys; anything else is refus
     assertFalse(FB.Set("history", "char", { [ME] = true }), "the same set changes nothing")
 end)
 
-test("filter bar: Group drops keeps every drop under any Character choice it offers", function()
+test("filter bar: Drops keeps every drop under any Character choice it offers", function()
     local NS = shown()
     local c = NS.WindowFilterBar.Controls()
     local tc = NS.Window.TabContext("group")

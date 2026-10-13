@@ -1,5 +1,5 @@
 local _, NS = ...
--- modules/WindowGroup.lua — the Group drops table (design spec §11.1-§11.2, boards 01, 03 and 06):
+-- modules/WindowGroup.lua — the Drops table (design spec §11.1-§11.2, boards 01, 03 and 06):
 -- every drop the group receives, one row each, under a collapsible header per encounter or key run.
 --
 -- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Type (Cloth … Plate, Jewelry,
@@ -28,12 +28,16 @@ local _, NS = ...
 -- modules/WindowRows.lua at each repaint (18 pixels and the template's own size by default, like
 -- Ka0s Loot History's table; feedback-2 spec §8, FB2-9); the headers, the column labels and the
 -- buttons keep their own. While the Trade window column is shown a row is the room its countdown
--- bar needs taller (WindowRows' mineHeight, as My drops' rows were), so the text and the bar never
--- overlap.
+-- bar needs taller (WindowRows' mineHeight), so the text and the bar never overlap.
+--
+-- THE STRIP (feedback-5 spec §3). Under the table (or the compact cards), above the footer, while at
+-- least one of your drops the tab lists can be traded: `n tradeable · next expiry 0:08:41` and Post
+-- my tradeables (modules/DropsStrip.lua, built with the pane and repainted with it).
 --
 -- THE COUNTDOWNS MOVE each second while a shown row has one (feedback-5 spec §1): Window.lua's
 -- countdown ticker, its footer ticker and TradeTimerTick call WG.TickCountdowns, which repaints the
--- Trade window cells alone (and the compact cards' countdowns), never the whole table;
+-- Trade window cells alone (and the compact cards' countdowns) and the strip's next expiry, never
+-- the whole table;
 -- WG.LiveCountdown tells Window.lua whether the ticker is still wanted.
 --
 -- THE ORDER. NS.WindowCells.Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
@@ -781,6 +785,7 @@ local function build(pane)
     pane.card = NS.DetailCard.Build(content)
     pane.emptyState = buildEmpty(pane)
     pane.entries = {}
+    NS.DropsStrip.Build(pane)
 end
 
 local function paintHeads(pane, cols, layout)
@@ -886,6 +891,7 @@ local function refresh(pane, ctx)
     if not compact then drawTable(pane, entries) end
     NS.CompactGroup.Refresh(pane, entries, compact)
     pane.entries = entries
+    NS.DropsStrip.Paint(pane, ctx, compact)
     paintEmpty(pane, entries, ctx, compact)
 end
 
@@ -915,11 +921,13 @@ function WG.LiveCountdown()
 end
 
 --- Move every shown countdown on to the clock: the Trade window cells of the drawn rows, or the
---- compact cards' countdowns; nothing else is repainted.
+--- compact cards' countdowns, and the strip's next expiry; nothing else is repainted.
 function WG.TickCountdowns()
     local pane = shownPane()
     if not pane then return end
-    if WG.IsCompact() then return NS.CompactGroup.TickCountdowns(pane) end
+    local compact = WG.IsCompact()
+    NS.DropsStrip.Tick(pane, compact)
+    if compact then return NS.CompactGroup.TickCountdowns(pane) end
     if not (pane.layout and pane.layout.tradeWindow) then return end
     local now, warnAt, size = GetTime(), NS.TradeTimer.WarnAt(), NS.WindowRows.FontSize(NS.Setting("window.fontSize"))
     for _, row in ipairs(pane.rowPool.active) do
@@ -928,8 +936,8 @@ function WG.TickCountdowns()
 end
 
 --- The drawn pane's rows and headers, in order, for the suites: { headers, rows, entries, columns,
---- pane, card, cardDropId, empty } (`cardDropId` nil while no card is open on screen; `empty` the
---- empty state's frame).
+--- pane, card, cardDropId, empty, summary } (`cardDropId` nil while no card is open on screen;
+--- `empty` the empty state's frame; `summary` the strip's MineCells.Summary, nil while it is hidden).
 --- @return table|nil
 function WG.Drawn()
     local f = NS.Window.Frame()
@@ -938,7 +946,7 @@ function WG.Drawn()
     if WG.IsCompact() then return NS.CompactGroup.Drawn(pane) end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
         columns = pane.columns, pane = pane, card = pane.card, cardDropId = pane.cardDropId,
-        empty = pane.emptyState }
+        empty = pane.emptyState, summary = pane.summaryData }
 end
 
 NS.Window.RegisterTab("group", { build = build, refresh = refresh })

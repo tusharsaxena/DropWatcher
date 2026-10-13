@@ -111,7 +111,8 @@ end)
 
 -- ── the feature verbs (design spec §12.3) ───────────────────────────────────────────────────
 
-local FEATURE = { "show", "hide", "toggle", "test", "scan", "clear", "history", "mine", "compact", "full",
+-- `mine` went with its tab (feedback-5 spec §3): your own drops are on Drops.
+local FEATURE = { "show", "hide", "toggle", "test", "scan", "clear", "history", "compact", "full",
     "situation", "offer", "add" }
 
 local function itemLink(id, name)
@@ -224,21 +225,23 @@ test("slash: `clear` closes an Offer panel whose drop it took", function()
     assertFalse(NS.OfferPanel.IsShown())
 end)
 
-test("slash: `history` and `mine` open the window on that tab, expanded", function()
-    local NS = T.enableAddon()
+test("slash: `history` opens the window on that tab, expanded; `mine` is no longer a verb", function()
+    local NS, _, m = T.enableAddon()
+    NS.Window.SetMinimized(true)
     NS.addon:OnSlashCommand("history")
     assertTrue(NS.IsWindowShown()); assertEqual(NS.Window.ActiveTab(), "history")
-    NS.Window.SetMinimized(true)
-    NS.addon:OnSlashCommand("mine")
-    assertEqual(NS.Window.ActiveTab(), "mine")
     assertFalse(NS.Window.IsMinimized(), "a tab verb expands the window")
+    for _, c in ipairs(NS.COMMANDS) do assertTrue(c[1] ~= "mine", "no `mine` verb") end
+    m.prints = {}
+    NS.addon:OnSlashCommand("mine")
+    assertEqual(NS.Window.ActiveTab(), "history", "an unknown verb opens nothing")
 end)
 
 test("slash: a tab verb the Visibility setting keeps hidden says so", function()
     local NS, _, m = T.enableAddon()
     NS.SchemaRuntime.Set("visibility", "never")
     m.prints = {}
-    NS.addon:OnSlashCommand("mine")
+    NS.addon:OnSlashCommand("history")
     assertFalse(NS.IsWindowShown())
     assertTrue(printed(m, "Visibility setting"), tostring(m.prints[1]))
 end)
@@ -283,7 +286,7 @@ test("slash: `offer` opens the panel on your newest drop of that item", function
     local newest = NS.LootFeed.Add(BAND)
     NS.addon:OnSlashCommand("offer " .. BAND)
     assertTrue(NS.OfferPanel.IsShown()); assertEqual(NS.OfferPanel.DropId(), newest)
-    assertEqual(NS.Window.ActiveTab(), "mine")
+    assertEqual(NS.Window.ActiveTab(), "group", "your drops are on Drops")
 end)
 
 test("slash: `offer` of a bag item the feed never saw adds it as yours first", function()
@@ -308,7 +311,7 @@ end)
 test("slash: every feature verb is refused while disabled", function()
     local NS, m = equipped()
     NS.addon:OnSlashCommand("disable")
-    for _, verb in ipairs({ "scan", "clear", "history", "mine", "compact", "full", "situation", "offer", "add" }) do
+    for _, verb in ipairs({ "scan", "clear", "history", "compact", "full", "situation", "offer", "add" }) do
         m.prints = {}
         NS.addon:OnSlashCommand(verb .. " " .. BAND)
         assertTrue(m.prints[1] ~= nil and m.prints[1]:find("is disabled", 1, true) ~= nil, verb)

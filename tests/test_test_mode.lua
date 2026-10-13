@@ -345,7 +345,7 @@ test("test mode: combat and the stand-down both empty the test feed", function()
     assertEqual(#NS.LootFeed.Drops("test"), 0)
 end)
 
-test("test mode: the Group drops tab shows View: All while on, and the player's View comes back", function()
+test("test mode: the Drops tab shows View: All while on, and the player's View comes back", function()
     local NS = T.enableAddon()
     local FB = NS.WindowFilterBar
     FB.Set("group", "view", { interesting = true, usable = true })
@@ -498,14 +498,19 @@ test("window: a sample's Their eq shows its own worn item, and its detail card i
     assertEqual(NS.WindowGroup.Drawn().cardDropId, crown.dropId)
 end)
 
-test("window: the My drops tab counts your samples, the tradeable ones in its tooltip, and draws them all", function()
+test("window: Drops lists your samples with the others, and its strip counts the tradeable ones", function()
     local NS = shownTest()
-    NS.Window.SelectTab("mine")
-    local f = NS.Window.Frame()
-    assertEqual(textOf(f.tabs.mine.label), "My drops · 5")
-    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[3], "4 of them you can still trade.")
-    local drawn = NS.WindowMine.Drawn()
-    assertEqual(#drawn.rows, 5)
+    NS.WindowFilterBar.Set("group", "view", {})
+    local drawn = NS.WindowGroup.Drawn()
+    local mine = 0
+    for _, e in ipairs(drawn.entries) do
+        if e.kind == "drop" and e.drop.isMine then mine = mine + 1 end
+    end
+    assertEqual(#drawn.pane.ownDrops, 5, "every sample of yours is listed")
+    assertTrue(mine <= 5)
+    assertEqual(drawn.summary.count, 4, "the tradeable ones")
+    assertTrue(drawn.pane.summary:IsShown())
+    assertEqual(textOf(NS.Window.Frame().tabs.group.label), "Drops")
 end)
 
 test("window: the empty state comes back once test mode ends with nothing in the live feed", function()
@@ -519,17 +524,18 @@ end)
 
 -- ── no trailing ellipsis (FB-11) ────────────────────────────────────────────────────────────
 
-test("labels: My drops says Offer, and no cell of its rows ends in an ellipsis", function()
+test("labels: your own rows on Drops say Offer, and no cell of theirs ends in an ellipsis", function()
     local NS = shownTest()
-    NS.Window.SelectTab("mine")
+    NS.WindowFilterBar.Set("group", "view", {})
     local offers = 0
-    for _, r in ipairs(NS.WindowMine.Drawn().rows) do
+    for _, r in ipairs(NS.WindowGroup.Drawn().rows) do
         local a = r.cells.actions
-        if a.offer:IsShown() then
-            assertEqual(textOf(a.offer.label), "Offer")
+        if a.ask:IsShown() and a.ask.offer then
+            assertEqual(textOf(a.ask.label), "Offer")
             offers = offers + 1
         end
-        for key, cell in pairs(r.cells) do
+        -- (another player's Their eq reads `…` while their gear is read: not a cut label)
+        for key, cell in pairs(r.drop.isMine and r.cells or {}) do
             local text = type(cell) == "table" and cell.text and textOf(cell.text)
             if type(text) == "string" then
                 assertFalse(text:find("…$") ~= nil, ("%s ends in an ellipsis: %s"):format(key, text))
@@ -540,7 +546,7 @@ test("labels: My drops says Offer, and no cell of its rows ends in an ellipsis",
 end)
 
 test("labels: no button the addon builds is labeled with a trailing ellipsis", function()
-    local files = { "modules/WindowTitleBar.lua", "modules/WindowGroup.lua", "modules/WindowMine.lua",
+    local files = { "modules/WindowTitleBar.lua", "modules/WindowGroup.lua", "modules/DropsStrip.lua",
         "modules/OfferPanel.lua", "modules/WindowHistory.lua", "modules/DetailCard.lua", "modules/Toast.lua" }
     local buttons = 0
     for _, path in ipairs(files) do

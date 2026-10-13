@@ -1,22 +1,20 @@
 local _, NS = ...
 -- modules/SimReport.lua — where a simulated loot burst's drops went (feedback-3 spec §0, DW-B0).
 --
--- THE OWNER'S CASE. The key scenario's loot step read `Loot: 2 drops` while Group drops showed one
--- drop and the My drops tab no count. Reproduced headless (every scenario, every seed): nothing is
--- lost. A random burst of two or more lines always has one line of yours (modules/SimEvents.lua's
--- Plan, sim feedback §0), your own drop goes to My drops (Group drops lists it only with
--- `feed.showOwn` on), and the tab's label then counted only your tradeable drops, so an upgrade for
--- you added nothing to it. The step now says where its drops went, and the tabs reconcile with it.
+-- THE OWNER'S CASE. The key scenario's loot step read `Loot: 2 drops` while the window showed one
+-- drop. Reproduced headless (every scenario, every seed): nothing was lost. A random burst of two or
+-- more lines always has one line of yours (modules/SimEvents.lua's Plan, sim feedback §0), and your
+-- own drop was then listed apart from the others. The step now says where its drops went, and the
+-- window reconciles with it.
 --
 -- THE REPORT. Loot marks the feed's receipt sequence and merge count (Mark), plays the drivers'
 -- burst (NS.SimEvents.Loot), then collects the receipts made since the mark (Collect): the records
 -- the feed took (each with its state: added, loading or hidden by a gate), how many lines merged
 -- into an earlier drop, and how many lines went out. Place says where one drop is now (pure, given
--- the feed's reader and the window's view, View): Group drops, hidden by a gate (its reason),
--- loading, cleared from the feed since, or not shown while test mode is on. Group drops lists your
--- own drops too (feedback-5 spec §2: `feed.showOwn` is retired), so a drop of yours is on Group
--- drops, and on My drops as well unless its own filters leave it out (feedback-3 spec §5, DW-B5).
--- It honors the feed the window shows. Summarize counts the places (pure) and words the step's
+-- the feed's reader and the window's view, View): Drops, hidden by a gate (its reason), loading,
+-- cleared from the feed since, or not shown while test mode is on. Drops lists your own drops too
+-- (feedback-5 spec §2 and §3: `feed.showOwn` and the third tab are retired), so a drop of yours
+-- is on Drops like any other. It honors the feed the window shows. Summarize counts the places (pure) and words the step's
 -- detail: `2 drops`, `3 drops (1 hidden)`; TipLines names each drop, its looter and its place, for the
 -- panel row's tooltip. The panel reads the report again on every repaint, so a drop that was still
 -- loading when the step ran is placed once it lands.
@@ -79,29 +77,19 @@ function R.Loot(n, who)
     return sent, why, R.Collect(mark, sent)
 end
 
---- What the window shows (the edge): its feed (NS.Window.FeedView), so a place honors it, and
---- `mineLeftOut` (NS.WindowMine.LeftOutNow: why My drops leaves a drop of yours out, its own
---- filters, else nil), so a tooltip agrees with the tab beyond the defaults (feedback-3 spec §5).
---- @return table { feed, mineLeftOut }
+--- What the window shows (the edge): its feed (NS.Window.FeedView), so a place honors it.
+--- @return table { feed }
 function R.View()
-    local v = NS.Window.FeedView()
-    v.mineLeftOut = NS.WindowMine.LeftOutNow
-    return v
-end
-
--- Why My drops leaves drop `rec` of yours out (view.mineLeftOut), else nil.
-local function leftOut(rec, view)
-    if not rec.isMine or type(view.mineLeftOut) ~= "function" then return nil end
-    return view.mineLeftOut(rec)
+    return NS.Window.FeedView()
 end
 
 --- Where one drop is now (pure, given `get`, the feed's reader, and `view`, the window's R.View;
---- nil is the live feed): `group` (yours too: Group drops lists every drop, feedback-5 spec §2),
+--- nil is the live feed): `group` (yours too: Drops lists every drop, feedback-5 spec §2),
 --- `hidden` (and the gate's reason), `loading`, `cleared` (taken out of the feed since) or
 --- `offscreen` (in a feed the window does not show: test mode is on).
 --- @param rec table
 --- @param get function|nil id -> drop (NS.LootFeed.Get)
---- @param view table|nil { feed, mineLeftOut }
+--- @param view table|nil { feed }
 --- @return string place, string|nil why
 function R.Place(rec, get, view)
     view = view or {}
@@ -114,7 +102,7 @@ end
 
 --- A report's counts and its detail (pure, given `get` and `view`, as R.Place's): { total, group,
 --- hidden, loading, merged, cleared, offscreen, refused, text }. `text` is `3 drops (1 hidden)`, the
---- count alone when every drop is on Group drops.
+--- count alone when every drop is on Drops.
 --- @param report table
 --- @param get function|nil
 --- @param view table|nil
@@ -139,20 +127,18 @@ function R.Summarize(report, get, view)
     return c
 end
 
-local PLACE_WORDS = { group = L["Group drops"], loading = L["still loading"],
+local PLACE_WORDS = { group = L["Drops"], loading = L["still loading"],
     cleared = L["cleared from the feed"], offscreen = L["not shown while test mode is on"] }
 
 local function where(rec, get, view)
     local place, why = R.Place(rec, get, view)
     if place == "hidden" then return L["hidden: %s"]:format(GATE[why] or tostring(why)) end
-    if place == "group" and rec.isMine and not leftOut(rec, view or {}) then return L["Group drops and My drops"] end
     return PLACE_WORDS[place]
 end
 
 --- The tooltip's lines for a report (pure, given `get`): each drop, its looter and where it is
---- (`Item (Seta): Group drops`, `Item (Seta): hidden: below the quality gate`, `Item (you): Group
---- drops and My drops`, or `Item (you): Group drops` while My drops' filters leave it out), then the
---- merged and refused lines' counts. `view` as R.Place's.
+--- (`Item (Seta): Drops`, `Item (Seta): hidden: below the quality gate`, `Item (you): Drops`), then
+--- the merged and refused lines' counts. `view` as R.Place's.
 --- @param report table
 --- @param get function|nil
 --- @param view table|nil

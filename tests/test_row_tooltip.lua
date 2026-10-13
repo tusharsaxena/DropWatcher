@@ -193,7 +193,7 @@ local function testWindow()
     return NS, m
 end
 
-test("row tooltip: Group drops, every cell, Ask and the header open at the row's top right", function()
+test("row tooltip: Drops, every cell, Ask and the header open at the row's top right", function()
     local NS, m = testWindow()
     local win = placeWindow(NS, m)
     local drawn = NS.WindowGroup.Drawn()
@@ -222,24 +222,21 @@ test("row tooltip: with no room on the right a row tooltip rises from the row's 
     assertEqual(x, -NS.Constants.WINDOW.TIP_GAP); assertEqual(y, -200)
 end)
 
-test("row tooltip: My drops rows, their Offer and Announce buttons and the headers open at the row's top right", function()
+test("row tooltip: your own drops' rows on Drops and their Offer open at the row's top right", function()
     local NS, m = testWindow()
-    NS.Window.SelectTab("mine")
+    NS.WindowFilterBar.Set("group", "view", {})
     local win = placeWindow(NS, m)
-    local drawn = NS.WindowMine.Drawn()
-    local row = drawn.rows[1]
-    assertTrue(row ~= nil and row.tipRow == true, "a My drops row, marked")
+    local row
+    for _, r in ipairs(NS.WindowGroup.Drawn().rows) do
+        if r.drop.isMine and r.cells.actions.ask:IsShown() then row = r; break end
+    end
+    assertTrue(row ~= nil and row.tipRow == true, "a row of yours, marked")
     for key, cell in pairs(row.cells) do
-        if key ~= "actions" and cell.tooltip then expectRowTop(NS, m, win, row, cell, "mine " .. key) end
+        if key ~= "actions" and cell.tooltip then expectRowTop(NS, m, win, row, cell, "own " .. key) end
     end
-    local a = row.cells.actions
-    for _, key in ipairs({ "offer", "announce", "dashTip" }) do
-        a[key].tipLines = { key, "why" }
-        expectRowTop(NS, m, win, row, a[key], "mine " .. key)
-    end
-    local h = drawn.headers[1]
-    assertTrue(h ~= nil and h.tipRow == true)
-    expectRowTop(NS, m, win, h, h, "mine header")
+    local b = row.cells.actions.ask
+    assertTrue(b.offer, "its Offer")
+    expectRowTop(NS, m, win, row, b, "own offer")
 end)
 
 test("row tooltip: History rows and headers open at the row's top right", function()

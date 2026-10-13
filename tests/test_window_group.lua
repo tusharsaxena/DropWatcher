@@ -1,4 +1,4 @@
--- tests/test_window_group.lua — the Group drops table (design spec §11.1-§11.2, boards 01, 03 and
+-- tests/test_window_group.lua — the Drops table (design spec §11.1-§11.2, boards 01, 03 and
 -- 06): every cell's text, glyph, tone and reason tooltip (modules/WindowCells.lua, pure), the
 -- column sets and the entry order (modules/WindowGroup.lua's pure halves), then the table built
 -- headless under the mock: pooled rows, encounter headers that collapse, item buttons, the Ask
@@ -398,7 +398,7 @@ test("rows: the pure metrics read Default as the template's size and keep the ro
     assertEqual(WR.RowHeight(4), K.ROW_H_MIN); assertEqual(WR.RowHeight(400), K.ROW_H_MAX)
     assertEqual(WR.IconSize(18), 16, "the item button fits an 18-pixel row")
     assertEqual(WR.IconSize(32), K.ROW_ICON, "and never grows past its own size")
-    assertEqual(WR.MineRowHeight(18), 32, "a My drops row keeps room for its countdown bar")
+    assertEqual(WR.MineRowHeight(18), 32, "a Drops row with Trade window keeps room for its countdown bar")
     assertEqual(WR.MineRowHeight(18, nil), 32, "Default reads the template's size")
     assertEqual(WR.MineRowHeight(30), 44, "a taller row adds the bar's room")
     assertEqual(WR.MineRowHeight(18, 14), 40, "a larger text grows the row so its two lines never overlap")
@@ -944,21 +944,21 @@ end)
 
 -- ── the least width, the search box and the headers (feedback-4 spec §4) ────────────────────
 
-test("layout: at the least width no tab sheds a column, and one pixel less would shed on Group drops", function()
+test("layout: at the least width no tab sheds a column, and one pixel less would shed on Drops", function()
     local NS = T.newAddon()
     local K = NS.Constants.WINDOW
     assertEqual(K.MIN_WIDTH, K.WIDTH, "the least width is a new profile's width")
     assertEqual(K.COMPACT_MIN_W, K.COMPACT_WIDTH, "in both layouts")
     local row = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
-    -- Group drops' columns start after the row's indent and chevron (feedback-5 spec §0).
-    local lead = { WindowGroup = NS.WindowGroup.LEAD, WindowMine = 0, WindowHistory = 0 }
-    for _, tab in ipairs({ "WindowGroup", "WindowMine", "WindowHistory" }) do
+    -- Drops' columns start after the row's indent and chevron (feedback-5 spec §0).
+    local lead = { WindowGroup = NS.WindowGroup.LEAD, WindowHistory = 0 }
+    for _, tab in ipairs({ "WindowGroup", "WindowHistory" }) do
         local cols = NS[tab].COLUMNS
         assertEqual(#NS.WindowGroup.Fit(cols, row - lead[tab]), #cols, tab .. " keeps every column")
     end
     local groupRow = row - NS.WindowGroup.LEAD
     assertTrue(#NS.WindowGroup.Fit(NS.WindowGroup.COLUMNS, groupRow - 1) < #NS.WindowGroup.COLUMNS,
-        "the least width is the tightest that fits Group drops")
+        "the least width is the tightest that fits Drops")
     assertTrue(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH) >= 200, "the search box has room to type")
 end)
 
@@ -973,13 +973,11 @@ test("layout: the search box spans from the bar's gap after Character to the bar
     assertTrue(c.search:IsShown())
 end)
 
-test("layout: the column labels are gold on all three full tables", function()
+test("layout: the column labels are gold on both full tables", function()
     local NS = shownTable()
     local G = NS.Constants.GOLD
     local function gold(label) return select(2, label.text:GetTextColor()) == G.g end
-    assertTrue(gold(NS.WindowGroup.Drawn().pane.colHead.labels.item), "Group drops")
-    NS.Window.SelectTab("mine")
-    assertTrue(gold(NS.Window.Frame().panes.mine.colHead.labels.item), "My drops")
+    assertTrue(gold(NS.WindowGroup.Drawn().pane.colHead.labels.item), "Drops")
     NS.Window.SelectTab("history")
     assertTrue(gold(NS.Window.Frame().panes.history.colHead.labels.item), "History")
 end)

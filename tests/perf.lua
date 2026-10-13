@@ -21,7 +21,7 @@
 -- The refresh pair was pinned at 0 when the scaffold's Refresh painted nothing. Re-measured
 -- 2026-10-11 (DW-61) at 13456 bytes in both: the shown window's whole pass now does real work (the
 -- tab labels' and the footer's formatted strings, the filter bar's labels, the tab's context and
--- its row predicate's closures, the Group drops table's empty state), coalesced to at most one pass
+-- its row predicate's closures, the Drops table's empty state), coalesced to at most one pass
 -- a frame. Its ceiling is that work; the zero-overhead evidence is PAIRED below: capture off may
 -- allocate nothing over capture on, and capture on no more than one note's PAIR_SLACK over off.
 -- Raised to 14500 on 2026-10-11 (DW-A6, M10): the pass measured 17226 bytes once the filter bar

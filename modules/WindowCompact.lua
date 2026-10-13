@@ -28,9 +28,8 @@ local _, NS = ...
 --
 -- PURE: ValidMode, IsRun, Effective, DefaultSize, Bounds, ClampSize, CornerPoint. The edge: the
 -- reads through NS.Setting and the profile, Apply (the frame's bounds, size and point), and the
--- override's bus receiver and visibility listener. In the compact layout the Group drops tab draws
--- cards (modules/CompactGroup.lua, DW-C2), and My drops and History theirs (modules/CompactMine.lua,
--- modules/CompactHistory.lua, DW-C3).
+-- override's bus receiver and visibility listener. In the compact layout the Drops tab draws cards
+-- (modules/CompactGroup.lua, DW-C2), and History its own (modules/CompactHistory.lua, DW-C3).
 
 NS.WindowCompact = NS.WindowCompact or {}
 local WC = NS.WindowCompact

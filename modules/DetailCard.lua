@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/DetailCard.lua — the detail card (design spec §11.3, board 02): the expanded row of the
--- Group drops table, with the full reasoning behind the row's verdicts.
+-- Drops table, with the full reasoning behind the row's verdicts.
 --
 -- WHAT IT HOLDS, top to bottom: the item header (a real item button, the name in its quality color
 -- and the chips: slot, armor type, bind, track and rank, the look, primary stat, socket, tertiary
