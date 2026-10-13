@@ -1,8 +1,8 @@
 -- tests/test_auto_ask.lua — modules/AutoAsk.lua, auto-ask (design spec §9.4): the pure timing, then
 -- the edge on the bus: off by default, a qualifying drop asked `delay` seconds after the later of
 -- the drop and ENCOUNTER_END (held while an encounter is in progress), each drop once, only drops
--- from after it was turned on, the cancel rules (a manual ask, the looter leaving, the row
--- dismissed, the item received, turned off, the stand-down), the one-time notice, test mode routed
+-- from after it was turned on, the cancel rules (a manual ask, the looter leaving, the item
+-- received, turned off, the stand-down), the one-time notice, test mode routed
 -- to print, and the diagnostics line.
 
 local T = _G.DW_TEST
@@ -243,18 +243,6 @@ test("auto-ask edge: the looter leaving the group cancels it", function()
     m.setGroup({})
     m.__fire("GROUP_ROSTER_UPDATE")
     assertEqual(NS.AutoAsk.Stats().waiting, 0); assertEqual(NS.AutoAsk.Stats().canceled, 1)
-    m.advance(60)
-    assertEqual(whispers(m), 0)
-end)
-
-test("auto-ask edge: dismissing the row cancels it for good", function()
-    local NS, m, make = party()
-    make(); added(NS, 1)
-    NS.DismissDrop(1)
-    assertEqual(NS.AutoAsk.Stats().waiting, 0)
-    assertTrue(NS.State.windowGroup.dismissed[1], "the row is dismissed too")
-    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "inspect")
-    assertEqual(NS.AutoAsk.Stats().waiting, 0, "not scheduled again")
     m.advance(60)
     assertEqual(whispers(m), 0)
 end)

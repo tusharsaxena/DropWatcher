@@ -406,18 +406,17 @@ function MC.TradeButton(ok, why, who)
     return { enabled = false, tip = { L["Trade: not now"], why or L["The trade cannot be opened now."] } }
 end
 
---- A row's actions (board 04 note 4): Offer and Announce while it may be traded; a dash and Hide
---- when it cannot.
+--- A row's actions (board 04 note 4): Offer and Announce while it may be traded; a dash with the
+--- reason when it cannot (nothing hides a drop, feedback-4 spec §2).
 --- @param drop table
 --- @param best table MC.BestCandidates' answer
 --- @param announce table MC.AnnounceButton's answer
---- @return table { tradeable, offer = { primary, tip }, announce, hide = { tip }, dash = { tip } }
+--- @return table { tradeable, offer = { primary, tip }, announce, dash = { tip } }
 function MC.Actions(drop, best, announce)
     local t = tradeOf(drop)
     if t.state == "no" then
         return { tradeable = false,
-            dash = { tip = { L["No offer"], L["Not tradeable: %s"]:format(WC.TradeReason(t, L["you"])) } },
-            hide = { tip = { L["Hide"], L["Hide this drop from My drops for this session."] } } }
+            dash = { tip = { L["No offer"], L["Not tradeable: %s"]:format(WC.TradeReason(t, L["you"])) } } }
     end
     local ups = upgradesOf(best.list or {})
     local primary = #ups > 0 and not best.hidden

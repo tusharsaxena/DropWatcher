@@ -1,7 +1,7 @@
 -- tests/test_compact_group.lua — the Group drops tab in the compact layout (compact spec §2, DW-C2):
 -- the card's metrics and the scroll carry-over (pure), the stacked detail card's flow (pure), then
 -- the cards drawn headless under the mock: pooled three-line cards that say what NS.CompactCards
--- says, the one-line headers, the stacked detail card inline, Ask and dismiss, the text size, and
+-- says, the one-line headers, the stacked detail card inline, Ask, the text size, and
 -- every tooltip at the card's top right.
 
 local T = _G.DW_TEST
@@ -94,16 +94,17 @@ test("compact group: the stacked detail card flows its actions into lines and gr
     local NS = T.newAddon()
     local DCard, K = NS.DetailCard, NS.Constants.WINDOW
     local wide, lines = DCard.FlowActions(2000)
-    assertEqual(lines, 1); assertEqual(wide.hide.x, 92 + 100 + 92 + 96 + 124 + 5 * 6)
+    assertEqual(lines, 1); assertEqual(wide.trade.x, 92 + 100 + 92 + 96 + 4 * 6)
+    assertTrue(wide.hide == nil, "no Hide this item (feedback-4 spec §2)")
     local narrow, n = DCard.FlowActions(324)
-    assertEqual(n, 3)
+    assertEqual(n, 2)
     assertEqual(narrow.ask.line .. narrow.edit.line .. narrow.link.line, "000")
-    assertEqual(narrow.retry.line .. narrow.trade.line .. narrow.hide.line, "112")
-    assertEqual(narrow.retry.x, 0); assertEqual(narrow.trade.x, 96 + 6); assertEqual(narrow.hide.x, 0)
+    assertEqual(narrow.retry.line .. narrow.trade.line, "11")
+    assertEqual(narrow.retry.x, 0); assertEqual(narrow.trade.x, 96 + 6)
     local P = K.CARD_PAD
     local one = P + K.CARD_ICON + P + 2 * K.SIDE_H + K.TRADE_BOX_H + 3 * P + K.ACTION_H + P
     assertEqual(DCard.StackedHeight(2000), one)
-    assertEqual(DCard.StackedHeight(340), one + 2 * (K.ACTION_H + 4))
+    assertEqual(DCard.StackedHeight(340), one + (K.ACTION_H + 4))
     assertEqual(DCard.ChipsThatFit({ 50, 50, 50 }, 108), 2)
     assertEqual(DCard.ChipsThatFit({ 50, 50 }, 500), 2)
     assertEqual(DCard.ChipsThatFit({}, 10), 0)
@@ -171,7 +172,7 @@ test("compact group: every piece keeps its full-view reason tooltip", function()
     assertEqual(W.TooltipOf(c.fresh.hit)[1], "Inspect of Seta")
     assertEqual(#W.TooltipOf(c.item.hit), 0, "the item shows the game's own tooltip instead")
     assertTrue(c.item.hit.showItem == true)
-    assertEqual(W.TooltipOf(cardFor(drawn, 1).dismiss)[1], "Dismiss")
+    assertTrue(cardFor(drawn, 1).dismiss == nil, "no dismiss mark (feedback-4 spec §2)")
 end)
 
 -- The window at 200..580, its top at 800, on a 1920-wide screen; a 320-wide tooltip.
@@ -191,7 +192,7 @@ test("compact group: every tooltip opens at the card's top right, just outside t
     local card = cardFor(drawn, 1)
     card.GetTop = function() return 600 end
     local K = NS.Constants.WINDOW
-    local frames = { card.cells.trade.hit, card.cells.you.hit, card.cells.slot.hit, card.cells.ilvl.hit, card.dismiss, card.icon,
+    local frames = { card.cells.trade.hit, card.cells.you.hit, card.cells.slot.hit, card.cells.ilvl.hit, card.icon,
         card.cells.item.hit }
     card.ask.tipLines = { "Ask", "why" }
     frames[#frames + 1] = card.ask
@@ -232,16 +233,13 @@ test("compact group: a card click opens the stacked detail card under it; the ca
     assertEqual(NS.WindowGroup.Drawn().cardDropId, below, "the full layout keeps the open card")
 end)
 
-test("compact group: Ask presses the ask, the × dismisses the card for the session", function()
+test("compact group: Ask presses the ask; no card can be dismissed", function()
     local NS, drawn = shownCards()
     local asked
     NS.PressAsk = function(id) asked = id end
     cardFor(drawn, 1).ask:__fire("OnClick")
     assertEqual(asked, 1)
-    cardFor(drawn, 2).dismiss:__fire("OnClick")
-    drawn = NS.WindowGroup.Drawn()
-    assertEqual(#drawn.rows, 1)
-    assertTrue(cardFor(drawn, 2) == nil)
+    assertTrue(cardFor(drawn, 2).dismiss == nil); assertTrue(NS.DismissDrop == nil)
 end)
 
 test("compact group: an ask in flight shows the full table's state; no ask offered shows the dash and why", function()

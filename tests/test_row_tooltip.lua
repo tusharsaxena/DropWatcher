@@ -193,7 +193,7 @@ local function testWindow()
     return NS, m
 end
 
-test("row tooltip: Group drops, every cell, Ask, the dismiss mark and the header open at the row's top right", function()
+test("row tooltip: Group drops, every cell, Ask and the header open at the row's top right", function()
     local NS, m = testWindow()
     local win = placeWindow(NS, m)
     local drawn = NS.WindowGroup.Drawn()
@@ -203,7 +203,6 @@ test("row tooltip: Group drops, every cell, Ask, the dismiss mark and the header
         if key ~= "actions" and cell.tooltip then expectRowTop(NS, m, win, row, cell, "group " .. key) end
     end
     local a = row.cells.actions
-    expectRowTop(NS, m, win, row, a.dismiss, "group dismiss")
     a.ask.tipLines = { "Ask", "why" }
     expectRowTop(NS, m, win, row, a.ask, "group ask")
     a.dashTip.tipLines = { "–", "why" }
@@ -234,7 +233,7 @@ test("row tooltip: My drops rows, their Offer and Announce buttons and the heade
         if key ~= "actions" and cell.tooltip then expectRowTop(NS, m, win, row, cell, "mine " .. key) end
     end
     local a = row.cells.actions
-    for _, key in ipairs({ "offer", "announce", "dashTip", "hide" }) do
+    for _, key in ipairs({ "offer", "announce", "dashTip" }) do
         a[key].tipLines = { key, "why" }
         expectRowTop(NS, m, win, row, a[key], "mine " .. key)
     end

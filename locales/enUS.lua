@@ -175,8 +175,8 @@ L["|cffFFFF00%s|r takes a setting path: |cffFFFF00%s|r (try |cffFFFF00%s|r). To 
 -- Auto-ask's one-time notice (modules/AutoAsk.lua, design spec §9.4)
 L["Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or more item levels for you, your ask template is whispered to them %d seconds after the boss kill or the drop."] =
     "Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or more item levels for you, your ask template is whispered to them %d seconds after the boss kill or the drop."
-L["It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."] =
-    "It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."
+L["It holds off when you ask yourself, they leave or you get the item. Turn it off in Settings > Messages > Auto-ask."] =
+    "It holds off when you ask yourself, they leave or you get the item. Turn it off in Settings > Messages > Auto-ask."
 
 -- The simulator (core/SimSeam.lua, modules/Sim.lua, simulator spec §5): the printed sends and
 -- hand-overs, the refusals, start and stop
@@ -360,7 +360,6 @@ L["%d of them you can still trade."] = "%d of them you can still trade."
 L["None of them can be traded now."] = "None of them can be traded now."
 -- The tabs and the panel agree beyond the defaults (feedback-3 spec §5, DW-B5)
 L["Not listed here:"] = "Not listed here:"
-L["you hid it"] = "you hid it"
 L["%d not shown in test mode"] = "%d not shown in test mode"
 L["%d not on My drops"] = "%d not on My drops"
 L["not on My drops: %s"] = "not on My drops: %s"

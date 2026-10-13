@@ -3,7 +3,7 @@
 --   * THE SAME DROP SET: for the same feed and filters, the full table and the compact cards draw the
 --     same drops (and the same headers) in the same order, on every tab: test mode's samples and a
 --     simulated run, under every View, Content, Character, search and Sort the bar offers, with a
---     group collapsed, a drop dismissed and your own drops shown.
+--     group collapsed, a card expanded and your own drops shown.
 --   * THE ENGINE UNTOUCHED: switching back and forth on every tab leaves every record's verdicts and
 --     trade state, the feed's counts, the history and the sends exactly as they were.
 --   * EVERY STATE RENDERED: test mode puts every state on a compact card, and each card says what the
@@ -124,16 +124,13 @@ test("modes: test mode's samples are the same drops in both layouts, on every ta
     assertTrue(shown.history >= 1, "History compared " .. shown.history)
 end)
 
-test("modes: a collapsed group, a dismissed drop and your own drops shown are the same in both layouts", function()
+test("modes: a collapsed group, an expanded drop and your own drops shown are the same in both layouts", function()
     local NS = testWindow()
     local groups = NS.LootFeed.Groups("test")
     NS.WindowGroup.ToggleGroup(groups[1].key, false)
     assertSameSet(NS, "group", "collapsed")
     NS.WindowGroup.ToggleGroup(groups[1].key, true)
-    local first = NS.LootFeed.Drops("test")[1]
-    local before = assertSameSet(NS, "group", "expanded")
-    NS.WindowGroup.Dismiss(first.id)
-    assertTrue(assertSameSet(NS, "group", "dismissed") <= before)
+    assertSameSet(NS, "group", "expanded")
     NS.addon.db.profile.feed.showOwn = true
     assertSameSet(NS, "group", "showOwn")
     NS.WindowMine.ToggleGroup(groups[1].key, false)
@@ -310,12 +307,12 @@ test("modes: test mode's My drops cards show every countdown, Offer and Announce
         assertEqual(c.trade.hit.tipLines[1], f.tradeTip[1], what .. ": the countdown's reason")
         seen.trade[trade:gsub("%d", "9")] = true
         seen.offer[card.offer:IsShown() and "offer" or "dash"] = true
-        seen.action[card.announce:IsShown() and "announce" or "hide"] = true
+        seen.action[card.announce:IsShown() and "announce" or "none"] = true
     end
     hasAll(seen.trade, { "9:99:99", "~9:99:99", "9:99:99 ending soon", "No limit (BoE)", "Not tradeable" },
         "countdown")
     hasAll(seen.offer, { "offer", "dash" }, "Offer")
-    hasAll(seen.action, { "announce", "hide" }, "Announce or Hide")
+    hasAll(seen.action, { "announce", "none" }, "Announce, or nothing on a dead drop")
 end)
 
 test("modes: test mode's History cards show every outcome, each saying what its full row says", function()

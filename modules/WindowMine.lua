@@ -5,7 +5,7 @@ local _, NS = ...
 -- THE COLUMNS. Item (a real item button and the name), Ilvl, For me (the verdict, with `keep?`
 -- under an upgrade), Trade window (the countdown over its bar, why it is not tradeable, or `No limit`
 -- for a bind-on-equip drop), Best candidates (the top three upgrades, or why there are none) and
--- Actions (Offer and Announce while it may be traded; a dash and Hide when it cannot). Under the
+-- Actions (Offer and Announce while it may be traded; a dash with the reason when it cannot). Under the
 -- rows, a summary strip: how many are tradeable, the next expiry and Post my tradeables. What every
 -- cell says, and its reason tooltip, is modules/MineCells.lua's (pure); this file is the frame edge
 -- that paints it. Nothing is ever blank.
@@ -27,7 +27,7 @@ local _, NS = ...
 -- (NS.LootFeed.Drops), the ask states (NS.Asks.StateOf) and the warning threshold
 -- (NS.TradeTimer.WarnAt), all read-only. Offer opens the Offer panel (modules/OfferPanel.lua);
 -- Announce and Post my tradeables go through the host handlers NS.PressAnnounce and
--- NS.PostTradeables (core/DropWatcher.lua); Hide is the tab's own, session-only.
+-- NS.PostTradeables (core/DropWatcher.lua). No drop is ever hidden from the tab (feedback-4 spec §2).
 
 NS.WindowMine = NS.WindowMine or {}
 local WM    = NS.WindowMine
@@ -63,7 +63,7 @@ local NO_MATCH = L["None of your drops matches the filters."]
 local function view()
     local v = State.windowMine
     if not v then
-        v = { dismissed = {}, revealed = {} }
+        v = { revealed = {} }
         State.windowMine = v
     end
     v.collapsed = v.collapsed or {}
@@ -72,14 +72,6 @@ end
 
 local function repaint()
     if NS.Window.IsShown() then NS.Window.Refresh() end
-end
-
---- Hide one of your drops from the tab for the session (its row's Hide).
---- @param id number
-function WM.Dismiss(id)
-    view().dismissed[id] = true
-    NS.Debug("UI", "my drop %s hidden", tostring(id))
-    repaint()
 end
 
 --- Collapse or expand one group's rows for the session (its header's click).
@@ -104,71 +96,61 @@ function WM.IsRevealed(id) return view().revealed[id] == true end
 
 -- ── the pure half ───────────────────────────────────────────────────────────────────────────
 
---- The tab's rows, top to bottom: your own drops that pass the tab's filter and were not hidden,
---- in the tab's order.
+--- The tab's rows, top to bottom: your own drops that pass the tab's filter, in the tab's order.
 --- @param drops table the feed's drops (NS.LootFeed.Drops)
 --- @param ctx table { matches = fn(drop), compare = fn(a, b) }
---- @param state table|nil { dismissed } (NS.State.windowMine)
 --- @return table drops
-function WM.Entries(drops, ctx, state)
+function WM.Entries(drops, ctx)
     local out = {}
     for _, d in ipairs(drops or {}) do
-        if WM.Lists(d, ctx, state) then out[#out + 1] = d end
+        if WM.Lists(d, ctx) then out[#out + 1] = d end
     end
     table.sort(out, ctx.compare)
     return out
 end
 
---- Whether the tab lists drop `d`: yours, not hidden with its row's Hide and passing the tab's own
---- filters. The tab's label and the Group drops headers' `· n yours on My drops` count with it, so
+--- Whether the tab lists drop `d`: yours and passing the tab's own filters. The tab's label and the Group drops headers' `· n yours on My drops` count with it, so
 --- they agree with what the tab lists (feedback-3 spec §5, DW-B5).
 --- @param d table
 --- @param ctx table { matches = fn(drop) }
---- @param state table|nil { dismissed }
 --- @return boolean
-function WM.Lists(d, ctx, state)
-    local dismissed = state and state.dismissed or {}
-    return type(d) == "table" and d.isMine == true and not dismissed[d.id] and ctx.matches(d) == true
+function WM.Lists(d, ctx)
+    return type(d) == "table" and d.isMine == true and ctx.matches(d) == true
 end
 
--- Why the tab leaves one of your drops out: `dismissed` (its row's Hide), else the filter's key.
-local function excludedWhy(d, ctx, state)
-    if state and state.dismissed and state.dismissed[d.id] then return "dismissed" end
+-- Why the tab leaves one of your drops out: the filter's key.
+local function excludedWhy(d, ctx)
     return ctx.hiddenBy and ctx.hiddenBy(d) or "filter"
 end
 
 --- Your drops in `drops`, tallied the way the tab lists them (pure): `listed` (WM.Lists), how many
---- of those you can still trade, and the ones left out ({ drop, why }, why `dismissed` or the
---- filter's key) for the tab's tooltip (feedback-3 spec §5).
+--- of those you can still trade, and the ones left out ({ drop, why }, why the filter's key) for the tab's tooltip (feedback-3 spec §5).
 --- @param drops table|nil
 --- @param ctx table { matches = fn(drop), hiddenBy = fn(drop) }
---- @param state table|nil { dismissed }
 --- @return table { listed, tradeable, excluded }
-function WM.Tally(drops, ctx, state)
+function WM.Tally(drops, ctx)
     local FB, t = NS.WindowFilterBar, { listed = 0, tradeable = 0, excluded = {} }
     for _, d in ipairs(drops or {}) do
-        if WM.Lists(d, ctx, state) then
+        if WM.Lists(d, ctx) then
             t.listed = t.listed + 1
             if FB.IsTradeableMine(d) then t.tradeable = t.tradeable + 1 end
         elseif type(d) == "table" and d.isMine then
-            t.excluded[#t.excluded + 1] = { drop = d, why = excludedWhy(d, ctx, state) }
+            t.excluded[#t.excluded + 1] = { drop = d, why = excludedWhy(d, ctx) }
         end
     end
     return t
 end
 
---- The words for why the tab leaves a drop of yours out (pure): `you hid it`, or the filter
---- (FB.ReasonLabel).
---- @param why string `dismissed` or a filter key (excludedWhy's)
+--- The words for why the tab leaves a drop of yours out (pure): the filter (FB.ReasonLabel).
+--- @param why string a filter key (excludedWhy's)
 --- @param filter table|nil the tab's filter state
 --- @return string
 function WM.WhyLabel(why, filter)
-    if why == "dismissed" then return L["you hid it"] end
     return NS.WindowFilterBar.ReasonLabel(why, filter)
 end
 
 --- The tab tooltip's lines for your drops it leaves out (pure): `Not listed here:`, then each drop
---- and why (`you hid it`, or the filter: FB.ReasonLabel), the first WC.HIDDEN_TIP_LINES of them.
+--- and why (the filter: FB.ReasonLabel), the first WC.HIDDEN_TIP_LINES of them.
 --- @param excluded table|nil WM.Tally's
 --- @param filter table|nil the tab's filter state
 --- @return table lines (empty when none is left out)
@@ -186,34 +168,34 @@ function WM.ExcludedLines(excluded, filter)
     return out
 end
 
---- The tab's tally over the feed the window shows, through its own filters and Hide (the edge
+--- The tab's tally over the feed the window shows, through its own filters (the edge
 --- the tab label and its tooltip read).
 --- @return table WM.Tally's, plus `filter` (the tab's filter state)
 function WM.TabTally()
     local ctx = NS.Window.TabContext("mine")
-    local t = WM.Tally(NS.LootFeed.Drops(ctx.feed), ctx, view())
+    local t = WM.Tally(NS.LootFeed.Drops(ctx.feed), ctx)
     t.filter = ctx.filter
     return t
 end
 
---- Whether the tab lists drop `d` now (WM.Lists over its own filters and Hide), for the Group drops
+--- Whether the tab lists drop `d` now (WM.Lists over its own filters), for the Group drops
 --- headers' `· n yours on My drops`. Asked only of your own drops Group drops leaves to My drops, so
 --- a repaint with none of them builds no context (the refresh pair's allocation ceiling).
 --- @param d table
 --- @return boolean
 function WM.ListsNow(d)
-    return WM.Lists(d, NS.Window.TabContext("mine"), view())
+    return WM.Lists(d, NS.Window.TabContext("mine"))
 end
 
---- Why the tab leaves drop `d` of yours out now (its Hide or its own filters, in WM.WhyLabel's
+--- Why the tab leaves drop `d` of yours out now (its own filters, in WM.WhyLabel's
 --- words), else nil: the sim report's `not on My drops` (modules/SimReport.lua, feedback-3 spec §5).
 --- Asked only of your own drops, so a repaint with none of them builds no context.
 --- @param d table
 --- @return string|nil
 function WM.LeftOutNow(d)
-    local ctx, st = NS.Window.TabContext("mine"), view()
-    if WM.Lists(d, ctx, st) then return nil end
-    return WM.WhyLabel(excludedWhy(d, ctx, st), ctx.filter)
+    local ctx = NS.Window.TabContext("mine")
+    if WM.Lists(d, ctx) then return nil end
+    return WM.WhyLabel(excludedWhy(d, ctx), ctx.filter)
 end
 
 --- How many drops the tab lists now (the tab label's `My drops · n`): WM.Tally's `listed`, without
@@ -226,9 +208,9 @@ function WM.ListedCount()
         if d.isMine then any = true; break end
     end
     if not any then return 0 end
-    local ctx, state, n = NS.Window.TabContext("mine"), view(), 0
+    local ctx, n = NS.Window.TabContext("mine"), 0
     for _, d in ipairs(drops) do
-        if WM.Lists(d, ctx, state) then n = n + 1 end
+        if WM.Lists(d, ctx) then n = n + 1 end
     end
     return n
 end
@@ -249,16 +231,16 @@ end
 --- @param drops table the feed's drops (NS.LootFeed.Drops)
 --- @param get function id -> drop (NS.LootFeed.Get)
 --- @param ctx table Window.TabContext's { matches, compare, filter, belongs, hiddenBy }
---- @param state table|nil { collapsed, dismissed } (NS.State.windowMine)
+--- @param state table|nil { collapsed } (NS.State.windowMine)
 --- @return table
 function WM.Rows(groups, drops, get, ctx, state)
     state, groups = state or {}, groups or {}
     local mine = { matches = ctx.matches, compare = ctx.compare, filter = ctx.filter, hiddenBy = ctx.hiddenBy,
         belongs = function(d) return d.isMine == true and (not ctx.belongs or ctx.belongs(d)) end }
     local out = NS.WindowCells.Entries(groups, get, mine,
-        { collapsed = state.collapsed, dismissed = state.dismissed, allOpen = true })
+        { collapsed = state.collapsed, allOpen = true })
     local grouped = groupedIds(groups)
-    for _, d in ipairs(WM.Entries(drops, ctx, state)) do
+    for _, d in ipairs(WM.Entries(drops, ctx)) do
         if not grouped[d.id] then out[#out + 1] = { kind = "drop", drop = d } end
     end
     return out
@@ -368,9 +350,6 @@ local function actionsCell(row)
     f.dashTip = CreateFrame("Frame", nil, f)
     f.dashTip:SetAllPoints(f.offer)
     attach(f.dashTip)
-    f.hide = W.TextButton(f, K.ANNOUNCE_W, nil, L["Hide"], function(b) WM.Dismiss(b.dropId) end)
-    f.hide:SetPoint("LEFT", f.offer, "RIGHT", 6, 0)
-    attach(f.hide)
     return f
 end
 
@@ -459,14 +438,13 @@ end
 
 local function paintActions(f, drop, best)
     local a = MC.Actions(drop, best, MC.AnnounceButton(annState(drop)))
-    f.offer.dropId, f.announce.dropId, f.hide.dropId = drop.id, drop.id, drop.id
+    f.offer.dropId, f.announce.dropId = drop.id, drop.id
     f.offer:SetShown(a.tradeable)
     f.announce:SetShown(a.tradeable)
     f.dash:SetShown(not a.tradeable)
     f.dashTip:SetShown(not a.tradeable)
-    f.hide:SetShown(not a.tradeable)
     if not a.tradeable then
-        f.dashTip.tipLines, f.hide.tipLines = a.dash.tip, a.hide.tip
+        f.dashTip.tipLines = a.dash.tip
         return
     end
     f.offer.tipLines, f.offer.primary = a.offer.tip, a.offer.primary

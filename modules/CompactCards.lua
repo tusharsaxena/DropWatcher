@@ -15,12 +15,12 @@ local _, NS = ...
 -- THE CARDS. A card is three lines; each line's pieces are named fields, left to right, and the
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
---   Group drops  line 1: item (quality color), ilvl (right), ask, dismiss
+--   Group drops  line 1: item (quality color), ilvl (right), ask
 --                line 2: looter (class color, ⊕ when cross-realm), slot, trade; fresh (right, dimmed)
 --                line 3: you = { label, verdict, eq }, them = { label, verdict, eq }
 --   My drops     line 1: item, ilvl (right), offer (or a dash on a drop that cannot be traded)
 --                line 2: forYou = { label, verdict, sub }, trade (the countdown and its bar, right)
---                line 3: candidates (class-colored parts), announce (or hide)
+--                line 3: candidates (class-colored parts), announce (none on a drop that cannot be traded)
 --   History      line 1: item, ilvl (right), outcome (right, in its tone)
 --                line 2: looter, slot, trade; time (right, dimmed)
 --                line 3: you, them
@@ -236,8 +236,6 @@ end
 
 -- ── the Group drops card (spec §2) ──────────────────────────────────────────────────────────
 
-local DISMISS_TIP = { L["Dismiss"], L["Hide this drop from the table for this session."] }
-
 --- A Group drops card.
 --- @param drop table
 --- @param ctx table { now, equipped (your gear snapshot's), gear (the looter's inspect gear),
@@ -251,7 +249,6 @@ function CC.Group(drop, ctx)
         -- line 1
         item = CC.Item(drop), ilvl = WC.Ilvl(drop),
         ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk),
-        dismiss = { tip = copyTip(DISMISS_TIP) },
         -- line 2
         looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), trade = WC.Trade(drop),
         fresh = CC.Freshness(drop, now),
@@ -296,10 +293,10 @@ local function offerOf(actions)
     return { text = DASH, dash = true, enabled = false, tip = copyTip(actions.dash.tip) }
 end
 
--- Line 3's Announce, or Hide on a drop that cannot be traded.
+-- Line 3's Announce; nil on a drop that cannot be traded (line 1's dash says why).
 local function lineThreeAction(actions)
     if actions.tradeable then return actions.announce end
-    return { text = L["Hide"], hide = true, enabled = true, tip = copyTip(actions.hide.tip) }
+    return nil
 end
 
 --- A My drops card.
@@ -384,14 +381,14 @@ end
 local PLAIN = {
     group = function(card)
         local ask = card.ask.offered and card.ask.text or DASH
-        return { ("%s  %s  %s  ×"):format(card.item.text, card.ilvl.text, ask), lineTwo(card, card.fresh),
+        return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, ask), lineTwo(card, card.fresh),
             CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) }
     end,
     mine = function(card)
         local fy = card.forYou
         local two = fy.label .. " " .. CC.VerdictText(fy.verdict) .. (fy.sub and (" " .. fy.sub) or "")
         return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, card.offer.text),
-            two .. "  " .. card.trade.text, candidatesText(card.candidates) .. "  " .. card.action.text }
+            two .. "  " .. card.trade.text, candidatesText(card.candidates) .. (card.action and ("  " .. card.action.text) or "") }
     end,
     history = function(card)
         return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, card.outcome.text), lineTwo(card, card.time),

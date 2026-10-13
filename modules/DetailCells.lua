@@ -473,13 +473,8 @@ local function tradeAction(drop, trade)
         L["Open a trade with %s, so they can put the item in."]:format(looterName(drop)))
 end
 
-local function hideAction()
-    local title = L["Hide this item"]
-    return act("hide", title, "close", true, title, L["Hide this drop from the table for this session."])
-end
-
 --- The card's actions (board 02, callout 6), left to right: Ask, Edit message, Link in chat, Retry
---- inspect, Trade and Hide this item. A disabled one says why in its tooltip.
+--- inspect and Trade. A disabled one says why in its tooltip. Nothing hides a drop (feedback-4 spec §2).
 --- @param drop table
 --- @param ctx table { askState, askReason, inspect (the looter's entry), now, trade = { ok, reason, text },
 --- transmogAsk (the `messages.transmogAsk` setting) }
@@ -489,6 +484,6 @@ function DC.Actions(drop, ctx)
     local ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk)
     return {
         askAction(drop, ask), editAction(ask), linkAction(drop),
-        retryAction(drop, ctx.inspect, ctx.now), tradeAction(drop, ctx.trade), hideAction(),
+        retryAction(drop, ctx.inspect, ctx.now), tradeAction(drop, ctx.trade),
     }
 end

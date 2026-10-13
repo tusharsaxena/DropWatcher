@@ -1,8 +1,8 @@
 local _, NS = ...
 -- modules/RowTooltip.lua — the one placement for every tooltip raised from a table row
 -- (feedback-3 spec §2, DW-B2), on all three tabs and the Offer panel: the item tooltip (DW-A2's,
--- moved here from modules/WindowGroup.lua), every cell's reason tooltip, the Ask, Offer, Announce
--- and Hide buttons and the dismiss mark, the group headers and the History rows.
+-- moved here from modules/WindowGroup.lua), every cell's reason tooltip, the Ask, Offer and Announce
+-- buttons, the group headers and the History rows.
 --
 -- AT THE ROW'S TOP RIGHT, LIKE KA0S LOOT HISTORY. Loot History anchors its row tooltip with
 -- ANCHOR_RIGHT on a row as wide as its window (../LootHistory/modules/BrowserTable.lua, the row's

@@ -2,7 +2,7 @@
 -- every cell's text, tone and reason tooltip (modules/MineCells.lua, pure), the countdown, the
 -- candidates ranked with their pills, the buttons' lifecycles, the summary, Post my tradeables'
 -- lines and the dock; then the tab and the panel built headless under the mock: pooled rows, the
--- countdown that moves on TradeTimerTick, Hide, Announce, Offer (the row's and the panel's), Trade
+-- countdown that moves on TradeTimerTick, Announce, Offer (the row's and the panel's), Trade
 -- and Post my tradeables through their host handlers.
 
 local T = _G.DW_TEST
@@ -171,7 +171,7 @@ test("mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabl
     assertTrue(M.TradeButton(true, nil, "Seta").enabled)
 end)
 
-test("mine cells: a tradeable row offers Offer and Announce; a dead one a dash and Hide", function()
+test("mine cells: a tradeable row offers Offer and Announce; a dead one a dash with its reason", function()
     local M = MC()
     local d = drop()
     local a = M.Actions(d, M.BestCandidates(d), M.AnnounceButton("ready"))
@@ -180,7 +180,7 @@ test("mine cells: a tradeable row offers Offer and Announce; a dead one a dash a
     assertFalse(M.Actions(up, M.BestCandidates(up), M.AnnounceButton("ready")).offer.primary)
     local dead = drop({ trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } })
     local b = M.Actions(dead, M.BestCandidates(dead), M.AnnounceButton("ready"))
-    assertFalse(b.tradeable); assertTrue(b.dash.tip[2]:find("Bonus roll") ~= nil); assertTrue(#b.hide.tip >= 2)
+    assertFalse(b.tradeable); assertTrue(b.dash.tip[2]:find("Bonus roll") ~= nil); assertTrue(b.hide == nil)
 end)
 
 -- ── the summary, the post, the dock ─────────────────────────────────────────────────────────
@@ -231,14 +231,13 @@ end)
 
 -- ── the entries ─────────────────────────────────────────────────────────────────────────────
 
-test("mine: the entries are your own drops that pass the filter and were not hidden, in the tab's order", function()
+test("mine: the entries are your own drops that pass the filter, in the tab's order", function()
     local NS = T.newAddon()
     local WM = NS.WindowMine
     local drops = { drop({ id = 1, at = 10 }), drop({ id = 2, at = 30, isMine = false }), drop({ id = 3, at = 20 }), drop({ id = 4, at = 40 }) }
     local ctx = { matches = function(d) return d.id ~= 4 end, compare = function(a, b) return a.at > b.at end }
     local e = WM.Entries(drops, ctx, {})
     assertEqual(#e, 2); assertEqual(e[1].id, 3); assertEqual(e[2].id, 1)
-    assertEqual(#WM.Entries(drops, ctx, { dismissed = { [3] = true } }), 1)
 end)
 
 -- M10 review (FB2-10): My drops groups its rows under the same headers as the other two tabs.
@@ -280,7 +279,6 @@ test("mine: rows sit under their run's or encounter's header, newest group first
         "a drop the filter hid is counted under its header")
     assertEqual(shape(WM.Rows(groups, drops, get, rowsCtx(), { collapsed = { ["Boss B"] = true } })),
         "[Boss B:1/1] [Boss A:2/2] 3 1 5", "a collapsed group keeps its header only")
-    assertEqual(shape(WM.Rows(groups, drops, get, rowsCtx(), { dismissed = { [4] = true } })), "[Boss A:2/2] 3 1 5")
 end)
 
 -- ── the tab, headless ───────────────────────────────────────────────────────────────────────
@@ -356,7 +354,7 @@ test("mine tab: built headless, one row per drop of yours, each column painted",
     assertTrue(math.abs(c.trade.fraction - 6432 / 7200) < 1e-9)
     assertEqual(textOf(c.best.text), "Seta +14 · Butterz +6")
     assertTrue(c.actions.offer:IsShown()); assertTrue(c.actions.announce:IsShown())
-    assertFalse(c.actions.hide:IsShown())
+    assertTrue(c.actions.hide == nil, "no Hide (feedback-4 spec §2)")
     local ring = rowFor(drawn, 2).cells
     assertEqual(textOf(ring.forMe.sub), "keep?")
     assertEqual(textOf(ring.best.text), "Hidden: an upgrade for you")
@@ -364,7 +362,7 @@ test("mine tab: built headless, one row per drop of yours, each column painted",
     assertEqual(textOf(trinket.trade.text), "0:08:41 ending soon"); assertTrue(trinket.trade.bold)
     local boots = rowFor(drawn, 4).cells
     assertEqual(textOf(boots.trade.text), "Bonus roll")
-    assertFalse(boots.actions.offer:IsShown()); assertTrue(boots.actions.dash:IsShown()); assertTrue(boots.actions.hide:IsShown())
+    assertFalse(boots.actions.offer:IsShown()); assertTrue(boots.actions.dash:IsShown())
     assertEqual(drawn.summary.text, "3 tradeable · next expiry 0:08:41")
     assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:41")
     assertTrue(drawn.pane.summary.post:IsEnabled())
@@ -406,7 +404,7 @@ test("mine tab: every shown cell has a reason tooltip; nothing is blank", functi
             end
         end
         local a = row.cells.actions
-        for _, b in ipairs({ a.offer, a.announce, a.dashTip, a.hide }) do
+        for _, b in ipairs({ a.offer, a.announce, a.dashTip }) do
             if b:IsShown() then assertTrue(#W.TooltipOf(b) >= 2, "an action has a reason") end
         end
     end
@@ -452,11 +450,9 @@ test("mine tab: TradeTimerTick moves the countdown while the tab shows", functio
     assertEqual(textOf(rowFor(NS.WindowMine.Drawn(), 1).cells.trade.text), "1:47:00")
 end)
 
-test("mine tab: Hide takes a dead row off the tab for the session", function()
-    local NS, drawn = shownMine()
-    rowFor(drawn, 4).cells.actions.hide:__fire("OnClick")
-    drawn = NS.WindowMine.Drawn()
-    assertEqual(#drawn.rows, 3); assertTrue(NS.State.windowMine.dismissed[4])
+test("mine tab: a dead row stays listed; nothing hides it (feedback-4 spec §2)", function()
+    local _, drawn = shownMine()
+    assertEqual(#drawn.rows, 4); assertTrue(rowFor(drawn, 4).cells.actions.hide == nil)
 end)
 
 test("mine tab: Announce goes through the shared handler, and AskStateChanged repaints it", function()

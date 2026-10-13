@@ -6,8 +6,8 @@ local _, NS = ...
 -- pass its filters and were not hidden, under their run's or encounter's header) once per repaint
 -- and hands them here in the compact layout; this file draws them into its own scroll view over the
 -- same pane (NS.CompactGroup's shared kit: pooled cards and headers, the layout switch and the scroll
--- carry-over). Nothing here filters, judges or sends: Offer, Announce and Hide are the full table's
--- handlers (NS.OfferPanel.Open, NS.PressAnnounce, NS.WindowMine.Dismiss).
+-- carry-over). Nothing here filters, judges or sends: Offer and Announce are the full table's
+-- handlers (NS.OfferPanel.Open, NS.PressAnnounce).
 --
 -- THE CARD. What each piece says, its tone and its tooltip are NS.CompactCards.Mine's:
 --
@@ -115,8 +115,6 @@ local function buildLineThree(card)
     CG.Piece(card, "candidates")
     card.announce = W.TextButton(card, K.ANNOUNCE_W, nil, L["Announce"], function(b) NS.PressAnnounce(b.dropId) end)
     attach(card.announce)
-    card.hide = W.TextButton(card, K.ANNOUNCE_W, nil, L["Hide"], function(b) NS.WindowMine.Dismiss(b.dropId) end)
-    attach(card.hide)
 end
 
 local function newCard(content)
@@ -147,10 +145,8 @@ local function layout(card, m)
     at(c.forYouLabel.text, "LEFT", card, "TOPLEFT", x, y2)
     at(card.barBg, "RIGHT", card, "TOPRIGHT", -P, y2)
     at(c.trade.text, "RIGHT", card.barBg, "LEFT", -6, 0)
-    for _, b in ipairs({ card.announce, card.hide }) do
-        at(b, "RIGHT", card, "TOPRIGHT", -P, y3)
-        b:SetHeight(m.line + 2)
-    end
+    at(card.announce, "RIGHT", card, "TOPRIGHT", -P, y3)
+    card.announce:SetHeight(m.line + 2)
     at(c.candidates.text, "LEFT", card, "TOPLEFT", x, y3)
     c.candidates.text:SetPoint("RIGHT", card.announce, "LEFT", -6, 0)
 end
@@ -209,12 +205,9 @@ local function paintLineThree(card, drop, cc)
     c.candidates.text:SetText(text)
     if colored then CG.SetTone(c.candidates.text, "plain") end
     local a = cc.action
-    card.announce.dropId, card.hide.dropId = drop.id, drop.id
-    card.announce:SetShown(not a.hide)
-    card.hide:SetShown(a.hide == true)
-    if a.hide then
-        card.hide.tipLines = a.tip
-    else
+    card.announce.dropId = drop.id
+    card.announce:SetShown(a ~= nil)
+    if a then
         a.toneState = select(2, NS.WindowMine.ToneStates(drop))
         NS.WindowMine.SetButtonLook(card.announce, a)
     end

@@ -15,8 +15,7 @@ local _, NS = ...
 -- comes.
 --
 -- IT FOLLOWS ITS DROP AND ITS SWITCH. A drop that leaves the feed (a Clear or the cap's trim: the
--- feed's removal sink, Prune) or whose row is dismissed (NS.DismissDrop, Forget) takes its toast
--- and its place in the queue with it, and an Ask on a drop already gone only takes the toast down.
+-- feed's removal sink, Prune) takes its toast and its place in the queue with it, and an Ask on a drop already gone only takes the toast down.
 -- Turning `toast.enabled` off (its row's reaction, OnEnabledChanged) or switching to a profile with
 -- it off (OnProfileReloaded) takes the toast down and empties the queue.
 --
@@ -394,16 +393,6 @@ function Toast.Prune()
     end
     if n > 0 then NS.Debug(TAG, "toast: %d gone with their drops", n) end
     return n
-end
-
---- One drop's toast, shown or waiting, goes for good: its row was dismissed (NS.DismissDrop).
---- @param id any
-function Toast.Forget(id)
-    toasted[id] = true
-    for i = #queue, 1, -1 do
-        if queue[i] == id then table.remove(queue, i) end
-    end
-    if shownId ~= nil and shownId == id then Toast.Dismiss() end
 end
 
 -- Toasts turned off: the one on screen goes and nothing waits.

@@ -174,7 +174,7 @@ test("compact cards: the Group drops card reads the spec's three lines", functio
     local card = C.Group(groupDrop(), groupCtx())
     local lines = C.Plain(card)
     -- The spec's sketch shows [Ask]; the engine offers none for a downgrade, so the full view's dash.
-    assertEqual(lines[1], "Vile Vial of Volatile Venom  295  –  ×")
+    assertEqual(lines[1], "Vile Vial of Volatile Venom  295  –")
     assertEqual(lines[2], "Lysandra · Trinket · Likely  2m")
     assertEqual(lines[3], "You ▽ -13 (321/308)  Them ⊘ Can't use (298/296)")
     assertEqual(card.kind, "group"); assertEqual(card.id, 7); assertEqual(card.link, LINK)
@@ -192,7 +192,7 @@ test("compact cards: the Group drops card's pieces keep the full view's tones an
     assertEqual(card.you.verdict.tone, "red"); assertEqual(card.them.verdict.tone, "bad", "can't use is gray in both columns")
     assertEqual(card.you.label, "You"); assertEqual(card.them.label, "Them")
     assertEqual(joined(card.ask.tip), joined(W.Ask(d, nil, nil, nil).tip))
-    assertEqual(card.dismiss.tip[1], "Dismiss")
+    assertTrue(card.dismiss == nil, "no dismiss (feedback-4 spec §2)")
     assertEqual(#card.you.eq.items, 2, "both worn trinkets, for the edge's tooltip")
 end)
 
@@ -223,7 +223,7 @@ test("compact cards: the Ask button keeps its states, and a drop you cannot ask 
         assertFalse(card.ask.text:find("…", 1, true) ~= nil, "no ellipsis")
     end
     local no = C.Group(groupDrop(), groupCtx())
-    assertFalse(no.ask.offered); assertEqual(C.Plain(no)[1], "Vile Vial of Volatile Venom  295  –  ×")
+    assertFalse(no.ask.offered); assertEqual(C.Plain(no)[1], "Vile Vial of Volatile Venom  295  –")
     assertTrue(has(no.ask.tip, "not an upgrade for you"))
 end)
 
@@ -259,7 +259,7 @@ test("compact cards: a drop whose details have not loaded is never blank", funct
     local card = C.Group(groupDrop({ facts = NONE, me = NONE, them = NONE, trade = NONE, inspect = NONE,
         link = NONE }), groupCtx())
     local lines = C.Plain(card)
-    assertEqual(lines[1], "?  ?  –  ×")
+    assertEqual(lines[1], "?  ?  –")
     assertEqual(lines[2], "Lysandra · – · Unknown  …")
     assertEqual(lines[3], "You ?  Them ?")
 end)
@@ -290,16 +290,16 @@ test("compact cards: the countdown keeps its bar fraction, its warning and its e
     assertEqual(boe.trade.text, "No limit (BoE)"); assertEqual(boe.trade.fraction, 1)
 end)
 
-test("compact cards: a drop that cannot be traded shows Not tradeable, a dash for Offer and Hide", function()
+test("compact cards: a drop that cannot be traded shows Not tradeable and a dash for Offer, and no Hide", function()
     local C = CC()
     local card = C.Mine(mineDrop({ trade = { state = "no", reasonKey = "bonusRoll" } }), { now = NOW })
     local lines = C.Plain(card)
     assertEqual(lines[1], "Leggings of the Frenzy  183  –")
     assertEqual(lines[2], "For you ▲ +49 (keep?)  Not tradeable")
-    assertEqual(lines[3], "–  Hide")
-    assertFalse(card.tradeable); assertTrue(card.offer.dash); assertTrue(card.action.hide)
+    assertEqual(lines[3], "–")
+    assertFalse(card.tradeable); assertTrue(card.offer.dash); assertTrue(card.action == nil, "nothing hides it")
     assertEqual(card.trade.tone, "bad"); assertTrue(has(card.trade.tip, "Bonus roll loot can't be traded."))
-    assertTrue(has(card.offer.tip, "Not tradeable")); assertEqual(card.action.tip[1], "Hide")
+    assertTrue(has(card.offer.tip, "Not tradeable"))
 end)
 
 test("compact cards: an upgrade for you hides its candidates until you choose to offer it", function()

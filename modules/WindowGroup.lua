@@ -7,7 +7,8 @@ local _, NS = ...
 -- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
 -- verdicts: ▲ ≈ ▽ before the signed item-level change, green, yellow or red in both; feedback-4
 -- spec §0), Trade
--- (Yes, Likely, Unknown or No) and Actions (the Ask button and the × that dismisses the row).
+-- (Yes, Likely, Unknown or No) and Actions (the Ask button; no drop is ever dismissed, feedback-4
+-- spec §2).
 -- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
 -- cell says, and its reason tooltip, is modules/WindowCells.lua's (pure); this file is the frame
@@ -25,24 +26,23 @@ local _, NS = ...
 -- THE ORDER. NS.WindowCells.Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
 -- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
 -- and your own drops only with `feed.showOwn` on)
--- and were not dismissed, ordered by the tab's Sort. A group with none keeps its header (`n drops ·
+-- ordered by the tab's Sort. A group with none keeps its header (`n drops ·
 -- 0 shown`) while the View filter hid them, and is left out when Search or Content did or it has
 -- nothing for the tab (WC.KeepsHeader); its header counts your own drops left to My drops (`· 1 yours
 -- on My drops`, feedback-3 spec §0). A group the
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
--- toggles and dismissals are session-only (NS.State.windowGroup).
+-- toggles are session-only (NS.State.windowGroup).
 --
 -- THE DETAIL CARD (design spec §11.3, board 02). A click on a row (anywhere but a button) expands
 -- it inline: modules/DetailCard.lua's card is placed under it and the rows below move down by the
 -- card's height. Only one row is expanded at a time (NS.State.windowGroup.expanded); a second click
--- on it, or on another row, collapses or moves the card. A row filtered out, collapsed under its
--- header or dismissed takes its card with it.
+-- on it, or on another row, collapses or moves the card. A row filtered out or collapsed under its
+-- header takes its card with it.
 -- THE COMPACT LAYOUT (WG.IsCompact) draws the same entries as cards: modules/CompactGroup.lua.
 --
 -- THE UI LISTENS. Window.lua repaints it on the bus; it reads the feed (NS.LootFeed.Groups, Get),
 -- the looter's inspect entry (NS.Inspect.Get) and the ask's state (NS.Asks.StateOf), all read-only.
--- The Ask button goes through the host handler NS.PressAsk, the × through NS.DismissDrop (both
--- core/DropWatcher.lua, which also cancels the drop's automatic ask). An item button
+-- The Ask button goes through the host handler NS.PressAsk (core/DropWatcher.lua). An item button
 -- shows the game's tooltip, shift-click links it (Compat.InsertChatLink) and ctrl-click tries it
 -- on (Compat.DressUpItem).
 
@@ -74,8 +74,8 @@ WG.COLUMNS = {
     { key = "them", label = L["Them"], width = 70, shed = 6,
       tip = L["The drop judged for its looter, in the same colors: ▲ upgrade green, ≈ sidegrade yellow, ▽ downgrade red."] },
     { key = "trade", label = L["Trade"], width = 70, shed = 7, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
-    { key = "actions", label = L["Actions"], width = 96,
-      tip = L["Ask the looter for it, once. The × hides the row for this session."] },
+    { key = "actions", label = L["Actions"], width = K.ASK_W,
+      tip = L["Ask the looter for it, once."] },
 }
 local GLYPH_COLS = { me = true, them = true }
 local WHITE = { r = 1, g = 1, b = 1 }   -- an untoned button's label (GameFontHighlightSmall)
@@ -89,7 +89,7 @@ local TEST_NONE = L["Test mode found no items to show."]
 local function view()
     local v = State.windowGroup
     if not v then
-        v = { collapsed = {}, dismissed = {} }
+        v = { collapsed = {} }
         State.windowGroup = v
     end
     return v
@@ -117,16 +117,6 @@ end
 function WG.ToggleGroup(key, collapsedNow)
     view().collapsed[key] = not collapsedNow
     NS.Debug("UI", "group %s %s", tostring(key), collapsedNow and "expanded" or "collapsed")
-    repaint()
-end
-
---- Dismiss one drop's row for the session (its ×).
---- @param id number
-function WG.Dismiss(id)
-    local v = view()
-    v.dismissed[id] = true
-    if v.expanded == id then v.expanded = nil end
-    NS.Debug("UI", "drop %s dismissed", tostring(id))
     repaint()
 end
 
@@ -433,17 +423,6 @@ local function actionsCell(row)
     f.dashTip = CreateFrame("Frame", nil, f)
     f.dashTip:SetAllPoints(f.ask)
     NS.Window.AttachTooltip(f.dashTip, function() return tipOf(f.dashTip) end, "row")
-    f.dismiss = CreateFrame("Button", nil, f)
-    f.dismiss:SetSize(14, 14)
-    f.dismiss:SetPoint("LEFT", f.ask, "RIGHT", 6, 0)
-    f.dismiss.art = f.dismiss:CreateTexture(nil, "ARTWORK")
-    f.dismiss.art:SetAllPoints(f.dismiss)
-    f.dismiss.art:SetTexture(NS.Icon("close"))
-    f.dismiss.art:SetVertexColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
-    f.dismiss:SetScript("OnClick", function(b) NS.DismissDrop(b.dropId) end)
-    NS.Window.AttachTooltip(f.dismiss, function()
-        return L["Dismiss"], L["Hide this drop from the table for this session."]
-    end, "row")
     return f
 end
 
@@ -558,7 +537,7 @@ end
 local function paintActions(f, drop)
     local state, reason = WG.AskState(drop)
     local a = WC.Ask(drop, state, reason, NS.Setting("messages.transmogAsk") == true)
-    f.ask.dropId, f.dismiss.dropId = drop.id, drop.id
+    f.ask.dropId = drop.id
     f.ask:SetShown(a.offered)
     f.dashTip:SetShown(not a.offered)
     f.dash:SetShown(not a.offered)

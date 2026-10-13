@@ -3,7 +3,7 @@ local _, NS = ...
 -- the same entries as the full table, each drop a three-line card under a one-line header.
 --
 -- ONE PANE, TWO LAYOUTS. modules/WindowGroup.lua builds the tab and computes its entries (the
--- feed's groups, the filters, the order, the dismissals) once per repaint, then hands them here in
+-- feed's groups, the filters, the order) once per repaint, then hands them here in
 -- the compact layout (WG.IsCompact) and draws its table otherwise. This file adds its own scroll
 -- frame to the same pane, built on the first compact repaint, and shows one or the other; the
 -- empty state and the filters' line stay WindowGroup's. Nothing here filters, judges or sends.
@@ -13,7 +13,7 @@ local _, NS = ...
 -- left edge. What each piece says, its tone and its reason tooltip are NS.CompactCards.Group's
 -- (pure, built from the full view's cells):
 --
---   line 1  item (quality color, the game's tooltip) · ilvl · Ask (the full table's states) · ×
+--   line 1  item (quality color, the game's tooltip) · ilvl · Ask (the full table's states)
 --   line 2  looter (class color, ⊕ from another realm) · slot · trade        inspect freshness
 --   line 3  You ▽ -13 (321/308)                 Them ⊘ Can't use (298/296)
 --
@@ -60,7 +60,6 @@ CG.GAP = 2             -- between two cards, and around the detail card
 CG.LINE_EXTRA = 4      -- a line's height over its text size
 CG.ICON_MIN, CG.ICON_MAX = 24, 48
 CG.QUALITY_W = 2       -- the quality bar at a card's left edge
-CG.DISMISS = 12        -- the × mark
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
 local SEP = "|cff9e9ea3·|r "
@@ -207,15 +206,6 @@ local function buildAsk(card)
     card.dashTip = CreateFrame("Frame", nil, card)
     card.dashTip:SetAllPoints(card.ask)
     W.AttachTooltip(card.dashTip, function() return tipOf(card.dashTip) end, "row")
-    local d = CreateFrame("Button", nil, card)
-    d:SetSize(CG.DISMISS, CG.DISMISS)
-    d.art = d:CreateTexture(nil, "ARTWORK")
-    d.art:SetAllPoints(d)
-    d.art:SetTexture(NS.Icon("close"))
-    d.art:SetVertexColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
-    d:SetScript("OnClick", function(b) NS.DismissDrop(b.dropId) end)
-    W.AttachTooltip(d, function() return tipOf(d) end, "row")
-    card.dismiss = d
 end
 
 local function buildLineOne(card)
@@ -279,8 +269,7 @@ local function layout(card, m)
     local x, P, c = CG.TextLeft(m), CG.PAD, card.cells
     local y1 = CG.LineY(m, 1)
     card.icon:SetSize(m.icon, m.icon)
-    at(card.dismiss, "RIGHT", card, "TOPRIGHT", -P, y1)
-    at(card.ask, "RIGHT", card.dismiss, "LEFT", -4, 0)
+    at(card.ask, "RIGHT", card, "TOPRIGHT", -P, y1)
     card.ask:SetHeight(m.line + 2)
     at(c.ilvl.text, "RIGHT", card.ask, "LEFT", -6, 0)
     at(c.item.text, "LEFT", card, "TOPLEFT", x, y1)
@@ -303,7 +292,7 @@ CG.PaintText = paintText
 -- dash with its reason where no ask is offered.
 local function paintAsk(card, a, id)
     local b = card.ask
-    b.dropId, card.dismiss.dropId = id, id
+    b.dropId = id
     b:SetShown(a.offered)
     card.dash:SetShown(not a.offered)
     card.dashTip:SetShown(not a.offered)
@@ -329,7 +318,6 @@ local function paintLineOne(card, drop, cc)
     c.item.hit.tipLines = nil   -- the real item tooltip instead
     paintText(c.ilvl, cc.ilvl)
     paintAsk(card, cc.ask, drop.id)
-    card.dismiss.tipLines = cc.dismiss.tip
 end
 
 --- Line 2 painted from a card model: the looter in class color, its ⊕, slot, trade and `right`.

@@ -751,15 +751,14 @@ local function onMine(ctx, d) return d.isMine == true and (not ctx.onMine or ctx
 
 -- A group's drops for the tab, split into those shown and those its filter hid ({ drop, why },
 -- why the control's key, else `filter`), and how many of your own the tab left to My drops that My
--- drops lists (`yours`, feedback-3 spec §0 and §5). A dismissed drop and one not the tab's are in
--- neither.
-local function visibleDrops(group, get, ctx, dismissed)
+-- drops lists (`yours`, feedback-3 spec §0 and §5). A drop not the tab's is in neither.
+local function visibleDrops(group, get, ctx)
     local shown, hidden, yours = {}, {}, 0
     for _, id in ipairs(group.drops or {}) do
         local d = get(id)
         if d and not belongs(ctx, d) then
             if onMine(ctx, d) then yours = yours + 1 end
-        elseif d and not dismissed[id] then
+        elseif d then
             if ctx.matches(d) then
                 shown[#shown + 1] = d
             else
@@ -798,18 +797,18 @@ end
 --- @param get function id -> drop (NS.LootFeed.Get)
 --- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy,
 ---   onMine = fn(drop): whether My drops lists one of yours the tab leaves to it (`yours`) }
---- @param state table|nil { collapsed, dismissed, allOpen } (NS.State.windowGroup)
+--- @param state table|nil { collapsed, allOpen } (NS.State.windowGroup)
 --- @return table
 function WC.Entries(groups, get, ctx, state)
     state = state or {}
-    local collapsed, dismissed = state.collapsed or {}, state.dismissed or {}
+    local collapsed = state.collapsed or {}
     local oldest = type(ctx.filter) == "table" and ctx.filter.sort == "oldest"
     local from, to, step = #groups, 1, -1
     if oldest then from, to, step = 1, #groups, 1 end
     local out, first = {}, true
     for i = from, to, step do
         local g = groups[i]
-        local drops, hidden, yours = visibleDrops(g, get, ctx, dismissed)
+        local drops, hidden, yours = visibleDrops(g, get, ctx)
         if #drops > 0 then
             local c = collapsedOf(collapsed, g.key, first, state.allOpen)
             first = false

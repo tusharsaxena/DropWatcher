@@ -152,10 +152,10 @@ local FAR = { ok = false, reason = "range", text = "That player is out of trade 
 test("cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read", function()
     local D = DC()
     local acts = D.Actions(drop(), { askState = "ready", inspect = { status = "fresh", at = 60 }, now = 100, trade = OK_TRADE })
-    assertEqual(texts(acts), "Ask Seta,Edit message,Link in chat,Retry inspect,Trade,Hide this item")
+    assertEqual(texts(acts), "Ask Seta,Edit message,Link in chat,Retry inspect,Trade")
     local on = {}
     for _, a in ipairs(acts) do on[#on + 1] = a.key .. "=" .. tostring(a.enabled) end
-    assertEqual(table.concat(on, ","), "ask=true,edit=true,link=true,retry=false,trade=true,hide=true")
+    assertEqual(table.concat(on, ","), "ask=true,edit=true,link=true,retry=false,trade=true")
     assertTrue(byKey(acts, "retry").tip[2]:find("read 40s ago") ~= nil)
     for _, a in ipairs(acts) do assertTrue(#a.tip >= 2, a.key .. " says why") end
 end)
@@ -182,7 +182,7 @@ test("cells: on your own drop Ask, Edit, Retry and Trade are off, each with its 
         local a = byKey(acts, key)
         assertFalse(a.enabled, key); assertTrue(#a.tip >= 2 and a.tip[2] ~= "", key)
     end
-    assertTrue(byKey(acts, "hide").enabled)
+    assertTrue(byKey(acts, "hide") == nil, "no Hide this item (feedback-4 spec §2)")
     local legacy = D.Actions(drop({ trade = { state = "no", reasonKey = "legacy" } }), { askState = "ready", now = 100, trade = OK_TRADE })
     assertFalse(byKey(legacy, "trade").enabled, "an item its looter can't trade")
 end)
@@ -313,13 +313,12 @@ test("card: the actions go through their host handlers; Trade is off with its re
     for _, b in pairs(a) do assertTrue(#NS.Window.TooltipOf(b) >= 2, b.key .. " has a tooltip") end
 end)
 
-test("card: Hide this item dismisses the row and takes the card with it", function()
+test("card: the card has no Hide this item; its row stays", function()
     local NS = shownTable()
     NS.WindowGroup.ToggleExpand(1)
-    NS.WindowGroup.Drawn().card.actions.hide:__fire("OnClick")
     local drawn = NS.WindowGroup.Drawn()
-    assertFalse(drawn.card:IsShown()); assertNil(NS.WindowGroup.Expanded())
-    assertTrue(NS.State.windowGroup.dismissed[1]); assertTrue(rowFor(drawn, 1) == nil)
+    assertTrue(drawn.card.actions.hide == nil)
+    assertTrue(drawn.card:IsShown()); assertTrue(rowFor(drawn, 1) ~= nil)
 end)
 
 test("card: a filtered-out or collapsed row hides its card; it comes back with the row", function()

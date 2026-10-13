@@ -2,7 +2,7 @@
 -- 06): every cell's text, glyph, tone and reason tooltip (modules/WindowCells.lua, pure), the
 -- column sets and the entry order (modules/WindowGroup.lua's pure halves), then the table built
 -- headless under the mock: pooled rows, encounter headers that collapse, item buttons, the Ask
--- button, the dismiss mark, the compact layout's hand-off, the filters and the empty state.
+-- button, the compact layout's hand-off, the filters and the empty state.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -256,7 +256,7 @@ test("table: the Item column takes the slack, never less than its minimum", func
     local WG, K = NS.WindowGroup, NS.Constants.WINDOW
     local cols = WG.Columns({ slot = false, looter = false, myEq = false, them = false, trade = false })
     local wide = WG.Layout(cols, 600)
-    local fixed = 40 + 84 + 70 + 96 + 5 * K.CELL_GAP
+    local fixed = 40 + 84 + 70 + K.ASK_W + 5 * K.CELL_GAP   -- Actions is the Ask button alone (feedback-4 §2)
     assertEqual(wide.item.w, 600 - fixed)
     assertEqual(wide.ilvl.x, wide.item.w + K.CELL_GAP)
     assertEqual(WG.Layout(cols, 100).item.w, K.ITEM_MIN)
@@ -303,9 +303,9 @@ test("table: groups newest first, the first open and older ones collapsed; a gro
     local searched = ctxOf(function(d) return d.id ~= 4 end)
     searched.hiddenBy = function() return "search" end
     assertEqual(Cells.Entries(groups, get, searched, {})[1].group.key, "b", "a group Search hides whole is left out")
-    local toggled = Cells.Entries(groups, get, ctxOf(), { collapsed = { a = false, c = true }, dismissed = { [2] = true } })
+    local toggled = Cells.Entries(groups, get, ctxOf(), { collapsed = { a = false, c = true } })
     assertEqual(toggled[1].group.key, "c"); assertTrue(toggled[1].collapsed, "the player's toggle wins")
-    assertEqual(toggled[2].group.key, "b"); assertEqual(toggled[2].count, 1, "a dismissed drop is gone")
+    assertEqual(toggled[2].group.key, "b"); assertEqual(toggled[2].count, 2, "nothing is dismissed")
     local oldest = Cells.Entries(groups, get, ctxOf(nil, "oldest"), {})
     assertEqual(oldest[1].group.key, "a", "Sort: Oldest turns the groups round")
 end)
@@ -491,7 +491,7 @@ test("table: every shown cell has a reason tooltip; nothing is blank", function(
         local a = row.cells.actions
         local tipHost = a.ask:IsShown() and a.ask or a.dashTip
         assertTrue(#W.TooltipOf(tipHost) >= 2, "the Ask cell has a reason")
-        assertTrue(#W.TooltipOf(a.dismiss) >= 2)
+        assertTrue(a.dismiss == nil, "no dismiss mark (feedback-4 spec §2)")
     end
     for _, label in pairs(drawn.pane.colHead.labels) do
         if label:IsShown() then assertTrue(#W.TooltipOf(label) >= 2, "each column label explains itself") end
@@ -638,13 +638,12 @@ test("table: a drop with no ask offered shows a dash with its reason", function(
     assertTrue(NS.Window.TooltipOf(a.dashTip)[2]:find("My drops") ~= nil)
 end)
 
-test("table: the × dismisses a row for the session", function()
+test("table: no row can be dismissed: no ×, no handler, no dismissed state (feedback-4 spec §2)", function()
     local NS, drawn = shownTable()
-    rowFor(drawn, 1).cells.actions.dismiss:__fire("OnClick")
-    drawn = NS.WindowGroup.Drawn()
-    assertEqual(#drawn.rows, 1)
-    assertTrue(rowFor(drawn, 1) == nil)
-    assertTrue(NS.State.windowGroup.dismissed[1])
+    assertTrue(rowFor(drawn, 1).cells.actions.dismiss == nil)
+    assertTrue(NS.DismissDrop == nil); assertTrue(NS.WindowGroup.Dismiss == nil)
+    assertTrue(NS.State.windowGroup.dismissed == nil)
+    assertEqual(#drawn.rows, 2)
 end)
 
 test("table: the compact layout draws cards instead of the table, and the full layout the table again", function()

@@ -8,7 +8,7 @@ local _, NS = ...
 -- change, the track change, the stat change, and Pawn's score for you or the looter's spec and the
 -- inspect's age, each under a verdict chip); the trade estimate box (the state, the reason in plain words, the rule in
 -- force and how fresh the data is); and the actions: Ask, Edit message, Link in chat, Retry inspect,
--- Trade (disabled with its reason) and Hide this item. Every line and chip has a reason tooltip.
+-- and Trade (disabled with its reason). Every line and chip has a reason tooltip.
 --
 -- THE SPLIT. What each part says is modules/DetailCells.lua's (pure); this file is the frame edge
 -- that paints it. modules/WindowGroup.lua owns the expansion (which row is open, where the card
@@ -24,7 +24,7 @@ local _, NS = ...
 -- entry (NS.Inspect.Get), the ask's state (NS.Asks.StateOf), the message preview (NS.Asks.Preview),
 -- the trade guard (NS.TradeHelper.CanTradeWith) and the client through NS.Compat (the spec's name,
 -- Pawn's presence), all read-only. Its buttons go through the host handlers in core/DropWatcher.lua
--- (NS.PressAsk, NS.RetryInspect, NS.TradeWithLooter, and NS.DismissDrop for Hide); Link in chat is
+-- (NS.PressAsk, NS.RetryInspect, NS.TradeWithLooter); Link in chat is
 -- Compat.InsertChatLink, as an item button's shift-click is.
 --
 -- THE EDIT MESSAGE BOX. Edit message opens a small skinned box over the window, prefilled with the
@@ -46,8 +46,8 @@ local max, floor = math.max, math.floor
 
 local MAX_CHIPS = 10
 local MAX_SIDE_ROWS = 5
-local ACTION_KEYS = { "ask", "edit", "link", "retry", "trade", "hide" }
-local ACTION_W = { ask = 92, edit = 100, link = 92, retry = 96, trade = 124, hide = 104 }
+local ACTION_KEYS = { "ask", "edit", "link", "retry", "trade" }
+local ACTION_W = { ask = 92, edit = 100, link = 92, retry = 96, trade = 124 }
 
 local editor   -- the Edit message box, built on its first use
 
@@ -191,7 +191,6 @@ local ON_CLICK = {
     link  = function(b) if b.link then NS.Compat.InsertChatLink(b.link) end end,
     retry = function(b) NS.RetryInspect(b.dropId) end,
     trade = function(b) NS.TradeWithLooter(b.dropId) end,
-    hide  = function(b) NS.DismissDrop(b.dropId) end,
 }
 
 local function buildActions(card)
@@ -200,9 +199,7 @@ local function buildActions(card)
     for _, key in ipairs(ACTION_KEYS) do
         local b = NS.Window.TextButton(card, ACTION_W[key], nil, "", ON_CLICK[key])
         b:SetHeight(K.ACTION_H)
-        if key == "hide" then
-            b:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -K.CARD_PAD, K.CARD_PAD)
-        elseif prev then
+        if prev then
             b:SetPoint("LEFT", prev, "RIGHT", 6, 0)
         else
             b:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", K.CARD_PAD, K.CARD_PAD)
@@ -210,7 +207,7 @@ local function buildActions(card)
         b.key = key
         attach(b)
         card.actions[key] = b
-        if key ~= "hide" then prev = b end
+        prev = b
     end
 end
 
@@ -258,7 +255,7 @@ end
 local ACTION_GAP, ACTION_LINE_GAP = 6, 4
 
 --- The actions flowed into lines `avail` pixels wide, in their order (Ask, Edit message, Link in
---- chat, Retry inspect, Trade, Hide this item): a button that does not fit after the last one on a
+--- chat, Retry inspect, Trade): a button that does not fit after the last one on a
 --- line starts the next. Each one's x and line (0 first), and the number of lines.
 --- @param avail number
 --- @return table { [key] = { x, line } }, number lines

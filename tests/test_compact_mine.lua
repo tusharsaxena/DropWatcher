@@ -1,7 +1,7 @@
 -- tests/test_compact_mine.lua — the My drops tab in the compact layout and the Offer panel beside the
 -- compact window (compact spec §3, DW-C3): the candidates' colored line and the short summary
 -- (pure), then the cards drawn headless under the mock: one pooled three-line card per row under a
--- one-line header, the countdown and its bar, Offer, Announce and Hide through the full table's
+-- one-line header, the countdown and its bar, Offer and Announce through the full table's
 -- handlers, the shortened strip, every tooltip at the card's top right, and the panel docked beside
 -- the compact window on whichever side has room.
 
@@ -138,7 +138,7 @@ test("compact mine: one pooled card per drop of yours under a one-line header, e
     assertEqual(textOf(c.trade.text), "1:47:12")
     assertEqual(plain(textOf(c.candidates.text)), "Seta +14 · Butterz +6")
     assertTrue(textOf(c.candidates.text):find("|c", 1, true) ~= nil, "the names in class colors")
-    assertTrue(card.announce:IsShown()); assertFalse(card.hide:IsShown())
+    assertTrue(card.announce:IsShown()); assertTrue(card.hide == nil)
     assertEqual(textOf(card.announce.label), "Announce")
     local lines = NS.CompactCards.Plain(card.model)
     assertEqual(lines[1], "Bracers of the Tide  305  Offer")
@@ -164,18 +164,15 @@ test("compact mine: the countdown's bar follows the time left and turns amber wh
     assertFalse(dead.bar:IsShown(), "no bar on a drop that cannot be traded")
 end)
 
-test("compact mine: a drop that cannot be traded shows the dash and Hide; Hide takes it off for the session", function()
+test("compact mine: a drop that cannot be traded shows the dash and no Announce; nothing hides it", function()
     local NS, drawn = shownCompact()
     local W = NS.Window
     local dead = cardFor(drawn, 4)
     assertFalse(dead.offer:IsShown()); assertTrue(dead.dash:IsShown())
     assertEqual(textOf(dead.dash), "–")
     assertEqual(W.TooltipOf(dead.dashTip)[1], "No offer")
-    assertFalse(dead.announce:IsShown()); assertTrue(dead.hide:IsShown())
-    assertEqual(W.TooltipOf(dead.hide)[1], "Hide")
-    dead.hide:__fire("OnClick")
-    drawn = NS.WindowMine.Drawn()
-    assertEqual(#drawn.rows, 2); assertTrue(NS.State.windowMine.dismissed[4])
+    assertFalse(dead.announce:IsShown()); assertTrue(dead.hide == nil, "no Hide (feedback-4 spec §2)")
+    assertEqual(#drawn.rows, 3, "the dead drop stays listed")
 end)
 
 test("compact mine: Announce goes through the shared handler and shows the ask's state", function()
@@ -342,6 +339,6 @@ test("compact mine: test mode fills a card for every sample of yours, no piece b
             assertTrue(t ~= nil and t ~= "", "card " .. tostring(card.dropId) .. ": " .. key)
         end
         assertTrue(card.offer:IsShown() or card.dash:IsShown(), "Offer or its dash")
-        assertTrue(card.announce:IsShown() or card.hide:IsShown(), "Announce or Hide")
+        assertTrue(card.announce:IsShown() or card.dash:IsShown(), "Announce, or the dash of a dead drop")
     end
 end)

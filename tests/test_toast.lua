@@ -301,16 +301,6 @@ test("toast edge: the cap's trim takes the trimmed drop's toast, through the rea
     m.advance(1)
 end)
 
-test("toast edge: dismissing the row forgets its toast, shown or waiting", function()
-    local NS = enabled({ drop(), drop({ id = 2 }), drop({ id = 3 }) })
-    added(NS, 1); added(NS, 2); added(NS, 3)
-    NS.DismissDrop(2)
-    assertEqual(NS.Toast.Stats().waiting, 1, "the waiting one left the queue")
-    -- red under: NS.DismissDrop without NS.Toast.Forget (core/DropWatcher.lua)
-    NS.DismissDrop(1)
-    assertEqual(NS.Toast.Stats().dropId, 3, "the shown one went, and the next took its turn")
-end)
-
 test("toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing", function()
     local NS, _, byId = enabled({ drop() })
     added(NS, 1)
