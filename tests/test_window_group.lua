@@ -358,18 +358,18 @@ end
 
 local function textOf(region) return region and region:GetText() end
 
-test("table: built at the minimum width, the shed columns hide and Ask stays inside the row", function()
+test("table: built at the least width, every column shows and Ask stays inside the row (feedback-4 §4)", function()
     local NS, _, m = T.enableAddon()
     local K = NS.Constants.WINDOW
     m.__now = 100
     seed(NS, { GROUP }, { drop() })
-    NS.addon.db.profile.window = { geometry = { full = { width = K.MIN_WIDTH } } }
+    NS.addon.db.profile.window = { geometry = { full = { width = 600 } } }   -- stored under the least
     NS.ShowWindow()
+    assertEqual(NS.Window.Frame():GetWidth(), K.MIN_WIDTH, "raised to the least width")
     local drawn = NS.WindowGroup.Drawn()
-    assertEqual(keys(drawn.columns), "item,me,them,trade,actions")
+    assertEqual(keys(drawn.columns), "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,actions")
     local c = rowFor(drawn, 1).cells
-    assertFalse(c.slot:IsShown()); assertFalse(c.looter:IsShown()); assertFalse(c.theirEq:IsShown())
-    assertFalse(drawn.pane.colHead.labels.slot:IsShown(), "and so does its column label")
+    assertTrue(c.slot:IsShown()); assertTrue(c.looter:IsShown()); assertTrue(c.theirEq:IsShown())
     assertTrue(c.actions:IsShown())
     local _, _, _, x = c.actions:GetPoint(1)
     assertTrue(x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
@@ -809,4 +809,43 @@ test("table: the Type column sits after Slot and is painted on every row", funct
     local keysShown = {}
     for _, col in ipairs(drawn.columns) do keysShown[#keysShown + 1] = col.key end
     assertEqual(keysShown[3] .. "," .. keysShown[4], "slot,armorType")
+end)
+
+-- ── the least width, the search box and the headers (feedback-4 spec §4) ────────────────────
+
+test("layout: at the least width no tab sheds a column, and one pixel less would shed on Group drops", function()
+    local NS = T.newAddon()
+    local K = NS.Constants.WINDOW
+    assertEqual(K.MIN_WIDTH, K.WIDTH, "the least width is a new profile's width")
+    assertEqual(K.COMPACT_MIN_W, K.COMPACT_WIDTH, "in both layouts")
+    local row = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
+    for _, tab in ipairs({ "WindowGroup", "WindowMine", "WindowHistory" }) do
+        local cols = NS[tab].COLUMNS
+        assertEqual(#NS.WindowGroup.Fit(cols, row), #cols, tab .. " keeps every column")
+    end
+    assertTrue(#NS.WindowGroup.Fit(NS.WindowGroup.COLUMNS, row - 1) < #NS.WindowGroup.COLUMNS,
+        "the least width is the tightest that fits Group drops")
+    assertTrue(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH) >= 200, "the search box has room to type")
+end)
+
+test("layout: the search box spans from the bar's gap after Character to the bar's right edge", function()
+    local NS = shownTable()
+    local FB, K = NS.WindowFilterBar, NS.Constants.WINDOW
+    local c = FB.Controls()
+    assertEqual(c.search.__points[1][1], "LEFT"); assertEqual(c.search.__points[1][2], c.char)
+    assertEqual(c.search.__points[1][4], 8)
+    assertEqual(c.search.__points[2][1], "RIGHT"); assertEqual(c.search.__points[2][2], c.host)
+    assertEqual(FB.SearchWidth(K.MIN_WIDTH + 300) - FB.SearchWidth(K.MIN_WIDTH), 300, "it takes all the width gained")
+    assertTrue(c.search:IsShown())
+end)
+
+test("layout: the column labels are gold on all three full tables", function()
+    local NS = shownTable()
+    local G = NS.Constants.GOLD
+    local function gold(label) return select(2, label.text:GetTextColor()) == G.g end
+    assertTrue(gold(NS.WindowGroup.Drawn().pane.colHead.labels.item), "Group drops")
+    NS.Window.SelectTab("mine")
+    assertTrue(gold(NS.Window.Frame().panes.mine.colHead.labels.item), "My drops")
+    NS.Window.SelectTab("history")
+    assertTrue(gold(NS.Window.Frame().panes.history.colHead.labels.item), "History")
 end)

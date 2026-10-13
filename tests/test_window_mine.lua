@@ -337,7 +337,7 @@ test("mine tab: a narrow row sheds Best candidates, Ilvl and For me, and keeps A
         return table.concat(out, ",")
     end
     assertEqual(names(NS.WindowGroup.Fit(cols, 900)), "item,ilvl,forMe,trade,best,actions")
-    local narrow = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
+    local narrow = 520 - 2 * K.INSET - K.SCROLL_W   -- narrower than the window can be: the shed rule alone
     local layout, kept = NS.WindowGroup.Layout(cols, narrow)
     assertEqual(names(kept), "item,trade,actions")
     assertTrue(layout.actions.x + layout.actions.w <= narrow, "Offer and Announce stay reachable")

@@ -653,9 +653,10 @@ function FB.Build(host)
     FB.Anchor()
 end
 
---- Put every control at its place on the bar, left to right, the search box on the right with its
---- full hint (the build, and the full layout taking them back from the compact Filters panel,
---- modules/CompactChrome.lua).
+--- Put every control at its place on the bar, left to right, then the search box from the bar's gap
+--- after the last of them to the bar's right edge, with its full hint (the build, and the full
+--- layout taking them back from the compact Filters panel, modules/CompactChrome.lua). Both its edges
+--- are anchored, so it widens and narrows with the window, live while sizing (feedback-4 spec §4).
 function FB.Anchor()
     local host = controls.host
     if not host then return end
@@ -670,23 +671,35 @@ function FB.Anchor()
             prev = w
         end
     end
-    controls.search:ClearAllPoints()
-    controls.search:SetPoint("RIGHT", host, "RIGHT", 0, 0)
-    controls.search.hint:SetText(L["Filter looter or item…"])
+    local eb = controls.search
+    eb:ClearAllPoints()
+    if prev then eb:SetPoint("LEFT", prev, "RIGHT", GAP, 0) else eb:SetPoint("LEFT", host, "LEFT", 0, 0) end
+    eb:SetPoint("RIGHT", host, "RIGHT", 0, 0)
+    eb.hint:SetText(L["Filter looter or item…"])
 end
 
---- Fit the bar to the window's width: the search box takes what the controls leave, and hides when
---- that is too little to type in. The compact layout's anchors size it there instead.
+--- The search box's width in a full window `width` pixels wide: what the bar's controls and their
+--- gaps leave between the last of them and the bar's right edge (FB.Anchor's two anchors give it
+--- that width on screen; pure, for the suites).
+--- @param width number|nil the window's width
+--- @return number
+function FB.SearchWidth(width)
+    local used = 2 * K.INSET
+    for _, key in ipairs(ROW) do
+        if controls[key] or not controls.host then used = used + WIDTH[key] + GAP end
+    end
+    return math.max((tonumber(width) or K.WIDTH) - used, 0)
+end
+
+--- Fit the bar to the window's width: the search box spans what the controls leave (its anchors,
+--- FB.Anchor), and hides only when that is too little to type in. The compact layout's anchors size
+--- it there instead.
 --- @param width number|nil the window's width
 function FB.Layout(width)
     local eb = controls.search
     if not eb or NS.WindowCompact.Mode() == "compact" then return end
-    local used = 2 * K.INSET
-    for _, key in ipairs(ROW) do
-        if controls[key] then used = used + GAP + WIDTH[key] end
-    end
-    local room = (tonumber(width) or K.WIDTH) - used
-    eb:SetWidth(math.min(220, math.max(room, 0)))
+    local room = FB.SearchWidth(width)
+    eb:SetWidth(room)   -- what the anchors give it; the headless suites read it
     eb:SetShown(room >= 80)
 end
 

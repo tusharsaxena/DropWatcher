@@ -419,7 +419,7 @@ local function buildHeads(pane)
         local f = CreateFrame("Frame", nil, head)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
-        f.text:SetTextColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
+        f.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as Loot History's (feedback-4 spec §4)
         f.text:SetText(col.label)
         NS.Window.AttachTooltip(f, function() return col.label, col.tip end)
         head.labels[col.key] = f

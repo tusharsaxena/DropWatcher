@@ -19,15 +19,18 @@ C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEX
 -- tab's body and a footer.
 C.WINDOW = {
     NAME        = "DropWatcherWindow",
-    WIDTH       = 1000,   -- board 01 drew 940; the My eq column and two filters (DW-83) take the rest
+    -- The default width is the least (feedback-4 spec §4): the Group drops table's every column at
+    -- its width, the Item column at ITEM_MIN, the scroll gutter and both insets (938 + 22 + 12).
+    -- tests/test_window_group.lua pins that no tab sheds a column there and the filter bar fits.
+    WIDTH       = 972,
     HEIGHT      = 600,
-    MIN_WIDTH   = 520,
+    MIN_WIDTH   = 972,    -- = WIDTH: sized wider and back, never narrower than a new profile's
     MIN_HEIGHT  = 260,
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
     COMPACT_WIDTH  = 380,
     COMPACT_HEIGHT = 460,
-    COMPACT_MIN_W  = 320,
+    COMPACT_MIN_W  = 380,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
     COMPACT_MAX_W  = 520,
     COMPACT_MIN_H  = 220,
     COMPACT_MAX_H  = 900,
