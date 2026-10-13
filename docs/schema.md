@@ -34,7 +34,11 @@ Every module reads a setting through `NS.Setting(path)`.
 
 `<key>` is each of `mythicPlus`, `dungeon`, `followerDungeon`, `raidLFR`, `raid`, `delve`,
 `scenario`, `pvp`, `openWorldGroup` and `solo`; `track` and `autoOpen` default on for Mythic+,
-dungeons and raids, `track` alone for Raid Finder, and off elsewhere.
+dungeons and raids, `track` alone for Raid Finder, and off elsewhere. The three
+`situations.<key>.*` rows are `skipRender` with no subsection (since DW-H0, feedback-8 spec §0):
+When to show's table draws them, one line per situation (`settings/PageEditors.lua`
+`SituationTable`, docs/settings-panel.md), and writes through the seam, so the CLI, the Defaults
+button and profiles reach them as any row.
 
 ### Feed
 

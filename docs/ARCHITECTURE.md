@@ -216,7 +216,9 @@ it on the panel, its `default` references
 `defaults/Profile.lua`, and its `validate` refuses a value outside its list or range before the
 seam stores it. `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by
 specID (architecture-§5's value route: a membership change is a whole write through the seam),
-drawn by their own editors (`skipRender`); the CLI shows them as their entry count. The reactions
+drawn by their own editors (`skipRender`); the CLI shows them as their entry count. The
+`situations.<key>.*` rows are `skipRender` too (since DW-H0): When to show's table draws them, a
+line per situation, and writes through the seam. The reactions
 every surface shares are `Settings.REACTIONS` (Master controls) and the window repaint on the
 Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared `writeThrough` so the
 host verbs still land on a load where the composers are hollow (options-ui-§1 route (a)). The
@@ -442,9 +444,10 @@ the design leaves open, module by module, is in [`design-readings.md`](design-re
 - **The trade-time warning** can arrive up to a minute late while the window is closed (the ticker
   slows to once a minute).
 - **A keystone chest** has no `ENCOUNTER_END`, so auto-ask times its drops from the drop itself.
-- **When to show** draws one block per situation rather than the design's grid of situations by
-  setting: LibKa0s-Options has no grid composer for mixed controls. A LibKa0s issue asking for one
-  is filed as [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
+- **When to show's table** (since DW-H0, feedback-8 spec §0) is the page's own editor
+  (`settings/PageEditors.lua`), not a library composer: LibKa0s-Options has no grid composer for
+  mixed controls. A LibKa0s issue asking for one is filed as
+  [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
 - **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
   headless mock does not model; PROFILE-1 is its in-game check.
 - **The simulator** (milestone M7) runs end to end: `/dw sim start <scenario> [size]` builds the

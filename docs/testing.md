@@ -49,7 +49,9 @@ spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and pass
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load), `test_settings_pages` (the settings
 pages built headless: the page list and each page's strip, a page's rows by its key, When to show's
-blocks and dimmed rows, the Feed page's "in force now" readout, the Comparison page's per-spec
+table (one line per situation, its gold headers and stripe, each cell's value, a toggle writing its
+path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, the
+rows still schema rows and `skipRender`), the Feed page's "in force now" readout, the Comparison page's per-spec
 weights and unwanted types written whole through the seam, the Messages page's live counters,
 preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's

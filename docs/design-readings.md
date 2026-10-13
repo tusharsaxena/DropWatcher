@@ -60,7 +60,12 @@ the design does not name (a housing interior, say) is the open world (`solo` or
 `openWorldGroup`); the Mythic Keystone difficulty is `mythicPlus` even before
 `IsChallengeModeActive` turns true; and the delve and follower-dungeon inputs come from the
 difficulty id. The check lives in the module's edge (`GetDifficultyInfo` is not version-variant).
-The per-situation settings are the `situations.<key>.*` rows, read through `NS.Setting`.
+The per-situation settings are the `situations.<key>.*` rows, read through `NS.Setting`. The
+settings page drew them as one block per situation under its name (the plan's fallback for the
+design's grid). **Superseded by feedback-8 (2026-10-13)** (feedback-8 spec §0, DW-H0): General › When
+to show draws them as one table, a line per situation (Situation, Track, Auto-open, Quality), in Ka0s
+Loot History's Price sources look; the rows are `skipRender` and the table writes through the seam
+(docs/settings-panel.md).
 
 ## The class tables
 

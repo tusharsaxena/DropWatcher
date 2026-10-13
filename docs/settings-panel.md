@@ -21,8 +21,8 @@ predicate, `settings/SchemaRows.lua`), never hidden, and keeps its value.
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 `settings/Panel.lua` registers General, `settings/Pages.lua` the five after it,
-`settings/Profiles.lua` the last. Three tabs and one closing line have no row the flow engine can
-draw; they are host tabs and an `afterGroup` hook handed to the library's tabbed renderer
+`settings/Profiles.lua` the last. Three tabs, one closing line and one table have no row the flow
+engine can draw; they are host tabs and `afterGroup` hooks handed to the library's tabbed renderer
 (`settings/PageEditors.lua`, over the pure `settings/Editors.lua`).
 
 ## General → Master controls
@@ -45,13 +45,32 @@ reset is a profile reset and never touches the minimap button (options-ui-§12, 
 
 ## General → When to show
 
-The master `autoOpen` row (Auto-open the window), then one block per situation under the
-situation's name: `Track` and `Auto-open`, then `Quality` (`Use global` or a mode of its own)
-(design spec §6.1). An untracked situation's `Auto-open` and `Quality` are dimmed, and every
-situation's `Auto-open` is dimmed while the master row is off. The design's grid (situations by
-setting) has no LibKa0s composer: `ChoiceGrid` draws one choice per row over one value list, and a
-situation's line holds two checkboxes and a dropdown. So the tab draws one block per situation, as
-the plan's fallback says, and a LibKa0s issue asking for a grid composer is filed as [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
+The master `autoOpen` row (Auto-open the window), then the per-situation settings as one table
+(feedback-8 spec §0, DW-H0), a line per situation in `K.SITUATIONS` order (design spec §6.1):
+
+| Situation | Track | Auto-open | Quality |
+|---|---|---|---|
+| the situation's name (`WindowFooter.SituationLabel`) | checkbox, `situations.<key>.track` | checkbox, `situations.<key>.autoOpen` | dropdown, `situations.<key>.quality` (`Use global` or a mode of its own) |
+
+It takes the look of Ka0s Loot History's Price sources table, without its drag handle, reorder list
+and status column: gold, left-aligned column headers (`GameFontNormalSmall`) in a band above
+fixed-height lines, every second line faintly striped, the cells' text in `GameFontHighlightSmall`,
+the panel's own CheckBox and Dropdown widgets. An untracked situation's `Auto-open` and `Quality`
+are dimmed and its name grays; every situation's `Auto-open` is dimmed while the master row is off.
+Each cell dims exactly when its schema row's `disabledIf` says so (`Editors.SituationRows`), so the
+rule has one home. Hovering a cell shows its row's label and tooltip; hovering a name shows the
+situation.
+
+The three per-situation rows stay schema rows (paths, defaults, checks, tooltips), marked
+`skipRender` with no subsection, so `/dw get|set`, the page's Defaults, profiles and their announce
+reach them unchanged. The table is When to show's `afterGroup` hook
+(`Settings.PageEditors.SituationTable`), writes through `NS.SchemaRuntime.Set` and repaints every
+value and state on each render and after every write (a toggle, the master row, Defaults, a profile
+switch). Its host frame and slots are built once per session and re-hosted on a fresh placeholder
+on each render; the General page's renderer parks it (`ParkSituationTable`) before `ClearScroll`
+hands the old placeholder back to AceGUI's pool. Until DW-H0 the tab drew one block per situation,
+since LibKa0s has no grid composer for mixed controls ([LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50));
+the table is drawn by the page's own editor instead.
 
 ## General → Simulation
 
