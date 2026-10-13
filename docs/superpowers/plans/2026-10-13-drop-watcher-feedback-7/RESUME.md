@@ -7,3 +7,4 @@ after DW-G2 and DW-G5. Never merge without the owner's go-ahead; after the merge
 branches (local and origin), stashes and worktrees.
 
 ## Log
+- 2026-10-13 20:10 — all items landed and pushed; bundle 20261013-200128 green. Next: owner merge go-ahead and in-game checks.
