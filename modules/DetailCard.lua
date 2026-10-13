@@ -9,7 +9,7 @@ local _, NS = ...
 -- inspect's age, each under a verdict chip); the trade estimate box (the state, the reason in plain words, the rule in
 -- force and how fresh the data is); and the actions: Ask, Edit message, Link in chat, Retry inspect,
 -- and Trade (disabled with its reason). Every line and chip has a reason tooltip. On your own drop
--- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Them row `(Multiple)` with every
+-- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Them row `(Details)` with every
 -- member it upgrades in the tooltip, and Offer takes the Ask's place: it opens the Offer panel
 -- (NS.WindowOwn: the reveal state, the offer's tone and the click).
 --

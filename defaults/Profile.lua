@@ -110,7 +110,9 @@ NS.C = {
         -- and no row addresses it.
         window = {
             columns = {
-                ilvl = true, slot = true, armorType = true, looter = true, myEq = true, theirEq = true,
+                -- `me` and `them` show the worn gear too (feedback-6 spec §1); schema step 7 retired
+                -- the `myEq` and `theirEq` toggles.
+                ilvl = true, slot = true, armorType = true, looter = true,
                 me = true, them = true, trade = true, tradeWindow = true, actions = true,
             },
             -- The layout (compact spec §1): `full` (the tables) or `compact` (the narrow card

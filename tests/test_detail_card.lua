@@ -125,7 +125,7 @@ test("cells: For the looter compares their inspected gear and names their spec a
     assertTrue(byKey(unread.rows, "spec").tip[2]:find("not been inspected") ~= nil)
 end)
 
-test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (Multiple)", function()
+test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (Details)", function()
     local D = DC()
     local function cand(name, gain, base)
         return { guid = "G-" .. name, name = name .. "-Realm", status = "ready",
@@ -135,17 +135,17 @@ test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (
     local down = { verdict = "downgrade", ilvlDelta = -5, reasons = {} }
     local mine = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = list }), nil, nil, 100)
     assertEqual(mine.title, "FOR THE GROUP")
-    assertEqual(mine.verdict.text, "(Multiple)"); assertEqual(mine.verdict.tone, "good")
+    assertEqual(mine.verdict.text, "(Details)"); assertEqual(mine.verdict.tone, "good")
     assertEqual(mine.rows[1].tip[2], "Your own drop: Offer shows who it would help.")
     local them = byKey(mine.rows, "them")
-    assertEqual(them.text, "(Multiple)"); assertEqual(them.label, "Them")
+    assertEqual(them.text, "(Details)"); assertEqual(them.label, "Them")
     assertEqual(them.tip[2], "Butterz ▲ +11 · wears 300 (Bloodthorn Treads)", "ranked by gain")
     assertEqual(them.tip[3], "Seta ▲ +4 · wears 307")
     -- The keep? rule: an upgrade for you reads Hidden until revealed.
     local kept = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100)
     assertEqual(byKey(kept.rows, "them").text, "Hidden")
     local revealed = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100, true)
-    assertEqual(byKey(revealed.rows, "them").text, "(Multiple)")
+    assertEqual(byKey(revealed.rows, "them").text, "(Details)")
 end)
 
 -- ── the trade box ───────────────────────────────────────────────────────────────────────────

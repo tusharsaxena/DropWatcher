@@ -88,9 +88,9 @@ test("shell: TEST MODE is bright-red text beside the title, SIMULATION the same 
     assertEqual(f.newChip.__points[1][2], f.simText, "the `n new` counter follows the mode's words")
 end)
 
-test("shell: the default size is 1104 x 600, the least width every column fits (feedback-4 spec §4)", function()
+test("shell: the default size is 1038 x 600, the least width every column fits (feedback-4 spec §4)", function()
     local _, f = shown()
-    assertEqual(f:GetWidth(), 1104)
+    assertEqual(f:GetWidth(), 1038)
     assertEqual(f:GetHeight(), 600)
 end)
 
@@ -655,7 +655,7 @@ test("shell: minimize collapses to the title bar, keeps the size, and counts eve
     assertTrue(NS.addon.db.profile.window.minimized, "kept in the profile")
     assertFalse(f.body:IsShown())
     assertEqual(f:GetHeight(), 32)
-    assertEqual(f:GetWidth(), 1104)
+    assertEqual(f:GetWidth(), 1038)
     assertEqual(f.minimizeButton.mark, "add")
     assertFalse(f.newChip:IsShown(), "nothing new yet")
     announce(NS, drop({ id = 7 }))

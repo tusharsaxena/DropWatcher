@@ -12,7 +12,8 @@ local _, NS = ...
 --
 --   line 1  item (quality color, the game's tooltip) · ilvl · outcome (in its tone)
 --   line 2  looter (class color, ⊕ from another realm) · slot · type · trade       17:02 (dimmed)
---   line 3  You ▽ -4                       Them ≈ +0
+--   line 3  You ▽4                         Them ≈0
+--           (the full table's Me and Them: a kept entry holds no worn items, so the verdict alone)
 --
 -- THE HEADERS are the full table's header button, painted with the short form
 -- (NS.CompactCards.HistoryHeader: `2d` once a day old); a click collapses the group as before.

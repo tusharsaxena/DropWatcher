@@ -3,22 +3,22 @@ local _, NS = ...
 -- every drop the group receives, one row each, under a collapsible header per encounter or key run.
 --
 -- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Type (Cloth … Plate, Jewelry,
--- Trinkets, Cloak or Weapons; feedback-4 spec §3), Looter (in class color), My eq
--- (what you wear in that slot, from your gear snapshot), Their eq (what the looter wears there, from
--- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
--- verdicts: ▲ ≈ ▽ before the signed item-level change, green, yellow or red in both; feedback-4
--- spec §0), Trade
--- (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
+-- Trinkets, Cloak or Weapons; feedback-4 spec §3), Looter (in class color), Me and Them (what you,
+-- or the looter, wear in that slot and the drop judged for you, or them, in one cell: the worn item's
+-- icon or two, its item level, then ▲ ≈ ▽ and the item-level difference in the verdict's green,
+-- yellow or red, `321/308 ▽8`; your gear from its snapshot, theirs from their inspect read, the
+-- read's age in the tooltip; NS.SideCells, feedback-6 spec §1, which merged My eq and Their eq into
+-- them), Trade (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
 -- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
 -- NS.MineCells.TradeWindow, feedback-5 spec §1) and Actions (the Ask button; no drop is ever
 -- dismissed, feedback-4 spec §2). YOUR OWN DROPS are listed too (feedback-5 spec §2;
--- modules/WindowOwn.lua): Trade counts the members it upgrades (`Yes (2)`), Them and Their eq read
--- `(Multiple)` with each upgrade in the tooltip (`Hidden` while it is an upgrade for you that you
+-- modules/WindowOwn.lua): Trade counts the members it upgrades (`Yes (2)`), Them reads
+-- `(Details)` with each upgrade in the tooltip (`Hidden` while it is an upgrade for you that you
 -- have not offered), and Actions is Offer, which opens the Offer panel (no Announce in the table).
 -- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
--- cell says, and its reason tooltip, is modules/WindowCells.lua's (pure); this file is the frame
--- edge that paints it. Nothing is ever blank.
+-- cell says, and its reason tooltip, is modules/WindowCells.lua's and modules/SideCells.lua's
+-- (pure); this file is the frame edge that paints it. Nothing is ever blank.
 --
 -- THE ROWS. Pooled through LibKa0s-Pool-1.0 (NS.Pool), one pool for the drop rows and one for the
 -- headers, released and re-acquired in order on every repaint (Pool v3 hands them back in their
@@ -78,6 +78,7 @@ local C     = NS.Constants
 local L     = NS.L
 local State = NS.State
 local WC    = NS.WindowCells
+local SC    = NS.SideCells
 
 local max = math.max
 
@@ -90,6 +91,11 @@ WG.LEAD = K.ROW_INDENT + WG.CHEVRON_LEAD
 -- the column is its widest answer (`No limit (BoE)`) plus this (feedback-6 spec §0; measured over
 -- every MineCells.TradeWindow answer by tests/test_drops_layout.lua).
 WG.TRADE_WINDOW_PAD = 6
+-- A Me or Them cell's pieces, left to right (feedback-6 spec §1): the worn items' icons (EQ_ICON
+-- each, ICON_GAP apart), LEVEL_GAP, the item level, VERDICT_GAP, the glyph (the monospace face),
+-- GLYPH_GAP, the difference or the word. A piece that is not there takes no room and no gap. The
+-- columns are their widest cell (tests/test_side_cells.lua measures every kind).
+WG.SIDE = { ICON_GAP = 2, LEVEL_GAP = 4, VERDICT_GAP = 4, GLYPH_GAP = 3 }
 
 -- The default columns, left to right (design spec §11.1). `flex` takes the width the others leave.
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
@@ -97,26 +103,21 @@ WG.TRADE_WINDOW_PAD = 6
 WG.COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 6, tip = L["The drop's item level."] },
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
     { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
     { key = "armorType", label = L["Type"], width = 64, shed = 0,
       tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
     { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
-    { key = "myEq", label = L["My eq"], width = 84, shed = 3,
-      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level. Hover an icon for the item."] },
-    { key = "theirEq", label = L["Their eq"], width = 84, shed = 4,
-      tip = L["What the looter wears in that slot (two items for rings, trinkets and weapons) and its item level. Hover for how old the read is."] },
-    { key = "me", label = L["Me"], width = 70, shed = 9,
-      tip = L["The drop judged for you: ▲ upgrade (green), ≈ sidegrade (yellow) or ▽ downgrade (red), then the item-level change."] },
-    { key = "them", label = L["Them"], width = 70, shed = 7,
-      tip = L["The drop judged for its looter, in the same colors: ▲ upgrade green, ≈ sidegrade yellow, ▽ downgrade red."] },
-    { key = "trade", label = L["Trade"], width = 70, shed = 8, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
-    { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 5,
+    { key = "me", label = L["Me"], width = 127, shed = 7,
+      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: ▲ upgrade (green), ≈ sidegrade (yellow) or ▽ downgrade (red) and the item-level difference. Hover an icon for the item."] },
+    { key = "them", label = L["Them"], width = 127, shed = 5,
+      tip = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, (Details) lists who it would help."] },
+    { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+    { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3,
       tip = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] },
     { key = "actions", label = L["Actions"], width = K.ASK_W,
       tip = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."] },
 }
-local GLYPH_COLS = { me = true, them = true }
 local WHITE = { r = 1, g = 1, b = 1 }   -- an untoned button's label (GameFontHighlightSmall)
 
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
@@ -271,27 +272,39 @@ local function textCell(row, key)
     return f
 end
 
--- The verdict cells: the glyph in the monospace face first, then the signed change in the row's
--- face (feedback-4 spec §0); a word with no glyph starts at the cell's left edge.
-local function glyphCell(row, key)
-    local f = textCell(row, key)
-    f.glyph = f:CreateFontString(nil, "OVERLAY")
-    f.glyph:SetFont(C.FONT_MONO, 12, "")
-    f.glyph:SetPoint("LEFT", f, "LEFT", 0, 0)
-    return f
-end
-
 --- Put a verdict cell's text after its glyph, or at the cell's left edge when it has none: the
---- arrow comes before the number in every full table (feedback-4 spec §0).
+--- arrow comes before the number in every full table (feedback-4 spec §0). History's verdict cells.
 --- @param f table the cell (`f.text`, `f.glyph`)
 --- @param glyph string|nil
 function WG.PlaceGlyph(f, glyph)
     f.text:ClearAllPoints()
     if glyph and glyph ~= "" then
-        f.text:SetPoint("LEFT", f.glyph, "RIGHT", 3, 0)
+        f.text:SetPoint("LEFT", f.glyph, "RIGHT", WG.SIDE.GLYPH_GAP, 0)
     else
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     end
+end
+
+--- Place a Me or Them cell's pieces left to right (WG.SIDE): the shown icons, the item level, the
+--- glyph, the difference or word; each after the last piece shown, the first at the cell's edge.
+--- @param f table the cell (`icons`, `level`, `glyph`, `text`)
+--- @param nIcons number the icons shown (0..2)
+--- @param hasLevel boolean
+--- @param hasGlyph boolean
+function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph)
+    local S = WG.SIDE
+    local last, gap = nil, 0
+    if nIcons > 0 then last, gap = f.icons[math.min(nIcons, 2)], S.LEVEL_GAP end
+    local function after(fs, wanted)
+        fs:ClearAllPoints()
+        if last then fs:SetPoint("LEFT", last, "RIGHT", gap, 0) else fs:SetPoint("LEFT", f, "LEFT", 0, 0) end
+        if wanted then last = fs end
+    end
+    after(f.level, hasLevel)
+    if hasLevel then gap = S.VERDICT_GAP end
+    after(f.glyph, hasGlyph)
+    if hasGlyph then gap = S.GLYPH_GAP end
+    after(f.text, true)
 end
 
 --- Color an action button's label and mark by whose move it is (feedback-4 spec §1): red your
@@ -443,11 +456,17 @@ local function itemCell(row)
     return f
 end
 
-local function eqCell(row, key)
+-- A Me or Them cell: the worn items' buttons, the item level, the glyph (the monospace face) and
+-- the difference or word (`f.text`); WG.PlaceSide places them.
+local function sideCell(row, key)
     local f = textCell(row, key)
     f.icons = { itemButton(f, K.EQ_ICON), itemButton(f, K.EQ_ICON) }
     f.icons[1]:SetPoint("LEFT", f, "LEFT", 0, 0)
-    f.icons[2]:SetPoint("LEFT", f.icons[1], "RIGHT", 2, 0)
+    f.icons[2]:SetPoint("LEFT", f.icons[1], "RIGHT", WG.SIDE.ICON_GAP, 0)
+    f.level = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.level:SetWordWrap(false)
+    f.glyph = f:CreateFontString(nil, "OVERLAY")
+    f.glyph:SetFont(C.FONT_MONO, 12, "")
     return f
 end
 
@@ -482,7 +501,7 @@ local function tradeWindowCell(row)
     return f
 end
 
-local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = actionsCell, tradeWindow = tradeWindowCell }
+local BUILDERS = { item = itemCell, me = sideCell, them = sideCell, actions = actionsCell, tradeWindow = tradeWindowCell }
 
 --- A drop row's (or compact card's) expand indicator: the header's chevron texture, ROW_CHEVRON
 --- square, muted white (C.CHEVRON_ROW); the caller anchors it. WG.PaintChevron sets its state.
@@ -518,7 +537,7 @@ local function newRow(content)
     row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
     for _, col in ipairs(WG.COLUMNS) do
-        local make = BUILDERS[col.key] or (GLYPH_COLS[col.key] and glyphCell) or textCell
+        local make = BUILDERS[col.key] or textCell
         row.cells[col.key] = make(row, col.key)
     end
     row:SetScript("OnClick", function(self) WG.ToggleExpand(self.dropId) end)
@@ -551,11 +570,6 @@ local function paintText(f, c)
     f.text:SetText(c.text)
     setTone(f.text, c.tone)
     f.tipLines = c.tip
-    if f.glyph then
-        f.glyph:SetText(c.glyph or "")
-        setTone(f.glyph, c.tone)
-        WG.PlaceGlyph(f, c.glyph)
-    end
 end
 
 local function qualityTone(fs, drop)
@@ -589,17 +603,20 @@ local function myGear()
     return snap and snap.equipped
 end
 
--- An equipment cell: its worn items' icons, their item levels beside them. `unit` names whose
+-- A Me or Them cell (NS.SideCells): the worn items' icons, their item level (plain, or a muted
+-- word), then the glyph and the difference or word in the verdict's tone. `unit` names whose
 -- inventory an icon's tooltip reads (yours: the client's own tooltip for your slot), else the link.
-local function paintEq(f, c, unit)
+local function paintSide(f, c, unit)
     paintText(f, c)
     for i, b in ipairs(f.icons) do
         local it = c.items[i]
         setItem(b, it and it.link or nil, it and unit and { unit = unit, slot = it.slot } or nil)
     end
-    f.text:ClearAllPoints()
-    local last = #c.items > 0 and f.icons[math.min(#c.items, 2)] or nil
-    if last then f.text:SetPoint("LEFT", last, "RIGHT", 4, 0) else f.text:SetPoint("LEFT", f, "LEFT", 0, 0) end
+    f.level:SetText(c.level or "")
+    setTone(f.level, c.levelTone)
+    f.glyph:SetText(c.glyph or "")
+    setTone(f.glyph, c.tone)
+    WG.PlaceSide(f, #c.items, c.level ~= nil, c.glyph ~= nil)
 end
 
 --- The ask's state and reason; `traded` once the history settled the drop received (History.lua).
@@ -639,9 +656,10 @@ local function paintActions(f, drop)
 end
 
 -- What a cell's text may take of its width, so a long name is cut short rather than spilling into
--- the next column: the item button, the verdict glyph and the worn items take their share.
-local EQ_INSET = 2 * (K.EQ_ICON + 2) + 4
-local TEXT_INSET = { item = K.ROW_ICON + 5, me = 16, them = 16, myEq = EQ_INSET, theirEq = EQ_INSET }
+-- the next column: the item button takes its share. A Me or Them cell's pieces are placed one after
+-- the other, and the column is their widest (WG.SIDE).
+local TEXT_INSET = { item = K.ROW_ICON + 5 }
+local SIDE_COLS = { me = true, them = true }
 
 local function placeCells(row, layout, height)
     for key, f in pairs(row.cells) do
@@ -651,7 +669,7 @@ local function placeCells(row, layout, height)
             f:ClearAllPoints()
             f:SetPoint("LEFT", row, "LEFT", WG.CHEVRON_LEAD + at.x, 0)
             f:SetSize(at.w, height)
-            if f.text then f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10)) end
+            if f.text and not SIDE_COLS[key] then f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10)) end
         end
     end
 end
@@ -674,20 +692,16 @@ local function paintTradeWindow(f, drop, now, warnAt, size)
     f.bold = c.bold == true
 end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WC.Me }
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType }
 
---- Them and Their eq for any drop: the looter's verdict and worn gear, or (your own drop)
---- `(Multiple)` in both (NS.WindowOwn.Multiple; feedback-5 spec §2).
+--- The Them cell for any drop (NS.SideCells.Them): what the looter wears and their verdict, or on
+--- your own drop `(Details)` (or `Hidden`, by the session's reveal state: NS.WindowOwn).
 --- @param drop table
 --- @param gear table|nil the looter's inspect gear
 --- @param now number|nil
---- @return table them, table theirEq (with `items`)
-function WG.ThemCells(drop, gear, now)
-    if not drop.isMine then return WC.Them(drop, now), WC.TheirEq(drop, gear, now) end
-    local WO = NS.WindowOwn
-    local eq = WO.Multiple(drop, L["Their eq"])
-    eq.items = {}
-    return WO.Multiple(drop, L["Them"]), eq
+--- @return table cell (with `items`)
+function WG.ThemCell(drop, gear, now)
+    return SC.Them(drop, gear, now, drop.isMine and NS.WindowOwn.IsRevealed(drop.id) or nil)
 end
 
 -- `metrics.rowH` is this repaint's row height (drawTable: taller while Trade window shows).
@@ -708,10 +722,8 @@ local function paintRow(row, drop, layout, now, metrics)
     paintText(cells.looter, lc)
     classTone(cells.looter.text, lc.classFile)
     paintText(cells.trade, NS.WindowOwn.Trade(drop))
-    local them, theirEq = WG.ThemCells(drop, inspectGear(drop), now)
-    paintText(cells.them, them)
-    paintEq(cells.myEq, WC.MyEq(drop, myGear()), "player")
-    paintEq(cells.theirEq, theirEq)
+    paintSide(cells.me, SC.Me(drop, myGear()), "player")
+    paintSide(cells.them, WG.ThemCell(drop, inspectGear(drop), now))
     if layout.tradeWindow then paintTradeWindow(cells.tradeWindow, drop, now, metrics.warnAt, metrics.fontSize) end
     paintActions(cells.actions, drop)
 end

@@ -19,20 +19,21 @@ C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEX
 -- tab's body and a footer.
 C.WINDOW = {
     NAME        = "DropWatcherWindow",
-    -- The default width is the least (feedback-4 spec §4, recomputed by feedback-5 spec §4): the Drops
-    -- table's every column at its width with a CELL_GAP after each, the Item column at ITEM_MIN, a drop
-    -- row's indent and chevron lead, the scroll gutter and both insets:
-    --   columns  Ilvl 40 + Slot 72 + Type 64 + Looter 104 + My eq 84 + Their eq 84 + Me 70 + Them 70
-    --            + Trade 70 + Trade window 76 + Actions 84 (ASK_W) = 818, + 12 gaps x 6 = 890,
-    --            + Item 150 (ITEM_MIN) = 1040 (Trade window is its widest answer plus its bar's
-    --            padding, feedback-6 spec §0)
+    -- The default width is the least (feedback-4 spec §4, recomputed by feedback-5 spec §4 and
+    -- feedback-6 spec §1): the Drops table's every column at its width with a CELL_GAP after each, the
+    -- Item column at ITEM_MIN, a drop row's indent and chevron lead, the scroll gutter and both insets:
+    --   columns  Ilvl 40 + Slot 72 + Type 64 + Looter 104 + Me 127 + Them 127 + Trade 70
+    --            + Trade window 76 + Actions 84 (ASK_W) = 764, + 10 gaps x 6 = 824,
+    --            + Item 150 (ITEM_MIN) = 974 (Trade window is its widest answer plus its bar's
+    --            padding, feedback-6 spec §0; Me and Them their widest cell, two worn icons, `321/308`
+    --            and `Not wanted`, feedback-6 spec §1: tests/test_side_cells.lua measures both)
     --   lead     ROW_INDENT 12 + CHEVRON_X 4 + ROW_CHEVRON 10 + CHEVRON_GAP 4 = 30 (WindowGroup.LEAD)
     --   chrome   SCROLL_W 22 + 2 x INSET 6 = 34
-    --   1040 + 30 + 34 = 1104. History's columns (no lead) fit with room to spare.
-    -- tests/test_window_group.lua pins that no tab sheds a column there and the filter bar fits.
-    WIDTH       = 1104,
+    --   974 + 30 + 34 = 1038. History's columns (no lead) fit with room to spare.
+    -- tests/test_drops_layout.lua pins that no tab sheds a column there and the filter bar fits.
+    WIDTH       = 1038,
     HEIGHT      = 600,
-    MIN_WIDTH   = 1104,   -- = WIDTH: sized wider and back, never narrower than a new profile's
+    MIN_WIDTH   = 1038,   -- = WIDTH: sized wider and back, never narrower than a new profile's
     MIN_HEIGHT  = 260,
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
@@ -40,6 +41,8 @@ C.WINDOW = {
     -- looter, its realm mark, slot, type and a counted trade (about 220px at the small template's 5px a
     -- character) before the countdown and its bar (40 + 6 + CG.BAR_W), past the indent, chevron, icon,
     -- insets and scroll gutter (tests/test_compact_group.lua measures it). 380 cut it by about 57px.
+    -- Line 3's fullest halves since feedback-6 spec §1 (`Them 321/308 ⊘ Not wanted`) end about 46px
+    -- short of the card's edge there (measured too), so line 2 still sets it.
     COMPACT_WIDTH  = 440,
     COMPACT_HEIGHT = 460,
     COMPACT_MIN_W  = 440,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
@@ -70,7 +73,7 @@ C.WINDOW = {
     GROUP_H     = 20,     -- one encounter header row
     COLHEAD_H   = 18,     -- the column labels above the rows
     ROW_ICON    = 20,     -- a row's item button at most; a shorter row takes it 2px under its height
-    EQ_ICON     = 16,     -- one worn item in the My eq and Their eq columns
+    EQ_ICON     = 16,     -- one worn item in the Me and Them cells
     CELL_GAP    = 6,      -- between two columns
     ITEM_MIN    = 150,    -- the Item column's least width (it takes the slack)
     SCROLL_W    = 22,     -- the scroll bar's gutter on the right of the rows

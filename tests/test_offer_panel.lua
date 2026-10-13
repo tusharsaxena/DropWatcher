@@ -169,7 +169,7 @@ test("offer panel: opening an upgrade for you reveals who it would help on its r
     offerOf(rowFor(drawn, 2)):__fire("OnClick")
     assertTrue(NS.WindowOwn.IsRevealed(2))
     m.advance(0)
-    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 2).cells.them.text), "(Multiple)")
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 2).cells.them.text), "(Details)")
 end)
 
 test("offer panel: the close mark closes it, and it closes itself when its drop is gone", function()

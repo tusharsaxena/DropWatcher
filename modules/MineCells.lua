@@ -3,8 +3,8 @@ local _, NS = ...
 -- 04; feedback-5 spec §1-§3): the Trade window cell every drop shows on Drops, the candidates
 -- ranked with their status pills, the Offer panel's buttons, header and dock, the Drops strip's
 -- summary line and Post my tradeables' lines; and what your own drop says on Drops (feedback-5
--- spec §2): Trade with its upgrade count (`Yes (2)`), Them and Their eq as `(Multiple)` with every
--- member it upgrades in the tooltip, and the Offer button.
+-- spec §2): Trade with its upgrade count (`Yes (2)`), Them as `(Details)` (renamed from `(Multiple)`
+-- by feedback-6 spec §3) with every member it upgrades in the tooltip, and the Offer button.
 -- Nothing is ever blank: an unknown value says `?`, `–` or `Checking` and its tooltip says why.
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
@@ -29,14 +29,14 @@ local _, NS = ...
 --
 -- THE CANDIDATES (spec §11.4). Every other member, judged for your drop by the feed: upgrades first
 -- by their gain, then EQUAL, NO UPGRADE, CAN'T USE, CHECKING and UNAVAILABLE, each tie by name. An
--- upgrade for you is not offered by default: its count and (Multiple) read `Hidden` until you open
+-- upgrade for you is not offered by default: its count and (Details) read `Hidden` until you open
 -- the Offer panel yourself (AskFlow B2).
 --
 -- YOUR OWN DROP ON DROPS (feedback-5 spec §2). Trade appends how many members it upgrades
--- (`Yes (2)`, the bare word with none); Them and Their eq read `(Multiple)`, green with at least one
--- upgrade, muted otherwise, their tooltip naming each upgrade by gain (`Butterz ▲ +11 · wears 276
--- (Bloodthorn Treads)`). The keep? rule holds: while it is an upgrade for you and not revealed, the
--- count is not drawn and (Multiple) reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's
+-- (`Yes (2)`, the bare word with none); Them reads `(Details)` (NS.SideCells.Them), green with at
+-- least one upgrade, muted otherwise, its tooltip naming each upgrade by gain (`Butterz ▲ +11 · wears
+-- 276 (Bloodthorn Treads)`). The keep? rule holds: while it is an upgrade for you and not revealed,
+-- the count is not drawn and (Details) reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's
 -- shape), toned by the furthest offer sent; a dash with the reason when it cannot be traded.
 
 NS.MineCells = NS.MineCells or {}
@@ -328,7 +328,7 @@ local function upgradeLine(e)
     return head .. " · " .. worn
 end
 
---- Them and Their eq on your own drop: `(Multiple)`, green when it upgrades at least one member
+--- Them on your own drop: `(Details)`, green when it upgrades at least one member
 --- and muted when it upgrades none; its tooltip lists each upgrade ranked by gain, else says why
 --- there is none (nobody's whose gear was read, `n checking`, nobody else in the group). `Hidden`
 --- under the keep? rule; a dash on a drop that cannot be traded.
@@ -348,7 +348,7 @@ function MC.Multiple(drop, revealed, title)
     end
     local list = MC.Candidates(drop)
     local ups = upgradesOf(list)
-    local c = cell(L["(Multiple)"], #ups > 0 and "good" or "muted", title)
+    local c = cell(L["(Details)"], #ups > 0 and "good" or "muted", title)
     c.upgrades = #ups
     if #list == 0 then
         c.tip[2] = L["Nobody else in your group."]

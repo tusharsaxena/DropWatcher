@@ -8,7 +8,8 @@ local _, NS = ...
 -- inspect entry's gear, an ask's state, the clock) and answers a plain table; nothing here reads a
 -- module, the client or a saved variable, so test_window_group drives each state case by case.
 -- The frame edge that paints them is modules/WindowGroup.lua; the detail card (DW-32) and the
--- compact cards take the same composers.
+-- compact cards take the same composers. The Me and Them cells merge two of them each (the worn gear,
+-- then the verdict): modules/SideCells.lua.
 --
 -- THE ENTRIES (Entries, DW-B0: peeled out of modules/WindowGroup.lua) are the drop tables' rows in
 -- order, under their group headers; the Drops table and its compact cards both take them.
@@ -157,7 +158,7 @@ local function cell(text, tone, title, ...)
     return { text = text, tone = tone, tip = { title, ... } }
 end
 
--- ── the verdict columns: Me and Them ────────────────────────────────────────────────────────
+-- ── the verdicts: Me and Them ───────────────────────────────────────────────────────────────
 
 local function hasReasons(eval) return type(eval.reasons) == "table" end
 
@@ -218,7 +219,7 @@ function WC.Verdict(eval, _side, title, ilvl)
     return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v }
 end
 
---- The Me column: the drop judged for you.
+--- The Me verdict: the drop judged for you (NS.SideCells puts it after your worn gear).
 --- @param drop table
 --- @return table cell
 function WC.Me(drop)
@@ -240,9 +241,9 @@ local function inspectWhy(insp, who, now)
     return L["The item it would replace was not read."]
 end
 
---- The Them column: the drop judged for its looter (the Me column's tones), `–` on your own drop
---- (the Drops table shows MineCells.Multiple there instead: feedback-5 spec §2), `?` while their gear
---- is not read.
+--- The Them verdict: the drop judged for its looter (the Me verdict's tones), `–` on your own drop
+--- (the Drops table shows MineCells.Multiple's `(Details)` there instead: feedback-5 spec §2), `?`
+--- while their gear is not read. NS.SideCells puts it after the looter's worn gear.
 --- @param drop table
 --- @param now number|nil GetTime()
 --- @return table cell
@@ -328,11 +329,12 @@ function WC.Trade(drop)
     return c
 end
 
--- ── the My eq and Their eq columns ──────────────────────────────────────────────────────────
+-- ── the gear halves of the Me and Them cells ────────────────────────────────────────────────
 -- Both show the worn item(s) for the drop's slot (two for rings, trinkets and one-hand weapons):
--- the icons are the edge's, the cell's text is their item levels (`311`, `300/296`), and the
--- tooltip names each item. Their eq's inspect age is in its tooltip (feedback spec §3, FB-7); a
--- state with no data keeps its reason word (`…`, `range`, `combat`, `!`, `–`).
+-- the icons are the edge's, the text is their item levels (`311`, `300/296`), and the tooltip
+-- names each item. Their inspect age is in Them's tooltip (feedback spec §3, FB-7); a state with
+-- no data keeps its reason word (`…`, `range`, `combat`, `!`, `–`). They were the My eq and Their
+-- eq columns until feedback-6 spec §1 put each before its verdict (modules/SideCells.lua).
 
 -- The worn slots a drop is compared with: both rings, both trinkets, both hands for a weapon.
 local function eqSlots(equipLoc)
@@ -394,7 +396,7 @@ local function eqCellOf(text, tone, title, items)
 end
 
 
---- The My eq column: what you wear in the drop's slot, from your gear snapshot (NS.Gear), so it is
+--- What you wear in the drop's slot (the Me cell's gear half), from your gear snapshot (NS.Gear), so it is
 --- always fresh; `empty slot` when you wear nothing there, `…` while your gear is still loading.
 --- @param drop table
 --- @param equipped table|nil the snapshot's `equipped` ({ [slot] = entry | false })
@@ -449,7 +451,7 @@ local function theirStatus(insp, empty, unread)
     return STATUS_TEXT[type(insp) == "table" and insp.status] or DASH, "muted"
 end
 
---- The Their eq column: the looter's worn item(s) for the drop's slot (two for rings, trinkets and
+--- What the looter wears (the Them cell's gear half): their worn item(s) for the drop's slot (two for rings, trinkets and
 --- weapons) and their item levels; the inspect's age (or why there is no read) in the tooltip.
 --- @param drop table
 --- @param gear table|nil the looter's inspect entry's `gear` ({ [slot] = { link, ilvl } | false })
@@ -458,7 +460,7 @@ end
 function WC.TheirEq(drop, gear, now)
     if drop.isMine then
         local own = eqCellOf(DASH, "muted", L["Their eq"], {})
-        own.tip[2] = L["Your own drop: what you wear is in the My eq column."]
+        own.tip[2] = L["Your own drop: what you wear is in the Me column."]
         return own
     end
     local who = looterName(drop)
@@ -478,7 +480,7 @@ function WC.TheirEq(drop, gear, now)
     return c
 end
 
---- How fresh the looter's inspect is, in words (the Their eq tooltip's last line, and compact mode's
+--- How fresh the looter's inspect is, in words (the Them gear half's last tooltip line, and compact mode's
 --- freshness tooltip, modules/CompactCards.lua): how old a good read is, else why there is none.
 --- @param insp table|nil the drop's inspect state { status, at, reason }
 --- @param who string the looter's short name

@@ -132,14 +132,20 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(plain(textOf(c.slot.text)), "· Head"); assertEqual(plain(textOf(c.trade.text)), "· Likely")
     assertEqual(textOf(c.fresh.text), "40s")
     assertEqual(textOf(c.youLabel.text), "You")
-    assertEqual(textOf(c.you.glyph) .. " " .. textOf(c.you.text), "▲ +19")
+    assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▲19")
     assertEqual(textOf(c.themLabel.text), "Them")
-    assertEqual(textOf(c.them.glyph) .. " " .. textOf(c.them.text), "▽ -13")
+    assertEqual(textOf(c.them.glyph) .. textOf(c.them.text), "▽13")
+    assertEqual(textOf(c.you.level), "empty", "nothing worn there (the mock's gear), before the verdict")
+    assertEqual(c.you.level.__points[1][2], c.youLabel.text, "the level after the label")
+    assertEqual(c.you.glyph.__points[1][2], c.you.level, "the glyph after the level")
+    assertEqual(c.you.text.__points[1][2], c.you.glyph, "the difference after the glyph")
     local model = NS.CompactCards.Plain(card.model)
     assertTrue(model[1]:find("Crown of Roaring Storms  311  Ask", 1, true) ~= nil, model[1])
     local other = cardFor(drawn, 2).cells
     assertEqual(textOf(other.looter.glyph), "", "same realm: no mark")
     assertEqual(textOf(other.you.glyph) .. " " .. textOf(other.you.text), "⊘ Can't use")
+    assertEqual(textOf(other.them.level), "range", "the gear part says why")
+    assertEqual(textOf(other.them.text), "", "so the ? goes")
     assertEqual(textOf(other.fresh.text), "range")
 end)
 
@@ -164,8 +170,14 @@ test("compact group: every piece keeps its full-view reason tooltip", function()
     local d = drop()
     local Cells = NS.WindowCells
     assertEqual(W.TooltipOf(c.trade.hit)[2], Cells.Trade(d).tip[2])
-    assertEqual(W.TooltipOf(c.you.hit)[1], Cells.Me(d).tip[1])
-    assertEqual(W.TooltipOf(c.them.hit)[1], "For Seta: Downgrade")
+    local you, them = W.TooltipOf(c.you.hit), W.TooltipOf(c.them.hit)
+    assertEqual(you[1], "You wear", "the gear's lines first (feedback-6 spec §1)")
+    local function has(tip, line)
+        for _, l in ipairs(tip) do if l == line then return true end end
+        return false
+    end
+    assertTrue(has(you, Cells.Me(d).tip[1]), "then the verdict's")
+    assertTrue(has(them, "For Seta: Downgrade"))
     assertEqual(W.TooltipOf(c.ilvl.hit)[1], "Item level 311")
     local looter = W.TooltipOf(c.looter.hit)
     assertEqual(looter[#looter], "From another realm: Otherrealm.")
@@ -305,6 +317,7 @@ test("compact group: test mode fills a card for every sample, no piece blank, an
         local c = card.cells
         for _, key in ipairs({ "item", "ilvl", "looter", "slot", "trade", "fresh", "you", "them" }) do
             local t = textOf(c[key].text)
+            if c[key].level then t = textOf(c[key].level) .. (t or "") end   -- a half: its gear, then its verdict
             assertTrue(t ~= nil and t ~= "", "card " .. tostring(card.dropId) .. ": " .. key)
         end
         assertTrue(card.ask:IsShown() or card.dash:IsShown(), "Ask or its dash")
@@ -434,4 +447,43 @@ test("compact group: at the least width line 2's pieces end before the countdown
         assertTrue(leftEnd + 4 <= rightStart,
             ("%s: line 2 ends at %d, the countdown starts at %d"):format(which, leftEnd, rightStart))
     end
+end)
+
+-- Line 3 at its fullest (feedback-6 spec §1): both halves on a trinket, two worn levels each
+-- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: each half ends a
+-- gap before the next one starts (the Them half at CG.HalfX) or before the card's right edge.
+test("compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict", function()
+    local NS, _, m = T.enableAddon()
+    local K, CG = NS.Constants.WINDOW, NS.CompactGroup
+    m.__now = 100
+    m.textCharWidth = 5
+    local unwanted = { verdict = "doesntWant", reasons = { { key = "undesired" } } }
+    local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 308 } }
+    seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = unwanted,
+        them = unwanted }) })
+    NS.Gear.Snapshot = function() return { equipped = trinkets } end
+    NS.Inspect.Get = function() return { status = "fresh", at = 60, gear = trinkets } end
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.SetWindowMode("compact")
+    NS.ShowWindow()
+    assertEqual(NS.Window.Frame():GetWidth(), K.COMPACT_MIN_W)
+    local card = cardFor(NS.WindowGroup.Drawn(), 1)
+    local c = card.cells
+    local function w(fs)   -- the visible characters' width (a UTF-8 glyph is one)
+        return #((fs:GetText() or ""):gsub("[\128-\191]", "")) * m.textCharWidth
+    end
+    local function halfEnd(key, x)
+        local h = c[key]
+        return x + w(c[key .. "Label"].text) + CG.HALF_GAP + w(h.level) + CG.HALF_GAP + w(h.glyph)
+            + CG.HALF_GLYPH_GAP + w(h.text)
+    end
+    assertEqual(NS.CompactCards.HalfText(card.model.you), "You 321/308 ⊘ Not wanted")
+    assertEqual(NS.CompactCards.HalfText(card.model.them), "Them 321/308 ⊘ Not wanted")
+    local m3 = CG.Metrics(nil)
+    local themX = CG.HalfX(card:GetWidth(), m3, CG.LEAD)
+    local youEnd = halfEnd("you", CG.TextLeft(m3, CG.LEAD))
+    assertTrue(youEnd + 4 <= themX, ("You ends at %d, Them starts at %d"):format(youEnd, themX))
+    local themEnd = halfEnd("them", themX)
+    assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
+        card:GetWidth() - CG.PAD))
 end)

@@ -907,7 +907,7 @@ local function listen()
     target:RegisterMessage(M.SITUATION_CHANGED, function() onSituation() end)
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() scheduleRepaint() end)
-    -- The My eq column reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).
+    -- The Me cell reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).
     target:RegisterMessage(M.GEAR_CHANGED, function() scheduleRepaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)
     -- The Drops tab's and the Offer panel's countdowns (modules/TradeTimer.lua).

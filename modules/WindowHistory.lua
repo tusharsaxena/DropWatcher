@@ -9,6 +9,9 @@ local _, NS = ...
 -- Trade and Me, in that order (NS.WindowGroup.Fit); Item and Outcome stay. The cells are
 -- modules/WindowCells.lua's composers over each entry turned into a drop-shaped record (AsDrop);
 -- this file adds the Outcome cell and a header that reads days for an old group. Nothing is blank.
+-- Me and Them read as the Drops table's (NS.SideCells, feedback-6 spec §1: the glyph and the
+-- unsigned difference, `▲6`, or a word), but a kept entry holds no worn items, so they are the
+-- verdict alone, never the gear the Drops table shows before it.
 -- A row's height, item button and text size are the Drops rows' (modules/WindowRows.lua, the
 -- Window page's Layout rows; feedback-2 spec §8, FB2-9).
 --
@@ -36,6 +39,7 @@ local C     = NS.Constants
 local L     = NS.L
 local State = NS.State
 local WC    = NS.WindowCells
+local SC    = NS.SideCells
 
 local max, floor = math.max, math.floor
 
@@ -353,7 +357,18 @@ local function qualityColor(q)
     if qc then return qc.r, qc.g, qc.b end
 end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WC.Me, trade = WC.Trade, them = WH.Them, outcome = WH.Outcome }
+--- The Me cell: the verdict alone, as the Drops table words it (NS.SideCells.Merge with no gear).
+--- @param drop table
+--- @return table cell
+function WH.Me(drop) return SC.Merge(WC.Me(drop)) end
+
+--- The Them cell: WH.Them's verdict alone, as the Drops table words it.
+--- @param drop table
+--- @return table cell
+function WH.ThemCell(drop) return SC.Merge(WH.Them(drop)) end
+
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WH.Me, trade = WC.Trade,
+    them = WH.ThemCell, outcome = WH.Outcome }
 
 local function paintRow(row, drop, layout, metrics)
     row.entry = drop.entry

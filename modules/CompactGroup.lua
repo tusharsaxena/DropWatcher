@@ -21,9 +21,10 @@ local _, NS = ...
 --   line 2  looter (class color, ⊕ from another realm) · slot · type · trade     ~1:42:10 ██████░░
 --           (the countdown and its bar for a drop with one, feedback-5 spec §1; else the inspect
 --           freshness: `2m`, `cached`, `…`)
---   line 3  You ▽ -13 (321/308)                 Them ⊘ Can't use (298/296)
---           (your own drop: line 2's trade carries its upgrade count, `Yes (2)`, and Them reads
---           `(Multiple)`, every member it upgrades in the tooltip)
+--   line 3  You 321/308 ▽13                     Them 298/296 ⊘ Can't use
+--           (the full table's Me and Them cells without their icons, feedback-6 spec §1; your own
+--           drop: line 2's trade carries its upgrade count, `Yes (2)`, and Them reads `(Details)`,
+--           every member it upgrades in the tooltip)
 --
 -- Every piece is a font string with a hit frame over it that carries its tooltip, placed by the
 -- row-tooltip helper (NS.RowTooltip, DW-B2) at the card's top right, just outside the window: the
@@ -269,18 +270,18 @@ function CG.BuildCountdown(card)
     cd.text:SetJustifyH("RIGHT")
 end
 
--- One half of line 3: the label (`cells[key .. "Label"]`), then the verdict's glyph and change
--- (`cells[key]`, one tooltip over the three) and the worn levels (`cells[key .. "Eq"]`).
+-- One half of line 3 (feedback-6 spec §1): the label (`cells[key .. "Label"]`), then the worn item
+-- level, the glyph and the difference or word (`cells[key]`: `level`, `glyph`, `text`), one tooltip
+-- over them all. CG.PaintHalf places each piece after the last one shown.
 function CG.BuildHalf(card, key)
     local label = { text = fontString(card) }
-    local verdict = { glyph = monoString(card), text = fontString(card) }
-    verdict.glyph:SetPoint("LEFT", label.text, "RIGHT", 3, 0)
-    verdict.text:SetPoint("LEFT", verdict.glyph, "RIGHT", 2, 0)
-    verdict.hit = hitOver(card, label.text, verdict.text)
-    card.cells[key .. "Label"], card.cells[key] = label, verdict
-    local eq = piece(card, key .. "Eq")
-    eq.text:SetPoint("LEFT", verdict.text, "RIGHT", 4, 0)
+    local half = { level = fontString(card), glyph = monoString(card), text = fontString(card) }
+    half.hit = hitOver(card, label.text, half.text)
+    card.cells[key .. "Label"], card.cells[key] = label, half
 end
+
+-- The gaps on line 3: between the label, the level and the verdict, and after a glyph.
+CG.HALF_GAP, CG.HALF_GLYPH_GAP = 3, 2
 
 local function newCard(content)
     local card = CreateFrame("Button", nil, content)
@@ -398,24 +399,32 @@ function CG.PaintCountdown(card, t, fontSize)
     card.bar:SetColorTexture(tone.r, tone.g, tone.b, 0.9)
 end
 
---- One half of line 3 painted (CompactCards.Half's): its label, the verdict and the worn levels.
+--- One half of line 3 painted (CompactCards.Half's): its label (muted), the worn item level (plain, or
+--- a muted word), the glyph and the difference or word in the verdict's tone, each placed after the
+--- last piece shown.
 --- @param card table
 --- @param key string `you` or `them`
 --- @param half table
 function CG.PaintHalf(card, key, half)
     local c = card.cells
-    local v, eq = c[key], c[key .. "Eq"]
-    c[key .. "Label"].text:SetText(half.label)
-    setTone(c[key .. "Label"].text, "muted")
-    v.glyph:SetText(half.verdict.glyph or "")
-    setTone(v.glyph, half.verdict.tone)
-    v.text:SetText(half.verdict.text)
-    setTone(v.text, half.verdict.tone)
-    v.hit.tipLines = half.verdict.tip
-    eq.text:SetText(half.eq and half.eq.text or "")
-    setTone(eq.text, "muted")
-    eq.hit.tipLines = half.eq and half.eq.tip or nil
-    eq.hit:SetShown(half.eq ~= nil)
+    local label, h = c[key .. "Label"].text, c[key]
+    label:SetText(half.label)
+    setTone(label, "muted")
+    h.level:SetText(half.level or "")
+    setTone(h.level, half.levelTone)
+    h.glyph:SetText(half.glyph or "")
+    setTone(h.glyph, half.tone)
+    h.text:SetText(half.text)
+    setTone(h.text, half.tone)
+    h.hit.tipLines = half.tip
+    at(h.level, "LEFT", label, "RIGHT", CG.HALF_GAP, 0)
+    local last = half.level and h.level or label
+    at(h.glyph, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
+    if half.glyph then
+        at(h.text, "LEFT", h.glyph, "RIGHT", CG.HALF_GLYPH_GAP, 0)
+    else
+        at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
+    end
 end
 
 -- What every card of one repaint shares: your gear, the transmog ask setting, your realm and the
@@ -431,7 +440,7 @@ local function cardCtx(drop, shared)
     local insp = NS.TestMode.InspectOf(drop)
     local ctx = { now = shared.now, equipped = shared.equipped, gear = insp and insp.gear, askState = state,
         askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm, warnAt = shared.warnAt }
-    if drop.isMine then   -- your own drop's Offer and (Multiple) (feedback-5 spec §2)
+    if drop.isMine then   -- your own drop's Offer and (Details) (feedback-5 spec §2)
         local WO = NS.WindowOwn
         ctx.revealed, ctx.offerTone = WO.IsRevealed(drop.id), (WO.ToneStates(drop))
     end

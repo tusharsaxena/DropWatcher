@@ -268,6 +268,10 @@ modules\WindowRows.lua
 # tradeables' lines, the dock, and your own drop's cells on Drops); takes NS.WindowCells (above),
 # NS.Constants and NS.L at load.
 modules\MineCells.lua
+# Conventional: publishes NS.SideCells, the drop tables' pure Me and Them cells (the worn gear and
+# the verdict in one cell; feedback-6 spec §1); takes NS.WindowCells and NS.MineCells (above) and
+# NS.L at load.
+modules\SideCells.lua
 # Conventional: publishes NS.WindowOwn, your own drops on Drops (the session's reveal state, the
 # Offer and Announce tone states, the message buttons' look, the own-drop cell reads and the
 # Ask-or-Offer click); takes
@@ -279,8 +283,8 @@ modules\WindowOwn.lua
 # (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
 modules\RowTooltip.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Drops body through
-# Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells (above), NS.Constants,
-# NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
+# Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells and NS.SideCells
+# (above), NS.Constants, NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
 # (modules\DetailCard.lua, below) and the host handlers (core\DropWatcher.lua) are read at call time,
 # when the tab is built and repainted.
 modules\WindowGroup.lua
@@ -303,12 +307,12 @@ modules\DetailCard.lua
 modules\OfferPanel.lua
 # LOAD-BEARING: publishes NS.WindowHistory and registers the History body through Window.RegisterTab
 # (modules\Window.lua, above) at load, and its HistoryChanged receiver on a NS.Bus target; takes
-# NS.WindowCells, NS.Constants, NS.L and NS.State at load. NS.History, NS.WindowGroup's item button
-# and layout, NS.WindowFilterBar and NS.WindowFooter (above) are read at call time.
+# NS.WindowCells, NS.SideCells, NS.Constants, NS.L and NS.State at load. NS.History,
+# NS.WindowGroup's item button and layout, NS.WindowFilterBar and NS.WindowFooter (above) are read at call time.
 modules\WindowHistory.lua
 # Conventional: publishes NS.CompactCards, compact mode's pure card composers (each card's three
 # lines, tones and tooltips for both tabs, and the header's short form); takes NS.WindowCells,
-# NS.MineCells and NS.L at load. NS.WindowHistory (above) is read at call time.
+# NS.MineCells, NS.SideCells and NS.L at load. NS.WindowHistory (above) is read at call time.
 modules\CompactCards.lua
 # Conventional: publishes NS.CompactGroup, the Drops tab's compact layout (pooled three-line
 # cards, one-line headers, the stacked detail card); takes NS.Constants at load. NS.WindowGroup,

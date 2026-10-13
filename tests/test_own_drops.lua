@@ -1,7 +1,7 @@
 -- tests/test_own_drops.lua — your own drops on the Drops tab (feedback-5 spec §2, DW-E2):
 -- always listed (`feed.showOwn` retired); Trade counts the members a drop upgrades (`Yes (2)`); Them
--- and Their eq read `(Multiple)` with each upgrade ranked by gain in the tooltip; the keep? rule
--- hides both until the Offer panel is opened; Actions is Offer, toned by the furthest offer sent.
+-- reads `(Details)` (renamed from `(Multiple)`, feedback-6 spec §3) with each upgrade ranked by gain in
+-- the tooltip; the keep? rule hides both until the Offer panel is opened; Actions is Offer, toned by the furthest offer sent.
 -- The pure composers (modules/MineCells.lua), the reveal state and click (modules/WindowOwn.lua),
 -- then the table, the detail card and the compact card painted headless.
 
@@ -80,11 +80,11 @@ test("own drops: the keep? rule: an upgrade for you draws no count until its Off
     assertEqual(M.OwnTrade(own({ me = KEEP }), true).text, "Likely (2)", "revealed")
 end)
 
-test("own drops: Them and Their eq read (Multiple), green with an upgrade, each one ranked by gain", function()
+test("own drops: Them reads (Details), green with an upgrade, each one ranked by gain", function()
     local M = MC()
-    local c = M.Multiple(own(), false, "Their eq")
-    assertEqual(c.text, "(Multiple)"); assertEqual(c.tone, "good"); assertEqual(c.upgrades, 2)
-    assertEqual(c.tip[1], "Their eq")
+    local c = M.Multiple(own(), false, "For the group")
+    assertEqual(c.text, "(Details)"); assertEqual(c.tone, "good"); assertEqual(c.upgrades, 2)
+    assertEqual(c.tip[1], "For the group", "the caller's title")
     assertEqual(c.tip[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
     assertEqual(c.tip[3], "Seta ▲ +4 · wears 283")
     assertEqual(#c.tip, 3, "a downgrade is not listed")
@@ -93,11 +93,11 @@ test("own drops: Them and Their eq read (Multiple), green with an upgrade, each 
     assertEqual(empty.tip[2], "Seta ▲ +30 · nothing worn there")
 end)
 
-test("own drops: (Multiple) with no upgrade is muted and says why: nobody's, checking, solo", function()
+test("own drops: (Details) with no upgrade is muted and says why: nobody's, checking, solo", function()
     local M = MC()
     local down = { verdict = "downgrade", ilvlDelta = -6, baseline = { ilvl = 293 }, reasons = {} }
     local nobody = M.Multiple(own({ candidates = { a = cand("Vaela", "ready", down) } }))
-    assertEqual(nobody.text, "(Multiple)"); assertEqual(nobody.tone, "muted")
+    assertEqual(nobody.text, "(Details)"); assertEqual(nobody.tone, "muted")
     assertEqual(nobody.tip[2], "Not an upgrade for anyone whose gear was read.")
     local checking = M.Multiple(own({ candidates = { a = cand("Vaela", "ready", down), b = cand("Seta", "checking"),
         c = cand("Kael", "checking") } }))
@@ -108,7 +108,7 @@ test("own drops: (Multiple) with no upgrade is muted and says why: nobody's, che
     local hidden = M.Multiple(own({ me = KEEP }))
     assertEqual(hidden.text, "Hidden"); assertEqual(hidden.tone, "muted"); assertTrue(hidden.hidden)
     assertTrue(hidden.tip[2]:find("Offer shows who it would help.", 1, true) ~= nil)
-    assertEqual(M.Multiple(own({ me = KEEP }), true).text, "(Multiple)")
+    assertEqual(M.Multiple(own({ me = KEEP }), true).text, "(Details)")
     local dead = M.Multiple(own({ trade = { state = "no", reasonKey = "bonusRoll" } }))
     assertEqual(dead.text, "–"); assertTrue(dead.tip[2]:find("Not tradeable", 1, true) ~= nil)
 end)
@@ -187,19 +187,20 @@ end
 
 local function textOf(region) return region and region:GetText() end
 
-test("own drops table: listed with the others: Trade's count, (Multiple) in Them and Their eq, Offer", function()
+test("own drops table: listed with the others: Trade's count, (Details) in Them, Offer", function()
     local NS = shown(own())
     local drawn = NS.WindowGroup.Drawn()
     assertEqual(#drawn.rows, 2, "your own drop is listed, whatever showOwn said")
     local r = rowFor(drawn, 1)
     assertEqual(textOf(r.cells.trade.text), "Likely (2)")
-    assertEqual(textOf(r.cells.them.text), "(Multiple)")
+    assertEqual(textOf(r.cells.them.text), "(Details)")
     local g = NS.Constants.TONE.good
     assertEqual(select(1, r.cells.them.text:GetTextColor()), g.r)
     assertEqual(NS.Window.TooltipOf(r.cells.them)[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
-    assertEqual(textOf(r.cells.theirEq.text), "(Multiple)")
-    assertFalse(r.cells.theirEq.icons[1]:IsShown(), "no worn icons on your own drop")
-    assertEqual(NS.Window.TooltipOf(r.cells.theirEq)[1], "Their eq")
+    assertFalse(r.cells.them.icons[1]:IsShown(), "no worn icons on your own drop")
+    assertEqual(textOf(r.cells.them.level), "", "no gear part"); assertEqual(textOf(r.cells.them.glyph), "")
+    assertEqual(NS.Window.TooltipOf(r.cells.them)[1], "Them")
+    assertTrue(r.cells.theirEq == nil, "no Their eq column (feedback-6 spec §1)")
     local b = r.cells.actions.ask
     assertTrue(b:IsShown()); assertEqual(textOf(b.label), "Offer"); assertTrue(b.offer)
     assertEqual(b.tone, "red", "your move until an offer is sent")
@@ -209,11 +210,11 @@ test("own drops table: listed with the others: Trade's count, (Multiple) in Them
     assertTrue(hd:find("2 drops", 1, true) ~= nil and hd:find("yours", 1, true) == nil, hd)
 end)
 
-test("own drops table: Offer opens the Offer panel and reveals a kept upgrade's count and (Multiple)", function()
+test("own drops table: Offer opens the Offer panel and reveals a kept upgrade's count and (Details)", function()
     local NS, m = shown(own({ me = KEEP }))
     local r = rowFor(NS.WindowGroup.Drawn(), 1)
     assertEqual(textOf(r.cells.trade.text), "Likely", "no count under the keep? rule")
-    assertEqual(textOf(r.cells.them.text), "Hidden"); assertEqual(textOf(r.cells.theirEq.text), "Hidden")
+    assertEqual(textOf(r.cells.them.text), "Hidden")
     local opened
     local open = NS.OfferPanel.Open
     NS.OfferPanel.Open = function(id) opened = id; return open(id) end
@@ -225,7 +226,7 @@ test("own drops table: Offer opens the Offer panel and reveals a kept upgrade's 
     m.advance(0)
     r = rowFor(NS.WindowGroup.Drawn(), 1)
     assertEqual(textOf(r.cells.trade.text), "Likely (2)")
-    assertEqual(textOf(r.cells.them.text), "(Multiple)")
+    assertEqual(textOf(r.cells.them.text), "(Details)")
 end)
 
 test("own drops table: Offer turns yellow once offered and green once given away; a dash when untradeable", function()
@@ -245,7 +246,7 @@ test("own drops table: Offer turns yellow once offered and green once given away
     assertTrue(NS2.Window.TooltipOf(a.dashTip)[2]:find("Bonus roll", 1, true) ~= nil)
 end)
 
-test("own drops: the detail card shows Offer in place of Ask and (Multiple) for Them", function()
+test("own drops: the detail card shows Offer in place of Ask and (Details) for Them", function()
     local NS = shown(own())
     NS.WindowGroup.ToggleExpand(1)
     local drawn = NS.WindowGroup.Drawn()
@@ -255,7 +256,7 @@ test("own drops: the detail card shows Offer in place of Ask and (Multiple) for 
     assertEqual(textOf(drawn.card.them.title), "FOR THE GROUP")
     local them
     for _, row in ipairs(drawn.card.them.rows) do if row.key == "them" then them = row end end
-    assertEqual(textOf(them.value), "(Multiple)")
+    assertEqual(textOf(them.value), "(Details)")
     assertEqual(them.tipLines[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
     local opened
     NS.OfferPanel.Open = function(id) opened = id end
@@ -263,7 +264,7 @@ test("own drops: the detail card shows Offer in place of Ask and (Multiple) for 
     assertEqual(opened, 1)
 end)
 
-test("own drops compact: line 1's Offer, line 2's count and line 3's (Multiple) with its tooltip", function()
+test("own drops compact: line 1's Offer, line 2's count and line 3's (Details) with its tooltip", function()
     local NS = shown(own())
     NS.SetWindowMode("compact")
     local drawn = NS.WindowGroup.Drawn()
@@ -271,7 +272,7 @@ test("own drops compact: line 1's Offer, line 2's count and line 3's (Multiple) 
     local card = rowFor(drawn, 1)
     assertEqual(textOf(card.ask.label), "Offer"); assertTrue(card.ask.offer); assertEqual(card.ask.tone, "red")
     assertEqual(textOf(card.cells.trade.text):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^· ", ""), "Likely (2)")
-    assertEqual(textOf(card.cells.them.text), "(Multiple)")
+    assertEqual(textOf(card.cells.them.text), "(Details)")
     assertEqual(card.cells.them.hit.tipLines[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
     local opened
     NS.OfferPanel.Open = function(id) opened = id end

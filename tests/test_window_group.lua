@@ -118,7 +118,7 @@ test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", fu
     assertEqual(W.Trade(drop({ trade = { state = "no", reasonKey = "legacy" } })).tone, "bad")
 end)
 
--- ── the Their eq column ─────────────────────────────────────────────────────────────────────
+-- ── the gear halves (WC.TheirEq, WC.MyEq; NS.SideCells puts them before the verdict) ────────
 
 -- Feedback spec §3 (FB-7): the worn item levels in the cell, the read's age in its tooltip.
 test("cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip", function()
@@ -245,29 +245,31 @@ end
 
 test("table: the default columns, and a column the profile turns off", function()
     local WG = T.newAddon().WindowGroup
-    assertEqual(keys(WG.Columns()), "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,tradeWindow,actions")
+    assertEqual(keys(WG.Columns()), "item,ilvl,slot,armorType,looter,me,them,trade,tradeWindow,actions")
     assertEqual(keys(WG.Columns({ slot = false, item = false, them = true })),
-        "item,ilvl,armorType,looter,myEq,theirEq,me,them,trade,tradeWindow,actions", "Item never hides")
-    assertEqual(keys(WG.Columns({ myEq = false })),
-        "item,ilvl,slot,armorType,looter,theirEq,me,them,trade,tradeWindow,actions", "`window.columns.myEq` turns My eq off")
+        "item,ilvl,armorType,looter,me,them,trade,tradeWindow,actions", "Item never hides")
+    assertEqual(keys(WG.Columns({ me = false })),
+        "item,ilvl,slot,armorType,looter,them,trade,tradeWindow,actions", "`window.columns.me` turns Me off, gear and all")
+    assertEqual(keys(WG.Columns({ myEq = false, theirEq = false })), keys(WG.Columns()),
+        "a retired toggle names no column (feedback-6 spec §1)")
     assertEqual(keys(WG.Columns({ tradeWindow = false })),
-        "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,actions", "`window.columns.tradeWindow` turns it off")
+        "item,ilvl,slot,armorType,looter,me,them,trade,actions", "`window.columns.tradeWindow` turns it off")
     assertTrue(T.newAddon().C.PROFILE.window.columns.tradeWindow == true, "on by default")
 end)
 
 test("table: the Item column takes the slack, never less than its minimum", function()
     local NS = T.newAddon()
     local WG, K = NS.WindowGroup, NS.Constants.WINDOW
-    local cols = WG.Columns({ slot = false, armorType = false, looter = false, myEq = false, them = false, trade = false,
+    local cols = WG.Columns({ slot = false, armorType = false, looter = false, them = false, trade = false,
         tradeWindow = false })
     local wide = WG.Layout(cols, 600)
-    local fixed = 40 + 84 + 70 + K.ASK_W + 5 * K.CELL_GAP   -- Actions is the Ask button alone (feedback-4 §2)
+    local fixed = 40 + 127 + K.ASK_W + 4 * K.CELL_GAP   -- Actions is the Ask button alone (feedback-4 §2)
     assertEqual(wide.item.w, 600 - fixed)
     assertEqual(wide.ilvl.x, wide.item.w + K.CELL_GAP)
     assertEqual(WG.Layout(cols, 100).item.w, K.ITEM_MIN)
 end)
 
-test("table: a row too narrow for every column sheds Type, Slot, Looter, My eq, Their eq, Trade window and Ilvl, in that order", function()
+test("table: a row too narrow for every column sheds Type, Slot, Looter, Trade window and Ilvl, in that order", function()
     local NS = T.newAddon()
     local WG = NS.WindowGroup
     local cols = WG.Columns(false)
@@ -280,8 +282,8 @@ test("table: a row too narrow for every column sheds Type, Slot, Looter, My eq, 
             if not kept[key] then shed[#shed + 1] = key; have[key] = nil end
         end
     end
-    assertEqual(table.concat(shed, ","), "armorType,slot,looter,myEq,theirEq,tradeWindow,ilvl,them,trade,me",
-        "Trade window goes after Their eq and before Them (feedback-5 spec §1)")
+    assertEqual(table.concat(shed, ","), "armorType,slot,looter,tradeWindow,ilvl,them,trade,me",
+        "Trade window goes after Looter, and Me and Them where the verdict columns sat (feedback-6 spec §1)")
     assertEqual(keys(WG.Fit(cols, 0)), "item,actions", "Item and Actions never go")
     for _, w in ipairs({ 300, 500, 700, 900 }) do
         local layout, kept = WG.Layout(cols, w)
@@ -373,9 +375,9 @@ test("table: built at the least width, every column shows and Ask stays inside t
     NS.ShowWindow()
     assertEqual(NS.Window.Frame():GetWidth(), K.MIN_WIDTH, "raised to the least width")
     local drawn = NS.WindowGroup.Drawn()
-    assertEqual(keys(drawn.columns), "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,tradeWindow,actions")
+    assertEqual(keys(drawn.columns), "item,ilvl,slot,armorType,looter,me,them,trade,tradeWindow,actions")
     local c = rowFor(drawn, 1).cells
-    assertTrue(c.slot:IsShown()); assertTrue(c.looter:IsShown()); assertTrue(c.theirEq:IsShown())
+    assertTrue(c.slot:IsShown()); assertTrue(c.looter:IsShown()); assertTrue(c.them:IsShown())
     assertTrue(c.tradeWindow:IsShown())
     assertTrue(c.actions:IsShown())
     local _, _, _, x = c.actions:GetPoint(1)   -- from the row's left edge, itself indented
@@ -464,14 +466,15 @@ test("table: built headless, one header and one row per drop, each column painte
     assertEqual(c.item.button.link, LINK)
     assertEqual(textOf(c.ilvl.text), "311"); assertEqual(textOf(c.slot.text), "Head")
     assertEqual(textOf(c.looter.text), "Seta")
-    assertEqual(textOf(c.me.text), "+19"); assertEqual(textOf(c.me.glyph), "▲")
-    assertEqual(textOf(c.them.text), "-13"); assertEqual(textOf(c.trade.text), "Likely")
+    assertEqual(textOf(c.me.text), "19"); assertEqual(textOf(c.me.glyph), "▲")
+    assertEqual(textOf(c.them.text), "13"); assertEqual(textOf(c.trade.text), "Likely")
     assertEqual(textOf(c.actions.ask.label), "Ask"); assertTrue(c.actions.ask:IsShown())
     local r2 = rowFor(drawn, 2)
-    assertEqual(textOf(r2.cells.them.text), "?"); assertEqual(textOf(r2.cells.theirEq.text), "range")
+    assertEqual(textOf(r2.cells.them.level), "range"); assertEqual(textOf(r2.cells.them.text), "",
+        "the ? goes: range already says why (feedback-6 spec §1)")
     assertEqual(textOf(r2.cells.trade.text), "Unknown")
     assertFalse(drawn.pane.placeholder:IsShown(), "drops on screen: no empty line")
-    assertEqual(textOf(drawn.pane.colHead.labels.theirEq.text), "Their eq")
+    assertEqual(textOf(drawn.pane.colHead.labels.them.text), "Them")
     assertTrue(NS.Window.Frame().panes.group:IsShown())
 end)
 
@@ -499,7 +502,8 @@ test("table: every shown cell has a reason tooltip; nothing is blank", function(
                 -- the item cell's hover is the real item tooltip (DW-80, BUG-2), not a text one
                 local itemTip = cell.showItem and cell.itemButton.link ~= nil
                 assertTrue(itemTip or #W.TooltipOf(cell) >= 2, key .. " has a reason")
-                assertTrue((cell.text:GetText() or "") ~= "", key .. " is not blank")
+                local all = (cell.level and cell.level:GetText() or "") .. (cell.text:GetText() or "")
+                assertTrue(all ~= "", key .. " is not blank")
             end
         end
         local a = row.cells.actions
@@ -585,7 +589,7 @@ test("item tooltip: a row's item button opens the game's tooltip at the row's to
     assertTrue(rel == win)
 end)
 
-test("table: Their eq shows the looter's worn item from their inspect read", function()
+test("table: Them shows the looter's worn item from their inspect read before their verdict", function()
     local NS, _, m = T.enableAddon()
     m.__now = 100
     seed(NS, { GROUP }, { drop() })
@@ -593,30 +597,31 @@ test("table: Their eq shows the looter's worn item from their inspect read", fun
         if guid == "Player-1-0000000A" then return { status = "fresh", at = 60, gear = { [1] = { link = OLD1, ilvl = 324 } } } end
     end
     NS.ShowWindow()
-    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.theirEq
+    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.them
     assertEqual(eq.icons[1].link, OLD1); assertTrue(eq.icons[1]:IsShown())
     assertFalse(eq.icons[2]:IsShown(), "a helm: one item")
-    assertEqual(textOf(eq.text), "324", "the worn item's level; its age is in the tooltip")
+    assertEqual(textOf(eq.level), "324", "the worn item's level; its age is in the tooltip")
+    assertEqual(textOf(eq.glyph) .. textOf(eq.text), "▽13", "then the verdict")
     assertEqual(NS.Window.TooltipOf(eq)[3], "Inspected 40s ago.")
 end)
 
-test("table: My eq shows your worn item from the gear snapshot, its icon showing your own slot", function()
+test("table: Me shows your worn item from the gear snapshot, its icon showing your own slot", function()
     local NS, _, m = T.enableAddon()
     m.__now = 100
     seed(NS, { GROUP }, { drop() })
     NS.Gear.Snapshot = function() return { equipped = { [1] = { link = OLD2, ilvl = 296 } } } end
     NS.ShowWindow()
-    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.myEq
+    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.me
     assertTrue(eq:IsShown())
     assertEqual(eq.icons[1].link, OLD2); assertTrue(eq.icons[1]:IsShown())
     assertEqual(eq.icons[1].worn.unit, "player"); assertEqual(eq.icons[1].worn.slot, 1)
     assertFalse(eq.icons[2]:IsShown(), "a helm: one item")
-    assertEqual(textOf(eq.text), "296")
-    assertEqual(textOf(NS.WindowGroup.Drawn().pane.colHead.labels.myEq.text), "My eq")
+    assertEqual(textOf(eq.level), "296")
+    assertEqual(textOf(NS.WindowGroup.Drawn().pane.colHead.labels.me.text), "Me")
     NS.Gear.Snapshot = function() return { equipped = { [1] = { link = OLD1, ilvl = 300 } } } end
     NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
     m.advance(0)
-    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.myEq.text), "300", "a new snapshot repaints it")
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.me.level), "300", "a new snapshot repaints it")
 end)
 
 test("table: the Ask button asks through the shared handler, and AskStateChanged repaints it", function()
@@ -672,7 +677,7 @@ test("table: the compact layout draws cards instead of the table, and the full l
     NS.ToggleWindowMode()
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact == nil)
-    assertEqual(#drawn.columns, 12)
+    assertEqual(#drawn.columns, 10)
     assertTrue(drawn.pane.scroll:IsShown()); assertFalse(drawn.pane.compactView.scroll:IsShown())
 end)
 

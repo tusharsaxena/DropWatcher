@@ -110,6 +110,7 @@ Kit.run{
         "test_compact_modes",
         "test_window_group",
         "test_drops_layout",
+        "test_side_cells",
         "test_detail_card",
         "test_own_drops",
         "test_drops_strip",

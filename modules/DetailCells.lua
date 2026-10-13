@@ -10,7 +10,7 @@ local _, NS = ...
 -- test_detail_card drives each state case by case. The frame edge that paints them is
 -- modules/DetailCard.lua. The verdict, trade and ask wording is modules/WindowCells.lua's, so the
 -- card and the row it expands never disagree; on your own drop (feedback-5 spec §2) the Them row's
--- `(Multiple)` and the Offer in place of Ask are modules/MineCells.lua's, as the row's are.
+-- `(Details)` and the Offer in place of Ask are modules/MineCells.lua's, as the row's are.
 --
 --   chip = { text, tone?, tip = { title, lines... } }
 --   side = { title, verdict = { text, tone, tip }, rows = { { key, label, text, tone, tip, link } } }
@@ -335,7 +335,7 @@ function DC.ForYou(drop, scorer)
     return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }
 end
 
--- Your own drop's side (feedback-5 spec §2): the looter is you, and the Them row reads (Multiple)
+-- Your own drop's side (feedback-5 spec §2): the looter is you, and the Them row reads (Details)
 -- with every member it upgrades in its tooltip (MineCells.Multiple), as the row's Them cell does.
 local function ownSide(drop, revealed)
     local m = MC.Multiple(drop, revealed, L["Them"])
@@ -346,7 +346,7 @@ local function ownSide(drop, revealed)
 end
 
 --- The For the looter column (board 02, callout 4): the same comparison against their inspected
---- gear, and their spec with the read's age. On your own drop: the Them row's `(Multiple)`.
+--- gear, and their spec with the read's age. On your own drop: the Them row's `(Details)`.
 --- @param drop table
 --- @param inspect table|nil the looter's inspect entry (NS.Inspect.Get)
 --- @param specName string|nil the looter's spec, in words

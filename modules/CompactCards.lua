@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/CompactCards.lua — what compact mode's cards say (compact spec §2 and §3, DW-C1): each
 -- card's three lines of text, their tones and their tooltips, for both tabs, and the group
 -- header's short form. The same data as the full tables: every piece is a full-view composer's
--- cell (modules/WindowCells.lua, modules/MineCells.lua, modules/WindowHistory.lua), reshaped, so
+-- cell (modules/WindowCells.lua, modules/SideCells.lua, modules/MineCells.lua,
+-- modules/WindowHistory.lua), reshaped, so
 -- the words, the tones and the reason tooltips never differ between the two layouts.
 --
 -- PURE. Every composer takes the drop record and plain inputs (the clock, your gear, the looter's
@@ -20,16 +21,18 @@ local _, NS = ...
 --                        of members it upgrades on your own drop); countdown (right, with its bar:
 --                        MineCells.TradeWindow's, for a drop with a countdown, feedback-5 spec §1) or
 --                        else fresh (right, dimmed)
---                line 3: you = { label, verdict, eq }, them = { label, verdict, eq } (`(Multiple)`
---                        on your own drop, feedback-5 spec §2)
+--                line 3: you and them, each a half: the label, then the full table's Me or Them
+--                        cell without its icons (`(Details)` on your own drop, feedback-5 spec §2)
 --   History      line 1: item, ilvl (right), outcome (right, in its tone)
 --                line 2: looter, slot, type, trade; time (right, dimmed)
 --                line 3: you, them
 --
--- THE VERDICT. A verdict reads glyph then text: `▲ +19`, `≈ +0`, `▽ -13`, and a verdict the full
--- view says in a word gets compact mode's ⊘ (`⊘ Can't use`, `⊘ Not wanted`). The worn levels
--- follow in parentheses, dimmed (`(321/308)`, `(empty)`, `(…)`); none where the full view's cell
--- is a dash. Glyphs, ⊘ and ⊕ are drawn in the monospace face (JetBrains Mono carries all three).
+-- LINE 3 (feedback-6 spec §1) reads as the full table's merged Me and Them cells (NS.SideCells), the
+-- icons left out: the label, the worn item level (plain; `empty`, `…`, `range` muted), then the glyph
+-- and the unsigned difference in the verdict's tone: `You 321/308 ▽8`, `Them 276 ▲12`, `Them
+-- (Details)` on your own drop. A verdict the full view says in a word keeps compact mode's ⊘
+-- (`You 321 ⊘ Can't use`). One tooltip over the half: the gear's lines, then the verdict's. Glyphs, ⊘
+-- and ⊕ are drawn in the monospace face (JetBrains Mono carries all three).
 --
 -- THE HEADER'S SHORT FORM. `Instance · Boss · Difficulty · 3m · 2 · Recorder`: no `ago`, no
 -- `drops`, `1 of 2` while a filter hides some; an instance name longer than PLACE_MAX characters is
@@ -41,6 +44,7 @@ local CC = NS.CompactCards
 local L  = NS.L
 local WC = NS.WindowCells
 local MC = NS.MineCells
+local SC = NS.SideCells
 
 local floor = math.floor
 
@@ -105,54 +109,47 @@ function CC.Age(seconds)
     return L["%dd"]:format(floor(s / DAY))
 end
 
---- A verdict's compact text: the glyph (⊘ for a worded verdict), a space, then the cell's text.
+--- A verdict's compact text: the glyph and the difference (`▽8`), ⊘ and a word (`⊘ Can't use`), the
+--- word alone, or "" for an unknown verdict the gear part explains.
 --- @param v table CC.Verdict's answer
 --- @return string
 function CC.VerdictText(v)
-    if v.glyph then return v.glyph .. " " .. v.text end
-    return v.text
+    if v.glyph == CC.NO_GLYPH then return v.glyph .. " " .. v.text end
+    return (v.glyph or "") .. v.text
 end
 
 -- ── the shared pieces ───────────────────────────────────────────────────────────────────────
 
---- A verdict cell as compact mode draws it: the full view's text, tone and tooltip, with ⊘ for a
---- verdict the full view says in a word.
---- @param c table a WindowCells verdict cell (WC.Me, WC.Them, MC.Multiple)
---- @return table { text, glyph, tone, tip, verdict }
+--- A Me or Them cell (NS.SideCells) as compact mode draws it: the full view's pieces, tones and
+--- tooltip, with ⊘ before a verdict the full view says in a word.
+--- @param c table a SideCells cell
+--- @return table { level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden }
 function CC.Verdict(c)
     local glyph = c.glyph
     if not glyph and WORD_VERDICT[c.verdict] then glyph = CC.NO_GLYPH end
-    return { text = c.text, glyph = glyph, tone = c.tone, tip = copyTip(c.tip), verdict = c.verdict }
+    return { level = c.level, levelTone = c.levelTone, glyph = glyph, text = c.text, tone = c.tone,
+        tip = copyTip(c.tip), verdict = c.verdict, items = c.items or {}, upgrades = c.upgrades, hidden = c.hidden }
 end
 
--- The worn levels, in parentheses and dimmed; nil where the full view shows a dash.
-local EQ_WORD = { [L["empty slot"]] = L["empty"] }
-
---- An equipment cell's levels as compact mode draws them: `(321/308)`, `(empty)`, `(…)`; nil when
---- the full view shows a dash (not worn, or your own drop's Their eq).
---- @param c table|nil WC.MyEq's or WC.TheirEq's answer
---- @return table|nil { text, tone = "muted", tip, items }
-function CC.Eq(c)
-    if type(c) ~= "table" or c.text == DASH then return nil end
-    return { text = ("(%s)"):format(EQ_WORD[c.text] or c.text), tone = "muted", tip = copyTip(c.tip), items = c.items }
-end
-
---- One half of line 3: `You ▽ -13 (321/308)`.
+--- One half of line 3: `You 321/308 ▽8`; its label and CC.Verdict's pieces.
 --- @param label string `You` or `Them`
---- @param verdictCell table a WindowCells verdict cell
---- @param eqCell table|nil a WindowCells equipment cell
---- @return table { label, verdict, eq }
-function CC.Half(label, verdictCell, eqCell)
-    return { label = label, verdict = CC.Verdict(verdictCell), eq = CC.Eq(eqCell) }
+--- @param side table a SideCells cell (SC.Me, SC.Them, SC.Merge)
+--- @return table { label, level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden }
+function CC.Half(label, side)
+    local h = CC.Verdict(side)
+    h.label = label
+    return h
 end
 
---- A half's plain text: `You ▽ -13 (321/308)`.
+--- A half's plain text: `You 321/308 ▽8`, `Them range`, `Them (Details)`.
 --- @param h table CC.Half's answer
 --- @return string
 function CC.HalfText(h)
-    local out = h.label .. " " .. CC.VerdictText(h.verdict)
-    if h.eq then out = out .. " " .. h.eq.text end
-    return out
+    local parts = { h.label }
+    if h.level then parts[#parts + 1] = h.level end
+    local v = CC.VerdictText(h)
+    if v ~= "" then parts[#parts + 1] = v end
+    return table.concat(parts, " ")
 end
 
 --- The item piece: the link's name in its quality color; hovering shows the game's own tooltip, so
@@ -246,14 +243,13 @@ local function groupCountdown(drop, now, warnAt)
 end
 
 -- Line 1's action, line 2's trade and line 3's Them: the looter's, or on your own drop its Offer,
--- its upgrade count and `(Multiple)` (feedback-5 spec §2: the full table's cells).
+-- its upgrade count and `(Details)` (feedback-5 spec §2: the full table's cells).
 local function sides(drop, ctx, now)
+    local them = CC.Half(L["Them"], SC.Them(drop, ctx.gear, now, ctx.revealed))
     if drop.isMine then
-        return MC.OwnOffer(drop, ctx.offerTone), MC.OwnTrade(drop, ctx.revealed),
-            CC.Half(L["Them"], MC.Multiple(drop, ctx.revealed, L["Them"]), nil)
+        return MC.OwnOffer(drop, ctx.offerTone), MC.OwnTrade(drop, ctx.revealed), them
     end
-    return WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk), WC.Trade(drop),
-        CC.Half(L["Them"], WC.Them(drop, now), WC.TheirEq(drop, ctx.gear, now))
+    return WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk), WC.Trade(drop), them
 end
 
 --- A Drops card.
@@ -276,7 +272,7 @@ function CC.Group(drop, ctx)
         trade = trade,
         fresh = CC.Freshness(drop, now), countdown = groupCountdown(drop, now, ctx.warnAt),
         -- line 3
-        you = CC.Half(L["You"], WC.Me(drop), WC.MyEq(drop, ctx.equipped)),
+        you = CC.Half(L["You"], SC.Me(drop, ctx.equipped)),
         them = them,
     }
 end
@@ -321,7 +317,7 @@ function CC.History(drop, ctx)
         trade = WC.Trade(drop),
         time = CC.When(drop.at, ctx.nowEpoch, ctx.dateFn),
         -- line 3
-        you = CC.Half(L["You"], WC.Me(drop), nil), them = CC.Half(L["Them"], WH.Them(drop), nil),
+        you = CC.Half(L["You"], WH.Me(drop)), them = CC.Half(L["Them"], WH.ThemCell(drop)),
     }
 end
 

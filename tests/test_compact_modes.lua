@@ -249,6 +249,7 @@ test("modes: test mode's Drops cards show every state, each saying what its full
     local NS = testWindow()
     local full = fullPieces(NS, "group", function(c)
         return { me = textOf(c.me.text), them = textOf(c.them.text), trade = textOf(c.trade.text),
+            meLevel = textOf(c.me.level), themLevel = textOf(c.them.level),
             ask = askWord(c.actions.ask, c.actions.dash), tradeTip = c.trade.tipLines }
     end)
     local seen = { ask = {}, trade = {}, fresh = {}, you = {}, them = {}, eq = {} }
@@ -260,6 +261,8 @@ test("modes: test mode's Drops cards show every state, each saying what its full
         assertTrue(f ~= nil, what .. ": a full row too")
         assertEqual(textOf(c.you.text), f.me, what .. ": You")
         assertEqual(textOf(c.them.text), f.them, what .. ": Them")
+        assertEqual(textOf(c.you.level), f.meLevel, what .. ": your worn level, as the Me cell's")
+        assertEqual(textOf(c.them.level), f.themLevel, what .. ": their worn level, as the Them cell's")
         assertEqual(plain(textOf(c.trade.text)), f.trade, what .. ": trade")
         assertEqual(askWord(card.ask, card.dash), f.ask, what .. ": ask")
         assertEqual(c.trade.hit.tipLines[1], f.tradeTip[1], what .. ": the trade reason")
@@ -268,14 +271,14 @@ test("modes: test mode's Drops cards show every state, each saying what its full
         seen.fresh[textOf(c.fresh.text)] = true
         seen.you[textOf(c.you.glyph)] = true
         seen.them[textOf(c.them.glyph)] = true
-        seen.eq[textOf(c.themEq.text)] = true
+        seen.eq[textOf(c.them.level)] = true
     end
     hasAll(seen.ask, { "Ask", "Queued", "Asked", "Retry", "–" }, "ask")
     hasAll(seen.trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
     hasAll(seen.fresh, { "cached", "…", "range", "combat", "!", "–" }, "inspect freshness")
     hasAll(seen.you, { "▲", "≈", "▽", "⊘" }, "your verdict")
     hasAll(seen.them, { "▲", "≈", "▽", "⊘" }, "their verdict")
-    hasAll(seen.eq, { "(…)", "(range)", "(combat)", "(!)", "(290)", "(300)" }, "their worn levels")
+    hasAll(seen.eq, { "…", "range", "combat", "!", "290", "300" }, "their worn levels")
 end)
 
 test("modes: test mode's own drops on Drops show their countdown and Offer as the full rows", function()

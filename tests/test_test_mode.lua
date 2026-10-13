@@ -446,6 +446,7 @@ test("window: every cell of every sample row says something and has a reason", f
         for key, cell in pairs(r.cells) do
             if cell.text and cell:IsShown() then
                 local text = textOf(cell.text)
+                if cell.level then text = (textOf(cell.level) or "") .. (text or "") end   -- Me, Them: gear, verdict
                 assertTrue(type(text) == "string" and text ~= "", ("row %s %s is blank"):format(r.dropId, key))
                 local itemTip = cell.showItem and cell.itemButton.link ~= nil   -- the real item tooltip (DW-80)
                 assertTrue(itemTip or (type(cell.tipLines) == "table" and #cell.tipLines >= 2),
@@ -463,13 +464,13 @@ local function wornOf(NS, dropId)
     return worn
 end
 
-test("window: the rows show every ask state, every Their eq state and every trade chip", function()
+test("window: the rows show every ask state, every Them gear state and every trade chip", function()
     local NS, drawn = shownTest()
     local ask, eq, trade, levels = {}, {}, {}, 0
     for _, r in ipairs(drawn.rows) do
         local a = r.cells.actions
         ask[a.ask:IsShown() and textOf(a.ask.label) or textOf(a.dash)] = true
-        local text = textOf(r.cells.theirEq.text)
+        local text = textOf(r.cells.them.level)
         eq[text] = true
         local worn = wornOf(NS, r.dropId)
         if worn then
@@ -479,19 +480,19 @@ test("window: the rows show every ask state, every Their eq state and every trad
         trade[textOf(r.cells.trade.text)] = true
     end
     hasAll(ask, { "Ask", "Queued", "Asked", "Retry", "–" }, "ask")
-    hasAll(eq, { "…", "range", "combat", "!", "–" }, "their eq: the reason word")
+    hasAll(eq, { "…", "range", "combat", "!" }, "their gear: the reason word")
     assertTrue(levels >= 5, "the inspected looters' worn levels")
     hasAll(trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
 end)
 
-test("window: a sample's Their eq shows its own worn item, and its detail card its own inspect", function()
+test("window: a sample's Them shows its own worn item, and its detail card its own inspect", function()
     local NS, drawn = shownTest()
     local crown
     for _, r in ipairs(drawn.rows) do
         local d = NS.LootFeed.Get(r.dropId)
         if d.looter.name == "Seta" and d.facts.equipLoc == "INVTYPE_HEAD" then crown = r end
     end
-    assertTrue(crown.cells.theirEq.icons[1]:IsShown(), "the worn item's button")
+    assertTrue(crown.cells.them.icons[1]:IsShown(), "the worn item's button")
     NS.WindowGroup.ToggleExpand(crown.dropId)
     local spec = NS.TestMode.InspectOf(NS.LootFeed.Get(crown.dropId))
     assertEqual(spec.status, "fresh")
@@ -534,7 +535,7 @@ test("labels: your own rows on Drops say Offer, and no cell of theirs ends in an
             assertEqual(textOf(a.ask.label), "Offer")
             offers = offers + 1
         end
-        -- (another player's Their eq reads `…` while their gear is read: not a cut label)
+        -- (another player's Them gear reads `…` while their gear is read: not a cut label)
         for key, cell in pairs(r.drop.isMine and r.cells or {}) do
             local text = type(cell) == "table" and cell.text and textOf(cell.text)
             if type(text) == "string" then

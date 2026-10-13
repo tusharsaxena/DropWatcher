@@ -6,12 +6,13 @@ local _, NS = ...
 --
 -- ALWAYS LISTED. Drops lists every drop, your own included (`feed.showOwn` is retired; a
 -- stored value is ignored). On your own drop the Trade cell counts the members it upgrades
--- (`Yes (2)`), Them and Their eq read `(Multiple)` with every upgrade in their tooltip, and Actions
+-- (`Yes (2)`), Them reads `(Details)` with every upgrade in its tooltip, and Actions
 -- is Offer, which opens the Offer panel (modules/OfferPanel.lua) and reveals the drop. What each
--- says is NS.MineCells' (pure: OwnTrade, Multiple, OwnOffer); this file reads the state they take.
+-- says is NS.MineCells' (pure: OwnTrade, Multiple, OwnOffer; NS.SideCells.Them takes Multiple into
+-- the Them cell); this file reads the state they take.
 --
 -- THE KEEP? RULE. An upgrade for you is offered to nobody until you open its Offer panel: until then
--- its count is not drawn and (Multiple) reads `Hidden`. Opening the panel reveals it for the session
+-- its count is not drawn and (Details) reads `Hidden`. Opening the panel reveals it for the session
 -- (WO.Reveal, NS.State.windowOwn).
 --
 -- THE TONES (feedback-4 spec §1). Offer is toned by the furthest offer sent for the drop, Announce
@@ -66,14 +67,6 @@ end
 function WO.Trade(drop)
     if drop.isMine then return MC.OwnTrade(drop, WO.IsRevealed(drop.id)) end
     return NS.WindowCells.Trade(drop)
-end
-
---- Them or Their eq on your own drop: `(Multiple)`, or `Hidden` (MineCells.Multiple).
---- @param drop table one of your drops
---- @param title string|nil the tooltip's title
---- @return table cell
-function WO.Multiple(drop, title)
-    return MC.Multiple(drop, WO.IsRevealed(drop.id), title)
 end
 
 --- Your own drop's Offer (MineCells.OwnOffer), toned by the offer half of WO.ToneStates.
