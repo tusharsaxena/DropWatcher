@@ -9,7 +9,8 @@ local _, NS = ...
 -- answers plain tables; nothing here reads a module, the client or a saved variable, so
 -- test_detail_card drives each state case by case. The frame edge that paints them is
 -- modules/DetailCard.lua. The verdict, trade and ask wording is modules/WindowCells.lua's, so the
--- card and the row it expands never disagree.
+-- card and the row it expands never disagree; on your own drop (feedback-5 spec §2) the Them row's
+-- `(Multiple)` and the Offer in place of Ask are modules/MineCells.lua's, as the row's are.
 --
 --   chip = { text, tone?, tip = { title, lines... } }
 --   side = { title, verdict = { text, tone, tip }, rows = { { key, label, text, tone, tip, link } } }
@@ -21,6 +22,7 @@ local DC = NS.DetailCells
 local C  = NS.Constants
 local L  = NS.L
 local WC = NS.WindowCells
+local MC = NS.MineCells
 
 local floor, abs = math.floor, math.abs
 
@@ -333,21 +335,29 @@ function DC.ForYou(drop, scorer)
     return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }
 end
 
+-- Your own drop's side (feedback-5 spec §2): the looter is you, and the Them row reads (Multiple)
+-- with every member it upgrades in its tooltip (MineCells.Multiple), as the row's Them cell does.
+local function ownSide(drop, revealed)
+    local m = MC.Multiple(drop, revealed, L["Them"])
+    local tip = m.tip
+    return { title = L["FOR THE GROUP"], verdict = { text = m.text, tone = m.tone, tip = tip },
+        rows = { row("mine", L["Looter"], L["you"], "muted", L["Looter"], L["Your own drop: Offer shows who it would help."]),
+            { key = "them", label = L["Them"], text = m.text, tone = m.tone, tip = tip } } }
+end
+
 --- The For the looter column (board 02, callout 4): the same comparison against their inspected
---- gear, and their spec with the read's age. On your own drop it says so.
+--- gear, and their spec with the read's age. On your own drop: the Them row's `(Multiple)`.
 --- @param drop table
 --- @param inspect table|nil the looter's inspect entry (NS.Inspect.Get)
 --- @param specName string|nil the looter's spec, in words
 --- @param now number|nil GetTime()
+--- @param revealed boolean|nil your own drop's Offer panel was opened this session (WindowOwn)
 --- @return table side
-function DC.ForLooter(drop, inspect, specName, now)
+function DC.ForLooter(drop, inspect, specName, now, revealed)
+    if drop.isMine then return ownSide(drop, revealed) end
     local who = looterName(drop)
     local title = L["FOR %s (LOOTER)"]:format(who:upper())
     local cell = WC.Them(drop, now)
-    if drop.isMine then
-        return { title = L["FOR THE LOOTER"], verdict = verdictChip(cell),
-            rows = { row("mine", L["Looter"], L["you"], "muted", L["Looter"], L["Your own drop: who it would help is on My drops."]) } }
-    end
     local rows = sideRows(drop.them, facts(drop), cell.tone, who)
     rows[#rows + 1] = specRow(drop, inspect, specName, now)
     return { title = title, verdict = verdictChip(cell), rows = rows }
@@ -392,6 +402,13 @@ end
 
 local function act(key, text, icon, enabled, title, ...)
     return { key = key, text = text, icon = icon, enabled = enabled and true or false, tip = { title, ... } }
+end
+
+-- Your own drop's Offer in the Ask's place (feedback-5 spec §2): it opens the Offer panel.
+local function offerAction(o)
+    local a = act("ask", o.offered and o.text or L["Offer"], "chat", o.offered, unpack(o.tip))
+    a.state, a.offer = o.state, true
+    return a
 end
 
 local function askAction(drop, ask)
@@ -456,7 +473,7 @@ local TRADE_SHORT = {
 
 local function tradeAction(drop, trade)
     local title = L["Trade"]
-    if drop.isMine then return act("trade", title, "transfer", false, title, L["Your own drop: hand it over from My drops."]) end
+    if drop.isMine then return act("trade", title, "transfer", false, title, L["Your own drop: Offer has a Trade button for each member."]) end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
         return act("trade", L["Trade · can't"], "transfer", false, title, L["Its looter can't trade it."])
     end
@@ -469,17 +486,19 @@ local function tradeAction(drop, trade)
         L["Open a trade with %s, so they can put the item in."]:format(looterName(drop)))
 end
 
---- The card's actions (board 02, callout 6), left to right: Ask, Edit message, Link in chat, Retry
---- inspect and Trade. A disabled one says why in its tooltip. Nothing hides a drop (feedback-4 spec §2).
+--- The card's actions (board 02, callout 6), left to right: Ask (Offer on your own drop, with
+--- `offer` set: feedback-5 spec §2), Edit message, Link in chat, Retry inspect and Trade. A
+--- disabled one says why in its tooltip. Nothing hides a drop (feedback-4 spec §2).
 --- @param drop table
 --- @param ctx table { askState, askReason, inspect (the looter's entry), now, trade = { ok, reason, text },
---- transmogAsk (the `messages.transmogAsk` setting) }
+--- transmogAsk (the `messages.transmogAsk` setting), offerTone (your own drop's: WindowOwn.ToneStates) }
 --- @return table list of actions
 function DC.Actions(drop, ctx)
     ctx = type(ctx) == "table" and ctx or {}
     local ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk)
+    local first = drop.isMine and offerAction(MC.OwnOffer(drop, ctx.offerTone)) or askAction(drop, ask)
     return {
-        askAction(drop, ask), editAction(ask), linkAction(drop),
+        first, editAction(ask), linkAction(drop),
         retryAction(drop, ctx.inspect, ctx.now), tradeAction(drop, ctx.trade),
     }
 end

@@ -272,15 +272,6 @@ function FB.IsInteresting(drop)
     return LOOTER_GIVES[verdictOf(drop.them)] == true and TRADEABLE[state] == true
 end
 
---- Whether a drop belongs in the Group drops table: someone else's always, your own only with
---- `feed.showOwn` on (design spec §6.3: off by default, own loot goes to My drops).
---- @param drop table
---- @param showOwn boolean|nil
---- @return boolean
-function FB.InGroup(drop, showOwn)
-    return type(drop) == "table" and (not drop.isMine or showOwn == true)
-end
-
 --- Your own drop whose trade estimate is `yes` or `likely` (the `My drops · n` count).
 --- @param drop table
 --- @return boolean

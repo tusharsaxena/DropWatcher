@@ -2,16 +2,19 @@ local _, NS = ...
 -- modules/MineCells.lua — what the My drops tab and the Offer panel say (design spec §11.4, board
 -- 04): each column's text, tone and reason tooltip for your own drops, the candidates ranked with
 -- their status pills, the tab's summary line, the Post my tradeables lines and where the Offer
--- panel docks; and the Trade window cell every drop shows on Group drops (feedback-5 spec §1).
+-- panel docks; the Trade window cell every drop shows on Group drops (feedback-5 spec §1); and what
+-- your own drop says there (feedback-5 spec §2): Trade with its upgrade count (`Yes (2)`), Them
+-- and Their eq as `(Multiple)` with every member it upgrades in the tooltip, and the Offer button.
 -- Nothing is ever blank: an unknown value says `?`, `–` or `Checking` and its tooltip says why.
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
 -- with its `expiresAt`, `me`) and plain inputs (the clock, the warning threshold, an ask's state)
 -- and answers a plain table; nothing here reads a module, the client or a saved variable, so
 -- test_window_mine drives each state case by case. The frame edges that paint them are
--- modules/WindowMine.lua (the tab), modules/WindowGroup.lua and modules/CompactGroup.lua (the Trade
--- window column and the compact card's countdown) and modules/OfferPanel.lua (the panel). The shared verdict and
--- trade wording is modules/WindowCells.lua's.
+-- modules/WindowMine.lua (the tab), modules/WindowGroup.lua, modules/CompactGroup.lua and
+-- modules/DetailCard.lua (the Trade window column, the compact card's countdown and your own drop's
+-- cells, through modules/WindowOwn.lua) and modules/OfferPanel.lua (the panel). The shared verdict
+-- and trade wording is modules/WindowCells.lua's.
 --
 --   cell = { text, glyph, tone = key of C.TONE, tip = { title, lines... } }
 --
@@ -27,6 +30,13 @@ local _, NS = ...
 -- by their gain, then EQUAL, NO UPGRADE, CAN'T USE, CHECKING and UNAVAILABLE, each tie by name. An
 -- upgrade for you is not offered by default: the Best candidates cell says `Hidden: an upgrade for
 -- you` until you open the Offer panel yourself (AskFlow B2).
+--
+-- YOUR OWN DROP ON GROUP DROPS (feedback-5 spec §2). Trade appends how many members it upgrades
+-- (`Yes (2)`, the bare word with none); Them and Their eq read `(Multiple)`, green with at least one
+-- upgrade, muted otherwise, their tooltip naming each upgrade by gain (`Butterz ▲ +11 · wears 276
+-- (Bloodthorn Treads)`). The keep? rule holds: while it is an upgrade for you and not revealed, the
+-- count is not drawn and (Multiple) reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's
+-- shape), toned by the furthest offer sent; a dash with the reason when it cannot be traded.
 
 NS.MineCells = NS.MineCells or {}
 local MC = NS.MineCells
@@ -241,6 +251,7 @@ local function entryOf(c, ilvl)
     local gain = gainOf(c)
     return { guid = c.guid, name = c.name, short = who, classFile = c.classFile, status = status,
         rank = RANK[status], gain = gain, pill = pillOf(status, gain, who), eq = eqText(status, c.eval, ilvl),
+        baseline = type(c.eval) == "table" and type(c.eval.baseline) == "table" and c.eval.baseline or nil,
         offerable = status == "upgrade" or status == "sidegrade" }
 end
 
@@ -252,7 +263,8 @@ local function byRank(a, b)
 end
 
 --- Every other member, ranked for your drop: { guid, name, short, classFile, status, rank, gain,
---- pill = { text, tone, tip }, eq, offerable }, upgrades first by gain.
+--- pill = { text, tone, tip }, eq, baseline (the worn item it is judged against: facts, or nil),
+--- offerable }, upgrades first by gain.
 --- @param drop table
 --- @return table
 function MC.Candidates(drop)
@@ -347,6 +359,117 @@ function MC.BestCandidates(drop, revealed)
     end
     c.list = list
     return c
+end
+
+-- ── your own drop on Group drops (feedback-5 spec §2) ───────────────────────────────────────
+
+local HIDDEN_LINE = L["An upgrade for you: nobody is offered it unless you choose to. Offer shows who it would help."]
+
+-- The keep? rule: an upgrade for you whose Offer panel you have not opened this session.
+local function keepHidden(drop, revealed)
+    return type(drop.me) == "table" and drop.me.verdict == "upgrade" and not revealed
+end
+
+--- How many members drop `drop` upgrades (MC.Candidates' upgrades).
+--- @param drop table
+--- @return number
+function MC.UpgradeCount(drop) return #upgradesOf(MC.Candidates(drop)) end
+
+--- The Trade column on your own drop: WindowCells.Trade's word with the count of members it
+--- upgrades (`Yes (2)`, `Likely (1)`; the bare word with none) and a tooltip line saying so. Not
+--- counted on a drop that cannot be traded, nor under the keep? rule (its tooltip says why).
+--- @param drop table one of your drops
+--- @param revealed boolean|nil its Offer panel was opened this session
+--- @return table cell, with `state` and `upgrades` (nil when not counted)
+function MC.OwnTrade(drop, revealed)
+    local c = WC.Trade(drop)
+    if c.state == nil or c.state == "no" then return c end
+    if keepHidden(drop, revealed) then
+        c.tip[#c.tip + 1] = HIDDEN_LINE
+        return c
+    end
+    local n = MC.UpgradeCount(drop)
+    c.upgrades = n
+    if n > 0 then
+        c.text = ("%s (%d)"):format(c.text, n)
+        c.tip[#c.tip + 1] = n == 1 and L["Upgrades 1 member: Offer shows who."]
+            or L["Upgrades %d members: Offer shows who."]:format(n)
+    end
+    return c
+end
+
+-- One upgrade's tooltip line: `Butterz ▲ +11 · wears 276 (Bloodthorn Treads)`.
+local function upgradeLine(e)
+    local head = e.short .. " " .. WC.GLYPH.upgrade
+    if e.gain then head = head .. " " .. WC.Signed(e.gain) end
+    local base = e.baseline
+    if not (base and num(base.ilvl)) then return head .. " · " .. L["nothing worn there"] end
+    local worn = L["wears %d"]:format(round(base.ilvl))
+    local name = base.name or WC.ItemName(base.link)
+    if name then worn = ("%s (%s)"):format(worn, name) end
+    return head .. " · " .. worn
+end
+
+--- Them and Their eq on your own drop: `(Multiple)`, green when it upgrades at least one member
+--- and muted when it upgrades none; its tooltip lists each upgrade ranked by gain, else says why
+--- there is none (nobody's whose gear was read, `n checking`, nobody else in the group). `Hidden`
+--- under the keep? rule; a dash on a drop that cannot be traded.
+--- @param drop table one of your drops
+--- @param revealed boolean|nil
+--- @param title string|nil the tooltip's title (the column's name; `Them` when nil)
+--- @return table cell, with `upgrades` and `hidden`
+function MC.Multiple(drop, revealed, title)
+    title = title or L["Them"]
+    if tradeOf(drop).state == "no" then
+        return cell(DASH, "muted", title, L["Not tradeable, so nobody can be offered it."])
+    end
+    if keepHidden(drop, revealed) then
+        local c = cell(L["Hidden"], "muted", title, HIDDEN_LINE)
+        c.hidden = true
+        return c
+    end
+    local list = MC.Candidates(drop)
+    local ups = upgradesOf(list)
+    local c = cell(L["(Multiple)"], #ups > 0 and "good" or "muted", title)
+    c.upgrades = #ups
+    if #list == 0 then
+        c.tip[2] = L["Nobody else in your group."]
+        return c
+    end
+    for _, e in ipairs(ups) do c.tip[#c.tip + 1] = upgradeLine(e) end
+    if #ups == 0 then c.tip[#c.tip + 1] = L["Not an upgrade for anyone whose gear was read."] end
+    local checking = countChecking(list)
+    if checking > 0 then c.tip[#c.tip + 1] = L["%d checking"]:format(checking) end
+    return c
+end
+
+-- Your own drop's Offer button, by the furthest offer sent for it (WindowMine's ToneStates).
+local OWN_OFFER_LOOK = {
+    ready = { text = L["Offer"] }, failed = { text = L["Offer"] },
+    queued = { text = L["Queued"], icon = "clock", line = L["An offer of it is queued until chat allows it."] },
+    sent = { text = L["Offered"], icon = "confirm", line = L["You offered it: the panel shows to whom."] },
+    tradedAway = { text = L["Traded"], icon = "confirm", line = L["You traded it away."] },
+}
+
+--- Actions on your own drop (feedback-5 spec §2), in WindowCells.Ask's shape with `offer` true:
+--- Offer, which opens the Offer panel (always clickable), labeled and toned by `toneState` (red
+--- until an offer was sent, yellow once offered or queued, green once given away); a dash with the
+--- reason on a drop that cannot be traded.
+--- @param drop table one of your drops
+--- @param toneState string|nil the offer half of the tone states (`ready`, `queued`, `sent`, `failed`,
+---   `tradedAway`)
+--- @return table { offered, offer = true, text, icon, enabled, tip, state }
+function MC.OwnOffer(drop, toneState)
+    local t = tradeOf(drop)
+    if t.state == "no" then
+        return { offered = false, offer = true, text = DASH, enabled = false,
+            tip = { L["No offer"], L["Not tradeable: %s"]:format(WC.TradeReason(t, L["you"])) } }
+    end
+    local s = OWN_OFFER_LOOK[toneState] and toneState or "ready"
+    local l = OWN_OFFER_LOOK[s]
+    local tip = { L["Offer"], L["Open the panel of who could use it, ranked by their gain, with Offer and Trade for each."] }
+    tip[3] = l.line
+    return { offered = true, offer = true, text = l.text, icon = l.icon, enabled = true, tip = tip, state = s }
 end
 
 -- ── the buttons ─────────────────────────────────────────────────────────────────────────────

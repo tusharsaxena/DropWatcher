@@ -16,11 +16,14 @@ local _, NS = ...
 -- header (feedback-5 spec §0; GROUP_SPEC.indent). What each piece says, its tone and its reason tooltip are NS.CompactCards.Group's
 -- (pure, built from the full view's cells):
 --
---   line 1  item (quality color, the game's tooltip) · ilvl · Ask (the full table's states)
+--   line 1  item (quality color, the game's tooltip) · ilvl · Ask (the full table's states; Offer on
+--           your own drop, which opens the Offer panel: NS.WindowOwn, feedback-5 spec §2)
 --   line 2  looter (class color, ⊕ from another realm) · slot · type · trade     ~1:42:10 ██████░░
 --           (the countdown and its bar for a drop with one, feedback-5 spec §1; else the inspect
 --           freshness: `2m`, `cached`, `…`)
 --   line 3  You ▽ -13 (321/308)                 Them ⊘ Can't use (298/296)
+--           (your own drop: line 2's trade carries its upgrade count, `Yes (2)`, and Them reads
+--           `(Multiple)`, every member it upgrades in the tooltip)
 --
 -- Every piece is a font string with a hit frame over it that carries its tooltip, placed by the
 -- row-tooltip helper (NS.RowTooltip, DW-B2) at the card's top right, just outside the window: the
@@ -213,7 +216,7 @@ CG.Background = buildBackground
 
 local function buildAsk(card)
     local W = NS.Window
-    card.ask = W.TextButton(card, K.ASK_W, nil, NS.L["Ask"], function(b) NS.PressAsk(b.dropId) end)
+    card.ask = W.TextButton(card, K.ASK_W, nil, NS.L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     W.AttachTooltip(card.ask, function() return tipOf(card.ask) end, "row")
     card.dash = fontString(card, "GameFontDisableSmall")
     card.dash:SetPoint("CENTER", card.ask, "CENTER", 0, 0)
@@ -323,11 +326,11 @@ local function paintText(cell, c, prefix)
 end
 CG.PaintText = paintText
 
--- The Ask button in the full table's states (WindowGroup's paintActions, the same cell), or the
--- dash with its reason where no ask is offered.
+-- The Ask button in the full table's states (WindowGroup's paintActions, the same cell), your own
+-- drop's Offer, or the dash with its reason where neither is offered.
 local function paintAsk(card, a, id)
     local b = card.ask
-    b.dropId = id
+    b.dropId, b.offer = id, a.offer == true
     b:SetShown(a.offered)
     card.dash:SetShown(not a.offered)
     card.dashTip:SetShown(not a.offered)
@@ -426,8 +429,13 @@ end
 local function cardCtx(drop, shared)
     local state, reason = NS.WindowGroup.AskState(drop)
     local insp = NS.TestMode.InspectOf(drop)
-    return { now = shared.now, equipped = shared.equipped, gear = insp and insp.gear, askState = state,
+    local ctx = { now = shared.now, equipped = shared.equipped, gear = insp and insp.gear, askState = state,
         askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm, warnAt = shared.warnAt }
+    if drop.isMine then   -- your own drop's Offer and (Multiple) (feedback-5 spec §2)
+        local WO = NS.WindowOwn
+        ctx.revealed, ctx.offerTone = WO.IsRevealed(drop.id), (WO.ToneStates(drop))
+    end
+    return ctx
 end
 
 local function paintCard(card, drop, width, m, shared)
@@ -615,7 +623,7 @@ end
 local function groupHeader(e, st)
     local g = e.group
     local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
-    return NS.CompactCards.Header(g, e.count, st.now, sit, e.collapsed, e.hidden, e.filter, e.yours)
+    return NS.CompactCards.Header(g, e.count, st.now, sit, e.collapsed, e.hidden, e.filter)
 end
 
 local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader, after = drawDetail,

@@ -131,8 +131,7 @@ test("modes: a collapsed group, an expanded drop and your own drops shown are th
     assertSameSet(NS, "group", "collapsed")
     NS.WindowGroup.ToggleGroup(groups[1].key, true)
     assertSameSet(NS, "group", "expanded")
-    NS.addon.db.profile.feed.showOwn = true
-    assertSameSet(NS, "group", "showOwn")
+    assertSameSet(NS, "group", "your own drops listed")   -- always (feedback-5 spec §2)
     NS.WindowMine.ToggleGroup(groups[1].key, false)
     assertSameSet(NS, "mine", "collapsed")
     NS.Window.SelectTab("history")

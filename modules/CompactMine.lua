@@ -215,7 +215,7 @@ end
 
 local function cardCtx(drop, st)
     local state, reason = NS.Asks.StateOf("announce", nil, drop.id)
-    return { now = st.now, warnAt = st.warnAt, revealed = NS.WindowMine.IsRevealed(drop.id),
+    return { now = st.now, warnAt = st.warnAt, revealed = NS.WindowOwn.IsRevealed(drop.id),
         announceState = state, announceReason = reason }
 end
 
@@ -226,7 +226,7 @@ local function paintCard(card, drop, _, m, st)
     NS.WindowRows.ApplyRowFont(card, m.fontSize)
     local cc = NS.CompactCards.Mine(drop, cardCtx(drop, st))
     card.model = cc
-    cc.offerTone, cc.announceTone = NS.WindowMine.ToneStates(drop)   -- once per card (feedback-4 spec §1)
+    cc.offerTone, cc.announceTone = NS.WindowOwn.ToneStates(drop)   -- once per card (feedback-4 spec §1)
     paintLineOne(card, drop, cc)
     paintForYou(card, cc.forYou)
     paintTrade(card, cc.trade, m)

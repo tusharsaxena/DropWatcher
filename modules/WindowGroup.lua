@@ -11,7 +11,10 @@ local _, NS = ...
 -- (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
 -- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
 -- NS.MineCells.TradeWindow, feedback-5 spec §1) and Actions (the Ask button; no drop is ever
--- dismissed, feedback-4 spec §2).
+-- dismissed, feedback-4 spec §2). YOUR OWN DROPS are listed too (feedback-5 spec §2;
+-- modules/WindowOwn.lua): Trade counts the members it upgrades (`Yes (2)`), Them and Their eq read
+-- `(Multiple)` with each upgrade in the tooltip (`Hidden` while it is an upgrade for you that you
+-- have not offered), and Actions is Offer, which opens the Offer panel (no Announce in the table).
 -- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
 -- cell says, and its reason tooltip, is modules/WindowCells.lua's (pure); this file is the frame
@@ -34,12 +37,10 @@ local _, NS = ...
 -- WG.LiveCountdown tells Window.lua whether the ticker is still wanted.
 --
 -- THE ORDER. NS.WindowCells.Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
--- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
--- and your own drops only with `feed.showOwn` on)
--- ordered by the tab's Sort. A group with none keeps its header (`n drops ·
--- 0 shown`) while the View filter hid them, and is left out when Search or Content did or it has
--- nothing for the tab (WC.KeepsHeader); its header counts your own drops left to My drops (`· 1 yours
--- on My drops`, feedback-3 spec §0). A group the
+-- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate;
+-- your own drops with the others) ordered by the tab's Sort. A group with none keeps its header
+-- (`n drops · 0 shown`) while the View filter hid them, and is left out when Search or Content did
+-- or it has nothing for the tab (WC.KeepsHeader). A group the
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles are session-only (NS.State.windowGroup).
 --
@@ -60,7 +61,8 @@ local _, NS = ...
 --
 -- THE UI LISTENS. Window.lua repaints it on the bus; it reads the feed (NS.LootFeed.Groups, Get),
 -- the looter's inspect entry (NS.Inspect.Get) and the ask's state (NS.Asks.StateOf), all read-only.
--- The Ask button goes through the host handler NS.PressAsk (core/DropWatcher.lua). An item button
+-- The Ask button goes through the host handler NS.PressAsk (core/DropWatcher.lua), the Offer button
+-- to the Offer panel (NS.WindowOwn.PressAction). An item button
 -- shows the game's tooltip, shift-click links it (Compat.InsertChatLink) and ctrl-click tries it
 -- on (Compat.DressUpItem).
 
@@ -103,7 +105,7 @@ WG.COLUMNS = {
     { key = "tradeWindow", label = L["Trade window"], width = 104, shed = 5,
       tip = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] },
     { key = "actions", label = L["Actions"], width = K.ASK_W,
-      tip = L["Ask the looter for it, once."] },
+      tip = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."] },
 }
 local GLYPH_COLS = { me = true, them = true }
 local WHITE = { r = 1, g = 1, b = 1 }   -- an untoned button's label (GameFontHighlightSmall)
@@ -443,7 +445,7 @@ end
 local function actionsCell(row)
     local f = CreateFrame("Frame", nil, row)
     f.key = "actions"
-    f.ask = NS.Window.TextButton(f, K.ASK_W, nil, L["Ask"], function(b) NS.PressAsk(b.dropId) end)
+    f.ask = NS.Window.TextButton(f, K.ASK_W, nil, L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     f.ask:SetPoint("LEFT", f, "LEFT", 0, 0)
     NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end, "row")
     f.dash = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -598,10 +600,19 @@ function WG.AskState(drop)
     return NS.History.AskState(drop, NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", target, drop.id)))
 end
 
-local function paintActions(f, drop)
+--- A row's action (both layouts): your own drop's Offer (NS.WindowOwn.Offer), else the Ask
+--- (WindowCells.Ask's look in the ask's state).
+--- @param drop table
+--- @return table WindowCells.Ask's shape (`offer` true for an Offer)
+function WG.Action(drop)
+    if drop.isMine then return NS.WindowOwn.Offer(drop) end
     local state, reason = WG.AskState(drop)
-    local a = WC.Ask(drop, state, reason, NS.Setting("messages.transmogAsk") == true)
-    f.ask.dropId = drop.id
+    return WC.Ask(drop, state, reason, NS.Setting("messages.transmogAsk") == true)
+end
+
+local function paintActions(f, drop)
+    local a = WG.Action(drop)
+    f.ask.dropId, f.ask.offer = drop.id, a.offer == true
     f.ask:SetShown(a.offered)
     f.dashTip:SetShown(not a.offered)
     f.dash:SetShown(not a.offered)
@@ -654,7 +665,21 @@ local function paintTradeWindow(f, drop, now, warnAt, size)
     f.bold = c.bold == true
 end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WC.Me, trade = WC.Trade }
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WC.Me }
+
+--- Them and Their eq for any drop: the looter's verdict and worn gear, or (your own drop)
+--- `(Multiple)` in both (NS.WindowOwn.Multiple; feedback-5 spec §2).
+--- @param drop table
+--- @param gear table|nil the looter's inspect gear
+--- @param now number|nil
+--- @return table them, table theirEq (with `items`)
+function WG.ThemCells(drop, gear, now)
+    if not drop.isMine then return WC.Them(drop, now), WC.TheirEq(drop, gear, now) end
+    local WO = NS.WindowOwn
+    local eq = WO.Multiple(drop, L["Their eq"])
+    eq.items = {}
+    return WO.Multiple(drop, L["Them"]), eq
+end
 
 -- `metrics.rowH` is this repaint's row height (drawTable: taller while Trade window shows).
 local function paintRow(row, drop, layout, now, metrics)
@@ -673,9 +698,11 @@ local function paintRow(row, drop, layout, now, metrics)
     local lc = WC.Looter(drop)
     paintText(cells.looter, lc)
     classTone(cells.looter.text, lc.classFile)
-    paintText(cells.them, WC.Them(drop, now))
+    paintText(cells.trade, NS.WindowOwn.Trade(drop))
+    local them, theirEq = WG.ThemCells(drop, inspectGear(drop), now)
+    paintText(cells.them, them)
     paintEq(cells.myEq, WC.MyEq(drop, myGear()), "player")
-    paintEq(cells.theirEq, WC.TheirEq(drop, inspectGear(drop), now))
+    paintEq(cells.theirEq, theirEq)
     if layout.tradeWindow then paintTradeWindow(cells.tradeWindow, drop, now, metrics.warnAt, metrics.fontSize) end
     paintActions(cells.actions, drop)
 end
@@ -683,7 +710,7 @@ end
 local function paintHeader(h, e, now)
     local g = e.group
     local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
-    local hd = WC.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter, e.yours)
+    local hd = WC.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter)
     h.groupKey, h.collapsed = g.key, e.collapsed
     h.text:SetText(hd.text)
     h.tipLines = hd.tip

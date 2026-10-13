@@ -15,11 +15,13 @@ local _, NS = ...
 -- THE CARDS. A card is three lines; each line's pieces are named fields, left to right, and the
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
---   Group drops  line 1: item (quality color), ilvl (right), ask
---                line 2: looter (class color, ⊕ when cross-realm), slot, type, trade; countdown (right,
---                        with its bar: MineCells.TradeWindow's, for a drop with a countdown,
---                        feedback-5 spec §1) or else fresh (right, dimmed)
---                line 3: you = { label, verdict, eq }, them = { label, verdict, eq }
+--   Group drops  line 1: item (quality color), ilvl (right), ask (Offer on your own drop)
+--                line 2: looter (class color, ⊕ when cross-realm), slot, type, trade (with the count
+--                        of members it upgrades on your own drop); countdown (right, with its bar:
+--                        MineCells.TradeWindow's, for a drop with a countdown, feedback-5 spec §1) or
+--                        else fresh (right, dimmed)
+--                line 3: you = { label, verdict, eq }, them = { label, verdict, eq } (`(Multiple)`
+--                        on your own drop, feedback-5 spec §2)
 --   My drops     line 1: item, ilvl (right), offer (or a dash on a drop that cannot be traded)
 --                line 2: forYou = { label, verdict, sub }, trade (the countdown and its bar, right)
 --                line 3: candidates (class-colored parts), announce (none on a drop that cannot be traded)
@@ -246,26 +248,39 @@ local function groupCountdown(drop, now, warnAt)
     return MC.TradeWindow(drop, now, warnAt)
 end
 
+-- Line 1's action, line 2's trade and line 3's Them: the looter's, or on your own drop its Offer,
+-- its upgrade count and `(Multiple)` (feedback-5 spec §2: the full table's cells).
+local function sides(drop, ctx, now)
+    if drop.isMine then
+        return MC.OwnOffer(drop, ctx.offerTone), MC.OwnTrade(drop, ctx.revealed),
+            CC.Half(L["Them"], MC.Multiple(drop, ctx.revealed, L["Them"]), nil)
+    end
+    return WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk), WC.Trade(drop),
+        CC.Half(L["Them"], WC.Them(drop, now), WC.TheirEq(drop, ctx.gear, now))
+end
+
 --- A Group drops card.
 --- @param drop table
 --- @param ctx table { now, equipped (your gear snapshot's), gear (the looter's inspect gear),
----   askState, askReason, transmogAsk, ownRealm, warnAt (the trade.warnAt default when nil) }
+---   askState, askReason, transmogAsk, ownRealm, warnAt (the trade.warnAt default when nil); on your
+---   own drop revealed (its Offer panel was opened this session) and offerTone (the offer half of
+---   WindowOwn.ToneStates) }
 --- @return table card
 function CC.Group(drop, ctx)
     ctx = ctx or {}
     local now = ctx.now
+    local action, trade, them = sides(drop, ctx, now)
     return {
         kind = "group", id = drop.id, link = drop.link,
         -- line 1
-        item = CC.Item(drop), ilvl = WC.Ilvl(drop),
-        ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk),
+        item = CC.Item(drop), ilvl = WC.Ilvl(drop), ask = action,
         -- line 2
         looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
-        trade = WC.Trade(drop),
+        trade = trade,
         fresh = CC.Freshness(drop, now), countdown = groupCountdown(drop, now, ctx.warnAt),
         -- line 3
         you = CC.Half(L["You"], WC.Me(drop), WC.MyEq(drop, ctx.equipped)),
-        them = CC.Half(L["Them"], WC.Them(drop, now), WC.TheirEq(drop, ctx.gear, now)),
+        them = them,
     }
 end
 
@@ -463,10 +478,9 @@ end
 --- @param collapsed boolean
 --- @param hidden table|nil
 --- @param filter table|nil
---- @param yours number|nil
 --- @return table { text, tip, cut }
-function CC.Header(group, shown, now, situationLabel, collapsed, hidden, filter, yours)
-    local full = WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter, yours)
+function CC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
+    local full = WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     local age = (num(group.at) and num(now)) and CC.Age(now - group.at) or nil
     return shortHeader(group, shown, age, situationLabel, hidden, full)
 end

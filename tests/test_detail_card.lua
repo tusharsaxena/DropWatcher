@@ -123,8 +123,29 @@ test("cells: For the looter compares their inspected gear and names their spec a
     assertEqual(unread.verdict.text, "UNKNOWN")
     assertEqual(byKey(unread.rows, "spec").text, "spec unknown")
     assertTrue(byKey(unread.rows, "spec").tip[2]:find("not been inspected") ~= nil)
-    local mine = D.ForLooter(drop({ isMine = true, them = NONE }), nil, nil, 100)
-    assertEqual(#mine.rows, 1); assertTrue(mine.rows[1].tip[2]:find("My drops") ~= nil)
+end)
+
+test("cells: on your own drop the looter's side is FOR THE GROUP, its Them row (Multiple)", function()
+    local D = DC()
+    local function cand(name, gain, base)
+        return { guid = "G-" .. name, name = name .. "-Realm", status = "ready",
+            eval = { verdict = "upgrade", ilvlDelta = gain, baseline = base, reasons = {} } }
+    end
+    local list = { a = cand("Butterz", 11, { ilvl = 300, name = "Bloodthorn Treads" }), b = cand("Seta", 4, { ilvl = 307 }) }
+    local down = { verdict = "downgrade", ilvlDelta = -5, reasons = {} }
+    local mine = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = list }), nil, nil, 100)
+    assertEqual(mine.title, "FOR THE GROUP")
+    assertEqual(mine.verdict.text, "(Multiple)"); assertEqual(mine.verdict.tone, "good")
+    assertEqual(mine.rows[1].tip[2], "Your own drop: Offer shows who it would help.")
+    local them = byKey(mine.rows, "them")
+    assertEqual(them.text, "(Multiple)"); assertEqual(them.label, "Them")
+    assertEqual(them.tip[2], "Butterz ▲ +11 · wears 300 (Bloodthorn Treads)", "ranked by gain")
+    assertEqual(them.tip[3], "Seta ▲ +4 · wears 307")
+    -- The keep? rule: an upgrade for you reads Hidden until revealed.
+    local kept = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100)
+    assertEqual(byKey(kept.rows, "them").text, "Hidden")
+    local revealed = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100, true)
+    assertEqual(byKey(revealed.rows, "them").text, "(Multiple)")
 end)
 
 -- ── the trade box ───────────────────────────────────────────────────────────────────────────
@@ -175,13 +196,22 @@ test("cells: a disabled action says why: Trade out of range, Retry already queue
     assertEqual(byKey(failed, "ask").text, "Retry")
 end)
 
-test("cells: on your own drop Ask, Edit, Retry and Trade are off, each with its reason", function()
+test("cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade are off, each with its reason", function()
     local D = DC()
     local acts = D.Actions(drop({ isMine = true, them = NONE }), { askState = "ready", now = 100, trade = OK_TRADE })
-    for _, key in ipairs({ "ask", "edit", "retry", "trade" }) do
+    local offer = byKey(acts, "ask")
+    assertTrue(offer.offer and offer.enabled, "Offer opens the Offer panel (feedback-5 spec §2)")
+    assertEqual(offer.text, "Offer"); assertEqual(offer.state, "ready")
+    for _, key in ipairs({ "edit", "retry", "trade" }) do
         local a = byKey(acts, key)
         assertFalse(a.enabled, key); assertTrue(#a.tip >= 2 and a.tip[2] ~= "", key)
+        assertTrue(a.tip[2]:find("My drops", 1, true) == nil, key .. ": no word of My drops")
     end
+    assertEqual(byKey(acts, "edit").tip[2], "Your own drop: Offer shows who it would help.")
+    local sent = D.Actions(drop({ isMine = true, them = NONE }), { now = 100, offerTone = "sent" })
+    assertEqual(byKey(sent, "ask").text, "Offered"); assertEqual(byKey(sent, "ask").state, "sent")
+    local dead = D.Actions(drop({ isMine = true, them = NONE, trade = { state = "no", reasonKey = "bonusRoll" } }), { now = 100 })
+    assertFalse(byKey(dead, "ask").enabled, "a drop of yours that cannot be traded")
     assertTrue(byKey(acts, "hide") == nil, "no Hide this item (feedback-4 spec §2)")
     local legacy = D.Actions(drop({ trade = { state = "no", reasonKey = "legacy" } }), { askState = "ready", now = 100, trade = OK_TRADE })
     assertFalse(byKey(legacy, "trade").enabled, "an item its looter can't trade")

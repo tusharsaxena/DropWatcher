@@ -14,7 +14,7 @@ local _, NS = ...
 -- `Stop simulation`. Clicking the next step runs it; clicking a later one runs every step up to and
 -- including it, in order (RunTo), never skipping one; clicking a completed step does nothing, and
 -- its tooltip says when it ran. Every row's tooltip says what the step injects. A played loot step
--- says where its drops went, `Loot: 2 drops (1 yours)`, and its tooltip names each drop, its looter
+-- says where its drops went, `Loot: 3 drops (1 hidden)`, and its tooltip names each drop, its looter
 -- and its tab or the gate that hid it (modules/SimReport.lua; feedback-3 spec §0).
 --
 -- THE PANEL NEVER CHANGES THE TIMELINE. Every click and every control goes through the very verbs
@@ -103,8 +103,8 @@ local function lineCount(n)
 end
 
 -- A played loot step reads its report again (modules/SimReport.lua; feedback-3 spec §0), so a drop
--- still loading when it ran is placed once it lands: `Loot: 2 drops (1 yours)`. It reads the window's
--- view each time too (SimReport.View: `feed.showOwn` and test mode; feedback-3 spec §5).
+-- still loading when it ran is placed once it lands: `Loot: 3 drops (1 hidden)`. It reads the window's
+-- view each time too (SimReport.View: test mode; feedback-3 spec §5).
 local function lootLabel(step)
     local R = NS.SimReport
     if step.report then return L["Loot: %s"]:format(R.Summarize(step.report, NS.LootFeed.Get, R.View()).text) end

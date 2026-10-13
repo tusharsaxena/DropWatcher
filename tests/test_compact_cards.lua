@@ -250,17 +250,43 @@ test("compact cards: the Ask button keeps its states, and a drop you cannot ask 
     assertTrue(has(no.ask.tip, "not an upgrade for you"))
 end)
 
-test("compact cards: your own drop on Group drops reads a dash for Them and no worn levels", function()
+test("compact cards: your own drop on Group drops reads (Multiple) for Them and offers it", function()
     local C = CC()
-    local card = C.Group(groupDrop({ isMine = true, them = NONE,
-        looter = { name = "Me-Realm", classFile = "PALADIN" } }), groupCtx())
+    local me = { name = "Me-Realm", classFile = "PALADIN" }
+    local card = C.Group(groupDrop({ isMine = true, them = NONE, looter = me }), groupCtx())
     local lines = C.Plain(card)
-    assertEqual(lines[3], "You ▽ -13 (321/308)  Them –")
-    assertEqual(lines[2], "Me · Trinket · Trinkets · Likely  ~1:59:50", "your own drop's countdown")
-    local dead = C.Group(groupDrop({ isMine = true, them = NONE, looter = { name = "Me-Realm", classFile = "PALADIN" },
+    assertEqual(lines[1], "Vile Vial of Volatile Venom  295  Offer", "line 1's button is Offer (feedback-5 spec §2)")
+    assertTrue(card.ask.offer and card.ask.offered)
+    assertEqual(lines[3], "You ▽ -13 (321/308)  Them (Multiple)")
+    assertEqual(card.them.verdict.tone, "muted", "nobody's upgrade")
+    assertTrue(has(card.them.verdict.tip, "Nobody else in your group."))
+    assertEqual(lines[2], "Me · Trinket · Trinkets · Likely  ~1:59:50", "the bare word with no upgrade")
+    local dead = C.Group(groupDrop({ isMine = true, them = NONE, looter = me,
         trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), groupCtx())
     assertEqual(C.Plain(dead)[2], "Me · Trinket · Trinkets · No  –", "no countdown: the freshness, a dash on yours")
-    assertTrue(has(card.them.verdict.tip, "My drops"))
+    assertEqual(C.Plain(dead)[1], "Vile Vial of Volatile Venom  295  –", "a dash where it cannot be traded")
+    assertTrue(has(dead.ask.tip, "Bonus roll loot"))
+end)
+
+test("compact cards: your own drop's trade counts its upgrades and Them names them, unless kept", function()
+    local C = CC()
+    local me = { name = "Me-Realm", classFile = "PALADIN" }
+    local card = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, candidates = candidates(2) }),
+        groupCtx({ offerTone = "sent" }))
+    assertEqual(card.trade.text, "Likely (2)")
+    assertTrue(has(card.trade.tip, "Upgrades 2 members: Offer shows who."))
+    assertEqual(card.them.verdict.text, "(Multiple)"); assertEqual(card.them.verdict.tone, "good")
+    assertTrue(has(card.them.verdict.tip, "Seta ▲ +14 · wears 169"))
+    assertEqual(card.ask.text, "Offered"); assertEqual(card.ask.state, "sent")
+    -- An upgrade for you (the keep? rule): no count and Hidden until its Offer panel is opened.
+    local up = { verdict = "upgrade", ilvlDelta = 9, reasons = {} }
+    local kept = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, me = up, candidates = candidates(2) }),
+        groupCtx())
+    assertEqual(kept.trade.text, "Likely"); assertEqual(kept.them.verdict.text, "Hidden")
+    assertTrue(has(kept.them.verdict.tip, "nobody is offered it unless you choose to"))
+    local shown = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, me = up, candidates = candidates(2) }),
+        groupCtx({ revealed = true }))
+    assertEqual(shown.trade.text, "Likely (2)"); assertEqual(shown.them.verdict.text, "(Multiple)")
 end)
 
 test("compact cards: an unread looter says `?` for Them, and the tooltip says why", function()
@@ -456,11 +482,11 @@ test("compact cards: a filter that hides drops reads `1 of 2`, the hidden ones i
     local NS = T.newAddon()
     local C = NS.CompactCards
     local hidden = { { drop = groupDrop(), why = "view" } }
-    local h = C.Header(encounter(), 1, NOW, "Dungeon", false, hidden, { view = "upgrades" }, 1)
+    local h = C.Header(encounter(), 1, NOW, "Dungeon", false, hidden, { view = "upgrades" })
     assertTrue(stripColor(h.text):find(" · 3m · 1 of 2 · ", 1, true) ~= nil, h.text)
     assertTrue(has(h.tip, "Hidden by the filters:"))
     assertTrue(has(h.tip, "2 drops · 1 shown"), "the reconciling counts in the long form")
-    assertTrue(has(h.tip, "1 yours on My drops"))
+    assertFalse(has(h.tip, "yours"), "no `yours on My drops` (feedback-5 spec §2)")
     assertEqual(C.Count(0, nil), "0"); assertEqual(C.Count(3, {}), "3")
 end)
 

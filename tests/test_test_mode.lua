@@ -424,19 +424,20 @@ test("window: test mode draws every sample, under the boss and the key run, with
     assertTrue(textOf(f.banner.text):find("real items", 1, true) ~= nil)
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
     assertEqual(#drawn.headers, 2)
-    local notMine = 0
+    local mine = 0
     for _, d in ipairs(NS.LootFeed.Drops("test")) do
-        if not d.isMine then notMine = notMine + 1 end
+        if d.isMine then mine = mine + 1 end
     end
-    assertEqual(#drawn.rows, notMine, "your own samples go to My drops (feed.showOwn off)")
+    assertTrue(mine > 0, "the samples hold drops of yours")
+    assertEqual(#drawn.rows, #NS.LootFeed.Drops("test"), "every sample, yours too (feedback-5 spec §2)")
     for _, r in ipairs(drawn.rows) do
         local tex = r.cells.item.button.art:GetTexture()
         assertTrue(tex ~= 134400 and tex ~= NS.Icon("help"), "a real icon: " .. tostring(tex))
     end
     assertFalse(drawn.empty:IsShown())
-    NS.addon.db.profile.feed = { showOwn = true }
+    NS.addon.db.profile.feed = { showOwn = false }   -- a stored value is ignored
     NS.Window.Refresh()
-    assertEqual(#NS.WindowGroup.Drawn().rows, #NS.LootFeed.Drops("test"), "showOwn on: every sample")
+    assertEqual(#NS.WindowGroup.Drawn().rows, #NS.LootFeed.Drops("test"), "still every sample")
 end)
 
 test("window: every cell of every sample row says something and has a reason", function()

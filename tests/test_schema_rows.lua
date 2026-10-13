@@ -21,7 +21,7 @@ local function specPaths()
         "feed.view.interesting", "feed.view.likely", "feed.view.usable", "feed.view.upgrade",
         "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
         "feed.quality.upgradeOverride", "feed.gearOnly", "feed.includeTokens", "feed.minIlvlMode",
-        "feed.minIlvl", "feed.relativeIlvl", "feed.showOwn", "feed.clearOnBossKill", "feed.sort",
+        "feed.minIlvl", "feed.relativeIlvl", "feed.clearOnBossKill", "feed.sort",
         "feed.content",
         "comparison.scorer", "comparison.weights", "comparison.sidegradeBand", "comparison.compareOwned",
         "comparison.heirloomProtect", "comparison.undesired",

@@ -78,7 +78,7 @@ end)
 test("cells: Them is a dash on your own drop and `?` with the inspect's reason while unread", function()
     local W = WC()
     local mine = W.Them(drop({ isMine = true, them = NONE }), 100)
-    assertEqual(mine.text, "–"); assertTrue(mine.tip[2]:find("My drops") ~= nil)
+    assertEqual(mine.text, "–"); assertEqual(mine.tip[2], "Your own drop: Offer shows who it would help.")
     local cases = {
         pending = "Waiting to inspect Seta", outOfRange = "out of range", combatParked = "combat to end",
         unavailable = "not in your group",
@@ -195,7 +195,8 @@ end)
 test("cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you", function()
     local W = WC()
     local mine = W.Ask(drop({ isMine = true }), "ready")
-    assertFalse(mine.offered); assertEqual(mine.text, "–"); assertTrue(mine.tip[2]:find("My drops") ~= nil)
+    assertFalse(mine.offered); assertEqual(mine.text, "–")
+    assertEqual(mine.tip[2], "Your own drop: Offer shows who it would help.", "reworded (feedback-5 spec §2)")
     local no = W.Ask(drop({ trade = { state = "no", reasonKey = "bonusRoll" } }), "ready")
     assertFalse(no.offered); assertTrue(no.tip[2]:find("Bonus roll") ~= nil)
     local down = W.Ask(drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }), "ready")
@@ -642,13 +643,12 @@ test("table: a drop with no ask offered shows a dash with its reason", function(
     local NS, drawn = shownTable()
     local a = rowFor(drawn, 2).cells.actions
     assertTrue(a.ask:IsShown(), "a sidegrade for you may be asked for")
-    NS.addon.db.profile.feed = { showOwn = true }   -- your own drop listed in Group drops
-    seed(NS, { GROUP }, { drop({ isMine = true, them = NONE }) })
+    seed(NS, { GROUP }, { drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }) })
     NS.Window.Refresh()
     a = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions
     assertFalse(a.ask:IsShown()); assertTrue(a.dash:IsShown())
     assertEqual(textOf(a.dash), "–")
-    assertTrue(NS.Window.TooltipOf(a.dashTip)[2]:find("My drops") ~= nil)
+    assertEqual(NS.Window.TooltipOf(a.dashTip)[2], "It is not an upgrade for you.")
 end)
 
 test("table: no row can be dismissed: no ×, no handler, no dismissed state (feedback-4 spec §2)", function()

@@ -523,13 +523,16 @@ test("shell: IsInteresting is an upgrade for you, or a drop its looter has no us
     assertFalse(FB.IsTradeableMine(drop()))
 end)
 
-test("shell: InGroup keeps your own drops out of Group drops unless showOwn is on", function()
-    local FB = T.newAddon().WindowFilterBar
-    assertTrue(FB.InGroup(drop(), false))
-    assertFalse(FB.InGroup(drop({ isMine = true }), nil), "off by default")
-    assertFalse(FB.InGroup(drop({ isMine = true }), false))
-    assertTrue(FB.InGroup(drop({ isMine = true }), true))
-    assertFalse(FB.InGroup(nil, true))
+test("shell: Group drops lists your own drops; a stored feed.showOwn is ignored", function()
+    local NS = T.enableAddon()
+    assertTrue(NS.WindowFilterBar.InGroup == nil, "retired with feed.showOwn (feedback-5 spec §2)")
+    NS.addon.db.profile.feed.showOwn = false
+    local ctx = NS.Window.TabContext("group")
+    assertTrue(ctx.belongs == nil and ctx.onMine == nil)
+    assertTrue(ctx.matches(drop({ isMine = true })), "your own drop passes the default filters")
+    assertTrue(ctx.matches(drop()))
+    assertFalse(ctx.matches(nil))
+    assertTrue(NS.Window.FeedView().showOwn == nil)
 end)
 
 test("shell: Matches applies only the controls a tab honors", function()

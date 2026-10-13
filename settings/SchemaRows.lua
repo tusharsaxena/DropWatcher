@@ -231,8 +231,6 @@ local function feed()
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
         L["How far under your average equipped item level a drop may be in the relative mode."],
         with(filters, { disabledIf = unless("feed.minIlvlMode", "relative") }))
-    bool("feed.showOwn", F.showOwn, L["Show my own loot in Group drops"],
-        L["Off, your own loot shows on My drops only."], filters)
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear on boss kill"],
         L["Clear the session's drops when a boss dies."], filters)
 end

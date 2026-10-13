@@ -147,7 +147,7 @@ local PLAY = {
 
 --- The chat line of a played step (sim feedback §0: every step gets one, typed or played):
 --- `Simulation step 3 of 11: kill (Warden Ashvane).`; a loot step says where its drops went
---- (feedback-3 spec §0): `Simulation step 10 of 11: loot: 2 drops (1 yours).`
+--- (feedback-3 spec §0): `Simulation step 10 of 11: loot: 3 drops (1 hidden).`
 --- @param pos number
 --- @param total number
 --- @param kind string

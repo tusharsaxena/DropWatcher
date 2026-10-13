@@ -380,8 +380,8 @@ function OP.Refresh()
     paintFoot(panel, drop, #list)
 end
 
---- Open the panel for one of your drops (its row's Offer). It reveals the drop's Best candidates
---- when it is an upgrade for you: the player chose to offer it.
+--- Open the panel for one of your drops (its row's Offer). It reveals who the drop would help when
+--- it is an upgrade for you: the player chose to offer it (NS.WindowOwn.Reveal).
 --- @param dropID number
 --- @return table|nil the panel, or nil before the window is built or for a drop that is not yours
 function OP.Open(dropID)
@@ -389,7 +389,7 @@ function OP.Open(dropID)
     if not (drop and drop.isMine and NS.Window.Frame()) then return nil end
     panel = panel or build()
     sink().dropId = dropID
-    NS.WindowMine.Reveal(dropID)
+    NS.WindowOwn.Reveal(dropID)
     NS.Debug("UI", "offer panel: drop %s", tostring(dropID))
     panel:Show()
     if NS.Window.IsShown() then NS.Window.Refresh() else OP.Refresh() end

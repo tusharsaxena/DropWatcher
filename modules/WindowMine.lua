@@ -25,7 +25,8 @@ local _, NS = ...
 -- THE UI LISTENS. Window.lua repaints it on the bus (TradeTimerTick moves the countdowns each second
 -- while a timer is live) and on its footer ticker while the tab is shown. It reads the feed
 -- (NS.LootFeed.Drops), the ask states (NS.Asks.StateOf) and the warning threshold
--- (NS.TradeTimer.WarnAt), all read-only. Offer opens the Offer panel (modules/OfferPanel.lua);
+-- (NS.TradeTimer.WarnAt), all read-only; the reveal state and the buttons' tone states are
+-- modules/WindowOwn.lua's (shared with Group drops). Offer opens the Offer panel (modules/OfferPanel.lua);
 -- Announce and Post my tradeables go through the host handlers NS.PressAnnounce and
 -- NS.PostTradeables (core/DropWatcher.lua). No drop is ever hidden from the tab (feedback-4 spec §2).
 
@@ -63,7 +64,7 @@ local NO_MATCH = L["None of your drops matches the filters."]
 local function view()
     local v = State.windowMine
     if not v then
-        v = { revealed = {} }
+        v = { collapsed = {} }
         State.windowMine = v
     end
     v.collapsed = v.collapsed or {}
@@ -83,17 +84,6 @@ function WM.ToggleGroup(key, collapsedNow)
     repaint()
 end
 
---- Show the Best candidates of an upgrade for you: the player chose to offer it.
---- @param id number
-function WM.Reveal(id)
-    if id ~= nil then view().revealed[id] = true end
-end
-
---- Whether the Best candidates of drop `id` were revealed.
---- @param id number
---- @return boolean
-function WM.IsRevealed(id) return view().revealed[id] == true end
-
 -- ── the pure half ───────────────────────────────────────────────────────────────────────────
 
 --- The tab's rows, top to bottom: your own drops that pass the tab's filter, in the tab's order.
@@ -109,8 +99,8 @@ function WM.Entries(drops, ctx)
     return out
 end
 
---- Whether the tab lists drop `d`: yours and passing the tab's own filters. The tab's label and the Group drops headers' `· n yours on My drops` count with it, so
---- they agree with what the tab lists (feedback-3 spec §5, DW-B5).
+--- Whether the tab lists drop `d`: yours and passing the tab's own filters. The tab's label counts
+--- with it, so it agrees with what the tab lists (feedback-3 spec §5, DW-B5).
 --- @param d table
 --- @param ctx table { matches = fn(drop) }
 --- @return boolean
@@ -178,17 +168,9 @@ function WM.TabTally()
     return t
 end
 
---- Whether the tab lists drop `d` now (WM.Lists over its own filters), for the Group drops
---- headers' `· n yours on My drops`. Asked only of your own drops Group drops leaves to My drops, so
---- a repaint with none of them builds no context (the refresh pair's allocation ceiling).
---- @param d table
---- @return boolean
-function WM.ListsNow(d)
-    return WM.Lists(d, NS.Window.TabContext("mine"))
-end
-
 --- Why the tab leaves drop `d` of yours out now (its own filters, in WM.WhyLabel's
---- words), else nil: the sim report's `not on My drops` (modules/SimReport.lua, feedback-3 spec §5).
+--- words), else nil: the sim report then says `Group drops` alone, not `Group drops and My drops`
+--- (modules/SimReport.lua, feedback-3 spec §5).
 --- Asked only of your own drops, so a repaint with none of them builds no context.
 --- @param d table
 --- @return string|nil
@@ -323,17 +305,6 @@ local function setButtonLook(b, look)
 end
 WM.SetButtonLook = setButtonLook
 
---- The state drop `drop`'s My drops buttons are toned by (feedback-4 spec §1): the row's Offer by
---- the furthest offer sent for it, its Announce by its own state; both `tradedAway` once you traded
---- it away (MineCells.ToneState).
---- @param drop table
---- @return string offer, string announce
-function WM.ToneStates(drop)
-    local outcome = NS.History.OutcomeOf(drop.id)
-    return MC.ToneState(outcome, NS.Asks.FurthestStateOf("offer", drop.id)),
-        MC.ToneState(outcome, NS.Asks.StateOf("announce", nil, drop.id))
-end
-
 local function actionsCell(row)
     local f = CreateFrame("Frame", nil, row)
     f.key = "actions"
@@ -448,7 +419,7 @@ local function paintActions(f, drop, best)
         return
     end
     f.offer.tipLines, f.offer.primary = a.offer.tip, a.offer.primary
-    local offerTone, announceTone = WM.ToneStates(drop)
+    local offerTone, announceTone = NS.WindowOwn.ToneStates(drop)
     NS.WindowGroup.ToneButton(f.offer, offerTone)
     a.announce.toneState = announceTone
     setButtonLook(f.announce, a.announce)
@@ -479,7 +450,7 @@ local function paintRow(row, drop, layout, now, warnAt, metrics)
     paintText(cells.ilvl, NS.WindowCells.Ilvl(drop))
     paintForMe(cells.forMe, drop)
     paintTrade(cells.trade, drop, now, warnAt, metrics.fontSize)
-    local best = MC.BestCandidates(drop, WM.IsRevealed(drop.id))
+    local best = MC.BestCandidates(drop, NS.WindowOwn.IsRevealed(drop.id))
     paintText(cells.best, best)
     paintActions(cells.actions, drop, best)
 end

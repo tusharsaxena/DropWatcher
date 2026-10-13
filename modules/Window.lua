@@ -104,11 +104,6 @@ end
 
 local function isLocked() return setting("locked") == true end
 
--- `feed.showOwn` (design spec §6.3): your own drops listed in Group drops too. Off by default.
-local function showOwn()
-    local feed = setting("feed")
-    return type(feed) == "table" and feed.showOwn == true
-end
 local function isMinimized() return geometry().minimized == true end
 local function feedName() return NS.State.testMode == true and "test" or "live" end
 
@@ -116,10 +111,11 @@ local function feedName() return NS.State.testMode == true and "test" or "live" 
 --- @return string
 function Window.FeedName() return feedName() end
 
---- What the window shows: its feed (`test` in test mode, else `live`) and whether Group drops lists
---- your own drops too (`feed.showOwn`). The simulator's report places its drops by it (SimReport).
---- @return table { feed, showOwn }
-function Window.FeedView() return { feed = feedName(), showOwn = showOwn() } end
+--- What the window shows: its feed (`test` in test mode, else `live`). The simulator's report
+--- places its drops by it (SimReport). Group drops lists every drop, your own included
+--- (feedback-5 spec §2: `feed.showOwn` is retired).
+--- @return table { feed }
+function Window.FeedView() return { feed = feedName() } end
 
 -- ── tooltips ────────────────────────────────────────────────────────────────────────────────
 
@@ -547,10 +543,10 @@ end
 --- The view a tab's body draws: its feed, its filter state, the controls it honors and the row
 --- predicate and order that apply them (modules/WindowFilterBar.lua).
 --- @param tab string|nil the active tab when nil
---- `belongs` says whether a drop is the tab's at all (Group drops: your own only with `feed.showOwn`),
---- `hiddenBy` which control hides one that is (FB.HiddenBy), so a header counts every drop.
---- @return table { tab, feed, filter, honors, ctx, matches = fn(drop), belongs = fn(drop),
----   hiddenBy = fn(drop), compare = fn(a, b) }
+--- Every drop is the tab's (Group drops lists your own too: feedback-5 spec §2); `hiddenBy` says
+--- which control hides one (FB.HiddenBy), so a header counts every drop.
+--- @return table { tab, feed, filter, honors, ctx, matches = fn(drop), hiddenBy = fn(drop),
+---   compare = fn(a, b) }
 function Window.TabContext(tab)
     tab = tab or activeTab
     local FB = NS.WindowFilterBar
@@ -559,14 +555,9 @@ function Window.TabContext(tab)
     -- The placeholders ignore the situation, so This instance does not cut them (spec §11.6). The
     -- Character dropdown reads your recorder key (modules/CharFilter.lua).
     local ctx = { instanceSince = feed ~= "test" and instanceSince or nil, current = NS.CharFilter.CurrentKey() }
-    -- Group drops lists your own loot only with `feed.showOwn` on; it goes to My drops, and a header
-    -- counts only the ones My drops lists (`onMine`, feedback-3 spec §5).
-    local own = tab ~= "group" or showOwn()
     return {
         tab = tab, feed = feed, filter = st, honors = honors, ctx = ctx,
-        onMine = tab == "group" and not own and NS.WindowMine.ListsNow or nil,
-        matches = function(drop) return FB.InGroup(drop, own) and FB.Matches(drop, st, ctx, honors) end,
-        belongs = function(drop) return FB.InGroup(drop, own) end,
+        matches = function(drop) return FB.Matches(drop, st, ctx, honors) end,
         hiddenBy = function(drop) return FB.HiddenBy(drop, st, ctx, honors) end,
         compare = FB.Comparator(st.sort),
     }

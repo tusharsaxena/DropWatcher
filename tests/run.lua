@@ -111,6 +111,7 @@ Kit.run{
         "test_compact_modes",
         "test_window_group",
         "test_detail_card",
+        "test_own_drops",
         "test_window_mine",
         "test_row_tooltip",
         "test_test_mode",

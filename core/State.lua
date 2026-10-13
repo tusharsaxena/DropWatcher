@@ -44,10 +44,14 @@ State.windowFilters = nil
 -- §2).
 State.windowGroup = nil
 
--- The My drops tab's view state (modules/WindowMine.lua, design spec §11.4): { collapsed, revealed =
--- { [dropId] = true } }. A revealed drop is an upgrade for you whose Offer panel you opened, so its
--- Best candidates are no longer hidden. No drop is ever hidden from the tab (feedback-4 spec §2).
+-- The My drops tab's view state (modules/WindowMine.lua, design spec §11.4): { collapsed }. No drop
+-- is ever hidden from the tab (feedback-4 spec §2).
 State.windowMine = nil
+
+-- Your own drops' reveal state (modules/WindowOwn.lua, feedback-5 spec §2): { revealed = { [dropId]
+-- = true } }. A revealed drop is an upgrade for you whose Offer panel you opened, so who it would
+-- help is no longer hidden (Group drops' count and (Multiple), My drops' Best candidates).
+State.windowOwn = nil
 
 -- The Offer panel (modules/OfferPanel.lua, design spec §11.4): { dropId } while it is open for one
 -- of your drops, else nil.

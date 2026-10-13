@@ -8,7 +8,10 @@ local _, NS = ...
 -- change, the track change, the stat change, and Pawn's score for you or the looter's spec and the
 -- inspect's age, each under a verdict chip); the trade estimate box (the state, the reason in plain words, the rule in
 -- force and how fresh the data is); and the actions: Ask, Edit message, Link in chat, Retry inspect,
--- and Trade (disabled with its reason). Every line and chip has a reason tooltip.
+-- and Trade (disabled with its reason). Every line and chip has a reason tooltip. On your own drop
+-- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Them row `(Multiple)` with every
+-- member it upgrades in the tooltip, and Offer takes the Ask's place: it opens the Offer panel
+-- (NS.WindowOwn: the reveal state, the offer's tone and the click).
 --
 -- THE SPLIT. What each part says is modules/DetailCells.lua's (pure); this file is the frame edge
 -- that paints it. modules/WindowGroup.lua owns the expansion (which row is open, where the card
@@ -186,7 +189,7 @@ local function buildTrade(card)
 end
 
 local ON_CLICK = {
-    ask   = function(b) NS.PressAsk(b.dropId) end,
+    ask   = function(b) NS.WindowOwn.PressAction(b) end,   -- Offer on your own drop (`b.offer`)
     edit  = function(b) DCard.OpenEditor(b.dropId) end,
     link  = function(b) if b.link then NS.Compat.InsertChatLink(b.link) end end,
     retry = function(b) NS.RetryInspect(b.dropId) end,
@@ -383,7 +386,7 @@ end
 local function paintActions(card, drop, ctx)
     for _, a in ipairs(DC.Actions(drop, ctx)) do
         local b = card.actions[a.key]
-        b.dropId, b.link = drop.id, drop.link
+        b.dropId, b.link, b.offer = drop.id, drop.link, a.offer == true
         b.label:SetText(a.text)
         b.art:SetTexture(NS.Icon(a.icon))
         b:SetEnabled(a.enabled)
@@ -427,12 +430,14 @@ function DCard.Paint(card, drop, width, now)
         placeStackedActions(card, width)
     end
     paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse()), sideW)
-    paintSide(card.them, DC.ForLooter(drop, insp, specName, now), sideW)
+    local WO = NS.WindowOwn
+    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id)), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
     paintTrade(card.trade, DC.TradeBox(drop, situation))
     local state, reason = askState(drop)
     paintActions(card, drop, { askState = state, askReason = reason, inspect = insp, now = now, trade = tradeGuard(drop),
-        transmogAsk = NS.Setting("messages.transmogAsk") == true })
+        transmogAsk = NS.Setting("messages.transmogAsk") == true,
+        offerTone = drop.isMine and (WO.ToneStates(drop)) or nil })
     return height
 end
 

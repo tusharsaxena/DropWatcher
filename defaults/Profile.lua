@@ -58,7 +58,6 @@ NS.C = {
             minIlvlMode     = "off",     -- off | absolute | relative
             minIlvl         = 0,         -- the absolute floor
             relativeIlvl    = 10,        -- how far below your average equipped level a drop may be
-            showOwn         = false,     -- your own loot listed in Group drops too
             clearOnBossKill = false,     -- the feed's session drops cleared at each boss kill
         },
 
