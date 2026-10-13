@@ -130,7 +130,9 @@ headless), `test_tip_marks` (the tooltips' verdict marks and lines, feedback-6 s
 `NS.TipMarks`' escape strings, the TGA size, each mark and its fallback without the media library,
 the class and quality colors, the non-wrapping line added unwrapped, `(Details)`' lines ranked and
 colored with the lower of two rings named, and audits that no column tip, `L[]` string or test-mode
-tooltip on either tab in either layout carries ▲ ▽ ≈ ⊘ or ⊕), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
+tooltip on either tab in either layout carries → ▲ ▽ ≈ ⊘ or ⊕; DW-F5: the arrow texture, the
+drawn-width count, and an audit that no text test mode draws in the default face, on Drops, the
+detail card, the Offer panel or History in either layout, carries one), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, hidden while none can be traded, its next expiry moving each second and keeping
 the ticker running, Post my tradeables through its handler, and the compact strip shortened and put

@@ -4,3 +4,4 @@ DW-F1	M15	DropWatcher	My eq merged into Me, Their eq into Them (Drops, History, 
 DW-F2	M15	DropWatcher	Offer in cyan	DW-F1	S	FEED	fb6 §2
 DW-F3	M15	DropWatcher	(Details) tooltip: per-member rich lines, texture arrows, no wrap; no glyph boxes in tooltips	DW-F2	M	FEED	fb6 §3
 DW-F4	M15	DropWatcher	Review fixes, docs sync, automated-test bundle	DW-F3	M		fb6 §4
+DW-F5	M15	DropWatcher	Glyph boxes outside tooltips: toast, detail card, Offer panel arrows as textures	DW-F4	S	FEED	fb6 §3

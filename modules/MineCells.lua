@@ -10,7 +10,8 @@ local _, NS = ...
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
 -- with its `expiresAt`, `me`) and plain inputs (the clock, the warning threshold, an ask's state)
 -- and answers a plain table; nothing here reads a module, the client or a saved variable (only
--- (Details)' tooltip lines take the class and quality colors, through NS.TipMarks), so
+-- NS.TipMarks: (Details)' tooltip lines take the class and quality colors, and the Offer panel's
+-- eq text its arrow texture), so
 -- test_mine_cells drives each state case by case. The frame edges that paint them are
 -- modules/WindowGroup.lua, modules/CompactGroup.lua and modules/DetailCard.lua (the Trade window
 -- column, the compact card's countdown and your own drop's cells, through modules/WindowOwn.lua),
@@ -227,16 +228,21 @@ local function pillOf(status, gain, who)
     return { text = text, tone = PILL_TONE[status], tip = { ("%s: %s"):format(who, text), PILL_TIP[status] } }
 end
 
--- `eq → drop`: what they wear there against the drop's item level.
-local function eqText(status, eval, ilvl)
-    local drop = ilvl and tostring(ilvl) or "?"
-    if status == "checking" then return "… → " .. drop end
+-- What they wear there against the drop's item level: `276 [arrow] 295`. The arrow is an inline
+-- texture (NS.TipMarks' TM.Arrow): the Offer panel draws this in the default face, which has no `→`
+-- (DW-F5).
+local function eqWorn(status, eval, ilvl)
+    if status == "checking" then return "…" end
     local base = type(eval) == "table" and eval.baseline or nil
-    if type(base) == "table" and num(base.ilvl) then return ("%d → %s"):format(round(base.ilvl), drop) end
+    if type(base) == "table" and num(base.ilvl) then return tostring(round(base.ilvl)) end
     local d = type(eval) == "table" and num(eval.ilvlDelta)
-    if d and ilvl then return ("%d → %s"):format(round(ilvl - d), drop) end
-    if type(eval) == "table" and eval.verdict == "upgrade" then return L["empty"] .. " → " .. drop end
-    return DASH .. " → " .. drop
+    if d and ilvl then return tostring(round(ilvl - d)) end
+    if type(eval) == "table" and eval.verdict == "upgrade" then return L["empty"] end
+    return DASH
+end
+
+local function eqText(status, eval, ilvl)
+    return ("%s %s %s"):format(eqWorn(status, eval, ilvl), TM.Arrow(), ilvl and tostring(ilvl) or "?")
 end
 
 -- One candidate, ready to draw.

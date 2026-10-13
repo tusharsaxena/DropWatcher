@@ -46,7 +46,7 @@ local function DC() return T.newAddon().DetailCells end
 
 local function texts(list)
     local out = {}
-    for _, c in ipairs(list) do out[#out + 1] = c.text end
+    for _, c in ipairs(list) do out[#out + 1] = T.marks(c.text) end
     return table.concat(out, ",")
 end
 
@@ -82,8 +82,8 @@ test("cells: For you shows what it replaces, the ilvl, track and stat change, an
     local D = DC()
     local side = D.ForYou(drop(), true)
     assertEqual(side.title, "FOR YOU")
-    assertEqual(side.verdict.text, "▲ UPGRADE"); assertEqual(side.verdict.tone, "good")
-    assertEqual(texts(side.rows), "Old Helm · 292,292 → 311 · +19,Champion 6/6 → Hero 2/6 ▲,+130 Haste -119 Mastery,+2.4")
+    assertEqual(T.marks(side.verdict.text), "[arrow-up] UPGRADE"); assertEqual(side.verdict.tone, "good")
+    assertEqual(texts(side.rows), "Old Helm · 292,292 [arrow-right] 311 · +19,Champion 6/6 [arrow-right] Hero 2/6 [arrow-up],+130 Haste -119 Mastery,+2.4")
     assertEqual(byKey(side.rows, "replaces").link, OLD)
     assertEqual(byKey(side.rows, "ilvl").tone, "good")
     for _, r in ipairs(side.rows) do assertTrue(#r.tip >= 2 and r.text ~= "", r.key) end
@@ -117,8 +117,8 @@ test("cells: For the looter compares their inspected gear and names their spec a
     local D = DC()
     local side = D.ForLooter(drop(), { status = "fresh", at = 60 }, "Discipline", 100)
     assertEqual(side.title, "FOR SETA (LOOTER)")
-    assertEqual(side.verdict.text, "▽ DOWNGRADE"); assertEqual(side.verdict.tone, "red", "one tone per verdict")
-    assertEqual(texts(side.rows), "Their Helm · 324,324 → 311 · -13,Myth 1/6 → Hero 2/6 ▽,+95 Haste -80 Crit,Discipline · inspected 40s ago")
+    assertEqual(T.marks(side.verdict.text), "[arrow-down] DOWNGRADE"); assertEqual(side.verdict.tone, "red", "one tone per verdict")
+    assertEqual(texts(side.rows), "Their Helm · 324,324 [arrow-right] 311 · -13,Myth 1/6 [arrow-right] Hero 2/6 [arrow-down],+95 Haste -80 Crit,Discipline · inspected 40s ago")
     local unread = D.ForLooter(drop({ them = NONE, inspect = { status = "pending" } }), nil, nil, 100)
     assertEqual(unread.verdict.text, "UNKNOWN")
     assertEqual(byKey(unread.rows, "spec").text, "spec unknown")
@@ -300,8 +300,8 @@ test("card: the header, both comparisons and the trade box are painted, each wit
     assertEqual(textOf(card.name), "Crown of Roaring Storms"); assertEqual(card.icon.link, LINK)
     assertEqual(textOf(card.chips[1].text), "Head"); assertEqual(textOf(card.chips[4].text), "Hero 2/6 · 311")
     assertTrue(card.chips[7]:IsShown()); assertFalse(card.chips[8]:IsShown())
-    assertEqual(textOf(card.me.title), "FOR YOU"); assertEqual(textOf(card.me.verdict.text), "▲ UPGRADE")
-    assertEqual(textOf(card.me.rows[2].value), "292 → 311 · +19")
+    assertEqual(textOf(card.me.title), "FOR YOU"); assertEqual(T.marks(textOf(card.me.verdict.text)), "[arrow-up] UPGRADE")
+    assertEqual(T.marks(textOf(card.me.rows[2].value)), "292 [arrow-right] 311 · +19")
     assertEqual(card.me.rows[1].item.link, OLD); assertTrue(card.me.rows[1].item:IsShown())
     assertEqual(textOf(card.them.title), "FOR SETA (LOOTER)")
     assertEqual(textOf(card.them.rows[5].value), "Discipline · inspected 40s ago")

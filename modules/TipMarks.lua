@@ -6,6 +6,12 @@ local _, NS = ...
 -- yellow for a sidegrade, `arrow-down` red for a downgrade. Table cells and compact lines keep the
 -- monospace glyphs (NS.WindowCells.GLYPH), which render.
 --
+-- NOT ONLY TOOLTIPS (DW-F5). Every text drawn in the default face (GameFont*, not C.FONT_MONO) takes
+-- its marks from here too: the toast's line, the detail card's verdict chips and Item level and
+-- Track rows, and the Offer panel's `Eq -> drop` label and eq text. The `->` between two values there
+-- is TM.Arrow, the `arrow-right` icon in the muted tone. TM.Chars counts what such a text draws (an
+-- escape as two characters, a color code as none), for a width estimated before the client measures.
+--
 -- A NON-WRAPPING LINE. A tooltip line is a string (it wraps at the tooltip's width) or
 -- `{ text, wrap = false }`, which does not wrap, so the tooltip grows to fit it
 -- (modules/Window.lua's showTooltip reads both). TM.Text answers either as its string.
@@ -60,6 +66,32 @@ function TM.Mark(verdict)
     if not path then return FALLBACK[verdict] end
     local t = C.TONE[m.tone]
     return TM.Escape(path, t.r, t.g, t.b)
+end
+
+--- The arrow between two values in the default face (`276 -> 295`): the `arrow-right` icon.
+TM.ARROW = { icon = "arrow-right", tone = "muted" }
+
+--- The arrow for a text in the default face: the muted `arrow-right` texture escape, or `->` when the
+--- media library is absent.
+--- @return string
+function TM.Arrow()
+    local path = NS.Icon(TM.ARROW.icon)
+    if not path then return "->" end
+    local t = C.TONE[TM.ARROW.tone]
+    return TM.Escape(path, t.r, t.g, t.b)
+end
+
+--- What a text draws, in characters: an inline texture escape counts two (it is square at the
+--- text's height), a color code none, a UTF-8 character one.
+--- @param text string|nil
+--- @return number
+function TM.Chars(text)
+    local s = tostring(text or "")
+    local n
+    s, n = s:gsub("|T.-|t", "")
+    s = s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|cn[^|:]+:", ""):gsub("|r", "")
+    s = s:gsub("[\128-\191]", "")   -- a UTF-8 continuation byte draws nothing of its own
+    return #s + 2 * n
 end
 
 --- A tooltip line that does not wrap: the tooltip grows to fit it.

@@ -136,13 +136,13 @@ local function decorateText(f)
 end
 
 -- Measured text on a font string, opt-in: with M.textCharWidth set, its one-line width is its text's
--- length times that (GetUnboundedStringWidth), and GetStringWidth is that bounded by the width its
+-- length times that, an inline texture escape counting two (GetUnboundedStringWidth), and GetStringWidth is that bounded by the width its
 -- anchors give it (`__boundWidth`, which a case sets, else SetWidth's), as on Retail since 10.0.
 -- Unset, both answer nil, as a font not yet loaded does.
 local function measureText(M, r)
     r.GetUnboundedStringWidth = function(s)
         local cw = M.textCharWidth
-        return cw and #(s.__text or "") * cw or nil
+        return cw and #((s.__text or ""):gsub("|T.-|t", "##")) * cw or nil
     end
     r.GetStringWidth = function(s)
         local w = s:GetUnboundedStringWidth()

@@ -123,7 +123,7 @@ test("offer panel: Offer opens it docked right, the candidates ranked with their
     assertEqual(textOf(p.panel.line.text), "You: -5 ilvl · 305 · Trade window 1:47:12")
     assertEqual(#p.rows, 5)
     local r1 = p.rows[1]
-    assertEqual(textOf(r1.member.text), "Seta"); assertEqual(textOf(r1.eq.text), "291 → 305")
+    assertEqual(textOf(r1.member.text), "Seta"); assertEqual(T.marks(textOf(r1.eq.text)), "291 [arrow-right] 305")
     assertEqual(textOf(r1.pill.text), "+14 UPGRADE")
     assertTrue(r1.offer:IsShown()); assertTrue(r1.trade:IsShown())
     local r4 = p.rows[4]

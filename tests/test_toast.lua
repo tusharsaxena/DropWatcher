@@ -57,10 +57,11 @@ test("toast: Compose reads board 06 C: the title, the item and Looted by · gain
     local t = Toast.Compose(drop())
     assertEqual(t.title, "Big upgrade for you")
     assertEqual(t.item, "Item 500"); assertEqual(t.link, link(500))
-    assertEqual(t.line, "Looted by Seta · +19 ▲ · Likely tradeable")
-    assertEqual(Toast.Compose(drop({ trade = { state = "yes" } })).line, "Looted by Seta · +19 ▲ · Tradeable")
+    assertEqual(T.marks(t.line), "Looted by Seta · +19 [arrow-up] · Likely tradeable")
+    assertFalse(t.line:find("▲", 1, true) ~= nil, "the toast's face has no ▲: the mark is a texture (DW-F5)")
+    assertEqual(T.marks(Toast.Compose(drop({ trade = { state = "yes" } })).line), "Looted by Seta · +19 [arrow-up] · Tradeable")
     local empty = { verdict = "upgrade", reasons = { { key = "emptySlot" } } }
-    assertEqual(Toast.Compose(drop({ me = empty })).line, "Looted by Seta · empty ▲ · Likely tradeable",
+    assertEqual(T.marks(Toast.Compose(drop({ me = empty })).line), "Looted by Seta · empty [arrow-up] · Likely tradeable",
         "an empty slot reads as the Me column does, never +0")
 end)
 
@@ -96,7 +97,7 @@ test("toast edge: a qualifying drop shows at once, painted, and goes after its d
     assertTrue(shown(NS)); assertEqual(NS.Toast.Stats().dropId, 1)
     assertEqual(f.title:GetText(), "Big upgrade for you")
     assertEqual(f.item:GetText(), "Item 500")
-    assertEqual(f.line:GetText(), "Looted by Seta · +19 ▲ · Likely tradeable")
+    assertEqual(T.marks(f.line:GetText()), "Looted by Seta · +19 [arrow-up] · Likely tradeable")
     assertEqual(f.ask.label:GetText(), "Ask"); assertTrue(f.ask:IsEnabled())
     assertEqual(#m.sounds, 0, "no sound unless asked for")
     local pt = { f:GetPoint(1) }

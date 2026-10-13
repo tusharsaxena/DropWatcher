@@ -6,7 +6,8 @@ local _, NS = ...
 -- WHAT IT HOLDS, top to bottom: the title (`Who could use this?` and `YOUR DROP`) with the shared
 -- close mark; the item header (a real item button, the name in its quality color, and `You: -5 ilvl ·
 -- 305 · Trade window 1:47:12`); the column labels; the candidates, ranked (upgrades first by their
--- gain), each with a class-colored stripe, the name, `eq → drop`, a status pill (`+n UPGRADE`,
+-- gain), each with a class-colored stripe, the name, `eq [arrow] drop` (the arrow an inline
+-- texture, NS.TipMarks; the panel's face has no `→`, DW-F5), a status pill (`+n UPGRADE`,
 -- `EQUAL`, `NO UPGRADE`, `CAN'T USE`, `CHECKING` or `UNAVAILABLE`) and, for an upgrade or an equal,
 -- the Offer and Trade buttons; the list scrolls in a raid. The foot strip holds Announce to group and
 -- a note on the order. What each part says is modules/MineCells.lua's (pure); this file is the frame
@@ -33,6 +34,7 @@ local C     = NS.Constants
 local L     = NS.L
 local State = NS.State
 local MC    = NS.MineCells
+local TM    = NS.TipMarks
 
 local max = math.max
 
@@ -40,7 +42,7 @@ local panel   -- built on the first Open
 
 local COLS = {
     { key = "member", label = L["Member"], x = 8, tip = L["A member of your group, in their class color."] },
-    { key = "eq", label = L["Eq → drop"], x = 132, tip = L["The item level they wear in that slot, then your drop's."] },
+    { key = "eq", label = L["Eq %s drop"]:format(TM.Arrow()), x = 132, tip = L["The item level they wear in that slot, then your drop's."] },
     { key = "status", label = L["Status"], x = 222, tip = L["Your drop judged for them, from their inspected gear."] },
     { key = "actions", label = L["Actions"], x = 326, tip = L["Offer whispers your offer template; Trade opens the trade window with the item placed."] },
 }
@@ -325,7 +327,7 @@ local function paintRow(row, e, drop)
     row.member.tipLines = { e.short, e.name ~= e.short and tostring(e.name) or L["A member of your group."] }
     row.eq.text:SetText(e.eq)
     setTone(row.eq.text, "muted")
-    row.eq.tipLines = { L["Eq → drop"], L["What %s wears in that slot, then your drop's item level."]:format(e.short) }
+    row.eq.tipLines = { COLS[2].label, L["What %s wears in that slot, then your drop's item level."]:format(e.short) }
     row.pill.text:SetText(e.pill.text)
     setTone(row.pill.text, e.pill.tone)
     row.pill.tipLines = e.pill.tip

@@ -97,20 +97,20 @@ end)
 
 -- ── the candidates ──────────────────────────────────────────────────────────────────────────
 
-test("mine cells: the candidates are ranked upgrades first by gain, each with its pill and eq → drop", function()
+test("mine cells: the candidates are ranked upgrades first by gain, each with its pill and eq [arrow] drop", function()
     local M = MC()
     local list = M.Candidates(drop())
     local names, pills, eqs = {}, {}, {}
-    for i, e in ipairs(list) do names[i], pills[i], eqs[i] = e.short, e.pill.text, e.eq end
+    for i, e in ipairs(list) do names[i], pills[i], eqs[i] = e.short, e.pill.text, T.marks(e.eq) end
     assertEqual(table.concat(names, ","), "Seta,Butterz,Littlewolf,Uniquerogue,Fifth")
     assertEqual(table.concat(pills, ","), "+14 UPGRADE,+6 UPGRADE,EQUAL,CAN'T USE,CHECKING")
-    assertEqual(table.concat(eqs, ","), "291 → 305,299 → 305,305 → 305,– → 305,… → 305")
+    assertEqual(table.concat(eqs, ","), "291 [arrow-right] 305,299 [arrow-right] 305,305 [arrow-right] 305,– [arrow-right] 305,… [arrow-right] 305")
     assertTrue(list[1].offerable and list[3].offerable); assertFalse(list[4].offerable)
     for _, e in ipairs(list) do assertTrue(#e.pill.tip >= 2, e.short .. " has a reason") end
     local gone = M.Candidates(drop({ candidates = { x = cand("Gone", "MAGE", "unavailable") } }))
     assertEqual(gone[1].pill.text, "UNAVAILABLE"); assertEqual(gone[1].pill.tone, "muted")
     local down = M.Candidates(drop({ candidates = { x = cand("Big", "MAGE", "ready", { verdict = "downgrade", ilvlDelta = -9, reasons = {} }) } }))
-    assertEqual(down[1].pill.text, "NO UPGRADE"); assertEqual(down[1].eq, "314 → 305")
+    assertEqual(down[1].pill.text, "NO UPGRADE"); assertEqual(T.marks(down[1].eq), "314 [arrow-right] 305")
 end)
 
 -- ── the buttons and the actions ─────────────────────────────────────────────────────────────

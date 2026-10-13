@@ -259,10 +259,12 @@ modules\WindowFooter.lua
 # Conventional: publishes NS.WindowCells, the drop tables' pure cell composers (each column's text,
 # glyph, tone and reason tooltip); reads NS.Constants and NS.L at load.
 modules\WindowCells.lua
-# Conventional: publishes NS.TipMarks, what a tooltip draws for a verdict mark (an inline texture,
-# never a font glyph) and its non-wrapping line; reads NS.Constants at load, and NS.Icon,
-# NS.Compat and NS.GroupRoster at call time. Above modules\MineCells.lua (which takes it at load),
-# modules\WindowGroup.lua and modules\WindowHistory.lua (whose column tooltips call it at load).
+# Conventional: publishes NS.TipMarks, what text in the default face draws for a verdict mark or an
+# arrow (an inline texture, never a font glyph: tooltips, the toast, the detail card, the Offer
+# panel) and a tooltip's non-wrapping line; reads NS.Constants at load, and NS.Icon, NS.Compat and
+# NS.GroupRoster at call time. Above modules\MineCells.lua, modules\DetailCells.lua and
+# modules\OfferPanel.lua (which take it at load), modules\WindowGroup.lua and
+# modules\WindowHistory.lua (whose column tooltips call it at load).
 modules\TipMarks.lua
 # Conventional: publishes NS.WindowRows, the drop tables' row height and text size (the pure
 # resolution and the font edge the two tabs share); reads NS.Constants at load and NS.Setting at
@@ -299,15 +301,17 @@ modules\WindowGroup.lua
 # NS.WindowGroup builds and repaints the tab.
 modules\DropsStrip.lua
 # Conventional: publishes NS.DetailCells, the detail card's pure composers (chips, both comparisons,
-# the trade box, the actions); takes NS.WindowCells and NS.MineCells (above), NS.Constants and NS.L
-# at load.
+# the trade box, the actions); takes NS.WindowCells, NS.TipMarks and NS.MineCells (above),
+# NS.Constants and NS.L at load.
 modules\DetailCells.lua
 # Conventional: publishes NS.DetailCard, the detail card's frame edge and the Edit message box; takes
 # NS.DetailCells (above), NS.Constants and NS.L at load. NS.WindowGroup builds it (above, at call
-# time); NS.Window, the engine modules and the host handlers are read at call time.
+# time); NS.Window, NS.TipMarks (a chip's estimated width), the engine modules and the host
+# handlers are read at call time.
 modules\DetailCard.lua
-# Conventional: publishes NS.OfferPanel, the "Who could use this?" panel; takes NS.MineCells (above),
-# NS.Constants, NS.L and NS.State at load. NS.Window, NS.WindowGroup, NS.WindowOwn, the feed, the
+# Conventional: publishes NS.OfferPanel, the "Who could use this?" panel; takes NS.MineCells and
+# NS.TipMarks (above; the Eq column's label is built at load with its arrow texture), NS.Constants,
+# NS.L and NS.State at load. NS.Window, NS.WindowGroup, NS.WindowOwn, the feed, the
 # asks, the trade helper and the host handlers are read at call time: it is built on its first Open.
 modules\OfferPanel.lua
 # LOAD-BEARING: publishes NS.WindowHistory and registers the History body through Window.RegisterTab
@@ -348,8 +352,8 @@ modules\TestMode.lua
 # STAND_UP steps and handlers to NS.addon at load, registers its DropAdded, DropUpdated and
 # AskStateChanged receivers on a NS.Bus target at load, and adds its removal sink to NS.LootFeed
 # (above) at load. NS.LootFeed, NS.Asks, NS.Window,
-# NS.WindowGroup, NS.WindowCells, NS.Setting and the host handlers are read at call time: the frame
-# is built on the first toast.
+# NS.WindowGroup, NS.WindowCells, NS.TipMarks (the line's mark), NS.Setting and the host handlers are
+# read at call time: the frame is built on the first toast.
 modules\Toast.lua
 # Conventional: publishes NS.AutoAsk, the opt-in auto-ask; appends its ENCOUNTER_START,
 # ENCOUNTER_END, GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows (after

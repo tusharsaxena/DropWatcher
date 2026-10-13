@@ -3,13 +3,16 @@
 -- the escape's color fields, never a font glyph the tooltip's face draws as a box; a line may be
 -- marked non-wrapping, and the tooltip then grows to fit it (modules/Window.lua). Then (Details)'
 -- lines on your own drop, and an audit: no tooltip on either tab, in either layout, carries
--- ▲ ▽ ≈ ⊘ or ⊕.
+-- → ▲ ▽ ≈ ⊘ or ⊕. Then the arrow between two values (TM.Arrow) and the drawn-width count
+-- (TM.Chars), and the same audit over every text drawn in the default face (DW-F5): the toast, the
+-- detail card's chips and rows and the Offer panel take textures; only monospace text keeps glyphs.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
--- The marks a tooltip's face cannot draw (the table cells' and compact lines' monospace glyphs).
-local GLYPHS = { "▲", "▽", "≈", "⊘", "⊕" }
+-- The marks the default face cannot draw (the table cells' and compact lines' monospace glyphs, and
+-- the arrow between two values).
+local GLYPHS = { "→", "▲", "▽", "≈", "⊘", "⊕" }
 
 local function glyphIn(s)
     for _, g in ipairs(GLYPHS) do
@@ -223,4 +226,96 @@ test("audit: every tooltip of test mode's drops, both layouts, the detail card a
     NS.Window.Refresh()
     lines = lines + auditTips(NS, widgets, "history")
     assertTrue(lines > 100, "the tooltips were read: " .. lines)
+end)
+
+-- ── the arrow and the drawn width (DW-F5) ───────────────────────────────────────────────────
+
+test("tip marks: the arrow between two values is arrow-right in the muted tone, -> without the library", function()
+    local NS = T.newAddon()
+    local TM = NS.TipMarks
+    local path = NS.Icon("arrow-right")
+    assertTrue(path ~= nil, "arrow-right is in the media catalog")
+    assertEqual(TM.Arrow(), ("|T%s:0:0:0:0:64:64:0:64:0:64:179:179:184|t"):format(path))
+    local w, h = tgaSize("libs/LibKa0s/media/icons/arrow-right.tga")
+    assertEqual(w, TM.TEX_SIZE); assertEqual(h, TM.TEX_SIZE)
+    NS.Icon = function() return nil end
+    assertEqual(TM.Arrow(), "->")
+end)
+
+test("tip marks: Chars counts what a text draws: an escape two, a color code none, a UTF-8 character one", function()
+    local TM = T.newAddon().TipMarks
+    assertEqual(TM.Chars("UPGRADE"), 7)
+    assertEqual(TM.Chars(TM.Mark("upgrade") .. " UPGRADE"), 10)
+    assertEqual(TM.Chars("292 " .. TM.Arrow() .. " 311"), 10)
+    assertEqual(TM.Chars("|cffa335eeTreads|r"), 6); assertEqual(TM.Chars("|cnIQ4:Treads|r"), 6)
+    assertEqual(TM.Chars("… –"), 3)
+    assertEqual(TM.Chars(nil), 0)
+end)
+
+-- Every frame the window, the toast and the Offer panel build from here on (the mock's CreateFrame).
+local function collected(m)
+    local frames = {}
+    local create = m.CreateFrame
+    m.CreateFrame = function(...)
+        local f = create(...)
+        frames[#frames + 1] = f
+        return f
+    end
+    return frames
+end
+
+-- Every text drawn on `frames` (each frame's own and its font strings'), split by face: a glyph in
+-- the default face is a box in game; the monospace face (C.FONT_MONO) draws them.
+local function auditFaces(NS, frames, where)
+    local plain, mono = 0, 0
+    for _, f in ipairs(frames) do
+        for _, r in ipairs(f.__regions or {}) do
+            local text = r.__objType == "FontString" and r.__text
+            if type(text) == "string" and text ~= "" then
+                if r.__font and r.__font[1] == NS.Constants.FONT_MONO then
+                    mono = mono + 1
+                else
+                    assertTrue(glyphIn(text) == nil, where .. ": " .. text)
+                    plain = plain + 1
+                end
+            end
+        end
+        if type(f.__text) == "string" then assertTrue(glyphIn(f.__text) == nil, where .. ": " .. f.__text) end
+    end
+    return plain, mono
+end
+
+test("audit: no text in the default face carries a glyph: Drops, the detail card, the Offer panel, History", function()
+    local NS, _, m = T.enableAddon()
+    local frames = collected(m)
+    m.seedGearJournal()
+    NS.SetTestMode(true)
+    NS.ShowWindow()
+    NS.Window.Refresh()
+    local drops = NS.LootFeed.Drops("test")
+    local ownId
+    for _, d in ipairs(drops) do
+        NS.WindowGroup.ToggleExpand(d.id)
+        if d.isMine then NS.WindowOwn.Reveal(d.id); ownId = ownId or d.id end
+    end
+    assertTrue(ownId ~= nil, "test mode has a drop of your own")
+    NS.OfferPanel.Open(ownId)
+    assertTrue(NS.OfferPanel.IsShown())
+    NS.Window.Refresh()
+    local plain, mono = auditFaces(NS, frames, "full")
+    NS.SetWindowMode("compact")
+    NS.Window.Refresh()
+    auditFaces(NS, frames, "compact")
+    NS.Window.SelectTab("history")
+    NS.Window.Refresh()
+    auditFaces(NS, frames, "history")
+    assertTrue(plain > 100, "the default face's texts were read: " .. plain)
+    assertTrue(mono > 0, "the table cells' glyphs are in the monospace face: " .. mono)
+    local found
+    for _, f in ipairs(frames) do
+        for _, r in ipairs(f.__regions or {}) do
+            if type(r.__text) == "string" and r.__text:find(NS.TipMarks.Arrow(), 1, true) then found = true end
+        end
+    end
+    assertTrue(found, "the detail card's and the Offer panel's arrows are textures")
 end)

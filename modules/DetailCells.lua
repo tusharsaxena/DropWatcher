@@ -12,6 +12,10 @@ local _, NS = ...
 -- card and the row it expands never disagree; on your own drop (feedback-5 spec §2) the Them row's
 -- `(Details)` and the Offer in place of Ask are modules/MineCells.lua's, as the row's are.
 --
+-- NO GLYPHS. The card draws in the default face, which has no `→` and no `▲ ≈ ▽` (feedback-6 spec
+-- §3, DW-F5): the verdict chip's mark, the Item level and Track rows' arrow and the Track row's mark
+-- are NS.TipMarks' inline textures (TM.Mark, TM.Arrow), never the table cells' monospace glyphs.
+--
 --   chip = { text, tone?, tip = { title, lines... } }
 --   side = { title, verdict = { text, tone, tip }, rows = { { key, label, text, tone, tip, link } } }
 --   box  = { chip = { text, tone }, text, meta, tip }
@@ -23,6 +27,7 @@ local C  = NS.Constants
 local L  = NS.L
 local WC = NS.WindowCells
 local MC = NS.MineCells
+local TM = NS.TipMarks
 
 local floor, abs = math.floor, math.abs
 
@@ -228,11 +233,11 @@ local function ilvlRow(eval, ilvl, tone)
             L["No item-level change: nothing to compare with yet."])
     end
     local from = round(ilvl - d)
-    return row("ilvl", L["Item level"], ("%d → %d · %s"):format(from, ilvl, WC.Signed(d)), tone, L["Item level"],
+    return row("ilvl", L["Item level"], ("%d %s %d · %s"):format(from, TM.Arrow(), ilvl, WC.Signed(d)), tone, L["Item level"],
         L["%d against %d: %s."]:format(ilvl, from, WC.Signed(d)))
 end
 
-local TRACK_GLYPH = { [1] = WC.GLYPH.upgrade, [0] = WC.GLYPH.sidegrade, [-1] = WC.GLYPH.downgrade }
+local TRACK_MARK = { [1] = "upgrade", [0] = "sidegrade", [-1] = "downgrade" }   -- TM.Mark's verdicts
 
 -- Shown even within one track (board 02, callout 2): a rank change is still a change.
 local function missingTrack(to)
@@ -246,10 +251,10 @@ local function trackRow(eval, dropTrack)
     if not (to and from) then return missingTrack(to) end
     local td = type(eval.trackDelta) == "table" and eval.trackDelta or nil
     if not td then
-        return row("track", L["Track"], ("%s → %s"):format(from, to), "plain", L["Track"],
+        return row("track", L["Track"], ("%s %s %s"):format(from, TM.Arrow(), to), "plain", L["Track"],
             L["The tracks could not be ranked against each other."])
     end
-    return row("track", L["Track"], ("%s → %s %s"):format(from, to, TRACK_GLYPH[td.sign] or ""), "plain", L["Track"],
+    return row("track", L["Track"], ("%s %s %s %s"):format(from, TM.Arrow(), to, TM.Mark(TRACK_MARK[td.sign])), "plain", L["Track"],
         L["The track it moves to, rank included."])
 end
 
@@ -315,8 +320,10 @@ local function specRow(drop, inspect, specName, now)
 end
 
 local function verdictChip(cell)
-    local glyph = cell.glyph and (cell.glyph .. " ") or ""   -- the arrow first (feedback-4 spec §0)
-    return { text = glyph .. (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown), tone = cell.tone, tip = cell.tip }
+    -- The arrow first (feedback-4 spec §0), as a texture: the chip's face has no glyph (DW-F5).
+    local mark = cell.glyph and TM.Mark(cell.verdict) or ""
+    if mark ~= "" then mark = mark .. " " end
+    return { text = mark .. (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown), tone = cell.tone, tip = cell.tip }
 end
 
 local function sideRows(eval, f, tone, whose, mine)

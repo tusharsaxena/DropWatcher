@@ -124,9 +124,10 @@ its one-line responsibility and why its position is load-bearing or conventional
   `DetailCells.lua`, `MineCells.lua`: the Trade window cell every Drops row shows, an estimate
   from when it dropped for another player's drop, feedback-5 spec §1; your own drop's Trade count,
   `(Details)` (`(Multiple)` until feedback-6 spec §3) and Offer, §2; the strip's summary and the
-  Offer panel's parts; `TipMarks.lua`: what a tooltip draws for a verdict mark, an inline texture
-  (LibKa0s media `arrow-up`, `transfer`, `arrow-down`, tinted) and never a font glyph the tooltip
-  face lacks, and the non-wrapping `{ text, wrap = false }` line `Window.AttachTooltip` grows to fit,
+  Offer panel's parts; `TipMarks.lua`: what text in the default face (a tooltip, the toast, the
+  detail card, the Offer panel) draws for a verdict mark or an arrow, an inline texture (LibKa0s
+  media `arrow-up`, `transfer`, `arrow-down`, `arrow-right`, tinted; DW-F5 beyond tooltips) and
+  never a font glyph the face lacks, and the non-wrapping `{ text, wrap = false }` line `Window.AttachTooltip` grows to fit,
   which the (Details) tooltip's one line per member uses, feedback-6 spec §3, DW-F3; and compact mode's
   `CompactCards.lua`: each card's three lines, tones and tooltips and the header's short form, over
   the same composers; compact spec §2-§3, DW-C1), compact mode's per-tab bodies (`CompactGroup.lua`:

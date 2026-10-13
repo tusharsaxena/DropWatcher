@@ -97,7 +97,8 @@ local function gainText(me)
 end
 
 --- The toast's texts for a qualifying drop: { title, item, line, link }. `line` reads
---- `Looted by Seta · +19 ▲ · Likely tradeable` (`empty` in place of the gain into an empty slot).
+--- `Looted by Seta · +19 [arrow] · Likely tradeable` (`empty` in place of the gain into an empty slot).
+--- The arrow is NS.TipMarks' green `arrow-up` texture: the toast's face draws no `▲` (DW-F5).
 --- @param drop table
 --- @return table
 function Toast.Compose(drop)
@@ -109,7 +110,7 @@ function Toast.Compose(drop)
         item = NS.WindowCells.ItemName(drop.link) or "?",
         link = drop.link,
         line = L["Looted by %s · %s %s · %s"]:format(shortName(who), gainText(me),
-            NS.WindowCells.GLYPH.upgrade, trade),
+            NS.TipMarks.Mark("upgrade"), trade),
     }
 end
 

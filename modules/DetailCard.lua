@@ -79,10 +79,11 @@ local function attach(frame)
     NS.Window.AttachTooltip(frame, function() return tipOf(frame) end)
 end
 
--- A string's drawn width, with an estimate where the client has not measured it yet.
+-- A string's drawn width, with an estimate where the client has not measured it yet (what it draws,
+-- NS.TipMarks.Chars: a chip's verdict mark is a texture escape, DW-F5).
 local function textWidth(fs, text)
     local w = fs.GetStringWidth and fs:GetStringWidth()
-    if type(w) ~= "number" or w <= 0 then w = #(text or "") * 6 end
+    if type(w) ~= "number" or w <= 0 then w = NS.TipMarks.Chars(text) * 6 end
     return w
 end
 

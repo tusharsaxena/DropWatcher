@@ -56,6 +56,12 @@ Kit.setSurfaceSource{
     ["LibKa0s-Compat-1.0"]    = surfaceMock.LibStub("LibKa0s-Compat-1.0", true),
 }
 
+-- A text's inline texture escapes (NS.TipMarks) as `[icon]`: `291 [arrow-right] 305`, `[arrow-up]
+-- UPGRADE`. A case reads the text the player sees; test_tip_marks pins each escape's exact string.
+local function marks(s)
+    return (tostring(s):gsub("|T[^:|]-([^\\:|]+):[^|]*|t", "[%1]"))
+end
+
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
 -- assertions in beside these keys.
 _G.DW_TEST = Kit.expose{
@@ -63,6 +69,7 @@ _G.DW_TEST = Kit.expose{
     bootAddon   = bootAddon,
     enableAddon = enableAddon,
     loadAddon   = loadAddon,
+    marks       = marks,
     root        = root,
     LibStub     = surfaceMock.LibStub,
     KIT_VERSION = Kit.VERSION,
