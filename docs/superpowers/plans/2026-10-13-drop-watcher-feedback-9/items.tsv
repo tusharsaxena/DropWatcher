@@ -1,0 +1,3 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-I0	M18	DropWatcher	The toast: four rows, colors, You/Them verdicts, trade reason, right-click closes		M	FEED	fb9 §0
+DW-I1	M18	DropWatcher	Review fixes, docs sync, automated-test bundle	DW-I0	S		fb9 §1
