@@ -1,16 +1,18 @@
 local _, NS = ...
 -- modules/OfferPanel.lua — the Offer panel, "Who could use this?" (design spec §11.4, board 04 and
--- AskFlow B3-B4): one of your drops against every other member's inspected gear, with Offer and
--- Trade for each and Announce to group.
+-- AskFlow B3-B4): one of your drops against every other member's inspected gear, with Offer for
+-- each and Announce to group.
 --
 -- WHAT IT HOLDS, top to bottom: the title (`Who could use this?` and `YOUR DROP`) with the shared
 -- close mark; the item header (a real item button, the name in its quality color, and `You: -5 ilvl ·
--- 305 · Trade window 1:47:12`); the column labels; the candidates, ranked (upgrades first by their
--- gain), each with a class-colored stripe, the name, `eq [arrow] drop` (the arrow an inline
--- texture, NS.TipMarks; the panel's face has no `→`, DW-F5), a status pill (`+n UPGRADE`,
--- `EQUAL`, `NO UPGRADE`, `CAN'T USE`, `CHECKING` or `UNAVAILABLE`) and, for an upgrade or an equal,
--- the Offer and Trade buttons; the list scrolls in a raid. The foot strip holds Announce to group and
--- a note on the order. What each part says is modules/MineCells.lua's (pure); this file is the frame
+-- 305 · Trade window 1:47:12`); the column labels (Member, Their eq, Actions); the candidates,
+-- ranked (upgrades first by their gain), every second row striped as the main window's, each with
+-- the name in its class color, Their eq in the Drops table's Them look (feedback-7 spec §0: the
+-- worn item icons, their item level, the verdict glyph and the difference, `321/308 ▽4`, or a word:
+-- `Can't use`, `…`, `Unavailable`; NS.SideCells.Candidate, painted by WindowGroup.PaintSide) and,
+-- for an upgrade or an equal, the Offer button (the Trade button went with feedback-7 spec §0); the
+-- list scrolls in a raid. The foot strip holds Announce to group and a note on the order. What each
+-- part says is modules/MineCells.lua's and modules/SideCells.lua's (pure); this file is the frame
 -- edge. Nothing is ever blank: a member with no button shows a dash with the reason.
 --
 -- THE DOCK. The panel is a child of the main window, so it hides, scales and fades with it. It is
@@ -23,9 +25,8 @@ local _, NS = ...
 -- THE UI LISTENS. One panel, built on its first Open; NS.State.offerPanel.dropId names the drop it
 -- shows. The window repaints it with the active tab (Window.Refresh), so the bus reaches it: the
 -- candidates' inspects (DropUpdated), the ask states (AskStateChanged) and the countdown
--- (TradeTimerTick). It closes itself when its drop is gone. Offer goes through NS.PressOffer, Trade
--- through NS.GiveDrop (the trade helper's guards, read first through NS.TradeHelper.CanGive so a
--- refused trade is a disabled button with the reason), Announce to group through NS.PressAnnounce.
+-- (TradeTimerTick). It closes itself when its drop is gone. Offer goes through NS.PressOffer,
+-- Announce to group through NS.PressAnnounce.
 
 NS.OfferPanel = NS.OfferPanel or {}
 local OP    = NS.OfferPanel
@@ -34,18 +35,23 @@ local C     = NS.Constants
 local L     = NS.L
 local State = NS.State
 local MC    = NS.MineCells
+local SC    = NS.SideCells
 local TM    = NS.TipMarks
 
 local max = math.max
 
 local panel   -- built on the first Open
 
+-- The columns (feedback-7 spec §0): Their eq is at least the Drops table's Them width, so
+-- `321/308 ▽13` and two icons fit; Actions holds the Offer button.
 local COLS = {
     { key = "member", label = L["Member"], x = 8, tip = L["A member of your group, in their class color."] },
-    { key = "eq", label = L["Eq %s drop"]:format(TM.Arrow()), x = 132, tip = L["The item level they wear in that slot, then your drop's."] },
-    { key = "status", label = L["Status"], x = 222, tip = L["Your drop judged for them, from their inspected gear."] },
-    { key = "actions", label = L["Actions"], x = 326, tip = L["Offer whispers your offer template; Trade opens the trade window with the item placed."] },
+    { key = "eq", label = L["Their eq"], x = 124,
+      tip = L["What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."]:format(
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
+    { key = "actions", label = L["Actions"], x = 318, tip = L["Offer whispers them your offer template for this item."] },
 }
+OP.COLS = COLS
 
 -- ── small helpers ───────────────────────────────────────────────────────────────────────────
 
@@ -83,29 +89,13 @@ end
 
 -- ── building a candidate row ────────────────────────────────────────────────────────────────
 
-local function newPill(row)
-    local p = CreateFrame("Frame", nil, row, "BackdropTemplate")
-    p:SetSize(K.PILL_W, K.CHIP_H)
-    local S = NS.SKIN
-    if p.SetBackdrop and S and S.edgeFile then
-        p:SetBackdrop({ edgeFile = S.edgeFile, edgeSize = S.edgeSize })
-    end
-    p.text = p:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    p.text:SetPoint("CENTER", p, "CENTER", 0, 0)
-    attach(p, "row")
-    return p
-end
-
 local function rowButtons(row)
     local W = NS.Window
     row.offer = W.TextButton(row, K.PANEL_BTN_W, nil, L["Offer"], function(b) NS.PressOffer(b.dropId, b.target) end)
-    row.offer:SetPoint("LEFT", row, "LEFT", COLS[4].x, 0)
+    row.offer:SetPoint("LEFT", row, "LEFT", COLS[3].x, 0)
     attach(row.offer, "row")
-    row.trade = W.TextButton(row, K.PANEL_BTN_W, "transfer", L["Trade"], function(b) NS.GiveDrop(b.dropId, b.target) end)
-    row.trade:SetPoint("LEFT", row.offer, "RIGHT", 4, 0)
-    attach(row.trade, "row")
     row.dash = tipFrame(row, "row")
-    row.dash:SetPoint("LEFT", row, "LEFT", COLS[4].x, 0)
+    row.dash:SetPoint("LEFT", row, "LEFT", COLS[3].x, 0)
     row.dash:SetSize(K.PANEL_BTN_W, K.OFFER_ROW_H)
     row.dash.text:SetText("–")
 end
@@ -114,17 +104,17 @@ local function newRow(content)
     local row = CreateFrame("Frame", nil, content)
     row:SetHeight(K.OFFER_ROW_H)
     row.tipRow = true
-    row.stripe = row:CreateTexture(nil, "ARTWORK")
-    row.stripe:SetSize(3, K.OFFER_ROW_H - 6)
-    row.stripe:SetPoint("LEFT", row, "LEFT", 0, 0)
+    -- Every second row's faint stripe, as the main window's rows (WindowGroup, WindowHistory).
+    row.stripe = row:CreateTexture(nil, "BACKGROUND")
+    row.stripe:SetAllPoints(row)
+    row.stripe:SetColorTexture(1, 1, 1, 0.03)
     row.member = tipFrame(row, "row")
     row.member:SetPoint("LEFT", row, "LEFT", COLS[1].x, 0)
     row.member:SetSize(COLS[2].x - COLS[1].x - 6, K.OFFER_ROW_H)
-    row.eq = tipFrame(row, "row")
+    row.member.text:SetPoint("RIGHT", row.member, "RIGHT", 0, 0)
+    row.eq = NS.WindowGroup.SideCell(row, "eq")
     row.eq:SetPoint("LEFT", row, "LEFT", COLS[2].x, 0)
     row.eq:SetSize(COLS[3].x - COLS[2].x - 6, K.OFFER_ROW_H)
-    row.pill = newPill(row)
-    row.pill:SetPoint("LEFT", row, "LEFT", COLS[3].x, 0)
     rowButtons(row)
     return row
 end
@@ -288,53 +278,43 @@ local function paintHeader(p, drop, now, warnAt)
     p.line.tipLines = h.tip
 end
 
-local function classStripe(row, classFile)
+local function classTone(fs, classFile)
     local r, g, b = NS.Compat.ClassColor(classFile)
-    if r then
-        row.stripe:SetColorTexture(r, g, b, 1)
-        row.member.text:SetTextColor(r, g, b)
-    else
-        row.stripe:SetColorTexture(C.IDLE.r, C.IDLE.g, C.IDLE.b, 1)
-        setTone(row.member.text, "plain")
-    end
+    if r then fs:SetTextColor(r, g, b) else setTone(fs, "plain") end
 end
 
 local function paintButtons(row, e, drop)
     local show = e.offerable and drop.trade and drop.trade.state ~= "no"
     row.offer:SetShown(show)
-    row.trade:SetShown(show)
     row.dash:SetShown(not show)
     if not show then
-        row.dash.tipLines = { L["No offer"], L["Offer and Trade are shown for members it is an upgrade or an equal for."] }
+        row.dash.tipLines = { L["No offer"], L["Offer is shown for members it is an upgrade or an equal for."] }
         return
     end
     row.offer.dropId, row.offer.target = drop.id, e.name
-    row.trade.dropId, row.trade.target = drop.id, e.name
     local look = MC.OfferButton(NS.Asks.StateOf("offer", e.name, drop.id), nil, e.short)
     look.toneState = MC.ToneState(NS.History.OutcomeOf(drop.id), look.state)
     NS.WindowOwn.SetButtonLook(row.offer, look)
-    local ok, reason = NS.TradeHelper.CanGive(drop.id, e.name)
-    local tb = MC.TradeButton(ok, NS.TradeHelper.ReasonText(reason), e.short)
-    row.trade:SetEnabled(tb.enabled)
-    row.trade:SetAlpha(tb.enabled and 1 or 0.5)
-    row.trade.tipLines = tb.tip
 end
 
-local function paintRow(row, e, drop)
+-- A candidate's inspect read (both worn items, the read's age); a test drop's candidates have none.
+local function readOf(drop, e)
+    if drop.test or not e.guid then return nil end
+    return NS.Inspect.Get(e.guid)
+end
+
+-- One candidate: the name in its class color, Their eq (the Them cell's look: the icons' tooltips
+-- read their links) and the Offer button.
+local function paintRow(row, e, drop, now)
     row.guid = e.guid
-    classStripe(row, e.classFile)
+    classTone(row.member.text, e.classFile)
     row.member.text:SetText(e.short)
     row.member.tipLines = { e.short, e.name ~= e.short and tostring(e.name) or L["A member of your group."] }
-    row.eq.text:SetText(e.eq)
-    setTone(row.eq.text, "muted")
-    row.eq.tipLines = { COLS[2].label, L["What %s wears in that slot, then your drop's item level."]:format(e.short) }
-    row.pill.text:SetText(e.pill.text)
-    setTone(row.pill.text, e.pill.tone)
-    row.pill.tipLines = e.pill.tip
+    NS.WindowGroup.PaintSide(row.eq, SC.Candidate(drop, e, readOf(drop, e), now))
     paintButtons(row, e, drop)
 end
 
-local function paintList(p, drop, list)
+local function paintList(p, drop, list, now)
     NS.Pool.ReleaseAll(p.rowPool)
     local width = K.OFFER_W - K.SCROLL_W - 24
     for i, e in ipairs(list) do
@@ -342,7 +322,8 @@ local function paintList(p, drop, list)
         r:ClearAllPoints()
         r:SetPoint("TOPLEFT", p.content, "TOPLEFT", 0, -(i - 1) * K.OFFER_ROW_H)
         r:SetWidth(width)
-        paintRow(r, e, drop)
+        r.stripe:SetShown(i % 2 == 0)
+        paintRow(r, e, drop, now)
     end
     p.content:SetSize(width, max(#list * K.OFFER_ROW_H, 1))
     p.empty:SetShown(#list == 0)
@@ -378,7 +359,7 @@ function OP.Refresh()
     local now = GetTime()
     paintHeader(panel, drop, now, NS.TradeTimer.WarnAt())
     local list = MC.Candidates(drop)
-    paintList(panel, drop, list)
+    paintList(panel, drop, list, now)
     paintFoot(panel, drop, #list)
 end
 

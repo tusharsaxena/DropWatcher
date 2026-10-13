@@ -311,10 +311,11 @@ Offer (row, card, detail card) ─> WindowOwn.PressAction ─> OfferPanel.Open(i
 Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
   ├─> MineCells.DockSide(window left, right, panel width, screen width)   (pure)
   ├─> MineCells.PanelHeader(drop, now, warnAt), MineCells.Candidates(drop)   (pure)
-  └─> each candidate: MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)) (kind `offer`,
+  └─> each candidate: SideCells.Candidate(drop, entry, NS.Inspect.Get(guid), now) (Their eq in
+                      the Them look, painted by WindowGroup.PaintSide; feedback-7 §0),
+                      MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)) (kind `offer`,
                       cyan while it reads Offer; Retry red; feedback-6 §2), toned by
-                      MineCells.ToneState(NS.History.OutcomeOf(id), its state),
-                      MineCells.TradeButton(NS.TradeHelper.CanGive(id, member));
+                      MineCells.ToneState(NS.History.OutcomeOf(id), its state);
       Announce to group: MineCells.AnnounceButton, WindowOwn.SetButtonLook, toned by
                       WindowOwn.ToneStates(drop): NS.Asks.FurthestStateOf("offer", id)
                       (Messaging.FurthestState: sent, else queued, else failed, else ready) and the
@@ -322,7 +323,8 @@ Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
                       ─> WindowGroup.ToneButton (feedback-4 §1)
 
 panel Offer ───────> NS.PressOffer(id, member) ─> NS.Asks.Press("offer", member, id) ─> AskStateChanged
-panel Trade ───────> NS.GiveDrop(id, member) ─> NS.TradeHelper.Give (its guards; a refusal printed)
+NS.GiveDrop(id, member) ─> NS.TradeHelper.Give (its guards; a refusal printed; the panel's Trade
+                      button went with feedback-7 §0)
 Announce to group ─> NS.PressAnnounce(id) ─> NS.Asks.Press("announce", nil, id) ─> AskStateChanged
 close mark ────────> OfferPanel.Close() ─> State.offerPanel = nil
 

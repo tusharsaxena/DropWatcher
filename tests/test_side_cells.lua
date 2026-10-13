@@ -1,9 +1,10 @@
 -- tests/test_side_cells.lua — the Me and Them cells (feedback-6 spec §1, DW-F1): My eq merged into
 -- Me and Their eq into Them, `[icon(s)] [item level] [glyph][difference]`. The pure composers
 -- (modules/SideCells.lua) case by case: every verdict kind, two worn items, an empty slot, every
--- inspect state, your own drop's `(Details)`, the merged tooltip and History's verdict alone; then
--- the columns' widths measured over every kind at the harness's character measure, the shed order,
--- and the cells painted headless on the Drops table.
+-- inspect state, your own drop's `(Details)`, the merged tooltip and History's verdict alone, and
+-- the Offer panel's Their eq cell (feedback-7 spec §0, SC.Candidate); then the columns' widths
+-- measured over every kind at the harness's character measure (the Offer panel's Their eq too), the
+-- shed order, and the cells painted headless on the Drops table.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -168,6 +169,60 @@ test("side cells: History's Me and Them are the verdict alone, worded as the Dro
     assertEqual(unread.text, "?", "shown alone: nothing else says why")
 end)
 
+-- ── the Offer panel's Their eq (feedback-7 spec §0) ─────────────────────────────────────────
+
+local function mine(over)
+    return drop({ isMine = true, them = NONE, inspect = NONE, facts = over or TRINKET })
+end
+
+local function entry(status, eval, guid)
+    return { guid = guid or "Player-1-B", name = "Butterz-Realm", classFile = "MAGE", status = status, eval = eval }
+end
+
+-- The candidate as the Offer panel draws it: MineCells.Candidates' entry, then SC.Candidate.
+local function candidate(NS, d, c, insp)
+    d.candidates = { [c.guid] = c }
+    return NS.SideCells.Candidate(d, NS.MineCells.Candidates(d)[1], insp, 100)
+end
+
+test("side cells: the Offer panel's Their eq reads like Them: both worn items from the read, glyph and difference", function()
+    local NS = T.newAddon()
+    local base = { link = OLD2, ilvl = 296 }
+    local read = { status = "fresh", at = 60, gear = HERS }
+    local up = candidate(NS, mine(), entry("ready", { verdict = "upgrade", ilvlDelta = 15, baseline = base, reasons = {} }), read)
+    assertEqual(#up.items, 2, "both trinkets from the inspect read"); assertEqual(up.level, "298/296"); assertEqual(up.levelTone, "plain")
+    assertEqual(up.glyph .. up.text, "▲15"); assertEqual(up.tone, "good")
+    assertEqual(up.tip[1], "Butterz wears"); assertTrue(has(up.tip, "Inspected 40s ago."), "the read's age")
+    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, "An upgrade for them: a higher item level than what they wear there."),
+        "the old pill's explanation moved into the tooltip")
+    local noRead = candidate(NS, mine(), entry("ready", { verdict = "downgrade", ilvlDelta = -4, baseline = base, reasons = {} }))
+    assertEqual(#noRead.items, 1, "without a read, the item it was judged against"); assertEqual(noRead.items[1].link, OLD2)
+    assertEqual(noRead.level, "296"); assertEqual(noRead.glyph .. noRead.text, "▽4"); assertEqual(noRead.tone, "red")
+    local side = candidate(NS, mine(), entry("ready", { verdict = "sidegrade", ilvlDelta = 0, baseline = { ilvl = 311 }, reasons = {} }))
+    assertEqual(#side.items, 0); assertEqual(side.level, "311"); assertEqual(side.levelTone, "plain", "a level known without its item")
+    assertEqual(side.glyph .. side.text, "≈0"); assertEqual(side.tone, "yellow")
+end)
+
+test("side cells: the Offer panel's Their eq says Can't use, …, Unavailable and empty in words", function()
+    local NS = T.newAddon()
+    local cant = candidate(NS, mine(), entry("ready", { verdict = "cantUse", reasons = { { key = "armorType" } } }))
+    assertTrue(cant.level == nil, "no dash beside the word"); assertEqual(cant.text, "Can't use"); assertEqual(cant.tone, "bad")
+    local checking = candidate(NS, mine(), entry("checking"))
+    assertEqual(checking.text, "…"); assertEqual(checking.tone, "muted"); assertEqual(checking.tip[1], "Butterz: Checking")
+    assertEqual(checking.tip[2], "Their gear is being inspected; the verdict follows.")
+    local gone = candidate(NS, mine(), entry("unavailable"))
+    assertEqual(gone.text, "Unavailable"); assertEqual(gone.tone, "muted"); assertTrue(#gone.tip >= 2)
+    local unknown = candidate(NS, mine(), entry("ready", { verdict = "unknown", reasons = {} }))
+    assertTrue(unknown.level == nil); assertEqual(unknown.text, "Unavailable")
+    local empty = candidate(NS, mine({ ilvl = 311, equipLoc = "INVTYPE_HEAD", quality = 4 }),
+        entry("ready", { verdict = "upgrade", reasons = { { key = "emptySlot" } } }))
+    assertEqual(empty.level, "empty"); assertEqual(empty.glyph, "▲"); assertEqual(empty.text, "")
+    assertTrue(has(empty.tip, "Empty slot."))
+    local stale = candidate(NS, mine(), entry("ready", { verdict = "upgrade", ilvlDelta = 3, baseline = { link = OLD1, ilvl = 308 }, reasons = {} }),
+        { status = "pending" })
+    assertEqual(#stale.items, 1, "a read not done yet gives no gear: the judged item stands in")
+end)
+
 -- ── the widths (measured) ───────────────────────────────────────────────────────────────────
 
 local CHAR = 5   -- the harness's character measure (the small template's average; a glyph is one)
@@ -210,6 +265,21 @@ local function allCells(S)
     return out
 end
 
+-- Every kind of cell the Offer panel's Their eq can show: each verdict on two worn items and on
+-- none, checking and unavailable.
+local function candidateCells(NS)
+    local out, read = {}, { status = "fresh", at = 60, gear = HERS }
+    for _, v in ipairs(VERDICTS) do
+        local eval = v ~= NONE and v or nil
+        for _, insp in ipairs({ read, false }) do
+            out[#out + 1] = candidate(NS, mine(), entry("ready", eval), insp or nil)
+        end
+    end
+    out[#out + 1] = candidate(NS, mine(), entry("checking"))
+    out[#out + 1] = candidate(NS, mine(), entry("unavailable"))
+    return out
+end
+
 test("widths: Me and Them are each their widest cell, measured (two icons, 321/308, then a word)", function()
     local NS = T.newAddon()
     local WG, K = NS.WindowGroup, NS.Constants.WINDOW
@@ -224,6 +294,24 @@ test("widths: Me and Them are each their widest cell, measured (two icons, 321/3
         if widest[col.key] then assertEqual(col.width, widest[col.key], col.key .. ": nothing cut, no margin") end
     end
     assertEqual(widest.me, 2 * K.EQ_ICON + 2 + 4 + 7 * CHAR + 4 + #"Not wanted" * CHAR, "two icons, 321/308, Not wanted")
+end)
+
+test("widths: the Offer panel's Their eq is at least Them's width and fits its widest cell", function()
+    local NS = T.newAddon()
+    local WG, K, COLS = NS.WindowGroup, NS.Constants.WINDOW, NS.OfferPanel.COLS
+    local keys = {}
+    for i, col in ipairs(COLS) do keys[i] = col.key end
+    assertEqual(table.concat(keys, ","), "member,eq,actions", "Eq -> drop and Status are one column")
+    assertEqual(COLS[2].label, "Their eq")
+    local width = COLS[3].x - COLS[2].x - 6
+    local them
+    for _, col in ipairs(WG.COLUMNS) do if col.key == "them" then them = col.width end end
+    assertTrue(width >= them, "at least the Drops table's Them width")
+    for _, c in ipairs(candidateCells(NS)) do
+        assertTrue(sideWidth(WG, K, c) <= width, (c.level or "") .. " " .. c.text .. " fits")
+    end
+    local rowW = K.OFFER_W - K.SCROLL_W - 24
+    assertTrue(COLS[3].x + K.PANEL_BTN_W <= rowW, "the Offer button inside the row")
 end)
 
 test("widths: the column set and the shed order keep Me and Them where the verdict columns sat", function()

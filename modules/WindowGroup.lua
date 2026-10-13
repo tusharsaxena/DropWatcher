@@ -465,7 +465,8 @@ local function itemCell(row)
 end
 
 -- A Me or Them cell: the worn items' buttons, the item level, the glyph (the monospace face) and
--- the difference or word (`f.text`); WG.PlaceSide places them.
+-- the difference or word (`f.text`); WG.PlaceSide places them. WG.SideCell: the Offer panel's
+-- Their eq cell is built the same (feedback-7 spec §0).
 local function sideCell(row, key)
     local f = textCell(row, key)
     f.icons = { itemButton(f, K.EQ_ICON), itemButton(f, K.EQ_ICON) }
@@ -477,6 +478,7 @@ local function sideCell(row, key)
     f.glyph:SetFont(C.FONT_MONO, 12, "")
     return f
 end
+WG.SideCell = sideCell
 
 local function actionsCell(row)
     local f = CreateFrame("Frame", nil, row)
@@ -626,6 +628,7 @@ local function paintSide(f, c, unit)
     setTone(f.glyph, c.tone)
     WG.PlaceSide(f, #c.items, c.level ~= nil, c.glyph ~= nil)
 end
+WG.PaintSide = paintSide   -- the Offer panel's Their eq cell too (feedback-7 spec §0)
 
 --- The ask's state and reason; `traded` once the history settled the drop received (History.lua).
 function WG.AskState(drop)

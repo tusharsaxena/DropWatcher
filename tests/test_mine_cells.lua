@@ -1,6 +1,7 @@
 -- tests/test_mine_cells.lua — what your own drops and the Offer panel say (modules/MineCells.lua,
 -- pure; design spec §11.4, board 04; feedback-5 spec §1-§3): the countdown and the Trade window
--- cell, the candidates ranked with their pills, the buttons' lifecycles and tones, the Drops strip's
+-- cell, the candidates ranked with their judgments (the Offer panel's Their eq cell is
+-- test_side_cells'), the buttons' lifecycles and tones, the Drops strip's
 -- summary (and its short compact form, modules/DropsStrip.lua), Post my tradeables' lines, the
 -- Offer panel's header and its dock. The frame edges that paint them are test_window_group,
 -- test_own_drops, test_drops_strip and test_offer_panel's.
@@ -97,25 +98,30 @@ end)
 
 -- ── the candidates ──────────────────────────────────────────────────────────────────────────
 
-test("mine cells: the candidates are ranked upgrades first by gain, each with its pill and eq [arrow] drop", function()
+test("mine cells: the candidates are ranked upgrades first by gain, each with its judgment and why", function()
     local M = MC()
     local list = M.Candidates(drop())
-    local names, pills, eqs = {}, {}, {}
-    for i, e in ipairs(list) do names[i], pills[i], eqs[i] = e.short, e.pill.text, T.marks(e.eq) end
+    local names, statuses, gains = {}, {}, {}
+    for i, e in ipairs(list) do names[i], statuses[i], gains[i] = e.short, e.status, tostring(e.gain) end
     assertEqual(table.concat(names, ","), "Seta,Butterz,Littlewolf,Uniquerogue,Fifth")
-    assertEqual(table.concat(pills, ","), "+14 UPGRADE,+6 UPGRADE,EQUAL,CAN'T USE,CHECKING")
-    assertEqual(table.concat(eqs, ","), "291 [arrow-right] 305,299 [arrow-right] 305,305 [arrow-right] 305,– [arrow-right] 305,… [arrow-right] 305")
+    assertEqual(table.concat(statuses, ","), "upgrade,upgrade,sidegrade,cantUse,checking")
+    assertEqual(table.concat(gains, ","), "14,6,0,nil,nil")
     assertTrue(list[1].offerable and list[3].offerable); assertFalse(list[4].offerable)
-    for _, e in ipairs(list) do assertTrue(#e.pill.tip >= 2, e.short .. " has a reason") end
+    assertEqual(list[1].eval.verdict, "upgrade"); assertEqual(list[1].baseline.ilvl, 291)
+    assertTrue(list[5].eval == nil, "nothing judged while checking")
+    for _, e in ipairs(list) do
+        assertTrue(type(e.explain) == "string" and e.explain ~= "", e.short .. " has a reason")
+        assertTrue(e.pill == nil and e.eq == nil, "no pill and no eq text (feedback-7 spec §0)")
+    end
     local gone = M.Candidates(drop({ candidates = { x = cand("Gone", "MAGE", "unavailable") } }))
-    assertEqual(gone[1].pill.text, "UNAVAILABLE"); assertEqual(gone[1].pill.tone, "muted")
-    local down = M.Candidates(drop({ candidates = { x = cand("Big", "MAGE", "ready", { verdict = "downgrade", ilvlDelta = -9, reasons = {} }) } }))
-    assertEqual(down[1].pill.text, "NO UPGRADE"); assertEqual(T.marks(down[1].eq), "314 [arrow-right] 305")
+    assertEqual(gone[1].status, "unavailable")
+    local odd = M.Candidates(drop({ candidates = { x = cand("Odd", "MAGE", "ready", { verdict = "strange" }) } }))
+    assertEqual(odd[1].status, "unknown", "a verdict the panel does not know reads unknown")
 end)
 
 -- ── the buttons and the actions ─────────────────────────────────────────────────────────────
 
-test("mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabled with its reason", function()
+test("mine cells: Offer and Announce follow the ask's lifecycle; the Trade button is gone", function()
     local M = MC()
     local want = { ready = "Offer", queued = "Queued", sent = "Offered", failed = "Retry" }
     for state, text in pairs(want) do
@@ -131,9 +137,7 @@ test("mine cells: Offer and Announce follow the ask's lifecycle; Trade is disabl
     assertEqual(M.OfferButton("sent", nil, "Seta").kind, "offer")
     assertTrue(M.OfferButton("failed", "throttled", "Seta").kind == nil, "Retry stays red")
     assertTrue(M.AnnounceButton(nil).kind == nil, "Announce is unchanged")
-    local off = M.TradeButton(false, "That player is out of trade range.", "Seta")
-    assertFalse(off.enabled); assertEqual(off.tip[2], "That player is out of trade range.")
-    assertTrue(M.TradeButton(true, nil, "Seta").enabled)
+    assertTrue(M.TradeButton == nil, "the Offer panel's Trade button went with feedback-7 spec §0")
 end)
 
 -- ── the summary, the post, the dock ─────────────────────────────────────────────────────────

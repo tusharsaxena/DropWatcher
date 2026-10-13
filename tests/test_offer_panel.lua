@@ -1,8 +1,10 @@
 -- tests/test_offer_panel.lua — the Offer panel (design spec §11.4, board 04) opened from your own
 -- drop's Offer on the Drops tab (feedback-5 spec §2 and §3), built headless under the mock: docked
--- beside the window (full or compact) on the side with room, the candidates ranked with their pills,
--- every part's reason tooltip, Offer, Trade and Announce to group through their host handlers, the
--- Edit message box, closing; then the host handlers Post my tradeables, Offer, Announce and Trade.
+-- beside the window (full or compact) on the side with room, the candidates ranked with their Their
+-- eq cells in the Drops table's Them look (feedback-7 spec §0: no class bar, alternating rows, no
+-- Trade button), every part's reason tooltip, Offer and Announce to group through their host
+-- handlers, the Edit message box, closing; then the host handlers Post my tradeables, Offer, Announce
+-- and Trade.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -115,21 +117,48 @@ local function openPanel()
     return NS, NS.OfferPanel.Drawn(), m
 end
 
-test("offer panel: Offer opens it docked right, the candidates ranked with their pills", function()
+-- A Their eq cell as drawn: level, glyph and difference (or word), space-joined.
+local function eqOf(row)
+    local parts = {}
+    for _, fs in ipairs({ row.eq.level, row.eq.glyph, row.eq.text }) do
+        local t = textOf(fs)
+        if t and t ~= "" then parts[#parts + 1] = t end
+    end
+    return table.concat(parts, " ")
+end
+
+test("offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look", function()
     local NS, p = openPanel()
     assertTrue(NS.OfferPanel.IsShown()); assertEqual(NS.OfferPanel.DropId(), 1)
     assertEqual(p.panel.dock, "right")
     assertEqual(textOf(p.panel.name.text), "Bracers of the Tide")
     assertEqual(textOf(p.panel.line.text), "You: -5 ilvl · 305 · Trade window 1:47:12")
     assertEqual(#p.rows, 5)
-    local r1 = p.rows[1]
-    assertEqual(textOf(r1.member.text), "Seta"); assertEqual(T.marks(textOf(r1.eq.text)), "291 [arrow-right] 305")
-    assertEqual(textOf(r1.pill.text), "+14 UPGRADE")
-    assertTrue(r1.offer:IsShown()); assertTrue(r1.trade:IsShown())
+    local cells = {}
+    for i, r in ipairs(p.rows) do cells[i] = textOf(r.member.text) .. " " .. eqOf(r) end
+    assertEqual(table.concat(cells, ","), "Seta 291 ▲ 14,Butterz 299 ▲ 6,Littlewolf 305 ≈ 0,Uniquerogue Can't use,Fifth …")
+    local r1, TONE = p.rows[1], NS.Constants.TONE
+    assertEqual(select(2, r1.eq.glyph:GetTextColor()), TONE.good.g, "the glyph in the verdict's tone")
+    assertEqual(select(2, r1.eq.text:GetTextColor()), TONE.good.g, "and the difference")
+    assertEqual(r1.eq.glyph.__font[1], NS.Constants.FONT_MONO, "the glyph in the monospace face")
+    assertTrue(r1.offer:IsShown()); assertTrue(r1.trade == nil and r1.pill == nil, "no Trade button and no pill")
     local r4 = p.rows[4]
-    assertEqual(textOf(r4.pill.text), "CAN'T USE"); assertFalse(r4.offer:IsShown()); assertTrue(r4.dash:IsShown())
-    assertEqual(textOf(p.rows[5].pill.text), "CHECKING")
+    assertFalse(r4.offer:IsShown()); assertTrue(r4.dash:IsShown())
     assertEqual(textOf(p.panel.note.text), "5 members · sorted by gain")
+    local heads = {}
+    for key, h in pairs(p.panel.heads) do heads[#heads + 1] = key .. "=" .. textOf(h.text) end
+    table.sort(heads)
+    assertEqual(table.concat(heads, ","), "actions=Actions,eq=Their eq,member=Member")
+end)
+
+test("offer panel: no class bar; every second row striped as the main window's; the name in its class color", function()
+    local NS, p = openPanel()
+    for i, r in ipairs(p.rows) do
+        assertEqual(r.stripe:IsShown(), i % 2 == 0, "row " .. i)
+        assertEqual(r.stripe.__layer, "BACKGROUND", "a stripe behind the row, not a bar at its start")
+    end
+    local r, g, b = NS.Compat.ClassColor("PRIEST")
+    assertEqual(table.concat({ p.rows[1].member.text:GetTextColor() }, ",", 1, 3), table.concat({ r, g, b }, ","))
 end)
 
 test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group unchanged", function()
@@ -149,35 +178,48 @@ test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Annou
     assertEqual(textOf(b.label), "Retry"); assertEqual(b.tone, "red", "Retry stays red")
 end)
 
-test("offer panel: every part has a reason tooltip; Trade is disabled with the trade helper's reason", function()
+test("offer panel: every part has a reason tooltip; Their eq's holds the old pill's explanation", function()
     local NS, p = openPanel()
     local W = NS.Window
     for _, r in ipairs(p.rows) do
-        assertTrue(#W.TooltipOf(r.member) >= 2); assertTrue(#W.TooltipOf(r.eq) >= 2); assertTrue(#W.TooltipOf(r.pill) >= 2)
-        for _, b in ipairs({ r.offer, r.trade, r.dash }) do
+        assertTrue(#W.TooltipOf(r.member) >= 2); assertTrue(#W.TooltipOf(r.eq) >= 2)
+        for _, b in ipairs({ r.offer, r.dash }) do
             if b:IsShown() then assertTrue(#W.TooltipOf(b) >= 2) end
         end
     end
-    local trade = p.rows[1].trade
-    assertFalse(trade:IsEnabled())
-    assertEqual(W.TooltipOf(trade)[2], "That player is out of trade range.")
+    local tip = table.concat(W.TooltipOf(p.rows[1].eq), " | ")
+    assertTrue(tip:find("Seta wears", 1, true) ~= nil, tip)
+    assertTrue(tip:find("For Seta: Upgrade | An upgrade for them", 1, true) ~= nil, tip)
+    assertTrue(W.TooltipOf(p.rows[5].eq)[1] == "Fifth: Checking")
+    assertTrue(table.concat(W.TooltipOf(p.panel.heads.actions), " "):find("Trade", 1, true) == nil, "no Trade sentence")
     assertTrue(#W.TooltipOf(p.panel.line) >= 3); assertTrue(#W.TooltipOf(p.panel.announce) >= 2)
     for _, h in pairs(p.panel.heads) do assertTrue(#W.TooltipOf(h) >= 2) end
 end)
 
-test("offer panel: Offer whispers through the shared handler; Trade hands the item over", function()
+test("offer panel: Offer whispers through the shared handler", function()
     local NS, p = openPanel()
-    local calls, gives = {}, {}
+    local calls = {}
     NS.Asks.Press = function(kind, target, id) calls[#calls + 1] = { kind, target, id }; return "sent" end
-    NS.TradeHelper.Give = function(id, target) gives[#gives + 1] = { id, target }; return true end
-    NS.TradeHelper.CanGive = function() return true end
     p.rows[1].offer:__fire("OnClick")
     assertEqual(table.concat(calls[1], ","), "offer,Seta-Realm,1")
-    NS.Window.Refresh()
-    local trade = NS.OfferPanel.Drawn().rows[1].trade
-    assertTrue(trade:IsEnabled())
-    trade:__fire("OnClick")
-    assertEqual(table.concat(gives[1], ","), "1,Seta-Realm")
+end)
+
+test("offer panel: Their eq shows both worn items from the member's inspect read", function()
+    local NS, _, m = shownMine()
+    local OLD1, OLD2 = "|cffa335ee|Hitem:300::|h[Old Band]|h|r", "|cffa335ee|Hitem:301::|h[Older Band]|h|r"
+    local d = NS.LootFeed.Get(2)
+    d.me = { verdict = "downgrade", ilvlDelta = -3, reasons = {} }
+    d.candidates = { x = cand("Butterz", "MAGE", "ready", { verdict = "upgrade", ilvlDelta = 6, baseline = { link = OLD2, ilvl = 292 }, reasons = {} }) }
+    NS.Inspect.Get = function(guid)
+        if guid ~= "Player-1-Butterz" then return nil end
+        return { status = "fresh", at = NOW - 30, gear = { [11] = { link = OLD1, ilvl = 308 }, [12] = { link = OLD2, ilvl = 292 } } }
+    end
+    m.__now = NOW
+    NS.OfferPanel.Open(2)
+    local r = NS.OfferPanel.Drawn().rows[1]
+    assertTrue(r.eq.icons[1]:IsShown() and r.eq.icons[2]:IsShown(), "both rings")
+    assertEqual(eqOf(r), "308/292 ▲ 6")
+    assertTrue(table.concat(NS.Window.TooltipOf(r.eq), " | "):find("Inspected 30s ago.", 1, true) ~= nil)
 end)
 
 test("offer panel: opening an upgrade for you reveals who it would help on its row", function()

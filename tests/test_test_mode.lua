@@ -113,7 +113,7 @@ test("test mode data: every trade estimate, inspect state and ask state is there
     hasAll(ask, { "ready", "queued", "sent", "failed", "traded" }, "ask")
 end)
 
-test("test mode data: your own drops cover every countdown and every candidate pill (board 04)", function()
+test("test mode data: your own drops cover every countdown and every candidate status (board 04)", function()
     local NS, specs = placeholders()
     local MC = NS.MineCells
     local pills, kinds = {}, {}
@@ -125,10 +125,10 @@ test("test mode data: your own drops cover every countdown and every candidate p
         elseif cd.exact and cd.left <= 600 then kinds.soon = true
         elseif cd.exact then kinds.exact = true
         else kinds.estimated = true end
-        for _, c in ipairs(MC.Candidates(drop)) do pills[c.pill.text:gsub("^%+%d+ ", "")] = true end
+        for _, c in ipairs(MC.Candidates(drop)) do pills[c.status] = true end
     end
     hasAll(kinds, { "exact", "soon", "estimated", "boe", "expired" }, "countdown")
-    hasAll(pills, { "UPGRADE", "EQUAL", "NO UPGRADE", "CAN'T USE", "CHECKING", "UNAVAILABLE" }, "pill")
+    hasAll(pills, { "upgrade", "sidegrade", "downgrade", "cantUse", "checking", "unavailable" }, "status")
 end)
 
 test("test mode data: two groups, a boss and a key run, every item a pool item that keeps its slot", function()

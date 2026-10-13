@@ -16,6 +16,9 @@ local _, NS = ...
 -- gear part goes when the verdict part has something to say.
 -- YOUR OWN DROP'S THEM is MineCells.Details's `(Details)` (or `Hidden`), its tones and its tooltip.
 -- History keeps no worn items, so its cells are the verdict part alone (SC.Merge with no gear).
+-- THE OFFER PANEL'S THEIR EQ (feedback-7 spec §0) is the same cell for one candidate (SC.Candidate):
+-- what they wear from their inspect read (else the worn item their verdict was judged against), and
+-- the verdict on your drop for them; `…` while checking, `Unavailable` when nothing could be read.
 --
 -- THE TOOLTIP is the gear tooltip's lines (each worn item, the inspect's age for Them) followed by
 -- the verdict's (its title, its explanation, the comparison and the reasons), a line the two share
@@ -41,10 +44,11 @@ local DASH = "–"
 local EXPLAINS = { ["…"] = true, [DASH] = true, ["!"] = true, [L["range"]] = true, [L["combat"]] = true }
 SC.EXPLAINS = EXPLAINS
 
--- The gear part: the worn levels (plain), else the muted word; `empty slot` reads `empty`.
+-- The gear part: the worn levels (plain; also a level known without its item), else the muted
+-- word; `empty slot` reads `empty`.
 local function gearPart(eq)
     if type(eq) ~= "table" then return nil, nil end
-    if type(eq.items) == "table" and #eq.items > 0 then return eq.text, "plain" end
+    if (type(eq.items) == "table" and #eq.items > 0) or eq.tone == "plain" then return eq.text, "plain" end
     if eq.text == L["empty slot"] then return L["empty"], "muted" end
     return eq.text, "muted"
 end
@@ -110,4 +114,81 @@ end
 function SC.Them(drop, gear, now, revealed)
     if drop.isMine then return SC.Merge(MC.Details(drop, revealed, L["Them"])) end
     return SC.Merge(WC.Them(drop, now), WC.TheirEq(drop, gear, now))
+end
+
+-- ── the Offer panel's Their eq (feedback-7 spec §0) ─────────────────────────────────────────
+
+local function num(v) return type(v) == "number" and v == v and v or nil end
+
+local function readOk(insp)
+    return type(insp) == "table" and (insp.status == "fresh" or insp.status == "cached")
+end
+
+-- What a candidate wears in the drop's slots, from their inspect read (both rings, both trinkets):
+-- the items, and how many slots were read as empty.
+local function wornIn(slots, gear)
+    local items, empty = {}, 0
+    for _, slot in ipairs(slots or {}) do
+        local g = type(gear) == "table" and gear[slot] or nil
+        if type(g) == "table" and type(g.link) == "string" then
+            items[#items + 1] = { link = g.link, ilvl = g.ilvl, slot = slot }
+        elseif g == false then
+            empty = empty + 1
+        end
+    end
+    return items, empty
+end
+
+-- The gear part of one candidate: their read, else the item their verdict was judged against.
+local function candidateEq(drop, e, insp, now)
+    local slots = WC.EqSlots(type(drop.facts) == "table" and drop.facts.equipLoc or nil)
+    local items, empty = wornIn(slots, readOk(insp) and insp.gear or nil)
+    local base = e.baseline
+    if #items == 0 and empty == 0 and base and type(base.link) == "string" then items[1] = { link = base.link, ilvl = base.ilvl } end
+    local c = { items = items, tone = "muted", tip = { L["%s wears"]:format(e.short) } }
+    if #items > 0 then
+        c.text, c.tone = WC.Levels(items), "plain"
+    elseif base and num(base.ilvl) then
+        c.text, c.tone = WC.Levels({ base }), "plain"
+    elseif empty > 0 or (e.eval and e.eval.verdict == "upgrade") then
+        c.text = L["empty slot"]
+    else
+        c.text = DASH
+    end
+    for _, it in ipairs(items) do c.tip[#c.tip + 1] = ("%s (%s)"):format(WC.ItemName(it.link) or it.link, WC.Levels({ it })) end
+    if c.text == L["empty slot"] then c.tip[#c.tip + 1] = L["Empty slot."] end
+    if readOk(insp) then c.tip[#c.tip + 1] = WC.InspectLine(insp, e.short, now) end
+    return c
+end
+
+-- The verdict part of one candidate: WindowCells.Verdict's for a judged one, else `…` or
+-- `Unavailable`; the status's explanation (MineCells.Candidates' `explain`) under the title.
+local UNREAD = { checking = { "…", L["Checking"] }, unavailable = { L["Unavailable"], L["Unavailable"] } }
+
+local function candidateVerdict(drop, e)
+    local w = UNREAD[e.status]
+    local v
+    if w then
+        v = { text = w[1], tone = "muted", verdict = e.status, tip = { ("%s: %s"):format(e.short, w[2]) } }
+    else
+        v = WC.Verdict(e.eval, "them", L["For %s"]:format(e.short), num(type(drop.facts) == "table" and drop.facts.ilvl))
+    end
+    if e.explain then table.insert(v.tip, 2, e.explain) end
+    return v
+end
+
+--- The Offer panel's Their eq cell (feedback-7 spec §0): one candidate (an entry of
+--- MineCells.Candidates) in the Them cell's look, `276 ▲19`, `321/308 ▽4`, `311 ≈0`, `Can't use`,
+--- `…` while checking, `Unavailable` when nothing could be read, `empty ▲` into an empty slot.
+--- @param drop table one of your drops
+--- @param e table the candidate (MineCells.Candidates' entry)
+--- @param insp table|nil their inspect entry (NS.Inspect.Get), whose `gear` gives both worn items
+--- @param now number|nil GetTime(), for the read's age
+--- @return table cell
+function SC.Candidate(drop, e, insp, now)
+    local v = candidateVerdict(drop, e)
+    if UNREAD[e.status] then return SC.Merge(v) end
+    local eq = candidateEq(drop, e, insp, now)
+    if v.verdict == "unknown" and eq.text == DASH then v.text, eq.text = L["Unavailable"], nil end
+    return SC.Merge(v, eq)
 end

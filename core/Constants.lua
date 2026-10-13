@@ -118,8 +118,7 @@ C.WINDOW = {
     OFFER_FOOT_H = 32,    -- its Announce to group strip
     OFFER_ROW_H = 26,     -- one candidate
     OFFER_MIN_H = 320,    -- its least height beside the compact window (head, six candidates, foot)
-    PILL_W      = 96,     -- a status pill
-    PANEL_BTN_W = 52,     -- a candidate's Offer or Trade button
+    PANEL_BTN_W = 52,     -- a candidate's Offer button
     DOCK_GAP    = 4,      -- between the window and the docked panel
     TIP_GAP     = 2,      -- between the window (or a docked panel) and an item tooltip beside it
     -- Where a fresh profile, and Reset position, put the window.

@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/MineCells.lua — what your own drops and the Offer panel say (design spec §11.4, board
 -- 04; feedback-5 spec §1-§3): the Trade window cell every drop shows on Drops, the candidates
--- ranked with their status pills, the Offer panel's buttons, header and dock, the Drops strip's
+-- ranked for the Offer panel (feedback-7 spec §0: their Their eq cell is NS.SideCells.Candidate's),
+-- the Offer panel's buttons, header and dock, the Drops strip's
 -- summary line and Post my tradeables' lines; and what your own drop says on Drops (feedback-5
 -- spec §2): Trade with its upgrade count (`Yes (2)`), Them as `(Details)` (renamed from `(Multiple)`
 -- by feedback-6 spec §3) with every member it upgrades in the tooltip, and the Offer button.
@@ -10,9 +11,7 @@ local _, NS = ...
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
 -- with its `expiresAt`, `me`) and plain inputs (the clock, the warning threshold, an ask's state)
 -- and answers a plain table; nothing here reads a module, the client or a saved variable (only
--- NS.TipMarks: (Details)' tooltip lines take the class and quality colors, and the Offer panel's
--- eq text its arrow texture), so
--- test_mine_cells drives each state case by case. The frame edges that paint them are
+-- NS.TipMarks: (Details)' tooltip lines take the class and quality colors), so test_mine_cells drives each state case by case. The frame edges that paint them are
 -- modules/WindowGroup.lua, modules/CompactGroup.lua and modules/DetailCard.lua (the Trade window
 -- column, the compact card's countdown and your own drop's cells, through modules/WindowOwn.lua),
 -- modules/DropsStrip.lua (the strip) and modules/OfferPanel.lua (the panel). The shared verdict
@@ -30,7 +29,10 @@ local _, NS = ...
 -- widest answer).
 --
 -- THE CANDIDATES (spec §11.4). Every other member, judged for your drop by the feed: upgrades first
--- by their gain, then EQUAL, NO UPGRADE, CAN'T USE, CHECKING and UNAVAILABLE, each tie by name. An
+-- by their gain, then equal, no upgrade, can't use, checking and unavailable, each tie by name; each
+-- carries its judgment (`eval`) and a line explaining its status (`explain`), which the Offer
+-- panel's Their eq cell draws in the Drops table's Them look (NS.SideCells.Candidate; the status
+-- pills and the `eq -> drop` text went with feedback-7 spec §0). An
 -- upgrade for you is not offered by default: its count and (Details) read `Hidden` until you open
 -- the Offer panel yourself (AskFlow B2).
 --
@@ -187,15 +189,9 @@ end
 
 -- ── the candidates ──────────────────────────────────────────────────────────────────────────
 
--- Each status's rank (lower first) and pill.
+-- Each status's rank (lower first) and the line explaining it (the Their eq cell's tooltip).
 local RANK = { upgrade = 1, sidegrade = 2, downgrade = 3, cantUse = 4, doesntWant = 4, unknown = 5, checking = 6, unavailable = 7 }
-local PILL_TONE = { upgrade = "good", sidegrade = "plain", downgrade = "bad", cantUse = "bad", doesntWant = "bad",
-    unknown = "muted", checking = "muted", unavailable = "muted" }
-local PILL_TEXT = {
-    sidegrade = L["EQUAL"], downgrade = L["NO UPGRADE"], cantUse = L["CAN'T USE"], doesntWant = L["CAN'T USE"],
-    unknown = L["UNAVAILABLE"], checking = L["CHECKING"], unavailable = L["UNAVAILABLE"],
-}
-local PILL_TIP = {
+local EXPLAIN = {
     upgrade = L["An upgrade for them: a higher item level than what they wear there."],
     sidegrade = L["About what they wear there: within the sidegrade band."],
     downgrade = L["Lower than what they wear there."],
@@ -220,39 +216,14 @@ local function gainOf(c)
     return type(c.eval) == "table" and num(c.eval.ilvlDelta) or nil
 end
 
-local function pillOf(status, gain, who)
-    local text = PILL_TEXT[status]
-    if status == "upgrade" then
-        text = gain and L["%s UPGRADE"]:format(WC.Signed(gain)) or L["UPGRADE"]
-    end
-    return { text = text, tone = PILL_TONE[status], tip = { ("%s: %s"):format(who, text), PILL_TIP[status] } }
-end
-
--- What they wear there against the drop's item level: `276 [arrow] 295`. The arrow is an inline
--- texture (NS.TipMarks' TM.Arrow): the Offer panel draws this in the default face, which has no `→`
--- (DW-F5).
-local function eqWorn(status, eval, ilvl)
-    if status == "checking" then return "…" end
-    local base = type(eval) == "table" and eval.baseline or nil
-    if type(base) == "table" and num(base.ilvl) then return tostring(round(base.ilvl)) end
-    local d = type(eval) == "table" and num(eval.ilvlDelta)
-    if d and ilvl then return tostring(round(ilvl - d)) end
-    if type(eval) == "table" and eval.verdict == "upgrade" then return L["empty"] end
-    return DASH
-end
-
-local function eqText(status, eval, ilvl)
-    return ("%s %s %s"):format(eqWorn(status, eval, ilvl), TM.Arrow(), ilvl and tostring(ilvl) or "?")
-end
-
 -- One candidate, ready to draw.
-local function entryOf(c, ilvl)
+local function entryOf(c)
     local status = statusOf(c)
     local who = WC.ShortName(c.name)
-    local gain = gainOf(c)
+    local eval = type(c.eval) == "table" and c.eval or nil
     return { guid = c.guid, name = c.name, short = who, classFile = c.classFile, status = status,
-        rank = RANK[status], gain = gain, pill = pillOf(status, gain, who), eq = eqText(status, c.eval, ilvl),
-        baseline = type(c.eval) == "table" and type(c.eval.baseline) == "table" and c.eval.baseline or nil,
+        rank = RANK[status], gain = gainOf(c), eval = eval, explain = EXPLAIN[status],
+        baseline = eval and type(eval.baseline) == "table" and eval.baseline or nil,
         offerable = status == "upgrade" or status == "sidegrade" }
 end
 
@@ -264,15 +235,14 @@ local function byRank(a, b)
 end
 
 --- Every other member, ranked for your drop: { guid, name, short, classFile, status, rank, gain,
---- pill = { text, tone, tip }, eq, baseline (the worn item it is judged against: facts, or nil),
---- offerable }, upgrades first by gain.
+--- eval (NS.Evaluate's answer, or nil), explain (a line on the status), baseline (the worn item it
+--- is judged against: facts, or nil), offerable }, upgrades first by gain.
 --- @param drop table
 --- @return table
 function MC.Candidates(drop)
     local out = {}
-    local ilvl = num(facts(drop).ilvl)
     for _, c in pairs(type(drop.candidates) == "table" and drop.candidates or {}) do
-        if type(c) == "table" then out[#out + 1] = entryOf(c, ilvl) end
+        if type(c) == "table" then out[#out + 1] = entryOf(c) end
     end
     table.sort(out, byRank)
     return out
@@ -404,7 +374,7 @@ function MC.OwnOffer(drop, toneState)
     end
     local s = OWN_OFFER_LOOK[toneState] and toneState or "ready"
     local l = OWN_OFFER_LOOK[s]
-    local tip = { L["Offer"], L["Open the panel of who could use it, ranked by their gain, with Offer and Trade for each."] }
+    local tip = { L["Offer"], L["Open the panel of who could use it, ranked by their gain, with Offer for each."] }
     tip[3] = l.line
     return { offered = true, offer = true, text = l.text, icon = l.icon, enabled = true, tip = tip, state = s, kind = "offer" }
 end
@@ -477,18 +447,6 @@ function MC.AnnounceButton(state, reason)
     local b = look(ANNOUNCE_LOOK, state)
     b.tip = { announceTip(b.state, reason) }
     return b
-end
-
---- The Trade button of one candidate: enabled, or disabled with the trade helper's reason.
---- @param ok boolean NS.TradeHelper.CanGive's answer
---- @param why string|nil its reason, in words
---- @param who string
---- @return table { enabled, tip }
-function MC.TradeButton(ok, why, who)
-    if ok then
-        return { enabled = true, tip = { L["Trade"], L["Open a trade with %s with the item already placed."]:format(who), L["You confirm in the trade window."] } }
-    end
-    return { enabled = false, tip = { L["Trade: not now"], why or L["The trade cannot be opened now."] } }
 end
 
 -- ── the summary and Post my tradeables ──────────────────────────────────────────────────────

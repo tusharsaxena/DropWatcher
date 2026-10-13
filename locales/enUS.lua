@@ -391,3 +391,12 @@ L["Quality, Content, Character and Sort, as the full view's bar and footer hold 
 L["Drop Watcher"] = "Drop Watcher"
 L["TEST: sample drops in every state. Nothing is whispered; combat ends it."] = "TEST: sample drops in every state. Nothing is whispered; combat ends it."
 L["Filter…"] = "Filter…"
+-- The Offer panel's Their eq column and its Offer (modules/OfferPanel.lua, modules/SideCells.lua;
+-- feedback-7 spec §0)
+L["Their eq"] = "Their eq"
+L["What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."] =
+    "What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."
+L["Offer whispers them your offer template for this item."] = "Offer whispers them your offer template for this item."
+L["Offer is shown for members it is an upgrade or an equal for."] = "Offer is shown for members it is an upgrade or an equal for."
+L["Unavailable"] = "Unavailable"
+L["Checking"] = "Checking"
