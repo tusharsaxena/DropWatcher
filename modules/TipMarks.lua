@@ -7,10 +7,12 @@ local _, NS = ...
 -- monospace glyphs (NS.WindowCells.GLYPH), which render.
 --
 -- NOT ONLY TOOLTIPS (DW-F5). Every text drawn in the default face (GameFont*, not C.FONT_MONO) takes
--- its marks from here too: the toast's line and the detail card's verdict chips and Item level and
--- Track rows. The `->` between two values in those rows is TM.Arrow, the `arrow-right` icon in the
--- muted tone. TM.Chars counts what such a text draws (an
--- escape as two characters, a color code as none), for a width estimated before the client measures.
+-- its marks from here too: the detail card's verdict chips and Item level and Track rows. The `->`
+-- between two values in those rows is TM.Arrow, the `arrow-right` icon in the muted tone. (The
+-- toast drew its gain's mark from here until feedback-9 spec §0: its verdicts are now monospace
+-- glyphs in segments of their own, and its names take TM.ItemName and TM.ClassName.) TM.Chars counts
+-- what such a text draws (an escape as two characters, a color code as none), for a width estimated
+-- before the client measures.
 --
 -- A NON-WRAPPING LINE. A tooltip line is a string (it wraps at the tooltip's width) or
 -- `{ text, wrap = false }`, which does not wrap, so the tooltip grows to fit it

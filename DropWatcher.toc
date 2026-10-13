@@ -357,9 +357,9 @@ modules\TestMode.lua
 # core\DropWatcher.lua's and modules\Inspect.lua's) to NS.FEATURE_EVENTS and its STAND_DOWN /
 # STAND_UP steps and handlers to NS.addon at load, registers its DropAdded, DropUpdated and
 # AskStateChanged receivers on a NS.Bus target at load, and adds its removal sink to NS.LootFeed
-# (above) at load. NS.LootFeed, NS.Asks, NS.Window,
-# NS.WindowGroup, NS.WindowCells, NS.TipMarks (the line's mark), NS.Setting and the host handlers are
-# read at call time: the frame is built on the first toast.
+# (above) at load. NS.LootFeed, NS.Asks, NS.Window, NS.WindowGroup, NS.WindowCells, NS.SideCells (the
+# verdicts), NS.WindowRows (the item level's mark), NS.TipMarks (the quality and class colors),
+# NS.Setting and the host handlers are read at call time: the frame is built on the first toast.
 modules\Toast.lua
 # Conventional: publishes NS.AutoAsk, the opt-in auto-ask; appends its ENCOUNTER_START,
 # ENCOUNTER_END, GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows (after
