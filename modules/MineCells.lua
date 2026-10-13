@@ -2,22 +2,26 @@ local _, NS = ...
 -- modules/MineCells.lua — what the My drops tab and the Offer panel say (design spec §11.4, board
 -- 04): each column's text, tone and reason tooltip for your own drops, the candidates ranked with
 -- their status pills, the tab's summary line, the Post my tradeables lines and where the Offer
--- panel docks. Nothing is ever blank: an unknown value says `?`, `–` or `Checking` and its
--- tooltip says why.
+-- panel docks; and the Trade window cell every drop shows on Group drops (feedback-5 spec §1).
+-- Nothing is ever blank: an unknown value says `?`, `–` or `Checking` and its tooltip says why.
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
 -- with its `expiresAt`, `me`) and plain inputs (the clock, the warning threshold, an ask's state)
 -- and answers a plain table; nothing here reads a module, the client or a saved variable, so
 -- test_window_mine drives each state case by case. The frame edges that paint them are
--- modules/WindowMine.lua (the tab) and modules/OfferPanel.lua (the panel). The shared verdict and
+-- modules/WindowMine.lua (the tab), modules/WindowGroup.lua and modules/CompactGroup.lua (the Trade
+-- window column and the compact card's countdown) and modules/OfferPanel.lua (the panel). The shared verdict and
 -- trade wording is modules/WindowCells.lua's.
 --
 --   cell = { text, glyph, tone = key of C.TONE, tip = { title, lines... } }
 --
 -- THE COUNTDOWN. Your own drop's trade window is exact once the trade timer has read the item's
 -- tooltip (`trade.basis == "timer"`, `trade.expiresAt`); before that it is estimated from when it
--- dropped and the rule's window (C.TRADE_WINDOW), and says so. A bind-on-equip drop has no window.
--- At `trade.warnAt` seconds or less the countdown reads `ending soon` and is drawn bold (spec §7.4).
+-- dropped and the rule's window (C.TRADE_WINDOW), and says so. Another player's drop (`isMine ==
+-- false`) is always that estimate, and its tooltip names the looter rather than your bags. A
+-- bind-on-equip drop has no window. At `trade.warnAt` seconds or less the countdown is ending soon
+-- (spec §7.4): amber and bold, its bar amber, the words `Ending soon: …` in its tooltip only
+-- (feedback-5 spec §1: the cell is 104 pixels and never says it).
 --
 -- THE CANDIDATES (spec §11.4). Every other member, judged for your drop by the feed: upgrades first
 -- by their gain, then EQUAL, NO UPGRADE, CAN'T USE, CHECKING and UNAVAILABLE, each tie by name. An
@@ -62,8 +66,9 @@ end
 
 local function isBoe(t) return t.state == "yes" and t.reasonKey == "boe" end
 
---- The time left to trade your own drop: { left, exact, fraction } (fraction of the rule's window
---- left, 0..1), or nil when there is no countdown (not tradeable, bind on equip, not estimated).
+--- The time left to trade a drop: { left, exact, fraction } (fraction of the rule's window left,
+--- 0..1), or nil when there is no countdown (not tradeable, bind on equip, not estimated). Exact
+--- only from the trade timer's read of your own item; another player's drop is always estimated.
 --- @param drop table
 --- @param now number GetTime()
 --- @return table|nil
@@ -71,7 +76,7 @@ function MC.Countdown(drop, now)
     local t = tradeOf(drop)
     if t.state == nil or t.state == "no" or isBoe(t) then return nil end
     local left, exact
-    if num(t.expiresAt) and num(now) then
+    if num(t.expiresAt) and num(now) and drop.isMine ~= false then
         left, exact = t.expiresAt - now, true
     elseif num(drop.at) and num(now) then
         left, exact = drop.at + C.TRADE_WINDOW - now, false
@@ -95,6 +100,15 @@ local NO_SHORT = {
     bonusRoll = L["Bonus roll"], warbound = L["Warbound"], legacy = L["Legacy loot"],
     expired = L["Window passed"], upgradeForLooter = L["Your upgrade"], badFacts = L["Not loaded"],
 }
+-- Another player's drop says whose upgrade it is in the same room.
+local NO_SHORT_THEIRS = { upgradeForLooter = L["Their upgrade"] }
+
+-- Whose drop it is, for the tooltips: nil for yours (or a record that does not say), else the
+-- looter's short name.
+local function othersName(drop)
+    if drop.isMine ~= false then return nil end
+    return WC.ShortName(type(drop.looter) == "table" and drop.looter.name or nil)
+end
 
 -- ── the My drops columns ────────────────────────────────────────────────────────────────────
 
@@ -111,28 +125,38 @@ function MC.ForMe(drop)
     return c
 end
 
-local function windowTip(cd, soon)
+-- `who` is the looter's short name on another player's drop, nil on yours.
+local function windowTip(cd, soon, who)
     local lines = { L["Trade window"] }
+    local left = MC.Clock(cd.left)
     if cd.exact then
-        lines[2] = L["Read from the item's tooltip: %s left to trade it."]:format(MC.Clock(cd.left))
+        lines[2] = L["Read from the item's tooltip: %s left to trade it."]:format(left)
+    elseif who then
+        lines[2] = L["Estimated from when it dropped: about %s left for %s to trade it. Only their own bags know the exact time."]:format(left, who)
     else
-        lines[2] = L["Estimated from when it dropped: about %s left. The exact time is read once the item is in your bags."]:format(MC.Clock(cd.left))
+        lines[2] = L["Estimated from when it dropped: about %s left. The exact time is read once the item is in your bags."]:format(left)
     end
-    if soon then lines[3] = L["Ending soon: trade it now or it stays yours."] end
+    if soon then
+        lines[3] = who and L["Ending soon: once it runs out, %s keeps it."]:format(who)
+            or L["Ending soon: trade it now or it stays yours."]
+    end
     return lines
 end
 
 --- The Trade window column: the countdown and its bar, why it is not tradeable, or `No limit` for a
---- bind-on-equip drop. `fraction` is how much of the bar is filled; `bold` marks ending soon.
+--- bind-on-equip drop, for your drop or another player's (whose estimate names its looter).
+--- `fraction` is how much of the bar is filled; ending soon is `bold`, `soon` and the warn tone,
+--- never words in the text (feedback-5 spec §1).
 --- @param drop table
 --- @param now number GetTime()
 --- @param warnAt number|nil seconds (the `trade.warnAt` default when nil)
 --- @return table cell, with `fraction`, `bold` and `soon`
 function MC.TradeWindow(drop, now, warnAt)
     local t = tradeOf(drop)
+    local who = othersName(drop)
     if t.state == "no" then
-        local c = cell(NO_SHORT[t.reasonKey] or L["Not tradeable"], "bad",
-            L["Not tradeable"], WC.TradeReason(t, L["you"]))
+        local short = who and NO_SHORT_THEIRS[t.reasonKey] or NO_SHORT[t.reasonKey]
+        local c = cell(short or L["Not tradeable"], "bad", L["Not tradeable"], WC.TradeReason(t, who or L["you"]))
         c.fraction = 0
         return c
     end
@@ -150,8 +174,7 @@ function MC.TradeWindow(drop, now, warnAt)
     local soon = endingSoon(cd.left, warnAt)
     local text = MC.Clock(cd.left)
     if not cd.exact then text = "~" .. text end
-    if soon then text = text .. " " .. L["ending soon"] end
-    local c = { text = text, tone = soon and "warn" or "plain", tip = windowTip(cd, soon) }
+    local c = { text = text, tone = soon and "warn" or "plain", tip = windowTip(cd, soon, who) }
     c.fraction, c.bold, c.soon, c.left = cd.fraction, soon, soon, cd.left
     return c
 end

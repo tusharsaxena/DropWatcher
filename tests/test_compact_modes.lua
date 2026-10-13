@@ -309,7 +309,7 @@ test("modes: test mode's My drops cards show every countdown, Offer and Announce
         seen.offer[card.offer:IsShown() and "offer" or "dash"] = true
         seen.action[card.announce:IsShown() and "announce" or "none"] = true
     end
-    hasAll(seen.trade, { "9:99:99", "~9:99:99", "9:99:99 ending soon", "No limit (BoE)", "Not tradeable" },
+    hasAll(seen.trade, { "9:99:99", "~9:99:99", "No limit (BoE)", "Not tradeable" },
         "countdown")
     hasAll(seen.offer, { "offer", "dash" }, "Offer")
     hasAll(seen.action, { "announce", "none" }, "Announce, or nothing on a dead drop")

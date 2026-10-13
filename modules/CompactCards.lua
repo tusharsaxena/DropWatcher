@@ -16,7 +16,9 @@ local _, NS = ...
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
 --   Group drops  line 1: item (quality color), ilvl (right), ask
---                line 2: looter (class color, ⊕ when cross-realm), slot, type, trade; fresh (right, dimmed)
+--                line 2: looter (class color, ⊕ when cross-realm), slot, type, trade; countdown (right,
+--                        with its bar: MineCells.TradeWindow's, for a drop with a countdown,
+--                        feedback-5 spec §1) or else fresh (right, dimmed)
 --                line 3: you = { label, verdict, eq }, them = { label, verdict, eq }
 --   My drops     line 1: item, ilvl (right), offer (or a dash on a drop that cannot be traded)
 --                line 2: forYou = { label, verdict, sub }, trade (the countdown and its bar, right)
@@ -236,10 +238,18 @@ end
 
 -- ── the Group drops card (spec §2) ──────────────────────────────────────────────────────────
 
+-- Line 2's countdown on a Group drops card: the Trade window cell for a drop with a countdown (your
+-- own or another player's estimate), nil for one with none (not tradeable, bind on equip, not
+-- estimated), which keeps the inspect freshness there.
+local function groupCountdown(drop, now, warnAt)
+    if not MC.Countdown(drop, now) then return nil end
+    return MC.TradeWindow(drop, now, warnAt)
+end
+
 --- A Group drops card.
 --- @param drop table
 --- @param ctx table { now, equipped (your gear snapshot's), gear (the looter's inspect gear),
----   askState, askReason, transmogAsk, ownRealm }
+---   askState, askReason, transmogAsk, ownRealm, warnAt (the trade.warnAt default when nil) }
 --- @return table card
 function CC.Group(drop, ctx)
     ctx = ctx or {}
@@ -252,7 +262,7 @@ function CC.Group(drop, ctx)
         -- line 2
         looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
         trade = WC.Trade(drop),
-        fresh = CC.Freshness(drop, now),
+        fresh = CC.Freshness(drop, now), countdown = groupCountdown(drop, now, ctx.warnAt),
         -- line 3
         you = CC.Half(L["You"], WC.Me(drop), WC.MyEq(drop, ctx.equipped)),
         them = CC.Half(L["Them"], WC.Them(drop, now), WC.TheirEq(drop, ctx.gear, now)),
@@ -384,7 +394,7 @@ end
 local PLAIN = {
     group = function(card)
         local ask = card.ask.offered and card.ask.text or DASH
-        return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, ask), lineTwo(card, card.fresh),
+        return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, ask), lineTwo(card, card.countdown or card.fresh),
             CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) }
     end,
     mine = function(card)

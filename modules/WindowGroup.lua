@@ -8,8 +8,10 @@ local _, NS = ...
 -- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
 -- verdicts: ▲ ≈ ▽ before the signed item-level change, green, yellow or red in both; feedback-4
 -- spec §0), Trade
--- (Yes, Likely, Unknown or No) and Actions (the Ask button; no drop is ever dismissed, feedback-4
--- spec §2).
+-- (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
+-- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
+-- NS.MineCells.TradeWindow, feedback-5 spec §1) and Actions (the Ask button; no drop is ever
+-- dismissed, feedback-4 spec §2).
 -- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
 -- cell says, and its reason tooltip, is modules/WindowCells.lua's (pure); this file is the frame
@@ -22,7 +24,14 @@ local _, NS = ...
 -- Window page's Layout rows (`window.rowHeight`, `window.fontSize`), read through
 -- modules/WindowRows.lua at each repaint (18 pixels and the template's own size by default, like
 -- Ka0s Loot History's table; feedback-2 spec §8, FB2-9); the headers, the column labels and the
--- buttons keep their own.
+-- buttons keep their own. While the Trade window column is shown a row is the room its countdown
+-- bar needs taller (WindowRows' mineHeight, as My drops' rows were), so the text and the bar never
+-- overlap.
+--
+-- THE COUNTDOWNS MOVE each second while a shown row has one (feedback-5 spec §1): Window.lua's
+-- countdown ticker, its footer ticker and TradeTimerTick call WG.TickCountdowns, which repaints the
+-- Trade window cells alone (and the compact cards' countdowns), never the whole table;
+-- WG.LiveCountdown tells Window.lua whether the ticker is still wanted.
 --
 -- THE ORDER. NS.WindowCells.Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
 -- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
@@ -77,7 +86,7 @@ WG.LEAD = K.ROW_INDENT + WG.CHEVRON_LEAD
 WG.COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 5, tip = L["The drop's item level."] },
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 6, tip = L["The drop's item level."] },
     { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
     { key = "armorType", label = L["Type"], width = 64, shed = 0,
       tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
@@ -86,11 +95,13 @@ WG.COLUMNS = {
       tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level. Hover an icon for the item."] },
     { key = "theirEq", label = L["Their eq"], width = 84, shed = 4,
       tip = L["What the looter wears in that slot (two items for rings, trinkets and weapons) and its item level. Hover for how old the read is."] },
-    { key = "me", label = L["Me"], width = 70, shed = 8,
+    { key = "me", label = L["Me"], width = 70, shed = 9,
       tip = L["The drop judged for you: ▲ upgrade (green), ≈ sidegrade (yellow) or ▽ downgrade (red), then the item-level change."] },
-    { key = "them", label = L["Them"], width = 70, shed = 6,
+    { key = "them", label = L["Them"], width = 70, shed = 7,
       tip = L["The drop judged for its looter, in the same colors: ▲ upgrade green, ≈ sidegrade yellow, ▽ downgrade red."] },
-    { key = "trade", label = L["Trade"], width = 70, shed = 7, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+    { key = "trade", label = L["Trade"], width = 70, shed = 8, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+    { key = "tradeWindow", label = L["Trade window"], width = 104, shed = 5,
+      tip = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] },
     { key = "actions", label = L["Actions"], width = K.ASK_W,
       tip = L["Ask the looter for it, once."] },
 }
@@ -443,7 +454,24 @@ local function actionsCell(row)
     return f
 end
 
-local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = actionsCell }
+-- The Trade window cell: the countdown at the top, its K.BAR_H bar at the bottom (the row is the
+-- bar's room taller while the column shows).
+local function tradeWindowCell(row)
+    local f = textCell(row, "tradeWindow")
+    f.text:ClearAllPoints()
+    f.text:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -5)
+    f.barBg = f:CreateTexture(nil, "BACKGROUND")
+    f.barBg:SetColorTexture(1, 1, 1, 0.12)
+    f.barBg:SetHeight(K.BAR_H)
+    f.barBg:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 0, 5)
+    f.barBg:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -6, 5)
+    f.bar = f:CreateTexture(nil, "ARTWORK")
+    f.bar:SetHeight(K.BAR_H)
+    f.bar:SetPoint("BOTTOMLEFT", f.barBg, "BOTTOMLEFT", 0, 0)
+    return f
+end
+
+local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = actionsCell, tradeWindow = tradeWindowCell }
 
 --- A drop row's (or compact card's) expand indicator: the header's chevron texture, ROW_CHEVRON
 --- square, muted white (C.CHEVRON_ROW); the caller anchors it. WG.PaintChevron sets its state.
@@ -608,15 +636,34 @@ local function placeCells(row, layout, height)
     end
 end
 
+-- The countdown's face follows its urgency (bold while ending soon); SetFontObject puts the
+-- template's size back, so the Font size row's size goes on again after it. The bar fills by the
+-- window left, amber while ending soon.
+local function paintTradeWindow(f, drop, now, warnAt, size)
+    local c = NS.MineCells.TradeWindow(drop, now, warnAt)
+    paintText(f, c)
+    f.text:SetFontObject(c.bold and "GameFontNormalSmall" or "GameFontHighlightSmall")
+    if size then NS.WindowRows.SetFontSize(f.text, size) end
+    setTone(f.text, c.tone)
+    local w = max((f:GetWidth() or 0) - 6, 0)
+    f.fraction = c.fraction or 0
+    f.bar:SetWidth(max(w * f.fraction, 0.01))
+    f.bar:SetShown(f.fraction > 0)
+    local tone = C.TONE[c.soon and "warn" or "good"]
+    f.bar:SetColorTexture(tone.r, tone.g, tone.b, 0.9)
+    f.bold = c.bold == true
+end
+
 local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WC.Me, trade = WC.Trade }
 
+-- `metrics.rowH` is this repaint's row height (drawTable: taller while Trade window shows).
 local function paintRow(row, drop, layout, now, metrics)
-    row.dropId = drop.id
+    row.dropId, row.drop = drop.id, drop
     local open = view().expanded == drop.id
     row.selected:SetShown(open)
     WG.PaintChevron(row.chevron, open)
-    row:SetHeight(metrics.height)
-    placeCells(row, layout, metrics.height)
+    row:SetHeight(metrics.rowH)
+    placeCells(row, layout, metrics.rowH)
     NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
     NS.WindowRows.ApplyRowIcon(row, metrics.icon)
     local cells = row.cells
@@ -629,6 +676,7 @@ local function paintRow(row, drop, layout, now, metrics)
     paintText(cells.them, WC.Them(drop, now))
     paintEq(cells.myEq, WC.MyEq(drop, myGear()), "player")
     paintEq(cells.theirEq, WC.TheirEq(drop, inspectGear(drop), now))
+    if layout.tradeWindow then paintTradeWindow(cells.tradeWindow, drop, now, metrics.warnAt, metrics.fontSize) end
     paintActions(cells.actions, drop)
 end
 
@@ -753,6 +801,8 @@ end
 
 local function drawEntries(pane, entries, layout, width)
     local now, y, metrics = GetTime(), 0, NS.WindowRows.Metrics()
+    metrics.rowH = layout.tradeWindow and metrics.mineHeight or metrics.height
+    metrics.warnAt = NS.TradeTimer.WarnAt()
     local Pool = NS.Pool
     local expanded = view().expanded
     pane.card:Hide()
@@ -768,7 +818,7 @@ local function drawEntries(pane, entries, layout, width)
             place(r, pane.content, y, width, K.ROW_INDENT)
             r.stripe:SetShown(i % 2 == 0)
             paintRow(r, e.drop, layout, now, metrics)
-            y = y + metrics.height
+            y = y + metrics.rowH
             if e.drop.id == expanded then y = y + drawCard(pane, e.drop, y, width, now) end
         end
     end
@@ -795,7 +845,7 @@ local function drawTable(pane, entries)
     local layout, kept = WG.Layout(cols, width - WG.LEAD)   -- the columns start after the indent and chevron
     paintHeads(pane, cols, layout)
     drawEntries(pane, entries, layout, width)
-    pane.columns = kept
+    pane.columns, pane.layout = kept, layout
 end
 
 -- The table, or (compact) the cards over the same entries; the other one is released and hidden.
@@ -810,6 +860,44 @@ local function refresh(pane, ctx)
     NS.CompactGroup.Refresh(pane, entries, compact)
     pane.entries = entries
     paintEmpty(pane, entries, ctx, compact)
+end
+
+-- ── the countdowns (feedback-5 spec §1) ─────────────────────────────────────────────────────
+
+local function shownPane()
+    local f = NS.Window.Frame()
+    local pane = f and f.panes.group
+    return pane and pane.rowPool and pane or nil
+end
+
+--- Whether a row (or compact card) on screen shows a countdown still running: the Trade window
+--- column is kept (always, in the compact layout) and a listed drop has time left. Window.lua runs
+--- its each-second countdown ticker while this holds.
+--- @return boolean
+function WG.LiveCountdown()
+    local pane = shownPane()
+    if not (pane and pane.entries) then return false end
+    local compact = WG.IsCompact()
+    if not compact and not (pane.layout and pane.layout.tradeWindow) then return false end
+    local now, MC = GetTime(), NS.MineCells
+    for _, e in ipairs(pane.entries) do
+        local cd = e.kind ~= "header" and MC.Countdown(e.drop, now)
+        if cd and cd.left > 0 then return true end
+    end
+    return false
+end
+
+--- Move every shown countdown on to the clock: the Trade window cells of the drawn rows, or the
+--- compact cards' countdowns; nothing else is repainted.
+function WG.TickCountdowns()
+    local pane = shownPane()
+    if not pane then return end
+    if WG.IsCompact() then return NS.CompactGroup.TickCountdowns(pane) end
+    if not (pane.layout and pane.layout.tradeWindow) then return end
+    local now, warnAt, size = GetTime(), NS.TradeTimer.WarnAt(), NS.WindowRows.FontSize(NS.Setting("window.fontSize"))
+    for _, row in ipairs(pane.rowPool.active) do
+        if row.drop then paintTradeWindow(row.cells.tradeWindow, row.drop, now, warnAt, size) end
+    end
 end
 
 --- The drawn pane's rows and headers, in order, for the suites: { headers, rows, entries, columns,

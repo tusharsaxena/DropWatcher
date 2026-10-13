@@ -20,9 +20,11 @@ local _, NS = ...
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
 -- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
--- many messages arrive; InspectDone repaints the footer alone; TradeTimerTick and its own footer
--- ticker (which also moves the My drops tab's estimated countdowns) repaint only what shows a
--- countdown, the My drops tab and the Offer panel. It reads records
+-- many messages arrive; InspectDone repaints the footer alone; TradeTimerTick, its own footer
+-- ticker and (while Group drops shows a countdown still running: WindowGroup.LiveCountdown) a
+-- countdown ticker every K.COUNTDOWN_TICK second repaint only what shows a countdown: the Group
+-- drops tab's Trade window cells (WindowGroup.TickCountdowns, feedback-5 spec §1), the My drops tab
+-- and the Offer panel. It reads records
 -- through the engine's read-only accessors and never calls an engine action. A button's action goes
 -- through the host handler its slash verb shares (NS.ScanGroup, NS.SetQualityMode,
 -- core/DropWatcher.lua).
@@ -73,8 +75,10 @@ local restrictionReason          -- RestrictionChanged's last `reason` (nil: not
 local restrictionSeen = false    -- a RestrictionChanged has arrived since the stand-up
 local instanceSince              -- GetTime() of the last situation change: "This instance"
 local footerTicker
+local countdownTicker            -- each second while Group drops shows a running countdown
 local repaintPending = false     -- a bus repaint is queued for the next frame
 local repaintCountdown           -- the countdowns' own repaint (defined with the repaints below)
+local syncCountdownTicker        -- starts or stops the countdown ticker (defined with it)
 
 local function notifyVisibility(shown)
     for _, fn in ipairs(visibilityListeners) do fn(shown) end
@@ -340,7 +344,8 @@ end
 
 local function stopTicker()
     if footerTicker then footerTicker:Cancel() end
-    footerTicker = nil
+    if countdownTicker then countdownTicker:Cancel() end
+    footerTicker, countdownTicker = nil, nil
 end
 
 -- "Last loot 12s ago" ages while nothing else happens: one slow ticker, alive only while the whole
@@ -496,6 +501,7 @@ end
 
 local function onShow()
     startTicker()
+    syncCountdownTicker()
     notifyVisibility(true)
 end
 
@@ -614,6 +620,7 @@ function Window.Refresh()
         -- The Offer panel docks beside the window and repaints with it (modules/OfferPanel.lua).
         if NS.OfferPanel then NS.OfferPanel.Refresh() end
     end
+    syncCountdownTicker()
     if t0 then Perf.Note("window.refresh", debugprofilestop() - t0) end
 end
 
@@ -639,13 +646,28 @@ end
 --- messages so a burst costs one pass (the History tab's HistoryChanged comes through here).
 Window.ScheduleRepaint = scheduleRepaint
 
--- A countdown moved (TradeTimerTick, the footer ticker): only what shows one repaints, the My drops
--- tab while it is the active tab and the Offer panel while it is open; the Group drops table, the
--- filter bar and the footer are left alone.
+-- A countdown moved (TradeTimerTick, the footer ticker, the countdown ticker): only what shows one
+-- repaints, Group drops' Trade window cells or the My drops tab while it is the active tab and the
+-- Offer panel while it is open; the rest of the table, the filter bar and the footer are left alone.
+-- The countdown ticker runs while the shown, expanded window's Group drops tab has a countdown
+-- still running (WindowGroup.LiveCountdown), and stops with the last one.
+syncCountdownTicker = function()
+    local want = frame and frame:IsShown() and not isMinimized() and activeTab == "group"
+        and NS.WindowGroup.LiveCountdown()
+    if want and not countdownTicker then
+        countdownTicker = C_Timer.NewTicker(K.COUNTDOWN_TICK, function() repaintCountdown() end)
+    elseif not want and countdownTicker then
+        countdownTicker:Cancel()
+        countdownTicker = nil
+    end
+end
+
 repaintCountdown = function()
-    if not (frame and frame:IsShown()) or isMinimized() then return end
+    if not (frame and frame:IsShown()) or isMinimized() then return syncCountdownTicker() end
+    if activeTab == "group" then NS.WindowGroup.TickCountdowns() end
     if activeTab == "mine" then refreshActive() end
     if NS.OfferPanel and NS.OfferPanel.IsShown() then NS.OfferPanel.Refresh() end
+    syncCountdownTicker()
 end
 
 -- ── tabs ────────────────────────────────────────────────────────────────────────────────────
@@ -752,6 +774,7 @@ function Window.UpdateVisibility(inCombat)
         Window.Refresh()
         frame:Show()
         startTicker()   -- OnShow starts it too; both are idempotent
+        syncCountdownTicker()
     elseif frame and frame:IsShown() then
         -- Hidden by the ladder, not by the player: keep the player's choice for the next show.
         local open = NS.State.windowOpen

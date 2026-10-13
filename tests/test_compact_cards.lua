@@ -175,9 +175,32 @@ test("compact cards: the Group drops card reads the spec's three lines", functio
     local lines = C.Plain(card)
     -- The spec's sketch shows [Ask]; the engine offers none for a downgrade, so the full view's dash.
     assertEqual(lines[1], "Vile Vial of Volatile Venom  295  –")
-    assertEqual(lines[2], "Lysandra · Trinket · Trinkets · Likely  2m")
+    -- Line 2's right side is the countdown (feedback-5 spec §1): her drop's, estimated from when it dropped.
+    assertEqual(lines[2], "Lysandra · Trinket · Trinkets · Likely  ~1:59:50")
     assertEqual(lines[3], "You ▽ -13 (321/308)  Them ⊘ Can't use (298/296)")
     assertEqual(card.kind, "group"); assertEqual(card.id, 7); assertEqual(card.link, LINK)
+end)
+
+test("compact cards: line 2 shows the countdown for a drop with one, else the inspect freshness (feedback-5 §1)", function()
+    local NS = T.newAddon()
+    local C, MC = NS.CompactCards, NS.MineCells
+    local d = groupDrop()
+    local card = C.Group(d, groupCtx())
+    assertEqual(card.countdown.text, "~1:59:50"); assertEqual(card.countdown.tone, "plain")
+    assertEqual(joined(card.countdown.tip), joined(MC.TradeWindow(d, NOW).tip), "the full view's Trade window cell")
+    assertTrue(card.countdown.fraction > 0.9, "its bar"); assertEqual(card.fresh.text, "2m", "the freshness is still built")
+    local late = C.Group(groupDrop({ at = NOW - 7000 }), groupCtx({ warnAt = 600 }))
+    assertEqual(late.countdown.text, "~0:03:20"); assertEqual(late.countdown.tone, "warn"); assertTrue(late.countdown.bold)
+    assertTrue(late.countdown.soon, "its bar turns amber")
+    for _, t in ipairs({
+        { state = "no", reasonKey = "bonusRoll", basis = "bind" },
+        { state = "yes", reasonKey = "boe", basis = "bind" },
+    }) do
+        local none = C.Group(groupDrop({ trade = t }), groupCtx())
+        assertTrue(none.countdown == nil, t.reasonKey .. ": no countdown")
+        assertEqual(C.Plain(none)[2]:sub(-4), "  2m", t.reasonKey .. ": the freshness keeps its place")
+    end
+    assertTrue(C.Group(groupDrop({ trade = NONE }), groupCtx()).countdown == nil, "not estimated yet")
 end)
 
 test("compact cards: the Group drops card's pieces keep the full view's tones and tooltips", function()
@@ -233,7 +256,10 @@ test("compact cards: your own drop on Group drops reads a dash for Them and no w
         looter = { name = "Me-Realm", classFile = "PALADIN" } }), groupCtx())
     local lines = C.Plain(card)
     assertEqual(lines[3], "You ▽ -13 (321/308)  Them –")
-    assertEqual(lines[2], "Me · Trinket · Trinkets · Likely  –")
+    assertEqual(lines[2], "Me · Trinket · Trinkets · Likely  ~1:59:50", "your own drop's countdown")
+    local dead = C.Group(groupDrop({ isMine = true, them = NONE, looter = { name = "Me-Realm", classFile = "PALADIN" },
+        trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), groupCtx())
+    assertEqual(C.Plain(dead)[2], "Me · Trinket · Trinkets · No  –", "no countdown: the freshness, a dash on yours")
     assertTrue(has(card.them.verdict.tip, "My drops"))
 end)
 
@@ -283,7 +309,7 @@ test("compact cards: the countdown keeps its bar fraction, its warning and its e
     assertEqual(card.trade.tone, "plain")
     local soon = C.Mine(mineDrop({ trade = { state = "yes", reasonKey = "timer", basis = "timer", args = { 300 },
         expiresAt = NOW + 300 } }), { now = NOW, warnAt = 600 })
-    assertEqual(soon.trade.text, "0:05:00 ending soon"); assertEqual(soon.trade.tone, "warn"); assertTrue(soon.trade.bold)
+    assertEqual(soon.trade.text, "0:05:00"); assertEqual(soon.trade.tone, "warn"); assertTrue(soon.trade.bold)
     local est = C.Mine(mineDrop({ trade = { state = "likely", reasonKey = "groupLoot" } }), { now = NOW })
     assertEqual(est.trade.text:sub(1, 1), "~", "an estimate says so")
     local boe = C.Mine(mineDrop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), { now = NOW })

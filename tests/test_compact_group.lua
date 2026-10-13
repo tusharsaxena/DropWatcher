@@ -345,3 +345,46 @@ test("compact group: the open card's chevron points up and its detail card inden
     assertEqual(cardFor(drawn, 1).chevron:GetTexture(), NS.Icon("chevron-down"))
     assertEqual(xOf(drawn.card), K.ROW_INDENT)
 end)
+
+-- ── line 2's countdown (feedback-5 spec §1) ─────────────────────────────────────────────────
+
+test("compact group: line 2 shows the countdown and its bar for a drop with one, else the inspect freshness", function()
+    local NS, _, m = T.enableAddon()
+    local C = NS.Constants
+    m.__now = 100
+    local group = { key = "enc:3", label = "Commander Ri'mok", kind = "encounter", situation = "dungeon", at = 90,
+        drops = { 1, 2, 3 } }
+    seed(NS, { group }, { drop(), drop({ id = 2, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }),
+        drop({ id = 3, at = 100 - 7000 }) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.SetWindowMode("compact")
+    NS.ShowWindow()
+    local drawn = NS.WindowGroup.Drawn()
+    local soonColors = {}
+    rawset(cardFor(drawn, 3).bar, "SetColorTexture", function(self, r) soonColors[#soonColors + 1] = r; return self end)
+    NS.Window.Refresh()
+    drawn = NS.WindowGroup.Drawn()
+    local live = cardFor(drawn, 1)
+    assertEqual(textOf(live.cells.countdown.text), "~2:00:00"); assertTrue(live.cells.countdown.text:IsShown())
+    assertTrue(live.bar:IsShown()); assertTrue(live.barBg:IsShown())
+    assertFalse(live.cells.fresh.text:IsShown(), "the countdown takes the freshness's place")
+    assertEqual(live.barBg.__points[1][2], live, "at the card's right"); assertEqual(live.cells.countdown.text.__points[1][2], live.barBg)
+    assertTrue(table.concat(live.cells.countdown.hit.tipLines, " "):find("left for Seta") ~= nil)
+    local dead = cardFor(drawn, 2)
+    assertFalse(dead.cells.countdown.text:IsShown()); assertFalse(dead.bar:IsShown()); assertFalse(dead.barBg:IsShown())
+    assertTrue(dead.cells.fresh.text:IsShown()); assertEqual(textOf(dead.cells.fresh.text), "40s")
+    local soon = cardFor(drawn, 3)
+    assertEqual(textOf(soon.cells.countdown.text), "~0:03:20", "ending soon is no words")
+    assertEqual(select(1, soon.cells.countdown.text:GetTextColor()), C.TONE.warn.r)
+    assertEqual(soonColors[#soonColors], C.TONE.warn.r, "its bar turns amber")
+end)
+
+test("compact group: the countdown moves each second on the card", function()
+    local NS, drawn, m = shownCards()
+    assertEqual(textOf(cardFor(drawn, 1).cells.countdown.text), "~2:00:00")
+    m.advance(1)
+    assertEqual(textOf(cardFor(NS.WindowGroup.Drawn(), 1).cells.countdown.text), "~1:59:59")
+    m.__now = m.__now + 10
+    NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
+    assertEqual(textOf(cardFor(NS.WindowGroup.Drawn(), 1).cells.countdown.text), "~1:59:49")
+end)

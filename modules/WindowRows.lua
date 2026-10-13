@@ -7,9 +7,10 @@ local _, NS = ...
 -- 18-pixel rows (../LootHistory/modules/BrowserTable.lua, ROW_H_DEFAULT). So `window.fontSize`'s
 -- default is 0, "Default": the cells keep their template's own size, and a size from FONT_MIN to
 -- FONT_MAX replaces it (a stored 1 to 7 reads as FONT_MIN). The row height defaults to 18; the item
--- button is ROW_ICON at most and 2 pixels under a shorter row's height. A My drops row is
--- MINE_EXTRA taller than the row height (its countdown bar sits under the text), and tall enough
--- for its two lines of text at the chosen size.
+-- button is ROW_ICON at most and 2 pixels under a shorter row's height. A My drops row, and a Group
+-- drops row while its Trade window column shows (feedback-5 spec §1), is MINE_EXTRA taller than the
+-- row height (its countdown bar sits under the text), and tall enough for its two lines of text at
+-- the chosen size.
 --
 -- PURE: FontSize, RowHeight, IconSize, MineRowHeight. The frame edge: Metrics reads the two rows
 -- through the schema seam (NS.Setting) once per repaint; SetFontSize and ApplyRowFont set a font

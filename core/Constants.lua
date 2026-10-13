@@ -21,11 +21,12 @@ C.WINDOW = {
     NAME        = "DropWatcherWindow",
     -- The default width is the least (feedback-4 spec §4): the Group drops table's every column at
     -- its width, the Item column at ITEM_MIN, a drop row's indent and chevron lead (ROW_INDENT +
-    -- CHEVRON_X + ROW_CHEVRON + CHEVRON_GAP), the scroll gutter and both insets (958 + 30 + 22 + 12).
+    -- CHEVRON_X + ROW_CHEVRON + CHEVRON_GAP), the scroll gutter and both insets (1068 + 30 + 22 +
+    -- 12; the columns include Trade window, feedback-5 spec §1).
     -- tests/test_window_group.lua pins that no tab sheds a column there and the filter bar fits.
-    WIDTH       = 1022,
+    WIDTH       = 1132,
     HEIGHT      = 600,
-    MIN_WIDTH   = 1022,   -- = WIDTH: sized wider and back, never narrower than a new profile's
+    MIN_WIDTH   = 1132,   -- = WIDTH: sized wider and back, never narrower than a new profile's
     MIN_HEIGHT  = 260,
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
@@ -47,6 +48,7 @@ C.WINDOW = {
     ICON        = 18,     -- a title-bar control's square slot (the close mark's size)
     DOUBLE_CLICK = 0.4,   -- seconds between two clicks on the title bar that expand a minimized window
     FOOTER_TICK = 5,      -- seconds between footer repaints while shown ("Last loot 12s ago")
+    COUNTDOWN_TICK = 1,   -- seconds between countdown repaints while Drops shows one running
     -- The drop tables (modules/WindowGroup.lua, design spec §11.1-§11.2).
     -- A drop row's height and text size are the Window page's Layout rows, `window.rowHeight` and
     -- `window.fontSize` (modules/WindowRows.lua; feedback-2 spec §8, FB2-9). Their defaults live in

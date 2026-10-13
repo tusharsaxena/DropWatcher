@@ -82,7 +82,8 @@ test("mine cells: the Trade window says the countdown, ending soon, not tradeabl
     assertEqual(c.text, "1:47:12"); assertEqual(c.tone, "plain"); assertFalse(c.bold)
     assertTrue(joined(c.tip):find("Read from the item's tooltip") ~= nil)
     local soon = M.TradeWindow(drop({ trade = { state = "yes", reasonKey = "timer", basis = "timer", expiresAt = NOW + 521 } }), NOW, 600)
-    assertEqual(soon.text, "0:08:41 ending soon"); assertTrue(soon.bold); assertEqual(soon.tone, "warn")
+    assertEqual(soon.text, "0:08:41"); assertTrue(soon.bold); assertEqual(soon.tone, "warn")
+    assertTrue(joined(soon.tip):find("Ending soon: trade it now") ~= nil, "ending soon is in the tooltip, never the cell")
     local off = M.TradeWindow(drop({ trade = { state = "yes", reasonKey = "timer", basis = "timer", expiresAt = NOW + 521 } }), NOW, 0)
     assertFalse(off.bold, "a threshold of 0 turns the warning off")
     local est = M.TradeWindow(drop({ trade = { state = "likely", reasonKey = "groupLoot", basis = "rule" } }), NOW, 600)
@@ -359,7 +360,7 @@ test("mine tab: built headless, one row per drop of yours, each column painted",
     assertEqual(textOf(ring.forMe.sub), "keep?")
     assertEqual(textOf(ring.best.text), "Hidden: an upgrade for you")
     local trinket = rowFor(drawn, 3).cells
-    assertEqual(textOf(trinket.trade.text), "0:08:41 ending soon"); assertTrue(trinket.trade.bold)
+    assertEqual(textOf(trinket.trade.text), "0:08:41"); assertTrue(trinket.trade.bold)
     local boots = rowFor(drawn, 4).cells
     assertEqual(textOf(boots.trade.text), "Bonus roll")
     assertFalse(boots.actions.offer:IsShown()); assertTrue(boots.actions.dash:IsShown())

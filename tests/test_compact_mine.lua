@@ -157,7 +157,7 @@ test("compact mine: the countdown's bar follows the time left and turns amber wh
     assertTrue(math.abs(widths[#widths] - CM.BAR_W * 6432 / 7200) < 1e-6, tostring(widths[#widths]))
     assertEqual(colors[#colors], C.TONE.good.r)
     local soon = cardFor(drawn, 3)
-    assertEqual(textOf(soon.cells.trade.text), "0:08:41 ending soon")
+    assertEqual(textOf(soon.cells.trade.text), "0:08:41")
     assertEqual(select(1, soon.cells.trade.text:GetTextColor()), C.TONE.warn.r)
     local dead = cardFor(drawn, 4)
     assertEqual(textOf(dead.cells.trade.text), "Not tradeable")

@@ -244,17 +244,21 @@ end
 
 test("table: the default columns, and a column the profile turns off", function()
     local WG = T.newAddon().WindowGroup
-    assertEqual(keys(WG.Columns()), "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,actions")
+    assertEqual(keys(WG.Columns()), "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,tradeWindow,actions")
     assertEqual(keys(WG.Columns({ slot = false, item = false, them = true })),
-        "item,ilvl,armorType,looter,myEq,theirEq,me,them,trade,actions", "Item never hides")
+        "item,ilvl,armorType,looter,myEq,theirEq,me,them,trade,tradeWindow,actions", "Item never hides")
     assertEqual(keys(WG.Columns({ myEq = false })),
-        "item,ilvl,slot,armorType,looter,theirEq,me,them,trade,actions", "`window.columns.myEq` turns My eq off")
+        "item,ilvl,slot,armorType,looter,theirEq,me,them,trade,tradeWindow,actions", "`window.columns.myEq` turns My eq off")
+    assertEqual(keys(WG.Columns({ tradeWindow = false })),
+        "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,actions", "`window.columns.tradeWindow` turns it off")
+    assertTrue(T.newAddon().C.PROFILE.window.columns.tradeWindow == true, "on by default")
 end)
 
 test("table: the Item column takes the slack, never less than its minimum", function()
     local NS = T.newAddon()
     local WG, K = NS.WindowGroup, NS.Constants.WINDOW
-    local cols = WG.Columns({ slot = false, armorType = false, looter = false, myEq = false, them = false, trade = false })
+    local cols = WG.Columns({ slot = false, armorType = false, looter = false, myEq = false, them = false, trade = false,
+        tradeWindow = false })
     local wide = WG.Layout(cols, 600)
     local fixed = 40 + 84 + 70 + K.ASK_W + 5 * K.CELL_GAP   -- Actions is the Ask button alone (feedback-4 §2)
     assertEqual(wide.item.w, 600 - fixed)
@@ -262,7 +266,7 @@ test("table: the Item column takes the slack, never less than its minimum", func
     assertEqual(WG.Layout(cols, 100).item.w, K.ITEM_MIN)
 end)
 
-test("table: a row too narrow for every column sheds Type, Slot, Looter, My eq, Their eq and Ilvl, in that order", function()
+test("table: a row too narrow for every column sheds Type, Slot, Looter, My eq, Their eq, Trade window and Ilvl, in that order", function()
     local NS = T.newAddon()
     local WG = NS.WindowGroup
     local cols = WG.Columns(false)
@@ -275,7 +279,8 @@ test("table: a row too narrow for every column sheds Type, Slot, Looter, My eq, 
             if not kept[key] then shed[#shed + 1] = key; have[key] = nil end
         end
     end
-    assertEqual(table.concat(shed, ","), "armorType,slot,looter,myEq,theirEq,ilvl,them,trade,me")
+    assertEqual(table.concat(shed, ","), "armorType,slot,looter,myEq,theirEq,tradeWindow,ilvl,them,trade,me",
+        "Trade window goes after Their eq and before Them (feedback-5 spec §1)")
     assertEqual(keys(WG.Fit(cols, 0)), "item,actions", "Item and Actions never go")
     for _, w in ipairs({ 300, 500, 700, 900 }) do
         local layout, kept = WG.Layout(cols, w)
@@ -367,9 +372,10 @@ test("table: built at the least width, every column shows and Ask stays inside t
     NS.ShowWindow()
     assertEqual(NS.Window.Frame():GetWidth(), K.MIN_WIDTH, "raised to the least width")
     local drawn = NS.WindowGroup.Drawn()
-    assertEqual(keys(drawn.columns), "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,actions")
+    assertEqual(keys(drawn.columns), "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,tradeWindow,actions")
     local c = rowFor(drawn, 1).cells
     assertTrue(c.slot:IsShown()); assertTrue(c.looter:IsShown()); assertTrue(c.theirEq:IsShown())
+    assertTrue(c.tradeWindow:IsShown())
     assertTrue(c.actions:IsShown())
     local _, _, _, x = c.actions:GetPoint(1)   -- from the row's left edge, itself indented
     assertTrue(K.ROW_INDENT + x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
@@ -416,8 +422,10 @@ test("rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0",
 end)
 
 test("table: the Window page's row height and font size lay out and size the drop rows", function()
-    local NS, drawn = shownTable()
+    local NS = shownTable()
     local K = NS.Constants.WINDOW
+    NS.SchemaRuntime.Set("window.columns.tradeWindow", false)   -- its bar's room is the next test's
+    local drawn = NS.WindowGroup.Drawn()
     local r1 = rowFor(drawn, 1)
     assertEqual(r1:GetHeight(), NS.WindowRows.ROW_H, "the default row height")
     assertEqual(r1.cells.item.button:GetWidth(), 16, "the item button fits the row")
@@ -664,8 +672,131 @@ test("table: the compact layout draws cards instead of the table, and the full l
     NS.ToggleWindowMode()
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact == nil)
-    assertEqual(#drawn.columns, 11)
+    assertEqual(#drawn.columns, 12)
     assertTrue(drawn.pane.scroll:IsShown()); assertFalse(drawn.pane.compactView.scroll:IsShown())
+end)
+
+-- ── the Trade window column (feedback-5 spec §1) ────────────────────────────────────────────
+
+test("cells: another player's drop is always the estimate, its tooltip naming the looter; ending soon is no words", function()
+    local NS = T.newAddon()
+    local MC = NS.MineCells
+    -- an exact expiry on another player's record is not trusted: only their own bags know it
+    local theirs = drop({ trade = { state = "likely", reasonKey = "notUpgrade", basis = "inspect", expiresAt = 200 } })
+    local cd = MC.Countdown(theirs, 100)
+    assertFalse(cd.exact); assertEqual(MC.Clock(cd.left), "2:00:00")
+    local c = MC.TradeWindow(theirs, 100, 600)
+    assertEqual(c.text, "~2:00:00"); assertEqual(c.tone, "plain"); assertFalse(c.bold); assertEqual(c.fraction, 1)
+    assertTrue(joined(c.tip):find("about 2:00:00 left for Seta to trade it") ~= nil, joined(c.tip))
+    assertTrue(joined(c.tip):find("your bags") == nil, "never your bags on their drop")
+    local soon = MC.TradeWindow(drop({ at = 100 - 7000 }), 100, 600)
+    assertEqual(soon.text, "~0:03:20", "the words `ending soon` are not drawn")
+    assertTrue(soon.bold); assertTrue(soon.soon); assertEqual(soon.tone, "warn")
+    assertTrue(joined(soon.tip):find("Ending soon: once it runs out, Seta keeps it.", 1, true) ~= nil, joined(soon.tip))
+    local up = MC.TradeWindow(drop({ trade = { state = "no", reasonKey = "upgradeForLooter", basis = "inspect", args = { 311, 300 } } }), 100)
+    assertEqual(up.text, "Their upgrade"); assertEqual(up.tone, "bad"); assertEqual(up.fraction, 0)
+    assertTrue(up.tip[2]:find("300 Seta wears") ~= nil, up.tip[2])
+    local yours = MC.TradeWindow(drop({ isMine = true, trade = { state = "no", reasonKey = "upgradeForLooter", args = { 311 } } }), 100)
+    assertEqual(yours.text, "Your upgrade")
+    local boe = MC.TradeWindow(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), 100)
+    assertEqual(boe.text, "No limit (BoE)")
+    assertEqual(MC.TradeWindow(drop({ trade = NONE }), 100).text, "Checking")
+end)
+
+-- Bar colors as they are set (the mock does not keep a texture's color).
+local function recordBar(bar)
+    local seen = {}
+    rawset(bar, "SetColorTexture", function(self, r, g, b) seen[#seen + 1] = { r, g, b }; return self end)
+    return seen
+end
+
+test("table: Trade window paints every drop's countdown over its bar; the row grows by the bar's room", function()
+    local NS, _, m = T.enableAddon()
+    local C, WR = NS.Constants, NS.WindowRows
+    m.__now = 100
+    seed(NS, { { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1, 2, 3, 4 } } }, {
+        drop(), drop({ id = 2, at = 100 - 7000 }),
+        drop({ id = 3, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }),
+        drop({ id = 4, trade = { state = "yes", reasonKey = "boe", basis = "bind" } }) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.ShowWindow()
+    local drawn = NS.WindowGroup.Drawn()
+    assertEqual(textOf(drawn.pane.colHead.labels.tradeWindow.text), "Trade window")
+    local f = rowFor(drawn, 1).cells.tradeWindow
+    local colors = recordBar(f.bar)
+    local soonColors = recordBar(rowFor(drawn, 2).cells.tradeWindow.bar)
+    NS.Window.Refresh()
+    drawn = NS.WindowGroup.Drawn()
+    f = rowFor(drawn, 1).cells.tradeWindow
+    assertTrue(f:IsShown()); assertEqual(f:GetWidth(), 104)
+    assertEqual(textOf(f.text), "~2:00:00", "another player's drop: the estimate from when it dropped")
+    assertTrue(joined(f.tipLines):find("left for Seta") ~= nil, joined(f.tipLines))
+    assertTrue(f.bar:IsShown()); assertEqual(f.fraction, 1); assertEqual(colors[#colors][1], C.TONE.good.r)
+    assertFalse(f.bold)
+    assertEqual(rowFor(drawn, 1):GetHeight(), WR.MineRowHeight(WR.ROW_H), "the row height plus the bar's room")
+    assertEqual(f:GetHeight(), WR.MineRowHeight(WR.ROW_H))
+    local soon = rowFor(drawn, 2).cells.tradeWindow
+    assertEqual(textOf(soon.text), "~0:03:20"); assertTrue(soon.bold)
+    assertEqual(select(1, soon.text:GetTextColor()), C.TONE.warn.r, "amber")
+    assertEqual(soonColors[#soonColors][1], C.TONE.warn.r, "and its bar")
+    local dead = rowFor(drawn, 3).cells.tradeWindow
+    assertEqual(textOf(dead.text), "Bonus roll"); assertFalse(dead.bar:IsShown())
+    assertEqual(textOf(rowFor(drawn, 4).cells.tradeWindow.text), "No limit (BoE)")
+    NS.SchemaRuntime.Set("window.columns.tradeWindow", false)
+    drawn = NS.WindowGroup.Drawn()
+    assertFalse(rowFor(drawn, 1).cells.tradeWindow:IsShown())
+    assertEqual(rowFor(drawn, 1):GetHeight(), WR.ROW_H, "turned off, the row is the row height again")
+end)
+
+-- The live countdown tickers: a repeating ticker every `period` seconds, not canceled.
+local function tickers(m, period)
+    local n = 0
+    for _, t in ipairs(m.__timers) do
+        if t.ticker and not t.stopped and t.delay == period then n = n + 1 end
+    end
+    return n
+end
+
+test("table: the countdowns move each second while one runs, repainting the Trade window cells alone", function()
+    local NS, drawn, m = shownTable()
+    assertEqual(tickers(m, 1), 1, "a countdown runs, so the each-second ticker does")
+    assertEqual(textOf(rowFor(drawn, 1).cells.tradeWindow.text), "~2:00:00")
+    local entries = 0
+    local real = NS.WindowCells.Entries
+    NS.WindowCells.Entries = function(...) entries = entries + 1; return real(...) end
+    m.advance(1)
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:59")
+    m.advance(2)
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:57")
+    assertEqual(entries, 0, "the table is not rebuilt: only the countdowns repaint")
+    m.__now = m.__now + 12
+    NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:45", "TradeTimerTick moves it too")
+    NS.Window.SelectTab("history")
+    NS.Window.Refresh()
+    assertEqual(tickers(m, 1), 0, "another tab: no countdown ticker")
+    NS.Window.SelectTab("group")
+    NS.Window.Refresh()
+    assertEqual(tickers(m, 1), 1)
+    NS.HideWindow()
+    assertEqual(tickers(m, 1), 0, "a hidden window runs none")
+end)
+
+test("table: with no countdown running (nothing tradeable, or the column off) no each-second ticker runs", function()
+    local NS, _, m = T.enableAddon()
+    m.__now = 100
+    seed(NS, { GROUP }, { drop({ trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }),
+        drop({ id = 2, trade = { state = "yes", reasonKey = "boe", basis = "bind" } }) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.ShowWindow()
+    assertEqual(tickers(m, 1), 0)
+    assertFalse(NS.WindowGroup.LiveCountdown())
+    seed(NS, { GROUP }, { drop(), drop({ id = 2 }) })
+    NS.Window.Refresh()
+    assertTrue(NS.WindowGroup.LiveCountdown()); assertEqual(tickers(m, 1), 1)
+    NS.SchemaRuntime.Set("window.columns.tradeWindow", false)
+    NS.Window.Refresh()
+    assertFalse(NS.WindowGroup.LiveCountdown(), "no column, nothing to move"); assertEqual(tickers(m, 1), 0)
 end)
 
 test("table: a column the profile turns off is not drawn", function()
