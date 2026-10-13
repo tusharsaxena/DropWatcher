@@ -117,7 +117,7 @@ end
 
 --- A verdict cell as compact mode draws it: the full view's text, tone and tooltip, with ⊘ for a
 --- verdict the full view says in a word.
---- @param c table a WindowCells verdict cell (WC.Me, WC.Them, MC.ForMe)
+--- @param c table a WindowCells verdict cell (WC.Me, WC.Them, MC.Multiple)
 --- @return table { text, glyph, tone, tip, verdict }
 function CC.Verdict(c)
     local glyph = c.glyph

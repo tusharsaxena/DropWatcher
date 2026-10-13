@@ -102,13 +102,13 @@ C.WINDOW = {
     -- A Drops row with its Trade window column (feedback-5 spec §1), the Drops strip
     -- (modules/DropsStrip.lua, feedback-5 spec §3) and the Offer panel (modules/OfferPanel.lua),
     -- design spec §11.4, board 04.
-    MINE_EXTRA  = 14,     -- such a row's height over the row height (its countdown sits over its bar)
-    MINE_FONT   = 10,     -- the small template's own text size, for such a row at Default
-    MINE_PAD    = 12,     -- such a row's room around its two lines (the countdown and its bar)
+    COUNTDOWN_EXTRA = 14, -- such a row's height over the row height (its countdown sits over its bar)
+    COUNTDOWN_FONT = 10,  -- the small template's own text size, for such a row at Default
+    COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
-    MINE_FOOT_H = 26,     -- the Drops strip, with Post my tradeables (and History's, with Clear history)
+    STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Clear history)
     POST_W      = 140,    -- Post my tradeables
-    CLEAR_W     = 124,    -- the History tab's Clear history (its strip is MINE_FOOT_H tall)
+    CLEAR_W     = 124,    -- the History tab's Clear history (its strip is STRIP_H tall)
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
     OFFER_FOOT_H = 32,    -- its Announce to group strip

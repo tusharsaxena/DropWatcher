@@ -117,7 +117,7 @@ local function paintStrip(pane, compact)
 end
 
 -- The pane's own scroll view, above its strip.
-local function buildView(pane) return NS.CompactGroup.BuildView(pane, K.MINE_FOOT_H) end
+local function buildView(pane) return NS.CompactGroup.BuildView(pane, K.STRIP_H) end
 
 --- Draw the compact layout's cards for the tab's entries (WindowHistory's refresh, every repaint),
 --- or, in the full layout, hide them and put the strip back.

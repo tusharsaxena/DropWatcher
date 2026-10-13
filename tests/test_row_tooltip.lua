@@ -2,7 +2,7 @@
 -- DW-B2; modules/RowTooltip.lua): the tooltip's BOTTOMLEFT at the row's top, just outside the right
 -- edge of the frame the row sits in (Ka0s Loot History's ANCHOR_RIGHT on a full-width row), else its
 -- BOTTOMRIGHT outside the left edge; the docked Offer panel counts as part of the window (DW-A9).
--- Then every row tooltip on the three tabs and the Offer panel, built headless, placed by it.
+-- Then every row tooltip on the two tabs and the Offer panel, built headless, placed by it.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
@@ -153,7 +153,7 @@ test("row tooltip: unknown geometry falls back to the hovered frame's top right"
     assertTrue(tip.pts[1][2] == owner)
 end)
 
--- ── every row tooltip on the three tabs and the Offer panel ─────────────────────────────────
+-- ── every row tooltip on the two tabs and the Offer panel ───────────────────────────────────
 
 -- The window at 200..1200, its top at 800, on a 1920-wide screen; a 320-wide tooltip.
 local function placeWindow(NS, m, screen)

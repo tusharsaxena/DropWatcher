@@ -86,7 +86,7 @@ local SEP = "|cff9e9ea3·|r "
 --- @param fontSize number|nil NS.WindowRows.FontSize's answer
 --- @return table
 function CG.Metrics(fontSize)
-    local size = fontSize or K.MINE_FONT
+    local size = fontSize or K.COUNTDOWN_FONT
     local line = size + CG.LINE_EXTRA
     return { fontSize = fontSize, size = size, line = line, height = 3 * line + 2 * CG.PAD,
         icon = min(CG.ICON_MAX, max(CG.ICON_MIN, 3 * line - 6)) }
@@ -98,8 +98,8 @@ end
 --- @return number
 function CG.LineY(m, i) return -(CG.PAD + (i - 0.5) * m.line) end
 
---- Where the text starts: after the quality bar, the chevron's lead (`lead`, CG.LEAD on a Group
---- drops card, 0 where a card has no chevron) and the icon.
+--- Where the text starts: after the quality bar, the chevron's lead (`lead`, CG.LEAD on a Drops
+--- card, 0 where a card has no chevron) and the icon.
 --- @param m table
 --- @param lead number|nil
 --- @return number

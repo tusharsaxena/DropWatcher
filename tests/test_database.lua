@@ -177,3 +177,23 @@ test("database: step 4 retires the History's group cap and prunes nothing", func
     assertEqual(NS.addon.db.global.history.retentionDays, 30, "the default window")
     NS.RetireHistoryCap(nil); NS.RetireHistoryCap({}); NS.RetireHistoryCap({ global = { history = 3 } })
 end)
+
+-- Feedback-5 spec §2 (DW-E2): Drops always lists your own drops; the retired switch's key goes.
+test("database: step 6 retires feed.showOwn in every stored profile and keeps the rest", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 5 },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { feed = { showOwn = true, clearOnBossKill = true } },
+            Alt = { feed = { showOwn = false } },
+        },
+    }
+    -- red under: no step 6 (the stored switch stays)
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    assertNil(p.Default.feed.showOwn); assertNil(p.Alt.feed.showOwn)
+    assertEqual(p.Default.feed.clearOnBossKill, true, "the other feed settings stay")
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    NS.RetireShowOwn(nil); NS.RetireShowOwn({}); NS.RetireShowOwn({ feed = 3 })
+end)

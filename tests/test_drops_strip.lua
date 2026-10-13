@@ -149,7 +149,7 @@ test("drops strip: under the table, it counts your tradeable drops and the next 
     assertTrue(#NS.Window.TooltipOf(strip.info) >= 2); assertTrue(#NS.Window.TooltipOf(strip.post) >= 2)
     local point, rel = strip:GetPoint(1)
     assertEqual(point, "BOTTOMLEFT"); assertTrue(rel == drawn.pane, "at the pane's foot, above the footer")
-    assertEqual(bottomOf(drawn.pane.scroll), K.MINE_FOOT_H, "the table ends over it")
+    assertEqual(bottomOf(drawn.pane.scroll), K.STRIP_H, "the table ends over it")
     assertEqual(#drawn.rows, 4, "the rows are the table's own")
 end)
 
@@ -169,7 +169,7 @@ test("drops strip: hidden while none of your listed drops can be traded; the tab
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.pane.summary:IsShown())
     assertEqual(textOf(drawn.pane.summary.info.text), "1 tradeable · next expiry 1:47:12", "another player's drop is not counted")
-    assertEqual(bottomOf(drawn.pane.scroll), NS.Constants.WINDOW.MINE_FOOT_H)
+    assertEqual(bottomOf(drawn.pane.scroll), NS.Constants.WINDOW.STRIP_H)
 end)
 
 test("drops strip: it counts the drops the tab lists, its filters applied, collapsed or not", function()
@@ -196,6 +196,26 @@ test("drops strip: its next expiry moves each second with the countdowns", funct
     assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:28")
 end)
 
+test("drops strip: its next expiry keeps the each-second ticker running with no row's countdown drawn", function()
+    local NS, drawn, m = shownMine()
+    local function tickers()
+        local n = 0
+        for _, t in ipairs(m.__timers) do
+            if t.ticker and not t.stopped and t.delay == NS.Constants.WINDOW.COUNTDOWN_TICK then n = n + 1 end
+        end
+        return n
+    end
+    drawn.headers[1]:__fire("OnClick")
+    drawn = NS.WindowGroup.Drawn()
+    assertEqual(#drawn.rows, 0, "collapsed: no row draws a countdown")
+    assertTrue(NS.WindowGroup.LiveCountdown(), "the strip still shows one"); assertEqual(tickers(), 1)
+    NS.SchemaRuntime.Set("window.columns.tradeWindow", false)
+    NS.Window.Refresh()
+    assertTrue(NS.WindowGroup.LiveCountdown(), "with the column off too"); assertEqual(tickers(), 1)
+    m.advance(1)
+    assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:40")
+end)
+
 test("drops strip: Post my tradeables goes through the shared handler", function()
     local NS, drawn = shownMine()
     local sent = {}
@@ -217,7 +237,7 @@ test("drops strip: shortened under the compact cards, and put back in the full l
     assertEqual(textOf(strip.post.label), "Post"); assertEqual(strip.post:GetWidth(), DS.POST_W)
     assertEqual(NS.Window.TooltipOf(strip.post)[1], "Post my tradeables", "the tooltip is unchanged")
     assertEqual(drawn.summary.count, 3)
-    assertEqual(bottomOf(drawn.scroll), K.MINE_FOOT_H, "the cards end over it")
+    assertEqual(bottomOf(drawn.scroll), K.STRIP_H, "the cards end over it")
     NS.SetWindowMode("full")
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact == nil and #drawn.rows == 4, "the table again")

@@ -290,7 +290,8 @@ modules\WindowGroup.lua
 # NS.WindowGroup builds and repaints the tab.
 modules\DropsStrip.lua
 # Conventional: publishes NS.DetailCells, the detail card's pure composers (chips, both comparisons,
-# the trade box, the actions); takes NS.WindowCells (above), NS.Constants and NS.L at load.
+# the trade box, the actions); takes NS.WindowCells and NS.MineCells (above), NS.Constants and NS.L
+# at load.
 modules\DetailCells.lua
 # Conventional: publishes NS.DetailCard, the detail card's frame edge and the Edit message box; takes
 # NS.DetailCells (above), NS.Constants and NS.L at load. NS.WindowGroup builds it (above, at call

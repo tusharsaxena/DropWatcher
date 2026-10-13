@@ -68,7 +68,7 @@ function DS.Build(pane)
     local strip = CreateFrame("Frame", nil, pane)
     strip:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 0, 0)
     strip:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
-    strip:SetHeight(K.MINE_FOOT_H)
+    strip:SetHeight(K.STRIP_H)
     strip.line = strip:CreateTexture(nil, "ARTWORK")
     strip.line:SetColorTexture(1, 1, 1, 0.1)
     strip.line:SetHeight(1)
@@ -80,7 +80,7 @@ function DS.Build(pane)
     info.text:SetJustifyH("LEFT")
     info.text:SetWordWrap(false)
     info:SetPoint("LEFT", strip, "LEFT", 2, 0)
-    info:SetSize(DS.INFO_W, K.MINE_FOOT_H)
+    info:SetSize(DS.INFO_W, K.STRIP_H)
     W.AttachTooltip(info, function() return tipOf(info) end, "row")
     strip.info = info
     strip.post = W.TextButton(strip, K.POST_W, "speech-bubble", L["Post my tradeables"], function() NS.PostTradeables() end)
@@ -133,7 +133,7 @@ function DS.Paint(pane, ctx, compact)
     strip:SetShown(shown)
     pane.summaryData = shown and s or nil
     if shown then paintText(pane, s, compact) end
-    local bottom = shown and K.MINE_FOOT_H or 0
+    local bottom = shown and K.STRIP_H or 0
     setBottom(pane.scroll, pane, pane.colHead, -2, bottom)
     local cv = pane.compactView
     setBottom(cv and cv.scroll, pane, pane, 0, bottom)

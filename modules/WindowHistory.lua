@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/WindowHistory.lua — the History tab (design spec §10, §11.1): the drops kept across
--- sessions (modules/History.lua), under a collapsible header per encounter or run, in the Group
--- drops table's row style, read-only, with Clear history behind a confirmation.
+-- sessions (modules/History.lua), under a collapsible header per encounter or run, in the Drops
+-- table's row style, read-only, with Clear history behind a confirmation.
 --
 -- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color), Me,
 -- Them, Trade (each as it was last judged while the drop was in the feed) and Outcome (seen, asked,
@@ -431,7 +431,7 @@ local function buildStrip(pane)
     local strip = CreateFrame("Frame", nil, pane)
     strip:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 0, 0)
     strip:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
-    strip:SetHeight(K.MINE_FOOT_H)
+    strip:SetHeight(K.STRIP_H)
     strip.line = strip:CreateTexture(nil, "ARTWORK")
     strip.line:SetColorTexture(1, 1, 1, 0.1)
     strip.line:SetHeight(1)
@@ -450,7 +450,7 @@ local function build(pane)
     buildStrip(pane)
     local scroll = CreateFrame("ScrollFrame", nil, pane, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", pane.colHead, "BOTTOMLEFT", 0, -2)
-    scroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -K.SCROLL_W, K.MINE_FOOT_H)
+    scroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -K.SCROLL_W, K.STRIP_H)
     local content = CreateFrame("Frame", nil, scroll)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)

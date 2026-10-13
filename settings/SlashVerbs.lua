@@ -66,7 +66,7 @@ end
 
 -- ── history, offer ──────────────────────────────────────────────────────────────────────────
 
---- Open the window, expanded, on one tab (`/dw history`, and Drops for `/dw offer`).
+--- Open the window, expanded, on one tab (`/dw history`; Drops for `/dw mine` and `/dw offer`).
 --- @param key string `group` or `history`
 --- @return boolean shown whether the window is on screen now
 function V.OpenTab(key)

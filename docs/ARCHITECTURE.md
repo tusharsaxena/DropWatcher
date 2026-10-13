@@ -240,7 +240,8 @@ refuses, in every stored profile, and whose step 3 (`NS.MigrateViewSet`, DW-A1) 
 `feed.view` string and the three retired checkbox rows into the View set. Step 4
 (`NS.RetireHistoryCap`, DW-A5) removes the retired history cap, and step 5
 (`NS.MigrateWindowMode`, DW-C0) turns the compact preset into `window.mode` and moves the single
-layout's point and size into `window.geometry.full`. No structural registry exists yet.
+layout's point and size into `window.geometry.full`. Step 6 (`NS.RetireShowOwn`, DW-E2) removes the
+retired `feed.showOwn`. No structural registry exists yet.
 
 ## Message Bus
 

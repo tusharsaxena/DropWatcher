@@ -1,9 +1,9 @@
 -- tests/test_char_filter.lua — the Character dropdown (feedback-2 spec §4, FB2-6), like Loot
 -- History's: the pure core (modules/CharFilter.lua: Key, IconMarkup, Canonical, Passes, IsCurrent,
 -- Label, Characters, Options); the recorder stamped on every drop record and kept by each History
--- entry; the filter bar's dropdown on all three tabs (All, Current, each character; Current by
+-- entry; the filter bar's dropdown on both tabs (All, Current, each character; Current by
 -- default; multi-select); History filtered by who saw each drop, an older entry with no recorder
--- shown only under All; the session tabs never hiding a drop. Test mode's alt group is
+-- shown only under All; the session tab (Drops) never hiding a drop. Test mode's alt group is
 -- test_test_mode's; a simulated run's recorder, test_sim_e2e's.
 
 local T = _G.DW_TEST

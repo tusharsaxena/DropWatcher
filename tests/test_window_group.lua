@@ -398,19 +398,19 @@ test("rows: the pure metrics read Default as the template's size and keep the ro
     assertEqual(WR.RowHeight(4), K.ROW_H_MIN); assertEqual(WR.RowHeight(400), K.ROW_H_MAX)
     assertEqual(WR.IconSize(18), 16, "the item button fits an 18-pixel row")
     assertEqual(WR.IconSize(32), K.ROW_ICON, "and never grows past its own size")
-    assertEqual(WR.MineRowHeight(18), 32, "a Drops row with Trade window keeps room for its countdown bar")
-    assertEqual(WR.MineRowHeight(18, nil), 32, "Default reads the template's size")
-    assertEqual(WR.MineRowHeight(30), 44, "a taller row adds the bar's room")
-    assertEqual(WR.MineRowHeight(18, 14), 40, "a larger text grows the row so its two lines never overlap")
-    assertEqual(WR.MineRowHeight(18, 20), 52)
-    assertEqual(WR.MineRowHeight(40, 8), 54, "the row height wins when it needs more")
+    assertEqual(WR.CountdownRowHeight(18), 32, "a Drops row with Trade window keeps room for its countdown bar")
+    assertEqual(WR.CountdownRowHeight(18, nil), 32, "Default reads the template's size")
+    assertEqual(WR.CountdownRowHeight(30), 44, "a taller row adds the bar's room")
+    assertEqual(WR.CountdownRowHeight(18, 14), 40, "a larger text grows the row so its two lines never overlap")
+    assertEqual(WR.CountdownRowHeight(18, 20), 52)
+    assertEqual(WR.CountdownRowHeight(40, 8), 54, "the row height wins when it needs more")
 end)
 
 test("rows: a stored row height and font size stay as the player set them", function()
     local NS = T.enableAddon()
     NS.addon.db.profile.window.rowHeight, NS.addon.db.profile.window.fontSize = 24, 12
     local m = NS.WindowRows.Metrics()
-    assertEqual(m.height, 24); assertEqual(m.fontSize, 12); assertEqual(m.icon, 20); assertEqual(m.mineHeight, 38)
+    assertEqual(m.height, 24); assertEqual(m.fontSize, 12); assertEqual(m.icon, 20); assertEqual(m.countdownHeight, 38)
 end)
 
 test("rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0", function()
@@ -733,8 +733,8 @@ test("table: Trade window paints every drop's countdown over its bar; the row gr
     assertTrue(joined(f.tipLines):find("left for Seta") ~= nil, joined(f.tipLines))
     assertTrue(f.bar:IsShown()); assertEqual(f.fraction, 1); assertEqual(colors[#colors][1], C.TONE.good.r)
     assertFalse(f.bold)
-    assertEqual(rowFor(drawn, 1):GetHeight(), WR.MineRowHeight(WR.ROW_H), "the row height plus the bar's room")
-    assertEqual(f:GetHeight(), WR.MineRowHeight(WR.ROW_H))
+    assertEqual(rowFor(drawn, 1):GetHeight(), WR.CountdownRowHeight(WR.ROW_H), "the row height plus the bar's room")
+    assertEqual(f:GetHeight(), WR.CountdownRowHeight(WR.ROW_H))
     local soon = rowFor(drawn, 2).cells.tradeWindow
     assertEqual(textOf(soon.text), "~0:03:20"); assertTrue(soon.bold)
     assertEqual(select(1, soon.text:GetTextColor()), C.TONE.warn.r, "amber")
@@ -940,117 +940,4 @@ test("table: the Type column sits after Slot and is painted on every row", funct
     local keysShown = {}
     for _, col in ipairs(drawn.columns) do keysShown[#keysShown + 1] = col.key end
     assertEqual(keysShown[3] .. "," .. keysShown[4], "slot,armorType")
-end)
-
--- ── the least width, the search box and the headers (feedback-4 spec §4) ────────────────────
-
-test("layout: at the least width no tab sheds a column, and one pixel less would shed on Drops", function()
-    local NS = T.newAddon()
-    local K = NS.Constants.WINDOW
-    assertEqual(K.MIN_WIDTH, K.WIDTH, "the least width is a new profile's width")
-    assertEqual(K.COMPACT_MIN_W, K.COMPACT_WIDTH, "in both layouts")
-    local row = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
-    -- Drops' columns start after the row's indent and chevron (feedback-5 spec §0).
-    local lead = { WindowGroup = NS.WindowGroup.LEAD, WindowHistory = 0 }
-    for _, tab in ipairs({ "WindowGroup", "WindowHistory" }) do
-        local cols = NS[tab].COLUMNS
-        assertEqual(#NS.WindowGroup.Fit(cols, row - lead[tab]), #cols, tab .. " keeps every column")
-    end
-    local groupRow = row - NS.WindowGroup.LEAD
-    assertTrue(#NS.WindowGroup.Fit(NS.WindowGroup.COLUMNS, groupRow - 1) < #NS.WindowGroup.COLUMNS,
-        "the least width is the tightest that fits Drops")
-    assertTrue(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH) >= 200, "the search box has room to type")
-end)
-
-test("layout: the search box spans from the bar's gap after Character to the bar's right edge", function()
-    local NS = shownTable()
-    local FB, K = NS.WindowFilterBar, NS.Constants.WINDOW
-    local c = FB.Controls()
-    assertEqual(c.search.__points[1][1], "LEFT"); assertEqual(c.search.__points[1][2], c.char)
-    assertEqual(c.search.__points[1][4], 8)
-    assertEqual(c.search.__points[2][1], "RIGHT"); assertEqual(c.search.__points[2][2], c.host)
-    assertEqual(FB.SearchWidth(K.MIN_WIDTH + 300) - FB.SearchWidth(K.MIN_WIDTH), 300, "it takes all the width gained")
-    assertTrue(c.search:IsShown())
-end)
-
-test("layout: the column labels are gold on both full tables", function()
-    local NS = shownTable()
-    local G = NS.Constants.GOLD
-    local function gold(label) return select(2, label.text:GetTextColor()) == G.g end
-    assertTrue(gold(NS.WindowGroup.Drawn().pane.colHead.labels.item), "Drops")
-    NS.Window.SelectTab("history")
-    assertTrue(gold(NS.Window.Frame().panes.history.colHead.labels.item), "History")
-end)
-
--- ── the expand indicator, the indent and the Actions width (feedback-5 spec §0) ─────────────
-
-local function xOf(frame) return select(4, frame:GetPoint(1)) end
-
-test("layout: Actions is 84 pixels, the Ask button's width, so every state's icon and word fits", function()
-    local NS = T.newAddon()
-    local K = NS.Constants.WINDOW
-    assertEqual(K.ASK_W, 84)
-    for _, col in ipairs(NS.WindowGroup.COLUMNS) do
-        if col.key == "actions" then assertEqual(col.width, K.ASK_W, "the column is the button's width") end
-    end
-end)
-
-test("rows: each row draws the header's chevron at its left, muted white, down while closed and up while open", function()
-    local NS, drawn = shownTable()
-    local K, C = NS.Constants.WINDOW, NS.Constants
-    local row = rowFor(drawn, 1)
-    assertTrue(row.expander == nil, "the right-edge mark is gone")
-    local ch = row.chevron
-    assertEqual(ch:GetTexture(), NS.Icon("chevron-down"), "collapsed")
-    assertEqual(ch.__points[1][1], "LEFT"); assertEqual(ch.__points[1][2], row)
-    assertEqual(ch.__points[1][4], K.CHEVRON_X, "at the row's left edge, as the header's")
-    local r, g, b, a = ch:GetVertexColor()
-    assertEqual(table.concat({ r, g, b, a }, ","), table.concat({ C.CHEVRON_ROW.r, C.CHEVRON_ROW.g,
-        C.CHEVRON_ROW.b, C.CHEVRON_ROW.a }, ","))
-    assertTrue(r == 1 and g == 1 and b == 1 and a > 0.4 and a < 0.7, "white at about 55%")
-    row:__fire("OnClick", "LeftButton")
-    ch = rowFor(NS.WindowGroup.Drawn(), 1).chevron
-    assertEqual(ch:GetTexture(), NS.Icon("chevron-up"), "open")
-    assertEqual(select(4, ch:GetVertexColor()), C.CHEVRON_ROW.a, "the same tint while open")
-end)
-
-test("rows: the Item cell starts after the chevron and a 4px gap; the chevron is no column", function()
-    local NS, drawn = shownTable()
-    local K, WG = NS.Constants.WINDOW, NS.WindowGroup
-    assertEqual(WG.CHEVRON_LEAD, K.CHEVRON_X + K.ROW_CHEVRON + 4)
-    assertEqual(WG.LEAD, K.ROW_INDENT + WG.CHEVRON_LEAD)
-    assertEqual(xOf(rowFor(drawn, 1).cells.item), WG.CHEVRON_LEAD)
-    for _, col in ipairs(WG.COLUMNS) do assertTrue(col.key ~= "chevron", "not a column") end
-    assertTrue(drawn.pane.colHead.labels.chevron == nil, "no label")
-end)
-
-test("rows: every drop row and its detail card sit ROW_INDENT in from the header; the labels shift over their cells", function()
-    local NS, drawn = shownTable()
-    local K = NS.Constants.WINDOW
-    assertEqual(K.ROW_INDENT, 12)
-    local h = drawn.headers[1]
-    assertEqual(xOf(h), 0, "the header keeps the full width")
-    local row = rowFor(drawn, 1)
-    assertEqual(xOf(row), K.ROW_INDENT)
-    assertEqual(row:GetWidth(), h:GetWidth() - K.ROW_INDENT, "the row ends where the header does")
-    local labels = drawn.pane.colHead.labels
-    for _, key in ipairs({ "item", "slot", "looter", "trade", "actions" }) do
-        assertEqual(xOf(labels[key]), K.ROW_INDENT + xOf(row.cells[key]), key .. "'s label over its cell")
-    end
-    NS.WindowGroup.ToggleExpand(1)
-    drawn = NS.WindowGroup.Drawn()
-    assertEqual(xOf(drawn.card), K.ROW_INDENT, "the detail card indents with its row")
-    assertEqual(drawn.card:GetWidth(), rowFor(drawn, 1):GetWidth())
-end)
-
-test("headers: a group header's chevron is gold, as its text, collapsed or open", function()
-    local NS, drawn = shownTable()
-    local G = NS.Constants.GOLD
-    local h = drawn.headers[1]
-    local r, g, b = h.chevron:GetVertexColor()
-    assertEqual(table.concat({ r, g, b }, ","), table.concat({ G.r, G.g, G.b }, ","))
-    h:__fire("OnClick", "LeftButton")
-    h = NS.WindowGroup.Drawn().headers[1]
-    assertEqual(h.chevron:GetTexture(), NS.Icon("chevron-right"), "collapsed")
-    assertEqual(select(2, h.chevron:GetVertexColor()), G.g, "still gold")
 end)

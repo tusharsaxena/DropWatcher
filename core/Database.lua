@@ -158,6 +158,16 @@ function NS.MigrateWindowMode(profile)
     moveGeometry(w)
 end
 
+-- ── step 6: own drops always listed (DW-E2, feedback-5 spec §2) ─────────────────────────────
+
+--- Step 6's work on one stored profile: `feed.showOwn` (Show my own loot in Group drops) is retired,
+--- since Drops always lists your own drops; only the key goes.
+--- @param profile table a raw stored profile
+function NS.RetireShowOwn(profile)
+    local feed = type(profile) == "table" and profile.feed
+    if type(feed) == "table" then feed.showOwn = nil end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -169,6 +179,8 @@ NS.MIGRATIONS = {
     { to = 4, run = function(sv) NS.RetireHistoryCap(sv) end },   -- 3 -> 4: History by days
     { to = 5, perProfile = true,         -- 4 -> 5: compact mode; the window's geometry per layout
       run = function(_, profile) NS.MigrateWindowMode(profile) end },
+    { to = 6, perProfile = true,         -- 5 -> 6: own drops always listed; their switch goes
+      run = function(_, profile) NS.RetireShowOwn(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

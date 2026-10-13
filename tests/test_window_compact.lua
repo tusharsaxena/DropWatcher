@@ -99,7 +99,7 @@ test("compact: step 5 runs for every stored profile on load", function()
     assertEqual(p.Main.window.mode, "compact", "the preset wins over a mode read through the defaults")
     assertEqual(p.Raid.window.geometry.full.width, 640)
     assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
-    assertEqual(NS.SCHEMA_VERSION, 5)
+    assertTrue(NS.SCHEMA_VERSION >= 5, "later steps run after it")
 end)
 
 -- ── the switch ──────────────────────────────────────────────────────────────────────────────

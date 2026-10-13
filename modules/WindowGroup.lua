@@ -28,13 +28,14 @@ local _, NS = ...
 -- modules/WindowRows.lua at each repaint (18 pixels and the template's own size by default, like
 -- Ka0s Loot History's table; feedback-2 spec §8, FB2-9); the headers, the column labels and the
 -- buttons keep their own. While the Trade window column is shown a row is the room its countdown
--- bar needs taller (WindowRows' mineHeight), so the text and the bar never overlap.
+-- bar needs taller (WindowRows' countdownHeight), so the text and the bar never overlap.
 --
 -- THE STRIP (feedback-5 spec §3). Under the table (or the compact cards), above the footer, while at
 -- least one of your drops the tab lists can be traded: `n tradeable · next expiry 0:08:41` and Post
 -- my tradeables (modules/DropsStrip.lua, built with the pane and repainted with it).
 --
--- THE COUNTDOWNS MOVE each second while a shown row has one (feedback-5 spec §1): Window.lua's
+-- THE COUNTDOWNS MOVE each second while a shown row or the strip has one (feedback-5 spec §1;
+-- the strip counts your drops under a collapsed header too): Window.lua's
 -- countdown ticker, its footer ticker and TradeTimerTick call WG.TickCountdowns, which repaints the
 -- Trade window cells alone (and the compact cards' countdowns) and the strip's next expiry, never
 -- the whole table;
@@ -833,7 +834,7 @@ end
 
 local function drawEntries(pane, entries, layout, width)
     local now, y, metrics = GetTime(), 0, NS.WindowRows.Metrics()
-    metrics.rowH = layout.tradeWindow and metrics.mineHeight or metrics.height
+    metrics.rowH = layout.tradeWindow and metrics.countdownHeight or metrics.height
     metrics.warnAt = NS.TradeTimer.WarnAt()
     local Pool = NS.Pool
     local expanded = view().expanded
@@ -903,21 +904,30 @@ local function shownPane()
     return pane and pane.rowPool and pane or nil
 end
 
---- Whether a row (or compact card) on screen shows a countdown still running: the Trade window
---- column is kept (always, in the compact layout) and a listed drop has time left. Window.lua runs
---- its each-second countdown ticker while this holds.
---- @return boolean
-function WG.LiveCountdown()
-    local pane = shownPane()
-    if not (pane and pane.entries) then return false end
-    local compact = WG.IsCompact()
-    if not compact and not (pane.layout and pane.layout.tradeWindow) then return false end
+-- Whether a drawn row (or compact card) shows a countdown still running: the Trade window column
+-- is kept (always, in the compact layout) and a drawn drop has time left.
+local function rowsLive(pane)
+    if not pane.entries then return false end
+    if not WG.IsCompact() and not (pane.layout and pane.layout.tradeWindow) then return false end
     local now, MC = GetTime(), NS.MineCells
     for _, e in ipairs(pane.entries) do
         local cd = e.kind ~= "header" and MC.Countdown(e.drop, now)
         if cd and cd.left > 0 then return true end
     end
     return false
+end
+
+--- Whether anything on screen shows a countdown still running: a drawn row's (or compact card's)
+--- Trade window, or the strip's next expiry, which also counts your drops under a collapsed header
+--- and shows whether the column is kept or not. Window.lua runs its each-second countdown ticker
+--- while this holds.
+--- @return boolean
+function WG.LiveCountdown()
+    local pane = shownPane()
+    if not pane then return false end
+    local s = pane.summaryData
+    if s and s.next and s.next > 0 then return true end
+    return rowsLive(pane)
 end
 
 --- Move every shown countdown on to the clock: the Trade window cells of the drawn rows, or the

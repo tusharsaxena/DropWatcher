@@ -225,16 +225,16 @@ test("slash: `clear` closes an Offer panel whose drop it took", function()
     assertFalse(NS.OfferPanel.IsShown())
 end)
 
-test("slash: `history` opens the window on that tab, expanded; `mine` is no longer a verb", function()
-    local NS, _, m = T.enableAddon()
+test("slash: `history` opens the window on that tab, expanded; `mine` opens Drops", function()
+    local NS = T.enableAddon()
     NS.Window.SetMinimized(true)
     NS.addon:OnSlashCommand("history")
     assertTrue(NS.IsWindowShown()); assertEqual(NS.Window.ActiveTab(), "history")
     assertFalse(NS.Window.IsMinimized(), "a tab verb expands the window")
-    for _, c in ipairs(NS.COMMANDS) do assertTrue(c[1] ~= "mine", "no `mine` verb") end
-    m.prints = {}
+    NS.Window.SetMinimized(true)
     NS.addon:OnSlashCommand("mine")
-    assertEqual(NS.Window.ActiveTab(), "history", "an unknown verb opens nothing")
+    assertEqual(NS.Window.ActiveTab(), "group", "the retired My drops verb opens Drops")
+    assertFalse(NS.Window.IsMinimized(), "and expands the window")
 end)
 
 test("slash: a tab verb the Visibility setting keeps hidden says so", function()

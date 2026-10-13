@@ -8,11 +8,11 @@ local _, NS = ...
 -- default is 0, "Default": the cells keep their template's own size, and a size from FONT_MIN to
 -- FONT_MAX replaces it (a stored 1 to 7 reads as FONT_MIN). The row height defaults to 18; the item
 -- button is ROW_ICON at most and 2 pixels under a shorter row's height. A Drops row while its Trade
--- window column shows (feedback-5 spec §1) is MINE_EXTRA taller than the
+-- window column shows (feedback-5 spec §1) is COUNTDOWN_EXTRA taller than the
 -- row height (its countdown bar sits under the text), and tall enough for its two lines of text at
 -- the chosen size.
 --
--- PURE: FontSize, RowHeight, IconSize, MineRowHeight. The frame edge: Metrics reads the two rows
+-- PURE: FontSize, RowHeight, IconSize, CountdownRowHeight. The frame edge: Metrics reads the two rows
 -- through the schema seam (NS.Setting) once per repaint; SetFontSize and ApplyRowFont set a font
 -- string's size, keeping its face and flags, and put the template's own size back for Default.
 
@@ -53,21 +53,21 @@ end
 
 --- A Drops row's height while its Trade window column shows: the row height plus the room its
 --- countdown bar needs, and never less
---- than its two lines of text at `fontSize` (nil = Default, the template's MINE_FONT) need.
+--- than its two lines of text at `fontSize` (nil = Default, the template's COUNTDOWN_FONT) need.
 --- @param height number
 --- @param fontSize number|nil
 --- @return number
-function WR.MineRowHeight(height, fontSize)
-    return max(height + K.MINE_EXTRA, 2 * (fontSize or K.MINE_FONT) + K.MINE_PAD)
+function WR.CountdownRowHeight(height, fontSize)
+    return max(height + K.COUNTDOWN_EXTRA, 2 * (fontSize or K.COUNTDOWN_FONT) + K.COUNTDOWN_PAD)
 end
 
 --- The rows' metrics for one repaint, from the Window page's Layout rows:
---- { height, fontSize (nil = Default), icon, mineHeight }.
+--- { height, fontSize (nil = Default), icon, countdownHeight }.
 --- @return table
 function WR.Metrics()
     local h = WR.RowHeight(NS.Setting("window.rowHeight"))
     local size = WR.FontSize(NS.Setting("window.fontSize"))
-    return { height = h, fontSize = size, icon = WR.IconSize(h), mineHeight = WR.MineRowHeight(h, size) }
+    return { height = h, fontSize = size, icon = WR.IconSize(h), countdownHeight = WR.CountdownRowHeight(h, size) }
 end
 
 -- ── the frame edge ──────────────────────────────────────────────────────────────────────────

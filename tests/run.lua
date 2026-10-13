@@ -109,6 +109,7 @@ Kit.run{
         "test_compact_chrome",
         "test_compact_modes",
         "test_window_group",
+        "test_drops_layout",
         "test_detail_card",
         "test_own_drops",
         "test_drops_strip",

@@ -48,7 +48,6 @@ dungeons and raids, `track` alone for Raid Finder, and off elsewhere.
 | `feed.content`, `feed.sort` | `"instance"`, `"newest"` | Filters | a fresh filter bar tab's Content and Sort |
 | `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Filters | armor, weapons, jewelry and trinkets only; tier tokens too |
 | `feed.minIlvlMode` | `"off"` | Filters | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
-| `feed.showOwn` | `false` | Filters | your own loot in Group drops too (your own drops auto-open the window and count toward `n new` either way since DW-83) |
 | `feed.clearOnBossKill` | `false` | Filters | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 
 ### Comparison
@@ -191,7 +190,7 @@ and Test mode rows are `sessionOnly` and store through their own closures.
 ## Migrations
 
 `core/Database.lua`: `NS.MIGRATIONS` is a list of steps `{ to, run, perProfile }`, and
-`NS.SCHEMA_VERSION` is the highest step's `to` (today 5). The runner runs in `OnInitialize` straight
+`NS.SCHEMA_VERSION` is the highest step's `to` (today 6). The runner runs in `OnInitialize` straight
 after `AceDB:New`, before anything reads the profile, and again on every profile event. It owns the
 stamp: a step's `to` is stored only after the step returned, so a step that raises is retried on the
 next load. A `perProfile` step runs for every stored profile in the raw SavedVariables, not only the
@@ -204,5 +203,6 @@ active one. The default stays `0`.
 | 3 | 2 → 3, per profile: the View becomes a set (DW-A1, feedback-2 spec §1). A stored `feed.view` string becomes `feed.view = { [value] = true }` (`interesting` keeps Interesting, `all` is the empty set), and the retired `trade.likelyOnly`, `feed.usableOnly` and `feed.upgradeOnly` fold into it as `likely`, `usable` and `upgrade` when they were on, their leaves removed, so each player keeps the choices they had. A profile that only inherited the old default (`interesting`) stored nothing, since AceDB strips a value equal to its default at logout, and opens on the new default, All. A profile already in the new shape passes through (`NS.MigrateViewSet`) |
 | 4 | 3 → 4, global: the History is kept by days (DW-A5, feedback-2 spec §5). The retired group cap, `global.history.maxGroups`, is removed; nothing is pruned by the step, and Keep history for starts on its default, 30 days, which the session's prune applies (`NS.RetireHistoryCap`) |
 | 5 | 4 → 5, per profile: compact mode (DW-C0, compact spec §1). The retired compact preset, `window.compact = true`, becomes `window.mode = "compact"` (the preset wins over a `mode` the defaults answer), and the key goes; the single-layout geometry `window.point`, `.width` and `.height` moves into `window.geometry.full`, keeping any value already there. A profile already in the new shape passes through (`NS.MigrateWindowMode`) |
+| 6 | 5 → 6, per profile: own drops are always listed on Drops (DW-E2, feedback-5 spec §2). The retired switch `feed.showOwn` (Show my own loot in Group drops) is removed; nothing else changes (`NS.RetireShowOwn`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

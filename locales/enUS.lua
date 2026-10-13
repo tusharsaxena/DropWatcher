@@ -34,6 +34,7 @@ L["List every setting and its current value"] = "List every setting and its curr
 L["List profiles, or switch to one: profile <name>"] = "List profiles, or switch to one: profile <name>"
 L["Lock the window in place"] = "Lock the window in place"
 L["Measure performance — `/dw perf` opens the step panel"] = "Measure performance — `/dw perf` opens the step panel"
+L["Open the Drops tab, where your own drops are listed"] = "Open the Drops tab, where your own drops are listed"
 L["Open the History tab"] = "Open the History tab"
 L["Open the Ka0s Drop Watcher settings panel"] = "Open the Ka0s Drop Watcher settings panel"
 L["Open the Offer panel for a bag item — `/dw offer <item link>`"] = "Open the Offer panel for a bag item — `/dw offer <item link>`"
