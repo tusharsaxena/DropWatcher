@@ -526,6 +526,63 @@ function WC.Slot(drop)
     return cell(label, "plain", label, line)
 end
 
+-- ── the Type column (feedback-4 spec §3) ────────────────────────────────────────────────────
+-- What kind of item it is, from its equip location first and then its armor subclass (stable ids,
+-- never a localized type name): the four armor types, Jewelry, Trinkets, Cloak or Weapons.
+
+local ARMOR_WORD = {
+    [C.ARMOR_SUBCLASS.CLOTH] = L["Cloth"], [C.ARMOR_SUBCLASS.LEATHER] = L["Leather"],
+    [C.ARMOR_SUBCLASS.MAIL] = L["Mail"], [C.ARMOR_SUBCLASS.PLATE] = L["Plate"],
+}
+-- Equip locations whose type is the location's, whatever the subclass: { word, tooltip line }.
+local LOC_TYPE = {
+    INVTYPE_NECK    = { L["Jewelry"], L["A neck: jewelry any class can wear."] },
+    INVTYPE_FINGER  = { L["Jewelry"], L["A ring: jewelry any class can wear."] },
+    INVTYPE_TRINKET = { L["Trinkets"], L["A trinket any class can wear."] },
+    -- Every class wears a cloak, so the cloth the game files it under would mislead.
+    INVTYPE_CLOAK   = { L["Cloak"], L["A cloak: every class wears one."] },
+}
+local WEAPON_LOC = {
+    INVTYPE_WEAPON = true, INVTYPE_2HWEAPON = true, INVTYPE_WEAPONMAINHAND = true, INVTYPE_WEAPONOFFHAND = true,
+    INVTYPE_SHIELD = true, INVTYPE_HOLDABLE = true, INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true,
+}
+
+local function typeTitle(word) return L["Type: %s"]:format(word) end
+
+--- The Type column (feedback-4 spec §3): `Cloth`, `Leather`, `Mail` or `Plate` for an armor piece,
+--- `Jewelry` for a neck or ring, `Trinkets`, `Cloak`, `Weapons` for anything held in a hand (a
+--- shield and an off hand too), else `–` with why. The detail card's chip and the compact cards
+--- read the same answer.
+--- @param drop table
+--- @return table cell, with `known` (false for the dash)
+function WC.ArmorType(drop)
+    local f = facts(drop)
+    local loc = f.equipLoc
+    local fixed = LOC_TYPE[loc]
+    if fixed then
+        local c = cell(fixed[1], "plain", typeTitle(fixed[1]), fixed[2]); c.known = true; return c
+    end
+    if WEAPON_LOC[loc] then
+        local w = L["Weapons"]
+        local c = cell(w, "plain", typeTitle(w), L["Held in a hand: a weapon, a shield or an off hand."]); c.known = true
+        return c
+    end
+    if C.ARMOR_TYPED_EQUIPLOC[loc] then
+        local word = f.classID == C.ITEM_CLASS.ARMOR and ARMOR_WORD[f.subClassID] or nil
+        if word then
+            local c = cell(word, "plain", typeTitle(word), L["Only classes that wear %s are judged able to use it."]:format(word))
+            c.known = true
+            return c
+        end
+        local c = cell(DASH, "muted", L["Type"], L["An armor piece with no armor type, or its details have not loaded."])
+        c.known = false
+        return c
+    end
+    local c = cell(DASH, "muted", L["Type"], L["Not an item that is worn (a token, say), or its details have not loaded."])
+    c.known = false
+    return c
+end
+
 local SOURCE_WORD = { chat = L["chat"], encounter = L["the encounter"], history = L["the loot history"], manual = L["/dw add"] }
 
 --- The Looter column: the short name (the edge colors it by class).

@@ -11,7 +11,7 @@ local _, NS = ...
 -- THE CARD. What each piece says, its tone and its tooltip are NS.CompactCards.History's:
 --
 --   line 1  item (quality color, the game's tooltip) · ilvl · outcome (in its tone)
---   line 2  looter (class color, ⊕ from another realm) · slot · trade              17:02 (dimmed)
+--   line 2  looter (class color, ⊕ from another realm) · slot · type · trade       17:02 (dimmed)
 --   line 3  You ▽ -4                       Them ≈ +0
 --
 -- THE HEADERS are the full table's header button, painted with the short form

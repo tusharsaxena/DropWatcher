@@ -140,7 +140,7 @@ test("transmog card: the header's look chip says New look, Look known or nothing
     assertEqual(texts(known), "Chest,600,Look known")
     assertEqual(known[3].tone, "muted")
     local ring = DC.Chips(drop({ facts = { ilvl = 600, equipLoc = "INVTYPE_FINGER" } }))
-    assertEqual(texts(ring), "Finger,600", "no appearance, no chip")
+    assertEqual(texts(ring), "Finger,Jewelry,600", "no appearance, no chip")
 end)
 
 test("transmog ask: offered for a missing look only with transmogAsk on, with its own tooltip", function()

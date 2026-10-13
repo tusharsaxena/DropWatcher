@@ -16,13 +16,13 @@ local _, NS = ...
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
 --   Group drops  line 1: item (quality color), ilvl (right), ask
---                line 2: looter (class color, ⊕ when cross-realm), slot, trade; fresh (right, dimmed)
+--                line 2: looter (class color, ⊕ when cross-realm), slot, type, trade; fresh (right, dimmed)
 --                line 3: you = { label, verdict, eq }, them = { label, verdict, eq }
 --   My drops     line 1: item, ilvl (right), offer (or a dash on a drop that cannot be traded)
 --                line 2: forYou = { label, verdict, sub }, trade (the countdown and its bar, right)
 --                line 3: candidates (class-colored parts), announce (none on a drop that cannot be traded)
 --   History      line 1: item, ilvl (right), outcome (right, in its tone)
---                line 2: looter, slot, trade; time (right, dimmed)
+--                line 2: looter, slot, type, trade; time (right, dimmed)
 --                line 3: you, them
 --
 -- THE VERDICT. A verdict reads glyph then text: `▲ +19`, `≈ +0`, `▽ -13`, and a verdict the full
@@ -250,7 +250,8 @@ function CC.Group(drop, ctx)
         item = CC.Item(drop), ilvl = WC.Ilvl(drop),
         ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk),
         -- line 2
-        looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), trade = WC.Trade(drop),
+        looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
+        trade = WC.Trade(drop),
         fresh = CC.Freshness(drop, now),
         -- line 3
         you = CC.Half(L["You"], WC.Me(drop), WC.MyEq(drop, ctx.equipped)),
@@ -355,7 +356,8 @@ function CC.History(drop, ctx)
         -- line 1
         item = CC.Item(drop), ilvl = WC.Ilvl(drop), outcome = WH.Outcome(drop),
         -- line 2
-        looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), trade = WC.Trade(drop),
+        looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
+        trade = WC.Trade(drop),
         time = CC.When(drop.at, ctx.nowEpoch, ctx.dateFn),
         -- line 3
         you = CC.Half(L["You"], WC.Me(drop), nil), them = CC.Half(L["Them"], WH.Them(drop), nil),
@@ -367,7 +369,8 @@ end
 local function looterText(c) return c.mark and (c.text .. " " .. c.mark) or c.text end
 
 local function lineTwo(card, right)
-    return ("%s · %s · %s  %s"):format(looterText(card.looter), card.slot.text, card.trade.text, right.text)
+    return ("%s · %s · %s · %s  %s"):format(looterText(card.looter), card.slot.text, card.armorType.text,
+        card.trade.text, right.text)
 end
 
 local function candidatesText(c)

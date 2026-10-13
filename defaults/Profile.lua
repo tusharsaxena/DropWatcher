@@ -111,8 +111,8 @@ NS.C = {
         -- and no row addresses it.
         window = {
             columns = {
-                ilvl = true, slot = true, looter = true, myEq = true, theirEq = true, me = true, them = true,
-                trade = true, actions = true,
+                ilvl = true, slot = true, armorType = true, looter = true, myEq = true, theirEq = true,
+                me = true, them = true, trade = true, actions = true,
             },
             -- The layout (compact spec §1): `full` (the tables) or `compact` (the narrow card
             -- view). Schema step 5 maps the retired `compact` preset to it.

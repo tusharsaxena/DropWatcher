@@ -14,7 +14,7 @@ local _, NS = ...
 -- (pure, built from the full view's cells):
 --
 --   line 1  item (quality color, the game's tooltip) · ilvl · Ask (the full table's states)
---   line 2  looter (class color, ⊕ from another realm) · slot · trade        inspect freshness
+--   line 2  looter (class color, ⊕ from another realm) · slot · type · trade  inspect freshness
 --   line 3  You ▽ -13 (321/308)                 Them ⊘ Can't use (298/296)
 --
 -- Every piece is a font string with a hit frame over it that carries its tooltip, placed by the
@@ -219,8 +219,8 @@ local function buildLineOne(card)
     buildAsk(card)
 end
 
---- Line 2's pieces: looter (and its ⊕), slot, trade, then `right` (right-aligned: Group drops'
---- inspect freshness, History's time).
+--- Line 2's pieces: looter (and its ⊕), slot, type (feedback-4 spec §3), trade, then `right`
+--- (right-aligned: Group drops' inspect freshness, History's time).
 --- @param card table
 --- @param right string the right piece's key
 function CG.BuildLineTwo(card, right)
@@ -230,8 +230,10 @@ function CG.BuildLineTwo(card, right)
     looter.hit:SetPoint("BOTTOMRIGHT", looter.glyph, "BOTTOMRIGHT", 0, 0)
     local slot = piece(card, "slot")
     slot.text:SetPoint("LEFT", looter.glyph, "RIGHT", 4, 0)
+    local kind = piece(card, "armorType")
+    kind.text:SetPoint("LEFT", slot.text, "RIGHT", 4, 0)
     local trade = piece(card, "trade")
-    trade.text:SetPoint("LEFT", slot.text, "RIGHT", 4, 0)
+    trade.text:SetPoint("LEFT", kind.text, "RIGHT", 4, 0)
     piece(card, right)
 end
 
@@ -320,7 +322,7 @@ local function paintLineOne(card, drop, cc)
     paintAsk(card, cc.ask, drop.id)
 end
 
---- Line 2 painted from a card model: the looter in class color, its ⊕, slot, trade and `right`.
+--- Line 2 painted from a card model: the looter in class color, its ⊕, slot, type, trade and `right`.
 --- @param card table
 --- @param cc table a CompactCards card
 --- @param right string the right piece's key (`fresh` or `time`)
@@ -332,6 +334,7 @@ function CG.PaintLineTwo(card, cc, right)
     c.looter.glyph:SetText(cc.looter.mark or "")
     setTone(c.looter.glyph, "muted")
     paintText(c.slot, cc.slot, SEP)
+    paintText(c.armorType, cc.armorType, SEP)
     paintText(c.trade, cc.trade, SEP)
     paintText(c[right], cc[right])
 end

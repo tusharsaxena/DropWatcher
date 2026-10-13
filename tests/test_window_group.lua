@@ -244,17 +244,17 @@ end
 
 test("table: the default columns, and a column the profile turns off", function()
     local WG = T.newAddon().WindowGroup
-    assertEqual(keys(WG.Columns()), "item,ilvl,slot,looter,myEq,theirEq,me,them,trade,actions")
+    assertEqual(keys(WG.Columns()), "item,ilvl,slot,armorType,looter,myEq,theirEq,me,them,trade,actions")
     assertEqual(keys(WG.Columns({ slot = false, item = false, them = true })),
-        "item,ilvl,looter,myEq,theirEq,me,them,trade,actions", "Item never hides")
+        "item,ilvl,armorType,looter,myEq,theirEq,me,them,trade,actions", "Item never hides")
     assertEqual(keys(WG.Columns({ myEq = false })),
-        "item,ilvl,slot,looter,theirEq,me,them,trade,actions", "`window.columns.myEq` turns My eq off")
+        "item,ilvl,slot,armorType,looter,theirEq,me,them,trade,actions", "`window.columns.myEq` turns My eq off")
 end)
 
 test("table: the Item column takes the slack, never less than its minimum", function()
     local NS = T.newAddon()
     local WG, K = NS.WindowGroup, NS.Constants.WINDOW
-    local cols = WG.Columns({ slot = false, looter = false, myEq = false, them = false, trade = false })
+    local cols = WG.Columns({ slot = false, armorType = false, looter = false, myEq = false, them = false, trade = false })
     local wide = WG.Layout(cols, 600)
     local fixed = 40 + 84 + 70 + K.ASK_W + 5 * K.CELL_GAP   -- Actions is the Ask button alone (feedback-4 §2)
     assertEqual(wide.item.w, 600 - fixed)
@@ -262,21 +262,26 @@ test("table: the Item column takes the slack, never less than its minimum", func
     assertEqual(WG.Layout(cols, 100).item.w, K.ITEM_MIN)
 end)
 
-test("table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order", function()
+test("table: a row too narrow for every column sheds Type, Slot, Looter, My eq, Their eq and Ilvl, in that order", function()
     local NS = T.newAddon()
-    local WG, K = NS.WindowGroup, NS.Constants.WINDOW
+    local WG = NS.WindowGroup
     local cols = WG.Columns(false)
-    local wide = select(2, WG.Layout(cols, 900))
-    assertEqual(keys(wide), "item,ilvl,slot,looter,myEq,theirEq,me,them,trade,actions", "900 keeps them all")
-    assertEqual(keys(WG.Fit(cols, 850)), "item,ilvl,looter,myEq,theirEq,me,them,trade,actions")
-    assertEqual(keys(WG.Fit(cols, 750)), "item,ilvl,myEq,theirEq,me,them,trade,actions")
-    assertEqual(keys(WG.Fit(cols, 650)), "item,ilvl,theirEq,me,them,trade,actions", "My eq goes before Their eq")
-    local narrow = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
-    local layout, kept = WG.Layout(cols, narrow)
-    assertEqual(keys(kept), "item,me,them,trade,actions")
-    assertTrue(layout.actions.x + layout.actions.w <= narrow, "Actions inside the row at the minimum width")
-    assertTrue(layout.slot == nil, "a shed column has no place")
+    local shed, have = {}, {}
+    for _, c in ipairs(cols) do have[c.key] = true end
+    for w = 1200, 0, -2 do
+        local kept = {}
+        for _, c in ipairs(WG.Fit(cols, w)) do kept[c.key] = true end
+        for key in pairs(have) do
+            if not kept[key] then shed[#shed + 1] = key; have[key] = nil end
+        end
+    end
+    assertEqual(table.concat(shed, ","), "armorType,slot,looter,myEq,theirEq,ilvl,them,trade,me")
     assertEqual(keys(WG.Fit(cols, 0)), "item,actions", "Item and Actions never go")
+    for _, w in ipairs({ 300, 500, 700, 900 }) do
+        local layout, kept = WG.Layout(cols, w)
+        assertTrue(layout.actions.x + layout.actions.w <= w, "Actions inside the row at " .. w)
+        if #kept < #cols then assertTrue(layout.armorType == nil, "a shed column has no place") end
+    end
 end)
 
 local function ctxOf(pass, sort)
@@ -659,7 +664,7 @@ test("table: the compact layout draws cards instead of the table, and the full l
     NS.ToggleWindowMode()
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact == nil)
-    assertEqual(#drawn.columns, 10)
+    assertEqual(#drawn.columns, 11)
     assertTrue(drawn.pane.scroll:IsShown()); assertFalse(drawn.pane.compactView.scroll:IsShown())
 end)
 
@@ -764,4 +769,44 @@ test("table: the Ask button wears its state's tone: red to ask, yellow once aske
     ask = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions.ask
     assertEqual(textOf(ask.label), "Traded"); assertEqual(ask.tone, "good")
     assertEqual(select(2, ask.label:GetTextColor()), G.g)
+end)
+
+-- ── the Type column (feedback-4 spec §3) ────────────────────────────────────────────────────
+
+test("cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why", function()
+    local NS = T.newAddon()
+    local W, A = NS.WindowCells, NS.Constants.ARMOR_SUBCLASS
+    local ARMOR = NS.Constants.ITEM_CLASS.ARMOR
+    local function typeOf(loc, classID, sub)
+        return W.ArmorType(drop({ facts = { ilvl = 300, equipLoc = loc, classID = classID, subClassID = sub } }))
+    end
+    assertEqual(typeOf("INVTYPE_HEAD", ARMOR, A.PLATE).text, "Plate")
+    assertEqual(typeOf("INVTYPE_CHEST", ARMOR, A.CLOTH).text, "Cloth")
+    assertEqual(typeOf("INVTYPE_ROBE", ARMOR, A.CLOTH).text, "Cloth")
+    assertEqual(typeOf("INVTYPE_HAND", ARMOR, A.LEATHER).text, "Leather")
+    assertEqual(typeOf("INVTYPE_FEET", ARMOR, A.MAIL).text, "Mail")
+    assertEqual(typeOf("INVTYPE_NECK", ARMOR, A.GENERIC).text, "Jewelry")
+    assertEqual(typeOf("INVTYPE_FINGER", ARMOR, A.GENERIC).text, "Jewelry")
+    assertEqual(typeOf("INVTYPE_TRINKET", ARMOR, A.GENERIC).text, "Trinkets")
+    assertEqual(typeOf("INVTYPE_CLOAK", ARMOR, A.CLOTH).text, "Cloak", "a cloak is never Cloth")
+    for _, loc in ipairs({ "INVTYPE_WEAPON", "INVTYPE_2HWEAPON", "INVTYPE_WEAPONMAINHAND", "INVTYPE_WEAPONOFFHAND",
+        "INVTYPE_SHIELD", "INVTYPE_HOLDABLE", "INVTYPE_RANGED", "INVTYPE_RANGEDRIGHT" }) do
+        assertEqual(typeOf(loc, 2, 7).text, "Weapons", loc)
+    end
+    local cosmetic = typeOf("INVTYPE_HEAD", ARMOR, A.COSMETIC)
+    assertEqual(cosmetic.text, "–"); assertFalse(cosmetic.known); assertEqual(cosmetic.tone, "muted")
+    local token = typeOf(nil, 15, 0)
+    assertEqual(token.text, "–"); assertTrue(#token.tip >= 2 and token.tip[2] ~= "", "the dash says why")
+    local plate = typeOf("INVTYPE_HEAD", ARMOR, A.PLATE)
+    assertEqual(plate.tip[1], "Type: Plate"); assertTrue(plate.known)
+end)
+
+test("table: the Type column sits after Slot and is painted on every row", function()
+    local _, drawn = shownTable()
+    local c = rowFor(drawn, 2).cells
+    assertEqual(textOf(c.armorType.text), "Jewelry", "the ring")
+    assertEqual(textOf(drawn.pane.colHead.labels.armorType.text), "Type")
+    local keysShown = {}
+    for _, col in ipairs(drawn.columns) do keysShown[#keysShown + 1] = col.key end
+    assertEqual(keysShown[3] .. "," .. keysShown[4], "slot,armorType")
 end)

@@ -62,7 +62,7 @@ test("cells: the header's chips name slot, armor, bind, track and rank, primary 
     assertEqual(texts(chips), "Head,Cloth,BoP,Hero 2/6 · 311,Int,Socket,Leech")
     for _, c in ipairs(chips) do assertTrue(#c.tip >= 2, c.text .. " explains itself") end
     local warbound = D.Chips(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER", warbound = true } }))
-    assertEqual(texts(warbound), "Finger,Warbound,311")
+    assertEqual(texts(warbound), "Finger,Jewelry,Warbound,311", "a ring's type is Jewelry (feedback-4 §3)")
     local bare = D.Chips(drop({ facts = NONE }))
     assertEqual(texts(bare), "–", "the slot always shows, even unread")
     assertTrue(bare[1].tip[2]:find("not loaded") ~= nil)

@@ -44,6 +44,8 @@ WH.COLUMNS = {
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
     { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
     { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
+    { key = "armorType", label = L["Type"], width = 64, shed = 0,
+      tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
     { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
     { key = "me", label = L["Me"], width = 70, shed = 6,
       tip = L["The drop judged for you, as it was last judged while it was in the feed."] },
@@ -351,7 +353,7 @@ local function qualityColor(q)
     if qc then return qc.r, qc.g, qc.b end
 end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade, them = WH.Them, outcome = WH.Outcome }
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WC.Me, trade = WC.Trade, them = WH.Them, outcome = WH.Outcome }
 
 local function paintRow(row, drop, layout, metrics)
     row.entry = drop.entry

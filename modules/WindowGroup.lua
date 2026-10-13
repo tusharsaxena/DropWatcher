@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/WindowGroup.lua — the Group drops table (design spec §11.1-§11.2, boards 01, 03 and 06):
 -- every drop the group receives, one row each, under a collapsible header per encounter or key run.
 --
--- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color), My eq
+-- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Type (Cloth … Plate, Jewelry,
+-- Trinkets, Cloak or Weapons; feedback-4 spec §3), Looter (in class color), My eq
 -- (what you wear in that slot, from your gear snapshot), Their eq (what the looter wears there, from
 -- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
 -- verdicts: ▲ ≈ ▽ before the signed item-level change, green, yellow or red in both; feedback-4
@@ -64,6 +65,8 @@ WG.COLUMNS = {
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
     { key = "ilvl", label = L["Ilvl"], width = 40, shed = 5, tip = L["The drop's item level."] },
     { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
+    { key = "armorType", label = L["Type"], width = 64, shed = 0,
+      tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
     { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
     { key = "myEq", label = L["My eq"], width = 84, shed = 3,
       tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level. Hover an icon for the item."] },
@@ -572,7 +575,7 @@ local function placeCells(row, layout, height)
     end
 end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade }
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WC.Me, trade = WC.Trade }
 
 local function paintRow(row, drop, layout, now, metrics)
     row.dropId = drop.id

@@ -46,11 +46,6 @@ local TERTIARY_ORDER = {
     "ITEM_MOD_CR_LIFESTEAL_SHORT", "ITEM_MOD_CR_SPEED_SHORT", "ITEM_MOD_CR_AVOIDANCE_SHORT", "ITEM_MOD_CR_STURDINESS_SHORT",
 }
 
-local ARMOR_WORD = {
-    [C.ARMOR_SUBCLASS.CLOTH] = L["Cloth"], [C.ARMOR_SUBCLASS.LEATHER] = L["Leather"],
-    [C.ARMOR_SUBCLASS.MAIL] = L["Mail"], [C.ARMOR_SUBCLASS.PLATE] = L["Plate"],
-    [C.ARMOR_SUBCLASS.SHIELD] = L["Shield"],
-}
 
 local BIND_CHIP = {
     [C.BIND.ON_ACQUIRE] = { L["BoP"], L["Bind on pickup: it binds to whoever loots it."] },
@@ -103,11 +98,12 @@ local function slotChip(f)
     return chip(label, L["Slot"], L["Worn in the %s slot."]:format(label))
 end
 
+-- The Type column's answer as a chip (feedback-4 spec §3: Cloth … Plate, Jewelry, Trinkets, Cloak,
+-- Weapons); none when the type is not known.
 local function armorChip(f)
-    if f.classID ~= C.ITEM_CLASS.ARMOR then return nil end
-    local word = ARMOR_WORD[f.subClassID]
-    if not word then return nil end
-    return chip(word, L["Armor type"], L["Only classes that wear %s are judged able to use it."]:format(word))
+    local t = WC.ArmorType({ facts = f })
+    if not t.known then return nil end
+    return chip(t.text, L["Type"], t.tip[2])
 end
 
 local function bindChip(f)
