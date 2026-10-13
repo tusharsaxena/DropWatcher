@@ -2,8 +2,9 @@
 -- page's strip, the rows each page draws, the dimmed rows, General › When to show's table, the Feed
 -- page's "in force now" readout, the Comparison page's per-spec editors, the Messages page's
 -- template editors (live counters, token chips, preview, Reset templates), each page's Defaults
--- button, and the pure halves of the editors (settings/Editors.lua). Built headless under the kit's AceGUI recorder: a page's body is
--- drawn on its first OnShow, and a tab is reached by clicking the strip's button.
+-- button, and the pure halves of the editors (settings/Editors.lua). Built headless under the
+-- kit's AceGUI recorder: a page's body is drawn on its first OnShow, and a tab is reached by
+-- clicking the strip's button.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -212,6 +213,20 @@ test("when to show: Defaults repaints the table", function()
     assertEqual(t.rows[6].track.value, false)
     assertEqual(t.rows[1].quality.value, "global")
     assertTrue(t.rows[6].autoOpen.disabled == true)
+end)
+
+test("when to show: a profile switch repaints the table and re-hosts it", function()
+    local NS, _, m = T.enableAddon()
+    local ctx, _, t = whenToShow(NS, m)
+    NS.SchemaRuntime.Set("situations.delve.track", true)
+    assertEqual(t.rows[6].track.value, true)
+    NS.addon.db:SetProfile("Other")
+    -- red under: a full re-render that builds a second table, or re-hosts nothing after the park
+    assertTrue(ctx.dwSituations == t, "the same table")
+    assertEqual(t.rows[6].track.value, false, "the fresh profile's delve is untracked")
+    assertTrue(t.rows[6].autoOpen.disabled == true, "and its auto-open dims again")
+    assertTrue(t.host:IsShown() == true, "still on the page")
+    assertTrue(t.host:GetParent() ~= ctx.panel, "re-hosted off the park")
 end)
 
 test("when to show: the table is built once, parked when the tab goes, and re-hosted when it comes back", function()

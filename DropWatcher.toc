@@ -422,8 +422,9 @@ settings\Panel.lua
 # settings\PageEditors.lua takes at load; reads NS.L, NS.Constants and NS.ClassData at load, and
 # NS.Evaluate and NS.Messaging (modules\, above) at call time.
 settings\Editors.lua
-# LOAD-BEARING: publishes Settings.PageEditors, which settings\Pages.lua takes at load; takes
-# Settings.Editors (above) at load and the engine modules at call time.
+# LOAD-BEARING: publishes Settings.PageEditors, which settings\Pages.lua takes at load and
+# settings\Panel.lua (above) reaches at render time (When to show's table); takes Settings.Editors
+# (above) at load and the engine modules at call time.
 settings\PageEditors.lua
 # LOAD-BEARING: registers the Feed, Comparison, Trade, Messages and Window pages after General's
 # (settings\Panel.lua, above) and before Profiles' (below), the order the settings list shows.

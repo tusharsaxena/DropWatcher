@@ -7,8 +7,9 @@ local _, NS = ...
 -- row per situation), the Messages page's template editors (their live counters, the token chips
 -- and the preview) and the Feed page's "in force now" readout. Their widgets are
 -- settings/PageEditors.lua's; what they show and what they write is decided here, with no widget
--- and no client call, so the suites can pin it. A map write is always a fresh table: the seam stores what it is handed, and an
--- edit made in place on the stored table would skip the seam's check and its announce.
+-- and no client call, so the suites can pin it. A map write is always a fresh table: the seam
+-- stores what it is handed, and an edit made in place on the stored table would skip the seam's
+-- check and its announce.
 
 local DW       = NS.addon
 local Settings = DW.Settings
