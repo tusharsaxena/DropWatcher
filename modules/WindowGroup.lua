@@ -608,10 +608,10 @@ local function inspectGear(drop)
     return e and e.gear
 end
 
--- Your worn gear: the gear snapshot's (NS.Gear), so it is always the current one.
+-- Your worn gear and class: the gear snapshot's (NS.Gear), so it is always the current one.
 local function myGear()
     local snap = NS.Gear.Snapshot()
-    return snap and snap.equipped
+    return snap and snap.equipped, snap and snap.classFile
 end
 
 -- A Me or Them cell (NS.SideCells): the worn items' icons, their item level (plain, or a muted

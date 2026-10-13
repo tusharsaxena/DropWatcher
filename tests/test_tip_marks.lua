@@ -1,9 +1,10 @@
 -- tests/test_tip_marks.lua — the tooltips' verdict marks and lines (feedback-6 spec §3, DW-F3;
 -- modules/TipMarks.lua): a mark is an inline texture escape of a LibKa0s media icon, tinted through
 -- the escape's color fields, never a font glyph the tooltip's face draws as a box; a line may be
--- marked non-wrapping, and the tooltip then grows to fit it (modules/Window.lua). Then (Details)'
--- lines on your own drop, and an audit: no tooltip on either tab, in either layout, carries
--- → ▲ ▽ ≈ ⊘ or ⊕. Then the arrow between two values (TM.Arrow) and the drawn-width count
+-- marked non-wrapping, and the tooltip then grows to fit it (modules/Window.lua). Then the gear
+-- grid (feedback-7 spec §3: TM.Grid, TM.GearRows, TM.ArrowCell; painted by modules/TipGrid.lua),
+-- Upgrade for N's rows on your own drop, and an audit: no tooltip on either tab, in either layout,
+-- carries → ▲ ▽ ≈ ⊘ or ⊕ outside a grid's glyph cell (drawn in the monospace face). Then the arrow between two values (TM.Arrow) and the drawn-width count
 -- (TM.Chars), and the same audit over every text drawn in the default face (DW-F5): the toast, the
 -- detail card's chips and rows and the Offer panel take textures; only monospace text keeps glyphs.
 
@@ -99,6 +100,88 @@ test("tooltip: a non-wrapping line is added with wrap off; every other line stil
     assertEqual(added[2].text, "Nobody else in your group."); assertEqual(added[2].wrap, true, "explanations wrap")
 end)
 
+-- ── the gear grid (feedback-7 spec §3) ──────────────────────────────────────────────────────
+
+test("grid: the arrow cell is the table's glyph and the unsigned difference, both in the verdict's tone", function()
+    local TM = T.newAddon().TipMarks
+    local up = TM.ArrowCell("upgrade", 12.4)
+    assertEqual(up.glyph, "▲"); assertEqual(up.text, "12"); assertEqual(up.tone, "good")
+    local side = TM.ArrowCell("sidegrade", 0)
+    assertEqual(side.glyph, "≈"); assertEqual(side.text, "0"); assertEqual(side.tone, "yellow")
+    local down = TM.ArrowCell("downgrade", -13)
+    assertEqual(down.glyph, "▽"); assertEqual(down.text, "13", "no sign: the glyph says which way"); assertEqual(down.tone, "red")
+    assertEqual(TM.ArrowCell("upgrade", nil).text, "", "into an empty slot: the glyph alone")
+    assertEqual(TM.ArrowCell("cantUse", 3), "", "a worded verdict has no arrow")
+end)
+
+test("grid: a member's rows, the name on the first, the arrow on the item it replaces, empty for a slot worn empty", function()
+    local NS, _, m = T.newAddon()
+    local TM = NS.TipMarks
+    m.ITEM_QUALITY_COLORS = { [4] = { r = 0.64, g = 0.21, b = 0.93 } }
+    local a, b = { link = "|cffa335ee|Hitem:1::|h[High]|h|r", ilvl = 308 }, { name = "Low", quality = 4, ilvl = 291.6 }
+    local rows = TM.GearRows("Seta", { a, b }, 0, TM.ArrowCell("upgrade", 5))
+    assertEqual(#rows, 2)
+    assertEqual(T.tipText(TM.Grid(rows)), "Seta  308  |cffa335eeHigh|r\n292  |cffa336edLow|r  ▲5", "the lower one")
+    rows = TM.GearRows("Seta", { a, b }, 0, TM.ArrowCell("upgrade", 5), { link = a.link })
+    assertEqual(rows[1][4].glyph, "▲", "the judged item, when named"); assertEqual(rows[2][4], "")
+    rows = TM.GearRows("Seta", { a }, 1, TM.ArrowCell("upgrade"))
+    assertEqual(rows[2][3].text, "empty"); assertEqual(rows[2][3].tone, "muted"); assertEqual(rows[2][4].glyph, "▲")
+    rows = TM.GearRows("Seta", {}, 0, "")
+    assertEqual(#rows, 1, "nothing listed: one empty row"); assertEqual(rows[1][3].text, "empty")
+    assertTrue(TM.IsGrid(TM.Grid(rows))); assertFalse(TM.IsGrid(TM.NoWrap("x"))); assertFalse(TM.IsGrid("x"))
+    assertEqual(TM.Text(TM.Grid(rows)), "Seta  empty", "Text reads a grid as its drawn cells")
+end)
+
+test("grid: a column is as wide as its widest cell, a fixed gap between, an empty column takes no room", function()
+    local TG = T.newAddon().TipGrid
+    local xs, total = TG.Columns({ { 40, 20, 90, 0 }, { 0, 25, 60, 30 } }, 10)
+    assertEqual(xs[1], 0); assertEqual(xs[2], 50); assertEqual(xs[3], 85); assertEqual(xs[4], 185)
+    assertEqual(total, 215)
+    xs, total = TG.Columns({ { 40, 0, 90 } }, 10)
+    assertEqual(xs[3], 50, "the empty column's gap is not added"); assertEqual(total, 140)
+end)
+
+test("tooltip: a grid reserves a line per row and paints its cells as columns, the glyph in the monospace face", function()
+    local NS, _, m = T.newAddon()
+    local cw = NS.TipGrid.CHAR_W   -- the harness's font strings are not measured: the estimate
+    local TM = NS.TipMarks
+    local w = m.CreateFrame("Frame")
+    NS.Window.AttachTooltip(w, function()
+        return "For Seta: Upgrade", TM.Grid(TM.GearRows("Seta", { { name = "High", ilvl = 308 }, { name = "Lowest", ilvl = 291 } }, 0,
+            TM.ArrowCell("upgrade", 13))), "Inspected 40s ago."
+    end)
+    w:__fire("OnEnter")
+    local tip = m.GameTooltip
+    assertEqual(#tip.__lines, 4, "the title, two reserved rows, the age")
+    assertEqual(tip.__lines[2].text, " "); assertEqual(tip.__lines[2].wrap, false)
+    assertEqual(tip.__lines[4].text, "Inspected 40s ago.")
+    local drawn = NS.TipGrid.Painted()
+    local by = {}
+    for _, d in ipairs(drawn) do by[d.text] = d end
+    assertEqual(by.Seta.line, 2); assertEqual(by.Seta.x, 0)
+    assertEqual(by["308"].x, 4 * cw + NS.TipGrid.GAP, "after the widest name")
+    assertEqual(by.Lowest.line, 3); assertEqual(by.High.x, by.Lowest.x, "one column")
+    assertEqual(by["▲"].line, 3, "the arrow on the lower row"); assertTrue(by["▲"].mono, "the glyph in the monospace face")
+    assertFalse(by["13"].mono); assertEqual(by["13"].x, by["▲"].x + cw + NS.TipGrid.GLYPH_GAP)
+    assertEqual(tip.__minWidth, by["13"].x + 2 * cw, "the tooltip is at least as wide as the grid")
+    tip:Hide()
+    w:__fire("OnLeave")
+    NS.TipGrid.Begin()
+    assertEqual(#NS.TipGrid.Painted(), 0); assertEqual(tip.__minWidth, 0, "the width goes back for the next tooltip")
+end)
+
+test("compat: a tooltip's line by number is its TextLeft global; nil for an unnamed tooltip or a missing line", function()
+    local NS, env = T.newAddon()
+    local line = {}
+    env.MyTipTextLeft3 = line
+    local named = { GetName = function() return "MyTip" end }
+    assertEqual(NS.Compat.TooltipLeftLine(named, 3), line)
+    assertTrue(NS.Compat.TooltipLeftLine(named, 4) == nil, "a line it does not have")
+    assertTrue(NS.Compat.TooltipLeftLine({ GetName = function() return nil end }, 3) == nil, "unnamed")
+    assertTrue(NS.Compat.TooltipLeftLine(nil, 3) == nil)
+    env.MyTipTextLeft3 = nil
+end)
+
 -- ── (Details) on your own drop (modules/MineCells.lua) ──────────────────────────────────────
 
 local function cand(name, classFile, eval)
@@ -113,19 +196,22 @@ local function own(candidates)
         trade = { state = "likely", reasonKey = "notUpgrade", basis = "inspect" }, candidates = candidates }
 end
 
-test("details: one non-wrapping line per upgrade, ranked by gain, every part colored, the gain unsigned", function()
+test("details: one grid row per upgrade, ranked by gain, every part colored, the gain unsigned", function()
     local NS, _, m = T.newAddon()
     m.ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 }, [4] = { r = 0.64, g = 0.21, b = 0.93 } }
-    local up = NS.TipMarks.Mark("upgrade")
     local c = NS.MineCells.Details(own({
         a = cand("Seta", "PRIEST", { verdict = "upgrade", ilvlDelta = 4.4, baseline = { ilvl = 283, name = "Loop", quality = 3 } }),
         b = cand("Butterz", "MAGE", { verdict = "upgrade", ilvlDelta = 11, baseline = { ilvl = 276, name = "Band", quality = 4 } }),
         c = cand("Kael", "ROGUE", { verdict = "downgrade", ilvlDelta = -2, baseline = { ilvl = 289 } }),
     }))
-    assertEqual(#c.tip, 3, "the title and the two upgrades; a downgrade is not listed")
-    assertEqual(c.tip[2].text, "|cff40c7ebButterz|r wears 276 |cffa336edBand|r " .. up .. "11")
-    assertEqual(c.tip[3].text, "|cffffffffSeta|r wears 283 |cff0070deLoop|r " .. up .. "4", "rounded, no sign")
-    assertEqual(c.tip[2].wrap, false); assertEqual(c.tip[3].wrap, false)
+    assertEqual(#c.tip, 2, "the title and the grid; a downgrade is not listed")
+    local g = c.tip[2].grid
+    assertEqual(#g, 2, "a row per upgrade")
+    assertEqual(g[1][1], "|cff40c7ebButterz|r"); assertEqual(g[1][2], "276"); assertEqual(g[1][3], "|cffa336edBand|r")
+    assertEqual(g[1][4].glyph, "▲"); assertEqual(g[1][4].text, "11"); assertEqual(g[1][4].tone, "good")
+    assertEqual(T.tipText({ grid = { g[2] } }), "|cffffffffSeta|r  283  |cff0070deLoop|r  ▲4", "rounded, no sign")
+    local bare = NS.MineCells.Details(own({ a = cand("Seta", "PRIEST", { verdict = "upgrade", ilvlDelta = 9 }) }))
+    assertEqual(T.tipText(bare.tip[2]), "|cffffffffSeta|r  empty  ▲9", "nothing worn there: empty")
     local none = NS.MineCells.Details(own({ a = cand("Kael", "ROGUE", { verdict = "downgrade", ilvlDelta = -2 }) }))
     assertEqual(type(none.tip[2]), "string", "an explanation still wraps")
     assertEqual(type(NS.MineCells.Details(own({})).tip[2]), "string", "solo: it wraps")
@@ -142,8 +228,8 @@ test("details: of two worn rings the line names the lower, the one the drop woul
     local eval = NS.Evaluate.Evaluate(ring(287), who)
     assertEqual(eval.verdict, "upgrade")
     local c = NS.MineCells.Details(own({ a = cand("Butterz", "MAGE", eval) }))
-    local text = c.tip[2].text
-    assertTrue(text:find("wears 276 Lower Loop ", 1, true) ~= nil, text)
+    local text = T.tipText(c.tip[2])
+    assertTrue(text:find("  276  Lower Loop  ", 1, true) ~= nil, text)
     assertFalse(text:find("Higher Band", 1, true) ~= nil, "the higher one is kept")
 end)
 
@@ -190,11 +276,33 @@ local function attached(NS)
     return widgets
 end
 
+-- A line's text in the tooltip's face: a grid's glyph cells are drawn in the monospace face
+-- (modules/TipGrid.lua), so only their numbers count, and the glyph must be the table's own.
+local function faceText(NS, line)
+    if not NS.TipMarks.IsGrid(line) then return NS.TipMarks.Text(line) end
+    local parts = {}
+    for _, row in ipairs(line.grid) do
+        for _, cell in ipairs(row) do
+            if type(cell) == "table" then
+                if cell.glyph then
+                    local ok = false
+                    for _, g in pairs(NS.WindowCells.GLYPH) do ok = ok or g == cell.glyph end
+                    assertTrue(ok, "a grid's glyph is the table's: " .. cell.glyph)
+                end
+                parts[#parts + 1] = tostring(cell.text or "")
+            else
+                parts[#parts + 1] = tostring(cell)
+            end
+        end
+    end
+    return table.concat(parts, " ")
+end
+
 local function auditTips(NS, widgets, where)
     local n = 0
     for _, w in ipairs(widgets) do
         for _, line in ipairs(NS.Window.TooltipOf(w)) do
-            local text = NS.TipMarks.Text(line)
+            local text = faceText(NS, line)
             assertTrue(glyphIn(text) == nil, where .. ": " .. text)
             n = n + 1
         end

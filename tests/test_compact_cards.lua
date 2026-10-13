@@ -62,12 +62,8 @@ end
 
 local function CC() return T.newAddon().CompactCards end
 
--- A tooltip's lines joined; a non-wrapping line (NS.TipMarks.NoWrap) by its text.
-local function joined(tip)
-    local out = {}
-    for i, l in ipairs(tip) do out[i] = type(l) == "table" and l.text or l end
-    return table.concat(out, " | ")
-end
+-- A tooltip's lines joined; a non-wrapping line (NS.TipMarks.NoWrap) by its text, a grid by its cells.
+local function joined(tip) return T.tipJoined(tip) end
 
 local function has(tip, words) return joined(tip):find(words, 1, true) ~= nil end
 
@@ -272,7 +268,7 @@ test("compact cards: your own drop's trade tooltip counts its upgrades and Them 
     assertEqual(card.trade.text, "Likely", "the count is in the tooltip, not the cell (feedback-7 spec §2)")
     assertTrue(has(card.trade.tip, "Upgrades 2 members: Offer shows who."))
     assertEqual(card.them.text, "Upgrade for 2"); assertEqual(card.them.tone, "good")
-    assertTrue(has(card.them.tip, "|cffffffffSeta|r wears 169 |T"), "a priest's name in white, the arrow a texture")
+    assertTrue(has(card.them.tip, "|cffffffffSeta|r  169  "), "a priest's name in white, a grid row (feedback-7 spec §3)")
     assertEqual(card.ask.text, "Offered"); assertEqual(card.ask.state, "sent")
     -- An upgrade for you (the keep? rule): no count and Hidden until its Offer panel is opened.
     local up = { verdict = "upgrade", ilvlDelta = 9, reasons = {} }

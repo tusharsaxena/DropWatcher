@@ -35,7 +35,7 @@ end
 
 local function WC() return T.newAddon().WindowCells end
 
-local function joined(tip) return table.concat(tip, " | ") end
+local function joined(tip) return T.tipJoined(tip) end
 
 -- ── the verdict cells ───────────────────────────────────────────────────────────────────────
 
@@ -59,7 +59,10 @@ test("cells: a verdict with no glyph says a word, and every verdict's tooltip sa
     assertEqual(unk.text, "?"); assertEqual(unk.tone, "muted")
     assertTrue(#unk.tip >= 2, "never a bare title")
     local up = W.Me(drop())
-    assertTrue(joined(up.tip):find("Item level 311 against 292 %(Old Band%): %+19") ~= nil, joined(up.tip))
+    assertEqual(T.tipText(up.tip[3]), "You  292  |cffa335eeOld Band|r  ▲19", "the comparison as a grid row (feedback-7 spec §3)")
+    assertTrue(joined(up.tip):find("against", 1, true) == nil, "no comparison prose")
+    assertEqual(T.tipText(W.Me(drop({ isMine = true, looter = { name = "Me-Realm", classFile = "MAGE" } })).tip[3]):sub(1, 18),
+        "|cff40c7ebYou|r  2", "your own drop: you in your class color")
     local empty = W.Me(drop({ me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))
     assertEqual(empty.text, "empty"); assertEqual(empty.glyph, "▲")
 end)
@@ -131,8 +134,8 @@ test("cells: Their eq shows both rings' levels for a ring, one for a helm, and t
     assertEqual(#helm.items, 1); assertEqual(helm.text, "324"); assertEqual(helm.tone, "plain")
     assertEqual(helm.items[1].slot, 1, "each item names its slot")
     assertEqual(helm.tip[1], "Seta wears")
-    assertEqual(helm.tip[2], "Old Band (324)")
-    assertEqual(helm.tip[3], "Inspected 40s ago.")
+    assertEqual(helm.tip[2], "Inspected 40s ago.", "the items are the merged cell's grid (SideCells), not lines")
+    assertEqual(helm.empty, 0)
     local ring = W.TheirEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER" }, link = RING }), gear, 100)
     assertEqual(#ring.items, 2, "rings compare with both worn rings")
     assertEqual(ring.text, "300/296")
@@ -142,7 +145,7 @@ test("cells: Their eq shows both rings' levels for a ring, one for a helm, and t
     assertEqual(#none.items, 0); assertEqual(none.text, "–")
     assertTrue(joined(none.tip):find("Nothing read") ~= nil)
     local empty = W.TheirEq(drop(), { [1] = false }, 100)
-    assertEqual(empty.text, "empty slot"); assertTrue(joined(empty.tip):find("Empty slot.", 1, true) ~= nil)
+    assertEqual(empty.text, "empty slot"); assertEqual(empty.empty, 1, "the slot worn empty, for the grid")
 end)
 
 -- Feedback spec §3 (FB-6): what you wear, from your gear snapshot.
@@ -152,10 +155,10 @@ test("cells: My eq shows what you wear in the drop's slot, both rings for a ring
         [13] = { link = OLD1, ilvl = 289 }, [14] = { link = OLD2, ilvl = 301 } }
     local helm = W.MyEq(drop(), equipped)
     assertEqual(helm.text, "292"); assertEqual(helm.tone, "plain"); assertEqual(#helm.items, 1)
-    assertEqual(helm.tip[1], "You wear"); assertEqual(helm.tip[2], "Old Band (292)")
+    assertEqual(helm.tip[1], "You wear"); assertTrue(helm.tip[2] == nil, "the items are the grid's")
     local ring = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER" } }), equipped)
     assertEqual(ring.text, "300", "one ring worn, the other slot empty")
-    assertTrue(joined(ring.tip):find("Empty slot.", 1, true) ~= nil)
+    assertEqual(ring.empty, 1, "the other slot worn empty")
     local trinket = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET" } }), equipped)
     assertEqual(trinket.text, "289/301"); assertEqual(#trinket.items, 2)
     local cloak = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_CLOAK" } }), { [15] = false })

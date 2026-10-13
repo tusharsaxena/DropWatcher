@@ -192,9 +192,11 @@ test("offer panel: every part has a reason tooltip; Their eq's holds the old pil
             if b:IsShown() then assertTrue(#W.TooltipOf(b) >= 2) end
         end
     end
-    local tip = table.concat(W.TooltipOf(p.rows[1].eq), " | ")
-    assertTrue(tip:find("Seta wears", 1, true) ~= nil, tip)
-    assertTrue(tip:find("For Seta: Upgrade | An upgrade for them", 1, true) ~= nil, tip)
+    local lines = W.TooltipOf(p.rows[1].eq)
+    local tip = T.tipJoined(lines)
+    assertEqual(lines[1], "For Seta: Upgrade")
+    assertTrue(NS.TipMarks.IsGrid(lines[2]), "the worn gear as a grid (feedback-7 spec §3)")
+    assertTrue(tip:find("An upgrade for them", 1, true) ~= nil, tip)
     assertTrue(W.TooltipOf(p.rows[5].eq)[1] == "Fifth: Checking")
     assertTrue(table.concat(W.TooltipOf(p.panel.heads.actions), " "):find("Trade", 1, true) == nil, "no Trade sentence")
     assertTrue(#W.TooltipOf(p.panel.line) >= 3); assertTrue(#W.TooltipOf(p.panel.announce) >= 2)
@@ -224,7 +226,7 @@ test("offer panel: Their eq shows both worn items from the member's inspect read
     local r = NS.OfferPanel.Drawn().rows[1]
     assertTrue(r.eq.icons[1]:IsShown() and r.eq.icons[2]:IsShown(), "both rings")
     assertEqual(eqOf(r), "308/292 ▲ 6")
-    assertTrue(table.concat(NS.Window.TooltipOf(r.eq), " | "):find("Inspected 30s ago.", 1, true) ~= nil)
+    assertTrue(T.tipJoined(NS.Window.TooltipOf(r.eq)):find("Inspected 30s ago.", 1, true) ~= nil)
 end)
 
 test("offer panel: opening an upgrade for you reveals who it would help on its row", function()

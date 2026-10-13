@@ -116,21 +116,59 @@ test("side cells: a dash gear part goes when the verdict says something, and sta
     assertEqual(nothing.level, "–"); assertEqual(nothing.text, "")
 end)
 
-test("side cells: the tooltip is the gear's lines, then the verdict's, a shared line said once", function()
+local OLD_BAND, OLDER_BAND = "|cffa335eeOld Band|r", "|cffa335eeOlder Band|r"   -- the links' own color
+
+test("side cells: the tooltip is the verdict's title, the worn gear as a grid, then the read's age and the verdict's lines", function()
     local S = SC()
-    local me = S.Me(drop(), MINE)
-    assertEqual(me.tip[1], "You wear"); assertEqual(me.tip[2], "Old Band (292)")
-    assertEqual(me.tip[3], "For you: Upgrade")
+    local me = S.Me(drop(), MINE, "MAGE")
+    assertEqual(me.tip[1], "For you: Upgrade")
+    assertEqual(T.tipText(me.tip[2]), "|cff40c7ebYou|r  292  " .. OLD_BAND .. "  ▲19", "[Name] [ilvl] [item] [arrow and difference]")
+    assertEqual(me.tip[2].grid[1][4].tone, "good", "the glyph and the difference in the verdict's tone")
+    assertEqual(me.tip[3], "A higher item level, and a higher score when scoring is on.")
+    assertFalse(has(me.tip, "You wear"), "the X wears line gives way to the grid")
+    for _, l in ipairs(me.tip) do assertTrue(T.tipText(l):find("against", 1, true) == nil, "no comparison prose: " .. T.tipText(l)) end
     local them = S.Them(drop(), HERS, 100)
-    assertEqual(them.tip[1], "Seta wears"); assertTrue(has(them.tip, "Inspected 40s ago."), "the read's age")
-    assertTrue(has(them.tip, "For Seta: Downgrade"), "the verdict's title")
+    assertEqual(them.tip[1], "For Seta: Downgrade")
+    assertEqual(T.tipText(them.tip[2]), "|cffffffffSeta|r  324  " .. OLD_BAND .. "  ▽13", "the looter in their class color")
+    assertEqual(them.tip[2].grid[1][4].tone, "red")
+    assertEqual(them.tip[3], "Inspected 40s ago.", "the read's age after the grid")
+    assertEqual(them.tip[4], "A lower item level and no score gain.")
     local range = S.Them(drop({ them = NONE, inspect = { status = "outOfRange" } }), nil, 100)
     local seen = {}
     for _, l in ipairs(range.tip) do
+        assertEqual(type(l), "string", "nothing read: no grid")
         assertFalse(seen[l], "said once: " .. l)
         seen[l] = true
     end
     assertTrue(has(range.tip, "For Seta: Unknown"))
+end)
+
+test("side cells: two worn items are two rows, the arrow on the one the drop would replace; a slot worn empty reads empty", function()
+    local S = SC()
+    local judged = drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 13, baseline = { link = OLD2, ilvl = 296 }, reasons = {} } })
+    local g = S.Them(judged, HERS, 100).tip[2].grid
+    assertEqual(#g, 2, "a row per trinket")
+    assertEqual(T.tipText({ grid = { g[1] } }), "|cffffffffSeta|r  298  " .. OLD_BAND, "the name on the first row; no arrow on the kept one")
+    assertEqual(T.tipText({ grid = { g[2] } }), "296  " .. OLDER_BAND .. "  ▲13", "the arrow on the item it replaces")
+    assertEqual(g[2][1], "")
+    local unlinked = drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 13, reasons = {} } })
+    assertEqual(S.Them(unlinked, HERS, 100).tip[2].grid[2][4].glyph, "▲", "no baseline named: the lower one")
+    local ring = drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER", quality = 4 },
+        me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } })
+    local rg = S.Me(ring, MINE).tip[2].grid
+    assertEqual(#rg, 2)
+    assertEqual(rg[1][4], "", "the worn ring is kept")
+    assertEqual(rg[2][3].text, "empty"); assertEqual(rg[2][3].tone, "muted")
+    assertEqual(rg[2][4].glyph, "▲"); assertEqual(rg[2][4].text, "", "into an empty slot: the glyph alone")
+    assertEqual(rg[1][1], "You", "no class known: plain")
+end)
+
+test("side cells: History's verdict alone keeps its own one-row grid from the judged item", function()
+    local S = SC()
+    local v = S.Merge(T.newAddon().WindowCells.Me(drop({ me = { verdict = "upgrade", ilvlDelta = 6,
+        baseline = { link = OLD1, ilvl = 305 }, reasons = {} } })))
+    assertEqual(v.tip[1], "For you: Upgrade")
+    assertEqual(T.tipText(v.tip[3]), "You  305  " .. OLD_BAND .. "  ▲6", "after the explanation, where the comparison line was")
 end)
 
 test("side cells: your own drop's Them is Upgrade for N or No upgrades, in its tones, with every upgrade in the tooltip", function()
@@ -192,7 +230,9 @@ test("side cells: the Offer panel's Their eq reads like Them: both worn items fr
     local up = candidate(NS, mine(), entry("ready", { verdict = "upgrade", ilvlDelta = 15, baseline = base, reasons = {} }), read)
     assertEqual(#up.items, 2, "both trinkets from the inspect read"); assertEqual(up.level, "298/296"); assertEqual(up.levelTone, "plain")
     assertEqual(up.glyph .. up.text, "▲15"); assertEqual(up.tone, "good")
-    assertEqual(up.tip[1], "Butterz wears"); assertTrue(has(up.tip, "Inspected 40s ago."), "the read's age")
+    assertEqual(up.tip[1], "For Butterz: Upgrade"); assertTrue(has(up.tip, "Inspected 40s ago."), "the read's age")
+    assertEqual(T.tipText(up.tip[2]), "|cff40c7ebButterz|r  298  " .. OLD_BAND .. "\n296  " .. OLDER_BAND .. "  ▲15",
+        "both trinkets from the read, the arrow on the one judged against")
     assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, "An upgrade for them: a higher item level than what they wear there."),
         "the old pill's explanation moved into the tooltip")
     local noRead = candidate(NS, mine(), entry("ready", { verdict = "downgrade", ilvlDelta = -4, baseline = base, reasons = {} }))
@@ -217,7 +257,7 @@ test("side cells: the Offer panel's Their eq says Can't use, …, Unavailable an
     local empty = candidate(NS, mine({ ilvl = 311, equipLoc = "INVTYPE_HEAD", quality = 4 }),
         entry("ready", { verdict = "upgrade", reasons = { { key = "emptySlot" } } }))
     assertEqual(empty.level, "empty"); assertEqual(empty.glyph, "▲"); assertEqual(empty.text, "")
-    assertTrue(has(empty.tip, "Empty slot."))
+    assertEqual(T.tipText(empty.tip[2]), "|cff40c7ebButterz|r  empty  ▲", "nothing worn: the item cell reads empty")
     local stale = candidate(NS, mine(), entry("ready", { verdict = "upgrade", ilvlDelta = 3, baseline = { link = OLD1, ilvl = 308 }, reasons = {} }),
         { status = "pending" })
     assertEqual(#stale.items, 1, "a read not done yet gives no gear: the judged item stands in")
@@ -367,7 +407,15 @@ test("table: the Me cell paints its icons, level, glyph and difference left to r
     assertEqual(select(1, c.level:GetTextColor()), C.TONE.plain.r, "the level is plain")
     assertEqual(select(2, c.glyph:GetTextColor()), C.TONE.red.g, "the glyph in the verdict's tone")
     assertEqual(select(2, c.text:GetTextColor()), C.TONE.red.g)
-    assertEqual(NS.Window.TooltipOf(c)[1], "You wear")
+    local tip = NS.Window.TooltipOf(c)
+    assertEqual(tip[1], "For you: Downgrade", "the verdict's title, then the gear grid (feedback-7 spec §3)")
+    assertEqual(#tip[2].grid, 2, "a row per worn trinket")
+    c:__fire("OnEnter")   -- the hover paints the grid as columns
+    local by = {}
+    for _, d in ipairs(NS.TipGrid.Painted()) do by[d.text] = d end
+    assertTrue(by["▽"] and by["▽"].mono, "the table's glyph, in the monospace face")
+    assertEqual(by["8"].line, by["308"].line, "the arrow on the lower trinket's row")
+    assertEqual(by["321"].x, by["308"].x, "the levels in one column")
     assertTrue(row.cells.myEq == nil and row.cells.theirEq == nil, "no eq columns")
     assertEqual(textOf(NS.WindowGroup.Drawn().pane.colHead.labels.me.text), "Me")
 end)

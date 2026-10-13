@@ -62,6 +62,31 @@ local function marks(s)
     return (tostring(s):gsub("|T[^:|]-([^\\:|]+):[^|]*|t", "[%1]"))
 end
 
+-- A tooltip line as plain text (NS.TipMarks.Text's reading, without an instance): a string as it
+-- is, a non-wrapping line by its text, a grid (feedback-7 spec §3) as its rows on lines of their
+-- own, each row's drawn cells (glyph and text) two spaces apart.
+local function tipText(line)
+    if type(line) ~= "table" then return tostring(line) end
+    if type(line.grid) ~= "table" then return tostring(line.text) end
+    local rows = {}
+    for i, row in ipairs(line.grid) do
+        local cells = {}
+        for _, cell in ipairs(row) do
+            local t = type(cell) == "table" and ((cell.glyph or "") .. tostring(cell.text or "")) or tostring(cell or "")
+            if t ~= "" then cells[#cells + 1] = t end
+        end
+        rows[i] = table.concat(cells, "  ")
+    end
+    return table.concat(rows, "\n")
+end
+
+-- A tooltip's lines joined by `sep` (" | " when nil), each read by tipText.
+local function tipJoined(tip, sep)
+    local out = {}
+    for i, l in ipairs(tip or {}) do out[i] = tipText(l) end
+    return table.concat(out, sep or " | ")
+end
+
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
 -- assertions in beside these keys.
 _G.DW_TEST = Kit.expose{
@@ -70,6 +95,8 @@ _G.DW_TEST = Kit.expose{
     enableAddon = enableAddon,
     loadAddon   = loadAddon,
     marks       = marks,
+    tipText     = tipText,
+    tipJoined   = tipJoined,
     root        = root,
     LibStub     = surfaceMock.LibStub,
     KIT_VERSION = Kit.VERSION,

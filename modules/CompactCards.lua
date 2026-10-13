@@ -254,7 +254,7 @@ end
 
 --- A Drops card.
 --- @param drop table
---- @param ctx table { now, equipped (your gear snapshot's), gear (the looter's inspect gear),
+--- @param ctx table { now, equipped and classFile (your gear snapshot's), gear (the looter's inspect gear),
 ---   askState, askReason, transmogAsk, ownRealm, warnAt (the trade.warnAt default when nil); on your
 ---   own drop revealed (its Offer panel was opened this session) and offerTone (the offer half of
 ---   WindowOwn.ToneStates) }
@@ -272,7 +272,7 @@ function CC.Group(drop, ctx)
         trade = trade,
         fresh = CC.Freshness(drop, now), countdown = groupCountdown(drop, now, ctx.warnAt),
         -- line 3
-        you = CC.Half(L["You"], SC.Me(drop, ctx.equipped)),
+        you = CC.Half(L["You"], SC.Me(drop, ctx.equipped, ctx.classFile)),
         them = them,
     }
 end

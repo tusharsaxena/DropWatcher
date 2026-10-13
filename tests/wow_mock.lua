@@ -70,6 +70,9 @@
 --                  "inventory:<unit>:<slot>" (the real game tooltip, in order);
 --                  GameTooltip's SetOwner is recorded as `__owner` / `__anchor`, and its
 --                  ClearAllPoints / SetPoint / GetPoint as on a window frame (where it is placed);
+--                  its lines too: SetText starts `__lines` over with the title, AddLine appends
+--                  { text, wrap }, NumLines counts them (a grid's reserved rows among them,
+--                  modules/TipGrid.lua), and SetMinimumWidth / GetMinimumWidth keep `__minWidth`;
 --                  bagItemReads["bag:slot"] = { ilvl, quality } is C_Item.GetCurrentItemLevel's and
 --                  C_Item.GetItemQuality's answer on that bag slot's ItemLocation;
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
@@ -622,9 +625,21 @@ local function installTableSurface(M)
     local tip = M.GameTooltip
     tip.__points = {}
     tip.SetOwner = function(self, owner, anchor)
-        self.__owner, self.__anchor, self.__points = owner, anchor, {}
+        self.__owner, self.__anchor, self.__points, self.__lines = owner, anchor, {}, {}
         return self
     end
+    tip.__lines = {}
+    tip.SetText = function(self, text)
+        self.__lines = { { text = text } }
+        return self
+    end
+    tip.AddLine = function(self, text, _, _, _, wrap)
+        self.__lines[#self.__lines + 1] = { text = text, wrap = wrap }
+        return self
+    end
+    tip.NumLines = function(self) return #self.__lines end
+    tip.SetMinimumWidth = function(self, w) self.__minWidth = w; return self end
+    tip.GetMinimumWidth = function(self) return self.__minWidth or 0 end
     tip.ClearAllPoints = function(self) self.__points = {}; return self end
     tip.SetPoint = function(self, point, rel, relPoint, x, y)
         self.__points[#self.__points + 1] = { point, rel, relPoint, x, y }

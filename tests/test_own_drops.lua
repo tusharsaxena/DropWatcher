@@ -56,20 +56,22 @@ local function MC() return T.newAddon().MineCells end
 
 local function joined(tip) return table.concat(tip, " | ") end
 
--- One Upgrade for N tooltip line as feedback-6 spec §3 draws it, built here from its parts so the suite pins the
--- format rather than reading it back from NS.TipMarks: a mage's name in the class color, `wears`,
--- the worn item, then the green arrow texture (LibKa0s media `arrow-up`, its 64x64 canvas whole,
--- tinted C.TONE.good as 0..255) and the unsigned gain.
-local function detailsLine(NS, who, worn, gain)
-    local arrow = ("|T%s:0:0:0:0:64:64:0:64:0:64:77:217:102|t"):format(NS.Icon("arrow-up"))
-    return ("|cff40c7eb%s|r wears %s %s%d"):format(who, worn, arrow, gain)
+-- One Upgrade for N grid row as feedback-7 spec §3 draws it, built here from its parts so the suite
+-- pins the format rather than reading it back from NS.TipMarks: a mage's name in the class color,
+-- the worn item's level and name (the drawn cells two spaces apart), then the table's ▲ and the
+-- unsigned gain (one green cell).
+local function detailsLine(_, who, worn, gain)
+    return ("|cff40c7eb%s|r  %s  ▲%d"):format(who, worn, gain)
 end
 
--- A non-wrapping tooltip line's text (NS.TipMarks.NoWrap), checking that it does not wrap.
-local function noWrap(line)
-    assertEqual(type(line), "table", "an upgrade line is a non-wrapping line")
-    assertEqual(line.wrap, false)
-    return line.text
+-- Row `i` (1 when nil) of a grid tooltip line (NS.TipMarks.Grid), as its drawn text, checking
+-- that it is a grid and its arrow cell is green.
+local function noWrap(line, i)
+    assertEqual(type(line), "table", "the upgrades are a grid line")
+    assertEqual(type(line.grid), "table")
+    local row = line.grid[i or 1]
+    assertEqual(row[4].tone, "good", "the glyph and the gain in green")
+    return T.tipText({ grid = { row } })
 end
 
 -- ── the pure cells ──────────────────────────────────────────────────────────────────────────
@@ -108,13 +110,13 @@ test("own drops: Them reads Upgrade for N, green, each one ranked by gain", func
     local c = M.Details(own(), false, "For the group")
     assertEqual(c.text, "Upgrade for 2"); assertEqual(c.tone, "good"); assertEqual(c.upgrades, 2)
     assertEqual(c.tip[1], "For the group", "the caller's title")
-    assertEqual(noWrap(c.tip[2]), detailsLine(NS, "Butterz", "276 Bloodthorn Treads", 11))
-    assertEqual(noWrap(c.tip[3]), detailsLine(NS, "Seta", "283", 4), "no item name read: the level alone")
-    assertEqual(#c.tip, 3, "a downgrade is not listed")
+    assertEqual(noWrap(c.tip[2]), detailsLine(NS, "Butterz", "276  Bloodthorn Treads", 11))
+    assertEqual(noWrap(c.tip[2], 2), detailsLine(NS, "Seta", "283", 4), "no item name read: the level alone")
+    assertEqual(#c.tip, 2, "one grid; a downgrade is not listed"); assertEqual(#c.tip[2].grid, 2)
     assertEqual(M.Details(own()).tip[1], "Them", "Them by default")
     local empty = M.Details(own({ candidates = { x = cand("Seta", "ready", up(30)) } }))
     assertEqual(empty.text, "Upgrade for 1")
-    assertEqual(noWrap(empty.tip[2]), detailsLine(NS, "Seta", "nothing there", 30),
+    assertEqual(noWrap(empty.tip[2]), detailsLine(NS, "Seta", "empty", 30),
         "nothing worn in the slot")
 end)
 
@@ -222,7 +224,7 @@ test("own drops table: listed with the others: Trade's word, Upgrade for N in Th
     assertEqual(textOf(r.cells.them.text), "Upgrade for 2")
     local g = NS.Constants.TONE.good
     assertEqual(select(1, r.cells.them.text:GetTextColor()), g.r)
-    assertEqual(noWrap(NS.Window.TooltipOf(r.cells.them)[2]), detailsLine(NS, "Butterz", "276 Bloodthorn Treads", 11))
+    assertEqual(noWrap(NS.Window.TooltipOf(r.cells.them)[2]), detailsLine(NS, "Butterz", "276  Bloodthorn Treads", 11))
     assertFalse(r.cells.them.icons[1]:IsShown(), "no worn icons on your own drop")
     assertEqual(textOf(r.cells.them.level), "", "no gear part"); assertEqual(textOf(r.cells.them.glyph), "")
     assertEqual(NS.Window.TooltipOf(r.cells.them)[1], "Them")
@@ -286,7 +288,7 @@ test("own drops: the detail card shows Offer in place of Ask and Upgrade for N f
     local them
     for _, row in ipairs(drawn.card.them.rows) do if row.key == "them" then them = row end end
     assertEqual(textOf(them.value), "Upgrade for 2")
-    assertEqual(noWrap(them.tipLines[2]), detailsLine(NS, "Butterz", "276 Bloodthorn Treads", 11))
+    assertEqual(noWrap(them.tipLines[2]), detailsLine(NS, "Butterz", "276  Bloodthorn Treads", 11))
     local opened
     NS.OfferPanel.Open = function(id) opened = id end
     b:__fire("OnClick")
@@ -304,7 +306,7 @@ test("own drops compact: line 1's Offer, line 2's trade word and line 3's Upgrad
     assertEqual(rowFor(drawn, 2).ask.tone, "red", "another player's Ask stays red")
     assertEqual(textOf(card.cells.trade.text):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^· ", ""), "Likely")
     assertEqual(textOf(card.cells.them.text), "Upgrade for 2")
-    assertEqual(noWrap(card.cells.them.hit.tipLines[2]), detailsLine(NS, "Butterz", "276 Bloodthorn Treads", 11))
+    assertEqual(noWrap(card.cells.them.hit.tipLines[2]), detailsLine(NS, "Butterz", "276  Bloodthorn Treads", 11))
     local opened
     NS.OfferPanel.Open = function(id) opened = id end
     card.ask:__fire("OnClick")

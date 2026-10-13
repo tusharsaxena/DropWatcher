@@ -144,10 +144,8 @@ test("cells: on your own drop the looter's side is FOR THE GROUP, its Looter row
     assertEqual(looter.classFile, "PRIEST")
     local them = byKey(mine.rows, "them")
     assertEqual(them.text, "Upgrade for 2"); assertEqual(them.label, "Them")
-    -- One non-wrapping line per upgrade (feedback-6 spec §3); no class read, so the names are plain.
-    local arrow = ("|T%s:0:0:0:0:64:64:0:64:0:64:77:217:102|t"):format(NS.Icon("arrow-up"))
-    assertEqual(them.tip[2].text, "Butterz wears 300 Bloodthorn Treads " .. arrow .. "11", "ranked by gain")
-    assertEqual(them.tip[3].text, "Seta wears 307 " .. arrow .. "4"); assertEqual(them.tip[3].wrap, false)
+    -- One grid row per upgrade (feedback-7 spec §3); no class read, so the names are plain.
+    assertEqual(T.tipText(them.tip[2]), "Butterz  300  Bloodthorn Treads  ▲11\nSeta  307  ▲4", "ranked by gain")
     -- The keep? rule: an upgrade for you reads Hidden until revealed.
     local kept = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100)
     assertEqual(byKey(kept.rows, "them").text, "Hidden")

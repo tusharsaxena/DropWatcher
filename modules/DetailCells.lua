@@ -335,9 +335,10 @@ end
 --- The For you column (board 02, callouts 2 and 3).
 --- @param drop table
 --- @param scorer string|boolean the scorer in use, "pawn" | "weights" | "none" (true reads "pawn")
+--- @param classFile string|nil your class (the gear snapshot's): the verdict tooltip's grid names you in it
 --- @return table side
-function DC.ForYou(drop, scorer)
-    local cell = WC.Me(drop)
+function DC.ForYou(drop, scorer, classFile)
+    local cell = WC.Me(drop, classFile)
     local rows = sideRows(drop.me, facts(drop), cell.tone, L["you"], true)
     rows[#rows + 1] = scoreRow(drop.me, scorer)
     return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }

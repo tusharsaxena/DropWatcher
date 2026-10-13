@@ -6,7 +6,9 @@ local _, NS = ...
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape) and plain inputs (an
 -- inspect entry's gear, an ask's state, the clock) and answers a plain table; nothing here reads a
--- module, the client or a saved variable, so test_window_group drives each state case by case.
+-- module's state, the client or a saved variable (only NS.TipMarks, at call time: a verdict
+-- tooltip's gear grid takes the class and quality colors), so test_window_group drives each state
+-- case by case.
 -- The frame edge that paints them is modules/WindowGroup.lua; the detail card (DW-32) and the
 -- compact cards take the same composers. The Me and Them cells merge two of them each (the worn gear,
 -- then the verdict): modules/SideCells.lua.
@@ -15,6 +17,11 @@ local _, NS = ...
 -- order, under their group headers; the Drops table and its compact cards both take them.
 --
 --   cell = { text, glyph = "▲" | "≈" | "▽" | nil, tone = key of C.TONE, tip = { title, lines... } }
+--
+-- THE GEAR GRID (feedback-7 spec §3). A verdict tooltip shows the comparison as a grid row
+-- (NS.TipMarks.Grid), `[who] [worn ilvl] [worn item] [▲diff]`, where it said `Item level 295 against
+-- 289 (Speakeasy Shroud): +6.`; the gear halves (MyEq, TheirEq) list no items in their tooltips and
+-- answer `items` and `empty` instead, which NS.SideCells lays out as the merged cell's grid.
 --
 -- THE TONES (C.TONE; feedback-4 spec §0). One tone per verdict, in the Me and the Them column
 -- alike: an upgrade `good` (green), a sidegrade `yellow`, a downgrade `red`; an item that cannot be
@@ -172,24 +179,26 @@ local function trackLine(td)
     return L["Upgrade track: the same track and rank."]
 end
 
-local function compareLines(eval, ilvl, lines)
+-- The comparison as one grid row (feedback-7 spec §3): `[who] [worn ilvl] [worn item] [▲diff]`.
+local function compareLines(eval, ilvl, lines, who)
     local base = type(eval.baseline) == "table" and eval.baseline or nil
     local d = num(eval.ilvlDelta)
     if d and ilvl then
-        local name = base and WC.ItemName(base.link) or L["the worn item"]
-        lines[#lines + 1] = L["Item level %d against %d (%s): %s."]:format(ilvl, round(ilvl - d), name, WC.Signed(d))
+        local TM = NS.TipMarks
+        local worn = { link = base and base.link, name = base and base.name, quality = base and base.quality, ilvl = ilvl - d }
+        lines[#lines + 1] = TM.Grid(TM.GearRows(who or "?", { worn }, 0, TM.ArrowCell(eval.verdict, d), worn))
     end
     lines[#lines + 1] = trackLine(eval.trackDelta)
     local sd = num(eval.scoreDelta)
     if sd then lines[#lines + 1] = L["Score: %+.1f."]:format(sd) end
 end
 
--- The tooltip of one verdict: its title, board 03's explanation, then the comparison and the
--- kernel's reasons.
-local function verdictTip(title, eval, ilvl)
+-- The tooltip of one verdict: its title, board 03's explanation, then the comparison (a grid row)
+-- and the kernel's reasons.
+local function verdictTip(title, eval, ilvl, who)
     local v = eval.verdict
     local lines = { title, VERDICT_EXPLAIN[v] or VERDICT_EXPLAIN.unknown }
-    compareLines(eval, ilvl, lines)
+    compareLines(eval, ilvl, lines, who)
     if hasReasons(eval) then
         for _, r in ipairs(eval.reasons) do lines[#lines + 1] = EVAL_REASON[r.key] or tostring(r.key) end
     end
@@ -206,27 +215,35 @@ local function verdictText(eval)
     return L["empty"], glyph
 end
 
---- One verdict cell (the Me or the Them column; both take the same tones).
+--- One verdict cell (the Me or the Them column; both take the same tones). Its tooltip's comparison
+--- is a grid row naming `who`; the cell keeps `who`, `delta` and `base` (the worn item it was judged
+--- against) for NS.SideCells, which lays the worn gear out in that grid.
 --- @param eval table|nil NS.Evaluate's answer
 --- @param _side string `me` or `them`
 --- @param title string the tooltip's subject (`For you`, `For Seta`)
 --- @param ilvl number|nil the drop's item level
+--- @param who string|nil the grid's name cell, colored (NS.TipMarks.ClassName)
 --- @return table cell
-function WC.Verdict(eval, _side, title, ilvl)
+function WC.Verdict(eval, _side, title, ilvl, who)
     if type(eval) ~= "table" or type(eval.verdict) ~= "string" then
         eval = { verdict = "unknown", reasons = {} }
     end
     local text, glyph = verdictText(eval)
     local v = eval.verdict
-    local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl)
-    return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v }
+    local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl, who)
+    return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v,
+        who = who, delta = num(eval.ilvlDelta), base = type(eval.baseline) == "table" and eval.baseline or nil }
 end
 
---- The Me verdict: the drop judged for you (NS.SideCells puts it after your worn gear).
+--- The Me verdict: the drop judged for you (NS.SideCells puts it after your worn gear). The grid
+--- names you `You`, in your class color: `classFile`, else the looter's on your own drop.
 --- @param drop table
+--- @param classFile string|nil your class (the gear snapshot's)
 --- @return table cell
-function WC.Me(drop)
-    return WC.Verdict(drop.me, "me", L["For you"], num(facts(drop).ilvl))
+function WC.Me(drop, classFile)
+    local mine = drop.isMine and type(drop.looter) == "table" and drop.looter.classFile or nil
+    local who = NS.TipMarks.ClassName(L["You"], classFile or mine)
+    return WC.Verdict(drop.me, "me", L["For you"], num(facts(drop).ilvl), who)
 end
 
 -- Why the looter's verdict is not known, from the drop's inspect state.
@@ -260,7 +277,8 @@ function WC.Them(drop, now)
         c.verdict = "unknown"
         return c
     end
-    return WC.Verdict(drop.them, "them", L["For %s"]:format(who), num(facts(drop).ilvl))
+    local named = NS.TipMarks.ClassName(who, type(drop.looter) == "table" and drop.looter.classFile or nil)
+    return WC.Verdict(drop.them, "them", L["For %s"]:format(who), num(facts(drop).ilvl), named)
 end
 
 -- ── the Trade column ────────────────────────────────────────────────────────────────────────
@@ -334,8 +352,9 @@ end
 
 -- ── the gear halves of the Me and Them cells ────────────────────────────────────────────────
 -- Both show the worn item(s) for the drop's slot (two for rings, trinkets and one-hand weapons):
--- the icons are the edge's, the text is their item levels (`311`, `300/296`), and the tooltip
--- names each item. Their inspect age is in Them's tooltip (feedback spec §3, FB-7); a state with
+-- the icons are the edge's, the text is their item levels (`311`, `300/296`), and the cell answers
+-- `items` and `empty` (slots worn empty), which NS.SideCells lays out as its tooltip's gear grid
+-- (feedback-7 spec §3; the tooltip named each item on a line before). Their inspect age is in Them's tooltip (feedback spec §3, FB-7); a state with
 -- no data keeps its reason word (`…`, `range`, `combat`, `!`, `–`). They were the My eq and Their
 -- eq columns until feedback-6 spec §1 put each before its verdict (modules/SideCells.lua).
 
@@ -384,17 +403,9 @@ function WC.Levels(items)
     return table.concat(parts, "/")
 end
 
--- One line per worn item (`Old Band (324)`), and one per slot read as empty.
-local function itemLines(tip, items, empty)
-    for _, it in ipairs(items) do
-        tip[#tip + 1] = ("%s (%s)"):format(WC.ItemName(it.link) or it.link, levelOf(it))
-    end
-    for _ = 1, empty do tip[#tip + 1] = L["Empty slot."] end
-end
-
-local function eqCellOf(text, tone, title, items)
+local function eqCellOf(text, tone, title, items, empty)
     local c = cell(text, tone, title)
-    c.items = items
+    c.items, c.empty = items, empty
     return c
 end
 
@@ -403,25 +414,24 @@ end
 --- always fresh; `empty slot` when you wear nothing there, `…` while your gear is still loading.
 --- @param drop table
 --- @param equipped table|nil the snapshot's `equipped` ({ [slot] = entry | false })
---- @return table cell, with `items` = { { link, ilvl, slot }, ... }
+--- @return table cell, with `items` = { { link, ilvl, slot }, ... } and `empty` (slots worn empty)
 function WC.MyEq(drop, equipped)
     local title = L["You wear"]
     local slots = eqSlots(facts(drop).equipLoc)
     if not slots then
-        local c = eqCellOf(DASH, "muted", title, {})
+        local c = eqCellOf(DASH, "muted", title, {}, 0)
         c.tip[2] = L["Not an item that is worn, or its details have not loaded."]
         return c
     end
     local items, empty, unread = slotItems(equipped, slots)
     local c
     if #items > 0 then
-        c = eqCellOf(WC.Levels(items), "plain", title, items)
+        c = eqCellOf(WC.Levels(items), "plain", title, items, empty)
     elseif unread > 0 then
-        c = eqCellOf("…", "muted", title, items)
+        c = eqCellOf("…", "muted", title, items, empty)
     else
-        c = eqCellOf(L["empty slot"], "muted", title, items)
+        c = eqCellOf(L["empty slot"], "muted", title, items, empty)
     end
-    itemLines(c.tip, items, empty)
     if unread > 0 then c.tip[#c.tip + 1] = L["Your gear is still loading."] end
     return c
 end
@@ -460,7 +470,7 @@ end
 --- @param drop table
 --- @param gear table|nil the looter's inspect entry's `gear` ({ [slot] = { link, ilvl } | false })
 --- @param now number|nil GetTime()
---- @return table cell, with `items` = { { link, ilvl, slot }, ... }
+--- @return table cell, with `items` = { { link, ilvl, slot }, ... } and `empty` (slots worn empty)
 function WC.TheirEq(drop, gear, now)
     local who = looterName(drop)
     local title = L["%s wears"]:format(who)
@@ -468,12 +478,11 @@ function WC.TheirEq(drop, gear, now)
     local items, empty, unread = slotItems(gear, slots)
     local c
     if #items > 0 then
-        c = eqCellOf(WC.Levels(items), "plain", title, items)
+        c = eqCellOf(WC.Levels(items), "plain", title, items, empty)
     else
         local text, tone = theirStatus(drop.inspect, empty, unread)
-        c = eqCellOf(text, tone, title, items)
+        c = eqCellOf(text, tone, title, items, empty)
     end
-    itemLines(c.tip, items, empty)
     if #items == 0 and empty == 0 then c.tip[#c.tip + 1] = L["Nothing read for this slot yet."] end
     c.tip[#c.tip + 1] = WC.InspectLine(drop.inspect, who, now)
     return c

@@ -204,9 +204,12 @@ local PLACERS = {
 }
 
 -- One line under the title: a string wraps at the tooltip's width; `{ text, wrap = false }`
--- (NS.TipMarks.NoWrap, feedback-6 spec §3) does not, so the tooltip grows to fit it.
+-- (NS.TipMarks.NoWrap, feedback-6 spec §3) does not, so the tooltip grows to fit it; `{ grid = rows }`
+-- (NS.TipMarks.Grid, feedback-7 spec §3) reserves a line per row, painted as columns by NS.TipGrid.
 local function addTipLine(line)
-    if type(line) == "table" then
+    if type(line) == "table" and type(line.grid) == "table" then
+        NS.TipGrid.Add(GameTooltip, line)
+    elseif type(line) == "table" then
         GameTooltip:AddLine(line.text, 1, 1, 1, line.wrap ~= false)
     else
         GameTooltip:AddLine(line, 1, 1, 1, true)
@@ -217,10 +220,12 @@ local function showTooltip(self)
     local lines = { self.tooltip() }
     if #lines == 0 or not GameTooltip then return end
     local placer = PLACERS[self.tipPlace]
+    NS.TipGrid.Begin()
     GameTooltip:SetOwner(self, placer and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
     GameTooltip:SetText(lines[1], C.GOLD.r, C.GOLD.g, C.GOLD.b)
     for i = 2, #lines do addTipLine(lines[i]) end
     GameTooltip:Show()
+    NS.TipGrid.Paint(GameTooltip)   -- after Show: it measures, widens and shows again
     if placer then placer(GameTooltip, self) end
 end
 
@@ -228,8 +233,9 @@ local function hideTooltip()
     if GameTooltip then GameTooltip:Hide() end
 end
 
---- Give `widget` a tooltip: `fn()` answers the title, then each line (a string, which wraps, or
---- `{ text, wrap = false }`, which does not: NS.TipMarks.NoWrap). Read on every hover, so it is
+--- Give `widget` a tooltip: `fn()` answers the title, then each line (a string, which wraps,
+--- `{ text, wrap = false }`, which does not: NS.TipMarks.NoWrap, or `{ grid = rows }`, columns:
+--- NS.TipMarks.Grid, painted by NS.TipGrid). Read on every hover, so it is
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
 --- Hooked rather than set, so a library widget keeps its own hover tint.
 --- `place` is nil (below the widget, ANCHOR_BOTTOM), `above` (Window.PlaceAbove: a filter-bar

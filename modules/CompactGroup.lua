@@ -435,18 +435,18 @@ function CG.PaintHalf(card, key, half)
     end
 end
 
--- What every card of one repaint shares: your gear, the transmog ask setting, your realm and the
--- countdown's warning threshold.
+-- What every card of one repaint shares: your gear and class, the transmog ask setting, your realm
+-- and the countdown's warning threshold.
 local function sharedCtx(now)
     local snap = NS.Gear.Snapshot()
-    return { now = now, equipped = snap and snap.equipped, transmogAsk = NS.Setting("messages.transmogAsk") == true,
+    return { now = now, equipped = snap and snap.equipped, classFile = snap and snap.classFile, transmogAsk = NS.Setting("messages.transmogAsk") == true,
         ownRealm = NS.Compat.NormalizedRealm(), warnAt = NS.TradeTimer.WarnAt() }
 end
 
 local function cardCtx(drop, shared)
     local state, reason = NS.WindowGroup.AskState(drop)
     local insp = NS.TestMode.InspectOf(drop)
-    local ctx = { now = shared.now, equipped = shared.equipped, gear = insp and insp.gear, askState = state,
+    local ctx = { now = shared.now, equipped = shared.equipped, classFile = shared.classFile, gear = insp and insp.gear, askState = state,
         askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm, warnAt = shared.warnAt }
     if drop.isMine then   -- your own drop's Offer and Upgrade for N (feedback-5 spec §2)
         local WO = NS.WindowOwn

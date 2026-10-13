@@ -171,7 +171,8 @@ test("compact group: every piece keeps its full-view reason tooltip", function()
     local Cells = NS.WindowCells
     assertEqual(W.TooltipOf(c.trade.hit)[2], Cells.Trade(d).tip[2])
     local you, them = W.TooltipOf(c.you.hit), W.TooltipOf(c.them.hit)
-    assertEqual(you[1], "You wear", "the gear's lines first (feedback-6 spec §1)")
+    assertEqual(you[1], Cells.Me(d).tip[1], "the verdict's title first, then the gear grid (feedback-7 spec §3)")
+    assertTrue(NS.TipMarks.IsGrid(you[2]), "the worn gear as a grid")
     local function has(tip, line)
         for _, l in ipairs(tip) do if l == line then return true end end
         return false

@@ -181,6 +181,7 @@ they are `NS.Compat` members so the seam answers them.
 | `TooltipBagItem(tip, bag, slot)` | `tip:SetBagItem(bag, slot)`: the client's own tooltip, with its trade-time line | `false` when the tooltip has no such method |
 | `TooltipInventoryItem(tip, unit, slot)` | `tip:SetInventoryItem(unit, slot)` | `false` |
 | `TooltipHyperlink(tip, link)` | `tip:SetHyperlink(link)` | `false`, also for a secret or non-string link |
+| `TooltipLeftLine(tip, n)` | `_G[tip:GetName() .. "TextLeft" .. n]` | `nil`, also for an unnamed tooltip or a missing line |
 
 `core/ItemRead.lua` reads `BagItemLevelQuality` (its `ItemLevelAt` and `QualityAt`); the drop tables'
 item buttons (`NS.WindowGroup.SetItemTooltip`) call the three setters: your own drop matched to its

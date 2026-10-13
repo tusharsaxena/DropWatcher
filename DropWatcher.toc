@@ -261,11 +261,15 @@ modules\WindowFooter.lua
 modules\WindowCells.lua
 # Conventional: publishes NS.TipMarks, what text in the default face draws for a verdict mark or an
 # arrow (an inline texture, never a font glyph: tooltips, the toast, the detail card, the Offer
-# panel) and a tooltip's non-wrapping line; reads NS.Constants at load, and NS.Icon, NS.Compat and
-# NS.GroupRoster at call time. Above modules\MineCells.lua, modules\DetailCells.lua and
+# panel), a tooltip's non-wrapping line and its gear grid's rows; reads NS.Constants, NS.L and
+# NS.WindowCells (above) at load, and NS.Icon, NS.Compat and NS.GroupRoster at call time. Above modules\MineCells.lua, modules\DetailCells.lua and
 # modules\OfferPanel.lua (which take it at load), modules\WindowGroup.lua and
 # modules\WindowHistory.lua (whose column tooltips call it at load).
 modules\TipMarks.lua
+# Conventional: publishes NS.TipGrid, the frame edge that paints a tooltip's grid (feedback-7 spec
+# §3: columns on a pooled child frame of GameTooltip); reads NS.Constants and NS.TipMarks (above) at
+# load. modules\Window.lua (above) calls it at hover time.
+modules\TipGrid.lua
 # Conventional: publishes NS.WindowRows, the drop tables' row height and text size (the pure
 # resolution and the font edge the two tabs share); reads NS.Constants at load and NS.Setting at
 # call time.

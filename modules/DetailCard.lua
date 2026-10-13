@@ -434,7 +434,8 @@ function DCard.Paint(card, drop, width, now)
         sideW = width - 2 * K.CARD_PAD
         placeStackedActions(card, width)
     end
-    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse()), sideW)
+    local snap = NS.Gear.Snapshot()
+    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile), sideW)
     local WO = NS.WindowOwn
     paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id)), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]

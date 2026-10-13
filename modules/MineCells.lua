@@ -38,9 +38,10 @@ local _, NS = ...
 --
 -- YOUR OWN DROP ON DROPS (feedback-5 spec §2; feedback-7 spec §2). Trade reads its word alone
 -- (`Yes`, not `Yes (2)`), its tooltip saying how many members it upgrades; Them reads `Upgrade for N`
--- (NS.SideCells.Them), green, or `No upgrades`, muted, its tooltip naming each upgrade by gain, one line each that
--- never wraps (`Butterz wears 276 Bloodthorn Treads [arrow]11`: the name in its class color, the item in
--- its quality color, the arrow an inline texture, NS.TipMarks; feedback-6 spec §3). The keep?
+-- (NS.SideCells.Them), green, or `No upgrades`, muted, its tooltip naming each upgrade by gain as a
+-- grid row (feedback-7 spec §3, NS.TipMarks.GearRows): `Butterz  276  Bloodthorn Treads  ▲11`, the
+-- name in its class color, the item in its quality color, the table's glyph and the gain in green.
+-- The keep?
 -- rule holds: while it is an upgrade for you and not revealed, the count is not said and Them
 -- reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's shape), toned by the furthest
 -- offer sent (cyan while it is your move, feedback-6 spec §2); a dash with the reason when it
@@ -61,8 +62,6 @@ local function num(v)
     if type(v) == "number" and v == v then return v end
     return nil
 end
-
-local function round(n) return floor(n + 0.5) end
 
 local function cell(text, tone, title, ...)
     return { text = text, tone = tone, tip = { title, ... } }
@@ -296,28 +295,21 @@ function MC.OwnTrade(drop, revealed)
     return c
 end
 
--- One upgrade's tooltip line (feedback-6 spec §3), never wrapped: `Butterz wears 276 Bloodthorn
--- Treads [arrow]11`, the name in its class color, the worn item's name in its quality color, the arrow an
--- inline texture tinted green (NS.TipMarks: the tooltip's face has no ▲) and the gain unsigned. The
--- worn item is the one the drop is judged against, so of two (rings, trinkets, one-hand weapons)
--- the lower, the one it would replace (NS.Evaluate's baseline).
-local function upgradeLine(e)
-    local who = TM.ClassName(e.short, e.classFile)
+-- One upgrade's grid row (feedback-7 spec §3): `Butterz  276  Bloodthorn Treads  ▲11`, the name in
+-- its class color, the worn item's name in its quality color, the table's glyph and the gain
+-- (unsigned) in green; `empty` (muted) when they wear nothing there. The worn item is the one the
+-- drop is judged against, so of two (rings, trinkets, one-hand weapons) the lower, the one it would
+-- replace (NS.Evaluate's baseline): a candidate's other worn item is not known here.
+local function upgradeRow(e)
     local base = e.baseline
-    local worn
-    if not (base and num(base.ilvl)) then
-        worn = L["%s wears nothing there"]:format(who)
-    else
-        local name = base.name or WC.ItemName(base.link)
-        worn = name and L["%s wears %d %s"]:format(who, round(base.ilvl), TM.ItemName(name, base.quality, base.link))
-            or L["%s wears %d"]:format(who, round(base.ilvl))
-    end
-    local gain = e.gain and tostring(round(math.abs(e.gain))) or ""
-    return TM.NoWrap(worn .. " " .. TM.Mark("upgrade") .. gain)
+    local items = (base and num(base.ilvl)) and { base } or {}
+    return TM.GearRows(TM.ClassName(e.short, e.classFile), items, #items == 0 and 1 or 0,
+        TM.ArrowCell("upgrade", e.gain), base)[1]
 end
 
 --- Them on your own drop (feedback-7 spec §2): `Upgrade for N`, green, N the members it upgrades;
---- `No upgrades`, muted, when it upgrades none. Its tooltip lists each upgrade ranked by gain, else
+--- `No upgrades`, muted, when it upgrades none. Its tooltip lists each upgrade ranked by gain (a grid,
+--- a row each: NS.TipMarks.GearRows), else
 --- says why there is none (nobody's whose gear was read, `n checking`, nobody else in the group). `Hidden`
 --- under the keep? rule; a dash on a drop that cannot be traded.
 --- @param drop table one of your drops
@@ -342,7 +334,11 @@ function MC.Details(drop, revealed, title)
         c.tip[2] = L["Nobody else in your group."]
         return c
     end
-    for _, e in ipairs(ups) do c.tip[#c.tip + 1] = upgradeLine(e) end
+    if #ups > 0 then
+        local rows = {}
+        for i, e in ipairs(ups) do rows[i] = upgradeRow(e) end
+        c.tip[#c.tip + 1] = TM.Grid(rows)
+    end
     if #ups == 0 then c.tip[#c.tip + 1] = L["Not an upgrade for anyone whose gear was read."] end
     local checking = countChecking(list)
     if checking > 0 then c.tip[#c.tip + 1] = L["%d checking"]:format(checking) end

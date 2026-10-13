@@ -20,9 +20,12 @@ local _, NS = ...
 -- what they wear from their inspect read (else the worn item their verdict was judged against), and
 -- the verdict on your drop for them; `…` while checking, `Unavailable` when nothing could be read.
 --
--- THE TOOLTIP is the gear tooltip's lines (each worn item, the inspect's age for Them) followed by
--- the verdict's (its title, its explanation, the comparison and the reasons), a line the two share
--- said once.
+-- THE TOOLTIP (feedback-7 spec §3) is the verdict's title, then the worn gear as a grid
+-- (NS.TipMarks.GearRows: `[Name] [ilvl] [worn item] [▲diff]`, a row per worn item, the arrow on the
+-- one the drop would replace, `empty` for a slot worn empty), then the gear's own lines (the
+-- inspect's age, or why nothing was read) and the verdict's (its explanation, the track, the score
+-- and the reasons). The verdict's own one-row grid gives way to the gear's; with no gear listed it
+-- stays. A line already said is not said twice.
 --
 -- PURE. Every composer takes the drop record and plain inputs and answers a plain table; nothing here
 -- reads a module's state, the client or a saved variable. The full tables paint it
@@ -37,6 +40,7 @@ local SC = NS.SideCells
 local L  = NS.L
 local WC = NS.WindowCells
 local MC = NS.MineCells
+local TM = NS.TipMarks
 
 local DASH = "–"
 
@@ -66,19 +70,33 @@ local function verdictPart(v, level)
     return nil, text
 end
 
--- The gear tooltip's lines, then the verdict's; a line already said is not said twice.
+-- The worn gear as a grid, or nil when the gear part lists none (a state word, no gear part).
+local function gearGrid(eq, v)
+    if type(eq) ~= "table" then return nil end
+    local items = eq.gridItems or (type(eq.items) == "table" and eq.items) or {}
+    local empty = eq.empty or 0
+    if #items == 0 and empty == 0 then return nil end
+    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta), v.base))
+end
+
+-- The verdict's title, the gear grid (else the verdict's own), the gear's lines after its title,
+-- then the verdict's; a line already said is not said twice.
 local function mergedTip(eq, v)
     local out, seen = {}, {}
-    local function add(lines)
-        for _, l in ipairs(type(lines) == "table" and lines or {}) do
-            if not seen[l] then
-                seen[l] = true
-                out[#out + 1] = l
-            end
+    local vt = type(v.tip) == "table" and v.tip or {}
+    local grid = gearGrid(eq, v)
+    local function add(l, from)
+        if from == "verdict" and grid and TM.IsGrid(l) then return end
+        if type(l) == "table" or not seen[l] then
+            seen[l] = true
+            out[#out + 1] = l
         end
     end
-    if type(eq) == "table" then add(eq.tip) end
-    add(v.tip)
+    if vt[1] ~= nil then add(vt[1]) end
+    if grid then add(grid) end
+    local et = type(eq) == "table" and type(eq.tip) == "table" and eq.tip or {}
+    for i = 2, #et do add(et[i]) end
+    for i = 2, #vt do add(vt[i], "verdict") end
     return out
 end
 
@@ -99,9 +117,10 @@ end
 --- The Me cell: what you wear in the drop's slot (your gear snapshot's) and the drop judged for you.
 --- @param drop table
 --- @param equipped table|nil the gear snapshot's `equipped`
+--- @param classFile string|nil your class (the snapshot's), for the tooltip grid's `You`
 --- @return table cell
-function SC.Me(drop, equipped)
-    return SC.Merge(WC.Me(drop), WC.MyEq(drop, equipped))
+function SC.Me(drop, equipped, classFile)
+    return SC.Merge(WC.Me(drop, classFile), WC.MyEq(drop, equipped))
 end
 
 --- The Them cell: what the looter wears there (their inspect read's) and the drop judged for them;
@@ -140,23 +159,23 @@ local function wornIn(slots, gear)
 end
 
 -- The gear part of one candidate: their read, else the item their verdict was judged against.
+-- `items` and `empty` are the tooltip grid's rows (SC.Merge); its other lines, the read's age.
 local function candidateEq(drop, e, insp, now)
     local slots = WC.EqSlots(type(drop.facts) == "table" and drop.facts.equipLoc or nil)
     local items, empty = wornIn(slots, readOk(insp) and insp.gear or nil)
     local base = e.baseline
     if #items == 0 and empty == 0 and base and type(base.link) == "string" then items[1] = { link = base.link, ilvl = base.ilvl } end
-    local c = { items = items, tone = "muted", tip = { L["%s wears"]:format(e.short) } }
+    local c = { items = items, empty = empty, tone = "muted", tip = { L["%s wears"]:format(e.short) } }
     if #items > 0 then
         c.text, c.tone = WC.Levels(items), "plain"
     elseif base and num(base.ilvl) then
         c.text, c.tone = WC.Levels({ base }), "plain"
+        c.gridItems = { base }   -- a level known without its item: no icon, but a grid row
     elseif empty > 0 or (e.eval and e.eval.verdict == "upgrade") then
-        c.text = L["empty slot"]
+        c.text, c.empty = L["empty slot"], math.max(empty, 1)
     else
         c.text = DASH
     end
-    for _, it in ipairs(items) do c.tip[#c.tip + 1] = ("%s (%s)"):format(WC.ItemName(it.link) or it.link, WC.Levels({ it })) end
-    if c.text == L["empty slot"] then c.tip[#c.tip + 1] = L["Empty slot."] end
     if readOk(insp) then c.tip[#c.tip + 1] = WC.InspectLine(insp, e.short, now) end
     return c
 end
@@ -171,7 +190,8 @@ local function candidateVerdict(drop, e)
     if w then
         v = { text = w[1], tone = "muted", verdict = e.status, tip = { ("%s: %s"):format(e.short, w[2]) } }
     else
-        v = WC.Verdict(e.eval, "them", L["For %s"]:format(e.short), num(type(drop.facts) == "table" and drop.facts.ilvl))
+        v = WC.Verdict(e.eval, "them", L["For %s"]:format(e.short), num(type(drop.facts) == "table" and drop.facts.ilvl),
+            TM.ClassName(e.short, e.classFile))
     end
     if e.explain then table.insert(v.tip, 2, e.explain) end
     return v
