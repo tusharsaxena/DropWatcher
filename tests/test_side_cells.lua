@@ -207,6 +207,24 @@ test("side cells: History's Me and Them are the verdict alone, worded as the Dro
     assertEqual(unread.text, "?", "shown alone: nothing else says why")
 end)
 
+test("side cells: History's Me grid names you in your class color, as on Drops", function()
+    local NS = T.newAddon()
+    local WH = NS.WindowHistory
+    NS.Gear.Snapshot = function() return { classFile = "MAGE", equipped = {} } end
+    local d = WH.AsDrop({ itemLink = LINK, looter = "Seta-Realm", class = "PRIEST", ilvl = 311, equipLoc = "INVTYPE_HEAD",
+        me = { verdict = "upgrade", ilvlDelta = 6, baseline = { link = OLD1, ilvl = 305 }, reasons = {} } }, 1)
+    assertEqual(T.tipText(WH.MeCell(d).tip[3]), "|cff40c7ebYou|r  305  " .. OLD_BAND .. "  ▲6")
+end)
+
+test("side cells: Them read but not judged names the looter in the grid, in their class color", function()
+    local S = SC()
+    local u = S.Them(drop({ them = NONE }), { [1] = { link = OLD1, ilvl = 324 } }, 100)
+    local grid
+    for _, l in ipairs(u.tip) do if type(l) == "table" and l.grid then grid = l.grid end end
+    assertTrue(grid ~= nil, "the worn helm as a grid")
+    assertEqual(grid[1][1], "|cffffffffSeta|r", "the looter's name, not `?`")
+end)
+
 -- ── the Offer panel's Their eq (feedback-7 spec §0) ─────────────────────────────────────────
 
 local function mine(over)
@@ -261,6 +279,23 @@ test("side cells: the Offer panel's Their eq says Can't use, …, Unavailable an
     local stale = candidate(NS, mine(), entry("ready", { verdict = "upgrade", ilvlDelta = 3, baseline = { link = OLD1, ilvl = 308 }, reasons = {} }),
         { status = "pending" })
     assertEqual(#stale.items, 1, "a read not done yet gives no gear: the judged item stands in")
+end)
+
+test("side cells: the Offer panel's Their eq lists a ring slot read empty as its own row, as Them does", function()
+    local NS = T.newAddon()
+    local RING = { ilvl = 311, equipLoc = "INVTYPE_FINGER", quality = 4 }
+    local gear = { [11] = { link = OLD1, ilvl = 320 }, [12] = false }
+    local eval = { verdict = "upgrade", reasons = { { key = "emptySlot" } } }
+    local c = candidate(NS, mine(RING), entry("ready", eval), { status = "fresh", at = 60, gear = gear })
+    local g = c.tip[2].grid
+    assertEqual(#g, 2, "the worn ring and the slot read empty")
+    assertEqual(g[1][4], "", "the worn ring is kept")
+    assertEqual(g[2][3].text, "empty"); assertEqual(g[2][4].glyph, "▲", "the arrow on the slot the drop would fill")
+    local them = NS.SideCells.Them(drop({ facts = RING, them = eval }), gear, 100)
+    assertEqual(c.level, "320"); assertEqual(c.level, them.level, "Their eq's level is Them's for the same gear")
+    local bare = candidate(NS, mine(RING), entry("ready", { verdict = "downgrade", ilvlDelta = -2, baseline = { ilvl = 313 }, reasons = {} }),
+        { status = "fresh", at = 60, gear = { [11] = false, [12] = false } })
+    assertEqual(bare.level, "empty", "both slots read empty: empty, not the judged level")
 end)
 
 -- ── the widths (measured) ───────────────────────────────────────────────────────────────────

@@ -278,11 +278,6 @@ local function paintHeader(p, drop, now, warnAt)
     p.line.tipLines = h.tip
 end
 
-local function classTone(fs, classFile)
-    local r, g, b = NS.Compat.ClassColor(classFile)
-    if r then fs:SetTextColor(r, g, b) else setTone(fs, "plain") end
-end
-
 local function paintButtons(row, e, drop)
     local show = e.offerable and drop.trade and drop.trade.state ~= "no"
     row.offer:SetShown(show)
@@ -307,7 +302,7 @@ end
 -- read their links) and the Offer button.
 local function paintRow(row, e, drop, now)
     row.guid = e.guid
-    classTone(row.member.text, e.classFile)
+    NS.WindowGroup.ClassTone(row.member.text, e.classFile, "plain")
     row.member.text:SetText(e.short)
     row.member.tipLines = { e.short, e.name ~= e.short and tostring(e.name) or L["A member of your group."] }
     NS.WindowGroup.PaintSide(row.eq, SC.Candidate(drop, e, readOf(drop, e), now))

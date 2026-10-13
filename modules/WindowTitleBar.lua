@@ -5,7 +5,7 @@ local _, NS = ...
 -- simulator's `SIMULATION` text in its own color (simulator spec §6), the `n new` counter, the
 -- restriction badge, the compact layout's Scan group icon, the layout toggle (compact spec §1),
 -- minimize and the close mark, plus the window's flat and icon buttons, which other frames borrow
--- through NS.Window.TextButton. The full layout's Scan group is the Drops strip's
+-- through NS.Window.TextButton (and paint through NS.Window.SetButtonMark). The full layout's Scan group is the Drops strip's
 -- (modules/DropsStrip.lua, feedback-7 spec §4): the title bar's button is built here and shown in
 -- compact only (modules/CompactChrome.lua), and the badge anchors to the layout toggle.
 --
@@ -178,6 +178,20 @@ function TB.TextButton(parent, width, icon, text, onClick)
     b.label:SetText(text)
     b:SetScript("OnClick", onClick)
     return b
+end
+
+--- A TextButton's label and catalog mark (feedback-7 spec §1): the text, the mark's texture (none
+--- when `icon` is nil) and the label centered, nudged right past the mark when there is one. Every
+--- button whose look follows a state paints through this. NS.Window.SetButtonMark is this.
+--- @param b table a TB.TextButton
+--- @param text string
+--- @param icon string|nil a catalog name (NS.Icon)
+function TB.SetButtonMark(b, text, icon)
+    b.label:SetText(text)
+    b.art:SetTexture(icon and NS.Icon(icon) or nil)
+    b.art:SetShown(icon ~= nil)
+    b.label:ClearAllPoints()
+    b.label:SetPoint("CENTER", b, "CENTER", icon and 7 or 0, 0)
 end
 
 -- ── construction ────────────────────────────────────────────────────────────────────────────

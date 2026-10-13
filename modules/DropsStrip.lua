@@ -27,6 +27,11 @@ local _, NS = ...
 -- goes through the host handler NS.PostTradeables (core/DropWatcher.lua), which posts every drop of
 -- yours you can still trade; Scan group through NS.ScanGroup, as the title bar's and the empty
 -- state's do.
+--
+-- THE EMPTY STATE (board 06 D, feedback-7 spec §4) is built here too (DS.BuildEmpty, peeled out of
+-- modules/WindowGroup.lua, which shows it while the feed holds no drop at all): `No drops yet`, a
+-- line on what the table will hold, and Preview with test data (NS.SetTestMode) beside Scan group,
+-- centered as a pair under the text.
 
 NS.DropsStrip = NS.DropsStrip or {}
 local DS = NS.DropsStrip
@@ -115,6 +120,45 @@ function DS.Build(pane)
     strip.scan:Hide()
     strip:Hide()
     pane.summary = strip
+end
+
+-- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
+
+local function previewTip()
+    return L["Preview with test data"], L["Turns test mode on: sample drops of real items in every state, so the window can be checked anywhere. Nothing is whispered, and combat ends it."]
+end
+
+local PREVIEW_W, PAIR_GAP = 160, 8
+
+-- No drop at all yet: what the table will hold, and the two ways to fill it now, centered as a pair
+-- under the text (feedback-7 spec §4) in both layouts: they sit in one frame as wide as both and
+-- their gap, centered on the text, so the wider Preview does not push the pair left.
+--- Build the Drops pane's empty state (board 06 D), hidden; WindowGroup shows it while the feed
+--- holds no drop at all.
+--- @param pane table the Drops pane
+--- @return table frame { title, text, pair, preview, scan }
+function DS.BuildEmpty(pane)
+    local e = CreateFrame("Frame", nil, pane)
+    e:SetSize(K.EMPTY_W, K.EMPTY_H)
+    e:SetPoint("CENTER", pane, "CENTER", 0, 0)
+    e.title = e:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    e.title:SetPoint("TOP", e, "TOP", 0, 0)
+    e.title:SetText(L["No drops yet"])
+    e.text = e:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    e.text:SetPoint("TOP", e.title, "BOTTOM", 0, -8)
+    e.text:SetText(L["Loot your group receives appears here, grouped by boss."])
+    local W = NS.Window
+    e.pair = CreateFrame("Frame", nil, e)
+    e.pair:SetSize(PREVIEW_W + PAIR_GAP + K.SCAN_W, K.CONTROL_H)
+    e.pair:SetPoint("TOP", e.text, "BOTTOM", 0, -12)
+    e.preview = W.TextButton(e.pair, PREVIEW_W, "eye", L["Preview with test data"], function() NS.SetTestMode(true) end)
+    e.preview:SetPoint("LEFT", e.pair, "LEFT", 0, 0)
+    W.AttachTooltip(e.preview, previewTip)
+    e.scan = W.TextButton(e.pair, K.SCAN_W, "people", L["Scan group"], function() NS.ScanGroup() end)
+    e.scan:SetPoint("RIGHT", e.pair, "RIGHT", 0, 0)
+    W.AttachTooltip(e.scan, NS.WindowTitleBar.ScanTip)
+    e:Hide()
+    return e
 end
 
 -- A scroll frame's bottom edge: `bottom` pixels over the pane's (the strip's room, or none).

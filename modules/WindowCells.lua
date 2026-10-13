@@ -113,6 +113,11 @@ local function num(v)
     return nil
 end
 
+--- A number that is not NaN, else nil (NS.SideCells shares it).
+--- @param v any
+--- @return number|nil
+function WC.Num(v) return num(v) end
+
 local function round(n) return floor(n + 0.5) end
 
 --- A signed whole number: `+19`, `-13`, `+0`.
@@ -272,12 +277,12 @@ function WC.Them(drop, now)
     if drop.isMine then
         return cell(DASH, "muted", L["Them"], L["Your own drop: Offer shows who it would help."])
     end
+    local named = NS.TipMarks.ClassName(who, type(drop.looter) == "table" and drop.looter.classFile or nil)
     if type(drop.them) ~= "table" then
         local c = cell("?", "muted", L["For %s: Unknown"]:format(who), inspectWhy(drop.inspect, who, now))
-        c.verdict = "unknown"
+        c.verdict, c.who = "unknown", named   -- the tooltip grid's name while their gear is read but not judged
         return c
     end
-    local named = NS.TipMarks.ClassName(who, type(drop.looter) == "table" and drop.looter.classFile or nil)
     return WC.Verdict(drop.them, "them", L["For %s"]:format(who), num(facts(drop).ilvl), named)
 end
 
@@ -389,6 +394,13 @@ local function slotItems(gear, slots)
     return items, empty, unread
 end
 
+--- What `gear` holds in `slots` (the Them cell's rule, shared with the Offer panel's Their eq):
+--- the read items { link, ilvl, slot }, the slots read as empty (false) and the slots not read.
+--- @param gear table|nil { [slot] = { link, ilvl } | false }
+--- @param slots table
+--- @return table items, number empty, number unread
+function WC.SlotItems(gear, slots) return slotItems(gear, slots) end
+
 local function levelOf(item)
     local n = num(item.ilvl)
     return n and tostring(round(n)) or "?"
@@ -442,6 +454,11 @@ local STATUS_TEXT = { pending = "…", combatParked = L["combat"], outOfRange = 
 local function readOk(insp)
     return type(insp) == "table" and (insp.status == "fresh" or insp.status == "cached")
 end
+
+--- Whether an inspect read's gear may be shown: it is fresh, or the cache's.
+--- @param insp table|nil the read (NS.Inspect.Get's)
+--- @return boolean
+function WC.ReadOk(insp) return readOk(insp) end
 
 -- The tooltip's line on how old the read is: `Inspected 2m ago.`, or the cache's.
 local function ageLine(insp, now)

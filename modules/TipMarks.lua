@@ -7,14 +7,16 @@ local _, NS = ...
 -- monospace glyphs (NS.WindowCells.GLYPH), which render.
 --
 -- NOT ONLY TOOLTIPS (DW-F5). Every text drawn in the default face (GameFont*, not C.FONT_MONO) takes
--- its marks from here too: the toast's line, the detail card's verdict chips and Item level and
--- Track rows, and the Offer panel's `Eq -> drop` label and eq text. The `->` between two values there
--- is TM.Arrow, the `arrow-right` icon in the muted tone. TM.Chars counts what such a text draws (an
+-- its marks from here too: the toast's line and the detail card's verdict chips and Item level and
+-- Track rows. The `->` between two values in those rows is TM.Arrow, the `arrow-right` icon in the
+-- muted tone. TM.Chars counts what such a text draws (an
 -- escape as two characters, a color code as none), for a width estimated before the client measures.
 --
 -- A NON-WRAPPING LINE. A tooltip line is a string (it wraps at the tooltip's width) or
 -- `{ text, wrap = false }`, which does not wrap, so the tooltip grows to fit it
--- (modules/Window.lua's showTooltip reads both). TM.Text answers either as its string.
+-- (modules/Window.lua's showTooltip reads strings, these and TM.Grid's lines). TM.Text answers any
+-- of them as its string. TM.NoWrap has no caller since the gear lines became grids: it is kept as
+-- API, pinned by test_tip_marks.
 --
 -- THE COLORS. TM.ClassName and TM.ItemName put a name in its class or quality color, read at call
 -- time from the client's tables (NS.Compat.ClassColor; ITEM_QUALITY_COLORS, else the link's own

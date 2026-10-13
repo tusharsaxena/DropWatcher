@@ -379,6 +379,12 @@ function Window.TextButton(parent, width, icon, text, onClick)
     return NS.WindowTitleBar.TextButton(parent, width, icon, text, onClick)
 end
 
+--- A TextButton's label and mark (`icon` may be nil): WindowTitleBar.SetButtonMark.
+--- @param b table a Window.TextButton
+--- @param text string
+--- @param icon string|nil
+function Window.SetButtonMark(b, text, icon) NS.WindowTitleBar.SetButtonMark(b, text, icon) end
+
 -- ── construction: the tabs and the body ─────────────────────────────────────────────────────
 
 local function buildTab(strip, key, i)

@@ -382,8 +382,9 @@ function NS.PressAnnounce(dropID, opts)
     return state, reason
 end
 
---- Hand one of your drops to a member (design spec §11.4, AskFlow B4): the Offer panel's Trade
---- button, through the trade helper's Give and its guards. A refusal is said in chat.
+--- Hand one of your drops to a member (design spec §11.4, AskFlow B4), through the trade helper's
+--- Give and its guards. A refusal is said in chat. No caller since the Offer panel's Trade button
+--- went (feedback-7 spec §0): kept pending the owner's call on retiring it with TradeHelper.Give.
 --- @param dropID number
 --- @param target string the member's "Name-Realm", name or GUID
 --- @return boolean ok, string|nil reason (as NS.TradeHelper.Give)

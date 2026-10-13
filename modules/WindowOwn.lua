@@ -83,11 +83,7 @@ end
 --- @param b table a Window.TextButton
 --- @param look table { text, icon, enabled, tip, state, toneState, kind }
 function WO.SetButtonLook(b, look)
-    b.label:SetText(look.text)
-    b.art:SetTexture(look.icon and NS.Icon(look.icon) or nil)
-    b.art:SetShown(look.icon ~= nil)
-    b.label:ClearAllPoints()
-    b.label:SetPoint("CENTER", b, "CENTER", look.icon and 7 or 0, 0)
+    NS.Window.SetButtonMark(b, look.text, look.icon)
     b:SetEnabled(look.enabled)
     b:SetAlpha(look.enabled and 1 or 0.6)
     b.tipLines, b.state = look.tip, look.state

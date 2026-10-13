@@ -217,6 +217,8 @@ test("cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade
         assertTrue(a.tip[2]:find("My drops", 1, true) == nil, key .. ": no word of My drops")
     end
     assertEqual(byKey(acts, "edit").tip[2], "Your own drop: Offer shows who it would help.")
+    assertEqual(byKey(acts, "trade").tip[2], "Your own drop: Offer shows who it would help, with an Offer button for each member.",
+        "no word of the Offer panel's Trade button, which went with feedback-7 spec §0")
     local sent = D.Actions(drop({ isMine = true, them = NONE }), { now = 100, offerTone = "sent" })
     assertEqual(byKey(sent, "ask").text, "Offered"); assertEqual(byKey(sent, "ask").state, "sent")
     local dead = D.Actions(drop({ isMine = true, them = NONE, trade = { state = "no", reasonKey = "bonusRoll" } }), { now = 100 })

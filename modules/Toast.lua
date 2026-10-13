@@ -247,11 +247,7 @@ end
 local function paintAsk(rec)
     local a = NS.WindowCells.Ask(rec, askState(rec))
     local b = frame.ask
-    b.label:SetText(a.text)
-    b.art:SetTexture(a.icon and NS.Icon(a.icon) or nil)
-    b.art:SetShown(a.icon ~= nil)
-    b.label:ClearAllPoints()
-    b.label:SetPoint("CENTER", b, "CENTER", a.icon and 7 or 0, 0)
+    NS.Window.SetButtonMark(b, a.text, a.icon)
     b:SetEnabled(a.enabled == true)
 end
 

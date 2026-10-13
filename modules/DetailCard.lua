@@ -347,8 +347,7 @@ local function paintSideRow(r, line, width)
     r.value:ClearAllPoints()
     local x = K.SIDE_LABEL + (line.link and K.SIDE_ROW_H + 2 or 0)
     r.value:SetPoint("LEFT", r, "LEFT", x, 0)
-    local cr, cg, cb = NS.Compat.ClassColor(line.classFile)
-    if cr then r.value:SetTextColor(cr, cg, cb) end
+    NS.WindowGroup.ClassTone(r.value, line.classFile)   -- a name in its class color, over the tone
     NS.WindowRows.PlaceMark(r.value, r.mark, line.you, max(width - 20 - x, 20))
 end
 

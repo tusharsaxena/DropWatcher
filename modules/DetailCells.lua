@@ -487,7 +487,7 @@ local TRADE_SHORT = {
 
 local function tradeAction(drop, trade)
     local title = L["Trade"]
-    if drop.isMine then return act("trade", title, "transfer", false, title, L["Your own drop: Offer has a Trade button for each member."]) end
+    if drop.isMine then return act("trade", title, "transfer", false, title, L["Your own drop: Offer shows who it would help, with an Offer button for each member."]) end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
         return act("trade", L["Trade · can't"], "transfer", false, title, L["Its looter can't trade it."])
     end

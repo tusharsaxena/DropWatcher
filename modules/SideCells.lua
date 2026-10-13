@@ -137,46 +137,41 @@ end
 
 -- ── the Offer panel's Their eq (feedback-7 spec §0) ─────────────────────────────────────────
 
-local function num(v) return type(v) == "number" and v == v and v or nil end
+local num = WC.Num
 
-local function readOk(insp)
-    return type(insp) == "table" and (insp.status == "fresh" or insp.status == "cached")
-end
-
--- What a candidate wears in the drop's slots, from their inspect read (both rings, both trinkets):
--- the items, and how many slots were read as empty.
-local function wornIn(slots, gear)
-    local items, empty = {}, 0
-    for _, slot in ipairs(slots or {}) do
-        local g = type(gear) == "table" and gear[slot] or nil
-        if type(g) == "table" and type(g.link) == "string" then
-            items[#items + 1] = { link = g.link, ilvl = g.ilvl, slot = slot }
-        elseif g == false then
-            empty = empty + 1
-        end
+-- The item their verdict was judged against stands in when the read gave nothing: as a row with
+-- its icon when its link is known, else as its level alone (a grid row with no icon).
+local function fromBaseline(c, base)
+    if type(base.link) == "string" then
+        c.items[1] = { link = base.link, ilvl = base.ilvl }
+        c.text, c.tone = WC.Levels(c.items), "plain"
+    elseif num(base.ilvl) then
+        c.text, c.tone = WC.Levels({ base }), "plain"
+        c.gridItems = { base }   -- a level known without its item: no icon, but a grid row
     end
-    return items, empty
 end
 
--- The gear part of one candidate: their read, else the item their verdict was judged against.
+-- The gear part of one candidate: their read (WindowCells.SlotItems, the Them cell's rule: both
+-- rings, both trinkets, a slot read empty counted), else the item their verdict was judged against.
 -- `items` and `empty` are the tooltip grid's rows (SC.Merge); its other lines, the read's age.
 local function candidateEq(drop, e, insp, now)
-    local slots = WC.EqSlots(type(drop.facts) == "table" and drop.facts.equipLoc or nil)
-    local items, empty = wornIn(slots, readOk(insp) and insp.gear or nil)
-    local base = e.baseline
-    if #items == 0 and empty == 0 and base and type(base.link) == "string" then items[1] = { link = base.link, ilvl = base.ilvl } end
+    local slots = WC.EqSlots(type(drop.facts) == "table" and drop.facts.equipLoc or nil) or {}
+    local ok = WC.ReadOk(insp)
+    local items, empty = WC.SlotItems(ok and insp.gear or nil, slots)
     local c = { items = items, empty = empty, tone = "muted", tip = { L["%s wears"]:format(e.short) } }
     if #items > 0 then
         c.text, c.tone = WC.Levels(items), "plain"
-    elseif base and num(base.ilvl) then
-        c.text, c.tone = WC.Levels({ base }), "plain"
-        c.gridItems = { base }   -- a level known without its item: no icon, but a grid row
-    elseif empty > 0 or (e.eval and e.eval.verdict == "upgrade") then
-        c.text, c.empty = L["empty slot"], math.max(empty, 1)
-    else
-        c.text = DASH
+    elseif empty == 0 and e.baseline then
+        fromBaseline(c, e.baseline)
     end
-    if readOk(insp) then c.tip[#c.tip + 1] = WC.InspectLine(insp, e.short, now) end
+    if not c.text then
+        if empty > 0 or (e.eval and e.eval.verdict == "upgrade") then
+            c.text, c.empty = L["empty slot"], math.max(empty, 1)
+        else
+            c.text = DASH
+        end
+    end
+    if ok then c.tip[#c.tip + 1] = WC.InspectLine(insp, e.short, now) end
     return c
 end
 

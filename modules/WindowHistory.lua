@@ -363,10 +363,14 @@ local function qualityColor(q)
     if qc then return qc.r, qc.g, qc.b end
 end
 
---- The Me cell: the verdict alone, as the Drops table words it (NS.SideCells.Merge with no gear).
+--- The Me cell: the verdict alone, as the Drops table words it (NS.SideCells.Merge with no gear);
+--- the tooltip grid's `You` in your class color (the gear snapshot's, NS.Gear), as on Drops.
 --- @param drop table
 --- @return table cell
-function WH.MeCell(drop) return SC.Merge(WC.Me(drop)) end
+function WH.MeCell(drop)
+    local snap = NS.Gear.Snapshot()
+    return SC.Merge(WC.Me(drop, type(snap) == "table" and snap.classFile or nil))
+end
 
 --- The Them cell: WH.ThemVerdict's verdict alone, as the Drops table words it.
 --- @param drop table

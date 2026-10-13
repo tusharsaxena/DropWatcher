@@ -46,7 +46,7 @@ State.windowGroup = nil
 
 -- Your own drops' reveal state (modules/WindowOwn.lua, feedback-5 spec §2): { revealed = { [dropId]
 -- = true } }. A revealed drop is an upgrade for you whose Offer panel you opened, so who it would
--- help is no longer hidden (Drops' count and (Details)).
+-- help is no longer hidden (Them's `Upgrade for N` and the Trade tooltip's count).
 State.windowOwn = nil
 
 -- The Offer panel (modules/OfferPanel.lua, design spec §11.4): { dropId } while it is open for one

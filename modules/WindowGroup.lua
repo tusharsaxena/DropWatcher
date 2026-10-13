@@ -591,10 +591,21 @@ local function qualityTone(fs, drop)
     if qc then fs:SetTextColor(qc.r, qc.g, qc.b) end
 end
 
-local function classTone(fs, classFile)
+local function classTone(fs, classFile, fallback)
     local r, g, b = NS.Compat.ClassColor(classFile)
+    if not r and fallback then
+        local t = C.TONE[fallback] or C.TONE.plain
+        r, g, b = t.r, t.g, t.b
+    end
     if r then fs:SetTextColor(r, g, b) end
 end
+
+--- Put a name in its class color (NS.Compat.ClassColor), else in the `fallback` tone (a C.TONE key),
+--- else leave the text's color as it is. The Offer panel's member and the detail card share it.
+--- @param fs table a FontString
+--- @param classFile string|nil
+--- @param fallback string|nil
+WG.ClassTone = classTone
 
 local function paintItem(f, drop)
     setItem(f.button, drop.link, WG.Where(drop))
@@ -657,11 +668,7 @@ local function paintActions(f, drop)
     f.dashTip:SetShown(not a.offered)
     f.dash:SetShown(not a.offered)
     f.dash:SetText(a.text)
-    f.ask.label:SetText(a.text)
-    f.ask.art:SetTexture(a.icon and NS.Icon(a.icon) or nil)
-    f.ask.art:SetShown(a.icon ~= nil)
-    f.ask.label:ClearAllPoints()
-    f.ask.label:SetPoint("CENTER", f.ask, "CENTER", a.icon and 7 or 0, 0)
+    NS.Window.SetButtonMark(f.ask, a.text, a.icon)
     f.ask:SetEnabled(a.enabled)
     f.ask:SetAlpha(a.enabled and 1 or 0.6)
     f.ask.tipLines, f.dashTip.tipLines = a.tip, a.tip
@@ -754,41 +761,6 @@ local function paintHeader(h, e, now)
     h.chevron:SetTexture(NS.Icon(e.collapsed and "chevron-right" or "chevron-down"))
 end
 
--- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
-
-local function previewTip()
-    return L["Preview with test data"], L["Turns test mode on: sample drops of real items in every state, so the window can be checked anywhere. Nothing is whispered, and combat ends it."]
-end
-
-local PREVIEW_W, PAIR_GAP = 160, 8
-
--- No drop at all yet: what the table will hold, and the two ways to fill it now, centered as a pair
--- under the text (feedback-7 spec §4) in both layouts: they sit in one frame as wide as both and
--- their gap, centered on the text, so the wider Preview does not push the pair left.
-local function buildEmpty(pane)
-    local e = CreateFrame("Frame", nil, pane)
-    e:SetSize(K.EMPTY_W, K.EMPTY_H)
-    e:SetPoint("CENTER", pane, "CENTER", 0, 0)
-    e.title = e:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    e.title:SetPoint("TOP", e, "TOP", 0, 0)
-    e.title:SetText(L["No drops yet"])
-    e.text = e:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    e.text:SetPoint("TOP", e.title, "BOTTOM", 0, -8)
-    e.text:SetText(L["Loot your group receives appears here, grouped by boss."])
-    local W = NS.Window
-    e.pair = CreateFrame("Frame", nil, e)
-    e.pair:SetSize(PREVIEW_W + PAIR_GAP + K.SCAN_W, K.CONTROL_H)
-    e.pair:SetPoint("TOP", e.text, "BOTTOM", 0, -12)
-    e.preview = W.TextButton(e.pair, PREVIEW_W, "eye", L["Preview with test data"], function() NS.SetTestMode(true) end)
-    e.preview:SetPoint("LEFT", e.pair, "LEFT", 0, 0)
-    W.AttachTooltip(e.preview, previewTip)
-    e.scan = W.TextButton(e.pair, K.SCAN_W, "people", L["Scan group"], function() NS.ScanGroup() end)
-    e.scan:SetPoint("RIGHT", e.pair, "RIGHT", 0, 0)
-    W.AttachTooltip(e.scan, NS.WindowTitleBar.ScanTip)
-    e:Hide()
-    return e
-end
-
 -- ── the pane ────────────────────────────────────────────────────────────────────────────────
 
 local function buildHeads(pane)
@@ -819,7 +791,7 @@ local function build(pane)
     pane.scroll, pane.content = scroll, content
     pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
     pane.card = NS.DetailCard.Build(content)
-    pane.emptyState = buildEmpty(pane)
+    pane.emptyState = NS.DropsStrip.BuildEmpty(pane)   -- the empty state (board 06 D)
     pane.entries = {}
     NS.DropsStrip.Build(pane)
 end
