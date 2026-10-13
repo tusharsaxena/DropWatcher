@@ -8,7 +8,7 @@ local _, NS = ...
 -- stored value is ignored). On your own drop the Trade cell counts the members it upgrades
 -- (`Yes (2)`), Them reads `(Details)` with every upgrade in its tooltip, and Actions
 -- is Offer, which opens the Offer panel (modules/OfferPanel.lua) and reveals the drop. What each
--- says is NS.MineCells' (pure: OwnTrade, Multiple, OwnOffer; NS.SideCells.Them takes Multiple into
+-- says is NS.MineCells' (pure: OwnTrade, Details, OwnOffer; NS.SideCells.Them takes Details into
 -- the Them cell); this file reads the state they take.
 --
 -- THE KEEP? RULE. An upgrade for you is offered to nobody until you open its Offer panel: until then

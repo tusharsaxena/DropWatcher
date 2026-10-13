@@ -127,11 +127,12 @@ function WH.Outcome(drop)
     return { text = o[1], tone = o[2], tip = { L["Outcome: %s"]:format(o[1]), o[3], hint } }
 end
 
---- The Them column: as the Drops table says it, except that a looter whose gear was never
---- read says so plainly (the inspect is long over).
+--- The Them verdict alone (WH.ThemCell is the merged cell the table and the card draw): as the
+--- Drops table says it, except that a looter whose gear was never read says so plainly (the inspect
+--- is long over).
 --- @param drop table
 --- @return table cell
-function WH.Them(drop)
+function WH.ThemVerdict(drop)
     if drop.isMine or type(drop.them) == "table" then return WC.Them(drop) end
     local who = WC.ShortName(drop.looter.name)
     return { text = "?", tone = "muted", verdict = "unknown",
@@ -363,14 +364,14 @@ end
 --- The Me cell: the verdict alone, as the Drops table words it (NS.SideCells.Merge with no gear).
 --- @param drop table
 --- @return table cell
-function WH.Me(drop) return SC.Merge(WC.Me(drop)) end
+function WH.MeCell(drop) return SC.Merge(WC.Me(drop)) end
 
---- The Them cell: WH.Them's verdict alone, as the Drops table words it.
+--- The Them cell: WH.ThemVerdict's verdict alone, as the Drops table words it.
 --- @param drop table
 --- @return table cell
-function WH.ThemCell(drop) return SC.Merge(WH.Them(drop)) end
+function WH.ThemCell(drop) return SC.Merge(WH.ThemVerdict(drop)) end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WH.Me, trade = WC.Trade,
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WH.MeCell, trade = WC.Trade,
     them = WH.ThemCell, outcome = WH.Outcome }
 
 local function paintRow(row, drop, layout, metrics)

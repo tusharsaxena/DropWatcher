@@ -242,7 +242,7 @@ local function inspectWhy(insp, who, now)
 end
 
 --- The Them verdict: the drop judged for its looter (the Me verdict's tones), `–` on your own drop
---- (the Drops table shows MineCells.Multiple's `(Details)` there instead: feedback-5 spec §2), `?`
+--- (the Drops table shows MineCells.Details's `(Details)` there instead: feedback-5 spec §2), `?`
 --- while their gear is not read. NS.SideCells puts it after the looter's worn gear.
 --- @param drop table
 --- @param now number|nil GetTime()
@@ -453,16 +453,12 @@ end
 
 --- What the looter wears (the Them cell's gear half): their worn item(s) for the drop's slot (two for rings, trinkets and
 --- weapons) and their item levels; the inspect's age (or why there is no read) in the tooltip.
+--- Another player's drop only: your own drop's Them cell is MineCells.Details's (SideCells.Them).
 --- @param drop table
 --- @param gear table|nil the looter's inspect entry's `gear` ({ [slot] = { link, ilvl } | false })
 --- @param now number|nil GetTime()
 --- @return table cell, with `items` = { { link, ilvl, slot }, ... }
 function WC.TheirEq(drop, gear, now)
-    if drop.isMine then
-        local own = eqCellOf(DASH, "muted", L["Their eq"], {})
-        own.tip[2] = L["Your own drop: what you wear is in the Me column."]
-        return own
-    end
     local who = looterName(drop)
     local title = L["%s wears"]:format(who)
     local slots = eqSlots(facts(drop).equipLoc) or {}

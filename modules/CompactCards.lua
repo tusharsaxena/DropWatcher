@@ -317,7 +317,7 @@ function CC.History(drop, ctx)
         trade = WC.Trade(drop),
         time = CC.When(drop.at, ctx.nowEpoch, ctx.dateFn),
         -- line 3
-        you = CC.Half(L["You"], WH.Me(drop)), them = CC.Half(L["Them"], WH.ThemCell(drop)),
+        you = CC.Half(L["You"], WH.MeCell(drop)), them = CC.Half(L["Them"], WH.ThemCell(drop)),
     }
 end
 

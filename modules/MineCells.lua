@@ -349,7 +349,7 @@ end
 --- @param revealed boolean|nil
 --- @param title string|nil the tooltip's title (the column's name; `Them` when nil)
 --- @return table cell, with `upgrades` and `hidden`
-function MC.Multiple(drop, revealed, title)
+function MC.Details(drop, revealed, title)
     title = title or L["Them"]
     if tradeOf(drop).state == "no" then
         return cell(DASH, "muted", title, L["Not tradeable, so nobody can be offered it."])

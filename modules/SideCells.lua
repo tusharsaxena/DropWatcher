@@ -14,7 +14,7 @@ local _, NS = ...
 -- side, red down); `Can't use` and `Not wanted` stay words (gray). An unknown verdict's `?` is left
 -- out when the gear part already says why (a state word), and shown when it does not. A dash in the
 -- gear part goes when the verdict part has something to say.
--- YOUR OWN DROP'S THEM is MineCells.Multiple's `(Details)` (or `Hidden`), its tones and its tooltip.
+-- YOUR OWN DROP'S THEM is MineCells.Details's `(Details)` (or `Hidden`), its tones and its tooltip.
 -- History keeps no worn items, so its cells are the verdict part alone (SC.Merge with no gear).
 --
 -- THE TOOLTIP is the gear tooltip's lines (each worn item, the inspect's age for Them) followed by
@@ -78,7 +78,7 @@ local function mergedTip(eq, v)
     return out
 end
 
---- One merged cell: a verdict cell (WindowCells.Me, Them or Verdict; MineCells.Multiple) after an
+--- One merged cell: a verdict cell (WindowCells.Me, Them or Verdict; MineCells.Details) after an
 --- equipment cell (WindowCells.MyEq or TheirEq; nil for the verdict alone).
 --- @param v table the verdict cell
 --- @param eq table|nil the equipment cell
@@ -101,13 +101,13 @@ function SC.Me(drop, equipped)
 end
 
 --- The Them cell: what the looter wears there (their inspect read's) and the drop judged for them;
---- on your own drop `(Details)` (MineCells.Multiple), every member it upgrades in the tooltip.
+--- on your own drop `(Details)` (MineCells.Details), every member it upgrades in the tooltip.
 --- @param drop table
 --- @param gear table|nil the looter's inspect gear
 --- @param now number|nil GetTime()
 --- @param revealed boolean|nil your own drop's Offer panel was opened this session
 --- @return table cell
 function SC.Them(drop, gear, now, revealed)
-    if drop.isMine then return SC.Merge(MC.Multiple(drop, revealed, L["Them"])) end
+    if drop.isMine then return SC.Merge(MC.Details(drop, revealed, L["Them"])) end
     return SC.Merge(WC.Them(drop, now), WC.TheirEq(drop, gear, now))
 end

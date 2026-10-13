@@ -114,7 +114,7 @@ test("details: one non-wrapping line per upgrade, ranked by gain, every part col
     local NS, _, m = T.newAddon()
     m.ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 }, [4] = { r = 0.64, g = 0.21, b = 0.93 } }
     local up = NS.TipMarks.Mark("upgrade")
-    local c = NS.MineCells.Multiple(own({
+    local c = NS.MineCells.Details(own({
         a = cand("Seta", "PRIEST", { verdict = "upgrade", ilvlDelta = 4.4, baseline = { ilvl = 283, name = "Loop", quality = 3 } }),
         b = cand("Butterz", "MAGE", { verdict = "upgrade", ilvlDelta = 11, baseline = { ilvl = 276, name = "Band", quality = 4 } }),
         c = cand("Kael", "ROGUE", { verdict = "downgrade", ilvlDelta = -2, baseline = { ilvl = 289 } }),
@@ -123,9 +123,9 @@ test("details: one non-wrapping line per upgrade, ranked by gain, every part col
     assertEqual(c.tip[2].text, "|cff40c7ebButterz|r wears 276 |cffa336edBand|r " .. up .. "11")
     assertEqual(c.tip[3].text, "|cffffffffSeta|r wears 283 |cff0070deLoop|r " .. up .. "4", "rounded, no sign")
     assertEqual(c.tip[2].wrap, false); assertEqual(c.tip[3].wrap, false)
-    local none = NS.MineCells.Multiple(own({ a = cand("Kael", "ROGUE", { verdict = "downgrade", ilvlDelta = -2 }) }))
+    local none = NS.MineCells.Details(own({ a = cand("Kael", "ROGUE", { verdict = "downgrade", ilvlDelta = -2 }) }))
     assertEqual(type(none.tip[2]), "string", "an explanation still wraps")
-    assertEqual(type(NS.MineCells.Multiple(own({})).tip[2]), "string", "solo: it wraps")
+    assertEqual(type(NS.MineCells.Details(own({})).tip[2]), "string", "solo: it wraps")
 end)
 
 test("details: of two worn rings the line names the lower, the one the drop would replace", function()
@@ -138,7 +138,7 @@ test("details: of two worn rings the line names the lower, the one the drop woul
         [C.SLOT.FINGER2] = ring(276, "Lower Loop") } }
     local eval = NS.Evaluate.Evaluate(ring(287), who)
     assertEqual(eval.verdict, "upgrade")
-    local c = NS.MineCells.Multiple(own({ a = cand("Butterz", "MAGE", eval) }))
+    local c = NS.MineCells.Details(own({ a = cand("Butterz", "MAGE", eval) }))
     local text = c.tip[2].text
     assertTrue(text:find("wears 276 Lower Loop ", 1, true) ~= nil, text)
     assertFalse(text:find("Higher Band", 1, true) ~= nil, "the higher one is kept")

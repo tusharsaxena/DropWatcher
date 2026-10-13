@@ -164,7 +164,7 @@ test("cells: My eq shows what you wear in the drop's slot, both rings for a ring
     assertEqual(W.MyEq(drop({ isMine = true }), equipped).text, "292", "your own drop too")
 end)
 
-test("cells: Their eq says pending, range, combat or failed beside the icons, and a dash on your own", function()
+test("cells: Their eq says pending, range, combat or failed beside the icons", function()
     local W = WC()
     local want = { pending = "…", outOfRange = "range", combatParked = "combat", failed = "!" }
     for status, text in pairs(want) do
@@ -172,8 +172,6 @@ test("cells: Their eq says pending, range, combat or failed beside the icons, an
         assertEqual(c.text, text, status); assertEqual(c.tone, "muted")
         assertTrue(#c.tip >= 3, status .. ": the reason is in the tooltip")
     end
-    local mine = W.TheirEq(drop({ isMine = true }), nil, 100)
-    assertEqual(mine.text, "–")
 end)
 
 -- ── the Ask button ──────────────────────────────────────────────────────────────────────────

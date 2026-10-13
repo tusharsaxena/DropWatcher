@@ -290,6 +290,8 @@ end
 
 --- Place a Me or Them cell's pieces left to right (WG.SIDE): the shown icons, the item level, the
 --- glyph, the difference or word; each after the last piece shown, the first at the cell's edge.
+--- The difference or word ends at the cell's right edge, so a long word (or a larger Font size) is
+--- cut short there rather than spilling into the next column.
 --- @param f table the cell (`icons`, `level`, `glyph`, `text`)
 --- @param nIcons number the icons shown (0..2)
 --- @param hasLevel boolean
@@ -308,6 +310,7 @@ function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph)
     after(f.glyph, hasGlyph)
     if hasGlyph then gap = S.GLYPH_GAP end
     after(f.text, true)
+    f.text:SetPoint("RIGHT", f, "RIGHT", 0, 0)
 end
 
 --- Color an action button's label and mark by whose move it is (feedback-4 spec §1): red your
@@ -662,7 +665,8 @@ end
 
 -- What a cell's text may take of its width, so a long name is cut short rather than spilling into
 -- the next column: the item button takes its share. A Me or Them cell's pieces are placed one after
--- the other, and the column is their widest (WG.SIDE).
+-- the other, and the column is their widest (WG.SIDE); the last ends at the cell's right edge
+-- (WG.PlaceSide), which cuts it short instead.
 local TEXT_INSET = { item = K.ROW_ICON + 5 }
 local SIDE_COLS = { me = true, them = true }
 

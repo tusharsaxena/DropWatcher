@@ -336,9 +336,9 @@ function DC.ForYou(drop, scorer)
 end
 
 -- Your own drop's side (feedback-5 spec §2): the looter is you, and the Them row reads (Details)
--- with every member it upgrades in its tooltip (MineCells.Multiple), as the row's Them cell does.
+-- with every member it upgrades in its tooltip (MineCells.Details), as the row's Them cell does.
 local function ownSide(drop, revealed)
-    local m = MC.Multiple(drop, revealed, L["Them"])
+    local m = MC.Details(drop, revealed, L["Them"])
     local tip = m.tip
     return { title = L["FOR THE GROUP"], verdict = { text = m.text, tone = m.tone, tip = tip },
         rows = { row("mine", L["Looter"], L["you"], "muted", L["Looter"], L["Your own drop: Offer shows who it would help."]),

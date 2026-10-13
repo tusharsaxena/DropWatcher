@@ -160,7 +160,7 @@ test("side cells: History's Me and Them are the verdict alone, worded as the Dro
     local d = WH.AsDrop({ itemLink = LINK, looter = "Seta-Realm", class = "PRIEST", ilvl = 311,
         equipLoc = "INVTYPE_HEAD", me = { verdict = "upgrade", ilvlDelta = 6 },
         them = { verdict = "downgrade", ilvlDelta = -8 } }, 1)
-    local me, them = WH.Me(d), WH.ThemCell(d)
+    local me, them = WH.MeCell(d), WH.ThemCell(d)
     assertTrue(me.level == nil, "a kept entry holds no worn items"); assertEqual(#me.items, 0)
     assertEqual(me.glyph .. me.text, "▲6"); assertEqual(them.glyph .. them.text, "▽8")
     assertEqual(me.tip[1], "For you: Upgrade")
@@ -274,6 +274,8 @@ test("table: the Me cell paints its icons, level, glyph and difference left to r
     assertEqual(c.level.__points[1][2], c.icons[2], "the level after the second icon")
     assertEqual(c.glyph.__points[1][2], c.level, "the glyph after the level")
     assertEqual(c.text.__points[1][2], c.glyph, "the difference after the glyph")
+    assertEqual(c.text.__points[2][1], "RIGHT"); assertEqual(c.text.__points[2][2], c,
+        "the difference ends at the cell's right edge: a long word or a larger font is cut short there")
     assertEqual(select(1, c.level:GetTextColor()), C.TONE.plain.r, "the level is plain")
     assertEqual(select(2, c.glyph:GetTextColor()), C.TONE.red.g, "the glyph in the verdict's tone")
     assertEqual(select(2, c.text:GetTextColor()), C.TONE.red.g)
@@ -292,4 +294,5 @@ test("table: a word starts after the level, and a cell with nothing worn starts 
     local me = row2.cells.me
     assertEqual(textOf(me.text), "Can't use"); assertEqual(textOf(me.glyph), "")
     assertEqual(me.text.__points[1][2], me.level, "the word after the level")
+    assertEqual(me.text.__points[2][2], me, "the word ends at the cell's right edge")
 end)

@@ -261,8 +261,8 @@ modules\WindowFooter.lua
 modules\WindowCells.lua
 # Conventional: publishes NS.TipMarks, what a tooltip draws for a verdict mark (an inline texture,
 # never a font glyph) and its non-wrapping line; reads NS.Constants at load, and NS.Icon,
-# NS.Compat and NS.GroupRoster at call time. Above modules\WindowGroup.lua and
-# modules\WindowHistory.lua, whose column tooltips take it at load.
+# NS.Compat and NS.GroupRoster at call time. Above modules\MineCells.lua (which takes it at load),
+# modules\WindowGroup.lua and modules\WindowHistory.lua (whose column tooltips call it at load).
 modules\TipMarks.lua
 # Conventional: publishes NS.WindowRows, the drop tables' row height and text size (the pure
 # resolution and the font edge the two tabs share); reads NS.Constants at load and NS.Setting at
@@ -270,8 +270,8 @@ modules\TipMarks.lua
 modules\WindowRows.lua
 # Conventional: publishes NS.MineCells, the pure composers for your own drops and the Offer panel
 # (the countdown, the candidates and their pills, the buttons, the strip's summary, Post my
-# tradeables' lines, the dock, and your own drop's cells on Drops); takes NS.WindowCells (above),
-# NS.Constants and NS.L at load.
+# tradeables' lines, the dock, and your own drop's cells on Drops); takes NS.WindowCells and
+# NS.TipMarks (above), NS.Constants and NS.L at load.
 modules\MineCells.lua
 # Conventional: publishes NS.SideCells, the drop tables' pure Me and Them cells (the worn gear and
 # the verdict in one cell; feedback-6 spec §1); takes NS.WindowCells and NS.MineCells (above) and
@@ -288,8 +288,8 @@ modules\WindowOwn.lua
 # (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
 modules\RowTooltip.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Drops body through
-# Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells and NS.SideCells
-# (above), NS.Constants, NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
+# Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells, NS.SideCells and
+# NS.TipMarks (above, its column tooltips call TipMarks.Mark), NS.Constants, NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
 # (modules\DetailCard.lua, below) and the host handlers (core\DropWatcher.lua) are read at call time,
 # when the tab is built and repainted.
 modules\WindowGroup.lua
@@ -312,7 +312,8 @@ modules\DetailCard.lua
 modules\OfferPanel.lua
 # LOAD-BEARING: publishes NS.WindowHistory and registers the History body through Window.RegisterTab
 # (modules\Window.lua, above) at load, and its HistoryChanged receiver on a NS.Bus target; takes
-# NS.WindowCells, NS.SideCells, NS.Constants, NS.L and NS.State at load. NS.History,
+# NS.WindowCells, NS.SideCells, NS.TipMarks (its column tooltips call TipMarks.Mark), NS.Constants,
+# NS.L and NS.State at load. NS.History,
 # NS.WindowGroup's item button and layout, NS.WindowFilterBar and NS.WindowFooter (above) are read at call time.
 modules\WindowHistory.lua
 # Conventional: publishes NS.CompactCards, compact mode's pure card composers (each card's three
