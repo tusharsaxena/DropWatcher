@@ -382,20 +382,6 @@ function NS.PressAnnounce(dropID, opts)
     return state, reason
 end
 
---- Hand one of your drops to a member (design spec §11.4, AskFlow B4), through the trade helper's
---- Give and its guards. A refusal is said in chat. No caller since the Offer panel's Trade button
---- went (feedback-7 spec §0): kept pending the owner's call on retiring it with TradeHelper.Give.
---- @param dropID number
---- @param target string the member's "Name-Realm", name or GUID
---- @return boolean ok, string|nil reason (as NS.TradeHelper.Give)
-function NS.GiveDrop(dropID, target)
-    local ok, reason = NS.TradeHelper.Give(dropID, target)
-    if not ok then
-        NS.Print(NS.L["No trade: %s"]:format(NS.TradeHelper.ReasonText(reason) or tostring(reason)))
-    end
-    return ok, reason
-end
-
 local postSeq = 0   -- each Post my tradeables files its lines under a key of its own
 
 --- Post my tradeables (design spec §11.4): one announce listing every drop of yours you can still

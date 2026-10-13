@@ -90,7 +90,6 @@ local function shownMine(compact)
     m.__now = NOW
     seed(NS, boardDrops(), { groupOf("Den of Nalorakk", NOW - 3000, { 1, 2, 3, 4 }, ROSTER) })
     NS.Asks.StateOf = function() return "ready" end
-    NS.TradeHelper.CanGive = function() return false, "range" end
     NS.WindowFilterBar.Set("group", "view", "all")
     if compact then NS.SetWindowMode("compact") end
     NS.ShowWindow()

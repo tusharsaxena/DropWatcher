@@ -2,7 +2,7 @@
 -- design spec §4): the secret guards on both load paths, the chat sender's ladder, the localized
 -- duration decoder behind the trade timer (spec §7.4) in three client languages, the tooltip line
 -- reader and its three readers, the restriction APIs, the bind helpers, the item readers, the Pawn
--- seam (spec §5.4), the trade actions and the drop tables' item icon, class color, chat link and
+-- seam (spec §5.4), the trade action and the drop tables' item icon, class color, chat link and
 -- dressing room (spec §11.1). Every shim is also driven with its API absent, where it
 -- must answer its documented absent value and never raise, the inspect calls (spec §8) and the
 -- feed's loot history and keystone map readers included.
@@ -588,24 +588,11 @@ end)
 -- Trade actions
 -- ---------------------------------------------------------------------------------------------
 
-test("compat: PickupBagItem calls C_Container, and reports false without it", function()
+test("compat: InitiateTrade calls through, and reports false when absent", function()
     local Compat, m = fresh()
-    assertTrue(Compat.PickupBagItem(0, 3))
-    assertEqual(m.tradeCalls[1][1], "PickupContainerItem")
-    assertEqual(m.tradeCalls[1][3], 3)
-    m.C_Container = nil
-    m.PickupContainerItem = function() error("the removed global was called") end
-    assertFalse(Compat.PickupBagItem(1, 2))
-end)
-
-test("compat: DropItemOnUnit and InitiateTrade call through, and report false when absent", function()
-    local Compat, m = fresh()
-    assertTrue(Compat.DropItemOnUnit("party1"))
     assertTrue(Compat.InitiateTrade("party2"))
-    assertEqual(m.tradeCalls[1][1], "DropItemOnUnit"); assertEqual(m.tradeCalls[1][2], "party1")
-    assertEqual(m.tradeCalls[2][1], "InitiateTrade"); assertEqual(m.tradeCalls[2][2], "party2")
-    m.DropItemOnUnit, m.InitiateTrade = nil, nil
-    assertFalse(Compat.DropItemOnUnit("party1"))
+    assertEqual(m.tradeCalls[1][1], "InitiateTrade"); assertEqual(m.tradeCalls[1][2], "party2")
+    m.InitiateTrade = nil
     assertFalse(Compat.InitiateTrade("party1"))
 end)
 
@@ -623,22 +610,6 @@ test("compat: InTradeRange reads interact distance 2; secret is out of range, no
     assertFalse(Compat.InTradeRange("party1"))
     m.CheckInteractDistance = nil
     assertTrue(Compat.InTradeRange("party1"))
-end)
-
-test("compat: CursorHasItem and ClearCursor call through, and answer false when absent", function()
-    local Compat, m = fresh()
-    assertFalse(Compat.CursorHasItem())
-    m.cursor = "0:1"
-    assertTrue(Compat.CursorHasItem())
-    assertTrue(Compat.ClearCursor())
-    assertFalse(Compat.CursorHasItem())
-    assertEqual(m.cursorCleared, 1)
-    m.issecretvalue = T.isSecret
-    m.CursorHasItem = function() return T.secret(true) end
-    assertFalse(Compat.CursorHasItem(), "a secret answer")
-    m.CursorHasItem, m.ClearCursor = nil, nil
-    assertFalse(Compat.CursorHasItem())
-    assertFalse(Compat.ClearCursor())
 end)
 
 test("compat: NormalizedRealm reads the normalized realm, then the plain one stripped", function()

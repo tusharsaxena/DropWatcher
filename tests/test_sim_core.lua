@@ -128,10 +128,8 @@ test("sim seam: no real inspect and no real trade while a simulation runs", func
     local C = NS.Compat
     assertTrue(C.NotifyInspect("party1")); assertTrue(C.ClearInspectPlayer())
     assertEqual(#m.inspect.notified, 0); assertEqual(m.inspect.cleared, 0)
-    assertTrue(C.PickupBagItem(0, 1)); assertTrue(C.DropItemOnUnit("party1"))
-    assertTrue(C.InitiateTrade("party2")); assertTrue(C.ClearCursor())
-    assertEqual(#m.tradeCalls, 0, "nothing reached the client"); assertNil(m.cursor)
-    assertEqual(printed(m, "[sim] Would hand the item to party1."), 1)
+    assertTrue(C.InitiateTrade("party2"))
+    assertEqual(#m.tradeCalls, 0, "nothing reached the client")
     assertEqual(printed(m, "[sim] Would open a trade with party2."), 1)
     Sim.Stop()
     C.NotifyInspect("party1")

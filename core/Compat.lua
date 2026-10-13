@@ -736,25 +736,7 @@ function Compat.PawnItemValue(link, scale)
     return type(v) == "number" and v or nil
 end
 
--- ── Trade actions (click-driven; the guards for range and combat are TradeHelper's, DW-29) ───
-
---- Picks up the item in bag `bag`, slot `slot` onto the cursor (C_Container.PickupContainerItem).
---- False when the client lacks it.
---- @return boolean
-function Compat.PickupBagItem(bag, slot)
-    local fn = containerApi("PickupContainerItem")
-    if not fn then return false end
-    fn(bag, slot)
-    return true
-end
-
---- Drops the cursor item on `unit`, which opens a trade with it. False when the API is absent.
---- @return boolean
-function Compat.DropItemOnUnit(unit)
-    if not DropItemOnUnit then return false end
-    DropItemOnUnit(unit)
-    return true
-end
+-- ── Trade action (click-driven; the guards for range and combat are TradeHelper's, DW-29) ────
 
 --- Opens a trade with `unit`. False when the API is absent.
 --- @return boolean
@@ -774,23 +756,6 @@ function Compat.InTradeRange(unit)
     local v = CheckInteractDistance(unit, 2)
     if Compat.IsSecret(v) then return false end
     return v == true or v == 1
-end
-
---- True when the cursor holds an item (CursorHasItem). False for a secret answer or no API.
---- @return boolean
-function Compat.CursorHasItem()
-    if not CursorHasItem then return false end
-    local v = CursorHasItem()
-    if Compat.IsSecret(v) then return false end
-    return v == true or v == 1
-end
-
---- Puts the cursor's item back where it came from (ClearCursor). False when the API is absent.
---- @return boolean
-function Compat.ClearCursor()
-    if not ClearCursor then return false end
-    ClearCursor()
-    return true
 end
 
 -- ── The trade window's contents (the history's trade completion, design spec §10) ───────────

@@ -1157,26 +1157,22 @@ the warning, wait until ten minutes are left (or `/dw set trade.warnAt 1800` and
 once only, with no second line after a bag move or `/dw disable` then `/dw enable` (a `/reload`
 forgets the warning, and warns again once).
 Loot an upgrade you equip or an item with no trade line → `expired=true`, no countdown. Loot a
-BoE drop → its `trade: drop` line reads `expired=false boe=true`, no countdown, and Give is offered
-for it. The failure
+BoE drop → its `trade: drop` line reads `expired=false boe=true`, no countdown, and its Drops row reads
+`No limit (BoE)`. The failure
 looks like no `trade:` line for a tradeable item (the tooltip line or its sentence did not read:
 record the tooltip text as shown), a time that drifts from the tooltip's, or a repeated warning.
 Result:
 
-**TRADE-6. The trade helper.** The guards, the GUID lookup and the call order are headless-tested
-(`test_trade_helper`); this check confirms the client's side, through the Offer panel's Trade and Offer
-buttons (DW-33; the panel opens from your own drop's Offer on Drops since DW-E2). In a dungeon, with a tradeable own drop
-(TRADE-5's `live=1`) and a member standing next to you: click Trade on the drop for that member →
-the trade window opens with the item already in it; cancel it. Move the item to another bag slot
-and click again → the same. Click Open trade (no item) → an empty trade window. Walk out of trade
-range (about 11 yards) → the button is disabled with "That player is out of trade range."; in
-combat → "You cannot trade in combat.", with no error from the client and no Lua error from
-`CheckInteractDistance`. Hold another item on the cursor and click → "Your cursor is holding an
-item.", and the held item stays on the cursor. With `/dw debug on`, each click leaves a `[TRADE]`
-`give:` or `open:` line, or a `refused:` line with its reason; `/dw diagnostics` shows
-`trade helper: gives=… opens=… refused=… last=…`. The failure looks like the trade opening empty
-when an item was meant (the drop did not land), the wrong item handed over, a client "Interface
-action failed" message, or an item left on the cursor. Result:
+**TRADE-6. The trade helper.** The guards and the call are headless-tested (`test_trade_helper`);
+this check confirms the client's side, through the detail card's Trade (the Offer panel's Trade and
+the give path behind it were retired with feedback-7 spec §0). In a dungeon, with a member standing
+next to you who looted a drop: open that drop's detail card and click Trade → an empty trade window
+with that member; cancel it. Walk out of trade range (about 11 yards) → the button is disabled with
+"That player is out of trade range."; in combat → "You cannot trade in combat.", with no error from
+the client and no Lua error from `CheckInteractDistance`. With `/dw debug on`, each click leaves a
+`[TRADE]` `open:` line, or a `refused:` line with its reason; `/dw diagnostics` shows
+`trade helper: opens=… refused=… last=…`. The failure looks like no trade window, a client
+"Interface action failed" message, or a Lua error. Result:
 
 ## Ask
 
@@ -1508,8 +1504,8 @@ a member's drop → it is queued, nothing is printed. `/dw sim kill` → within 
 covers the same ground. `/dw sim start dungeon`, then `/dw
 sim loot 2 me` → Drops shows both with Offer, the first with about 9 minutes left in its Trade window (it warns at once, since
 the warning is at 10 minutes) and the second with about 2 hours; your real bags are unchanged.
-Offer the second to a member and press Trade → chat prints `[sim] Would hand the item to <unit>.` and
-no trade window opens. `/dw sim trade <its id>` → the History tab shows it `Traded away`; loot a
+Open a member's drop's detail card and press Trade → chat prints `[sim] Would open a trade with <unit>.`
+and no trade window opens. `/dw sim trade <its id>` → the History tab shows it `Traded away`; loot a
 member's drop and `/dw sim trade <its id>` → `Received`. After `/dw sim stop` the History tab shows
 only your real history. Result:
 

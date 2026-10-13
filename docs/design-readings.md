@@ -239,6 +239,12 @@ being cleared, and a pickup with no `DropItemOnUnit` to follow is put back with 
 `CanGive` and `CanTradeWith` run every guard without acting, for the buttons' disabled state and
 tooltip (`ReasonText`). Only the calls that act count towards the diagnostics line.
 
+**Superseded by feedback-7 (2026-10-13)** (feedback-7 spec §0): with the Offer panel's Trade button gone,
+the give path is removed: `Give`, `CanGive`, `FindBagSlot`, the `notInBags`, `expired` and `cursorBusy`
+reasons, `NS.GiveDrop` and the Compat wrappers only it used (`PickupBagItem`, `DropItemOnUnit`,
+`CursorHasItem`, `ClearCursor`). The helper keeps `Open` (the detail card's Trade) and `CanTradeWith`, and
+its diagnostics line counts opens and refusals only. The reading above stands as history.
+
 ## The messaging edge
 
 The messaging edge (`modules/Asks.lua`) reads six cases the design leaves open. Design spec §4
@@ -479,8 +485,8 @@ worn icons, the item level, the monospace glyph and the unsigned difference in t
 `…`, `Unavailable` and `empty` as words), the pill's explanation moving into the cell's tooltip, a gear grid.
 The class stripe at each row's start is gone and every second row draws the main window's faint stripe. The
 **Trade button is removed** (owner decision): Actions holds Offer alone, `K.PANEL_BTN_W` 72 with its icon;
-`NS.GiveDrop` and the trade helper stay for the slash surface, and the readings below about Trade stand as
-history. `(Details)` is `Upgrade for N` and Trade's count is gone from the cell. Post my tradeables is the
+the readings below about Trade stand as history (the give path `NS.GiveDrop` / `TradeHelper.Give` was
+removed afterwards, see the trade helper's reading). `(Details)` is `Upgrade for N` and Trade's count is gone from the cell. Post my tradeables is the
 footer Sort's size, directly above it, with Scan group beside it on the strip.
 
 The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The tab** lists

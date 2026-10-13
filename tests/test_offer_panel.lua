@@ -90,7 +90,6 @@ local function shownMine(compact)
     m.__now = NOW
     seed(NS, boardDrops(), { groupOf("Den of Nalorakk", NOW - 3000, { 1, 2, 3, 4 }, ROSTER) })
     NS.Asks.StateOf = function() return "ready" end
-    NS.TradeHelper.CanGive = function() return false, "range" end
     NS.WindowFilterBar.Set("group", "view", "all")
     if compact then NS.SetWindowMode("compact") end
     NS.ShowWindow()
@@ -314,7 +313,7 @@ test("handlers: Post my tradeables announces every tradeable drop of yours, line
     assertTrue(m.prints[#m.prints]:find("Nothing to post") ~= nil)
 end)
 
-test("handlers: Offer, Announce and Trade say why they did nothing", function()
+test("handlers: Offer and Announce say why they did nothing", function()
     local NS, _, m = shownMine()
     NS.Asks.Press = function() return "refused", "alreadyAsked" end
     NS.PressOffer(1, "Seta-Realm")
@@ -322,9 +321,6 @@ test("handlers: Offer, Announce and Trade say why they did nothing", function()
     NS.PressAnnounce(1)
     assertTrue(m.prints[#m.prints]:find("You already announced it") ~= nil)
     assertEqual(select(2, NS.PressOffer(99, "Seta-Realm")), "noDrop")
-    NS.TradeHelper.Give = function() return false, "combat" end
-    NS.GiveDrop(1, "Seta-Realm")
-    assertTrue(m.prints[#m.prints]:find("You cannot trade in combat") ~= nil)
     NS.SchemaRuntime.Set("enabled", false)
     assertEqual(select(2, NS.PressAnnounce(1)), "disabled")
     assertEqual(NS.PostTradeables(), 0)

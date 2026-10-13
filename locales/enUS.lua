@@ -100,15 +100,12 @@ L["%s: %d min left to trade it."] = "%s: %d min left to trade it."
 
 -- The trade helper's refusal reasons, the disabled button's tooltip (modules/TradeHelper.lua)
 L["Drop Watcher is disabled."] = "Drop Watcher is disabled."
-L["That item is not in your bags."] = "That item is not in your bags."
 L["That player is not in your group."] = "That player is not in your group."
 L["That player is offline."] = "That player is offline."
 L["That player is out of trade range."] = "That player is out of trade range."
-L["The trade window for that item has passed."] = "The trade window for that item has passed."
 L["This client cannot open a trade."] = "This client cannot open a trade."
 L["You cannot trade in combat."] = "You cannot trade in combat."
 L["You cannot trade with yourself."] = "You cannot trade with yourself."
-L["Your cursor is holding an item."] = "Your cursor is holding an item."
 
 -- The gain token of an upgrade into an empty slot (modules/Asks.lua, design spec §9.1)
 L["an empty-slot upgrade"] = "an empty-slot upgrade"
@@ -197,7 +194,6 @@ L["Trade complete."] = "Trade complete."
 L["Turn test mode off before starting a simulation."] = "Turn test mode off before starting a simulation."
 L["[sim] %s to %s: %s"] = "[sim] %s to %s: %s"
 L["[sim] %s: %s"] = "[sim] %s: %s"
-L["[sim] Would hand the item to %s."] = "[sim] Would hand the item to %s."
 L["[sim] Would open a trade with %s."] = "[sim] Would open a trade with %s."
 
 -- The simulator's verbs, chip, footer and timeline (settings/SimVerbs.lua, modules/SimScenario.lua,

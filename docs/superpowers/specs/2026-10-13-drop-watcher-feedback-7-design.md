@@ -26,9 +26,10 @@ buttons, a class-colored bar at each row's start. `02-them-column-look.png`: the
 - **Alternating rows,** as the main window's: every second row draws the same faint stripe (`1, 1, 1, 0.03`) across
   the row, as WindowGroup's and WindowHistory's rows do.
 - **The Trade button is removed** (owner decision). Actions holds Offer alone (or the dash with its reason). The
-  Actions column's tooltip drops its Trade sentence. `NS.GiveDrop`, `NS.TradeHelper` and their tests stay (the
-  slash surface and the trade helper still use them); a helper only the panel's button used (`MC.TradeButton`) is
-  removed with its tests.
+  Actions column's tooltip drops its Trade sentence. The give path the button used (`NS.GiveDrop`,
+  `NS.TradeHelper.Give` and its Give-only helpers, reasons, Compat wrappers and tests) is removed with it;
+  `NS.TradeHelper.Open` (the detail card's Trade) and `CanTradeWith` stay. A helper only the panel's button used
+  (`MC.TradeButton`) is removed with its tests.
 - The column positions are re-measured for the new set (Member, Their eq, Actions) inside the unchanged 440px panel;
   the Their eq column is at least the Drops table's Them width so `321/308 ▽13` and two icons fit.
 

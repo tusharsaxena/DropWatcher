@@ -23,7 +23,7 @@ what this addon reads (combat state, the client's addon list, the chat sink, the
 libraries, the main window's whole frame tree (each region its own object, with its points, size,
 text, text color, texture and check state recorded, and its backdrop, edit-box font and insets, checked texture and hit insets), and the client APIs `core/Compat.lua` wraps: the tooltip
 data, the chat sender and lockdown, the restriction state, `C_Item`'s upgrade, bind and GUID
-answers, the trade actions, the enums it resolves by name and the enUS GlobalStrings it parses),
+answers, the trade action, the enums it resolves by name and the enUS GlobalStrings it parses),
 and a mocked clock: `advance(seconds)` runs the kit's timer queue in due order, and
 `C_Timer.NewTicker` is a repeating ticker on the same queue (its handle carries `ticker`).
 Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
@@ -152,8 +152,7 @@ candidates ranked with Their eq in the Them look (both worn items from the read)
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's
 explanation), Offer and Announce to group through their host handlers and toned by whose move it
 is (Offer cyan, Offered yellow, Retry and Announce red), the Edit message box, closing; then the
-host handlers Post my tradeables, Offer, Announce and Trade, the last still `NS.GiveDrop` with no
-panel button since feedback-7 spec §0),
+host handlers Post my tradeables, Offer and Announce),
 `test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
 top just outside the window, else its bottom right outside the left edge, at the UI scale, the row
 a cell sits in, the docked Offer panel as part of the window, the fallback on unknown geometry, then
@@ -267,10 +266,7 @@ a moved item kept and a removed one dropped; the three scan triggers sharing one
 the ticker slow while the window is hidden, fast while it is shown and off with nothing live, one
 ticker for every item; the warning once per item at the threshold with its message and chat line,
 at once below it, off at 0; secret links, GUIDs and lines; and the stand-down keeping the warned
-flags), `test_trade_helper` (the trade helper: your drop's bag item picked up by GUID and dropped on
-the member named by GUID, name or Name-Realm; a moved item found by a walk of the bags, the hinted
-slot first, a secret GUID refused; not in the bags, expired, a busy cursor left alone, no drop API
-putting the pickup back; `CanGive` touching nothing; combat refused before the range is read; a
+flags), `test_trade_helper` (the trade helper: combat refused before the range is read; a
 stranger, yourself, an offline member and one out of range; the stand-down; every reason's tooltip
 line; `Open` and its missing API; the diagnostics line), `test_asks` (the messaging edge: a
 whisper to the looter's Name-Realm with the template expanded from the drop's tokens and one

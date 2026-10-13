@@ -13,7 +13,7 @@
                                       │     Gear (me) ┘
                                       ├─> TradeRules ─> trade estimate
                                       └─> TradeTimer (own bag items)
- Restrictions ──> Messaging queue ──> Compat.ChatSender (pcall)   TradeHelper ──> DropItemOnUnit
+ Restrictions ──> Messaging queue ──> Compat.ChatSender (pcall)   TradeHelper ──> InitiateTrade
 ```
 
 Modules talk over the `NS.MSG` catalog in `core/Bus.lua`, one sender per message; the UI only
@@ -342,8 +342,6 @@ Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
                       ─> WindowGroup.ToneButton (feedback-4 §1)
 
 panel Offer ───────> NS.PressOffer(id, member) ─> NS.Asks.Press("offer", member, id) ─> AskStateChanged
-NS.GiveDrop(id, member) ─> NS.TradeHelper.Give (its guards; a refusal printed; the panel's Trade
-                      button went with feedback-7 §0)
 Announce to group ─> NS.PressAnnounce(id) ─> NS.Asks.Press("announce", nil, id) ─> AskStateChanged
 close mark ────────> OfferPanel.Close() ─> State.offerPanel = nil
 
@@ -565,20 +563,19 @@ Window OnShow / OnHide (NS.Window.AddVisibilityListener) ─> the ticker retuned
 The stand-down cancels the ticker and the pending scan and keeps the entries (their warned flags
 with them); the stand-up scans again.
 
-## Handing your drop over (design spec §4)
+## Opening a trade (design spec §4)
 
 ```
-a click (the Offer panel's Trade, DW-33)
-  ─> TradeHelper.Give(dropID, target)            TradeHelper.Open(target)
+a click (the detail card's Trade: NS.TradeWithLooter)
+  ─> TradeHelper.Open(target)
       ─> the guards, in order: stoodDown, combat (Restrictions.CanTrade), noTarget
          (Roster.Resolve: a GUID, Name-Realm or Name), self, offline, range (Compat.InTradeRange)
-      ─> TradeTimer.ForDrop(dropID): notInBags / expired
-      ─> FindBagSlot(guid): the entry's slot, then every bag (Compat.GetBagItemGUID)
-      ─> cursorBusy (Compat.CursorHasItem)
-      ─> Compat.PickupBagItem ─> Compat.DropItemOnUnit(member.unit)    ─> Compat.InitiateTrade
-         (no drop API: Compat.ClearCursor, noApi)
+      ─> Compat.InitiateTrade(member.unit)   (no API: noApi)
   <─ ok, or false and the reason; ReasonText(reason) is the button's tooltip
 ```
+
+The give path that placed your drop in the trade (`TradeHelper.Give`, `NS.GiveDrop`, for the Offer
+panel's Trade button) was retired with that button (feedback-7 spec §0).
 
 Nothing is sent on the bus; the trade itself is the client's. Stood down, every call refuses with
 `stoodDown`.

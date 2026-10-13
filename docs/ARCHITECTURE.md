@@ -118,7 +118,7 @@ its one-line responsibility and why its position is load-bearing or conventional
   builds the Drops empty state too, Preview with test data and Scan group centered as a pair), the
   detail card and the Offer panel (its rows read like the Drops table since feedback-7 spec §0,
   DW-G0: Member, Their eq in the Them cell's look and Actions with Offer alone, no class stripe,
-  alternating faint rows; the Trade button is retired, `NS.GiveDrop` and the trade helper stay),
+  alternating faint rows; the Trade button is retired, and the give path it used went with it),
   their pure composers (`WindowCells.lua`: every cell's words and tone, one tone per verdict in Me
   and Them alike, green upgrade, yellow sidegrade, red downgrade, gray can't use, the arrow before
   the number, feedback-4 spec §0; `ActionTone`, an action button's tone by whose move it is, red
@@ -308,7 +308,7 @@ mode's switch (`modules/WindowCompact.lua`) `SITUATION_CHANGED` on its own (DW-C
 accessors and never calls an engine action; a button's action goes through the host handler its
 slash verb shares (`NS.ScanGroup`, `NS.SetQualityMode`, `NS.PressAsk`, `NS.ToggleWindowMode`, and the
 detail card's `NS.RetryInspect` and `NS.TradeWithLooter`, the Offer
-panel's `NS.PressOffer`, `NS.PressAnnounce` and `NS.GiveDrop`, and the Drops strip's `NS.PostTradeables`). Drops leaving a
+panel's `NS.PressOffer` and `NS.PressAnnounce`, and the Drops strip's `NS.PostTradeables`). Drops leaving a
 feed are not a message: `LF.Clear` and the cap's trim call the feed's removal sinks
 (`NS.LootFeed.AddRemovalSink`, the loot parser's `AddSink` shape), and the toast's sink lets a toast
 go with its drop. The payloads and consumers below are the code's.
@@ -383,23 +383,22 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are
 allowed in combat and nothing defers (the toast waits out combat by choice, `toast.inCombat`). Settings writes touch no protected frame. Opening the settings panel is refused
 in combat by the options library, which also locks a page shown in combat; the addon adds no lock of
-its own and never closes Blizzard's settings window (options-ui-§2). The trade actions
-(`C_Container.PickupContainerItem`, `DropItemOnUnit`, `InitiateTrade`) and the chat sender are wrapped in
+its own and never closes Blizzard's settings window (options-ui-§2). The trade action
+(`InitiateTrade`) and the chat sender are wrapped in
 `core/Compat.lua` and guard nothing themselves: the trade helper (`modules/TradeHelper.lua`) and the
 messaging edge (`modules/Asks.lua`) call them only from a click, or for a queued ask from the flush
 timer, and check combat, range and restriction state first (design spec §4, §9). The chat sender
 runs inside `pcall`, so a client refusal is a failed ask, never a Lua error; a whisper and a
 PARTY, RAID or INSTANCE_CHAT message need no hardware event, so the timer may send them, and SAY
 and YELL, which do, are never used. The trade helper reads `NS.Restrictions.CanTrade()` before the
-trade range, because `CheckInteractDistance` is not to be called in combat, and never picks up an
-item while the cursor holds another, so nothing of the player's is swapped away. The inspect broker (`modules/Inspect.lua`) watches `NotifyInspect` through
+trade range, because `CheckInteractDistance` is not to be called in combat. The inspect broker (`modules/Inspect.lua`) watches `NotifyInspect` through
 `hooksecurefunc` (in `core/Compat.lua`), never by replacing it; it never inspects in combat or while
 Blizzard's inspect window is open, and calls `ClearInspectPlayer` only for an inspect it started
 and nobody took over, so another addon's or the player's inspect is never cleared under them.
 While a simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`core/SimSeam.lua`)
-keeps the chat sender, the inspect calls, the trade actions and `ClearCursor` from the client
-altogether: a send is printed with `[sim]`, a hand-over is printed, and nothing is inspected,
-picked up or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
+keeps the chat sender, the inspect calls and the trade action from the client
+altogether: a send is printed with `[sim]`, a trade is printed, and nothing is inspected
+or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
 simulated restrictions, so nothing it queued can reach the real sender. `Sim.Fire` calls each
 handler under `pcall`, as the client's event dispatch isolates it, and the stop runs each cleanup
 step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
@@ -509,7 +508,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 65 addon-specific shims (three or more), and its family adds the stable reads of `core/CompatWorld.lua` and `core/CompatItem.lua` |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 62 addon-specific shims (three or more), and its family adds the stable reads of `core/CompatWorld.lua` and `core/CompatItem.lua` |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 
 ### Verification and record (documentation-§3)
