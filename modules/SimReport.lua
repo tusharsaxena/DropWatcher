@@ -15,7 +15,7 @@ local _, NS = ...
 -- the feed's reader and the window's view, View): Group drops, My drops, hidden by a gate (its
 -- reason), loading, cleared from the feed since, or not shown while test mode is on. It honors
 -- `feed.showOwn` (a drop of yours is then on Group drops, and My drops too) and the feed the window
--- shows, and a drop of yours My drops leaves out (its Hide or its own filters) is `not on My drops`,
+-- shows, and a drop of yours My drops' own filters leave out is `not on My drops`,
 -- so the step agrees with the tab's label and the Group drops suffix (feedback-3 spec §5, DW-B5). Summarize counts the places (pure) and words the step's detail: `2 drops (1
 -- yours)`, `3 drops (1 yours, 1 hidden)`; TipLines names each drop, its looter and its place, for the
 -- panel row's tooltip. The panel reads the report again on every repaint, so a drop that was still
@@ -82,7 +82,7 @@ end
 
 --- What the window shows (the edge): its feed and `feed.showOwn` (NS.Window.FeedView), so a place
 --- honors them, and `mineLeftOut` (NS.WindowMine.LeftOutNow: why My drops leaves a drop of yours
---- out, its Hide or its own filters, else nil), so a place agrees with the tab's label and the Group
+--- out, its own filters, else nil), so a place agrees with the tab's label and the Group
 --- drops suffix beyond the defaults (feedback-3 spec §5, DW-B5).
 --- @return table { feed, showOwn, mineLeftOut }
 function R.View()
@@ -99,7 +99,7 @@ end
 
 --- Where one drop is now (pure, given `get`, the feed's reader, and `view`, the window's R.View;
 --- nil is the live feed with `feed.showOwn` off): `group`, `mine`, `notListed` (yours, but My drops
---- leaves it out: its Hide or its own filters, and why), `hidden` (and the gate's reason), `loading`,
+--- leaves it out: its own filters, and why), `hidden` (and the gate's reason), `loading`,
 --- `cleared` (taken out of the feed since) or `offscreen` (in a feed the window does not show: test
 --- mode is on). With `feed.showOwn` on, a drop of yours is `group` (Group drops lists it, and My
 --- drops too unless it leaves it out).

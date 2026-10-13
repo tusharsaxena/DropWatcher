@@ -92,7 +92,7 @@ function WC.Effective(stored, inRun)
     return MODE_SET[stored] and stored or "full"
 end
 
---- A layout's default size: 1000 x 600 full, 380 x 460 compact.
+--- A layout's default size: 972 x 600 full, 380 x 460 compact; each is also its least width.
 --- @param mode string
 --- @return number width, number height
 function WC.DefaultSize(mode)

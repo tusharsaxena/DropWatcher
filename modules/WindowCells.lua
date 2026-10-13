@@ -240,7 +240,7 @@ local function inspectWhy(insp, who, now)
     return L["The item it would replace was not read."]
 end
 
---- The Them column: the drop judged for its looter (inverted tones), `–` on your own drop, `?`
+--- The Them column: the drop judged for its looter (the Me column's tones), `–` on your own drop, `?`
 --- while their gear is not read.
 --- @param drop table
 --- @param now number|nil GetTime()

@@ -168,7 +168,7 @@ local function paintLineOne(card, drop, cc)
     card.dashTip:SetShown(o.dash == true)
     card.dash:SetText(o.text)
     card.offer.tipLines, card.dashTip.tipLines, card.offer.primary = o.tip, o.tip, o.primary
-    NS.WindowGroup.ToneButton(card.offer, (NS.WindowMine.ToneStates(drop)))   -- feedback-4 spec §1
+    NS.WindowGroup.ToneButton(card.offer, cc.offerTone)   -- feedback-4 spec §1
 end
 
 local function paintForYou(card, fy)
@@ -208,7 +208,7 @@ local function paintLineThree(card, drop, cc)
     card.announce.dropId = drop.id
     card.announce:SetShown(a ~= nil)
     if a then
-        a.toneState = select(2, NS.WindowMine.ToneStates(drop))
+        a.toneState = cc.announceTone
         NS.WindowMine.SetButtonLook(card.announce, a)
     end
 end
@@ -226,6 +226,7 @@ local function paintCard(card, drop, _, m, st)
     NS.WindowRows.ApplyRowFont(card, m.fontSize)
     local cc = NS.CompactCards.Mine(drop, cardCtx(drop, st))
     card.model = cc
+    cc.offerTone, cc.announceTone = NS.WindowMine.ToneStates(drop)   -- once per card (feedback-4 spec §1)
     paintLineOne(card, drop, cc)
     paintForYou(card, cc.forYou)
     paintTrade(card, cc.trade, m)
