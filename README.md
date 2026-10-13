@@ -27,8 +27,9 @@ a time.
 
 The window has two tabs: **Drops** and **History**. Each keeps its own filters
 in the bar under the tabs. The footer tells you how much of the group's gear has been read, when the
-last loot line came in, where the addon thinks you are, and whether Pawn is loaded. **Scan group**
-reads everyone's gear before the loot starts, which saves waiting later. When a boss fight or a key
+last loot line came in, where the addon thinks you are, and whether Pawn is loaded. **Scan group**,
+on the strip at the bottom of Drops, reads everyone's gear before the loot starts, which saves
+waiting later. When a boss fight or a key
 blocks addon chat, an orange lock in the title bar says so and counts the asks waiting to go out.
 
 **Drops** shows every drop, yours included, grouped under the boss or key run it came from. Each
@@ -40,16 +41,18 @@ it, in class color. Hovering the header names the party on one `Group:` line and
 filters hid and why. History keeps the place, the character and the party with each group. Each drop
 sits a little in from its header, with a small arrow at its left: it points down while the row is
 closed and up while its detail card is open. A row gives the item, its item level, its slot and its
-type (Cloth, Leather, Mail, Plate, Jewelry, Trinkets, Cloak or Weapons) and who looted it. Then
+type (Cloth, Leather, Mail, Plate, Jewelry, Trinkets, Cloak or Weapons) and who looted it, with a
+gold `[YOU]` after your own name. Then
 come **Me** (is it an upgrade for you?) and **Them** (is it one for the looter?). Each shows what
 that person wears in the slot, as icons with item levels (`321/308` for two rings, trinkets or
 one-hand weapons, `empty` when nothing is worn there), then the verdict and by how many item levels:
 ▲6 means upgrade (green), ≈1 sidegrade (yellow), ▽8 downgrade (red), the same in both columns. Can't
 use and Not wanted stay words. **Trade** reads
-Yes, Likely, Unknown or No. **Trade window** counts down the time left to trade it over a thin bar,
+Yes, Likely, Unknown or a red No. **Trade window** counts down the time left to trade it over a thin bar,
 which turns amber and bold in the last ten minutes. For someone else's drop it's an estimate from
 when it dropped (`~1:42:10`); a bind-on-equip item says `No limit (BoE)`, and an item that can't be
-traded says why. Hover any cell to see why; hover Them for the looter's gear and how old the read
+traded says why. Hover any cell to see why; hover Me or Them for a small table of the gear in that
+slot (who wears it, its item level, the item and the arrow with the difference), how old the read
 of it is, then the verdict's reasons. The **View** dropdown starts on All; pick **Interesting**, **Likely tradeable**, **Usable by
 me** or **Upgrade for me** to narrow it, several at once if you like (a drop must pass each), and
 All again to clear them. Shift-click the icon to link the item, ctrl-click to try it on. **Ask**
@@ -61,17 +64,17 @@ the stat and track changes, Pawn's score, and the trade rule behind the estimate
 edit the message before it goes, inspect the looter again, or open a trade.
 
 Your own loot is on **Drops** too, with a few differences. Its trade countdown is exact once the
-item is in your bags. **Trade** adds how many group members it would be an upgrade for, `Yes (2)`,
-and **Them** reads `(Details)`: hover it for one line per member it would help, biggest gain
-first, each name in class color with the item level and item they wear there and how much they'd
-gain. If it's an upgrade for you, nobody sees it offered until you decide: the count is left off and
-`(Details)` reads `Hidden` until you open its Offer panel.
-**Offer**, in place of Ask, opens that panel, which ranks everyone by how much they'd gain, with an
-**Offer** whisper, a **Trade** button that opens the trade with the item already in it, and
-**Announce to group**. The row's Offer is cyan until you've offered it, so it reads apart from
+item is in your bags. **Them** reads `Upgrade for 2`, the group members it would be an upgrade for (`No upgrades` when
+there are none): hover it for a row per member, biggest gain first, each name in class color with
+the item level and item they wear there and how much they'd gain. If it's an upgrade for you,
+nobody sees it offered until you decide: it reads `Hidden` until you open its Offer panel.
+**Offer**, in place of Ask, opens that panel, which ranks everyone by how much they'd gain. Its
+**Their eq** column reads like the Them column (what they wear, its item level, then the arrow and
+the difference), and each member gets an **Offer** whisper; **Announce to group** tells everyone at
+once. Every action button carries an icon for what it does. The row's Offer is cyan until you've offered it, so it reads apart from
 Ask, yellow once you have and green once you've given it away. While any of your listed drops can still be traded, a strip under the
 table counts them and gives the next one to run out (`2 tradeable · next expiry 0:08:41`), and
-**Post my tradeables** lists all of them in group chat in one line.
+**Post my tradeables**, right above the Sort dropdown, lists all of them in group chat in one line.
 
 The **History** tab remembers what the feed showed, across logouts and across your characters, for
 30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never
@@ -86,9 +89,9 @@ There is also a compact view: a narrow window, 440 pixels wide, where each drop 
 three lines instead of a table row. The top line has the item, its level and Ask (Offer on your
 own). The middle one says who looted it, the slot, the type and whether they can trade it, with the
 trade countdown and its bar on the right, and the bottom one reads like the table's Me and Them
-without the icons: `You 321/308 ▽8` and `Them 276 ▲12` (`Them (Details)` on your own). History cards show what became of the drop, and the strip under
+without the icons: `You 321/308 ▽8` and `Them 276 ▲12` (`Them Upgrade for 2` on your own). History cards show what became of the drop, and the strip under
 the Drops cards is shorter (`2 tradeable · next 0:08:41` and **Post**). Quality, Content, Character
-and Sort fold into a **Filters** button beside View. Hovering still explains everything, and
+and Sort fold into a **Filters** button beside View, and Scan group is the icon in the title bar. Hovering still explains everything, and
 clicking a Drops card opens the same detail card. The button next to minimize switches views, as do
 `/dw compact` and `/dw full`, and each view remembers its own size and place. When a drop opens the
 window by itself in a dungeon, key, raid or delve, it opens compact, then goes back to your usual

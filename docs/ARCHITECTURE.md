@@ -112,23 +112,41 @@ its one-line responsibility and why its position is load-bearing or conventional
   session's reveal state, the Offer and Announce tone states, the message buttons' look and the
   Ask-or-Offer click; feedback-5 spec §2, DW-E2) and its strip (`DropsStrip.lua`: your listed
   tradeable drops, the next expiry and Post my tradeables under the table or the cards, shown only
-  while one can be traded; §3, DW-E3), the detail card and the Offer panel,
+  while one can be traded; §3, DW-E3; since feedback-7 spec §4, DW-G4, the full layout's Scan group
+  lives on it, 8px left of Post, and slides into Post's slot while Post is hidden, Post takes the
+  footer Sort's size directly above it, and the full layout shows the strip on Drops always; it
+  builds the Drops empty state too, Preview with test data and Scan group centered as a pair), the
+  detail card and the Offer panel (its rows read like the Drops table since feedback-7 spec §0,
+  DW-G0: Member, Their eq in the Them cell's look and Actions with Offer alone, no class stripe,
+  alternating faint rows; the Trade button is retired, `NS.GiveDrop` and the trade helper stay),
   their pure composers (`WindowCells.lua`: every cell's words and tone, one tone per verdict in Me
   and Them alike, green upgrade, yellow sidegrade, red downgrade, gray can't use, the arrow before
   the number, feedback-4 spec §0; `ActionTone`, an action button's tone by whose move it is, red
   yours, yellow waiting, green done, §1, and Offer cyan (`C.TONE.cyan`) while it is your move,
-  feedback-6 spec §2, DW-F2; `ArmorType`, the Type column beside Slot, §3;
+  feedback-6 spec §2, DW-F2; an icon on every action button's every state, Ask `chat` and Offer
+  `export`, feedback-7 spec §1, DW-G1; Trade's `No` in the palette's red and your own name
+  `Name [YOU]`, the mark in gold, feedback-7 spec §2, DW-G2; `ArmorType`, the Type column beside
+  Slot, §3;
   `SideCells.lua`: the Me and Them cells, the worn gear and the verdict in one cell,
-  `[icons] 321/308 ▽8`, its tooltip the gear lines then the verdict's reasons, feedback-6 spec §1,
-  DW-F1, where My eq and Their eq were columns of their own;
+  `[icons] 321/308 ▽8`, its tooltip the gear grid then the verdict's reasons, feedback-6 spec §1,
+  DW-F1, where My eq and Their eq were columns of their own, and the Offer panel's Their eq cell in
+  the same look, `SideCells.Candidate`, feedback-7 spec §0;
   `DetailCells.lua`, `MineCells.lua`: the Trade window cell every Drops row shows, an estimate
-  from when it dropped for another player's drop, feedback-5 spec §1; your own drop's Trade count,
-  `(Details)` (`(Multiple)` until feedback-6 spec §3) and Offer, §2; the strip's summary and the
+  from when it dropped for another player's drop, feedback-5 spec §1; your own drop's Trade
+  (its upgrade count moved to the tooltip by feedback-7 spec §2: `Yes`, not `Yes (2)`),
+  `Upgrade for N` (`No upgrades` with none; `(Details)` until feedback-7 spec §2, `(Multiple)` until
+  feedback-6 spec §3) and Offer, §2; the strip's summary and the
   Offer panel's parts; `TipMarks.lua`: what text in the default face (a tooltip, the toast, the
   detail card, the Offer panel) draws for a verdict mark or an arrow, an inline texture (LibKa0s
   media `arrow-up`, `transfer`, `arrow-down`, `arrow-right`, tinted; DW-F5 beyond tooltips) and
-  never a font glyph the face lacks, and the non-wrapping `{ text, wrap = false }` line `Window.AttachTooltip` grows to fit,
-  which the (Details) tooltip's one line per member uses, feedback-6 spec §3, DW-F3; and compact mode's
+  never a font glyph the face lacks, the non-wrapping `{ text, wrap = false }` line `Window.AttachTooltip` grows to fit,
+  feedback-6 spec §3, DW-F3, and the gear grid described as data (`{ grid = rows }`, `GearRows`,
+  `ArrowCell`: `[Name] [Item level] [Item name] [glyph and difference]`, feedback-7 spec §3, DW-G3)
+  that every tooltip listing worn gear against a drop carries (Me, Them, `Upgrade for N`, the
+  detail card's verdict chips, the Offer panel's Their eq); `TipGrid.lua`: the frame edge that
+  paints such a grid as columns on a pooled child frame of GameTooltip, anchored to reserved lines,
+  the arrow column the table's glyph in the monospace face with glyph and number in the verdict
+  tone, released when the tooltip hides or is cleared; and compact mode's
   `CompactCards.lua`: each card's three lines, tones and tooltips and the header's short form, over
   the same composers; compact spec §2-§3, DW-C1), compact mode's per-tab bodies (`CompactGroup.lua`:
   the Drops tab's pooled three-line cards under one-line headers in the same pane, handed
@@ -138,7 +156,7 @@ its one-line responsibility and why its position is load-bearing or conventional
   `CompactGroup`'s shared kit, the Offer panel docked beside the compact window; compact spec §3,
   DW-C3), compact
   mode's chrome (`CompactChrome.lua`: the short title with `TEST` or `SIM`, the badge's lock and
-  count, the icon Scan group, the short tabs, the one-row filter bar whose `Filters ▾` panel holds the
+  count, the icon Scan group (compact keeps it in the title bar, feedback-7 spec §4), the short tabs, the one-row filter bar whose `Filters ▾` panel holds the
   full bar's own Quality, Content and Character dropdowns and the footer's Sort, the shortened strip
   and the one-line footer, over the same frame and controls; compact spec §4, DW-C4),
   the two tables'

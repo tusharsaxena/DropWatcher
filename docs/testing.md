@@ -53,7 +53,8 @@ blocks and dimmed rows, the Feed page's "in force now" readout, the Comparison p
 weights and unwanted types written whole through the seam, the Messages page's live counters,
 preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
-chrome built headless: the title bar, the restriction badge, Scan group, the tabs and their lazy
+chrome built headless: the title bar, the restriction badge, Scan group (the compact layout's
+title-bar icon; the full layout's is on the Drops strip, feedback-7 spec §4), the tabs and their lazy
 panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values,
 label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, the
 default size, 1038 x 600, as the least width, a tooltip on
@@ -63,7 +64,7 @@ reads, schema step 5, the title-bar toggle, each layout's own size and point on 
 Layout row, and the run override taken on an auto-open and let go when the run ends),
 `test_compact_cards` (compact mode's cards, DW-C1, pure: each Drops and History card's
 three lines in every verdict, trade, inspect, ask, countdown and outcome state (line 2's countdown
-and its bar, your own card's Offer, upgrade count and `(Details)`, feedback-5 spec §1-§2; line 3's `You 321/308 ▽8`, feedback-6 spec §1), each piece's tone and
+and its bar, your own card's Offer, `Upgrade for N` and ` [YOU]`, feedback-5 spec §1-§2, feedback-7 spec §2; line 3's `You 321/308 ▽8`, feedback-6 spec §1), each piece's tone and
 tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
 `test_compact_group` (the Drops tab in the compact layout, DW-C2: the card's metrics and the
 scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
@@ -92,7 +93,7 @@ Character, search and Sort, with a group collapsed, a drop expanded and your own
 switching back and forth on every tab leaving every verdict, trade state, inspect status, feed
 count, history entry and send as it was; and every test-mode state on a compact card saying what
 its full row says: the verdicts, trade words, ask states, inspect freshness, worn levels and
-countdowns on Drops, your own drops' Offer, count and `(Details)` among them, and every outcome on
+countdowns on Drops, your own drops' Offer and `Upgrade for N` among them, and every outcome on
 History),
 `test_window_group` (the Drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state (one tone per verdict in Me and Them, the arrow first;
@@ -104,51 +105,62 @@ the Ask button, its repaint and its tone by state, no row dismissable, the Type 
 the shed order (Trade window among it), the Trade window column on every drop (another player's an
 estimate, its bar, the row taller by the bar's room, the countdown moving each second, feedback-5
 spec §1), the hand-off to the compact cards, the filters, the empty
-state and its two buttons, and the filters' empty line), `test_drops_layout` (the Drops table's
+state and its two buttons centered as a pair (feedback-7 spec §4), and the filters' empty line), `test_drops_layout` (the Drops table's
 geometry, split from `test_window_group`: every column shown at the least width, 1038, and neither
 tab shedding there, the search box spanning from Character to the bar's edge, the gold column
 labels, the 84px Actions, each drop row's muted-white chevron and indent under its header and the
 header's gold chevron, the Trade window column pinned to its widest `MineCells.TradeWindow` answer
-plus its padding, 76, feedback-4 spec §4, feedback-5 spec §0, §4, feedback-6 spec §0),
+plus its padding, 76, feedback-4 spec §4, feedback-5 spec §0, §4, feedback-6 spec §0; every action
+button's icon and word fitting its width, feedback-7 spec §1),
 `test_side_cells` (the Me and Them cells, feedback-6 spec §1, DW-F1, pure: every verdict kind, two
-worn items, an empty slot, every inspect state, your own drop's `(Details)`, the merged tooltip and
-History's verdict alone; then each column's width measured over every kind at the harness's
+worn items, an empty slot, every inspect state, your own drop's `Upgrade for N` and `No upgrades`,
+the merged tooltip with its gear grid (two worn items two rows, the arrow on the replaced one, a slot
+worn empty its own row) and History's verdict alone; the Offer panel's Their eq
+(`SideCells.Candidate`, feedback-7 spec §0) in every candidate state and at least Them's width; then each column's width measured over every kind at the harness's
 character measure, the shed order, and the cells painted headless on the Drops table),
 `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
-through its host handler, no Hide this item, the card indented with its row, Offer (cyan) and `(Details)` on
-your own drop, and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
+through its host handler, no Hide this item, the card indented with its row, Offer (cyan), `Upgrade for N` and the
+Looter row's `Name [YOU]` on your own drop, and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
 the Trade window cell, exact and estimated, another player's naming its looter, ending soon in tone
-and tooltip only; the candidates ranked with their pills, the buttons' lifecycles and tones
-(`ToneState`), the strip's summary and its short compact form, Post my tradeables' lines, the
+and tooltip only; the candidates ranked with their judgment, the buttons' lifecycles and tones
+(`ToneState`), the Trade button gone, every state of every action look table carrying a shipped
+icon and the detail card's actions wearing their state's (feedback-7 spec §1), the strip's summary and its short compact form, Post my tradeables' lines, the
 Offer panel's header and its dock), `test_own_drops` (your own drops on Drops, feedback-5 spec §2,
-DW-E2: always listed; Trade's upgrade count, Them's `(Details)` and its tooltip ranked
-by gain, the keep? rule's `Hidden` until the Offer panel is opened, Offer toned by the furthest offer
+DW-E2: always listed; Trade's `Yes` with the upgrade count in its tooltip, Them's `Upgrade for N`
+and its grid ranked by gain, the looter's gold `[YOU]`, Trade's `No` in red (feedback-7 spec §2), the keep? rule's `Hidden` until the Offer panel is opened, Offer toned by the furthest offer
 sent and its dash with the reason; then the table, the detail card and the compact card painted
 headless), `test_tip_marks` (the tooltips' verdict marks and lines, feedback-6 spec §3, DW-F3:
 `NS.TipMarks`' escape strings, the TGA size, each mark and its fallback without the media library,
-the class and quality colors, the non-wrapping line added unwrapped, `(Details)`' lines ranked and
-colored with the lower of two rings named, and audits that no column tip, `L[]` string or test-mode
+the class and quality colors, the non-wrapping line added unwrapped, `Upgrade for N`'s grid rows ranked and
+colored with the lower of two rings named; the gear grid, feedback-7 spec §3: the arrow cell's glyph and
+number in the verdict tone, a member's rows, the columns' widths and gap (`TipGrid.Columns`), a grid
+painted headless as columns on reserved lines with the glyph in the monospace face, and
+`Compat.TooltipLeftLine`; and audits that no column tip, `L[]` string or test-mode
 tooltip on either tab in either layout carries → ▲ ▽ ≈ ⊘ or ⊕; DW-F5: the arrow texture, the
 drawn-width count, and an audit that no text test mode draws in the default face, on Drops, the
 detail card, the Offer panel or History in either layout, carries one), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
-collapsed or not, hidden while none can be traded, its next expiry moving each second and keeping
+collapsed or not, its next expiry moving each second and keeping
 the ticker running, Post my tradeables through its handler, and the compact strip shortened and put
-back; feedback-5 spec §3, DW-E3), `test_offer_panel` (the Offer panel opened from your own drop's
+back, hidden there while none can be traded; feedback-5 spec §3, DW-E3; feedback-7 spec §4: Post
+at Sort's size with its right edge on Sort's, Scan group 8px left of it through its handler, the pure
+`Slots`, and the full layout's strip shown with nothing tradeable, Scan group in Post's slot), `test_offer_panel` (the Offer panel opened from your own drop's
 Offer, built headless: docked beside the full or compact window on the side with room, the
-candidates ranked with their pills, every part's reason tooltip, Offer, Trade and Announce to group
-through their host handlers and toned by whose move it is (Offer cyan, Offered yellow, Retry and
-Announce red), the Edit message box, closing; then the
-host handlers Post my tradeables, Offer, Announce and Trade),
+candidates ranked with Their eq in the Them look (both worn items from the read), no class bar and
+every second row striped, every part's reason tooltip (Their eq's holding the old pill's
+explanation), Offer and Announce to group through their host handlers and toned by whose move it
+is (Offer cyan, Offered yellow, Retry and Announce red), the Edit message box, closing; then the
+host handlers Post my tradeables, Offer, Announce and Trade, the last still `NS.GiveDrop` with no
+panel button since feedback-7 spec §0),
 `test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
 top just outside the window, else its bottom right outside the left edge, at the UI scale, the row
 a cell sits in, the docked Offer panel as part of the window, the fallback on unknown geometry, then
 every cell, button and header of both tabs placed by it, the column labels and tabs not),
 `test_test_mode`
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
-and candidate pill covered by the data, over pool items that keep their slot and level, the worn
+and candidate status covered by the data, over pool items that keep their slot and level, the worn
 items the nearest of their slot, an empty pool giving none; the History sample with every outcome;
 `AddTest` and the test feed filled from the mock journal's pool (`seedGearJournal`) and emptied
 with test mode, while the pool loads, with no pool at all, by combat and by the stand-down; the

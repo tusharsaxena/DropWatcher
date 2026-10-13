@@ -70,7 +70,9 @@ TradeTimerExpiring ────────> shown: the whole repaint
 footer ticker (5s) ────────> shown and expanded: the footer ("Last loot 12s ago"), then what
                              TradeTimerTick repaints
 filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
-Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine)
+Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine;
+                             the Drops strip's button in the full layout, the title bar's icon in
+                             compact, the empty state's; feedback-7 §4)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
 resize (grip released) ────> the whole repaint (the table's columns take the new width); never
                              under the layout's least width, its default (full 1038, compact 440;
@@ -105,13 +107,15 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   ├─> each row, indented K.ROW_INDENT, its chevron first (WindowGroup.PaintChevron: down, up while
   │     its card is open, C.CHEVRON_ROW; feedback-5 §0), then the cells after WindowGroup.CHEVRON_LEAD:
-  │     NS.WindowCells.Item / Ilvl / Slot / ArmorType / Looter;
+  │     NS.WindowCells.Item / Ilvl / Slot / ArmorType / Looter (your own: the name in class color
+  │       and ` [YOU]` in gold beside it, never cut; feedback-7 §2);
   │     Me: SideCells.Me(drop, your gear) ─> WindowCells.MyEq + WindowCells.Me merged (SideCells.Merge:
   │       `[icons] 321/308 ▽8`, the difference unsigned; feedback-6 §1, DW-F1);
-  │     Trade: WindowOwn.Trade (your own drop: MineCells.OwnTrade, `Yes (2)`; else WindowCells.Trade);
-  │     Them: WindowGroup.ThemCell ─> SideCells.Them (your own drop: MineCells.Details, `(Details)`,
-  │       its tooltip one non-wrapping line per upgrade from MineCells.Candidates, ranked by gain,
-  │       the arrow a TipMarks texture (feedback-6 §3, DW-F3), `Hidden` while unrevealed; else
+  │     Trade: WindowOwn.Trade (your own drop: MineCells.OwnTrade, `Yes`, the upgrade count in its
+  │       tooltip; else WindowCells.Trade), No in C.TONE.red (feedback-7 §2);
+  │     Them: WindowGroup.ThemCell ─> SideCells.Them (your own drop: MineCells.Details, `Upgrade for
+  │       N` (feedback-7 §2), its tooltip a gear grid, a row per upgrade from MineCells.Candidates,
+  │       ranked by gain (TipMarks.GearRows, feedback-7 §3), `Hidden` while unrevealed; else
   │       WindowCells.TheirEq + WindowCells.Them merged); each painted by paintSide and placed by
   │       WindowGroup.PlaceSide (icons, plain level, the glyph and difference in the verdict's tone);
   │     Trade window: MineCells.TradeWindow(drop, now, TradeTimer.WarnAt()) ─> the countdown over its
@@ -120,15 +124,19 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     Actions: WindowGroup.Action (your own drop: WindowOwn.Offer ─> MineCells.OwnOffer, toned by
   │       WindowOwn.ToneStates' offer half; else WindowCells.Ask), the tone: WindowCells.ActionTone(state,
   │       kind) ─> WindowGroup.ToneButton (red your move, cyan for an Offer, yellow waiting, green
-  │       Traded; feedback-4 §1, feedback-6 §2); the
+  │       Traded; feedback-4 §1, feedback-6 §2), its state's icon through Window.SetButtonMark
+  │       (Ask `chat`, Offer `export`; feedback-7 §1); the
   │       verdicts one tone each, the arrow first (WindowGroup.PlaceGlyph; §0)
                   reads: NS.Gear.Snapshot().equipped (Me's gear; its icons show your inventory slot's
                   own tooltip), NS.TestMode.InspectOf(drop).gear (Them's gear: NS.Inspect.Get(looter guid),
                   or a sample's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
-        ─> MineCells.Summary(yours, now) ─> shown while one is tradeable: `2 tradeable · next expiry
-        0:08:41` and Post my tradeables, the scroll frame's bottom moved up over it; else hidden
+        ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` and Post my
+        tradeables while one is tradeable; full layout (feedback-7 §4): always shown, Post above
+        the footer's Sort at its size, Scan group 8px left of it, DropsStrip.Slots(postShown,
+        WindowFooter.SORT_INSET, SORT_W, GAP) sliding Scan group into Post's slot while Post is
+        hidden; the scroll frame's bottom moved up over it
 
 header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint
 Ask ───────────> WindowOwn.PressAction ─> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id)
@@ -143,10 +151,16 @@ row hover ─────> a cell, button or header: Window.AttachTooltip ("row"
                  BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2);
                  a line given as `{ text, wrap = false }` (TipMarks.NoWrap) is added unwrapped, so the
                  tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
-                 a font glyph (feedback-6 §3, DW-F3)
+                 a font glyph (feedback-6 §3, DW-F3); a `{ grid = rows }` line (TipMarks.Grid,
+                 feedback-7 §3) ─> TipGrid.Begin, then TipGrid.Add reserves a blank line per row,
+                 then after Show TipGrid.Paint draws the cells as columns on a pooled child of
+                 GameTooltip (anchored through Compat.TooltipLeftLine; the arrow column the mono
+                 glyph and the difference in the verdict tone), SetMinimumWidth for the widest row;
+                 released on the next Begin, on hide and on OnTooltipCleared
 NS.SetWindowMode ─> SchemaRuntime.Set("window.mode") ─> WindowCompact.OnModeChanged ─> Apply
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
-no drop at all > the empty state: Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
+no drop at all > the empty state (DropsStrip.BuildEmpty; the two buttons centered as a pair,
+                 feedback-7 §4): Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
 ```
 
 In the compact layout (`WindowGroup.IsCompact()`, compact spec §2) the same refresh computes the
@@ -161,9 +175,9 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     CompactCards.Group(drop, { now, your gear, the looter's gear, WindowGroup.AskState,
   │     messages.transmogAsk, Compat.NormalizedRealm, TradeTimer.WarnAt(); your own drop: its
   │     WindowOwn.IsRevealed and offer tone }) ─> three lines of pieces (line 2: looter · slot · type
-  │     · trade, the count on your own; the countdown and its bar on the right, CompactGroup.PaintCountdown,
-  │     else the inspect freshness; line 3 SideCells' Me and Them without icons, `You 321/308 ▽8`, `Them (Details)` on your
-  │     own; feedback-6 §1); the Ask or Offer toned by
+  │     · trade, ` [YOU]` in gold after your own name; the countdown and its bar on the right, CompactGroup.PaintCountdown,
+  │     else the inspect freshness; line 3 SideCells' Me and Them without icons, `You 321/308 ▽8`, `Them Upgrade for 2` on your
+  │     own; feedback-6 §1, feedback-7 §2); the Ask or Offer toned by
   │     WindowGroup.ToneButton as the row's
   └─> DropsStrip.Paint(pane, ctx, true): the strip shortened, DropsStrip.SummaryText, `Post`
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
@@ -286,7 +300,8 @@ the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, w
   └─> DetailCells.Actions(drop, { NS.Asks.StateOf("ask", …), the inspect entry,
                                   NS.TradeHelper.CanTradeWith(looter) })                  (pure)
   (your own drop: Offer in place of Ask, toned as the row's, and the For the looter Them row
-   `(Details)` with the row's tooltip: MineCells.OwnOffer / Details; feedback-5 §2, feedback-6 §3)
+   `Upgrade for N` with the row's tooltip: MineCells.OwnOffer / Details; feedback-5 §2, feedback-6 §3,
+   feedback-7 §2; the Looter row `Name [YOU]`)
 
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press ─> AskStateChanged ─> repaint
                  (messages.editFirst on, window shown, not queued: ─> DetailCard.OpenEditor(id, "ask"))
@@ -300,19 +315,23 @@ Trade ─────────> NS.TradeWithLooter(id) ─> NS.TradeHelper.Op
 
 ## Your own drops and the Offer panel
 
-Your own drops are Drops rows like any other (above; feedback-5 §2, DW-E2): Trade counts their
-upgrades, Them reads `(Details)` (feedback-6 §1, §3), Actions is Offer (cyan while your move, §2). What is theirs alone is the reveal
+Your own drops are Drops rows like any other (above; feedback-5 §2, DW-E2): Trade's tooltip counts
+their upgrades, Them reads `Upgrade for N` (feedback-6 §1, §3; feedback-7 §2), Actions is Offer (cyan
+while your move, §2). What is theirs alone is the reveal
 state and the Offer panel:
 
 ```
 Offer (row, card, detail card) ─> WindowOwn.PressAction ─> OfferPanel.Open(id)
       ─> State.offerPanel.dropId, WindowOwn.Reveal(id) (State.windowOwn.revealed) ─> repaint
-         (the count and (Details) drawn from now on: the keep? rule, MineCells.OwnTrade / Details)
+         (the count and Upgrade for N drawn from now on: the keep? rule, MineCells.OwnTrade / Details)
 Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
   ├─> MineCells.DockSide(window left, right, panel width, screen width)   (pure)
   ├─> MineCells.PanelHeader(drop, now, warnAt), MineCells.Candidates(drop)   (pure)
-  └─> each candidate: SideCells.Candidate(drop, entry, NS.Inspect.Get(guid), now) (Their eq in
-                      the Them look, painted by WindowGroup.PaintSide; feedback-7 §0),
+  └─> each candidate (every second row the faint stripe, no class stripe; feedback-7 §0):
+                      the name in class color (WindowGroup.ClassTone),
+                      SideCells.Candidate(drop, entry, NS.Inspect.Get(guid), now) (Their eq in
+                      the Them look, painted by WindowGroup.PaintSide; its tooltip the member's
+                      gear grid and the verdict's explanation; feedback-7 §0, §3),
                       MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)) (kind `offer`,
                       cyan while it reads Offer; Retry red; feedback-6 §2), toned by
                       MineCells.ToneState(NS.History.OutcomeOf(id), its state);

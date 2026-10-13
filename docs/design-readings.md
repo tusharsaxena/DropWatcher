@@ -379,6 +379,11 @@ drops whose verdict for you is an upgrade. Both are the Group drops tab's alone.
 listed. The window has two tabs, Drops (the Group drops tab renamed, its key still `group`) and
 History; `feed.showOwn` is retired (schema step 6 removes it), and a stored active tab of `mine`
 opens Drops.
+**Superseded by feedback-7 (2026-10-13)** (feedback-7 spec §4, DW-G4): the full layout's Scan group is no
+longer in the title bar. It sits on the Drops strip, 8px left of Post my tradeables, and slides into Post's
+slot while Post is hidden, so the full layout shows the strip on Drops always (its summary empty with nothing
+tradeable). History has no Scan group (`/dw scan` stays). The compact layout keeps its title-bar icon, and
+the restriction badge anchors to the layout toggle.
 
 ## The Group drops table
 
@@ -423,6 +428,14 @@ unsigned form, since a kept entry holds no worn items. On your own drop Them rea
 color, `wears`, the item level and item in its quality color, a green arrow texture and the unsigned gain,
 naming the lower of two worn items. Offer is cyan while it is your move. A verdict mark in any tooltip is an
 inline texture, never a font glyph. The least width is now 1038 (compact 440).
+**Superseded by feedback-7 (2026-10-13)** (feedback-7 spec §1-§3, DW-G1..DW-G3): on your own drop Them reads
+`Upgrade for N` (green; `No upgrades`, muted, with none; `Hidden` under the keep? rule) where it read
+`(Details)`, and Trade drops the count (`Yes`, not `Yes (2)`), the count moving to its tooltip. Trade's `No`
+is the palette's red, not the gray `bad` tone. Your own drop's looter reads `Name [YOU]`, the mark in gold and
+never cut. Ask carries the `chat` icon and Offer `export`. Every tooltip that lists worn gear against a drop
+(Me, Them, `Upgrade for N`) lays it out as a grid, `[Name] [Item level] [Item name] [glyph and difference]`,
+the glyph the table's monospace one with glyph and number in the verdict's tone; the `wears` lines and the
+`Item level A against B` sentence give way to it.
 
 ## The detail card
 
@@ -435,7 +448,10 @@ can't trade, and otherwise follows the trade helper's guards (combat, range, off
 short reason on the button (`Trade · out of range`). **Superseded by feedback-5 (2026-10-13)**
 (feedback-5 spec §2): on your own drop the card's Ask is Offer, which opens the Offer panel, and its Them row
 reads `(Multiple)`; My drops is retired. **Superseded by feedback-6 (2026-10-13)** (feedback-6 spec §2-§3): the
-Them row reads `(Details)` and the Offer is cyan while it is your move. **Retry inspect** is off while the looter's read is
+Them row reads `(Details)` and the Offer is cyan while it is your move. **Superseded by feedback-7
+(2026-10-13)** (feedback-7 spec §1-§3): the Them row reads `Upgrade for N`, the Looter row `Name [YOU]` (the mark
+in gold), the trade chip's `NOT TRADEABLE` is red, Ask and Offer wear their state's icon, and the verdict
+chips' tooltips list the gear as a grid. **Retry inspect** is off while the looter's read is
 still good or already queued, since the broker would not inspect again, and queues them at the looter
 priority otherwise. **Stats** are the four secondary stats' change against the replaced item, the largest
 first; the primary stat, stamina, sockets and tertiary stats are the header's chips. The score line is
@@ -457,6 +473,15 @@ its tooltip one line per member it upgrades (name in class color, the worn item 
 color, a green arrow texture and the unsigned gain), never wrapping; Offer, on the row and each candidate's in
 the panel, is cyan while it is your move (Offered yellow, Traded green, Retry red); Announce to group is
 unchanged.
+**Superseded by feedback-7 (2026-10-13)** (feedback-7 spec §0-§2, §4, DW-G0..DW-G2, DW-G4): the Offer panel's
+`Eq -> drop` and Status pill columns are merged into one **Their eq** column drawn as the Drops Them cell (the
+worn icons, the item level, the monospace glyph and the unsigned difference in the verdict's tone; `Can't use`,
+`…`, `Unavailable` and `empty` as words), the pill's explanation moving into the cell's tooltip, a gear grid.
+The class stripe at each row's start is gone and every second row draws the main window's faint stripe. The
+**Trade button is removed** (owner decision): Actions holds Offer alone, `K.PANEL_BTN_W` 72 with its icon;
+`NS.GiveDrop` and the trade helper stay for the slash surface, and the readings below about Trade stand as
+history. `(Details)` is `Upgrade for N` and Trade's count is gone from the cell. Post my tradeables is the
+footer Sort's size, directly above it, with Scan group beside it on the strip.
 
 The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The tab** lists
 every drop of yours in the tab's feed, a drop that cannot be traded included (a dash and Hide, board 04's
@@ -535,3 +560,7 @@ carries Offer, the upgrade count and `(Multiple)`, the strip under the cards is 
 Them without icons, `You 321/308 ▽8` and `Them 276 ▲12`, `Them (Details)` on your own card (History's cards
 the verdict alone); Offer is cyan while it is your move; the least compact width stays 440, line 3's fullest
 halves ending about 46px short of the card's edge.
+**Superseded by feedback-7 (2026-10-13)** (feedback-7 spec §1-§4): your own card reads `Them Upgrade for 2`
+where it read `Them (Details)`, its trade piece drops the count, your name carries a gold ` [YOU]`, Trade's
+`No` is red, Ask and Offer wear their icons, and the compact layout keeps Scan group as its title-bar icon
+while the full layout's moves to the Drops strip. The empty state's two buttons are centered as a pair.

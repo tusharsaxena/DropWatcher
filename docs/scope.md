@@ -32,8 +32,9 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   edit-first box when wanted; never SAY or YELL.
 - **The window.** Drops (every drop, your own included, in rows under collapsible boss headers, each
   row's Me and Them showing the worn gear beside the verdict, with a detail card that expands inline and a trade countdown on every row; on your own drops the
-  upgrade count, who it would help and Offer, which opens the "Who could use this?" panel with its
-  Trade button, and a strip with Post my tradeables) and History (every drop the feed showed, kept across sessions
+  upgrade count, who it would help and Offer, which opens the "Who could use this?" panel with an
+  Offer per member (its Trade button retired by feedback-7), and a strip with Post my tradeables and,
+  in the full layout, Scan group) and History (every drop the feed showed, kept across sessions
   on every character, with its outcome), plus the filter bar, the footer's health line, the
   restriction badge, Scan group, minimize, test mode and auto-open.
 - **Compact mode** (M12, [`superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md`](superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md)).
