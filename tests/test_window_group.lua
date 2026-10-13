@@ -39,14 +39,14 @@ local function joined(tip) return table.concat(tip, " | ") end
 
 -- ── the verdict cells ───────────────────────────────────────────────────────────────────────
 
-test("cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade", function()
+test("cells: Me shows ▲ ≈ ▽ and the signed change, green up, yellow side, red down (feedback-4 §0)", function()
     local W = WC()
     local up = W.Me(drop())
     assertEqual(up.text, "+19"); assertEqual(up.glyph, "▲"); assertEqual(up.tone, "good")
     local side = W.Me(drop({ me = { verdict = "sidegrade", ilvlDelta = 0.4, reasons = {} } }))
-    assertEqual(side.text, "+0"); assertEqual(side.glyph, "≈"); assertEqual(side.tone, "plain")
+    assertEqual(side.text, "+0"); assertEqual(side.glyph, "≈"); assertEqual(side.tone, "yellow")
     local down = W.Me(drop({ me = { verdict = "downgrade", ilvlDelta = -13, reasons = {} } }))
-    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▽"); assertEqual(down.tone, "bad")
+    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▽"); assertEqual(down.tone, "red")
 end)
 
 test("cells: a verdict with no glyph says a word, and every verdict's tooltip says why", function()
@@ -64,15 +64,15 @@ test("cells: a verdict with no glyph says a word, and every verdict's tooltip sa
     assertEqual(empty.text, "empty"); assertEqual(empty.glyph, "▲")
 end)
 
-test("cells: the Them column inverts the tones: their upgrade is amber, their downgrade green", function()
+test("cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray", function()
     local W = WC()
     local down = W.Them(drop(), 100)
-    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▽"); assertEqual(down.tone, "good")
+    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▽"); assertEqual(down.tone, "red")
     assertEqual(down.tip[1], "For Seta: Downgrade")
     local up = W.Them(drop({ them = { verdict = "upgrade", ilvlDelta = 12, reasons = {} } }), 100)
-    assertEqual(up.tone, "warn")
+    assertEqual(up.tone, "good")
     local cant = W.Them(drop({ them = { verdict = "cantUse", reasons = {} } }), 100)
-    assertEqual(cant.tone, "good", "they cannot use it: good news for you")
+    assertEqual(cant.tone, "bad", "gray, as in the Me column")
 end)
 
 test("cells: Them is a dash on your own drop and `?` with the inspect's reason while unread", function()
@@ -467,8 +467,11 @@ test("table: the verdicts wear their tones, the looter their class color, the it
     local G = NS.Constants.TONE.good
     local r, g, b = c.me.text:GetTextColor()
     assertEqual(table.concat({ r, g, b }, ","), table.concat({ G.r, G.g, G.b }, ","), "an upgrade for you is green")
+    local R = NS.Constants.TONE.red
     r, g = c.them.text:GetTextColor()
-    assertEqual(r .. "," .. g, G.r .. "," .. G.g, "their downgrade is green too: the Them column is inverted")
+    assertEqual(r .. "," .. g, R.r .. "," .. R.g, "their downgrade is red: one tone per verdict")
+    assertEqual(c.them.text.__points[1][2], c.them.glyph, "the arrow comes before the number")
+    assertEqual(c.them.glyph.__points[1][2], c.them, "the arrow sits at the cell's left edge")
     r = c.looter.text:GetTextColor()
     assertEqual(r, 1, "a priest is white")
 end)

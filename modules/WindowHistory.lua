@@ -48,7 +48,7 @@ WH.COLUMNS = {
     { key = "me", label = L["Me"], width = 70, shed = 6,
       tip = L["The drop judged for you, as it was last judged while it was in the feed."] },
     { key = "them", label = L["Them"], width = 70, shed = 3,
-      tip = L["The drop judged for its looter, as it was last judged. Their upgrade is amber, their downgrade green."] },
+      tip = L["The drop judged for its looter, as it was last judged. In the same colors as Me: ▲ green, ≈ yellow, ▽ red."] },
     { key = "trade", label = L["Trade"], width = 70, shed = 5, tip = L["The last trade estimate: Yes, Likely, Unknown or No."] },
     { key = "outcome", label = L["Outcome"], width = 92,
       tip = L["What became of it: seen, asked, offered, received, traded away, expired or declined. Right-click a row to mark it declined."] },
@@ -278,7 +278,7 @@ local function glyphCell(row, key)
     local f = textCell(row, key)
     f.glyph = f:CreateFontString(nil, "OVERLAY")
     f.glyph:SetFont(C.FONT_MONO, 12, "")
-    f.glyph:SetPoint("LEFT", f.text, "RIGHT", 3, 0)
+    f.glyph:SetPoint("LEFT", f, "LEFT", 0, 0)   -- the arrow before the number (feedback-4 spec §0)
     return f
 end
 
@@ -323,6 +323,7 @@ local function paintText(f, c)
     if f.glyph then
         f.glyph:SetText(c.glyph or "")
         setTone(f.glyph, c.tone)
+        NS.WindowGroup.PlaceGlyph(f, c.glyph)
     end
 end
 

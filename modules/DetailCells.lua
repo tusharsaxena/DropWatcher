@@ -317,8 +317,8 @@ local function specRow(drop, inspect, specName, now)
 end
 
 local function verdictChip(cell)
-    local glyph = cell.glyph and (" " .. cell.glyph) or ""
-    return { text = (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown) .. glyph, tone = cell.tone, tip = cell.tip }
+    local glyph = cell.glyph and (cell.glyph .. " ") or ""   -- the arrow first (feedback-4 spec §0)
+    return { text = glyph .. (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown), tone = cell.tone, tip = cell.tip }
 end
 
 local function sideRows(eval, f, tone, whose, mine)

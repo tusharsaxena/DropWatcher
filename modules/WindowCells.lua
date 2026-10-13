@@ -15,9 +15,9 @@ local _, NS = ...
 --
 --   cell = { text, glyph = "▲" | "≈" | "▽" | nil, tone = key of C.TONE, tip = { title, lines... } }
 --
--- THE TONES (C.TONE). The Me column: an upgrade is `good` (green), a downgrade or an item you
--- cannot use `bad` (gray). The Them column is inverted (board 03): the looter's upgrade is `warn`
--- (amber, they will keep it), their downgrade `good` (green, they may pass it on).
+-- THE TONES (C.TONE; feedback-4 spec §0). One tone per verdict, in the Me and the Them column
+-- alike: an upgrade `good` (green), a sidegrade `yellow`, a downgrade `red`; an item that cannot be
+-- used or is not wanted `bad` (gray) and an unknown one `muted`.
 
 NS.WindowCells = NS.WindowCells or {}
 local WC = NS.WindowCells
@@ -47,9 +47,8 @@ local VERDICT_EXPLAIN = {
     doesntWant = L["Usable, but excluded by your own preferences."],
     unknown    = L["No inspect yet, no spec, or a protected value."],
 }
-local TONE_FOR = {
-    me   = { upgrade = "good", sidegrade = "plain", downgrade = "bad", cantUse = "bad", doesntWant = "bad", unknown = "muted" },
-    them = { upgrade = "warn", sidegrade = "plain", downgrade = "good", cantUse = "good", doesntWant = "good", unknown = "muted" },
+local VERDICT_TONE = {
+    upgrade = "good", sidegrade = "yellow", downgrade = "red", cantUse = "bad", doesntWant = "bad", unknown = "muted",
 }
 -- NS.Evaluate's reason keys, in words.
 local EVAL_REASON = {
@@ -203,21 +202,20 @@ local function verdictText(eval)
     return L["empty"], glyph
 end
 
---- One verdict cell (the Me or the Them column).
+--- One verdict cell (the Me or the Them column; both take the same tones).
 --- @param eval table|nil NS.Evaluate's answer
---- @param side string `me` or `them`
+--- @param _side string `me` or `them`
 --- @param title string the tooltip's subject (`For you`, `For Seta`)
 --- @param ilvl number|nil the drop's item level
 --- @return table cell
-function WC.Verdict(eval, side, title, ilvl)
+function WC.Verdict(eval, _side, title, ilvl)
     if type(eval) ~= "table" or type(eval.verdict) ~= "string" then
         eval = { verdict = "unknown", reasons = {} }
     end
     local text, glyph = verdictText(eval)
-    local tones = TONE_FOR[side] or TONE_FOR.me
     local v = eval.verdict
     local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl)
-    return { text = text, glyph = glyph, tone = tones[v] or "muted", tip = tip, verdict = v }
+    return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v }
 end
 
 --- The Me column: the drop judged for you.

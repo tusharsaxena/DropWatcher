@@ -302,11 +302,11 @@ end
 
 local function forMeCell(row)
     local f = textCell(row, "forMe")
-    f.text:ClearAllPoints()
-    f.text:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -4)
     f.glyph = f:CreateFontString(nil, "OVERLAY")
     f.glyph:SetFont(C.FONT_MONO, 12, "")
-    f.glyph:SetPoint("LEFT", f.text, "RIGHT", 3, 0)
+    f.glyph:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -4)   -- the arrow before the number (feedback-4 spec §0)
+    f.text:ClearAllPoints()
+    f.text:SetPoint("LEFT", f.glyph, "RIGHT", 3, 0)
     f.sub = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     f.sub:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 0, 4)
     return f
@@ -418,6 +418,8 @@ local function paintForMe(f, drop)
     paintText(f, c)
     f.glyph:SetText(c.glyph or "")
     setTone(f.glyph, c.tone)
+    f.text:ClearAllPoints()
+    if c.glyph then f.text:SetPoint("LEFT", f.glyph, "RIGHT", 3, 0) else f.text:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -4) end
     f.sub:SetText(c.sub or "")
     f.sub:SetShown(c.sub ~= nil)
 end

@@ -110,6 +110,11 @@ C.TONE = {
     good  = { r = 0.30, g = 0.85, b = 0.40 },
     bad   = { r = 0.55, g = 0.55, b = 0.58 },
     warn  = { r = 1.00, g = 0.65, b = 0.15 },
+    -- The verdicts' sidegrade and an action waiting on someone else (feedback-4 spec §0, §1): a
+    -- yellow kept apart from the headers' gold.
+    yellow = { r = 1.00, g = 0.96, b = 0.42 },
+    -- The verdicts' downgrade and an action that is your move.
+    red   = { r = 1.00, g = 0.36, b = 0.32 },
     plain = { r = 0.92, g = 0.92, b = 0.92 },
     muted = { r = 0.70, g = 0.70, b = 0.72 },
 }

@@ -5,7 +5,8 @@ local _, NS = ...
 -- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color), My eq
 -- (what you wear in that slot, from your gear snapshot), Their eq (what the looter wears there, from
 -- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
--- verdicts: the signed item-level change beside ▲ ≈ ▽, the Them column's tones inverted), Trade
+-- verdicts: ▲ ≈ ▽ before the signed item-level change, green, yellow or red in both; feedback-4
+-- spec §0), Trade
 -- (Yes, Likely, Unknown or No) and Actions (the Ask button and the × that dismisses the row).
 -- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
@@ -69,9 +70,9 @@ WG.COLUMNS = {
     { key = "theirEq", label = L["Their eq"], width = 84, shed = 4,
       tip = L["What the looter wears in that slot (two items for rings, trinkets and weapons) and its item level. Hover for how old the read is."] },
     { key = "me", label = L["Me"], width = 70, shed = 8,
-      tip = L["The drop judged for you: the item-level change, with ▲ upgrade, ≈ sidegrade or ▽ downgrade."] },
+      tip = L["The drop judged for you: ▲ upgrade (green), ≈ sidegrade (yellow) or ▽ downgrade (red), then the item-level change."] },
     { key = "them", label = L["Them"], width = 70, shed = 6,
-      tip = L["The drop judged for its looter. The colors are inverted: their upgrade is amber, their downgrade green."] },
+      tip = L["The drop judged for its looter, in the same colors: ▲ upgrade green, ≈ sidegrade yellow, ▽ downgrade red."] },
     { key = "trade", label = L["Trade"], width = 70, shed = 7, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
     { key = "actions", label = L["Actions"], width = 96,
       tip = L["Ask the looter for it, once. The × hides the row for this session."] },
@@ -240,13 +241,27 @@ local function textCell(row, key)
     return f
 end
 
--- The verdict cells: the signed change in the row's face, the glyph in the monospace face.
+-- The verdict cells: the glyph in the monospace face first, then the signed change in the row's
+-- face (feedback-4 spec §0); a word with no glyph starts at the cell's left edge.
 local function glyphCell(row, key)
     local f = textCell(row, key)
     f.glyph = f:CreateFontString(nil, "OVERLAY")
     f.glyph:SetFont(C.FONT_MONO, 12, "")
-    f.glyph:SetPoint("LEFT", f.text, "RIGHT", 3, 0)
+    f.glyph:SetPoint("LEFT", f, "LEFT", 0, 0)
     return f
+end
+
+--- Put a verdict cell's text after its glyph, or at the cell's left edge when it has none: the
+--- arrow comes before the number in every full table (feedback-4 spec §0).
+--- @param f table the cell (`f.text`, `f.glyph`)
+--- @param glyph string|nil
+function WG.PlaceGlyph(f, glyph)
+    f.text:ClearAllPoints()
+    if glyph and glyph ~= "" then
+        f.text:SetPoint("LEFT", f.glyph, "RIGHT", 3, 0)
+    else
+        f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
+    end
 end
 
 -- ── the item button ─────────────────────────────────────────────────────────────────────────
@@ -471,6 +486,7 @@ local function paintText(f, c)
     if f.glyph then
         f.glyph:SetText(c.glyph or "")
         setTone(f.glyph, c.tone)
+        WG.PlaceGlyph(f, c.glyph)
     end
 end
 

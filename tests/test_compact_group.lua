@@ -150,7 +150,7 @@ test("compact group: the pieces are colored by quality, class and tone, the worn
     if q then assertEqual(select(1, c.item.text:GetTextColor()), q.r, "the item in its quality color") end
     local good = C.TONE.good
     assertEqual(select(1, c.you.text:GetTextColor()), good.r, "an upgrade for you is green")
-    assertEqual(select(2, c.them.glyph:GetTextColor()), good.g, "their downgrade is good news")
+    assertEqual(select(2, c.them.glyph:GetTextColor()), C.TONE.red.g, "their downgrade is red, as yours is")
     local muted = C.TONE.muted
     assertEqual(select(1, c.fresh.text:GetTextColor()), muted.r)
     assertEqual(select(1, c.youLabel.text:GetTextColor()), muted.r)

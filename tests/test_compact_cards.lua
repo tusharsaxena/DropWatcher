@@ -102,8 +102,8 @@ test("compact cards: a verdict reads glyph then change; a worded one takes ⊘",
     local C, W = NS.CompactCards, NS.WindowCells
     local cases = {
         { { verdict = "upgrade", ilvlDelta = 19, reasons = {} }, "▲ +19", "good" },
-        { { verdict = "sidegrade", ilvlDelta = 0.2, reasons = {} }, "≈ +0", "plain" },
-        { { verdict = "downgrade", ilvlDelta = -13, reasons = {} }, "▽ -13", "bad" },
+        { { verdict = "sidegrade", ilvlDelta = 0.2, reasons = {} }, "≈ +0", "yellow" },
+        { { verdict = "downgrade", ilvlDelta = -13, reasons = {} }, "▽ -13", "red" },
         { { verdict = "cantUse", reasons = {} }, "⊘ Can't use", "bad" },
         { { verdict = "doesntWant", reasons = {} }, "⊘ Not wanted", "bad" },
         { NONE, "?", "muted" },
@@ -189,7 +189,7 @@ test("compact cards: the Group drops card's pieces keep the full view's tones an
     assertEqual(joined(card.ilvl.tip), joined(W.Ilvl(d).tip))
     assertEqual(card.trade.tone, "good"); assertEqual(joined(card.trade.tip), joined(W.Trade(d).tip))
     assertEqual(card.slot.text, "Trinket"); assertEqual(joined(card.slot.tip), joined(W.Slot(d).tip))
-    assertEqual(card.you.verdict.tone, "bad"); assertEqual(card.them.verdict.tone, "good", "Them is inverted")
+    assertEqual(card.you.verdict.tone, "red"); assertEqual(card.them.verdict.tone, "bad", "can't use is gray in both columns")
     assertEqual(card.you.label, "You"); assertEqual(card.them.label, "Them")
     assertEqual(joined(card.ask.tip), joined(W.Ask(d, nil, nil, nil).tip))
     assertEqual(card.dismiss.tip[1], "Dismiss")
