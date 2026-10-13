@@ -1,0 +1,7 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-E0	M14	DropWatcher	Actions 84px; row chevron + indent; gold header chevron (full + compact)		S	FEED	fb5 §0
+DW-E1	M14	DropWatcher	Trade window column for every drop (full + compact line 2)	DW-E0	M	FEED	fb5 §1
+DW-E2	M14	DropWatcher	Own drops in Drops: always listed, Offer, Trade count, (Multiple)	DW-E1	L	FEED	fb5 §2
+DW-E3	M14	DropWatcher	One tab: Drops + strip; retire My drops	DW-E2	L	FEED	fb5 §3
+DW-E4	M14	DropWatcher	Least width recomputed; shed order	DW-E3	S	PANEL	fb5 §4
+DW-E5	M14	DropWatcher	Review fixes, docs sync, automated-test bundle	DW-E4	M		fb5 §5
