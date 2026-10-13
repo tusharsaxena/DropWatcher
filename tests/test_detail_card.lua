@@ -202,6 +202,8 @@ test("cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade
     local offer = byKey(acts, "ask")
     assertTrue(offer.offer and offer.enabled, "Offer opens the Offer panel (feedback-5 spec §2)")
     assertEqual(offer.text, "Offer"); assertEqual(offer.state, "ready")
+    assertEqual(offer.kind, "offer", "toned as an Offer: cyan while your move (feedback-6 spec §2)")
+    assertTrue(byKey(D.Actions(drop(), { askState = "ready", now = 100 }), "ask").kind == nil, "an Ask is no Offer")
     for _, key in ipairs({ "edit", "retry", "trade" }) do
         local a = byKey(acts, key)
         assertFalse(a.enabled, key); assertTrue(#a.tip >= 2 and a.tip[2] ~= "", key)

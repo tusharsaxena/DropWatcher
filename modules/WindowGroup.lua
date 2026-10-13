@@ -308,12 +308,14 @@ function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph)
 end
 
 --- Color an action button's label and mark by whose move it is (feedback-4 spec §1): red your
---- move, yellow waiting on someone else, green done (WindowCells.ActionTone); white for a state that
---- is none of them. Every Ask, Offer and Announce button goes through here, in both layouts.
+--- move (cyan for an Offer, feedback-6 spec §2), yellow waiting on someone else, green done
+--- (WindowCells.ActionTone); white for a state that is none of them. Every Ask, Offer and Announce
+--- button goes through here, in both layouts.
 --- @param b table a Window.TextButton (`b.label`, `b.art`)
 --- @param state string|nil the button's state (WindowCells.ActionTone's key)
-function WG.ToneButton(b, state)
-    local tone = NS.WindowCells.ActionTone(state)
+--- @param kind string|nil `offer` for a button that reads Offer
+function WG.ToneButton(b, state, kind)
+    local tone = NS.WindowCells.ActionTone(state, kind)
     local c = tone and C.TONE[tone] or WHITE
     b.label:SetTextColor(c.r, c.g, c.b)
     if b.art then b.art:SetVertexColor(c.r, c.g, c.b) end
@@ -652,7 +654,7 @@ local function paintActions(f, drop)
     f.ask:SetAlpha(a.enabled and 1 or 0.6)
     f.ask.tipLines, f.dashTip.tipLines = a.tip, a.tip
     f.ask.state = a.state
-    WG.ToneButton(f.ask, a.state)
+    WG.ToneButton(f.ask, a.state, a.kind)
 end
 
 -- What a cell's text may take of its width, so a long name is cut short rather than spilling into

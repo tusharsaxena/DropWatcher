@@ -407,7 +407,7 @@ end
 -- Your own drop's Offer in the Ask's place (feedback-5 spec §2): it opens the Offer panel.
 local function offerAction(o)
     local a = act("ask", o.offered and o.text or L["Offer"], "chat", o.offered, unpack(o.tip))
-    a.state, a.offer = o.state, true
+    a.state, a.offer, a.kind = o.state, true, o.kind
     return a
 end
 

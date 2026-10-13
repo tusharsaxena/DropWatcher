@@ -15,8 +15,9 @@ local _, NS = ...
 -- its count is not drawn and (Details) reads `Hidden`. Opening the panel reveals it for the session
 -- (WO.Reveal, NS.State.windowOwn).
 --
--- THE TONES (feedback-4 spec §1). Offer is toned by the furthest offer sent for the drop, Announce
--- by its own state; both green once you traded the drop away (MineCells.ToneState). WO.ToneStates
+-- THE TONES (feedback-4 spec §1). Offer is toned by the furthest offer sent for the drop (cyan
+-- while it is your move, feedback-6 spec §2), Announce by its own state; both green once you traded
+-- the drop away (MineCells.ToneState). WO.ToneStates
 -- answers both, for the Drops table, the detail card, the compact card and the Offer panel.
 --
 -- THE BUTTONS' LOOK. WO.SetButtonLook paints a message button (the Offer panel's Offer and
@@ -80,7 +81,7 @@ end
 --- label, catalog mark, whether it clicks, its tooltip and its tone (`look.toneState`, else the
 --- state: whose move it is, feedback-4 spec §1).
 --- @param b table a Window.TextButton
---- @param look table { text, icon, enabled, tip, state, toneState }
+--- @param look table { text, icon, enabled, tip, state, toneState, kind }
 function WO.SetButtonLook(b, look)
     b.label:SetText(look.text)
     b.art:SetTexture(look.icon and NS.Icon(look.icon) or nil)
@@ -90,7 +91,7 @@ function WO.SetButtonLook(b, look)
     b:SetEnabled(look.enabled)
     b:SetAlpha(look.enabled and 1 or 0.6)
     b.tipLines, b.state = look.tip, look.state
-    NS.WindowGroup.ToneButton(b, look.toneState or look.state)
+    NS.WindowGroup.ToneButton(b, look.toneState or look.state, look.kind)
 end
 
 --- An action button's click: Offer opens the Offer panel (`b.offer`), else it is the Ask.

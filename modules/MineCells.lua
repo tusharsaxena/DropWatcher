@@ -37,7 +37,8 @@ local _, NS = ...
 -- least one upgrade, muted otherwise, its tooltip naming each upgrade by gain (`Butterz ▲ +11 · wears
 -- 276 (Bloodthorn Treads)`). The keep? rule holds: while it is an upgrade for you and not revealed,
 -- the count is not drawn and (Details) reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's
--- shape), toned by the furthest offer sent; a dash with the reason when it cannot be traded.
+-- shape), toned by the furthest offer sent (cyan while it is your move, feedback-6 spec §2); a dash
+-- with the reason when it cannot be traded.
 
 NS.MineCells = NS.MineCells or {}
 local MC = NS.MineCells
@@ -370,13 +371,13 @@ local OWN_OFFER_LOOK = {
 }
 
 --- Actions on your own drop (feedback-5 spec §2), in WindowCells.Ask's shape with `offer` true:
---- Offer, which opens the Offer panel (always clickable), labeled and toned by `toneState` (red
---- until an offer was sent, yellow once offered or queued, green once given away); a dash with the
---- reason on a drop that cannot be traded.
+--- Offer, which opens the Offer panel (always clickable), labeled and toned by `toneState` (cyan
+--- until an offer was sent, feedback-6 spec §2: `kind` "offer"; yellow once offered or queued,
+--- green once given away); a dash with the reason on a drop that cannot be traded.
 --- @param drop table one of your drops
 --- @param toneState string|nil the offer half of the tone states (`ready`, `queued`, `sent`, `failed`,
 ---   `tradedAway`)
---- @return table { offered, offer = true, text, icon, enabled, tip, state }
+--- @return table { offered, offer = true, text, icon, enabled, tip, state, kind }
 function MC.OwnOffer(drop, toneState)
     local t = tradeOf(drop)
     if t.state == "no" then
@@ -387,7 +388,7 @@ function MC.OwnOffer(drop, toneState)
     local l = OWN_OFFER_LOOK[s]
     local tip = { L["Offer"], L["Open the panel of who could use it, ranked by their gain, with Offer and Trade for each."] }
     tip[3] = l.line
-    return { offered = true, offer = true, text = l.text, icon = l.icon, enabled = true, tip = tip, state = s }
+    return { offered = true, offer = true, text = l.text, icon = l.icon, enabled = true, tip = tip, state = s, kind = "offer" }
 end
 
 -- ── the buttons ─────────────────────────────────────────────────────────────────────────────
@@ -437,14 +438,16 @@ function MC.ToneState(outcome, state)
     return state or "ready"
 end
 
---- The Offer button of one candidate, by its ask state.
+--- The Offer button of one candidate, by its ask state. While it reads Offer its `kind` is "offer"
+--- (cyan, feedback-6 spec §2); as Retry it takes Retry's red.
 --- @param state string|nil NS.Asks.StateOf's state
 --- @param reason string|nil
 --- @param who string the member's short name
---- @return table { text, icon, enabled, state, tip }
+--- @return table { text, icon, enabled, state, tip, kind }
 function MC.OfferButton(state, reason, who)
     local b = look(OFFER_LOOK, state)
     b.tip = { offerTip(b.state, who, reason) }
+    if b.state ~= "failed" then b.kind = "offer" end
     return b
 end
 

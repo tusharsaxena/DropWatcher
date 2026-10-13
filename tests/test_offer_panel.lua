@@ -132,6 +132,23 @@ test("offer panel: Offer opens it docked right, the candidates ranked with their
     assertEqual(textOf(p.panel.note.text), "5 members · sorted by gain")
 end)
 
+test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group unchanged", function()
+    local NS, p = openPanel()
+    local TONE = NS.Constants.TONE
+    local b = p.rows[1].offer
+    assertEqual(textOf(b.label), "Offer"); assertEqual(b.tone, "cyan")
+    assertEqual(select(3, b.label:GetTextColor()), TONE.cyan.b)
+    assertEqual(p.panel.announce.tone, "red", "Announce keeps its red (feedback-6 spec §2)")
+    NS.Asks.StateOf = function(kind) return kind == "offer" and "sent" or "ready" end
+    NS.Window.Refresh()
+    b = NS.OfferPanel.Drawn().rows[1].offer
+    assertEqual(textOf(b.label), "Offered"); assertEqual(b.tone, "yellow")
+    NS.Asks.StateOf = function(kind) return kind == "offer" and "failed" or "ready" end
+    NS.Window.Refresh()
+    b = NS.OfferPanel.Drawn().rows[1].offer
+    assertEqual(textOf(b.label), "Retry"); assertEqual(b.tone, "red", "Retry stays red")
+end)
+
 test("offer panel: every part has a reason tooltip; Trade is disabled with the trade helper's reason", function()
     local NS, p = openPanel()
     local W = NS.Window

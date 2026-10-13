@@ -628,18 +628,23 @@ local ASK_LOOK = {
 }
 
 -- WHOSE MOVE IT IS (feedback-4 spec §1): an action button's tone by its state. Your move is red
--- (Ask, Retry, an Offer or Announce not yet sent), waiting on someone else yellow (Asked, Queued,
--- Offered, Announced), done green (Traded, traded away).
+-- (Ask, Retry, an Announce not yet sent), waiting on someone else yellow (Asked, Queued, Offered,
+-- Announced), done green (Traded, traded away).
 local ACTION_TONE = {
     ready = "red", failed = "red", queued = "yellow", sent = "yellow", traded = "good", tradedAway = "good",
 }
 
---- An action button's tone for its state: `red` your move, `yellow` waiting, `good` done; nil for
---- a state that is none of them (the button keeps its own color).
+-- OFFER IN CYAN (feedback-6 spec §2): a button of kind `offer` (one that reads Offer) is cyan while it
+-- is your move, not Ask's red; its other states take ACTION_TONE's.
+local OFFER_TONE = { ready = "cyan", failed = "cyan" }
+
+--- An action button's tone for its state: `red` your move (`cyan` for an Offer), `yellow` waiting,
+--- `good` done; nil for a state that is none of them (the button keeps its own color).
 --- @param state string|nil an ask state (`ready`, `queued`, `sent`, `failed`), `traded` or `tradedAway`
+--- @param kind string|nil `offer` for a button that reads Offer (MineCells.OwnOffer, OfferButton)
 --- @return string|nil a key of C.TONE
-function WC.ActionTone(state)
-    return ACTION_TONE[state]
+function WC.ActionTone(state, kind)
+    return kind == "offer" and OFFER_TONE[state] or ACTION_TONE[state]
 end
 
 local function askTip(state, who, reason, template)

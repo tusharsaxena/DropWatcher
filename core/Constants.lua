@@ -137,7 +137,8 @@ C.CHEVRON_ROW = { r = 1.0, g = 1.0, b = 1.0, a = 0.55 }
 
 -- The drop tables' tones (design spec §11.2; feedback-4 spec §0 and §1): `good` an upgrade, a
 -- tradeable estimate or an action done, `bad` gray (can't use, not tradeable), `warn` amber (a trade
--- window ending soon), `plain` plain text, `muted` what is not known yet; `yellow` and `red` below.
+-- window ending soon), `plain` plain text, `muted` what is not known yet; `yellow`, `red` and `cyan`
+-- below.
 C.TONE = {
     good  = { r = 0.30, g = 0.85, b = 0.40 },
     bad   = { r = 0.55, g = 0.55, b = 0.58 },
@@ -147,6 +148,9 @@ C.TONE = {
     yellow = { r = 1.00, g = 0.96, b = 0.42 },
     -- The verdicts' downgrade and an action that is your move.
     red   = { r = 1.00, g = 0.36, b = 0.32 },
+    -- Offer while it is your move (feedback-6 spec §2): a cyan at the palette's saturation and
+    -- brightness, so giving an item away reads apart from Ask's red.
+    cyan  = { r = 0.35, g = 0.82, b = 0.95 },
     plain = { r = 0.92, g = 0.92, b = 0.92 },
     muted = { r = 0.70, g = 0.70, b = 0.72 },
 }

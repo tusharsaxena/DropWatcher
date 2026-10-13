@@ -892,6 +892,16 @@ test("cells: ActionTone is red for your move, yellow while waiting, green once d
     assertTrue(W.ActionTone(nil) == nil); assertTrue(W.ActionTone("other") == nil)
 end)
 
+test("cells: an Offer is cyan while it is your move, its other states as any button's (feedback-6 spec §2)", function()
+    local W = WC()
+    assertEqual(W.ActionTone("ready", "offer"), "cyan"); assertEqual(W.ActionTone("failed", "offer"), "cyan")
+    assertEqual(W.ActionTone("queued", "offer"), "yellow"); assertEqual(W.ActionTone("sent", "offer"), "yellow")
+    assertEqual(W.ActionTone("tradedAway", "offer"), "good")
+    assertEqual(W.ActionTone("ready"), "red", "Ask keeps its red")
+    local cyan = T.newAddon().Constants.TONE.cyan
+    assertTrue(cyan.b > cyan.g and cyan.g > cyan.r and cyan.r < 0.5, "a cyan")
+end)
+
 test("table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded", function()
     local NS, drawn = shownTable()
     local R, Y, G = NS.Constants.TONE.red, NS.Constants.TONE.yellow, NS.Constants.TONE.good

@@ -117,7 +117,7 @@ test("own drops: Offer is labeled and toned by the furthest offer sent, a dash w
     local M = MC()
     local ready = M.OwnOffer(own(), "ready")
     assertTrue(ready.offered and ready.offer and ready.enabled)
-    assertEqual(ready.text, "Offer"); assertEqual(ready.state, "ready")
+    assertEqual(ready.text, "Offer"); assertEqual(ready.state, "ready"); assertEqual(ready.kind, "offer")
     assertTrue(ready.tip[2]:find("Open the panel of who could use it", 1, true) ~= nil)
     local expect = { queued = { "Queued", "clock" }, sent = { "Offered", "confirm" }, tradedAway = { "Traded", "confirm" },
         failed = { "Offer" } }
@@ -203,7 +203,9 @@ test("own drops table: listed with the others: Trade's count, (Details) in Them,
     assertTrue(r.cells.theirEq == nil, "no Their eq column (feedback-6 spec §1)")
     local b = r.cells.actions.ask
     assertTrue(b:IsShown()); assertEqual(textOf(b.label), "Offer"); assertTrue(b.offer)
-    assertEqual(b.tone, "red", "your move until an offer is sent")
+    assertEqual(b.tone, "cyan", "your move until an offer is sent: cyan, not Ask's red (feedback-6 spec §2)")
+    local cyan = NS.Constants.TONE.cyan
+    assertEqual(select(2, b.label:GetTextColor()), cyan.g); assertEqual(select(3, b.label:GetTextColor()), cyan.b)
     assertFalse(r.cells.actions.dash:IsShown())
     assertFalse(rowFor(drawn, 2).cells.actions.ask.offer, "another player's row keeps its Ask")
     local hd = textOf(drawn.headers[1].text)
@@ -252,7 +254,8 @@ test("own drops: the detail card shows Offer in place of Ask and (Details) for T
     local drawn = NS.WindowGroup.Drawn()
     assertEqual(drawn.cardDropId, 1)
     local b = drawn.card.actions.ask
-    assertEqual(textOf(b.label), "Offer"); assertTrue(b.offer); assertEqual(b.tone, "red")
+    assertEqual(textOf(b.label), "Offer"); assertTrue(b.offer); assertEqual(b.tone, "cyan")
+    assertEqual(select(3, b.label:GetTextColor()), NS.Constants.TONE.cyan.b)
     assertEqual(textOf(drawn.card.them.title), "FOR THE GROUP")
     local them
     for _, row in ipairs(drawn.card.them.rows) do if row.key == "them" then them = row end end
@@ -270,7 +273,9 @@ test("own drops compact: line 1's Offer, line 2's count and line 3's (Details) w
     local drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact)
     local card = rowFor(drawn, 1)
-    assertEqual(textOf(card.ask.label), "Offer"); assertTrue(card.ask.offer); assertEqual(card.ask.tone, "red")
+    assertEqual(textOf(card.ask.label), "Offer"); assertTrue(card.ask.offer); assertEqual(card.ask.tone, "cyan")
+    assertEqual(select(3, card.ask.label:GetTextColor()), NS.Constants.TONE.cyan.b)
+    assertEqual(rowFor(drawn, 2).ask.tone, "red", "another player's Ask stays red")
     assertEqual(textOf(card.cells.trade.text):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^· ", ""), "Likely (2)")
     assertEqual(textOf(card.cells.them.text), "(Details)")
     assertEqual(card.cells.them.hit.tipLines[2], "Butterz ▲ +11 · wears 276 (Bloodthorn Treads)")
