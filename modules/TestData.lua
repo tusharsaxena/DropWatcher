@@ -9,8 +9,8 @@ local _, NS = ...
 -- likely, unknown, no; inspect: fresh, cached, pending, out of range, combat, failed, not in the
 -- group; Ask: ready, queued, asked, retry, traded and the dash) and five of your own covering board
 -- 04 (an exact countdown, one ending soon, an estimated one, a bind-on-equip drop and an expired
--- one, with candidates in every pill: +n UPGRADE, EQUAL, NO UPGRADE, CAN'T USE, CHECKING and
--- UNAVAILABLE). One drop's look is collected and one's is not, for the look chips and the
+-- one, with candidates in every status the Offer panel shows: upgrade, equal, no upgrade, can't use,
+-- checking and unavailable). One drop's look is collected and one's is not, for the look chips and the
 -- transmog ask.
 --
 -- THE ITEMS. Each sample keeps its slot: Source(drops, gear, factsOf) answers, per equip location,

@@ -1,16 +1,25 @@
 local _, NS = ...
--- modules/WindowGroup.lua — the Group drops table (design spec §11.1-§11.2, boards 01, 03 and 06):
+-- modules/WindowGroup.lua — the Drops table (design spec §11.1-§11.2, boards 01, 03 and 06):
 -- every drop the group receives, one row each, under a collapsible header per encounter or key run.
 --
--- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color), My eq
--- (what you wear in that slot, from your gear snapshot), Their eq (what the looter wears there, from
--- their inspect read, the read's age in its tooltip; feedback spec §3, FB-6 and FB-7), Me, Them (the
--- verdicts: the signed item-level change beside ▲ ≈ ▽, the Them column's tones inverted), Trade
--- (Yes, Likely, Unknown or No) and Actions (the Ask button and the × that dismisses the row).
+-- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Type (Cloth … Plate, Jewelry,
+-- Trinkets, Cloak or Weapons; feedback-4 spec §3), Looter (in class color), Me and Them (what you,
+-- or the looter, wear in that slot and the drop judged for you, or them, in one cell: the worn item's
+-- icon or two, its item level, then ▲ ≈ ▼ and the item-level difference in the verdict's green,
+-- yellow or red, `321/308 ▼8`; your gear from its snapshot, theirs from their inspect read, the
+-- read's age in the tooltip; NS.SideCells, feedback-6 spec §1, which merged My eq and Their eq into
+-- them), Trade (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
+-- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
+-- NS.MineCells.TradeWindow, feedback-5 spec §1) and Actions (the Ask button; no drop is ever
+-- dismissed, feedback-4 spec §2). YOUR OWN DROPS are listed too (feedback-5 spec §2;
+-- modules/WindowOwn.lua): Looter reads `Name [YOU]`, Them reads `Upgrade for N` (feedback-7
+-- spec §2) with each upgrade in the tooltip (`Hidden` while it is an upgrade for you that you
+-- have not offered), and Actions is Offer, which opens the Offer panel (no Announce in the table).
 -- `profile.window.columns[key] = false` hides a column (Item never hides); a row too narrow for them
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
--- cell says, and its reason tooltip, is modules/WindowCells.lua's (pure); this file is the frame
--- edge that paints it. Nothing is ever blank.
+-- cell says, and its reason tooltip, is modules/WindowCells.lua's and modules/SideCells.lua's
+-- (pure); this file is the frame edge that paints it. Nothing is ever blank. A column tooltip draws
+-- the verdict marks as NS.TipMarks' inline textures (the tooltip's face has no ▲ ≈ ▼).
 --
 -- THE ROWS. Pooled through LibKa0s-Pool-1.0 (NS.Pool), one pool for the drop rows and one for the
 -- headers, released and re-acquired in order on every repaint (Pool v3 hands them back in their
@@ -19,29 +28,49 @@ local _, NS = ...
 -- Window page's Layout rows (`window.rowHeight`, `window.fontSize`), read through
 -- modules/WindowRows.lua at each repaint (18 pixels and the template's own size by default, like
 -- Ka0s Loot History's table; feedback-2 spec §8, FB2-9); the headers, the column labels and the
--- buttons keep their own.
+-- buttons keep their own. While the Trade window column is shown a row is the room its countdown
+-- bar needs taller (WindowRows' countdownHeight), so the text and the bar never overlap.
+--
+-- THE STRIP (feedback-5 spec §3, feedback-7 spec §4). Under the table (or the compact cards), above
+-- the footer: `n tradeable · next expiry 0:08:41`, Post my tradeables (while one of your drops the
+-- tab lists can be traded) and, in the full layout, Scan group, so there it is always shown; compact
+-- shows it only while one can be traded (modules/DropsStrip.lua, built with the pane and repainted
+-- with it).
+--
+-- THE COUNTDOWNS MOVE each second while a shown row or the strip has one (feedback-5 spec §1;
+-- the strip counts your drops under a collapsed header too): Window.lua's
+-- countdown ticker, its footer ticker and TradeTimerTick call WG.TickCountdowns, which repaints the
+-- Trade window cells alone (the compact cards show none, feedback-10 spec §2) and the strip's next expiry, never
+-- the whole table;
+-- WG.LiveCountdown tells Window.lua whether the ticker is still wanted.
 --
 -- THE ORDER. NS.WindowCells.Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
--- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate,
--- and your own drops only with `feed.showOwn` on)
--- and were not dismissed, ordered by the tab's Sort. A group with none keeps its header (`n drops ·
--- 0 shown`) while the View filter hid them, and is left out when Search or Content did or it has
--- nothing for the tab (WC.KeepsHeader); its header counts your own drops left to My drops (`· 1 yours
--- on My drops`, feedback-3 spec §0). A group the
+-- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate;
+-- your own drops with the others) ordered by the tab's Sort. A group with none keeps its header
+-- (`n drops · 0 shown`) while the View filter hid them, and is left out when Search, Content or
+-- Character did or it has nothing for the tab (WC.KeepsHeader). A group the
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
--- toggles and dismissals are session-only (NS.State.windowGroup).
+-- toggles are session-only (NS.State.windowGroup).
 --
 -- THE DETAIL CARD (design spec §11.3, board 02). A click on a row (anywhere but a button) expands
 -- it inline: modules/DetailCard.lua's card is placed under it and the rows below move down by the
 -- card's height. Only one row is expanded at a time (NS.State.windowGroup.expanded); a second click
--- on it, or on another row, collapses or moves the card. A row filtered out, collapsed under its
--- header or dismissed takes its card with it.
+-- on it, or on another row, collapses or moves the card. A row filtered out or collapsed under its
+-- header takes its card with it.
+--
+-- THE EXPAND INDICATOR (feedback-5 spec §0). Every drop row draws the header's chevron at its left
+-- edge, before the Item column: chevron-down while collapsed, chevron-up while its card is open,
+-- muted white (C.CHEVRON_ROW) and the same on hover. The rows read as their header's children: each
+-- row (stripe, chevron, every cell) and its detail card is indented K.ROW_INDENT from the header's
+-- left edge, and the column labels move with them (WG.LEAD, the indent and the chevron's lead, is
+-- what the columns lose of the pane's width). A header's own chevron is gold, as its text, on every
+-- tab and in both layouts (they all build it here, WG.NewHeader).
 -- THE COMPACT LAYOUT (WG.IsCompact) draws the same entries as cards: modules/CompactGroup.lua.
 --
 -- THE UI LISTENS. Window.lua repaints it on the bus; it reads the feed (NS.LootFeed.Groups, Get),
 -- the looter's inspect entry (NS.Inspect.Get) and the ask's state (NS.Asks.StateOf), all read-only.
--- The Ask button goes through the host handler NS.PressAsk, the × through NS.DismissDrop (both
--- core/DropWatcher.lua, which also cancels the drop's automatic ask). An item button
+-- The Ask button goes through the host handler NS.PressAsk (core/DropWatcher.lua), the Offer button
+-- to the Offer panel (NS.WindowOwn.PressAction). An item button
 -- shows the game's tooltip, shift-click links it (Compat.InsertChatLink) and ctrl-click tries it
 -- on (Compat.DressUpItem).
 
@@ -52,8 +81,25 @@ local C     = NS.Constants
 local L     = NS.L
 local State = NS.State
 local WC    = NS.WindowCells
+local SC    = NS.SideCells
+local TM    = NS.TipMarks
 
 local max = math.max
+
+-- Where a drop row's Item column starts, from the header's left edge (feedback-5 spec §0): the
+-- row's indent, then its chevron (CHEVRON_X in, ROW_CHEVRON wide) and the gap after it. The chevron
+-- is not a column: no label, no toggle, never shed.
+WG.CHEVRON_LEAD = K.CHEVRON_X + K.ROW_CHEVRON + K.CHEVRON_GAP
+WG.LEAD = K.ROW_INDENT + WG.CHEVRON_LEAD
+-- The Trade window cell's own padding: its bar stops this far short of the cell's right edge, and
+-- the column is its widest answer (`No limit (BoE)`) plus this (feedback-6 spec §0; measured over
+-- every MineCells.TradeWindow answer by tests/test_drops_layout.lua).
+WG.TRADE_WINDOW_PAD = 6
+-- A Me or Them cell's pieces, left to right (feedback-6 spec §1): the worn items' icons (EQ_ICON
+-- each, ICON_GAP apart), LEVEL_GAP, the item level, VERDICT_GAP, the glyph (the monospace face),
+-- GLYPH_GAP, the difference or the word. A piece that is not there takes no room and no gap. The
+-- columns are their widest cell (tests/test_side_cells.lua measures every kind).
+WG.SIDE = { ICON_GAP = 2, LEVEL_GAP = 4, VERDICT_GAP = 4, GLYPH_GAP = 3 }
 
 -- The default columns, left to right (design spec §11.1). `flex` takes the width the others leave.
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
@@ -61,22 +107,23 @@ local max = math.max
 WG.COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 5, tip = L["The drop's item level."] },
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
     { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
+    { key = "armorType", label = L["Type"], width = 64, shed = 0,
+      tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
     { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
-    { key = "myEq", label = L["My eq"], width = 84, shed = 3,
-      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level. Hover an icon for the item."] },
-    { key = "theirEq", label = L["Their eq"], width = 84, shed = 4,
-      tip = L["What the looter wears in that slot (two items for rings, trinkets and weapons) and its item level. Hover for how old the read is."] },
-    { key = "me", label = L["Me"], width = 70, shed = 8,
-      tip = L["The drop judged for you: the item-level change, with ▲ upgrade, ≈ sidegrade or ▽ downgrade."] },
-    { key = "them", label = L["Them"], width = 70, shed = 6,
-      tip = L["The drop judged for its looter. The colors are inverted: their upgrade is amber, their downgrade green."] },
-    { key = "trade", label = L["Trade"], width = 70, shed = 7, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
-    { key = "actions", label = L["Actions"], width = 96,
-      tip = L["Ask the looter for it, once. The × hides the row for this session."] },
+    { key = "me", label = L["Me"], width = 127, shed = 7,
+      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
+    { key = "them", label = L["Them"], width = 127, shed = 5,
+      tip = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."] },
+    { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+    { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3,
+      tip = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] },
+    { key = "actions", label = L["Actions"], width = K.ASK_W,
+      tip = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."] },
 }
-local GLYPH_COLS = { me = true, them = true }
+local WHITE = { r = 1, g = 1, b = 1 }   -- an untoned button's label (GameFontHighlightSmall)
 
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
 local TEST_LOADING = L["Gathering real items for test mode."]
@@ -87,7 +134,7 @@ local TEST_NONE = L["Test mode found no items to show."]
 local function view()
     local v = State.windowGroup
     if not v then
-        v = { collapsed = {}, dismissed = {} }
+        v = { collapsed = {} }
         State.windowGroup = v
     end
     return v
@@ -115,16 +162,6 @@ end
 function WG.ToggleGroup(key, collapsedNow)
     view().collapsed[key] = not collapsedNow
     NS.Debug("UI", "group %s %s", tostring(key), collapsedNow and "expanded" or "collapsed")
-    repaint()
-end
-
---- Dismiss one drop's row for the session (its ×).
---- @param id number
-function WG.Dismiss(id)
-    local v = view()
-    v.dismissed[id] = true
-    if v.expanded == id then v.expanded = nil end
-    NS.Debug("UI", "drop %s dismissed", tostring(id))
     repaint()
 end
 
@@ -240,13 +277,57 @@ local function textCell(row, key)
     return f
 end
 
--- The verdict cells: the signed change in the row's face, the glyph in the monospace face.
-local function glyphCell(row, key)
-    local f = textCell(row, key)
-    f.glyph = f:CreateFontString(nil, "OVERLAY")
-    f.glyph:SetFont(C.FONT_MONO, 12, "")
-    f.glyph:SetPoint("LEFT", f.text, "RIGHT", 3, 0)
-    return f
+--- Put a verdict cell's text after its glyph, or at the cell's left edge when it has none: the
+--- arrow comes before the number in every full table (feedback-4 spec §0). History's verdict cells.
+--- @param f table the cell (`f.text`, `f.glyph`)
+--- @param glyph string|nil
+function WG.PlaceGlyph(f, glyph)
+    f.text:ClearAllPoints()
+    if glyph and glyph ~= "" then
+        f.text:SetPoint("LEFT", f.glyph, "RIGHT", WG.SIDE.GLYPH_GAP, 0)
+    else
+        f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
+    end
+end
+
+--- Place a Me or Them cell's pieces left to right (WG.SIDE): the shown icons, the item level, the
+--- glyph, the difference or word; each after the last piece shown, the first at the cell's edge.
+--- The difference or word ends at the cell's right edge, so a long word (or a larger Font size) is
+--- cut short there rather than spilling into the next column.
+--- @param f table the cell (`icons`, `level`, `glyph`, `text`)
+--- @param nIcons number the icons shown (0..2)
+--- @param hasLevel boolean
+--- @param hasGlyph boolean
+function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph)
+    local S = WG.SIDE
+    local last, gap = nil, 0
+    if nIcons > 0 then last, gap = f.icons[math.min(nIcons, 2)], S.LEVEL_GAP end
+    local function after(fs, wanted)
+        fs:ClearAllPoints()
+        if last then fs:SetPoint("LEFT", last, "RIGHT", gap, 0) else fs:SetPoint("LEFT", f, "LEFT", 0, 0) end
+        if wanted then last = fs end
+    end
+    after(f.level, hasLevel)
+    if hasLevel then gap = S.VERDICT_GAP end
+    after(f.glyph, hasGlyph)
+    if hasGlyph then gap = S.GLYPH_GAP end
+    after(f.text, true)
+    f.text:SetPoint("RIGHT", f, "RIGHT", 0, 0)
+end
+
+--- Color an action button's label and mark by whose move it is (feedback-4 spec §1): red your
+--- move (cyan for an Offer, feedback-6 spec §2), yellow waiting on someone else, green done
+--- (WindowCells.ActionTone); white for a state that is none of them. Every Ask, Offer and Announce
+--- button goes through here, in both layouts.
+--- @param b table a Window.TextButton (`b.label`, `b.art`)
+--- @param state string|nil the button's state (WindowCells.ActionTone's key)
+--- @param kind string|nil `offer` for a button that reads Offer
+function WG.ToneButton(b, state, kind)
+    local tone = NS.WindowCells.ActionTone(state, kind)
+    local c = tone and C.TONE[tone] or WHITE
+    b.label:SetTextColor(c.r, c.g, c.b)
+    if b.art then b.art:SetVertexColor(c.r, c.g, c.b) end
+    b.tone = tone
 end
 
 -- ── the item button ─────────────────────────────────────────────────────────────────────────
@@ -385,40 +466,70 @@ local function itemCell(row)
     return f
 end
 
-local function eqCell(row, key)
+-- A Me or Them cell: the worn items' buttons, the item level, the glyph (the monospace face) and
+-- the difference or word (`f.text`); WG.PlaceSide places them. WG.SideCell: the Offer panel's
+-- Their eq cell is built the same (feedback-7 spec §0).
+local function sideCell(row, key)
     local f = textCell(row, key)
     f.icons = { itemButton(f, K.EQ_ICON), itemButton(f, K.EQ_ICON) }
     f.icons[1]:SetPoint("LEFT", f, "LEFT", 0, 0)
-    f.icons[2]:SetPoint("LEFT", f.icons[1], "RIGHT", 2, 0)
+    f.icons[2]:SetPoint("LEFT", f.icons[1], "RIGHT", WG.SIDE.ICON_GAP, 0)
+    f.level = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.level:SetWordWrap(false)
+    f.glyph = f:CreateFontString(nil, "OVERLAY")
+    f.glyph:SetFont(C.FONT_MONO, 12, "")
     return f
 end
+WG.SideCell = sideCell
 
 local function actionsCell(row)
     local f = CreateFrame("Frame", nil, row)
     f.key = "actions"
-    f.ask = NS.Window.TextButton(f, K.ASK_W, nil, L["Ask"], function(b) NS.PressAsk(b.dropId) end)
+    f.ask = NS.Window.TextButton(f, K.ASK_W, "chat", L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     f.ask:SetPoint("LEFT", f, "LEFT", 0, 0)
     NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end, "row")
-    f.dash = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    f.dash:SetPoint("CENTER", f.ask, "CENTER", 0, 0)
-    f.dashTip = CreateFrame("Frame", nil, f)
-    f.dashTip:SetAllPoints(f.ask)
-    NS.Window.AttachTooltip(f.dashTip, function() return tipOf(f.dashTip) end, "row")
-    f.dismiss = CreateFrame("Button", nil, f)
-    f.dismiss:SetSize(14, 14)
-    f.dismiss:SetPoint("LEFT", f.ask, "RIGHT", 6, 0)
-    f.dismiss.art = f.dismiss:CreateTexture(nil, "ARTWORK")
-    f.dismiss.art:SetAllPoints(f.dismiss)
-    f.dismiss.art:SetTexture(NS.Icon("close"))
-    f.dismiss.art:SetVertexColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
-    f.dismiss:SetScript("OnClick", function(b) NS.DismissDrop(b.dropId) end)
-    NS.Window.AttachTooltip(f.dismiss, function()
-        return L["Dismiss"], L["Hide this drop from the table for this session."]
-    end, "row")
     return f
 end
 
-local BUILDERS = { item = itemCell, myEq = eqCell, theirEq = eqCell, actions = actionsCell }
+-- The Trade window cell: the countdown at the top, its K.BAR_H bar at the bottom (the row is the
+-- bar's room taller while the column shows).
+local function tradeWindowCell(row)
+    local f = textCell(row, "tradeWindow")
+    f.text:ClearAllPoints()
+    f.text:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -5)
+    f.barBg = f:CreateTexture(nil, "BACKGROUND")
+    f.barBg:SetColorTexture(1, 1, 1, 0.12)
+    f.barBg:SetHeight(K.BAR_H)
+    f.barBg:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 0, 5)
+    f.barBg:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -WG.TRADE_WINDOW_PAD, 5)
+    f.bar = f:CreateTexture(nil, "ARTWORK")
+    f.bar:SetHeight(K.BAR_H)
+    f.bar:SetPoint("BOTTOMLEFT", f.barBg, "BOTTOMLEFT", 0, 0)
+    return f
+end
+
+local BUILDERS = { item = itemCell, me = sideCell, them = sideCell, actions = actionsCell, tradeWindow = tradeWindowCell,
+    looter = function(row, key) return NS.WindowRows.MarkedCell(textCell(row, key)) end }
+
+--- A drop row's (or compact card's) expand indicator: the header's chevron texture, ROW_CHEVRON
+--- square, muted white (C.CHEVRON_ROW); the caller anchors it. WG.PaintChevron sets its state.
+--- @param parent table the row or card
+--- @return table the texture
+function WG.RowChevron(parent)
+    local t = parent:CreateTexture(nil, "ARTWORK")
+    t:SetSize(K.ROW_CHEVRON, K.ROW_CHEVRON)
+    local c = C.CHEVRON_ROW
+    t:SetVertexColor(c.r, c.g, c.b, c.a)
+    t:SetTexture(NS.Icon("chevron-down"))
+    return t
+end
+
+--- Point a row's chevron down while it is collapsed and up while its detail card is open.
+--- @param t table WG.RowChevron's texture
+--- @param open boolean
+function WG.PaintChevron(t, open)
+    t:SetTexture(NS.Icon(open and "chevron-up" or "chevron-down"))
+end
 
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
@@ -430,13 +541,11 @@ local function newRow(content)
     row.selected = row:CreateTexture(nil, "BACKGROUND")
     row.selected:SetAllPoints(row)
     row.selected:SetColorTexture(C.GOLD.r, C.GOLD.g, C.GOLD.b, 0.08)
-    row.expander = row:CreateTexture(nil, "ARTWORK")
-    row.expander:SetSize(10, 10)
-    row.expander:SetPoint("RIGHT", row, "RIGHT", -1, 0)
-    row.expander:SetTexture(NS.Icon("chevron-up"))
+    row.chevron = WG.RowChevron(row)
+    row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
     for _, col in ipairs(WG.COLUMNS) do
-        local make = BUILDERS[col.key] or (GLYPH_COLS[col.key] and glyphCell) or textCell
+        local make = BUILDERS[col.key] or textCell
         row.cells[col.key] = make(row, col.key)
     end
     row:SetScript("OnClick", function(self) WG.ToggleExpand(self.dropId) end)
@@ -452,7 +561,8 @@ local function newHeader(content)
     h.fill:SetColorTexture(1, 1, 1, 0.06)
     h.chevron = h:CreateTexture(nil, "ARTWORK")
     h.chevron:SetSize(10, 10)
-    h.chevron:SetPoint("LEFT", h, "LEFT", 4, 0)
+    h.chevron:SetPoint("LEFT", h, "LEFT", K.CHEVRON_X, 0)
+    h.chevron:SetVertexColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as its text (feedback-5 spec §0)
     h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
     h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
@@ -468,10 +578,6 @@ local function paintText(f, c)
     f.text:SetText(c.text)
     setTone(f.text, c.tone)
     f.tipLines = c.tip
-    if f.glyph then
-        f.glyph:SetText(c.glyph or "")
-        setTone(f.glyph, c.tone)
-    end
 end
 
 local function qualityTone(fs, drop)
@@ -480,10 +586,21 @@ local function qualityTone(fs, drop)
     if qc then fs:SetTextColor(qc.r, qc.g, qc.b) end
 end
 
-local function classTone(fs, classFile)
+local function classTone(fs, classFile, fallback)
     local r, g, b = NS.Compat.ClassColor(classFile)
+    if not r and fallback then
+        local t = C.TONE[fallback] or C.TONE.plain
+        r, g, b = t.r, t.g, t.b
+    end
     if r then fs:SetTextColor(r, g, b) end
 end
+
+--- Put a name in its class color (NS.Compat.ClassColor), else in the `fallback` tone (a C.TONE key),
+--- else leave the text's color as it is. The Offer panel's member and the detail card share it.
+--- @param fs table a FontString
+--- @param classFile string|nil
+--- @param fallback string|nil
+WG.ClassTone = classTone
 
 local function paintItem(f, drop)
     setItem(f.button, drop.link, WG.Where(drop))
@@ -499,24 +616,28 @@ local function inspectGear(drop)
     return e and e.gear
 end
 
--- Your worn gear: the gear snapshot's (NS.Gear), so it is always the current one.
+-- Your worn gear and class: the gear snapshot's (NS.Gear), so it is always the current one.
 local function myGear()
     local snap = NS.Gear.Snapshot()
-    return snap and snap.equipped
+    return snap and snap.equipped, snap and snap.classFile
 end
 
--- An equipment cell: its worn items' icons, their item levels beside them. `unit` names whose
+-- A Me or Them cell (NS.SideCells): the worn items' icons, their item level (plain, or a muted
+-- word), then the glyph and the difference or word in the verdict's tone. `unit` names whose
 -- inventory an icon's tooltip reads (yours: the client's own tooltip for your slot), else the link.
-local function paintEq(f, c, unit)
+local function paintSide(f, c, unit)
     paintText(f, c)
     for i, b in ipairs(f.icons) do
         local it = c.items[i]
         setItem(b, it and it.link or nil, it and unit and { unit = unit, slot = it.slot } or nil)
     end
-    f.text:ClearAllPoints()
-    local last = #c.items > 0 and f.icons[math.min(#c.items, 2)] or nil
-    if last then f.text:SetPoint("LEFT", last, "RIGHT", 4, 0) else f.text:SetPoint("LEFT", f, "LEFT", 0, 0) end
+    f.level:SetText(c.level or "")
+    setTone(f.level, c.levelTone)
+    f.glyph:SetText(c.glyph or "")
+    setTone(f.glyph, c.tone)
+    WG.PlaceSide(f, #c.items, c.level ~= nil, c.glyph ~= nil)
 end
+WG.PaintSide = paintSide   -- the Offer panel's Their eq cell too (feedback-7 spec §0)
 
 --- The ask's state and reason; `traded` once the history settled the drop received (History.lua).
 function WG.AskState(drop)
@@ -525,29 +646,33 @@ function WG.AskState(drop)
     return NS.History.AskState(drop, NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", target, drop.id)))
 end
 
-local function paintActions(f, drop)
+--- A row's action (both layouts): your own drop's Offer (NS.WindowOwn.Offer), else the Ask
+--- (WindowCells.Ask's look in the ask's state).
+--- @param drop table
+--- @return table WindowCells.Ask's shape (`offer` true for an Offer)
+function WG.Action(drop)
+    if drop.isMine then return NS.WindowOwn.Offer(drop) end
     local state, reason = WG.AskState(drop)
-    local a = WC.Ask(drop, state, reason, NS.Setting("messages.transmogAsk") == true)
-    f.ask.dropId, f.dismiss.dropId = drop.id, drop.id
-    f.ask:SetShown(a.offered)
-    f.dashTip:SetShown(not a.offered)
-    f.dash:SetShown(not a.offered)
-    f.dash:SetText(a.text)
-    f.ask.label:SetText(a.text)
-    f.ask.art:SetTexture(a.icon and NS.Icon(a.icon) or nil)
-    f.ask.art:SetShown(a.icon ~= nil)
-    f.ask.label:ClearAllPoints()
-    f.ask.label:SetPoint("CENTER", f.ask, "CENTER", a.icon and 7 or 0, 0)
+    return WC.Ask(drop, state, reason, NS.Setting("messages.transmogAsk") == true)
+end
+
+local function paintActions(f, drop)
+    local a = WG.Action(drop)
+    f.ask.dropId, f.ask.offer = drop.id, a.offer == true
+    NS.Window.SetButtonMark(f.ask, a.text, a.icon)   -- No action where there is none (feedback-11 spec §1)
     f.ask:SetEnabled(a.enabled)
     f.ask:SetAlpha(a.enabled and 1 or 0.6)
-    f.ask.tipLines, f.dashTip.tipLines = a.tip, a.tip
+    f.ask.tipLines = a.tip
     f.ask.state = a.state
+    WG.ToneButton(f.ask, a.state, a.kind)
 end
 
 -- What a cell's text may take of its width, so a long name is cut short rather than spilling into
--- the next column: the item button, the verdict glyph and the worn items take their share.
-local EQ_INSET = 2 * (K.EQ_ICON + 2) + 4
-local TEXT_INSET = { item = K.ROW_ICON + 5, me = 16, them = 16, myEq = EQ_INSET, theirEq = EQ_INSET }
+-- the next column: the item button takes its share. A Me or Them cell's pieces are placed one after
+-- the other, and the column is their widest (WG.SIDE); the last ends at the cell's right edge
+-- (WG.PlaceSide), which cuts it short instead.
+local TEXT_INSET = { item = K.ROW_ICON + 5 }
+local SIDE_COLS = { me = true, them = true }
 
 local function placeCells(row, layout, height)
     for key, f in pairs(row.cells) do
@@ -555,22 +680,51 @@ local function placeCells(row, layout, height)
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
-            f:SetPoint("LEFT", row, "LEFT", at.x, 0)
+            f:SetPoint("LEFT", row, "LEFT", WG.CHEVRON_LEAD + at.x, 0)
             f:SetSize(at.w, height)
-            if f.text then f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10)) end
+            if f.text and not SIDE_COLS[key] then f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10)) end
         end
     end
 end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade }
+-- The countdown's face follows its urgency (bold while ending soon); SetFontObject puts the
+-- template's size back, so the Font size row's size goes on again after it. The bar fills by the
+-- window left, amber while ending soon.
+local function paintTradeWindow(f, drop, now, warnAt, size)
+    local c = NS.MineCells.TradeWindow(drop, now, warnAt)
+    paintText(f, c)
+    f.text:SetFontObject(c.bold and "GameFontNormalSmall" or "GameFontHighlightSmall")
+    if size then NS.WindowRows.SetFontSize(f.text, size) end
+    setTone(f.text, c.tone)
+    local w = max((f:GetWidth() or 0) - WG.TRADE_WINDOW_PAD, 0)
+    f.fraction = c.fraction or 0
+    f.bar:SetWidth(max(w * f.fraction, 0.01))
+    f.bar:SetShown(f.fraction > 0)
+    local tone = C.TONE[c.soon and "warn" or "good"]
+    f.bar:SetColorTexture(tone.r, tone.g, tone.b, 0.9)
+    f.bold = c.bold == true
+end
 
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType }
+
+--- The Them cell for any drop (NS.SideCells.Them): what the looter wears and their verdict, or on
+--- your own drop `Upgrade for N` (or `Hidden`, by the session's reveal state: NS.WindowOwn).
+--- @param drop table
+--- @param gear table|nil the looter's inspect gear
+--- @param now number|nil
+--- @return table cell (with `items`)
+function WG.ThemCell(drop, gear, now)
+    return SC.Them(drop, gear, now, drop.isMine and NS.WindowOwn.IsRevealed(drop.id) or nil)
+end
+
+-- `metrics.rowH` is this repaint's row height (drawTable: taller while Trade window shows).
 local function paintRow(row, drop, layout, now, metrics)
-    row.dropId = drop.id
+    row.dropId, row.drop = drop.id, drop
     local open = view().expanded == drop.id
     row.selected:SetShown(open)
-    row.expander:SetShown(open)
-    row:SetHeight(metrics.height)
-    placeCells(row, layout, metrics.height)
+    WG.PaintChevron(row.chevron, open)
+    row:SetHeight(metrics.rowH)
+    placeCells(row, layout, metrics.rowH)
     NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
     NS.WindowRows.ApplyRowIcon(row, metrics.icon)
     local cells = row.cells
@@ -580,52 +734,22 @@ local function paintRow(row, drop, layout, now, metrics)
     local lc = WC.Looter(drop)
     paintText(cells.looter, lc)
     classTone(cells.looter.text, lc.classFile)
-    paintText(cells.them, WC.Them(drop, now))
-    paintEq(cells.myEq, WC.MyEq(drop, myGear()), "player")
-    paintEq(cells.theirEq, WC.TheirEq(drop, inspectGear(drop), now))
+    NS.WindowRows.PaintMark(cells.looter, lc.you, layout.looter)   -- ` [YOU]` (feedback-7 spec §2)
+    paintText(cells.trade, NS.WindowOwn.Trade(drop))
+    paintSide(cells.me, SC.Me(drop, myGear()), "player")
+    paintSide(cells.them, WG.ThemCell(drop, inspectGear(drop), now))
+    if layout.tradeWindow then paintTradeWindow(cells.tradeWindow, drop, now, metrics.warnAt, metrics.fontSize) end
     paintActions(cells.actions, drop)
 end
 
 local function paintHeader(h, e, now)
     local g = e.group
     local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
-    local hd = WC.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter, e.yours)
+    local hd = WC.Header(g, e.count, now, sit, e.collapsed, e.hidden, e.filter)
     h.groupKey, h.collapsed = g.key, e.collapsed
     h.text:SetText(hd.text)
     h.tipLines = hd.tip
     h.chevron:SetTexture(NS.Icon(e.collapsed and "chevron-right" or "chevron-down"))
-end
-
--- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
-
-local function previewTip()
-    return L["Preview with test data"], L["Turns test mode on: sample drops of real items in every state, so the window can be checked anywhere. Nothing is whispered, and combat ends it."]
-end
-
-local function scanTip()
-    return L["Scan group"], L["Inspects every other member of your group, one at a time and out of combat, so each drop can be judged for its looter."]
-end
-
--- No drop at all yet: what the table will hold, and the two ways to fill it now.
-local function buildEmpty(pane)
-    local e = CreateFrame("Frame", nil, pane)
-    e:SetSize(K.EMPTY_W, K.EMPTY_H)
-    e:SetPoint("CENTER", pane, "CENTER", 0, 0)
-    e.title = e:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    e.title:SetPoint("TOP", e, "TOP", 0, 0)
-    e.title:SetText(L["No drops yet"])
-    e.text = e:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    e.text:SetPoint("TOP", e.title, "BOTTOM", 0, -8)
-    e.text:SetText(L["Loot your group receives appears here, grouped by boss."])
-    local W = NS.Window
-    e.preview = W.TextButton(e, 160, "eye", L["Preview with test data"], function() NS.SetTestMode(true) end)
-    e.preview:SetPoint("TOPRIGHT", e.text, "BOTTOM", -4, -12)
-    W.AttachTooltip(e.preview, previewTip)
-    e.scan = W.TextButton(e, 110, "people", L["Scan group"], function() NS.ScanGroup() end)
-    e.scan:SetPoint("TOPLEFT", e.text, "BOTTOM", 4, -12)
-    W.AttachTooltip(e.scan, scanTip)
-    e:Hide()
-    return e
 end
 
 -- ── the pane ────────────────────────────────────────────────────────────────────────────────
@@ -640,7 +764,7 @@ local function buildHeads(pane)
         local f = CreateFrame("Frame", nil, head)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
-        f.text:SetTextColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
+        f.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as Loot History's (feedback-4 spec §4)
         NS.Window.AttachTooltip(f, function() return f.label, col.tip end)
         head.labels[col.key] = f
     end
@@ -658,8 +782,9 @@ local function build(pane)
     pane.scroll, pane.content = scroll, content
     pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
     pane.card = NS.DetailCard.Build(content)
-    pane.emptyState = buildEmpty(pane)
+    pane.emptyState = NS.DropsStrip.BuildEmpty(pane)   -- the empty state (board 06 D)
     pane.entries = {}
+    NS.DropsStrip.Build(pane)
 end
 
 local function paintHeads(pane, cols, layout)
@@ -668,7 +793,7 @@ local function paintHeads(pane, cols, layout)
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
-            f:SetPoint("LEFT", pane.colHead, "LEFT", at.x, 0)
+            f:SetPoint("LEFT", pane.colHead, "LEFT", WG.LEAD + at.x, 0)   -- over their cells
             f:SetSize(at.w, K.COLHEAD_H)
         end
     end
@@ -689,16 +814,17 @@ local function rowWidth(pane)
     return w - K.SCROLL_W
 end
 
-local function place(frame, content, y, width)
+-- `x` indents a drop row and its detail card (K.ROW_INDENT); a header takes the full width.
+local function place(frame, content, y, width, x)
     frame:ClearAllPoints()
-    frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
-    frame:SetWidth(width)
+    frame:SetPoint("TOPLEFT", content, "TOPLEFT", x or 0, -y)
+    frame:SetWidth(width - (x or 0))
 end
 
--- The open row's detail card under it; answers the height it takes.
+-- The open row's detail card under it, indented with its row; answers the height it takes.
 local function drawCard(pane, drop, y, width, now)
-    place(pane.card, pane.content, y, width)
-    NS.DetailCard.Paint(pane.card, drop, width, now)
+    place(pane.card, pane.content, y, width, K.ROW_INDENT)
+    NS.DetailCard.Paint(pane.card, drop, width - K.ROW_INDENT, now)
     pane.card:Show()
     pane.cardDropId = drop.id
     return K.CARD_H
@@ -706,6 +832,8 @@ end
 
 local function drawEntries(pane, entries, layout, width)
     local now, y, metrics = GetTime(), 0, NS.WindowRows.Metrics()
+    metrics.rowH = layout.tradeWindow and metrics.countdownHeight or metrics.height
+    metrics.warnAt = NS.TradeTimer.WarnAt()
     local Pool = NS.Pool
     local expanded = view().expanded
     pane.card:Hide()
@@ -718,10 +846,10 @@ local function drawEntries(pane, entries, layout, width)
             y = y + K.GROUP_H
         else
             local r = Pool.Acquire(pane.rowPool, function() return newRow(pane.content) end)
-            place(r, pane.content, y, width)
+            place(r, pane.content, y, width, K.ROW_INDENT)
             r.stripe:SetShown(i % 2 == 0)
             paintRow(r, e.drop, layout, now, metrics)
-            y = y + metrics.height
+            y = y + metrics.rowH
             if e.drop.id == expanded then y = y + drawCard(pane, e.drop, y, width, now) end
         end
     end
@@ -745,10 +873,10 @@ local function drawTable(pane, entries)
     local w = profileWindow()
     local cols = WG.Columns(w and w.columns)
     local width = rowWidth(pane)
-    local layout, kept = WG.Layout(cols, width)
+    local layout, kept = WG.Layout(cols, width - WG.LEAD)   -- the columns start after the indent and chevron
     paintHeads(pane, cols, layout)
     drawEntries(pane, entries, layout, width)
-    pane.columns = kept
+    pane.columns, pane.layout = kept, layout
 end
 
 -- The table, or (compact) the cards over the same entries; the other one is released and hidden.
@@ -762,12 +890,61 @@ local function refresh(pane, ctx)
     if not compact then drawTable(pane, entries) end
     NS.CompactGroup.Refresh(pane, entries, compact)
     pane.entries = entries
+    NS.DropsStrip.Paint(pane, ctx, compact)
     paintEmpty(pane, entries, ctx, compact)
 end
 
+-- ── the countdowns (feedback-5 spec §1) ─────────────────────────────────────────────────────
+
+local function shownPane()
+    local f = NS.Window.Frame()
+    local pane = f and f.panes.group
+    return pane and pane.rowPool and pane or nil
+end
+
+-- Whether a drawn row shows a countdown still running: the Trade window column is kept and a drawn
+-- drop has time left. The compact cards show none (feedback-10 spec §2).
+local function rowsLive(pane)
+    if not pane.entries or WG.IsCompact() then return false end
+    if not (pane.layout and pane.layout.tradeWindow) then return false end
+    local now, MC = GetTime(), NS.MineCells
+    for _, e in ipairs(pane.entries) do
+        local cd = e.kind ~= "header" and MC.Countdown(e.drop, now)
+        if cd and cd.left > 0 then return true end
+    end
+    return false
+end
+
+--- Whether anything on screen shows a countdown still running: a drawn row's Trade window, or the strip's next expiry, which also counts your drops under a collapsed header
+--- and shows whether the column is kept or not. Window.lua runs its each-second countdown ticker
+--- while this holds.
+--- @return boolean
+function WG.LiveCountdown()
+    local pane = shownPane()
+    if not pane then return false end
+    local s = pane.summaryData
+    if s and s.next and s.next > 0 then return true end
+    return rowsLive(pane)
+end
+
+--- Move every shown countdown on to the clock: the Trade window cells of the drawn rows and the
+--- strip's next expiry; nothing else is repainted (the compact cards show no countdown).
+function WG.TickCountdowns()
+    local pane = shownPane()
+    if not pane then return end
+    local compact = WG.IsCompact()
+    NS.DropsStrip.Tick(pane, compact)
+    if compact then return end
+    if not (pane.layout and pane.layout.tradeWindow) then return end
+    local now, warnAt, size = GetTime(), NS.TradeTimer.WarnAt(), NS.WindowRows.FontSize(NS.Setting("window.fontSize"))
+    for _, row in ipairs(pane.rowPool.active) do
+        if row.drop then paintTradeWindow(row.cells.tradeWindow, row.drop, now, warnAt, size) end
+    end
+end
+
 --- The drawn pane's rows and headers, in order, for the suites: { headers, rows, entries, columns,
---- pane, card, cardDropId, empty } (`cardDropId` nil while no card is open on screen; `empty` the
---- empty state's frame).
+--- pane, card, cardDropId, empty, summary } (`cardDropId` nil while no card is open on screen;
+--- `empty` the empty state's frame; `summary` the strip's MineCells.Summary, nil while nothing is tradeable).
 --- @return table|nil
 function WG.Drawn()
     local f = NS.Window.Frame()
@@ -776,7 +953,7 @@ function WG.Drawn()
     if WG.IsCompact() then return NS.CompactGroup.Drawn(pane) end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
         columns = pane.columns, pane = pane, card = pane.card, cardDropId = pane.cardDropId,
-        empty = pane.emptyState }
+        empty = pane.emptyState, summary = pane.summaryData }
 end
 
 NS.Window.RegisterTab("group", { build = build, refresh = refresh })

@@ -32,6 +32,12 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261014-133254`](20261014-133254/) | `5996818` | clean | 0.1.0 | 0/0 | 169 | 1399/1/1400 | pass | 41539 | 5304 | 7.3 | 2.4 | 14 | 0 | **green** |
+| [`20261014-124905`](20261014-124905/) | `d34072e` | clean | 0.1.0 | 0/0 | 169 | 1399/1/1400 | pass | 41520 | 5304 | 7.3 | 2.4 | 14 | 0 | **green** |
+| [`20261013-200128`](20261013-200128/) | `98688dc` | clean | 0.1.0 | 0/0 | 169 | 1397/1/1398 | pass | 41508 | 5303 | 7.3 | 2.4 | 14 | 0 | **green** |
+| [`20261013-160309`](20261013-160309/) | `453bab1` | clean | 0.1.0 | 0/0 | 168 | 1366/1/1367 | pass | 40379 | 5201 | 7.2 | 2.4 | 14 | 0 | **green** |
+| [`20261013-141937`](20261013-141937/) | `d2c4e7a` | clean | 0.1.0 | 0/0 | 164 | 1335/1/1336 | pass | 39524 | 5106 | 7.2 | 2.4 | 13 | 0 | **green** |
+| [`20261013-104522`](20261013-104522/) | `189a13d` | clean | 0.1.0 | 0/0 | 161 | 1333/1/1334 | pass | 39660 | 5143 | 7.2 | 2.4 | 13 | 0 | **green** |
 | [`20261011-230412`](20261011-230412/) | `7b77749` | clean | 0.1.0 | 0/0 | 161 | 1321/1/1322 | pass | 39401 | 5110 | 7.2 | 2.4 | 13 | 0 | **green** |
 | [`20261011-211521`](20261011-211521/) | `0bca5ca` | clean | 0.1.0 | 0/0 | 148 | 1196/1/1197 | pass | 35560 | 4635 | 7.1 | 2.4 | 13 | 0 | **green** |
 | [`20261011-204356`](20261011-204356/) | `c6b3161` | clean | 0.1.0 | 0/0 | 146 | 1175/1/1176 | pass | 35025 | 4563 | 7.1 | 2.4 | 13 | 0 | **green** |
@@ -45,18 +51,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**1322 cases** — 1321 passed, 0 failed, 1 skipped. The generated inventory
-[`20261011-230412/test-cases.md`](20261011-230412/test-cases.md) is the authority on which cases existed at this run;
+**1400 cases** — 1399 passed, 0 failed, 1 skipped. The generated inventory
+[`20261014-133254/test-cases.md`](20261014-133254/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **1197 → 1322** since the previous run.
+Unchanged from the previous run at 1400 cases.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 161 files** (`luacheck .`).
+**0 warnings / 0 errors over 169 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `docs/audits/`, `docs/reviews/`, `docs/revendor/`, `_dev/`, `tests/_kit/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -66,24 +72,24 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **7 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261011-230412/perf.json`](20261011-230412/perf.json).
+[`20261014-133254/perf.json`](20261014-133254/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.07649 | 0.00 | 14248.8 |
-| `refreshCaptureOn` | 1000 | 0.07096 | 1.00 | 14248.8 |
-| `refreshCompactCaptureOff` | 1000 | 0.06851 | 0.00 | 11064.8 |
-| `refreshCompactCaptureOn` | 1000 | 0.06306 | 1.00 | 11064.8 |
+| `refreshCaptureOff` | 1000 | 0.08330 | 0.00 | 14240.8 |
+| `refreshCaptureOn` | 1000 | 0.07439 | 1.00 | 14240.8 |
+| `refreshCompactCaptureOff` | 1000 | 0.07617 | 0.00 | 10368.9 |
+| `refreshCompactCaptureOn` | 1000 | 0.08015 | 1.00 | 10368.9 |
 | `showDecisionStoodDown` | 1000 | 0.00013 | 0.00 | 0.0 |
-| `parseCaptureOff` | 1000 | 0.01262 | 0.00 | 664.2 |
-| `parseCaptureOn` | 1000 | 0.01173 | 1.00 | 664.2 |
+| `parseCaptureOff` | 1000 | 0.01231 | 0.00 | 664.2 |
+| `parseCaptureOn` | 1000 | 0.01181 | 1.00 | 664.2 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261011-230412`](20261011-230412/) — **this run's measurement, not its diff.** Max CCN **13** across 5110
+Current as of [`20261014-133254`](20261014-133254/) — **this run's measurement, not its diff.** Max CCN **14** across 5304
 functions, **0** of them warned on; 0 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 

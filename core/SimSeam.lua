@@ -19,8 +19,7 @@ local _, NS = ...
 --   ChatSender            a sender that prints `[sim] <channel> <target>: <text>` and counts it:
 --                         nothing is ever whispered or posted
 --   NotifyInspect, ClearInspectPlayer   no client call: a real player is never inspected
---   PickupBagItem, DropItemOnUnit, InitiateTrade, ClearCursor   no client call: no real trade
---                         opens and nothing leaves the bags; the hand-over is printed instead
+--   InitiateTrade         no client call: no real trade opens; the hand-over is printed instead
 --
 -- LIVE READS. Sim.Live(fn, ...) runs `fn` with the ordinary members answering for the client again
 -- (the guarded ones stay guarded): the simulator's own safety checks read the real world through it.
@@ -77,9 +76,6 @@ local GUARDED = {}
 GUARDED.ChatSender = function() return printSend end
 GUARDED.NotifyInspect = yes
 GUARDED.ClearInspectPlayer = yes
-GUARDED.PickupBagItem = yes
-GUARDED.ClearCursor = yes
-GUARDED.DropItemOnUnit = function(unit) return handOver("[sim] Would hand the item to %s.", unit) end
 GUARDED.InitiateTrade = function(unit) return handOver("[sim] Would open a trade with %s.", unit) end
 
 -- ── the seam ────────────────────────────────────────────────────────────────────────────────

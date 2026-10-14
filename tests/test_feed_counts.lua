@@ -234,7 +234,7 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
         "Den of Nalorakk · Mythic+ 12 · 2 drops · Testchar")
 end)
 
-test("header: your own drop, listed in My drops, is not counted as hidden in Group drops", function()
+test("header: your own drop is listed in Drops with the others, never counted as hidden", function()
     local NS, m, LF = run()
     loot(m, "You receive loot: " .. YOKE .. ".")
     loot(m, "Keghunt-Thrall receives loot: " .. YOKE .. ".")
@@ -242,9 +242,8 @@ test("header: your own drop, listed in My drops, is not counted as hidden in Gro
     NS.WindowFilterBar.State("group").view = "all"
     local ctx = NS.Window.TabContext("group")
     local h = NS.WindowCells.Entries(LF.Groups(ctx.feed), LF.Get, ctx, {})[1]
-    assertEqual(h.count, 1); assertEqual(h.total, 1); assertFalse(#h.hidden > 0)
-    -- red under: the M10 header, which said nothing of your own drop (feedback-3 spec §0, DW-B0)
-    assertEqual(h.yours, 1, "your own drop is counted as left to My drops")
+    assertEqual(h.count, 2); assertEqual(h.total, 2); assertFalse(#h.hidden > 0)
+    assertEqual(h.yours, nil, "no `yours` count (feedback-5 spec §2)")
 end)
 
 test("header: History names its hidden drops too, and a long list is cut with a count", function()

@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/DetailCard.lua — the detail card (design spec §11.3, board 02): the expanded row of the
--- Group drops table, with the full reasoning behind the row's verdicts.
+-- Drops table, with the full reasoning behind the row's verdicts.
 --
 -- WHAT IT HOLDS, top to bottom: the item header (a real item button, the name in its quality color
 -- and the chips: slot, armor type, bind, track and rank, the look, primary stat, socket, tertiary
@@ -8,7 +8,10 @@ local _, NS = ...
 -- change, the track change, the stat change, and Pawn's score for you or the looter's spec and the
 -- inspect's age, each under a verdict chip); the trade estimate box (the state, the reason in plain words, the rule in
 -- force and how fresh the data is); and the actions: Ask, Edit message, Link in chat, Retry inspect,
--- Trade (disabled with its reason) and Hide this item. Every line and chip has a reason tooltip.
+-- and Trade (disabled with its reason). Every line and chip has a reason tooltip. On your own drop
+-- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Looter row `Name [YOU]` and its Them
+-- row `Upgrade for N` (feedback-7 spec §2) with every member it upgrades in the tooltip, and Offer takes the Ask's place: it opens the Offer panel
+-- (NS.WindowOwn: the reveal state, the offer's tone and the click).
 --
 -- THE SPLIT. What each part says is modules/DetailCells.lua's (pure); this file is the frame edge
 -- that paints it. modules/WindowGroup.lua owns the expansion (which row is open, where the card
@@ -24,7 +27,7 @@ local _, NS = ...
 -- entry (NS.Inspect.Get), the ask's state (NS.Asks.StateOf), the message preview (NS.Asks.Preview),
 -- the trade guard (NS.TradeHelper.CanTradeWith) and the client through NS.Compat (the spec's name,
 -- Pawn's presence), all read-only. Its buttons go through the host handlers in core/DropWatcher.lua
--- (NS.PressAsk, NS.RetryInspect, NS.TradeWithLooter, and NS.DismissDrop for Hide); Link in chat is
+-- (NS.PressAsk, NS.RetryInspect, NS.TradeWithLooter); Link in chat is
 -- Compat.InsertChatLink, as an item button's shift-click is.
 --
 -- THE EDIT MESSAGE BOX. Edit message opens a small skinned box over the window, prefilled with the
@@ -46,8 +49,8 @@ local max, floor = math.max, math.floor
 
 local MAX_CHIPS = 10
 local MAX_SIDE_ROWS = 5
-local ACTION_KEYS = { "ask", "edit", "link", "retry", "trade", "hide" }
-local ACTION_W = { ask = 92, edit = 100, link = 92, retry = 96, trade = 124, hide = 104 }
+local ACTION_KEYS = { "ask", "edit", "link", "retry", "trade" }
+local ACTION_W = { ask = 92, edit = 100, link = 92, retry = 96, trade = 124 }
 
 local editor   -- the Edit message box, built on its first use
 
@@ -76,10 +79,11 @@ local function attach(frame)
     NS.Window.AttachTooltip(frame, function() return tipOf(frame) end)
 end
 
--- A string's drawn width, with an estimate where the client has not measured it yet.
+-- A string's drawn width, with an estimate where the client has not measured it yet (what it draws,
+-- NS.TipMarks.Chars: a chip's verdict mark is a texture escape, DW-F5).
 local function textWidth(fs, text)
     local w = fs.GetStringWidth and fs:GetStringWidth()
-    if type(w) ~= "number" or w <= 0 then w = #(text or "") * 6 end
+    if type(w) ~= "number" or w <= 0 then w = NS.TipMarks.Chars(text) * 6 end
     return w
 end
 
@@ -150,6 +154,7 @@ local function newSideRow(side, i)
     r.value = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     r.value:SetJustifyH("LEFT")
     r.value:SetWordWrap(false)
+    r.mark = NS.WindowRows.NewMark(r, r.value)   -- your own drop's ` [YOU]` (feedback-7 spec §2)
     attach(r)
     return r
 end
@@ -186,12 +191,11 @@ local function buildTrade(card)
 end
 
 local ON_CLICK = {
-    ask   = function(b) NS.PressAsk(b.dropId) end,
+    ask   = function(b) NS.WindowOwn.PressAction(b) end,   -- Offer on your own drop (`b.offer`)
     edit  = function(b) DCard.OpenEditor(b.dropId) end,
     link  = function(b) if b.link then NS.Compat.InsertChatLink(b.link) end end,
     retry = function(b) NS.RetryInspect(b.dropId) end,
     trade = function(b) NS.TradeWithLooter(b.dropId) end,
-    hide  = function(b) NS.DismissDrop(b.dropId) end,
 }
 
 local function buildActions(card)
@@ -200,9 +204,7 @@ local function buildActions(card)
     for _, key in ipairs(ACTION_KEYS) do
         local b = NS.Window.TextButton(card, ACTION_W[key], nil, "", ON_CLICK[key])
         b:SetHeight(K.ACTION_H)
-        if key == "hide" then
-            b:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -K.CARD_PAD, K.CARD_PAD)
-        elseif prev then
+        if prev then
             b:SetPoint("LEFT", prev, "RIGHT", 6, 0)
         else
             b:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", K.CARD_PAD, K.CARD_PAD)
@@ -210,7 +212,7 @@ local function buildActions(card)
         b.key = key
         attach(b)
         card.actions[key] = b
-        if key ~= "hide" then prev = b end
+        prev = b
     end
 end
 
@@ -258,7 +260,7 @@ end
 local ACTION_GAP, ACTION_LINE_GAP = 6, 4
 
 --- The actions flowed into lines `avail` pixels wide, in their order (Ask, Edit message, Link in
---- chat, Retry inspect, Trade, Hide this item): a button that does not fit after the last one on a
+--- chat, Retry inspect, Trade): a button that does not fit after the last one on a
 --- line starts the next. Each one's x and line (0 first), and the number of lines.
 --- @param avail number
 --- @return table { [key] = { x, line } }, number lines
@@ -345,7 +347,8 @@ local function paintSideRow(r, line, width)
     r.value:ClearAllPoints()
     local x = K.SIDE_LABEL + (line.link and K.SIDE_ROW_H + 2 or 0)
     r.value:SetPoint("LEFT", r, "LEFT", x, 0)
-    r.value:SetWidth(max(width - 20 - x, 20))
+    NS.WindowGroup.ClassTone(r.value, line.classFile)   -- a name in its class color, over the tone
+    NS.WindowRows.PlaceMark(r.value, r.mark, line.you, max(width - 20 - x, 20))
 end
 
 local function paintSide(side, model, width)
@@ -386,13 +389,16 @@ end
 local function paintActions(card, drop, ctx)
     for _, a in ipairs(DC.Actions(drop, ctx)) do
         local b = card.actions[a.key]
-        b.dropId, b.link = drop.id, drop.link
+        b.dropId, b.link, b.offer = drop.id, drop.link, a.offer == true
         b.label:SetText(a.text)
         b.art:SetTexture(NS.Icon(a.icon))
         b:SetEnabled(a.enabled)
         b:SetAlpha(a.enabled and 1 or 0.5)
         b.tipLines = a.tip
         b.enabled = a.enabled
+        -- The Ask (or your own drop's Offer, cyan while your move: feedback-6 spec §2) takes its
+        -- state's tone, as the row's does (feedback-4 spec §1); the rest stay white.
+        NS.WindowGroup.ToneButton(b, a.key == "ask" and a.state or nil, a.kind)
     end
 end
 
@@ -427,13 +433,16 @@ function DCard.Paint(card, drop, width, now)
         sideW = width - 2 * K.CARD_PAD
         placeStackedActions(card, width)
     end
-    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse()), sideW)
-    paintSide(card.them, DC.ForLooter(drop, insp, specName, now), sideW)
+    local snap = NS.Gear.Snapshot()
+    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile), sideW)
+    local WO = NS.WindowOwn
+    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id)), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
     paintTrade(card.trade, DC.TradeBox(drop, situation))
     local state, reason = askState(drop)
     paintActions(card, drop, { askState = state, askReason = reason, inspect = insp, now = now, trade = tradeGuard(drop),
-        transmogAsk = NS.Setting("messages.transmogAsk") == true })
+        transmogAsk = NS.Setting("messages.transmogAsk") == true,
+        offerTone = drop.isMine and (WO.ToneStates(drop)) or nil })
     return height
 end
 

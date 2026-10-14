@@ -20,13 +20,13 @@ local _, NS = ...
 -- THE CHARACTER DROPDOWN (feedback-2 spec §4, FB2-6), like Loot History's: All, Current, then each
 -- character Drop Watcher has a record for (modules/CharFilter.lua builds the rows and the
 -- predicate). Multi-select, Current by default, on every tab. History filters its kept drops by who
--- saw them; Group drops and My drops list only you, and every drop on them is yours (`charScope`
--- `session`), so their filter never hides one.
+-- saw them; Drops lists only you, and every drop on it is yours (`charScope` `session`), so its
+-- filter never hides one.
 --
 -- THE QUALITY CONTROL IS NOT A VIEW FILTER: it shows the feed's minimum-quality mode in force (the
 -- situation's override, else `feed.quality.mode`) with its threshold, `Quality: Rare+` (design spec
 -- §6.2), and choosing a mode goes through NS.SetQualityMode (core/DropWatcher.lua), the handler the
--- settings row shares. It is the same on every tab, and only the Group drops tab honors it.
+-- settings row shares. It is the same on every tab, and only the Drops tab honors it.
 --
 -- PURE: IsInteresting, IsTradeableMine, Matches, HiddenBy, ViewLabel and Comparator take plain
 -- tables and read nothing else, so the suites drive them case by case. Build, Sync and Layout are
@@ -54,7 +54,7 @@ FB.VALUES = {
     sort    = { "newest", "oldest", "ilvl", "gain" },
 }
 
--- Which controls each tab honors (the footer's Sort included). `views` is the View values the tab
+-- Which controls each tab honors (the tab's Sort included). `views` is the View values the tab
 -- uses; the rest are grayed in its menu and ignored by its filter.
 local ALL_VIEWS = { interesting = true, likely = true, usable = true, upgrade = true }
 -- `char` is the Character dropdown; `charScope` `session` marks a tab whose drops are all yours.
@@ -62,7 +62,6 @@ local ALL = { view = true, quality = true, content = true, search = true, sort =
     charScope = "session", views = ALL_VIEWS }
 FB.HONORS = {
     group   = ALL,
-    mine    = { content = true, search = true, sort = true, char = true, charScope = "session", views = {} },
     history = { view = true, content = true, search = true, sort = true, char = true,
                 views = { interesting = true, usable = true, upgrade = true } },
 }
@@ -108,7 +107,7 @@ local VIEW_TIP = {
 local TIPS = {
     content = { L["Content"], L["This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."] },
     search = { L["Search"], L["Show only the drops whose item or looter name contains this text."] },
-    char = { L["Character"], L["Show only the drops these characters saw. History is kept for every character on the account; Group drops and My drops hold this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] },
+    char = { L["Character"], L["Show only the drops these characters saw. History is kept for every character on the account; Drops holds this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] },
 }
 local GRAYED = L["This tab does not use this filter."]
 local GRAY = { 0.5, 0.5, 0.5 }
@@ -272,16 +271,7 @@ function FB.IsInteresting(drop)
     return LOOTER_GIVES[verdictOf(drop.them)] == true and TRADEABLE[state] == true
 end
 
---- Whether a drop belongs in the Group drops table: someone else's always, your own only with
---- `feed.showOwn` on (design spec §6.3: off by default, own loot goes to My drops).
---- @param drop table
---- @param showOwn boolean|nil
---- @return boolean
-function FB.InGroup(drop, showOwn)
-    return type(drop) == "table" and (not drop.isMine or showOwn == true)
-end
-
---- Your own drop whose trade estimate is `yes` or `likely` (the `My drops · n` count).
+--- Your own drop whose trade estimate is `yes` or `likely` (what Post my tradeables posts).
 --- @param drop table
 --- @return boolean
 function FB.IsTradeableMine(drop)
@@ -653,9 +643,10 @@ function FB.Build(host)
     FB.Anchor()
 end
 
---- Put every control at its place on the bar, left to right, the search box on the right with its
---- full hint (the build, and the full layout taking them back from the compact Filters panel,
---- modules/CompactChrome.lua).
+--- Put every control at its place on the bar, left to right, then the search box from the bar's gap
+--- after the last of them to the bar's right edge, with its full hint (the build, and the full
+--- layout taking them back from the compact Filters panel, modules/CompactChrome.lua). Both its edges
+--- are anchored, so it widens and narrows with the window, live while sizing (feedback-4 spec §4).
 function FB.Anchor()
     local host = controls.host
     if not host then return end
@@ -670,23 +661,35 @@ function FB.Anchor()
             prev = w
         end
     end
-    controls.search:ClearAllPoints()
-    controls.search:SetPoint("RIGHT", host, "RIGHT", 0, 0)
-    controls.search.hint:SetText(L["Filter looter or item…"])
+    local eb = controls.search
+    eb:ClearAllPoints()
+    if prev then eb:SetPoint("LEFT", prev, "RIGHT", GAP, 0) else eb:SetPoint("LEFT", host, "LEFT", 0, 0) end
+    eb:SetPoint("RIGHT", host, "RIGHT", 0, 0)
+    eb.hint:SetText(L["Filter looter or item…"])
 end
 
---- Fit the bar to the window's width: the search box takes what the controls leave, and hides when
---- that is too little to type in. The compact layout's anchors size it there instead.
+--- The search box's width in a full window `width` pixels wide: what the bar's controls and their
+--- gaps leave between the last of them and the bar's right edge (FB.Anchor's two anchors give it
+--- that width on screen; pure, for the suites).
+--- @param width number|nil the window's width
+--- @return number
+function FB.SearchWidth(width)
+    local used = 2 * K.INSET
+    for _, key in ipairs(ROW) do
+        if controls[key] or not controls.host then used = used + WIDTH[key] + GAP end
+    end
+    return math.max((tonumber(width) or K.WIDTH) - used, 0)
+end
+
+--- Fit the bar to the window's width: the search box spans what the controls leave (its anchors,
+--- FB.Anchor), and hides only when that is too little to type in. The compact layout's anchors size
+--- it there instead.
 --- @param width number|nil the window's width
 function FB.Layout(width)
     local eb = controls.search
     if not eb or NS.WindowCompact.Mode() == "compact" then return end
-    local used = 2 * K.INSET
-    for _, key in ipairs(ROW) do
-        if controls[key] then used = used + GAP + WIDTH[key] end
-    end
-    local room = (tonumber(width) or K.WIDTH) - used
-    eb:SetWidth(math.min(220, math.max(room, 0)))
+    local room = FB.SearchWidth(width)
+    eb:SetWidth(room)   -- what the anchors give it; the headless suites read it
     eb:SetShown(room >= 80)
 end
 

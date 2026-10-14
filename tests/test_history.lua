@@ -386,6 +386,14 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     for _, r in ipairs(drawn.rows) do outcomes[#outcomes + 1] = textOf(r.cells.outcome.text) end
     table.sort(outcomes)
     assertEqual(table.concat(outcomes, ","), "Asked,Expired")
+    -- The action buttons' tones (feedback-12 spec §0): Asked yellow (waiting), Expired red (fell through).
+    local want = { Asked = NS.Constants.TONE.yellow, Expired = NS.Constants.TONE.red }
+    for _, r in ipairs(drawn.rows) do
+        local t = r.cells.outcome.text
+        local r1, g1, b1 = t:GetTextColor()
+        local c = want[textOf(t)]
+        assertEqual(table.concat({ r1, g1, b1 }, ","), table.concat({ c.r, c.g, c.b }, ","), textOf(t))
+    end
     assertEqual(NS.WindowFilterBar.State("history").content, "all", "the tab opens on Content: All")
     assertEqual(next(NS.WindowFilterBar.State("history").view), nil, "and View: All")
     assertEqual(textOf(drawn.strip.info), "2 groups, 3 drops · kept for 30 days")
@@ -397,7 +405,7 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     end
 end)
 
--- Feedback-2 spec §8 (FB2-9): History's rows follow the same Layout rows as Group drops.
+-- Feedback-2 spec §8 (FB2-9): History's rows follow the same Layout rows as Drops.
 test("history tab: rows take the Window page's row height and font size", function()
     local NS, drawn = shownTab()
     local r = drawn.rows[1]
@@ -483,4 +491,14 @@ test("history tab: the pure Ago reads seconds, hours, then days", function()
     assertEqual(WH.Ago(7140), "1h 59m ago")
     assertEqual(WH.Ago(86400), "1 day ago")
     assertEqual(WH.Ago(3 * 86400 + 5), "3 days ago")
+end)
+
+test("history tab: rows do not expand, so they draw no chevron and are not indented; the headers' chevrons are gold", function()
+    local NS, drawn = shownTab()
+    local G = NS.Constants.GOLD
+    for _, r in ipairs(drawn.rows) do
+        assertTrue(r.chevron == nil, "no chevron")
+        assertEqual(select(4, r:GetPoint(1)), 0, "no indent")
+    end
+    assertEqual(select(2, drawn.headers[1].chevron:GetVertexColor()), G.g)
 end)

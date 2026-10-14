@@ -2,7 +2,7 @@
 -- roster snapshot's pure core (modules/GroupRoster.lua: Entry, Merge, Names, TipLine); a feed
 -- group taking the members when its first drop makes it and growing when someone joins mid-run,
 -- between drops or with the next one; the History group keeping the roster across the log; the
--- headers on Group drops and History naming everyone class-colored, you first, a raid's cut to
+-- headers on Drops and History naming everyone class-colored, you first, a raid's cut to
 -- `+n`, and an older History group with no roster naming none. Test mode's sample rosters are
 -- test_test_mode's; a simulated run's, test_sim_e2e's.
 

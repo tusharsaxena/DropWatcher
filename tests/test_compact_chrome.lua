@@ -19,14 +19,12 @@ local function textOf(region) return region and region:GetText() end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
-test("chrome: the tabs' compact labels are Group, Mine · n and History; full keeps its own", function()
+test("chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)", function()
     local CC = T.newAddon().CompactChrome
-    assertEqual(CC.TabText("group", 0, true), "Group")
-    assertEqual(CC.TabText("mine", 3, true), "Mine · 3")
-    assertEqual(CC.TabText("mine", 0, true), "Mine")
-    assertEqual(CC.TabText("history", 9, true), "History")
-    assertEqual(CC.TabText("group", 0, false), "Group drops")
-    assertEqual(CC.TabText("mine", 2, false), "My drops · 2")
+    assertEqual(CC.TabText("group", true), "Drops")
+    assertEqual(CC.TabText("history", true), "History")
+    assertEqual(CC.TabText("group", false), "Drops")
+    assertEqual(CC.TabText("history", false), "History")
 end)
 
 test("chrome: TEST MODE and SIMULATION shorten to TEST and SIM", function()
@@ -144,10 +142,10 @@ test("chrome: the badge collapses to its lock and the queued count at the left, 
     assertEqual(tip[1], "Encounter"); assertEqual(tip[3], "Queued: Ask to Seta-Realm")
     NS.SetWindowMode("full")
     assertEqual(textOf(f.badge.text), "Encounter · 2 queued")
-    assertEqual(f.badge.__points[1][2], f.scanButton, "back beside Scan group")
+    assertEqual(f.badge.__points[1][2], f.modeButton, "back beside the layout toggle (Scan group is the strip's)")
 end)
 
-test("chrome: Scan group becomes an icon button, with its tooltip and its click", function()
+test("chrome: Scan group is an icon button in compact, with its tooltip and its click; full hides it", function()
     local NS, f = shown("compact")
     local b = f.scanButton
     assertEqual(b:GetWidth(), NS.Constants.WINDOW.ICON + 4)
@@ -158,25 +156,28 @@ test("chrome: Scan group becomes an icon button, with its tooltip and its click"
     NS.ScanGroup = function() scanned = scanned + 1 end
     b:__fire("OnClick")
     assertEqual(scanned, 1)
+    assertTrue(b:IsShown())
     NS.SetWindowMode("full")
-    assertEqual(b:GetWidth(), 96); assertTrue(b.label:IsShown()); assertEqual(b.art.__points[1][1], "LEFT")
+    assertFalse(b:IsShown(), "the full layout's Scan group is the Drops strip's (feedback-7 spec §4)")
+    assertTrue(NS.WindowGroup.Drawn().pane.summary.scan:IsShown())
+    NS.SetWindowMode("compact")
+    assertTrue(b:IsShown()); assertEqual(b:GetWidth(), NS.Constants.WINDOW.ICON + 4)
 end)
 
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────
 
-test("chrome: the tabs keep three at a reduced width, short labels, full names in their tooltips", function()
+test("chrome: the two tabs keep a reduced width, their names in their tooltips", function()
     local NS, f = shown("compact")
     local CC = NS.CompactChrome
-    assertEqual(textOf(f.tabs.group.label), "Group")
-    assertEqual(textOf(f.tabs.mine.label), "Mine")
+    assertEqual(textOf(f.tabs.group.label), "Drops")
     assertEqual(textOf(f.tabs.history.label), "History")
-    assertEqual(f.tabs.mine:GetWidth(), CC.TAB_W)
-    assertEqual(f.tabs.history.__points[1][4], 2 * (CC.TAB_W + NS.Constants.WINDOW.TAB_GAP))
-    assertEqual(NS.Window.TooltipOf(f.tabs.group)[1], "Group drops")
-    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[1], "My drops")
+    assertEqual(f.tabs.group:GetWidth(), CC.TAB_W)
+    assertEqual(f.tabs.history.__points[1][4], CC.TAB_W + NS.Constants.WINDOW.TAB_GAP)
+    assertEqual(NS.Window.TooltipOf(f.tabs.group)[1], "Drops")
+    assertEqual(NS.Window.TooltipOf(f.tabs.history)[1], "History")
     NS.SetWindowMode("full")
-    assertEqual(textOf(f.tabs.group.label), "Group drops")
-    assertEqual(f.tabs.mine:GetWidth(), NS.Constants.WINDOW.TAB_W)
+    assertEqual(textOf(f.tabs.group.label), "Drops")
+    assertEqual(f.tabs.group:GetWidth(), NS.Constants.WINDOW.TAB_W)
 end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
@@ -224,8 +225,8 @@ test("chrome: Filters opens the panel of the full bar's own dropdowns, and a pic
     assertEqual(textOf(p.filters.label), "Filters · 2", "Sort is not counted")
     p.filters:__fire("OnClick")
     assertFalse(p.panel:IsShown(), "a second click closes it")
-    NS.Window.SelectTab("mine")
-    assertEqual(textOf(p.filters.label), "Filters", "My drops starts from its own state")
+    NS.Window.SelectTab("history")
+    assertEqual(textOf(p.filters.label), "Filters · 1", "History starts from its own state (Content: All)")
     assertTrue(f:IsShown())
 end)
 
@@ -244,7 +245,7 @@ test("chrome: the panel closes when the window hides, minimizes or goes back to 
     assertFalse(p.panel:IsShown(), "full")
 end)
 
-test("chrome: the full layout takes every control back to its place on the bar and in the footer", function()
+test("chrome: the full layout takes every control back to its place on the bar and the tab's strip", function()
     local NS, f = shown("compact")
     NS.SetWindowMode("full")
     local c, p = NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
@@ -254,11 +255,14 @@ test("chrome: the full layout takes every control back to its place on the bar a
     assertEqual(c.quality.__points[1][2], c.view)
     assertEqual(c.char.__points[1][2], c.content)
     assertEqual(c.char:GetWidth(), 168)
-    assertEqual(#c.search.__points, 1); assertEqual(c.search.__points[1][1], "RIGHT")
+    assertEqual(#c.search.__points, 2, "both edges anchored (feedback-4 spec §4)")
+    assertEqual(c.search.__points[1][1], "LEFT"); assertEqual(c.search.__points[1][2], c.char)
+    assertEqual(c.search.__points[1][4], 8, "the gap between the dropdowns")
+    assertEqual(c.search.__points[2][1], "RIGHT")
     assertEqual(textOf(c.search.hint), "Filter looter or item…")
     assertTrue(c.search:GetWidth() > 0)
     local _, sort = NS.WindowFooter.Parts()
-    assertTrue(sort:GetParent() == f.footerHost)
+    assertTrue(sort:GetParent() == f.panes.group.summary, "Sort on Drops' strip (feedback-10 spec §3)")
     assertEqual(sort.__points[1][1], "RIGHT"); assertEqual(sort:GetWidth(), 150)
 end)
 

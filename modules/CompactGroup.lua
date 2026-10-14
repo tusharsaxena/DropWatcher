@@ -1,21 +1,37 @@
 local _, NS = ...
--- modules/CompactGroup.lua — the Group drops tab in the compact layout (compact spec §2, DW-C2):
+-- modules/CompactGroup.lua — the Drops tab in the compact layout (compact spec §2, DW-C2):
 -- the same entries as the full table, each drop a three-line card under a one-line header.
 --
 -- ONE PANE, TWO LAYOUTS. modules/WindowGroup.lua builds the tab and computes its entries (the
--- feed's groups, the filters, the order, the dismissals) once per repaint, then hands them here in
+-- feed's groups, the filters, the order) once per repaint, then hands them here in
 -- the compact layout (WG.IsCompact) and draws its table otherwise. This file adds its own scroll
 -- frame to the same pane, built on the first compact repaint, and shows one or the other; the
 -- empty state and the filters' line stay WindowGroup's. Nothing here filters, judges or sends.
 --
 -- THE CARD. Three lines, the item button spanning them (NS.WindowGroup.ItemButton: the game's own
 -- tooltip, shift-click links, ctrl-click tries on), a thin bar in the item's quality color at the
--- left edge. What each piece says, its tone and its reason tooltip are NS.CompactCards.Group's
+-- left edge, and between the two the full table's expand indicator (NS.WindowGroup.RowChevron:
+-- chevron-down, chevron-up while the card's detail card is open, muted white) centered on line 1.
+-- Like the full table's rows, each card and its detail card are indented K.ROW_INDENT under their
+-- header (feedback-5 spec §0; GROUP_SPEC.indent). What each piece says, its tone and its reason tooltip are NS.CompactCards.Group's
 -- (pure, built from the full view's cells):
 --
---   line 1  item (quality color, the game's tooltip) · ilvl · Ask (the full table's states) · ×
---   line 2  looter (class color, ⊕ from another realm) · slot · trade        inspect freshness
---   line 3  You ▽ -13 (321/308)                 Them ⊘ Can't use (298/296)
+--   line 1  ilvl item (fresh) (the item level before the name, the name in quality color with the
+--           game's tooltip, then the inspect freshness in brackets, dimmed: `(2m)`, `(cached)`,
+--           `(…)`, none at all where there is nothing to say; the name is cut, the freshness not;
+--           feedback-10 spec §2)
+--   line 2  looter (class color, ⊕ from another realm) · slot · type · trade            [ Ask ]
+--           (the full table's states; Offer on your own drop, which opens the Offer panel:
+--           NS.WindowOwn, feedback-5 spec §2; with neither the gray `No action` button, its reason
+--           in its tooltip, feedback-11 spec §1)
+--   line 3  You 321/308 ▼13   Them 298/296 ⊘ Can't use
+--           (the full table's Me and Them cells without their icons, feedback-6 spec §1; the labels
+--           gold and Them a fixed gap after You, feedback-10 spec §2; your own drop: line 2's looter
+--           reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2), every member it
+--           upgrades in the tooltip)
+--
+-- NO TRADE WINDOW on the card (feedback-10 spec §2): the full table's Trade window column, the
+-- strip's next expiry and the detail card say it; the card has nothing to tick each second.
 --
 -- Every piece is a font string with a hit frame over it that carries its tooltip, placed by the
 -- row-tooltip helper (NS.RowTooltip, DW-B2) at the card's top right, just outside the window: the
@@ -41,10 +57,11 @@ local _, NS = ...
 -- SWITCHING keeps the expanded card (NS.State.windowGroup is shared) and carries the scroll offset
 -- over as a fraction of the scroll range (CarryScroll), as near as the two layouts allow.
 --
--- THE SHARED KIT. My drops and History draw their cards the same way (modules/CompactMine.lua and
--- modules/CompactHistory.lua, DW-C3), so the frame pieces live here once and are exported: the
--- pieces and their hit frames (Piece, FontString, MonoString, Background), line 2 and line 3's
--- halves (BuildLineTwo/PaintLineTwo, BuildHalf/PaintHalf), the pane's own scroll view (BuildView),
+-- THE SHARED KIT. History draws its cards the same way (modules/CompactHistory.lua, DW-C3), so the
+-- frame pieces live here once and are exported: the
+-- pieces and their hit frames (Piece, FontString, MonoString, Background), line 1's item level
+-- and name (PlaceLineOne), line 2 and line 3's halves (BuildLineTwo/PaintLineTwo, BuildHalf/PaintHalf,
+-- PlaceThem), the pane's own scroll view (BuildView),
 -- the layout switch (Swap, Settle) and the draw loop over a tab's entries (Draw, driven by a
 -- per-tab `spec` table built once at load: no closure per repaint).
 
@@ -60,7 +77,9 @@ CG.GAP = 2             -- between two cards, and around the detail card
 CG.LINE_EXTRA = 4      -- a line's height over its text size
 CG.ICON_MIN, CG.ICON_MAX = 24, 48
 CG.QUALITY_W = 2       -- the quality bar at a card's left edge
-CG.DISMISS = 12        -- the × mark
+CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Drops card's chevron and the gap before its icon
+CG.ILVL_GAP = 4        -- line 1: between the item level and the name (feedback-10 spec §2)
+CG.HALVES_GAP = 12     -- line 3: between You's last piece and the Them label (feedback-10 spec §2)
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
 local SEP = "|cff9e9ea3·|r "
@@ -73,7 +92,7 @@ local SEP = "|cff9e9ea3·|r "
 --- @param fontSize number|nil NS.WindowRows.FontSize's answer
 --- @return table
 function CG.Metrics(fontSize)
-    local size = fontSize or K.MINE_FONT
+    local size = fontSize or K.COUNTDOWN_FONT
     local line = size + CG.LINE_EXTRA
     return { fontSize = fontSize, size = size, line = line, height = 3 * line + 2 * CG.PAD,
         icon = min(CG.ICON_MAX, max(CG.ICON_MIN, 3 * line - 6)) }
@@ -85,19 +104,12 @@ end
 --- @return number
 function CG.LineY(m, i) return -(CG.PAD + (i - 0.5) * m.line) end
 
---- Where the text starts: after the quality bar and the icon.
+--- Where the text starts: after the quality bar, the chevron's lead (`lead`, CG.LEAD on a Drops
+--- card, 0 where a card has no chevron) and the icon.
 --- @param m table
+--- @param lead number|nil
 --- @return number
-function CG.TextLeft(m) return CG.PAD + CG.QUALITY_W + m.icon + 6 end
-
---- Where line 3's second half (Them) starts on a card `width` pixels wide: halfway across the text.
---- @param width number
---- @param m table
---- @return number
-function CG.HalfX(width, m)
-    local x = CG.TextLeft(m)
-    return x + floor(max(0, width - x - CG.PAD) / 2)
-end
+function CG.TextLeft(m, lead) return CG.PAD + CG.QUALITY_W + (lead or 0) + m.icon + 6 end
 
 --- A scroll offset carried from one layout to the other: the same fraction of the scroll range.
 --- @param offset number|nil the offset in the layout being left
@@ -142,7 +154,7 @@ local function pieceClick(self, button)
     if card and card.onPiece then card.onPiece(card, button) end
 end
 
--- A Group drops card's click expands its detail card (a piece's too).
+-- A Drops card's click expands its detail card (a piece's too).
 local function groupPiece(card, button)
     if button == "LeftButton" then NS.WindowGroup.ToggleExpand(card.dropId) end
 end
@@ -200,62 +212,77 @@ CG.Background = buildBackground
 
 local function buildAsk(card)
     local W = NS.Window
-    card.ask = W.TextButton(card, K.ASK_W, nil, NS.L["Ask"], function(b) NS.PressAsk(b.dropId) end)
+    card.ask = W.TextButton(card, K.ASK_W, "chat", NS.L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     W.AttachTooltip(card.ask, function() return tipOf(card.ask) end, "row")
-    card.dash = fontString(card, "GameFontDisableSmall")
-    card.dash:SetPoint("CENTER", card.ask, "CENTER", 0, 0)
-    card.dashTip = CreateFrame("Frame", nil, card)
-    card.dashTip:SetAllPoints(card.ask)
-    W.AttachTooltip(card.dashTip, function() return tipOf(card.dashTip) end, "row")
-    local d = CreateFrame("Button", nil, card)
-    d:SetSize(CG.DISMISS, CG.DISMISS)
-    d.art = d:CreateTexture(nil, "ARTWORK")
-    d.art:SetAllPoints(d)
-    d.art:SetTexture(NS.Icon("close"))
-    d.art:SetVertexColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
-    d:SetScript("OnClick", function(b) NS.DismissDrop(b.dropId) end)
-    W.AttachTooltip(d, function() return tipOf(d) end, "row")
-    card.dismiss = d
+end
+
+--- Line 1's item level then the name (feedback-10 spec §2): the level at `x` on line 1, the name
+--- CG.ILVL_GAP after it and cut at `rightOf` (a region on line 1's right: History's outcome), so the
+--- name is cut first and the level always shows. A Drops card places its own (the freshness follows
+--- the name there).
+--- @param card table
+--- @param x number the text's left edge
+--- @param y number line 1's middle
+--- @param rightOf table
+function CG.PlaceLineOne(card, x, y, rightOf)
+    local c = card.cells
+    at(c.ilvl.text, "LEFT", card, "TOPLEFT", x, y)
+    at(c.item.text, "LEFT", c.ilvl.text, "RIGHT", CG.ILVL_GAP, 0)
+    c.item.text:SetPoint("RIGHT", rightOf, "LEFT", -6, 0)
 end
 
 local function buildLineOne(card)
     local WG = NS.WindowGroup
+    card.chevron = WG.RowChevron(card)   -- placed on line 1 (layout)
     card.icon = WG.ItemButton(card, K.ROW_ICON)
-    card.icon:SetPoint("LEFT", card, "LEFT", CG.PAD + CG.QUALITY_W, 0)
+    card.icon:SetPoint("LEFT", card, "LEFT", CG.PAD + CG.QUALITY_W + CG.LEAD, 0)
     local item = piece(card, "item")
     item.hit.showItem = true   -- the game's own tooltip (WindowGroup.ItemHover)
     WG.ItemHover(item.hit, card.icon)
     piece(card, "ilvl")
+    piece(card, "fresh")   -- `(2m)` right after the name (layout)
     buildAsk(card)
 end
 
---- Line 2's pieces: looter (and its ⊕), slot, trade, then `right` (right-aligned: Group drops'
---- inspect freshness, History's time).
+--- Line 2's pieces: looter (and its ⊕, or its gold ` [YOU]` mark on your own drop: feedback-7 spec
+--- §2), slot, type (feedback-4 spec §3), trade, then `right` (right-aligned: History's time; nil on
+--- a Drops card, whose action button sits there).
 --- @param card table
---- @param right string the right piece's key
+--- @param right string|nil the right piece's key
 function CG.BuildLineTwo(card, right)
     local looter = piece(card, "looter")
     looter.glyph = monoString(card)
     looter.glyph:SetPoint("LEFT", looter.text, "RIGHT", 2, 0)
+    looter.mark = NS.WindowRows.NewMark(card, looter.glyph)
     looter.hit:SetPoint("BOTTOMRIGHT", looter.glyph, "BOTTOMRIGHT", 0, 0)
     local slot = piece(card, "slot")
     slot.text:SetPoint("LEFT", looter.glyph, "RIGHT", 4, 0)
+    local kind = piece(card, "armorType")
+    kind.text:SetPoint("LEFT", slot.text, "RIGHT", 4, 0)
     local trade = piece(card, "trade")
-    trade.text:SetPoint("LEFT", slot.text, "RIGHT", 4, 0)
-    piece(card, right)
+    trade.text:SetPoint("LEFT", kind.text, "RIGHT", 4, 0)
+    if right then piece(card, right) end
 end
 
--- One half of line 3: the label (`cells[key .. "Label"]`), then the verdict's glyph and change
--- (`cells[key]`, one tooltip over the three) and the worn levels (`cells[key .. "Eq"]`).
+-- One half of line 3 (feedback-6 spec §1): the label (`cells[key .. "Label"]`), then the worn item
+-- level, the glyph and the difference or word (`cells[key]`: `level`, `glyph`, `text`), one tooltip
+-- over them all. CG.PaintHalf places each piece after the last one shown.
 function CG.BuildHalf(card, key)
     local label = { text = fontString(card) }
-    local verdict = { glyph = monoString(card), text = fontString(card) }
-    verdict.glyph:SetPoint("LEFT", label.text, "RIGHT", 3, 0)
-    verdict.text:SetPoint("LEFT", verdict.glyph, "RIGHT", 2, 0)
-    verdict.hit = hitOver(card, label.text, verdict.text)
-    card.cells[key .. "Label"], card.cells[key] = label, verdict
-    local eq = piece(card, key .. "Eq")
-    eq.text:SetPoint("LEFT", verdict.text, "RIGHT", 4, 0)
+    local half = { level = fontString(card), glyph = monoString(card), text = fontString(card) }
+    half.hit = hitOver(card, label.text, half.text)
+    card.cells[key .. "Label"], card.cells[key] = label, half
+end
+
+-- The gaps on line 3: between the label, the level and the verdict, and after a glyph.
+CG.HALF_GAP, CG.HALF_GLYPH_GAP = 3, 2
+
+--- Line 3's Them half placed CG.HALVES_GAP after You's last piece (feedback-10 spec §2: the halves
+--- read close together, not at half the card's width). You's text is its last piece, shown or empty.
+--- @param card table
+function CG.PlaceThem(card)
+    local c = card.cells
+    at(c.themLabel.text, "LEFT", c.you.text, "RIGHT", CG.HALVES_GAP, 0)
 end
 
 local function newCard(content)
@@ -265,7 +292,7 @@ local function newCard(content)
     card.onPiece = groupPiece
     buildBackground(card)
     buildLineOne(card)
-    CG.BuildLineTwo(card, "fresh")
+    CG.BuildLineTwo(card)
     CG.BuildHalf(card, "you")
     CG.BuildHalf(card, "them")
     card:SetScript("OnClick", function(self) NS.WindowGroup.ToggleExpand(self.dropId) end)
@@ -276,18 +303,18 @@ end
 local function layout(card, m)
     if card.dwLine == m.line then return end
     card.dwLine = m.line
-    local x, P, c = CG.TextLeft(m), CG.PAD, card.cells
+    local x, P, c = CG.TextLeft(m, CG.LEAD), CG.PAD, card.cells
     local y1 = CG.LineY(m, 1)
     card.icon:SetSize(m.icon, m.icon)
-    at(card.dismiss, "RIGHT", card, "TOPRIGHT", -P, y1)
-    at(card.ask, "RIGHT", card.dismiss, "LEFT", -4, 0)
+    at(card.chevron, "LEFT", card, "TOPLEFT", P + CG.QUALITY_W, y1)
+    at(c.ilvl.text, "LEFT", card, "TOPLEFT", x, y1)
+    at(c.item.text, "LEFT", c.ilvl.text, "RIGHT", CG.ILVL_GAP, 0)
+    at(c.fresh.text, "LEFT", c.item.text, "RIGHT", NS.WindowRows.MARK_GAP, 0)
+    at(card.ask, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
     card.ask:SetHeight(m.line + 2)
-    at(c.ilvl.text, "RIGHT", card.ask, "LEFT", -6, 0)
-    at(c.item.text, "LEFT", card, "TOPLEFT", x, y1)
-    c.item.text:SetPoint("RIGHT", c.ilvl.text, "LEFT", -6, 0)
     at(c.looter.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
-    at(c.fresh.text, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
     at(c.youLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
+    CG.PlaceThem(card)
 end
 
 -- ── painting a card ─────────────────────────────────────────────────────────────────────────
@@ -299,26 +326,36 @@ local function paintText(cell, c, prefix)
 end
 CG.PaintText = paintText
 
--- The Ask button in the full table's states (WindowGroup's paintActions, the same cell), or the
--- dash with its reason where no ask is offered.
+-- The Ask button in the full table's states (WindowGroup's paintActions, the same cell), your own
+-- drop's Offer, or the gray No action with its reason where neither is offered (feedback-11 spec §1).
 local function paintAsk(card, a, id)
     local b = card.ask
-    b.dropId, card.dismiss.dropId = id, id
-    b:SetShown(a.offered)
-    card.dash:SetShown(not a.offered)
-    card.dashTip:SetShown(not a.offered)
-    card.dash:SetText(a.text)
-    b.label:SetText(a.text)
-    b.art:SetTexture(a.icon and NS.Icon(a.icon) or nil)
-    b.art:SetShown(a.icon ~= nil)
-    at(b.label, "CENTER", b, "CENTER", a.icon and 7 or 0, 0)
+    b.dropId, b.offer = id, a.offer == true
+    NS.Window.SetButtonMark(b, a.text, a.icon)
     b:SetEnabled(a.enabled)
     b:SetAlpha(a.enabled and 1 or 0.6)
-    b.tipLines, card.dashTip.tipLines = a.tip, a.tip
+    b.tipLines = a.tip
     b.state = a.state
+    NS.WindowGroup.ToneButton(b, a.state, a.kind)   -- whose move it is (feedback-4 spec §1; Offer cyan, feedback-6 §2)
 end
 
-local function paintLineOne(card, drop, cc)
+-- Line 1's freshness, `(2m)`, right after the name, or nothing (CompactCards.FreshMark); the name
+-- takes what is left of the line after the item level and it (NS.WindowRows.MarkedWidth), so the
+-- name is cut and the freshness is not.
+local function paintFresh(card, cc, width, m)
+    local c = card.cells
+    local mark = NS.CompactCards.FreshMark(cc.fresh)
+    c.fresh.text:SetText(mark or "")
+    setTone(c.fresh.text, "muted")
+    c.fresh.text:SetShown(mark ~= nil); c.fresh.hit:SetShown(mark ~= nil)
+    c.fresh.hit.tipLines = cc.fresh.tip
+    local item = c.item.text
+    local room = width - CG.TextLeft(m, CG.LEAD) - CG.PAD - (c.ilvl.text:GetStringWidth() or 0) - CG.ILVL_GAP
+    local full = item.GetUnboundedStringWidth and item:GetUnboundedStringWidth() or nil
+    item:SetWidth(NS.WindowRows.MarkedWidth(room, full, mark and (c.fresh.text:GetStringWidth() or 0) or nil))
+end
+
+local function paintLineOne(card, drop, cc, width, m)
     local WG, c = NS.WindowGroup, card.cells
     WG.SetItem(card.icon, drop.link, WG.Where(drop))
     card.icon.dropId = drop.id
@@ -327,14 +364,15 @@ local function paintLineOne(card, drop, cc)
     c.item.text:SetTextColor(qualityColor(drop))
     c.item.hit.tipLines = nil   -- the real item tooltip instead
     paintText(c.ilvl, cc.ilvl)
+    paintFresh(card, cc, width, m)
     paintAsk(card, cc.ask, drop.id)
-    card.dismiss.tipLines = cc.dismiss.tip
 end
 
---- Line 2 painted from a card model: the looter in class color, its ⊕, slot, trade and `right`.
+--- Line 2 painted from a card model: the looter in class color, its ⊕ or ` [YOU]`, slot, type, trade
+--- and `right`. Slot (and the looter's tooltip) follows the mark while it shows.
 --- @param card table
 --- @param cc table a CompactCards card
---- @param right string the right piece's key (`fresh` or `time`)
+--- @param right string|nil the right piece's key (History's `time`; nil on a Drops card)
 function CG.PaintLineTwo(card, cc, right)
     local c = card.cells
     paintText(c.looter, cc.looter)
@@ -342,57 +380,80 @@ function CG.PaintLineTwo(card, cc, right)
     if r then c.looter.text:SetTextColor(r, g, b) end
     c.looter.glyph:SetText(cc.looter.mark or "")
     setTone(c.looter.glyph, "muted")
+    c.looter.mark:SetText(cc.looter.you or "")
+    c.looter.mark:SetShown(cc.looter.you ~= nil)
+    local last = cc.looter.you and c.looter.mark or c.looter.glyph
+    at(c.slot.text, "LEFT", last, "RIGHT", 4, 0)
+    c.looter.hit:SetPoint("BOTTOMRIGHT", last, "BOTTOMRIGHT", 0, 0)
     paintText(c.slot, cc.slot, SEP)
+    paintText(c.armorType, cc.armorType, SEP)
     paintText(c.trade, cc.trade, SEP)
-    paintText(c[right], cc[right])
+    if right then paintText(c[right], cc[right]) end
 end
 
---- One half of line 3 painted (CompactCards.Half's): its label, the verdict and the worn levels.
+--- One half of line 3 painted (CompactCards.Half's): its label (gold, feedback-10 spec §2), the worn
+--- item level (plain, or
+--- a muted word), the glyph and the difference or word in the verdict's tone, each placed after the
+--- last piece shown.
 --- @param card table
 --- @param key string `you` or `them`
 --- @param half table
 function CG.PaintHalf(card, key, half)
     local c = card.cells
-    local v, eq = c[key], c[key .. "Eq"]
-    c[key .. "Label"].text:SetText(half.label)
-    setTone(c[key .. "Label"].text, "muted")
-    v.glyph:SetText(half.verdict.glyph or "")
-    setTone(v.glyph, half.verdict.tone)
-    v.text:SetText(half.verdict.text)
-    setTone(v.text, half.verdict.tone)
-    v.hit.tipLines = half.verdict.tip
-    eq.text:SetText(half.eq and half.eq.text or "")
-    setTone(eq.text, "muted")
-    eq.hit.tipLines = half.eq and half.eq.tip or nil
-    eq.hit:SetShown(half.eq ~= nil)
+    local label, h = c[key .. "Label"].text, c[key]
+    label:SetText(half.label)
+    label:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    h.level:SetText(half.level or "")
+    setTone(h.level, half.levelTone)
+    h.glyph:SetText(half.glyph or "")
+    setTone(h.glyph, half.tone)
+    h.text:SetText(half.text)
+    setTone(h.text, half.tone)
+    h.hit.tipLines = half.tip
+    at(h.level, "LEFT", label, "RIGHT", CG.HALF_GAP, 0)
+    local last = half.level and h.level or label
+    at(h.glyph, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
+    if half.glyph then
+        at(h.text, "LEFT", h.glyph, "RIGHT", CG.HALF_GLYPH_GAP, 0)
+    else
+        at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
+    end
+    -- Them, the line's last half, runs to the card's right inset and is cut there (feedback-11 spec §0).
+    if key == "them" then h.text:SetPoint("RIGHT", card, "RIGHT", -CG.PAD, 0) end
 end
 
--- What every card of one repaint shares: your gear, the transmog ask setting and your realm.
+-- What every card of one repaint shares: your gear and class, the transmog ask setting and your realm.
 local function sharedCtx(now)
     local snap = NS.Gear.Snapshot()
-    return { now = now, equipped = snap and snap.equipped, transmogAsk = NS.Setting("messages.transmogAsk") == true,
+    return { now = now, equipped = snap and snap.equipped, classFile = snap and snap.classFile, transmogAsk = NS.Setting("messages.transmogAsk") == true,
         ownRealm = NS.Compat.NormalizedRealm() }
 end
 
 local function cardCtx(drop, shared)
     local state, reason = NS.WindowGroup.AskState(drop)
     local insp = NS.TestMode.InspectOf(drop)
-    return { now = shared.now, equipped = shared.equipped, gear = insp and insp.gear, askState = state,
+    local ctx = { now = shared.now, equipped = shared.equipped, classFile = shared.classFile, gear = insp and insp.gear, askState = state,
         askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm }
+    if drop.isMine then   -- your own drop's Offer and Upgrade for N (feedback-5 spec §2)
+        local WO = NS.WindowOwn
+        ctx.revealed, ctx.offerTone = WO.IsRevealed(drop.id), (WO.ToneStates(drop))
+    end
+    return ctx
 end
 
 local function paintCard(card, drop, width, m, shared)
-    card.dropId = drop.id
+    card.dropId, card.drop = drop.id, drop
     card:SetHeight(m.height)
     layout(card, m)
     NS.WindowRows.ApplyRowFont(card, m.fontSize)
-    card.selected:SetShown(NS.WindowGroup.Expanded() == drop.id)
+    local open = NS.WindowGroup.Expanded() == drop.id
+    card.selected:SetShown(open)
+    NS.WindowGroup.PaintChevron(card.chevron, open)
     local cc = NS.CompactCards.Group(drop, cardCtx(drop, shared))
     card.model = cc
-    paintLineOne(card, drop, cc)
-    CG.PaintLineTwo(card, cc, "fresh")
+    paintLineOne(card, drop, cc, width, m)
+    CG.PaintLineTwo(card, cc)
     CG.PaintHalf(card, "you", cc.you)
-    at(card.cells.themLabel.text, "LEFT", card, "TOPLEFT", CG.HalfX(width, m), CG.LineY(m, 3))
     CG.PaintHalf(card, "them", cc.them)
 end
 
@@ -415,7 +476,8 @@ end
 --- A pane's compact view: its own scroll frame over the pane (above a strip `bottom` pixels tall),
 --- hidden until the first compact repaint, and the card and header pools.
 --- @param pane table
---- @param bottom number|nil the strip under the cards (My drops' summary, History's Clear history)
+--- @param bottom number|nil the strip under the cards (History's Clear history; the Drops strip
+---   moves the view's bottom edge itself, modules/DropsStrip.lua)
 --- @return table cv { scroll, content, cardPool, headPool }
 function CG.BuildView(pane, bottom)
     local cv = {}
@@ -450,9 +512,10 @@ function CG.CardWidth(pane)
     return w - K.SCROLL_W
 end
 
-local function place(frame, content, y, width)
+-- `x` indents a card (and its detail card) under its header; the header takes the full width.
+local function place(frame, content, y, width, x)
     frame:ClearAllPoints()
-    frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
+    frame:SetPoint("TOPLEFT", content, "TOPLEFT", x or 0, -y)
     frame:SetWidth(width)
 end
 
@@ -516,8 +579,9 @@ end
 
 --- Draw a tab's entries as headers and cards (every repaint). `spec` is the tab's, built once:
 --- { newCard = fn(content), paint = fn(card, drop, width, m, st), header = fn(e, st) -> { text, tip },
----   toggle = OnClick for its headers (nil keeps Group drops'), after = fn(cv, drop, y, width, st) ->
----   extra height under a card (the detail card) }; `st` is the repaint's shared state.
+---   toggle = OnClick for its headers (nil keeps Drops'), after = fn(cv, drop, y, width, st) ->
+---   extra height under a card (the detail card), indent = how far a card sits in from its header
+---   (nil none) }; `st` is the repaint's shared state. A card's `width` is the view's less its indent.
 --- @param cv table
 --- @param entries table
 --- @param width number
@@ -526,6 +590,8 @@ end
 function CG.Draw(cv, entries, width, spec, st)
     local m = CG.Metrics(NS.WindowRows.FontSize(NS.Setting("window.fontSize")))
     local y, Pool = 0, NS.Pool
+    local indent = spec.indent or 0
+    local cardW = width - indent
     factories(cv, spec)
     for i, e in ipairs(entries) do
         if e.kind == "header" then
@@ -535,20 +601,21 @@ function CG.Draw(cv, entries, width, spec, st)
             y = y + K.GROUP_H
         else
             local card = Pool.Acquire(cv.cardPool, cv.makeCard)
-            place(card, cv.content, y, width)
+            place(card, cv.content, y, cardW, indent)
             card.stripe:SetShown(i % 2 == 0)
-            spec.paint(card, e.drop, width, m, st)
+            spec.paint(card, e.drop, cardW, m, st)
             y = y + m.height + CG.GAP
-            if spec.after then y = y + spec.after(cv, e.drop, y, width, st) end
+            if spec.after then y = y + spec.after(cv, e.drop, y, cardW, st) end
         end
     end
     cv.content:SetSize(width, max(y, 1))
 end
 
--- The open card's detail card under it, stacked; answers the height it takes (0 for another card).
+-- The open card's detail card under it, stacked and indented with it; answers the height it takes
+-- (0 for another card). `width` is the card's.
 local function drawDetail(cv, drop, y, width, st)
     if drop.id ~= st.expanded then return 0 end
-    place(cv.card, cv.content, y, width)
+    place(cv.card, cv.content, y, width, K.ROW_INDENT)
     local h = NS.DetailCard.Paint(cv.card, drop, width, st.now)
     cv.card:Show()
     cv.cardDropId = drop.id
@@ -558,14 +625,15 @@ end
 local function groupHeader(e, st)
     local g = e.group
     local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
-    return NS.CompactCards.Header(g, e.count, st.now, sit, e.collapsed, e.hidden, e.filter, e.yours)
+    return NS.CompactCards.Header(g, e.count, st.now, sit, e.collapsed, e.hidden, e.filter)
 end
 
-local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader, after = drawDetail }
+local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader, after = drawDetail,
+    indent = K.ROW_INDENT }
 
 --- Draw the compact layout's cards for `entries` (WindowGroup's refresh, every repaint), or, in the
 --- full layout, hide them (carrying the scroll offset over to the table on the way out).
---- @param pane table the Group drops pane
+--- @param pane table the Drops pane
 --- @param entries table NS.WindowCells.Entries' answer
 --- @param compact boolean whether the compact layout is in force
 function CG.Refresh(pane, entries, compact)
@@ -580,12 +648,13 @@ function CG.Refresh(pane, entries, compact)
 end
 
 --- The drawn compact pane, for the suites (WindowGroup.Drawn's shape in the compact layout):
---- { compact = true, rows (the cards), headers, entries, pane, card, cardDropId, empty }.
+--- { compact = true, rows (the cards), headers, entries, pane, card, cardDropId, empty, scroll, summary }.
 --- @param pane table
 --- @return table|nil
 function CG.Drawn(pane)
     local cv = pane.compactView
     if not cv then return nil end
     return { compact = true, rows = cv.cardPool.active, headers = cv.headPool.active, entries = pane.entries,
-        pane = pane, card = cv.card, cardDropId = cv.cardDropId, empty = pane.emptyState, scroll = cv.scroll }
+        pane = pane, card = cv.card, cardDropId = cv.cardDropId, empty = pane.emptyState, scroll = cv.scroll,
+        summary = pane.summaryData }
 end

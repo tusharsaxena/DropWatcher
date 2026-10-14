@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/CompactCards.lua — what compact mode's cards say (compact spec §2 and §3, DW-C1): each
--- card's three lines of text, their tones and their tooltips, for all three tabs, and the group
+-- card's three lines of text, their tones and their tooltips, for both tabs, and the group
 -- header's short form. The same data as the full tables: every piece is a full-view composer's
--- cell (modules/WindowCells.lua, modules/MineCells.lua, modules/WindowHistory.lua), reshaped, so
+-- cell (modules/WindowCells.lua, modules/SideCells.lua, modules/MineCells.lua,
+-- modules/WindowHistory.lua), reshaped, so
 -- the words, the tones and the reason tooltips never differ between the two layouts.
 --
 -- PURE. Every composer takes the drop record and plain inputs (the clock, your gear, the looter's
@@ -15,20 +16,24 @@ local _, NS = ...
 -- THE CARDS. A card is three lines; each line's pieces are named fields, left to right, and the
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
---   Group drops  line 1: item (quality color), ilvl (right), ask, dismiss
---                line 2: looter (class color, ⊕ when cross-realm), slot, trade; fresh (right, dimmed)
---                line 3: you = { label, verdict, eq }, them = { label, verdict, eq }
---   My drops     line 1: item, ilvl (right), offer (or a dash on a drop that cannot be traded)
---                line 2: forYou = { label, verdict, sub }, trade (the countdown and its bar, right)
---                line 3: candidates (class-colored parts), announce (or hide)
---   History      line 1: item, ilvl (right), outcome (right, in its tone)
---                line 2: looter, slot, trade; time (right, dimmed)
+--   Drops        line 1: ilvl, item (quality color), fresh in brackets right after it, dimmed, or
+--                        nothing (CC.FreshMark; feedback-10 spec §2)
+--                line 2: looter (class color, ⊕ when cross-realm, ` [YOU]` in gold on your own drop:
+--                        feedback-7 spec §2), slot, type, trade; ask (right: Offer on your own drop;
+--                        No action with neither, feedback-11 spec §1). No trade window countdown
+--                        (feedback-10 spec §2)
+--                line 3: you and them, each a half: the label, then the full table's Me or Them
+--                        cell without its icons (`Upgrade for N` on your own drop, feedback-7 spec §2)
+--   History      line 1: ilvl, item; outcome (right, in its tone)
+--                line 2: looter, slot, type, trade; time (right, dimmed)
 --                line 3: you, them
 --
--- THE VERDICT. A verdict reads glyph then text: `▲ +19`, `≈ +0`, `▽ -13`, and a verdict the full
--- view says in a word gets compact mode's ⊘ (`⊘ Can't use`, `⊘ Not wanted`). The worn levels
--- follow in parentheses, dimmed (`(321/308)`, `(empty)`, `(…)`); none where the full view's cell
--- is a dash. Glyphs, ⊘ and ⊕ are drawn in the monospace face (JetBrains Mono carries all three).
+-- LINE 3 (feedback-6 spec §1) reads as the full table's merged Me and Them cells (NS.SideCells), the
+-- icons left out: the label, the worn item level (plain; `empty`, `…`, `range` muted), then the glyph
+-- and the unsigned difference in the verdict's tone: `You 321/308 ▼8`, `Them 276 ▲12`, `Them
+-- Upgrade for 2` on your own drop. A verdict the full view says in a word keeps compact mode's ⊘
+-- (`You 321 ⊘ Can't use`). One tooltip over the half: the gear's lines, then the verdict's. Glyphs, ⊘
+-- and ⊕ are drawn in the monospace face (JetBrains Mono carries all three).
 --
 -- THE HEADER'S SHORT FORM. `Instance · Boss · Difficulty · 3m · 2 · Recorder`: no `ago`, no
 -- `drops`, `1 of 2` while a filter hides some; an instance name longer than PLACE_MAX characters is
@@ -40,6 +45,7 @@ local CC = NS.CompactCards
 local L  = NS.L
 local WC = NS.WindowCells
 local MC = NS.MineCells
+local SC = NS.SideCells
 
 local floor = math.floor
 
@@ -104,54 +110,47 @@ function CC.Age(seconds)
     return L["%dd"]:format(floor(s / DAY))
 end
 
---- A verdict's compact text: the glyph (⊘ for a worded verdict), a space, then the cell's text.
+--- A verdict's compact text: the glyph and the difference (`▼8`), ⊘ and a word (`⊘ Can't use`), the
+--- word alone, or "" for an unknown verdict the gear part explains.
 --- @param v table CC.Verdict's answer
 --- @return string
 function CC.VerdictText(v)
-    if v.glyph then return v.glyph .. " " .. v.text end
-    return v.text
+    if v.glyph == CC.NO_GLYPH then return v.glyph .. " " .. v.text end
+    return (v.glyph or "") .. v.text
 end
 
 -- ── the shared pieces ───────────────────────────────────────────────────────────────────────
 
---- A verdict cell as compact mode draws it: the full view's text, tone and tooltip, with ⊘ for a
---- verdict the full view says in a word.
---- @param c table a WindowCells verdict cell (WC.Me, WC.Them, MC.ForMe)
---- @return table { text, glyph, tone, tip, verdict }
+--- A Me or Them cell (NS.SideCells) as compact mode draws it: the full view's pieces, tones and
+--- tooltip, with ⊘ before a verdict the full view says in a word.
+--- @param c table a SideCells cell
+--- @return table { level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden }
 function CC.Verdict(c)
     local glyph = c.glyph
     if not glyph and WORD_VERDICT[c.verdict] then glyph = CC.NO_GLYPH end
-    return { text = c.text, glyph = glyph, tone = c.tone, tip = copyTip(c.tip), verdict = c.verdict }
+    return { level = c.level, levelTone = c.levelTone, glyph = glyph, text = c.text, tone = c.tone,
+        tip = copyTip(c.tip), verdict = c.verdict, items = c.items or {}, upgrades = c.upgrades, hidden = c.hidden }
 end
 
--- The worn levels, in parentheses and dimmed; nil where the full view shows a dash.
-local EQ_WORD = { [L["empty slot"]] = L["empty"] }
-
---- An equipment cell's levels as compact mode draws them: `(321/308)`, `(empty)`, `(…)`; nil when
---- the full view shows a dash (not worn, or your own drop's Their eq).
---- @param c table|nil WC.MyEq's or WC.TheirEq's answer
---- @return table|nil { text, tone = "muted", tip, items }
-function CC.Eq(c)
-    if type(c) ~= "table" or c.text == DASH then return nil end
-    return { text = ("(%s)"):format(EQ_WORD[c.text] or c.text), tone = "muted", tip = copyTip(c.tip), items = c.items }
-end
-
---- One half of line 3: `You ▽ -13 (321/308)`.
+--- One half of line 3: `You 321/308 ▼8`; its label and CC.Verdict's pieces.
 --- @param label string `You` or `Them`
---- @param verdictCell table a WindowCells verdict cell
---- @param eqCell table|nil a WindowCells equipment cell
---- @return table { label, verdict, eq }
-function CC.Half(label, verdictCell, eqCell)
-    return { label = label, verdict = CC.Verdict(verdictCell), eq = CC.Eq(eqCell) }
+--- @param side table a SideCells cell (SC.Me, SC.Them, SC.Merge)
+--- @return table { label, level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden }
+function CC.Half(label, side)
+    local h = CC.Verdict(side)
+    h.label = label
+    return h
 end
 
---- A half's plain text: `You ▽ -13 (321/308)`.
+--- A half's plain text: `You 321/308 ▼8`, `Them range`, `Them Upgrade for 2`.
 --- @param h table CC.Half's answer
 --- @return string
 function CC.HalfText(h)
-    local out = h.label .. " " .. CC.VerdictText(h.verdict)
-    if h.eq then out = out .. " " .. h.eq.text end
-    return out
+    local parts = { h.label }
+    if h.level then parts[#parts + 1] = h.level end
+    local v = CC.VerdictText(h)
+    if v ~= "" then parts[#parts + 1] = v end
+    return table.concat(parts, " ")
 end
 
 --- The item piece: the link's name in its quality color; hovering shows the game's own tooltip, so
@@ -188,11 +187,11 @@ function CC.CrossRealm(name, ownRealm)
     return a ~= b, realm
 end
 
---- The looter piece: the full view's Looter cell (short name, class color), with ⊕ (`mark`) and a
---- tooltip line naming the realm when the looter is from another realm.
+--- The looter piece: the full view's Looter cell (short name, class color, `you` on your own drop),
+--- with ⊕ (`mark`) and a tooltip line naming the realm when the looter is from another realm.
 --- @param drop table
 --- @param ownRealm string|nil
---- @return table cell, with `classFile`, `mark` and `crossRealm`
+--- @return table cell, with `classFile`, `you`, `mark` and `crossRealm`
 function CC.Looter(drop, ownRealm)
     local c = WC.Looter(drop)
     local who = type(drop.looter) == "table" and drop.looter.name or nil
@@ -220,7 +219,7 @@ local function freshText(insp, now)
     return FRESH_WORD[status] or DASH
 end
 
---- Line 2's inspect freshness (dimmed, right-aligned): `2m`, `cached`, `…`, `range`, `combat`, `!`,
+--- Line 1's inspect freshness (dimmed, in brackets after the name: CC.FreshMark): `2m`, `cached`, `…`, `range`, `combat`, `!`,
 --- `–`; the tooltip says how old the read is or why there is none. Your own drop needs no inspect.
 --- @param drop table
 --- @param now number|nil GetTime()
@@ -234,91 +233,49 @@ function CC.Freshness(drop, now)
         tip = { L["Inspect of %s"]:format(who), WC.InspectLine(drop.inspect, who, now) } }
 end
 
--- ── the Group drops card (spec §2) ──────────────────────────────────────────────────────────
+--- Line 1's freshness as the card draws it (feedback-10 spec §2): `(2m)`, `(cached)`, `(range)`, or nil
+--- where there is nothing to say (your own drop, no inspect to speak of: the dash) or where Them
+--- already says it (a read still pending, `…`: feedback-11 spec §0), so the card draws no placeholder.
+--- @param cell table|nil CC.Freshness's answer
+--- @return string|nil
+function CC.FreshMark(cell)
+    local t = type(cell) == "table" and cell.text
+    if type(t) ~= "string" or t == "" or t == DASH or t == "…" then return nil end
+    return "(" .. t .. ")"
+end
 
-local DISMISS_TIP = { L["Dismiss"], L["Hide this drop from the table for this session."] }
+-- ── the Drops card (spec §2) ────────────────────────────────────────────────────────────────
 
---- A Group drops card.
+-- Line 2's action and trade, and line 3's Them: the looter's, or on your own drop its Offer,
+-- its trade word and `Upgrade for N` (feedback-5 spec §2: the full table's cells).
+local function sides(drop, ctx, now)
+    local them = CC.Half(L["Them"], SC.Them(drop, ctx.gear, now, ctx.revealed))
+    if drop.isMine then
+        return MC.OwnOffer(drop, ctx.offerTone), MC.OwnTrade(drop, ctx.revealed), them
+    end
+    return WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk), WC.Trade(drop), them
+end
+
+--- A Drops card.
 --- @param drop table
---- @param ctx table { now, equipped (your gear snapshot's), gear (the looter's inspect gear),
----   askState, askReason, transmogAsk, ownRealm }
+--- @param ctx table { now, equipped and classFile (your gear snapshot's), gear (the looter's inspect gear),
+---   askState, askReason, transmogAsk, ownRealm; on your own drop revealed (its Offer panel was opened this session) and offerTone (the offer half of
+---   WindowOwn.ToneStates) }
 --- @return table card
 function CC.Group(drop, ctx)
     ctx = ctx or {}
     local now = ctx.now
+    local action, trade, them = sides(drop, ctx, now)
     return {
         kind = "group", id = drop.id, link = drop.link,
         -- line 1
-        item = CC.Item(drop), ilvl = WC.Ilvl(drop),
-        ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk),
-        dismiss = { tip = copyTip(DISMISS_TIP) },
+        ilvl = WC.Ilvl(drop), item = CC.Item(drop), fresh = CC.Freshness(drop, now),
         -- line 2
-        looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), trade = WC.Trade(drop),
-        fresh = CC.Freshness(drop, now),
+        looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
+        trade = trade, ask = action,
         -- line 3
-        you = CC.Half(L["You"], WC.Me(drop), WC.MyEq(drop, ctx.equipped)),
-        them = CC.Half(L["Them"], WC.Them(drop, now), WC.TheirEq(drop, ctx.gear, now)),
-    }
-end
-
--- ── the My drops card (spec §3) ─────────────────────────────────────────────────────────────
-
--- Line 2's countdown: MC.TradeWindow's, but a drop that cannot be traded says so in two words (the
--- reason stays in the tooltip).
-local function countdown(drop, now, warnAt)
-    local c = MC.TradeWindow(drop, now, warnAt)
-    if type(drop.trade) == "table" and drop.trade.state == "no" then c.text = L["Not tradeable"] end
-    return c
-end
-
-local function forYou(drop)
-    local c = MC.ForMe(drop)
-    local sub = c.sub and ("(%s)"):format(c.sub) or nil
-    return { label = L["For you"], verdict = CC.Verdict(c), sub = sub, keep = c.keep }
-end
-
--- Line 3's candidates: the full view's Best candidates cell, with each named upgrade as its own
--- part so the edge can color it by class.
-local function candidates(best)
-    local c = { text = best.text, tone = best.tone, tip = copyTip(best.tip), hidden = best.hidden, parts = {} }
-    if best.tone ~= "good" then return c end
-    local parts, more = MC.TopUpgrades(best.list or {})
-    for i, p in ipairs(parts) do c.parts[i] = { text = p.text, classFile = p.entry.classFile } end
-    c.more = more
-    return c
-end
-
--- Line 1's Offer, or the dash a drop that cannot be traded shows instead.
-local function offerOf(actions)
-    if actions.tradeable then
-        return { text = L["Offer"], primary = actions.offer.primary, enabled = true, tip = copyTip(actions.offer.tip) }
-    end
-    return { text = DASH, dash = true, enabled = false, tip = copyTip(actions.dash.tip) }
-end
-
--- Line 3's Announce, or Hide on a drop that cannot be traded.
-local function lineThreeAction(actions)
-    if actions.tradeable then return actions.announce end
-    return { text = L["Hide"], hide = true, enabled = true, tip = copyTip(actions.hide.tip) }
-end
-
---- A My drops card.
---- @param drop table one of your drops
---- @param ctx table { now, warnAt, revealed (its Offer panel was opened this session),
----   announceState, announceReason }
---- @return table card
-function CC.Mine(drop, ctx)
-    ctx = ctx or {}
-    local best = MC.BestCandidates(drop, ctx.revealed)
-    local actions = MC.Actions(drop, best, MC.AnnounceButton(ctx.announceState, ctx.announceReason))
-    return {
-        kind = "mine", id = drop.id, link = drop.link, tradeable = actions.tradeable,
-        -- line 1
-        item = CC.Item(drop), ilvl = WC.Ilvl(drop), offer = offerOf(actions),
-        -- line 2
-        forYou = forYou(drop), trade = countdown(drop, ctx.now, ctx.warnAt),
-        -- line 3
-        candidates = candidates(best), action = lineThreeAction(actions),
+        you = CC.Half(L["You"], SC.Me(drop, ctx.equipped, ctx.classFile)),
+        them = them,
     }
 end
 
@@ -356,51 +313,43 @@ function CC.History(drop, ctx)
     return {
         kind = "history", id = drop.id, link = drop.link,
         -- line 1
-        item = CC.Item(drop), ilvl = WC.Ilvl(drop), outcome = WH.Outcome(drop),
+        ilvl = WC.Ilvl(drop), item = CC.Item(drop), outcome = WH.Outcome(drop),
         -- line 2
-        looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), trade = WC.Trade(drop),
+        looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
+        trade = WC.Trade(drop),
         time = CC.When(drop.at, ctx.nowEpoch, ctx.dateFn),
         -- line 3
-        you = CC.Half(L["You"], WC.Me(drop), nil), them = CC.Half(L["Them"], WH.Them(drop), nil),
+        you = CC.Half(L["You"], WH.MeCell(drop)), them = CC.Half(L["Them"], WH.ThemCell(drop)),
     }
 end
 
 -- ── the plain text of a card (tests, and the simulator's report) ────────────────────────────
 
-local function looterText(c) return c.mark and (c.text .. " " .. c.mark) or c.text end
-
-local function lineTwo(card, right)
-    return ("%s · %s · %s  %s"):format(looterText(card.looter), card.slot.text, card.trade.text, right.text)
+local function looterText(c)
+    local t = c.you and (c.text .. " " .. c.you) or c.text
+    return c.mark and (t .. " " .. c.mark) or t
 end
 
-local function candidatesText(c)
-    if #c.parts == 0 then return c.text end
-    local words = {}
-    for i, p in ipairs(c.parts) do words[i] = p.text end
-    words[#words + 1] = c.more
-    return table.concat(words, " · ")
+local function lineTwo(card, right)
+    return ("%s · %s · %s · %s  %s"):format(looterText(card.looter), card.slot.text, card.armorType.text,
+        card.trade.text, right.text)
 end
 
 local PLAIN = {
     group = function(card)
-        local ask = card.ask.offered and card.ask.text or DASH
-        return { ("%s  %s  %s  ×"):format(card.item.text, card.ilvl.text, ask), lineTwo(card, card.fresh),
+        local fresh = CC.FreshMark(card.fresh)
+        local one = ("%s %s"):format(card.ilvl.text, card.item.text) .. (fresh and (" " .. fresh) or "")
+        return { one, lineTwo(card, card.ask),
             CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) }
     end,
-    mine = function(card)
-        local fy = card.forYou
-        local two = fy.label .. " " .. CC.VerdictText(fy.verdict) .. (fy.sub and (" " .. fy.sub) or "")
-        return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, card.offer.text),
-            two .. "  " .. card.trade.text, candidatesText(card.candidates) .. "  " .. card.action.text }
-    end,
     history = function(card)
-        return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, card.outcome.text), lineTwo(card, card.time),
+        return { ("%s %s  %s"):format(card.ilvl.text, card.item.text, card.outcome.text), lineTwo(card, card.time),
             CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) }
     end,
 }
 
 --- A card's three lines as plain text, each piece in order (two spaces before a right-aligned one).
---- @param card table CC.Group's, CC.Mine's or CC.History's answer
+--- @param card table CC.Group's or CC.History's answer
 --- @return table { line1, line2, line3 }
 function CC.Plain(card)
     return PLAIN[card.kind](card)
@@ -443,7 +392,7 @@ local function shortHeader(group, shown, age, situationLabel, hidden, full)
     return { text = table.concat(parts, " · "), tip = shortTip(full), cut = cut }
 end
 
---- A Group drops or My drops header's short form (compact spec §2): `Instance · Boss · Difficulty ·
+--- A Drops header's short form (compact spec §2): `Instance · Boss · Difficulty ·
 --- 3m · 2 · Recorder`, its tooltip the long form (WC.Header) and its lines. The chevron says whether
 --- it is collapsed, so the text does not.
 --- @param group table a feed group
@@ -453,10 +402,9 @@ end
 --- @param collapsed boolean
 --- @param hidden table|nil
 --- @param filter table|nil
---- @param yours number|nil
 --- @return table { text, tip, cut }
-function CC.Header(group, shown, now, situationLabel, collapsed, hidden, filter, yours)
-    local full = WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter, yours)
+function CC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
+    local full = WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     local age = (num(group.at) and num(now)) and CC.Age(now - group.at) or nil
     return shortHeader(group, shown, age, situationLabel, hidden, full)
 end

@@ -9,8 +9,10 @@ local _, NS = ...
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
 -- specID (architecture-§5's value route): written whole through the seam, drawn by their own
--- editors (`skipRender`). The window's geometry, its minimized flag and the toast's position have
--- no row: they are named non-setting state (docs/ARCHITECTURE.md -> Settings Schema).
+-- editors (`skipRender`). General › When to show's per-situation rows (`situations.<key>.track`,
+-- `.autoOpen`, `.quality`) are `skipRender` too: its table draws them, one line per situation. The
+-- window's geometry, its minimized flag and the toast's position have no row: they are named
+-- non-setting state (docs/ARCHITECTURE.md -> Settings Schema).
 
 local DW       = NS.addon
 local Settings = DW.Settings
@@ -181,7 +183,9 @@ local function whenToShow()
     for _, s in ipairs(K.SITUATIONS) do
         local key, d = s.key, P.situations[s.key]
         local base = "situations." .. key .. "."
-        local sit = { page = "general", group = L["When to show"], subgroup = NS.WindowFooter.SituationLabel(key) }
+        -- Drawn by When to show's table (settings/PageEditors.lua SituationTable), one table row per
+        -- situation: still schema rows, so the CLI, the resets and profiles reach them as before.
+        local sit = { page = "general", group = L["When to show"], skipRender = true }
         local untracked = unless(base .. "track", true)
         bool(base .. "track", d.track, L["Track"],
             L["Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."], sit)
@@ -231,8 +235,6 @@ local function feed()
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
         L["How far under your average equipped item level a drop may be in the relative mode."],
         with(filters, { disabledIf = unless("feed.minIlvlMode", "relative") }))
-    bool("feed.showOwn", F.showOwn, L["Show my own loot in Group drops"],
-        L["Off, your own loot shows on My drops only."], filters)
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear on boss kill"],
         L["Clear the session's drops when a boss dies."], filters)
 end
@@ -327,11 +329,11 @@ local function window()
         L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
-        L["The height of one row in the drop tables: Group drops, My drops and History. A My drops row adds room for its countdown bar."], layout)
+        L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."], layout)
     -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table
     -- (feedback-2 spec §8, FB2-9); 1 to 7 read as the least size (modules/WindowRows.lua).
     slider("window.fontSize", W.fontSize, 0, K.WINDOW.FONT_MAX, 1, L["Font size"],
-        L["The size of the drop tables' text, on all three tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
+        L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
         with(layout, { zeroText = L["Default"] }))
 
     local T = P.toast

@@ -390,9 +390,12 @@ test("BUG-2: a row's item button and its name show the real tooltip, the addon's
         order[#order + 1] = "game"
         return set(self, ...)
     end
+    NS.WindowFilterBar.Set("group", "view", {})
     NS.ShowWindow()
-    NS.Window.SelectTab("mine")
-    local row = NS.WindowMine.Drawn().rows[1]
+    local function rowOf(drawn)
+        for _, r in ipairs(drawn.rows) do if r.dropId == id then return r end end
+    end
+    local row = rowOf(NS.WindowGroup.Drawn())
     assertEqual(row.dropId, id)
     row.cells.item.button:__fire("OnEnter")
     assertEqual(m.tooltipSets[#m.tooltipSets], "bag:0:1")
@@ -400,7 +403,7 @@ test("BUG-2: a row's item button and its name show the real tooltip, the addon's
     row.cells.item:__fire("OnEnter")
     assertEqual(m.tooltipSets[#m.tooltipSets], "bag:0:1", "the name too")
     NS.SetWindowMode("compact")
-    local card = NS.WindowMine.Drawn().rows[1]
+    local card = rowOf(NS.WindowGroup.Drawn())
     assertEqual(card.dropId, id)
     m.tooltipSets[#m.tooltipSets + 1] = "reset"
     card.icon:__fire("OnEnter")

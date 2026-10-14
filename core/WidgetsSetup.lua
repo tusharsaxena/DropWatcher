@@ -1,6 +1,6 @@
 local _, NS = ...
 -- core/WidgetsSetup.lua — NS.MakeDropdown / NS.CloseMenu from LibKa0s-Widgets-1.0: the window's
--- flat dropdowns (the filter bar's View, Quality and Content, the footer's Sort).
+-- flat dropdowns (the filter bar's View, Quality and Content, the tab's Sort).
 --
 -- A seam, nothing else (library-stack-§7): one file leases the major, so the art the dropdown
 -- draws is resolved once, here. The library is vendored and cannot know which folder it was copied

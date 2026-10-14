@@ -24,7 +24,7 @@ local _, NS = ...
 -- and an area's label is the instance itself, so it is named once), then the difficulty. A group
 -- with no difficulty name (the open world, a client that gives none, a History group kept before
 -- DW-B4) falls back to the generic situation word, so an older group keeps its current label. Who
--- names the recorder alone, its short name in its class color: you on Group drops and My drops, the
+-- names the recorder alone, its short name in its class color: you on Drops, the
 -- character that saw it on History. The party is no longer named in the header; its tooltip keeps
 -- one `Group: ...` line (modules/GroupRoster.lua's TipLine).
 --

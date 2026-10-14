@@ -177,3 +177,52 @@ test("database: step 4 retires the History's group cap and prunes nothing", func
     assertEqual(NS.addon.db.global.history.retentionDays, 30, "the default window")
     NS.RetireHistoryCap(nil); NS.RetireHistoryCap({}); NS.RetireHistoryCap({ global = { history = 3 } })
 end)
+
+-- Feedback-5 spec §2 (DW-E2): Drops always lists your own drops; the retired switch's key goes.
+test("database: step 6 retires feed.showOwn in every stored profile and keeps the rest", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 5 },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { feed = { showOwn = true, clearOnBossKill = true } },
+            Alt = { feed = { showOwn = false } },
+        },
+    }
+    -- red under: no step 6 (the stored switch stays)
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    assertNil(p.Default.feed.showOwn); assertNil(p.Alt.feed.showOwn)
+    assertEqual(p.Default.feed.clearOnBossKill, true, "the other feed settings stay")
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    NS.RetireShowOwn(nil); NS.RetireShowOwn({}); NS.RetireShowOwn({ feed = 3 })
+end)
+
+-- Feedback-6 spec §1 (DW-F1): My eq and Their eq merged into Me and Them; their toggles' keys go.
+test("database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 6 },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { window = { columns = { myEq = false, theirEq = true, me = false, slot = false } } },
+            Alt = { window = { columns = { theirEq = false } } },
+            Bare = { window = { mode = "compact" } },
+        },
+    }
+    -- red under: no step 7 (the stored toggles stay)
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    assertNil(p.Default.window.columns.myEq); assertNil(p.Default.window.columns.theirEq)
+    assertNil(p.Alt.window.columns.theirEq)
+    assertEqual(p.Default.window.columns.me, false, "the merged column's own toggle stays")
+    assertEqual(p.Default.window.columns.slot, false, "the other toggles stay")
+    assertEqual(p.Bare.window.mode, "compact")
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertTrue(NS.addon.db.profile.window.columns.myEq == nil, "no default brings it back")
+    NS.RetireEqColumns(nil); NS.RetireEqColumns({}); NS.RetireEqColumns({ window = 3 })
+    NS.RetireEqColumns({ window = { columns = 3 } })
+    for _, key in ipairs({ "myEq", "theirEq" }) do
+        assertNil(NS.SchemaRuntime.FindRow("window.columns." .. key), key .. ": no settings row toggles it")
+    end
+end)

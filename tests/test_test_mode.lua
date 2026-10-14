@@ -113,7 +113,7 @@ test("test mode data: every trade estimate, inspect state and ask state is there
     hasAll(ask, { "ready", "queued", "sent", "failed", "traded" }, "ask")
 end)
 
-test("test mode data: your own drops cover every countdown and every candidate pill (board 04)", function()
+test("test mode data: your own drops cover every countdown and every candidate status (board 04)", function()
     local NS, specs = placeholders()
     local MC = NS.MineCells
     local pills, kinds = {}, {}
@@ -125,10 +125,10 @@ test("test mode data: your own drops cover every countdown and every candidate p
         elseif cd.exact and cd.left <= 600 then kinds.soon = true
         elseif cd.exact then kinds.exact = true
         else kinds.estimated = true end
-        for _, c in ipairs(MC.Candidates(drop)) do pills[c.pill.text:gsub("^%+%d+ ", "")] = true end
+        for _, c in ipairs(MC.Candidates(drop)) do pills[c.status] = true end
     end
     hasAll(kinds, { "exact", "soon", "estimated", "boe", "expired" }, "countdown")
-    hasAll(pills, { "UPGRADE", "EQUAL", "NO UPGRADE", "CAN'T USE", "CHECKING", "UNAVAILABLE" }, "pill")
+    hasAll(pills, { "upgrade", "sidegrade", "downgrade", "cantUse", "checking", "unavailable" }, "status")
 end)
 
 test("test mode data: two groups, a boss and a key run, every item a pool item that keeps its slot", function()
@@ -345,7 +345,7 @@ test("test mode: combat and the stand-down both empty the test feed", function()
     assertEqual(#NS.LootFeed.Drops("test"), 0)
 end)
 
-test("test mode: the Group drops tab shows View: All while on, and the player's View comes back", function()
+test("test mode: the Drops tab shows View: All while on, and the player's View comes back", function()
     local NS = T.enableAddon()
     local FB = NS.WindowFilterBar
     FB.Set("group", "view", { interesting = true, usable = true })
@@ -424,19 +424,20 @@ test("window: test mode draws every sample, under the boss and the key run, with
     assertTrue(textOf(f.banner.text):find("real items", 1, true) ~= nil)
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
     assertEqual(#drawn.headers, 2)
-    local notMine = 0
+    local mine = 0
     for _, d in ipairs(NS.LootFeed.Drops("test")) do
-        if not d.isMine then notMine = notMine + 1 end
+        if d.isMine then mine = mine + 1 end
     end
-    assertEqual(#drawn.rows, notMine, "your own samples go to My drops (feed.showOwn off)")
+    assertTrue(mine > 0, "the samples hold drops of yours")
+    assertEqual(#drawn.rows, #NS.LootFeed.Drops("test"), "every sample, yours too (feedback-5 spec §2)")
     for _, r in ipairs(drawn.rows) do
         local tex = r.cells.item.button.art:GetTexture()
         assertTrue(tex ~= 134400 and tex ~= NS.Icon("help"), "a real icon: " .. tostring(tex))
     end
     assertFalse(drawn.empty:IsShown())
-    NS.addon.db.profile.feed = { showOwn = true }
+    NS.addon.db.profile.feed = { showOwn = false }   -- a stored value is ignored
     NS.Window.Refresh()
-    assertEqual(#NS.WindowGroup.Drawn().rows, #NS.LootFeed.Drops("test"), "showOwn on: every sample")
+    assertEqual(#NS.WindowGroup.Drawn().rows, #NS.LootFeed.Drops("test"), "still every sample")
 end)
 
 test("window: every cell of every sample row says something and has a reason", function()
@@ -445,6 +446,7 @@ test("window: every cell of every sample row says something and has a reason", f
         for key, cell in pairs(r.cells) do
             if cell.text and cell:IsShown() then
                 local text = textOf(cell.text)
+                if cell.level then text = (textOf(cell.level) or "") .. (text or "") end   -- Me, Them: gear, verdict
                 assertTrue(type(text) == "string" and text ~= "", ("row %s %s is blank"):format(r.dropId, key))
                 local itemTip = cell.showItem and cell.itemButton.link ~= nil   -- the real item tooltip (DW-80)
                 assertTrue(itemTip or (type(cell.tipLines) == "table" and #cell.tipLines >= 2),
@@ -462,13 +464,13 @@ local function wornOf(NS, dropId)
     return worn
 end
 
-test("window: the rows show every ask state, every Their eq state and every trade chip", function()
+test("window: the rows show every ask state, every Them gear state and every trade chip", function()
     local NS, drawn = shownTest()
     local ask, eq, trade, levels = {}, {}, {}, 0
     for _, r in ipairs(drawn.rows) do
         local a = r.cells.actions
-        ask[a.ask:IsShown() and textOf(a.ask.label) or textOf(a.dash)] = true
-        local text = textOf(r.cells.theirEq.text)
+        ask[textOf(a.ask.label)] = true
+        local text = textOf(r.cells.them.level)
         eq[text] = true
         local worn = wornOf(NS, r.dropId)
         if worn then
@@ -477,34 +479,39 @@ test("window: the rows show every ask state, every Their eq state and every trad
         end
         trade[textOf(r.cells.trade.text)] = true
     end
-    hasAll(ask, { "Ask", "Queued", "Asked", "Retry", "–" }, "ask")
-    hasAll(eq, { "…", "range", "combat", "!", "–" }, "their eq: the reason word")
+    hasAll(ask, { "Ask", "Queued", "Asked", "Retry", "No action" }, "ask")
+    hasAll(eq, { "…", "range", "combat", "!" }, "their gear: the reason word")
     assertTrue(levels >= 5, "the inspected looters' worn levels")
     hasAll(trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
 end)
 
-test("window: a sample's Their eq shows its own worn item, and its detail card its own inspect", function()
+test("window: a sample's Them shows its own worn item, and its detail card its own inspect", function()
     local NS, drawn = shownTest()
     local crown
     for _, r in ipairs(drawn.rows) do
         local d = NS.LootFeed.Get(r.dropId)
         if d.looter.name == "Seta" and d.facts.equipLoc == "INVTYPE_HEAD" then crown = r end
     end
-    assertTrue(crown.cells.theirEq.icons[1]:IsShown(), "the worn item's button")
+    assertTrue(crown.cells.them.icons[1]:IsShown(), "the worn item's button")
     NS.WindowGroup.ToggleExpand(crown.dropId)
     local spec = NS.TestMode.InspectOf(NS.LootFeed.Get(crown.dropId))
     assertEqual(spec.status, "fresh")
     assertEqual(NS.WindowGroup.Drawn().cardDropId, crown.dropId)
 end)
 
-test("window: the My drops tab counts your samples, the tradeable ones in its tooltip, and draws them all", function()
+test("window: Drops lists your samples with the others, and its strip counts the tradeable ones", function()
     local NS = shownTest()
-    NS.Window.SelectTab("mine")
-    local f = NS.Window.Frame()
-    assertEqual(textOf(f.tabs.mine.label), "My drops · 5")
-    assertEqual(NS.Window.TooltipOf(f.tabs.mine)[3], "4 of them you can still trade.")
-    local drawn = NS.WindowMine.Drawn()
-    assertEqual(#drawn.rows, 5)
+    NS.WindowFilterBar.Set("group", "view", {})
+    local drawn = NS.WindowGroup.Drawn()
+    local mine = 0
+    for _, e in ipairs(drawn.entries) do
+        if e.kind == "drop" and e.drop.isMine then mine = mine + 1 end
+    end
+    assertEqual(#drawn.pane.ownDrops, 5, "every sample of yours is listed")
+    assertTrue(mine <= 5)
+    assertEqual(drawn.summary.count, 4, "the tradeable ones")
+    assertTrue(drawn.pane.summary:IsShown())
+    assertEqual(textOf(NS.Window.Frame().tabs.group.label), "Drops")
 end)
 
 test("window: the empty state comes back once test mode ends with nothing in the live feed", function()
@@ -518,17 +525,18 @@ end)
 
 -- ── no trailing ellipsis (FB-11) ────────────────────────────────────────────────────────────
 
-test("labels: My drops says Offer, and no cell of its rows ends in an ellipsis", function()
+test("labels: your own rows on Drops say Offer, and no cell of theirs ends in an ellipsis", function()
     local NS = shownTest()
-    NS.Window.SelectTab("mine")
+    NS.WindowFilterBar.Set("group", "view", {})
     local offers = 0
-    for _, r in ipairs(NS.WindowMine.Drawn().rows) do
+    for _, r in ipairs(NS.WindowGroup.Drawn().rows) do
         local a = r.cells.actions
-        if a.offer:IsShown() then
-            assertEqual(textOf(a.offer.label), "Offer")
+        if a.ask:IsShown() and a.ask.offer and a.ask:IsEnabled() then   -- No action on a dead drop (feedback-11 spec §1)
+            assertEqual(textOf(a.ask.label), "Offer")
             offers = offers + 1
         end
-        for key, cell in pairs(r.cells) do
+        -- (another player's Them gear reads `…` while their gear is read: not a cut label)
+        for key, cell in pairs(r.drop.isMine and r.cells or {}) do
             local text = type(cell) == "table" and cell.text and textOf(cell.text)
             if type(text) == "string" then
                 assertFalse(text:find("…$") ~= nil, ("%s ends in an ellipsis: %s"):format(key, text))
@@ -539,7 +547,7 @@ test("labels: My drops says Offer, and no cell of its rows ends in an ellipsis",
 end)
 
 test("labels: no button the addon builds is labeled with a trailing ellipsis", function()
-    local files = { "modules/WindowTitleBar.lua", "modules/WindowGroup.lua", "modules/WindowMine.lua",
+    local files = { "modules/WindowTitleBar.lua", "modules/WindowGroup.lua", "modules/DropsStrip.lua",
         "modules/OfferPanel.lua", "modules/WindowHistory.lua", "modules/DetailCard.lua", "modules/Toast.lua" }
     local buttons = 0
     for _, path in ipairs(files) do

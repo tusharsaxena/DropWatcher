@@ -6,10 +6,11 @@ local _, NS = ...
 --
 --   title bar   `Drop Watcher` centered, `TEST` / `SIM` beside it in their red and cyan; the
 --               restriction badge its lock and the queued count, at the left; Scan group an icon
---               button; the layout toggle, minimize and close at the right
---   tabs        `Group`, `Mine · n`, `History` at a reduced width (their tooltips say the full names)
+--               button (the full layout hides it: its Scan group is the Drops strip's); the layout
+--               toggle, minimize and close at the right
+--   tabs        `Drops`, `History` at a reduced width (their tooltips say what each holds)
 --   filter bar  View, the search box (`Filter…`) and Filters ▾ on the right. The Filters menu holds
---               the full bar's Quality, Content and Character dropdowns and the footer's Sort, the
+--               the full bar's Quality, Content and Character dropdowns and the tab's Sort, the
 --               very same LibKa0s-Widgets dropdowns moved into it, so their choices, their
 --               multi-select and their per-tab state are identical. The button counts the ones not at
 --               their default (`Filters · 2`), and its tooltip lists every value in force.
@@ -42,12 +43,12 @@ CC.WRAP_H    = 12     -- the strip's second line
 local GAP = 8
 local ROW_GAP = 4
 
--- The Filters panel's rows, top to bottom; the footer's Sort is the last.
+-- The Filters panel's rows, top to bottom; the tab's Sort is the last.
 CC.PANEL_ROWS = { "quality", "content", "char", "sort" }
 -- The ones the button counts (compact spec §4: Quality, Content and Character).
 CC.COUNTED = { "quality", "content", "char" }
 
-local SHORT_TAB = { group = L["Group"], history = L["History"] }
+local SHORT_TAB = { group = L["Drops"], history = L["History"] }
 local WORD = {
     test = { full = L["TEST MODE"], compact = L["TEST"] },
     sim  = { full = L["SIMULATION"], compact = L["SIM"] },
@@ -55,19 +56,15 @@ local WORD = {
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
---- A tab's label in a layout: compact `Group`, `Mine · n` (`Mine` at none) and `History`; full
---- Window.TabLabel's.
+--- A tab's label in a layout: compact `Drops` and `History`; full Window.TabLabel's (the same
+--- words: feedback-5 spec §3 left two short tab names).
 --- @param key string
---- @param mine number|nil the drops My drops lists
 --- @param compact boolean|nil the layout in force is compact (read when nil)
 --- @return string
-function CC.TabText(key, mine, compact)
+function CC.TabText(key, compact)
     if compact == nil then compact = NS.WindowCompact.Mode() == "compact" end
-    if not compact then return NS.Window.TabLabel(key, mine) end
-    if key ~= "mine" then return SHORT_TAB[key] or tostring(key) end
-    local n = tonumber(mine) or 0
-    if n > 0 then return L["Mine · %d"]:format(n) end
-    return L["Mine"]
+    if not compact then return NS.Window.TabLabel(key) end
+    return SHORT_TAB[key] or tostring(key)
 end
 
 --- The word beside the title: test mode's `TEST MODE` or `TEST`, the simulator's `SIMULATION` or `SIM`.
@@ -328,16 +325,15 @@ local function fitWord(m, word)
     m:SetWidth(w)
 end
 
+-- The title bar's Scan group: an icon button in compact; hidden in full, where Scan group is the
+-- Drops strip's (feedback-7 spec §4, modules/DropsStrip.lua).
 local function layoutScan(b, compact)
+    b:SetShown(compact)
+    if not compact then return end
+    b:SetWidth(K.ICON + 4)
     b.art:ClearAllPoints()
-    if compact then
-        b:SetWidth(K.ICON + 4)
-        b.art:SetPoint("CENTER", b, "CENTER", 0, 0)
-    else
-        b:SetWidth(96)
-        b.art:SetPoint("LEFT", b, "LEFT", 6, 0)
-    end
-    b.label:SetShown(not compact)
+    b.art:SetPoint("CENTER", b, "CENTER", 0, 0)
+    b.label:Hide()
 end
 
 local function layoutTitleBar(f, compact)
@@ -351,7 +347,7 @@ local function layoutTitleBar(f, compact)
         f.badge:SetPoint("LEFT", f.titleBar, "LEFT", 6, 0)
     else
         f.badge:SetWidth(170)
-        f.badge:SetPoint("RIGHT", f.scanButton, "LEFT", -8, 0)
+        f.badge:SetPoint("RIGHT", f.modeButton, "LEFT", -8, 0)
     end
 end
 
@@ -379,7 +375,7 @@ local function layoutStrip(f, compact)
     if b.text.SetJustifyH then b.text:SetJustifyH("LEFT") end
 end
 
--- The full bar back: the dropdowns on the bar and the Sort in the footer, at their own places.
+-- The full bar back: the dropdowns on the bar and Sort on the tab's strip (feedback-10 spec §3).
 local function restoreBar(f)
     CC.CloseFilters()
     if parts.filters then parts.filters:Hide() end

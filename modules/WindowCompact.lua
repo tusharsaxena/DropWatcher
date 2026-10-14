@@ -10,7 +10,7 @@ local _, NS = ...
 --
 -- PER-MODE GEOMETRY. Each layout keeps its own size and point in `window.geometry.<mode>`
 -- ({ point, width, height }); modules/Window.lua reads and writes them through Geometry, Size and
--- Point, and nowhere else. Compact defaults to 380 x 460, sized between 320 and 520 wide and 220
+-- Point, and nowhere else. Compact defaults to 440 x 460, sized between 440 and 520 wide and 220
 -- and 900 tall; until the player moves it, its point is the full window's top-right corner
 -- (CornerPoint), so it opens where the eye already is. `minimized` stays shared.
 --
@@ -28,9 +28,8 @@ local _, NS = ...
 --
 -- PURE: ValidMode, IsRun, Effective, DefaultSize, Bounds, ClampSize, CornerPoint. The edge: the
 -- reads through NS.Setting and the profile, Apply (the frame's bounds, size and point), and the
--- override's bus receiver and visibility listener. In the compact layout the Group drops tab draws
--- cards (modules/CompactGroup.lua, DW-C2), and My drops and History theirs (modules/CompactMine.lua,
--- modules/CompactHistory.lua, DW-C3).
+-- override's bus receiver and visibility listener. In the compact layout the Drops tab draws cards
+-- (modules/CompactGroup.lua, DW-C2), and History its own (modules/CompactHistory.lua, DW-C3).
 
 NS.WindowCompact = NS.WindowCompact or {}
 local WC = NS.WindowCompact
@@ -92,7 +91,7 @@ function WC.Effective(stored, inRun)
     return MODE_SET[stored] and stored or "full"
 end
 
---- A layout's default size: 1000 x 600 full, 380 x 460 compact.
+--- A layout's default size: 1038 x 600 full, 440 x 460 compact; each is also its least width.
 --- @param mode string
 --- @return number width, number height
 function WC.DefaultSize(mode)

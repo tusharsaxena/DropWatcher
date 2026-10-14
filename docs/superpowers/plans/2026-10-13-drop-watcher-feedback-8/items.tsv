@@ -1,0 +1,3 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-H0	M17	DropWatcher	When to show as a four-column table		M	FEED	fb8 §0
+DW-H1	M17	DropWatcher	Review fixes, docs sync, automated-test bundle	DW-H0	S		fb8 §1

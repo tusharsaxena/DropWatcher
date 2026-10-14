@@ -1,9 +1,9 @@
 -- tests/test_char_filter.lua — the Character dropdown (feedback-2 spec §4, FB2-6), like Loot
 -- History's: the pure core (modules/CharFilter.lua: Key, IconMarkup, Canonical, Passes, IsCurrent,
 -- Label, Characters, Options); the recorder stamped on every drop record and kept by each History
--- entry; the filter bar's dropdown on all three tabs (All, Current, each character; Current by
+-- entry; the filter bar's dropdown on both tabs (All, Current, each character; Current by
 -- default; multi-select); History filtered by who saw each drop, an older entry with no recorder
--- shown only under All; the session tabs never hiding a drop. Test mode's alt group is
+-- shown only under All; the session tab (Drops) never hiding a drop. Test mode's alt group is
 -- test_test_mode's; a simulated run's recorder, test_sim_e2e's.
 
 local T = _G.DW_TEST
@@ -219,14 +219,12 @@ test("filter bar: the Character dropdown sits after Content, multi-select, Curre
     assertEqual(NS.Window.TooltipOf(c.char)[1], "Character")
 end)
 
-test("filter bar: the session tabs list All, Current and you alone; History every recorder", function()
+test("filter bar: Drops lists All, Current and you alone; History every recorder", function()
     local NS = shown()
     seedHistory(NS)
     local c = NS.WindowFilterBar.Controls()
     assertEqual(values(c.char), "all,current," .. ME)
-    NS.Window.SelectTab("mine")
-    assertTrue(c.char:IsEnabled(), "My drops honors it")
-    assertEqual(values(c.char), "all,current," .. ME)
+    assertTrue(c.char:IsEnabled(), "Drops honors it")
     NS.Window.SelectTab("history")
     assertEqual(values(c.char), "all,current,Alt-Testrealm," .. ME, "unknown is not listed")
     local alt = c.char._options[3]
@@ -241,14 +239,14 @@ test("filter bar: History shows your drops under Current, every recorder chosen,
     local c = NS.WindowFilterBar.Controls()
     assertEqual(headerLabels(NS), "My boss", "Current: yours alone")
     -- red under: a group the filter hides whole is left out (the upgrade's kept groups vanish)
-    assertEqual(emptyHeaders(NS), "Old boss:char", "a group with no recorder is still counted: 1 drop · 0 shown")
+    assertEqual(emptyHeaders(NS), "", "a group with no recorder is left out, no `0 shown` header (feedback-12 spec §1)")
     pick(c.char, "Alt-Testrealm")
     assertEqual(c.char.text:GetText(), "Character: 2 selected")
     assertEqual(headerLabels(NS), "My boss,Alt run")
     pick(c.char, ME)
     assertEqual(uncolored(c.char.text:GetText()), "|A:classicon-priest:14:14|a Alt-Testrealm", "one character: its row")
     assertEqual(headerLabels(NS), "Alt run")
-    assertEqual(emptyHeaders(NS), "Old boss:char", "a group another character saw is the question asked: left out")
+    assertEqual(emptyHeaders(NS), "", "a group another character saw, or none, is the question asked: left out")
     pick(c.char, "current")
     assertEqual(c.char.text:GetText(), "Character: Current", "Current selects exactly you")
     assertTrue(NS.WindowFilterBar.State("history").char[ME])
@@ -256,6 +254,22 @@ test("filter bar: History shows your drops under Current, every recorder chosen,
     assertEqual(c.char.text:GetText(), "Character: All")
     assertEqual(headerLabels(NS), "My boss,Alt run,Old boss", "All shows the unknown group too")
     assertEqual(emptyHeaders(NS), "")
+end)
+
+test("filter bar: a group Character and Content leave empty shows no header, full or compact (feedback-12 spec §1)", function()
+    local NS = shown()
+    seedHistory(NS)
+    NS.Window.SelectTab("history")
+    for _, mode in ipairs({ "full", "compact" }) do
+        NS.SetWindowMode(mode)
+        local drawn = NS.WindowHistory.Drawn()
+        local labels = {}
+        for _, e in ipairs(drawn.entries) do
+            if e.kind == "header" then labels[#labels + 1] = e.group.label end
+        end
+        assertEqual(table.concat(labels, ","), "My boss", mode .. ": no `0 shown` header")
+        assertEqual(#drawn.headers, 1, mode .. ": one header drawn")
+    end
 end)
 
 test("filter bar: a drop the Character filter hides is named in the header's reason", function()
@@ -267,7 +281,7 @@ test("filter bar: a drop the Character filter hides is named in the header's rea
     assertEqual(FB.HiddenBy({}, st, ctx, FB.HONORS.history), "char", "no recorder: hidden under Current")
     assertNil(FB.HiddenBy({ seenBy = ME }, st, ctx, FB.HONORS.history))
     assertNil(FB.HiddenBy({ seenBy = "Alt-Testrealm" }, st, ctx, FB.HONORS.group), "a session tab's drops are yours")
-    assertEqual(FB.HiddenBy({}, { char = { ["Alt-Testrealm"] = true } }, ctx, FB.HONORS.mine), "char",
+    assertEqual(FB.HiddenBy({}, { char = { ["Alt-Testrealm"] = true } }, ctx, FB.HONORS.group), "char",
         "a session tab's drop is yours, never an alt's")
     assertEqual(FB.ReasonLabel("char", st), "Character: Current")
 end)
@@ -285,7 +299,7 @@ test("filter bar: a Character selection is a set of keys; anything else is refus
     assertFalse(FB.Set("history", "char", { [ME] = true }), "the same set changes nothing")
 end)
 
-test("filter bar: Group drops keeps every drop under any Character choice it offers", function()
+test("filter bar: Drops keeps every drop under any Character choice it offers", function()
     local NS = shown()
     local c = NS.WindowFilterBar.Controls()
     local tc = NS.Window.TabContext("group")

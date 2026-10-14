@@ -1,15 +1,20 @@
 local _, NS = ...
 -- modules/WindowHistory.lua — the History tab (design spec §10, §11.1): the drops kept across
--- sessions (modules/History.lua), under a collapsible header per encounter or run, in the Group
--- drops table's row style, read-only, with Clear history behind a confirmation.
+-- sessions (modules/History.lua), under a collapsible header per encounter or run, in the Drops
+-- table's row style, read-only, with Clear history behind a confirmation.
 --
--- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color), Me,
+-- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color; ` [YOU]`
+-- in gold after your own name, feedback-7 spec §2), Me,
 -- Them, Trade (each as it was last judged while the drop was in the feed) and Outcome (seen, asked,
 -- offered, received, traded away, expired or declined). A narrow row sheds Slot, Looter, Them, Ilvl,
 -- Trade and Me, in that order (NS.WindowGroup.Fit); Item and Outcome stay. The cells are
 -- modules/WindowCells.lua's composers over each entry turned into a drop-shaped record (AsDrop);
 -- this file adds the Outcome cell and a header that reads days for an old group. Nothing is blank.
--- A row's height, item button and text size are the Group drops rows' (modules/WindowRows.lua, the
+-- Me and Them read as the Drops table's (NS.SideCells, feedback-6 spec §1: the glyph and the
+-- unsigned difference, `▲6`, or a word), but a kept entry holds no worn items, so they are the
+-- verdict alone, never the gear the Drops table shows before it.
+-- Them's column tooltip draws the verdict marks as NS.TipMarks' inline textures (feedback-6 spec §3).
+-- A row's height, item button and text size are the Drops rows' (modules/WindowRows.lua, the
 -- Window page's Layout rows; feedback-2 spec §8, FB2-9).
 --
 -- READ-ONLY. No row asks, offers or expands. A right-click on a row opens its menu (core/Compat.lua's
@@ -25,7 +30,7 @@ local _, NS = ...
 --
 -- THE COMPACT LAYOUT draws the same entries as cards: modules/CompactHistory.lua (DW-C3).
 --
--- THE UI LISTENS. HistoryChanged repaints the shown window on the next frame, the Group drops rows
+-- THE UI LISTENS. HistoryChanged repaints the shown window on the next frame, the Drops rows
 -- included (their Ask button reads `Traded` once a trade settles the drop). Collapsed groups are
 -- session-only (NS.State.windowHistory).
 
@@ -36,6 +41,8 @@ local C     = NS.Constants
 local L     = NS.L
 local State = NS.State
 local WC    = NS.WindowCells
+local SC    = NS.SideCells
+local TM    = NS.TipMarks
 
 local max, floor = math.max, math.floor
 
@@ -44,25 +51,32 @@ WH.COLUMNS = {
       tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
     { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
     { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
+    { key = "armorType", label = L["Type"], width = 64, shed = 0,
+      tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
     { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
     { key = "me", label = L["Me"], width = 70, shed = 6,
       tip = L["The drop judged for you, as it was last judged while it was in the feed."] },
     { key = "them", label = L["Them"], width = 70, shed = 3,
-      tip = L["The drop judged for its looter, as it was last judged. Their upgrade is amber, their downgrade green."] },
+      tip = L["The drop judged for its looter, as it was last judged. In the same colors as Me: %s green, %s yellow, %s red."]:format(
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
     { key = "trade", label = L["Trade"], width = 70, shed = 5, tip = L["The last trade estimate: Yes, Likely, Unknown or No."] },
     { key = "outcome", label = L["Outcome"], width = 92,
       tip = L["What became of it: seen, asked, offered, received, traded away, expired or declined. Right-click a row to mark it declined."] },
 }
 local GLYPH_COLS = { me = true, them = true }
 
+-- Each outcome's word, tone and line. The tones follow the action buttons' (feedback-12 spec §0,
+-- WindowCells.ActionTone): yellow while it waited on someone else (Asked, Offered), green once done
+-- (Received, Traded away), gray where nothing came of it (Seen, Declined, as No action), and red where
+-- it fell through (Expired, as Retry).
 local OUTCOME = {
-    seen       = { L["Seen"], "muted", L["Shown in the feed; nothing more happened."] },
-    asked      = { L["Asked"], "plain", L["You asked its looter for it."] },
-    offered    = { L["Offered"], "plain", L["You offered or announced your drop."] },
+    seen       = { L["Seen"], "bad", L["Shown in the feed; nothing more happened."] },
+    asked      = { L["Asked"], "yellow", L["You asked its looter for it."] },
+    offered    = { L["Offered"], "yellow", L["You offered or announced your drop."] },
     received   = { L["Received"], "good", L["A completed trade gave you this item."] },
     tradedAway = { L["Traded away"], "good", L["A completed trade passed your drop on."] },
-    expired    = { L["Expired"], "bad", L["Its trade window passed."] },
-    declined   = { L["Declined"], "muted", L["Marked declined by you."] },
+    expired    = { L["Expired"], "red", L["Its trade window passed."] },
+    declined   = { L["Declined"], "bad", L["Marked declined by you."] },
 }
 
 local NO_HISTORY = L["Drops from earlier encounters appear here."]
@@ -118,11 +132,12 @@ function WH.Outcome(drop)
     return { text = o[1], tone = o[2], tip = { L["Outcome: %s"]:format(o[1]), o[3], hint } }
 end
 
---- The Them column: as the Group drops table says it, except that a looter whose gear was never
---- read says so plainly (the inspect is long over).
+--- The Them verdict alone (WH.ThemCell is the merged cell the table and the card draw): as the
+--- Drops table says it, except that a looter whose gear was never read says so plainly (the inspect
+--- is long over).
 --- @param drop table
 --- @return table cell
-function WH.Them(drop)
+function WH.ThemVerdict(drop)
     if drop.isMine or type(drop.them) == "table" then return WC.Them(drop) end
     local who = WC.ShortName(drop.looter.name)
     return { text = "?", tone = "muted", verdict = "unknown",
@@ -187,9 +202,9 @@ end
 --- The tab's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
 --- collapsed } (as NS.WindowCells.Entries') and
 --- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest); a group with no
---- entry passing the filter keeps an open header with count 0 while the View filter hid them, or
---- Character hid entries with no recorder (kept before the Character dropdown); it is left out
---- when Search, Content or a Character choice did (WC.KeepsHeader). A group never toggled is open
+--- entry passing the filter keeps an open header with count 0 while the View filter hid them; it is
+--- left out when Search, Content or the Character filter did (WC.KeepsHeader; entries with no
+--- recorder too, feedback-12 spec §1). A group never toggled is open
 --- when it is the first shown.
 --- @param groups table NS.History.Groups(), oldest first
 --- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort } }
@@ -278,7 +293,7 @@ local function glyphCell(row, key)
     local f = textCell(row, key)
     f.glyph = f:CreateFontString(nil, "OVERLAY")
     f.glyph:SetFont(C.FONT_MONO, 12, "")
-    f.glyph:SetPoint("LEFT", f.text, "RIGHT", 3, 0)
+    f.glyph:SetPoint("LEFT", f, "LEFT", 0, 0)   -- the arrow before the number (feedback-4 spec §0)
     return f
 end
 
@@ -305,11 +320,12 @@ local function newRow(content)
         local make = (col.key == "item" and itemCell) or (GLYPH_COLS[col.key] and glyphCell) or textCell
         row.cells[col.key] = make(row, col.key)
     end
+    NS.WindowRows.MarkedCell(row.cells.looter)   -- ` [YOU]` after your own name (feedback-7 spec §2)
     row:SetScript("OnMouseUp", onMouseUp)
     return row
 end
 
--- A kept group's header: the Group drops tab's own button (WindowGroup.NewHeader), toggling this tab's.
+-- A kept group's header: the Drops tab's own button (WindowGroup.NewHeader), toggling this tab's.
 local function newHeader(content)
     local h = NS.WindowGroup.NewHeader(content)
     h:SetScript("OnClick", function(self) WH.ToggleGroup(self.groupKey, self.collapsed) end)
@@ -323,6 +339,7 @@ local function paintText(f, c)
     if f.glyph then
         f.glyph:SetText(c.glyph or "")
         setTone(f.glyph, c.tone)
+        NS.WindowGroup.PlaceGlyph(f, c.glyph)
     end
 end
 
@@ -350,7 +367,22 @@ local function qualityColor(q)
     if qc then return qc.r, qc.g, qc.b end
 end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, me = WC.Me, trade = WC.Trade, them = WH.Them, outcome = WH.Outcome }
+--- The Me cell: the verdict alone, as the Drops table words it (NS.SideCells.Merge with no gear);
+--- the tooltip grid's `You` in your class color (the gear snapshot's, NS.Gear), as on Drops.
+--- @param drop table
+--- @return table cell
+function WH.MeCell(drop)
+    local snap = NS.Gear.Snapshot()
+    return SC.Merge(WC.Me(drop, type(snap) == "table" and snap.classFile or nil))
+end
+
+--- The Them cell: WH.ThemVerdict's verdict alone, as the Drops table words it.
+--- @param drop table
+--- @return table cell
+function WH.ThemCell(drop) return SC.Merge(WH.ThemVerdict(drop)) end
+
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WH.MeCell, trade = WC.Trade,
+    them = WH.ThemCell, outcome = WH.Outcome }
 
 local function paintRow(row, drop, layout, metrics)
     row.entry = drop.entry
@@ -367,6 +399,7 @@ local function paintRow(row, drop, layout, metrics)
     local lc = WC.Looter(drop)
     paintText(cells.looter, lc)
     tone(cells.looter.text, NS.Compat.ClassColor(lc.classFile))
+    NS.WindowRows.PaintMark(cells.looter, lc.you, layout.looter)
 end
 
 local function paintHeader(h, e, now)
@@ -416,7 +449,7 @@ local function buildHeads(pane)
         local f = CreateFrame("Frame", nil, head)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
-        f.text:SetTextColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
+        f.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as Loot History's (feedback-4 spec §4)
         f.text:SetText(col.label)
         NS.Window.AttachTooltip(f, function() return col.label, col.tip end)
         head.labels[col.key] = f
@@ -428,7 +461,7 @@ local function buildStrip(pane)
     local strip = CreateFrame("Frame", nil, pane)
     strip:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 0, 0)
     strip:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
-    strip:SetHeight(K.MINE_FOOT_H)
+    strip:SetHeight(K.STRIP_H)
     strip.line = strip:CreateTexture(nil, "ARTWORK")
     strip.line:SetColorTexture(1, 1, 1, 0.1)
     strip.line:SetHeight(1)
@@ -440,6 +473,7 @@ local function buildStrip(pane)
     strip.clear:SetPoint("RIGHT", strip, "RIGHT", 0, 0)
     NS.Window.AttachTooltip(strip.clear, clearTip)
     pane.strip = strip
+    pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
 end
 
 local function build(pane)
@@ -447,7 +481,7 @@ local function build(pane)
     buildStrip(pane)
     local scroll = CreateFrame("ScrollFrame", nil, pane, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", pane.colHead, "BOTTOMLEFT", 0, -2)
-    scroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -K.SCROLL_W, K.MINE_FOOT_H)
+    scroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -K.SCROLL_W, K.STRIP_H)
     local content = CreateFrame("Frame", nil, scroll)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)

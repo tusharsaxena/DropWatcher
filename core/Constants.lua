@@ -19,15 +19,34 @@ C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEX
 -- tab's body and a footer.
 C.WINDOW = {
     NAME        = "DropWatcherWindow",
-    WIDTH       = 1000,   -- board 01 drew 940; the My eq column and two filters (DW-83) take the rest
+    -- The default width is the least (feedback-4 spec §4, recomputed by feedback-5 spec §4 and
+    -- feedback-6 spec §1): the Drops table's every column at its width with a CELL_GAP after each, the
+    -- Item column at ITEM_MIN, a drop row's indent and chevron lead, the scroll gutter and both insets:
+    --   columns  Ilvl 40 + Slot 72 + Type 64 + Looter 104 + Me 127 + Them 127 + Trade 70
+    --            + Trade window 76 + Actions 84 (ASK_W) = 764, + 10 gaps x 6 = 824,
+    --            + Item 150 (ITEM_MIN) = 974 (Trade window is its widest answer plus its bar's
+    --            padding, feedback-6 spec §0; Me and Them their widest cell, two worn icons, `321/308`
+    --            and `Not wanted`, feedback-6 spec §1: tests/test_side_cells.lua measures both)
+    --   lead     ROW_INDENT 12 + CHEVRON_X 4 + ROW_CHEVRON 10 + CHEVRON_GAP 4 = 30 (WindowGroup.LEAD)
+    --   chrome   SCROLL_W 22 + 2 x INSET 6 = 34
+    --   974 + 30 + 34 = 1038. History's columns (no lead) fit with room to spare.
+    -- tests/test_drops_layout.lua pins that no tab sheds a column there and the filter bar fits.
+    WIDTH       = 1038,
     HEIGHT      = 600,
-    MIN_WIDTH   = 520,
+    MIN_WIDTH   = 1038,   -- = WIDTH: sized wider and back, never narrower than a new profile's
     MIN_HEIGHT  = 260,
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
-    COMPACT_WIDTH  = 380,
+    -- The compact least width (feedback-5 spec §4) fits a Drops card's fullest line 2: a twelve-letter
+    -- looter, its realm mark, slot, type and a counted trade (about 220px at the small template's 5px a
+    -- character) before the action button (ASK_W, line 2's right since feedback-10 spec §2; the
+    -- countdown and its bar were there before), past the indent, chevron, icon, insets and scroll
+    -- gutter (tests/test_compact_group.lua measures it). 380 cut it by about 57px.
+    -- Line 3's fullest halves since feedback-6 spec §1 (`Them 321/308 ⊘ Not wanted`) end about 46px
+    -- short of the card's edge there (measured too), so line 2 still sets it.
+    COMPACT_WIDTH  = 440,
     COMPACT_HEIGHT = 460,
-    COMPACT_MIN_W  = 320,
+    COMPACT_MIN_W  = 440,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
     COMPACT_MAX_W  = 520,
     COMPACT_MIN_H  = 220,
     COMPACT_MAX_H  = 900,
@@ -43,6 +62,7 @@ C.WINDOW = {
     ICON        = 18,     -- a title-bar control's square slot (the close mark's size)
     DOUBLE_CLICK = 0.4,   -- seconds between two clicks on the title bar that expand a minimized window
     FOOTER_TICK = 5,      -- seconds between footer repaints while shown ("Last loot 12s ago")
+    COUNTDOWN_TICK = 1,   -- seconds between countdown repaints while Drops shows one running
     -- The drop tables (modules/WindowGroup.lua, design spec §11.1-§11.2).
     -- A drop row's height and text size are the Window page's Layout rows, `window.rowHeight` and
     -- `window.fontSize` (modules/WindowRows.lua; feedback-2 spec §8, FB2-9). Their defaults live in
@@ -54,11 +74,21 @@ C.WINDOW = {
     GROUP_H     = 20,     -- one encounter header row
     COLHEAD_H   = 18,     -- the column labels above the rows
     ROW_ICON    = 20,     -- a row's item button at most; a shorter row takes it 2px under its height
-    EQ_ICON     = 16,     -- one worn item in the My eq and Their eq columns
+    EQ_ICON     = 16,     -- one worn item in the Me and Them cells
     CELL_GAP    = 6,      -- between two columns
     ITEM_MIN    = 150,    -- the Item column's least width (it takes the slack)
     SCROLL_W    = 22,     -- the scroll bar's gutter on the right of the rows
-    ASK_W       = 64,     -- the Ask button
+    -- The Ask button, and the Actions column it fills: every state's icon and word (Ask, Asked,
+    -- Queued, Retry, Traded) fits with room on both sides (feedback-5 spec §0). Compact's is the same.
+    ASK_W       = 84,
+    -- The expand indicator (feedback-5 spec §0): a drop row is indented ROW_INDENT from its header's
+    -- left edge, and draws the header's chevron (ROW_CHEVRON square) CHEVRON_X into the row, as the
+    -- header does its own; the Item column starts CHEVRON_GAP after it. A compact card is indented
+    -- the same, its chevron before the item button.
+    ROW_INDENT  = 12,
+    ROW_CHEVRON = 10,
+    CHEVRON_X   = 4,
+    CHEVRON_GAP = 4,
     -- The detail card, expanded inline under its row (modules/DetailCard.lua, design spec §11.3).
     CARD_H      = 248,    -- the whole card
     CARD_PAD    = 8,      -- its margin, and the gap between its boxes
@@ -71,27 +101,30 @@ C.WINDOW = {
     ACTION_H    = 22,     -- an action button
     EDITOR_W    = 380,    -- the Edit message box
     EDITOR_H    = 156,
-    -- The Group drops table's empty state (board 06 D): its title, line and two buttons.
+    -- The Drops table's empty state (board 06 D): its title, line and two buttons.
     EMPTY_W     = 360,
     EMPTY_H     = 90,
-    -- The My drops tab (modules/WindowMine.lua) and the Offer panel (modules/OfferPanel.lua),
+    -- A Drops row with its Trade window column (feedback-5 spec §1), the Drops strip
+    -- (modules/DropsStrip.lua, feedback-5 spec §3) and the Offer panel (modules/OfferPanel.lua),
     -- design spec §11.4, board 04.
-    MINE_EXTRA  = 14,     -- a My drops row's height over the row height (its countdown sits over its bar)
-    MINE_FONT   = 10,     -- the small template's own text size, for a My drops row at Default
-    MINE_PAD    = 12,     -- a My drops row's room around its two lines (verdict and keep?, countdown and bar)
+    COUNTDOWN_EXTRA = 14, -- such a row's height over the row height (its countdown sits over its bar)
+    COUNTDOWN_FONT = 10,  -- the small template's own text size, for such a row at Default
+    COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
-    MINE_FOOT_H = 26,     -- the tab's summary strip, with Post my tradeables
-    OFFER_BTN_W = 64,     -- a row's Offer button
-    ANNOUNCE_W  = 76,     -- a row's Announce button
-    POST_W      = 140,    -- Post my tradeables
-    CLEAR_W     = 124,    -- the History tab's Clear history (its strip is MINE_FOOT_H tall)
+    STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Clear history)
+    -- Post my tradeables is the tab's Sort size in the full layout (NS.WindowFooter.SORT_W,
+    -- feedback-7 spec §4); Scan group, between it and Sort on the strip (feedback-10 spec §3) and in
+    -- the empty state, is SCAN_W.
+    SCAN_W      = 110,
+    CLEAR_W     = 124,    -- the History tab's Clear history (its strip is STRIP_H tall)
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
     OFFER_FOOT_H = 32,    -- its Announce to group strip
     OFFER_ROW_H = 26,     -- one candidate
     OFFER_MIN_H = 320,    -- its least height beside the compact window (head, six candidates, foot)
-    PILL_W      = 96,     -- a status pill
-    PANEL_BTN_W = 52,     -- a candidate's Offer or Trade button
+    -- A candidate's Offer button: every state's icon and word (Offer, Offered, Queued, Retry) fits
+    -- with room on both sides (feedback-7 spec §1); inside the row past the Actions column's x.
+    PANEL_BTN_W = 80,     -- fits `No action` beside its icon (feedback-11 spec §1)
     DOCK_GAP    = 4,      -- between the window and the docked panel
     TIP_GAP     = 2,      -- between the window (or a docked panel) and an item tooltip beside it
     -- Where a fresh profile, and Reset position, put the window.
@@ -103,13 +136,26 @@ C.WINDOW = {
 C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
 C.IDLE = { r = 0.62, g = 0.62, b = 0.64 }
 
--- The drop tables' tones (design spec §11.2, board 03): `good` is news in your favor (an upgrade for
--- you, the looter's downgrade, a tradeable estimate), `bad` the opposite, `warn` the looter's own
--- upgrade (amber: the Them column is inverted), `plain` a sidegrade, `muted` what is not known yet.
+-- A drop row's chevron (feedback-5 spec §0): muted white, as its vertex color, and the same on hover.
+-- A group header's chevron is C.GOLD, as its text.
+C.CHEVRON_ROW = { r = 1.0, g = 1.0, b = 1.0, a = 0.55 }
+
+-- The drop tables' tones (design spec §11.2; feedback-4 spec §0 and §1): `good` an upgrade, a
+-- tradeable estimate or an action done, `bad` gray (can't use, not tradeable), `warn` amber (a trade
+-- window ending soon), `plain` plain text, `muted` what is not known yet; `yellow`, `red` and `cyan`
+-- below.
 C.TONE = {
     good  = { r = 0.30, g = 0.85, b = 0.40 },
     bad   = { r = 0.55, g = 0.55, b = 0.58 },
     warn  = { r = 1.00, g = 0.65, b = 0.15 },
+    -- The verdicts' sidegrade and an action waiting on someone else (feedback-4 spec §0, §1): a
+    -- yellow kept apart from the headers' gold.
+    yellow = { r = 1.00, g = 0.96, b = 0.42 },
+    -- The verdicts' downgrade and an action that is your move.
+    red   = { r = 1.00, g = 0.36, b = 0.32 },
+    -- Offer while it is your move (feedback-6 spec §2): a cyan at the palette's saturation and
+    -- brightness, so giving an item away reads apart from Ask's red.
+    cyan  = { r = 0.35, g = 0.82, b = 0.95 },
     plain = { r = 0.92, g = 0.92, b = 0.92 },
     muted = { r = 0.70, g = 0.70, b = 0.72 },
 }

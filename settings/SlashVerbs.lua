@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the handlers of the design spec's feature verbs (§12.3) that only the
--- slash surface reaches: `clear`, `history`, `mine`, `situation`, `offer <link>` and
+-- slash surface reaches: `clear`, `history`, `situation`, `offer <link>` and
 -- `add <link> [player]`, plus the confirmation line `compact` and `full` print around the shared
 -- layout handlers. The verbs another surface shares (`show`, `hide`, `toggle`, `test`, `scan`,
 -- `compact`, `full`) call the host
@@ -64,10 +64,10 @@ function V.Full()
     printLayout()
 end
 
--- ── history, mine ───────────────────────────────────────────────────────────────────────────
+-- ── history, offer ──────────────────────────────────────────────────────────────────────────
 
---- Open the window, expanded, on one tab (`/dw history`, `/dw mine`, and `/dw offer`).
---- @param key string `group`, `mine` or `history`
+--- Open the window, expanded, on one tab (`/dw history`; Drops for `/dw mine` and `/dw offer`).
+--- @param key string `group` or `history`
 --- @return boolean shown whether the window is on screen now
 function V.OpenTab(key)
     local W = NS.Window
@@ -196,6 +196,6 @@ function V.Offer(rest)
     end
     local drop = newestMine(itemID) or adopt(itemID, link)
     if not drop then return false end
-    if not V.OpenTab("mine") then return false end
+    if not V.OpenTab("group") then return false end
     return NS.OfferPanel.Open(drop.id) ~= nil
 end

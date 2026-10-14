@@ -10,7 +10,8 @@ local SITUATIONS = {
     "mythicPlus", "dungeon", "followerDungeon", "raidLFR", "raid", "delve", "scenario", "pvp",
     "openWorldGroup", "solo",
 }
-local COLUMNS = { "ilvl", "slot", "looter", "myEq", "theirEq", "me", "them", "trade", "actions" }
+-- `myEq` and `theirEq` were retired by schema step 7 (feedback-6 spec §1: merged into Me and Them).
+local COLUMNS = { "ilvl", "slot", "looter", "me", "them", "trade", "tradeWindow", "actions" }
 
 -- Spec §12.1's keys as stored paths. `debug` is the session-only console row, `minimap.shown` the
 -- global closure row; `window.point`, `size`, `minimized` and `toast.point` are named state.
@@ -21,7 +22,7 @@ local function specPaths()
         "feed.view.interesting", "feed.view.likely", "feed.view.usable", "feed.view.upgrade",
         "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
         "feed.quality.upgradeOverride", "feed.gearOnly", "feed.includeTokens", "feed.minIlvlMode",
-        "feed.minIlvl", "feed.relativeIlvl", "feed.showOwn", "feed.clearOnBossKill", "feed.sort",
+        "feed.minIlvl", "feed.relativeIlvl", "feed.clearOnBossKill", "feed.sort",
         "feed.content",
         "comparison.scorer", "comparison.weights", "comparison.sidegradeBand", "comparison.compareOwned",
         "comparison.heirloomProtect", "comparison.undesired",

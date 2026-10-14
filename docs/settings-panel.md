@@ -21,8 +21,8 @@ predicate, `settings/SchemaRows.lua`), never hidden, and keeps its value.
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 `settings/Panel.lua` registers General, `settings/Pages.lua` the five after it,
-`settings/Profiles.lua` the last. Three tabs and one closing line have no row the flow engine can
-draw; they are host tabs and an `afterGroup` hook handed to the library's tabbed renderer
+`settings/Profiles.lua` the last. Three tabs, one closing line and one table have no row the flow
+engine can draw; they are host tabs and `afterGroup` hooks handed to the library's tabbed renderer
 (`settings/PageEditors.lua`, over the pure `settings/Editors.lua`).
 
 ## General → Master controls
@@ -45,13 +45,32 @@ reset is a profile reset and never touches the minimap button (options-ui-§12, 
 
 ## General → When to show
 
-The master `autoOpen` row (Auto-open the window), then one block per situation under the
-situation's name: `Track` and `Auto-open`, then `Quality` (`Use global` or a mode of its own)
-(design spec §6.1). An untracked situation's `Auto-open` and `Quality` are dimmed, and every
-situation's `Auto-open` is dimmed while the master row is off. The design's grid (situations by
-setting) has no LibKa0s composer: `ChoiceGrid` draws one choice per row over one value list, and a
-situation's line holds two checkboxes and a dropdown. So the tab draws one block per situation, as
-the plan's fallback says, and a LibKa0s issue asking for a grid composer is filed as [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
+The master `autoOpen` row (Auto-open the window), then the per-situation settings as one table
+(feedback-8 spec §0, DW-H0), a line per situation in `K.SITUATIONS` order (design spec §6.1):
+
+| Situation | Track | Auto-open | Quality |
+|---|---|---|---|
+| the situation's name (`WindowFooter.SituationLabel`) | checkbox, `situations.<key>.track` | checkbox, `situations.<key>.autoOpen` | dropdown, `situations.<key>.quality` (`Use global` or a mode of its own) |
+
+It takes the look of Ka0s Loot History's Price sources table, without its drag handle, reorder list
+and status column: gold, left-aligned column headers (`GameFontNormalSmall`) in a band above
+fixed-height lines, every second line faintly striped, the cells' text in `GameFontHighlightSmall`,
+the panel's own CheckBox and Dropdown widgets. An untracked situation's `Auto-open` and `Quality`
+are dimmed and its name grays; every situation's `Auto-open` is dimmed while the master row is off.
+Each cell dims exactly when its schema row's `disabledIf` says so (`Editors.SituationRows`), so the
+rule has one home. Hovering a cell shows its row's label and tooltip; hovering a name shows the
+situation.
+
+The three per-situation rows stay schema rows (paths, defaults, checks, tooltips), marked
+`skipRender` with no subsection, so `/dw get|set`, the page's Defaults, profiles and their announce
+reach them unchanged. The table is When to show's `afterGroup` hook
+(`Settings.PageEditors.SituationTable`), writes through `NS.SchemaRuntime.Set` and repaints every
+value and state on each render and after every write (a toggle, the master row, Defaults, a profile
+switch). Its host frame and slots are built once per session and re-hosted on a fresh placeholder
+on each render; the General page's renderer parks it (`ParkSituationTable`) before `ClearScroll`
+hands the old placeholder back to AceGUI's pool. Until DW-H0 the tab drew one block per situation,
+since LibKa0s has no grid composer for mixed controls ([LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50));
+the table is drawn by the page's own editor instead.
 
 ## General → Simulation
 
@@ -71,8 +90,9 @@ when its own setting overrides the feed's mode. It repaints with every write.
 **Filters:** View: Interesting, View: Likely tradeable, View: Usable by me and View: Upgrade for me
 (the View a fresh tab opens on, one checkbox per value; all unticked is View: All, the default,
 DW-A1), Content and Sort (what a fresh tab starts with), Gear only, Tier tokens, Minimum item level
-with its absolute and relative values (each live in its mode only), Show my own loot in Group drops,
-Clear on boss kill.
+with its absolute and relative values (each live in its mode only), Clear on boss kill. (Show my own
+loot in Group drops is retired: Drops always lists your own drops, feedback-5 spec §2; schema step 6
+removes the stored value.)
 
 ## Comparison
 
@@ -115,8 +135,8 @@ prints auto-ask's one-time notice; turning it off cancels the asks waiting to go
 
 ## Window
 
-**Columns:** a checkbox per optional column (My eq among them since DW-83), for the full layout's tables; the compact cards carry every fact on their three lines and ignore them. **Layout:** Layout (Full or Compact, compact spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`), Open in compact view during a run (on by default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends), Row height (18 by default, all three
-tabs of the full layout; the compact layout's cards size from their text), Font size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact spec §5), Keep history
+**Columns:** a checkbox per optional Drops column, generated from its column list (Ilvl, Slot, Type since DW-D3, feedback-4 spec §3, Looter, Me, Them, Trade, Trade window since DW-E1, feedback-5 spec §1, and Actions; My eq and Their eq, there since DW-83, went with DW-F1, feedback-6 spec §1, when Me and Them took the worn gear, so Me and Them hide the gear with the verdict), for the full layout's Drops table (History shows every column); the compact cards carry every fact on their three lines and ignore them. **Layout:** Layout (Full or Compact, compact spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`), Open in compact view during a run (on by default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends), Row height (18 by default, both
+tabs of the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the compact layout's cards size from their text), Font size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact spec §5), Keep history
 for (7 to 180 days or Never delete, default 30; account-wide; a shorter time that would delete groups
 asks first, and No puts the previous time back). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.

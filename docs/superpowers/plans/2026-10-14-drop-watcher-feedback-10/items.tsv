@@ -1,0 +1,6 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-J0	M19	DropWatcher	The downgrade glyph filled		S	FEED	fb10 §0
+DW-J1	M19	DropWatcher	The Offer icon is external-link		S	FEED	fb10 §1
+DW-J2	M19	DropWatcher	The compact card simplified		M	FEED	fb10 §2
+DW-J3	M19	DropWatcher	Sort on the tab strip		M	FEED	fb10 §3
+DW-J4	M19	DropWatcher	Review fixes, docs sync, automated-test bundle	DW-J0 DW-J1 DW-J2 DW-J3	S		fb10 §4

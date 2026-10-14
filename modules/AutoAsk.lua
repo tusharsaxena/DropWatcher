@@ -29,8 +29,7 @@ local _, NS = ...
 -- sent: the messaging edge prints the text instead.
 --
 -- CANCELED (spec §9.4) when you ask yourself (any AskStateChanged for the drop's ask), when the
--- looter leaves the group (GROUP_ROSTER_UPDATE), when the row is dismissed (NS.DismissDrop, the
--- Group drops row's × and the detail card's Hide), when the item is received (HistoryChanged and
+-- looter leaves the group (GROUP_ROSTER_UPDATE), when the item is received (HistoryChanged and
 -- the history's `received`), when auto-ask is turned off, and on the stand-down. A canceled drop is
 -- never scheduled again this session.
 --
@@ -232,7 +231,7 @@ function AA.Notice()
     local cfg = AA.Config()
     NS.Print(L["Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or more item levels for you, your ask template is whispered to them %d seconds after the boss kill or the drop."]
         :format(cfg.minGain, cfg.delay))
-    NS.Print(L["It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."])
+    NS.Print(L["It holds off when you ask yourself, they leave or you get the item. Turn it off in Settings > Messages > Auto-ask."])
     return true
 end
 

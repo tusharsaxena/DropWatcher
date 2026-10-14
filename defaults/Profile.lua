@@ -58,7 +58,6 @@ NS.C = {
             minIlvlMode     = "off",     -- off | absolute | relative
             minIlvl         = 0,         -- the absolute floor
             relativeIlvl    = 10,        -- how far below your average equipped level a drop may be
-            showOwn         = false,     -- your own loot listed in Group drops too
             clearOnBossKill = false,     -- the feed's session drops cleared at each boss kill
         },
 
@@ -111,8 +110,10 @@ NS.C = {
         -- and no row addresses it.
         window = {
             columns = {
-                ilvl = true, slot = true, looter = true, myEq = true, theirEq = true, me = true, them = true,
-                trade = true, actions = true,
+                -- `me` and `them` show the worn gear too (feedback-6 spec §1); schema step 7 retired
+                -- the `myEq` and `theirEq` toggles.
+                ilvl = true, slot = true, armorType = true, looter = true,
+                me = true, them = true, trade = true, tradeWindow = true, actions = true,
             },
             -- The layout (compact spec §1): `full` (the tables) or `compact` (the narrow card
             -- view). Schema step 5 maps the retired `compact` preset to it.
@@ -121,8 +122,8 @@ NS.C = {
             -- `mode` says, until that run ends.
             compactInRuns = true,
             -- Like Ka0s Loot History's table (feedback-2 spec §8, FB2-9): 18-pixel rows, and the
-            -- text at its template's own size (0 is Default). All three tabs read both; a My drops
-            -- row adds the room its countdown bar needs. A value the player stored stays as it is.
+            -- text at its template's own size (0 is Default). Both tabs read both; a Drops row
+            -- while Trade window shows adds the room its countdown bar needs. A value the player stored stays as it is.
             rowHeight = 18,      -- one drop row, in pixels
             fontSize  = 0,       -- the tables' text: 0 is the template's own size, else 8 to 20
         },

@@ -9,10 +9,16 @@ local _, NS = ...
 -- answers plain tables; nothing here reads a module, the client or a saved variable, so
 -- test_detail_card drives each state case by case. The frame edge that paints them is
 -- modules/DetailCard.lua. The verdict, trade and ask wording is modules/WindowCells.lua's, so the
--- card and the row it expands never disagree.
+-- card and the row it expands never disagree; on your own drop (feedback-5 spec §2) the Them row's
+-- `Upgrade for N` (feedback-7 spec §2) and the Offer in place of Ask are modules/MineCells.lua's, as the row's are.
+--
+-- NO GLYPHS. The card draws in the default face, which has no `→` and no `▲ ≈ ▼` (feedback-6 spec
+-- §3, DW-F5): the verdict chip's mark, the Item level and Track rows' arrow and the Track row's mark
+-- are NS.TipMarks' inline textures (TM.Mark, TM.Arrow), never the table cells' monospace glyphs.
 --
 --   chip = { text, tone?, tip = { title, lines... } }
---   side = { title, verdict = { text, tone, tip }, rows = { { key, label, text, tone, tip, link } } }
+--   side = { title, verdict = { text, tone, tip }, rows = { { key, label, text, tone, tip, link, classFile, you } } }
+--     (`classFile` and `you`: your own drop's Looter row, the name in class color and ` [YOU]` in gold)
 --   box  = { chip = { text, tone }, text, meta, tip }
 --   act  = { key, text, icon, enabled, tip }
 
@@ -21,6 +27,8 @@ local DC = NS.DetailCells
 local C  = NS.Constants
 local L  = NS.L
 local WC = NS.WindowCells
+local MC = NS.MineCells
+local TM = NS.TipMarks
 
 local floor, abs = math.floor, math.abs
 
@@ -46,11 +54,6 @@ local TERTIARY_ORDER = {
     "ITEM_MOD_CR_LIFESTEAL_SHORT", "ITEM_MOD_CR_SPEED_SHORT", "ITEM_MOD_CR_AVOIDANCE_SHORT", "ITEM_MOD_CR_STURDINESS_SHORT",
 }
 
-local ARMOR_WORD = {
-    [C.ARMOR_SUBCLASS.CLOTH] = L["Cloth"], [C.ARMOR_SUBCLASS.LEATHER] = L["Leather"],
-    [C.ARMOR_SUBCLASS.MAIL] = L["Mail"], [C.ARMOR_SUBCLASS.PLATE] = L["Plate"],
-    [C.ARMOR_SUBCLASS.SHIELD] = L["Shield"],
-}
 
 local BIND_CHIP = {
     [C.BIND.ON_ACQUIRE] = { L["BoP"], L["Bind on pickup: it binds to whoever loots it."] },
@@ -67,7 +70,7 @@ local VERDICT_CHIP = {
 local TRADE_CHIP = {
     yes = L["TRADEABLE"], likely = L["LIKELY TRADEABLE"], unknown = L["TRADE UNKNOWN"], no = L["NOT TRADEABLE"],
 }
-local TRADE_TONE = { yes = "good", likely = "good", unknown = "muted", no = "bad" }
+local TRADE_TONE = WC.TRADE_TONE   -- the Trade column's tones (No red, feedback-7 spec §2)
 local RULE_WORD = { personal = L["personal loot"], group = L["group loot"], legacy = L["legacy loot"] }
 local BASIS_WORD = { bind = L["the item's bind"], rule = L["the content's rule"], inspect = L["inspect"], timer = L["your bag's timer"] }
 
@@ -103,11 +106,12 @@ local function slotChip(f)
     return chip(label, L["Slot"], L["Worn in the %s slot."]:format(label))
 end
 
+-- The Type column's answer as a chip (feedback-4 spec §3: Cloth … Plate, Jewelry, Trinkets, Cloak,
+-- Weapons); none when the type is not known.
 local function armorChip(f)
-    if f.classID ~= C.ITEM_CLASS.ARMOR then return nil end
-    local word = ARMOR_WORD[f.subClassID]
-    if not word then return nil end
-    return chip(word, L["Armor type"], L["Only classes that wear %s are judged able to use it."]:format(word))
+    local t = WC.ArmorType({ facts = f })
+    if not t.known then return nil end
+    return chip(t.text, L["Type"], t.tip[2])
 end
 
 local function bindChip(f)
@@ -230,11 +234,11 @@ local function ilvlRow(eval, ilvl, tone)
             L["No item-level change: nothing to compare with yet."])
     end
     local from = round(ilvl - d)
-    return row("ilvl", L["Item level"], ("%d → %d · %s"):format(from, ilvl, WC.Signed(d)), tone, L["Item level"],
+    return row("ilvl", L["Item level"], ("%d %s %d · %s"):format(from, TM.Arrow(), ilvl, WC.Signed(d)), tone, L["Item level"],
         L["%d against %d: %s."]:format(ilvl, from, WC.Signed(d)))
 end
 
-local TRACK_GLYPH = { [1] = WC.GLYPH.upgrade, [0] = WC.GLYPH.sidegrade, [-1] = WC.GLYPH.downgrade }
+local TRACK_MARK = { [1] = "upgrade", [0] = "sidegrade", [-1] = "downgrade" }   -- TM.Mark's verdicts
 
 -- Shown even within one track (board 02, callout 2): a rank change is still a change.
 local function missingTrack(to)
@@ -248,10 +252,10 @@ local function trackRow(eval, dropTrack)
     if not (to and from) then return missingTrack(to) end
     local td = type(eval.trackDelta) == "table" and eval.trackDelta or nil
     if not td then
-        return row("track", L["Track"], ("%s → %s"):format(from, to), "plain", L["Track"],
+        return row("track", L["Track"], ("%s %s %s"):format(from, TM.Arrow(), to), "plain", L["Track"],
             L["The tracks could not be ranked against each other."])
     end
-    return row("track", L["Track"], ("%s → %s %s"):format(from, to, TRACK_GLYPH[td.sign] or ""), "plain", L["Track"],
+    return row("track", L["Track"], ("%s %s %s %s"):format(from, TM.Arrow(), to, TM.Mark(TRACK_MARK[td.sign])), "plain", L["Track"],
         L["The track it moves to, rank included."])
 end
 
@@ -317,8 +321,10 @@ local function specRow(drop, inspect, specName, now)
 end
 
 local function verdictChip(cell)
-    local glyph = cell.glyph and (" " .. cell.glyph) or ""
-    return { text = (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown) .. glyph, tone = cell.tone, tip = cell.tip }
+    -- The arrow first (feedback-4 spec §0), as a texture: the chip's face has no glyph (DW-F5).
+    local mark = cell.glyph and TM.Mark(cell.verdict) or ""
+    if mark ~= "" then mark = mark .. " " end
+    return { text = mark .. (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown), tone = cell.tone, tip = cell.tip }
 end
 
 local function sideRows(eval, f, tone, whose, mine)
@@ -329,29 +335,41 @@ end
 --- The For you column (board 02, callouts 2 and 3).
 --- @param drop table
 --- @param scorer string|boolean the scorer in use, "pawn" | "weights" | "none" (true reads "pawn")
+--- @param classFile string|nil your class (the gear snapshot's): the verdict tooltip's grid names you in it
 --- @return table side
-function DC.ForYou(drop, scorer)
-    local cell = WC.Me(drop)
+function DC.ForYou(drop, scorer, classFile)
+    local cell = WC.Me(drop, classFile)
     local rows = sideRows(drop.me, facts(drop), cell.tone, L["you"], true)
     rows[#rows + 1] = scoreRow(drop.me, scorer)
     return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }
 end
 
+-- Your own drop's side (feedback-5 spec §2): the looter is you (`Name [YOU]`, feedback-7 spec §2:
+-- the name in your class color, the mark in gold), and the Them row reads `Upgrade for N`
+-- with every member it upgrades in its tooltip (MineCells.Details), as the row's Them cell does.
+local function ownSide(drop, revealed)
+    local m = MC.Details(drop, revealed, L["Them"])
+    local tip = m.tip
+    local lc = WC.Looter(drop)
+    local looter = row("mine", L["Looter"], lc.text, "plain", L["Looter"], L["Your own drop: Offer shows who it would help."])
+    looter.classFile, looter.you = lc.classFile, lc.you
+    return { title = L["FOR THE GROUP"], verdict = { text = m.text, tone = m.tone, tip = tip },
+        rows = { looter, { key = "them", label = L["Them"], text = m.text, tone = m.tone, tip = tip } } }
+end
+
 --- The For the looter column (board 02, callout 4): the same comparison against their inspected
---- gear, and their spec with the read's age. On your own drop it says so.
+--- gear, and their spec with the read's age. On your own drop: the Them row's `Upgrade for N`.
 --- @param drop table
 --- @param inspect table|nil the looter's inspect entry (NS.Inspect.Get)
 --- @param specName string|nil the looter's spec, in words
 --- @param now number|nil GetTime()
+--- @param revealed boolean|nil your own drop's Offer panel was opened this session (WindowOwn)
 --- @return table side
-function DC.ForLooter(drop, inspect, specName, now)
+function DC.ForLooter(drop, inspect, specName, now, revealed)
+    if drop.isMine then return ownSide(drop, revealed) end
     local who = looterName(drop)
     local title = L["FOR %s (LOOTER)"]:format(who:upper())
     local cell = WC.Them(drop, now)
-    if drop.isMine then
-        return { title = L["FOR THE LOOTER"], verdict = verdictChip(cell),
-            rows = { row("mine", L["Looter"], L["you"], "muted", L["Looter"], L["Your own drop: who it would help is on My drops."]) } }
-    end
     local rows = sideRows(drop.them, facts(drop), cell.tone, who)
     rows[#rows + 1] = specRow(drop, inspect, specName, now)
     return { title = title, verdict = verdictChip(cell), rows = rows }
@@ -398,11 +416,25 @@ local function act(key, text, icon, enabled, title, ...)
     return { key = key, text = text, icon = icon, enabled = enabled and true or false, tip = { title, ... } }
 end
 
+-- Your own drop's Offer in the Ask's place (feedback-5 spec §2): it opens the Offer panel. Its mark
+-- is its state's (feedback-7 spec §1: `external-link` while it reads Offer, feedback-10 spec §1), as
+-- on the row; Trade keeps `transfer`, so the two never share a mark.
+local function offerAction(o)
+    local a = act("ask", o.text, o.icon or "external-link", o.offered, unpack(o.tip))
+    a.state, a.offer, a.kind = o.state, true, o.kind
+    return a
+end
+
+-- The Ask, its mark its state's (feedback-7 spec §1: `chat`, `clock`, `confirm`, `reset`), as on the row.
 local function askAction(drop, ask)
     local who = looterName(drop)
-    if not ask.offered then return act("ask", L["Ask"], "chat", false, L["Ask"], ask.tip[2]) end
+    if not ask.offered then   -- No action, gray, its reason (feedback-11 spec §1)
+        local a = act("ask", ask.text, ask.icon, false, unpack(ask.tip))
+        a.state = ask.state
+        return a
+    end
     local text = ask.state == "ready" and L["Ask %s"]:format(who) or ask.text
-    local a = act("ask", text, "chat", ask.enabled, unpack(ask.tip))
+    local a = act("ask", text, ask.icon or "chat", ask.enabled, unpack(ask.tip))
     a.state = ask.state
     return a
 end
@@ -460,7 +492,7 @@ local TRADE_SHORT = {
 
 local function tradeAction(drop, trade)
     local title = L["Trade"]
-    if drop.isMine then return act("trade", title, "transfer", false, title, L["Your own drop: hand it over from My drops."]) end
+    if drop.isMine then return act("trade", title, "transfer", false, title, L["Your own drop: Offer shows who it would help, with an Offer button for each member."]) end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
         return act("trade", L["Trade · can't"], "transfer", false, title, L["Its looter can't trade it."])
     end
@@ -473,22 +505,19 @@ local function tradeAction(drop, trade)
         L["Open a trade with %s, so they can put the item in."]:format(looterName(drop)))
 end
 
-local function hideAction()
-    local title = L["Hide this item"]
-    return act("hide", title, "close", true, title, L["Hide this drop from the table for this session."])
-end
-
---- The card's actions (board 02, callout 6), left to right: Ask, Edit message, Link in chat, Retry
---- inspect, Trade and Hide this item. A disabled one says why in its tooltip.
+--- The card's actions (board 02, callout 6), left to right: Ask (Offer on your own drop, with
+--- `offer` set: feedback-5 spec §2), Edit message, Link in chat, Retry inspect and Trade. A
+--- disabled one says why in its tooltip. Nothing hides a drop (feedback-4 spec §2).
 --- @param drop table
 --- @param ctx table { askState, askReason, inspect (the looter's entry), now, trade = { ok, reason, text },
---- transmogAsk (the `messages.transmogAsk` setting) }
+--- transmogAsk (the `messages.transmogAsk` setting), offerTone (your own drop's: WindowOwn.ToneStates) }
 --- @return table list of actions
 function DC.Actions(drop, ctx)
     ctx = type(ctx) == "table" and ctx or {}
     local ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk)
+    local first = drop.isMine and offerAction(MC.OwnOffer(drop, ctx.offerTone)) or askAction(drop, ask)
     return {
-        askAction(drop, ask), editAction(ask), linkAction(drop),
-        retryAction(drop, ctx.inspect, ctx.now), tradeAction(drop, ctx.trade), hideAction(),
+        first, editAction(ask), linkAction(drop),
+        retryAction(drop, ctx.inspect, ctx.now), tradeAction(drop, ctx.trade),
     }
 end

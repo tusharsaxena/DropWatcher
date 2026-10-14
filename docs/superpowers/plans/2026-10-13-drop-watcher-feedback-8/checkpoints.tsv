@@ -1,0 +1,2 @@
+date	milestone	evidence
+2026-10-13	M17	DW-H0..H1 landed; review (3 findings) fixed in 3e092c8; bundle 20261013-200128 green (1397/1/1398, lint 0/0 in 169); pushed; awaiting owner merge go-ahead

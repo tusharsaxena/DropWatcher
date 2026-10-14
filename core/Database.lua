@@ -158,6 +158,28 @@ function NS.MigrateWindowMode(profile)
     moveGeometry(w)
 end
 
+-- ── step 6: own drops always listed (DW-E2, feedback-5 spec §2) ─────────────────────────────
+
+--- Step 6's work on one stored profile: `feed.showOwn` (Show my own loot in Group drops) is retired,
+--- since Drops always lists your own drops; only the key goes.
+--- @param profile table a raw stored profile
+function NS.RetireShowOwn(profile)
+    local feed = type(profile) == "table" and profile.feed
+    if type(feed) == "table" then feed.showOwn = nil end
+end
+
+-- ── step 7: My eq and Their eq merged into Me and Them (DW-F1, feedback-6 spec §1) ──────────
+
+--- Step 7's work on one stored profile: the `window.columns` toggles `myEq` and `theirEq` are
+--- retired, since the worn gear now shows in the Me and Them cells (which `me` and `them` toggle);
+--- only the two keys go.
+--- @param profile table a raw stored profile
+function NS.RetireEqColumns(profile)
+    local w = type(profile) == "table" and profile.window
+    local cols = type(w) == "table" and w.columns
+    if type(cols) == "table" then cols.myEq, cols.theirEq = nil, nil end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -169,6 +191,10 @@ NS.MIGRATIONS = {
     { to = 4, run = function(sv) NS.RetireHistoryCap(sv) end },   -- 3 -> 4: History by days
     { to = 5, perProfile = true,         -- 4 -> 5: compact mode; the window's geometry per layout
       run = function(_, profile) NS.MigrateWindowMode(profile) end },
+    { to = 6, perProfile = true,         -- 5 -> 6: own drops always listed; their switch goes
+      run = function(_, profile) NS.RetireShowOwn(profile) end },
+    { to = 7, perProfile = true,         -- 6 -> 7: the eq columns merged into Me and Them; toggles go
+      run = function(_, profile) NS.RetireEqColumns(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

@@ -6,18 +6,26 @@ local _, NS = ...
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape) and plain inputs (an
 -- inspect entry's gear, an ask's state, the clock) and answers a plain table; nothing here reads a
--- module, the client or a saved variable, so test_window_group drives each state case by case.
--- The frame edge that paints them is modules/WindowGroup.lua; the My drops tab (DW-33) and the
--- detail card (DW-32) take the same composers.
+-- module's state, the client or a saved variable (only NS.TipMarks, at call time: a verdict
+-- tooltip's gear grid takes the class and quality colors), so test_window_group drives each state
+-- case by case.
+-- The frame edge that paints them is modules/WindowGroup.lua; the detail card (DW-32) and the
+-- compact cards take the same composers. The Me and Them cells merge two of them each (the worn gear,
+-- then the verdict): modules/SideCells.lua.
 --
 -- THE ENTRIES (Entries, DW-B0: peeled out of modules/WindowGroup.lua) are the drop tables' rows in
--- order, under their group headers; Group drops and My drops both take them.
+-- order, under their group headers; the Drops table and its compact cards both take them.
 --
---   cell = { text, glyph = "▲" | "≈" | "▽" | nil, tone = key of C.TONE, tip = { title, lines... } }
+--   cell = { text, glyph = "▲" | "≈" | "▼" | nil, tone = key of C.TONE, tip = { title, lines... } }
 --
--- THE TONES (C.TONE). The Me column: an upgrade is `good` (green), a downgrade or an item you
--- cannot use `bad` (gray). The Them column is inverted (board 03): the looter's upgrade is `warn`
--- (amber, they will keep it), their downgrade `good` (green, they may pass it on).
+-- THE GEAR GRID (feedback-7 spec §3). A verdict tooltip shows the comparison as a grid row
+-- (NS.TipMarks.Grid), `[who] [worn ilvl] [worn item] [▲diff]`, where it said `Item level 295 against
+-- 289 (Speakeasy Shroud): +6.`; the gear halves (MyEq, TheirEq) list no items in their tooltips and
+-- answer `items` and `empty` instead, which NS.SideCells lays out as the merged cell's grid.
+--
+-- THE TONES (C.TONE; feedback-4 spec §0). One tone per verdict, in the Me and the Them column
+-- alike: an upgrade `good` (green), a sidegrade `yellow`, a downgrade `red`; an item that cannot be
+-- used or is not wanted `bad` (gray) and an unknown one `muted`. Trade's No is `red` too.
 
 NS.WindowCells = NS.WindowCells or {}
 local WC = NS.WindowCells
@@ -30,7 +38,7 @@ local DASH = "–"
 
 -- The verdict glyphs (design spec §11.2), drawn in the monospace face: the client's default face
 -- has none of them.
-WC.GLYPH = { upgrade = "▲", sidegrade = "≈", downgrade = "▽" }
+WC.GLYPH = { upgrade = "▲", sidegrade = "≈", downgrade = "▼" }
 
 local VERDICT_WORD = {
     upgrade = L["Upgrade"], sidegrade = L["Sidegrade"], downgrade = L["Downgrade"],
@@ -47,9 +55,8 @@ local VERDICT_EXPLAIN = {
     doesntWant = L["Usable, but excluded by your own preferences."],
     unknown    = L["No inspect yet, no spec, or a protected value."],
 }
-local TONE_FOR = {
-    me   = { upgrade = "good", sidegrade = "plain", downgrade = "bad", cantUse = "bad", doesntWant = "bad", unknown = "muted" },
-    them = { upgrade = "warn", sidegrade = "plain", downgrade = "good", cantUse = "good", doesntWant = "good", unknown = "muted" },
+local VERDICT_TONE = {
+    upgrade = "good", sidegrade = "yellow", downgrade = "red", cantUse = "bad", doesntWant = "bad", unknown = "muted",
 }
 -- NS.Evaluate's reason keys, in words.
 local EVAL_REASON = {
@@ -78,7 +85,10 @@ local EVAL_REASON = {
 }
 
 local TRADE_LABEL = { yes = L["Yes"], likely = L["Likely"], unknown = L["Unknown"], no = L["No"] }
-local TRADE_TONE = { yes = "good", likely = "good", unknown = "muted", no = "bad" }
+-- Trade's tones: Yes and Likely green, Unknown muted, No the palette's red (feedback-7 spec §2:
+-- not the gray `bad` tone). The detail card's trade chip reads this table too.
+local TRADE_TONE = { yes = "good", likely = "good", unknown = "muted", no = "red" }
+WC.TRADE_TONE = TRADE_TONE
 
 -- An inspect failure's reason, in words.
 local FAILED_WORD = {
@@ -102,6 +112,11 @@ local function num(v)
     if type(v) == "number" and v == v then return v end
     return nil
 end
+
+--- A number that is not NaN, else nil (NS.SideCells shares it).
+--- @param v any
+--- @return number|nil
+function WC.Num(v) return num(v) end
 
 local function round(n) return floor(n + 0.5) end
 
@@ -158,7 +173,7 @@ local function cell(text, tone, title, ...)
     return { text = text, tone = tone, tip = { title, ... } }
 end
 
--- ── the verdict columns: Me and Them ────────────────────────────────────────────────────────
+-- ── the verdicts: Me and Them ───────────────────────────────────────────────────────────────
 
 local function hasReasons(eval) return type(eval.reasons) == "table" end
 
@@ -169,31 +184,33 @@ local function trackLine(td)
     return L["Upgrade track: the same track and rank."]
 end
 
-local function compareLines(eval, ilvl, lines)
+-- The comparison as one grid row (feedback-7 spec §3): `[who] [worn ilvl] [worn item] [▲diff]`.
+local function compareLines(eval, ilvl, lines, who)
     local base = type(eval.baseline) == "table" and eval.baseline or nil
     local d = num(eval.ilvlDelta)
     if d and ilvl then
-        local name = base and WC.ItemName(base.link) or L["the worn item"]
-        lines[#lines + 1] = L["Item level %d against %d (%s): %s."]:format(ilvl, round(ilvl - d), name, WC.Signed(d))
+        local TM = NS.TipMarks
+        local worn = { link = base and base.link, name = base and base.name, quality = base and base.quality, ilvl = ilvl - d }
+        lines[#lines + 1] = TM.Grid(TM.GearRows(who or "?", { worn }, 0, TM.ArrowCell(eval.verdict, d), worn))
     end
     lines[#lines + 1] = trackLine(eval.trackDelta)
     local sd = num(eval.scoreDelta)
     if sd then lines[#lines + 1] = L["Score: %+.1f."]:format(sd) end
 end
 
--- The tooltip of one verdict: its title, board 03's explanation, then the comparison and the
--- kernel's reasons.
-local function verdictTip(title, eval, ilvl)
+-- The tooltip of one verdict: its title, board 03's explanation, then the comparison (a grid row)
+-- and the kernel's reasons.
+local function verdictTip(title, eval, ilvl, who)
     local v = eval.verdict
     local lines = { title, VERDICT_EXPLAIN[v] or VERDICT_EXPLAIN.unknown }
-    compareLines(eval, ilvl, lines)
+    compareLines(eval, ilvl, lines, who)
     if hasReasons(eval) then
         for _, r in ipairs(eval.reasons) do lines[#lines + 1] = EVAL_REASON[r.key] or tostring(r.key) end
     end
     return lines
 end
 
--- The cell's text and glyph: the signed item-level change beside ▲ ≈ ▽, or a word.
+-- The cell's text and glyph: the signed item-level change beside ▲ ≈ ▼, or a word.
 local function verdictText(eval)
     local v = eval.verdict
     local glyph = WC.GLYPH[v]
@@ -203,28 +220,35 @@ local function verdictText(eval)
     return L["empty"], glyph
 end
 
---- One verdict cell (the Me or the Them column).
+--- One verdict cell (the Me or the Them column; both take the same tones). Its tooltip's comparison
+--- is a grid row naming `who`; the cell keeps `who`, `delta` and `base` (the worn item it was judged
+--- against) for NS.SideCells, which lays the worn gear out in that grid.
 --- @param eval table|nil NS.Evaluate's answer
---- @param side string `me` or `them`
+--- @param _side string `me` or `them`
 --- @param title string the tooltip's subject (`For you`, `For Seta`)
 --- @param ilvl number|nil the drop's item level
+--- @param who string|nil the grid's name cell, colored (NS.TipMarks.ClassName)
 --- @return table cell
-function WC.Verdict(eval, side, title, ilvl)
+function WC.Verdict(eval, _side, title, ilvl, who)
     if type(eval) ~= "table" or type(eval.verdict) ~= "string" then
         eval = { verdict = "unknown", reasons = {} }
     end
     local text, glyph = verdictText(eval)
-    local tones = TONE_FOR[side] or TONE_FOR.me
     local v = eval.verdict
-    local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl)
-    return { text = text, glyph = glyph, tone = tones[v] or "muted", tip = tip, verdict = v }
+    local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl, who)
+    return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v,
+        who = who, delta = num(eval.ilvlDelta), base = type(eval.baseline) == "table" and eval.baseline or nil }
 end
 
---- The Me column: the drop judged for you.
+--- The Me verdict: the drop judged for you (NS.SideCells puts it after your worn gear). The grid
+--- names you `You`, in your class color: `classFile`, else the looter's on your own drop.
 --- @param drop table
+--- @param classFile string|nil your class (the gear snapshot's)
 --- @return table cell
-function WC.Me(drop)
-    return WC.Verdict(drop.me, "me", L["For you"], num(facts(drop).ilvl))
+function WC.Me(drop, classFile)
+    local mine = drop.isMine and type(drop.looter) == "table" and drop.looter.classFile or nil
+    local who = NS.TipMarks.ClassName(L["You"], classFile or mine)
+    return WC.Verdict(drop.me, "me", L["For you"], num(facts(drop).ilvl), who)
 end
 
 -- Why the looter's verdict is not known, from the drop's inspect state.
@@ -242,22 +266,24 @@ local function inspectWhy(insp, who, now)
     return L["The item it would replace was not read."]
 end
 
---- The Them column: the drop judged for its looter (inverted tones), `–` on your own drop, `?`
---- while their gear is not read.
+--- The Them verdict: the drop judged for its looter (the Me verdict's tones), `–` on your own drop
+--- (the Drops table shows MineCells.Details's `Upgrade for N` there instead: feedback-5 spec §2), `?`
+--- while their gear is not read. NS.SideCells puts it after the looter's worn gear.
 --- @param drop table
 --- @param now number|nil GetTime()
 --- @return table cell
 function WC.Them(drop, now)
     local who = looterName(drop)
     if drop.isMine then
-        return cell(DASH, "muted", L["Them"], L["Your own drop: who it would help is on My drops."])
+        return cell(DASH, "muted", L["Them"], L["Your own drop: Offer shows who it would help."])
     end
+    local named = NS.TipMarks.ClassName(who, type(drop.looter) == "table" and drop.looter.classFile or nil)
     if type(drop.them) ~= "table" then
         local c = cell("?", "muted", L["For %s: Unknown"]:format(who), inspectWhy(drop.inspect, who, now))
-        c.verdict = "unknown"
+        c.verdict, c.who = "unknown", named   -- the tooltip grid's name while their gear is read but not judged
         return c
     end
-    return WC.Verdict(drop.them, "them", L["For %s"]:format(who), num(facts(drop).ilvl))
+    return WC.Verdict(drop.them, "them", L["For %s"]:format(who), num(facts(drop).ilvl), named)
 end
 
 -- ── the Trade column ────────────────────────────────────────────────────────────────────────
@@ -329,11 +355,13 @@ function WC.Trade(drop)
     return c
 end
 
--- ── the My eq and Their eq columns ──────────────────────────────────────────────────────────
+-- ── the gear halves of the Me and Them cells ────────────────────────────────────────────────
 -- Both show the worn item(s) for the drop's slot (two for rings, trinkets and one-hand weapons):
--- the icons are the edge's, the cell's text is their item levels (`311`, `300/296`), and the
--- tooltip names each item. Their eq's inspect age is in its tooltip (feedback spec §3, FB-7); a
--- state with no data keeps its reason word (`…`, `range`, `combat`, `!`, `–`).
+-- the icons are the edge's, the text is their item levels (`311`, `300/296`), and the cell answers
+-- `items` and `empty` (slots worn empty), which NS.SideCells lays out as its tooltip's gear grid
+-- (feedback-7 spec §3; the tooltip named each item on a line before). Their inspect age is in Them's tooltip (feedback spec §3, FB-7); a state with
+-- no data keeps its reason word (`…`, `range`, `combat`, `!`, `–`). They were the My eq and Their
+-- eq columns until feedback-6 spec §1 put each before its verdict (modules/SideCells.lua).
 
 -- The worn slots a drop is compared with: both rings, both trinkets, both hands for a weapon.
 local function eqSlots(equipLoc)
@@ -366,6 +394,13 @@ local function slotItems(gear, slots)
     return items, empty, unread
 end
 
+--- What `gear` holds in `slots` (the Them cell's rule, shared with the Offer panel's Their eq):
+--- the read items { link, ilvl, slot }, the slots read as empty (false) and the slots not read.
+--- @param gear table|nil { [slot] = { link, ilvl } | false }
+--- @param slots table
+--- @return table items, number empty, number unread
+function WC.SlotItems(gear, slots) return slotItems(gear, slots) end
+
 local function levelOf(item)
     local n = num(item.ilvl)
     return n and tostring(round(n)) or "?"
@@ -380,44 +415,35 @@ function WC.Levels(items)
     return table.concat(parts, "/")
 end
 
--- One line per worn item (`Old Band (324)`), and one per slot read as empty.
-local function itemLines(tip, items, empty)
-    for _, it in ipairs(items) do
-        tip[#tip + 1] = ("%s (%s)"):format(WC.ItemName(it.link) or it.link, levelOf(it))
-    end
-    for _ = 1, empty do tip[#tip + 1] = L["Empty slot."] end
-end
-
-local function eqCellOf(text, tone, title, items)
+local function eqCellOf(text, tone, title, items, empty)
     local c = cell(text, tone, title)
-    c.items = items
+    c.items, c.empty = items, empty
     return c
 end
 
 
---- The My eq column: what you wear in the drop's slot, from your gear snapshot (NS.Gear), so it is
+--- What you wear in the drop's slot (the Me cell's gear half), from your gear snapshot (NS.Gear), so it is
 --- always fresh; `empty slot` when you wear nothing there, `…` while your gear is still loading.
 --- @param drop table
 --- @param equipped table|nil the snapshot's `equipped` ({ [slot] = entry | false })
---- @return table cell, with `items` = { { link, ilvl, slot }, ... }
+--- @return table cell, with `items` = { { link, ilvl, slot }, ... } and `empty` (slots worn empty)
 function WC.MyEq(drop, equipped)
     local title = L["You wear"]
     local slots = eqSlots(facts(drop).equipLoc)
     if not slots then
-        local c = eqCellOf(DASH, "muted", title, {})
+        local c = eqCellOf(DASH, "muted", title, {}, 0)
         c.tip[2] = L["Not an item that is worn, or its details have not loaded."]
         return c
     end
     local items, empty, unread = slotItems(equipped, slots)
     local c
     if #items > 0 then
-        c = eqCellOf(WC.Levels(items), "plain", title, items)
+        c = eqCellOf(WC.Levels(items), "plain", title, items, empty)
     elseif unread > 0 then
-        c = eqCellOf("…", "muted", title, items)
+        c = eqCellOf("…", "muted", title, items, empty)
     else
-        c = eqCellOf(L["empty slot"], "muted", title, items)
+        c = eqCellOf(L["empty slot"], "muted", title, items, empty)
     end
-    itemLines(c.tip, items, empty)
     if unread > 0 then c.tip[#c.tip + 1] = L["Your gear is still loading."] end
     return c
 end
@@ -428,6 +454,11 @@ local STATUS_TEXT = { pending = "…", combatParked = L["combat"], outOfRange = 
 local function readOk(insp)
     return type(insp) == "table" and (insp.status == "fresh" or insp.status == "cached")
 end
+
+--- Whether an inspect read's gear may be shown: it is fresh, or the cache's.
+--- @param insp table|nil the read (NS.Inspect.Get's)
+--- @return boolean
+function WC.ReadOk(insp) return readOk(insp) end
 
 -- The tooltip's line on how old the read is: `Inspected 2m ago.`, or the cache's.
 local function ageLine(insp, now)
@@ -450,36 +481,31 @@ local function theirStatus(insp, empty, unread)
     return STATUS_TEXT[type(insp) == "table" and insp.status] or DASH, "muted"
 end
 
---- The Their eq column: the looter's worn item(s) for the drop's slot (two for rings, trinkets and
+--- What the looter wears (the Them cell's gear half): their worn item(s) for the drop's slot (two for rings, trinkets and
 --- weapons) and their item levels; the inspect's age (or why there is no read) in the tooltip.
+--- Another player's drop only: your own drop's Them cell is MineCells.Details's (SideCells.Them).
 --- @param drop table
 --- @param gear table|nil the looter's inspect entry's `gear` ({ [slot] = { link, ilvl } | false })
 --- @param now number|nil GetTime()
---- @return table cell, with `items` = { { link, ilvl, slot }, ... }
+--- @return table cell, with `items` = { { link, ilvl, slot }, ... } and `empty` (slots worn empty)
 function WC.TheirEq(drop, gear, now)
-    if drop.isMine then
-        local own = eqCellOf(DASH, "muted", L["Their eq"], {})
-        own.tip[2] = L["Your own drop: what you wear is in the My eq column."]
-        return own
-    end
     local who = looterName(drop)
     local title = L["%s wears"]:format(who)
     local slots = eqSlots(facts(drop).equipLoc) or {}
     local items, empty, unread = slotItems(gear, slots)
     local c
     if #items > 0 then
-        c = eqCellOf(WC.Levels(items), "plain", title, items)
+        c = eqCellOf(WC.Levels(items), "plain", title, items, empty)
     else
         local text, tone = theirStatus(drop.inspect, empty, unread)
-        c = eqCellOf(text, tone, title, items)
+        c = eqCellOf(text, tone, title, items, empty)
     end
-    itemLines(c.tip, items, empty)
     if #items == 0 and empty == 0 then c.tip[#c.tip + 1] = L["Nothing read for this slot yet."] end
     c.tip[#c.tip + 1] = WC.InspectLine(drop.inspect, who, now)
     return c
 end
 
---- How fresh the looter's inspect is, in words (the Their eq tooltip's last line, and compact mode's
+--- How fresh the looter's inspect is, in words (the Them gear half's last tooltip line, and compact mode's
 --- freshness tooltip, modules/CompactCards.lua): how old a good read is, else why there is none.
 --- @param insp table|nil the drop's inspect state { status, at, reason }
 --- @param who string the looter's short name
@@ -528,11 +554,69 @@ function WC.Slot(drop)
     return cell(label, "plain", label, line)
 end
 
+-- ── the Type column (feedback-4 spec §3) ────────────────────────────────────────────────────
+-- What kind of item it is, from its equip location first and then its armor subclass (stable ids,
+-- never a localized type name): the four armor types, Jewelry, Trinkets, Cloak or Weapons.
+
+local ARMOR_WORD = {
+    [C.ARMOR_SUBCLASS.CLOTH] = L["Cloth"], [C.ARMOR_SUBCLASS.LEATHER] = L["Leather"],
+    [C.ARMOR_SUBCLASS.MAIL] = L["Mail"], [C.ARMOR_SUBCLASS.PLATE] = L["Plate"],
+}
+-- Equip locations whose type is the location's, whatever the subclass: { word, tooltip line }.
+local LOC_TYPE = {
+    INVTYPE_NECK    = { L["Jewelry"], L["A neck: jewelry any class can wear."] },
+    INVTYPE_FINGER  = { L["Jewelry"], L["A ring: jewelry any class can wear."] },
+    INVTYPE_TRINKET = { L["Trinkets"], L["A trinket any class can wear."] },
+    -- Every class wears a cloak, so the cloth the game files it under would mislead.
+    INVTYPE_CLOAK   = { L["Cloak"], L["A cloak: every class wears one."] },
+}
+local WEAPON_LOC = {
+    INVTYPE_WEAPON = true, INVTYPE_2HWEAPON = true, INVTYPE_WEAPONMAINHAND = true, INVTYPE_WEAPONOFFHAND = true,
+    INVTYPE_SHIELD = true, INVTYPE_HOLDABLE = true, INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true,
+}
+
+local function typeTitle(word) return L["Type: %s"]:format(word) end
+
+--- The Type column (feedback-4 spec §3): `Cloth`, `Leather`, `Mail` or `Plate` for an armor piece,
+--- `Jewelry` for a neck or ring, `Trinkets`, `Cloak`, `Weapons` for anything held in a hand (a
+--- shield and an off hand too), else `–` with why. The detail card's chip and the compact cards
+--- read the same answer.
+--- @param drop table
+--- @return table cell, with `known` (false for the dash)
+function WC.ArmorType(drop)
+    local f = facts(drop)
+    local loc = f.equipLoc
+    local fixed = LOC_TYPE[loc]
+    if fixed then
+        local c = cell(fixed[1], "plain", typeTitle(fixed[1]), fixed[2]); c.known = true; return c
+    end
+    if WEAPON_LOC[loc] then
+        local w = L["Weapons"]
+        local c = cell(w, "plain", typeTitle(w), L["Held in a hand: a weapon, a shield or an off hand."]); c.known = true
+        return c
+    end
+    if C.ARMOR_TYPED_EQUIPLOC[loc] then
+        local word = f.classID == C.ITEM_CLASS.ARMOR and ARMOR_WORD[f.subClassID] or nil
+        if word then
+            local c = cell(word, "plain", typeTitle(word), L["Only classes that wear %s are judged able to use it."]:format(word))
+            c.known = true
+            return c
+        end
+        local c = cell(DASH, "muted", L["Type"], L["An armor piece with no armor type, or its details have not loaded."])
+        c.known = false
+        return c
+    end
+    local c = cell(DASH, "muted", L["Type"], L["Not an item that is worn (a token, say), or its details have not loaded."])
+    c.known = false
+    return c
+end
+
 local SOURCE_WORD = { chat = L["chat"], encounter = L["the encounter"], history = L["the loot history"], manual = L["/dw add"] }
 
---- The Looter column: the short name (the edge colors it by class).
+--- The Looter column: the short name (the edge colors it by class) and, on your own drop, `you`:
+--- the ` [YOU]` mark the edge draws after the name in gold, never cut (feedback-7 spec §2).
 --- @param drop table
---- @return table cell, with `classFile`
+--- @return table cell, with `classFile` and `you` (nil on another player's drop)
 function WC.Looter(drop)
     local who = type(drop.looter) == "table" and drop.looter or {}
     local name = WC.ShortName(who.name)
@@ -543,6 +627,7 @@ function WC.Looter(drop)
     local c = cell(name, "plain", name, line)
     if #from > 0 then c.tip[#c.tip + 1] = L["Reported by %s."]:format(table.concat(from, ", ")) end
     c.classFile = who.classFile
+    if drop.isMine then c.you = L["[YOU]"] end
     return c
 end
 
@@ -551,7 +636,7 @@ end
 -- Why no ask is offered for `drop`, or nil when one is; the template it fills when one is
 -- (NS.Messaging.AskTemplate: `ask`, or `transmog` for a look you lack with `transmogAsk` on).
 local function noAskReason(drop, transmogAsk)
-    if drop.isMine then return L["Your own drop: offer it from My drops."] end
+    if drop.isMine then return L["Your own drop: Offer shows who it would help."] end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
         return L["Its looter can't trade it: %s"]:format(WC.TradeReason(drop.trade, looterName(drop)))
     end
@@ -561,13 +646,50 @@ local function noAskReason(drop, transmogAsk)
     return nil, template
 end
 
+-- Every state carries an icon (feedback-7 spec §1): `chat` for Ask, a whisper to the looter.
 local ASK_LOOK = {
-    ready  = { text = L["Ask"], enabled = true },
+    ready  = { text = L["Ask"], icon = "chat", enabled = true },
     traded = { text = L["Traded"], icon = "confirm", enabled = false },
     queued = { text = L["Queued"], icon = "clock", enabled = true },
     sent   = { text = L["Asked"], icon = "confirm", enabled = false },
     failed = { text = L["Retry"], icon = "reset", enabled = true },
 }
+WC.ASK_LOOK = ASK_LOOK   -- read by the suites: every state has an icon
+
+-- NO ACTION (feedback-11 spec §1): where a drop has no action, every view's action slot shows this
+-- placeholder button, gray, dimmed and not clickable, never a dash or an empty slot; its tooltip
+-- is titled `No action` and gives the reason.
+WC.NO_ACTION = { text = L["No action"], icon = "ban" }
+
+--- The placeholder action (feedback-11 spec §1) in WindowCells.Ask's shape: `offered` false, the
+--- `No action` label and `ban` mark, state `none` (gray, WC.ActionTone), the reason in its tooltip.
+--- @param reason string why the drop has no action
+--- @return table { offered = false, text, icon, enabled = false, tip, state = "none" }
+function WC.NoAction(reason)
+    return { offered = false, text = WC.NO_ACTION.text, icon = WC.NO_ACTION.icon, enabled = false,
+        tip = { L["No action"], reason }, state = "none" }
+end
+
+-- WHOSE MOVE IT IS (feedback-4 spec §1): an action button's tone by its state. Your move is red
+-- (Ask, Retry, an Announce not yet sent), waiting on someone else yellow (Asked, Queued, Offered,
+-- Announced), done green (Traded, traded away).
+local ACTION_TONE = {
+    ready = "red", failed = "red", queued = "yellow", sent = "yellow", traded = "good", tradedAway = "good",
+    none = "bad",   -- No action, gray (feedback-11 spec §1)
+}
+
+-- OFFER IN CYAN (feedback-6 spec §2): a button of kind `offer` (one that reads Offer) is cyan while it
+-- is your move, not Ask's red; its other states take ACTION_TONE's.
+local OFFER_TONE = { ready = "cyan", failed = "cyan" }
+
+--- An action button's tone for its state: `red` your move (`cyan` for an Offer), `yellow` waiting,
+--- `good` done; nil for a state that is none of them (the button keeps its own color).
+--- @param state string|nil an ask state (`ready`, `queued`, `sent`, `failed`), `traded` or `tradedAway`
+--- @param kind string|nil `offer` for a button that reads Offer (MineCells.OwnOffer, OfferButton)
+--- @return string|nil a key of C.TONE
+function WC.ActionTone(state, kind)
+    return kind == "offer" and OFFER_TONE[state] or ACTION_TONE[state]
+end
 
 local function askTip(state, who, reason, template)
     if state == "queued" then
@@ -583,8 +705,10 @@ local function askTip(state, who, reason, template)
     return L["Ask"], L["Whisper %s your ask template for this item."]:format(who), L["One ask per item per looter."]
 end
 
---- The Ask button's look: `offered` false shows a dash with the reason; else the label, the
---- catalog mark (`clock` queued, `confirm` asked, `reset` retry) and whether it can be clicked.
+--- The Ask button's look: `offered` false is WC.NoAction's (the gray No action with the reason,
+--- feedback-11 spec §1); else the label, the
+--- catalog mark (`chat` ask, `clock` queued, `confirm` asked or traded, `reset` retry) and whether
+--- it can be clicked.
 --- @param drop table
 --- @param state string|nil NS.Asks.StateOf's state (`ready`, `queued`, `sent`, `failed`), or
 --- `traded` once the history settled the drop received (NS.History.AskState)
@@ -594,7 +718,7 @@ end
 --- @return table { offered, text, icon, enabled, tip, state, template }
 function WC.Ask(drop, state, reason, transmogAsk)
     local no, template = noAskReason(drop, transmogAsk)
-    if no and state ~= "traded" then return { offered = false, text = DASH, enabled = false, tip = { L["No ask"], no } } end
+    if no and state ~= "traded" then return WC.NoAction(no) end
     local look = ASK_LOOK[state] or ASK_LOOK.ready
     local s = ASK_LOOK[state] and state or "ready"
     return { offered = true, text = look.text, icon = look.icon, enabled = look.enabled,
@@ -615,17 +739,16 @@ WC.HIDDEN_TIP_LINES = 8
 local NARROWING = { search = true, content = true, char = true }
 
 -- Whether a hidden drop is the player's narrowing question. A drop with no recorder (kept before
--- the Character dropdown, feedback-2 spec §4) is not: Current hides it, and it is still counted.
+-- the Character dropdown) is too: Current hides it with the rest (feedback-12 spec §1).
 local function narrowed(h)
-    if h.why == "char" then return type(h.drop) == "table" and type(h.drop.seenBy) == "string" end
     return NARROWING[h.why] == true
 end
 
 --- Whether a group keeps its header (feedback-2 spec §0, nothing hidden silently): when a drop is
---- shown under it, or when one the View filter hid (or a drop with no recorder the Character filter
---- hid) is there to count (`n drops · 0 shown`, the tooltip naming the filter). A group that Search,
---- Content or a Character choice hides whole is left out, since that is the question the player
---- asked.
+--- shown under it, or when one the View filter hid is there to count (`n drops · 0 shown`, the
+--- tooltip naming the filter). A group that Search, Content or the Character filter hides whole is
+--- left out, since that is the question the player asked (a drop with no recorder too, feedback-12
+--- spec §1).
 --- @param shown number the drops shown under it
 --- @param hidden table|nil { { drop, why }, ... }
 --- @return boolean
@@ -711,14 +834,11 @@ end
 --- @param collapsed boolean
 --- @param hidden table|nil { { drop, why }, ... } the group's drops the filter hid
 --- @param filter table|nil the tab's filter state, to name the filters
---- @param yours number|nil your own drops of the group the tab left to My drops: `· 1 yours on My
----   drops` after the count (feedback-3 spec §0)
 --- @return table { text, tip }
-function WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter, yours)
+function WC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     local parts, who = WC.Place(group, situationLabel)
     if num(group.at) and num(now) then parts[#parts + 1] = L["%s ago"]:format(WC.Duration(now - group.at)) end
     parts[#parts + 1] = WC.DropCount(shown, hidden)
-    if (tonumber(yours) or 0) > 0 then parts[#parts + 1] = L["%d yours on My drops"]:format(yours) end
     parts[#parts + 1] = who
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
@@ -729,24 +849,13 @@ end
 
 -- ── the table's entries (pure; peeled out of modules/WindowGroup.lua) ───────────────────────
 
--- Whether a drop is the tab's (`ctx.belongs`: Group drops lists your own only with `feed.showOwn`).
-local function belongs(ctx, d) return not ctx.belongs or ctx.belongs(d) end
-
--- One of your drops the tab left to My drops that My drops lists (`ctx.onMine`, its own filters and
--- Hide: feedback-3 spec §5); every one of yours without the predicate.
-local function onMine(ctx, d) return d.isMine == true and (not ctx.onMine or ctx.onMine(d)) end
-
 -- A group's drops for the tab, split into those shown and those its filter hid ({ drop, why },
--- why the control's key, else `filter`), and how many of your own the tab left to My drops that My
--- drops lists (`yours`, feedback-3 spec §0 and §5). A dismissed drop and one not the tab's are in
--- neither.
-local function visibleDrops(group, get, ctx, dismissed)
-    local shown, hidden, yours = {}, {}, 0
+-- why the control's key, else `filter`). Every drop is the tab's (feedback-5 spec §2).
+local function visibleDrops(group, get, ctx)
+    local shown, hidden = {}, {}
     for _, id in ipairs(group.drops or {}) do
         local d = get(id)
-        if d and not belongs(ctx, d) then
-            if onMine(ctx, d) then yours = yours + 1 end
-        elseif d and not dismissed[id] then
+        if d then
             if ctx.matches(d) then
                 shown[#shown + 1] = d
             else
@@ -755,54 +864,51 @@ local function visibleDrops(group, get, ctx, dismissed)
         end
     end
     table.sort(shown, ctx.compare)
-    return shown, hidden, yours
+    return shown, hidden
 end
 
 -- One group's header, then its shown drops unless it is collapsed.
-local function appendGroup(out, g, drops, hidden, filter, c, yours)
+local function appendGroup(out, g, drops, hidden, filter, c)
     out[#out + 1] = { kind = "header", group = g, count = #drops, total = #drops + #hidden,
-        hidden = hidden, filter = filter, collapsed = c, yours = yours }
+        hidden = hidden, filter = filter, collapsed = c }
     if c then return end
     for _, d in ipairs(drops) do out[#out + 1] = { kind = "drop", drop = d } end
 end
 
-local function collapsedOf(collapsed, key, first, allOpen)
+local function collapsedOf(collapsed, key, first)
     local v = collapsed[key]
-    if v == nil then return not (first or allOpen) end
+    if v == nil then return not first end
     return v
 end
 
 --- The table's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
---- collapsed, yours }
---- and { kind = "drop", drop }. `count` is the drops shown, `total` every drop of the group the tab
---- lists, `hidden` the ones the filter hid ({ drop, why }), so the header can say `2 drops · 1 shown`
---- (feedback-2 spec §0), and `yours` your own drops of the group the tab leaves to My drops (Group
---- drops without `feed.showOwn`), so it can say `· 1 yours on My drops` (feedback-3 spec §0).
+--- collapsed } and { kind = "drop", drop }. `count` is the drops shown, `total` every drop of the
+--- group the tab lists, `hidden` the ones the filter hid ({ drop, why }), so the header can say
+--- `2 drops · 1 shown` (feedback-2 spec §0). Your own drops are listed with the others (feedback-5
+--- spec §2).
 --- Groups newest first (oldest first under Sort: Oldest); a group with no drop passing the filter keeps an open header with count 0 unless KeepsHeader says no, and
---- does not take the first group's open default; a collapsed group's drops left out. With
---- `state.allOpen` every group never toggled is open (My drops, modules/WindowMine.lua).
+--- does not take the first group's open default; a collapsed group's drops left out.
 --- @param groups table the feed's groups, oldest first (NS.LootFeed.Groups)
 --- @param get function id -> drop (NS.LootFeed.Get)
---- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, belongs, hiddenBy,
----   onMine = fn(drop): whether My drops lists one of yours the tab leaves to it (`yours`) }
---- @param state table|nil { collapsed, dismissed, allOpen } (NS.State.windowGroup)
+--- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort }, hiddenBy }
+--- @param state table|nil { collapsed } (NS.State.windowGroup)
 --- @return table
 function WC.Entries(groups, get, ctx, state)
     state = state or {}
-    local collapsed, dismissed = state.collapsed or {}, state.dismissed or {}
+    local collapsed = state.collapsed or {}
     local oldest = type(ctx.filter) == "table" and ctx.filter.sort == "oldest"
     local from, to, step = #groups, 1, -1
     if oldest then from, to, step = 1, #groups, 1 end
     local out, first = {}, true
     for i = from, to, step do
         local g = groups[i]
-        local drops, hidden, yours = visibleDrops(g, get, ctx, dismissed)
+        local drops, hidden = visibleDrops(g, get, ctx)
         if #drops > 0 then
-            local c = collapsedOf(collapsed, g.key, first, state.allOpen)
+            local c = collapsedOf(collapsed, g.key, first)
             first = false
-            appendGroup(out, g, drops, hidden, ctx.filter, c, yours)
+            appendGroup(out, g, drops, hidden, ctx.filter, c)
         elseif WC.KeepsHeader(0, hidden) then
-            appendGroup(out, g, drops, hidden, ctx.filter, false, yours)
+            appendGroup(out, g, drops, hidden, ctx.filter, false)
         end
     end
     return out

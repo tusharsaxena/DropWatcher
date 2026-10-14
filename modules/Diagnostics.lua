@@ -265,7 +265,7 @@ end
 local function trade(out)
     local th = NS.TradeHelper.Stats()
     if th then
-        out:add(TAG, "trade helper: gives=%s opens=%s refused=%s last=%s", th.gives, th.opens, th.refused,
+        out:add(TAG, "trade helper: opens=%s refused=%s last=%s", th.opens, th.refused,
             th.lastReason or "none")
     end
     local st = NS.TradeTimer.Stats()

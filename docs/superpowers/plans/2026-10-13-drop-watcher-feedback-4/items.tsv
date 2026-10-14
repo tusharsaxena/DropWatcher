@@ -1,0 +1,7 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-D0	M13	DropWatcher	Verdict colors consistent; arrow before the number		S	FEED	fb4 §0
+DW-D1	M13	DropWatcher	Action buttons toned by whose move it is	DW-D0	M	FEED	fb4 §1
+DW-D2	M13	DropWatcher	Remove every dismiss and hide	DW-D1	M	FEED	fb4 §2
+DW-D3	M13	DropWatcher	Type column beside Slot	DW-D2	M	FEED	fb4 §3
+DW-D4	M13	DropWatcher	Gold headers; search box anchors; least width = default	DW-D3	M	PANEL	fb4 §4
+DW-D5	M13	DropWatcher	Docs sync + automated-test bundle	DW-D4	S		fb4 §5

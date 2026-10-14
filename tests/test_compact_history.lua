@@ -68,8 +68,14 @@ test("compact history: kept groups as one-line headers, the newest open, each en
     assertEqual(textOf(c.looter.text), "Brakk"); assertEqual(textOf(c.looter.glyph), "⊕", "from another realm")
     assertEqual(plain(textOf(c.slot.text)), "· Neck"); assertEqual(plain(textOf(c.trade.text)), "· Likely")
     assertTrue(textOf(c.time.text):match("^%d%d:%d%d$") ~= nil, "the time within a day: " .. textOf(c.time.text))
-    assertEqual(textOf(c.you.glyph) .. " " .. textOf(c.you.text), "▽ -4")
+    assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▼4", "the verdict alone (feedback-6 spec §1)")
+    assertEqual(textOf(c.you.level), "", "a kept entry holds no worn items")
     assertEqual(textOf(c.themLabel.text), "Them")
+    -- feedback-10 spec §2: the level before the name, cut before the outcome; gold labels, Them close after You.
+    local CG, gold = NS.CompactGroup, NS.Constants.GOLD
+    assertEqual(c.item.text.__points[1][2], c.ilvl.text); assertEqual(c.item.text.__points[2][2], c.outcome.text)
+    assertEqual(c.themLabel.text.__points[1][2], c.you.text); assertEqual(c.themLabel.text.__points[1][4], CG.HALVES_GAP)
+    assertEqual(select(2, c.youLabel.text:GetTextColor()), gold.g)
     assertEqual(card.model.kind, "history")
     assertTrue(cardWith(drawn, "Expired") ~= nil)
 end)
@@ -78,7 +84,7 @@ test("compact history: the outcome is in its tone, and every piece keeps its ful
     local NS, drawn = shownCompact()
     local C, W = NS.Constants, NS.Window
     local expired = cardWith(drawn, "Expired")
-    assertEqual(select(1, expired.cells.outcome.text:GetTextColor()), C.TONE.bad.r)
+    assertEqual(select(1, expired.cells.outcome.text:GetTextColor()), C.TONE.red.r, "Expired in red (feedback-12 spec §0)")
     local asked = cardWith(drawn, "Asked")
     assertEqual(W.TooltipOf(asked.cells.outcome.hit)[1], "Outcome: Asked")
     assertEqual(W.TooltipOf(asked.cells.time.hit)[1], "When")
@@ -182,3 +188,25 @@ test("compact history: test mode's kept samples fill a card each, no piece blank
         end
     end
 end)
+
+test("history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)", function()
+    local NS, drawn = shownCompact()
+    local G = NS.Constants.GOLD
+    local mine, theirs = cardWith(drawn, "Expired"), cardWith(drawn, "Asked")
+    assertEqual(textOf(mine.cells.looter.text), "Testchar")
+    assertTrue(mine.cells.looter.mark:IsShown()); assertEqual(textOf(mine.cells.looter.mark), "[YOU]")
+    assertEqual(select(2, mine.cells.looter.mark:GetTextColor()), G.g)
+    assertFalse(theirs.cells.looter.mark:IsShown())
+    NS.SetWindowMode("full")
+    local full = NS.WindowHistory.Drawn()
+    local marked = 0
+    for _, r in ipairs(full.rows) do
+        local l = r.cells and r.cells.looter
+        if l and l.mark:IsShown() then
+            marked = marked + 1
+            assertEqual(textOf(l.text), "Testchar"); assertEqual(textOf(l.mark), "[YOU]")
+        end
+    end
+    assertEqual(marked, 1, "only your own entry is marked")
+end)
+

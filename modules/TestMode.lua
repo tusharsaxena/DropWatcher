@@ -12,7 +12,7 @@ local _, NS = ...
 -- class's loot, falling back to your own equipped and bag gear) into test mode's own holder
 -- (State.testPool). The drops fill in when it is ready: at once when the journal has loaded, else
 -- after EJ_LOOT_DATA_RECIEVED or the pool's timeout, never with an invented item meanwhile (the
--- Group drops tab says it is gathering them). Each item's facts are the item cache's
+-- Drops tab says it is gathering them). Each item's facts are the item cache's
 -- (NS.ItemFacts.Get), else the pool's level and slot with the link's quality.
 --
 -- THE HISTORY (FB-10). While test mode is on, the History tab reads test mode's own session-only
@@ -21,12 +21,12 @@ local _, NS = ...
 --
 -- THE HOOKS. A sample carries its own inspect entry (`testInspect`, read in place of
 -- NS.Inspect.Get) and its own ask state (`testAsk`, shown while the messaging edge holds none for
--- it): TM.InspectOf and TM.AskState are what the Group drops table and the detail card read. A click
+-- it): TM.InspectOf and TM.AskState are what the Drops table and the detail card read. A click
 -- on a sample's Ask, Offer or Announce goes through the messaging edge, which prints the text
 -- instead of sending it (modules/Asks.lua): nothing is ever whispered in test mode.
 --
 -- THE GATES. Samples skip the situation and quality gates, ask for no inspect and are never
--- re-judged (modules/LootFeed.lua AddTest). While test mode is on, the Group drops tab's View is
+-- re-judged (modules/LootFeed.lua AddTest). While test mode is on, the Drops tab's View is
 -- All, so every state is on screen; turning it off puts the player's View back.
 --
 -- NS.SetTestMode (core/DropWatcher.lua) calls Populate and Clear; the stand-down clears too.
@@ -40,7 +40,7 @@ local State = NS.State
 
 local TAG = "State"
 
-local savedView   -- the Group drops tab's View before test mode set it to All
+local savedView   -- the Drops tab's View before test mode set it to All
 
 --- The pool test mode builds: the dungeons at Mythic Keystone, every class's loot.
 TM.POOL = { situation = "mythicPlus", classFilter = "any" }
@@ -128,7 +128,7 @@ function TM.PreviewSpecs()
     return TD.Placeholders(now, you(), TD.Source(worn, worn, function(e) return e end))
 end
 
---- True while test mode's pool is still being built (the Group drops tab says so).
+--- True while test mode's pool is still being built (the Drops tab says so).
 --- @return boolean
 function TM.IsLoading()
     local holder = State.testPool
@@ -216,7 +216,7 @@ function TM.Populate()
 end
 
 --- Empty the test feed and the sample history (test mode turned off), let the pool go and put the
---- Group drops tab's View back.
+--- Drops tab's View back.
 function TM.Clear()
     releasePool()
     NS.LootFeed.Clear("test")

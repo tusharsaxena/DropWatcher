@@ -169,7 +169,7 @@ local function ensureCrossRealm(plan, members, ownRealm)
 end
 
 -- A random burst of two or more lines gives you its first line when none is yours, so every
--- such burst fills My drops as well as Group drops (sim feedback §0).
+-- such burst lists a drop of yours on Drops beside the others' (sim feedback §0).
 local function ensureMine(plan)
     if #plan < 2 then return end
     for _, line in ipairs(plan) do
@@ -179,7 +179,7 @@ local function ensureMine(plan)
 end
 
 -- A random burst of two or more lines gives a member its last line when every line is yours, so
--- Group drops has something too.
+-- Drops has another player's drop too.
 local function ensureTheirs(plan, members, rnd)
     if #plan < 2 or #members == 0 then return end
     for _, line in ipairs(plan) do

@@ -15,6 +15,9 @@ local _, NS = ...
 --   Settings.PageEditors.PrefsTab      Comparison › Preferences: the same sub-strip, then one
 --                                      checkbox per item type your class's loot comes in.
 --   Settings.PageEditors.QualityReadout  Feed › Quality's afterGroup: the threshold in force now.
+--   Settings.PageEditors.SituationTable  General › When to show's afterGroup: one table line per
+--                                      situation (Track, Auto-open, Quality), pooled for the session;
+--                                      ParkSituationTable takes it off its placeholder before a render.
 
 local DW       = NS.addon
 local Settings = DW.Settings
@@ -52,6 +55,179 @@ end
 function P.QualityReadout(ctx)
     local w = H().TextRow(ctx, readoutText(), { fontObject = "GameFontHighlight" })
     if w then addRefresher(ctx, function() w:SetText(readoutText()) end) end
+end
+
+-- ── General › When to show: the situations table ────────────────────────────────────────────
+--
+-- Ka0s Loot History's Price sources table (its settings/Panel.lua buildAuctionTable), without the
+-- drag handle, the reorder list and the status column: gold column headers in a band above fixed-
+-- height rows, every second row striped as the window's tables are, the cells' text in
+-- GameFontHighlightSmall, the panel's own CheckBox and Dropdown widgets. No hover highlight, as there.
+
+local SIT_COL = { situation = 8, track = 190, autoOpen = 270, quality = 360 }
+local SIT_QUALITY_W = 200
+local SIT_ROW_H, SIT_HEAD_H, SIT_HEAD_Y = 28, 30, -6
+local SIT_HEAD_RGB = { 0.91, 0.77, 0.42 }   -- Loot History's header gold
+local SIT_LABEL_ON, SIT_LABEL_OFF = 0.86, 0.5   -- its label gray, live and inactive
+
+local function situationEntries()
+    return E.SituationRows(NS.SchemaRuntime.FindRow, NS.Setting, NS.WindowFooter.SituationLabel)
+end
+
+-- Repaint every slot from the stored values: the values, the dimmed label and the disabled cells.
+local function paintSituations(t)
+    for i, e in ipairs(situationEntries()) do
+        local r = t.rows[i]
+        local gray = e.active and SIT_LABEL_ON or SIT_LABEL_OFF
+        r.label:SetText(e.label)
+        r.label:SetTextColor(gray, gray, gray)
+        r.track:SetValue(e.track.value == true)
+        r.track:SetDisabled(not e.track.enabled)
+        r.autoOpen:SetValue(e.autoOpen.value == true)
+        r.autoOpen:SetDisabled(not e.autoOpen.enabled)
+        r.quality:SetValue(e.quality.value)
+        r.quality:SetDisabled(not e.quality.enabled)
+    end
+end
+
+-- A write through the seam, then the repaint (the seam's announce repaints too; this covers a
+-- refused value, which announces nothing).
+local function writeCell(t, path, value)
+    set(path, value)
+    paintSituations(t)
+end
+
+local function tipOf(path)
+    local row = NS.SchemaRuntime.FindRow(path)
+    return row and row.label, row and row.tooltip
+end
+
+local function situationCheck(t, rf, x, path)
+    local h = H()
+    local cb = h.AceGUI:Create("CheckBox")
+    cb:SetLabel("")
+    cb.frame:SetParent(rf)
+    cb.frame:ClearAllPoints()
+    cb.frame:SetPoint("LEFT", rf, "LEFT", x, 0)
+    cb.frame:SetWidth(26)
+    cb.frame:Show()
+    cb:SetCallback("OnValueChanged", function(_, _, v) writeCell(t, path, v and true or false) end)
+    h.AttachTooltip(cb, tipOf(path))
+    return cb
+end
+
+local function situationQuality(t, rf, path)
+    local h = H()
+    local dd = h.AceGUI:Create("Dropdown")
+    dd:SetLabel("")
+    local row = NS.SchemaRuntime.FindRow(path)
+    local items, order = {}, {}
+    for i, v in ipairs(row and row.values or {}) do items[v.value], order[i] = v.text, v.value end
+    dd:SetList(items, order)
+    dd:SetWidth(SIT_QUALITY_W)
+    dd.frame:SetParent(rf)
+    dd.frame:ClearAllPoints()
+    dd.frame:SetPoint("LEFT", rf, "LEFT", SIT_COL.quality, 0)
+    dd.frame:Show()
+    dd:SetCallback("OnValueChanged", function(_, _, v) writeCell(t, path, v) end)
+    h.AttachTooltip(dd, tipOf(path))
+    return dd
+end
+
+-- The Situation cell: its text, and a mouse target over it for the situation's tooltip.
+local function situationLabel(rf, key)
+    local fs = rf:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    fs:SetPoint("LEFT", rf, "LEFT", SIT_COL.situation, 0)
+    fs:SetJustifyH("LEFT")
+    local hit = CreateFrame("Frame", nil, rf)
+    hit:SetPoint("TOPLEFT", rf, "TOPLEFT", SIT_COL.situation, 0)
+    hit:SetPoint("BOTTOMRIGHT", rf, "BOTTOMLEFT", SIT_COL.track - 8, 0)
+    hit:EnableMouse(true)
+    H().AttachTooltip(hit, NS.WindowFooter.SituationLabel(key), nil)
+    return fs
+end
+
+-- One slot, for the situation at index `i`: the slots follow K.SITUATIONS, so a slot's paths are
+-- fixed and only its values and states are repainted.
+local function situationSlot(t, i, key)
+    local rf = CreateFrame("Frame", nil, t.host)
+    local y = -(SIT_HEAD_H + (i - 1) * SIT_ROW_H)
+    rf:SetPoint("TOPLEFT", t.host, "TOPLEFT", 0, y)
+    rf:SetPoint("TOPRIGHT", t.host, "TOPRIGHT", 0, y)
+    rf:SetHeight(SIT_ROW_H)
+    local stripe = rf:CreateTexture(nil, "BACKGROUND")
+    stripe:SetAllPoints(rf)
+    stripe:SetColorTexture(1, 1, 1, 0.03)
+    stripe:SetShown(i % 2 == 0)
+    local base = "situations." .. key .. "."
+    return {
+        frame = rf, stripe = stripe, label = situationLabel(rf, key),
+        track = situationCheck(t, rf, SIT_COL.track, base .. "track"),
+        autoOpen = situationCheck(t, rf, SIT_COL.autoOpen, base .. "autoOpen"),
+        quality = situationQuality(t, rf, base .. "quality"),
+    }
+end
+
+local function situationHeader(host, x, text)
+    local fs = host:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    fs:SetPoint("TOPLEFT", host, "TOPLEFT", x, SIT_HEAD_Y)
+    fs:SetJustifyH("LEFT")
+    fs:SetText(text)
+    fs:SetTextColor(SIT_HEAD_RGB[1], SIT_HEAD_RGB[2], SIT_HEAD_RGB[3])
+    return fs
+end
+
+-- The host, its headers and its slots, once per session. A raw frame the page owns rather than an
+-- AceGUI child: ClearScroll hands every scroll child back to AceGUI's pool on each render of the
+-- tab, and the slots' widgets are parented to their rows, never to the scroll, so it reclaims none.
+local function buildSituationTable(ctx)
+    local t = { host = CreateFrame("Frame", nil, ctx.panel), rows = {} }
+    t.headers = {
+        situationHeader(t.host, SIT_COL.situation, L["Situation"]),
+        situationHeader(t.host, SIT_COL.track, L["Track"]),
+        situationHeader(t.host, SIT_COL.autoOpen, L["Auto-open"]),
+        situationHeader(t.host, SIT_COL.quality, L["Quality"]),
+    }
+    for i, s in ipairs(K.SITUATIONS) do t.rows[i] = situationSlot(t, i, s.key) end
+    return t
+end
+
+--- Take the table off the placeholder it was hosted on and park it, hidden, on the panel. Called by
+--- the General page's renderer BEFORE its ClearScroll: that hands the placeholder back to AceGUI's
+--- pool, and a table left on it would ride the frame into whatever it is handed out for next, on
+--- whichever tab is drawn.
+--- @param ctx table
+function P.ParkSituationTable(ctx)
+    local t = ctx.dwSituations
+    if not t then return end
+    t.host:Hide()
+    t.host:SetParent(ctx.panel)
+    t.host:ClearAllPoints()
+end
+
+--- General › When to show's afterGroup: the per-situation rows as one table, a line per situation
+--- (Situation, Track, Auto-open, Quality). Built once and re-parented to a fresh placeholder on each
+--- render of the tab; repainted on each render and after every write (a toggle, the global
+--- Auto-open, Defaults, a profile switch).
+--- @param ctx table
+function P.SituationTable(ctx)
+    local h = H()
+    local scroll = h.EnsureScroll(ctx)
+    if not scroll then return end
+    h.AddSpacer(scroll, 4)
+    local holder = h.AceGUI:Create("SimpleGroup")
+    holder:SetLayout(nil)
+    holder:SetFullWidth(true)
+    holder:SetHeight(SIT_HEAD_H + SIT_ROW_H * #K.SITUATIONS + 8)
+    scroll:AddChild(holder)
+    local t = ctx.dwSituations or buildSituationTable(ctx)
+    ctx.dwSituations = t
+    t.host:SetParent(holder.frame)
+    t.host:ClearAllPoints()
+    t.host:SetAllPoints(holder.frame)
+    t.host:Show()
+    paintSituations(t)
+    addRefresher(ctx, function() paintSituations(t) end)
 end
 
 -- ── the spec sub-strip (Weights and Preferences) ────────────────────────────────────────────

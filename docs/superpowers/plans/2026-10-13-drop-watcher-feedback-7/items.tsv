@@ -1,0 +1,7 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-G0	M16	DropWatcher	Offer panel: Their eq column in the Them look, no class bar, alternating rows, Trade button removed		M	FEED	fb7 §0
+DW-G1	M16	DropWatcher	An icon on every action button, every view	DW-G0	S	FEED	fb7 §1
+DW-G2	M16	DropWatcher	Trade No red; looter [YOU]; Upgrade for N; Trade count dropped	DW-G1	M	FEED	fb7 §2
+DW-G3	M16	DropWatcher	Columnar gear tooltips with mono arrows, toned number	DW-G2	L	FEED	fb7 §3
+DW-G4	M16	DropWatcher	Scan group beside Post above Sort; empty-state buttons centered	DW-G3	M	FEED	fb7 §4
+DW-G5	M16	DropWatcher	Review fixes, docs sync, automated-test bundle	DW-G4	M		fb7 §5

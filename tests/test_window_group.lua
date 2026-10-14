@@ -1,8 +1,8 @@
--- tests/test_window_group.lua — the Group drops table (design spec §11.1-§11.2, boards 01, 03 and
+-- tests/test_window_group.lua — the Drops table (design spec §11.1-§11.2, boards 01, 03 and
 -- 06): every cell's text, glyph, tone and reason tooltip (modules/WindowCells.lua, pure), the
 -- column sets and the entry order (modules/WindowGroup.lua's pure halves), then the table built
 -- headless under the mock: pooled rows, encounter headers that collapse, item buttons, the Ask
--- button, the dismiss mark, the compact layout's hand-off, the filters and the empty state.
+-- button, the compact layout's hand-off, the filters and the empty state.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -35,18 +35,18 @@ end
 
 local function WC() return T.newAddon().WindowCells end
 
-local function joined(tip) return table.concat(tip, " | ") end
+local function joined(tip) return T.tipJoined(tip) end
 
 -- ── the verdict cells ───────────────────────────────────────────────────────────────────────
 
-test("cells: Me shows the signed change beside ▲ ≈ ▽, green for an upgrade and gray for a downgrade", function()
+test("cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)", function()
     local W = WC()
     local up = W.Me(drop())
     assertEqual(up.text, "+19"); assertEqual(up.glyph, "▲"); assertEqual(up.tone, "good")
     local side = W.Me(drop({ me = { verdict = "sidegrade", ilvlDelta = 0.4, reasons = {} } }))
-    assertEqual(side.text, "+0"); assertEqual(side.glyph, "≈"); assertEqual(side.tone, "plain")
+    assertEqual(side.text, "+0"); assertEqual(side.glyph, "≈"); assertEqual(side.tone, "yellow")
     local down = W.Me(drop({ me = { verdict = "downgrade", ilvlDelta = -13, reasons = {} } }))
-    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▽"); assertEqual(down.tone, "bad")
+    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▼"); assertEqual(down.tone, "red")
 end)
 
 test("cells: a verdict with no glyph says a word, and every verdict's tooltip says why", function()
@@ -59,26 +59,29 @@ test("cells: a verdict with no glyph says a word, and every verdict's tooltip sa
     assertEqual(unk.text, "?"); assertEqual(unk.tone, "muted")
     assertTrue(#unk.tip >= 2, "never a bare title")
     local up = W.Me(drop())
-    assertTrue(joined(up.tip):find("Item level 311 against 292 %(Old Band%): %+19") ~= nil, joined(up.tip))
+    assertEqual(T.tipText(up.tip[3]), "You  292  |cffa335eeOld Band|r  ▲19", "the comparison as a grid row (feedback-7 spec §3)")
+    assertTrue(joined(up.tip):find("against", 1, true) == nil, "no comparison prose")
+    assertEqual(T.tipText(W.Me(drop({ isMine = true, looter = { name = "Me-Realm", classFile = "MAGE" } })).tip[3]):sub(1, 18),
+        "|cff40c7ebYou|r  2", "your own drop: you in your class color")
     local empty = W.Me(drop({ me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))
     assertEqual(empty.text, "empty"); assertEqual(empty.glyph, "▲")
 end)
 
-test("cells: the Them column inverts the tones: their upgrade is amber, their downgrade green", function()
+test("cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray", function()
     local W = WC()
     local down = W.Them(drop(), 100)
-    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▽"); assertEqual(down.tone, "good")
+    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▼"); assertEqual(down.tone, "red")
     assertEqual(down.tip[1], "For Seta: Downgrade")
     local up = W.Them(drop({ them = { verdict = "upgrade", ilvlDelta = 12, reasons = {} } }), 100)
-    assertEqual(up.tone, "warn")
+    assertEqual(up.tone, "good")
     local cant = W.Them(drop({ them = { verdict = "cantUse", reasons = {} } }), 100)
-    assertEqual(cant.tone, "good", "they cannot use it: good news for you")
+    assertEqual(cant.tone, "bad", "gray, as in the Me column")
 end)
 
 test("cells: Them is a dash on your own drop and `?` with the inspect's reason while unread", function()
     local W = WC()
     local mine = W.Them(drop({ isMine = true, them = NONE }), 100)
-    assertEqual(mine.text, "–"); assertTrue(mine.tip[2]:find("My drops") ~= nil)
+    assertEqual(mine.text, "–"); assertEqual(mine.tip[2], "Your own drop: Offer shows who it would help.")
     local cases = {
         pending = "Waiting to inspect Seta", outOfRange = "out of range", combatParked = "combat to end",
         unavailable = "not in your group",
@@ -115,10 +118,13 @@ test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", fu
     assertTrue(reason({ state = "unknown", reasonKey = "noInspect", args = { "outOfRange" } }):find("out of range") ~= nil)
     local none = W.Trade(drop({ trade = NONE }))
     assertEqual(none.text, "Unknown"); assertEqual(none.tip[2], "Not estimated yet.")
-    assertEqual(W.Trade(drop({ trade = { state = "no", reasonKey = "legacy" } })).tone, "bad")
+    assertEqual(W.Trade(drop({ trade = { state = "no", reasonKey = "legacy" } })).tone, "red",
+        "No in the palette's red, not the gray `bad` (feedback-7 spec §2)")
+    assertEqual(W.Trade(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } })).tone, "good")
+    assertEqual(none.tone, "muted")
 end)
 
--- ── the Their eq column ─────────────────────────────────────────────────────────────────────
+-- ── the gear halves (WC.TheirEq, WC.MyEq; NS.SideCells puts them before the verdict) ────────
 
 -- Feedback spec §3 (FB-7): the worn item levels in the cell, the read's age in its tooltip.
 test("cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip", function()
@@ -128,8 +134,8 @@ test("cells: Their eq shows both rings' levels for a ring, one for a helm, and t
     assertEqual(#helm.items, 1); assertEqual(helm.text, "324"); assertEqual(helm.tone, "plain")
     assertEqual(helm.items[1].slot, 1, "each item names its slot")
     assertEqual(helm.tip[1], "Seta wears")
-    assertEqual(helm.tip[2], "Old Band (324)")
-    assertEqual(helm.tip[3], "Inspected 40s ago.")
+    assertEqual(helm.tip[2], "Inspected 40s ago.", "the items are the merged cell's grid (SideCells), not lines")
+    assertEqual(helm.empty, 0)
     local ring = W.TheirEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER" }, link = RING }), gear, 100)
     assertEqual(#ring.items, 2, "rings compare with both worn rings")
     assertEqual(ring.text, "300/296")
@@ -139,7 +145,7 @@ test("cells: Their eq shows both rings' levels for a ring, one for a helm, and t
     assertEqual(#none.items, 0); assertEqual(none.text, "–")
     assertTrue(joined(none.tip):find("Nothing read") ~= nil)
     local empty = W.TheirEq(drop(), { [1] = false }, 100)
-    assertEqual(empty.text, "empty slot"); assertTrue(joined(empty.tip):find("Empty slot.", 1, true) ~= nil)
+    assertEqual(empty.text, "empty slot"); assertEqual(empty.empty, 1, "the slot worn empty, for the grid")
 end)
 
 -- Feedback spec §3 (FB-6): what you wear, from your gear snapshot.
@@ -149,10 +155,10 @@ test("cells: My eq shows what you wear in the drop's slot, both rings for a ring
         [13] = { link = OLD1, ilvl = 289 }, [14] = { link = OLD2, ilvl = 301 } }
     local helm = W.MyEq(drop(), equipped)
     assertEqual(helm.text, "292"); assertEqual(helm.tone, "plain"); assertEqual(#helm.items, 1)
-    assertEqual(helm.tip[1], "You wear"); assertEqual(helm.tip[2], "Old Band (292)")
+    assertEqual(helm.tip[1], "You wear"); assertTrue(helm.tip[2] == nil, "the items are the grid's")
     local ring = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER" } }), equipped)
     assertEqual(ring.text, "300", "one ring worn, the other slot empty")
-    assertTrue(joined(ring.tip):find("Empty slot.", 1, true) ~= nil)
+    assertEqual(ring.empty, 1, "the other slot worn empty")
     local trinket = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET" } }), equipped)
     assertEqual(trinket.text, "289/301"); assertEqual(#trinket.items, 2)
     local cloak = W.MyEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_CLOAK" } }), { [15] = false })
@@ -164,7 +170,7 @@ test("cells: My eq shows what you wear in the drop's slot, both rings for a ring
     assertEqual(W.MyEq(drop({ isMine = true }), equipped).text, "292", "your own drop too")
 end)
 
-test("cells: Their eq says pending, range, combat or failed beside the icons, and a dash on your own", function()
+test("cells: Their eq says pending, range, combat or failed beside the icons", function()
     local W = WC()
     local want = { pending = "…", outOfRange = "range", combatParked = "combat", failed = "!" }
     for status, text in pairs(want) do
@@ -172,8 +178,6 @@ test("cells: Their eq says pending, range, combat or failed beside the icons, an
         assertEqual(c.text, text, status); assertEqual(c.tone, "muted")
         assertTrue(#c.tip >= 3, status .. ": the reason is in the tooltip")
     end
-    local mine = W.TheirEq(drop({ isMine = true }), nil, 100)
-    assertEqual(mine.text, "–")
 end)
 
 -- ── the Ask button ──────────────────────────────────────────────────────────────────────────
@@ -181,7 +185,7 @@ end)
 test("cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure", function()
     local W = WC()
     local ready = W.Ask(drop(), "ready")
-    assertTrue(ready.offered and ready.enabled); assertEqual(ready.text, "Ask"); assertTrue(ready.icon == nil)
+    assertTrue(ready.offered and ready.enabled); assertEqual(ready.text, "Ask"); assertEqual(ready.icon, "chat", "a whisper to the looter (feedback-7 spec §1)")
     assertTrue(ready.tip[2]:find("Whisper Seta") ~= nil)
     local queued = W.Ask(drop(), "queued")
     assertEqual(queued.text, "Queued"); assertEqual(queued.icon, "clock"); assertTrue(queued.enabled, "a click cancels it")
@@ -195,7 +199,10 @@ end)
 test("cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you", function()
     local W = WC()
     local mine = W.Ask(drop({ isMine = true }), "ready")
-    assertFalse(mine.offered); assertEqual(mine.text, "–"); assertTrue(mine.tip[2]:find("My drops") ~= nil)
+    assertFalse(mine.offered); assertEqual(mine.text, "No action", "the placeholder (feedback-11 spec §1)")
+    assertEqual(mine.icon, "ban"); assertEqual(mine.state, "none"); assertEqual(mine.tip[1], "No action")
+    assertEqual(W.ActionTone(mine.state), "bad", "gray")
+    assertEqual(mine.tip[2], "Your own drop: Offer shows who it would help.", "reworded (feedback-5 spec §2)")
     local no = W.Ask(drop({ trade = { state = "no", reasonKey = "bonusRoll" } }), "ready")
     assertFalse(no.offered); assertTrue(no.tip[2]:find("Bonus roll") ~= nil)
     local down = W.Ask(drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }), "ready")
@@ -244,39 +251,51 @@ end
 
 test("table: the default columns, and a column the profile turns off", function()
     local WG = T.newAddon().WindowGroup
-    assertEqual(keys(WG.Columns()), "item,ilvl,slot,looter,myEq,theirEq,me,them,trade,actions")
+    assertEqual(keys(WG.Columns()), "item,ilvl,slot,armorType,looter,me,them,trade,tradeWindow,actions")
     assertEqual(keys(WG.Columns({ slot = false, item = false, them = true })),
-        "item,ilvl,looter,myEq,theirEq,me,them,trade,actions", "Item never hides")
-    assertEqual(keys(WG.Columns({ myEq = false })),
-        "item,ilvl,slot,looter,theirEq,me,them,trade,actions", "`window.columns.myEq` turns My eq off")
+        "item,ilvl,armorType,looter,me,them,trade,tradeWindow,actions", "Item never hides")
+    assertEqual(keys(WG.Columns({ me = false })),
+        "item,ilvl,slot,armorType,looter,them,trade,tradeWindow,actions", "`window.columns.me` turns Me off, gear and all")
+    assertEqual(keys(WG.Columns({ myEq = false, theirEq = false })), keys(WG.Columns()),
+        "a retired toggle names no column (feedback-6 spec §1)")
+    assertEqual(keys(WG.Columns({ tradeWindow = false })),
+        "item,ilvl,slot,armorType,looter,me,them,trade,actions", "`window.columns.tradeWindow` turns it off")
+    assertTrue(T.newAddon().C.PROFILE.window.columns.tradeWindow == true, "on by default")
 end)
 
 test("table: the Item column takes the slack, never less than its minimum", function()
     local NS = T.newAddon()
     local WG, K = NS.WindowGroup, NS.Constants.WINDOW
-    local cols = WG.Columns({ slot = false, looter = false, myEq = false, them = false, trade = false })
+    local cols = WG.Columns({ slot = false, armorType = false, looter = false, them = false, trade = false,
+        tradeWindow = false })
     local wide = WG.Layout(cols, 600)
-    local fixed = 40 + 84 + 70 + 96 + 5 * K.CELL_GAP
+    local fixed = 40 + 127 + K.ASK_W + 4 * K.CELL_GAP   -- Actions is the Ask button alone (feedback-4 §2)
     assertEqual(wide.item.w, 600 - fixed)
     assertEqual(wide.ilvl.x, wide.item.w + K.CELL_GAP)
     assertEqual(WG.Layout(cols, 100).item.w, K.ITEM_MIN)
 end)
 
-test("table: a row too narrow for every column sheds Slot, Looter, My eq, Their eq and Ilvl, in that order", function()
+test("table: a row too narrow for every column sheds Type, Slot, Looter, Trade window and Ilvl, in that order", function()
     local NS = T.newAddon()
-    local WG, K = NS.WindowGroup, NS.Constants.WINDOW
+    local WG = NS.WindowGroup
     local cols = WG.Columns(false)
-    local wide = select(2, WG.Layout(cols, 900))
-    assertEqual(keys(wide), "item,ilvl,slot,looter,myEq,theirEq,me,them,trade,actions", "900 keeps them all")
-    assertEqual(keys(WG.Fit(cols, 850)), "item,ilvl,looter,myEq,theirEq,me,them,trade,actions")
-    assertEqual(keys(WG.Fit(cols, 750)), "item,ilvl,myEq,theirEq,me,them,trade,actions")
-    assertEqual(keys(WG.Fit(cols, 650)), "item,ilvl,theirEq,me,them,trade,actions", "My eq goes before Their eq")
-    local narrow = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
-    local layout, kept = WG.Layout(cols, narrow)
-    assertEqual(keys(kept), "item,me,them,trade,actions")
-    assertTrue(layout.actions.x + layout.actions.w <= narrow, "Actions inside the row at the minimum width")
-    assertTrue(layout.slot == nil, "a shed column has no place")
+    local shed, have = {}, {}
+    for _, c in ipairs(cols) do have[c.key] = true end
+    for w = 1200, 0, -2 do
+        local kept = {}
+        for _, c in ipairs(WG.Fit(cols, w)) do kept[c.key] = true end
+        for key in pairs(have) do
+            if not kept[key] then shed[#shed + 1] = key; have[key] = nil end
+        end
+    end
+    assertEqual(table.concat(shed, ","), "armorType,slot,looter,tradeWindow,ilvl,them,trade,me",
+        "Trade window goes after Looter, and Me and Them where the verdict columns sat (feedback-6 spec §1)")
     assertEqual(keys(WG.Fit(cols, 0)), "item,actions", "Item and Actions never go")
+    for _, w in ipairs({ 300, 500, 700, 900 }) do
+        local layout, kept = WG.Layout(cols, w)
+        assertTrue(layout.actions.x + layout.actions.w <= w, "Actions inside the row at " .. w)
+        if #kept < #cols then assertTrue(layout.armorType == nil, "a shed column has no place") end
+    end
 end)
 
 local function ctxOf(pass, sort)
@@ -303,21 +322,21 @@ test("table: groups newest first, the first open and older ones collapsed; a gro
     local searched = ctxOf(function(d) return d.id ~= 4 end)
     searched.hiddenBy = function() return "search" end
     assertEqual(Cells.Entries(groups, get, searched, {})[1].group.key, "b", "a group Search hides whole is left out")
-    local toggled = Cells.Entries(groups, get, ctxOf(), { collapsed = { a = false, c = true }, dismissed = { [2] = true } })
+    local toggled = Cells.Entries(groups, get, ctxOf(), { collapsed = { a = false, c = true } })
     assertEqual(toggled[1].group.key, "c"); assertTrue(toggled[1].collapsed, "the player's toggle wins")
-    assertEqual(toggled[2].group.key, "b"); assertEqual(toggled[2].count, 1, "a dismissed drop is gone")
+    assertEqual(toggled[2].group.key, "b"); assertEqual(toggled[2].count, 2, "nothing is dismissed")
     local oldest = Cells.Entries(groups, get, ctxOf(nil, "oldest"), {})
     assertEqual(oldest[1].group.key, "a", "Sort: Oldest turns the groups round")
 end)
 
-test("cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder", function()
+test("cells: KeepsHeader keeps a group the View hid whole; Character leaves one out, recorder or not", function()
     local W = WC()
     assertTrue(W.KeepsHeader(1, {}))
     assertFalse(W.KeepsHeader(0, {}), "nothing for the tab")
     assertTrue(W.KeepsHeader(0, { { drop = {}, why = "interesting" } }), "View: counted, never silent")
     assertFalse(W.KeepsHeader(0, { { drop = {}, why = "search" }, { drop = {}, why = "content" } }), "the question asked")
     assertFalse(W.KeepsHeader(0, { { drop = { seenBy = "Alt-Testrealm" }, why = "char" } }), "a Character choice")
-    assertTrue(W.KeepsHeader(0, { { drop = {}, why = "char" } }), "kept before the dropdown: no recorder")
+    assertFalse(W.KeepsHeader(0, { { drop = {}, why = "char" } }), "no recorder: left out too (feedback-12 spec §1)")
 end)
 
 -- ── the table, headless ─────────────────────────────────────────────────────────────────────
@@ -353,21 +372,22 @@ end
 
 local function textOf(region) return region and region:GetText() end
 
-test("table: built at the minimum width, the shed columns hide and Ask stays inside the row", function()
+test("table: built at the least width, every column shows and Ask stays inside the row (feedback-4 §4)", function()
     local NS, _, m = T.enableAddon()
     local K = NS.Constants.WINDOW
     m.__now = 100
     seed(NS, { GROUP }, { drop() })
-    NS.addon.db.profile.window = { geometry = { full = { width = K.MIN_WIDTH } } }
+    NS.addon.db.profile.window = { geometry = { full = { width = 600 } } }   -- stored under the least
     NS.ShowWindow()
+    assertEqual(NS.Window.Frame():GetWidth(), K.MIN_WIDTH, "raised to the least width")
     local drawn = NS.WindowGroup.Drawn()
-    assertEqual(keys(drawn.columns), "item,me,them,trade,actions")
+    assertEqual(keys(drawn.columns), "item,ilvl,slot,armorType,looter,me,them,trade,tradeWindow,actions")
     local c = rowFor(drawn, 1).cells
-    assertFalse(c.slot:IsShown()); assertFalse(c.looter:IsShown()); assertFalse(c.theirEq:IsShown())
-    assertFalse(drawn.pane.colHead.labels.slot:IsShown(), "and so does its column label")
+    assertTrue(c.slot:IsShown()); assertTrue(c.looter:IsShown()); assertTrue(c.them:IsShown())
+    assertTrue(c.tradeWindow:IsShown())
     assertTrue(c.actions:IsShown())
-    local _, _, _, x = c.actions:GetPoint(1)
-    assertTrue(x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
+    local _, _, _, x = c.actions:GetPoint(1)   -- from the row's left edge, itself indented
+    assertTrue(K.ROW_INDENT + x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
 end)
 
 -- Feedback-2 spec §8 (FB2-9): the tables read like Ka0s Loot History's, 18-pixel rows and the
@@ -386,19 +406,19 @@ test("rows: the pure metrics read Default as the template's size and keep the ro
     assertEqual(WR.RowHeight(4), K.ROW_H_MIN); assertEqual(WR.RowHeight(400), K.ROW_H_MAX)
     assertEqual(WR.IconSize(18), 16, "the item button fits an 18-pixel row")
     assertEqual(WR.IconSize(32), K.ROW_ICON, "and never grows past its own size")
-    assertEqual(WR.MineRowHeight(18), 32, "a My drops row keeps room for its countdown bar")
-    assertEqual(WR.MineRowHeight(18, nil), 32, "Default reads the template's size")
-    assertEqual(WR.MineRowHeight(30), 44, "a taller row adds the bar's room")
-    assertEqual(WR.MineRowHeight(18, 14), 40, "a larger text grows the row so its two lines never overlap")
-    assertEqual(WR.MineRowHeight(18, 20), 52)
-    assertEqual(WR.MineRowHeight(40, 8), 54, "the row height wins when it needs more")
+    assertEqual(WR.CountdownRowHeight(18), 32, "a Drops row with Trade window keeps room for its countdown bar")
+    assertEqual(WR.CountdownRowHeight(18, nil), 32, "Default reads the template's size")
+    assertEqual(WR.CountdownRowHeight(30), 44, "a taller row adds the bar's room")
+    assertEqual(WR.CountdownRowHeight(18, 14), 40, "a larger text grows the row so its two lines never overlap")
+    assertEqual(WR.CountdownRowHeight(18, 20), 52)
+    assertEqual(WR.CountdownRowHeight(40, 8), 54, "the row height wins when it needs more")
 end)
 
 test("rows: a stored row height and font size stay as the player set them", function()
     local NS = T.enableAddon()
     NS.addon.db.profile.window.rowHeight, NS.addon.db.profile.window.fontSize = 24, 12
     local m = NS.WindowRows.Metrics()
-    assertEqual(m.height, 24); assertEqual(m.fontSize, 12); assertEqual(m.icon, 20); assertEqual(m.mineHeight, 38)
+    assertEqual(m.height, 24); assertEqual(m.fontSize, 12); assertEqual(m.icon, 20); assertEqual(m.countdownHeight, 38)
 end)
 
 test("rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0", function()
@@ -411,8 +431,10 @@ test("rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0",
 end)
 
 test("table: the Window page's row height and font size lay out and size the drop rows", function()
-    local NS, drawn = shownTable()
+    local NS = shownTable()
     local K = NS.Constants.WINDOW
+    NS.SchemaRuntime.Set("window.columns.tradeWindow", false)   -- its bar's room is the next test's
+    local drawn = NS.WindowGroup.Drawn()
     local r1 = rowFor(drawn, 1)
     assertEqual(r1:GetHeight(), NS.WindowRows.ROW_H, "the default row height")
     assertEqual(r1.cells.item.button:GetWidth(), 16, "the item button fits the row")
@@ -450,14 +472,15 @@ test("table: built headless, one header and one row per drop, each column painte
     assertEqual(c.item.button.link, LINK)
     assertEqual(textOf(c.ilvl.text), "311"); assertEqual(textOf(c.slot.text), "Head")
     assertEqual(textOf(c.looter.text), "Seta")
-    assertEqual(textOf(c.me.text), "+19"); assertEqual(textOf(c.me.glyph), "▲")
-    assertEqual(textOf(c.them.text), "-13"); assertEqual(textOf(c.trade.text), "Likely")
+    assertEqual(textOf(c.me.text), "19"); assertEqual(textOf(c.me.glyph), "▲")
+    assertEqual(textOf(c.them.text), "13"); assertEqual(textOf(c.trade.text), "Likely")
     assertEqual(textOf(c.actions.ask.label), "Ask"); assertTrue(c.actions.ask:IsShown())
     local r2 = rowFor(drawn, 2)
-    assertEqual(textOf(r2.cells.them.text), "?"); assertEqual(textOf(r2.cells.theirEq.text), "range")
+    assertEqual(textOf(r2.cells.them.level), "range"); assertEqual(textOf(r2.cells.them.text), "",
+        "the ? goes: range already says why (feedback-6 spec §1)")
     assertEqual(textOf(r2.cells.trade.text), "Unknown")
     assertFalse(drawn.pane.placeholder:IsShown(), "drops on screen: no empty line")
-    assertEqual(textOf(drawn.pane.colHead.labels.theirEq.text), "Their eq")
+    assertEqual(textOf(drawn.pane.colHead.labels.them.text), "Them")
     assertTrue(NS.Window.Frame().panes.group:IsShown())
 end)
 
@@ -467,8 +490,11 @@ test("table: the verdicts wear their tones, the looter their class color, the it
     local G = NS.Constants.TONE.good
     local r, g, b = c.me.text:GetTextColor()
     assertEqual(table.concat({ r, g, b }, ","), table.concat({ G.r, G.g, G.b }, ","), "an upgrade for you is green")
+    local R = NS.Constants.TONE.red
     r, g = c.them.text:GetTextColor()
-    assertEqual(r .. "," .. g, G.r .. "," .. G.g, "their downgrade is green too: the Them column is inverted")
+    assertEqual(r .. "," .. g, R.r .. "," .. R.g, "their downgrade is red: one tone per verdict")
+    assertEqual(c.them.text.__points[1][2], c.them.glyph, "the arrow comes before the number")
+    assertEqual(c.them.glyph.__points[1][2], c.them, "the arrow sits at the cell's left edge")
     r = c.looter.text:GetTextColor()
     assertEqual(r, 1, "a priest is white")
 end)
@@ -482,13 +508,13 @@ test("table: every shown cell has a reason tooltip; nothing is blank", function(
                 -- the item cell's hover is the real item tooltip (DW-80, BUG-2), not a text one
                 local itemTip = cell.showItem and cell.itemButton.link ~= nil
                 assertTrue(itemTip or #W.TooltipOf(cell) >= 2, key .. " has a reason")
-                assertTrue((cell.text:GetText() or "") ~= "", key .. " is not blank")
+                local all = (cell.level and cell.level:GetText() or "") .. (cell.text:GetText() or "")
+                assertTrue(all ~= "", key .. " is not blank")
             end
         end
         local a = row.cells.actions
-        local tipHost = a.ask:IsShown() and a.ask or a.dashTip
-        assertTrue(#W.TooltipOf(tipHost) >= 2, "the Ask cell has a reason")
-        assertTrue(#W.TooltipOf(a.dismiss) >= 2)
+        assertTrue(#W.TooltipOf(a.ask) >= 2, "the Ask cell has a reason (No action's too)")
+        assertTrue(a.dismiss == nil, "no dismiss mark (feedback-4 spec §2)")
     end
     for _, label in pairs(drawn.pane.colHead.labels) do
         if label:IsShown() then assertTrue(#W.TooltipOf(label) >= 2, "each column label explains itself") end
@@ -568,7 +594,7 @@ test("item tooltip: a row's item button opens the game's tooltip at the row's to
     assertTrue(rel == win)
 end)
 
-test("table: Their eq shows the looter's worn item from their inspect read", function()
+test("table: Them shows the looter's worn item from their inspect read before their verdict", function()
     local NS, _, m = T.enableAddon()
     m.__now = 100
     seed(NS, { GROUP }, { drop() })
@@ -576,30 +602,31 @@ test("table: Their eq shows the looter's worn item from their inspect read", fun
         if guid == "Player-1-0000000A" then return { status = "fresh", at = 60, gear = { [1] = { link = OLD1, ilvl = 324 } } } end
     end
     NS.ShowWindow()
-    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.theirEq
+    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.them
     assertEqual(eq.icons[1].link, OLD1); assertTrue(eq.icons[1]:IsShown())
     assertFalse(eq.icons[2]:IsShown(), "a helm: one item")
-    assertEqual(textOf(eq.text), "324", "the worn item's level; its age is in the tooltip")
+    assertEqual(textOf(eq.level), "324", "the worn item's level; its age is in the tooltip")
+    assertEqual(textOf(eq.glyph) .. textOf(eq.text), "▼13", "then the verdict")
     assertEqual(NS.Window.TooltipOf(eq)[3], "Inspected 40s ago.")
 end)
 
-test("table: My eq shows your worn item from the gear snapshot, its icon showing your own slot", function()
+test("table: Me shows your worn item from the gear snapshot, its icon showing your own slot", function()
     local NS, _, m = T.enableAddon()
     m.__now = 100
     seed(NS, { GROUP }, { drop() })
     NS.Gear.Snapshot = function() return { equipped = { [1] = { link = OLD2, ilvl = 296 } } } end
     NS.ShowWindow()
-    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.myEq
+    local eq = rowFor(NS.WindowGroup.Drawn(), 1).cells.me
     assertTrue(eq:IsShown())
     assertEqual(eq.icons[1].link, OLD2); assertTrue(eq.icons[1]:IsShown())
     assertEqual(eq.icons[1].worn.unit, "player"); assertEqual(eq.icons[1].worn.slot, 1)
     assertFalse(eq.icons[2]:IsShown(), "a helm: one item")
-    assertEqual(textOf(eq.text), "296")
-    assertEqual(textOf(NS.WindowGroup.Drawn().pane.colHead.labels.myEq.text), "My eq")
+    assertEqual(textOf(eq.level), "296")
+    assertEqual(textOf(NS.WindowGroup.Drawn().pane.colHead.labels.me.text), "Me")
     NS.Gear.Snapshot = function() return { equipped = { [1] = { link = OLD1, ilvl = 300 } } } end
     NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
     m.advance(0)
-    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.myEq.text), "300", "a new snapshot repaints it")
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.me.level), "300", "a new snapshot repaints it")
 end)
 
 test("table: the Ask button asks through the shared handler, and AskStateChanged repaints it", function()
@@ -608,6 +635,7 @@ test("table: the Ask button asks through the shared handler, and AskStateChanged
     NS.Asks.Press = function(kind, target, id) calls[#calls + 1] = { kind, target, id }; state = "queued"; return "queued" end
     NS.Asks.StateOf = function() return state end
     local ask = rowFor(drawn, 1).cells.actions.ask
+    assertTrue(ask.art:IsShown() and ask.art:GetTexture() == NS.Icon("chat"), "Ask wears chat (feedback-7 spec §1)")
     ask:__fire("OnClick")
     assertEqual(table.concat(calls[1], ","), "ask,Seta-Realm,1")
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "queued", "ask", "Seta-Realm")
@@ -622,26 +650,26 @@ test("table: the Ask button asks through the shared handler, and AskStateChanged
     assertEqual(textOf(ask.label), "Asked"); assertFalse(ask:IsEnabled())
 end)
 
-test("table: a drop with no ask offered shows a dash with its reason", function()
+test("table: a drop with no ask offered shows the gray No action button with its reason (feedback-11 §1)", function()
     local NS, drawn = shownTable()
     local a = rowFor(drawn, 2).cells.actions
     assertTrue(a.ask:IsShown(), "a sidegrade for you may be asked for")
-    NS.addon.db.profile.feed = { showOwn = true }   -- your own drop listed in Group drops
-    seed(NS, { GROUP }, { drop({ isMine = true, them = NONE }) })
+    seed(NS, { GROUP }, { drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }) })
     NS.Window.Refresh()
     a = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions
-    assertFalse(a.ask:IsShown()); assertTrue(a.dash:IsShown())
-    assertEqual(textOf(a.dash), "–")
-    assertTrue(NS.Window.TooltipOf(a.dashTip)[2]:find("My drops") ~= nil)
+    assertTrue(a.ask:IsShown(), "a button, never a dash"); assertTrue(a.dash == nil and a.dashTip == nil)
+    assertEqual(textOf(a.ask.label), "No action"); assertEqual(a.ask.art:GetTexture(), NS.Icon("ban"))
+    assertFalse(a.ask:IsEnabled()); assertEqual(a.ask.tone, "bad", "gray")
+    assertEqual(NS.Window.TooltipOf(a.ask)[1], "No action")
+    assertEqual(NS.Window.TooltipOf(a.ask)[2], "It is not an upgrade for you.")
 end)
 
-test("table: the × dismisses a row for the session", function()
+test("table: no row can be dismissed: no ×, no handler, no dismissed state (feedback-4 spec §2)", function()
     local NS, drawn = shownTable()
-    rowFor(drawn, 1).cells.actions.dismiss:__fire("OnClick")
-    drawn = NS.WindowGroup.Drawn()
-    assertEqual(#drawn.rows, 1)
-    assertTrue(rowFor(drawn, 1) == nil)
-    assertTrue(NS.State.windowGroup.dismissed[1])
+    assertTrue(rowFor(drawn, 1).cells.actions.dismiss == nil)
+    assertTrue(NS.DismissDrop == nil); assertTrue(NS.WindowGroup.Dismiss == nil)
+    assertTrue(NS.State.windowGroup.dismissed == nil)
+    assertEqual(#drawn.rows, 2)
 end)
 
 test("table: the compact layout draws cards instead of the table, and the full layout the table again", function()
@@ -659,6 +687,131 @@ test("table: the compact layout draws cards instead of the table, and the full l
     assertTrue(drawn.compact == nil)
     assertEqual(#drawn.columns, 10)
     assertTrue(drawn.pane.scroll:IsShown()); assertFalse(drawn.pane.compactView.scroll:IsShown())
+end)
+
+-- ── the Trade window column (feedback-5 spec §1) ────────────────────────────────────────────
+
+test("cells: another player's drop is always the estimate, its tooltip naming the looter; ending soon is no words", function()
+    local NS = T.newAddon()
+    local MC = NS.MineCells
+    -- an exact expiry on another player's record is not trusted: only their own bags know it
+    local theirs = drop({ trade = { state = "likely", reasonKey = "notUpgrade", basis = "inspect", expiresAt = 200 } })
+    local cd = MC.Countdown(theirs, 100)
+    assertFalse(cd.exact); assertEqual(MC.Clock(cd.left), "2:00:00")
+    local c = MC.TradeWindow(theirs, 100, 600)
+    assertEqual(c.text, "~2:00:00"); assertEqual(c.tone, "plain"); assertFalse(c.bold); assertEqual(c.fraction, 1)
+    assertTrue(joined(c.tip):find("about 2:00:00 left for Seta to trade it") ~= nil, joined(c.tip))
+    assertTrue(joined(c.tip):find("your bags") == nil, "never your bags on their drop")
+    local soon = MC.TradeWindow(drop({ at = 100 - 7000 }), 100, 600)
+    assertEqual(soon.text, "~0:03:20", "the words `ending soon` are not drawn")
+    assertTrue(soon.bold); assertTrue(soon.soon); assertEqual(soon.tone, "warn")
+    assertTrue(joined(soon.tip):find("Ending soon: once it runs out, Seta keeps it.", 1, true) ~= nil, joined(soon.tip))
+    local up = MC.TradeWindow(drop({ trade = { state = "no", reasonKey = "upgradeForLooter", basis = "inspect", args = { 311, 300 } } }), 100)
+    assertEqual(up.text, "Their upgrade"); assertEqual(up.tone, "bad"); assertEqual(up.fraction, 0)
+    assertTrue(up.tip[2]:find("300 Seta wears") ~= nil, up.tip[2])
+    local yours = MC.TradeWindow(drop({ isMine = true, trade = { state = "no", reasonKey = "upgradeForLooter", args = { 311 } } }), 100)
+    assertEqual(yours.text, "Your upgrade")
+    local boe = MC.TradeWindow(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), 100)
+    assertEqual(boe.text, "No limit (BoE)")
+    assertEqual(MC.TradeWindow(drop({ trade = NONE }), 100).text, "Checking")
+end)
+
+-- Bar colors as they are set (the mock does not keep a texture's color).
+local function recordBar(bar)
+    local seen = {}
+    rawset(bar, "SetColorTexture", function(self, r, g, b) seen[#seen + 1] = { r, g, b }; return self end)
+    rawset(bar, "SetWidth", function(self, w) seen.width = w; return self end)
+    return seen
+end
+
+test("table: Trade window paints every drop's countdown over its bar; the row grows by the bar's room", function()
+    local NS, _, m = T.enableAddon()
+    local C, WR = NS.Constants, NS.WindowRows
+    m.__now = 100
+    seed(NS, { { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1, 2, 3, 4 } } }, {
+        drop(), drop({ id = 2, at = 100 - 7000 }),
+        drop({ id = 3, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }),
+        drop({ id = 4, trade = { state = "yes", reasonKey = "boe", basis = "bind" } }) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.ShowWindow()
+    local drawn = NS.WindowGroup.Drawn()
+    assertEqual(textOf(drawn.pane.colHead.labels.tradeWindow.text), "Trade window")
+    local f = rowFor(drawn, 1).cells.tradeWindow
+    local colors = recordBar(f.bar)
+    local soonColors = recordBar(rowFor(drawn, 2).cells.tradeWindow.bar)
+    NS.Window.Refresh()
+    drawn = NS.WindowGroup.Drawn()
+    f = rowFor(drawn, 1).cells.tradeWindow
+    assertTrue(f:IsShown()); assertEqual(f:GetWidth(), 76)
+    assertEqual(textOf(f.text), "~2:00:00", "another player's drop: the estimate from when it dropped")
+    assertTrue(joined(f.tipLines):find("left for Seta") ~= nil, joined(f.tipLines))
+    assertTrue(f.bar:IsShown()); assertEqual(f.fraction, 1); assertEqual(colors[#colors][1], C.TONE.good.r)
+    assertEqual(colors.width, 76 - NS.WindowGroup.TRADE_WINDOW_PAD, "a full bar spans the column but its padding")
+    assertFalse(f.bold)
+    assertEqual(rowFor(drawn, 1):GetHeight(), WR.CountdownRowHeight(WR.ROW_H), "the row height plus the bar's room")
+    assertEqual(f:GetHeight(), WR.CountdownRowHeight(WR.ROW_H))
+    local soon = rowFor(drawn, 2).cells.tradeWindow
+    assertEqual(textOf(soon.text), "~0:03:20"); assertTrue(soon.bold)
+    assertEqual(select(1, soon.text:GetTextColor()), C.TONE.warn.r, "amber")
+    assertEqual(soonColors[#soonColors][1], C.TONE.warn.r, "and its bar")
+    local dead = rowFor(drawn, 3).cells.tradeWindow
+    assertEqual(textOf(dead.text), "Bonus roll"); assertFalse(dead.bar:IsShown())
+    assertEqual(textOf(rowFor(drawn, 4).cells.tradeWindow.text), "No limit (BoE)")
+    NS.SchemaRuntime.Set("window.columns.tradeWindow", false)
+    drawn = NS.WindowGroup.Drawn()
+    assertFalse(rowFor(drawn, 1).cells.tradeWindow:IsShown())
+    assertEqual(rowFor(drawn, 1):GetHeight(), WR.ROW_H, "turned off, the row is the row height again")
+end)
+
+-- The live countdown tickers: a repeating ticker every `period` seconds, not canceled.
+local function tickers(m, period)
+    local n = 0
+    for _, t in ipairs(m.__timers) do
+        if t.ticker and not t.stopped and t.delay == period then n = n + 1 end
+    end
+    return n
+end
+
+test("table: the countdowns move each second while one runs, repainting the Trade window cells alone", function()
+    local NS, drawn, m = shownTable()
+    assertEqual(tickers(m, 1), 1, "a countdown runs, so the each-second ticker does")
+    assertEqual(textOf(rowFor(drawn, 1).cells.tradeWindow.text), "~2:00:00")
+    local entries = 0
+    local real = NS.WindowCells.Entries
+    NS.WindowCells.Entries = function(...) entries = entries + 1; return real(...) end
+    m.advance(1)
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:59")
+    m.advance(2)
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:57")
+    assertEqual(entries, 0, "the table is not rebuilt: only the countdowns repaint")
+    m.__now = m.__now + 12
+    NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:45", "TradeTimerTick moves it too")
+    NS.Window.SelectTab("history")
+    NS.Window.Refresh()
+    assertEqual(tickers(m, 1), 0, "another tab: no countdown ticker")
+    NS.Window.SelectTab("group")
+    NS.Window.Refresh()
+    assertEqual(tickers(m, 1), 1)
+    NS.HideWindow()
+    assertEqual(tickers(m, 1), 0, "a hidden window runs none")
+end)
+
+test("table: with no countdown running (nothing tradeable, or the column off) no each-second ticker runs", function()
+    local NS, _, m = T.enableAddon()
+    m.__now = 100
+    seed(NS, { GROUP }, { drop({ trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }),
+        drop({ id = 2, trade = { state = "yes", reasonKey = "boe", basis = "bind" } }) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.ShowWindow()
+    assertEqual(tickers(m, 1), 0)
+    assertFalse(NS.WindowGroup.LiveCountdown())
+    seed(NS, { GROUP }, { drop(), drop({ id = 2 }) })
+    NS.Window.Refresh()
+    assertTrue(NS.WindowGroup.LiveCountdown()); assertEqual(tickers(m, 1), 1)
+    NS.SchemaRuntime.Set("window.columns.tradeWindow", false)
+    NS.Window.Refresh()
+    assertFalse(NS.WindowGroup.LiveCountdown(), "no column, nothing to move"); assertEqual(tickers(m, 1), 0)
 end)
 
 test("table: a column the profile turns off is not drawn", function()
@@ -700,6 +853,24 @@ test("table: with no drop at all the empty state says so, with Preview with test
     assertEqual(NS.Window.TooltipOf(e.scan)[1], "Scan group")
 end)
 
+test("table: the empty state's two buttons are centered as a pair under its text", function()
+    local NS = T.enableAddon()
+    NS.ShowWindow()
+    local K = NS.Constants.WINDOW
+    local e = NS.WindowGroup.Drawn().empty
+    local point, rel, relPoint, x = e.pair:GetPoint(1)
+    assertEqual(point, "TOP"); assertTrue(rel == e.text); assertEqual(relPoint, "BOTTOM"); assertEqual(x, 0)
+    local gap = e.pair:GetWidth() - e.preview:GetWidth() - e.scan:GetWidth()
+    assertEqual(gap, 8, "a fixed gap between them")
+    assertEqual(e.scan:GetWidth(), K.SCAN_W)
+    local p1, r1 = e.preview:GetPoint(1)
+    assertEqual(p1, "LEFT"); assertTrue(r1 == e.pair)
+    local p2, r2 = e.scan:GetPoint(1)
+    assertEqual(p2, "RIGHT"); assertTrue(r2 == e.pair)
+    NS.SetWindowMode("compact")
+    assertTrue(NS.WindowGroup.Drawn().empty == e, "the compact layout's empty state is the same frame")
+end)
+
 test("table: the empty state's buttons turn test mode on and scan the group", function()
     local NS, _, m = T.enableAddon()
     m.seedGearJournal()
@@ -735,4 +906,81 @@ test("table: PressAsk says why it asked nobody: your own drop, a gone drop, the 
     NS.Asks.Press = function() return "refused", "alreadyAsked" end
     NS.PressAsk(1)
     assertTrue(m.prints[#m.prints]:find("You already asked Seta%-Realm for it") ~= nil)
+end)
+
+-- ── whose move it is (feedback-4 spec §1) ───────────────────────────────────────────────────
+
+test("cells: ActionTone is red for your move, yellow while waiting, green once done", function()
+    local W = WC()
+    assertEqual(W.ActionTone("ready"), "red"); assertEqual(W.ActionTone("failed"), "red")
+    assertEqual(W.ActionTone("queued"), "yellow"); assertEqual(W.ActionTone("sent"), "yellow")
+    assertEqual(W.ActionTone("traded"), "good"); assertEqual(W.ActionTone("tradedAway"), "good")
+    assertTrue(W.ActionTone(nil) == nil); assertTrue(W.ActionTone("other") == nil)
+end)
+
+test("cells: an Offer is cyan while it is your move, its other states as any button's (feedback-6 spec §2)", function()
+    local W = WC()
+    assertEqual(W.ActionTone("ready", "offer"), "cyan"); assertEqual(W.ActionTone("failed", "offer"), "cyan")
+    assertEqual(W.ActionTone("queued", "offer"), "yellow"); assertEqual(W.ActionTone("sent", "offer"), "yellow")
+    assertEqual(W.ActionTone("tradedAway", "offer"), "good")
+    assertEqual(W.ActionTone("ready"), "red", "Ask keeps its red")
+    local cyan = T.newAddon().Constants.TONE.cyan
+    assertTrue(cyan.b > cyan.g and cyan.g > cyan.r and cyan.r < 0.5, "a cyan")
+end)
+
+test("table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded", function()
+    local NS, drawn = shownTable()
+    local R, Y, G = NS.Constants.TONE.red, NS.Constants.TONE.yellow, NS.Constants.TONE.good
+    local ask = rowFor(drawn, 1).cells.actions.ask
+    assertEqual(ask.tone, "red"); assertEqual(select(1, ask.label:GetTextColor()), R.r)
+    NS.Asks.StateOf = function() return "sent" end
+    NS.Window.Refresh()
+    ask = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions.ask
+    assertEqual(textOf(ask.label), "Asked"); assertEqual(ask.tone, "yellow")
+    assertEqual(select(2, ask.label:GetTextColor()), Y.g)
+    NS.History.OutcomeOf = function() return "received" end
+    NS.Window.Refresh()
+    ask = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions.ask
+    assertEqual(textOf(ask.label), "Traded"); assertEqual(ask.tone, "good")
+    assertEqual(select(2, ask.label:GetTextColor()), G.g)
+end)
+
+-- ── the Type column (feedback-4 spec §3) ────────────────────────────────────────────────────
+
+test("cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why", function()
+    local NS = T.newAddon()
+    local W, A = NS.WindowCells, NS.Constants.ARMOR_SUBCLASS
+    local ARMOR = NS.Constants.ITEM_CLASS.ARMOR
+    local function typeOf(loc, classID, sub)
+        return W.ArmorType(drop({ facts = { ilvl = 300, equipLoc = loc, classID = classID, subClassID = sub } }))
+    end
+    assertEqual(typeOf("INVTYPE_HEAD", ARMOR, A.PLATE).text, "Plate")
+    assertEqual(typeOf("INVTYPE_CHEST", ARMOR, A.CLOTH).text, "Cloth")
+    assertEqual(typeOf("INVTYPE_ROBE", ARMOR, A.CLOTH).text, "Cloth")
+    assertEqual(typeOf("INVTYPE_HAND", ARMOR, A.LEATHER).text, "Leather")
+    assertEqual(typeOf("INVTYPE_FEET", ARMOR, A.MAIL).text, "Mail")
+    assertEqual(typeOf("INVTYPE_NECK", ARMOR, A.GENERIC).text, "Jewelry")
+    assertEqual(typeOf("INVTYPE_FINGER", ARMOR, A.GENERIC).text, "Jewelry")
+    assertEqual(typeOf("INVTYPE_TRINKET", ARMOR, A.GENERIC).text, "Trinkets")
+    assertEqual(typeOf("INVTYPE_CLOAK", ARMOR, A.CLOTH).text, "Cloak", "a cloak is never Cloth")
+    for _, loc in ipairs({ "INVTYPE_WEAPON", "INVTYPE_2HWEAPON", "INVTYPE_WEAPONMAINHAND", "INVTYPE_WEAPONOFFHAND",
+        "INVTYPE_SHIELD", "INVTYPE_HOLDABLE", "INVTYPE_RANGED", "INVTYPE_RANGEDRIGHT" }) do
+        assertEqual(typeOf(loc, 2, 7).text, "Weapons", loc)
+    end
+    local cosmetic = typeOf("INVTYPE_HEAD", ARMOR, A.COSMETIC)
+    assertEqual(cosmetic.text, "–"); assertFalse(cosmetic.known); assertEqual(cosmetic.tone, "muted")
+    local token = typeOf(nil, 15, 0)
+    assertEqual(token.text, "–"); assertTrue(#token.tip >= 2 and token.tip[2] ~= "", "the dash says why")
+    local plate = typeOf("INVTYPE_HEAD", ARMOR, A.PLATE)
+    assertEqual(plate.tip[1], "Type: Plate"); assertTrue(plate.known)
+end)
+
+test("table: the Type column sits after Slot and is painted on every row", function()
+    local _, drawn = shownTable()
+    local c = rowFor(drawn, 2).cells
+    assertEqual(textOf(c.armorType.text), "Jewelry", "the ring")
+    assertEqual(textOf(drawn.pane.colHead.labels.armorType.text), "Type")
+    local keysShown = {}
+    for _, col in ipairs(drawn.columns) do keysShown[#keysShown + 1] = col.key end
+    assertEqual(keysShown[3] .. "," .. keysShown[4], "slot,armorType")
 end)

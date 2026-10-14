@@ -1,8 +1,8 @@
 -- tests/test_sim_e2e.lua — a sim run fills the window (sim feedback spec §0, DW-90): the owner's
--- first `/dw sim run` left Group drops empty. Every read the simulator answers goes through the
+-- first `/dw sim run` left the drops table empty. Every read the simulator answers goes through the
 -- seam (no module names one of those globals itself); and every scenario, run in the real solo,
 -- out-of-instance world the mock answers by default, puts drops in the feed with both verdicts,
--- rows in Group drops and My drops under the window's DEFAULT filters (View Interesting, Content
+-- rows in Drops, yours among them, under the window's DEFAULT filters (View Interesting, Content
 -- This instance, Quality Rare+), and a footer and chat that report the run. It runs once with a
 -- player at the content's level and once with a player who outgears it, the owner's case.
 -- Also the M7 review's low findings on the same reads: the combat flags and the LOOT_ITEM*
@@ -159,7 +159,7 @@ end
 -- Quality Rare+.
 local function assertDefaultFilters(NS)
     local FB = NS.WindowFilterBar
-    for _, tab in ipairs({ "group", "mine", "history" }) do
+    for _, tab in ipairs({ "group", "history" }) do
         local st = FB.State(tab)
         assertEqual(next(st.view), nil, "View: All"); assertEqual(st.content, "instance")
         assertEqual(st.search, "")
@@ -189,10 +189,9 @@ local function assertFooter(NS, sc, label)
     assertEqual(seg.inspect.text, ("Inspect %d/%d fresh"):format(sc.members, sc.members), label)
 end
 
--- The pieces every compact card fills, per tab (modules/CompactGroup.lua, CompactMine.lua).
+-- The pieces every compact card fills, per tab (modules/CompactGroup.lua).
 local CARD_PIECES = {
-    group = { "item", "ilvl", "looter", "slot", "trade", "fresh", "you", "them" },
-    mine  = { "item", "ilvl", "forYouLabel", "forYou", "trade", "candidates" },
+    group = { "item", "ilvl", "looter", "slot", "trade", "you", "them" },   -- fresh may be left out (feedback-10 spec §2)
 }
 
 -- Each drawn row is a card in the compact layout, a table row in the full one; a card leaves no
@@ -218,13 +217,9 @@ local function assertWindow(NS, mode, label)
     -- red under: the M7 roster, which dressed the group around you, so content you outgear left
     -- the members naked and nothing Interesting (the owner's empty window)
     local group = NS.WindowGroup.Drawn()
-    assertTrue(dropEntries(group) > 0, label .. ": Group drops shows rows")
+    assertTrue(dropEntries(group) > 0, label .. ": Drops shows rows")
     assertLayout(group, "group", mode, label)
-    W.SelectTab("mine")
-    W.Refresh()
-    local mine = NS.WindowMine.Drawn()
-    assertTrue(mine ~= nil and #mine.entries > 0, label .. ": My drops shows your drops")
-    assertLayout(mine, "mine", mode, label)
+    assertTrue(#group.pane.ownDrops > 0, label .. ": Drops lists your drops too (feedback-5 spec §3)")
 end
 
 -- Every group the run made names the whole simulated group, you first, and its History group (the
@@ -307,7 +302,7 @@ end
 
 for _, mode in ipairs({ "full", "compact" }) do
     for _, sc in ipairs(SCENARIOS) do
-        test(("sim e2e %s, %s: a run fills Group drops and My drops under the default filters"):format(sc.name, mode),
+        test(("sim e2e %s, %s: a run fills Drops, yours too, under the default filters"):format(sc.name, mode),
             function()
                 for _, ilvl in ipairs({ 600, 660 }) do
                     for seed = 1, 3 do runScenario(sc, ilvl, seed, mode) end

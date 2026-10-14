@@ -56,6 +56,37 @@ Kit.setSurfaceSource{
     ["LibKa0s-Compat-1.0"]    = surfaceMock.LibStub("LibKa0s-Compat-1.0", true),
 }
 
+-- A text's inline texture escapes (NS.TipMarks) as `[icon]`: `291 [arrow-right] 305`, `[arrow-up]
+-- UPGRADE`. A case reads the text the player sees; test_tip_marks pins each escape's exact string.
+local function marks(s)
+    return (tostring(s):gsub("|T[^:|]-([^\\:|]+):[^|]*|t", "[%1]"))
+end
+
+-- A tooltip line as plain text (NS.TipMarks.Text's reading, without an instance): a string as it
+-- is, a non-wrapping line by its text, a grid (feedback-7 spec §3) as its rows on lines of their
+-- own, each row's drawn cells (glyph and text) two spaces apart.
+local function tipText(line)
+    if type(line) ~= "table" then return tostring(line) end
+    if type(line.grid) ~= "table" then return tostring(line.text) end
+    local rows = {}
+    for i, row in ipairs(line.grid) do
+        local cells = {}
+        for _, cell in ipairs(row) do
+            local t = type(cell) == "table" and ((cell.glyph or "") .. tostring(cell.text or "")) or tostring(cell or "")
+            if t ~= "" then cells[#cells + 1] = t end
+        end
+        rows[i] = table.concat(cells, "  ")
+    end
+    return table.concat(rows, "\n")
+end
+
+-- A tooltip's lines joined by `sep` (" | " when nil), each read by tipText.
+local function tipJoined(tip, sep)
+    local out = {}
+    for i, l in ipairs(tip or {}) do out[i] = tipText(l) end
+    return table.concat(out, sep or " | ")
+end
+
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
 -- assertions in beside these keys.
 _G.DW_TEST = Kit.expose{
@@ -63,6 +94,9 @@ _G.DW_TEST = Kit.expose{
     bootAddon   = bootAddon,
     enableAddon = enableAddon,
     loadAddon   = loadAddon,
+    marks       = marks,
+    tipText     = tipText,
+    tipJoined   = tipJoined,
     root        = root,
     LibStub     = surfaceMock.LibStub,
     KIT_VERSION = Kit.VERSION,
@@ -105,13 +139,18 @@ Kit.run{
         "test_window_compact",
         "test_compact_cards",
         "test_compact_group",
-        "test_compact_mine",
         "test_compact_history",
         "test_compact_chrome",
         "test_compact_modes",
         "test_window_group",
+        "test_drops_layout",
+        "test_side_cells",
         "test_detail_card",
-        "test_window_mine",
+        "test_own_drops",
+        "test_tip_marks",
+        "test_drops_strip",
+        "test_offer_panel",
+        "test_mine_cells",
         "test_row_tooltip",
         "test_test_mode",
         "test_compat",

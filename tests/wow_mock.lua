@@ -38,9 +38,7 @@
 --                  loadsNeeded }; addItem(link, def) seeds one. While loadsNeeded > 0 the item is
 --                  uncached (GetItemInfo answers nil) and each RequestLoadItemDataByID of its id
 --                  counts it down on the next timer pass; loadRequests records those ids in order
---   tradeCalls     PickupContainerItem / DropItemOnUnit / InitiateTrade calls, in order; cursor is
---                  the "bag:slot" a pickup put on the cursor (nil when empty: a drop on a unit or
---                  ClearCursor empties it, cursorCleared counts ClearCursor), CursorHasItem reads it;
+--   tradeCalls     InitiateTrade calls, in order, as { name, unit };
 --                  tradeFar[unit] = true makes CheckInteractDistance(unit, 2) false (trade range)
 --   inventory      GetInventoryItemLink's answers: inventory[unit][slot] = link
 --   bags           C_Container's bags: bags[bag] = { size = n, [slot] = link }; an absent bag has 0 slots
@@ -70,6 +68,9 @@
 --                  "inventory:<unit>:<slot>" (the real game tooltip, in order);
 --                  GameTooltip's SetOwner is recorded as `__owner` / `__anchor`, and its
 --                  ClearAllPoints / SetPoint / GetPoint as on a window frame (where it is placed);
+--                  its lines too: SetText starts `__lines` over with the title, AddLine appends
+--                  { text, wrap }, NumLines counts them (a grid's reserved rows among them,
+--                  modules/TipGrid.lua), and SetMinimumWidth / GetMinimumWidth keep `__minWidth`;
 --                  bagItemReads["bag:slot"] = { ilvl, quality } is C_Item.GetCurrentItemLevel's and
 --                  C_Item.GetItemQuality's answer on that bag slot's ItemLocation;
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
@@ -106,8 +107,8 @@ local SIM_PANEL_NAME = "DropWatcherSimPanel"
 -- A frame is decorated when it is the window, the toast or the simulation panel, or when its parent
 -- is decorated (`__dwTree`), so the whole tree is, and nothing outside it changes.
 
--- Text, color, font, texture and check state, recorded on any widget or region of the tree (a font
--- string never given a font answers the game's default face at 10 points).
+-- Text, color, font, texture, vertex color and check state, recorded on any widget or region of
+-- the tree (a font string never given a font answers the game's default face at 10 points).
 local function decorateText(f)
     f.SetText = function(self, t) self.__text = t; return self end
     f.GetText = function(self) return self.__text end
@@ -119,6 +120,12 @@ local function decorateText(f)
     end
     f.SetTexture = function(self, tex) self.__texture = tex; return self end
     f.GetTexture = function(self) return self.__texture end
+    -- A texture's vertex color (a chevron's tint, feedback-5 spec §0); unset answers white.
+    f.SetVertexColor = function(self, r, g, b, a) self.__vertex = { r, g, b, a or 1 }; return self end
+    f.GetVertexColor = function(self)
+        local c = self.__vertex or { 1, 1, 1, 1 }
+        return c[1], c[2], c[3], c[4]
+    end
     f.SetFont = function(self, file, size, flags) self.__font = { file, size, flags }; return self end
     f.GetFont = function(self)
         local font = self.__font or { "Fonts\\FRIZQT__.TTF", 10, "" }
@@ -130,13 +137,13 @@ local function decorateText(f)
 end
 
 -- Measured text on a font string, opt-in: with M.textCharWidth set, its one-line width is its text's
--- length times that (GetUnboundedStringWidth), and GetStringWidth is that bounded by the width its
+-- length times that, an inline texture escape counting two (GetUnboundedStringWidth), and GetStringWidth is that bounded by the width its
 -- anchors give it (`__boundWidth`, which a case sets, else SetWidth's), as on Retail since 10.0.
 -- Unset, both answer nil, as a font not yet loaded does.
 local function measureText(M, r)
     r.GetUnboundedStringWidth = function(s)
         local cw = M.textCharWidth
-        return cw and #(s.__text or "") * cw or nil
+        return cw and #((s.__text or ""):gsub("|T.-|t", "##")) * cw or nil
     end
     r.GetStringWidth = function(s)
         local w = s:GetUnboundedStringWidth()
@@ -381,23 +388,12 @@ local function installCompatSurface(M)
     }
     installItemCache(M)
 
-    -- The trade actions, recorded in order as { name, ... }.
+    -- The trade action, recorded in order as { name, ... }.
     M.tradeCalls = {}
     local function recorder(name)
         return function(...) M.tradeCalls[#M.tradeCalls + 1] = { name, ... } end
     end
-    -- The cursor: a pickup puts "bag:slot" on it, a drop on a unit or ClearCursor takes it off.
-    M.cursor, M.cursorCleared = nil, 0
-    local pickup = recorder("PickupContainerItem")
-    M.C_Container = { PickupContainerItem = function(bag, slot)
-        pickup(bag, slot)
-        M.cursor = bag .. ":" .. slot
-    end }
-    M.CursorHasItem = function() return M.cursor ~= nil end
-    M.ClearCursor = function()
-        M.cursor = nil
-        M.cursorCleared = M.cursorCleared + 1
-    end
+    M.C_Container = {}
 
     -- What the player wears and carries (modules/Gear.lua), and the spec the client answers.
     M.inventory, M.bags = { player = {} }, {}
@@ -415,11 +411,6 @@ local function installCompatSurface(M)
     end
     M.specID = 250
     M.GetSpecializationInfo = function() return M.specID, M.__context.spec end
-    local drop = recorder("DropItemOnUnit")
-    M.DropItemOnUnit = function(unit)
-        drop(unit)
-        M.cursor = nil
-    end
     M.InitiateTrade = recorder("InitiateTrade")
 end
 
@@ -616,9 +607,21 @@ local function installTableSurface(M)
     local tip = M.GameTooltip
     tip.__points = {}
     tip.SetOwner = function(self, owner, anchor)
-        self.__owner, self.__anchor, self.__points = owner, anchor, {}
+        self.__owner, self.__anchor, self.__points, self.__lines = owner, anchor, {}, {}
         return self
     end
+    tip.__lines = {}
+    tip.SetText = function(self, text)
+        self.__lines = { { text = text } }
+        return self
+    end
+    tip.AddLine = function(self, text, _, _, _, wrap)
+        self.__lines[#self.__lines + 1] = { text = text, wrap = wrap }
+        return self
+    end
+    tip.NumLines = function(self) return #self.__lines end
+    tip.SetMinimumWidth = function(self, w) self.__minWidth = w; return self end
+    tip.GetMinimumWidth = function(self) return self.__minWidth or 0 end
     tip.ClearAllPoints = function(self) self.__points = {}; return self end
     tip.SetPoint = function(self, point, rel, relPoint, x, y)
         self.__points[#self.__points + 1] = { point, rel, relPoint, x, y }

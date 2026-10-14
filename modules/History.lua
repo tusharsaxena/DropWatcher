@@ -439,7 +439,7 @@ function H.OutcomeOf(dropId)
 end
 
 --- The Ask button's state once the history knows the drop was received (`traded`), else the
---- state given (the Group drops row and the detail card read it through here).
+--- state given (the Drops row and the detail card read it through here).
 --- @param drop table
 --- @param state string|nil
 --- @param reason any

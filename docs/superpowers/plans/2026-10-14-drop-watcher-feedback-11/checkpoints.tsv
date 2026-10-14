@@ -1,0 +1,2 @@
+date	milestone	evidence
+2026-10-14	M20	DW-K0..K2 landed; review (no bugs, stale comments fixed); bundle 20261014-133254 green (1399/1/1400, lint 0/0 in 169); not pushed; awaiting owner merge go-ahead

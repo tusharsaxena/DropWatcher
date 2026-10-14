@@ -1,6 +1,7 @@
--- tests/test_toast.lua — the upgrade toast (design spec §11.5, board 06 C): the pure qualifier and
--- composer, then the edge on the bus: off by default, one at a time from a queue, dismissed after
--- its duration and paused while hovered, held in combat unless allowed, each drop once, placed and
+-- tests/test_toast.lua — the upgrade toast (design spec §11.5, board 06 C; feedback-9 spec §0): the
+-- pure qualifier and composer (the four rows' parts), then the edge on the bus: the painted rows,
+-- off by default, one at a time from a queue, dismissed after its duration, on its close mark or on
+-- a right-click, paused while hovered, held in combat unless allowed, each drop once, placed and
 -- saved only in test mode, the optional sound, the Ask button, the stand-down and the diagnostics.
 
 local T = _G.DW_TEST
@@ -52,16 +53,84 @@ test("toast: Qualifies wants someone else's upgrade for you of minGain or more, 
     end
 end)
 
-test("toast: Compose reads board 06 C: the title, the item and Looted by · gain · trade", function()
-    local Toast = T.newAddon().Toast
-    local t = Toast.Compose(drop())
-    assertEqual(t.title, "Big upgrade for you")
-    assertEqual(t.item, "Item 500"); assertEqual(t.link, link(500))
-    assertEqual(t.line, "Looted by Seta · +19 ▲ · Likely tradeable")
-    assertEqual(Toast.Compose(drop({ trade = { state = "yes" } })).line, "Looted by Seta · +19 ▲ · Tradeable")
-    local empty = { verdict = "upgrade", reasons = { { key = "emptySlot" } } }
-    assertEqual(Toast.Compose(drop({ me = empty })).line, "Looted by Seta · empty ▲ · Likely tradeable",
-        "an empty slot reads as the Me column does, never +0")
+test("toast: Compose answers the four rows' parts (feedback-9 spec §0)", function()
+    local NS = T.newAddon()
+    local Toast = NS.Toast
+    local t = Toast.Compose(drop({ them = { verdict = "downgrade", ilvlDelta = -13 } }))
+    assertEqual(t.title, "Big upgrade for you"); assertEqual(t.link, link(500))
+    -- Row 2: the name in its quality color (here the link's own code), the item level apart.
+    assertEqual(t.item, "Item 500"); assertEqual(t.itemText, "|cffa335eeItem 500|r"); assertEqual(t.ilvl, 311)
+    -- Row 3: the looter in their class color, and both verdicts as the Me and Them cells draw them.
+    assertEqual(t.looter, "Seta"); assertEqual(t.classFile, "PRIEST")
+    assertEqual(t.looterText, NS.TipMarks.ClassName("Seta", "PRIEST"))
+    assertEqual(t.me.glyph, "▲"); assertEqual(t.me.text, "19"); assertEqual(t.me.tone, "good")
+    assertEqual(t.them.glyph, "▼"); assertEqual(t.them.text, "13"); assertEqual(t.them.tone, "red")
+    -- Row 4: the trade word in the Trade cell's tone, the short reason; the full one in the tooltip.
+    assertEqual(t.trade, "Likely tradeable"); assertEqual(t.tradeTone, "good")
+    assertEqual(t.reason, "not an upgrade for Seta")
+    assertEqual(t.tip[1], "Trade: Likely")
+    assertEqual(t.tip[2], NS.WindowCells.TradeReason(drop().trade, "Seta"))
+end)
+
+test("toast: Compose keeps the table's words, the empty slot and each trade reason", function()
+    local NS = T.newAddon()
+    local C = NS.Toast.Compose
+    local side = C(drop({ me = { verdict = "sidegrade", ilvlDelta = 1 } }))
+    assertEqual(side.me.glyph, "≈"); assertEqual(side.me.text, "1"); assertEqual(side.me.tone, "yellow")
+    local t = C(drop())
+    assertNil(t.them.glyph, "their gear not read: the word")
+    assertEqual(t.them.text, "?"); assertEqual(t.them.tone, "muted")
+    t = C(drop({ them = { verdict = "cantUse" } }))
+    assertNil(t.them.glyph); assertEqual(t.them.text, "Can't use"); assertEqual(t.them.tone, "bad")
+    t = C(drop({ them = { verdict = "doesntWant" } }))
+    assertEqual(t.them.text, "Not wanted"); assertEqual(t.them.tone, "bad")
+    t = C(drop({ me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))
+    assertEqual(t.me.text, "empty", "an empty slot reads as the Me column does, never 0")
+    assertEqual(t.me.glyph, "▲"); assertEqual(t.me.tone, "good")
+    t = C(drop({ trade = { state = "yes", reasonKey = "boe" } }))
+    assertEqual(t.trade, "Tradeable"); assertEqual(t.tradeTone, "good"); assertEqual(t.reason, "bind on equip")
+    t = C(drop({ trade = { state = "likely", reasonKey = "groupLoot" } }))
+    assertEqual(t.reason, "group loot: two hours to trade")
+    t = C(drop({ trade = { state = "likely", reasonKey = "error", args = { "x" } } }))
+    assertEqual(t.reason, "The estimate failed: x", "any other reason is the Trade cell's, its period dropped")
+    t = C(drop({ looter = false, facts = false }))
+    assertEqual(t.looter, "?"); assertNil(t.ilvl)
+end)
+
+-- Rough widths in the client's GameFontHighlightSmall: under 5 pixels a character (the owner's
+-- screenshot 01 draws `Looted by Seta · +19 ↑ · Likely trad…`, 37 characters, in about 170 of the
+-- toast's then 340), and a 12-point monospace glyph about 7.
+local CHAR_W, GLYPH_W = 5, 7
+
+-- Row 3's drawn width: the looter's segment, then each verdict's glyph (when it has one) and text.
+local function row3Width(NS, t)
+    local TM, G, S = NS.TipMarks, NS.Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
+    local function verdict(part)
+        return G + (part.glyph and GLYPH_W + S or 0) + TM.Chars(part.text) * CHAR_W
+    end
+    return TM.Chars(("Looted by %s · You"):format(t.looterText)) * CHAR_W + verdict(t.me)
+        + G + TM.Chars("· Them") * CHAR_W + verdict(t.them)
+end
+
+test("toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec §0)", function()
+    local NS = T.newAddon()
+    local Toast, TM = NS.Toast, NS.TipMarks
+    local long = drop({ looter = { name = "Abcdefghijkl-Realm", classFile = "PRIEST" },
+        me = { verdict = "upgrade", ilvlDelta = 19 }, them = { verdict = "downgrade", ilvlDelta = -13 } })
+    local t = Toast.Compose(long)
+    local row4 = TM.Chars(t.trade) * CHAR_W + Toast.SEG_GAP + TM.Chars("· " .. t.reason) * CHAR_W
+    assertEqual(Toast.WIDTH, 350)
+    local row3 = row3Width(NS, t)
+    assertTrue(row3 <= Toast.RowWidth(), ("row 3: %d > %d"):format(row3, Toast.RowWidth()))
+    -- red under: WIDTH 340 (an empty slot, `▲ empty`, then a Them word; 267 > 258)
+    for _, them in ipairs({ { verdict = "cantUse" }, { verdict = "doesntWant" } }) do
+        t = Toast.Compose(drop({ looter = long.looter, them = them,
+            me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))
+        row3 = row3Width(NS, t)
+        assertTrue(row3 <= Toast.RowWidth(), ("row 3, %s: %d > %d"):format(them.verdict, row3, Toast.RowWidth()))
+    end
+    assertTrue(row4 <= Toast.RowWidth(), ("row 4: %d > %d"):format(row4, Toast.RowWidth()))
+    assertEqual(Toast.HEIGHT, Toast.ICON + 2 * Toast.INSET, "the icon spans the rows; the frame keeps its insets")
 end)
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
@@ -95,9 +164,9 @@ test("toast edge: a qualifying drop shows at once, painted, and goes after its d
     local f = NS.Toast.Frame()
     assertTrue(shown(NS)); assertEqual(NS.Toast.Stats().dropId, 1)
     assertEqual(f.title:GetText(), "Big upgrade for you")
-    assertEqual(f.item:GetText(), "Item 500")
-    assertEqual(f.line:GetText(), "Looted by Seta · +19 ▲ · Likely tradeable")
+    assertEqual(f.item:GetText(), "|cffa335eeItem 500|r")
     assertEqual(f.ask.label:GetText(), "Ask"); assertTrue(f.ask:IsEnabled())
+    assertTrue(f.ask.art:IsShown() and f.ask.art:GetTexture() == NS.Icon("chat"), "Ask wears chat (feedback-7 spec §1)")
     assertEqual(#m.sounds, 0, "no sound unless asked for")
     local pt = { f:GetPoint(1) }
     assertEqual(pt[1], "TOP"); assertEqual(pt[5], -160)
@@ -105,6 +174,102 @@ test("toast edge: a qualifying drop shows at once, painted, and goes after its d
     assertTrue(shown(NS))
     m.advance(0.2)
     assertFalse(shown(NS)); assertNil(NS.Toast.Stats().dropId)
+end)
+
+test("toast edge: the four rows beside a four-row icon, painted (feedback-9 spec §0)", function()
+    local NS = enabled({ drop({ them = { verdict = "downgrade", ilvlDelta = -13 } }) })
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    local C = NS.Constants
+    assertEqual(f.icon:GetWidth(), NS.Toast.ICON); assertEqual(f:GetHeight(), NS.Toast.ICON + 2 * NS.Toast.INSET)
+    -- Row 2: the item level always shows, after the name, smaller and muted.
+    assertEqual(f.ilvl:GetText(), "311"); assertTrue(f.ilvl:IsShown())
+    assertEqual(f.ilvl.__template, "GameFontHighlightSmall")
+    assertEqual(f.ilvl.__textColor[1], C.TONE.muted.r)
+    assertEqual(f.ilvl.__points[1][2], f.item, "the level follows the name")
+    -- Row 3: the looter in their class color, then each verdict's mono glyph and number in its tone.
+    assertEqual(f.looted:GetText(), "Looted by |cffffffffSeta|r · You")
+    assertEqual(f.meGlyph:GetText(), "▲"); assertEqual(f.meGlyph.__font[1], C.FONT_MONO)
+    assertEqual(f.meText:GetText(), "19"); assertEqual(f.meText.__textColor[2], C.TONE.good.g)
+    assertEqual(f.meGlyph.__textColor[2], C.TONE.good.g)
+    assertEqual(f.themLabel:GetText(), "· Them"); assertEqual(f.themLabel.__points[1][2], f.meText)
+    assertEqual(f.themGlyph:GetText(), "▼"); assertEqual(f.themGlyph.__font[1], C.FONT_MONO)
+    assertEqual(f.themText:GetText(), "13"); assertEqual(f.themText.__textColor[1], C.TONE.red.r)
+    local last = f.themText.__points[2]
+    assertEqual(last[1], "RIGHT"); assertEqual(last[2], f); assertEqual(last[4], -NS.Toast.INSET, "cut at the inset")
+    -- Row 4: the trade word in its tone, the reason muted and running to the right inset.
+    assertEqual(f.trade:GetText(), "Likely tradeable"); assertEqual(f.trade.__textColor[2], C.TONE.good.g)
+    assertEqual(f.reason:GetText(), "· not an upgrade for Seta")
+    local right = f.reason.__points[2]
+    assertEqual(right[1], "RIGHT"); assertEqual(right[2], f); assertEqual(right[4], -NS.Toast.INSET)
+    -- The tooltip is the Trade cell's: the full reason.
+    local tip = NS.Window.TooltipOf(f)
+    assertEqual(tip[1], "Trade: Likely")
+    assertEqual(tip[2], "Personal loot: it is not an upgrade for Seta, so they may trade it.")
+    -- The arrow texture and the signed gain are gone; no glyph is drawn in the default face.
+    for _, r in ipairs(f.__regions) do
+        local tx = r.__objType == "FontString" and r.__text
+        if type(tx) == "string" and not (r.__font and r.__font[1] == C.FONT_MONO) then
+            for _, mark in ipairs({ "▲", "▼", "≈", "|T" }) do assertFalse(tx:find(mark, 1, true) ~= nil, tx) end
+            assertFalse(tx:find("+19", 1, true) ~= nil, tx)
+        end
+    end
+end)
+
+test("toast edge: a verdict in a word takes no glyph's room", function()
+    local NS = enabled({ drop({ them = { verdict = "cantUse" } }) })
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    assertFalse(f.themGlyph:IsShown()); assertEqual(f.themText:GetText(), "Can't use")
+    assertEqual(f.themText.__points[1][2], f.themLabel)
+end)
+
+test("toast edge: a looter of unknown class is a plain name in row 3's muted tone", function()
+    local NS = enabled({ drop({ looter = { name = "Seta" } }) })
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    assertEqual(f.looted:GetText(), "Looted by Seta · You")
+    assertEqual(f.looted.__textColor[1], NS.Constants.TONE.muted.r)
+end)
+
+test("toast edge: a right-click anywhere closes it as the close mark does; the left button does not", function()
+    local NS = enabled({ drop(), drop({ id = 2 }) })
+    added(NS, 1); added(NS, 2)
+    local f = NS.Toast.Frame()
+    local pressed = 0
+    NS.PressAsk = function() pressed = pressed + 1 end
+    f:GetScript("OnMouseUp")(f, "LeftButton")
+    assertEqual(NS.Toast.Stats().dropId, 1, "a left click keeps it")
+    f:GetScript("OnMouseUp")(f, "RightButton")
+    assertEqual(NS.Toast.Stats().dropId, 2, "closed: the next shows")
+    -- On its controls too: the icon, Ask and the close mark.
+    f.ask:GetScript("OnMouseUp")(f.ask, "RightButton")
+    assertFalse(shown(NS)); assertEqual(pressed, 0, "nothing asked for")
+    added(NS, 1); added(NS, 2)
+    assertFalse(shown(NS), "a closed drop does not toast again")
+end)
+
+test("toast edge: in test mode the left button still drags it and a left click keeps it", function()
+    local NS = enabled({ drop() })
+    NS.State.testMode = true
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    local moved = 0
+    f.StartMoving = function() moved = moved + 1 end
+    f:GetScript("OnDragStart")(f)
+    f:GetScript("OnDragStop")(f)
+    f:GetScript("OnMouseUp")(f, "LeftButton")
+    assertEqual(moved, 1); assertTrue(shown(NS))
+    f:GetScript("OnMouseUp")(f, "RightButton")
+    assertFalse(shown(NS), "a test toast closes on a right-click too")
+end)
+
+test("toast edge: a right-click on the item button closes it too", function()
+    local NS = enabled({ drop() })
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    f.icon:GetScript("OnMouseUp")(f.icon, "RightButton")
+    assertFalse(shown(NS))
 end)
 
 test("toast edge: one at a time; the next waits its turn, and each drop toasts once", function()
@@ -219,6 +384,7 @@ test("toast edge: Ask goes through the shared host handler, and the button follo
     f.ask:GetScript("OnClick")(f.ask)
     assertEqual(pressed[1], 1)
     assertEqual(f.ask.label:GetText(), "Queued")
+    assertTrue(f.ask.art:GetTexture() == NS.Icon("clock"), "Queued wears clock")
     NS.Asks.StateOf = function() return "sent" end
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "sent", "ask", "Seta-Testrealm")
     assertEqual(f.ask.label:GetText(), "Asked"); assertFalse(f.ask:IsEnabled())
@@ -299,16 +465,6 @@ test("toast edge: the cap's trim takes the trimmed drop's toast, through the rea
     assertEqual(LF.Get(first), nil, "the first drop was trimmed")
     assertFalse(shown(NS), "and its toast went with it")
     m.advance(1)
-end)
-
-test("toast edge: dismissing the row forgets its toast, shown or waiting", function()
-    local NS = enabled({ drop(), drop({ id = 2 }), drop({ id = 3 }) })
-    added(NS, 1); added(NS, 2); added(NS, 3)
-    NS.DismissDrop(2)
-    assertEqual(NS.Toast.Stats().waiting, 1, "the waiting one left the queue")
-    -- red under: NS.DismissDrop without NS.Toast.Forget (core/DropWatcher.lua)
-    NS.DismissDrop(1)
-    assertEqual(NS.Toast.Stats().dropId, 3, "the shown one went, and the next took its turn")
 end)
 
 test("toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing", function()

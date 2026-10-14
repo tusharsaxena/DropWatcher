@@ -17,8 +17,8 @@ at call time, guards them, and passes them in; its members of the same names are
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**Sixty-six shims**, counted the way documentation-§3 counts them
-(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `66`). The three
+**Sixty-two shims**, counted the way documentation-§3 counts them
+(`grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua` answers `62`). The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -92,12 +92,8 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
 | | `PawnScaleForSpec(classID, specID)` | `PawnFindScaleForSpec` | `nil` |
 | | `PawnItemValue(link, scale)` | `PawnGetSingleValueFromItem(PawnGetItemData(link), scale)`, a number | `nil` |
-| Trade | `PickupBagItem(bag, slot)` | `C_Container.PickupContainerItem` | `false` |
-| | `DropItemOnUnit(unit)` | `DropItemOnUnit` | `false` |
-| | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
+| Trade | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
 | | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |
-| | `CursorHasItem()` | `CursorHasItem`; a secret answer reads as empty | `false` |
-| | `ClearCursor()` | `ClearCursor`, which puts the cursor's item back where it came from | `false` |
 | Trade window | `TradeItemLinks()` | `GetTradePlayerItemLink(i)` and `GetTradeTargetItemLink(i)` over slots 1-6 (slot 7 is not traded): answers `given, received`, two lists of links, a secret or empty answer left out | `{}, {}` |
 | | `TradePartnerName()` | `UnitName("NPC")`, the trade window's partner, as `Name-Realm` when a realm is named, else `Name`; a secret or empty name is nil | `nil` |
 | | `IsTradeCompleteMessage(messageType, message)` | whether a `UI_INFO_MESSAGE` is the client's "Trade complete.": its type is `LE_GAME_ERR_TRADE_COMPLETE`, or, without that constant, its text is `ERR_TRADE_COMPLETE`; a secret value is no match | `false` |
@@ -113,7 +109,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `JournalInstances(isRaid)` | `EJ_GetInstanceByIndex(i, isRaid)` until it answers no id: `{ { id, name } }` of the selected tier | `{}` |
 | | `JournalLoot()` | `EJ_GetNumLoot` and `C_EncounterJournal.GetLootInfoByIndex`: the loaded entries `{ itemID, link, encounterID }` and how many have no link yet (they load later, announced by `EJ_LOOT_DATA_RECIEVED`) | `{}, 0` |
 
-The trade actions return `true` when they called the client. They guard nothing: the range, combat
+`InitiateTrade` returns `true` when it called the client. They guard nothing: the range, combat
 and restriction checks are the trade helper's (`modules/TradeHelper.lua`), which calls them only
 from a click, and reads `InTradeRange` only once `NS.Restrictions.CanTrade()` has said the player
 is out of combat.
@@ -132,8 +128,8 @@ a provider, the live member answers. With no simulation running, the wrap costs 
 The **guarded** members never reach the client while a simulation runs, whatever a provider does:
 `ChatSender` hands out a sender that prints `[sim] <channel> to <target>: <text>` (nothing is
 whispered or posted), `NotifyInspect` and `ClearInspectPlayer` answer `true` with no call (a real
-player is never inspected), and `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade` and `ClearCursor`
-answer `true` with no call (no trade opens and nothing leaves the bags; the hand-over is printed).
+player is never inspected), and `InitiateTrade`
+answers `true` with no call (no trade opens; the trade is printed).
 `NS.Sim.Live(fn)` runs `fn` with the ordinary members answering for the client again, which is how
 the simulator's own safety checks read the real world. `test_sim_core` holds all of this.
 
@@ -181,6 +177,7 @@ they are `NS.Compat` members so the seam answers them.
 | `TooltipBagItem(tip, bag, slot)` | `tip:SetBagItem(bag, slot)`: the client's own tooltip, with its trade-time line | `false` when the tooltip has no such method |
 | `TooltipInventoryItem(tip, unit, slot)` | `tip:SetInventoryItem(unit, slot)` | `false` |
 | `TooltipHyperlink(tip, link)` | `tip:SetHyperlink(link)` | `false`, also for a secret or non-string link |
+| `TooltipLeftLine(tip, n)` | `_G[tip:GetName() .. "TextLeft" .. n]` | `nil`, also for an unnamed tooltip or a missing line |
 
 `core/ItemRead.lua` reads `BagItemLevelQuality` (its `ItemLevelAt` and `QualityAt`); the drop tables'
 item buttons (`NS.WindowGroup.SetItemTooltip`) call the three setters: your own drop matched to its
@@ -226,7 +223,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo`, `UnitName` (`core/CompatWorld.lua`) |
 | `modules/GroupPlace.lua` | `IsSecret`; `InstanceState`, `InstanceInfo`, `DifficultyName`, `KeystoneLevel` (`core/CompatWorld.lua`: a group's instance and difficulty name) |
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
-| `modules/TradeHelper.lua` | `PickupBagItem`, `DropItemOnUnit`, `InitiateTrade`, `InTradeRange`, `CursorHasItem`, `ClearCursor`, `GetBagItemGUID`, `BagSlotCount` |
+| `modules/TradeHelper.lua` | `InitiateTrade`, `InTradeRange` |
 | `modules/Asks.lua` | `ChatSender`, `GlobalString`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |
 | `modules/Scoring.lua` | `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |

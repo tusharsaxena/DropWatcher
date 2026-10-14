@@ -132,11 +132,32 @@ end
 
 local function isBook(book) return isTable(book) and isTable(book.asks) and isTable(book.queue) end
 
+-- How far a state has come, for M.FurthestState: a sent one outranks a queued one, a queued one a
+-- failed one.
+local STATE_RANK = { failed = 1, queued = 2, sent = 3 }
+
 --- The state of one ask and its reason ("ready" when it was never asked, or was canceled).
 function M.StateOf(book, kind, target, dropID)
     local a = isBook(book) and book.asks[M.Key(kind, target, dropID)] or nil
     if not a then return "ready" end
     return a.state, a.reason
+end
+
+--- The furthest state any `kind` ask for one drop has reached, whoever it went to: `sent`, else
+--- `queued`, else `failed`, else `ready` (your own drop's Offer button: whether an offer is out;
+--- feedback-4 spec §1).
+--- @param book table
+--- @param kind string
+--- @param dropID any
+--- @return string
+function M.FurthestState(book, kind, dropID)
+    local best, rank = "ready", 0
+    if not isBook(book) then return best end
+    for _, a in pairs(book.asks) do
+        local r = a.kind == kind and a.dropID == dropID and STATE_RANK[a.state] or 0
+        if r > rank then best, rank = a.state, r end
+    end
+    return best
 end
 
 local function refuse(reason, length)

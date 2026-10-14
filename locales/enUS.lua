@@ -34,9 +34,9 @@ L["List every setting and its current value"] = "List every setting and its curr
 L["List profiles, or switch to one: profile <name>"] = "List profiles, or switch to one: profile <name>"
 L["Lock the window in place"] = "Lock the window in place"
 L["Measure performance — `/dw perf` opens the step panel"] = "Measure performance — `/dw perf` opens the step panel"
+L["Open the Drops tab, where your own drops are listed"] = "Open the Drops tab, where your own drops are listed"
 L["Open the History tab"] = "Open the History tab"
 L["Open the Ka0s Drop Watcher settings panel"] = "Open the Ka0s Drop Watcher settings panel"
-L["Open the My drops tab"] = "Open the My drops tab"
 L["Open the Offer panel for a bag item — `/dw offer <item link>`"] = "Open the Offer panel for a bag item — `/dw offer <item link>`"
 L["Open/close the debug window — `/dw debug on|off` toggles logging"] = "Open/close the debug window — `/dw debug on|off` toggles logging"
 L["Print a setting's current value — `/dw get <path>`"] = "Print a setting's current value — `/dw get <path>`"
@@ -100,15 +100,12 @@ L["%s: %d min left to trade it."] = "%s: %d min left to trade it."
 
 -- The trade helper's refusal reasons, the disabled button's tooltip (modules/TradeHelper.lua)
 L["Drop Watcher is disabled."] = "Drop Watcher is disabled."
-L["That item is not in your bags."] = "That item is not in your bags."
 L["That player is not in your group."] = "That player is not in your group."
 L["That player is offline."] = "That player is offline."
 L["That player is out of trade range."] = "That player is out of trade range."
-L["The trade window for that item has passed."] = "The trade window for that item has passed."
 L["This client cannot open a trade."] = "This client cannot open a trade."
 L["You cannot trade in combat."] = "You cannot trade in combat."
 L["You cannot trade with yourself."] = "You cannot trade with yourself."
-L["Your cursor is holding an item."] = "Your cursor is holding an item."
 
 -- The gain token of an upgrade into an empty slot (modules/Asks.lua, design spec §9.1)
 L["an empty-slot upgrade"] = "an empty-slot upgrade"
@@ -175,8 +172,8 @@ L["|cffFFFF00%s|r takes a setting path: |cffFFFF00%s|r (try |cffFFFF00%s|r). To 
 -- Auto-ask's one-time notice (modules/AutoAsk.lua, design spec §9.4)
 L["Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or more item levels for you, your ask template is whispered to them %d seconds after the boss kill or the drop."] =
     "Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or more item levels for you, your ask template is whispered to them %d seconds after the boss kill or the drop."
-L["It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."] =
-    "It holds off when you ask yourself, they leave, you dismiss the row or you get the item. Turn it off in Settings > Messages > Auto-ask."
+L["It holds off when you ask yourself, they leave or you get the item. Turn it off in Settings > Messages > Auto-ask."] =
+    "It holds off when you ask yourself, they leave or you get the item. Turn it off in Settings > Messages > Auto-ask."
 
 -- The simulator (core/SimSeam.lua, modules/Sim.lua, simulator spec §5): the printed sends and
 -- hand-overs, the refusals, start and stop
@@ -197,7 +194,6 @@ L["Trade complete."] = "Trade complete."
 L["Turn test mode off before starting a simulation."] = "Turn test mode off before starting a simulation."
 L["[sim] %s to %s: %s"] = "[sim] %s to %s: %s"
 L["[sim] %s: %s"] = "[sim] %s: %s"
-L["[sim] Would hand the item to %s."] = "[sim] Would hand the item to %s."
 L["[sim] Would open a trade with %s."] = "[sim] Would open a trade with %s."
 
 -- The simulator's verbs, chip, footer and timeline (settings/SimVerbs.lua, modules/SimScenario.lua,
@@ -318,7 +314,7 @@ L["Character: Current"] = "Character: Current"
 L["Character: %s"] = "Character: %s"
 L["Character: %d selected"] = "Character: %d selected"
 L["Character"] = "Character"
-L["Show only the drops these characters saw. History is kept for every character on the account; Group drops and My drops hold this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] = "Show only the drops these characters saw. History is kept for every character on the account; Group drops and My drops hold this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."
+L["Show only the drops these characters saw. History is kept for every character on the account; Drops holds this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] = "Show only the drops these characters saw. History is kept for every character on the account; Drops holds this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."
 L["Placeholder boss (alt)"] = "Placeholder boss (alt)"
 
 -- Keep history for (modules/HistoryRetention.lua, feedback-2 spec §5)
@@ -341,7 +337,6 @@ L["a token"] = "a token"
 L["not gear"] = "not gear"
 L["below the minimum item level"] = "below the minimum item level"
 L["below the quality gate"] = "below the quality gate"
-L["%d yours"] = "%d yours"
 L["%d hidden"] = "%d hidden"
 L["%d loading"] = "%d loading"
 L["%d merged"] = "%d merged"
@@ -354,18 +349,9 @@ L["%d merged into an earlier drop"] = "%d merged into an earlier drop"
 L["%d refused by the feed"] = "%d refused by the feed"
 L["%s: %s"] = "%s: %s"
 L["Simulated loot: %s."] = "Simulated loot: %s."
-L["%d yours on My drops"] = "%d yours on My drops"
-L["Your own drops, with the time left to trade them and who each would help."] = "Your own drops, with the time left to trade them and who each would help."
-L["%d of them you can still trade."] = "%d of them you can still trade."
-L["None of them can be traded now."] = "None of them can be traded now."
--- The tabs and the panel agree beyond the defaults (feedback-3 spec §5, DW-B5)
-L["Not listed here:"] = "Not listed here:"
-L["you hid it"] = "you hid it"
+-- The panel agrees with the window beyond the defaults (feedback-3 spec §5, DW-B5)
 L["%d not shown in test mode"] = "%d not shown in test mode"
-L["%d not on My drops"] = "%d not on My drops"
-L["not on My drops: %s"] = "not on My drops: %s"
 L["not shown while test mode is on"] = "not shown while test mode is on"
-L["Group drops and My drops"] = "Group drops and My drops"
 -- Compact mode's cards and the header's short form (modules/CompactCards.lua, compact spec §2 and §3)
 L["%dd"] = "%dd"
 L["%d of %d"] = "%d of %d"
@@ -380,17 +366,15 @@ L["range"] = "range"
 L["Them"] = "Them"
 L["When"] = "When"
 L["The time it dropped was not kept."] = "The time it dropped was not kept."
--- Compact mode's My drops and History strips (modules/CompactMine.lua, modules/CompactHistory.lua)
+-- Compact mode's Drops and History strips (modules/DropsStrip.lua, modules/CompactHistory.lua)
 L["next %s"] = "next %s"
 L["Post"] = "Post"
 L["Clear"] = "Clear"
 -- Compact mode's chrome (modules/CompactChrome.lua, compact spec §4)
-L["Group"] = "Group"
+L["Drops"] = "Drops"
 L["History"] = "History"
 L["TEST"] = "TEST"
 L["SIM"] = "SIM"
-L["Mine · %d"] = "Mine · %d"
-L["Mine"] = "Mine"
 L["Sim: %s"] = "Sim: %s"
 L["%s (not tracked)"] = "%s (not tracked)"
 L["No group"] = "No group"
@@ -403,3 +387,12 @@ L["Quality, Content, Character and Sort, as the full view's bar and footer hold 
 L["Drop Watcher"] = "Drop Watcher"
 L["TEST: sample drops in every state. Nothing is whispered; combat ends it."] = "TEST: sample drops in every state. Nothing is whispered; combat ends it."
 L["Filter…"] = "Filter…"
+-- The Offer panel's Their eq column and its Offer (modules/OfferPanel.lua, modules/SideCells.lua;
+-- feedback-7 spec §0)
+L["Their eq"] = "Their eq"
+L["What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."] =
+    "What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."
+L["Offer whispers them your offer template for this item."] = "Offer whispers them your offer template for this item."
+L["Offer is shown for members it is an upgrade or an equal for."] = "Offer is shown for members it is an upgrade or an equal for."
+L["Unavailable"] = "Unavailable"
+L["Checking"] = "Checking"
