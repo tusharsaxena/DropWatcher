@@ -269,7 +269,7 @@ fallback; test mode's and the simulator's realistic instance and difficulty name
 `Passes` (All passes everything, a drop with no recorder only All, the session sentinel is you),
 `Canonical`, `Label` and `IsCurrent`, `Characters` and `Options`; your recorder read live and
 unknown until the realm is; every drop record, test placeholder and History entry stamped with who
-saw it; the dropdown after Content on every tab, multi-select and Current by default, the session
+saw it; the dropdown after Content on every tab, multi-select, Current by default on Drops and All on History (feedback-13 spec §0), the session
 tabs listing you alone and History every recorder; History filtered by it, unknown only under All,
 a group it leaves empty with no `0 shown` header in either layout (feedback-12 spec §1);
 `HiddenBy`'s `char` reason and its label; test mode's alt group is `test_test_mode`'s and a

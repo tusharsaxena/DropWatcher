@@ -321,7 +321,7 @@ test("modes: test mode's History cards show every outcome, each saying what its 
     end)
     local seen = {}
     local cards = compactCards(NS, "history")
-    assertEqual(#cards, 7, "every kept sample")
+    assertEqual(#cards, 9, "every kept sample, the alt's too (Character: All, feedback-13 spec §0)")
     for _, card in ipairs(cards) do
         local c, f = card.cells, full[idOf("history", card)]
         local what = "entry " .. tostring(card.dropId)

@@ -232,6 +232,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/OfferPanel.lua` | `ClassColor` |
 | `modules/WindowHistory.lua` | `ContextMenu`, `ClassColor` |
 | `modules/WindowFooter.lua` | `PawnIsReady` |
+| `modules/TipGrid.lua` | `IsSecret` (a grid cell's width and the tooltip's line count, read in combat; feedback-14 spec §0); `TooltipLeftLine` (`core/CompatItem.lua`) |
 | `modules/Toast.lua` | `PlayAlertSound`; `InCombatLockdown` (`core/CompatWorld.lua`) |
 | `modules/Window.lua` | `PlayerInCombat` (`core/CompatWorld.lua`: the show decision off a combat edge) |
 | `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal) |

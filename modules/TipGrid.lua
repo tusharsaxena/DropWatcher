@@ -16,6 +16,11 @@ local _, NS = ...
 -- tooltip hides (the pool frame's OnHide) and when it is cleared for someone else (OnTooltipCleared):
 -- GameTooltip is the whole UI's, so nothing of a grid outlives it.
 --
+-- SECRETS. In combat the client may answer a font string's width on GameTooltip, or the tooltip's
+-- line count, as a 12.0 secret number, which raises when compared. Each read meets NS.Compat.IsSecret
+-- first: a secret width falls back to the estimate (TG.CHAR_W a character), a secret line count to
+-- the reserved rows' own count (feedback-14 spec §0).
+--
 -- TG.Columns is pure (the suites read it); TG.Painted answers what the last paint drew, for the
 -- suites, which have no tooltip lines to anchor to.
 
@@ -102,7 +107,7 @@ end
 
 local function widthOf(fs, text)
     local w = fs.GetUnboundedStringWidth and fs:GetUnboundedStringWidth()
-    if type(w) ~= "number" then w = TM.Chars(text) * TG.CHAR_W end
+    if NS.Compat.IsSecret(w) or type(w) ~= "number" then w = TM.Chars(text) * TG.CHAR_W end
     return w
 end
 
@@ -155,7 +160,8 @@ function TG.Add(tip, line)
     for _, row in ipairs(line.grid) do
         tip:AddLine(" ", 1, 1, 1, false)
         local n = tip.NumLines and tip:NumLines()
-        pending[#pending + 1] = { line = type(n) == "number" and n or #pending + 2, row = row }
+        if NS.Compat.IsSecret(n) or type(n) ~= "number" then n = #pending + 2 end
+        pending[#pending + 1] = { line = n, row = row }
     end
 end
 

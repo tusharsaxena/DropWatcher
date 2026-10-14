@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1400%2F1400_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1402%2F1402_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -88,9 +88,10 @@ received or traded away, the last two once a trade with that item goes through. 
 action buttons' colors: yellow while it waited on someone (asked, offered), green once done (received,
 traded away), red when it fell through (expired) and gray when nothing came of it (seen, declined), in
 both the table and the compact cards. Right-click a row to
-mark it declined. The **Character** dropdown in the bar starts on **Current**, the character you're
-playing; on History it lists every character that saw a drop, with its class icon, so pick another,
-several, or **All** (the only choice that shows drops kept before Drop Watcher noted who saw them).
+mark it declined. Drops opens on **Content: This session** and **Character: Current**, the character
+you're playing. History opens on everything: **View: All**, **Content: All** and **Character: All**.
+Its Character dropdown lists every character that saw a drop, with its class icon, so you can narrow
+it to one or several. Drops kept before Drop Watcher noted who saw them show only under All.
 
 There is also a compact view: a narrow window, 440 pixels wide, where each drop is a small card of
 three lines instead of a table row. The top line has the item level, then the item, then how fresh

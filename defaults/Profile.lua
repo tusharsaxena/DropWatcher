@@ -45,7 +45,7 @@ NS.C = {
             -- The View a fresh filter bar tab opens on: a set, every value off is All (feedback-2
             -- spec §1). Each value is a `feed.view.<value>` row; they combine as AND.
             view    = { interesting = false, likely = false, usable = false, upgrade = false },
-            content = "instance",      -- instance | session | all
+            content = "session",       -- instance | session | all
             sort    = "newest",        -- newest | oldest | ilvl | gain
             quality = {
                 mode            = "fixed",   -- fixed | dynamicSlot | dynamicCharacter

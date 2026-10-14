@@ -307,6 +307,7 @@ gave, your own drop of that id; one entry per item. **The keeping** is by age (K
 feedback-2 spec §5): a group whose newest entry is older than the window goes, once per session and
 when the window shrinks (after a confirmation when that deletes anything), with 50 drops per group
 and a safety ceiling of 5,000 drops in all, the oldest first. **The tab** opens on View: All and Content: All
+(and Character: All since feedback-13 spec §0, its fixed defaults, WindowFilterBar.TAB_FIXED)
 the first time each session (Content's This session and This instance then cut by time, and
 `n days ago` names an older group); it is read-only but for the row menu (right-click: Mark as
 declined or Clear declined, through the client's `MenuUtil`, or at once without it), and Clear

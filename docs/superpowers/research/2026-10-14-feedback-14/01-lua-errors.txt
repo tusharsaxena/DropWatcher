@@ -1,0 +1,13 @@
+The owner's two BugSack reports, 2026-10-14, in combat after another player looted (verbatim).
+
+5x DropWatcher/modules/TipGrid.lua:132: attempt to compare local 'w' (a secret number value, while execution tainted by 'DropWatcher')
+[DropWatcher/modules/TipGrid.lua]:132: in function <DropWatcher/modules/TipGrid.lua:118>
+[DropWatcher/modules/TipGrid.lua]:173: in function 'Paint'
+[DropWatcher/modules/Window.lua]:228: in function <DropWatcher/modules/Window.lua:219>
+Locals: cell={ text="71", glyph="▼", tone="red" }, w=<secret number>
+
+1x attempt to perform numeric conversion on a secret number value (execution tainted by 'DropWatcher')
+[DropWatcher/modules/TipGrid.lua]:50: in function 'Columns'
+[DropWatcher/modules/TipGrid.lua]:177: in function 'Paint'
+[DropWatcher/modules/Window.lua]:228: in function <DropWatcher/modules/Window.lua:219>
+Locals: row={ 1=<secret number>, 2=<secret number>, 3=0, 4=0 }, w=<secret number>

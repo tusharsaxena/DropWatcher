@@ -192,7 +192,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (57)
+### test_window_shell.lua (58)
 
 - shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -222,6 +222,7 @@ Total.
 - shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
 - shell: each tab keeps its own filter state, and grays what it does not use
 - shell: a filter change redraws the active tab with the new state
+- shell: each tab opens on its own defaults, Drops this session's and yours, History everything (feedback-13 spec §0)
 - shell: a fresh tab's state is seeded from the profile's feed settings when valid
 - shell: the Quality control shows the mode in force and sets it through the shared handler
 - shell: IsInteresting is an upgrade for you, or a drop its looter has no use for and can trade
@@ -510,7 +511,7 @@ Total.
 - own drops table: Looter reads Name [YOU], the name in class color and the mark in gold
 - own drops: the detail card's Looter row and the compact card's line 2 read Name [YOU]
 
-### test_tip_marks.lua (18)
+### test_tip_marks.lua (19)
 
 - tip marks: the escape is the whole 64x64 canvas at the text's height, tinted as 0..255
 - tip marks: up is arrow-up in green, side is transfer in yellow, down is arrow-down in red
@@ -521,6 +522,7 @@ Total.
 - grid: a member's rows, the name on the first, the arrow on the item it replaces, empty for a slot worn empty
 - grid: a column is as wide as its widest cell, a fixed gap between, an empty column takes no room
 - tooltip: a grid reserves a line per row and paints its cells as columns, the glyph in the monospace face
+- tooltip: a secret width or line count in combat paints the grid on the estimate, never raising (feedback-14 spec §0)
 - compat: a tooltip's line by number is its TextLeft global; nil for an unnamed tooltip or a missing line
 - details: one grid row per upgrade, ranked by gain, every part colored, the gain unsigned
 - details: of two worn rings the line names the lower, the one the drop would replace
@@ -1638,7 +1640,7 @@ Total.
 | test_settings_pages.lua | 36 |
 | test_slash.lua | 26 |
 | test_window.lua | 14 |
-| test_window_shell.lua | 57 |
+| test_window_shell.lua | 58 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 26 |
 | test_compact_group.lua | 20 |
@@ -1650,7 +1652,7 @@ Total.
 | test_side_cells.lua | 21 |
 | test_detail_card.lua | 21 |
 | test_own_drops.lua | 15 |
-| test_tip_marks.lua | 18 |
+| test_tip_marks.lua | 19 |
 | test_drops_strip.lua | 14 |
 | test_offer_panel.lua | 16 |
 | test_mine_cells.lua | 14 |
@@ -1702,4 +1704,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1400** |
+| **Total** | **1402** |

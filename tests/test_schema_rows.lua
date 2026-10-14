@@ -156,7 +156,7 @@ test("rows: the filter bar seeds a fresh tab from the rows", function()
     assertFalse(NS.SchemaRuntime.Set("feed.view.likely", "yes"), "a View row takes a boolean")
     assertTrue(NS.Setting("feed.usableOnly") == nil and NS.Setting("trade.likelyOnly") == nil,
         "the checkbox rows are retired")
-    assertEqual(d.content, "instance")
+    assertEqual(d.content, "session", "This session by default (feedback-13 spec §0)")
 end)
 
 test("rows: the Quality control and the window's layout write through the seam (handoff from M3)", function()
