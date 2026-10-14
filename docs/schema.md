@@ -49,7 +49,7 @@ button and profiles reach them as any row.
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
 | `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you shows below the threshold |
 | `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade` | `false` each | Filters | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me), the values combine as AND, and all off is All, the default |
-| `feed.content`, `feed.sort` | `"instance"`, `"newest"` | Filters | a fresh filter bar tab's Content and Sort |
+| `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Filters | the Drops tab's Content when it opens, and a fresh tab's Sort (History always opens on Content: All) |
 | `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Filters | armor, weapons, jewelry and trinkets only; tier tokens too |
 | `feed.minIlvlMode` | `"off"` | Filters | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Filters | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
@@ -162,7 +162,7 @@ history = { retentionDays = 30, v = 1, groups = {
   first entry's. No migration step: the fields are optional.
 - `seenBy` is the character that saw the drop, its Name-Realm, and `seenByClass` that character's
   classFile (feedback-2 spec §4, `modules/CharFilter.lua`): the feed stamps every drop record with
-  them and the entry copies them. The History tab's Character dropdown (Current by default) filters
+  them and the entry copies them. The History tab's Character dropdown (All by default since feedback-13 spec §0) filters
   by `seenBy`. An entry kept before DW-A4 has neither: it is "unknown", which only `Character: All`
   shows. No migration step: the fields are optional.
 - `outcome` is `seen`, `asked`, `offered`, `received`, `tradedAway`, `expired` or `declined`;
@@ -179,14 +179,15 @@ history = { retentionDays = 30, v = 1, groups = {
 `NS.State.windowFilters` (the filter bar's state per tab, `{ view = { [value] = true },
 char = { [Name-Realm] = true }, content, search, sort }`, seeded from the `feed.view.<value>`,
 `feed.content` and `feed.sort` rows when they hold a valid value; `char` starts on Current, your
-key, or the `current` sentinel until your key is known),
+key, or the `current` sentinel until your key is known; History then takes
+`WindowFilterBar.TAB_FIXED`'s View: All, Content: All and Character: All, feedback-13 spec §0),
 `NS.State.windowGroup` (the Drops table's collapsed groups and the row whose detail card is open; no
 drop is dismissed since DW-D2, feedback-4 spec §2),
 `NS.State.windowOwn` (your own drops that are upgrades for you whose Offer panel you opened, so Drops
 draws who they would help; feedback-5 spec §2, DW-E2, where `NS.State.windowMine` was My drops'),
 `NS.State.offerPanel` (the drop the Offer panel shows),
-`NS.State.windowHistory` (the History tab's collapsed groups, and whether this session already put
-View: All and Content: All on it),
+`NS.State.windowHistory` (the History tab's collapsed groups; its View: All, Content: All and
+Character: All come from WindowFilterBar.TAB_FIXED since feedback-13 spec §0),
 `NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
 came from; nil while stood down). The Debug console
 and Test mode rows are `sessionOnly` and store through their own closures.

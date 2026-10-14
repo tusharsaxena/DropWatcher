@@ -1,0 +1,3 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-M0	M22	DropWatcher	Each tab default filters		S	FEED	fb13 §0
+DW-M1	M22	DropWatcher	Docs sync	DW-M0	S		fb13

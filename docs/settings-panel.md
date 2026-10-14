@@ -88,8 +88,9 @@ timeline, and the panel's Run all tooltip names the current delay.
 when its own setting overrides the feed's mode. It repaints with every write.
 
 **Filters:** View: Interesting, View: Likely tradeable, View: Usable by me and View: Upgrade for me
-(the View a fresh tab opens on, one checkbox per value; all unticked is View: All, the default,
-DW-A1), Content and Sort (what a fresh tab starts with), Gear only, Tier tokens, Minimum item level
+(the View the Drops tab opens on, one checkbox per value; all unticked is View: All, the default,
+DW-A1), Content (the Drops tab's, This session by default; History always opens on All, feedback-13
+spec §0) and Sort (what a fresh tab starts with), Gear only, Tier tokens, Minimum item level
 with its absolute and relative values (each live in its mode only), Clear on boss kill. (Show my own
 loot in Group drops is retired: Drops always lists your own drops, feedback-5 spec §2; schema step 6
 removes the stored value.)

@@ -221,7 +221,7 @@ local function feed()
         bool("feed.view." .. v.key, F.view[v.key], v.label, v.tip, filters)
     end
     pick("feed.content", F.content, CONTENTS, L["Content"],
-        L["Which drops a fresh tab lists: this instance's, this session's, or all of them."], filters)
+        L["Which drops the Drops tab lists when it opens: this instance's, this session's, or all of them. History always opens on All."], filters)
     pick("feed.sort", F.sort, SORTS, L["Sort"], L["How a fresh tab sorts its rows."], filters)
     bool("feed.gearOnly", F.gearOnly, L["Gear only"],
         L["List armor, weapons, jewelry and trinkets only."], filters)

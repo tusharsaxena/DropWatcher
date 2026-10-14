@@ -226,7 +226,7 @@ test("chrome: Filters opens the panel of the full bar's own dropdowns, and a pic
     p.filters:__fire("OnClick")
     assertFalse(p.panel:IsShown(), "a second click closes it")
     NS.Window.SelectTab("history")
-    assertEqual(textOf(p.filters.label), "Filters · 1", "History starts from its own state (Content: All)")
+    assertEqual(textOf(p.filters.label), "Filters", "History starts from its own defaults, none counted (feedback-13 spec §0)")
     assertTrue(f:IsShown())
 end)
 

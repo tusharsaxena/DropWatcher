@@ -76,8 +76,8 @@ its one-line responsibility and why its position is load-bearing or conventional
   opens and kept on it and its History group, and the character that saw it, the only name a header
   shows; feedback-3 spec §4; and `CharFilter.lua`, the Character
   dropdown's recorder: every drop record and History entry says who saw it, `seenBy` (Name-Realm)
-  and `seenByClass`, and the filter bar's Character dropdown, Current by default, filters History by
-  it; feedback-2 spec §4); and the
+  and `seenByClass`, and the filter bar's Character dropdown (Current by default on Drops, All on History since feedback-13
+  spec §0) filters History by it; feedback-2 spec §4); and the
   recorded and opt-in features (`History.lua`, with `HistoryRetention.lua` keeping it by days:
   Keep history for, confirmed before a shorter window deletes (only the latest pending choice is
   answered), pruned once per session, also when the addon is enabled later in a session that
@@ -263,7 +263,8 @@ the feed read is a row: the window's layout (`window.mode`, `NS.SetWindowMode` a
 `/dw full`; it replaced M3's compact preset, `window.compact`, which schema step 5 maps to it) and the filter bar's Quality control (`NS.SetQualityMode`, the Feed page's
 row) both write through the seam. The filter bar's per-tab state is session-only
 (`NS.State.windowFilters`), seeded from the `feed.view.<value>`, `feed.content` and `feed.sort`
-rows when they hold a valid value. Its View is a set (DW-A1): the multi-select View dropdown's
+rows when they hold a valid value, History then taking its fixed View, Content and Character
+All (`WindowFilterBar.TAB_FIXED`, feedback-13 spec §0). Its View is a set (DW-A1): the multi-select View dropdown's
 values combine as AND, All is the empty set and the default, and each tab grays the values it does
 not use (`FB.HONORS[tab].views`);
 test mode sets the Drops tab's View to All while it is on and puts the player's value back
@@ -524,7 +525,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 28 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 30 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |

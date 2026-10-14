@@ -373,9 +373,11 @@ test("history: test mode shows its sample groups, every outcome, and never write
     NS.Window.SelectTab("history")
     NS.Window.Refresh()
     local drawn = NS.WindowHistory.Drawn()
-    assertEqual(#drawn.headers, 2, "Character: Current hides the alt's group (feedback-2 spec §4)")
+    assertEqual(#drawn.headers, 3, "Character: All, History's default, shows the alt's group (feedback-13 spec §0)")
     assertTrue(#drawn.rows >= 1)
     local dd = NS.WindowFilterBar.Controls().char
+    dd:ToggleSelected("current"); dd.onMultiSelect(dd._selected)
+    assertEqual(#NS.WindowHistory.Drawn().headers, 2, "Character: Current hides the alt's group (feedback-2 spec §4)")
     local listed = {}
     for _, o in ipairs(dd._options) do listed[#listed + 1] = o.value end
     assertEqual(table.concat(listed, ","), "all,current,Emberwick-Testrealm,Testchar-Testrealm")

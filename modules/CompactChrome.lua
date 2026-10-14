@@ -126,17 +126,19 @@ end
 
 --- Whether one counted control is off its default on a tab that honors it: Quality when the mode in
 --- force is not the feed's default mode, Content when it is not the seeded value, Character when it
---- is not exactly you.
+--- is not exactly you (on a tab whose default is All, History's, when it names anyone).
 --- @param key string `quality`, `content` or `char`
 --- @param st table the tab's filter state
 --- @param honors table the tab's WindowFilterBar.HONORS row
---- @param d table { quality = mode in force, qualityDefault, content = the seeded Content, current }
+--- @param d table { quality = mode in force, qualityDefault, content = the seeded Content, current,
+--- charAll = the tab's Character default is All }
 --- @return boolean
 function CC.IsActive(key, st, honors, d)
     if type(st) ~= "table" or type(honors) ~= "table" or not honors[key] then return false end
     if key == "quality" then return d.quality ~= d.qualityDefault end
     if key == "content" then return st.content ~= d.content end
     if key == "char" then
+        if d.charAll then return type(st.char) == "table" and next(st.char) ~= nil end
         if NS.CharFilter.IsCurrent(st.char, d.current) then return false end
         return not sameSet(st.char, { [NS.CharFilter.CURRENT] = true })
     end
@@ -194,14 +196,17 @@ end
 local function isCompact() return NS.WindowCompact.Mode() == "compact" end
 
 -- The counted controls' defaults on the tab now: the feed's own quality mode, the seeded Content
--- (the `feed.content` row, as a fresh tab's state starts), your key.
+-- (the `feed.content` row, as a fresh tab's state starts, unless the tab fixes its own:
+-- WindowFilterBar.TAB_FIXED), your key, and whether the tab's Character default is All.
 local defaults = {}
-local function readDefaults()
+local function readDefaults(tab)
     local FB, P = NS.WindowFilterBar, NS.C.PROFILE.feed
+    local fixed = FB.TAB_FIXED[tab] or {}
     local content = NS.Setting("feed.content")
     local ok = false
     for _, v in ipairs(FB.VALUES.content) do if v == content then ok = true end end
-    defaults.content = ok and content or P.content
+    defaults.content = fixed.content or (ok and content or P.content)
+    defaults.charAll = fixed.char ~= nil
     defaults.qualityDefault = P.quality.mode
     defaults.quality = NS.QualityGate.ResolveMode(NS.Setting("feed.quality.mode"), NS.Situations.QualityOverride())
     defaults.current = NS.CharFilter.CurrentKey()
@@ -230,7 +235,7 @@ end
 local function filtersTip()
     local tab = NS.Window.ActiveTab()
     local FB = NS.WindowFilterBar
-    return unpack(CC.FiltersTip(labelsInForce(), CC.ActiveKeys(FB.State(tab), FB.HONORS[tab], readDefaults())))
+    return unpack(CC.FiltersTip(labelsInForce(), CC.ActiveKeys(FB.State(tab), FB.HONORS[tab], readDefaults(tab))))
 end
 
 --- Close the Filters panel (and any dropdown menu opened from it).
@@ -431,7 +436,7 @@ local function paintFilters()
     if not (b and b:IsShown()) then return end
     local tab = NS.Window.ActiveTab()
     local FB = NS.WindowFilterBar
-    local n = CC.CountActive(FB.State(tab), FB.HONORS[tab], readDefaults())
+    local n = CC.CountActive(FB.State(tab), FB.HONORS[tab], readDefaults(tab))
     if b.count == n then return end
     b.count = n
     b.label:SetText(CC.FiltersLabel(n))

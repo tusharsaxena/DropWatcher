@@ -2,8 +2,8 @@
 -- first `/dw sim run` left the drops table empty. Every read the simulator answers goes through the
 -- seam (no module names one of those globals itself); and every scenario, run in the real solo,
 -- out-of-instance world the mock answers by default, puts drops in the feed with both verdicts,
--- rows in Drops, yours among them, under the window's DEFAULT filters (View Interesting, Content
--- This instance, Quality Rare+), and a footer and chat that report the run. It runs once with a
+-- rows in Drops, yours among them, under the window's DEFAULT filters (View All, Content This
+-- session, Quality Rare+; feedback-13 spec §0), and a footer and chat that report the run. It runs once with a
 -- player at the content's level and once with a player who outgears it, the owner's case.
 -- Also the M7 review's low findings on the same reads: the combat flags and the LOOT_ITEM*
 -- strings through Compat, raid1 aliased to you, you online in a raid, LFR's instance chat.
@@ -155,16 +155,20 @@ local function assertSoloWorld(NS)
     assertEqual(NS.Situations.Current(), "solo")
 end
 
--- The window's filters are the defaults: View All, Character Current, Content This instance,
--- Quality Rare+.
+-- The window's filters are the defaults (feedback-13 spec §0): Drops View All, Character Current,
+-- Content This session; History View All, Character All, Content All; Quality Rare+.
 local function assertDefaultFilters(NS)
     local FB = NS.WindowFilterBar
     for _, tab in ipairs({ "group", "history" }) do
         local st = FB.State(tab)
-        assertEqual(next(st.view), nil, "View: All"); assertEqual(st.content, "instance")
-        assertEqual(st.search, "")
-        assertTrue(st.char["Testchar-Testrealm"] == true and next(st.char, next(st.char)) == nil,
-            "Character: Current (feedback-2 spec §4)")
+        assertEqual(next(st.view), nil, "View: All"); assertEqual(st.search, "")
+        if tab == "group" then
+            assertEqual(st.content, "session")
+            assertTrue(st.char["Testchar-Testrealm"] == true and next(st.char, next(st.char)) == nil,
+                "Character: Current (feedback-2 spec §4)")
+        else
+            assertEqual(st.content, "all"); assertNil(next(st.char), "Character: All")
+        end
     end
     local mode, threshold = FB.QualityReadout()
     assertEqual(mode, "fixed"); assertEqual(threshold, 3)

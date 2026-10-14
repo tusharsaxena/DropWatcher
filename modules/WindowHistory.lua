@@ -21,12 +21,13 @@ local _, NS = ...
 -- ContextMenu): Mark as declined, or Clear declined; a client without the menu toggles it at once.
 --
 -- THE FILTER. The tab honors View, Character, Content, the search box and Sort
--- (modules/WindowFilterBar.lua). History is account-wide, so Character (Current by default, feedback-2
--- spec §4) filters it by who saw each drop; an entry kept before that was recorded shows only under All.
+-- (modules/WindowFilterBar.lua). History is account-wide, so Character (All by default since
+-- feedback-13 spec §0) filters it by who saw each drop; an entry kept before that was recorded shows
+-- only under All.
 -- An entry's `at` is time(), so This instance and This session are the window's GetTime() marks
 -- turned into time() (ctx: instanceSince, sessionSince = NS.History.SessionStart()). The tab opens
--- on View: All and Content: All the first time it is shown in a session: it is a record of earlier
--- sessions, not a feed to act on.
+-- on View: All, Content: All and Character: All (WindowFilterBar.TAB_FIXED, feedback-13 spec §0):
+-- it is a record of earlier sessions and every character, not a feed to act on.
 --
 -- THE COMPACT LAYOUT draws the same entries as cards: modules/CompactHistory.lua (DW-C3).
 --
@@ -488,14 +489,6 @@ local function build(pane)
     pane.scroll, pane.content = scroll, content
     pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
     pane.entries = {}
-    -- Opened for the first time this session: View: All and Content: All, since the tab is a
-    -- record of earlier sessions, not a feed to act on.
-    local v = view()
-    if not v.seeded then
-        v.seeded = true
-        local st = NS.WindowFilterBar.State("history")
-        st.view, st.content = {}, "all"
-    end
 end
 
 local function paintHeads(pane, layout)

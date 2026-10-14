@@ -256,7 +256,7 @@ test("shell: the filter bar holds View, Quality, Content and the search box, and
     local c = NS.WindowFilterBar.Controls()
     assertEqual(textOf(c.view.text), "View: All", "All is the default View (FB2-1)")
     assertEqual(textOf(c.quality.text), "Quality: Rare+")
-    assertEqual(textOf(c.content.text), "Content: This instance")
+    assertEqual(textOf(c.content.text), "Content: This session", "the default since feedback-13 spec §0")
     assertTrue(c.likelyOnly == nil and c.usableOnly == nil and c.upgradeOnly == nil,
         "the checkboxes are View values now (FB2-2)")
     assertEqual(textOf(c.search.hint), "Filter looter or item…")
@@ -466,6 +466,21 @@ test("shell: a filter change redraws the active tab with the new state", functio
     assertFalse(NS.WindowFilterBar.Set("group", "view", { likely = "yes" }), "a member is true")
 end)
 
+test("shell: each tab opens on its own defaults, Drops this session's and yours, History everything (feedback-13 spec §0)", function()
+    local NS = shown()
+    local c = NS.WindowFilterBar.Controls()
+    local function bar()
+        return table.concat({ textOf(c.view.text), textOf(c.quality.text), textOf(c.content.text),
+            textOf(c.char.text) }, " | ")
+    end
+    assertEqual(bar(), "View: All | Quality: Rare+ | Content: This session | Character: Current")
+    NS.Window.SelectTab("history")
+    assertEqual(bar(), "View: All | Quality: Rare+ | Content: All | Character: All")
+    assertFalse(c.quality:IsEnabled(), "History does not honor Quality")
+    NS.Window.SelectTab("group")
+    assertEqual(bar(), "View: All | Quality: Rare+ | Content: This session | Character: Current", "each tab its own")
+end)
+
 test("shell: a fresh tab's state is seeded from the profile's feed settings when valid", function()
     local NS = T.enableAddon()
     NS.addon.db.profile.feed = { view = { likely = true, usable = true, upgrade = "yes" },
@@ -473,7 +488,7 @@ test("shell: a fresh tab's state is seeded from the profile's feed settings when
     local st = NS.WindowFilterBar.State("group")
     assertTrue(st.view.likely and st.view.usable)
     assertTrue(st.view.upgrade == nil, "an invalid stored value falls back to off")
-    assertEqual(st.content, "instance", "an invalid stored value falls back")
+    assertEqual(st.content, "session", "an invalid stored value falls back")
     assertEqual(st.sort, "ilvl")
 end)
 

@@ -8,7 +8,8 @@ local _, NS = ...
 -- state on the bar (Sync). A control a tab does not honor is grayed rather than hidden, so the bar
 -- never reflows between tabs (Ka0s Loot History's pattern). A fresh tab's state is seeded from the
 -- `feed.view.<value>`, `feed.content` and `feed.sort` rows (through the schema seam) when they hold
--- a valid value, else from DEFAULTS, which are those rows' defaults.
+-- a valid value, else from DEFAULTS, which are those rows' defaults. History then takes its own
+-- fixed defaults (TAB_FIXED: View, Content and Character all All, feedback-13 spec §0).
 --
 -- THE VIEW IS A SET (feedback-2 spec §1, FB2-1..3). Like Loot History's `Direction: 3 selected`
 -- (../LootHistory/modules/BrowserFilterBar.lua) the View dropdown is multi-select: Interesting,
@@ -175,9 +176,15 @@ local function seededView()
     return set
 end
 
---- A fresh tab's state: DEFAULTS, overridden by each seed the profile holds a valid value for.
+-- A tab's defaults that no profile row seeds. History is a record of every session and character,
+-- not a feed to act on: it opens on View: All, Content: All and Character: All (feedback-13 spec §0).
+FB.TAB_FIXED = { history = { view = {}, content = "all", char = {} } }
+
+--- A fresh tab's state: DEFAULTS, overridden by each seed the profile holds a valid value for, then
+--- by the tab's FB.TAB_FIXED values.
+--- @param tab string|nil
 --- @return table
-function FB.Defaults()
+function FB.Defaults(tab)
     local d = {}
     for k, v in pairs(DEFAULTS) do d[k] = v end
     d.view = seededView()
@@ -186,6 +193,7 @@ function FB.Defaults()
         local v = NS.Setting(path)
         if valid(k, v) then d[k] = v end
     end
+    for k, v in pairs(FB.TAB_FIXED[tab] or {}) do d[k] = SETS[k] and copySet(v) or v end
     return d
 end
 
@@ -200,7 +208,7 @@ function FB.State(tab)
         all = {}
         State.windowFilters = all
     end
-    if not all[tab] then all[tab] = FB.Defaults() end
+    if not all[tab] then all[tab] = FB.Defaults(tab) end
     return all[tab]
 end
 

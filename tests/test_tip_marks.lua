@@ -171,6 +171,42 @@ test("tooltip: a grid reserves a line per row and paints its cells as columns, t
     assertEqual(#NS.TipGrid.Painted(), 0); assertEqual(tip.__minWidth, 0, "the width goes back for the next tooltip")
 end)
 
+test("tooltip: a secret width or line count in combat paints the grid on the estimate, never raising (feedback-14 spec §0)", function()
+    local NS, _, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    -- The client's type() answers a secret's underlying type (the kit's wrapper is a table); every
+    -- secret here stands for a number.
+    local rawType = type
+    m.type = function(v) return T.isSecret(v) and "number" or rawType(v) end
+    local cw = NS.TipGrid.CHAR_W
+    local TM = NS.TipMarks
+    local tip = m.GameTooltip
+    local realCreate = m.CreateFrame
+    m.CreateFrame = function(...)
+        local f = realCreate(...)
+        local mk = f.CreateFontString
+        f.CreateFontString = function(self, ...)
+            local fs = mk(self, ...)
+            fs.GetUnboundedStringWidth = function() return T.secret(40) end
+            return fs
+        end
+        return f
+    end
+    tip.NumLines = function() return T.secret(2) end
+    local w = realCreate("Frame")
+    NS.Window.AttachTooltip(w, function()
+        return "For Seta: Downgrade", TM.Grid(TM.GearRows("Seta", { { name = "High", ilvl = 308 } }, 0,
+            TM.ArrowCell("downgrade", 71)))
+    end)
+    w:__fire("OnEnter")
+    local by = {}
+    for _, d in ipairs(NS.TipGrid.Painted()) do by[d.text] = d end
+    assertEqual(by["▼"].line, 2, "the reserved row's own count")
+    assertEqual(by["71"].x, by["▼"].x + cw + NS.TipGrid.GLYPH_GAP, "the glyph's estimated width")
+    assertEqual(tip.__minWidth, by["71"].x + 2 * cw)
+    m.CreateFrame = realCreate
+end)
+
 test("compat: a tooltip's line by number is its TextLeft global; nil for an unnamed tooltip or a missing line", function()
     local NS, env = T.newAddon()
     local line = {}
