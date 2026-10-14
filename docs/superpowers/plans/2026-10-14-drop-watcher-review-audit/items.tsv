@@ -1,0 +1,30 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-P1	M24a	WowAddonStandards	slash-commands-§7 step 6 proves reach; AUDIT walks steps 1-10		S		F22 F29
+DW-P2	M24a	WowAddonStandards	toc-file-§5 positional load-bearing definition		S		F23
+DW-P3	M24a	WowAddonStandards	documentation-§3 spill vs architecture-§5; spill targets for every hub section		M		F24 F25
+DW-P4	M24a	WowAddonStandards	options-ui-§19 reparent onto pooled widget, OnRelease cleanup		S		F26
+DW-P5	M24a	WowAddonStandards	Perf-hold refusal wording rule		S		F27
+DW-P6	M24a	WowAddonStandards	compat root header names every shim file		S		F28
+DW-P7	M24a	WowAddonStandards	Release v2.81.0 ripple	DW-P1 DW-P2 DW-P3 DW-P4 DW-P5 DW-P6	M		X09
+DW-P8	M24b	LibKa0s	testkit __fireUnconditional reaches method handlers, returns count (kit 39)		M		F19 X02
+DW-P9	M24b	LibKa0s	Perf.Note top-level observation (Perf 15)		M		F20
+DW-P10	M24b	LibKa0s	testkit step-10 hold-ordering helper	DW-P8	S		F21
+DW-P11	M24b	LibKa0s	Release v1.72.0 on branch	DW-P8 DW-P9 DW-P10	S		X09
+DW-P12	M24c	dev-copilot	Slash census sees constant-driven RegisterChatCommand		S		F30
+DW-P13	M24c	dev-copilot	Audit prompt: census scope and conformance steps 6/8/10		S		F31 F32
+DW-P14	M24c	dev-copilot	curl timeout/retry; zsh-safe playbook snippets		S		F33 F34
+DW-P15	M24c	dev-copilot	Release 2.3.5	DW-P12 DW-P13 DW-P14	S
+DW-P16	M24d	DropWatcher	StoodDownRefusal for every refusal site; perf line	DW-P5	S	SLASH	F01 F10 X01
+DW-P17	M24d	DropWatcher	Fixed announce channel honours group refusal		S	ANN	F02 X10
+DW-P18	M24d	DropWatcher	Shared event dispatcher isolates handlers		S	FEED	F03 X12
+DW-P19	M24d	DropWatcher	enUS carries every routed string, test enforces it		M		F07
+DW-P20	M24d	DropWatcher	luacheck globals scoped; optional-addon probes via Compat		S		F08 X10
+DW-P21	M24d	DropWatcher	SetTestMode doc block; When-to-show OnRelease cleanup; Toast close degrades	DW-P4	S	UI	F09 F11 F12
+DW-P22	M24e	DropWatcher	Re-vendor LibKa0s v1.72.0; re-check deviations register	DW-P11	S		F17 X06
+DW-P23	M24e	DropWatcher	Refresh standard reference to v2.81.0	DW-P7	S		X09
+DW-P24	M24e	DropWatcher	evaluate/quality.gate nest within feed.add (Perf 15)	DW-P22	S	PERF	F06 X05 X12
+DW-P25	M24e	DropWatcher	Disabled-state suite: step 6 reach, steps 7/8, step 10	DW-P22 DW-P16	M		F04 F05 F18
+DW-P26	M24e	DropWatcher	TOC LOAD-BEARING comments + harness gate	DW-P23	M		F15 X07
+DW-P27	M24e	DropWatcher	ARCHITECTURE.md spill and stale counts	DW-P23	M		F13 F14
+DW-P28	M24f	DropWatcher	Docs sync, smoke checks, test-case list	DW-P27	S		X04 X05 X08
+DW-P29	M24f	DropWatcher	Automated-test bundle	DW-P28	S		F16
