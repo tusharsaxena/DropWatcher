@@ -1,7 +1,7 @@
 # Module map — Ka0s Drop Watcher
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored and never edited.
+LibDataBroker, LibDBIcon, LibKa0s v1.72.0 whole) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
 

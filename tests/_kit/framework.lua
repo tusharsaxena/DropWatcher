@@ -17,7 +17,7 @@ local Kit = {}
 --- cannot answer on its own: *which* kit is a given consumer holding? Before this, "AbsorbTracker's
 --- kit is stale" was only reachable by diffing against this repo at the right commit. Now the
 --- consumer can say so itself, and its API document has a name.
-Kit.VERSION = 38
+Kit.VERSION = 39
 
 -- ── the resource guard (kit revision 23) ───────────────────────────────────────────────────────
 --
@@ -239,6 +239,7 @@ end
 
 local asserts = dofile(kitFolder() .. "asserts.lua")(Kit)
 dofile(kitFolder() .. "secrets.lua")(Kit)   -- Kit.secret and its siblings (kit revision 38)
+dofile(kitFolder() .. "latch.lua")(Kit)     -- Kit.assertLatchHoldOrder (kit revision 39)
 local fail = asserts.fail
 
 --- Merge the registry and assertions into the host's `_G.<X>_TEST` table and return it, so a repo
@@ -261,6 +262,7 @@ function Kit.expose(t)
   t.assertSurfaceParity  = Kit.assertSurfaceParity
   t.publicMembers        = Kit.publicMembers
   t.setSurfaceSource     = Kit.setSurfaceSource
+  t.assertLatchHoldOrder = Kit.assertLatchHoldOrder
 
   -- The by-name form needs somewhere to look, and every harness in this collection that stubs a
   -- LIBRARY TABLE already has it: the mock it just built. Wired here rather than demanded of the
