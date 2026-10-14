@@ -28,7 +28,7 @@ local TAG = "TRADE"
 
 -- Every refusal reason, with the tooltip line the button shows.
 TH.REASON_TEXT = {
-    stoodDown  = L["Drop Watcher is disabled."],
+    stoodDown  = L["%s is disabled."]:format(NS.BRAND),
     combat     = L["You cannot trade in combat."],
     noTarget   = L["That player is not in your group."],
     self       = L["You cannot trade with yourself."],

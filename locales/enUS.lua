@@ -22,6 +22,9 @@ L["%s; running on reduced built-in fallbacks."] = "%s; running on reduced built-
 L["The LibKa0s library is missing from this installation of %s (expected in libs/LibKa0s)"] =
     "The LibKa0s library is missing from this installation of %s (expected in libs/LibKa0s)"
 
+-- A feature's refusal under the perf hold alone (core/LifecycleSetup.lua NS.StoodDownRefusal)
+L["Not available during a performance capture."] = "Not available during a performance capture."
+
 -- Slash command descriptions (settings/Slash.lua NS.COMMANDS)
 L["Clear this session's drops from the feed"] = "Clear this session's drops from the feed"
 L["Disable the addon"] = "Disable the addon"
@@ -99,7 +102,9 @@ L["Open world"] = "Open world"
 L["%s: %d min left to trade it."] = "%s: %d min left to trade it."
 
 -- The trade helper's refusal reasons, the disabled button's tooltip (modules/TradeHelper.lua)
-L["Drop Watcher is disabled."] = "Drop Watcher is disabled."
+L["%s is disabled."] = "%s is disabled."
+-- ...and the Edit message box's reason fragment for the same state (modules/DetailCard.lua)
+L["%s is disabled"] = "%s is disabled"
 L["That player is not in your group."] = "That player is not in your group."
 L["That player is offline."] = "That player is offline."
 L["That player is out of trade range."] = "That player is out of trade range."

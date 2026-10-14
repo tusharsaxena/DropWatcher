@@ -57,7 +57,7 @@ local editor   -- the Edit message box, built on its first use
 -- Why the box has nothing to send (NS.Asks.Preview's refusal reasons).
 local EDIT_REFUSAL = {
     notInGroup = L["the looter is not in your group"], offline = L["the looter is offline"],
-    self = L["that is your own drop"], noTarget = L["the looter is not known"], disabled = L["the addon is disabled"],
+    self = L["that is your own drop"], noTarget = L["the looter is not known"], disabled = L["%s is disabled"]:format(NS.BRAND),
 }
 
 -- An offer's refusals name the member, not the looter.

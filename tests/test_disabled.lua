@@ -177,3 +177,56 @@ test("disabled 8: the launcher's menu grays every entry but Enabled", function()
     boxes[3].click()
     assertFalse(NS.State.testMode, "a grayed entry writes nothing")
 end)
+
+-- Every feature refusal a player can reach while stood down: the slash verbs that get past the
+-- dispatcher's gate (it reads the stored `enabled`), and the window's host handlers.
+local REFUSERS = {
+    { "/dw scan", function(NS) NS.addon:OnSlashCommand("scan") end },
+    { "/dw test", function(NS) NS.addon:OnSlashCommand("test") end },
+    { "/dw sim start", function(NS) NS.addon:OnSlashCommand("sim start dungeon") end },
+    { "Post my tradeables", function(NS) NS.PostTradeables() end },
+    { "Retry inspect", function(NS) NS.RetryInspect(1) end },
+    { "Ask", function(NS) NS.PressAsk(1) end },
+    { "Offer", function(NS) NS.PressOffer(1, "Seta-Realm") end },
+    { "Announce to group", function(NS) NS.PressAnnounce(1) end },
+    { "Trade", function(NS) NS.TradeWithLooter(1) end },
+}
+
+local PERF_LINE = "Not available during a performance capture."
+
+test("disabled 9: under the perf hold alone, each feature refusal names the capture, never 'is disabled'", function()
+    local NS, _, m = T.enableAddon()
+    NS.Lifecycle:Hold(NS.HOLD_PERF)
+    assertTrue(NS.IsStoodDown())
+    assertTrue(NS.addon.db.profile.enabled, "the stored setting is still on")
+    -- red under: return NS.SlashCommands:DisabledLine() from NS.StoodDownRefusal unconditionally
+    assertEqual(NS.StoodDownRefusal(), PERF_LINE)
+    for _, r in ipairs(REFUSERS) do
+        m.prints = {}
+        r[2](NS)
+        assertEqual(#m.prints, 1, r[1])
+        assertTrue(m.prints[1]:find(PERF_LINE, 1, true) ~= nil, r[1] .. ": " .. tostring(m.prints[1]))
+        assertTrue(m.prints[1]:find("is disabled", 1, true) == nil, r[1])
+    end
+    assertEqual(select(2, NS.PressAsk(1)), "perf", "the press names the hold it refused on")
+    NS.Lifecycle:Release(NS.HOLD_PERF)
+    assertFalse(NS.IsStoodDown())
+    assertTrue(NS.StoodDownRefusal() == nil, "no refusal while standing up")
+end)
+
+test("disabled 10: while disabled, each feature refusal is the one refusal line, unwrapped", function()
+    local NS, _, m = T.enableAddon()
+    NS.addon:OnSlashCommand("disable")
+    local line = NS.SlashCommands:DisabledLine()
+    assertEqual(NS.StoodDownRefusal(), line)
+    for _, r in ipairs(REFUSERS) do
+        m.prints = {}
+        r[2](NS)
+        assertEqual(#m.prints, 1, r[1])
+        -- red under: drop the `if stoodDown` print branch in NS.PressAsk (core/DropWatcher.lua)
+        assertTrue(m.prints[1]:find(line, 1, true) ~= nil, r[1] .. ": " .. tostring(m.prints[1]))
+        assertTrue(m.prints[1]:find("Not ", 1, true) ~= 1 and m.prints[1]:find("No trade", 1, true) == nil, r[1])
+    end
+    assertEqual(select(2, NS.PressOffer(1, "Seta-Realm")), "disabled")
+    assertTrue(NS.TradeHelper.ReasonText("stoodDown"):find(NS.BRAND, 1, true) ~= nil, "the tooltip names the addon")
+end)

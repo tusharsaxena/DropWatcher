@@ -1529,7 +1529,7 @@ Total.
 - sim panel: the picker starts the chosen scenario, with a raid's member count
 - sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it
 
-### test_disabled.lua (9)
+### test_disabled.lua (11)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /dw disable, nothing is registered, scheduled or shown
@@ -1540,6 +1540,8 @@ Total.
 - disabled 6: the stand-up re-registers from current state and the window comes back
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's menu grays every entry but Enabled
+- disabled 9: under the perf hold alone, each feature refusal names the capture, never 'is disabled'
+- disabled 10: while disabled, each feature refusal is the one refusal line, unwrapped
 
 ### test_diagnostics.lua (15)
 
@@ -1695,7 +1697,7 @@ Total.
 | test_sim_e2e.lua | 19 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 19 |
-| test_disabled.lua | 9 |
+| test_disabled.lua | 11 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
@@ -1704,4 +1706,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1402** |
+| **Total** | **1404** |

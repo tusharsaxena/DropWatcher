@@ -265,7 +265,10 @@ Watcher and the `identity`, `settings`, `window`, `registration` and `integratio
 is on afterwards. `/dw debug diagnostics` writes the same report again below the first. Result:
 
 **DIAG-2. Perf.** `/dw perf` → the step panel opens with its own close mark; run A, B and finish →
-the report lists `window.refresh`, and `parse` when a loot line arrived during the run. Result:
+the report lists `window.refresh`, and `parse` when a loot line arrived during the run. During a
+suspended run (the addon stood down by the `perf` hold, `enabled` still on), `/dw scan`, `/dw test` and
+`/dw sim start dungeon` each answer `Not available during a performance capture.` and never `is
+disabled — enable it with /dw enable`. Result:
 
 **DIAG-3. State and Scoring.** In a dungeon, `/dw diagnostics` → `state: enabled=true
 situation=dungeon testMode=false restriction=none queuedSends=0`; pull a boss and run it again →

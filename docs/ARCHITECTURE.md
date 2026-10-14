@@ -23,7 +23,7 @@ lists the toolchain):
 | Pool | `core/PoolSetup.lua` | the row pool (for the drop tables) |
 | Item | `core/ItemSetup.lua` | link parsing, quality labels, the item load (for item facts) |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
-| Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch |
+| Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch; `NS.StoodDownRefusal()`, the one stood-down refusal line (the dispatcher's under the `disabled` hold, `Not available during a performance capture.` under the `perf` hold alone) |
 | Perf | `core/PerfSetup.lua` | the performance harness |
 | DebugLog | `core/DebugLogSetup.lua` | the debug console and the diagnostics report |
 | Launcher | `core/LauncherSetup.lua` | the minimap button and broker plugin, one object |
@@ -354,7 +354,9 @@ reset resetall profile debug diagnostics perf`) plus `lock`, `unlock`, `show`, `
 add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
 controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the
-window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`.
+window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. A verb or
+button refused while stood down prints `NS.StoodDownRefusal()`, so a perf capture never tells the
+player to `/dw enable` an addon that is already enabled.
 
 ## Event Subscriptions
 
