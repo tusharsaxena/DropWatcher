@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1397%2F1397_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1399%2F1399_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -46,7 +46,7 @@ gold `[YOU]` after your own name. Then
 come **Me** (is it an upgrade for you?) and **Them** (is it one for the looter?). Each shows what
 that person wears in the slot, as icons with item levels (`321/308` for two rings, trinkets or
 one-hand weapons, `empty` when nothing is worn there), then the verdict and by how many item levels:
-▲6 means upgrade (green), ≈1 sidegrade (yellow), ▽8 downgrade (red), the same in both columns. Can't
+▲6 means upgrade (green), ≈1 sidegrade (yellow), ▼8 downgrade (red), the same in both columns. Can't
 use and Not wanted stay words. **Trade** reads
 Yes, Likely, Unknown or a red No. **Trade window** counts down the time left to trade it over a thin bar,
 which turns amber and bold in the last ten minutes. For someone else's drop it's an estimate from
@@ -71,10 +71,11 @@ nobody sees it offered until you decide: it reads `Hidden` until you open its Of
 **Offer**, in place of Ask, opens that panel, which ranks everyone by how much they'd gain. Its
 **Their eq** column reads like the Them column (what they wear, its item level, then the arrow and
 the difference), and each member gets an **Offer** whisper; **Announce to group** tells everyone at
-once. Every action button carries an icon for what it does. The row's Offer is cyan until you've offered it, so it reads apart from
+once. Every action button carries an icon for what it does (Offer's is a box with an arrow leaving it, handing the item out). The row's Offer is cyan until you've offered it, so it reads apart from
 Ask, yellow once you have and green once you've given it away. While any of your listed drops can still be traded, a strip under the
 table counts them and gives the next one to run out (`2 tradeable · next expiry 0:08:41`), and
-**Post my tradeables**, right above the Sort dropdown, lists all of them in group chat in one line.
+**Post my tradeables**, at the strip's right beside Scan group and the Sort dropdown, lists all of them in
+group chat in one line. On History, Sort sits at the strip's right beside Clear history.
 
 The **History** tab remembers what the feed showed, across logouts and across your characters, for
 30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never
@@ -86,10 +87,12 @@ playing; on History it lists every character that saw a drop, with its class ico
 several, or **All** (the only choice that shows drops kept before Drop Watcher noted who saw them).
 
 There is also a compact view: a narrow window, 440 pixels wide, where each drop is a small card of
-three lines instead of a table row. The top line has the item, its level and Ask (Offer on your
-own). The middle one says who looted it, the slot, the type and whether they can trade it, with the
-trade countdown and its bar on the right, and the bottom one reads like the table's Me and Them
-without the icons: `You 321/308 ▽8` and `Them 276 ▲12` (`Them Upgrade for 2` on your own). History cards show what became of the drop, and the strip under
+three lines instead of a table row. The top line has the item level, then the item, then how fresh
+the looter's inspect read is in brackets, `(2m)`, left out when there's nothing to say. The middle one
+says who looted it, the slot, the type and whether they can trade it, with Ask (Offer on your own) on
+the right, or nothing there when there's no action; the card leaves the trade countdown to the table
+and the strip. The bottom one reads like the table's Me and Them without the
+icons, `You` and `Them` in gold: `You 321/308 ▼8  Them 276 ▲12` (`Them Upgrade for 2` on your own). History cards show what became of the drop, and the strip under
 the Drops cards is shorter (`2 tradeable · next 0:08:41` and **Post**). Quality, Content, Character
 and Sort fold into a **Filters** button beside View, and Scan group is the icon in the title bar. Hovering still explains everything, and
 clicking a Drops card opens the same detail card. The button next to minimize switches views, as do
@@ -102,7 +105,7 @@ view you normally get.
 Two extras are off until you turn them on. The **toast** (Settings › Window › Toast) pops up when
 someone else loots a big upgrade for you, 10 item levels or more, that they can probably trade.
 Beside the item's icon it names the item in its quality color with its item level, the looter in
-their class color, how the drop compares for you and for them (`You ▲19 · Them ▽13`), and why they
+their class color, how the drop compares for you and for them (`You ▲19 · Them ▼13`), and why they
 can likely trade it. It has an Ask button, goes away after 8 seconds unless your pointer is on it (a
 right-click closes it), and keeps out of combat unless you let it. **Auto-ask** (Settings › Messages › Auto-ask) whispers the looter for you, 10
 seconds after the boss dies, when a likely tradeable drop is at least 5 item levels better than

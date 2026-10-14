@@ -336,7 +336,7 @@ title, the item, and `Looted by Seta · +19 ▲ · Likely tradeable` (the `▲` 
 since DW-F5). **Superseded by feedback-9 (2026-10-13)** (feedback-9 spec §0, DW-I0): the toast is
 four rows beside a four-row icon (56 pixels; the toast 350 wide): the title with Ask and the close
 mark; the item name in its quality color and its item level after it, smaller and muted, never cut;
-`Looted by Seta · You ▲19 · Them ▽13`, the looter in class color and each verdict as the table's Me
+`Looted by Seta · You ▲19 · Them ▼13` (`▽` until feedback-10 spec §0), the looter in class color and each verdict as the table's Me
 and Them cells draw it (the monospace glyph and the unsigned difference in the verdict tone, `empty`
 for an empty slot, or the word); and the trade word in the Trade cell's tone with a short reason,
 muted, cut at the inset, the full reason in the toast's tooltip. The signed gain and the texture
@@ -457,6 +457,13 @@ never cut. Ask carries the `chat` icon and Offer `export`. Every tooltip that li
 (Me, Them, `Upgrade for N`) lays it out as a grid, `[Name] [Item level] [Item name] [glyph and difference]`,
 the glyph the table's monospace one with glyph and number in the verdict's tone; the `wears` lines and the
 `Item level A against B` sentence give way to it.
+**Superseded by feedback-10 (2026-10-14)** (feedback-10 spec §0, §1, §3, DW-J0, DW-J1, DW-J3): the downgrade
+glyph is a filled `▼` where it was a hollow `▽`, in the tables' Me and Them cells, the compact cards, the toast,
+the Offer panel and the tooltips' grids (`WindowCells.GLYPH`; the texture marks, `arrow-down`, were already
+solid and stay). Offer wears LibKa0s' `external-link` (a box with an arrow leaving it) where it wore `export`, on
+the row, the compact card, the detail card and the Offer panel; the detail card's Trade keeps `transfer`, so the
+two never share a mark. Sort leaves the footer for the active tab's strip:
+see the Offer panel's reading. That they read right in game is FEED-67 and FEED-68.
 
 ## The detail card
 
@@ -503,6 +510,13 @@ The class stripe at each row's start is gone and every second row draws the main
 the readings below about Trade stand as history (the give path `NS.GiveDrop` / `TradeHelper.Give` was
 removed afterwards, see the trade helper's reading). `(Details)` is `Upgrade for N` and Trade's count is gone from the cell. Post my tradeables is the
 footer Sort's size, directly above it, with Scan group beside it on the strip.
+**Superseded by feedback-10 (2026-10-14)** (feedback-10 spec §3, DW-J3): Sort is no longer in the footer. In
+the full layout it sits at the right edge of the active tab's strip (the pane's `sortHost`, re-anchored by
+`WindowFooter.AnchorSort` on every full pass, so it follows a tab switch): on Drops the strip reads,
+right-aligned, `[Post my tradeables] [Scan group] [Sort]`, 8px apart, Post still at Sort's size, and while
+Post is hidden Scan group keeps its place beside Sort (nothing slides); on History, Clear history sits left of
+Sort. The footer keeps only its health segments, and compact keeps Sort in the Filters panel. That it reads
+right in game is FEED-70.
 
 The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The tab** lists
 every drop of yours in the tab's feed, a drop that cannot be traded included (a dash and Hide, board 04's
@@ -585,3 +599,14 @@ halves ending about 46px short of the card's edge.
 where it read `Them (Details)`, its trade piece drops the count, your name carries a gold ` [YOU]`, Trade's
 `No` is red, Ask and Offer wear their icons, and the compact layout keeps Scan group as its title-bar icon
 while the full layout's moves to the Drops strip. The empty state's two buttons are centered as a pair.
+**Superseded by feedback-10 (2026-10-14)** (feedback-10 spec §2, DW-J2): line 1 reads the item level then the
+name (`292 Item name`, `CompactGroup.ILVL_GAP` apart, the name cut first so the level always shows), with the
+inspect freshness in brackets right after the name on a Drops card (`(2m)`, moved from line 2; left out where
+there is nothing to say, no `–`) and the outcome on the right of a History card; a Drops card's line 2 is
+looter · slot · type · trade with the action button (Ask, Offer, their states) at its right (moved from line
+1), the slot left empty with no action (its reason tooltip kept). The trade window countdown and its bar are gone from the card: the full
+table's Trade window column, the strip's next expiry and the detail card say it, and the cards have nothing to
+tick each second. Line 3's `You` and `Them` are gold, and Them follows You's last piece by
+`CompactGroup.HALVES_GAP` (12px) instead of starting at half the card's width (`You 321/308 ▼13   Them
+298/296 ⊘ Can't use`); History's cards the same. The least compact width stays 440, line 2's left pieces and
+the 84px button fitting. That it reads right in game is FEED-69.

@@ -65,17 +65,20 @@ every control, the build without the Widgets library, and the pure row predicate
 reads, schema step 5, the title-bar toggle, each layout's own size and point on the one frame, the
 Layout row, and the run override taken on an auto-open and let go when the run ends),
 `test_compact_cards` (compact mode's cards, DW-C1, pure: each Drops and History card's
-three lines in every verdict, trade, inspect, ask, countdown and outcome state (line 2's countdown
-and its bar, your own card's Offer, `Upgrade for N` and ` [YOU]`, feedback-5 spec §1-§2, feedback-7 spec §2; line 3's `You 321/308 ▽8`, feedback-6 spec §1), each piece's tone and
+three lines in every verdict, trade, inspect, ask and outcome state (line 1's item level before the
+name and the freshness bracketed right after it or left out (`FreshMark`), an empty action slot with
+no action, no trade window on the card with or without a countdown,
+feedback-10 spec §2; your own card's Offer, `Upgrade for N` and ` [YOU]`, feedback-5 spec §2, feedback-7 spec §2; line 3's `You 321/308 ▼8`, feedback-6 spec §1), each piece's tone and
 tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
 `test_compact_group` (the Drops tab in the compact layout, DW-C2: the card's metrics and the
 scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
 headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
 reason tooltip, every tooltip at the card's top right, the stacked detail card inline, Ask in its
 state's tone and no card dismissable, the ask states and the dash, the text size, the pool's reuse, the
-collapsing headers; each card indented under its header with the muted-white chevron, line 2's
-countdown and its bar moving each second, and the least compact width, 440, at which line 2's
-fullest pieces and the countdown are never cut, feedback-5 spec §0, §1, §4),
+collapsing headers; each card indented under its header with the muted-white chevron, no card
+showing a trade window and a second's tick leaving the cards as they are (feedback-10 spec §2), and
+the least compact width, 440, at which line 2's fullest pieces end before the action button,
+feedback-5 spec §0, §4),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
 repainting, the collapsing headers, every tooltip at the card's top right, Clear shortened and put
@@ -86,7 +89,8 @@ tooltip, pure; then headless: the short title centered with its word, the badge 
 tooltip, Scan group as an icon button, the short tabs at their width with the full names in their
 tooltips, View, the search box and Filters on one row with Quality, Content, Character and Sort
 moved into the Filters panel and filtering as on the full bar, the panel closing on hide, minimize
-and the switch, the full layout taking every control back, the shortened strip, the one-line footer
+and the switch, the full layout taking every control back (Sort to the tab's strip, feedback-10
+spec §3), the shortened strip, the one-line footer
 under the ticker, and the filter state kept across a switch),
 `test_compact_modes` (the two layouts over one engine, DW-C5, compact spec §5: the same drop set, the
 full table and the compact cards drawing the same drops and headers in the same order on every tab,
@@ -94,8 +98,9 @@ for test mode's samples and a simulated dungeon and open-world run, under every 
 Character, search and Sort, with a group collapsed, a drop expanded and your own drops shown;
 switching back and forth on every tab leaving every verdict, trade state, inspect status, feed
 count, history entry and send as it was; and every test-mode state on a compact card saying what
-its full row says: the verdicts, trade words, ask states, inspect freshness, worn levels and
-countdowns on Drops, your own drops' Offer and `Upgrade for N` among them, and every outcome on
+its full row says: the verdicts, trade words, ask states, inspect freshness and worn levels on
+Drops, your own drops' Offer and `Upgrade for N` among them (and no countdown on the card,
+feedback-10 spec §2), and every outcome on
 History),
 `test_window_group` (the Drops table: every cell's text, glyph, tone and reason tooltip for
 each verdict, trade, inspect and ask state (one tone per verdict in Me and Them, the arrow first;
@@ -140,15 +145,17 @@ colored with the lower of two rings named; the gear grid, feedback-7 spec §3: t
 number in the verdict tone, a member's rows, the columns' widths and gap (`TipGrid.Columns`), a grid
 painted headless as columns on reserved lines with the glyph in the monospace face, and
 `Compat.TooltipLeftLine`; and audits that no column tip, `L[]` string or test-mode
-tooltip on either tab in either layout carries → ▲ ▽ ≈ ⊘ or ⊕; DW-F5: the arrow texture, the
+tooltip on either tab in either layout carries → ▲ ▼ ≈ ⊘ or ⊕; DW-F5: the arrow texture, the
 drawn-width count, and an audit that no text test mode draws in the default face, on Drops, the
 detail card, the Offer panel or History in either layout, carries one), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, its next expiry moving each second and keeping
 the ticker running, Post my tradeables through its handler, and the compact strip shortened and put
-back, hidden there while none can be traded; feedback-5 spec §3, DW-E3; feedback-7 spec §4: Post
-at Sort's size with its right edge on Sort's, Scan group 8px left of it through its handler, the pure
-`Slots`, and the full layout's strip shown with nothing tradeable, Scan group in Post's slot), `test_offer_panel` (the Offer panel opened from your own drop's
+back, hidden there while none can be traded; feedback-5 spec §3, DW-E3; feedback-7 spec §4 and
+feedback-10 spec §3: one right-aligned row, `[Post my tradeables] [Scan group] [Sort]`, Post at Sort's
+size, Scan group through its handler, Sort following the active tab to History's strip after Clear
+history and back, the pure `Slots`, and the full layout's strip shown with nothing tradeable, Scan
+group beside Sort), `test_offer_panel` (the Offer panel opened from your own drop's
 Offer, built headless: docked beside the full or compact window on the side with room, the
 candidates ranked with Their eq in the Them look (both worn items from the read), no class bar and
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's

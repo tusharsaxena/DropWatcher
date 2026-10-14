@@ -115,8 +115,12 @@ its one-line responsibility and why its position is load-bearing or conventional
   Ask-or-Offer click; feedback-5 spec §2, DW-E2) and its strip (`DropsStrip.lua`: your listed
   tradeable drops, the next expiry and Post my tradeables under the table or the cards, shown only
   while one can be traded; §3, DW-E3; since feedback-7 spec §4, DW-G4, the full layout's Scan group
-  lives on it, 8px left of Post, and slides into Post's slot while Post is hidden, Post takes the
-  footer Sort's size directly above it, and the full layout shows the strip on Drops always; it
+  lives on it and Post takes Sort's size, and the full layout shows the strip on Drops always; since
+  feedback-10 spec §3, DW-J3, the row reads `[Post my tradeables] [Scan group] [Sort]` at the strip's
+  right edge, 8px apart, the tab's Sort moved out of the footer onto the active tab's strip
+  (`pane.sortHost`; `WindowFooter.AnchorSort` re-anchors it on every full pass, so it follows a tab
+  switch; History's strip has it right of Clear history), and Scan group keeps its place while Post
+  is hidden; it
   builds the Drops empty state too, Preview with test data and Scan group centered as a pair), the
   detail card and the Offer panel (its rows read like the Drops table since feedback-7 spec §0,
   DW-G0: Member, Their eq in the Them cell's look and Actions with Offer alone, no class stripe,
@@ -126,11 +130,13 @@ its one-line responsibility and why its position is load-bearing or conventional
   the number, feedback-4 spec §0; `ActionTone`, an action button's tone by whose move it is, red
   yours, yellow waiting, green done, §1, and Offer cyan (`C.TONE.cyan`) while it is your move,
   feedback-6 spec §2, DW-F2; an icon on every action button's every state, Ask `chat` and Offer
-  `export`, feedback-7 spec §1, DW-G1; Trade's `No` in the palette's red and your own name
+  `external-link` (`export` until feedback-10 spec §1, DW-J1; never the detail card Trade's
+  `transfer`), feedback-7 spec §1, DW-G1; the downgrade
+  glyph a filled `▼` (`▽` until feedback-10 spec §0, DW-J0); Trade's `No` in the palette's red and your own name
   `Name [YOU]`, the mark in gold, feedback-7 spec §2, DW-G2; `ArmorType`, the Type column beside
   Slot, §3;
   `SideCells.lua`: the Me and Them cells, the worn gear and the verdict in one cell,
-  `[icons] 321/308 ▽8`, its tooltip the gear grid then the verdict's reasons, feedback-6 spec §1,
+  `[icons] 321/308 ▼8`, its tooltip the gear grid then the verdict's reasons, feedback-6 spec §1,
   DW-F1, where My eq and Their eq were columns of their own, and the Offer panel's Their eq cell in
   the same look, `SideCells.Candidate`, feedback-7 spec §0;
   `DetailCells.lua`, `MineCells.lua`: the Trade window cell every Drops row shows, an estimate
@@ -153,14 +159,17 @@ its one-line responsibility and why its position is load-bearing or conventional
   `CompactCards.lua`: each card's three lines, tones and tooltips and the header's short form, over
   the same composers; compact spec §2-§3, DW-C1), compact mode's per-tab bodies (`CompactGroup.lua`:
   the Drops tab's pooled three-line cards under one-line headers in the same pane, handed
-  `WindowGroup`'s entries, line 2 ending in the countdown and its bar for a drop with one, Offer on
-  your own card, the detail card stacked at the compact width; compact spec §2, DW-C2, feedback-5
+  `WindowGroup`'s entries, line 1 the item level before the name and the inspect freshness in
+  brackets right after it, or nothing, line 2 ending in the action button (Offer on your own card;
+  an empty slot with neither), line 3's `You` and `Them` in
+  gold a fixed gap apart, and no trade window countdown (the line 2 countdown and its bar of
+  feedback-5 spec §1 went with feedback-10 spec §2, DW-J2), the detail card stacked at the compact width; compact spec §2, DW-C2, feedback-5
   spec §1-§2; `CompactHistory.lua`: History's cards with the outcome and the row menu, drawn through
   `CompactGroup`'s shared kit, the Offer panel docked beside the compact window; compact spec §3,
   DW-C3), compact
   mode's chrome (`CompactChrome.lua`: the short title with `TEST` or `SIM`, the badge's lock and
   count, the icon Scan group (compact keeps it in the title bar, feedback-7 spec §4), the short tabs, the one-row filter bar whose `Filters ▾` panel holds the
-  full bar's own Quality, Content and Character dropdowns and the footer's Sort, the shortened strip
+  full bar's own Quality, Content and Character dropdowns and the tab's Sort, the shortened strip
   and the one-line footer, over the same frame and controls; compact spec §4, DW-C4),
   the two tables'
   shared row height and text size (`WindowRows.lua`: `window.rowHeight` and `window.fontSize`,
@@ -188,8 +197,9 @@ its one-line responsibility and why its position is load-bearing or conventional
   chevron is gold (`C.GOLD`) on both tabs (feedback-5 spec §0, DW-E0). Countdowns move each second:
   while a shown Drops row or the strip has a live one, a `K.COUNTDOWN_TICK` ticker, the footer
   ticker and `TradeTimerTick` call `WindowGroup.TickCountdowns`, which repaints the Trade window
-  cells, the compact cards' countdowns and the strip's next expiry alone (feedback-5 spec §1). A filter-bar control's
-  tooltip (View, Quality, Content, Character, the search box and the footer's Sort) opens above the
+  cells and the strip's next expiry alone (feedback-5 spec §1; the compact cards show no countdown
+  since feedback-10 spec §2, DW-J2). A filter-bar control's
+  tooltip (View, Quality, Content, Character, the search box and the tab's Sort) opens above the
   control, never over it or its menu: its `BOTTOMLEFT` on the control's `TOPRIGHT`, or its
   `BOTTOMRIGHT` on the `TOPLEFT` when the screen has no room on the right (`Window.AttachTooltip`'s
   `above` placement, `Window.PlaceAbove`; feedback-3 spec §1, DW-B1). Near the top of the screen,

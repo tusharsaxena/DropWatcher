@@ -280,7 +280,7 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
-### test_compact_cards.lua (25)
+### test_compact_cards.lua (26)
 
 - compact cards: Truncate cuts by characters, not bytes, and marks the cut with …
 - compact cards: Age is the short duration, then whole days
@@ -289,7 +289,8 @@ Total.
 - compact cards: a cross-realm looter takes ⊕ and the realm in the tooltip
 - compact cards: inspect freshness reads its age or state, dimmed, and the tooltip says why
 - compact cards: the Drops card reads the spec's three lines
-- compact cards: line 2 shows the countdown for a drop with one, else the inspect freshness (feedback-5 §1)
+- compact cards: no trade window on the card; the freshness on line 1 with or without a countdown (feedback-10 §2)
+- compact cards: the freshness mark is bracketed, and left out where there is nothing to say (feedback-10 §2)
 - compact cards: the Drops card's pieces keep the full view's tones and tooltips
 - compact cards: every trade state keeps its short word and tone on line 2
 - compact cards: the Ask button keeps its states, and a drop you cannot ask for shows a dash
@@ -326,9 +327,9 @@ Total.
 - compact group: test mode fills a card for every sample, no piece blank, and each opens its card
 - compact group: each card is indented under its header and draws the row chevron on line 1, before the icon
 - compact group: the open card's chevron points up and its detail card indents with it; the header chevron is gold
-- compact group: line 2 shows the countdown and its bar for a drop with one, else the inspect freshness
-- compact group: the countdown moves each second on the card
-- compact group: at the least width line 2's pieces end before the countdown and its bar
+- compact group: no card shows a trade window; every card keeps its freshness on line 1
+- compact group: a second's tick leaves the cards as they are
+- compact group: at the least width line 2's pieces end before the action button
 - compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict
 
 ### test_compact_history.lua (10)
@@ -361,7 +362,7 @@ Total.
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
 - chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does
 - chrome: the panel closes when the window hides, minimizes or goes back to full
-- chrome: the full layout takes every control back to its place on the bar and in the footer
+- chrome: the full layout takes every control back to its place on the bar and the tab's strip
 - chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
 - chrome: the compact strip takes a second line exactly when its words wrap at the window's width
 - chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
@@ -374,12 +375,12 @@ Total.
 - modes: a simulated run is the same drops in both layouts, on every tab, under every filter
 - modes: switching layouts on every tab changes nothing the engine recorded, judged or sent
 - modes: test mode's Drops cards show every state, each saying what its full row says
-- modes: test mode's own drops on Drops show their countdown and Offer as the full rows
+- modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
 ### test_window_group.lua (50)
 
-- cells: Me shows ▲ ≈ ▽ and the signed change, green up, yellow side, red down (feedback-4 §0)
+- cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
 - cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray
 - cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
@@ -530,14 +531,15 @@ Total.
 - tip marks: Chars counts what a text draws: an escape two, a color code none, a UTF-8 character one
 - audit: no text in the default face carries a glyph: Drops, the detail card, the Offer panel, History
 
-### test_drops_strip.lua (13)
+### test_drops_strip.lua (14)
 
 - drops tab: the tabs are Drops and History, and the retired `mine` opens Drops
 - drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
-- drops strip: Post my tradeables is Sort's size, its right edge on Sort's, Scan group 8px left of it
+- drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Sort] (feedback-10 spec §3)
+- drops strip: Sort follows the active tab to History's strip, after Clear history, and back
 - drops strip: Scan group goes through the shared handler
-- drops strip: the slots, pure: Scan group beside Post, or in Post's slot while it is hidden
-- drops strip: full layout, nothing tradeable: shown with Scan group in Post's slot, no summary
+- drops strip: the slots, pure: Sort at the edge, Scan group beside it, Post beside that or hidden
+- drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary
 - drops strip: compact, hidden while none of your listed drops can be traded; the cards take its room back
 - drops strip: it counts the drops the tab lists, its filters applied, collapsed or not
 - drops strip: its next expiry moves each second with the countdowns
@@ -1637,7 +1639,7 @@ Total.
 | test_window.lua | 14 |
 | test_window_shell.lua | 57 |
 | test_window_compact.lua | 25 |
-| test_compact_cards.lua | 25 |
+| test_compact_cards.lua | 26 |
 | test_compact_group.lua | 20 |
 | test_compact_history.lua | 10 |
 | test_compact_chrome.lua | 20 |
@@ -1648,7 +1650,7 @@ Total.
 | test_detail_card.lua | 21 |
 | test_own_drops.lua | 15 |
 | test_tip_marks.lua | 18 |
-| test_drops_strip.lua | 13 |
+| test_drops_strip.lua | 14 |
 | test_offer_panel.lua | 16 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
@@ -1699,4 +1701,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1397** |
+| **Total** | **1399** |
