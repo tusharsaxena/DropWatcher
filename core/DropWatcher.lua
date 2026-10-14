@@ -51,11 +51,22 @@ end
 
 -- AceEvent keeps one handler per event per object, so an event two modules declare
 -- (GROUP_ROSTER_UPDATE: the situation edge and the roster) is registered once, on this dispatcher,
--- which calls every declared handler in row order. Built at each registration.
+-- which calls every declared handler in row order. Built at each registration. Each handler is
+-- isolated under pcall, so one that raises costs only itself: the rest still run, its error is a
+-- debug line, and the first error is raised once the loop is done (the shape of the client's own
+-- registrant dispatch and of AceAddon's errorCollector).
 local sharedHandlers = {}
 
 function DW:OnSharedFeatureEvent(event, ...)
-    for _, method in ipairs(sharedHandlers[event] or {}) do self[method](self, event, ...) end
+    local first
+    for _, method in ipairs(sharedHandlers[event] or {}) do
+        local ok, err = pcall(self[method], self, event, ...)
+        if not ok then
+            NS.Debug("Init", "%s: %s raised: %s", tostring(event), tostring(method), NS.SafeToString(err))
+            if first == nil then first = err end
+        end
+    end
+    if first ~= nil then error(first, 0) end
 end
 
 local function registerFeatureEvents(self)

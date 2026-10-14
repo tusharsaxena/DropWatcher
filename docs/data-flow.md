@@ -395,7 +395,8 @@ stand-up re-reads the client and announces where the player is.
 ## The roster
 
 ```
-GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent ─> DW.OnSituationEvent (above), then
+GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent (each handler under pcall; the first error is
+  raised after the rest ran) ─> DW.OnSituationEvent (above), then
   └─> DW.OnRosterEvent ─> Roster.Refresh
         ├─> tokens: raid1..N, or player + party1..N-1, or player alone
         ├─> per token: UnitGUID (secret or missing: skipped), UnitName (secret or Unknown: no

@@ -42,12 +42,13 @@ Total.
 - parity: the Compat seam carries every library member it wires
 - parity: the Compat seam publishes the same members on both load paths
 
-### test_setup.lua (18)
+### test_setup.lua (19)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [DW] prefix
 - core: the close-button wrapper passes the addon folder as the third argument
 - core: no file but the wrapper calls a close-button factory directly
+- core: a raising shared handler costs only itself; the first error is raised after the rest ran
 - media: FONT_MONO is the shipped face live, and a real client font degraded
 - bus: the catalog holds the ten messages of the design, each Ka0s_DropWatcher_<Event>
 - bus: a tracked target's registrations come down with the stand-down and back with the stand-up
@@ -1639,7 +1640,7 @@ Total.
 |-------|------:|
 | test_harness.lua | 10 |
 | test_surface_parity.lua | 18 |
-| test_setup.lua | 18 |
+| test_setup.lua | 19 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
@@ -1710,4 +1711,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1408** |
+| **Total** | **1409** |

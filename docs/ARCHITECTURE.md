@@ -364,7 +364,9 @@ Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.S
 so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. Two
 modules may declare the same event: AceEvent keeps one handler per event, so such an event is
 registered once, on `DW:OnSharedFeatureEvent`, which calls each declared handler in row order (the
-TOC order of the modules). `NS.FeatureEventNames()` is the declared list with each event once.
+TOC order of the modules). Each handler runs under `pcall`, so one that raises never skips the
+rest: its error is an `Init` debug line, and the first error is raised once every handler has run,
+the way the client's own registrant dispatch and AceAddon's errorCollector behave. `NS.FeatureEventNames()` is the declared list with each event once.
 
 | Event | Handler | Why |
 |---|---|---|
@@ -422,7 +424,8 @@ keeps the chat sender, the inspect calls and the trade action from the client
 altogether: a send is printed with `[sim]`, a trade is printed, and nothing is inspected
 or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
 simulated restrictions, so nothing it queued can reach the real sender. `Sim.Fire` calls each
-handler under `pcall`, as the client's event dispatch isolates it, and the stop runs each cleanup
+handler under `pcall`, as the client's event dispatch and the live shared dispatcher
+(`DW:OnSharedFeatureEvent`) isolate it, and the stop runs each cleanup
 step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
 failure is a `SIM` debug line. While its combat edge is up, the simulator answers
 `InCombatLockdown` and the player's combat flag `true` through the seam and never `false`, so a

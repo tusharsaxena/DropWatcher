@@ -49,6 +49,30 @@ test("core: no file but the wrapper calls a close-button factory directly", func
     end
 end)
 
+test("core: a raising shared handler costs only itself; the first error is raised after the rest ran", function()
+    local NS, _, m = T.enableAddon()
+    local order, ranRoster, ranRaiser = {}, 0, 0
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        if row[1] == "GROUP_ROSTER_UPDATE" then order[#order + 1] = row[2] end
+    end
+    local iRaiser, iRoster
+    for i, method in ipairs(order) do
+        if method == "OnSituationEvent" then iRaiser = i elseif method == "OnRosterEvent" then iRoster = i end
+    end
+    assertTrue(iRaiser and iRoster and iRaiser < iRoster, "the raiser's row precedes the roster's")
+    local addon = NS.addon
+    local realSituation, realRoster = addon.OnSituationEvent, addon.OnRosterEvent
+    addon.OnSituationEvent = function() ranRaiser = ranRaiser + 1; error("boom", 0) end
+    addon.OnRosterEvent = function(self, ...) ranRoster = ranRoster + 1; return realRoster(self, ...) end
+    local ok, err = pcall(m.__fire, "GROUP_ROSTER_UPDATE")
+    addon.OnSituationEvent, addon.OnRosterEvent = realSituation, realRoster
+    -- red under: revert core/DropWatcher.lua's OnSharedFeatureEvent to the bare loop
+    assertFalse(ok, "the first error still surfaces")
+    assertEqual(err, "boom")
+    assertEqual(ranRaiser, 1)
+    assertEqual(ranRoster, 1, "the handler after the raiser still ran")
+end)
+
 -- ── Media and the console font ──────────────────────────────────────────────────────────────
 
 test("media: FONT_MONO is the shipped face live, and a real client font degraded", function()
