@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_harness.lua (10)
+### test_harness.lua (12)
 
 - harness: the addon's file list is the TOC's, Namespace first and Profiles last
 - harness: every LibKa0s file comes from LibKa0s.xml, in its order
@@ -16,6 +16,8 @@ Total.
 - toc: the fixed field order, a single Retail Interface line and the X-Standard field
 - toc: the icon is the 128x128 logo, and the file exists
 - toc: OptionalDeps names Pawn and CanIMogIt, and no hard Dependencies
+- toc: no Conventional comment states the order of handlers on a shared event (toc-file-§5)
+- toc: no position labeled Conventional is load-bearing under toc-file-§5 (a) or (b)
 - repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
 - repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
 - repo: every authored file opens with the bootstrap and a comment naming its path
@@ -42,12 +44,13 @@ Total.
 - parity: the Compat seam carries every library member it wires
 - parity: the Compat seam publishes the same members on both load paths
 
-### test_setup.lua (19)
+### test_setup.lua (20)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [DW] prefix
 - core: the close-button wrapper passes the addon folder as the third argument
 - core: no file but the wrapper calls a close-button factory directly
+- core: no file builds a typed × close mark (the close control degrades to nothing)
 - core: a raising shared handler costs only itself; the first error is raised after the rest ran
 - media: FONT_MONO is the shipped face live, and a real client font degraded
 - bus: the catalog holds the ten messages of the design, each Ka0s_DropWatcher_<Event>
@@ -108,7 +111,7 @@ Total.
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 
-### test_settings_pages.lua (36)
+### test_settings_pages.lua (37)
 
 - pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -121,6 +124,7 @@ Total.
 - when to show: Defaults repaints the table
 - when to show: a profile switch repaints the table and re-hosts it
 - when to show: the table is built once, parked when the tab goes, and re-hosted when it comes back
+- when to show: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)
 - when to show: the per-situation rows are still schema rows, skipRender, with no subsection
 - when to show: the pure rows carry each situation's label, values and live cells
 - feed: the Quality tab closes with the threshold in force now, repainted on a write
@@ -1314,7 +1318,7 @@ Total.
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
-### test_toast.lua (31)
+### test_toast.lua (32)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1327,6 +1331,7 @@ Total.
 - toast edge: a looter of unknown class is a plain name in row 3's muted tone
 - toast edge: a right-click anywhere closes it as the close mark does; the left button does not
 - toast edge: in test mode the left button still drags it and a left click keeps it
+- toast edge: without LibKa0s the close mark degrades to nothing; Ask takes its corner, a right-click still closes
 - toast edge: a right-click on the item button closes it too
 - toast edge: one at a time; the next waits its turn, and each drop toasts once
 - toast edge: the queue keeps the newest MAX_QUEUE drops
@@ -1644,13 +1649,13 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_harness.lua | 10 |
+| test_harness.lua | 12 |
 | test_surface_parity.lua | 18 |
-| test_setup.lua | 19 |
+| test_setup.lua | 20 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
-| test_settings_pages.lua | 36 |
+| test_settings_pages.lua | 37 |
 | test_slash.lua | 26 |
 | test_window.lua | 14 |
 | test_window_shell.lua | 58 |
@@ -1699,7 +1704,7 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
-| test_toast.lua | 31 |
+| test_toast.lua | 32 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 19 |
@@ -1718,4 +1723,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1412** |
+| **Total** | **1417** |

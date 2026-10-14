@@ -106,7 +106,10 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 97 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 Why each position is load-bearing or conventional is written beside its line in `DropWatcher.toc`
-(toc-file-§5).
+(toc-file-§5). A position is `LOAD-BEARING:` when it reads at load a member another file of its own
+section publishes, appends a row on an event another file also handles to `NS.FEATURE_EVENTS`, or
+appends a `NS.STAND_DOWN` / `NS.STAND_UP` step (walked in TOC order); `test_harness` fails a
+`Conventional:` label on any of those, and on a `Conventional:` comment that states handler order.
 
 ## Tests
 

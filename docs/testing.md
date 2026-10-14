@@ -41,7 +41,8 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
-`test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
+`test_harness` (the load, the repository's shape, and the TOC's position labels: no `Conventional:`
+comment on a load-bearing position, toc-file-§5), `test_setup` (each adopted module's wiring),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
 reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
 into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles), `test_schema`, `test_schema_rows` (every

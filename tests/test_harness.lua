@@ -96,6 +96,128 @@ test("toc: OptionalDeps names Pawn and CanIMogIt, and no hard Dependencies", fun
     assertTrue(field(fields, "Dependencies") == nil, "no hard dependency (library-stack-§6)")
 end)
 
+-- Every file line of the TOC with the label of the contiguous `# ` comment block right above it
+-- ("Conventional", "LOAD-BEARING", ... or nil), the block's text, and its folder (section).
+local function tocPositions()
+    local _, lines = tocFields()
+    local out, block = {}, {}
+    for _, line in ipairs(lines) do
+        if line:find("^# ") or line == "#" then
+            block[#block + 1] = line
+        elseif line:find("^##") then
+            block = {}
+        else
+            local label
+            for _, b in ipairs(block) do
+                label = b:match("^# (Conventional)") or b:match("^# (LOAD%-BEARING)")
+                if label then break end
+            end
+            out[#out + 1] = { file = line:gsub("\\", "/"), label = label, text = table.concat(block, "\n"),
+                section = line:match("^(%w+)\\") }
+            block = {}
+        end
+    end
+    return out
+end
+
+local HANDLER_ORDER = {
+    "handler runs", "handlers run", "runs first", "runs second", "run first", "run second",
+    "after %w+\\[%w_]+%.lua's",
+}
+
+test("toc: no Conventional comment states the order of handlers on a shared event (toc-file-§5)", function()
+    -- red under: relabel modules\Roster.lua's comment (GROUP_ROSTER_UPDATE after
+    -- modules\Situations.lua's, so its handler runs second) back to `# Conventional:`
+    local bad = {}
+    for _, p in ipairs(tocPositions()) do
+        if p.label == "Conventional" then
+            local text = p.text:gsub("\n# ", " ")
+            for _, pat in ipairs(HANDLER_ORDER) do
+                if text:find(pat) then bad[#bad + 1] = p.file .. " (" .. pat .. ")" end
+            end
+        end
+    end
+    assertTrue(#bad == 0, "Conventional comments stating handler order, LOAD-BEARING:\n" .. table.concat(bad, "\n"))
+end)
+
+-- The members an authored file publishes at file scope (`NS.X = ...` at column 0).
+local function publishes(src)
+    local set = {}
+    for line in src:gmatch("[^\r\n]+") do
+        local name = line:match("^NS%.([%w_]+)%s*=[^=]")
+        if name then set[name] = true end
+    end
+    return set
+end
+
+-- The NS members an authored file reads at file scope: column-0 statements that are not a function
+-- definition, an `end` or a comment.
+local function loadReads(src)
+    local set = {}
+    for line in src:gmatch("[^\r\n]+") do
+        if line:find("^[%a_]") and not line:find("^local function") and not line:find("^function")
+            and not line:find("^end") then
+            for name in line:gmatch("NS%.([%w_]+)") do set[name] = true end
+        end
+    end
+    return set
+end
+
+test("toc: no position labeled Conventional is load-bearing under toc-file-§5 (a) or (b)", function()
+    -- red under: relabel core\Compat.lua's comment (it takes NS.TextParse, published one line up in
+    -- core\, at load) back to `# Conventional:`
+    local positions = tocPositions()
+    local bad = {}
+    local function flag(ok, why) if not ok then bad[#bad + 1] = why end end
+    local src, pub = {}, {}
+    for _, p in ipairs(positions) do
+        if p.section ~= "libs" then
+            src[p.file] = read(p.file)
+            pub[p.file] = publishes(src[p.file])
+        end
+    end
+    -- (b) shared events: the file that declares each NS.FEATURE_EVENTS row, by its method name.
+    local NS = T.newAddon()
+    local filesOf = {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        for _, p in ipairs(positions) do
+            if src[p.file] and src[p.file]:find('"' .. row[2] .. '"', 1, true) then
+                filesOf[row[1]] = filesOf[row[1]] or {}
+                filesOf[row[1]][p.file] = true
+            end
+        end
+    end
+    for _, p in ipairs(positions) do
+        if p.label == "Conventional" and src[p.file] then
+            local s = src[p.file]
+            -- (b) a step on a list walked in TOC order
+            flag(s:find("NS%.STAND_DOWN%[#") == nil and s:find("NS%.STAND_UP%[#") == nil,
+                p.file .. " appends a NS.STAND_DOWN / NS.STAND_UP step: LOAD-BEARING")
+            -- (b) a row on an event another file also handles
+            for event, files in pairs(filesOf) do
+                if files[p.file] then
+                    local n = 0
+                    for _ in pairs(files) do n = n + 1 end
+                    flag(n == 1, p.file .. " has a row on the shared event " .. event .. ": LOAD-BEARING")
+                end
+            end
+            -- (a) a file-scope read of a member another file of the same section publishes
+            local own = pub[p.file]
+            for name in pairs(loadReads(s)) do
+                if not own[name] then
+                    for _, q in ipairs(positions) do
+                        if q.file ~= p.file and q.section == p.section and pub[q.file] and pub[q.file][name] then
+                            flag(false, p.file .. " reads NS." .. name .. " (" .. q.file
+                                .. ", same section) at load: LOAD-BEARING")
+                        end
+                    end
+                end
+            end
+        end
+    end
+    assertTrue(#bad == 0, "Conventional positions that are load-bearing:\n" .. table.concat(bad, "\n"))
+end)
+
 -- ── the repository's shape ──────────────────────────────────────────────────────────────────
 
 test("repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)", function()
