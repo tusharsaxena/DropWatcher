@@ -44,7 +44,7 @@ Total.
 - parity: the Compat seam carries every library member it wires
 - parity: the Compat seam publishes the same members on both load paths
 
-### test_setup.lua (20)
+### test_setup.lua (24)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [DW] prefix
@@ -57,6 +57,10 @@ Total.
 - bus: a tracked target's registrations come down with the stand-down and back with the stand-up
 - bus: the seam answers tracked once; without the library the modules take their receivers down
 - perf: every declared bucket is reached by a real bracket
+- perf: evaluate and quality.gate declare themselves within feed.add
+- perf: a capture of Receive alone observes evaluate and quality.gate inside feed.add
+- perf: a later load and a gear re-judge are observed at top level, so the record reads mixed
+- perf: a Receive that raises does not leave later work counted inside feed.add
 - perf: with capture off the bracket notes nothing
 - perf: the `perf` hold stands the addon down, and the verbs keep answering
 - perf: the descriptor's SavedVariables global is declared in the TOC
@@ -1651,7 +1655,7 @@ Total.
 |-------|------:|
 | test_harness.lua | 12 |
 | test_surface_parity.lua | 18 |
-| test_setup.lua | 20 |
+| test_setup.lua | 24 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
@@ -1723,4 +1727,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1417** |
+| **Total** | **1421** |

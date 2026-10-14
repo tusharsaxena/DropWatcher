@@ -543,9 +543,9 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   Situations.IsTracking(situation)? no ─> hidden `notTracking` (nothing loaded, no inspect)
   ItemFacts.Request ─> loading? wait for the load, then go on
   FeedFilter.Filter (heirloom, cosmetic, tokens, gear only, minimum item level) ─> hidden with its reason
-  Evaluate(facts, your candidate)                       [Perf bucket `evaluate`]   ─> drop.me
+  Evaluate(facts, your candidate)                       [Perf bucket `evaluate`, within `feed.add`]   ─> drop.me
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
-  QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`]
+  QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`, within `feed.add`]
     ─> hidden `quality` (one FEED line with the reason, one QUAL line with the threshold), before any inspect
   someone else's drop: Inspect.Request(looter, looter priority)
       ─> Evaluate(facts, Inspect.Candidate(looter)) once read ─> drop.them

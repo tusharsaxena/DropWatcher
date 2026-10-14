@@ -178,6 +178,81 @@ test("perf: every declared bucket is reached by a real bracket", function()
     end
 end)
 
+-- evaluate and quality.gate run inside feed.add when the item is cached, and at top level when it
+-- loads later or a gear change re-judges (performance-§3; Perf 15's `false` is "top level").
+local CACHED = "|cnIQ4:|Hitem:2001::::::::90:::::|h[Band]|h|r"
+local LOADS = "|cnIQ4:|Hitem:2002::::::::90:::::|h[Loop]|h|r"
+local function band(extra)
+    local d = { name = "Band", quality = 4, ilvl = 600, equipLoc = "INVTYPE_FINGER", classID = 4,
+        subClassID = 0, bindType = 1, stats = {} }
+    for k, v in pairs(extra or {}) do d[k] = v end
+    return d
+end
+
+local function captured(NS, run)
+    NS.Perf.Reset()
+    NS.Perf.on = true
+    run()
+    NS.Perf.on = false
+    return NS.Perf.BuildRecord("test").buckets
+end
+
+test("perf: evaluate and quality.gate declare themselves within feed.add", function()
+    local NS = T.enableAddon()
+    -- red under: the bare `{ key = "evaluate" }` / `{ key = "quality.gate" }` rows in core/PerfSetup.lua
+    assertEqual(NS.Perf.BUCKET_WITHIN.evaluate, "feed.add")
+    assertEqual(NS.Perf.BUCKET_WITHIN["quality.gate"], "feed.add")
+end)
+
+test("perf: a capture of Receive alone observes evaluate and quality.gate inside feed.add", function()
+    local NS, _, m = T.enableAddon()
+    m.addItem(CACHED, band())
+    local b = captured(NS, function() NS.LootFeed.Add(CACHED) end)
+    -- red under: Note("evaluate", ms) with no parent in modules/LootFeed.lua
+    assertEqual(b.evaluate.observedWithin, "feed.add")
+    assertEqual(b["quality.gate"].observedWithin, "feed.add")
+    assertTrue(not b.evaluate.observedMixed and not b["quality.gate"].observedMixed, "never at top level")
+end)
+
+test("perf: a later load and a gear re-judge are observed at top level, so the record reads mixed", function()
+    local NS, _, m = T.enableAddon()
+    m.addItem(CACHED, band())
+    m.addItem(LOADS, band({ loadsNeeded = 1 }))
+    local b = captured(NS, function()
+        NS.LootFeed.Add(CACHED)
+        local _, status = NS.LootFeed.Add(LOADS)
+        assertEqual(status, "loading")
+        m.advance(0.5)                  -- the load answers: judged outside the feed.add bracket
+        NS.LootFeed.OnGearChanged()
+    end)
+    -- red under: a parent of "feed.add" passed unconditionally (no `receiving` depth)
+    for _, key in ipairs({ "evaluate", "quality.gate" }) do
+        assertEqual(b[key].within, "feed.add", key)
+        assertEqual(b[key].observedWithin, "feed.add", key)
+        assertTrue(b[key].observedMixed == true, key .. " observed in both places")
+        assertEqual(b[key].observedSecond, false, key .. " second observation is top level")
+    end
+end)
+
+test("perf: a Receive that raises does not leave later work counted inside feed.add", function()
+    local NS, _, m = T.enableAddon()
+    m.addItem(CACHED, band())
+    m.addItem(LOADS, band({ loadsNeeded = 1 }))
+    local E, real = NS.Evaluate, NS.Evaluate.Evaluate
+    E.Evaluate = function() error("boom", 0) end
+    local ok, err = pcall(NS.LootFeed.Add, CACHED)
+    E.Evaluate = real
+    assertFalse(ok, "the raise still reaches the caller")
+    assertEqual(err, "boom")
+    local b = captured(NS, function()
+        NS.LootFeed.Add(LOADS)
+        m.advance(0.5)
+    end)
+    -- red under: `receiving = receiving + 1; receive(r); receiving = receiving - 1` with no pcall
+    assertEqual(b.evaluate.observedWithin, false)
+    assertTrue(not b.evaluate.observedMixed)
+end)
+
 test("perf: with capture off the bracket notes nothing", function()
     local NS = T.enableAddon()
     local notes = 0

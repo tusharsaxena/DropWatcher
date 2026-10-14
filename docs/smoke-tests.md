@@ -2076,7 +2076,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | COMPAT-4 | DW-P20, the optional-addon probe through Compat | No client pass recorded yet |
 | PANEL-8, DEGRADED-2, TOAST-4 | DW-P21, When to show's OnRelease park; the toast's close degrading to nothing | No client pass recorded yet |
 | INSTALL-4 | DW-P22, the LibKa0s v1.72.0 re-vendor | Owed once DW-P22 lands; no client pass recorded yet |
-| DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | Owed once DW-P22 and DW-P24 land, with the owner's capture recorded under `docs/perf-analysis/`; none is invented |
+| DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | DW-P22 and DW-P24 have landed; owed the owner's capture recorded under `docs/perf-analysis/`; none is invented |
 | SLASH-7 | Review 2026-10-14, the cross-addon census's in-client half | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
@@ -2091,7 +2091,7 @@ the client runs, and have no in-client check.
 | C-01 | STATE-5 (its combat and zone half) | | | |
 | C-02 (ANN-1, ANN-1b) | ASK-10, ASK-1 | | | |
 | C-03 | ROSTER-3 | | | |
-| C-04 | DIAG-4 | | | Pending DW-P22 + DW-P24 and the owner's capture |
+| C-04 | DIAG-4 | | | Pending the owner's capture (DW-P22 and DW-P24 landed) |
 | C-05 | LOC-2 | | | |
 | C-06 | COMPAT-4 | | | |
 | C-07 | none | n/a | | Comment only |
