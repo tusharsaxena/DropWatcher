@@ -12,7 +12,7 @@ local _, NS = ...
 -- editors (`skipRender`). General › When to show's per-situation rows (`situations.<key>.track`,
 -- `.autoOpen`, `.quality`) are `skipRender` too: its table draws them, one line per situation. The
 -- window's geometry, its minimized flag and the toast's position have no row: they are named
--- non-setting state (docs/ARCHITECTURE.md -> Settings Schema).
+-- non-setting state (docs/schema.md -> State written outside the seam).
 
 local DW       = NS.addon
 local Settings = DW.Settings

@@ -5,7 +5,7 @@ How the code reads the cases the design spec
 leaves open, module by module, in the order a drop travels: the kernels, the edges, the feed, the
 sends, then the window. Each reading is pinned by the module's suite (see [`testing.md`](testing.md)); what
 only the client can confirm is named by its smoke-check id ([`smoke-tests.md`](smoke-tests.md)). The
-limitations that follow from these readings are summarized in `ARCHITECTURE.md` → Known Limitations.
+limitations that follow from these readings are listed in [`known-limitations.md`](known-limitations.md).
 
 ## The verdict kernel
 
