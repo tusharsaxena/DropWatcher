@@ -84,7 +84,7 @@ test("compact history: the outcome is in its tone, and every piece keeps its ful
     local NS, drawn = shownCompact()
     local C, W = NS.Constants, NS.Window
     local expired = cardWith(drawn, "Expired")
-    assertEqual(select(1, expired.cells.outcome.text:GetTextColor()), C.TONE.bad.r)
+    assertEqual(select(1, expired.cells.outcome.text:GetTextColor()), C.TONE.red.r, "Expired in red (feedback-12 spec §0)")
     local asked = cardWith(drawn, "Asked")
     assertEqual(W.TooltipOf(asked.cells.outcome.hit)[1], "Outcome: Asked")
     assertEqual(W.TooltipOf(asked.cells.time.hit)[1], "When")

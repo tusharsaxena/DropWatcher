@@ -47,8 +47,8 @@ local _, NS = ...
 -- THE ORDER. NS.WindowCells.Entries (pure): the feed's groups newest first (oldest first under Sort: Oldest),
 -- each group's drops that pass the tab's filter (Window.TabContext: the filter bar's predicate;
 -- your own drops with the others) ordered by the tab's Sort. A group with none keeps its header
--- (`n drops · 0 shown`) while the View filter hid them, and is left out when Search or Content did
--- or it has nothing for the tab (WC.KeepsHeader). A group the
+-- (`n drops · 0 shown`) while the View filter hid them, and is left out when Search, Content or
+-- Character did or it has nothing for the tab (WC.KeepsHeader). A group the
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles are session-only (NS.State.windowGroup).
 --

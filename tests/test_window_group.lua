@@ -329,14 +329,14 @@ test("table: groups newest first, the first open and older ones collapsed; a gro
     assertEqual(oldest[1].group.key, "a", "Sort: Oldest turns the groups round")
 end)
 
-test("cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder", function()
+test("cells: KeepsHeader keeps a group the View hid whole; Character leaves one out, recorder or not", function()
     local W = WC()
     assertTrue(W.KeepsHeader(1, {}))
     assertFalse(W.KeepsHeader(0, {}), "nothing for the tab")
     assertTrue(W.KeepsHeader(0, { { drop = {}, why = "interesting" } }), "View: counted, never silent")
     assertFalse(W.KeepsHeader(0, { { drop = {}, why = "search" }, { drop = {}, why = "content" } }), "the question asked")
     assertFalse(W.KeepsHeader(0, { { drop = { seenBy = "Alt-Testrealm" }, why = "char" } }), "a Character choice")
-    assertTrue(W.KeepsHeader(0, { { drop = {}, why = "char" } }), "kept before the dropdown: no recorder")
+    assertFalse(W.KeepsHeader(0, { { drop = {}, why = "char" } }), "no recorder: left out too (feedback-12 spec §1)")
 end)
 
 -- ── the table, headless ─────────────────────────────────────────────────────────────────────

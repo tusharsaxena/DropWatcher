@@ -386,6 +386,14 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     for _, r in ipairs(drawn.rows) do outcomes[#outcomes + 1] = textOf(r.cells.outcome.text) end
     table.sort(outcomes)
     assertEqual(table.concat(outcomes, ","), "Asked,Expired")
+    -- The action buttons' tones (feedback-12 spec §0): Asked yellow (waiting), Expired red (fell through).
+    local want = { Asked = NS.Constants.TONE.yellow, Expired = NS.Constants.TONE.red }
+    for _, r in ipairs(drawn.rows) do
+        local t = r.cells.outcome.text
+        local r1, g1, b1 = t:GetTextColor()
+        local c = want[textOf(t)]
+        assertEqual(table.concat({ r1, g1, b1 }, ","), table.concat({ c.r, c.g, c.b }, ","), textOf(t))
+    end
     assertEqual(NS.WindowFilterBar.State("history").content, "all", "the tab opens on Content: All")
     assertEqual(next(NS.WindowFilterBar.State("history").view), nil, "and View: All")
     assertEqual(textOf(drawn.strip.info), "2 groups, 3 drops · kept for 30 days")

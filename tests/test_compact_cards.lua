@@ -346,16 +346,17 @@ test("compact cards: the History card reads the spec's three lines", function()
     assertEqual(lines[1], "311 Yoke of the Charging Bear  Seen", "the item level before the name (feedback-10 spec §2)")
     assertEqual(lines[2], "Bùnian ⊕ · Neck · Jewelry · Likely  " .. clock)
     assertEqual(lines[3], "You ▼4  Them ≈0", "a kept entry holds no worn items: the verdict alone")
-    assertEqual(card.outcome.tone, "muted"); assertEqual(card.time.tone, "muted")
+    assertEqual(card.outcome.tone, "bad", "Seen in gray (feedback-12 spec §0)"); assertEqual(card.time.tone, "muted")
     assertTrue(has(card.time.tip, "2m ago"))
 end)
 
 test("compact cards: every History outcome keeps its word and tone", function()
     local NS = T.newAddon()
     local C = NS.CompactCards
-    local cases = { seen = { "Seen", "muted" }, asked = { "Asked", "plain" }, offered = { "Offered", "plain" },
-        received = { "Received", "good" }, tradedAway = { "Traded away", "good" }, expired = { "Expired", "bad" },
-        declined = { "Declined", "muted" } }
+    -- The action buttons' convention (feedback-12 spec §0): waiting yellow, done green, nothing gray, fell through red.
+    local cases = { seen = { "Seen", "bad" }, asked = { "Asked", "yellow" }, offered = { "Offered", "yellow" },
+        received = { "Received", "good" }, tradedAway = { "Traded away", "good" }, expired = { "Expired", "red" },
+        declined = { "Declined", "bad" } }
     for outcome, want in pairs(cases) do
         local card = C.History(historyDrop(NS, { outcome = outcome }), { nowEpoch = 1000000, dateFn = fakeDate })
         assertEqual(card.outcome.text, want[1], outcome); assertEqual(card.outcome.tone, want[2], outcome)

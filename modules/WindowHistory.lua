@@ -65,14 +65,18 @@ WH.COLUMNS = {
 }
 local GLYPH_COLS = { me = true, them = true }
 
+-- Each outcome's word, tone and line. The tones follow the action buttons' (feedback-12 spec §0,
+-- WindowCells.ActionTone): yellow while it waited on someone else (Asked, Offered), green once done
+-- (Received, Traded away), gray where nothing came of it (Seen, Declined, as No action), and red where
+-- it fell through (Expired, as Retry).
 local OUTCOME = {
-    seen       = { L["Seen"], "muted", L["Shown in the feed; nothing more happened."] },
-    asked      = { L["Asked"], "plain", L["You asked its looter for it."] },
-    offered    = { L["Offered"], "plain", L["You offered or announced your drop."] },
+    seen       = { L["Seen"], "bad", L["Shown in the feed; nothing more happened."] },
+    asked      = { L["Asked"], "yellow", L["You asked its looter for it."] },
+    offered    = { L["Offered"], "yellow", L["You offered or announced your drop."] },
     received   = { L["Received"], "good", L["A completed trade gave you this item."] },
     tradedAway = { L["Traded away"], "good", L["A completed trade passed your drop on."] },
-    expired    = { L["Expired"], "bad", L["Its trade window passed."] },
-    declined   = { L["Declined"], "muted", L["Marked declined by you."] },
+    expired    = { L["Expired"], "red", L["Its trade window passed."] },
+    declined   = { L["Declined"], "bad", L["Marked declined by you."] },
 }
 
 local NO_HISTORY = L["Drops from earlier encounters appear here."]
@@ -198,9 +202,9 @@ end
 --- The tab's entries, top to bottom: { kind = "header", group, count, total, hidden, filter,
 --- collapsed } (as NS.WindowCells.Entries') and
 --- { kind = "drop", drop }. Groups newest first (oldest first under Sort: Oldest); a group with no
---- entry passing the filter keeps an open header with count 0 while the View filter hid them, or
---- Character hid entries with no recorder (kept before the Character dropdown); it is left out
---- when Search, Content or a Character choice did (WC.KeepsHeader). A group never toggled is open
+--- entry passing the filter keeps an open header with count 0 while the View filter hid them; it is
+--- left out when Search, Content or the Character filter did (WC.KeepsHeader; entries with no
+--- recorder too, feedback-12 spec §1). A group never toggled is open
 --- when it is the first shown.
 --- @param groups table NS.History.Groups(), oldest first
 --- @param ctx table { matches = fn(drop), compare = fn(a, b), filter = { sort } }

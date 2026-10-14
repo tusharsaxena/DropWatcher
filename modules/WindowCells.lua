@@ -739,17 +739,16 @@ WC.HIDDEN_TIP_LINES = 8
 local NARROWING = { search = true, content = true, char = true }
 
 -- Whether a hidden drop is the player's narrowing question. A drop with no recorder (kept before
--- the Character dropdown, feedback-2 spec §4) is not: Current hides it, and it is still counted.
+-- the Character dropdown) is too: Current hides it with the rest (feedback-12 spec §1).
 local function narrowed(h)
-    if h.why == "char" then return type(h.drop) == "table" and type(h.drop.seenBy) == "string" end
     return NARROWING[h.why] == true
 end
 
 --- Whether a group keeps its header (feedback-2 spec §0, nothing hidden silently): when a drop is
---- shown under it, or when one the View filter hid (or a drop with no recorder the Character filter
---- hid) is there to count (`n drops · 0 shown`, the tooltip naming the filter). A group that Search,
---- Content or a Character choice hides whole is left out, since that is the question the player
---- asked.
+--- shown under it, or when one the View filter hid is there to count (`n drops · 0 shown`, the
+--- tooltip naming the filter). A group that Search, Content or the Character filter hides whole is
+--- left out, since that is the question the player asked (a drop with no recorder too, feedback-12
+--- spec §1).
 --- @param shown number the drops shown under it
 --- @param hidden table|nil { { drop, why }, ... }
 --- @return boolean
