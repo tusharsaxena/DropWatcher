@@ -39,8 +39,9 @@ C.WINDOW = {
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
     -- The compact least width (feedback-5 spec §4) fits a Drops card's fullest line 2: a twelve-letter
     -- looter, its realm mark, slot, type and a counted trade (about 220px at the small template's 5px a
-    -- character) before the countdown and its bar (40 + 6 + CG.BAR_W), past the indent, chevron, icon,
-    -- insets and scroll gutter (tests/test_compact_group.lua measures it). 380 cut it by about 57px.
+    -- character) before the action button (ASK_W, line 2's right since feedback-10 spec §2; the
+    -- countdown and its bar were there before), past the indent, chevron, icon, insets and scroll
+    -- gutter (tests/test_compact_group.lua measures it). 380 cut it by about 57px.
     -- Line 3's fullest halves since feedback-6 spec §1 (`Them 321/308 ⊘ Not wanted`) end about 46px
     -- short of the card's edge there (measured too), so line 2 still sets it.
     COMPACT_WIDTH  = 440,
@@ -111,8 +112,9 @@ C.WINDOW = {
     COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
     STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Clear history)
-    -- Post my tradeables is the footer's Sort size in the full layout (NS.WindowFooter.SORT_W,
-    -- feedback-7 spec §4); Scan group, beside it on the strip and in the empty state, is SCAN_W.
+    -- Post my tradeables is the tab's Sort size in the full layout (NS.WindowFooter.SORT_W,
+    -- feedback-7 spec §4); Scan group, between it and Sort on the strip (feedback-10 spec §3) and in
+    -- the empty state, is SCAN_W.
     SCAN_W      = 110,
     CLEAR_W     = 124,    -- the History tab's Clear history (its strip is STRIP_H tall)
     OFFER_W     = 440,    -- the Offer panel

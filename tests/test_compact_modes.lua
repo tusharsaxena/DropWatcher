@@ -240,9 +240,11 @@ local function compactCards(NS, tab)
     return NS[DRAWN[tab]].Drawn().rows
 end
 
+-- A card's action word: its button's label, or the full row's dash where the card leaves the slot
+-- empty (feedback-10 spec §2).
 local function askWord(a, dash)
     if a:IsShown() then return textOf(a.label) end
-    return textOf(dash)
+    return dash and textOf(dash) or "–"
 end
 
 test("modes: test mode's Drops cards show every state, each saying what its full row says", function()
@@ -275,13 +277,13 @@ test("modes: test mode's Drops cards show every state, each saying what its full
     end
     hasAll(seen.ask, { "Ask", "Queued", "Asked", "Retry", "–" }, "ask")
     hasAll(seen.trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
-    hasAll(seen.fresh, { "cached", "…", "range", "combat", "!", "–" }, "inspect freshness")
-    hasAll(seen.you, { "▲", "≈", "▽", "⊘" }, "your verdict")
-    hasAll(seen.them, { "▲", "≈", "▽", "⊘" }, "their verdict")
+    hasAll(seen.fresh, { "(cached)", "(…)", "(range)", "(combat)", "(!)", "" }, "inspect freshness, bracketed or left out")
+    hasAll(seen.you, { "▲", "≈", "▼", "⊘" }, "your verdict")
+    hasAll(seen.them, { "▲", "≈", "▼", "⊘" }, "their verdict")
     hasAll(seen.eq, { "…", "range", "combat", "!", "290", "300" }, "their worn levels")
 end)
 
-test("modes: test mode's own drops on Drops show their countdown and Offer as the full rows", function()
+test("modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card", function()
     local NS = testWindow()
     NS.WindowFilterBar.Set("group", "view", {})
     local full = fullPieces(NS, "group", function(c, r)
@@ -298,10 +300,7 @@ test("modes: test mode's own drops on Drops show their countdown and Offer as th
             local what = "card " .. tostring(card.dropId)
             assertEqual(askWord(card.ask, card.dash), f.offer, what .. ": Offer")
             assertEqual(card.ask.offer == true, f.isOffer, what .. ": your own drop's button is Offer")
-            if card.cells.countdown.text:IsShown() then
-                assertEqual(textOf(card.cells.countdown.text), f.window, what .. ": countdown")
-                assertEqual(card.cells.countdown.hit.tipLines[1], f.windowTip[1], what .. ": the countdown's reason")
-            end
+            assertTrue(card.cells.countdown == nil, what .. ": no trade window on the card (feedback-10 spec §2)")
             seen.window[f.window:gsub("%d", "9")] = true
             seen.offer[f.offer] = true
         end

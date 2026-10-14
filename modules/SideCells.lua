@@ -3,7 +3,7 @@ local _, NS = ...
 -- you (or the looter) wear in the drop's slot and the verdict on the drop, in one cell where My eq,
 -- Their eq, Me and Them were four columns:
 --
---   [icon(s)] [item level] [glyph][difference]      321/308 ▽8 · 276 ▲12 · 311 ≈0 · 334 Can't use
+--   [icon(s)] [item level] [glyph][difference]      321/308 ▼8 · 276 ▲12 · 311 ≈0 · 334 Can't use
 --
 -- THE GEAR PART is WindowCells.MyEq's or TheirEq's answer: the worn items (the icons are the
 -- edge's; two for rings, trinkets and one-hand weapons) and their item levels (`321`, `321/308`) in
@@ -193,7 +193,7 @@ local function candidateVerdict(drop, e)
 end
 
 --- The Offer panel's Their eq cell (feedback-7 spec §0): one candidate (an entry of
---- MineCells.Candidates) in the Them cell's look, `276 ▲19`, `321/308 ▽4`, `311 ≈0`, `Can't use`,
+--- MineCells.Candidates) in the Them cell's look, `276 ▲19`, `321/308 ▼4`, `311 ≈0`, `Can't use`,
 --- `…` while checking, `Unavailable` when nothing could be read, `empty ▲` into an empty slot.
 --- @param drop table one of your drops
 --- @param e table the candidate (MineCells.Candidates' entry)

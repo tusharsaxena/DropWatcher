@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/TipMarks.lua — what a tooltip may draw where a table cell draws a verdict glyph
--- (feedback-6 spec §3, DW-F3). The tooltip's face has no `▲`, `▽`, `≈` or `⊘`: it draws them as
+-- (feedback-6 spec §3, DW-F3). The tooltip's face has no `▲`, `▼`, `≈` or `⊘`: it draws them as
 -- boxes. So a verdict mark in a tooltip is an inline texture escape (`|T…|t`) of a LibKa0s media
 -- icon, tinted through the escape's own color fields: `arrow-up` green for an upgrade, `transfer`
 -- yellow for a sidegrade, `arrow-down` red for a downgrade. Table cells and compact lines keep the

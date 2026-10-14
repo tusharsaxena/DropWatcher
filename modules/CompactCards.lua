@@ -16,20 +16,20 @@ local _, NS = ...
 -- THE CARDS. A card is three lines; each line's pieces are named fields, left to right, and the
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
---   Drops        line 1: item (quality color), ilvl (right), ask (Offer on your own drop)
+--   Drops        line 1: ilvl, item (quality color), fresh in brackets right after it, dimmed, or
+--                        nothing (CC.FreshMark; feedback-10 spec §2)
 --                line 2: looter (class color, ⊕ when cross-realm, ` [YOU]` in gold on your own drop:
---                        feedback-7 spec §2), slot, type, trade; countdown (right, with its bar:
---                        MineCells.TradeWindow's, for a drop with a countdown, feedback-5 spec §1) or
---                        else fresh (right, dimmed)
+--                        feedback-7 spec §2), slot, type, trade; ask (right: Offer on your own drop;
+--                        an empty slot with neither). No trade window countdown (feedback-10 spec §2)
 --                line 3: you and them, each a half: the label, then the full table's Me or Them
 --                        cell without its icons (`Upgrade for N` on your own drop, feedback-7 spec §2)
---   History      line 1: item, ilvl (right), outcome (right, in its tone)
+--   History      line 1: ilvl, item; outcome (right, in its tone)
 --                line 2: looter, slot, type, trade; time (right, dimmed)
 --                line 3: you, them
 --
 -- LINE 3 (feedback-6 spec §1) reads as the full table's merged Me and Them cells (NS.SideCells), the
 -- icons left out: the label, the worn item level (plain; `empty`, `…`, `range` muted), then the glyph
--- and the unsigned difference in the verdict's tone: `You 321/308 ▽8`, `Them 276 ▲12`, `Them
+-- and the unsigned difference in the verdict's tone: `You 321/308 ▼8`, `Them 276 ▲12`, `Them
 -- Upgrade for 2` on your own drop. A verdict the full view says in a word keeps compact mode's ⊘
 -- (`You 321 ⊘ Can't use`). One tooltip over the half: the gear's lines, then the verdict's. Glyphs, ⊘
 -- and ⊕ are drawn in the monospace face (JetBrains Mono carries all three).
@@ -109,7 +109,7 @@ function CC.Age(seconds)
     return L["%dd"]:format(floor(s / DAY))
 end
 
---- A verdict's compact text: the glyph and the difference (`▽8`), ⊘ and a word (`⊘ Can't use`), the
+--- A verdict's compact text: the glyph and the difference (`▼8`), ⊘ and a word (`⊘ Can't use`), the
 --- word alone, or "" for an unknown verdict the gear part explains.
 --- @param v table CC.Verdict's answer
 --- @return string
@@ -131,7 +131,7 @@ function CC.Verdict(c)
         tip = copyTip(c.tip), verdict = c.verdict, items = c.items or {}, upgrades = c.upgrades, hidden = c.hidden }
 end
 
---- One half of line 3: `You 321/308 ▽8`; its label and CC.Verdict's pieces.
+--- One half of line 3: `You 321/308 ▼8`; its label and CC.Verdict's pieces.
 --- @param label string `You` or `Them`
 --- @param side table a SideCells cell (SC.Me, SC.Them, SC.Merge)
 --- @return table { label, level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden }
@@ -141,7 +141,7 @@ function CC.Half(label, side)
     return h
 end
 
---- A half's plain text: `You 321/308 ▽8`, `Them range`, `Them Upgrade for 2`.
+--- A half's plain text: `You 321/308 ▼8`, `Them range`, `Them Upgrade for 2`.
 --- @param h table CC.Half's answer
 --- @return string
 function CC.HalfText(h)
@@ -218,7 +218,7 @@ local function freshText(insp, now)
     return FRESH_WORD[status] or DASH
 end
 
---- Line 2's inspect freshness (dimmed, right-aligned): `2m`, `cached`, `…`, `range`, `combat`, `!`,
+--- Line 1's inspect freshness (dimmed, in brackets after the name: CC.FreshMark): `2m`, `cached`, `…`, `range`, `combat`, `!`,
 --- `–`; the tooltip says how old the read is or why there is none. Your own drop needs no inspect.
 --- @param drop table
 --- @param now number|nil GetTime()
@@ -232,17 +232,20 @@ function CC.Freshness(drop, now)
         tip = { L["Inspect of %s"]:format(who), WC.InspectLine(drop.inspect, who, now) } }
 end
 
--- ── the Drops card (spec §2) ────────────────────────────────────────────────────────────────
-
--- Line 2's countdown on a Drops card: the Trade window cell for a drop with a countdown (your
--- own or another player's estimate), nil for one with none (not tradeable, bind on equip, not
--- estimated), which keeps the inspect freshness there.
-local function groupCountdown(drop, now, warnAt)
-    if not MC.Countdown(drop, now) then return nil end
-    return MC.TradeWindow(drop, now, warnAt)
+--- Line 1's freshness as the card draws it (feedback-10 spec §2): `(2m)`, `(cached)`, `(…)`, or nil
+--- where there is nothing to say (your own drop, no inspect to speak of: the dash), so the card
+--- draws no placeholder.
+--- @param cell table|nil CC.Freshness's answer
+--- @return string|nil
+function CC.FreshMark(cell)
+    local t = type(cell) == "table" and cell.text
+    if type(t) ~= "string" or t == "" or t == DASH then return nil end
+    return "(" .. t .. ")"
 end
 
--- Line 1's action, line 2's trade and line 3's Them: the looter's, or on your own drop its Offer,
+-- ── the Drops card (spec §2) ────────────────────────────────────────────────────────────────
+
+-- Line 2's action and trade, and line 3's Them: the looter's, or on your own drop its Offer,
 -- its trade word and `Upgrade for N` (feedback-5 spec §2: the full table's cells).
 local function sides(drop, ctx, now)
     local them = CC.Half(L["Them"], SC.Them(drop, ctx.gear, now, ctx.revealed))
@@ -255,8 +258,7 @@ end
 --- A Drops card.
 --- @param drop table
 --- @param ctx table { now, equipped and classFile (your gear snapshot's), gear (the looter's inspect gear),
----   askState, askReason, transmogAsk, ownRealm, warnAt (the trade.warnAt default when nil); on your
----   own drop revealed (its Offer panel was opened this session) and offerTone (the offer half of
+---   askState, askReason, transmogAsk, ownRealm; on your own drop revealed (its Offer panel was opened this session) and offerTone (the offer half of
 ---   WindowOwn.ToneStates) }
 --- @return table card
 function CC.Group(drop, ctx)
@@ -266,11 +268,10 @@ function CC.Group(drop, ctx)
     return {
         kind = "group", id = drop.id, link = drop.link,
         -- line 1
-        item = CC.Item(drop), ilvl = WC.Ilvl(drop), ask = action,
+        ilvl = WC.Ilvl(drop), item = CC.Item(drop), fresh = CC.Freshness(drop, now),
         -- line 2
         looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
-        trade = trade,
-        fresh = CC.Freshness(drop, now), countdown = groupCountdown(drop, now, ctx.warnAt),
+        trade = trade, ask = action,
         -- line 3
         you = CC.Half(L["You"], SC.Me(drop, ctx.equipped, ctx.classFile)),
         them = them,
@@ -311,7 +312,7 @@ function CC.History(drop, ctx)
     return {
         kind = "history", id = drop.id, link = drop.link,
         -- line 1
-        item = CC.Item(drop), ilvl = WC.Ilvl(drop), outcome = WH.Outcome(drop),
+        ilvl = WC.Ilvl(drop), item = CC.Item(drop), outcome = WH.Outcome(drop),
         -- line 2
         looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
         trade = WC.Trade(drop),
@@ -335,12 +336,14 @@ end
 
 local PLAIN = {
     group = function(card)
-        local ask = card.ask.offered and card.ask.text or DASH
-        return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, ask), lineTwo(card, card.countdown or card.fresh),
+        local fresh = CC.FreshMark(card.fresh)
+        local one = ("%s %s"):format(card.ilvl.text, card.item.text) .. (fresh and (" " .. fresh) or "")
+        local two = card.ask.offered and lineTwo(card, card.ask) or lineTwo(card, { text = "" }):gsub("%s+$", "")
+        return { one, two,
             CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) }
     end,
     history = function(card)
-        return { ("%s  %s  %s"):format(card.item.text, card.ilvl.text, card.outcome.text), lineTwo(card, card.time),
+        return { ("%s %s  %s"):format(card.ilvl.text, card.item.text, card.outcome.text), lineTwo(card, card.time),
             CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) }
     end,
 }

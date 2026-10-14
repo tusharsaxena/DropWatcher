@@ -16,7 +16,7 @@ local _, NS = ...
 -- THE ENTRIES (Entries, DW-B0: peeled out of modules/WindowGroup.lua) are the drop tables' rows in
 -- order, under their group headers; the Drops table and its compact cards both take them.
 --
---   cell = { text, glyph = "▲" | "≈" | "▽" | nil, tone = key of C.TONE, tip = { title, lines... } }
+--   cell = { text, glyph = "▲" | "≈" | "▼" | nil, tone = key of C.TONE, tip = { title, lines... } }
 --
 -- THE GEAR GRID (feedback-7 spec §3). A verdict tooltip shows the comparison as a grid row
 -- (NS.TipMarks.Grid), `[who] [worn ilvl] [worn item] [▲diff]`, where it said `Item level 295 against
@@ -38,7 +38,7 @@ local DASH = "–"
 
 -- The verdict glyphs (design spec §11.2), drawn in the monospace face: the client's default face
 -- has none of them.
-WC.GLYPH = { upgrade = "▲", sidegrade = "≈", downgrade = "▽" }
+WC.GLYPH = { upgrade = "▲", sidegrade = "≈", downgrade = "▼" }
 
 local VERDICT_WORD = {
     upgrade = L["Upgrade"], sidegrade = L["Sidegrade"], downgrade = L["Downgrade"],
@@ -210,7 +210,7 @@ local function verdictTip(title, eval, ilvl, who)
     return lines
 end
 
--- The cell's text and glyph: the signed item-level change beside ▲ ≈ ▽, or a word.
+-- The cell's text and glyph: the signed item-level change beside ▲ ≈ ▼, or a word.
 local function verdictText(eval)
     local v = eval.verdict
     local glyph = WC.GLYPH[v]

@@ -8,7 +8,7 @@ local _, NS = ...
 -- 305 · Trade window 1:47:12`); the column labels (Member, Their eq, Actions); the candidates,
 -- ranked (upgrades first by their gain), every second row striped as the main window's, each with
 -- the name in its class color, Their eq in the Drops table's Them look (feedback-7 spec §0: the
--- worn item icons, their item level, the verdict glyph and the difference, `321/308 ▽4`, or a word:
+-- worn item icons, their item level, the verdict glyph and the difference, `321/308 ▼4`, or a word:
 -- `Can't use`, `…`, `Unavailable`; NS.SideCells.Candidate, painted by WindowGroup.PaintSide) and,
 -- for an upgrade or an equal, the Offer button (the Trade button went with feedback-7 spec §0); the
 -- list scrolls in a raid. The foot strip holds Announce to group and a note on the order. What each
@@ -43,7 +43,7 @@ local max = math.max
 local panel   -- built on the first Open
 
 -- The columns (feedback-7 spec §0): Their eq is at least the Drops table's Them width, so
--- `321/308 ▽13` and two icons fit; Actions holds the Offer button.
+-- `321/308 ▼13` and two icons fit; Actions holds the Offer button.
 local COLS = {
     { key = "member", label = L["Member"], x = 8, tip = L["A member of your group, in their class color."] },
     { key = "eq", label = L["Their eq"], x = 124,
@@ -91,7 +91,7 @@ end
 
 local function rowButtons(row)
     local W = NS.Window
-    row.offer = W.TextButton(row, K.PANEL_BTN_W, "export", L["Offer"], function(b) NS.PressOffer(b.dropId, b.target) end)
+    row.offer = W.TextButton(row, K.PANEL_BTN_W, "external-link", L["Offer"], function(b) NS.PressOffer(b.dropId, b.target) end)
     row.offer:SetPoint("LEFT", row, "LEFT", COLS[3].x, 0)
     attach(row.offer, "row")
     row.dash = tipFrame(row, "row")

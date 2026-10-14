@@ -61,7 +61,7 @@ test("side cells: Me reads the worn level, then the glyph and the unsigned diffe
     local sideDown = S.Me(drop({ me = { verdict = "sidegrade", ilvlDelta = -1, reasons = {} } }), MINE)
     assertEqual(sideDown.glyph .. sideDown.text, "≈1", "no sign: the glyph says which way")
     local down = S.Me(drop({ me = { verdict = "downgrade", ilvlDelta = -8, reasons = {} } }), MINE)
-    assertEqual(down.glyph .. down.text, "▽8"); assertEqual(down.tone, "red")
+    assertEqual(down.glyph .. down.text, "▼8"); assertEqual(down.tone, "red")
 end)
 
 test("side cells: Can't use and Not wanted stay words after the gear, gray", function()
@@ -77,7 +77,7 @@ test("side cells: two worn items read both levels and carry both icons", functio
     local S = SC()
     local me = S.Me(drop({ facts = TRINKET, me = { verdict = "downgrade", ilvlDelta = -8, reasons = {} } }), MINE)
     assertEqual(me.level, "321/308"); assertEqual(#me.items, 2)
-    assertEqual(me.glyph .. me.text, "▽8")
+    assertEqual(me.glyph .. me.text, "▼8")
     local them = S.Them(drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 12, reasons = {} } }), HERS, 100)
     assertEqual(them.level, "298/296"); assertEqual(#them.items, 2); assertEqual(them.glyph .. them.text, "▲12")
 end)
@@ -129,7 +129,7 @@ test("side cells: the tooltip is the verdict's title, the worn gear as a grid, t
     for _, l in ipairs(me.tip) do assertTrue(T.tipText(l):find("against", 1, true) == nil, "no comparison prose: " .. T.tipText(l)) end
     local them = S.Them(drop(), HERS, 100)
     assertEqual(them.tip[1], "For Seta: Downgrade")
-    assertEqual(T.tipText(them.tip[2]), "|cffffffffSeta|r  324  " .. OLD_BAND .. "  ▽13", "the looter in their class color")
+    assertEqual(T.tipText(them.tip[2]), "|cffffffffSeta|r  324  " .. OLD_BAND .. "  ▼13", "the looter in their class color")
     assertEqual(them.tip[2].grid[1][4].tone, "red")
     assertEqual(them.tip[3], "Inspected 40s ago.", "the read's age after the grid")
     assertEqual(them.tip[4], "A lower item level and no score gain.")
@@ -201,7 +201,7 @@ test("side cells: History's Me and Them are the verdict alone, worded as the Dro
         them = { verdict = "downgrade", ilvlDelta = -8 } }, 1)
     local me, them = WH.MeCell(d), WH.ThemCell(d)
     assertTrue(me.level == nil, "a kept entry holds no worn items"); assertEqual(#me.items, 0)
-    assertEqual(me.glyph .. me.text, "▲6"); assertEqual(them.glyph .. them.text, "▽8")
+    assertEqual(me.glyph .. me.text, "▲6"); assertEqual(them.glyph .. them.text, "▼8")
     assertEqual(me.tip[1], "For you: Upgrade")
     local unread = WH.ThemCell(WH.AsDrop({ itemLink = LINK, looter = "Seta-Realm", ilvl = 311 }, 2))
     assertEqual(unread.text, "?", "shown alone: nothing else says why")
@@ -255,7 +255,7 @@ test("side cells: the Offer panel's Their eq reads like Them: both worn items fr
         "the old pill's explanation moved into the tooltip")
     local noRead = candidate(NS, mine(), entry("ready", { verdict = "downgrade", ilvlDelta = -4, baseline = base, reasons = {} }))
     assertEqual(#noRead.items, 1, "without a read, the item it was judged against"); assertEqual(noRead.items[1].link, OLD2)
-    assertEqual(noRead.level, "296"); assertEqual(noRead.glyph .. noRead.text, "▽4"); assertEqual(noRead.tone, "red")
+    assertEqual(noRead.level, "296"); assertEqual(noRead.glyph .. noRead.text, "▼4"); assertEqual(noRead.tone, "red")
     local side = candidate(NS, mine(), entry("ready", { verdict = "sidegrade", ilvlDelta = 0, baseline = { ilvl = 311 }, reasons = {} }))
     assertEqual(#side.items, 0); assertEqual(side.level, "311"); assertEqual(side.levelTone, "plain", "a level known without its item")
     assertEqual(side.glyph .. side.text, "≈0"); assertEqual(side.tone, "yellow")
@@ -363,7 +363,7 @@ test("widths: Me and Them are each their widest cell, measured (two icons, 321/3
         widest[key] = 0
         for _, c in ipairs(cells) do widest[key] = math.max(widest[key], sideWidth(WG, K, c)) end
     end
-    local spec = sideWidth(WG, K, { items = { 1, 2 }, level = "321/308", glyph = "▽", text = "13" })
+    local spec = sideWidth(WG, K, { items = { 1, 2 }, level = "321/308", glyph = "▼", text = "13" })
     assertTrue(widest.me >= spec, "the spec's worst case fits")
     for _, col in ipairs(WG.COLUMNS) do
         if widest[col.key] then assertEqual(col.width, widest[col.key], col.key .. ": nothing cut, no margin") end
@@ -433,7 +433,7 @@ test("table: the Me cell paints its icons, level, glyph and difference left to r
     local NS, row = shown(drop({ facts = TRINKET, me = { verdict = "downgrade", ilvlDelta = -8, reasons = {} } }))
     local c, C = row.cells.me, NS.Constants
     assertTrue(c.icons[1]:IsShown() and c.icons[2]:IsShown(), "both worn trinkets")
-    assertEqual(textOf(c.level), "321/308"); assertEqual(textOf(c.glyph), "▽"); assertEqual(textOf(c.text), "8")
+    assertEqual(textOf(c.level), "321/308"); assertEqual(textOf(c.glyph), "▼"); assertEqual(textOf(c.text), "8")
     assertEqual(c.level.__points[1][2], c.icons[2], "the level after the second icon")
     assertEqual(c.glyph.__points[1][2], c.level, "the glyph after the level")
     assertEqual(c.text.__points[1][2], c.glyph, "the difference after the glyph")
@@ -448,7 +448,7 @@ test("table: the Me cell paints its icons, level, glyph and difference left to r
     c:__fire("OnEnter")   -- the hover paints the grid as columns
     local by = {}
     for _, d in ipairs(NS.TipGrid.Painted()) do by[d.text] = d end
-    assertTrue(by["▽"] and by["▽"].mono, "the table's glyph, in the monospace face")
+    assertTrue(by["▼"] and by["▼"].mono, "the table's glyph, in the monospace face")
     assertEqual(by["8"].line, by["308"].line, "the arrow on the lower trinket's row")
     assertEqual(by["321"].x, by["308"].x, "the levels in one column")
     assertTrue(row.cells.myEq == nil and row.cells.theirEq == nil, "no eq columns")

@@ -16,15 +16,22 @@ local _, NS = ...
 -- header (feedback-5 spec §0; GROUP_SPEC.indent). What each piece says, its tone and its reason tooltip are NS.CompactCards.Group's
 -- (pure, built from the full view's cells):
 --
---   line 1  item (quality color, the game's tooltip) · ilvl · Ask (the full table's states; Offer on
---           your own drop, which opens the Offer panel: NS.WindowOwn, feedback-5 spec §2)
---   line 2  looter (class color, ⊕ from another realm) · slot · type · trade     ~1:42:10 ██████░░
---           (the countdown and its bar for a drop with one, feedback-5 spec §1; else the inspect
---           freshness: `2m`, `cached`, `…`)
---   line 3  You 321/308 ▽13                     Them 298/296 ⊘ Can't use
---           (the full table's Me and Them cells without their icons, feedback-6 spec §1; your own
---           drop: line 2's looter reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2),
---           every member it upgrades in the tooltip)
+--   line 1  ilvl item (fresh) (the item level before the name, the name in quality color with the
+--           game's tooltip, then the inspect freshness in brackets, dimmed: `(2m)`, `(cached)`,
+--           `(…)`, none at all where there is nothing to say; the name is cut, the freshness not;
+--           feedback-10 spec §2)
+--   line 2  looter (class color, ⊕ from another realm) · slot · type · trade            [ Ask ]
+--           (the full table's states; Offer on your own drop, which opens the Offer panel:
+--           NS.WindowOwn, feedback-5 spec §2; with neither the slot is left empty, its reason
+--           tooltip still over it)
+--   line 3  You 321/308 ▼13   Them 298/296 ⊘ Can't use
+--           (the full table's Me and Them cells without their icons, feedback-6 spec §1; the labels
+--           gold and Them a fixed gap after You, feedback-10 spec §2; your own drop: line 2's looter
+--           reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2), every member it
+--           upgrades in the tooltip)
+--
+-- NO TRADE WINDOW on the card (feedback-10 spec §2): the full table's Trade window column, the
+-- strip's next expiry and the detail card say it; the card has nothing to tick each second.
 --
 -- Every piece is a font string with a hit frame over it that carries its tooltip, placed by the
 -- row-tooltip helper (NS.RowTooltip, DW-B2) at the card's top right, just outside the window: the
@@ -36,10 +43,6 @@ local _, NS = ...
 -- size, as in the full table); a card's line height, height and icon follow from it (Metrics,
 -- pure): about 50 pixels at the default size. `window.rowHeight` is the full table's and does not
 -- apply.
---
--- THE COUNTDOWN on line 2 (CG.BuildCountdown/CG.PaintCountdown) is the full table's Trade window
--- cell: its text (bold and amber while ending soon) before a BAR_W bar that fills by the window
--- left. It moves each second through CG.TickCountdowns (WindowGroup.TickCountdowns).
 --
 -- THE HEADERS are the full table's header button (NS.WindowGroup.NewHeader, so a click collapses
 -- the group the same way), painted with the short form (NS.CompactCards.Header), the long form and
@@ -56,8 +59,9 @@ local _, NS = ...
 --
 -- THE SHARED KIT. History draws its cards the same way (modules/CompactHistory.lua, DW-C3), so the
 -- frame pieces live here once and are exported: the
--- pieces and their hit frames (Piece, FontString, MonoString, Background), line 2 and line 3's
--- halves (BuildLineTwo/PaintLineTwo, BuildHalf/PaintHalf), the pane's own scroll view (BuildView),
+-- pieces and their hit frames (Piece, FontString, MonoString, Background), line 1's item level
+-- and name (PlaceLineOne), line 2 and line 3's halves (BuildLineTwo/PaintLineTwo, BuildHalf/PaintHalf,
+-- PlaceThem), the pane's own scroll view (BuildView),
 -- the layout switch (Swap, Settle) and the draw loop over a tab's entries (Draw, driven by a
 -- per-tab `spec` table built once at load: no closure per repaint).
 
@@ -74,7 +78,8 @@ CG.LINE_EXTRA = 4      -- a line's height over its text size
 CG.ICON_MIN, CG.ICON_MAX = 24, 48
 CG.QUALITY_W = 2       -- the quality bar at a card's left edge
 CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Drops card's chevron and the gap before its icon
-CG.BAR_W = 56          -- line 2's countdown bar
+CG.ILVL_GAP = 4        -- line 1: between the item level and the name (feedback-10 spec §2)
+CG.HALVES_GAP = 12     -- line 3: between You's last piece and the Them label (feedback-10 spec §2)
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
 local SEP = "|cff9e9ea3·|r "
@@ -105,16 +110,6 @@ function CG.LineY(m, i) return -(CG.PAD + (i - 0.5) * m.line) end
 --- @param lead number|nil
 --- @return number
 function CG.TextLeft(m, lead) return CG.PAD + CG.QUALITY_W + (lead or 0) + m.icon + 6 end
-
---- Where line 3's second half (Them) starts on a card `width` pixels wide: halfway across the text.
---- @param width number
---- @param m table
---- @param lead number|nil as CG.TextLeft's
---- @return number
-function CG.HalfX(width, m, lead)
-    local x = CG.TextLeft(m, lead)
-    return x + floor(max(0, width - x - CG.PAD) / 2)
-end
 
 --- A scroll offset carried from one layout to the other: the same fraction of the scroll range.
 --- @param offset number|nil the offset in the layout being left
@@ -219,11 +214,25 @@ local function buildAsk(card)
     local W = NS.Window
     card.ask = W.TextButton(card, K.ASK_W, "chat", NS.L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     W.AttachTooltip(card.ask, function() return tipOf(card.ask) end, "row")
-    card.dash = fontString(card, "GameFontDisableSmall")
-    card.dash:SetPoint("CENTER", card.ask, "CENTER", 0, 0)
+    -- No action: the slot is left empty (feedback-10 spec §2), its reason a tooltip over it.
     card.dashTip = CreateFrame("Frame", nil, card)
     card.dashTip:SetAllPoints(card.ask)
     W.AttachTooltip(card.dashTip, function() return tipOf(card.dashTip) end, "row")
+end
+
+--- Line 1's item level then the name (feedback-10 spec §2): the level at `x` on line 1, the name
+--- CG.ILVL_GAP after it and cut at `rightOf` (a region on line 1's right: History's outcome), so the
+--- name is cut first and the level always shows. A Drops card places its own (the freshness follows
+--- the name there).
+--- @param card table
+--- @param x number the text's left edge
+--- @param y number line 1's middle
+--- @param rightOf table
+function CG.PlaceLineOne(card, x, y, rightOf)
+    local c = card.cells
+    at(c.ilvl.text, "LEFT", card, "TOPLEFT", x, y)
+    at(c.item.text, "LEFT", c.ilvl.text, "RIGHT", CG.ILVL_GAP, 0)
+    c.item.text:SetPoint("RIGHT", rightOf, "LEFT", -6, 0)
 end
 
 local function buildLineOne(card)
@@ -235,14 +244,15 @@ local function buildLineOne(card)
     item.hit.showItem = true   -- the game's own tooltip (WindowGroup.ItemHover)
     WG.ItemHover(item.hit, card.icon)
     piece(card, "ilvl")
+    piece(card, "fresh")   -- `(2m)` right after the name (layout)
     buildAsk(card)
 end
 
 --- Line 2's pieces: looter (and its ⊕, or its gold ` [YOU]` mark on your own drop: feedback-7 spec
---- §2), slot, type (feedback-4 spec §3), trade, then `right` (right-aligned: Drops' inspect
---- freshness, History's time).
+--- §2), slot, type (feedback-4 spec §3), trade, then `right` (right-aligned: History's time; nil on
+--- a Drops card, whose action button sits there).
 --- @param card table
---- @param right string the right piece's key
+--- @param right string|nil the right piece's key
 function CG.BuildLineTwo(card, right)
     local looter = piece(card, "looter")
     looter.glyph = monoString(card)
@@ -255,21 +265,7 @@ function CG.BuildLineTwo(card, right)
     kind.text:SetPoint("LEFT", slot.text, "RIGHT", 4, 0)
     local trade = piece(card, "trade")
     trade.text:SetPoint("LEFT", kind.text, "RIGHT", 4, 0)
-    piece(card, right)
-end
-
---- Line 2's countdown: a piece (`cells.countdown`, right-aligned) before its bar (`card.barBg`,
---- `card.bar`), placed by the card's layout and hidden while the card has none.
---- @param card table
-function CG.BuildCountdown(card)
-    card.barBg = card:CreateTexture(nil, "BACKGROUND")
-    card.barBg:SetColorTexture(1, 1, 1, 0.12)
-    card.barBg:SetSize(CG.BAR_W, K.BAR_H + 1)
-    card.bar = card:CreateTexture(nil, "ARTWORK")
-    card.bar:SetHeight(K.BAR_H + 1)
-    card.bar:SetPoint("LEFT", card.barBg, "LEFT", 0, 0)
-    local cd = piece(card, "countdown")
-    cd.text:SetJustifyH("RIGHT")
+    if right then piece(card, right) end
 end
 
 -- One half of line 3 (feedback-6 spec §1): the label (`cells[key .. "Label"]`), then the worn item
@@ -285,6 +281,14 @@ end
 -- The gaps on line 3: between the label, the level and the verdict, and after a glyph.
 CG.HALF_GAP, CG.HALF_GLYPH_GAP = 3, 2
 
+--- Line 3's Them half placed CG.HALVES_GAP after You's last piece (feedback-10 spec §2: the halves
+--- read close together, not at half the card's width). You's text is its last piece, shown or empty.
+--- @param card table
+function CG.PlaceThem(card)
+    local c = card.cells
+    at(c.themLabel.text, "LEFT", c.you.text, "RIGHT", CG.HALVES_GAP, 0)
+end
+
 local function newCard(content)
     local card = CreateFrame("Button", nil, content)
     card.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
@@ -292,8 +296,7 @@ local function newCard(content)
     card.onPiece = groupPiece
     buildBackground(card)
     buildLineOne(card)
-    CG.BuildLineTwo(card, "fresh")
-    CG.BuildCountdown(card)
+    CG.BuildLineTwo(card)
     CG.BuildHalf(card, "you")
     CG.BuildHalf(card, "them")
     card:SetScript("OnClick", function(self) NS.WindowGroup.ToggleExpand(self.dropId) end)
@@ -308,16 +311,14 @@ local function layout(card, m)
     local y1 = CG.LineY(m, 1)
     card.icon:SetSize(m.icon, m.icon)
     at(card.chevron, "LEFT", card, "TOPLEFT", P + CG.QUALITY_W, y1)
-    at(card.ask, "RIGHT", card, "TOPRIGHT", -P, y1)
+    at(c.ilvl.text, "LEFT", card, "TOPLEFT", x, y1)
+    at(c.item.text, "LEFT", c.ilvl.text, "RIGHT", CG.ILVL_GAP, 0)
+    at(c.fresh.text, "LEFT", c.item.text, "RIGHT", NS.WindowRows.MARK_GAP, 0)
+    at(card.ask, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
     card.ask:SetHeight(m.line + 2)
-    at(c.ilvl.text, "RIGHT", card.ask, "LEFT", -6, 0)
-    at(c.item.text, "LEFT", card, "TOPLEFT", x, y1)
-    c.item.text:SetPoint("RIGHT", c.ilvl.text, "LEFT", -6, 0)
     at(c.looter.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
-    at(c.fresh.text, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
-    at(card.barBg, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
-    at(c.countdown.text, "RIGHT", card.barBg, "LEFT", -6, 0)
     at(c.youLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
+    CG.PlaceThem(card)
 end
 
 -- ── painting a card ─────────────────────────────────────────────────────────────────────────
@@ -330,14 +331,12 @@ end
 CG.PaintText = paintText
 
 -- The Ask button in the full table's states (WindowGroup's paintActions, the same cell), your own
--- drop's Offer, or the dash with its reason where neither is offered.
+-- drop's Offer, or an empty slot with its reason tooltip where neither is offered.
 local function paintAsk(card, a, id)
     local b = card.ask
     b.dropId, b.offer = id, a.offer == true
     b:SetShown(a.offered)
-    card.dash:SetShown(not a.offered)
     card.dashTip:SetShown(not a.offered)
-    card.dash:SetText(a.text)
     NS.Window.SetButtonMark(b, a.text, a.icon)
     b:SetEnabled(a.enabled)
     b:SetAlpha(a.enabled and 1 or 0.6)
@@ -346,7 +345,23 @@ local function paintAsk(card, a, id)
     NS.WindowGroup.ToneButton(b, a.state, a.kind)   -- whose move it is (feedback-4 spec §1; Offer cyan, feedback-6 §2)
 end
 
-local function paintLineOne(card, drop, cc)
+-- Line 1's freshness, `(2m)`, right after the name, or nothing (CompactCards.FreshMark); the name
+-- takes what is left of the line after the item level and it (NS.WindowRows.MarkedWidth), so the
+-- name is cut and the freshness is not.
+local function paintFresh(card, cc, width, m)
+    local c = card.cells
+    local mark = NS.CompactCards.FreshMark(cc.fresh)
+    c.fresh.text:SetText(mark or "")
+    setTone(c.fresh.text, "muted")
+    c.fresh.text:SetShown(mark ~= nil); c.fresh.hit:SetShown(mark ~= nil)
+    c.fresh.hit.tipLines = cc.fresh.tip
+    local item = c.item.text
+    local room = width - CG.TextLeft(m, CG.LEAD) - CG.PAD - (c.ilvl.text:GetStringWidth() or 0) - CG.ILVL_GAP
+    local full = item.GetUnboundedStringWidth and item:GetUnboundedStringWidth() or nil
+    item:SetWidth(NS.WindowRows.MarkedWidth(room, full, mark and (c.fresh.text:GetStringWidth() or 0) or nil))
+end
+
+local function paintLineOne(card, drop, cc, width, m)
     local WG, c = NS.WindowGroup, card.cells
     WG.SetItem(card.icon, drop.link, WG.Where(drop))
     card.icon.dropId = drop.id
@@ -355,6 +370,7 @@ local function paintLineOne(card, drop, cc)
     c.item.text:SetTextColor(qualityColor(drop))
     c.item.hit.tipLines = nil   -- the real item tooltip instead
     paintText(c.ilvl, cc.ilvl)
+    paintFresh(card, cc, width, m)
     paintAsk(card, cc.ask, drop.id)
 end
 
@@ -362,7 +378,7 @@ end
 --- and `right`. Slot (and the looter's tooltip) follows the mark while it shows.
 --- @param card table
 --- @param cc table a CompactCards card
---- @param right string the right piece's key (`fresh` or `time`)
+--- @param right string|nil the right piece's key (History's `time`; nil on a Drops card)
 function CG.PaintLineTwo(card, cc, right)
     local c = card.cells
     paintText(c.looter, cc.looter)
@@ -378,33 +394,11 @@ function CG.PaintLineTwo(card, cc, right)
     paintText(c.slot, cc.slot, SEP)
     paintText(c.armorType, cc.armorType, SEP)
     paintText(c.trade, cc.trade, SEP)
-    paintText(c[right], cc[right])
+    if right then paintText(c[right], cc[right]) end
 end
 
---- Line 2's countdown painted (a Trade window cell, MineCells.TradeWindow's), or hidden for nil;
---- the inspect freshness shows in its place while it is hidden. Its face follows its urgency, as the
---- full table's (SetFontObject puts the template's size back, so the Font size row's goes on after).
---- @param card table
---- @param t table|nil
---- @param fontSize number|nil
-function CG.PaintCountdown(card, t, fontSize)
-    local c = card.cells
-    local on = t ~= nil
-    c.countdown.text:SetShown(on); c.countdown.hit:SetShown(on)
-    card.barBg:SetShown(on); card.bar:SetShown(on)
-    c.fresh.text:SetShown(not on); c.fresh.hit:SetShown(not on)
-    if not on then return end
-    c.countdown.text:SetFontObject(t.bold and "GameFontNormalSmall" or "GameFontHighlightSmall")
-    if fontSize then NS.WindowRows.SetFontSize(c.countdown.text, fontSize) end
-    paintText(c.countdown, t)
-    card.fraction = t.fraction or 0
-    card.bar:SetWidth(max(CG.BAR_W * card.fraction, 0.01))
-    card.bar:SetShown(card.fraction > 0)
-    local tone = C.TONE[t.soon and "warn" or "good"]
-    card.bar:SetColorTexture(tone.r, tone.g, tone.b, 0.9)
-end
-
---- One half of line 3 painted (CompactCards.Half's): its label (muted), the worn item level (plain, or
+--- One half of line 3 painted (CompactCards.Half's): its label (gold, feedback-10 spec §2), the worn
+--- item level (plain, or
 --- a muted word), the glyph and the difference or word in the verdict's tone, each placed after the
 --- last piece shown.
 --- @param card table
@@ -414,7 +408,7 @@ function CG.PaintHalf(card, key, half)
     local c = card.cells
     local label, h = c[key .. "Label"].text, c[key]
     label:SetText(half.label)
-    setTone(label, "muted")
+    label:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
     h.level:SetText(half.level or "")
     setTone(h.level, half.levelTone)
     h.glyph:SetText(half.glyph or "")
@@ -432,19 +426,18 @@ function CG.PaintHalf(card, key, half)
     end
 end
 
--- What every card of one repaint shares: your gear and class, the transmog ask setting, your realm
--- and the countdown's warning threshold.
+-- What every card of one repaint shares: your gear and class, the transmog ask setting and your realm.
 local function sharedCtx(now)
     local snap = NS.Gear.Snapshot()
     return { now = now, equipped = snap and snap.equipped, classFile = snap and snap.classFile, transmogAsk = NS.Setting("messages.transmogAsk") == true,
-        ownRealm = NS.Compat.NormalizedRealm(), warnAt = NS.TradeTimer.WarnAt() }
+        ownRealm = NS.Compat.NormalizedRealm() }
 end
 
 local function cardCtx(drop, shared)
     local state, reason = NS.WindowGroup.AskState(drop)
     local insp = NS.TestMode.InspectOf(drop)
     local ctx = { now = shared.now, equipped = shared.equipped, classFile = shared.classFile, gear = insp and insp.gear, askState = state,
-        askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm, warnAt = shared.warnAt }
+        askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm }
     if drop.isMine then   -- your own drop's Offer and Upgrade for N (feedback-5 spec §2)
         local WO = NS.WindowOwn
         ctx.revealed, ctx.offerTone = WO.IsRevealed(drop.id), (WO.ToneStates(drop))
@@ -462,11 +455,9 @@ local function paintCard(card, drop, width, m, shared)
     NS.WindowGroup.PaintChevron(card.chevron, open)
     local cc = NS.CompactCards.Group(drop, cardCtx(drop, shared))
     card.model = cc
-    paintLineOne(card, drop, cc)
-    CG.PaintLineTwo(card, cc, "fresh")
-    CG.PaintCountdown(card, cc.countdown, m.fontSize)
+    paintLineOne(card, drop, cc, width, m)
+    CG.PaintLineTwo(card, cc)
     CG.PaintHalf(card, "you", cc.you)
-    at(card.cells.themLabel.text, "LEFT", card, "TOPLEFT", CG.HalfX(width, m, CG.LEAD), CG.LineY(m, 3))
     CG.PaintHalf(card, "them", cc.them)
 end
 
@@ -658,21 +649,6 @@ function CG.Refresh(pane, entries, compact)
     cv.cardDropId = nil
     CG.Draw(cv, entries, CG.CardWidth(pane), GROUP_SPEC, st)
     CG.Settle(pane, cv)
-end
-
---- Move the drawn cards' countdowns on to the clock (WindowGroup.TickCountdowns, each second): a
---- card painted with a countdown repaints it alone.
---- @param pane table the Drops pane
-function CG.TickCountdowns(pane)
-    local cv = pane.compactView
-    if not (cv and cv.scroll:IsShown()) then return end
-    local now, warnAt = GetTime(), NS.TradeTimer.WarnAt()
-    local size = NS.WindowRows.FontSize(NS.Setting("window.fontSize"))
-    for _, card in ipairs(cv.cardPool.active) do
-        if card.drop and card.model and card.model.countdown then
-            CG.PaintCountdown(card, NS.MineCells.TradeWindow(card.drop, now, warnAt), size)
-        end
-    end
 end
 
 --- The drawn compact pane, for the suites (WindowGroup.Drawn's shape in the compact layout):

@@ -469,6 +469,7 @@ local function buildStrip(pane)
     strip.clear:SetPoint("RIGHT", strip, "RIGHT", 0, 0)
     NS.Window.AttachTooltip(strip.clear, clearTip)
     pane.strip = strip
+    pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
 end
 
 local function build(pane)

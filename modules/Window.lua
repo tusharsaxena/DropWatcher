@@ -124,7 +124,7 @@ function Window.FeedView() return { feed = feedName() } end
 -- ── tooltips ────────────────────────────────────────────────────────────────────────────────
 
 -- ABOVE THE CONTROL (feedback-3 spec §1, DW-B1). A filter-bar control's tooltip (the bar's
--- dropdowns, its search box and the footer's Sort) never covers the control or the menu it opens
+-- dropdowns, its search box and the tab's Sort) never covers the control or the menu it opens
 -- below: its BOTTOMLEFT sits on the control's TOPRIGHT (ANCHOR_RIGHT's place), or, when the screen
 -- has no room on the right, its BOTTOMRIGHT on the control's TOPLEFT (ANCHOR_LEFT's). Near the top
 -- of the screen, with no room above, it goes below instead (its TOPLEFT on the control's BOTTOMRIGHT,

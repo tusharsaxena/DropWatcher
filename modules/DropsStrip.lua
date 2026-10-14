@@ -12,11 +12,12 @@ local _, NS = ...
 -- Window.TabContext's `matches`), collapsed under their header or not. What it says is
 -- NS.MineCells.Summary's (pure): `2 tradeable · next expiry 0:08:41`.
 --
--- THE FULL LAYOUT'S BUTTONS (feedback-7 spec §4). Post my tradeables is the footer's Sort dropdown's
--- size (NS.WindowFooter.SORT_W, the control height) with its right edge on Sort's
--- (NS.WindowFooter.SORT_INSET from the right: the pane and the footer share their side edges), so it
--- sits directly above Sort. Scan group sits DS.GAP left of it; while Post is hidden (nothing of yours
--- can be traded) Scan group slides into Post's slot. DS.Slots is that placement, pure.
+-- THE FULL LAYOUT'S ROW (feedback-10 spec §3), right-aligned: `[Post my tradeables] [Scan group]
+-- [Sort]`. The tab's Sort (NS.WindowFooter's control, anchored here through `pane.sortHost`) is at the
+-- strip's right edge (NS.WindowFooter.SORT_INSET), Scan group DS.GAP left of it, Post my tradeables
+-- (Sort's size, NS.WindowFooter.SORT_W, feedback-7 spec §4) DS.GAP left of Scan group. While Post is
+-- hidden (nothing of yours can be traded) the other two keep their places. DS.Slots is that
+-- placement, pure.
 --
 -- THE COMPACT LAYOUT shortens the summary: `2 tradeable · next 0:08:41` (DS.SummaryText) and a
 -- narrower `Post` button at the strip's right, with the same tooltip and the same handler.
@@ -68,17 +69,18 @@ function DS.SummaryText(s)
     return text
 end
 
---- Where the full layout's two buttons go (pure): each one's right edge, in pixels left of the
---- strip's right edge. Post my tradeables sits above Sort (`sortInset`); Scan group `gap` left of it,
---- or in Post's slot while Post is hidden.
+--- Where the full layout's row goes (pure): each control's right edge, in pixels left of the
+--- strip's right edge, `[Post my tradeables] [Scan group] [Sort]` (feedback-10 spec §3). Sort at
+--- `sortInset`, Scan group `gap` left of it, Post `gap` left of Scan group, or hidden.
 --- @param postShown boolean
---- @param sortInset number Sort's right edge left of the footer's
---- @param postW number Post's width
+--- @param sortInset number Sort's right edge left of the strip's
+--- @param sortW number Sort's width
+--- @param scanW number Scan group's width
 --- @param gap number
---- @return table { post = number|nil (nil: hidden), scan = number }
-function DS.Slots(postShown, sortInset, postW, gap)
-    if not postShown then return { scan = sortInset } end
-    return { post = sortInset, scan = sortInset + postW + gap }
+--- @return table { sort = number, scan = number, post = number|nil (nil: hidden) }
+function DS.Slots(postShown, sortInset, sortW, scanW, gap)
+    local scan = sortInset + sortW + gap
+    return { sort = sortInset, scan = scan, post = postShown and (scan + scanW + gap) or nil }
 end
 
 -- ── the frame ───────────────────────────────────────────────────────────────────────────────
@@ -120,6 +122,7 @@ function DS.Build(pane)
     strip.scan:Hide()
     strip:Hide()
     pane.summary = strip
+    pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
 end
 
 -- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
@@ -185,7 +188,7 @@ local function place(strip, b, inset)
 end
 
 -- The buttons in the layout in force: compact Post at the strip's right and no Scan group; full
--- DS.Slots' (Post above Sort, Scan group beside it or in its slot).
+-- DS.Slots' (Post, Scan group, then the tab's Sort at the right edge, anchored by NS.WindowFooter.AnchorSort).
 local function placeButtons(strip, tradeable, compact)
     if compact then
         place(strip, strip.post, 0)
@@ -193,7 +196,7 @@ local function placeButtons(strip, tradeable, compact)
         return
     end
     local WF = NS.WindowFooter
-    local slots = DS.Slots(tradeable, WF.SORT_INSET, WF.SORT_W, DS.GAP)
+    local slots = DS.Slots(tradeable, WF.SORT_INSET, WF.SORT_W, K.SCAN_W, DS.GAP)
     place(strip, strip.post, slots.post)
     place(strip, strip.scan, slots.scan)
 end

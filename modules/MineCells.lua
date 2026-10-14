@@ -346,9 +346,10 @@ function MC.Details(drop, revealed, title)
 end
 
 -- Your own drop's Offer button, by the furthest offer sent for it (WindowOwn's ToneStates). Every
--- state carries an icon (feedback-7 spec §1): `export` while it reads Offer, handing the item out.
+-- state carries an icon (feedback-7 spec §1): `external-link` while it reads Offer, handing the item out
+-- (feedback-10 spec §1).
 local OWN_OFFER_LOOK = {
-    ready = { text = L["Offer"], icon = "export" }, failed = { text = L["Offer"], icon = "export" },
+    ready = { text = L["Offer"], icon = "external-link" }, failed = { text = L["Offer"], icon = "external-link" },
     queued = { text = L["Queued"], icon = "clock", line = L["An offer of it is queued until chat allows it."] },
     sent = { text = L["Offered"], icon = "confirm", line = L["You offered it: the panel shows to whom."] },
     tradedAway = { text = L["Traded"], icon = "confirm", line = L["You traded it away."] },
@@ -389,7 +390,7 @@ local function lookTable(ready, sent, readyIcon)
     }
 end
 
-local OFFER_LOOK = lookTable(L["Offer"], L["Offered"], "export")            -- handing the item out
+local OFFER_LOOK = lookTable(L["Offer"], L["Offered"], "external-link")     -- handing the item out
 local ANNOUNCE_LOOK = lookTable(L["Announce"], L["Announced"], "speech-bubble") -- a post to the group
 MC.OFFER_LOOK, MC.ANNOUNCE_LOOK = OFFER_LOOK, ANNOUNCE_LOOK   -- read by the suites: every state has an icon
 

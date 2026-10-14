@@ -6,7 +6,7 @@ local _, NS = ...
 --
 --   [icon]  Big upgrade for you                                   [Ask] [x]
 --           Nalorakk's Nightmare 295
---           Looted by Seta · You ▲19 · Them ▽13
+--           Looted by Seta · You ▲19 · Them ▼13
 --           Likely tradeable · not an upgrade for Seta
 --
 -- Row 2 is the item name in its quality color (NS.TipMarks.ItemName) and its item level after it in
@@ -252,7 +252,7 @@ local function text(f, template, tone)
     return fs
 end
 
--- A verdict's glyph, in the monospace face (the default face has no ▲ ≈ ▽).
+-- A verdict's glyph, in the monospace face (the default face has no ▲ ≈ ▼).
 local function glyph(f)
     local fs = f:CreateFontString(nil, "OVERLAY")
     fs:SetFont(C.FONT_MONO, 12, "")

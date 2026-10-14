@@ -12,7 +12,7 @@ local _, NS = ...
 -- card and the row it expands never disagree; on your own drop (feedback-5 spec §2) the Them row's
 -- `Upgrade for N` (feedback-7 spec §2) and the Offer in place of Ask are modules/MineCells.lua's, as the row's are.
 --
--- NO GLYPHS. The card draws in the default face, which has no `→` and no `▲ ≈ ▽` (feedback-6 spec
+-- NO GLYPHS. The card draws in the default face, which has no `→` and no `▲ ≈ ▼` (feedback-6 spec
 -- §3, DW-F5): the verdict chip's mark, the Item level and Track rows' arrow and the Track row's mark
 -- are NS.TipMarks' inline textures (TM.Mark, TM.Arrow), never the table cells' monospace glyphs.
 --
@@ -417,9 +417,10 @@ local function act(key, text, icon, enabled, title, ...)
 end
 
 -- Your own drop's Offer in the Ask's place (feedback-5 spec §2): it opens the Offer panel. Its mark
--- is its state's (feedback-7 spec §1: `export` while it reads Offer), as on the row.
+-- is its state's (feedback-7 spec §1: `external-link` while it reads Offer, feedback-10 spec §1), as
+-- on the row; Trade keeps `transfer`, so the two never share a mark.
 local function offerAction(o)
-    local a = act("ask", o.offered and o.text or L["Offer"], o.icon or "export", o.offered, unpack(o.tip))
+    local a = act("ask", o.offered and o.text or L["Offer"], o.icon or "external-link", o.offered, unpack(o.tip))
     a.state, a.offer, a.kind = o.state, true, o.kind
     return a
 end

@@ -10,10 +10,11 @@ local _, NS = ...
 --
 -- THE CARD. What each piece says, its tone and its tooltip are NS.CompactCards.History's:
 --
---   line 1  item (quality color, the game's tooltip) · ilvl · outcome (in its tone)
+--   line 1  ilvl item (the item level before the name, feedback-10 spec §2)   outcome (in its tone)
 --   line 2  looter (class color, ⊕ from another realm) · slot · type · trade       17:02 (dimmed)
---   line 3  You ▽4                         Them ≈0
---           (the full table's Me and Them: a kept entry holds no worn items, so the verdict alone)
+--   line 3  You ▼4   Them ≈0
+--           (the full table's Me and Them: a kept entry holds no worn items, so the verdict alone;
+--           the labels gold, Them a fixed gap after You, as on Drops' cards)
 --
 -- THE HEADERS are the full table's header button, painted with the short form
 -- (NS.CompactCards.HistoryHeader: `2d` once a day old); a click collapses the group as before.
@@ -68,17 +69,16 @@ local function layout(card, m)
     local y1 = CG.LineY(m, 1)
     card.icon:SetSize(m.icon, m.icon)
     at(c.outcome.text, "RIGHT", card, "TOPRIGHT", -P, y1)
-    at(c.ilvl.text, "RIGHT", c.outcome.text, "LEFT", -8, 0)
-    at(c.item.text, "LEFT", card, "TOPLEFT", x, y1)
-    c.item.text:SetPoint("RIGHT", c.ilvl.text, "LEFT", -6, 0)
+    CG.PlaceLineOne(card, x, y1, c.outcome.text)
     at(c.looter.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
     at(c.time.text, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
     at(c.youLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
+    CG.PlaceThem(card)
 end
 
 -- ── painting a card ─────────────────────────────────────────────────────────────────────────
 
-local function paintCard(card, drop, width, m, st)
+local function paintCard(card, drop, _, m, st)
     local CG, WG, c = NS.CompactGroup, NS.WindowGroup, card.cells
     card.dropId, card.entry = drop.id, drop.entry
     card:SetHeight(m.height)
@@ -95,7 +95,6 @@ local function paintCard(card, drop, width, m, st)
     CG.PaintText(c.outcome, cc.outcome)
     CG.PaintLineTwo(card, cc, "time")
     CG.PaintHalf(card, "you", cc.you)
-    CG.At(c.themLabel.text, "LEFT", card, "TOPLEFT", CG.HalfX(width, m), CG.LineY(m, 3))
     CG.PaintHalf(card, "them", cc.them)
 end
 
@@ -109,12 +108,16 @@ local function toggle(h) NS.WindowHistory.ToggleGroup(h.groupKey, h.collapsed) e
 
 local SPEC = { newCard = newCard, paint = paintCard, header = historyHeader, toggle = toggle }
 
--- The strip's Clear history, shortened in the compact layout and put back in the full one.
+-- The strip's Clear history, shortened in the compact layout and put back in the full one: at the
+-- strip's right edge in compact, left of the tab's Sort in full (feedback-10 spec §3).
 local function paintStrip(pane, compact)
     local clear = pane.strip and pane.strip.clear
     if not clear then return end
     clear:SetWidth(compact and CH.CLEAR_W or K.CLEAR_W)
     clear.label:SetText(compact and L["Clear"] or L["Clear history"])
+    local WF = NS.WindowFooter
+    clear:ClearAllPoints()
+    clear:SetPoint("RIGHT", pane.strip, "RIGHT", compact and 0 or -(WF.SORT_INSET + WF.SORT_W + NS.DropsStrip.GAP), 0)
 end
 
 -- The pane's own scroll view, above its strip.

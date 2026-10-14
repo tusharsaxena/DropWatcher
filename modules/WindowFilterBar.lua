@@ -54,7 +54,7 @@ FB.VALUES = {
     sort    = { "newest", "oldest", "ilvl", "gain" },
 }
 
--- Which controls each tab honors (the footer's Sort included). `views` is the View values the tab
+-- Which controls each tab honors (the tab's Sort included). `views` is the View values the tab
 -- uses; the rest are grayed in its menu and ignored by its filter.
 local ALL_VIEWS = { interesting = true, likely = true, usable = true, upgrade = true }
 -- `char` is the Character dropdown; `charScope` `session` marks a tab whose drops are all yours.

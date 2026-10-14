@@ -165,7 +165,7 @@ test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Annou
     local TONE = NS.Constants.TONE
     local b = p.rows[1].offer
     assertEqual(textOf(b.label), "Offer"); assertEqual(b.tone, "cyan")
-    assertTrue(b.art:IsShown() and b.art:GetTexture() == NS.Icon("export"), "Offer wears export (feedback-7 spec §1)")
+    assertTrue(b.art:IsShown() and b.art:GetTexture() == NS.Icon("external-link"), "Offer wears external-link (feedback-10 spec §1)")
     assertEqual(b:GetWidth(), NS.Constants.WINDOW.PANEL_BTN_W)
     local ann = p.panel.announce
     assertTrue(ann.art:IsShown() and ann.art:GetTexture() == NS.Icon("speech-bubble"), "Announce to group keeps its mark")

@@ -64,7 +64,7 @@ test("toast: Compose answers the four rows' parts (feedback-9 spec §0)", functi
     assertEqual(t.looter, "Seta"); assertEqual(t.classFile, "PRIEST")
     assertEqual(t.looterText, NS.TipMarks.ClassName("Seta", "PRIEST"))
     assertEqual(t.me.glyph, "▲"); assertEqual(t.me.text, "19"); assertEqual(t.me.tone, "good")
-    assertEqual(t.them.glyph, "▽"); assertEqual(t.them.text, "13"); assertEqual(t.them.tone, "red")
+    assertEqual(t.them.glyph, "▼"); assertEqual(t.them.text, "13"); assertEqual(t.them.tone, "red")
     -- Row 4: the trade word in the Trade cell's tone, the short reason; the full one in the tooltip.
     assertEqual(t.trade, "Likely tradeable"); assertEqual(t.tradeTone, "good")
     assertEqual(t.reason, "not an upgrade for Seta")
@@ -193,7 +193,7 @@ test("toast edge: the four rows beside a four-row icon, painted (feedback-9 spec
     assertEqual(f.meText:GetText(), "19"); assertEqual(f.meText.__textColor[2], C.TONE.good.g)
     assertEqual(f.meGlyph.__textColor[2], C.TONE.good.g)
     assertEqual(f.themLabel:GetText(), "· Them"); assertEqual(f.themLabel.__points[1][2], f.meText)
-    assertEqual(f.themGlyph:GetText(), "▽"); assertEqual(f.themGlyph.__font[1], C.FONT_MONO)
+    assertEqual(f.themGlyph:GetText(), "▼"); assertEqual(f.themGlyph.__font[1], C.FONT_MONO)
     assertEqual(f.themText:GetText(), "13"); assertEqual(f.themText.__textColor[1], C.TONE.red.r)
     local last = f.themText.__points[2]
     assertEqual(last[1], "RIGHT"); assertEqual(last[2], f); assertEqual(last[4], -NS.Toast.INSET, "cut at the inset")
@@ -210,7 +210,7 @@ test("toast edge: the four rows beside a four-row icon, painted (feedback-9 spec
     for _, r in ipairs(f.__regions) do
         local tx = r.__objType == "FontString" and r.__text
         if type(tx) == "string" and not (r.__font and r.__font[1] == C.FONT_MONO) then
-            for _, mark in ipairs({ "▲", "▽", "≈", "|T" }) do assertFalse(tx:find(mark, 1, true) ~= nil, tx) end
+            for _, mark in ipairs({ "▲", "▼", "≈", "|T" }) do assertFalse(tx:find(mark, 1, true) ~= nil, tx) end
             assertFalse(tx:find("+19", 1, true) ~= nil, tx)
         end
     end

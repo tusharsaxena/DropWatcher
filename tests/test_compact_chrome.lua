@@ -245,7 +245,7 @@ test("chrome: the panel closes when the window hides, minimizes or goes back to 
     assertFalse(p.panel:IsShown(), "full")
 end)
 
-test("chrome: the full layout takes every control back to its place on the bar and in the footer", function()
+test("chrome: the full layout takes every control back to its place on the bar and the tab's strip", function()
     local NS, f = shown("compact")
     NS.SetWindowMode("full")
     local c, p = NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
@@ -262,7 +262,7 @@ test("chrome: the full layout takes every control back to its place on the bar a
     assertEqual(textOf(c.search.hint), "Filter looter or item…")
     assertTrue(c.search:GetWidth() > 0)
     local _, sort = NS.WindowFooter.Parts()
-    assertTrue(sort:GetParent() == f.footerHost)
+    assertTrue(sort:GetParent() == f.panes.group.summary, "Sort on Drops' strip (feedback-10 spec §3)")
     assertEqual(sort.__points[1][1], "RIGHT"); assertEqual(sort:GetWidth(), 150)
 end)
 

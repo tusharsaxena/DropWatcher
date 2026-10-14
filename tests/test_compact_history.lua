@@ -68,9 +68,14 @@ test("compact history: kept groups as one-line headers, the newest open, each en
     assertEqual(textOf(c.looter.text), "Brakk"); assertEqual(textOf(c.looter.glyph), "⊕", "from another realm")
     assertEqual(plain(textOf(c.slot.text)), "· Neck"); assertEqual(plain(textOf(c.trade.text)), "· Likely")
     assertTrue(textOf(c.time.text):match("^%d%d:%d%d$") ~= nil, "the time within a day: " .. textOf(c.time.text))
-    assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▽4", "the verdict alone (feedback-6 spec §1)")
+    assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▼4", "the verdict alone (feedback-6 spec §1)")
     assertEqual(textOf(c.you.level), "", "a kept entry holds no worn items")
     assertEqual(textOf(c.themLabel.text), "Them")
+    -- feedback-10 spec §2: the level before the name, cut before the outcome; gold labels, Them close after You.
+    local CG, gold = NS.CompactGroup, NS.Constants.GOLD
+    assertEqual(c.item.text.__points[1][2], c.ilvl.text); assertEqual(c.item.text.__points[2][2], c.outcome.text)
+    assertEqual(c.themLabel.text.__points[1][2], c.you.text); assertEqual(c.themLabel.text.__points[1][4], CG.HALVES_GAP)
+    assertEqual(select(2, c.youLabel.text:GetTextColor()), gold.g)
     assertEqual(card.model.kind, "history")
     assertTrue(cardWith(drawn, "Expired") ~= nil)
 end)

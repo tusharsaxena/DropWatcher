@@ -160,8 +160,9 @@ test("action icons: every state of every action button's look table carries a sh
         for state, l in pairs(tbl) do shipped(NS, l.icon, name .. "." .. state) end
     end
     assertEqual(tables.ask.ready.icon, "chat", "Ask: a whisper to the looter")
-    assertEqual(tables.ownOffer.ready.icon, "export", "Offer: handing the item out")
-    assertEqual(tables.offer.ready.icon, "export")
+    assertEqual(tables.ownOffer.ready.icon, "external-link", "Offer: handing the item out")
+    assertEqual(tables.offer.ready.icon, "external-link")
+    assertTrue(tables.offer.ready.icon ~= "transfer", "never the detail card's Trade mark (feedback-10 spec §1)")
     assertEqual(tables.announce.ready.icon, "speech-bubble", "Announce to group keeps its mark")
 end)
 
@@ -177,7 +178,7 @@ test("action icons: the detail card's actions wear their state's icon, Ask and O
         for _, a in ipairs(acts) do shipped(NS, a.icon, state .. " " .. a.key) end
         assertEqual(acts[1].icon, icon, "Ask " .. state)
     end
-    local own = { ready = "export", failed = "export", queued = "clock", sent = "confirm", tradedAway = "confirm" }
+    local own = { ready = "external-link", failed = "external-link", queued = "clock", sent = "confirm", tradedAway = "confirm" }
     for tone, icon in pairs(own) do
         local acts = DC.Actions(drop(), { offerTone = tone, now = NOW })
         for _, a in ipairs(acts) do shipped(NS, a.icon, tone .. " " .. a.key) end

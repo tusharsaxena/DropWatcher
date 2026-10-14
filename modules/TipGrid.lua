@@ -10,7 +10,7 @@ local _, NS = ...
 -- widest row through SetMinimumWidth (guarded: an older client or the headless mock may lack it),
 -- showing the tooltip again so it takes the width. A string cell draws in the lines' own font, its
 -- colors in its own codes; a `{ glyph, text, tone }` cell draws the glyph in the monospace face
--- (C.FONT_MONO: the tooltip's face has no ▲ ≈ ▽) and the number after it, both in the tone (C.TONE).
+-- (C.FONT_MONO: the tooltip's face has no ▲ ≈ ▼) and the number after it, both in the tone (C.TONE).
 --
 -- RELEASE. The pool hides, and the minimum width goes back to 0, on the next TG.Begin, when the
 -- tooltip hides (the pool frame's OnHide) and when it is cleared for someone else (OnTooltipCleared):

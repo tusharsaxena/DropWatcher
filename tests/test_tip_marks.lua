@@ -4,7 +4,7 @@
 -- marked non-wrapping, and the tooltip then grows to fit it (modules/Window.lua). Then the gear
 -- grid (feedback-7 spec §3: TM.Grid, TM.GearRows, TM.ArrowCell; painted by modules/TipGrid.lua),
 -- Upgrade for N's rows on your own drop, and an audit: no tooltip on either tab, in either layout,
--- carries → ▲ ▽ ≈ ⊘ or ⊕ outside a grid's glyph cell (drawn in the monospace face). Then the arrow between two values (TM.Arrow) and the drawn-width count
+-- carries → ▲ ▼ ≈ ⊘ or ⊕ outside a grid's glyph cell (drawn in the monospace face). Then the arrow between two values (TM.Arrow) and the drawn-width count
 -- (TM.Chars), and the same audit over every text drawn in the default face (DW-F5): the detail card's
 -- chips and rows and the Offer panel take textures (the toast's default-face audit is in test_toast);
 -- only monospace text keeps glyphs.
@@ -14,7 +14,7 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 
 -- The marks the default face cannot draw (the table cells' and compact lines' monospace glyphs, and
 -- the arrow between two values).
-local GLYPHS = { "→", "▲", "▽", "≈", "⊘", "⊕" }
+local GLYPHS = { "→", "▲", "▼", "≈", "⊘", "⊕" }
 
 local function glyphIn(s)
     for _, g in ipairs(GLYPHS) do
@@ -110,7 +110,7 @@ test("grid: the arrow cell is the table's glyph and the unsigned difference, bot
     local side = TM.ArrowCell("sidegrade", 0)
     assertEqual(side.glyph, "≈"); assertEqual(side.text, "0"); assertEqual(side.tone, "yellow")
     local down = TM.ArrowCell("downgrade", -13)
-    assertEqual(down.glyph, "▽"); assertEqual(down.text, "13", "no sign: the glyph says which way"); assertEqual(down.tone, "red")
+    assertEqual(down.glyph, "▼"); assertEqual(down.text, "13", "no sign: the glyph says which way"); assertEqual(down.tone, "red")
     assertEqual(TM.ArrowCell("upgrade", nil).text, "", "into an empty slot: the glyph alone")
     assertEqual(TM.ArrowCell("cantUse", 3), "", "a worded verdict has no arrow")
 end)

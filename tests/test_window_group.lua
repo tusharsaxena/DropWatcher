@@ -39,14 +39,14 @@ local function joined(tip) return T.tipJoined(tip) end
 
 -- ── the verdict cells ───────────────────────────────────────────────────────────────────────
 
-test("cells: Me shows ▲ ≈ ▽ and the signed change, green up, yellow side, red down (feedback-4 §0)", function()
+test("cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)", function()
     local W = WC()
     local up = W.Me(drop())
     assertEqual(up.text, "+19"); assertEqual(up.glyph, "▲"); assertEqual(up.tone, "good")
     local side = W.Me(drop({ me = { verdict = "sidegrade", ilvlDelta = 0.4, reasons = {} } }))
     assertEqual(side.text, "+0"); assertEqual(side.glyph, "≈"); assertEqual(side.tone, "yellow")
     local down = W.Me(drop({ me = { verdict = "downgrade", ilvlDelta = -13, reasons = {} } }))
-    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▽"); assertEqual(down.tone, "red")
+    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▼"); assertEqual(down.tone, "red")
 end)
 
 test("cells: a verdict with no glyph says a word, and every verdict's tooltip says why", function()
@@ -70,7 +70,7 @@ end)
 test("cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray", function()
     local W = WC()
     local down = W.Them(drop(), 100)
-    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▽"); assertEqual(down.tone, "red")
+    assertEqual(down.text, "-13"); assertEqual(down.glyph, "▼"); assertEqual(down.tone, "red")
     assertEqual(down.tip[1], "For Seta: Downgrade")
     local up = W.Them(drop({ them = { verdict = "upgrade", ilvlDelta = 12, reasons = {} } }), 100)
     assertEqual(up.tone, "good")
@@ -605,7 +605,7 @@ test("table: Them shows the looter's worn item from their inspect read before th
     assertEqual(eq.icons[1].link, OLD1); assertTrue(eq.icons[1]:IsShown())
     assertFalse(eq.icons[2]:IsShown(), "a helm: one item")
     assertEqual(textOf(eq.level), "324", "the worn item's level; its age is in the tooltip")
-    assertEqual(textOf(eq.glyph) .. textOf(eq.text), "▽13", "then the verdict")
+    assertEqual(textOf(eq.glyph) .. textOf(eq.text), "▼13", "then the verdict")
     assertEqual(NS.Window.TooltipOf(eq)[3], "Inspected 40s ago.")
 end)
 

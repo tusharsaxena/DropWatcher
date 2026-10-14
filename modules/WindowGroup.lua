@@ -5,8 +5,8 @@ local _, NS = ...
 -- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Type (Cloth … Plate, Jewelry,
 -- Trinkets, Cloak or Weapons; feedback-4 spec §3), Looter (in class color), Me and Them (what you,
 -- or the looter, wear in that slot and the drop judged for you, or them, in one cell: the worn item's
--- icon or two, its item level, then ▲ ≈ ▽ and the item-level difference in the verdict's green,
--- yellow or red, `321/308 ▽8`; your gear from its snapshot, theirs from their inspect read, the
+-- icon or two, its item level, then ▲ ≈ ▼ and the item-level difference in the verdict's green,
+-- yellow or red, `321/308 ▼8`; your gear from its snapshot, theirs from their inspect read, the
 -- read's age in the tooltip; NS.SideCells, feedback-6 spec §1, which merged My eq and Their eq into
 -- them), Trade (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
 -- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
@@ -19,7 +19,7 @@ local _, NS = ...
 -- all sheds columns by their `shed` order (WG.Fit) rather than clip Actions. What every
 -- cell says, and its reason tooltip, is modules/WindowCells.lua's and modules/SideCells.lua's
 -- (pure); this file is the frame edge that paints it. Nothing is ever blank. A column tooltip draws
--- the verdict marks as NS.TipMarks' inline textures (the tooltip's face has no ▲ ≈ ▽).
+-- the verdict marks as NS.TipMarks' inline textures (the tooltip's face has no ▲ ≈ ▼).
 --
 -- THE ROWS. Pooled through LibKa0s-Pool-1.0 (NS.Pool), one pool for the drop rows and one for the
 -- headers, released and re-acquired in order on every repaint (Pool v3 hands them back in their
@@ -40,7 +40,7 @@ local _, NS = ...
 -- THE COUNTDOWNS MOVE each second while a shown row or the strip has one (feedback-5 spec §1;
 -- the strip counts your drops under a collapsed header too): Window.lua's
 -- countdown ticker, its footer ticker and TradeTimerTick call WG.TickCountdowns, which repaints the
--- Trade window cells alone (and the compact cards' countdowns) and the strip's next expiry, never
+-- Trade window cells alone (the compact cards show none, feedback-10 spec §2) and the strip's next expiry, never
 -- the whole table;
 -- WG.LiveCountdown tells Window.lua whether the ticker is still wanted.
 --
@@ -911,11 +911,11 @@ local function shownPane()
     return pane and pane.rowPool and pane or nil
 end
 
--- Whether a drawn row (or compact card) shows a countdown still running: the Trade window column
--- is kept (always, in the compact layout) and a drawn drop has time left.
+-- Whether a drawn row shows a countdown still running: the Trade window column is kept and a drawn
+-- drop has time left. The compact cards show none (feedback-10 spec §2).
 local function rowsLive(pane)
-    if not pane.entries then return false end
-    if not WG.IsCompact() and not (pane.layout and pane.layout.tradeWindow) then return false end
+    if not pane.entries or WG.IsCompact() then return false end
+    if not (pane.layout and pane.layout.tradeWindow) then return false end
     local now, MC = GetTime(), NS.MineCells
     for _, e in ipairs(pane.entries) do
         local cd = e.kind ~= "header" and MC.Countdown(e.drop, now)
@@ -924,8 +924,7 @@ local function rowsLive(pane)
     return false
 end
 
---- Whether anything on screen shows a countdown still running: a drawn row's (or compact card's)
---- Trade window, or the strip's next expiry, which also counts your drops under a collapsed header
+--- Whether anything on screen shows a countdown still running: a drawn row's Trade window, or the strip's next expiry, which also counts your drops under a collapsed header
 --- and shows whether the column is kept or not. Window.lua runs its each-second countdown ticker
 --- while this holds.
 --- @return boolean
@@ -937,14 +936,14 @@ function WG.LiveCountdown()
     return rowsLive(pane)
 end
 
---- Move every shown countdown on to the clock: the Trade window cells of the drawn rows, or the
---- compact cards' countdowns, and the strip's next expiry; nothing else is repainted.
+--- Move every shown countdown on to the clock: the Trade window cells of the drawn rows and the
+--- strip's next expiry; nothing else is repainted (the compact cards show no countdown).
 function WG.TickCountdowns()
     local pane = shownPane()
     if not pane then return end
     local compact = WG.IsCompact()
     NS.DropsStrip.Tick(pane, compact)
-    if compact then return NS.CompactGroup.TickCountdowns(pane) end
+    if compact then return end
     if not (pane.layout and pane.layout.tradeWindow) then return end
     local now, warnAt, size = GetTime(), NS.TradeTimer.WarnAt(), NS.WindowRows.FontSize(NS.Setting("window.fontSize"))
     for _, row in ipairs(pane.rowPool.active) do

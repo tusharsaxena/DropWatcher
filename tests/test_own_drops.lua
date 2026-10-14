@@ -145,10 +145,10 @@ test("own drops: Offer is labeled and toned by the furthest offer sent, a dash w
     local ready = M.OwnOffer(own(), "ready")
     assertTrue(ready.offered and ready.offer and ready.enabled)
     assertEqual(ready.text, "Offer"); assertEqual(ready.state, "ready"); assertEqual(ready.kind, "offer")
-    assertEqual(ready.icon, "export", "handing the item out (feedback-7 spec §1)")
+    assertEqual(ready.icon, "external-link", "handing the item out (feedback-7 spec §1)")
     assertTrue(ready.tip[2]:find("Open the panel of who could use it", 1, true) ~= nil)
     local expect = { queued = { "Queued", "clock" }, sent = { "Offered", "confirm" }, tradedAway = { "Traded", "confirm" },
-        failed = { "Offer", "export" } }
+        failed = { "Offer", "external-link" } }
     for state, e in pairs(expect) do
         local b = M.OwnOffer(own(), state)
         assertEqual(b.text, e[1], state); assertEqual(b.icon, e[2], state); assertEqual(b.state, state)

@@ -10,7 +10,7 @@ local _, NS = ...
 --               toggle, minimize and close at the right
 --   tabs        `Drops`, `History` at a reduced width (their tooltips say what each holds)
 --   filter bar  View, the search box (`Filter…`) and Filters ▾ on the right. The Filters menu holds
---               the full bar's Quality, Content and Character dropdowns and the footer's Sort, the
+--               the full bar's Quality, Content and Character dropdowns and the tab's Sort, the
 --               very same LibKa0s-Widgets dropdowns moved into it, so their choices, their
 --               multi-select and their per-tab state are identical. The button counts the ones not at
 --               their default (`Filters · 2`), and its tooltip lists every value in force.
@@ -43,7 +43,7 @@ CC.WRAP_H    = 12     -- the strip's second line
 local GAP = 8
 local ROW_GAP = 4
 
--- The Filters panel's rows, top to bottom; the footer's Sort is the last.
+-- The Filters panel's rows, top to bottom; the tab's Sort is the last.
 CC.PANEL_ROWS = { "quality", "content", "char", "sort" }
 -- The ones the button counts (compact spec §4: Quality, Content and Character).
 CC.COUNTED = { "quality", "content", "char" }
@@ -375,7 +375,7 @@ local function layoutStrip(f, compact)
     if b.text.SetJustifyH then b.text:SetJustifyH("LEFT") end
 end
 
--- The full bar back: the dropdowns on the bar and the Sort in the footer, at their own places.
+-- The full bar back: the dropdowns on the bar and Sort on the tab's strip (feedback-10 spec §3).
 local function restoreBar(f)
     CC.CloseFilters()
     if parts.filters then parts.filters:Hide() end

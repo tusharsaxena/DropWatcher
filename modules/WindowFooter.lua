@@ -1,9 +1,14 @@
 local _, NS = ...
 -- modules/WindowFooter.lua — the main window's footer (design spec §11.1, board 01 note 12): a
 -- quick health check, so it is clear the addon is listening even with no drop on screen. Inspect
--- freshness, the last loot seen, the situation and Pawn's status on the left; the tab's Sort on the
--- right, beside the resize grip. While a simulation runs, the situation reads `Simulating: <situation>
--- · n members` (simulator spec §6).
+-- freshness, the last loot seen, the situation and Pawn's status. While a simulation runs, the
+-- situation reads `Simulating: <situation> · n members` (simulator spec §6).
+--
+-- THE TAB'S SORT is built here, once, and kept here (Parts, Refresh's state), but it no longer sits
+-- in the footer (feedback-10 spec §3): in the full layout it is at the right edge of the active tab's
+-- strip (`pane.sortHost`: Drops' summary strip, after Post my tradeables and Scan group; History's,
+-- after Clear history), re-anchored on every pass so it follows a tab switch; in the compact layout
+-- it is in the Filters panel (modules/CompactChrome.lua).
 --
 -- Compose is PURE: plain inputs in, each segment's text and tooltip out, so test_window drives it
 -- case by case. Read gathers the inputs through the engine's read-only accessors (the roster, the
@@ -160,10 +165,10 @@ local function buildSegment(host, key, prev)
     return s
 end
 
---- The Sort control's width, and its right edge's inset from the footer's right edge. The Drops
---- strip's Post my tradeables takes both, so it sits directly above Sort (feedback-7 spec §4).
+--- The Sort control's width (Post my tradeables takes it too, feedback-7 spec §4) and its right
+--- edge's inset from its strip's right edge (feedback-10 spec §3).
 WF.SORT_W = 150
-WF.SORT_INSET = 16
+WF.SORT_INSET = 0
 
 local function buildSort(host)
     local dd = NS.MakeDropdown(host, WF.SORT_W)
@@ -189,12 +194,22 @@ function WF.Build(host)
     WF.AnchorSort()
 end
 
---- Put the Sort control at its place in the footer, left of the resize grip in the window's
---- bottom-right corner (the build, and the full layout taking it back from the compact Filters
---- panel, modules/CompactChrome.lua).
+-- The full layout's place for Sort: the active tab's strip (its pane's `sortHost`), else the footer
+-- (a tab whose pane is not built yet).
+local function sortHost()
+    local f = NS.Window.Frame()
+    local pane = f and f.panes and f.panes[NS.Window.ActiveTab()]
+    return pane and pane.sortHost or footerHost
+end
+
+--- Put the Sort control at its place in the full layout: the right edge of the active tab's strip
+--- (feedback-10 spec §3). Every full pass calls it (Refresh), so it follows a tab switch, and so does
+--- the full layout taking it back from the compact Filters panel (modules/CompactChrome.lua).
 function WF.AnchorSort()
-    local dd, host = sortDropdown, footerHost
+    local dd, host = sortDropdown, sortHost()
     if not (dd and host) then return end
+    if dd.dwHost == host and dd:GetParent() == host then return end
+    dd.dwHost = host
     dd:SetParent(host)
     dd:ClearAllPoints()
     dd:SetPoint("RIGHT", host, "RIGHT", -WF.SORT_INSET, 0)
@@ -210,6 +225,7 @@ function WF.Refresh()
     if NS.WindowCompact.Mode() == "compact" then
         NS.CompactChrome.PaintFooter(segments, read, composed)
     else
+        WF.AnchorSort()
         for key, s in pairs(segments) do
             local seg = composed[key]
             s.text:SetText(seg.text)

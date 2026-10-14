@@ -191,7 +191,7 @@ end
 
 -- The pieces every compact card fills, per tab (modules/CompactGroup.lua).
 local CARD_PIECES = {
-    group = { "item", "ilvl", "looter", "slot", "trade", "fresh", "you", "them" },
+    group = { "item", "ilvl", "looter", "slot", "trade", "you", "them" },   -- fresh may be left out (feedback-10 spec §2)
 }
 
 -- Each drawn row is a card in the compact layout, a table row in the full one; a card leaves no

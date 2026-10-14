@@ -78,7 +78,7 @@ test("compact group: a card is three lines at the text size, about 50 pixels at 
     assertEqual(CG.Metrics(8).icon, 30)
     assertEqual(CG.LineY(m, 1), -11); assertEqual(CG.LineY(m, 3), -39)
     assertEqual(CG.TextLeft(m), 4 + 2 + 36 + 6)
-    assertEqual(CG.HalfX(348, m), 48 + 148, "line 3's second half starts halfway across the text")
+    assertTrue(CG.HalfX == nil, "Them follows You, not half the card's width (feedback-10 spec §2)")
 end)
 
 test("compact group: switching layouts carries the scroll offset over as a fraction of the range", function()
@@ -130,23 +130,40 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(textOf(card.ask.label), "Ask"); assertTrue(card.ask:IsShown())
     assertEqual(textOf(c.looter.text), "Seta"); assertEqual(textOf(c.looter.glyph), "⊕", "from another realm")
     assertEqual(plain(textOf(c.slot.text)), "· Head"); assertEqual(plain(textOf(c.trade.text)), "· Likely")
-    assertEqual(textOf(c.fresh.text), "40s")
+    assertEqual(textOf(c.fresh.text), "(40s)", "in brackets (feedback-10 spec §2)")
     assertEqual(textOf(c.youLabel.text), "You")
     assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▲19")
     assertEqual(textOf(c.themLabel.text), "Them")
-    assertEqual(textOf(c.them.glyph) .. textOf(c.them.text), "▽13")
+    assertEqual(textOf(c.them.glyph) .. textOf(c.them.text), "▼13")
     assertEqual(textOf(c.you.level), "empty", "nothing worn there (the mock's gear), before the verdict")
     assertEqual(c.you.level.__points[1][2], c.youLabel.text, "the level after the label")
     assertEqual(c.you.glyph.__points[1][2], c.you.level, "the glyph after the level")
     assertEqual(c.you.text.__points[1][2], c.you.glyph, "the difference after the glyph")
     local model = NS.CompactCards.Plain(card.model)
-    assertTrue(model[1]:find("Crown of Roaring Storms  311  Ask", 1, true) ~= nil, model[1])
+    assertEqual(model[1], "311 Crown of Roaring Storms (40s)")
+    assertEqual(model[2]:sub(-5), "  Ask", model[2])
+    -- feedback-10 spec §2: the level then the name on line 1, the freshness at its right; the button
+    -- at line 2's right; Them a fixed gap after You's last piece.
+    local m3 = NS.CompactGroup.Metrics(nil)
+    local CG = NS.CompactGroup
+    local p = c.ilvl.text.__points[1]
+    assertEqual(p[1], "LEFT"); assertEqual(p[2], card); assertEqual(p[4], CG.TextLeft(m3, CG.LEAD)); assertEqual(p[5], CG.LineY(m3, 1))
+    p = c.item.text.__points[1]
+    assertEqual(p[2], c.ilvl.text); assertEqual(p[3], "RIGHT"); assertEqual(p[4], CG.ILVL_GAP, "the name right after the level")
+    assertTrue(c.item.text.__points[2] == nil, "one anchor: the name's width is set, not stretched")
+    p = c.fresh.text.__points[1]
+    assertEqual(p[1], "LEFT"); assertEqual(p[2], c.item.text); assertEqual(p[3], "RIGHT", "the freshness right after the name")
+    p = card.ask.__points[1]
+    assertEqual(p[1], "RIGHT"); assertEqual(p[2], card); assertEqual(p[5], CG.LineY(m3, 2), "the button on line 2")
+    p = c.themLabel.text.__points[1]
+    assertEqual(p[2], c.you.text); assertEqual(p[3], "RIGHT"); assertEqual(p[4], CG.HALVES_GAP)
+    assertTrue(card.cells.countdown == nil and card.bar == nil, "no trade window on the card")
     local other = cardFor(drawn, 2).cells
     assertEqual(textOf(other.looter.glyph), "", "same realm: no mark")
     assertEqual(textOf(other.you.glyph) .. " " .. textOf(other.you.text), "⊘ Can't use")
     assertEqual(textOf(other.them.level), "range", "the gear part says why")
     assertEqual(textOf(other.them.text), "", "so the ? goes")
-    assertEqual(textOf(other.fresh.text), "range")
+    assertEqual(textOf(other.fresh.text), "(range)")
 end)
 
 test("compact group: the pieces are colored by quality, class and tone, the worn levels dimmed", function()
@@ -160,7 +177,8 @@ test("compact group: the pieces are colored by quality, class and tone, the worn
     assertEqual(select(2, c.them.glyph:GetTextColor()), C.TONE.red.g, "their downgrade is red, as yours is")
     local muted = C.TONE.muted
     assertEqual(select(1, c.fresh.text:GetTextColor()), muted.r)
-    assertEqual(select(1, c.youLabel.text:GetTextColor()), muted.r)
+    assertEqual(select(2, c.youLabel.text:GetTextColor()), C.GOLD.g, "You in gold (feedback-10 spec §2)")
+    assertEqual(select(2, c.themLabel.text:GetTextColor()), C.GOLD.g, "Them in gold")
 end)
 
 test("compact group: every piece keeps its full-view reason tooltip", function()
@@ -267,9 +285,8 @@ test("compact group: an ask in flight shows the full table's state; no ask offer
     seed(NS, { GROUP }, { drop({ trade = { state = "no", reasonKey = "legacy", basis = "rule" } }) })
     NS.Window.Refresh()
     card = cardFor(NS.WindowGroup.Drawn(), 1)
-    assertFalse(card.ask:IsShown()); assertTrue(card.dash:IsShown())
-    assertEqual(textOf(card.dash), "–")
-    assertEqual(NS.Window.TooltipOf(card.dashTip)[1], "No ask")
+    assertFalse(card.ask:IsShown()); assertTrue(card.dash == nil, "the slot is left empty (feedback-10 spec §2)")
+    assertTrue(card.dashTip:IsShown()); assertEqual(NS.Window.TooltipOf(card.dashTip)[1], "No ask", "its reason still there")
 end)
 
 test("compact group: the text follows the Font size row and the card's height follows the text", function()
@@ -318,12 +335,16 @@ test("compact group: test mode fills a card for every sample, no piece blank, an
     assertTrue(#drawn.rows >= 6, "the samples, as cards: " .. #drawn.rows)
     for _, card in ipairs(drawn.rows) do
         local c = card.cells
-        for _, key in ipairs({ "item", "ilvl", "looter", "slot", "trade", "fresh", "you", "them" }) do
+        for _, key in ipairs({ "item", "ilvl", "looter", "slot", "trade", "you", "them" }) do
             local t = textOf(c[key].text)
             if c[key].level then t = textOf(c[key].level) .. (t or "") end   -- a half: its gear, then its verdict
             assertTrue(t ~= nil and t ~= "", "card " .. tostring(card.dropId) .. ": " .. key)
         end
-        assertTrue(card.ask:IsShown() or card.dash:IsShown(), "Ask or its dash")
+        -- The freshness is left out where there is nothing to say, never a placeholder (feedback-10 spec §2).
+        local mark = NS.CompactCards.FreshMark(card.model.fresh)
+        assertEqual(textOf(c.fresh.text), mark or "", "card " .. tostring(card.dropId) .. ": fresh")
+        assertEqual(c.fresh.text:IsShown(), mark ~= nil)
+        assertTrue(card.ask:IsShown() or card.dashTip:IsShown(), "Ask, or the empty slot's reason")
     end
     for _, card in ipairs(drawn.rows) do NS.WindowGroup.ToggleExpand(card.dropId) end
     assertTrue(NS.WindowGroup.Drawn().card:IsShown(), "the last one opened")
@@ -362,11 +383,10 @@ test("compact group: the open card's chevron points up and its detail card inden
     assertEqual(xOf(drawn.card), K.ROW_INDENT)
 end)
 
--- ── line 2's countdown (feedback-5 spec §1) ─────────────────────────────────────────────────
+-- ── no trade window on the card (feedback-10 spec §2) ───────────────────────────────────────
 
-test("compact group: line 2 shows the countdown and its bar for a drop with one, else the inspect freshness", function()
+test("compact group: no card shows a trade window; every card keeps its freshness on line 1", function()
     local NS, _, m = T.enableAddon()
-    local C = NS.Constants
     m.__now = 100
     local group = { key = "enc:3", label = "Commander Ri'mok", kind = "encounter", situation = "dungeon", at = 90,
         drops = { 1, 2, 3 } }
@@ -376,41 +396,30 @@ test("compact group: line 2 shows the countdown and its bar for a drop with one,
     NS.SetWindowMode("compact")
     NS.ShowWindow()
     local drawn = NS.WindowGroup.Drawn()
-    local soonColors = {}
-    rawset(cardFor(drawn, 3).bar, "SetColorTexture", function(self, r) soonColors[#soonColors + 1] = r; return self end)
-    NS.Window.Refresh()
-    drawn = NS.WindowGroup.Drawn()
-    local live = cardFor(drawn, 1)
-    assertEqual(textOf(live.cells.countdown.text), "~2:00:00"); assertTrue(live.cells.countdown.text:IsShown())
-    assertTrue(live.bar:IsShown()); assertTrue(live.barBg:IsShown())
-    assertFalse(live.cells.fresh.text:IsShown(), "the countdown takes the freshness's place")
-    assertEqual(live.barBg.__points[1][2], live, "at the card's right"); assertEqual(live.cells.countdown.text.__points[1][2], live.barBg)
-    assertTrue(table.concat(live.cells.countdown.hit.tipLines, " "):find("left for Seta") ~= nil)
-    local dead = cardFor(drawn, 2)
-    assertFalse(dead.cells.countdown.text:IsShown()); assertFalse(dead.bar:IsShown()); assertFalse(dead.barBg:IsShown())
-    assertTrue(dead.cells.fresh.text:IsShown()); assertEqual(textOf(dead.cells.fresh.text), "40s")
-    local soon = cardFor(drawn, 3)
-    assertEqual(textOf(soon.cells.countdown.text), "~0:03:20", "ending soon is no words")
-    assertEqual(select(1, soon.cells.countdown.text:GetTextColor()), C.TONE.warn.r)
-    assertEqual(soonColors[#soonColors], C.TONE.warn.r, "its bar turns amber")
+    for id = 1, 3 do
+        local card = cardFor(drawn, id)
+        assertTrue(card.cells.countdown == nil and card.bar == nil and card.barBg == nil, id .. ": no countdown or bar")
+        assertTrue(card.cells.fresh.text:IsShown(), id .. ": the freshness shows")
+        assertEqual(textOf(card.cells.fresh.text), "(40s)")
+    end
+    assertFalse(NS.WindowGroup.LiveCountdown(), "nothing on the cards ticks; nothing of yours on the strip")
 end)
 
-test("compact group: the countdown moves each second on the card", function()
+test("compact group: a second's tick leaves the cards as they are", function()
     local NS, drawn, m = shownCards()
-    assertEqual(textOf(cardFor(drawn, 1).cells.countdown.text), "~2:00:00")
+    local before = NS.CompactCards.Plain(cardFor(drawn, 1).model)
     m.advance(1)
-    assertEqual(textOf(cardFor(NS.WindowGroup.Drawn(), 1).cells.countdown.text), "~1:59:59")
-    m.__now = m.__now + 10
     NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
-    assertEqual(textOf(cardFor(NS.WindowGroup.Drawn(), 1).cells.countdown.text), "~1:59:49")
+    local after = NS.CompactCards.Plain(cardFor(NS.WindowGroup.Drawn(), 1).model)
+    assertEqual(table.concat(after, "|"), table.concat(before, "|"))
 end)
 
 -- ── the least width (feedback-5 spec §4) ────────────────────────────────────────────────────
 
 -- Line 2 at its fullest: a twelve-letter looter (the game's longest name) with slot, type and trade on
--- the left, the countdown and its bar on the right. Measured at 5px a character (the small template's
--- average; a color code takes no room), the left pieces end a gap before the countdown at
--- COMPACT_MIN_W, on another player's two-hander from another realm and on your own counted drop.
+-- the left, the action button on the right (feedback-10 spec §2). Measured at 5px a character (the
+-- small template's average; a color code takes no room), the left pieces end a gap before the button
+-- at COMPACT_MIN_W, on another player's two-hander from another realm and on your own counted drop.
 local function cand(name, gain)
     return { guid = "Player-1-" .. name, name = name .. "-Testrealm", classFile = "MAGE", status = "ready",
         eval = { verdict = "upgrade", ilvlDelta = gain, baseline = { ilvl = 280 }, reasons = {} } }
@@ -425,7 +434,7 @@ local FULLEST = {
         candidates = { a = cand("Seta", 4), b = cand("Butterz", 11), c = cand("Vaela", 2) } },
 }
 
-test("compact group: at the least width line 2's pieces end before the countdown and its bar", function()
+test("compact group: at the least width line 2's pieces end before the action button", function()
     for which, over in pairs(FULLEST) do
         local NS, _, m = T.enableAddon()
         local K, CG = NS.Constants.WINDOW, NS.CompactGroup
@@ -443,18 +452,18 @@ test("compact group: at the least width line 2's pieces end before the countdown
             local s = (fs:GetText() or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("[\128-\191]", "")
             return #s * m.textCharWidth
         end
-        assertTrue(c.countdown.text:IsShown(), which .. ": the countdown shows")
+        assertTrue(card.ask:IsShown(), which .. ": the button shows")
         local leftEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + w(c.looter.text) + 2 + w(c.looter.glyph)
             + 4 + w(c.slot.text) + 4 + w(c.armorType.text) + 4 + w(c.trade.text)
-        local rightStart = card:GetWidth() - CG.PAD - CG.BAR_W - 6 - w(c.countdown.text)
+        local rightStart = card:GetWidth() - CG.PAD - K.ASK_W
         assertTrue(leftEnd + 4 <= rightStart,
-            ("%s: line 2 ends at %d, the countdown starts at %d"):format(which, leftEnd, rightStart))
+            ("%s: line 2 ends at %d, the button starts at %d"):format(which, leftEnd, rightStart))
     end
 end)
 
 -- Line 3 at its fullest (feedback-6 spec §1): both halves on a trinket, two worn levels each
--- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: each half ends a
--- gap before the next one starts (the Them half at CG.HalfX) or before the card's right edge.
+-- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: Them starts
+-- CG.HALVES_GAP after You ends (feedback-10 spec §2) and ends before the card's right edge.
 test("compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict", function()
     local NS, _, m = T.enableAddon()
     local K, CG = NS.Constants.WINDOW, NS.CompactGroup
@@ -483,9 +492,8 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     assertEqual(NS.CompactCards.HalfText(card.model.you), "You 321/308 ⊘ Not wanted")
     assertEqual(NS.CompactCards.HalfText(card.model.them), "Them 321/308 ⊘ Not wanted")
     local m3 = CG.Metrics(nil)
-    local themX = CG.HalfX(card:GetWidth(), m3, CG.LEAD)
     local youEnd = halfEnd("you", CG.TextLeft(m3, CG.LEAD))
-    assertTrue(youEnd + 4 <= themX, ("You ends at %d, Them starts at %d"):format(youEnd, themX))
+    local themX = youEnd + CG.HALVES_GAP
     local themEnd = halfEnd("them", themX)
     assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
         card:GetWidth() - CG.PAD))
