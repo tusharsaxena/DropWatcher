@@ -43,6 +43,8 @@
 | D7 | TOC `Conventional:` comments (F15) are rewritten to the corrected toc-file-§5 definition (F23), and a harness test (X07) rejects a `Conventional:` comment that states a load-time read or handler order. | Same ordering logic as D6. |
 | D8 | The 722 missing enUS keys (F07) are added mechanically from a scan of `NS.L[...]` / `L[...]` literals, with a test that fails on any routed string missing from enUS. | Mechanical, and the test keeps it closed. |
 
+**Amendment (2026-10-14):** DropWatcher's vendor-sync test checks `libs/` and `tests/_kit/` against a LibKa0s *tag*, so D4 could not hold for LibKa0s. The owner approved cutting and pushing `v1.72.0` before the merge; WowAddonStandards and dev-copilot still tag on merge.
+
 ## Work by repo
 
 The per-finding fix text is in `findings.md`; this section groups it into deliverables.

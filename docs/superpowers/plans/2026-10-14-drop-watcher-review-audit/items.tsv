@@ -28,3 +28,4 @@ DW-P26	M24e	DropWatcher	TOC LOAD-BEARING comments + harness gate	DW-P23	M		F15 X
 DW-P27	M24e	DropWatcher	ARCHITECTURE.md spill and stale counts	DW-P23	M		F13 F14
 DW-P28	M24f	DropWatcher	Docs sync, smoke checks, test-case list	DW-P27	S		X04 X05 X08
 DW-P29	M24f	DropWatcher	Automated-test bundle	DW-P28	S		F16
+DW-P30	M24f	DropWatcher	Docs sync + fresh automated-test bundle after P22/P24/P25	DW-P22 DW-P24 DW-P25	S		X08 X12 F16

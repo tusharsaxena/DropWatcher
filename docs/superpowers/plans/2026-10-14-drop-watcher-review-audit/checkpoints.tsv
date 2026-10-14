@@ -1,1 +1,7 @@
 date	milestone	evidence
+2026-10-14	M24a	WowAddonStandards 7/7 (72dfaf2..40ccd97, v2.81.0), check-standard.sh 7/7 ok; pushed
+2026-10-14	M24b	LibKa0s 4/4 (3fdd342..785c297, v1.72.0, Perf 15, kit 39), battery green; pushed; tag v1.72.0 cut+pushed with owner approval
+2026-10-14	M24c	dev-copilot 4/4 (472956b..164507d, 2.3.5), battery green; pushed
+2026-10-14	M24d	DropWatcher P16-P21 (26c357f..2e56e14), gate green; pushed
+2026-10-15	M24e	DropWatcher P22-P27; P22 re-vendor from tag v1.72.0 (ff567d3), vendor drift empty; gate green; pushed
+2026-10-15	M24f	P28-P30; gate 1422/0/1 (1423), luacheck 0/0 in 170 files; fresh automated-test bundle; final re-check: 46/46 ids closed or non-goal; no stashes/worktrees; pushed
