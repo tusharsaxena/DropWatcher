@@ -58,7 +58,9 @@ me** or **Upgrade for me** to narrow it, several at once if you like (a drop mus
 All again to clear them. Shift-click the icon to link the item, ctrl-click to try it on. **Ask**
 whispers the looter once; mid-fight the whisper waits and goes out when the fight ends, and a second
 click cancels it. The button is red while the move is yours (Ask, Retry), yellow while it waits on
-someone else (Asked, Queued) and green once the item is traded. Click the row itself and a detail
+someone else (Asked, Queued) and green once the item is traded. Where there is nothing to do (the
+looter can't trade it, it's no upgrade for you, a bonus roll) the slot holds a gray, unclickable
+**No action** button instead, and hovering it says why. Click the row itself and a detail
 card opens under it with the full reasoning: what the item would replace for you and for the looter,
 the stat and track changes, Pawn's score, and the trade rule behind the estimate. From there you can
 edit the message before it goes, inspect the looter again, or open a trade.
@@ -88,9 +90,10 @@ several, or **All** (the only choice that shows drops kept before Drop Watcher n
 
 There is also a compact view: a narrow window, 440 pixels wide, where each drop is a small card of
 three lines instead of a table row. The top line has the item level, then the item, then how fresh
-the looter's inspect read is in brackets, `(2m)`, left out when there's nothing to say. The middle one
+the looter's inspect read is in brackets, `(2m)`, left out when there's nothing to say or the read
+is still pending (Them's `…` already says so). The middle one
 says who looted it, the slot, the type and whether they can trade it, with Ask (Offer on your own) on
-the right, or nothing there when there's no action; the card leaves the trade countdown to the table
+the right, or the gray **No action** button when there's no action; the card leaves the trade countdown to the table
 and the strip. The bottom one reads like the table's Me and Them without the
 icons, `You` and `Them` in gold: `You 321/308 ▼8  Them 276 ▲12` (`Them Upgrade for 2` on your own). History cards show what became of the drop, and the strip under
 the Drops cards is shorter (`2 tradeable · next 0:08:41` and **Post**). Quality, Content, Character

@@ -464,6 +464,11 @@ solid and stay). Offer wears LibKa0s' `external-link` (a box with an arrow leavi
 the row, the compact card, the detail card and the Offer panel; the detail card's Trade keeps `transfer`, so the
 two never share a mark. Sort leaves the footer for the active tab's strip:
 see the Offer panel's reading. That they read right in game is FEED-67 and FEED-68.
+**Superseded by feedback-11 (2026-10-14)** (feedback-11 spec §1, DW-K1): a drop with no action (it cannot be
+traded, a warbound or bonus-roll drop, not an upgrade, the looter unknown) shows a placeholder button in the
+Actions cell where a dash stood: `No action` with LibKa0s' `ban` (⊘), gray (`C.TONE.bad`) and dimmed like a
+disabled button, not clickable, its tooltip titled `No action` with the reason (`No ask` and `No offer` are
+gone; `WindowCells.NoAction`, state `none`). It fits the 84px Actions. That it reads right in game is FEED-72.
 
 ## The detail card
 
@@ -479,7 +484,9 @@ reads `(Multiple)`; My drops is retired. **Superseded by feedback-6 (2026-10-13)
 Them row reads `(Details)` and the Offer is cyan while it is your move. **Superseded by feedback-7
 (2026-10-13)** (feedback-7 spec §1-§3): the Them row reads `Upgrade for N`, the Looter row `Name [YOU]` (the mark
 in gold), the trade chip's `NOT TRADEABLE` is red, Ask and Offer wear their state's icon, and the verdict
-chips' tooltips list the gear as a grid. **Retry inspect** is off while the looter's read is
+chips' tooltips list the gear as a grid. **Superseded by feedback-11 (2026-10-14)** (feedback-11 spec §1,
+DW-K1): with no action the card's first action is the gray `No action` with its reason (FEED-72), where a
+disabled `Ask` or `Offer` stood. **Retry inspect** is off while the looter's read is
 still good or already queued, since the broker would not inspect again, and queues them at the looter
 priority otherwise. **Stats** are the four secondary stats' change against the replaced item, the largest
 first; the primary stat, stamina, sockets and tertiary stats are the header's chips. The score line is
@@ -517,6 +524,11 @@ right-aligned, `[Post my tradeables] [Scan group] [Sort]`, 8px apart, Post still
 Post is hidden Scan group keeps its place beside Sort (nothing slides); on History, Clear history sits left of
 Sort. The footer keeps only its health segments, and compact keeps Sort in the Filters panel. That it reads
 right in game is FEED-70.
+**Superseded by feedback-11 (2026-10-14)** (feedback-11 spec §1, DW-K1): a member it is no upgrade or equal
+for, and every member while the drop cannot be traded, shows the gray `No action` button with its reason in
+Actions where the dash stood, and a drop of yours that cannot be traded shows it on its row; `K.PANEL_BTN_W` is
+80 (the Actions column at x 314) so `No action` fits beside its icon. The readings below about a dash stand as
+history. That it reads right in game is FEED-72.
 
 The My drops tab and the Offer panel (DW-33) settle nine cases the design leaves open. **The tab** lists
 every drop of yours in the tab's feed, a drop that cannot be traded included (a dash and Hide, board 04's
@@ -610,3 +622,8 @@ tick each second. Line 3's `You` and `Them` are gold, and Them follows You's las
 `CompactGroup.HALVES_GAP` (12px) instead of starting at half the card's width (`You 321/308 ▼13   Them
 298/296 ⊘ Can't use`); History's cards the same. The least compact width stays 440, line 2's left pieces and
 the 84px button fitting. That it reads right in game is FEED-69.
+**Superseded by feedback-11 (2026-10-14)** (feedback-11 spec §0-§1, DW-K0, DW-K1): line 1 leaves the freshness
+out while the read is pending, since Them's `…` already says it (no `(…)`; `(2m)`, `(cached)`, `(range)`,
+`(combat)` and `(!)` still show), and line 3's Them is cut at the card's right inset, as line 1's name already
+was. With no action line 2's slot holds the gray `No action` button with its reason, not an empty slot. That
+they read right in game is FEED-71 and FEED-72.

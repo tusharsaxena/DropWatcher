@@ -66,17 +66,19 @@ reads, schema step 5, the title-bar toggle, each layout's own size and point on 
 Layout row, and the run override taken on an auto-open and let go when the run ends),
 `test_compact_cards` (compact mode's cards, DW-C1, pure: each Drops and History card's
 three lines in every verdict, trade, inspect, ask and outcome state (line 1's item level before the
-name and the freshness bracketed right after it or left out (`FreshMark`), an empty action slot with
-no action, no trade window on the card with or without a countdown,
+name and the freshness bracketed right after it or left out (`FreshMark`; a pending read left out too,
+Them's `…` saying it, feedback-11 spec §0), `No action` on line 2 with no action (feedback-11 spec
+§1, where feedback-10 left the slot empty), no trade window on the card with or without a countdown,
 feedback-10 spec §2; your own card's Offer, `Upgrade for N` and ` [YOU]`, feedback-5 spec §2, feedback-7 spec §2; line 3's `You 321/308 ▼8`, feedback-6 spec §1), each piece's tone and
 tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
 `test_compact_group` (the Drops tab in the compact layout, DW-C2: the card's metrics and the
 scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
 headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
 reason tooltip, every tooltip at the card's top right, the stacked detail card inline, Ask in its
-state's tone and no card dismissable, the ask states and the dash, the text size, the pool's reuse, the
+state's tone and no card dismissable, the ask states and the gray `No action` with its reason, never an empty slot (feedback-11 spec §1), the text size, the pool's reuse, the
 collapsing headers; each card indented under its header with the muted-white chevron, no card
-showing a trade window and a second's tick leaving the cards as they are (feedback-10 spec §2), and
+showing a trade window and a second's tick leaving the cards as they are (feedback-10 spec §2), Them's last piece cut at the
+card's right inset (feedback-11 spec §0), and
 the least compact width, 440, at which line 2's fullest pieces end before the action button,
 feedback-5 spec §0, §4),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
@@ -108,7 +110,8 @@ each verdict, trade, inspect and ask state (one tone per verdict in Me and Them,
 the column sets and the entry order, then the table
 built headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room,
 the item tooltip at the row's top right, else its top left,
-the Ask button, its repaint and its tone by state, no row dismissable, the Type column after Slot,
+the Ask button, its repaint and its tone by state, the gray `No action` (`ban`) with its reason where
+there is no ask (feedback-11 spec §1), no row dismissable, the Type column after Slot,
 the shed order (Trade window among it), the Trade window column on every drop (another player's an
 estimate, its bar, the row taller by the bar's room, the countdown moving each second, feedback-5
 spec §1), the hand-off to the compact cards, the filters, the empty
@@ -118,7 +121,8 @@ tab shedding there, the search box spanning from Character to the bar's edge, th
 labels, the 84px Actions, each drop row's muted-white chevron and indent under its header and the
 header's gold chevron, the Trade window column pinned to its widest `MineCells.TradeWindow` answer
 plus its padding, 76, feedback-4 spec §4, feedback-5 spec §0, §4, feedback-6 spec §0; every action
-button's icon and word fitting its width, feedback-7 spec §1),
+button's icon and word fitting its width, feedback-7 spec §1, `No action` in the 84px `ASK_W` and the Offer
+panel's 80px `PANEL_BTN_W` included, feedback-11 spec §1),
 `test_side_cells` (the Me and Them cells, feedback-6 spec §1, DW-F1, pure: every verdict kind, two
 worn items, an empty slot, every inspect state, your own drop's `Upgrade for N` and `No upgrades`,
 the merged tooltip with its gear grid (two worn items two rows, the arrow on the replaced one, a slot
@@ -128,7 +132,8 @@ character measure, the shed order, and the cells painted headless on the Drops t
 `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
-through its host handler, no Hide this item, the card indented with its row, Offer (cyan), `Upgrade for N` and the
+through its host handler, the first action's `No action` with its reason where there is none
+(feedback-11 spec §1), no Hide this item, the card indented with its row, Offer (cyan), `Upgrade for N` and the
 Looter row's `Name [YOU]` on your own drop, and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
 the Trade window cell, exact and estimated, another player's naming its looter, ending soon in tone
 and tooltip only; the candidates ranked with their judgment, the buttons' lifecycles and tones
@@ -137,7 +142,7 @@ icon and the detail card's actions wearing their state's (feedback-7 spec §1), 
 Offer panel's header and its dock), `test_own_drops` (your own drops on Drops, feedback-5 spec §2,
 DW-E2: always listed; Trade's `Yes` with the upgrade count in its tooltip, Them's `Upgrade for N`
 and its grid ranked by gain, the looter's gold `[YOU]`, Trade's `No` in red (feedback-7 spec §2), the keep? rule's `Hidden` until the Offer panel is opened, Offer toned by the furthest offer
-sent and its dash with the reason; then the table, the detail card and the compact card painted
+sent and `No action` with the reason where it cannot be traded (a dash until feedback-11 spec §1); then the table, the detail card and the compact card painted
 headless), `test_tip_marks` (the tooltips' verdict marks and lines, feedback-6 spec §3, DW-F3:
 `NS.TipMarks`' escape strings, the TGA size, each mark and its fallback without the media library,
 the class and quality colors, the non-wrapping line added unwrapped, `Upgrade for N`'s grid rows ranked and
@@ -160,7 +165,8 @@ Offer, built headless: docked beside the full or compact window on the side with
 candidates ranked with Their eq in the Them look (both worn items from the read), no class bar and
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's
 explanation), Offer and Announce to group through their host handlers and toned by whose move it
-is (Offer cyan, Offered yellow, Retry and Announce red), the Edit message box, closing; then the
+is (Offer cyan, Offered yellow, Retry and Announce red), a member it is no upgrade or equal for showing
+the gray `No action` with its reason (feedback-11 spec §1), the Edit message box, closing; then the
 host handlers Post my tradeables, Offer and Announce),
 `test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
 top just outside the window, else its bottom right outside the left edge, at the UI scale, the row

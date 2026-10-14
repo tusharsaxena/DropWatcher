@@ -320,7 +320,7 @@ Total.
 - compact group: every tooltip opens at the card's top right, just outside the window
 - compact group: a card click opens the stacked detail card under it; the cards below move down
 - compact group: Ask presses the ask; no card can be dismissed
-- compact group: an ask in flight shows the full table's state; no ask offered shows the dash and why
+- compact group: an ask in flight shows the full table's state; no ask offered shows No action and why
 - compact group: the text follows the Font size row and the card's height follows the text
 - compact group: cards are pooled: a repaint reuses them and builds none
 - compact group: a header click collapses its group, and the filters' line and empty state still show
@@ -412,7 +412,7 @@ Total.
 - table: Them shows the looter's worn item from their inspect read before their verdict
 - table: Me shows your worn item from the gear snapshot, its icon showing your own slot
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
-- table: a drop with no ask offered shows a dash with its reason
+- table: a drop with no ask offered shows the gray No action button with its reason (feedback-11 §1)
 - table: no row can be dismissed: no ×, no handler, no dismissed state (feedback-4 spec §2)
 - table: the compact layout draws cards instead of the table, and the full layout the table again
 - cells: another player's drop is always the estimate, its tooltip naming the looter; ending soon is no words
@@ -498,11 +498,11 @@ Total.
 - own drops: the keep? rule: an upgrade for you says no count until its Offer panel is opened
 - own drops: Them reads Upgrade for N, green, each one ranked by gain
 - own drops: No upgrades is muted and says why: nobody's, checking, solo
-- own drops: Offer is labeled and toned by the furthest offer sent, a dash where it cannot be traded
+- own drops: Offer is labeled and toned by the furthest offer sent, No action where it cannot be traded
 - own drops: Reveal is session state; the tone states read the offer and announce halves
 - own drops table: listed with the others: Trade's word, Upgrade for N in Them, Offer
 - own drops table: Offer opens the Offer panel and reveals a kept upgrade's Upgrade for N
-- own drops table: Offer turns yellow once offered and green once given away; a dash when untradeable
+- own drops table: Offer turns yellow once offered and green once given away; No action when untradeable
 - own drops: the detail card shows Offer in place of Ask and Upgrade for N for Them
 - own drops compact: line 1's Offer, line 2's trade word and line 3's Upgrade for N with its tooltip
 - own drops: the Looter cell marks your own drop [YOU], never another player's

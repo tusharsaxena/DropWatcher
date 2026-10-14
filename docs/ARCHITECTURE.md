@@ -123,13 +123,16 @@ its one-line responsibility and why its position is load-bearing or conventional
   is hidden; it
   builds the Drops empty state too, Preview with test data and Scan group centered as a pair), the
   detail card and the Offer panel (its rows read like the Drops table since feedback-7 spec §0,
-  DW-G0: Member, Their eq in the Them cell's look and Actions with Offer alone, no class stripe,
+  DW-G0: Member, Their eq in the Them cell's look and Actions with Offer alone, the gray `No action` where it is none, feedback-11 spec §1, no class stripe,
   alternating faint rows; the Trade button is retired, and the give path it used went with it),
   their pure composers (`WindowCells.lua`: every cell's words and tone, one tone per verdict in Me
   and Them alike, green upgrade, yellow sidegrade, red downgrade, gray can't use, the arrow before
   the number, feedback-4 spec §0; `ActionTone`, an action button's tone by whose move it is, red
   yours, yellow waiting, green done, §1, and Offer cyan (`C.TONE.cyan`) while it is your move,
-  feedback-6 spec §2, DW-F2; an icon on every action button's every state, Ask `chat` and Offer
+  feedback-6 spec §2, DW-F2; `NoAction`, the placeholder in every view's action slot where a drop
+  has no action (`No action` with LibKa0s' `ban`, state `none`, gray `C.TONE.bad`, dimmed and not
+  clickable, its tooltip `No action` and the reason; where a dash, an empty slot or a disabled Ask
+  was), `Ask` and `MineCells.OwnOffer` answering it, feedback-11 spec §1, DW-K1; an icon on every action button's every state, Ask `chat` and Offer
   `external-link` (`export` until feedback-10 spec §1, DW-J1; never the detail card Trade's
   `transfer`), feedback-7 spec §1, DW-G1; the downgrade
   glyph a filled `▼` (`▽` until feedback-10 spec §0, DW-J0); Trade's `No` in the palette's red and your own name
@@ -160,9 +163,10 @@ its one-line responsibility and why its position is load-bearing or conventional
   the same composers; compact spec §2-§3, DW-C1), compact mode's per-tab bodies (`CompactGroup.lua`:
   the Drops tab's pooled three-line cards under one-line headers in the same pane, handed
   `WindowGroup`'s entries, line 1 the item level before the name and the inspect freshness in
-  brackets right after it, or nothing, line 2 ending in the action button (Offer on your own card;
-  an empty slot with neither), line 3's `You` and `Them` in
-  gold a fixed gap apart, and no trade window countdown (the line 2 countdown and its bar of
+  brackets right after it, or nothing (nor while the read is pending, Them's `…` says it,
+  feedback-11 spec §0, DW-K0), line 2 ending in the action button (Offer on your own card;
+  the gray `No action` with neither, feedback-11 spec §1), line 3's `You` and `Them` in
+  gold a fixed gap apart, Them cut at the card's right inset (feedback-11 spec §0), and no trade window countdown (the line 2 countdown and its bar of
   feedback-5 spec §1 went with feedback-10 spec §2, DW-J2), the detail card stacked at the compact width; compact spec §2, DW-C2, feedback-5
   spec §1-§2; `CompactHistory.lua`: History's cards with the outcome and the row menu, drawn through
   `CompactGroup`'s shared kit, the Offer panel docked beside the compact window; compact spec §3,

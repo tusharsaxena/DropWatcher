@@ -125,7 +125,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │       bar (an estimate from drop.at for another player's drop), the row WindowRows.CountdownRowHeight
   │       tall while the column shows (feedback-5 §1);
   │     Actions: WindowGroup.Action (your own drop: WindowOwn.Offer ─> MineCells.OwnOffer, toned by
-  │       WindowOwn.ToneStates' offer half; else WindowCells.Ask), the tone: WindowCells.ActionTone(state,
+  │       WindowOwn.ToneStates' offer half; else WindowCells.Ask; no action: WindowCells.NoAction(reason),
+  │       the gray `No action` with `ban`, state `none`, dimmed and not clickable, its reason in the
+  │       tooltip, feedback-11 §1), the tone: WindowCells.ActionTone(state,
   │       kind) ─> WindowGroup.ToneButton (red your move, cyan for an Offer, yellow waiting, green
   │       Traded; feedback-4 §1, feedback-6 §2), its state's icon through Window.SetButtonMark
   │       (Ask `chat`, Offer `external-link`; feedback-7 §1, feedback-10 §1); the
@@ -180,12 +182,13 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     CompactCards.Group(drop, { now, your gear, the looter's gear, WindowGroup.AskState,
   │     messages.transmogAsk, Compat.NormalizedRealm; your own drop: its WindowOwn.IsRevealed and
   │     offer tone }) ─> three lines of pieces (line 1: ilvl then item, then CompactCards.FreshMark's
-  │     `(2m)` right after it or nothing, the name cut by WindowRows.MarkedWidth; line 2: looter · slot ·
-  │     type · trade, ` [YOU]` in gold after your own name, the Ask or Offer on the right (an empty
-  │     slot with neither), toned by WindowGroup.ToneButton as the
+  │     `(2m)` right after it or nothing, never `(…)` while Them reads `…` (feedback-11 §0), the name cut by WindowRows.MarkedWidth; line 2: looter · slot ·
+  │     type · trade, ` [YOU]` in gold after your own name, the Ask or Offer on the right (the gray
+  │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
   │     row's; no trade window countdown, feedback-10 §2; line 3 SideCells' Me and Them without
   │     icons, `You 321/308 ▼8`, `Them Upgrade for 2` on your own, the labels gold and Them
-  │     CompactGroup.PlaceThem's fixed gap after You; feedback-6 §1, feedback-7 §2)
+  │     CompactGroup.PlaceThem's fixed gap after You, cut at the card's right inset (feedback-11 §0);
+  │     feedback-6 §1, feedback-7 §2)
   └─> DropsStrip.Paint(pane, ctx, true): the strip shortened, DropsStrip.SummaryText, `Post`
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
 piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
@@ -308,7 +311,8 @@ the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, w
                                   NS.TradeHelper.CanTradeWith(looter) })                  (pure)
   (your own drop: Offer in place of Ask, toned as the row's, and the For the looter Them row
    `Upgrade for N` with the row's tooltip: MineCells.OwnOffer / Details; feedback-5 §2, feedback-6 §3,
-   feedback-7 §2; the Looter row `Name [YOU]`)
+   feedback-7 §2; the Looter row `Name [YOU]`; with no action the first action is the gray
+   `No action` with its reason, WindowCells.NoAction, not a disabled Ask or Offer, feedback-11 §1)
 
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press ─> AskStateChanged ─> repaint
                  (messages.editFirst on, window shown, not queued: ─> DetailCard.OpenEditor(id, "ask"))
@@ -341,7 +345,10 @@ Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
                       gear grid and the verdict's explanation; feedback-7 §0, §3),
                       MineCells.OfferButton(NS.Asks.StateOf("offer", member, id)) (kind `offer`,
                       cyan while it reads Offer; Retry red; feedback-6 §2), toned by
-                      MineCells.ToneState(NS.History.OutcomeOf(id), its state);
+                      MineCells.ToneState(NS.History.OutcomeOf(id), its state); a member it is
+                      no upgrade or equal for, or a drop that cannot be traded: WindowCells.NoAction
+                      (reason) through WindowOwn.SetButtonLook, the gray `No action` on the same
+                      80px button (K.PANEL_BTN_W; feedback-11 §1);
       Announce to group: MineCells.AnnounceButton, WindowOwn.SetButtonLook, toned by
                       WindowOwn.ToneStates(drop): NS.Asks.FurthestStateOf("offer", id)
                       (Messaging.FurthestState: sent, else queued, else failed, else ready) and the
