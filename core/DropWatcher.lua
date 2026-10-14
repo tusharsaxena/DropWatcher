@@ -115,11 +115,6 @@ end
 
 -- ── the shared host handlers ────────────────────────────────────────────────────────────────
 
---- Turn test mode on or off (preview-mode). One handler for the Master controls checkbox, the
---- launcher entry and `/dw test`. Refused while stood down, in combat (which also ends it) and
---- while a simulation runs (modules/Sim.lua).
---- @param on boolean
---- @return boolean changed
 -- Repaint any open settings page, so a checkbox follows a change another surface made.
 local function refreshPanels()
     local H = DW.Settings and DW.Settings.Helpers
@@ -136,6 +131,11 @@ local function testModeRefusal()
     return nil
 end
 
+--- Turn test mode on or off (preview-mode). One handler for the Master controls checkbox, the
+--- launcher entry and `/dw test`. Refused while stood down, in combat (which also ends it) and
+--- while a simulation runs (modules/Sim.lua).
+--- @param on boolean
+--- @return boolean changed
 function NS.SetTestMode(on)
     on = on and true or false
     if on == NS.State.testMode then return false end

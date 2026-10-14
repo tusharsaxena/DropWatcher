@@ -67,8 +67,9 @@ reach them unchanged. The table is When to show's `afterGroup` hook
 (`Settings.PageEditors.SituationTable`), writes through `NS.SchemaRuntime.Set` and repaints every
 value and state on each render and after every write (a toggle, the master row, Defaults, a profile
 switch). Its host frame and slots are built once per session and re-hosted on a fresh placeholder
-on each render; the General page's renderer parks it (`ParkSituationTable`) before `ClearScroll`
-hands the old placeholder back to AceGUI's pool. Until DW-H0 the tab drew one block per situation,
+on each render. The placeholder's `OnRelease` parks it (`ParkSituationTable`), hidden on the panel,
+whenever AceGUI takes the placeholder back (options-ui-§19); the General page's renderer also parks
+it before `ClearScroll` as belt-and-braces. Until DW-H0 the tab drew one block per situation,
 since LibKa0s has no grid composer for mixed controls ([LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50));
 the table is drawn by the page's own editor instead.
 

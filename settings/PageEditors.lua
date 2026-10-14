@@ -192,10 +192,11 @@ local function buildSituationTable(ctx)
     return t
 end
 
---- Take the table off the placeholder it was hosted on and park it, hidden, on the panel. Called by
---- the General page's renderer BEFORE its ClearScroll: that hands the placeholder back to AceGUI's
---- pool, and a table left on it would ride the frame into whatever it is handed out for next, on
---- whichever tab is drawn.
+--- Take the table off the placeholder it was hosted on and park it, hidden, on the panel. The
+--- placeholder's OnRelease calls it (options-ui-§19, the canonical undo): a release hands the
+--- placeholder back to AceGUI's pool, and a table left on it would ride the frame into whatever it
+--- is handed out for next, on whichever tab is drawn. The General page's renderer also calls it
+--- before its ClearScroll, belt-and-braces; parking twice is harmless.
 --- @param ctx table
 function P.ParkSituationTable(ctx)
     local t = ctx.dwSituations
@@ -222,6 +223,11 @@ function P.SituationTable(ctx)
     scroll:AddChild(holder)
     local t = ctx.dwSituations or buildSituationTable(ctx)
     ctx.dwSituations = t
+    -- The undo of the reparent below, on the widget's own release (options-ui-§19). Guarded on the
+    -- host still sitting on THIS placeholder, so an old one released late never pulls it off a new one.
+    holder:SetCallback("OnRelease", function(w)
+        if t.host:GetParent() == w.frame then P.ParkSituationTable(ctx) end
+    end)
     t.host:SetParent(holder.frame)
     t.host:ClearAllPoints()
     t.host:SetAllPoints(holder.frame)

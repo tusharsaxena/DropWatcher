@@ -49,6 +49,16 @@ test("core: no file but the wrapper calls a close-button factory directly", func
     end
 end)
 
+test("core: no file builds a typed × close mark (the close control degrades to nothing)", function()
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
+        local src = fh:read("*a"); fh:close()
+        src = src:gsub("%-%-[^\r\n]*", "")
+        -- red under: restore the "×" TextButton fallback in modules/Toast.lua buildClose
+        assertTrue(src:find("TextButton%([^\r\n]*\"×\"") == nil, rel .. " builds a TextButton labeled ×")
+    end
+end)
+
 test("core: a raising shared handler costs only itself; the first error is raised after the rest ran", function()
     local NS, _, m = T.enableAddon()
     local order, ranRoster, ranRaiser = {}, 0, 0
