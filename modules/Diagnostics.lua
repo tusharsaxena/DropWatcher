@@ -363,9 +363,8 @@ local function integrations(out)
     local Lc = NS.Launcher
     out:add(TAG, "launcher: registered=%s shown=%s", Lc and read(Lc.IsRegistered, Lc),
         Lc and read(Lc.IsShown, Lc))
-    local loaded = C_AddOns and C_AddOns.IsAddOnLoaded
-    out:add(TAG, "optional: Pawn=%s CanIMogIt=%s", loaded and read(loaded, "Pawn") or false,
-        loaded and read(loaded, "CanIMogIt") or false)
+    out:add(TAG, "optional: Pawn=%s CanIMogIt=%s", read(NS.Compat.IsAddOnLoaded, "Pawn"),
+        read(NS.Compat.IsAddOnLoaded, "CanIMogIt"))
     out:add(TAG, "transmog: source=%s", NS.Compat.TransmogSource())
 end
 

@@ -637,13 +637,14 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
 
-### test_compat.lua (66)
+### test_compat.lua (67)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
 - compat: with canaccessvalue present the degraded CanAccess asks it
 - compat: ChatSender prefers C_ChatInfo.SendChatMessage
 - compat: ChatSender falls back to the global, then to nil
+- compat: IsAddOnLoaded answers a plain boolean, and false without the API
 - compat: FormatToPattern captures %s and %d and escapes every magic character
 - compat: DecodeDuration reads every enUS unit and their sums
 - compat: DecodeDuration refuses anything that is not wholly a duration
@@ -1670,7 +1671,7 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 30 |
-| test_compat.lua | 66 |
+| test_compat.lua | 67 |
 | test_text_parse.lua | 9 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
@@ -1717,4 +1718,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1411** |
+| **Total** | **1412** |

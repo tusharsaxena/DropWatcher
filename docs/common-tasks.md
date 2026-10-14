@@ -40,7 +40,8 @@ A version-variant, deprecated or optional client API is called from `core/Compat
 1. Add `function Compat.Name(...)` there: read the client global bare, at call time; ask
    `Compat.IsSecret` before comparing or matching anything the client hands back; answer a
    documented absent value (nil, false or `{}`) when the API is missing.
-2. Declare the client global in `.luacheckrc` under `files["core/Compat.lua"]`, never globally, and
+2. Declare the client global in `.luacheckrc` under `files["core/Compat.lua"]` (a stable world read
+   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`), never globally, and
    add its name to `SEAM_ONLY` in `tests/test_compat.lua`.
 3. Add a controllable fake to `tests/wow_mock.lua` and cases to `tests/test_compat.lua`, the API
    absent among them.

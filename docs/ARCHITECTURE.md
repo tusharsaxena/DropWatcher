@@ -49,9 +49,9 @@ its one-line responsibility and why its position is load-bearing or conventional
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
   family (its root `Compat.lua`, the only caller of version-variant, deprecated and optional client
   APIs and the GlobalString read, with its pure text parsers in `TextParse.lua`; the stable group,
-  unit, instance and combat reads the simulator must also answer in `CompatWorld.lua`; the exact item reads at a
+  unit, instance and combat reads the simulator must also answer, and optional-addon presence, in `CompatWorld.lua`; the exact item reads at a
   bag location and the game tooltip's item setters in `CompatItem.lua`; no other file names those
-  client globals), and the simulator's answer seam over it in `SimSeam.lua`, which wraps every
+  client globals, and `.luacheckrc` declares them for those files alone), and the simulator's answer seam over it in `SimSeam.lua`, which wraps every
   member that answers for the client, the library-shaped item
   reads (`ItemRead.lua`: how complete a link is, the better of two, level and quality read the
   exact way; ui spec §0), the

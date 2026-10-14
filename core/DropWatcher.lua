@@ -550,8 +550,7 @@ end
 
 -- The optional integrations, said once when logging is turned on (debug-logging-§8).
 local function logDependencies()
-    local loaded = C_AddOns and C_AddOns.IsAddOnLoaded
-    local function state(name) return (loaded and loaded(name)) and "loaded" or "absent" end
+    local function state(name) return NS.Compat.IsAddOnLoaded(name) and "loaded" or "absent" end
     NS.DebugAtEnable("Init", "optional: Pawn %s, CanIMogIt %s", state("Pawn"), state("CanIMogIt"))
 end
 

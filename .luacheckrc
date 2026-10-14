@@ -19,14 +19,14 @@ globals = {
   "StaticPopupDialogs",
 }
 
+-- C_AddOns stays shared for core/EnvSetup.lua's metadata read, C_Item for core/ItemSetup.lua and the
+-- load-time tables; the world reads are scoped to the Compat family below.
 read_globals = {
   "_G", "LibStub", "C_AddOns", "C_Item", "C_Timer",
   "CreateFrame", "UIParent", "UISpecialFrames", "STANDARD_TEXT_FONT", "ITEM_QUALITY_COLORS",
-  "InCombatLockdown", "UnitAffectingCombat", "debugprofilestop", "tinsert",
+  "debugprofilestop", "tinsert",
   "Settings", "StaticPopup_Show", "StaticPopup_Hide", "YES", "NO",
-  "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
-  "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected", "UNKNOWNOBJECT",
-  "GetTime", "time", "date", "LE_PARTY_CATEGORY_INSTANCE", "GameTooltip", "IsShiftKeyDown", "IsControlKeyDown",
+  "GetTime", "time", "date", "GameTooltip", "IsShiftKeyDown", "IsControlKeyDown",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The
@@ -57,7 +57,18 @@ files["core/Compat.lua"] = {
     "MenuUtil", "PlaySound", "SOUNDKIT",
     "EncounterJournal", "C_EncounterJournal", "EJ_GetNumTiers", "EJ_GetCurrentTier", "EJ_SelectTier",
     "EJ_GetInstanceByIndex", "EJ_SelectInstance", "EJ_SelectEncounter", "EJ_GetDifficulty", "EJ_SetDifficulty",
-    "EJ_GetLootFilter", "EJ_SetLootFilter", "EJ_GetNumLoot",
+    "EJ_GetLootFilter", "EJ_SetLootFilter", "EJ_GetNumLoot", "C_ChallengeMode", "UnitName",
+  },
+}
+
+-- The stable world reads (the group, its units, the instance, combat, optional-addon presence):
+-- core/CompatWorld.lua alone names them, so a module that reads one directly fails lint as well as
+-- tests/test_sim_e2e.lua's scan.
+files["core/CompatWorld.lua"] = {
+  read_globals = {
+    "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
+    "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
+    "LE_PARTY_CATEGORY_INSTANCE", "InCombatLockdown", "UnitAffectingCombat",
   },
 }
 

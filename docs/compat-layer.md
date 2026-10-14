@@ -146,13 +146,17 @@ DW-B4 (feedback-3 spec §4) `DifficultyName` (`GetDifficultyInfo`'s name, plain,
 `C_ChallengeMode.GetChallengeCompletionInfo().level` while a completed run's chest is looted, else
 nil), which name a group header's difficulty; and,
 since DW-90 (sim feedback §0), whether you are fighting, `InCombatLockdown` and `PlayerInCombat`
-(`UnitAffectingCombat("player")`), each a plain boolean. (`GlobalString(name)` is the root's, in the
+(`UnitAffectingCombat("player")`), each a plain boolean; and since DW-P20 whether an optional addon
+is loaded, `IsAddOnLoaded(name)` (`C_AddOns.IsAddOnLoaded`, a plain boolean, false without the API),
+the one read behind the Pawn and CanIMogIt presence lines. (`GlobalString(name)` is the root's, in the
 table above: a GlobalString read is not a world read.) None is version-variant, so the compat rule
 does not ask for them here, and they are not counted above; they are `NS.Compat` members so the
 seam wraps them, because a module reading the global would bypass a running simulation and see the
 real, empty group. They answer the client's raw values (secrets included) and each caller guards
-them as before. No other file names these globals: `tests/test_sim_e2e.lua` scans every shipped
-file and fails one that does (the engine's modules for `_G` too).
+them as before. No other file names these globals: `.luacheckrc` declares them for
+`core/CompatWorld.lua` alone (`C_ChallengeMode` and `UnitName` also for `core/Compat.lua`), and
+`tests/test_sim_e2e.lua` scans every shipped file and fails one that does (the engine's modules for
+`_G` too; `UNKNOWNOBJECT` and `C_AddOns.IsAddOnLoaded` are on its list).
 
 While a simulation runs, `modules/SimWorld.lua` answers them for the invented group and place (raid1
 is you in a raid, for every unit read; Raid Finder is an instance group, answering `InGroup` for the
@@ -213,7 +217,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | Caller | Shims |
 |---|---|
 | `modules/Restrictions.lua` | `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive`; `InCombatLockdown` (`core/CompatWorld.lua`) |
-| `modules/Roster.lua` | `NormalizedRealm`; `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected` (`core/CompatWorld.lua`) |
+| `modules/Roster.lua` | `NormalizedRealm`, `GlobalString` (`UNKNOWNOBJECT`, a name not yet arrived); `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected` (`core/CompatWorld.lua`) |
 | `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |
 | `core/ItemRead.lua` | `GetItemInfo`, `GetDetailedItemLevel`; `BagItemLevelQuality` (`core/CompatItem.lua`) |
 | `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `PlayerHasTransmog` |
@@ -235,9 +239,9 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/TipGrid.lua` | `IsSecret` (a grid cell's width and the tooltip's line count, read in combat; feedback-14 spec §0); `TooltipLeftLine` (`core/CompatItem.lua`) |
 | `modules/Toast.lua` | `PlayAlertSound`; `InCombatLockdown` (`core/CompatWorld.lua`) |
 | `modules/Window.lua` | `PlayerInCombat` (`core/CompatWorld.lua`: the show decision off a combat edge) |
-| `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal) |
+| `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal); `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line at logging on) |
 | `modules/TestMode.lua` | `UnitName`, `UnitClass`, `UnitGUID` (`core/CompatWorld.lua`: you, as a placeholder's looter) |
-| `modules/Diagnostics.lua` | `PawnIsReady`, `PawnScaleForSpec`, `TransmogSource` |
+| `modules/Diagnostics.lua` | `PawnIsReady`, `PawnScaleForSpec`, `TransmogSource`; `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line) |
 | `settings/Editors.lua`, `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec); `UnitClass` (`core/CompatWorld.lua`) |
 | `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item) |
 | `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |

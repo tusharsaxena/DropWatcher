@@ -2,7 +2,8 @@ local _, NS = ...
 -- core/CompatWorld.lua — the stable world reads, published on NS.Compat so the simulator's answer
 -- seam (core/SimSeam.lua, simulator spec §2) answers them too: the group's size and kind, a unit's
 -- GUID, name, class and connection, where the player is (the instance, its difficulty and that
--- difficulty's name, a keystone run in progress and its level) and whether the player is fighting. (The GlobalString reads are the root's,
+-- difficulty's name, a keystone run in progress and its level), whether the player is fighting, and
+-- whether an optional addon (Pawn, CanIMogIt) is loaded. (The GlobalString reads are the root's,
 -- core/Compat.lua's Compat.GlobalString: they are not world reads.)
 --
 -- WHY HERE. None of these APIs is version-variant, so the compat rule does not need them in
@@ -151,4 +152,12 @@ end
 --- @return boolean
 function Compat.PlayerInCombat()
     return UnitAffectingCombat ~= nil and UnitAffectingCombat("player") and true or false
+end
+
+--- C_AddOns.IsAddOnLoaded(name) as a plain boolean (false without the API).
+--- @param name string
+--- @return boolean
+function Compat.IsAddOnLoaded(name)
+    local api = C_AddOns
+    return api ~= nil and type(api.IsAddOnLoaded) == "function" and api.IsAddOnLoaded(name) == true
 end
