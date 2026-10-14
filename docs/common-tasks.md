@@ -25,7 +25,8 @@ feature verb is refused while disabled by the dispatcher itself. Update `docs/sl
 
 Append `{ "EVENT_NAME", "HandlerMethod" }` to `NS.FEATURE_EVENTS` from the owning file, and define
 `DW.HandlerMethod`. The stand-up registers it, the stand-down unregisters it, and `test_disabled`
-pins the list by name: add the event there too.
+pins the list by name: add the event there too. Its case 3 fires the new event while disabled and
+fails unless the fire reaches your handler.
 
 ## Add a bus message
 

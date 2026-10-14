@@ -42,7 +42,12 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7; its own cases 9 and 10 hold
 every stood-down refusal to `NS.StoodDownRefusal()`: the capture line under the `perf` hold alone, the
-one refusal line, unwrapped, while disabled; review F01/F10, DW-P16). The addon's own:
+one refusal line, unwrapped, while disabled; review F01/F10, DW-P16. Case 3 is step 6: it fires
+every event in `NS.FeatureEventNames()` through the kit's `__fireUnconditional` and asserts each
+returned count is at least 1, so a fire that reaches no handler fails rather than passing on silence.
+Cases 4 and 5 are step 7 over every verb in `NS.COMMANDS` and the bare command, case 8 is step 8 over
+both launcher buttons, and case 11 is step 10 through `Kit.assertLatchHoldOrder`; review F04 F05 F18,
+DW-P25). The addon's own:
 `test_harness` (the load, the repository's shape, and the TOC's position labels: no `Conventional:`
 comment on a load-bearing position, nor one stating handler order, toc-file-§5), `test_setup` (each
 adopted module's wiring, and the shared event dispatcher running every handler when one raises, the

@@ -1544,19 +1544,20 @@ Total.
 - sim panel: the picker starts the chosen scenario, with a raid's member count
 - sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it
 
-### test_disabled.lua (11)
+### test_disabled.lua (12)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /dw disable, nothing is registered, scheduled or shown
 - disabled 2: through the write seam, nothing is registered, scheduled or shown
-- disabled 3: no SavedVariables write from a game event while disabled
-- disabled 4: every reserved verb keeps answering while disabled
-- disabled 5: a feature verb answers with the one refusal line and does nothing
+- disabled 3: every feature event, fired anyway while disabled, reaches its handler and writes, prints and shows nothing
+- disabled 4: every reserved verb, and the bare command, keeps answering while disabled
+- disabled 5: every feature verb answers with the one refusal line and writes nothing
 - disabled 6: the stand-up re-registers from current state and the window comes back
 - disabled 7: a disabled profile loads stood down, with nothing registered
-- disabled 8: the launcher's menu grays every entry but Enabled
+- disabled 8: the launcher's left-click opens settings and writes nothing; its menu grays every entry but Enabled
 - disabled 9: under the perf hold alone, each feature refusal names the capture, never 'is disabled'
 - disabled 10: while disabled, each feature refusal is the one refusal line, unwrapped
+- disabled 11: the latch holds in both orders, perf first and disabled first
 
 ### test_diagnostics.lua (15)
 
@@ -1717,7 +1718,7 @@ Total.
 | test_sim_e2e.lua | 19 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 19 |
-| test_disabled.lua | 11 |
+| test_disabled.lua | 12 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
 | test_locale.lua | 2 |
@@ -1727,4 +1728,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1421** |
+| **Total** | **1422** |

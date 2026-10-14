@@ -96,40 +96,91 @@ for _, way in ipairs(DISABLES) do
     end)
 end
 
-test("disabled 3: no SavedVariables write from a game event while disabled", function()
+-- Step 6: every event in R_on fired at the mock anyway, each one proven to have reached the
+-- handler its registration named (kit 39's __fireUnconditional answers a count, 0 when nothing was
+-- reached), and none of them writes, prints or shows.
+test("disabled 3: every feature event, fired anyway while disabled, reaches its handler and writes, prints and shows nothing", function()
     local NS, _, m = T.enableAddon()
     NS.addon:OnSlashCommand("disable")
     m.__resetSvWrites()
-    m.__fireUnconditional(NS.addon, "PLAYER_REGEN_DISABLED")
-    m.__fireUnconditional(NS.addon, "PLAYER_REGEN_ENABLED")
-    assertEqual(#m.__svWrites(), 0)
+    m.prints = {}
+    local shownBefore = #m.__shownFrames()
+    local names = NS.FeatureEventNames()
+    local sorted = { unpack(names) }
+    table.sort(sorted)
+    assertEqual(table.concat(sorted, ","), table.concat(PINNED, ","), "R_on is the pinned set")
+    -- red under: re-vendor kit 38 (its __fireUnconditional cannot reach OnCombatStart, so the count is 0)
+    for _, event in ipairs(names) do
+        assertTrue(m.__fireUnconditional(NS.addon, event) >= 1, event .. " reached no handler")
+    end
+    -- red under: add `NS.addon.db.profile.locked = true` to DW:OnCombatStart (core/DropWatcher.lua)
+    assertEqual(#m.__svWrites(), 0, "no SavedVariables write")
+    assertEqual(#m.prints, 0, "no chat output")
+    assertEqual(#m.__shownFrames(), shownBefore, "no frame shown")
 end)
 
-test("disabled 4: every reserved verb keeps answering while disabled", function()
+-- Step 7. The live set is the library's reserved verbs plus `profile`, as settings/Slash.lua builds
+-- it; every other verb in NS.COMMANDS is a feature verb.
+local LIVE_ARGS = { get = "get enabled", set = "set scale 1.2", reset = "reset scale" }
+
+local function liveSet(m)
+    local live = { profile = true }
+    for _, verb in ipairs(m.LibStub("LibKa0s-Slash-1.0").LIVE_VERBS) do live[verb] = true end
+    return live
+end
+
+local function disabledWithOpener()
     local NS, _, m = T.enableAddon()
     NS.addon:OnSlashCommand("disable")
-    for _, verb in ipairs({ "help", "version", "list", "get enabled", "diagnostics", "profile" }) do
+    local opened = 0
+    NS.addon.OpenSettings = function() opened = opened + 1 end
+    return NS, m, function() return opened end
+end
+
+test("disabled 4: every reserved verb, and the bare command, keeps answering while disabled", function()
+    local _, m0 = T.enableAddon()
+    local verbs = { "" }
+    for verb in pairs(liveSet(m0)) do verbs[#verbs + 1] = verb end
+    table.sort(verbs)
+    assertTrue(#verbs >= 15, "thirteen reserved verbs, profile and the bare command")
+    for _, verb in ipairs(verbs) do
+        local NS, m, opened = disabledWithOpener()
         m.prints = {}
-        NS.addon:OnSlashCommand(verb)
-        local refused = false
-        for _, line in ipairs(m.prints) do
-            if line:find("is disabled", 1, true) and not line:find("slash commands", 1, true) then
-                refused = verb ~= "help"
+        m.popupsShown = {}
+        NS.addon:OnSlashCommand(LIVE_ARGS[verb] or verb)
+        -- red under: drop `liveVerbs = liveVerbs` from the lib:New descriptor in settings/Slash.lua (profile is refused)
+        local refusal = NS.SlashCommands:DisabledLine()
+        if verb == "help" then
+            -- help names the disabled state above its listing, and still lists every verb
+            assertTrue(#m.prints > #NS.COMMANDS, "help lists the commands")
+        else
+            for _, line in ipairs(m.prints) do
+                assertTrue(line:find(refusal, 1, true) == nil, "'" .. verb .. "' was refused")
             end
         end
-        assertFalse(refused, verb .. " was refused")
+        if verb == "" or verb == "config" then assertEqual(opened(), 1, "'" .. verb .. "' opens the panel") end
+        if verb == "resetall" then assertEqual(#m.popupsShown, 1, "resetall shows its popup") end
     end
 end)
 
-test("disabled 5: a feature verb answers with the one refusal line and does nothing", function()
+test("disabled 5: every feature verb answers with the one refusal line and writes nothing", function()
     local NS, _, m = T.enableAddon()
     NS.addon:OnSlashCommand("disable")
-    for _, verb in ipairs({ "show", "test", "lock" }) do
-        m.prints = {}
-        NS.addon:OnSlashCommand(verb)
-        assertEqual(#m.prints, 1, verb)
-        assertTrue(m.prints[1]:find("Ka0s Drop Watcher is disabled", 1, true) ~= nil, m.prints[1])
+    local live, line, refused = liveSet(m), NS.SlashCommands:DisabledLine(), 0
+    for _, entry in ipairs(NS.COMMANDS) do
+        local verb = entry[1]
+        if not live[verb] then
+            m.prints = {}
+            m.__resetSvWrites()
+            NS.addon:OnSlashCommand(verb)
+            -- red under: add the verb's name to `liveVerbs` in settings/Slash.lua
+            assertEqual(#m.prints, 1, verb)
+            assertTrue(m.prints[1]:find(line, 1, true) ~= nil, verb .. ": " .. m.prints[1])
+            assertEqual(#m.__svWrites(), 0, verb .. " wrote SavedVariables")
+            refused = refused + 1
+        end
     end
+    assertTrue(refused >= 16, "every feature verb was driven")
     assertFalse(NS.IsWindowShown())
     assertFalse(NS.State.testMode)
     assertFalse(NS.addon.db.profile.locked)
@@ -157,7 +208,7 @@ test("disabled 7: a disabled profile loads stood down, with nothing registered",
     assertTrue(m.ldbObjects.DropWatcher ~= nil, "setup stays up: the launcher is registered")
 end)
 
-test("disabled 8: the launcher's menu grays every entry but Enabled", function()
+test("disabled 8: the launcher's left-click opens settings and writes nothing; its menu grays every entry but Enabled", function()
     local NS, _, m = T.enableAddon()
     NS.addon:OnSlashCommand("disable")
     local boxes = {}
@@ -171,7 +222,17 @@ test("disabled 8: the launcher's menu grays every entry but Enabled", function()
         end,
     }
     m.MenuUtil = { CreateContextMenu = function(owner, gen) gen(owner, root) end }
+    local opened = 0
+    NS.addon.OpenSettings = function() opened = opened + 1 end
+    m.__resetSvWrites()
+    local shownBefore = #m.__shownFrames()
+    -- red under: route the launcher's LeftButton through NS.ShowWindow (core/LauncherSetup.lua)
+    m.ldbObjects.DropWatcher.OnClick(m.UIParent, "LeftButton")
+    assertEqual(opened, 1, "left-click opens the settings panel")
+    assertEqual(#m.__svWrites(), 0, "left-click writes nothing")
+    assertEqual(#m.__shownFrames(), shownBefore, "left-click shows no frame of the addon's")
     m.ldbObjects.DropWatcher.OnClick(m.UIParent, "RightButton")
+    assertEqual(#m.__svWrites(), 0, "opening the menu writes nothing")
     assertTrue(boxes[1].enabled == nil, "Enabled stays live")
     for i = 2, #boxes do assertEqual(boxes[i].enabled, false, boxes[i].label) end
     boxes[3].click()
@@ -229,4 +290,21 @@ test("disabled 10: while disabled, each feature refusal is the one refusal line,
     end
     assertEqual(select(2, NS.PressOffer(1, "Seta-Realm")), "disabled")
     assertTrue(NS.TradeHelper.ReasonText("stoodDown"):find(NS.BRAND, 1, true) ~= nil, "the tooltip names the addon")
+end)
+
+-- Step 10: the two-hold latch in both orders, through the kit's one form of it.
+test("disabled 11: the latch holds in both orders, perf first and disabled first", function()
+    local NS, _, m = T.enableAddon()
+    -- red under: make NS.StandUp (core/DropWatcher.lua) run whenever the perf hold is released, ignoring the disabled hold
+    local R_on = T.assertLatchHoldOrder({
+        lifecycle  = NS.Lifecycle,
+        perfHold   = NS.HOLD_PERF,
+        setEnabled = function(on) NS.SchemaRuntime.Set("enabled", on) end,
+        regSet     = m.__registrations,
+        label      = NS.BRAND,
+    })
+    assertTrue(#R_on >= #PINNED + #PINNED_MESSAGES, "R_on holds the events and the bus receivers")
+    assertFalse(NS.IsStoodDown(), "the helper leaves the addon enabled")
+    assertEqual(registered(m, "event"), table.concat(PINNED, ","))
+    assertEqual(registered(m, "message"), table.concat(PINNED_MESSAGES, ","))
 end)
