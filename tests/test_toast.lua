@@ -264,6 +264,23 @@ test("toast edge: in test mode the left button still drags it and a left click k
     assertFalse(shown(NS), "a test toast closes on a right-click too")
 end)
 
+test("toast edge: without LibKa0s the close mark degrades to nothing; Ask takes its corner, a right-click still closes", function()
+    local NS = T.enableAddon{ skip = T.loadAddon.libFiles }
+    NS.LootFeed.Get = function(id) if id == 1 then return drop() end end
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    NS.State.testMode = true
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    assertTrue(f ~= nil and shown(NS), "the toast builds and shows")
+    -- red under: restore the typed × fallback in modules/Toast.lua buildClose
+    assertNil(f.close, "no one-off close mark (standalone-windows)")
+    local point, rel = f.ask:GetPoint(1)
+    assertEqual(point, "TOPRIGHT", "Ask is anchored in the close mark's corner")
+    assertTrue(rel == f, "on the toast itself")
+    f:GetScript("OnMouseUp")(f, "RightButton")
+    assertFalse(shown(NS), "a right-click closes it")
+end)
+
 test("toast edge: a right-click on the item button closes it too", function()
     local NS = enabled({ drop() })
     added(NS, 1)

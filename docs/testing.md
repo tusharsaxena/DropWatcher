@@ -16,7 +16,7 @@ without it).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 38, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 39, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
@@ -40,8 +40,20 @@ each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env
 every degradation stub is tested: by a real load, never by a hand-written stub (testing-§8).
 
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
-(testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
-`test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
+(testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7; its own cases 9 and 10 hold
+every stood-down refusal to `NS.StoodDownRefusal()`: the capture line under the `perf` hold alone, the
+one refusal line, unwrapped, while disabled; review F01/F10, DW-P16. Case 3 is step 6: it fires
+every event in `NS.FeatureEventNames()` through the kit's `__fireUnconditional` and asserts each
+returned count is at least 1, so a fire that reaches no handler fails rather than passing on silence.
+Cases 4 and 5 are step 7 over every verb in `NS.COMMANDS` and the bare command, case 8 is step 8 over
+both launcher buttons, and case 11 is step 10 through `Kit.assertLatchHoldOrder`; review F04 F05 F18,
+DW-P25). The addon's own:
+`test_harness` (the load, the repository's shape, and the TOC's position labels: no `Conventional:`
+comment on a load-bearing position, nor one stating handler order, toc-file-§5), `test_setup` (each
+adopted module's wiring, and the shared event dispatcher running every handler when one raises, the
+first error raised after the rest; review F03, DW-P18; and `evaluate` and `quality.gate` declared
+within `feed.add`, observed inside it on a Receive-only capture, mixed with top level on a later
+load or re-judge, and the depth counter cleared when Receive raises; review F06, DW-P24),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
 reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
 into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles), `test_schema`, `test_schema_rows` (every
@@ -50,8 +62,8 @@ the refused values, the per-spec maps, the readers that go through `NS.Setting`,
 through the seam, the account-wide Keep history for, the CLI and the degraded load), `test_settings_pages` (the settings
 pages built headless: the page list and each page's strip, a page's rows by its key, When to show's
 table (one line per situation, its gold headers and stripe, each cell's value, a toggle writing its
-path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, the
-rows still schema rows and `skipRender`), the Feed page's "in force now" readout, the Comparison page's per-spec
+path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, parked
+by its placeholder's own `OnRelease` outside the renderer (options-ui-§19, DW-P21), the rows still schema rows and `skipRender`), the Feed page's "in force now" readout, the Comparison page's per-spec
 weights and unwanted types written whole through the seam, the Messages page's live counters,
 preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
@@ -183,8 +195,8 @@ sample drawn with a real icon, a reason on every cell, the TEST MODE text and ba
 samples on Drops; no button label or Trade window cell ending in an ellipsis; Ask and Post my tradeables printed,
 never sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
-tooltip line reader, the trade window's items and partner, the row menu, and each shim's fallback
-with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+tooltip line reader, the trade window's items and partner, the row menu, the optional-addon probe
+`IsAddOnLoaded` (DW-P20), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups), `test_evaluate` (the verdict kernel, table-driven over
@@ -289,10 +301,11 @@ whisper to the looter's Name-Realm with the template expanded from the drop's to
 confirmation line; an empty slot's gain read as `an empty-slot upgrade`, never the item level, its `+` dropped; the one-ask guard and `messages.oneAsk`; an edited text over 255 bytes; a
 stranger, yourself, an offline member and a missing or secret target refused; an offer to a
 candidate; a raising sender failed with its message and retried, a secret error, no sender, the
-deprecated global fallback; the announce channel; queueing under a restriction and the flush on
+deprecated global fallback; the announce channel (a stored Party, Raid or Instance channel refused
+`noChannel` outside that kind of group, and retryable; Post my tradeables the same; DW-P17); queueing under a restriction and the flush on
 the lift, `ENCOUNTER_END` and `CHALLENGE_MODE_COMPLETED`, one send every 1.5 seconds first in first
 out, stopped by a lockdown mid-flush; cancel by a second press and when the looter leaves, and a
-queued announce once out of a group; test mode printing instead of sending; the stand-down),
+queued announce once it has no channel; test mode printing instead of sending; the stand-down),
 `test_transmog` (the transmog-known flag: CanIMogIt answering first when loaded, its no-appearance
 answer, a raise or a non-boolean falling back to `C_TransmogCollection`, and the source named; the
 item facts reading through it; the ask template picked for a drop (the plain ask for a gain, the For
@@ -325,7 +338,8 @@ time with each drop once, the queue's cap, a drop that turns likely on its `Drop
 pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the
 Ask button through the host handler, the sound, the drag only in test mode with the point saved and
 Reset position, test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim)
-taking its toast and its place in the queue, an Ask on a gone drop, turning the toast off
+taking its toast and its place in the queue, an Ask on a gone drop, no typed `×` close mark when the
+close control degrades (DW-P21), turning the toast off
 or switching to a profile with it off, the stand-down and the diagnostics line),
 `test_auto_ask` (auto-ask: the pure `DueAt` and the delay's clamp; then the edge: off by default, a
 qualifying drop whispered after the delay once with the ask template, the delay and least gain
@@ -405,7 +419,9 @@ every step in between, a completed step inert with its tooltip naming when it ra
 stop or automatic stop repainting it, Run all, Pause and Resume, Restart and Stop, typed or clicked,
 the picker starting the chosen scenario with a raid's count, and the dragged position remembered,
 forgotten by Reset position and the panel hidden at stand-down),
-`test_diagnostics`. Kit suites,
+`test_diagnostics`, `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
+entry in `locales/enUS.lua`, the key-on-miss fallback bypassed; one direction only, since some keys
+are reached dynamically; review F07, decision D8). Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
 

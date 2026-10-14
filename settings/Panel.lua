@@ -71,7 +71,9 @@ local AFTER_GROUP = {
 if Helpers.MASTER_GROUP then AFTER_GROUP[Helpers.MASTER_GROUP] = MASTER_TAIL end
 
 -- The General page's render, a tab click's included (`rerender`): the When to show table is parked
--- first, before ClearScroll hands the placeholder it sits on back to AceGUI's pool.
+-- first, before ClearScroll hands the placeholder it sits on back to AceGUI's pool. The
+-- placeholder's own OnRelease is the canonical undo (settings/PageEditors.lua); this park is
+-- belt-and-braces.
 local function renderGeneral(c)
     Settings.PageEditors.ParkSituationTable(c)
     Helpers.ClearScroll(c)

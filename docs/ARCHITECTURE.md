@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker and LibDBIcon are vendored under `libs/`, and so is the whole
-LibKa0s v1.71.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.72.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -23,7 +23,7 @@ lists the toolchain):
 | Pool | `core/PoolSetup.lua` | the row pool (for the drop tables) |
 | Item | `core/ItemSetup.lua` | link parsing, quality labels, the item load (for item facts) |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
-| Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch |
+| Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch; `NS.StoodDownRefusal()`, the one stood-down refusal line (the dispatcher's under the `disabled` hold, `Not available during a performance capture.` under the `perf` hold alone) |
 | Perf | `core/PerfSetup.lua` | the performance harness |
 | DebugLog | `core/DebugLogSetup.lua` | the debug console and the diagnostics report |
 | Launcher | `core/LauncherSetup.lua` | the minimap button and broker plugin, one object |
@@ -42,175 +42,23 @@ built on its first show; one ladder decides when it is on screen ([`data-flow.md
 
 ## Module Map
 
-Ninety-four authored files load from the TOC, in the standard's folder order; every one, its kind,
-its one-line responsibility and why its position is load-bearing or conventional is in
-[`module-map.md`](module-map.md). In short:
+The authored files load from the TOC in the standard's folder order; every one, its kind, its
+one-line responsibility and why its position is load-bearing or conventional is in
+[`module-map.md`](module-map.md), the only inventory. In short:
 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
-  family (its root `Compat.lua`, the only caller of version-variant, deprecated and optional client
-  APIs and the GlobalString read, with its pure text parsers in `TextParse.lua`; the stable group,
-  unit, instance and combat reads the simulator must also answer in `CompatWorld.lua`; the exact item reads at a
-  bag location and the game tooltip's item setters in `CompatItem.lua`; no other file names those
-  client globals), and the simulator's answer seam over it in `SimSeam.lua`, which wraps every
-  member that answers for the client, the library-shaped item
-  reads (`ItemRead.lua`: how complete a link is, the better of two, level and quality read the
-  exact way; ui spec §0), the
-  game-data tables (`Constants.lua`, `ClassData.lua`), the session state, the addon object and its
-  lifecycle (`DropWatcher.lua`, which also holds the host handlers every surface shares), and the
-  migration runner.
+  family (`Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`, the only files that name the client
+  globals they wrap, with the pure parsers in `TextParse.lua`) and the simulator's answer seam over
+  it (`SimSeam.lua`), the library-shaped item reads, the game-data tables, the session state, the
+  addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
-- `modules/`, the simulator's session first (`Sim.lua`: start, stop and its cleanup, the refusals,
-  the automatic stop, the event delivery and the session-only history log; simulator spec §1, §5).
-- `modules/`, the engine: six pure kernels (`Evaluate.lua` the verdict, `QualityGate.lua`,
-  `TradeRules.lua` the trade estimate, `FeedFilter.lua` the feed's filters, `FeedRecords.lua` the
-  feed's record logic, `Messaging.lua` the templates and the one-ask guard) and the
-  scorers (`Scoring.lua`); the edges that read the client (`Situations.lua`, `Restrictions.lua`,
-  `Roster.lua`, `ItemFacts.lua`, `Gear.lua`, `LootParser.lua`, `Inspect.lua`, `TradeTimer.lua`,
-  `TradeHelper.lua`, `Asks.lua`); the feed that orchestrates them (`LootFeed.lua`, with
-  `FeedCounts.lua` counting every receipt it hides or refuses by reason, and `GroupRoster.lua`
-  keeping who was in each group: a snapshot taken by its first drop, grown by every later drop and
-  by a roster change, copied into the History group, and named class-colored, you first, on the
-  one `Group: ...` line of the headers' tooltips on both tabs; feedback-2 spec §3, and since
-  DW-B4 no longer in the header itself; `GroupPlace.lua` naming where each group dropped, its
-  instance and the client's difficulty name (`Mythic+ <level>` for a key), captured when the group
-  opens and kept on it and its History group, and the character that saw it, the only name a header
-  shows; feedback-3 spec §4; and `CharFilter.lua`, the Character
-  dropdown's recorder: every drop record and History entry says who saw it, `seenBy` (Name-Realm)
-  and `seenByClass`, and the filter bar's Character dropdown (Current by default on Drops, All on History since feedback-13
-  spec §0) filters History by it; feedback-2 spec §4); and the
-  recorded and opt-in features (`History.lua`, with `HistoryRetention.lua` keeping it by days:
-  Keep history for, confirmed before a shorter window deletes (only the latest pending choice is
-  answered), pruned once per session, also when the addon is enabled later in a session that
-  started disabled; feedback-2 spec §5, §8; `Toast.lua`, the toast as four rows beside a
-  four-row icon, the drop judged for you and for the looter, the trade reason, a right-click
-  closes it, feedback-9 spec §0; `AutoAsk.lua`).
-- `modules/`, the simulator's inputs: its invented group and their gear (`SimRoster.lua`), its
-  item pool, read from the Encounter Journal with your own gear as the fallback (`SimPool.lua`), the
-  client answers about its world (`SimWorld.lua`: the group, the place, the inspect replies, your
-  simulated bag items and the trade window), its event drivers (`SimEvents.lua`: loot lines,
-  pulls and kills, a keystone run, combat, a completed trade; simulator spec §2, §3), where a loot
-  burst's drops went (`SimReport.lua`: Drops, or the gate that hid each, so the loot step reads
-  `Loot: 3 drops (1 hidden)` and reconciles with the window; feedback-3 spec §0; it honors the feed
-  the window shows, `Window.FeedView`, §5; since feedback-5 spec §2 your own drops are on Drops like
-  any other) and its
-  scenarios and timeline (`SimScenario.lua`: what `/dw sim start` builds and `run` and `step`
-  play, with `pause`, `resume` and `restart`; simulator spec §4) and its step panel (`SimPanel.lua`:
-  PerfPanel's look, the timeline as clickable steps, the run controls and the scenario picker,
-  every click through the typed verb; sim feedback spec §1).
-- `modules/`, the window: the shell (`Window.lua`), its title bar, filter bar and footer, compact
-  mode's switch (`WindowCompact.lua`: two layouts, `full` and `compact`, over the one frame, each
-  with its own size and point, compact 440 x 460 by default at the full window's top right and
-  sized 440 to 520 wide, the full window 1038 x 600 and never narrower than that (the least width is
-  the default, every Drops column at its width plus the rows' indent and chevron, a stored width
-  under it raised on load; feedback-4 spec §4, DW-D4, recomputed by feedback-5 spec §4, DW-E4, and
-  by feedback-6 spec §0-§1, DW-F0 and DW-F1: the 76px Trade window column, its widest answer
-  `No limit (BoE)` plus its bar's padding, and the merged 127px Me and Them); the title-bar
-  toggle, the Layout row, `/dw compact` and `/dw full`; and the run override,
-  `window.compactInRuns`, which opens an auto-open inside a dungeon, raid, key or
-  delve compact until the run ends, a key's 120 seconds after it completes so the chest is still
-  the run's; compact spec §1, DW-C0), one body per tab: two tabs, Drops (key `group`) and History,
-  since feedback-5 spec §3 retired My drops (a stored active tab of `mine` opens Drops;
-  `WindowGroup.lua`, `WindowHistory.lua`), the Drops tab's own-drop reads (`WindowOwn.lua`: the
-  session's reveal state, the Offer and Announce tone states, the message buttons' look and the
-  Ask-or-Offer click; feedback-5 spec §2, DW-E2) and its strip (`DropsStrip.lua`: your listed
-  tradeable drops, the next expiry and Post my tradeables under the table or the cards, shown only
-  while one can be traded; §3, DW-E3; since feedback-7 spec §4, DW-G4, the full layout's Scan group
-  lives on it and Post takes Sort's size, and the full layout shows the strip on Drops always; since
-  feedback-10 spec §3, DW-J3, the row reads `[Post my tradeables] [Scan group] [Sort]` at the strip's
-  right edge, 8px apart, the tab's Sort moved out of the footer onto the active tab's strip
-  (`pane.sortHost`; `WindowFooter.AnchorSort` re-anchors it on every full pass, so it follows a tab
-  switch; History's strip has it right of Clear history), and Scan group keeps its place while Post
-  is hidden; it
-  builds the Drops empty state too, Preview with test data and Scan group centered as a pair), the
-  detail card and the Offer panel (its rows read like the Drops table since feedback-7 spec §0,
-  DW-G0: Member, Their eq in the Them cell's look and Actions with Offer alone, the gray `No action` where it is none, feedback-11 spec §1, no class stripe,
-  alternating faint rows; the Trade button is retired, and the give path it used went with it),
-  their pure composers (`WindowCells.lua`: every cell's words and tone, one tone per verdict in Me
-  and Them alike, green upgrade, yellow sidegrade, red downgrade, gray can't use, the arrow before
-  the number, feedback-4 spec §0; `ActionTone`, an action button's tone by whose move it is, red
-  yours, yellow waiting, green done, §1, and Offer cyan (`C.TONE.cyan`) while it is your move,
-  feedback-6 spec §2, DW-F2; `NoAction`, the placeholder in every view's action slot where a drop
-  has no action (`No action` with LibKa0s' `ban`, state `none`, gray `C.TONE.bad`, dimmed and not
-  clickable, its tooltip `No action` and the reason; where a dash, an empty slot or a disabled Ask
-  was), `Ask` and `MineCells.OwnOffer` answering it, feedback-11 spec §1, DW-K1; an icon on every action button's every state, Ask `chat` and Offer
-  `external-link` (`export` until feedback-10 spec §1, DW-J1; never the detail card Trade's
-  `transfer`), feedback-7 spec §1, DW-G1; the downgrade
-  glyph a filled `▼` (`▽` until feedback-10 spec §0, DW-J0); Trade's `No` in the palette's red and your own name
-  `Name [YOU]`, the mark in gold, feedback-7 spec §2, DW-G2; `ArmorType`, the Type column beside
-  Slot, §3;
-  `SideCells.lua`: the Me and Them cells, the worn gear and the verdict in one cell,
-  `[icons] 321/308 ▼8`, its tooltip the gear grid then the verdict's reasons, feedback-6 spec §1,
-  DW-F1, where My eq and Their eq were columns of their own, and the Offer panel's Their eq cell in
-  the same look, `SideCells.Candidate`, feedback-7 spec §0;
-  `DetailCells.lua`, `MineCells.lua`: the Trade window cell every Drops row shows, an estimate
-  from when it dropped for another player's drop, feedback-5 spec §1; your own drop's Trade
-  (its upgrade count moved to the tooltip by feedback-7 spec §2: `Yes`, not `Yes (2)`),
-  `Upgrade for N` (`No upgrades` with none; `(Details)` until feedback-7 spec §2, `(Multiple)` until
-  feedback-6 spec §3) and Offer, §2; the strip's summary and the
-  Offer panel's parts; `TipMarks.lua`: what text in the default face (a tooltip, the detail
-  card, the Offer panel; the toast until feedback-9, whose verdicts are the table's monospace
-  glyphs since DW-I0) draws for a verdict mark or an arrow, an inline texture (LibKa0s
-  media `arrow-up`, `transfer`, `arrow-down`, `arrow-right`, tinted; DW-F5 beyond tooltips) and
-  never a font glyph the face lacks, the non-wrapping `{ text, wrap = false }` line `Window.AttachTooltip` grows to fit,
-  feedback-6 spec §3, DW-F3, and the gear grid described as data (`{ grid = rows }`, `GearRows`,
-  `ArrowCell`: `[Name] [Item level] [Item name] [glyph and difference]`, feedback-7 spec §3, DW-G3)
-  that every tooltip listing worn gear against a drop carries (Me, Them, `Upgrade for N`, the
-  detail card's verdict chips, the Offer panel's Their eq); `TipGrid.lua`: the frame edge that
-  paints such a grid as columns on a pooled child frame of GameTooltip, anchored to reserved lines,
-  the arrow column the table's glyph in the monospace face with glyph and number in the verdict
-  tone, released when the tooltip hides or is cleared; and compact mode's
-  `CompactCards.lua`: each card's three lines, tones and tooltips and the header's short form, over
-  the same composers; compact spec §2-§3, DW-C1), compact mode's per-tab bodies (`CompactGroup.lua`:
-  the Drops tab's pooled three-line cards under one-line headers in the same pane, handed
-  `WindowGroup`'s entries, line 1 the item level before the name and the inspect freshness in
-  brackets right after it, or nothing (nor while the read is pending, Them's `…` says it,
-  feedback-11 spec §0, DW-K0), line 2 ending in the action button (Offer on your own card;
-  the gray `No action` with neither, feedback-11 spec §1), line 3's `You` and `Them` in
-  gold a fixed gap apart, Them cut at the card's right inset (feedback-11 spec §0), and no trade window countdown (the line 2 countdown and its bar of
-  feedback-5 spec §1 went with feedback-10 spec §2, DW-J2), the detail card stacked at the compact width; compact spec §2, DW-C2, feedback-5
-  spec §1-§2; `CompactHistory.lua`: History's cards with the outcome and the row menu, drawn through
-  `CompactGroup`'s shared kit, the Offer panel docked beside the compact window; compact spec §3,
-  DW-C3), compact
-  mode's chrome (`CompactChrome.lua`: the short title with `TEST` or `SIM`, the badge's lock and
-  count, the icon Scan group (compact keeps it in the title bar, feedback-7 spec §4), the short tabs, the one-row filter bar whose `Filters ▾` panel holds the
-  full bar's own Quality, Content and Character dropdowns and the tab's Sort, the shortened strip
-  and the one-line footer, over the same frame and controls; compact spec §4, DW-C4),
-  the two tables'
-  shared row height and text size (`WindowRows.lua`: `window.rowHeight` and `window.fontSize`,
-  18-pixel rows and the template's own size by default, like Ka0s Loot History's table; a Drops
-  row adds its countdown bar's room while the Trade window column shows; feedback-2 spec §8, FB2-9), test mode
-  (`TestData.lua`, its pure sample drops and History groups over real items from the simulator's
-  item pool, and `TestMode.lua`, its edge; ui spec §4) and the diagnostics sections
-  (`Diagnostics.lua`). Every tooltip raised from a table row (the item tooltip, every cell's
-  reason, the Ask, Offer and Announce buttons and the group headers, on
-  both tabs and the Offer panel, and the item tooltip of the Me and Them icons, the detail card and
-  the toast) has one placement, like Ka0s Loot History's `ANCHOR_RIGHT` on a full-width row: the
-  tooltip's `BOTTOMLEFT` at the row's top, just outside the right edge of the frame the row sits
-  in, or its `BOTTOMRIGHT` outside the left edge when the screen has no room on the right, measured
-  after `Show()` at each frame's effective scale (`RowTooltip.lua`: `RowTooltip.Place`, which
-  `Window.AttachTooltip`'s `row` placement and the item buttons share; feedback-3 spec §2, DW-B2,
-  after DW-A2's beside-the-window placement). The row is the nearest ancestor marked `tipRow`; the
-  frame is the nearest ancestor marked `tipHost` (the docked Offer panel), else the outermost one
-  under UIParent (the window, the toast). While the Offer panel is docked beside the window, the two
-  are one span: a tooltip goes beside the pair, never over the panel nor over the window
-  (`tipDocked`; feedback-2 spec §8, FB2-10). The tables' entries in order are `WindowCells.Entries`
-  (pure), your own drops among the others (feedback-5 spec §2: the header's `· n yours on My
-  drops`, the tab's count and `feed.showOwn` are retired). Every Drops row and compact card is
-  indented `K.ROW_INDENT` under its header and draws the header's chevron at its left in muted white
-  (`C.CHEVRON_ROW`; down while closed, up while its detail card is open), and every group header's
-  chevron is gold (`C.GOLD`) on both tabs (feedback-5 spec §0, DW-E0). Countdowns move each second:
-  while a shown Drops row or the strip has a live one, a `K.COUNTDOWN_TICK` ticker, the footer
-  ticker and `TradeTimerTick` call `WindowGroup.TickCountdowns`, which repaints the Trade window
-  cells and the strip's next expiry alone (feedback-5 spec §1; the compact cards show no countdown
-  since feedback-10 spec §2, DW-J2). A filter-bar control's
-  tooltip (View, Quality, Content, Character, the search box and the tab's Sort) opens above the
-  control, never over it or its menu: its `BOTTOMLEFT` on the control's `TOPRIGHT`, or its
-  `BOTTOMRIGHT` on the `TOPLEFT` when the screen has no room on the right (`Window.AttachTooltip`'s
-  `above` placement, `Window.PlaceAbove`; feedback-3 spec §1, DW-B1). Near the top of the screen,
-  with no room above, it opens below instead: its `TOPLEFT` on the control's `BOTTOMRIGHT`, else its
-  `TOPRIGHT` on the `BOTTOMLEFT` (`Window.AboveFits`; feedback-3 spec §5, DW-B5).
+- `modules/`: the simulator's session; the pure engine kernels and the scorers; the edges that read
+  the client; the feed that orchestrates them, with its counts, rosters, places and recorders; the
+  recorded and opt-in features (History and its retention, the toast, auto-ask); the simulator's
+  inputs, scenarios and step panel; then the window: its shell, chrome, two tabs, pure cell
+  composers, tooltip placement, compact mode's switch and bodies, test mode and the diagnostics.
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
-  the slash-only verbs and `/dw sim`'s (`SimVerbs.lua`), and Profiles, last.
+  the slash-only and `/dw sim` verbs, and Profiles, last.
 
 The window only listens: it reads the engine through read-only accessors and the bus, and every
 button goes through the host handler its slash verb shares.
@@ -218,91 +66,19 @@ button goes through the host handler its slash verb shares.
 ## Settings Schema
 
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher
-and the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or the row's default
-before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
-composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
-§12.1 (`settings/SchemaRows.lua`): General's `When to show` (master `autoOpen` and
-`situations.<key>.track|autoOpen|quality`) and `Simulation` (`sim.stepDelay`, feedback-2 spec §8,
-DW-A7), Feed (`feed.quality.*`, the filters and the filter bar's
-seeds, the View set `feed.view.<value>` since DW-A1), Comparison (`comparison.*`), Trade (`trade.rules.<situation>`, `trade.warnAt`), Messages (`messages.*`), Window (`window.columns.<col>`, Trade window's `window.columns.tradeWindow` among them since DW-E1, `window.mode`,
-`window.compactInRuns`, `rowHeight`, `fontSize`, `toast.*`) and the account-wide `Keep history for`,
-`global.history.retentionDays` (feedback-2 spec §5, DW-A5; it replaced the group cap).
-Each row's `group` is its tab on its page (design spec §12.2; a page draws the rows whose `page` is
-its key, `Settings.RowsForPage`), a row with nothing to do carries a `disabledIf` predicate that dims
-it on the panel, its `default` references
-`defaults/Profile.lua`, and its `validate` refuses a value outside its list or range before the
-seam stores it. `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by
-specID (architecture-§5's value route: a membership change is a whole write through the seam),
-drawn by their own editors (`skipRender`); the CLI shows them as their entry count. The
-`situations.<key>.*` rows are `skipRender` too (since DW-H0): When to show's table draws them, a
-line per situation, and writes through the seam. The reactions
-every surface shares are `Settings.REACTIONS` (Master controls) and the window repaint on the
-Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared `writeThrough` so the
-host verbs still land on a load where the composers are hollow (options-ui-§1 route (a)). The
-global closure rows are the Minimap button (`global.minimap.shown`, onto LibDBIcon's `hide`) and
-Keep history for (onto `global.history.retentionDays`, whose change to a shorter window asks before
-it deletes anything, `modules/HistoryRetention.lua`; until the player answers, its onChange writes
-the agreed window back, so an unanswered confirmation never leaves an unconfirmed window stored). Shape, defaults and migrations:
-[`schema.md`](schema.md); the panel: [`settings-panel.md`](settings-panel.md).
+and the host verbs alike, and one read, `NS.Setting(path)`. The rows are `settings/Schema.lua`'s
+`Settings.Schema` array: the composed Master controls rows (`settings/Panel.lua`), then every
+hand-written row of design spec §12.1 (`settings/SchemaRows.lua`). Each row's `group` is its tab on
+its page, a `disabledIf` predicate dims a row with nothing to do, its `default` references
+`defaults/Profile.lua`, and its `validate` refuses a value before the seam stores it. The two
+specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
 
-**State written outside the seam** (architecture-§5): `profile.window.geometry.full` and
-`.geometry.compact` (each `{ point, width, height }`, one per layout; compact spec §1, DW-C0) are
-geometry only a drag or a resize sets, read and created through `NS.WindowCompact.Geometry` for the
-layout in force. Their one owner is `modules/Window.lua`, and its writers
-are `savePoint` (title-bar drag stop and the resize grip's release), `saveSize` (the resize grip's
-release, saved together with the point) and
-`Window.ResetPosition` (the Reset position button, which forgets both layouts' geometry,
-`WindowCompact.ResetGeometry`, and the toast's and the simulation panel's points too); `profile.toast.point` is the
-toast's position, written by `modules/Toast.lua` alone (a drag, allowed only in test mode, and
-`Toast.ResetPosition`); `profile.simPanel.point` is the simulation panel's position, written by
-`modules/SimPanel.lua` alone (its drag stop and `SimPanel.ResetPosition`), absent until the player
-drags it, so the panel opens beside the window; `profile.window.minimized` is the minimize
-button's remembered view, written by `Window.SetMinimized` alone. Every other setting the window and
-the feed read is a row: the window's layout (`window.mode`, `NS.SetWindowMode` and
-`NS.ToggleWindowMode`: the Window page's Layout row, the title-bar toggle, `/dw compact` and
-`/dw full`; it replaced M3's compact preset, `window.compact`, which schema step 5 maps to it) and the filter bar's Quality control (`NS.SetQualityMode`, the Feed page's
-row) both write through the seam. The filter bar's per-tab state is session-only
-(`NS.State.windowFilters`), seeded from the `feed.view.<value>`, `feed.content` and `feed.sort`
-rows when they hold a valid value, History then taking its fixed View, Content and Character
-All (`WindowFilterBar.TAB_FIXED`, feedback-13 spec §0). Its View is a set (DW-A1): the multi-select View dropdown's
-values combine as AND, All is the empty set and the default, and each tab grays the values it does
-not use (`FB.HONORS[tab].views`);
-test mode sets the Drops tab's View to All while it is on and puts the player's value back
-when it ends (`modules/TestMode.lua`). The
-Drops table's collapsed groups and the one expanded row (the detail card)
-are session-only too (`NS.State.windowGroup`), and so are your own drops that are upgrades for you
-whose Offer panel you opened, so who they would help is shown (`NS.State.windowOwn`,
-`modules/WindowOwn.lua`) and the Offer panel's drop
-(`NS.State.offerPanel`), and so are the History tab's collapsed groups (`NS.State.windowHistory`)
-and compact mode's run override (`NS.State.compactRun`, `{ key, ended }` while an auto-open inside a
-run holds the window compact, and `NS.State.compactRunSpent`, the situation a completed key's
-grace ran out in, where no auto-open re-arms it until the situation moves or a key starts;
-`modules/WindowCompact.lua`). Compact mode keeps no state of its own
-beyond it: the cards read the same session tables as the rows, so a switch keeps the tab, the
-filters, the collapsed groups and the expanded detail card. No drop is dismissed or hidden on any
-tab (feedback-4 spec §2, DW-D2).
-`global.notices.autoAsk` is auto-ask's one-time notice, set by `modules/AutoAsk.lua` alone the first
-time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once per
-account. `global.history.v` and `global.history.groups` are the history's own record, written by
-`modules/History.lua` alone (on a recorded drop, an outcome, a completed trade, the safety ceiling
-and Clear history), and by `modules/HistoryRetention.lua`, which deletes the groups older than Keep
-history for (once per session, five seconds after the first `PLAYER_ENTERING_WORLD`, or after the
-stand-up when the addon started disabled, and on a confirmed shorter window); neither replaces `global.history` whole, since the retention row's value
-lives in it. While a simulation
-runs, History writes a simulated drop (`sim = true`) and a simulated trade to the simulation's
-session-only log instead (`NS.Sim.HistoryLog`, `modules/Sim.lua`), never `global.history`, and the
-stop lets that log go (simulator spec §5). A drop or trade is simulated only when `Sim.Fire`
-delivered the event that made it (`NS.Sim.IsDelivering`): a real loot line or trade that arrives
-while a simulation runs is real, keeps the real situation and is saved (`History.LogFor`).
-`global.minimap.minimapPos` is LibDBIcon's own
-write into the table the launcher hands it. The load pass is `NS:RunMigrations`
-(`core/Database.lua`), whose step 2 (`NS.RepairStoredSettings`) drops a stored value a row now
-refuses, in every stored profile, and whose step 3 (`NS.MigrateViewSet`, DW-A1) turns the old
-`feed.view` string and the three retired checkbox rows into the View set. Step 4
-(`NS.RetireHistoryCap`, DW-A5) removes the retired history cap, and step 5
-(`NS.MigrateWindowMode`, DW-C0) turns the compact preset into `window.mode` and moves the single
-layout's point and size into `window.geometry.full`. Step 6 (`NS.RetireShowOwn`, DW-E2) removes the
-retired `feed.showOwn`. No structural registry exists yet.
+State written outside the seam (architecture-§5) is named, each key with its one owner module and
+every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's and
+the simulation panel's positions, auto-ask's one-time notice, the history's own record and
+LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, seven steps), and
+no structural registry exists yet. The shape, every default, the named state with its writers, the
+session-only state and each migration step are in [`schema.md`](schema.md).
 
 ## Message Bus
 
@@ -354,7 +130,9 @@ reset resetall profile debug diagnostics perf`) plus `lock`, `unlock`, `show`, `
 add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
 controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the
-window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`.
+window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. A verb or
+button refused while stood down prints `NS.StoodDownRefusal()`, so a perf capture never tells the
+player to `/dw enable` an addon that is already enabled.
 
 ## Event Subscriptions
 
@@ -362,7 +140,9 @@ Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.S
 so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. Two
 modules may declare the same event: AceEvent keeps one handler per event, so such an event is
 registered once, on `DW:OnSharedFeatureEvent`, which calls each declared handler in row order (the
-TOC order of the modules). `NS.FeatureEventNames()` is the declared list with each event once.
+TOC order of the modules). Each handler runs under `pcall`, so one that raises never skips the
+rest: its error is an `Init` debug line, and the first error is raised once every handler has run,
+the way the client's own registrant dispatch and AceAddon's errorCollector behave. `NS.FeatureEventNames()` is the declared list with each event once.
 
 | Event | Handler | Why |
 |---|---|---|
@@ -420,7 +200,8 @@ keeps the chat sender, the inspect calls and the trade action from the client
 altogether: a send is printed with `[sim]`, a trade is printed, and nothing is inspected
 or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
 simulated restrictions, so nothing it queued can reach the real sender. `Sim.Fire` calls each
-handler under `pcall`, as the client's event dispatch isolates it, and the stop runs each cleanup
+handler under `pcall`, as the client's event dispatch and the live shared dispatcher
+(`DW:OnSharedFeatureEvent`) isolate it, and the stop runs each cleanup
 step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
 failure is a `SIM` debug line. While its combat edge is up, the simulator answers
 `InCombatLockdown` and the player's combat flag `true` through the seam and never `false`, so a
@@ -431,76 +212,13 @@ Blizzard's own dialogs (DW-62).
 
 ## Known Limitations
 
-What the addon does not do yet, or cannot know without the client. How the code reads every case
-the design leaves open, module by module, is in [`design-readings.md`](design-readings.md).
-
-- **Unconfirmed in game.** Every in-game check in [`smoke-tests.md`](smoke-tests.md) is owed: none
-  has a recorded client pass yet. The readings most at risk are whether `CHAT_MSG_LOOT` is readable
-  mid-encounter (COMBAT-1), whether a whisper goes out during an encounter (ASK-4), the raid trade
-  rule (TRADE-3, `personal` until confirmed) and whether the game counts the looter's bags as well
-  as their worn gear (TRADE-4, worn gear only today).
-- **Localized clients.** Loot lines and the trade-time sentence are read with the client's own
-  GlobalStrings, but an upgrade track's tier comes from its enUS name until FEED-5 records the
-  client's track ids, so a non-English client shows no track change (LOC-1).
-- **Which source handed the bare link** in the owner's BUG-1 report (ui spec §0) is not proven
-  offline: the headless reproduction shows that a first report without bonus data read the drop at
-  its base level and quality, and the fix keeps the most complete link and reads your own drops from
-  their bag item whatever the source. ITEM-3 and the `drops` diagnostics line record it in game.
-- **A delve's tier** is not in its group header: the header names the difficulty as the client
-  gives it (GetInstanceInfo's difficultyName, else GetDifficultyInfo's), and neither is known to
-  name the tier, so a delve reads `Delves` (feedback-3 spec §4 names `a delve tier`). FEED-30 records
-  what the client gives.
-- **Tier tokens** are recognized, but the slot a token makes is not read, so the verdict for one is
-  `unknown` until the tier-token follow-up (design spec §14).
-- **Your gear** is a per-slot best, not a loadout planner: unique-equipped limits and a
-  two-hander's claim on both hands are not weighed, and the reagent bag, the bank and the warband
-  bank are not read.
-- **A drop you traded away** is `tradedAway` in the history and its Offer button on Drops reads
-  `Traded`, but its Trade window cell reads as expired rather than `Traded to …`.
-- **After a reload** the kept history takes no more ask or trade-estimate outcomes (drop ids
-  restart each session); a completed trade still matches it by item id.
-- **The trade-time warning** can arrive up to a minute late while the window is closed (the ticker
-  slows to once a minute).
-- **A keystone chest** has no `ENCOUNTER_END`, so auto-ask times its drops from the drop itself.
-- **When to show's table** (since DW-H0, feedback-8 spec §0) is the page's own editor
-  (`settings/PageEditors.lua`), not a library composer: LibKa0s-Options has no grid composer for
-  mixed controls. A LibKa0s issue asking for one is filed as
-  [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
-- **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
-  headless mock does not model; PROFILE-1 is its in-game check.
-- **The simulator** (milestone M7) runs end to end: `/dw sim start <scenario> [size]` builds the
-  pool and the group, `run` and `step` play the scenario's timeline, and the `SIMULATION` title text, the footer's
-  `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). The
-  timeline's steps are event drivers only; the engine computes every verdict, estimate and inspect.
-  A key's bosses drop nothing: its loot comes with the completion, as the end-of-run chest's does.
-  Since the owner's first run (DW-90, sim feedback §0) a run fills the window under the default
-  filters in every scenario: the group wears the content's items 1 to 12 levels above it (so its
-  drops are spare for their looters whatever you wear; the M7 band around your own level left a
-  group naked of content you outgear, and nothing read as Interesting), each random burst has a
-  line of yours and a member's plain loot line, a simulation tracks the situation it simulates
-  whatever its row says (the delve and the open world are untracked by default), and every step
-  prints its line. So a simulation does not exercise a situation's tracking switch.
-- **A simulated member's spec** stays unknown: the inspect broker reads the spec after it has
-  cleared its own inspect (its flight ends first), and the simulator lets the inspect data go on
-  `ClearInspectPlayer`, as the client does. Whether the live client still answers
-  `GetInspectSpecialization` after the clear is unconfirmed (SIM-4); the headless mock keeps it.
-- **A simulated loot line** carries no `ENCOUNTER_LOOT_RECEIVED` or `C_LootHistory` twin, so the
-  feed's de-duplication across sources is not exercised by a simulation (`test_feed` covers it).
-- **The simulator's item pool** reads the newest Encounter Journal tier, which is the current
-  season's on a live client; a season whose dungeons sit in older tiers is read only as far as the
-  newest tier lists them. Its difficulty ids are the journal's (Mythic Keystone 8 for a key); an
-  instance without one of its side's difficulties repeats another difficulty's links, which the pool
-  de-duplicates. A pool built with `loot for me` lists your class's items only, so members of
-  another armor type draw fewer slots from it.
-- **Compact mode** (M12, compact spec) is a second layout of the same window, unconfirmed in game
-  like the rest (COMPACT-1..7). A switch carries the scroll offset as the same fraction of the
-  scroll range, so the drop at the top can move by a card or two; the Columns rows and Row height
-  shape the full layout's tables only. The run override reads the situation edge, so a run ends
-  when the situation moves off the one it began in (a key's completion re-reads it as a dungeon),
-  not on a boss kill or a wipe.
-- **The logo** is a placeholder generated for the scaffold; the owner may replace the art
-  (regenerate the TGAs with the recipe in `DEPENDENCIES.md`).
-
+What the addon does not do yet, or cannot know without the client. In short: no in-game check has a
+recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
+unconfirmed; a non-English client shows no upgrade-track change; a delve's tier and a tier token's
+slot are not read; your gear is a per-slot best, not a loadout planner; after a reload the kept
+history takes no more ask or trade-estimate outcomes; and a simulation does not exercise every live
+path (a member's spec, cross-source de-duplication, a situation's tracking switch). Every limitation,
+with its smoke-check id, is in [`known-limitations.md`](known-limitations.md).
 
 ## Documentation map
 
@@ -529,8 +247,10 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 62 addon-specific shims (three or more), and its family adds the stable reads of `core/CompatWorld.lua` and `core/CompatItem.lua` |
+| `compat-layer.md` | Present | The compat family publishes 84 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 62, `core/CompatWorld.lua` 17, `core/CompatItem.lua` 5 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
+| `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
+| `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |
 
 ### Verification and record (documentation-§3)
 
@@ -547,7 +267,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 
 | Doc | Covers |
 |---|---|
-| `design-readings.md` | How the code reads every case the design spec leaves open, module by module (spilled from Known Limitations) |
+| `design-readings.md` | How the code reads every case the design spec leaves open, module by module (linked from `known-limitations.md`) |
 
 ## Documented deviations
 
@@ -556,12 +276,12 @@ deviation not in this table is not ratified.
 
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
-| library-stack-§7, anti-pattern #47 | The chat sender (`Compat.ChatSender`) and the tooltip line reader with its duration decoder (`Compat.ReadTooltipLine`, `DecodeDuration`, its parsing in `core/TextParse.lua`) are written in this addon, not taken from LibKa0s | No LibKa0s major carries them, and MultiMeters' `ChatSender` is the only other copy; the promotion bars (two consumers with the same semantics) are not met yet. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a major carrying either shape, or a second Ka0s addon needs the reader or the decoder |
-| (no rule yet) chat sent by an addon | The addon whispers and posts to group chat on the player's behalf: an ask or offer whispered to one member, an announce to INSTANCE_CHAT, RAID or PARTY, each from a click or, when queued under a restriction, from the 1.5-second flush timer (`modules/Asks.lua`) | The standard has no rule for addon-sent chat. The addon holds itself to design spec §9: one send per click, the one-ask guard, the 255-byte limit, the restriction queue, `pcall` around the sender, never SAY or YELL, a confirmation line per send, and test mode printing instead. A WowAddonStandards proposal issue is filed as [WowAddonStandards#11](https://github.com/tusharsaxena/WowAddonStandards/issues/11) (design spec §14) | 2026-10-10 (design spec §2, §14) | The standard adopts a rule for addon-sent chat |
-| library-stack-§7, anti-pattern #47 | The loot parser (`modules/LootParser.lua`: the `LOOT_ITEM*` GlobalStrings compiled into patterns for every looter, rebuilt when the globals change, the upgrade and crafting echoes rejected) is written in this addon, not taken from LibKa0s | No LibKa0s major parses loot lines. LootHistory carries the only other parser (`core/Util.lua`), and it reads the player's own loot only, so the semantics differ. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a loot-line major, or LootHistory needs third-person loot |
-| library-stack-§7, anti-pattern #47 | The item read (`core/ItemRead.lua`: how complete a link is, the better of two links, an item's identity, the gear level read detailed-then-base, the exact level and quality at a bag location, the quality of a link) is written in this addon, shaped as the API LibKa0s-Item-1.0 would take, not taken from LibKa0s | LibKa0s-Item-1.0 carries identity primitives only (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`). Loot History reads the same levels with its own `GetItemExtras` / `GearItemLevel`, and Bank Ledger resolves items too, so the read has three would-be adopters; the run builds in-addon first and promotes later (ui spec §0). A LibKa0s promotion issue is filed as [LibKa0s#51](https://github.com/tusharsaxena/LibKa0s/issues/51), with the loot-line parser as its second candidate | 2026-10-11 (ui spec §0) | LibKa0s-Item-1.0 ships these reads, or Loot History or Bank Ledger adopts them |
-| library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14) | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
-| library-stack-§7, anti-pattern #47 | The simulation step panel (`modules/SimPanel.lua`) copies LibKa0s-Perf-1.0's step panel (`PerfPanel.lua`): its geometry, its three columns and its per-state colors. The frame is built from Core's skin and close mark (`NS.ApplySkin`, `NS.MakeCloseButton`) and the Widgets dropdown, but the row and state logic is this addon's | PerfPanel is attached to the Perf probe and drives only its fixed perf steps; it takes no host step list, so a simulator timeline cannot use it. The owner asked for its look exactly (sim feedback spec §1) | DW-91, 2026-10-11 | The LibKa0s step-panel issue ([LibKa0s#53](https://github.com/tusharsaxena/LibKa0s/issues/53)) lands a shared step panel: adopt it and delete the copy |
+| library-stack-§7, anti-pattern #47 | The chat sender (`Compat.ChatSender`) and the tooltip line reader with its duration decoder (`Compat.ReadTooltipLine`, `DecodeDuration`, its parsing in `core/TextParse.lua`) are written in this addon, not taken from LibKa0s | No LibKa0s major carries them, and MultiMeters' `ChatSender` is the only other copy; the promotion bars (two consumers with the same semantics) are not met yet. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major (v1.72.0 moves Perf.lua to minor 15 and the kit to revision 39 only) and LibKa0s#49 is still open, so the trigger has not fired | LibKa0s ships a major carrying either shape, or a second Ka0s addon needs the reader or the decoder |
+| (no rule yet) chat sent by an addon | The addon whispers and posts to group chat on the player's behalf: an ask or offer whispered to one member, an announce to INSTANCE_CHAT, RAID or PARTY, each from a click or, when queued under a restriction, from the 1.5-second flush timer (`modules/Asks.lua`) | The standard has no rule for addon-sent chat. The addon holds itself to design spec §9: one send per click, the one-ask guard, the 255-byte limit, the restriction queue, `pcall` around the sender, never SAY or YELL, a confirmation line per send, and test mode printing instead. A WowAddonStandards proposal issue is filed as [WowAddonStandards#11](https://github.com/tusharsaxena/WowAddonStandards/issues/11) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): WowAddonStandards#11 is still open and the standard (v2.81.0 branch) has no addon-sent-chat rule, so the trigger has not fired | The standard adopts a rule for addon-sent chat |
+| library-stack-§7, anti-pattern #47 | The loot parser (`modules/LootParser.lua`: the `LOOT_ITEM*` GlobalStrings compiled into patterns for every looter, rebuilt when the globals change, the upgrade and crafting echoes rejected) is written in this addon, not taken from LibKa0s | No LibKa0s major parses loot lines. LootHistory carries the only other parser (`core/Util.lua`), and it reads the player's own loot only, so the semantics differ. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major and LibKa0s#49 is still open, so the trigger has not fired | LibKa0s ships a loot-line major, or LootHistory needs third-person loot |
+| library-stack-§7, anti-pattern #47 | The item read (`core/ItemRead.lua`: how complete a link is, the better of two links, an item's identity, the gear level read detailed-then-base, the exact level and quality at a bag location, the quality of a link) is written in this addon, shaped as the API LibKa0s-Item-1.0 would take, not taken from LibKa0s | LibKa0s-Item-1.0 carries identity primitives only (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`). Loot History reads the same levels with its own `GetItemExtras` / `GearItemLevel`, and Bank Ledger resolves items too, so the read has three would-be adopters; the run builds in-addon first and promotes later (ui spec §0). A LibKa0s promotion issue is filed as [LibKa0s#51](https://github.com/tusharsaxena/LibKa0s/issues/51), with the loot-line parser as its second candidate | 2026-10-11 (ui spec §0). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): Item.lua stays at minor 2 and LibKa0s#51 is still open, so the trigger has not fired | LibKa0s-Item-1.0 ships these reads, or Loot History or Bank Ledger adopts them |
+| library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major and LibKa0s#49 is still open, so the trigger has not fired | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
+| library-stack-§7, anti-pattern #47 | The simulation step panel (`modules/SimPanel.lua`) copies LibKa0s-Perf-1.0's step panel (`PerfPanel.lua`): its geometry, its three columns and its per-state colors. The frame is built from Core's skin and close mark (`NS.ApplySkin`, `NS.MakeCloseButton`) and the Widgets dropdown, but the row and state logic is this addon's | PerfPanel is attached to the Perf probe and drives only its fixed perf steps; it takes no host step list, so a simulator timeline cannot use it. The owner asked for its look exactly (sim feedback spec §1) | DW-91, 2026-10-11. Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): PerfPanel.lua stays at minor 6 and LibKa0s#53 is still open, so the trigger has not fired | The LibKa0s step-panel issue ([LibKa0s#53](https://github.com/tusharsaxena/LibKa0s/issues/53)) lands a shared step panel: adopt it and delete the copy |
 
 ### Files over the 1500-line cap
 

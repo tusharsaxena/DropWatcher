@@ -193,6 +193,7 @@ Kit.run{
         "test_disabled",
         "test_diagnostics",
         "test_vendor_sync",
+        "test_locale",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
         { name = "test_prose",                dir = "tests/_kit/" },   -- localization-§5
         { name = "test_layout_cap",           dir = "tests/_kit/" },   -- layout-§1

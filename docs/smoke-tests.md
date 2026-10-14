@@ -13,31 +13,31 @@ passed.
 
 | ID range | Theme | What it covers |
 |---|---|---|
-| INSTALL-1..3 | Install | Load, reload, first run, the logo |
-| SLASH-1..6 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42) |
-| PANEL-1..7 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7) |
+| INSTALL-1..4 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22) |
+| SLASH-1..7 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14) |
+| PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); When to show's table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
-| STATE-1..4 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84) |
-| COMPAT-1..3 | Compat | The client facts `core/Compat.lua` relies on (DW-20) |
+| STATE-1..5 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16) |
+| COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
-| DIAG-1..3 | Diagnostics | The debug console, the report, perf (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43) |
-| DEGRADED-1 | Degraded | The install with LibKa0s missing |
+| DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
+| DEGRADED-1..2 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21) |
 | FEED-1..76 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); General › When to show as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0) |
-| ROSTER-1..2 | Roster | The group's members and the name resolver (DW-22) |
+| ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
 | ITEM-1..4 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
 | INSPECT-1..4 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
-| ASK-1..9 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62) |
+| ASK-1..10 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17) |
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
 | HIST-1..4 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51; Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9 |
-| TOAST-1..3 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62 |
+| TOAST-1..4 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
 | COMPACT-1..7 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2) |
-| LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15) |
+| LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 
 ## Before you start
 
@@ -56,6 +56,11 @@ click hints. A missing icon (a blank or green square) is the failure. Result:
 
 **INSTALL-3. Reload keeps settings.** Set Master scale to 1.25 and lock the window, `/reload` →
 both are kept; the debug flag and test mode are not (session-only). Result:
+
+**INSTALL-4. The re-vendored LibKa0s (DW-P22).** The DW-P22 re-vendor has landed (`ff567d3`). `/reload`
+→ no Lua error and no new chat line; `/dump LibStub.minors["LibKa0s-Perf-1.0"]` → `15`. `/dw diagnostics`
+and `/dw perf` open as DIAG-1 and DIAG-2 describe. A lower minor means an older copy of the library
+loaded first from another addon; record which addons were enabled. Result:
 
 ## Slash
 
@@ -88,6 +93,13 @@ Offer panel docked for that drop. `/dw offer <a tradeable bag item the feed neve
 as your drop and the panel opens for it. `/dw offer <an item not in your bags>` → `[item] is not in
 your bags.`; `/dw offer` alone → the usage line. While disabled, every one of these verbs answers
 the one disabled line. Result:
+
+**SLASH-7. Each root reaches its own addon (cross-addon census, review 2026-10-14).** Enable Drop
+Watcher with as many other Ka0s addons as you have (QuickComms, and any others), `/reload`. Type each
+root with `help`: `/dw`, `/dropwatcher`, then each other addon's own roots (`/qc`, `/quickcomms`, …)
+→ each prints its own addon's help, under its own brand, and none is answered by another addon or by
+the client's `Type /help for a listing`. Then Settings → AddOns → each addon is listed once, and each
+multi-page addon's pages appear once each under it. Result:
 
 ## Settings panel
 
@@ -141,6 +153,13 @@ press Send; an Offer panel's Offer and Announce to group open the box with the o
 announcement's text; Post my tradeables still posts at once. Window › Layout: drag Row height to 32
 and Font size to 15 → the rows grow and their text with them, at once, on Drops and History.
 Result:
+
+**PANEL-8. When to show's table never rides a released frame (DW-P21).** Open General › When to show
+→ the table, a line per situation. Without changing anything: close the Settings window, reopen it on
+Feed → no situation table anywhere on Feed. Back to General › When to show → the table is there once.
+Switch to Master controls and back three times, then open Comparison, Trade and Messages in turn →
+the table shows only on When to show, never on another tab or page, never twice, never empty; toggle
+one cell → it writes, and Defaults repaints it. No Lua error throughout. Result:
 
 ## Profiles
 
@@ -207,6 +226,14 @@ since DW-D4) → none ends in an ellipsis or is cut short. Then in a Heroic dung
 out of combat, with the window closed: `/dw test` → the window opens with the test rows; `/dw test` again →
 the window closes (test mode opened it, even though its drops arrived first). Result:
 
+**STATE-5. One refusal line while disabled (DW-P16).** `/dw disable` (the refusal comes before any
+other check, so no drop is needed). Run
+`/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").PressAsk(1)` and then `/dw scan` → each prints
+exactly `Ka0s Drop Watcher is disabled — enable it with /dw enable`, byte for byte the same, never
+inside `Not asked: …` and never `The addon is disabled.`. Then enter and leave combat with a training
+dummy and travel to another zone without reloading → no `[DW]` chat line and no window, and nothing
+in the feed changes (review C-01's in-client half). `/dw enable` after. Result:
+
 ## Compat
 
 The seam's decisions are headless-tested (`test_compat`), on the mock's idea of the client. These
@@ -229,6 +256,12 @@ duration such as `1 hour 59 min`. Then `/dump C_TooltipInfo.GetInventoryItem("pl
 
 **COMPAT-3. Pawn.** With Pawn installed and loaded, `/dump type(PawnIsInitialized), PawnIsInitialized`
 → `boolean`, `true`. Without Pawn → `nil`. Result:
+
+**COMPAT-4. The optional-addon probe (DW-P20).** Pawn installed and enabled, CanIMogIt not (or the
+other way round). `/reload`, then `/dw debug on` (the line is said once, as logging turns on) → the
+console's `[Init]` line reads `optional: Pawn loaded, CanIMogIt absent`; `/dw diagnostics` → its
+`integrations` section reads `optional: Pawn=true CanIMogIt=false`. Both agree with the AddOns list; swap which addon is enabled and they follow. A
+line that names neither, or one reading `unavailable` or `unreadable`, is the failure. Result:
 
 ## Combat
 
@@ -265,7 +298,10 @@ Watcher and the `identity`, `settings`, `window`, `registration` and `integratio
 is on afterwards. `/dw debug diagnostics` writes the same report again below the first. Result:
 
 **DIAG-2. Perf.** `/dw perf` → the step panel opens with its own close mark; run A, B and finish →
-the report lists `window.refresh`, and `parse` when a loot line arrived during the run. Result:
+the report lists `window.refresh`, and `parse` when a loot line arrived during the run. During a
+suspended run (the addon stood down by the `perf` hold, `enabled` still on), `/dw scan`, `/dw test` and
+`/dw sim start dungeon` each answer `Not available during a performance capture.` and never `is
+disabled — enable it with /dw enable`. Result:
 
 **DIAG-3. State and Scoring.** In a dungeon, `/dw diagnostics` → `state: enabled=true
 situation=dungeon testMode=false restriction=none queuedSends=0`; pull a boss and run it again →
@@ -273,12 +309,29 @@ situation=dungeon testMode=false restriction=none queuedSends=0`; pull a boss an
 spec's Pawn scale>` with Pawn installed (`ready=false scale=none` without it), and `retries pending=0
 spent=0 timer=off` out of loot. Result:
 
+**DIAG-4. Perf nesting confirmed by a capture (DW-P24, review C-04).** DW-P22 (LibKa0s Perf 15,
+`ff567d3`) and DW-P24 (`evaluate` and `quality.gate` declared within `feed.add`, `917449f`) have landed. In a
+dungeon, in a group: the standard two-arm `/dw perf` protocol, the clean arm first and the suspended
+arm second, no `/reload` between the arms, with at least one boss kill and its loot in the clean arm.
+→ the report's nesting lines read `evaluate observed inside feed.add and at top level` and
+`quality.gate observed inside feed.add and at top level` (top level is an item judged later, once it
+loads). The failure is any `declares itself within feed.add — not observed` or `… but was observed
+at top level` line. Read the bucket figures, not the frame-time delta. Hand the report and the JSON
+dump to `/dev-copilot:wow-perf-analysis`, which records the capture as
+`docs/perf-analysis/<YYYYMMDD-HHMMSS>/`; record that folder here. Result:
+
 ## Degraded
 
 **DEGRADED-1. LibKa0s missing.** Rename `libs\LibKa0s` and `/reload` → no Lua error; one chat line
 says the library is missing; `/dw show` opens the window without the skin; `/dw disable` and
 `/dw enable` still work; `/dw list` says the settings CLI is unavailable. Restore the folder after.
 Result:
+
+**DEGRADED-2. The toast's close degrades to nothing (DW-P21).** With the library present, turn
+Settings › Window › Toast › Show a toast on (it is saved). Rename `libs\LibKa0s` as in DEGRADED-1,
+`/reload`, then `/dw test` → the test toast shows with Ask in its top-right corner and no close control at all:
+no `×` text button. Right-click the toast → it closes. With the library restored and `/reload` → the
+skinned close mark is back at the corner and Ask sits to its left. Restore the folder after. Result:
 
 ## Feed
 
@@ -1156,6 +1209,16 @@ Record any member whose realm differs. Result:
 line carrying `player=true`. Have a member log out → after the next `[ROSTER]` line their
 `online=false`. Leave the group → `roster: 1 members` with you alone at `unit=player`. Result:
 
+**ROSTER-3. The roster survives a raising handler on its shared event (DW-P18, review C-03).** In a
+party with a second character, `/console scriptErrors 1`. Run
+`/run local D=LibStub("AceAddon-3.0"):GetAddon("DropWatcher"); D._s=D.OnSituationEvent; D.OnSituationEvent=function() error("probe") end`,
+then have the second character leave and rejoin the party → one Lua error `probe` per roster update,
+and `/dw diagnostics`'s `roster:` lines (and the window's group header tooltip) show the member gone,
+then back. With `/dw debug on` the console has an `[Init] GROUP_ROSTER_UPDATE: OnSituationEvent
+raised: …probe` line for each. Restore with
+`/run local D=LibStub("AceAddon-3.0"):GetAddon("DropWatcher"); D.OnSituationEvent=D._s` (or
+`/reload`). A roster that stays stale while the error shows is the failure. Result:
+
 ## Item facts
 
 The facts and the load are headless-tested (`test_item_facts`); these checks confirm the shapes the
@@ -1345,7 +1408,9 @@ frame shows your own outgoing whisper, and the addon prints one line `Whispered 
 the print reads `sent`. Run it again → `refused alreadyAsked`, and nothing is whispered. Swap
 `"ask"` for `"announce"` (the target is ignored) → "[item] is up for grabs, whisper me." in party
 chat (raid chat in a raid, instance chat in a dungeon finder group) and `Announced in <channel>:
-[item]`. The failure looks like a Lua error, no whisper with `sent` printed, a broken link, or a
+[item]`. In a party (not a raid), `/dw set messages.announceChannel RAID` and announce again → the
+print reads `failed noChannel`, nothing is posted and no `Announced` line appears; Post my
+tradeables prints `Not announced: You are not in a group, ...` (DW-P17). Set it back to `auto`. The failure looks like a Lua error, no whisper with `sent` printed, a broken link, or a
 `[MSG] send failed` line (record its reason). Result:
 
 **ASK-2. Queued under a restriction, flushed at the kill.** In a dungeon, pull a boss and, during
@@ -1429,6 +1494,17 @@ one was held) and `/dw diagnostics` shows auto-ask `inEncounter=false`. Have a m
 tradeable upgrade for you (or `/dw add` one naming them) → the whisper goes after the delay, not at
 the next boss or `/reload`. Back inside, pull a boss and cross into another part of the instance
 during the fight → nothing is asked until the boss dies. Result:
+
+**ASK-10. A stored announce channel without its group is refused (DW-P17, review ANN-1).** One of
+your own drops in the feed (`/dw add <item link>`), Settings › Messages › Announce channel = **Party**.
+Solo: open the drop's Offer panel and press **Announce to group** → chat says `Not announced: You are
+not in a group, so there is no channel to post in.`, no red system line about the party, and the
+button stays pressable. Join a party with the second character and press it again → `Announced in
+Party: [item]`, and the party sees it. Then set Announce channel = **Instance**, stay in the home
+party (ANN-1b: a premade group outside an instance) and press it → refused with the same line,
+nothing posted. Post my tradeables in the same two states → `Not announced: …` solo, posted in the
+party. Set it back to Automatic after. A step that prints `Announced in` without the line appearing
+in that channel is the failure. Result:
 
 ## Situations
 
@@ -1584,6 +1660,10 @@ with Least gain 50, auto-ask on. In a group: `/dw add <a BoE ring link> <member>
 by <member> · You ▲ empty · Them …`, `empty` in green, and row 4 `Tradeable` with its reason; FEED-66); after the auto-ask delay the whisper goes and reads
 `It'd be an empty-slot upgrade for me`: never the ring's item level, never `+?` and never `+an`.
 Result:
+
+**TOAST-4. The toast with LibKa0s present (DW-P21).** Toast on, `/dw test` → the close mark sits in the
+toast's top-right corner and Ask to its left; click the mark → the toast goes. (Without the library the
+mark is absent, never a typed `×`: DEGRADED-2.) Result:
 
 ## Transmog
 
@@ -1864,6 +1944,12 @@ expand a drop that has an upgrade track → the detail card's track chip shows t
 (localized) track name and rank, never an English name; the track change line may be missing on
 this client (Known Limitations), and its absence is not a failure. Result:
 
+**LOC-2. The enUS catalog reads the same (DW-P19).** On an enUS client: open the window on both tabs,
+expand a drop's detail card, open the Offer panel, every settings page and tab, `/dw help`,
+`/dw diagnostics` and the minimap tooltip → every string reads as it did before DW-P19 (the catalog
+now carries every routed string, so a typo in a key would show as different text). No raw key, no
+stray `%s` or `%d`, and no Lua error. Result:
+
 ## Pending sign-off
 
 | ID | Origin | Why it is owed |
@@ -1983,3 +2069,34 @@ this client (Known Limitations), and its absence is not a failure. Result:
 | COMPACT-2, COMPACT-7 | DW-C2, compact Drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
 | COMPACT-3, COMPACT-4 | DW-C3, compact cards of your own drops (on Drops since DW-E3) and History cards, the countdown, Offer and the strip, the docked Offer panel | No client pass recorded yet |
 | COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |
+| ASK-1 (its `noChannel` sentence), ASK-10 | DW-P17, a stored announce channel honors the not-in-a-group refusal, Post my tradeables included | No client pass recorded yet |
+| STATE-5, DIAG-2 (its perf-hold sentence) | DW-P16, `NS.StoodDownRefusal()` for every stood-down refusal | No client pass recorded yet |
+| ROSTER-3 | DW-P18, the shared event dispatcher isolates each handler | No client pass recorded yet |
+| LOC-2 | DW-P19, the completed enUS catalog | No client pass recorded yet |
+| COMPAT-4 | DW-P20, the optional-addon probe through Compat | No client pass recorded yet |
+| PANEL-8, DEGRADED-2, TOAST-4 | DW-P21, When to show's OnRelease park; the toast's close degrading to nothing | No client pass recorded yet |
+| INSTALL-4 | DW-P22, the LibKa0s v1.72.0 re-vendor | DW-P22 has landed (`ff567d3`); no client pass recorded yet |
+| DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | DW-P22 (`ff567d3`) and DW-P24 (`917449f`) have landed; owed the owner's capture recorded under `docs/perf-analysis/`; none is invented |
+| SLASH-7 | Review 2026-10-14, the cross-addon census's in-client half | No client pass recorded yet |
+
+### Review 2026-10-14 (M24) sign-off
+
+The review's in-client checks (`reviews/2026-10-14/03_SMOKE_TESTS.md`, a frozen bundle) live above
+under these IDs, and this table is where their sign-off is recorded. The owner fills it; an agent
+never marks a row passed. DW-P25 (the disabled-state suite), DW-P26 (TOC labels) and DW-P27 (the
+documentation spill) change no code the client runs, and have no in-client check.
+
+| Review ID | Check here | Tested? | Pass/Fail | Notes |
+|---|---|---|---|---|
+| C-01 | STATE-5 (its combat and zone half) | | | |
+| C-02 (ANN-1, ANN-1b) | ASK-10, ASK-1 | | | |
+| C-03 | ROSTER-3 | | | |
+| C-04 | DIAG-4 | | | DW-P22 and DW-P24 landed; owed the owner's capture |
+| C-05 | LOC-2 | | | |
+| C-06 | COMPAT-4 | | | |
+| C-07 | none | n/a | | Comment only |
+| C-08 | STATE-5, DIAG-2 | | | |
+| U-1/U-2 re-vendor | INSTALL-4 | | | DW-P22 landed (`ff567d3`); owed the owner's client pass |
+| DW-P21 (F11, F12) | PANEL-8, DEGRADED-2, TOAST-4 | | | |
+| Regression | INSTALL-1..3, PROFILE-1, STATE-1, STATE-3, PANEL-3, SIM-1 | | | |
+| Cross-addon | SLASH-7 | | | |

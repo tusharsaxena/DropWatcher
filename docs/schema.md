@@ -4,6 +4,40 @@ The SavedVariables shape, every default, and the migration path. Defaults live i
 `defaults/Profile.lua` (`NS.C`); `settings/Schema.lua`'s `Settings.BuildDefaults` merges them with
 every stored schema row's own default and hands the tree to AceDB.
 
+## The write seam
+
+One write, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher and
+the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or the row's default
+before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
+composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
+§12.1 (`settings/SchemaRows.lua`), page by page as the tables below list them: General's When to
+show and Simulation, Feed, Comparison, Trade, Messages, Window, and the account-wide Keep history
+for (`global.history.retentionDays`, feedback-2 spec §5, DW-A5; it replaced the group cap).
+
+- Each row's `group` is its tab on its page (design spec §12.2); a page draws the rows whose `page`
+  is its key (`Settings.RowsForPage`). The tree is [`settings-panel.md`](settings-panel.md).
+- A row with nothing to do carries a `disabledIf` predicate that dims it on the panel; its `default`
+  references `defaults/Profile.lua`; its `validate` refuses a value outside its list or range
+  before the seam stores it.
+- `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by specID
+  (architecture-§5's value route: a membership change is a whole write through the seam), drawn by
+  their own editors (`skipRender`); the CLI shows them as their entry count. The
+  `situations.<key>.*` rows are `skipRender` too (since DW-H0): When to show's table draws them, a
+  line per situation, and writes through the seam.
+- The reactions every surface shares are `Settings.REACTIONS` (Master controls) and the window
+  repaint on the Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared
+  `writeThrough`, so the host verbs still land on a load where the composers are hollow
+  (options-ui-§1 route (a)).
+- The global closure rows are the Minimap button (`global.minimap.shown`, onto LibDBIcon's `hide`)
+  and Keep history for (onto `global.history.retentionDays`, whose change to a shorter window asks
+  before it deletes anything, `modules/HistoryRetention.lua`; until the player answers, its
+  onChange writes the agreed window back, so an unanswered confirmation never leaves an
+  unconfirmed window stored).
+- Every other setting the window and the feed read is a row: the window's layout (`window.mode`,
+  through `NS.SetWindowMode` and `NS.ToggleWindowMode`: the Window page's Layout row, the title-bar
+  toggle, `/dw compact` and `/dw full`) and the filter bar's Quality control (`NS.SetQualityMode`,
+  the Feed page's row) both write through the seam.
+
 ## SavedVariables
 
 Exactly two (savedvariables-§4):
@@ -104,15 +138,13 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 
 | Key | Default | Set by | What it is |
 |---|---|---|---|
-| `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, full is 972 x 600 and compact is 380 x 460 at the full window's top right. A stored width under the layout's least (its default: full 972, compact 380; feedback-4 spec §4, DW-D4) is raised to it on load |
+| `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, full is 1038 x 600 and compact is 440 x 460 at the full window's top right. A stored width under the layout's least (its default: full 1038, compact 440; feedback-4 spec §4, DW-D4, recomputed by feedback-5 spec §4, DW-E4, and feedback-6 spec §0-§1) is raised to it on load |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
 | `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }` |
 | `simPanel.point` | absent | a drag of the simulation panel; Reset position clears it | `{ point, relativePoint, x, y }`; until set, the panel opens beside the window |
 
-Their one owner is `modules/Window.lua` (`savePoint`, `saveSize`, `Window.SetMinimized`,
-`Window.ResetPosition`, through `NS.WindowCompact.Geometry` for the layout in force), as `docs/ARCHITECTURE.md` → Settings Schema names (architecture-§5).
-The toast's position (design spec §11.5) is named state too: `toast.point` (`{ point, relativePoint, x, y }`, absent until a drag), written by `modules/Toast.lua` alone, from a drag that only test mode allows; the Window's Reset position forgets it with the window's.
-The simulation panel's position (sim feedback spec §1, DW-91) is named state as well: `simPanel.point`, written by `modules/SimPanel.lua` alone (its drag stop and `SimPanel.ResetPosition`), absent until a drag; the Window's Reset position forgets it with the window's.
+Each one's owner and every writer are named under
+[State written outside the seam](#state-written-outside-the-seam-architecture-5) below.
 
 ## `DropWatcherDB.global`
 
@@ -173,6 +205,47 @@ history = { retentionDays = 30, v = 1, groups = {
   (`NS.History.CEILING`, a constant the diagnostics report), the oldest going first, keep
   SavedVariables bounded even under Never delete. The history's shape has its own stamp, `v`.
 
+## State written outside the seam (architecture-§5)
+
+The one home of these names: `docs/ARCHITECTURE.md` → Settings Schema summarizes them and links
+here (documentation-§3's spill rule). Each key has one owner module, and every function that writes
+it is named.
+
+- `profile.window.geometry.full` and `.geometry.compact` (`{ point, width, height }`, one per
+  layout; compact spec §1, DW-C0) are geometry only a drag or a resize sets, read and created
+  through `NS.WindowCompact.Geometry` for the layout in force. Owner `modules/Window.lua`; writers
+  `savePoint` (the title-bar drag stop and the resize grip's release), `saveSize` (the resize
+  grip's release, saved together with the point) and `Window.ResetPosition` (the Reset position
+  button, which forgets both layouts' geometry, `WindowCompact.ResetGeometry`, and the toast's and
+  the simulation panel's points too).
+- `profile.window.minimized` is the minimize button's remembered view. Owner `modules/Window.lua`;
+  writer `Window.SetMinimized` alone.
+- `profile.toast.point` is the toast's position (design spec §11.5). Owner `modules/Toast.lua`;
+  writers its drag stop (a drag only test mode allows) and `Toast.ResetPosition`.
+- `profile.simPanel.point` is the simulation panel's position (sim feedback spec §1, DW-91), absent
+  until the player drags it, so the panel opens beside the window. Owner `modules/SimPanel.lua`;
+  writers its drag stop and `SimPanel.ResetPosition`.
+- `global.notices.autoAsk` is auto-ask's one-time notice. Owner `modules/AutoAsk.lua`; written the
+  first time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once
+  per account.
+- `global.history.v` and `global.history.groups` are the history's own record. Owner
+  `modules/History.lua`, which writes them on a recorded drop, an outcome, a completed trade, the
+  safety ceiling and Clear history; `modules/HistoryRetention.lua` deletes the groups older than
+  Keep history for (once per session, five seconds after the first `PLAYER_ENTERING_WORLD`, or
+  after the stand-up when the addon started disabled, and on a confirmed shorter window). Neither
+  replaces `global.history` whole, since the retention row's value lives in it.
+- `global.minimap.minimapPos` is LibDBIcon's own write into the table the launcher hands it.
+
+While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to
+the simulation's session-only log instead (`NS.Sim.HistoryLog`, `modules/Sim.lua`), never
+`global.history`, and the stop lets that log go (simulator spec §5). A drop or trade is simulated
+only when `Sim.Fire` delivered the event that made it (`NS.Sim.IsDelivering`): a real loot line or
+trade that arrives while a simulation runs is real, keeps the real situation and is saved
+(`History.LogFor`).
+
+No structural registry exists yet. The load pass is `NS:RunMigrations` (`core/Database.lua`),
+below.
+
 ## Session-only (never saved)
 
 `NS.State.debug` (the logging flag), `NS.State.testMode`, `NS.State.windowOpen`,
@@ -189,17 +262,28 @@ draws who they would help; feedback-5 spec §2, DW-E2, where `NS.State.windowMin
 `NS.State.windowHistory` (the History tab's collapsed groups; its View: All, Content: All and
 Character: All come from WindowFilterBar.TAB_FIXED since feedback-13 spec §0),
 `NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
-came from; nil while stood down). The Debug console
+came from; nil while stood down), and compact mode's run override (`NS.State.compactRun`,
+`{ key, ended }` while an auto-open inside a run holds the window compact, and
+`NS.State.compactRunSpent`, the situation a completed key's grace ran out in, where no auto-open
+re-arms it until the situation moves or a key starts; `modules/WindowCompact.lua`). The Debug console
 and Test mode rows are `sessionOnly` and store through their own closures.
+
+The filter bar's View is a set (DW-A1): the multi-select View dropdown's values combine as AND, All
+is the empty set and the default, and each tab grays the values it does not use
+(`FB.HONORS[tab].views`). Test mode sets the Drops tab's View to All while it is on and puts the
+player's value back when it ends (`modules/TestMode.lua`). Compact mode keeps no state of its own
+beyond the run override: the cards read the same session tables as the rows, so a switch keeps the
+tab, the filters, the collapsed groups and the expanded detail card. No drop is dismissed or hidden
+on any tab (feedback-4 spec §2, DW-D2).
 
 ## Migrations
 
-`core/Database.lua`: `NS.MIGRATIONS` is a list of steps `{ to, run, perProfile }`, and
-`NS.SCHEMA_VERSION` is the highest step's `to` (today 7). The runner runs in `OnInitialize` straight
-after `AceDB:New`, before anything reads the profile, and again on every profile event. It owns the
-stamp: a step's `to` is stored only after the step returned, so a step that raises is retried on the
-next load. A `perProfile` step runs for every stored profile in the raw SavedVariables, not only the
-active one. The default stays `0`.
+`core/Database.lua`: the load pass is `NS:RunMigrations`, `NS.MIGRATIONS` is a list of steps
+`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 7). The runner
+runs in `OnInitialize` straight after `AceDB:New`, before anything reads the profile, and again on
+every profile event. It owns the stamp: a step's `to` is stored only after the step returned, so a
+step that raises is retried on the next load. A `perProfile` step runs for every stored profile in
+the raw SavedVariables, not only the active one. The default stays `0`.
 
 | Step | What it does |
 |---|---|

@@ -36,7 +36,7 @@ local TAG = "ROSTER"
 -- A plain, non-empty string, or nil (secret, missing or the client's "Unknown" placeholder).
 local function plainName(v)
     if NS.Compat.IsSecret(v) or type(v) ~= "string" or v == "" then return nil end
-    if v == UNKNOWNOBJECT then return nil end
+    if v == NS.Compat.GlobalString("UNKNOWNOBJECT") then return nil end
     return v
 end
 

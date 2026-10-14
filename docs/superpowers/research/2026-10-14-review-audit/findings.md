@@ -1,0 +1,1237 @@
+# Review + audit findings, collated and verified (2026-10-14)
+
+Source bundles: `docs/reviews/2026-10-14/` (dev-copilot:review, scope all) and `docs/audits/2026-10-14/` (dev-copilot:wow-standards-audit).
+Each finding was checked against the tree by an adversarial verifier (all 34 held); X-items came from a completeness critic. Raw data: `findings.json`.
+
+## F01 — Feature refusals print 'is disabled — enable it with /dw enable' while only the perf hold is taken
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** medium · **Sources:** audit:DRW-05
+- **Evidence:** core/DropWatcher.lua:120 (testModeRefusal), :177-178 (NS.ScanGroup), :282-283 (NS.RetryInspect), :393-394 (NS.PostTradeables), modules/Sim.lua:128 (Sim.Refusal) all refuse on NS.IsStoodDown(), which is true under either hold (core/LifecycleSetup.lua:14-16), then print NS.SlashCommands:DisabledLine(). During a /dw perf suspended arm, /dw scan, test, sim start, post-tradeables print a false line whose remedy does nothing (enabled is already true). Dispatcher gate correctly reads stored flag (settings/Slash.lua:100-103, :176).
+
+**Fix (verified):**
+
+1. core/LifecycleSetup.lua: after NS.IsStoodDown (line 16), add:
+
+```lua
+--- Why a stood-down feature refuses, as the line to print, or nil while standing up.
+--- @return string|nil
+function NS.StoodDownRefusal()
+    if not NS.IsStoodDown() then return nil end
+    if NS.Lifecycle:IsHeld(NS.HOLD_DISABLED) then return NS.SlashCommands:DisabledLine() end
+    return NS.L["Not available during a performance capture."]
+end
+```
+
+NS.HOLD_DISABLED is defined later in the same file, but it is only read at call time, so this is safe.
+
+2. Route the five sites through the helper:
+- core/DropWatcher.lua:120 becomes `local r = NS.StoodDownRefusal(); if r then return r end`
+- core/DropWatcher.lua:177-180, :282-285 and :393-396 become `local r = NS.StoodDownRefusal(); if r then NS.Print(r); return <0|nil|0> end`
+- modules/Sim.lua:128: same shape as :120
+
+3. locales/enUS.lua: add `L["Not available during a performance capture."] = true` (or the file's key = value style). Mirror the key in the other locale files if the locale-key test requires it.
+
+4. Tests:
+- tests/test_disabled.lua, or a new test: with NS.Lifecycle:Hold(NS.HOLD_PERF) alone, `/dw scan`, `/dw test`, `sim start` and post-tradeables print the perf line and never "is disabled".
+- With HOLD_DISABLED held, the same verbs print DisabledLine.
+- Release both holds after each case.
+
+5. Gate: run `lua tests/run.lua` and `luacheck .` and get 0/0. Sync docs/ARCHITECTURE.md (the stand-down/slash section) and docs/smoke-tests.md with a perf-suspend refusal check.
+
+**Verifier notes:**
+
+I checked this against today's code and could not refute it. NS.IsStoodDown (core/LifecycleSetup.lua:14-16) returns Lifecycle:IsDown(), which is true while either hold is taken: `disabled` or `perf`. Five sites refuse on it and then print or return NS.SlashCommands:DisabledLine():
+- core/DropWatcher.lua:120, testModeRefusal
+- core/DropWatcher.lua:177-178, NS.ScanGroup (also reached from the window's Scan group button)
+- core/DropWatcher.lua:282-283, NS.RetryInspect
+- core/DropWatcher.lua:393-394, NS.PostTradeables
+- modules/Sim.lua:128, Sim.Refusal
+
+The dispatcher gate in settings/Slash.lua:97-103 and :129 reads the stored `enabled` flag on purpose. Its comment says a perf capture is "a reason to be inert, never a reason to refuse the player's verbs". So during a perf suspend these verbs get past the gate and then print "is disabled — enable it with /dw enable". `enabled` is already true, so that advice does nothing. The line is wrong.
+
+Routing is correct. The fix is addon code only and touches no libs/ or tests/_kit/ files. No row in the documented deviations table covers it, and no upstream change is needed: the library's Lifecycle already has IsHeld (libs/LibKa0s/Lifecycle.lua:193), and so does the stub used when the library is absent (core/LifecycleSetup.lua:34).
+
+The other IsStoodDown sites refuse silently and are not affected: core/DropWatcher.lua:252, :345 and :370, modules/SimPanel.lua:620 and modules/Window.lua:768.
+
+Risks:
+- The helper needs NS.SlashCommands at call time. That is already true at all five sites.
+- The new enUS string must get past the prose checks (tests/prose_waivers.lua and the locale-key tests).
+- Existing tests that assert the disabled line (tests/test_disabled.lua, tests/test_window_shell.lua:174) take HOLD_DISABLED, so they should keep passing. Confirm this.
+
+## F02 — A fixed announce channel skips the not-in-a-group refusal and confirms a send that went nowhere
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** medium · **Sources:** review:F-002, review:C-02
+- **Evidence:** modules/Asks.lua:128-136 A.AnnounceChannel: `if want ~= "auto" then return want end` (:130); route() :235-238 returns A.AnnounceChannel() unconditionally (:237). File header :27 promises an announce outside a group fails noChannel; the queue-cancel at :459 does check NS.Compat.InGroup(). With announceChannel=PARTY/RAID/INSTANCE_CHAT while solo or lacking that group, the client refuses silently, pcall succeeds, addon prints 'Announced in Party: [item]', marks sent, and Ask-once blocks retries for the session. Post my tradeables shares the path.
+
+**Fix (verified):**
+
+1. modules/Asks.lua :125-136. Add a file-scope gate table and change A.AnnounceChannel so a stored channel is used only when the player is in that kind of group:
+
+    local HAS = {
+        INSTANCE_CHAT = function(C) return C.InGroup(C.InstanceGroupCategory()) end,
+        RAID = function(C) return C.InRaid() end,
+        PARTY = function(C) return C.InGroup() end,
+    }
+    function A.AnnounceChannel()
+        local want, Compat = A.Settings().announceChannel, NS.Compat
+        if want ~= "auto" then
+            local has = HAS[want]
+            return (has and has(Compat)) and want or nil
+        end
+        ...auto branch unchanged...
+    end
+
+Also update the doc comment at :125-126 to say: "the stored one when it names a channel and you are in that kind of group, else nil".
+
+send() (:243) already maps nil to `noChannel`, so route() and send() need no change.
+
+2. Header comment at modules/Asks.lua:25-27: say that an announce fails `noChannel` outside a group, or when the stored channel's group is missing (a stored PARTY, RAID or INSTANCE_CHAT is never sent blind).
+
+3. Docs:
+- docs/data-flow.md:613: add "a stored channel only while in that group; else noChannel".
+- docs/design-readings.md:261: same wording, if it restates the rule.
+
+4. tests/test_asks.lua: add tests after :251.
+- (a) Solo (m.setGroup({})) with announceChannel=PARTY: Request answers failed/noChannel, #m.chatSent==0, no "Announced in" line printed, StateOf is not sent, and a retry is allowed.
+- (b) In a party but not a raid, with RAID stored: failed/noChannel.
+- (c) In a party but not an instance group, with INSTANCE_CHAT stored: failed/noChannel.
+- (d) With m.instanceGroup=true and INSTANCE_CHAT stored: sent with chatType INSTANCE_CHAT.
+- (e) Solo with PARTY stored, through NS.PostTradeables (core/DropWatcher.lua around :410): prints the "Not announced" refusal and does not send.
+
+5. Regenerate docs/test-cases.md and the README test-count badge. Then run `lua tests/run.lua` and `luacheck .`, and expect 0/0.
+
+**Verifier notes:**
+
+I checked this against today's tree and it holds. In modules/Asks.lua, A.AnnounceChannel (:128-136) returns the stored channel at :130 (`if want ~= "auto" then return want end`) without checking group state. route() (:235-238) passes that value straight to send() (:241-249). send() only fails `noChannel` when chatType is nil, which only the auto branch can produce. So with announceChannel=PARTY, RAID or INSTANCE_CHAT while solo, or while in a group of the wrong kind, pcall(sender, ...) succeeds, succeed() marks the drop sent, confirm() prints "Announced in Party: [item]", and the sent ask carries on into History and the oneAsk guard.
+
+Post my tradeables (core/DropWatcher.lua, around :410) calls NS.Asks.Request("announce", ...) and goes through the same route. A queued announce flushed later also goes through send(), so it is affected too. The header comment at :25-27 promises that "an announce outside a group fails noChannel", and that promise is broken.
+
+Existing tests miss this. tests/test_asks.lua:236 checks a stored PARTY only while inside a raid plus instance group. The noChannel test at :244 uses the auto setting.
+
+Routing: the fix belongs in DropWatcher's own module code, not in libs/ or tests/_kit/. The documented deviation in ARCHITECTURE.md:560 (addon-sent chat) covers having no rule for addon chat at all. It does not ratify this bug; the addon's own §9 rules promise the refusal.
+
+Risks:
+(a) The PARTY gate. Compat.InGroup() with no category is true inside an LFG-only instance group. Sending PARTY there may still be refused by the client, because instance groups use INSTANCE_CHAT. Using InGroup() matches today's auto branch and keeps the change minimal. The stricter option is C.InGroup(LE_PARTY_CATEGORY_HOME or 1), which would need a Compat helper for the home category. This is a judgement call; say which one you chose.
+(b) The noChannel message (core/DropWatcher.lua:320) reads "You are not in a group, so there is no channel to post in." That is slightly wrong for a player in a party with RAID fixed. It is acceptable, or you could add a reason `wrongChannel` with a new locale string, but that widens scope.
+(c) Existing tests at tests/test_asks.lua:236, test_sim_events.lua:173/187/195, test_sim_scenario.lua:441 and test_sim_e2e.lua:407-414 should still pass. :236 runs inside raid plus instance, so PARTY passes InGroup(). Re-run them to confirm.
+
+## F03 — Shared event dispatcher has no per-handler isolation; one raising handler silently skips the rest
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** medium · **Sources:** review:F-003, review:C-03
+- **Evidence:** core/DropWatcher.lua:57-59 `for _, method in ipairs(sharedHandlers[event] or {}) do self[method](self, event, ...) end`. Ten events are shared (GROUP_ROSTER_UPDATE has 6 handlers: Sim, Situations, Roster, Inspect, Asks, AutoAsk). The addon already isolates other fan-outs: modules/Sim.lua:148 pcall(DW[row[2]], ...), modules/LootParser.lua:263 pcall(fn, loot).
+
+**Fix (verified):**
+
+core/DropWatcher.lua:57-59: replace the body of DW:OnSharedFeatureEvent with:
+```lua
+function DW:OnSharedFeatureEvent(event, ...)
+    local first
+    for _, method in ipairs(sharedHandlers[event] or {}) do
+        local ok, err = pcall(self[method], self, event, ...)
+        if not ok then
+            NS.Debug("Init", "%s: %s raised: %s", tostring(event), tostring(method), NS.SafeToString(err))
+            if first == nil then first = err end
+        end
+    end
+    if first ~= nil then error(first, 0) end
+end
+```
+Use NS.SafeToString rather than tostring for err, so a secret value cannot taint the debug line (this matches Sim.lua:150). Update the comment at core/DropWatcher.lua:52-55 to say that each handler is isolated and the first error is raised after the loop, the same way mock_base Callbacks:fire and the AceAddon errorCollector work.
+
+Test: add one case to tests/test_setup.lua (tests/test_situations.lua or tests/test_group_roster.lua would also fit):
+1. Stub NS.addon.OnSituationEvent with a function that does `error("boom", 0)`.
+2. Wrap NS.addon.OnRosterEvent with a counter.
+3. Call `local ok, err = pcall(mock.fireEvent, "GROUP_ROSTER_UPDATE")`.
+4. Assert `ok == false`, `err == "boom"`, and that the roster counter is 1.
+5. Restore both stubs in a finally/teardown.
+6. Add the comment `-- red under: revert to the bare loop`.
+Before relying on the red, confirm that the raiser's row comes before OnRosterEvent in NS.FEATURE_EVENTS. Bump the test badge/inventory by 1 (README badge and docs/testing.md test-case list).
+
+Docs: docs/ARCHITECTURE.md around lines 422-424 (the Sim.Fire paragraph) should say that the live shared dispatcher isolates each handler too. Add a matching line to docs/data-flow.md or module-map.md if either describes OnSharedFeatureEvent. Gate: `lua tests/run.lua` and `luacheck .` at 0/0.
+
+**Verifier notes:**
+
+The finding holds as of today. core/DropWatcher.lua:57-59 `DW:OnSharedFeatureEvent` runs `self[method](self, event, ...)` in a bare loop. If one handler raises, the loop unwinds and every later handler for that event is skipped.
+
+AceEvent keeps one handler per event per object, so every multi-declared event is registered only once, on this dispatcher (registerFeatureEvents, lines 61-73). The client isolates registrants from each other but never isolates rows inside one dispatcher. GROUP_ROSTER_UPDATE is declared in Sim.lua:392, Situations.lua:198, Roster.lua:263, Inspect.lua:654, Asks.lua:527 and AutoAsk.lua:342. A raise in Situations would therefore skip the roster, inspect and ask updates.
+
+The code is inconsistent with itself:
+- modules/Sim.lua:140-156 `deliver` pcalls each row, with a comment saying it does so "as the client's event dispatch isolates it". For shared events in the live client that claim is false. docs/ARCHITECTURE.md:422-423 repeats it.
+- LootParser.lua:263 already isolates each sink.
+
+No documented deviation covers this; the register at ARCHITECTURE.md:552+ has only the chat row. The fix belongs in DropWatcher's own core file, not in libs/ or tests/_kit/.
+
+The test plan works. tests/_kit/mock_base.lua:372-389 `Callbacks:fire` pcalls each registrant and re-raises the first error after the loop. So with the dispatcher's single registration, firing still raises the raiser's message. Under the current bare loop, OnRosterEvent never runs, so the test is red as required.
+
+Check before relying on the red: Situations' row must precede Roster's in NS.FEATURE_EVENTS, which depends on TOC load order. If it does not, put the raiser on the first row instead (Sim's row, or whatever `sharedHandlers` lists first).
+
+Risks are low:
+- Re-raising the first error keeps today's surfacing through AceEvent/geterrorhandler. Later errors appear only as debug lines.
+- The "Init" debug tag already exists (DebugAtEnable("Init", ...) at line 526). "State" might fit better, but either is acceptable.
+
+## F04 — test_disabled step 6 ('disabled 3') is vacuous: its unconditional fires reach no handler and it asserts only SV writes
+
+- **Repo:** DropWatcher · **Kind:** test · **Severity:** medium · **Sources:** review:F-001, review:C-01, audit:DRW-04
+- **Evidence:** tests/test_disabled.lua:99-106; :103 m.__fireUnconditional(NS.addon, "PLAYER_REGEN_DISABLED") returns 0 (review probe P1: FIRE-RAN 0 0) because handlers are registered under method names (OnCombatStart/OnCombatEnd) and the kit cannot reach them after unregister (F19); return value discarded. Fires 2 of 28 registered events; no zero-printer-calls or zero-frame-shows assertion (slash-commands-§7 step 6); no `-- red under:` comment (only step 3 has one, :88). Shipped code is fine (probe P2: all 53 FEATURE_EVENTS handlers driven while disabled -> 0 writes, 0 prints, 0 shows).
+
+**Fix (verified):**
+
+tests/test_disabled.lua:99-106: replace the case with:
+
+test("disabled 3: every declared feature handler, driven while disabled, writes, prints and shows nothing", function()
+    local NS, _, m = T.enableAddon()
+    NS.addon:OnSlashCommand("disable")
+    m.__resetSvWrites(); m.prints = {}
+    local shownBefore = #m.__shownFrames()
+    local reached = 0
+    -- red under: add NS.addon.db.profile.locked = true to DW.OnCombatStart (core/DropWatcher.lua:439)
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        local fn = NS.addon[row[2]]
+        assertEqual(type(fn), "function", row[1] .. " -> " .. row[2])
+        fn(NS.addon, row[1])
+        reached = reached + 1
+    end
+    assertEqual(reached, #NS.FEATURE_EVENTS, "every row's handler ran")
+    assertEqual(#m.__svWrites(), 0, "no SavedVariables write")
+    assertEqual(#m.prints, 0, "no chat output")
+    assertEqual(#m.__shownFrames(), shownBefore, "no frame shown")
+end)
+
+Before you rely on the frame assertion, check the shape `__shownFrames` returns in tests/_kit/mock_record.lua. If it returns a function or a keyed set rather than an array, count it accordingly.
+
+In the same commit, update docs/test-cases.md:1537 to the new title (regenerate with the repo's generator if there is one). Then run `lua tests/run.lua` and `luacheck .` (both must be 0/0). Do the red check by temporarily applying the mutation and confirming the case fails. The kit-side follow-up (`__fireUnconditional` resolving the method names AceEvent recorded) is F18 in LibKa0s, then a re-vendor. Do not edit tests/_kit/ here.
+
+**Verifier notes:**
+
+The finding holds against today's tree. In tests/test_disabled.lua:99-106 ('disabled 3'), `m.__fireUnconditional(NS.addon, "PLAYER_REGEN_DISABLED"/"..._ENABLED")` goes through tests/_kit/mock_record.lua:614-637. After StandDown, `__events` no longer holds the handler, so the kit falls back to `target[event]`. That is NS.addon.PLAYER_REGEN_DISABLED, which does not exist: the handlers are DW.OnCombatStart/OnCombatEnd (core/DropWatcher.lua:21-22, 439-454). Nothing runs and the call returns 0. The test discards that return value, so `#__svWrites()==0` passes even if a handler wrote to SV. It also fires only 2 events, asserts no prints or shows, and has no `-- red under:` comment (the only one is at :88).
+
+Routing is correct. The fix belongs in the addon's own test file, not in libs/ or tests/_kit/. Teaching the kit to resolve method names belongs upstream in LibKa0s (F18). The addon's shipped code is not at fault.
+
+Risk: calling handlers with no event payload could hit nil args in some handlers. Probe P2 reportedly drove all rows cleanly, but the rewritten test must stay green. Rows that share an event dispatch through OnSharedFeatureEvent at registration time. Calling each row's own method directly covers every handler, so this is fine.
+
+## F05 — Disabled-state conformance suite lacks step 10 and covers steps 7 and 8 only partly
+
+- **Repo:** DropWatcher · **Kind:** test · **Severity:** low · **Sources:** audit:DRW-04
+- **Evidence:** tests/test_disabled.lua (179 lines): no case takes HOLD_PERF, writes enabled=false, releases perf and asserts still down, nor the reverse order (`git grep HOLD_PERF tests` -> only tests/perf.lua:147,:149). Step 7 :111 dispatches only help, version, list, get enabled, diagnostics, profile — not config, enable, disable, debug, perf, set, reset, resetall or bare /dw; :127 checks 3 of 16 feature verbs (show, test, lock). Step 8 :174 drives RightButton only. Falsification comment missing on step 10 (slash-commands-§7 MUST on steps 3, 6, 10).
+
+**Fix (verified):**
+
+All changes go in tests/test_disabled.lua.
+(a) New test 'disabled 9: the latch holds in both orders'. Order A: T.enableAddon(), then NS.Lifecycle:Hold(NS.HOLD_PERF), then NS.SchemaRuntime.Set("enabled", false), then NS.Lifecycle:Release(NS.HOLD_PERF). Assert NS.IsStoodDown() and registered(m)=="" with `-- red under: make NS.StandUp (core/DropWatcher.lua:98) or the Lifecycle release ignore the disabled hold`. Then Set("enabled", true) and assert the event and message sets equal PINNED and PINNED_MESSAGES. Order B: Set enabled=false, Hold perf, Set enabled=true, assert still down and empty, Release perf, assert both sets are back.
+(b) Replace the verb list at :111 with a loop over NS.COMMANDS (settings/Slash.lua:89) plus "". Build the live set from lib.LIVE_VERBS plus "profile", mirroring settings/Slash.lua:168-170. Use a fresh enableAddon+disable for each verb, or skip the re-enabling 'enable' until last.
+ - Live verbs and the bare command: no 'is disabled' refusal line.
+ - config and the bare command: a stubbed panel opener is called.
+ - resetall: its popup is shown.
+ - Every remaining verb: exactly one line containing 'Ka0s Drop Watcher is disabled', and #m.__svWrites()==0 after m.__resetSvWrites().
+ This folds in :127 and covers unlock, hide, toggle and mine, which no test covers today.
+(c) In 'disabled 8' (:174), first call m.ldbObjects.DropWatcher.OnClick(m.UIParent, "LeftButton") after m.__resetSvWrites(). Assert the opener stub was called once, #m.__svWrites()==0 and no new entry in m.__shownFrames. After the RightButton open, also assert zero SV writes.
+(d) At 'disabled 3' (:99-106), add `-- red under: let a feature handler run past the stand-down (e.g. drop the registration loop's unregister)`. Optionally widen it to fire every PINNED event and assert #m.prints==0 and no frame shows.
+Then run lua tests/run.lua and luacheck . (0/0), regenerate docs/test-cases.md (the test_disabled.lua section at :1532 and its count) and update the README.md:6 Tests badge count.
+
+**Verifier notes:**
+
+I checked the claim against tests/test_disabled.lua (179 lines, unchanged) and slash-commands.md:297-311, and it holds. There is no documented deviation for slash-commands-§7. The fix belongs in this addon's own test file, not in libs/ or tests/_kit/.
+- Step 10 is absent. HOLD_PERF appears only in tests/perf.lua:147/149 and tests/test_setup.lua:162-169. That test_setup case takes the perf hold alone and never writes enabled=false while the hold is held, so it does not test the latch in either order.
+- Step 7 is partial. :111 dispatches 6 of the 13 reserved verbs plus profile; config, enable, disable, debug, perf, set, reset, resetall and bare /dw are missing. Feature-verb refusal is partly covered outside this suite: :127 covers show/test/lock, and test_slash.lua:312-321 covers scan/clear/history/compact/full/situation/offer/add. Even so, unlock, hide, toggle and mine are never asserted anywhere, and the standard puts step 7 in test_disabled.lua.
+- Step 8 is partial. :174 drives RightButton only. No test anywhere calls the launcher OnClick with LeftButton: test_setup.lua:203 is also RightButton.
+- The falsification comments are short too. Only :88 (step 3) has one. Step 6, which is 'disabled 3' at :99-106, also lacks one, and that is a second slash-commands-§7 MUST breach the finding misses. Step 6 also only checks SV writes and fires only the two REGEN events; the standard asks for every event in R_on, zero prints and zero shows. That is worth tightening in the same pass.
+Risk: the step-7 'normal output' checks for reset/resetall/set must not leave state mutated across cases, so use a fresh T.enableAddon() for each verb or restore after. The resetall popup and the config opener need stubs; check how test_slash already stubs Settings.OpenToCategory / StaticPopup_Show. If the launcher's LeftButton opens the panel through the same opener, count calls on it. Land after F01 as proposed.
+
+## F06 — evaluate and quality.gate perf buckets nest inside feed.add but are declared flat
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** medium · **Sources:** review:F-004, review:C-04
+- **Evidence:** core/PerfSetup.lua:24-25 `{ key = "evaluate" }`, `{ key = "quality.gate" }` with no within. modules/LootFeed.lua:633-635 feed.add bracket around LF.Receive encloses receive->start->judge (:507-519), which brackets evaluate (:225, via judgeMe :242) and quality.gate (:266, via :516). Both also run at top level (async item-facts callback :529, InspectDone/GearChanged re-judges). performance-§3 makes within a MUST; a perf report double counts.
+
+**Fix (verified):**
+
+Blocked until LibKa0s Perf minor 15 (F17/F20) is re-vendored and defines how a top-level observation is passed to Note.
+
+Then:
+1. core/PerfSetup.lua:24-25: change to `{ key = "evaluate", within = "feed.add" }` and `{ key = "quality.gate", within = "feed.add" }`, and update the trailing comments to say they run inside Receive and also on re-judges.
+
+2. modules/LootFeed.lua, near :82: add a file-scope `local receiving = 0`. Use a depth counter, not a boolean, so a synchronous DropAdded listener that re-enters LF.Receive cannot clear it early.
+
+3. modules/LootFeed.lua:632-637: rewrite LF.Receive as:
+   `receiving = receiving + 1; local ok, id, status = pcall(receive, r); receiving = receiving - 1; if not ok then error(id, 0) end`
+   Keep the existing t0/Note around this.
+
+4. modules/LootFeed.lua:225: change to `Perf.Note("evaluate", debugprofilestop() - t0, receiving > 0 and "feed.add" or TOP)`.
+
+5. modules/LootFeed.lua:266: same change for "quality.gate".
+
+`TOP` is the top-level sentinel that Perf 15 defines; do not use `false` under Perf 14. The parent argument only runs when t0 is set, so the capture-off path is unchanged.
+
+6. tests/test_setup.lua (or the existing perf-bucket test): add one test. With capture on, LF.Receive a drop whose facts are cached, then fire an inspect re-judge (InspectDone). Assert that evaluate's record has within == "feed.add" and observedMixed == true. Also assert that a capture of only Receive calls reads observedWithin == "feed.add".
+
+7. Run tests/perf.lua and confirm the capture-on/off pairs still match.
+
+8. Update docs/performance.md:22-23 to show the nesting and add a "do not sum" note. Bump the test-count badge by 1. Run `lua tests/run.lua` and `luacheck .` (both must be 0/0).
+
+**Verifier notes:**
+
+I checked the claim against today's code and it holds. core/PerfSetup.lua:24-25 declares `{ key = "evaluate" }` and `{ key = "quality.gate" }` with no `within`. LF.Receive (modules/LootFeed.lua:632-637) brackets feed.add around receive(r) (:611). receive calls start (:519), which calls judge (:507), which calls judgeMe (:515), then qualityGate (:516), then judgeLooter. That puts the evaluate bracket (:223-225, reached through :242, :322 and :353) and the quality.gate bracket (:258-266) inside feed.add whenever item facts are cached.
+
+The same buckets also run at top level:
+- the async ItemFacts callback (:529)
+- the re-judge paths at :385, :781 and :841 (InspectDone and GearChanged)
+
+So the nesting is real but mixed, and a perf report sums them as if they were disjoint. performance.md §3 says nesting MUST be declared with `within`, so this is a standard violation. No documented deviation covers it; the only Perf-related row in ARCHITECTURE.md is the SimPanel one.
+
+Routing is correct. The fix lives in DropWatcher's own core/ and modules/ files, not in libs/ or tests/_kit/.
+
+The blocker on F20/F17 is real. The vendored Perf.lua is minor 14, the same as LibKa0s master. In P.Note (libs/LibKa0s/Perf.lua:685-693), `parentKey ~= nil` stores a passed `false` as observedWithin = false. Two things then go wrong:
+- If only top-level calls happen in a capture, nestingSentence (:280-289) treats false as falsy and prints "declares itself within feed.add — not observed". That is wrong, because the work was observed at top level.
+- If calls are mixed, it prints "(first: false)".
+
+Perf 14 has no "observed at top level" sentinel. The addon change must wait for the library to define one, or must pass whatever sentinel F17/F20 define. Do not hard-code `false` until that lands.
+
+Side note, low severity, not part of this finding: G.Snapshot's lazy G.Refresh (modules/Gear.lua:305-306) can fire gear.rebuild inside feed.add on the first drop of a session. That bucket also declares no `within`. Mention it to whoever closes F06, but don't widen this fix.
+
+## F07 — locales/enUS.lua is missing 722 of the strings routed through NS.L
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** low · **Sources:** review:F-005, review:C-05
+- **Evidence:** 1299 L["…"] uses across the 97 non-test authored files; 722 distinct keys absent from locales/enUS.lua (which defines 327, none unused). Biggest gaps modules/WindowCells.lua (190 uses), modules/DetailCells.lua (160), settings/SchemaRows.lua (140). Examples core/DropWatcher.lua:183, modules/CompactHistory.lua:117. Fallback metatable at locales/enUS.lua:9 hides it on enUS.
+
+**Fix (verified):**
+
+1. locales/enUS.lua (398 lines today): append the 722 missing keys in the existing `L["x"] = "x"` shape. Group them under `-- <source file>` comment headings in TOC load order. A key used in several files goes once, under its first user. Wrap lines over 120 columns in the existing two-line form (see lines 21-22). Generate the entries with a script and keep escapes byte-exact: `\"`, `\n`, `|c...|r` color codes and `%s`/`%d`. Do this after F01 and F10 so their added and retired keys are reflected, and re-run the scan before committing.
+2. New tests/test_locale.lua, registered in tests/run.lua:
+   - Get the load list from Loader.tocFiles (tests/loader.lua:26 already uses it). Exclude libs/ and locales/.
+   - Scan every line for `L%["((\\.|[^"\\])*)"%]`, which matches both `L[` and `NS.L[`. Unescape each capture with `load('return "'..s..'"')()`.
+   - Load locales/enUS.lua with a stub NS, and read the table raw so the metatable fallback cannot answer.
+   - Assert `rawget(L, key) ~= nil` for every key, and on failure report `file:line: missing enUS key "<key>"`.
+   - Check one direction only: keys reached dynamically (core/SimSeam.lua:67 `L[line]`, and the ASK_REFUSAL / SEND_REFUSAL / OFFER_REFUSAL / EDIT_REFUSAL / SITUATION_LABEL tables) have no literal call site.
+   - Header comment: `-- red under: delete any one entry from locales/enUS.lua`.
+3. Docs: in docs/testing.md, add the suite to the suite list and the count. Add the case lines to docs/test-cases.md. Bump the README tests badge by one suite, plus the case count if the badge carries one. Optionally point docs/common-tasks.md:10 at the new gate.
+4. Green gate: `lua tests/run.lua` and `luacheck .` must show 0 warnings and 0 errors. Watch for luacheck max_line_length on long keys.
+
+Risks:
+- Keys that contain `|` codes or `%%` must match the call-site literal byte for byte.
+- If F01 or F10 land afterwards, the new test fails until enUS is updated, which is the intended behavior.
+
+**Verifier notes:**
+
+I checked this against the repo as it stands today. The numbers reproduce with a regex scan of core/, modules/ and settings/, skipping libs/, tests/ and locales/. locales/enUS.lua defines 327 keys. The code uses 1028 distinct L["..."] literals, and 722 of them are not in enUS. No uses are single-quoted or concatenated. 21 enUS keys have no literal use, but they are reached through dynamic lookups such as core/SimSeam.lua:67 `L[line]` and the refusal and label tables in core/DropWatcher.lua and modules/DetailCard.lua. So "none unused" holds only if those dynamic paths are counted, and a test must not assert the reverse direction (every enUS key used by a literal). The cited lines core/DropWatcher.lua:183 and modules/CompactHistory.lua:117 both use keys that are missing.
+
+How strong a finding this is. No standard MUST is broken. localization-§1 requires the key-on-miss metatable, which enUS.lua:9 has, and §3 only requires that enUS.lua ships. The only §3 MUST NOT in this area is about dead keys, not missing ones. Players on an enUS client see nothing wrong.
+
+Why it is still real, at low severity:
+- The addon's own process doc, docs/common-tasks.md:10, says "Add every new `label` and `tooltip` string to `locales/enUS.lua`", and the schema rows in settings/SchemaRows.lua do not follow it.
+- The enUS.lua header (lines 4-6) treats the fallback as a stopgap for strings not yet added.
+- enUS.lua is the translator's base. With 69% of routed strings missing, a future deDE.lua would start from an incomplete list, and the fallback hides the gap.
+
+The fix belongs in DropWatcher: it touches only locales/, tests/ and docs/, nothing in libs/ or tests/_kit/, and no documented deviation covers it. Do not treat it as a standard violation in the audit cross-reference. It is an addon-hygiene and documentation-coherence item.
+
+## F08 — World API globals allowed in every file by .luacheckrc; two optional-addon probes bypass Compat
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** low · **Sources:** review:F-006, review:C-06
+- **Evidence:** .luacheckrc:22-30 top-level read_globals include C_AddOns, InCombatLockdown, GetInstanceInfo, IsInGroup, IsInRaid, UnitGUID, UnitName, UnitClass, GetNumGroupMembers, etc. core/DropWatcher.lua:524 and modules/Diagnostics.lua:366 each do `local loaded = C_AddOns and C_AddOns.IsAddOnLoaded`, contradicting docs/ARCHITECTURE.md's claim that only the Compat family names those globals.
+
+**Fix (verified):**
+
+1. core/CompatWorld.lua: after Compat.PlayerInCombat (~line 155), add:
+   --- C_AddOns.IsAddOnLoaded(name) as a plain boolean (false without the API).
+   function Compat.IsAddOnLoaded(name)
+       local api = C_AddOns
+       return api ~= nil and type(api.IsAddOnLoaded) == "function" and api.IsAddOnLoaded(name) == true
+   end
+   Update the header comment (lines 2-5) to list optional-addon presence. If the owner prefers, the member can go in core/Compat.lua next to the Pawn/CanIMogIt shims, since it is an optional-addon probe. SimSeam wraps it automatically (core/SimSeam.lua:130-133). Make sure it is not in PURE.
+2. core/DropWatcher.lua:524-525: replace with `local function state(name) return NS.Compat.IsAddOnLoaded(name) and "loaded" or "absent" end`.
+3. modules/Diagnostics.lua:366-368: replace with `out:add(TAG, "optional: Pawn=%s CanIMogIt=%s", NS.Compat.IsAddOnLoaded("Pawn"), NS.Compat.IsAddOnLoaded("CanIMogIt"))`.
+4. modules/Roster.lua:39: replace `v == UNKNOWNOBJECT` with `v == NS.Compat.GlobalString("UNKNOWNOBJECT")`.
+5. .luacheckrc:
+   - Remove these from the top-level read_globals: GetInstanceInfo, GetDifficultyInfo, IsInInstance, IsInGroup, IsInRaid, C_ChallengeMode, GetNumGroupMembers, UnitGUID, UnitName, UnitClass, UnitIsConnected, UNKNOWNOBJECT, LE_PARTY_CATEGORY_INSTANCE, InCombatLockdown, UnitAffectingCombat.
+   - Keep C_AddOns at top level, because core/EnvSetup.lua reads it. Keep C_Item too, for core/ItemSetup.lua and ClassData/Constants.
+   - Add `files["core/CompatWorld.lua"] = { read_globals = { <those 15 except UNKNOWNOBJECT>, "C_AddOns" } }`.
+   - Add "C_ChallengeMode" and "UnitName" to the existing files["core/Compat.lua"] list, plus whatever else luacheck reports there.
+   - Rerun luacheck with the bounded runner (/home/tushar/.claude/dev-copilot/bin/ka0s-bounded luacheck .) and add back exactly what it flags, aiming for 0/0. If a tests/ file or a Sim* module needs a name, give it a narrow per-file stanza, never a top-level entry.
+6. tests/test_compat.lua: add a test with three cases. Mock loadedAddons containing "Pawn" gives true. A name that is not loaded gives false. With _G.C_AddOns = nil it gives false and does not raise. The mock is in tests/wow_mock.lua:787. Optionally add "C_AddOns.IsAddOnLoaded" to WORLD_READS in tests/test_sim_e2e.lua:85 so a module cannot regress.
+7. docs/compat-layer.md:
+   - Add an IsAddOnLoaded row to the CompatWorld table (~line 149).
+   - Add callers to the consumer table (~line 221+): core/DropWatcher.lua, modules/Diagnostics.lua, and Roster's GlobalString.
+   - Fix the shim count in docs/ARCHITECTURE.md:532 if it changes.
+8. README.md:6: update the Tests badge to the new passing count.
+9. Gate: run `lua tests/run.lua` and `luacheck .` through ka0s-bounded.
+
+**Verifier notes:**
+
+Confirmed today. .luacheckrc:22-30 declares the world reads (GetInstanceInfo, GetDifficultyInfo, IsInInstance, IsInGroup, IsInRaid, C_ChallengeMode, GetNumGroupMembers, UnitGUID, UnitName, UnitClass, UnitIsConnected, UNKNOWNOBJECT, LE_PARTY_CATEGORY_INSTANCE, InCombatLockdown, UnitAffectingCombat) in the top-level read_globals, which apply to every file. That contradicts the file's own comment at the files["core/Compat.lua"] stanza ("declared for that file alone, so a feature module that reaches for one directly fails lint") and docs/ARCHITECTURE.md:49-54 ("no other file names those client globals"). core/DropWatcher.lua:524 and modules/Diagnostics.lua:366 each do `local loaded = C_AddOns and C_AddOns.IsAddOnLoaded` to probe the optional addons Pawn and CanIMogIt, so they skip the Compat family that already owns Pawn*/CanIMogIt.
+
+The finding missed one bypass: modules/Roster.lua:39 does `v == UNKNOWNOBJECT` with a bare GlobalString read. ARCHITECTURE says core/Compat.lua is the only GlobalString reader (through Compat.GlobalString).
+
+What lowers the impact: tests/test_sim_e2e.lua:85 (WORLD_READS, DW-90) already fails any module that names a world global directly. A scan of today's non-Compat files finds only Roster's UNKNOWNOBJECT, C_Item in core/ItemSetup.lua:49-50 (a LibKa0s setup file, legitimate), C_AddOns in core/EnvSetup.lua:14-15 (metadata, legitimate) and the two IsAddOnLoaded probes. So the luacheck change is defence in depth, and nothing is broken at runtime. No row in Documented deviations covers this. The fix belongs in DropWatcher's own files, not in libs/ or tests/_kit/.
+
+Risks:
+- Luacheck 1.2.0 is installed. Two explicit stanzas avoid any doubt about whether glob keys match.
+- If core/Compat.lua loses access to C_ChallengeMode or UnitName, lint will flag it. Run the gate to check.
+- SimSeam wraps the new member automatically. A simulation with no provider for IsAddOnLoaded must fall through to the live read; check wrap() at core/SimSeam.lua:122.
+- The test count (1402) moves by however many tests are added, so set the README badge to the real count.
+
+## F09 — NS.SetTestMode's doc block is attached to refreshPanels
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** low · **Sources:** review:F-007, review:C-07
+- **Evidence:** core/DropWatcher.lua:107-111 `--- Turn test mode on or off (preview-mode)…` with @param on / @return changed sits above `local function refreshPanels()` (:113); function NS.SetTestMode(on) is at :127.
+
+**Fix (verified):**
+
+In core/DropWatcher.lua, cut lines 107-111, the five `---` lines from "--- Turn test mode on or off (preview-mode)..." through "--- @return boolean changed". Paste them immediately above line 127, `function NS.SetTestMode(on)`, with no blank line in between. Leave line 112 ("-- Repaint any open settings page...") where it is, directly above `local function refreshPanels()`. After the move, the section header at line 105 is followed by a blank line and then refreshPanels' comment and function, then testModeRefusal's comment and function, a blank line, the 5-line LDoc block, and `function NS.SetTestMode(on)`. This changes comments only. Re-run `lua tests/run.lua` and `luacheck .` (both 0/0) as the commit gate.
+
+**Verifier notes:**
+
+I checked the file at today's state and the finding holds. In /mnt/d/Profile/Users/Tushar/Documents/GIT/DropWatcher/core/DropWatcher.lua, the LDoc block for NS.SetTestMode is at lines 107-111. That block starts with "--- Turn test mode on or off (preview-mode)..." and includes "--- @param on boolean" and "--- @return boolean changed". It sits directly above refreshPanels' own one-line comment at line 112 and `local function refreshPanels()` at line 113. Line 118 has a separate comment, and `local function testModeRefusal()` is at line 119. `function NS.SetTestMode(on)` is at line 127 and has no doc block of its own. LDoc and LuaLS therefore attach the @param/@return to refreshPanels, which takes no parameters and returns nothing.
+
+The routing is right. The fix belongs in DropWatcher's own core/, not in libs/ or tests/_kit/, and no documented deviation or standard rule applies. It changes comments only, so behaviour is not affected. Luacheck and the tests should stay green.
+
+## F10 — Three ad-hoc 'addon is off' wordings, none the dispatcher's refusal line
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** low · **Sources:** review:F-008, review:C-08
+- **Evidence:** modules/TradeHelper.lua:31 L["Drop Watcher is disabled."]; core/DropWatcher.lua:215 ASK_REFUSAL.disabled = NS.L["The addon is disabled."]; modules/DetailCard.lua:60 L["the addon is disabled"]. The library line is "%s is disabled — enable it with /dw enable" (libs/LibKa0s/Slash.lua:94); NS.ScanGroup/RetryInspect already print NS.SlashCommands:DisabledLine(). slash-commands-§7: one refusal string.
+
+**Fix (verified):**
+
+Do this after F01 lands, because it needs NS.StoodDownRefusal().
+1. core/DropWatcher.lua
+   - In PressAsk (:261-265), PressOffer (:354-356) and PressAnnounce (:377-379): when `reason == "disabled"`, call `NS.Print(NS.StoodDownRefusal())` and skip the "Not asked/offered/announced: %s" wrapper. The refusal line has to stay exactly one line, with no prefix.
+   - Remove `disabled = ...` from ASK_REFUSAL (:215).
+   - In NS.TradeWithLooter (~:309-317): when `reason == "stoodDown"`, also print `NS.StoodDownRefusal()` in place of `No trade: ...`.
+2. modules/TradeHelper.lua:31: change to `stoodDown = L["%s is disabled."]:format(NS.BRAND)`. This stays the button-tooltip fragment, because ReasonText is a tooltip. Check that NS.BRAND is set before this file loads (core/Namespace.lua loads first in the TOC).
+3. modules/DetailCard.lua:60: change to `disabled = L["%s is disabled"]:format(NS.BRAND)`.
+4. locales/enUS.lua:102: delete `L["Drop Watcher is disabled."]` and add `L["%s is disabled."]` and `L["%s is disabled"]`. The other two old keys never had rows, since the metatable fallback covers them.
+5. tests/test_disabled.lua: add a test. After `/dw disable`, inject a drop and call NS.PressAsk, NS.PressOffer, NS.PressAnnounce and NS.TradeWithLooter. Each must print exactly one line equal to NS.SlashCommands:DisabledLine(), or to NS.StoodDownRefusal() once F01 exists. Mark it `-- red under: restore ASK_REFUSAL.disabled`. Add a second assertion: NS.TradeHelper.ReasonText("stoodDown") contains NS.BRAND. Bump the test-count badge by 1 (README and any test-case list in docs/testing.md).
+
+**Verifier notes:**
+
+The finding holds as of today. There are three ad-hoc "disabled" wordings:
+- modules/TradeHelper.lua:31 `stoodDown = L["Drop Watcher is disabled."]`. It drops the "Ka0s" from NS.BRAND, which core/Namespace.lua:13 defines as "Ka0s Drop Watcher".
+- core/DropWatcher.lua:215 `ASK_REFUSAL.disabled = NS.L["The addon is disabled."]`. PressAsk prints it at :262. PressOffer (:355) and PressAnnounce (:378) reach it through sendRefusal's fallback at :325.
+- modules/DetailCard.lua:60 `EDIT_REFUSAL.disabled = L["the addon is disabled"]`, used at :567.
+
+Meanwhile RetryInspect (:283), PostTradeables (:394), ScanGroup (:178) and Sim (:128) already print NS.SlashCommands:DisabledLine(). So refusals printed to the same chat surface for the same state read differently. The citation to the standard needs a caveat. slash-commands §7 ("one shape, collection-wide; MUST NOT be re-spelled per call site") binds the refusal line for slash feature verbs, which §2 only makes a SHOULD. Button presses are not slash verbs, so this is a consistency defect, not a hard MUST violation. DropWatcher is the right place for the fix: nothing in libs/ or tests/_kit/ changes, and no row in Documented deviations covers it.
+
+Most of these strings are hard to reach in practice. When the addon is stood down, the window and the detail card are hidden (the show decision refuses at the source), so the buttons rarely get pressed. That keeps the severity at low.
+
+Dependency: NS.StoodDownRefusal() does not exist yet. It comes from F01 (audit S1.1 / DRW-05, core/LifecycleSetup.lua). F10 has to land after F01, or fall back to NS.SlashCommands:DisabledLine() until F01 lands.
+
+Gap in the proposed fix: NS.TradeWithLooter (core/DropWatcher.lua ~:309) also prints a chat refusal for the stood-down case, `No trade: <ReasonText(stoodDown)>`. The proposal only changes the tooltip wording there and leaves this chat line as a fourth variant. It should be routed to the same refusal line.
+
+Locale: enUS has a metatable fallback, and "The addon is disabled." and "the addon is disabled" have no explicit rows, so only "Drop Watcher is disabled." (enUS.lua:102) needs retiring. Tests that grep for "is disabled" (test_disabled.lua:116/131, test_slash, test_sim_*) keep passing with the new wording.
+
+## F11 — When-to-show table is reparented onto a pooled AceGUI SimpleGroup and undone by the renderer, not the widget's OnRelease
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** low · **Sources:** audit:DRW-06
+- **Evidence:** settings/PageEditors.lua:218 holder = h.AceGUI:Create("SimpleGroup"); :225-227 t.host:SetParent(holder.frame)/ClearAllPoints/SetAllPoints. Undo is P.ParkSituationTable (:200-206), called only by the renderer (settings/Panel.lua:75-79). `git grep OnRelease settings modules` -> only a comment at settings/Panel.lua:23. options-ui-§19 MUST, anti-pattern #93 (latent).
+
+**Fix (verified):**
+
+settings/PageEditors.lua, P.SituationTable: after `scroll:AddChild(holder)` (line 222) and the `ctx.dwSituations = t` assignment (line 224), add:
+    holder:SetCallback("OnRelease", function(w)
+        if t.host:GetParent() == w.frame then P.ParkSituationTable(ctx) end
+    end)
+This is the holder's single OnRelease callback. It is set fresh on each acquisition, which is safe because AceGUI fires OnRelease before it wipes the widget's callbacks. Keep the renderer's park in settings/Panel.lua:76 as belt-and-braces and update its comment to say OnRelease is now the canonical undo. Also update the ParkSituationTable doc comment (PageEditors.lua:195-199) to name both callers. Test: add a case in the settings test file that renders the General page's When to show tab, takes the holder (the scroll child whose frame is t.host's parent) and releases it straight through AceGUI:Release(holder) without the renderer. Assert that ctx.dwSituations.host:GetParent() == ctx.panel and that host:IsShown() is false. Then re-render and assert the host is parented to the new holder's frame and shown. Gate with `lua tests/run.lua` and `luacheck .`. Also update docs/ARCHITECTURE.md or settings-panel.md where the park mechanism is described.
+
+**Verifier notes:**
+
+Confirmed at today's state. settings/PageEditors.lua:218 creates `holder` with AceGUI:Create("SimpleGroup") (addon-owned, not a library maker). Lines 225-228 reparent the raw table host onto holder.frame with SetParent/ClearAllPoints/SetAllPoints/Show. The only undo is P.ParkSituationTable (:200-206), which is called only from renderGeneral (settings/Panel.lua:75-79) before ClearScroll. `git grep OnRelease settings modules` finds only the comment at Panel.lua:23. options-ui-§19 (standards/standards/options-ui.md:466) says addon code MUST NOT put a child frame on a widget's .frame unless that widget's "OnRelease" callback undoes it. The rule names CreateFrame(…, widget.frame), and SetParent(widget.frame) has the same pooling effect, so the rule's intent clearly covers this. The case matches anti-pattern #93. No documented deviation covers it. The fix belongs in DropWatcher: it does not touch libs/ or tests/_kit/, and the addon owns the callback because the holder does not come from a library maker. The issue is latent: today every release goes through renderGeneral, which parks the table first, so the bug only shows up if some other path releases the scroll's children (a library re-render or ClearScroll that skips renderGeneral). AceGUI fires "OnRelease" before it clears callbacks (libs/AceGUI-3.0/AceGUI-3.0.lua:172-181), and the test mock in tests/_kit/mock_base.lua:1363-1391 copies that order, so the fix can be tested headlessly. Risk is small. Parking twice (once in the renderer, once in OnRelease) is harmless because Park is idempotent. One refinement: guard the callback on the host's current parent being this holder's frame. Without the guard, an old holder released after the table has moved to a new holder would pull the table off the new one. Current render order (park, ClearScroll, rebuild) prevents that, but the guard costs nothing.
+
+## F12 — Toast's degraded close falls back to a typed '×' text button (recurring)
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** low · **Sources:** audit:DRW-01
+- **Evidence:** modules/Toast.lua:268-275 buildClose: when NS.MakeCloseButton returns nil (degraded stub core/CoreSetup.lua:49), :270-272 creates NS.Window.TextButton(f, 20, nil, "×", …). Every other close control degrades to nothing (standalone-windows; library-stack-§8 no one-off marks). Recurs from 2026-10-11 audit, neither fixed nor registered.
+
+**Fix (verified):**
+
+modules/Toast.lua:
+- buildClose (:268-275): delete the fallback at :270-272. Make it `local close = NS.MakeCloseButton(f, function() Toast.Dismiss() end); if close then close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4) end; return close`, and update the comment so it says the mark degrades to nothing (standalone-windows).
+- build() :329: `if f.close then f.ask:SetPoint("RIGHT", f.close, "LEFT", -6, 0) else f.ask:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4) end`. Check the vertical alignment of the anchor on the degraded path.
+- build() :337: `if f.close then onToast(f.close) end`.
+- Don't change the test-toast countdown. Test toasts stay up on purpose (:47-51, :429), and a right-click (:231-233) or turning test mode off already dismisses them.
+
+tests/test_toast.lua: add a case for the degraded path using `T.newAddon{ skip = T.loadAddon.libFiles }`. It should turn on toasts and test mode (or queue a drop) and assert four things: the toast builds without error, frame.close is nil, Ask is anchored, and a right-click on the toast dismisses it. Add a "red under: restore the × fallback" note. Optionally add a source scan to tests/test_setup.lua (next to the MakeCloseButton scan at :40-48) asserting that no module builds a TextButton labelled "×".
+
+Afterwards, update the Toast module's header comment (:3 in tests/test_toast.lua, which mentions "its close mark") if needed, and docs/smoke-tests.md if it describes the degraded toast. Then run the gate: `lua tests/run.lua` and `luacheck .`.
+
+**Verifier notes:**
+
+I checked the claim against today's files and it holds. In modules/Toast.lua:268-275, buildClose calls NS.MakeCloseButton. On the degraded path that stub returns nil (core/CoreSetup.lua:49), and the comment at :45-46 says the chrome "degrades to NOTHING". When it gets nil, :270-272 builds a typed "×" button with NS.Window.TextButton(f, 20, nil, "×", ...). This is the only close control in the addon that does this. DetailCard.lua:523, SimPanel.lua:559, OfferPanel.lua:129 and WindowTitleBar.lua:257 all accept nil. No row in docs/ARCHITECTURE.md "## Documented deviations" covers it. The only close-related row is the SimPanel/PerfPanel copy (DW-91), which is a different matter. The fix belongs in DropWatcher's own module, not in libs/ or tests/_kit/.
+
+One correction to the proposed fix: the second half isn't needed and would change behaviour. A test-mode toast with no close button can still be dismissed. A right-click anywhere on the toast closes it (onMouseUp at :231-233, already tested in tests/test_toast.lua:235-264), and turning test mode off removes it (Toast.OnTestModeChanged :564). A live toast still has its countdown (:429). Test toasts skip the timer on purpose (:47-51) so they stay up while being placed. Giving the degraded test toast a countdown would break that.
+
+Risk: removing the fallback leaves f.close nil. Two later lines in build() would then fail on a library-absent install: :329 (f.ask:SetPoint("RIGHT", f.close, "LEFT", -6, 0)) and :337 (onToast(f.close)). Both need guards. There is a test helper for the library-absent path: T.newAddon{ skip = T.loadAddon.libFiles }, used in tests/test_setup.lua:11/19.
+
+## F13 — docs/ARCHITECTURE.md hub is 571 lines with three sections past the ~60-line spill threshold
+
+- **Repo:** DropWatcher · **Kind:** docs · **Severity:** low · **Sources:** audit:DRW-03
+- **Evidence:** wc -l docs/ARCHITECTURE.md -> 571. Section heads: Module Map :43-217 (175 lines), Settings Schema :218-306 (89), Known Limitations :432-504 (73). documentation-§3 MUST spill >~60 lines; SHOULD stay <~400 lines.
+
+**Fix (verified):**
+
+Applies to docs/ARCHITECTURE.md (571 lines), with the spill targets below.
+1) Module Map, :43-217 (175 lines). Keep :43-47, the file count and the module-map.md link, then add at most about 15 lines with one summary bullet per folder (locales/core, defaults, modules engine/edges/feed/window, settings). Remove the per-file narrative at :49-213, merging first into docs/module-map.md every per-file fact it does not already state (window repaint and countdown ticking, tooltip placement via Window.AttachTooltip/PlaceAbove/AboveFits, chevron colours, compact-card behaviour). Keep the closing "window only listens" invariant (:215-216).
+2) Settings Schema, :218-306 (89 lines). Keep the seam paragraph (Set/Setting, where the rows live, how group/page/disabledIf/validate work) and the architecture-§5 named-state list in short form, ending with one link to docs/schema.md. Move to schema.md: the per-row page/tab inventory, the whole-value map rows detail, the global.notices, global.history writers and retention timing, the sim session-only history log, the compact-mode state prose, and the RunMigrations steps 2-6 (about :282-305). Target 60 lines or fewer.
+3) Known Limitations, :432-504 (73 lines). Keep the intro and the player-relevant bullets (unconfirmed in game, localized clients, the top trade/inspect limits). Move the simulator, compact-mode and internal-reading bullets into docs/design-readings.md under a matching heading, checking for duplicates. Leave the one existing link. Target 60 lines or fewer.
+4) Grep the repo, excluding libs/, tests/_kit/ and the frozen docs/audits, docs/reviews and docs/automated-tests, for `ARCHITECTURE.md#` and `ARCHITECTURE.md:` links into the cut ranges and repoint them. Check that the Documentation map rows still hold. Target under 400 lines in total. Do this after the code-change findings land, then run dev-copilot:sync-docs, `lua tests/run.lua` and `luacheck .`.
+
+**Verifier notes:**
+
+Confirmed against today's tree. `wc -l docs/ARCHITECTURE.md` gives 571. The section heads are at Module Map :43, Settings Schema :218, Message Bus :307, Known Limitations :432, Documentation map :505 and Documented deviations :552, which makes the three named sections 175, 89 and 73 lines long. The rule is documentation-§3 (WowAddonStandards standards/CHANGELOG.md v2.23.0 and EXECUTIVE_SUMMARY.md:38): a mandated section past about 60 lines MUST spill into its topic doc and leave a summary with exactly one link, and the hub SHOULD stay under about 400 lines. No row in `## Documented deviations` covers the hub's size, and the file is the addon's own, not vendored, so the fix belongs in DropWatcher.
+
+Module Map already opens with a link to module-map.md (:45-47), but "In short:" is followed by about 170 lines of per-file detail. That detail is a second module map, not a summary. module-map.md is only 120 lines, so the hub currently holds more detail than the topic doc. The move has to be a merge: any per-file facts found only in the hub (WindowGroup countdown ticking, filter-bar tooltip placement, the chevron colours and similar) must land in module-map.md or another doc before they are cut. Simply deleting them would lose information.
+
+Settings Schema (:218-306) has migration steps 2-6, the history-retention writers, the sim session-only log and compact-mode state prose. All of that belongs in schema.md (214 lines today). Known Limitations has no Tier 1/2 home, but it already links design-readings.md (:434-435), so that is the natural spill target. design-readings.md is already 630 lines, which is acceptable for a Tier 3 doc, but the moved bullets must not repeat its existing readings.
+
+Risk: other docs, smoke-tests and specs may point at anchors or line ranges in ARCHITECTURE.md. Grep for `ARCHITECTURE.md#` and `ARCHITECTURE.md:` before cutting. Keep the `## Documentation map` rows in step with the change, and keep the summaries consistent with the README's player-facing text.
+
+## F14 — Two stale inventory counts in docs/ARCHITECTURE.md
+
+- **Repo:** DropWatcher · **Kind:** docs · **Severity:** low · **Sources:** audit:DRW-07
+- **Evidence:** docs/ARCHITECTURE.md:45 'Ninety-four authored files load from the TOC' but the TOC loads 97 (`tr -d '\r' < DropWatcher.toc | grep -vE '^#|^$' | grep -v '^libs' | wc -l`; docs/module-map.md rows 1-97). :532 says core/Compat.lua publishes 62 shims; documentation-§3/compat family count is 83 (62 + CompatWorld 16 + CompatItem 5).
+
+**Fix (verified):**
+
+1) docs/ARCHITECTURE.md:45: replace "Ninety-four authored files load from the TOC" with "Ninety-seven authored files load from the TOC", or better, drop the number ("The authored files load from the TOC, in the standard's folder order; ...") so module-map.md (rows 1-97) is the only inventory and the hub cannot go stale again. 2) docs/ARCHITECTURE.md:532 (compat-layer.md trigger row): rewrite as "The compat family publishes 83 addon-specific shims (three or more), counted per documentation-§3: core/Compat.lua 62, core/CompatWorld.lua 16, core/CompatItem.lua 5 (`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`)". 3) The same drift is in docs/compat-layer.md:20-21: "**Sixty-two shims**, counted the way documentation-§3 counts them (`grep ... core/Compat.lua` answers `62`)". documentation-§3 counts across the family (Compat.lua plus any Compat<Topic>.lua), so either say 83 with the `core/Compat*.lua` command, or keep 62 and label it as the root file's count with the family total of 83 next to it. 4) Recount all three after F08 lands Compat.IsAddOnLoaded (the root file goes to 63 and the family to 84). Check the result with the grep over core/Compat*.lua and do not reuse the number from this note.
+
+**Verifier notes:**
+
+I checked this today and it holds up. The TOC loads 97 non-lib files (I ran the cited command), and module-map.md ends at row 97 (settings/Profiles.lua), but ARCHITECTURE.md:45 still says "Ninety-four". Per-file shim counts are Compat.lua 62, CompatWorld.lua 16 and CompatItem.lua 5, so the family has 83. The line 532 claim is literally true for Compat.lua by itself. Still, the standard's compat-layer.md trigger (documentation-§3, per EXECUTIVE_SUMMARY) counts "across the compat family ... counted mechanically", so the count the row states is the wrong one. The audit missed one spot: docs/compat-layer.md:20 has the same problem and explicitly says it counts "the way documentation-§3 counts them" while grepping only Compat.lua. The fix belongs in DropWatcher docs only. It needs no change under libs/ or tests/_kit/ and no deviation entry. The only risk is ordering with F08, which adds a shim, so do the recount after F08.
+
+## F15 — 51 of 66 TOC 'Conventional:' comments describe load-time reads or in-group handler order (should be LOAD-BEARING)
+
+- **Repo:** DropWatcher · **Kind:** standard · **Severity:** low · **Sources:** audit:DRW-08
+- **Evidence:** Reproduced: the audit's awk over DropWatcher.toc prints `51 66`. Examples DropWatcher.toc:47-48 (core\Compat.lua needs NS.TextParse at load; core/Compat.lua:14 reads it at file scope), :158-163 (Roster 'so its handler runs second'), :190-196 (Inspect), :262-268 (TipMarks taken at load by MineCells etc.), :197, :204, :245. modules\Asks.lua (:212-221) makes the same claim labelled LOAD-BEARING — inconsistent. Shared handlers run in FEATURE_EVENTS row order = TOC order (core/DropWatcher.lua:57-58). toc-file-§5 MUST.
+
+**Fix (verified):**
+
+Change labels only in /mnt/d/Profile/Users/Tushar/Documents/GIT/DropWatcher/DropWatcher.toc. Do not move any lines.
+(1) Relabel every `# Conventional:` block whose text states a file-scope read or write, or an order between files in the same group, to `# LOAD-BEARING:`. Keep the text that names what resolves. A rough scan gives 51 such blocks among the `# Conventional` comment lines at 29 47 67 69 71 73 75 77 81 98 100 118 121 125 129 134 137 141 146 149 153 158 164 168 176 180 185 190 197 204 210 222 228 234 241 245 252 256 259 262 269 273 277 282 286 292 302 308 312 317 329 333 338 342 347 350 356 364 372 376 382 386 390 393 397 403 432 436. Treat that list as a starting point and re-derive which blocks qualify. These must be relabelled:
+- :47 core\Compat.lua takes NS.TextParse at load (core/Compat.lua:14).
+- :158 modules\Roster.lua: 'so its handler runs second'.
+- :190 modules\Inspect.lua and :197 modules\LootFeed.lua: rows placed after other modules' rows.
+- :204 modules\TradeTimer.lua: BAG_UPDATE_DELAYED after modules\Gear.lua's.
+- :245 modules\WindowCompact.lua: CHALLENGE_MODE rows after modules\Situations.lua's.
+- :262 modules\TipMarks.lua: MineCells, DetailCells and OfferPanel take it at load.
+- Every module that appends to NS.FEATURE_EVENTS, NS.STAND_DOWN or NS.STAND_UP, or takes NS.Perf, NS.C or NS.L as a load-time upvalue.
+Match the variant prefix too: `# Conventional (vs. the settings files):` on modules\Window.lua.
+Keep `Conventional:` only on blocks where everything is reached at call time. Examples: core\EnvSetup.lua, PoolSetup.lua, ItemSetup.lua, WidgetsSetup.lua, Database.lua, LauncherSetup.lua. Keep one such comment per group, per the SHOULD.
+(2) Add a guard to /mnt/d/Profile/Users/Tushar/Documents/GIT/DropWatcher/tests/test_harness.lua in the '-- the TOC' section, near :58. This file is addon-owned, not tests/_kit/. Use the existing tocFields() lines. The test collects each contiguous `# ` comment block above a file line. It fails when a block starting `# Conventional` contains any of 'at load', 'load-time', 'so its handler runs', or "after modules\\...'s". The handler-order blocks (Inspect, LootFeed, TradeTimer, WindowCompact) say "after modules\X's", not "so its handler runs", so the proposed keyword list alone would miss them.
+(3) Gate: run `lua tests/run.lua` and `luacheck .` and get 0/0.
+
+**Verifier notes:**
+
+The finding holds today, and DropWatcher.toc is the right place to fix it.
+- **The count reproduces.** My awk prints 51 of 68 Conventional-labelled blocks. The audit says 51 of 66; the 2 extra are a counting-method difference that does not matter.
+- **The definitions in the standard.** toc-file-§5 (WowAddonStandards/standards/standards/toc-file.md, about lines 125-168) calls a position "conventional" only when everything the file needs is reached through a closure at call time. It calls a position load-bearing when something resolves at file scope, so moving the line changes behavior. It also says a modules\ file that takes NS.X as an upvalue at load is load-bearing.
+- **Both cited examples break that definition.** core/Compat.lua:14 reads NS.TextParse at file scope. Shared handlers run in the order of their FEATURE_EVENTS rows, which is TOC order (core/DropWatcher.lua:57-58). So the Roster, Inspect, LootFeed, TradeTimer and WindowCompact positions change behavior when moved, yet each says "Conventional".
+- **Inconsistent labels.** modules\Asks.lua (:212) makes the same kind of claim and is labelled LOAD-BEARING.
+- **No exemption applies.** I found no TOC or Conventional deviation row in docs/ARCHITECTURE.md '## Documented deviations'.
+
+Why severity is low and not a hard MUST failure:
+- The standard's worked example lets a consumer carry no comment at all when an annotated publisher line above already pins its position. Several of these constraints are also stated on the publisher line, which is already labelled LOAD-BEARING (TextParse names Compat; MediaSetup names Constants).
+- So the real defect is a wrong label: comments that tell the next author a line is free to move when it is not. The constraint is not missing.
+
+Risks:
+- This is a comment-only change and moves no lines, so there is no runtime risk.
+- The new harness guard has to match the 'Conventional (vs. the settings files)' prefix and the "after modules\X's" wording, or it will miss blocks.
+- If upstream F23 relaxes the rule (for example, so that reads pinned only by section order count as conventional), redo the labels to match. The line order stays the same either way.
+
+## F16 — Newest automated-test bundle is 7 commits behind HEAD
+
+- **Repo:** DropWatcher · **Kind:** tooling · **Severity:** info · **Sources:** audit:DRW-10, review:measurement (complexity record stale)
+- **Evidence:** docs/automated-tests/20261014-133254 measured 5996818; `git rev-list --count 5996818..HEAD` = 7. Live sighted run 41618 NLOC / 5314 functions vs recorded 41539 / 5304; max CCN 14, 0 warnings unchanged (automated-tests-§4).
+
+**Fix (verified):**
+
+As the final plan step, after all code, doc and re-vendor commits on the remediation branch, run dev-copilot:wow-automated-tests (or `bash tests/_kit/run-automated-tests.sh` from /mnt/d/Profile/Users/Tushar/Documents/GIT/DropWatcher). This writes docs/automated-tests/<YYYYMMDD-HHMMSS>/ with ANALYSIS.md recording the final HEAD SHA, and adds a row to docs/automated-tests/RESULTS.md. Gate: luacheck 0/0, `lua tests/run.lua` green, lizard 0 functions at or above CCN 15. Explicitly check that DW:OnSharedFeatureEvent and any functions touched by the remediation stay at CCN 14 or below. Commit the bundle by itself. Do not edit earlier bundles, which are frozen.
+
+**Verifier notes:**
+
+Confirmed. The newest bundle in docs/automated-tests/ is 20261014-133254. Its ANALYSIS.md:5 records commit 5996818 on feat/2026-10-13-drop-watcher-feedback-5. HEAD is 3eadd89, and `git rev-list --count 5996818..HEAD` returns 7. The recorded complexity snapshot is therefore stale, but there is no failure: the live numbers in the finding still show max CCN 14 and 0 warnings. The fix belongs in DropWatcher's own docs/automated-tests/ and RESULTS.md. Running tests/_kit/run-automated-tests.sh only uses the vendored kit and does not edit it, so the never-edit rule for tests/_kit/ is respected. This is a process step, not a code defect. It must be scheduled as the last task of the remediation plan, after any LibKa0s re-vendor and every code change, so the bundle's commit equals the final HEAD. Running it earlier would make it stale again. One risk: the bundle commit itself moves HEAD by one. The convention is to record the measured commit, i.e. the tree under test, so that is fine.
+
+## F17 — Re-vendor LibKa0s to the release carrying kit 39 and Perf 15
+
+- **Repo:** DropWatcher · **Kind:** library · **Severity:** medium · **Sources:** review:F-009 (consumer step), review:F-010 (consumer step), review:T8
+- **Evidence:** CLAUDE.md:41 and docs provenance name v1.71.0; libs/LibKa0s and tests/_kit are byte-identical to v1.71.0 (diff -rq empty). F06 and F18 cannot land until the fixed kit (F19) and Perf minor (F20) are vendored; libs/ and tests/_kit/ must never be edited in place (CLAUDE.md, library-stack-§5, testing-§1).
+
+**Fix (verified):**
+
+Prerequisite: LibKa0s tags a release (v1.72.0 or later) that contains F19 (kit revision 39) and F20 (Perf-1.0 minor 15), and optionally F21. Make sure the sibling ../LibKa0s checkout is at that tag.
+
+Then, in DropWatcher, run /dev-copilot:wow-revendor-libka0s:
+1. Commit A (the copy only): replace libs/LibKa0s/ with LibKa0s/LibKa0s/ from the tag, and tests/_kit/ with LibKa0s/testkit/ from the tag. Copy both whole, and roll the CLAUDE.md:41 provenance line ("Bundles [LibKa0s](...) v1.71.0 (MIT).") to the new tag in the same commit. Never hand-edit either payload.
+2. Commit B (docs): roll docs/ARCHITECTURE.md:14 ("LibKa0s v1.71.0 payload, ...") and docs/module-map.md:4 ("LibKa0s v1.71.0 whole") to the new tag. Update the count of wired majors on that ARCHITECTURE line if the tag added any. DEPENDENCIES.md contains no version string, so leave it alone. Write the frozen docs/revendor/2026-10-14-v<tag>/ bundle; this is the repo's first. Regenerate docs/test-cases.md and the test badge if the new kit adds self-cases.
+3. Gate: run `lua tests/run.lua` and `luacheck .`. tests/test_disabled.lua:103-104 (the `__fireUnconditional` calls for PLAYER_REGEN_DISABLED/ENABLED) is expected to fail under the fixed kit. Land F06 and F18 against the new kit to turn it green, rather than weakening the test. tests/test_vendor_sync.lua must pass against ../LibKa0s at the new tag.
+4. Record a follow-up to re-vendor the other roster addons (out of scope here).
+
+Risks:
+- The re-vendor also pulls in every other v1.71.0 to new-tag delta, so read the bundle's report of contract changes on unchanged signatures before adopting anything.
+- Some files in the payload now carry LibKa0s promotion deviations (#49, #50, #51, #53). If the new tag ships any of those, re-check the matching rows' re-check triggers in docs/ARCHITECTURE.md "## Documented deviations".
+
+**Verifier notes:**
+
+The finding holds. I checked the repo as it stands today. I extracted `git archive v1.71.0` from ../LibKa0s and ran `diff -rq` against DropWatcher's libs/LibKa0s and tests/_kit. Neither diff found any difference, so the vendored copies are byte-identical to v1.71.0.
+
+- **Perf minor:** libs/LibKa0s/Perf.lua:37 still declares `"LibKa0s-Perf-1.0", 14`, so the Perf 15 minor (F20) has not arrived.
+- **Upstream state:** the newest LibKa0s tag is v1.71.0. The release carrying F19 and F20 does not exist yet, so this finding is blocked on F19, F20 and a new LibKa0s tag.
+- **Routing:** the work belongs in DropWatcher. It is the consumer side of upstream fixes. It must be a whole-payload re-vendor, never an in-place edit of libs/ or tests/_kit/.
+- **No ratified deviation applies:** nothing in docs/ARCHITECTURE.md "## Documented deviations" covers the vendored version.
+- **Why test_disabled will turn red:** tests/test_disabled.lua:103-104 calls `m.__fireUnconditional` for PLAYER_REGEN_DISABLED and PLAYER_REGEN_ENABLED. The fixed kit is expected to make those calls fail loudly. That failure is the trigger for F06 and F18.
+
+**Corrections to the proposed fix:**
+- DEPENDENCIES.md does not name v1.71.0, so it needs no version roll.
+- The provenance strings that do need rolling are:
+  - CLAUDE.md:41
+  - docs/ARCHITECTURE.md:14
+  - docs/module-map.md:4, which the finding missed.
+- docs/revendor/ does not exist yet. This would be its first bundle.
+- tests/test_vendor_sync.lua compares the vendored files against the sibling ../LibKa0s checkout. That sibling checkout must be at the new tag when the gate runs, or the gate fails.
+
+## F18 — After re-vendor, step 6 must fire every R_on event through the kit and assert each reached a handler
+
+- **Repo:** DropWatcher · **Kind:** test · **Severity:** low · **Sources:** review:F-001 follow-up, review:T10, audit:DRW-04
+- **Evidence:** slash-commands-§7 step 6 says 'fire every event in R_on at the mock anyway'; F04's interim form calls handlers directly because kit 38's __fireUnconditional cannot reach method-named handlers (tests/_kit/mock_record.lua:614-639).
+
+**Fix (verified):**
+
+The change is in tests/test_disabled.lua, case "disabled 3" (lines 99-106). Once F17 re-vendors kit 39 or later, which can reach a handler recorded under a method name after unregister:
+  local NS, _, m = T.enableAddon(); NS.addon:OnSlashCommand("disable")
+  m.__resetSvWrites(); m.prints = {}; local shownBefore = #m.__shownFrames()
+  for _, ev in ipairs(NS.FeatureEventNames()) do assertTrue(m.__fireUnconditional(NS.addon, ev) >= 1, ev) end
+  assertEqual(#m.__svWrites(), 0); assertEqual(#m.prints, 0); assertEqual(#m.__shownFrames(), shownBefore)
+Iterate NS.FeatureEventNames(). Do not hard-code the two events, so that any event added to NS.FEATURE_EVENTS is covered automatically. The combat-entry event PLAYER_REGEN_DISABLED is already in that list. If kit 39 raises on an unreachable target instead of returning 0, drop the >=1 assertion. Until F17 lands, the interim form (F04) loops over NS.FEATURE_EVENTS rows and calls NS.addon[row[2]](NS.addon, row[1]) directly. If F21 ships a step-10 helper, switch F05's hand-written hold-order cases to it. The test case count stays the same. Run `lua tests/run.lua` and `luacheck .` afterwards.
+
+**Verifier notes:**
+
+The finding holds, so I could not refute it. The vendored kit is revision 38 (tests/_kit/framework.lua:20). It is byte-identical to ../LibKa0s/testkit/mock_record.lua at HEAD, so no kit 39 exists yet and this finding really does depend on F17. In M.__fireUnconditional (tests/_kit/mock_record.lua:614-639) the method-name fallback only tries target[event]. DropWatcher registers method-named handlers whose names differ from the event: core/DropWatcher.lua:21-22 maps PLAYER_REGEN_DISABLED to OnCombatStart and PLAYER_REGEN_ENABLED to OnCombatEnd, and lines 61-72 do the registering, with OnSharedFeatureEvent used when an event has several handlers. After the stand-down clears __events, both fires in tests/test_disabled.lua:103-104 hit no handler and return 0. Test "disabled 3" never checks that return value, so its assertion `#m.__svWrites()==0` passes on silence. That is exactly the failure the kit's own comment warns about. The case also checks only SavedVariables writes, not prints or shown frames, while slash-commands.md:304 (step 6) requires all three. Routing: the fix is in the addon's own test file and does not touch libs/ or tests/_kit/; the kit change itself belongs upstream in LibKa0s as F17. One risk: if kit 39 instead raises on an unreachable target, use pcall-free direct calls and drop the >=1 assertion, since the raise is then the proof.
+
+## F19 — testkit __fireUnconditional cannot reach a handler registered under a method name after unregister, and returns 0 silently
+
+- **Repo:** LibKa0s · **Kind:** library · **Severity:** medium · **Sources:** review:F-009, review:U-1
+- **Evidence:** ../LibKa0s/testkit/mock_record.lua:614-639: looks in rawget(target,'__scripts').OnEvent, then __events[event] (cleared on unregister), then target[event]; an AceEvent handler registered as RegisterEvent("PLAYER_REGEN_DISABLED", "OnCombatStart") matches none and the function returns 0 without raising. Its doc comment calls it 'the falsification half'. Kit.VERSION = 38 (testkit/framework.lua:20). 13 of 14 roster addons call it (e.g. QuickComms/tests/test_disabled.lua:99, :294 sums the return).
+
+**Fix (verified):**
+
+LibKa0s:
+1. testkit/mock_base.lua, registerEvent (around :443): after `self.__events[event] = handler or true`, also record the handler in a never-cleared table: `local ever = rawget(self,'__everHandlers') or {}; self.__everHandlers = ever; ever[event] = handler or event`. Do the same in any unit-event or frame register path that stores handlers. Leave unregisterEvent (:456) and unregisterAllEvents (:465) untouched. Like `__events`, keep it out of the registration listing.
+2. testkit/mock_record.lua:614-639, M.__fireUnconditional: after the target[event] lookup (:634), add `local ever = rawget(target,'__everHandlers'); local h = ever and ever[event]`. If h is a function, call h(event, ...). If h is a string and target[h] is a function, call target[h](target, event, ...). Return 1 in either case. Replace `return 0` (and the non-table early return at :615) with `error("__fireUnconditional: nothing registered " .. tostring(event) .. " on this target", 2)`. Update the doc comment at :606-613.
+3. tests/test_mock_record.lua: add a case that embeds AceEvent, registers ("PLAYER_REGEN_DISABLED", "OnCombatStart"), calls UnregisterAllEvents, expects __fire to return 0, expects __fireUnconditional to return 1 and the handler to run. Add the same for a function handler, and a case asserting the raise for a target that never registered the event.
+4. testkit/framework.lua:20: Kit.VERSION = 39. Add docs/api/testkit/version-39-docs.md (contract change: raises instead of returning 0, reaches method-named handlers after unregister). Update testkit/README.md around :835-838 and the CHANGELOG under a minor bump, released with F20.
+
+DropWatcher (after re-vendoring tests/_kit): in tests/test_disabled.lua:103-104, sum the two returns and assertEqual(sum, 2). If the handlers then write SavedVariables while disabled, fix the addon's guard rather than the test.
+
+**Verifier notes:**
+
+Confirmed at LibKa0s HEAD 5d22cf1. testkit/mock_record.lua:614-639 tries rawget(target,'__scripts').OnEvent, then __events[event], then target[event], and otherwise returns 0 without raising. testkit/mock_base.lua:456 (unregisterEvent) and :465 (unregisterAllEvents) clear __events[event], so a handler registered under a method name can't be reached after a stand-down. The existing kit self-test (tests/test_mock_record.lua:194-203) only covers the default handler, where the method name is the event name, which is why the gap went unnoticed.
+
+The defect is live in DropWatcher. core/DropWatcher.lua:21-22 registers PLAYER_REGEN_DISABLED as "OnCombatStart". PLAYER_REGEN_ENABLED goes through "OnSharedFeatureEvent", because Gear (modules/Gear.lua:345) also declares it. The registration goes through NS.SafeRegisterEvent at :72, and NS.StandDown unregisters both events. So tests/test_disabled.lua:103-104 ("disabled 3") runs no handler, and its `#__svWrites()==0` assertion holds for the wrong reason. Twelve roster addons besides LibKa0s also call it. Routing is correct: the fix belongs in the LibKa0s testkit, never in tests/_kit/ in the addon. Kit.VERSION is 38 (testkit/framework.lua:20) and the newest doc is docs/api/testkit/version-38-docs.md.
+
+Risks:
+(1) Raising instead of returning 0 is a contract change. Consumer suites that call it on targets that never registered the event will go red when re-vendored, so audit every consumer's call site in the same wave.
+(2) Once the handler really runs, DropWatcher "disabled 3" may go red for real: OnCombatStart, OnCombatEnd, OnGearRegenEvent and the Inspect REGEN handler then execute while disabled. That is the intended exposure, but it may need a guard in the addon or a change to the test.
+(3) sharedHandlers in core/DropWatcher.lua:55 is not cleared on StandDown, so OnSharedFeatureEvent will still dispatch to the Gear and Inspect handlers when fired unconditionally. That is correct for falsification.
+(4) After the fix, make the DropWatcher test assert the return value: assertEqual(sum, 2).
+
+## F20 — Perf.Note cannot record a top-level observation, so a sometimes-nested bucket cannot be recorded truthfully
+
+- **Repo:** LibKa0s · **Kind:** library · **Severity:** medium · **Sources:** review:F-010, review:U-2
+- **Evidence:** ../LibKa0s/LibKa0s/Perf.lua:669-695 P.Note(key, ms, parentKey): only `if parentKey ~= nil` records observedWithin/observedMixed; nil means 'not stated'. Passing false today would store false itself as the observed parent. Perf minor 14 (:37). observedMixed feeds nestingSentence at :300 and the dump at :859.
+
+**Fix (verified):**
+
+In ../LibKa0s:
+1. LibKa0s/Perf.lua:37: MINOR 14 -> 15.
+2. P.Note doc comment (:661-668): state that parentKey `false` means "observed at top level (no enclosing bucket)" and nil means "not stated". Keep the logic at :685-694 as it is; it already stores `false` and flags a mix correctly. Optionally reject any parentKey that is not nil, false or a string, using the framed error(..., 2).
+3. addNestingNote :298: replace `local observed = b and b.observedWithin or nil` with `local observed = b and b.observedWithin` so `false` survives. Change the guard at :299 to `if b and (declared or observed ~= nil) then`.
+4. nestingSentence :280-289: add a local `label(o)` that returns "top level" for `false` and the key otherwise. Then:
+   - mixed: "%s observed inside more than one parent (first: <label>)", or better, "observed inside X and at top level" when one of the two is `false`. That needs the second observation, so also record `b.observedSecond` at :692, or `b.observedTop = true` when parentKey == false. Add the new field to the dump at :856-860.
+   - `observed == false` with something declared: "%s declares itself within %s but was observed at top level".
+   - `observed == false` with nothing declared: "%s observed at top level".
+   - Keep `elseif observed then` for strings only.
+5. Dump at :858: confirm the JSON serializer writes `false` and does not drop the field.
+6. Optional, owner's call: in LibKa0s/PerfSampler.lua:143, pass `false` instead of nil when at == 1. Bump SAMPLER_MINOR 1 -> 2 at :22 and update tests/test_perf_core.lua:234.
+7. Tests in tests/test_perf_core.lua, near :120-140:
+   - false-only: observedWithin == false, no mix, and the report says "at top level".
+   - parent-only: unchanged.
+   - false then parent, and parent then false: observedMixed == true, and the sentence names both.
+   - declared within but only false: reported as contradicted.
+   - Record round-trip with the field preserved.
+8. docs/record-schema.md:69-112: observedWithin becomes string|false, plus any new field. Update docs/api for Perf.Note and the CHANGELOG entry plus "Versions in this release" (Perf 15, Sampler 2 if step 6 is taken). Release with F19.
+9. In DropWatcher, after re-vendoring: pass the real parent or `false` at modules/LootFeed.lua:225 and :266 (per F-004), and update CLAUDE.md's provenance line.
+
+**Verifier notes:**
+
+I checked the claim against today's ../LibKa0s and it holds. LibKa0s/Perf.lua:37 is MINOR 14. P.Note at :669 records an observation only inside `if parentKey ~= nil` (:685-694), so nil means "not stated" and there is no way to say "observed at top level". In DropWatcher, the sometimes-nested buckets in modules/LootFeed.lua:225 (`evaluate`) and :266 (`quality.gate`) call Perf.Note with no parent, so a capture can't tell whether they nest (review F-004/F-010). Routing to LibKa0s is right: the vendored copy is libs/LibKa0s/Perf.lua, which the addon must not patch, and it gets the fix only by re-vendoring. docs/ARCHITECTURE.md has no deviation that covers this.
+
+Correction to the evidence: passing `false` today is not harmful at record time. The first-wins and mixed logic at :689-693 already handles `false` correctly, because `false == nil` is false and `false ~= "feed.add"` is true. The breakage is all in the reporting:
+- addNestingNote :298 has `b.observedWithin or nil`, which turns `false` into nil.
+- nestingSentence :280-289 treats `false` as falsy, so a top-level-only bucket is reported as "not observed".
+- The mixed case prints "first: false".
+- When nothing is declared and the only observation is top level, `(declared or observed)` drops the bucket from the note entirely.
+
+That makes a string sentinel such as "(top)" unnecessary, and it could collide with a real bucket key. The simpler fix is to keep storing `false` and teach the renderers about it.
+
+The proposal also misses Shape B. P.Close in LibKa0s/PerfSampler.lua:143 (`local parent = at > 1 and slots[at - 1].key or nil`) passes nil for an outermost bracket, so Shape B has the same gap. It can be fixed in one of two ways:
+- (a) Pass `false` when at == 1. This bumps SAMPLER_MINOR (PerfSampler.lua:22) and changes the assertion at tests/test_perf_core.lua:234 ("the outermost bracket has no parent"). That is a behaviour change: a bucket closed at depth 1 that declares a `within` would go from "not observed" to "declares X but observed at top level".
+- (b) Leave Shape B alone and document it.
+
+Option (a) is more truthful; flag it to the owner. Either way, the record dump at :858 emits `observedWithin = false`. Check that the JSON dump encoder writes a boolean there, and update docs/record-schema.md:111-112: observedWithin becomes string|false, still additive within schema 2. Low risk otherwise, since nil keeps today's meaning for every existing call site.
+
+## F21 — Test kit has no helper for the slash-commands-§7 step-10 hold-ordering case every addon writes by hand
+
+- **Repo:** LibKa0s · **Kind:** library · **Severity:** info · **Sources:** audit:LibKa0s suggestion
+- **Evidence:** Audit summary: 'the test kit could ship a helper for the step-10 hold-ordering case, which every addon currently writes by hand'. Standard slash-commands.md:310 step 10 (perf hold + enabled=false, release, still down; reverse order).
+
+**Fix (verified):**
+
+LibKa0s (branch, then release with F19 and F20):
+1. Add LibKa0s/tests/_kit/latch.lua. It returns function(Kit) and installs Kit.assertLatchHoldOrder(opts), using the same pattern as secrets.lua.
+   - opts:
+     - lifecycle: the object with Hold(name), Release(name) and IsHeld(name)
+     - perfHold: the hold name, for example NS.HOLD_PERF
+     - setEnabled(bool): the addon's single write seam
+     - regSet(): returns the registration list
+     - label: optional
+   - Order A:
+     1. Capture R_on = regSet() and assert it is non-empty.
+     2. Hold perf, then setEnabled(false).
+     3. Release perf. Assert #regSet()==0 ("still stood down").
+     4. setEnabled(true). Assert the set equals R_on, compared by key, not only by count.
+   - Order B:
+     1. setEnabled(false), then hold perf.
+     2. setEnabled(true). Assert still down.
+     3. Release perf. Assert the set equals R_on.
+   - Restore state with pcall and finally, matching the existing addon cases.
+2. Load it in LibKa0s/tests/_kit/framework.lua beside line 241: dofile(kitFolder() .. "latch.lua")(Kit).
+3. Bump Kit.VERSION to 39 at framework.lua:20.
+4. Add a latch.lua row to the file table in tests/_kit/README.md (around line 24). Add latch.lua to the must-vendor list at README.md:45 and to vendor_sync.lua's expected-file inventory, if it enumerates files.
+5. Self-test in LibKa0s/tests, for example in test_lifecycle.lua or a new test_kit_latch.lua. Run the helper against a fixture Lifecycle and a recording mock, and pass in both directions. Add negative cases with assertError: a fake whose enable path stands up directly, bypassing the hold, must make the helper fail in each order.
+6. Add the new cases to docs/test-cases.md and CHANGELOG.
+
+DropWatcher (F18), after re-vendoring: add step 10 to tests/test_disabled.lua as a new case "disabled 9", or as a case named "slash-commands-§7 step 10" after line 160. It calls Kit.assertLatchHoldOrder with NS.Lifecycle, NS.HOLD_PERF, the suite's existing enable writer and its registration-set function. Keep the testing-§12 "-- red under: ..." comment at the call site.
+
+Optional upstream: one line in WowAddonStandards slash-commands.md §7 step 10 (or testing.md) pointing to the kit helper as the recommended form. This is a SHOULD/MAY, not a MUST.
+
+**Verifier notes:**
+
+Confirmed. Standard slash-commands.md step 10 sits at WowAddonStandards/standards/standards/slash-commands.md:309, not the root standards/ folder. The kit at LibKa0s/tests/_kit (Kit.VERSION = 38, framework.lua:20) has no latch or hold-order helper. I grepped every kit file for hold/latch and found only unrelated comments. Each addon writes step 10 by hand with its own seams: WhatGroup/tests/test_disabled.lua:527 uses NS.Lifecycle:Hold(NS.HOLD_PERF) plus regKeys(mock), and LootHistory/tests/test_disabled.lua:679 uses setEnabled and regSet, so the duplication is real. DropWatcher/tests/test_disabled.lua (179 lines, cases "disabled 1" to "disabled 8") has no step-10 case and no hold or perf reference at all, which is consistent with F18. Routing is correct: the kit is vendored into DropWatcher's tests/_kit/, which must not be edited in place, so the helper belongs in LibKa0s and arrives in DropWatcher by re-vendoring. This is a suggestion, not a violation. Neither the standard nor the library requires the helper, and step 10 itself is a MUST on the addon (F18). Severity stays info.
+
+Risks:
+(a) Seams differ per addon: hold constant names (HOLD_PERF and HOLD_DISABLED), the registration-set function (regSet, regKeys(mock) or mock registry) and the enable writer. Make the helper take injected callbacks and never reach into NS.
+(b) Step 10 says "Take the perf hold", and in real addons the hold arrives through P.Suspend. Holding directly through the Lifecycle object is what LootHistory and WhatGroup already do; document that choice.
+(c) Testing-§12 requires a falsification comment on step 10 in the addon suite. The helper must not hide that requirement: the addon keeps the "-- red under:" comment at its call site.
+(d) Kit.VERSION 39 assumes F19 and F20 ship in the same release. If they ship separately, renumber.
+
+## F22 — slash-commands-§7 conformance step 6 never requires proving the unconditional fire reached a handler
+
+- **Repo:** WowAddonStandards · **Kind:** standard · **Severity:** medium · **Sources:** review:F-011, review:U-3
+- **Evidence:** ../WowAddonStandards/standards/standards/slash-commands.md:304 step 6 asks for zero writes/prints/shows after firing every R_on event, but never requires asserting that each fire ran a handler — the testing-§12 trap; F04 passed it vacuously. (The `-- red under:` comment on step 6 is already a MUST at :312, so no new SHOULD is needed.)
+
+**Fix (verified):**
+
+WowAddonStandards (branch off master, HEAD 8aad69d, v2.80.0):
+1. standards/standards/slash-commands.md:304 (§7, conformance-test step 6). After "...and **zero frame shows** result.", add: "**Each fire MUST be shown to have reached at least one handler.** Assert `__fireUnconditional`'s return is >= 1 for every event fired, or sum the returns and assert the sum equals the number of events fired. A step-6 loop that ignores the return passes against a harness that dispatched nothing, which is the trap testing-§12 describes. On kit revisions <= 38 the case that silently returns 0 is an AceEvent handler registered under a method name other than the event's own name (`RegisterEvent(\"PLAYER_REGEN_DISABLED\", \"OnCombatStart\")`): once it is unregistered it is no longer in `__events`, and `target[event]` is nil." Cite the raising kit revision ("from kit revision 39 a fire that reaches nothing raises") only after LibKa0s F09 actually ships it. Today Kit.VERSION = 38 (../LibKa0s/testkit/framework.lua:20) and __fireUnconditional returns 0 without raising (../LibKa0s/testkit/mock_record.lua:614-639). Order the work as LibKa0s first, then the standard text that names the revision. Otherwise, write the rule as "assert the return" only.
+2. Line 311 already makes the `-- red under:` comment on step 6 a MUST, so leave it alone. You could name the reach assertion as the line it annotates.
+3. AUDIT.md:656-659 ("The conformance suite" bullet). Add: "and its step-6 fires assert that a handler was reached (the `__fireUnconditional` return), not only that nothing was written. A step 6 that discards the return is a testing-§12 finding."
+4. Update the version and date in standards/STANDARDS.md line 1 (v2.80.0 -> v2.81.0, 2026-10-14). Move the previous entry into standards/CHANGELOG.md, following the repo convention in WowAddonStandards/CLAUDE.md:94-99 and :163-164. Check the step-6 wording in standards/NEW_ADDON_CONTEXT.md (around :1640) and in NEW_ADDON.md:263 for a restatement that needs updating.
+Addon side, not part of this finding: DropWatcher/tests/test_disabled.lua:103-104 discards both returns. Its handlers are "OnCombatStart" and "OnCombatEnd" (core/DropWatcher.lua:21-22), so on kit 38 both fires reach nothing and the svWrites==0 assertion holds without testing anything. F-001/F04 fixes that.
+
+**Verifier notes:**
+
+The finding is real. slash-commands.md:304 (step 6) asks for zero writes, prints and shows after the unconditional fires, but nothing in step 6, at :311, or in AUDIT.md:656-659 requires showing that a fire reached a handler. The gap is real in practice. LibKa0s testkit __fireUnconditional (mock_record.lua:614-639, kit 38) returns 0 without raising for a handler registered under a method name other than the event's own name. DropWatcher's test_disabled.lua:103-104 fires PLAYER_REGEN_DISABLED and PLAYER_REGEN_ENABLED, whose handlers are OnCombatStart and OnCombatEnd (core/DropWatcher.lua:21-22), and ignores the return, so the test passes vacuously. Routing is correct: this is text in the standard and AUDIT.md, not libs/ or tests/_kit/. I found no documented deviation that covers it. Two corrections to the proposed fix. (a) "Method-named AceEvent handlers silently reach nothing" is too broad. The current kit's last-resort branch does reach a method named after the event; what it misses is a handler whose method name differs from the event name. (b) "Kit revision 39+ that raises" does not exist yet. Kit.VERSION is 38 and the function returns 0. That behavior depends on the LibKa0s fix (review F-009) landing first. Until then the standard should require asserting the return and must not cite rev 39. The finding is right that :311 already makes red-under a MUST for step 6, so no extra SHOULD is needed.
+
+## F23 — toc-file-§5 contradicts itself on what is load-bearing and omits shared-event handler order
+
+- **Repo:** WowAddonStandards · **Kind:** standard · **Severity:** medium · **Sources:** audit:U-1
+- **Evidence:** ../WowAddonStandards/standards/standards/toc-file.md:134-138 defines load-bearing as 'something resolves at file scope … so moving the line changes behavior'; the denominator paragraph :156-161 says any modules\/settings\ file taking an NS member at load is load-bearing, even where the mandated folder order already guarantees it. Neither names the ordering of handlers on a shared event (rows appended to a dispatch table in TOC order) as load-bearing (`grep -i 'shared event' toc-file.md` -> none).
+
+**Fix (verified):**
+
+In /mnt/d/Profile/Users/Tushar/Documents/GIT/WowAddonStandards:
+
+1. **toc-file.md:134-138 (definition paragraph).** Restate the test as positional.
+   - A position is load-bearing when moving the line to any other place the section-header MUST still allows changes behavior. That means two things:
+     - (a) It reads at file scope something published by an earlier file in the same `#` section, or by a file whose relative position the section order does not already fix.
+     - (b) It appends to a table or list whose order is TOC order and is read in that order. Examples are rows appended to `NS.FEATURE_EVENTS` for an event another file also handles (dispatch order of handlers on a shared event), schema rows appended to `SchemaRuntime`, and sinks or cleanup steps added to a list.
+   - A file-scope read satisfied only by the mandated section order (a `modules\` file reading a `core\` member) is conventional. It MAY note the cross-section dependency.
+
+2. **toc-file.md:156-161 (denominator paragraph).** Replace "That covers every position in the listing … is as load-bearing as a seam file" with:
+   - Every listed file must still be read, so the denominator is not reduced to the seam files.
+   - What counts is (a) and (b) above. A `modules\` or `settings\` file is load-bearing when it reads a same-section producer at load, or when its row order on a shared event or ordered table matters. A dependency on `core\` alone is not enough.
+   - Keep the "below at least one of several files" clause.
+
+3. **Worked examples.** Add two after the AbsorbTracker example (around :173-190):
+   - (i) A same-group file-scope read, for example `settings\Schema.lua` reading `Settings.SchemaLib` from the line above. This is load-bearing.
+   - (ii) A shared-event row, modeled on DropWatcher.toc:158-162 (Roster's GROUP_ROSTER_UPDATE handler must run after Situations'). This is load-bearing: the annotation names the event and which handler must run first.
+   - Also add a counter-example: a `modules\` file reading `NS.Constants` at load. This is conventional because the section order already guarantees it.
+
+4. **Grading text.**
+   - In toc-file.md, state that an unannotated (b)-type position is a MUST failure.
+   - Update the toc-file blurb in standards/STANDARDS.md:56 so it no longer says "whose denominator is every listed file that binds, reads or writes an NS member … at file scope". It should name same-section reads and TOC-ordered or shared-event order.
+   - Check AUDIT.md for any grading step that quotes the old denominator.
+
+5. **Version and changelog.** Bump the standard (minor, 2.80.0 to 2.81.0) everywhere 2.80.0 appears: README.md, CLAUDE.md, AUDIT.md, standards/STANDARDS.md, standards/EXECUTIVE_SUMMARY.md and standards/NEW_ADDON_CONTEXT.md. Add the changelog / version-history entry, and remove or close any open-evolutions entry for U-1.
+
+6. **Downstream.** DropWatcher F15 then relabels DropWatcher.toc under the new rule.
+   - The shared-event lines become LOAD-BEARING: Roster at :158-162, and Restrictions, ItemFacts, Gear, LootParser, Inspect, TradeTimer, Toast, AutoAsk and the others whose comments say "appends its row … so its handler runs …".
+   - Lines whose only file-scope reads come from `core\` may stay Conventional.
+
+**Verifier notes:**
+
+I checked this against WowAddonStandards@8aad69d (v2.80.0) and the finding holds. The citations are exact.
+
+- **Definition:** /mnt/d/Profile/Users/Tushar/Documents/GIT/WowAddonStandards/standards/standards/toc-file.md:134-138 defines a load-bearing position as one where "moving the line changes behavior".
+- **Denominator paragraph:** :156-161 says "every position in the listing" counts, and that a `modules\` or `settings\` file taking `NS.Something` as an upvalue at load "is as load-bearing as a seam file". That holds even when the only thing it depends on is in `core\`, which the mandated header order (Core before Modules) already keeps above it. In that case, moving the line around inside its group does not change behavior.
+- **Wording correction:** this is a tension between two tests (positional versus "reads at file scope"), not a strict contradiction. Auditors can read it either way, and the 2026-10-14 DropWatcher audit did. docs/audits/2026-10-14/02_DEVIATIONS.md:146-159 says DropWatcher's labeling is inconsistent and defers to "U-1".
+- **Shared events are not covered:** a grep for "shared event", "dispatch order" and "TOC order" across standards/ finds no rule about the order handlers run on a shared event.
+- **The gap shows up in DropWatcher's TOC:** DropWatcher.toc:158-162 labels modules\Roster.lua "Conventional", but its comment says its GROUP_ROSTER_UPDATE handler "runs second" after Situations. That is a behavior-changing position, but nothing in the standard calls it load-bearing.
+
+**Routing:** WowAddonStandards is the right home. This is the standard's own text, not libs/ or tests/_kit/. No deviation in DropWatcher's register covers it. The addon cannot satisfy an ambiguous rule; it can only pick a reading.
+
+**Risks:**
+- Narrowing clause (a) shrinks the MUST's denominator, so some lines that currently pass with LOAD-BEARING labels become ones that only need the SHOULD. That is not a regression.
+- The worked "This is stated because an audit got it wrong" paragraph (:163-171) counts positions under the old denominator. Re-check that its counts still hold under the new wording, or mark them as historical.
+- The fix is a rule change, so the full ripple applies: index blurb, version bump, context pack, AUDIT.md.
+- Sequencing: DropWatcher F15 (the relabel) must land after this ruling.
+
+## F24 — documentation-§3 spill MUST collides with architecture-§5's requirement to name state in ARCHITECTURE.md → Settings Schema
+
+- **Repo:** WowAddonStandards · **Kind:** standard · **Severity:** medium · **Sources:** audit:U-2
+- **Evidence:** ../WowAddonStandards/standards/standards/documentation.md:341-343 a mandated section >~60 lines MUST spill to its canonical doc (Settings Schema -> schema.md). architecture.md:161 requires ARCHITECTURE.md → Settings Schema to name each piece of out-of-seam state (key, owner, every writer). An addon with much named state cannot satisfy both (DropWatcher Settings Schema is 89 lines, F13).
+
+**Fix (verified):**
+
+Make these edits in ../WowAddonStandards:
+1. standards/standards/documentation.md, after line 343 (the spill bullet): add a sentence saying that when Settings Schema spills, everything another section requires it to name moves with it to schema.md and counts as named there. This covers architecture-§5's registry storage keys, writers and load pass, and its named non-setting state with owner and writers. The hub keeps the summary and the one link. Spilled names live in one file only and are never split across the two.
+2. standards/standards/architecture.md:148: change "name that writer in `docs/ARCHITECTURE.md` → **Settings Schema** (documentation-§3)" to "... → **Settings Schema**, or the `schema.md` it spills to (documentation-§3)".
+3. architecture.md:153: change "`ARCHITECTURE.md` names the storage keys..." to "`ARCHITECTURE.md` → Settings Schema (or its `schema.md` spill) names the storage keys...".
+4. architecture.md:161: change "`ARCHITECTURE.md` → Settings Schema names each piece" to "`ARCHITECTURE.md` → Settings Schema, or the `schema.md` it spills to, names each piece", and add "the spill rule (documentation-§3) governs where the list lives".
+5. AUDIT.md:757 and AUDIT.md:772-773: accept names found in docs/schema.md when the hub's Settings Schema has spilled and links there. Also add a note under the hub-shape check at AUDIT.md:161-163 that a spilled Settings Schema still keeps its naming obligations, now met in schema.md.
+6. Ripple: the documentation and architecture blurbs in standards/STANDARDS.md if either mentions this, plus a CHANGELOG entry in STANDARDS.md. Bump the minor version, v2.80.0 to v2.81.0, carrying it to CLAUDE.md, README.md, EXECUTIVE_SUMMARY.md and NEW_ADDON_CONTEXT.md the way v2.80.0 did. Leave frozen history as written.
+Then in DropWatcher (tracked as F13): move the 89-line Settings Schema, including the named-state paragraph at docs/ARCHITECTURE.md:251, into docs/schema.md. Leave a summary and one link in the hub, and re-vendor the standards reference.
+
+**Verifier notes:**
+
+Confirmed at WowAddonStandards HEAD 8aad69d (v2.80.0). documentation.md:341-343 says a mandated ARCHITECTURE.md section over ~60 lines MUST spill to its canonical doc (Settings Schema goes to schema.md) and leave only a summary and exactly one link. architecture-§5 asks for the names to sit in ARCHITECTURE.md itself in three places: architecture.md:148 (name the registry writer in `docs/ARCHITECTURE.md` → **Settings Schema**), :153 ("`ARCHITECTURE.md` names the storage keys, the writer and the load-pass function(s)") and :161 (named non-setting state, "`ARCHITECTURE.md` → Settings Schema names each piece"). AUDIT.md:757 and :772-773 check these names against `docs/ARCHITECTURE.md` and nothing else. No text anywhere says a spilled schema.md can hold these names. An addon with enough named state therefore breaks one MUST or the other, and an auditor following AUDIT.md would file whichever one the addon chose to break.
+
+The DropWatcher evidence holds. Its ARCHITECTURE.md Settings Schema section is 89 lines (line 218 onward), it names the owner and writers of its named state inside the hub (line 251), and the whole hub is about 563 lines.
+
+The finding understates the reach. The collision covers registry-writer naming (:148/:153, AUDIT.md:757) as well as the named-state list at :161. It is not covered by any deviation, and the fix belongs upstream, not in the addon.
+
+Risk: low. This is a relaxation, so every addon that complied before still complies, which by the repo's convention makes it a minor bump. Make sure the AUDIT.md wording does not accept names split across both files with no single home. Require the names to be complete in one place, either the hub section or the schema.md it spills to, with the hub keeping the one link. Once the standard lands, DropWatcher still has to actually spill (F13).
+
+## F25 — Spill rule names canonical targets for only four of the mandated hub sections
+
+- **Repo:** WowAddonStandards · **Kind:** standard · **Severity:** low · **Sources:** audit:U-3
+- **Evidence:** ../WowAddonStandards/standards/standards/documentation.md:341-343 names targets only for Module Map, Settings Schema, Slash Commands, Message Bus. Known Limitations, Event Subscriptions and Taint Notes have no canonical spill doc, so the MUST cannot be met for them (DropWatcher Known Limitations is 73 lines).
+
+**Fix (verified):**
+
+WowAddonStandards, standards/standards/documentation.md:
+1. Lines 341-343, the spill-rule bullet: extend the list of canonical targets. Event Subscriptions spills to `data-flow.md`, which is Tier 1 and already covers "event or trigger in". Taint Notes spills to `taint.md`. Known Limitations spills to `known-limitations.md`. Add one closing sentence: Overview, Documentation map and Documented deviations never spill, because they are lead-in and register sections.
+2. Tier 2 table, lines 268-276: add two rows. `docs/known-limitations.md` is required when ARCHITECTURE.md's Known Limitations section passes about 60 lines. `docs/taint.md` is required when Taint Notes passes about 60 lines. This keeps the "Not applicable" rule (lines 316-321) consistent.
+3. Optionally add an alternative sentence: an addon whose spill is by-module design readings MAY keep a Tier 3 doc (such as DropWatcher's design-readings.md) as long as the canonical doc links it. Without that sentence, DropWatcher would need to rename the doc or add a canonical doc that links to it.
+4. Line 148: no change needed, unless it restates the targets.
+5. Ripple: bump the version and date in standards/STANDARDS.md (minor bump to v2.81.0), add a CHANGELOG entry, and regenerate the NEW_ADDON_CONTEXT pack and the AUDIT playbook wherever they quote the spill-rule list.
+6. Follow-up in DropWatcher after the standard is bumped: move the body of Known Limitations (docs/ARCHITECTURE.md:432-504) into docs/known-limitations.md and leave a summary plus one link. Either fold design-readings.md into it or link to it. Register the new doc in the Tier 2 table of ## Documentation map.
+
+**Verifier notes:**
+
+I checked this against WowAddonStandards HEAD 8aad69d (v2.80.0) and the claim holds. In standards/standards/documentation.md, lines 341-343 say a mandated ARCHITECTURE.md section over about 60 lines "MUST spill into its canonical topic doc". They then name a target for only four sections: Module Map (module-map.md), Settings Schema (schema.md), Slash Commands (slash-dispatch.md) and Message Bus (message-bus.md). Line 148 lists ten mandated sections. Overview, Documentation map and Documented deviations are registers or a lead-in, so a spill target would make little sense for them. That leaves three content sections with no canonical doc: Event Subscriptions, Taint Notes and Known Limitations. Neither the Tier 1 table (lines 250-262) nor the Tier 2 table (lines 266-276) offers a doc for any of them. data-flow.md comes closest for events, but the rule never names it as a spill target.
+
+In DropWatcher at today's state, Known Limitations runs about 73 lines (docs/ARCHITECTURE.md:432 to just before Documentation map). It already links design-readings.md, a Tier 3 doc registered at docs/ARCHITECTURE.md:550 as "spilled from Known Limitations". The addon has improvised a spill into a free-form doc, but the section is still over the threshold. Even a full spill would not count as compliant under the letter of the rule, because no canonical topic doc exists for it. No ratified deviation covers this. Routing is correct: the fix is upstream wording in the standard, and libs/ and tests/_kit/ are not involved.
+
+Side note, not part of F25: DropWatcher's Module Map section is about 175 lines and Settings Schema about 89, both over the threshold. That should be a separate addon-side finding if one is not already filed.
+
+Risk: adding new canonical filenames makes them Tier 2 docs with a trigger. Every rostered addon's Documentation map would then need a row for each one, or a "Not applicable" row. So the release needs a minor version bump and a changelog note.
+
+## F26 — options-ui-§19 does not cover reparenting an existing frame onto a pooled widget, nor renderer-side cleanup
+
+- **Repo:** WowAddonStandards · **Kind:** standard · **Severity:** low · **Sources:** audit:U-4
+- **Evidence:** ../WowAddonStandards/standards/standards/options-ui.md:466 lists CreateTexture/CreateFontString/CreateLine/CreateMaskTexture, CreateFrame(…, widget.frame) and scripts; `grep -n SetParent options-ui.md` -> none. It does not say whether undoing in a page renderer rather than the widget's OnRelease is acceptable (DropWatcher F11).
+
+**Fix (verified):**
+
+In WowAddonStandards (currently v2.80.0), bump to v2.81.0 (minor: a rule is tightened):
+1. standards/standards/options-ui.md:466 (§19 MUST bullet). Add a third case: "nor reparent an existing addon-owned frame onto one (`existingFrame:SetParent(widget.frame | widget.content)`, typically followed by `ClearAllPoints`/`SetAllPoints`)". In the "undoes it" clause, define the undo for a reparent: SetParent to an addon-owned park frame (never left on the widget), ClearAllPoints, Hide. Add: "The undo MUST live in that widget's own single `\"OnRelease\"`. A renderer-side park (a page renderer re-homing the frame before `ClearScroll`) MAY be added as belt-and-braces but does not satisfy this rule, because a release the renderer does not see (a parent container's ReleaseChildren, another page's ClearScroll) still sends the frame into the pool attached."
+2. Same section: add one sentence scoping the opposite direction out. `widget.frame:SetParent(addonFrame)` on a widget the addon holds is a separate case; check AceGUI's Release in libs/AceGUI-3.0/AceGUI-3.0.lua before the text claims that AceGUI resets it.
+3. standards/standards/anti-patterns.md:122 (#93). Change "calling `CreateTexture`, `CreateFontString` or `CreateFrame` on … or setting a script there" to also name "or reparenting an existing frame onto it", and add "or undoing it only in the page renderer rather than in the widget's `\"OnRelease\"`". The index range #1–#93 stays the same.
+4. standards/NEW_ADDON_CONTEXT.md:1633 checklist. Change "Nothing is drawn on, or scripted onto" to "Nothing is drawn on, reparented onto, or scripted onto", undone in that widget's single `"OnRelease"`.
+5. standards/CHANGELOG.md: add a v2.81.0 entry (the finding: DropWatcher settings/PageEditors.lua:218-227 and its renderer-side ParkSituationTable :200-206; the rule; the ripple).
+6. Ripple the version to CLAUDE.md, README.md, EXECUTIVE_SUMMARY.md and NEW_ADDON_CONTEXT.md, as previous entries did.
+DropWatcher follow-up (F11): add a holder `"OnRelease"` at settings/PageEditors.lua right after :218 that parks t.host (SetParent(ctx.panel), ClearAllPoints, Hide). Keep ParkSituationTable as belt-and-braces.
+
+**Verifier notes:**
+
+I checked the claim against today's tree and it holds. WowAddonStandards is at HEAD 8aad69d (v2.80.0). In standards/standards/options-ui.md, §19's MUST bullet at line 466 lists only these: CreateTexture, CreateFontString, CreateLine and CreateMaskTexture, CreateFrame(…, widget.frame), and SetScript/HookScript. `grep SetParent` in options-ui.md hits only line 137, which is about the Defaults button and has nothing to do with §19. Anti-pattern #93 (anti-patterns.md:122) and the NEW_ADDON_CONTEXT.md:1633 checklist have the same gap.
+
+The gap shows up in DropWatcher. settings/PageEditors.lua:225-227 reparents an existing frame (`t.host:SetParent(holder.frame)` + ClearAllPoints/SetAllPoints) onto a SimpleGroup created at :218. The undo is a renderer-side `P.ParkSituationTable` (:200-206, `t.host:SetParent(ctx.panel)`), not the holder's OnRelease. As written, §19 neither forbids nor allows this, so a reviewer cannot rule on F11. A gap in the standard belongs upstream, so the routing to WowAddonStandards is correct. DropWatcher's libs/ and tests/_kit/ are not touched, and docs/ARCHITECTURE.md has no deviation row covering it.
+
+Scope note: only reparenting addon-owned frames ONTO a widget's .frame/.content is in scope. The reverse, `widget.frame:SetParent(addonFrame)` (PageEditors.lua:109/128, Profiles.lua:31, the WindowFilterBar/CompactChrome/WindowFooter dropdowns), is out of scope. I believe AceGUI's own Release/OnAcquire resets the frame's parent and anchors, but I did not check that in libs/. The new rule should exclude that case explicitly so it does not cause false positives.
+
+Risks:
+1. The change can turn DropWatcher's current renderer-only park into non-compliance. That is intended, and it should go out as a minor bump.
+2. A holder returned by a library maker must not get its OnRelease overwritten. That rule already exists at line 468; the new text should point to it.
+3. "Undo" for a reparent has to mean SetParent to an addon-owned park frame plus ClearAllPoints and Hide. Just hiding the frame is not enough, because the frame stays a child of the pooled widget and comes back with it.
+
+## F27 — Standard is silent on what a feature refusal says when only the perf hold is taken
+
+- **Repo:** WowAddonStandards · **Kind:** standard · **Severity:** low · **Sources:** audit:U-5
+- **Evidence:** ../WowAddonStandards/standards/standards/slash-commands.md:260-275 'The refusal line' is defined for the disabled state and names /<slash> enable; performance.md §6 / slash-commands-§7 latch text (:285-290) describe two holds but no refusal wording for perf-only; grep finds no rule. DropWatcher printed the disabled line under the perf hold (F01).
+
+**Fix (verified):**
+
+WowAddonStandards (standard text only):
+1. slash-commands.md §7: add a subsection after "The refusal line" (after line 278, before "Disabled and perf-suspended are two holds" at line 280), titled "Which refusal, by hold". Content:
+   - The disabled refusal line MUST be printed only when the `disabled` hold is taken (Lifecycle `IsHeld("disabled")`), never on a bare stood-down check.
+   - When only the `perf` hold is taken, a feature verb that implements the §2 SHOULD answers with exactly one tagged line, for example `<NS.PREFIX> <BrandName> is paused for a performance capture — finish it with |cFFFFFF00/<slash> perf finish|r` (no trailing period, same em-dash and gold-command style). It MUST NOT name `/<slash> enable`.
+   - When both holds are taken, the disabled line wins, because `enable` is still the step the player needs.
+2. slash-commands.md:43-44 (§2 feature-verb SHOULD): add one clause that points to the new subsection for the perf-only case.
+3. performance.md §6 (near line 142): add one sentence cross-referencing slash-commands-§7 "Which refusal, by hold".
+4. slash-commands.md:310 (conformance step 10): optionally add that a feature verb is dispatched with the `perf` hold alone and must produce the perf line, not the disabled line. Do this only for addons that implement the SHOULD.
+5. Do the usual standard-change ripple: bump STANDARDS.md (v2.81.0, new date), update the slash-commands blurb in the index, add a changelog entry, and refresh the context pack.
+
+Optional companion in LibKa0s: add a constant/helper beside DISABLED_LINE_FORMAT (for example `PERF_HELD_LINE_FORMAT` / `Slash:PerfHeldLine()`), and have the standard pin the wording against it the way it already pins `DISABLED_LINE_FORMAT` with `Kit.assertLibraryConstant`.
+
+**Verifier notes:**
+
+I couldn't refute it. The standard is v2.80.0 (2026-10-13). In ../WowAddonStandards/standards/standards/slash-commands.md:
+- §2's feature-verb SHOULD (lines 43-46) is written only for the disabled state ("A disabled addon SHOULD refuse a feature verb ... names /<slash> enable").
+- §7 "The refusal line" (lines 260-278) is defined as "the one refusal a disabled addon prints".
+- §7 "Disabled and perf-suspended are two holds on ONE latch" (lines 280-291) covers how the holds acquire and release and how long each lasts. It says nothing about what a feature verb prints when only the `perf` hold is taken.
+
+performance.md §6 (lines 138-147) is silent on this too. A grep for refusal near perf/suspend finds nothing, and conformance-test step 10 (line 310) checks only the registration set.
+
+The gap shows up in practice. DropWatcher/core/DropWatcher.lua:120, 178, 283 and 394 branch on NS.IsStoodDown(), which is true under either hold. They then print NS.SlashCommands:DisabledLine(), so during a perf capture the player is told to run `/<slash> enable` on an addon that is already enabled. That is the addon's own bug F01. This finding is the missing rule upstream, so WowAddonStandards is the right place for it. It is not a documented deviation, and libs/ and tests/_kit/ are untouched.
+
+Risk: this adds a second canonical string. If it ships without a LibKa0s constant, each addon will word it its own way, which is the drift that §7 "one line, the wording is the collection's" exists to prevent. Optional companion: a LibKa0s Slash constant/helper, released in step with the standard bump. Severity is low because this is wording on a SHOULD-level courtesy.
+
+## F28 — compat root header rule 'names every family member' is ambiguous (files vs shims)
+
+- **Repo:** WowAddonStandards · **Kind:** standard · **Severity:** low · **Sources:** audit:U-6
+- **Evidence:** ../WowAddonStandards/standards/standards/compat.md:10 'Its file header names every family member, so the header alone tells a reader where the rest of the seam lives' — 'member' could mean every shim; v2.79.0 changelog says 'every member'.
+
+**Fix (verified):**
+
+WowAddonStandards only:
+1. standards/standards/compat.md:10: change "Its file header names every family member, so the header alone tells a reader where the rest of the seam lives." to "Its file header names every other family file (each core/Compat<Topic>.lua) by path, so the header alone tells a reader where the rest of the seam lives; it need not list the individual NS.Compat members." You could also rename the term to "family file" throughout this bullet so that "member" always means an NS.Compat.X shim, which is how bullets 9-10 already use it.
+2. Optionally align standards/NEW_ADDON_CONTEXT.md:286 ("is named in its header") and :1623 ("is listed in its header"). They already say files, so at most make it "named by path in Compat.lua's header".
+3. Add a v2.80.1 patch entry to standards/CHANGELOG.md and to the changelog block in standards/STANDARDS.md (line ~100 area). Say it clarifies the wording and changes no rule, and that the v2.79.0 entry's "naming every member" means family files. Leave the v2.79.0 entry itself as written, as frozen history.
+4. Update the version in every place the standard records it: the standards/STANDARDS.md:1 title line, CLAUDE.md (the "As of v2.80.0" line ~172 and any version line), README.md:173, EXECUTIVE_SUMMARY.md, and NEW_ADDON_CONTEXT.md's pack version.
+No change in DropWatcher: its core/Compat.lua header (lines 2-4) already names CompatWorld.lua and CompatItem.lua.
+
+**Verifier notes:**
+
+Confirmed at WowAddonStandards HEAD 8aad69d (v2.80.0). The text is at standards/standards/compat.md:10: "Its file header names every family member, so the header alone tells a reader where the rest of the seam lives." The ambiguity is real, and the same paragraph makes it worse. Bullet 9 ("moving a member between family files") and the sentence just before it on line 10 ("every member routed through that major and that member's library-absent stub") both use "member" to mean an NS.Compat.X shim. So "family member" can fairly be read as "every shim", which would be a much heavier requirement.
+
+The intended meaning is files. The clause "where the rest of the seam lives" points to files, and the context pack also says files: NEW_ADDON_CONTEXT.md:286 has "is named in its header" and :1623 has "is listed in its header", both about a core/Compat<Topic>.lua. The v2.79.0 changelog entry (standards/CHANGELOG.md:7) says "its header naming every member", which is even more ambiguous. AUDIT.md does not restate the rule, so it needs no change.
+
+DropWatcher already complies under the file reading: core/Compat.lua lines 2-4 name core/CompatWorld.lua and core/CompatItem.lua, and docs/compat-layer.md tables the shims. So this is a wording fix to the standard only, with no addon-side work, and WowAddonStandards is the right place for it. No documented deviation covers it.
+
+One part of the proposed fix needs correcting: do not rewrite the v2.79.0 changelog entry. The standard's own convention is "Frozen history is left as written". Clarify it in a new patch entry instead.
+
+## F29 — AUDIT.md conformance-suite check does not walk steps 1-10, so incomplete suites pass
+
+- **Repo:** WowAddonStandards · **Kind:** standard · **Severity:** low · **Sources:** audit:T-2
+- **Evidence:** ../WowAddonStandards/AUDIT.md:656-659 checks only that test_disabled.lua exists, is listed, and asserts on the registration set; it never requires checking step 6's reach/prints/shows, step 7 covering every NS.COMMANDS row, step 8's left-click, step 10's hold-order cases or the red-under comments on steps 3/6/10. The 2026-10-11 DropWatcher audit passed an incomplete suite (DRW-04).
+
+**Fix (verified):**
+
+In ../WowAddonStandards/AUDIT.md, replace lines 656-659 ("The conformance suite." bullet) with a sub-list that walks slash-commands-§7 steps 1-10 against tests/test_disabled.lua. Each step needs a file:line of the assertion as evidence. A missing or partial step is a finding:
+- (1) Baseline snapshots R_on, timers and F_on are captured from the recording mocks.
+- (2) Disable goes through the single write seam, never a direct teardown call.
+- (3) The registration set is empty by count and by name, with a "-- red under:" comment.
+- (4) No timer, ticker or OnUpdate is armed, now or for the rest of the run.
+- (5) Every frame in F_on is hidden.
+- (6) Every event in R_on is fired at the mock, with assertions of zero SV writes, zero printer calls and zero frame shows. It must reach the handlers (per F22), and it carries a "-- red under:" comment.
+- (7) Every NS.COMMANDS row is dispatched through the real dispatcher. Diagnostics is dispatched in both forms (cross-reference the existing line 686).
+- (8) Launcher LeftButton opens the panel with zero writes and zero shows, and RightButton menu entries are gated as in §7.
+- (9) Re-enable restores R_on, plus the changed-setting cycle.
+- (10) The latch is tested in both hold orders, with a "-- red under:" comment.
+Keep the existing registration-set and draw-gate (testing-§12) sentences.
+
+Add a standards/CHANGELOG.md entry. Bump as a patch (v2.80.1): this is a playbook check with no new rule. Ripple the version to CLAUDE.md, README.md, EXECUTIVE_SUMMARY.md and NEW_ADDON_CONTEXT.md, following the existing convention.
+
+**Verifier notes:**
+
+Confirmed at today's state (WowAddonStandards HEAD 8aad69d, v2.80.0). AUDIT.md:656-659, the "The conformance suite" bullet, checks only three things: that tests/test_disabled.lua is present, that it is listed in tests/run.lua, and that it asserts on the registration set rather than on a handler return. It also flags a suite that would pass against a draw gate (testing-§12).
+
+The normative list is in standards/standards/slash-commands.md:297-311 (§7, "The conformance test every addon ships"). It sets ten ordered steps and requires red-under comments on steps 3, 6 and 10. AUDIT.md never asks the auditor to walk those steps. The only per-step hook elsewhere in AUDIT.md is line 686: "test_disabled.lua dispatches both forms" of diagnostics.
+
+The real-world miss checks out. The 2026-10-11 DropWatcher audit (docs/audits/2026-10-11/03_EVIDENCE.md:119, 01_CURRENT_STATE.md:26) graded the suite from its registered()=="" and timer assertions. The 2026-10-14 audit then found step 10 missing and steps 6, 7 and 8 only partly covered (DRW-04, docs/audits/2026-10-14/01_CURRENT_STATE.md:36).
+
+Routing is correct. This is the playbook's own gap, not an addon deviation, and nothing in libs/ or tests/_kit/ is involved. The paired dev-copilot side (F32) is separate.
+
+Risk is low. The change only tightens the playbook. Addons with partial suites will start drawing findings on their next audit, which is the intent. Keep step numbers referenced to slash-commands-§7 rather than copying its text, so the two cannot drift.
+
+## F30 — Cross-addon slash census is blind to constant-driven RegisterChatCommand
+
+- **Repo:** dev-copilot · **Kind:** tooling · **Severity:** medium · **Sources:** review:F-012, review:U-4
+- **Evidence:** ../dev-copilot/profiles/wow/agent-review.md:363 `xargs -r grep -hoE 'RegisterChatCommand\("[a-z]+"'` only matches string literals. DropWatcher registers via NS.SLASH:sub(2) (core/DropWatcher.lua:518) and QuickComms via constants (QuickComms/core/QuickComms.lua:120); constants at DropWatcher/core/Namespace.lua:19-20 and QuickComms/core/Namespace.lua:19-20 ("/dw","/dropwatcher","/qc","/quickcomms"). Second review in a row covering this by hand.
+
+**Fix (verified):**
+
+In `../dev-copilot/profiles/wow/agent-review.md`, change lines 360-366 (the class-1 roots loop) so that each addon builds the TOC load list once and runs both greps over it before `sort -u`:
+
+```sh
+for a in "$@"; do
+  ( cd "$a" && files=$(tr -d '\r' < *.toc | grep -iE '\.lua$' | grep -v '^#' | sed 's|\\|/|g')
+    { printf '%s\n' "$files" | xargs -r grep -hoE 'RegisterChatCommand\("[a-z]+"' | sed -E 's/.*"([a-z]+)"/\1/'
+      printf '%s\n' "$files" | xargs -r grep -hoE 'NS\.SLASH[A-Z_]* *= *"/[a-z]+"' | sed -E 's/.*"\/([a-z]+)"/\1/'
+    } | sort -u
+  ) | sed "s|\$|\t$a|"
+done | sort | tee "$roots"
+```
+
+Then:
+1. Add a short paragraph before the block. It should say that DropWatcher and QuickComms register via `NS.SLASH:sub(2)` / `NS.SLASH_ALIAS:sub(2)` with the constants in `core/Namespace.lua` (`slash-commands-§3`). A literal-only grep therefore drops their roots and reports a false clean, so the second pass reads the constants.
+2. Add a bullet next to `:312`: a literal-only census misses `dw`, `dropwatcher`, `qc` and `quickcomms`.
+3. If the baseline root-count table elsewhere in the profile states a total, update it: it rises by 4.
+4. Optionally touch the cross-addon sentence in `dev-copilot/CLAUDE.md:117`.
+5. No change to `agents/wow-standards-audit.md`, which has no such census.
+6. Bump `.claude-plugin/plugin.json` 2.3.4 to 2.3.5, add a CHANGELOG entry, and re-sync the plugin cache under `~/.claude`.
+7. Verify by running the loop over the roster: the output should contain `dw`, `dropwatcher`, `qc` and `quickcomms`, and `uniq -d` should stay empty.
+
+**Verifier notes:**
+
+The finding holds. Checked against today's files:
+- `../dev-copilot/profiles/wow/agent-review.md:360-366` is the class-1 roots loop. Line 363 is `xargs -r grep -hoE 'RegisterChatCommand\("[a-z]+"'`, which only matches string-literal arguments.
+- DropWatcher registers through constants at `core/DropWatcher.lua:518-519` (`NS.SLASH:sub(2)` and `NS.SLASH_ALIAS:sub(2)`), with `NS.SLASH="/dw"` and `NS.SLASH_ALIAS="/dropwatcher"` at `core/Namespace.lua:19-20`. QuickComms does the same at `core/QuickComms.lua:120-121` and `core/Namespace.lua:19-20` (`/qc`, `/quickcomms`).
+- A collection-wide grep shows these two are the only roster addons that register by constant. The others (AbsorbTracker, AuraMaster, BankLedger, ConsumableMaster, KickCD, LootHistory, MultiMeters, PanelMaster, PartyFrameEnhanced, PGFE, PrettyChat) all pass literals.
+- So the census silently leaves out 4 of the collection's roots. A collision on `dw`/`qc` would be reported as clean.
+
+Routing:
+- dev-copilot is the right home. The defect is in the plugin's review profile, not in the addon, `libs/` or `tests/_kit/`.
+- No standard rule is involved. Registering via a Namespace constant is legitimate.
+- There is no documented deviation to check.
+- `agents/wow-standards-audit.md` has no slash-root collision census (grep for `RegisterChatCommand` and `uniq -d` finds nothing), so the "mirror in the audit agent" part needs no change.
+- The plugin is at 2.3.4 in `.claude-plugin/plugin.json`, so the patch bump goes to 2.3.5.
+
+Risks:
+- The proposed sed `s/.*"\/([a-z]+)"/\1/` is correct.
+- Keep the `sort -u` per addon after merging both passes. Otherwise an addon that also registers the same root as a literal would show up as a self-collision in `uniq -d`.
+- The `NS\.SLASH[A-Z_]*` form also catches extra alias constants if an addon adds one.
+- It would miss a constant defined under a different namespace name, e.g. `ns.SLASH`. Document that the convention is `NS.SLASH*` per `slash-commands-§3`.
+
+## F31 — Audit prompt's disabled-state census greps include tests/, contradicting its own TOC-scope rule for runtime claims
+
+- **Repo:** dev-copilot · **Kind:** tooling · **Severity:** low · **Sources:** audit:T-1
+- **Evidence:** ../dev-copilot/agents/wow-standards-audit.md:290-301 the three greps use `git ls-files '*.lua' ':!libs' ':!tests/_kit'`, so test registrations appear as noise; the census rule at :190-192 says runtime claims (event handlers, registrations) use the TOC-derived load list.
+
+**Fix (verified):**
+
+File: ../dev-copilot/agents/wow-standards-audit.md
+
+1. Lines 290-292: rewrite the lead-in. Replace "all three start from `git ls-files` with the vendored payloads excluded, per the census rule above — never `grep -r`, ..." with: "all three start from the TOC-derived load list, the runtime scope of the census rule above (a file the TOC never loads, `tests/` included, registers nothing in the client). Never use `grep -r`, which reports the library's own registrations as if the addon had written them. If the TOC loads an authored (non-`libs/`) `.xml`, add the `.lua` files it includes by hand."
+
+2. Lines 294-302: replace the three `git ls-files '*.lua' ':!libs' ':!tests/_kit'` sources with one shared load list:
+```sh
+# The TOC-derived load list: authored .lua the client actually loads.
+loadlist() { cat *.toc | tr -d '\r' | grep -v '^#' | grep -iE '\.lua[[:space:]]*$' \
+  | sed 's|\\|/|g; s/[[:space:]]*$//' | grep -v '^libs/' | sort -u; }
+loadlist | xargs grep -nE 'Register(Unit)?Event|RegisterMessage|RegisterBucketEvent'
+loadlist | xargs grep -nE 'Unregister(All)?Events?|UnregisterMessage|UnregisterBucket|CancelTimer|CancelAllTimers|:Cancel\(|SetScript\("OnUpdate", *nil\)'
+loadlist | xargs grep -n '\benabled\b'
+```
+Keep the existing one-line comments above each grep.
+
+3. Check the rest of the file for other runtime-claim greps that still use the `git ls-files ... ':!tests/_kit'` source (for example slash or `_G` censuses), and give them the same scope.
+
+4. Patch-bump dev-copilot from 2.3.4 to 2.3.5 in .claude-plugin/plugin.json and wherever else the version appears (use /dev-copilot:bump-version). Add a CHANGELOG entry, then re-sync the installed plugin cache.
+
+**Verifier notes:**
+
+Confirmed against dev-copilot master 3d145a0 (plugin version 2.3.4). In ../dev-copilot/agents/wow-standards-audit.md, lines 190-195 set out the census-scope rule: "The TOC-derived load list, for any claim about what the client loads or runs — slash registrations, `_G` writes, event handlers, taint surface." The registration census (lines 214-230) is exactly that kind of claim. Lines 290-292 still say all three greps "start from `git ls-files` with the vendored payloads excluded, per the census rule above". The greps at 294-302 use `git ls-files '*.lua' ':!libs' ':!tests/_kit'`, so the prompt contradicts its own rule.
+
+I ran the first grep against DropWatcher today. It lists 13 tests/test_*.lua files next to the 10 runtime files. That is more than half of the output, so the noise is real. The prompt does call the greps "orient only", which keeps the severity at low, but it misdirects the census and cites the wrong rule.
+
+Routing: this is a tooling prompt that lives in dev-copilot, so the fix belongs there. It does not touch addon libs/ or tests/_kit/. No ratified deviation applies.
+
+Risks of the proposed fix:
+1. A Ka0s repo can ship several TOCs (one per flavor), so dedupe the list with `sort -u`.
+2. TOC lines use backslashes and CRLF, so keep the `tr -d '\r'` and the backslash-to-slash `sed`.
+3. Authored code loaded through an addon-owned .xml (not libs/) is missed by a `.lua$` filter. The text should tell the auditor to expand any authored .xml entry by hand, or the census silently under-counts.
+4. The `':!tests'` fallback is a weaker fix: it drops tests but still counts tracked .lua that no TOC loads, such as scripts or tools. Prefer the TOC-derived list.
+
+## F32 — Audit prompt's conformance-suite bullet does not make the auditor check steps 6, 8 and 10
+
+- **Repo:** dev-copilot · **Kind:** tooling · **Severity:** low · **Sources:** audit:T-2
+- **Evidence:** ../dev-copilot/agents/wow-standards-audit.md:280-287 'The conformance suite.' bullet checks step 3 (registration set) and step 7 only; nothing on step 6 fire-reach/prints/shows, step 8 LeftButton, step 10 hold orders, or red-under comments on 3/6/10. The 2026-10-11 run passed DropWatcher's incomplete suite.
+
+**Fix (verified):**
+
+dev-copilot (plugin.json version 2.3.4 -> 2.3.5):
+1. agents/wow-standards-audit.md lines 280-287, the '- **The conformance suite.**' bullet: keep the presence, listed-in-run.lua and green-gate MUST and the 'presence is not a pass' framing. Replace the step 3 / step 7 sentences with a per-step checklist that mirrors WowAddonStandards/standards/standards/slash-commands.md:299-309. For each step, say what to read in tests/test_disabled.lua and what evidence to cite:
+   (1) baseline R_on/T_on/F_on snapshots with R_on asserted non-empty
+   (2) the disable goes through the single write seam, not a direct teardown call
+   (3) the registration set is empty by count and by name from the mock registry, never a handler's return value; the mocks must record
+   (4) no armed timer, ticker or OnUpdate
+   (5) every frame in F_on hidden
+   (6) every event in R_on fired anyway, combat-entry event included by name, with zero SV writes, zero printer calls and zero frame shows asserted; add the F22 reach assertion, i.e. evidence that the fire actually reaches handlers or the assertion can go red (testing-§12)
+   (7) the existing text
+   (8) OnClick "LeftButton" asserts the panel opener plus zero writes and shows, and "RightButton" goes through the kit menu mock with Enabled live and the rest grayed
+   (9) re-enable restores R_on, and a setting changed while disabled is reflected
+   (10) perf/disabled hold orders tested both ways
+   A missing step, or a step whose assertion cannot go red, is a finding citing the line, or its absence, in test_disabled.lua.
+2. profiles/wow/agent-review.md line 553 ('Read `tests/test_disabled.lua` before believing it'): add a compact pointer to the same 1-10 checklist, covering at least steps 3, 6 (with reach), 8 and 10.
+3. Re-sync any generated or cached copies per the repo's sync procedure.
+4. Update CHANGELOG with a patch entry.
+Related upstream gap, probably F29's scope: WowAddonStandards/AUDIT.md:656-659 checks only presence and the registration-set assertion. The agent prompt should cite slash-commands-§7's step list directly, not depend on AUDIT.md being fixed first.
+
+**Verifier notes:**
+
+I confirmed the finding against today's files and found nothing to refute it. In dev-copilot (HEAD 3d145a0), agents/wow-standards-audit.md:280-287 is the 'The conformance suite.' bullet. It checks the file's presence and gate membership, step 3 (assertions on the registration set, mocks that record) and step 7 (the slash surface). It never asks the auditor to verify step 6 (fire every R_on event and assert no SV writes, prints or shows, combat event included), step 8 (LeftButton/RightButton launcher), step 9 (restore from current state) or step 10 (perf/disabled hold order in both directions). The standard defines all ten steps at WowAddonStandards/standards/standards/slash-commands.md:299-309. The review profile's disabled-state probe at profiles/wow/agent-review.md:553 has the same gap: it mentions only the registration-set assertion and recording mocks.
+
+Routing is right. The text that needs fixing lives in the dev-copilot prompts, and nothing touches the addon's libs/ or tests/_kit/. No documented deviation applies. The upstream playbook WowAddonStandards/AUDIT.md:656-659 is just as thin, so that copy needs the same fix (likely F29); the dev-copilot fix should not wait on it.
+
+Risk: low. These are prompt and documentation edits only. The checklist will make audits stricter, so DropWatcher's own test_disabled.lua may come back with new findings on steps 6, 8 and 10 that the 2026-10-11 audit passed. Keep the step text in sync with slash-commands-§7 so the prompt does not drift from the standard; a reference with a short paraphrase is safer than a full copy. Severity low is appropriate.
+
+## F33 — Faithful-fetch rule uses curl with no timeout or retry; fetches hung >120s
+
+- **Repo:** dev-copilot · **Kind:** tooling · **Severity:** low · **Sources:** audit:T-3, review:measurement note (section files not finished downloading)
+- **Evidence:** ../dev-copilot/agents/wow-standards-audit.md:115 and profiles/wow/agent-review.md:514 prescribe `curl -fsSL "<url>"` with no --max-time/--retry. Audit's first fetch hung >120s; review had to read some sections from the local checkout because downloads had not finished. Both later found the fetched copy byte-identical to ../WowAddonStandards.
+
+**Fix (verified):**
+
+In ../dev-copilot (currently v2.3.4, HEAD 3d145a0), change every faithful-fetch prescription. The finding names two sites, but the same bare command appears at four more, so fixing only two would leave the drift in place:
+- agents/wow-standards-audit.md:115
+- profiles/wow/agent-review.md:514
+- commands/wow-new-addon.md:212
+- commands/wow-revendor-standards.md:62
+- commands/wow-automated-tests.md:39
+- commands/wow-perf-analysis.md:39
+
+Each site prescribes `curl -fsSL "<url>"`. Replace it with `curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 2 "<url>" -o <scratch>/<name>`.
+
+For the multi-file fetches (the audit agent and the review profile, which walk the STANDARDS.md Sections list), add a parallel-fetch note: `xargs -P 8` over the discovered section URLs.
+
+Add one sentence to the audit agent and the review profile, close to the existing sibling-repo paragraph at wow-standards-audit.md:382-393. It should say the sibling ../WowAddonStandards working tree MAY be read instead of the network copy only when all three checks pass, and that the bundle records which source was used:
+- `git -C ../WowAddonStandards status --porcelain` is empty.
+- `git -C ../WowAddonStandards rev-parse HEAD` equals `git ls-remote origin master`.
+- `diff -rq` confirms the copies match when both exist.
+If the checks fail, or the sibling is absent, fall back to the fetch and record the reason.
+
+Also update the summary mentions at CLAUDE.md:109 and DEPENDENCIES.md:89 if they quote the command. Then patch-bump dev-copilot to 2.3.5 (plugin.json and wherever else the bump-version skill finds the version) and re-sync the installed plugin.
+
+**Verifier notes:**
+
+The finding holds. At today's HEAD, dev-copilot prescribes a bare `curl -fsSL "<url>"` with no --max-time, --connect-timeout or --retry. That is true at both cited sites (wow-standards-audit.md:115, agent-review.md:514) and at four more: wow-new-addon.md:212, wow-revendor-standards.md:62, wow-automated-tests.md:39 and wow-perf-analysis.md:39. The fix scope above is widened to cover all six. A grep found no timeout flag anywhere in the repo.
+
+The routing is right: this is plugin tooling and has nothing to do with the addon's libs/ or tests/_kit/. It is not covered by a documented deviation either.
+
+There are two risks:
+1. Reading the local checkout as a shortcut could quietly audit against a stale standard. It must be gated on a clean tree, HEAD matching remote master (ls-remote is cheap but still a network call), and recording the provenance in the bundle.
+2. A 30s --max-time could cut off a slow but legitimate fetch on a bad link. Retries soften that. Since curl -f fails loudly, the result is a visible failure, not silent truncation, which keeps the faithful-fetch intent intact.
+
+## F34 — Playbook POSIX shell snippets break under the zsh Bash tool shell
+
+- **Repo:** dev-copilot · **Kind:** tooling · **Severity:** info · **Sources:** audit:T-4
+- **Evidence:** Environment shell is zsh; audit reports `echo ===` broke a compound command; zsh also errors on unmatched globs (`no matches found: --include=*.md` observed this session). Snippets in agents/wow-standards-audit.md and profiles/wow/agent-review.md (e.g. the class-1 loop at :360-372 using `*.toc`) are written as POSIX sh with no wrapper.
+
+**Fix (verified):**
+
+In ../dev-copilot, add one short "Shell" note near the top of the tool-use guidance in agents/wow-standards-audit.md (before the first ```sh fence at :176) and in profiles/wow/agent-review.md (before the first ```sh fence at :199). Text: "The Bash tool shell may be zsh. The snippets here are POSIX sh/bash. Run a multi-line snippet through `bash -s -- <args> <<'EOF' … EOF` so "$@" survives. In ad-hoc commands, quote globs that are arguments (`--include='*.md'`), and never start a word with `=` (for example `echo ===`), because zsh expands it as a command path." Optionally say the same in agents/review.md (the generic review agent), which shares the hazard.
+
+Change the snippets themselves only where a glob can match nothing in a scope the prompt asks to run: the `*.toc` redirects at profiles/wow/agent-review.md:335, :362, :371 and the `"$a"/*.toc` at :426. In a rotation repo with no root TOC (LibKa0s, WowAddonStandards), zsh aborts the whole loop, so guard each with `ls *.toc >/dev/null 2>&1 || exit 0` inside the subshell, or have the note require bash.
+
+Do not wrap every block in `bash -c '…'`. Run luacheck/tests as the repo requires, then patch-bump dev-copilot from 2.3.4 to 2.3.5 with the CHANGELOG entry and re-sync the installed plugin.
+
+**Verifier notes:**
+
+The finding is real but overstated. It is routed correctly to dev-copilot. I checked dev-copilot at 3d145a0, plugin v2.3.4, and the Bash tool shell is /usr/bin/zsh. Neither agents/wow-standards-audit.md nor profiles/wow/agent-review.md mentions zsh or says the snippets need bash. Grep found no "zsh", "POSIX" or "Bash tool" in them.
+
+Where the evidence falls short: the cited loop at profiles/wow/agent-review.md:359-375 runs correctly under zsh. I ran it over DropWatcher and it printed the TOC's lua entries. With several .toc files zsh's MULTIOS reads them all, while bash fails with "ambiguous redirect", so zsh is more forgiving there. The audit agent's line-ending check at agents/wow-standards-audit.md:349-357 already runs its body through `sh -c`.
+
+Neither cited failure comes from the playbook text:
+- `echo ===` appears in neither prompt. It came from the agent's own ad-hoc command. In zsh the EQUALS option turns `===` into a command lookup, and I reproduced "zsh: == not found".
+- `--include=*.md` was also an ad-hoc command. I reproduced "no matches found".
+
+So the actual hazard is zsh-only syntax in the commands agents improvise, plus zsh aborting a whole compound command on an unmatched glob where bash would pass the word through literally. I confirmed that abort for `*.toc` in a repo with no root TOC (LibKa0s); bash also fails there, just with a different error.
+
+The T-4 label could not be traced in docs/audits/2026-10-14/ or docs/reviews/2026-10-14/. It probably comes from the audit's chat summary.
+
+Risk of the proposed fix: wrapping each loop in `bash -c '…'` is wrong, because the snippets use "$@" and `bash -c` would lose those arguments, and it adds a layer of quoting inside snippets that are already single-quoted (the `sh -c '…'` at :350). One preamble note covers the hazard. Wrapping all 11 fenced blocks would be churn.
+
+# Completeness-critic items
+
+## X01 — C-08 (F10) and DRW-05 (F01) conflict: printing DisabledLine() on reason=='disabled' in PressAsk/PressOffer/PressAnnounce creates a new perf-hold mis-refusal site
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** medium · **Sources:** review:C-08, audit:DRW-05, audit:04_TECHNICAL_DESIGN DRW-05 callers
+- **Evidence:** 02_PROPOSED_CHANGES.md C-08 prints NS.SlashCommands:DisabledLine() when reason=='disabled' in core/DropWatcher.lua PressAsk/PressOffer/PressAnnounce (:252, :345, :370). Audit 04_TECHNICAL_DESIGN.md DRW-05 notes that reason is set from NS.IsStoodDown() (true under either hold) and says to split it into 'disabled'/'perf' if a caller renders it. C-08 makes the caller render it.
+
+Implement F01 first (NS.StoodDownRefusal()), then route C-08's three Press* refusals through NS.StoodDownRefusal() and split the reason into 'disabled' and 'perf'. Add a test that under HOLD_PERF alone NS.PressAsk prints the perf line, not 'is disabled'.
+
+## X02 — Kit 39 changes __fireUnconditional from returning 0 to raising, which can break other consumers' test_disabled suites
+
+- **Repo:** LibKa0s · **Kind:** library · **Severity:** medium · **Sources:** review:F-009, review:U-1
+- **Evidence:** 01_FINDINGS.md F-009: 13 of the 14 roster addons call __fireUnconditional, and QuickComms sums its return value. U-1 changes 'returns 0' to raising 'nothing registered <event> on this target', a contract change under a signature that does not move.
+
+Before tagging, run each roster addon's suite against the new testkit (or grep their __fireUnconditional call sites) and list which would turn red. Record the contract change in the LibKa0s CHANGELOG as an adoption blocker, and note in the re-vendor guidance that consumers must fix their step-6 cases in the same re-vendor commit.
+
+## X03 — The other 13 roster addons need the same LibKa0s re-vendor, or cross-addon classes 2 and 3 split
+
+- **Repo:** DropWatcher · **Kind:** deviation-decision · **Severity:** low · **Sources:** review:05_FINAL_SUMMARY Known follow-ups, review:04_EXECUTION_PLAN checkpoint 3
+- **Evidence:** 05_FINAL_SUMMARY.md Known follow-ups: 'The other 13 roster addons need the same re-vendor, so classes 2 and 3 return to one line.' 04_EXECUTION_PLAN.md checkpoint 3 says the split is expected mid-sweep and recorded, not fixed here. F17 covers only DropWatcher.
+
+Decide explicitly whether the collection-wide re-vendor sweep is in scope for this run. If it is, add a milestone per addon (wow-revendor-libka0s) after the LibKa0s tag. If it is not, record it as a follow-up issue and note the expected class-2/3 divergence in the plan.
+
+## X04 — In-client smoke checks (C-01..C-08, ANN-1, re-vendor, regression, cross-addon in-client census) and their sign-off table are not planned
+
+- **Repo:** DropWatcher · **Kind:** test · **Severity:** low · **Sources:** review:03_SMOKE_TESTS.md, review:F-002 ANN-1
+- **Evidence:** 03_SMOKE_TESTS.md has a sign-off table with every row empty. 01_FINDINGS.md F-002 marks the client's reply to a refused channel as unverified headless and carries it as smoke check ANN-1. The cross-addon section asks for an in-client check that each slash root reaches its own addon.
+
+Add a final owner-run checklist step to the plan: hand over 03_SMOKE_TESTS.md and record the filled sign-off table (or a pointer to it) once the owner runs it. Do not mark any row passed without the owner.
+
+## X05 — C-04 needs an in-client two-arm /dw perf capture recorded under docs/perf-analysis/ to confirm the 'observed inside feed.add and at top level' nesting
+
+- **Repo:** DropWatcher · **Kind:** test · **Severity:** low · **Sources:** review:03_SMOKE_TESTS C-04, review:05_FINAL_SUMMARY Performance impact
+- **Evidence:** 03_SMOKE_TESTS.md C-04 asks for a capture recorded with /dev-copilot:wow-perf-analysis. 05_FINAL_SUMMARY says the after figures come from 'the in-client capture C-04 records under docs/perf-analysis/'. 01_FINDINGS F-004 notes that no capture is committed yet.
+
+Plan an owner-provided capture step after T9. Run wow-perf-analysis with the owner's report and dump. Record it as pending if the owner has not supplied them, and never invent one. Also re-run tests/perf.lua and confirm the zero-overhead pairs still match.
+
+## X06 — Re-vendoring to a new LibKa0s tag fires the re-check trigger on the six Documented-deviations register rows
+
+- **Repo:** DropWatcher · **Kind:** docs · **Severity:** info · **Sources:** audit:DRW-09, audit:05_EXECUTION_PLAN Not actioned
+- **Evidence:** 02_DEVIATIONS.md DRW-09: five rows cover library-stack-§7/#47 and are re-checked when a LibKa0s major carries a chat sender, tooltip reader, loot parser and so on. 05_EXECUTION_PLAN.md: 'Re-check the six register rows at the next LibKa0s tag.' F17 introduces that tag.
+
+As part of the re-vendor milestone, re-check each register row in docs/ARCHITECTURE.md -> Documented deviations against the new tag's majors and the cited issues (LibKa0s#49/#51/#53, WowAddonStandards#11). Update the Decided and evidence cells if anything moved.
+
+## X07 — Add a harness gate that rejects a TOC 'Conventional:' comment stating a load-time read or handler order, so the DRW-08 drift cannot recur
+
+- **Repo:** DropWatcher · **Kind:** test · **Severity:** low · **Sources:** audit:04_TECHNICAL_DESIGN DRW-08, audit:05_EXECUTION_PLAN S3.1
+- **Evidence:** 04_TECHNICAL_DESIGN.md DRW-08: 'Extend tests/test_harness.lua with a case: a TOC comment beginning Conventional: must not contain at load, load-time upvalue or so its handler runs.' F15 names only the relabel.
+
+Add the case to tests/test_harness.lua with a '-- red under:' line, then regenerate docs/test-cases.md and the README badge in the same commit.
+
+## X08 — Topic docs that the changes touch (data-flow, compat-layer, testing, performance) plus a final sync-docs pass are not itemized
+
+- **Repo:** DropWatcher · **Kind:** docs · **Severity:** low · **Sources:** audit:05_EXECUTION_PLAN S3.4, review:04_EXECUTION_PLAN T2/T6/T7/T9 files
+- **Evidence:** Review plan file lists name docs/data-flow.md (C-02 channel rule), docs/compat-layer.md (C-06 new member and fence), docs/testing.md (new test_locale suite) and docs/performance.md (C-04 within). Audit S3.4: 'Run dev-copilot:sync-docs'. Each new case also moves docs/test-cases.md and the README badge (testing-§5).
+
+Fold these doc touches into each task's commit, and add a closing dev-copilot:sync-docs pass after the hub re-spill (F13/F14) and before the fresh automated-test bundle (F16).
+
+## X09 — Upstream release mechanics are not itemized: standard version bump and changelog, LibKa0s tag with a 'Versions in this release' line, dev-copilot patch release and plugin-cache re-sync
+
+- **Repo:** WowAddonStandards · **Kind:** tooling · **Severity:** low · **Sources:** review:02_PROPOSED_CHANGES upstream change-set, review:04_EXECUTION_PLAN checkpoint 2, review:F-012 fix direction
+- **Evidence:** 02_PROPOSED_CHANGES.md: U-3 'Standard minor bump, with the date and version line at the top of STANDARDS.md'; U-1/U-2 'LibKa0s minor release'; U-4 'Plugin patch release'. 04_EXECUTION_PLAN.md checkpoint 2 requires the LibKa0s CHANGELOG 'Versions in this release' line to list Perf 15 and kit 39. F-012: 'Then re-sync the plugin cache.' After a standard bump, this addon's three-place standards reference (TOC X-Standard, README, CLAUDE.md) also needs wow-revendor-standards.
+
+Add per-repo release steps: WowAddonStandards (one minor bump covering F22-F29, with the changelog, context pack and playbook ripple), LibKa0s (one tag carrying kit 39 and Perf 15, plus the CHANGELOG versions line), dev-copilot (patch bump and cache re-sync). Then run wow-revendor-standards in DropWatcher to pick up the new standard version.
+
+## X10 — Sub-items of proposed changes that the collated titles do not name
+
+- **Repo:** DropWatcher · **Kind:** code · **Severity:** info · **Sources:** review:C-04 risk, review:C-06, review:C-02
+- **Evidence:** C-04: wrap receive in pcall so the 'receiving' flag cannot stay true after a raise (the preferred option). C-06: have logDependencies and Diagnostics share one NS.Compat read, and keep C_AddOns/C_Item top-level only for the Env/Item degradation stubs. C-02: Post my tradeables has the same fixed-channel defect, and the queue-cancel path (Asks.lua:459) must agree. The Asks.lua:25-28 header must be updated.
+
+Carry these as acceptance criteria on F06, F08 and F02 in the spec.
+
+## X11 — Open triaged issues are out of scope for 'fix ALL issues': eight feature ideas (#1-#8) plus the register-cited LibKa0s#49/#50/#51/#53 and WowAddonStandards#11
+
+- **Repo:** DropWatcher · **Kind:** deviation-decision · **Severity:** info · **Sources:** audit:01_CURRENT_STATE register/issues, audit:03_EVIDENCE gh issue view
+- **Evidence:** 01_CURRENT_STATE.md: eight issues, all OPEN, state:triaged, severity:low, all feature ideas. 03_EVIDENCE.md: LibKa0s#49, #50, #51, #53 and WowAddonStandards#11 are OPEN and cited by the register and Known Limitations.
+
+State explicitly in the spec that these are feature backlog and promotion candidates, not review or audit findings, and are excluded. Or ask the owner if they want any of them pulled in.
+
+## X12 — Confirm DW:OnSharedFeatureEvent (and LF.Receive after the pcall) stay under CCN 15 after C-03/C-04
+
+- **Repo:** DropWatcher · **Kind:** test · **Severity:** info · **Sources:** review:02_PROPOSED_CHANGES watch-list note, review:05_FINAL_SUMMARY complexity
+- **Evidence:** 02_PROPOSED_CHANGES.md: 'DW:OnSharedFeatureEvent gains two decisions (from about 2 to about 4). The next release's regeneration confirms it.'
+
+The fresh automated-test bundle in F16 should be cut after C-03 and C-04 land, and should confirm max CCN stays at or below 15 with an empty watch list.
+

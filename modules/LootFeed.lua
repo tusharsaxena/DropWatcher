@@ -97,6 +97,12 @@ local removalSinks = {}
 -- Bumped at every stand-down: an item load answering after it is ignored.
 local generation = 0
 
+-- How deep LF.Receive is open: evaluate and quality.gate note `feed.add` as their parent inside it
+-- and `false` (Perf 15: top level) outside. A depth, not a flag, so a synchronous DropAdded listener
+-- re-entering Receive cannot clear it early; Receive runs under pcall so a raise cannot leave it set.
+local receiving = 0
+local function parent() return receiving > 0 and "feed.add" or false end
+
 local function stoodDown()
     return NS.IsStoodDown ~= nil and NS.IsStoodDown()
 end
@@ -222,7 +228,7 @@ end
 local function evaluate(facts, candidate, opts)
     local t0 = Perf.on and debugprofilestop()
     local out = NS.Evaluate.Evaluate(facts, candidate, opts)
-    if t0 then Perf.Note("evaluate", debugprofilestop() - t0) end
+    if t0 then Perf.Note("evaluate", debugprofilestop() - t0, parent()) end
     return out
 end
 
@@ -263,7 +269,7 @@ local function qualityGate(rec, cfg)
         verdict = rec.me.verdict }
     local pass, threshold, reason = QG.Passes(f.quality, mode, ctx)
     rec.quality = { mode = mode, threshold = threshold, reason = reason }
-    if t0 then Perf.Note("quality.gate", debugprofilestop() - t0) end
+    if t0 then Perf.Note("quality.gate", debugprofilestop() - t0, parent()) end
     return pass
 end
 
@@ -631,7 +637,10 @@ end
 --- @return number|nil id, string status
 function LF.Receive(r)
     local t0 = Perf.on and debugprofilestop()
-    local id, status = receive(r)
+    receiving = receiving + 1
+    local ok, id, status = pcall(receive, r)
+    receiving = receiving - 1
+    if not ok then error(id, 0) end
     if t0 then Perf.Note("feed.add", debugprofilestop() - t0) end
     return id, status
 end

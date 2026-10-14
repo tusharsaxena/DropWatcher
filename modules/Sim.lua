@@ -125,7 +125,8 @@ end
 --- Why a simulation may not start now, as the line to print, or nil when it may (spec §5).
 --- @return string|nil
 function Sim.Refusal()
-    if NS.IsStoodDown() then return NS.SlashCommands:DisabledLine() end
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then return stoodDown end
     if Sim.active then return L["A simulation is already running."] end
     if State.testMode then return L["Turn test mode off before starting a simulation."] end
     local w = realWorld()

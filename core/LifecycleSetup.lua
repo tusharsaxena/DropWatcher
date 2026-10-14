@@ -15,6 +15,23 @@ function NS.IsStoodDown()
     return NS.Lifecycle ~= nil and NS.Lifecycle:IsDown() == true
 end
 
+--- Why a stood-down feature refuses, as the one line to print, or nil while standing up. The
+--- `disabled` hold answers the dispatcher's refusal line (slash-commands-§7); the `perf` hold
+--- alone answers that a capture runs, since `/dw enable` would do nothing (`enabled` is on).
+--- NS.HOLD_DISABLED is set below and NS.SlashCommands later in the load; both are read at call time.
+--- @return string|nil
+function NS.StoodDownRefusal()
+    if not NS.IsStoodDown() then return nil end
+    if NS.Lifecycle:IsHeld(NS.HOLD_DISABLED) then return NS.SlashCommands:DisabledLine() end
+    return NS.L["Not available during a performance capture."]
+end
+
+--- The refusal reason a stood-down press returns: `disabled` under that hold, else `perf`.
+--- @return string
+function NS.StoodDownReason()
+    return NS.Lifecycle:IsHeld(NS.HOLD_DISABLED) and "disabled" or "perf"
+end
+
 if not lib then
     -- The library-absent stand-in: the same hold set and edge, with no edge logging (the degraded
     -- DebugLog has nowhere to show a line).

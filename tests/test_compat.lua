@@ -96,6 +96,16 @@ test("compat: ChatSender falls back to the global, then to nil", function()
     assertNil(Compat.ChatSender())
 end)
 
+test("compat: IsAddOnLoaded answers a plain boolean, and false without the API", function()
+    local Compat, m = fresh()
+    m.loadedAddons.Pawn = true
+    assertEqual(Compat.IsAddOnLoaded("Pawn"), true)
+    assertEqual(Compat.IsAddOnLoaded("CanIMogIt"), false)
+    m.C_AddOns = nil
+    -- red under: a probe that indexes C_AddOns without checking it
+    assertEqual(Compat.IsAddOnLoaded("Pawn"), false)
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Pattern building and the duration decoder
 -- ---------------------------------------------------------------------------------------------

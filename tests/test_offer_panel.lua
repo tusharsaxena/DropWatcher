@@ -317,6 +317,15 @@ test("handlers: Post my tradeables announces every tradeable drop of yours, line
     assertTrue(m.prints[#m.prints]:find("Nothing to post") ~= nil)
 end)
 
+test("handlers: Post my tradeables to a stored PARTY while solo says not announced and sends nothing", function()
+    local NS, _, m = shownMine()
+    NS.db.profile.messages = { announceChannel = "PARTY" }
+    m.setGroup({})
+    assertEqual(NS.PostTradeables(), 0)
+    assertEqual(#m.chatSent, 0)
+    assertTrue(m.prints[#m.prints]:find("Not announced: You are not in a group", 1, true) ~= nil)
+end)
+
 test("handlers: Offer and Announce say why they did nothing", function()
     local NS, _, m = shownMine()
     NS.Asks.Press = function() return "refused", "alreadyAsked" end

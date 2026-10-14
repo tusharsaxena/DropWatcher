@@ -32,6 +32,14 @@ While disabled, a verb that is not live prints the one refusal line, `Ka0s Drop 
 enable it with /dw enable`, and does nothing else. The gate reads the stored `enabled`, not the
 latch, so a perf capture never refuses a verb.
 
+A verb or a button that gets past the gate and then finds the latch down refuses through
+`NS.StoodDownRefusal()` (`core/LifecycleSetup.lua`), the one line for every stood-down refusal: `scan`
+and Scan group, `test`, `sim start`, Post my tradeables, Retry inspect, Ask, Offer, Announce to group
+and Trade. With the `disabled` hold taken it is the refusal line above; with the `perf` hold alone it
+is `Not available during a performance capture.`, since `/dw enable` would change nothing. The line is
+printed alone, never inside `Not asked: …`; `NS.PressAsk`, `PressOffer` and `PressAnnounce` return
+the reason `disabled` or `perf` (`NS.StoodDownReason()`).
+
 The feature verbs are spec §12.3's (and compact spec §1's `full`). `scan`, `compact` and `full` call the host handlers their window
 controls call; the slash-only ones live in `settings/SlashVerbs.lua` (`NS.SlashVerbs`), loaded just before
 `settings/Slash.lua`. A verb that takes an item link reads it with the pure `SlashVerbs.SplitLink`:

@@ -21,8 +21,11 @@ local BUCKETS = {
     { key = "parse" },            -- modules/LootParser.lua Parse: one CHAT_MSG_LOOT line
     { key = "inspect.read" },     -- modules/Inspect.lua readSlots: one read of a unit's 17 slots
     { key = "feed.add" },         -- modules/LootFeed.lua Receive: one receipt taken into the feed
-    { key = "evaluate" },         -- modules/LootFeed.lua evaluate: one verdict for one candidate
-    { key = "quality.gate" },     -- modules/LootFeed.lua qualityGate: one minimum-quality decision
+    -- evaluate and quality.gate run inside Receive when the item is cached, and at top level when
+    -- it loads later or a re-judge (inspect, gear, bag) runs: each note passes `feed.add` or Perf
+    -- 15's `false` (performance-§3), so the report reads the nesting as observed, never summed.
+    { key = "evaluate", within = "feed.add" },      -- modules/LootFeed.lua evaluate: one verdict, one candidate
+    { key = "quality.gate", within = "feed.add" },  -- modules/LootFeed.lua qualityGate: one quality decision
     { key = "tradeTimer.scan" },  -- modules/TradeTimer.lua Scan: one read of your own drops' bag items
     { key = "gear.rebuild" },     -- modules/Gear.lua Refresh: one read of your worn and bag items
     { key = "window.refresh" },   -- modules/Window.lua Refresh: one window repaint pass

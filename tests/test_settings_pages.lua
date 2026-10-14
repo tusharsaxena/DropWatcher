@@ -249,6 +249,28 @@ test("when to show: the table is built once, parked when the tab goes, and re-ho
     assertEqual(t.rows[10].track.value, true, "repainted after the re-host")
 end)
 
+test("when to show: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)", function()
+    local NS, _, m = T.enableAddon()
+    local ctx, drawn, t = whenToShow(NS, m)
+    local holder
+    for _, w in ipairs(drawn) do
+        if w.type == "SimpleGroup" and w.frame == t.host:GetParent() then holder = w end
+    end
+    assertTrue(holder ~= nil, "the table sits on a SimpleGroup placeholder")
+    gui(m):Release(holder)
+    -- red under: an undo only the General page's renderer runs, so a release from any other path
+    -- leaves the table riding the pooled frame
+    assertEqual(t.host:GetParent(), ctx.panel, "parked on the panel")
+    assertFalse(t.host:IsShown() == true, "and hidden")
+    local again = tab(m, ctx, "When to show")
+    local fresh
+    for _, w in ipairs(again) do
+        if w.type == "SimpleGroup" and w.frame == t.host:GetParent() then fresh = w end
+    end
+    assertTrue(fresh ~= nil and fresh ~= holder, "re-hosted on the new placeholder")
+    assertTrue(t.host:IsShown() == true, "and shown")
+end)
+
 test("when to show: the per-situation rows are still schema rows, skipRender, with no subsection", function()
     local NS = T.enableAddon()
     for _, s in ipairs(NS.Constants.SITUATIONS) do

@@ -32,6 +32,8 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261015-001310`](20261015-001310/) | `0109f2a` | clean | 0.1.0 | 0/0 | 170 | 1422/1/1423 | pass | 42998 | 5377 | 7.3 | 2.4 | 14 | 0 | **green** |
+| [`20261014-231415`](20261014-231415/) | `fb8128c` | clean | 0.1.0 | 0/0 | 170 | 1417/1/1418 | pass | 42869 | 5359 | 7.3 | 2.4 | 14 | 0 | **green** |
 | [`20261014-133254`](20261014-133254/) | `5996818` | clean | 0.1.0 | 0/0 | 169 | 1399/1/1400 | pass | 41539 | 5304 | 7.3 | 2.4 | 14 | 0 | **green** |
 | [`20261014-124905`](20261014-124905/) | `d34072e` | clean | 0.1.0 | 0/0 | 169 | 1399/1/1400 | pass | 41520 | 5304 | 7.3 | 2.4 | 14 | 0 | **green** |
 | [`20261013-200128`](20261013-200128/) | `98688dc` | clean | 0.1.0 | 0/0 | 169 | 1397/1/1398 | pass | 41508 | 5303 | 7.3 | 2.4 | 14 | 0 | **green** |
@@ -51,18 +53,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**1400 cases** — 1399 passed, 0 failed, 1 skipped. The generated inventory
-[`20261014-133254/test-cases.md`](20261014-133254/test-cases.md) is the authority on which cases existed at this run;
+**1423 cases** — 1422 passed, 0 failed, 1 skipped. The generated inventory
+[`20261015-001310/test-cases.md`](20261015-001310/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Unchanged from the previous run at 1400 cases.
+Moved **1418 → 1423** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 169 files** (`luacheck .`).
+**0 warnings / 0 errors over 170 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `docs/audits/`, `docs/reviews/`, `docs/revendor/`, `_dev/`, `tests/_kit/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -72,25 +74,25 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **7 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261014-133254/perf.json`](20261014-133254/perf.json).
+[`20261015-001310/perf.json`](20261015-001310/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.08330 | 0.00 | 14240.8 |
-| `refreshCaptureOn` | 1000 | 0.07439 | 1.00 | 14240.8 |
-| `refreshCompactCaptureOff` | 1000 | 0.07617 | 0.00 | 10368.9 |
-| `refreshCompactCaptureOn` | 1000 | 0.08015 | 1.00 | 10368.9 |
-| `showDecisionStoodDown` | 1000 | 0.00013 | 0.00 | 0.0 |
-| `parseCaptureOff` | 1000 | 0.01231 | 0.00 | 664.2 |
-| `parseCaptureOn` | 1000 | 0.01181 | 1.00 | 664.2 |
+| `refreshCaptureOff` | 1000 | 0.08422 | 0.00 | 14240.8 |
+| `refreshCaptureOn` | 1000 | 0.07748 | 1.00 | 14240.8 |
+| `refreshCompactCaptureOff` | 1000 | 0.08366 | 0.00 | 10432.9 |
+| `refreshCompactCaptureOn` | 1000 | 0.07723 | 1.00 | 10432.9 |
+| `showDecisionStoodDown` | 1000 | 0.00020 | 0.00 | 0.0 |
+| `parseCaptureOff` | 1000 | 0.01247 | 0.00 | 664.2 |
+| `parseCaptureOn` | 1000 | 0.01284 | 1.00 | 664.2 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261014-133254`](20261014-133254/) — **this run's measurement, not its diff.** Max CCN **14** across 5304
-functions, **0** of them warned on; 0 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261015-001310`](20261015-001310/) — **this run's measurement, not its diff.** Max CCN **14** across 5377
+functions, **0** of them warned on; 1 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -109,8 +111,7 @@ None.
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-
-None.
+| 1000–1500 (on notice) | `locales/enUS.lua` | 1296 | **Accepted** — a flat `L["..."] = "..."` string table with no logic; it grew past 1000 when DW-P19 added every routed enUS key (F07, D8). Split it by surface before it nears the 1500 cap. |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN

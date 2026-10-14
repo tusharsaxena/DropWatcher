@@ -51,11 +51,22 @@ end
 
 -- AceEvent keeps one handler per event per object, so an event two modules declare
 -- (GROUP_ROSTER_UPDATE: the situation edge and the roster) is registered once, on this dispatcher,
--- which calls every declared handler in row order. Built at each registration.
+-- which calls every declared handler in row order. Built at each registration. Each handler is
+-- isolated under pcall, so one that raises costs only itself: the rest still run, its error is a
+-- debug line, and the first error is raised once the loop is done (the shape of the client's own
+-- registrant dispatch and of AceAddon's errorCollector).
 local sharedHandlers = {}
 
 function DW:OnSharedFeatureEvent(event, ...)
-    for _, method in ipairs(sharedHandlers[event] or {}) do self[method](self, event, ...) end
+    local first
+    for _, method in ipairs(sharedHandlers[event] or {}) do
+        local ok, err = pcall(self[method], self, event, ...)
+        if not ok then
+            NS.Debug("Init", "%s: %s raised: %s", tostring(event), tostring(method), NS.SafeToString(err))
+            if first == nil then first = err end
+        end
+    end
+    if first ~= nil then error(first, 0) end
 end
 
 local function registerFeatureEvents(self)
@@ -104,11 +115,6 @@ end
 
 -- ── the shared host handlers ────────────────────────────────────────────────────────────────
 
---- Turn test mode on or off (preview-mode). One handler for the Master controls checkbox, the
---- launcher entry and `/dw test`. Refused while stood down, in combat (which also ends it) and
---- while a simulation runs (modules/Sim.lua).
---- @param on boolean
---- @return boolean changed
 -- Repaint any open settings page, so a checkbox follows a change another surface made.
 local function refreshPanels()
     local H = DW.Settings and DW.Settings.Helpers
@@ -117,13 +123,19 @@ end
 
 -- Why test mode may not turn on now, as the line to print, or nil when it may.
 local function testModeRefusal()
-    if NS.IsStoodDown() then return NS.SlashCommands:DisabledLine() end
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then return stoodDown end
     if NS.Compat.InCombatLockdown() then return NS.L["Test mode is not available in combat."] end
     -- The simulator and test mode are exclusive (simulator spec §1): placeholders are not the engine.
     if NS.Sim.active then return NS.L["Test mode is not available while a simulation runs."] end
     return nil
 end
 
+--- Turn test mode on or off (preview-mode). One handler for the Master controls checkbox, the
+--- launcher entry and `/dw test`. Refused while stood down, in combat (which also ends it) and
+--- while a simulation runs (modules/Sim.lua).
+--- @param on boolean
+--- @return boolean changed
 function NS.SetTestMode(on)
     on = on and true or false
     if on == NS.State.testMode then return false end
@@ -174,8 +186,9 @@ function NS.IsWindowShown() return NS.Window ~= nil and NS.Window.IsShown() end
 --- button, and `/dw scan` once it lands (DW-42). Refused while stood down.
 --- @return number queued how many members were queued
 function NS.ScanGroup()
-    if NS.IsStoodDown() then
-        NS.Print(NS.SlashCommands:DisabledLine())
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        NS.Print(stoodDown)
         return 0
     end
     local n = NS.Inspect.Scan("scan")
@@ -212,7 +225,7 @@ local ASK_REFUSAL = {
     offline = NS.L["%s is offline."], noTarget = NS.L["The looter is not known."],
     alreadyAsked = NS.L["You already asked %s for it."],
     tooLong = NS.L["The message is longer than chat allows; shorten the ask template."],
-    disabled = NS.L["The addon is disabled."], noDrop = NS.L["That drop is gone."],
+    noDrop = NS.L["That drop is gone."],
 }
 
 --- The name an ask for `drop` is filed under (NS.Asks.Request's and StateOf's `target`): the
@@ -249,8 +262,9 @@ function NS.PressAsk(dropID, opts)
     local rec = NS.LootFeed.Get(dropID)
     local target = NS.AskTargetOf(rec)
     local state, reason
-    if NS.IsStoodDown() then
-        state, reason = "refused", "disabled"
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        state, reason = "refused", NS.StoodDownReason()
     elseif not target then
         state, reason = "refused", rec and "self" or "noDrop"
     elseif editFirst("ask", target, dropID, opts) then
@@ -258,7 +272,9 @@ function NS.PressAsk(dropID, opts)
     else
         state, reason = NS.Asks.Press("ask", target, dropID, opts)
     end
-    if state == "refused" then
+    if stoodDown then
+        NS.Print(stoodDown)
+    elseif state == "refused" then
         local why = ASK_REFUSAL[reason]
         why = why and why:format(target or "?") or tostring(reason)
         NS.Print(L["Not asked: %s"]:format(why))
@@ -279,8 +295,9 @@ end
 --- @return string|nil status NS.Inspect.Request's answer
 function NS.RetryInspect(dropID)
     local L = NS.L
-    if NS.IsStoodDown() then
-        NS.Print(NS.SlashCommands:DisabledLine())
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        NS.Print(stoodDown)
         return nil
     end
     local who = looterOf(dropID)
@@ -298,6 +315,11 @@ end
 --- @param dropID number
 --- @return boolean ok, string|nil reason (as NS.TradeHelper.Open)
 function NS.TradeWithLooter(dropID)
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        NS.Print(stoodDown)
+        return false, "stoodDown"
+    end
     local who = looterOf(dropID)
     local target = who and (who.guid or who.name)
     local ok, reason
@@ -342,8 +364,9 @@ end
 --- @return string state, string|nil reason (as NS.Asks.Press, or `editing`)
 function NS.PressOffer(dropID, target, opts)
     local state, reason
-    if NS.IsStoodDown() then
-        state, reason = "refused", "disabled"
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        state, reason = "refused", NS.StoodDownReason()
     elseif not mineOf(dropID) then
         state, reason = "refused", "noDrop"
     elseif editFirst("offer", target, dropID, opts) then
@@ -351,7 +374,9 @@ function NS.PressOffer(dropID, target, opts)
     else
         state, reason = NS.Asks.Press("offer", target, dropID, opts)
     end
-    if state == "refused" then
+    if stoodDown then
+        NS.Print(stoodDown)
+    elseif state == "refused" then
         NS.Print(NS.L["Not offered: %s"]:format(sendRefusal("offer", reason, target)))
     end
     return state, reason
@@ -367,8 +392,9 @@ end
 --- @return string state, string|nil reason (as NS.Asks.Press, or `editing`)
 function NS.PressAnnounce(dropID, opts)
     local state, reason
-    if NS.IsStoodDown() then
-        state, reason = "refused", "disabled"
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        state, reason = "refused", NS.StoodDownReason()
     elseif not mineOf(dropID) then
         state, reason = "refused", "noDrop"
     elseif editFirst("announce", nil, dropID, opts) then
@@ -376,7 +402,9 @@ function NS.PressAnnounce(dropID, opts)
     else
         state, reason = NS.Asks.Press("announce", nil, dropID, opts)
     end
-    if state == "refused" then
+    if stoodDown then
+        NS.Print(stoodDown)
+    elseif state == "refused" then
         NS.Print(NS.L["Not announced: %s"]:format(sendRefusal("announce", reason)))
     end
     return state, reason
@@ -390,8 +418,9 @@ local postSeq = 0   -- each Post my tradeables files its lines under a key of it
 --- @return number lines posted (sent or queued)
 function NS.PostTradeables()
     local L = NS.L
-    if NS.IsStoodDown() then
-        NS.Print(NS.SlashCommands:DisabledLine())
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        NS.Print(stoodDown)
         return 0
     end
     local links = {}
@@ -521,8 +550,7 @@ end
 
 -- The optional integrations, said once when logging is turned on (debug-logging-§8).
 local function logDependencies()
-    local loaded = C_AddOns and C_AddOns.IsAddOnLoaded
-    local function state(name) return (loaded and loaded(name)) and "loaded" or "absent" end
+    local function state(name) return NS.Compat.IsAddOnLoaded(name) and "loaded" or "absent" end
     NS.DebugAtEnable("Init", "optional: Pawn %s, CanIMogIt %s", state("Pawn"), state("CanIMogIt"))
 end
 

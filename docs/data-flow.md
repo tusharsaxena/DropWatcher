@@ -376,6 +376,16 @@ tracked bus registrations taken down, test mode ended, each module's teardown, w
 stand-up re-registers and re-applies the window from current settings. The perf harness's suspend
 takes the same latch's `perf` hold.
 
+```
+a press or verb while the latch is down (Ask, Offer, Announce to group, Trade, Retry inspect,
+Scan group / `/dw scan`, Post my tradeables, `/dw test`, `/dw sim start`)
+  └─> NS.StoodDownRefusal()  (core/LifecycleSetup.lua, read before any other guard)
+        ├─> `disabled` hold taken ─> SlashCommands:DisabledLine()  ("… is disabled — enable it with /dw enable")
+        └─> `perf` hold alone     ─> "Not available during a performance capture."
+      ─> NS.Print(line), alone (never inside `Not asked: …`); the Press* calls return
+         ("refused", NS.StoodDownReason()) = `disabled` | `perf`; nothing sent, queued or inspected
+```
+
 ## The situation
 
 ```
@@ -395,7 +405,8 @@ stand-up re-reads the client and announces where the player is.
 ## The roster
 
 ```
-GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent ─> DW.OnSituationEvent (above), then
+GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent (each handler under pcall; the first error is
+  raised after the rest ran) ─> DW.OnSituationEvent (above), then
   └─> DW.OnRosterEvent ─> Roster.Refresh
         ├─> tokens: raid1..N, or player + party1..N-1, or player alone
         ├─> per token: UnitGUID (secret or missing: skipped), UnitName (secret or Unknown: no
@@ -532,9 +543,9 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   Situations.IsTracking(situation)? no ─> hidden `notTracking` (nothing loaded, no inspect)
   ItemFacts.Request ─> loading? wait for the load, then go on
   FeedFilter.Filter (heirloom, cosmetic, tokens, gear only, minimum item level) ─> hidden with its reason
-  Evaluate(facts, your candidate)                       [Perf bucket `evaluate`]   ─> drop.me
+  Evaluate(facts, your candidate)                       [Perf bucket `evaluate`, within `feed.add`]   ─> drop.me
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
-  QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`]
+  QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`, within `feed.add`]
     ─> hidden `quality` (one FEED line with the reason, one QUAL line with the threshold), before any inspect
   someone else's drop: Inspect.Request(looter, looter priority)
       ─> Evaluate(facts, Inspect.Candidate(looter)) once read ─> drop.them
@@ -610,7 +621,8 @@ a click (row button, Offer panel, DW-33) or auto-ask (DW-54)
          canSend = test or Restrictions.CanSendChat()
   queue ─> AskStateChanged(dropID, "queued", kind, target)
   send  ─> pcall(Compat.ChatSender(), text, "WHISPER", nil, Name-Realm)
-           (announce: INSTANCE_CHAT, else RAID, else PARTY; noChannel outside a group)
+           (announce: INSTANCE_CHAT, else RAID, else PARTY; a stored channel only while in that
+            kind of group; else noChannel)
            test: NS.Print("Test mode, not sent: ...") instead
         ─> Messaging.MarkSent, "Whispered Name: [item]"      or Messaging.MarkFailed(reason)
         ─> AskStateChanged(dropID, "sent" | "failed", kind, target, reason)
@@ -621,7 +633,7 @@ CHALLENGE_MODE_COMPLETED ─> Restrictions.Refresh┘     Messaging.ShouldFlush 
                                                       every 1.5s (C_Timer); stops while chat is
                                                       restricted again
 GROUP_ROSTER_UPDATE (after the roster re-read) ─> Asks.OnRosterChanged
-  ─> Messaging.CancelTarget for each member who left (and "group" outside a group)
+  ─> Messaging.CancelTarget for each member who left (and "group" once the announce has no channel)
   ─> AskStateChanged(dropID, "ready", kind, target, "left")
 ```
 

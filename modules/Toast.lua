@@ -265,12 +265,11 @@ local function atRow(fs, f, i)
     fs:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", Toast.TEXT_GAP, Toast.ROW_Y[i])
 end
 
+-- The close mark, or nil: without LibKa0s it degrades to nothing, as every other close control does
+-- (standalone-windows; no one-off mark). A right-click anywhere still closes the toast.
 local function buildClose(f)
     local close = NS.MakeCloseButton(f, function() Toast.Dismiss() end)
-    if not close then
-        close = NS.Window.TextButton(f, 20, nil, "×", function() Toast.Dismiss() end)
-    end
-    close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4)
+    if close then close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4) end
     return close
 end
 
@@ -326,7 +325,11 @@ local function build()
     f.icon:SetPoint("TOPLEFT", f, "TOPLEFT", Toast.INSET, -Toast.INSET)
     f.close = buildClose(f)
     f.ask = NS.Window.TextButton(f, 64, "chat", L["Ask"], function() Toast.Ask() end)
-    f.ask:SetPoint("RIGHT", f.close, "LEFT", -6, 0)
+    if f.close then
+        f.ask:SetPoint("RIGHT", f.close, "LEFT", -6, 0)
+    else
+        f.ask:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4)
+    end
     buildTop(f)
     buildVerdicts(f)
     buildTrade(f)
@@ -334,7 +337,7 @@ local function build()
     NS.Window.AttachTooltip(f, function() return unpack(f.tipLines or {}) end)
     onToast(f.icon)
     onToast(f.ask)
-    onToast(f.close)
+    if f.close then onToast(f.close) end
     applyPoint()
     return f
 end

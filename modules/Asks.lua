@@ -24,8 +24,9 @@ local _, NS = ...
 -- ask is queued, else sent at once: `ChatSender()(text, "WHISPER", nil, NameRealm)` in pcall, or
 -- the announce channel for an announce (`messages.announceChannel`: `auto` is INSTANCE_CHAT, then
 -- RAID, then PARTY; never SAY or YELL). A raise is a failure with its message as the reason, a
--- client without a sender fails `noApi`, an announce outside a group fails `noChannel`; a failed
--- ask may be retried.
+-- client without a sender fails `noApi`, an announce outside a group, or to a stored channel whose
+-- group is missing, fails `noChannel` (a stored PARTY, RAID or INSTANCE_CHAT is never sent blind,
+-- and a queued one is canceled once that group is gone); a failed ask may be retried.
 --
 -- THE TRANSMOG ASK (design spec §4 transmog-known). An ask fills the template
 -- NS.Messaging.AskTemplate picks for its drop: `ask` for an upgrade or sidegrade for you, else
@@ -39,7 +40,8 @@ local _, NS = ...
 -- back mid-flush stops it, and the rest wait for the next trigger.
 --
 -- CANCEL. Press on a queued ask cancels it (its button clicked again); GROUP_ROSTER_UPDATE cancels
--- every ask queued to a member who left, and every queued announce once you are out of a group.
+-- every ask queued to a member who left, and every queued announce once it has no channel (out of
+-- a group, or out of the stored channel's kind of group).
 --
 -- CONFIRMATION (spec §9.3). One chat line per send through NS.Print ("Whispered Seta: [item]"); a
 -- failure is logged under the MSG debug tag with its reason. AskStateChanged(dropID, state, kind,
@@ -122,13 +124,23 @@ function A.TemplateFor(kind, rec)
     return M.AskTemplate(rec, A.Settings().transmogAsk) or "ask"
 end
 
---- The channel an announce goes to now: the stored one when it names a channel, else (auto)
---- INSTANCE_CHAT in an instance group, then RAID, then PARTY. Nil outside a group.
+-- Whether you are in the kind of group a stored channel posts to.
+local HAS = {
+    INSTANCE_CHAT = function(Compat) return Compat.InGroup(Compat.InstanceGroupCategory()) end,
+    RAID = function(Compat) return Compat.InRaid() end,
+    PARTY = function(Compat) return Compat.InGroup() end,
+}
+
+--- The channel an announce goes to now: the stored one when it names a channel and you are in
+--- that kind of group, else nil; or (auto) INSTANCE_CHAT in an instance group, then RAID, then
+--- PARTY. Nil outside a group.
 --- @return string|nil
 function A.AnnounceChannel()
-    local want = A.Settings().announceChannel
-    if want ~= "auto" then return want end
-    local Compat = NS.Compat
+    local want, Compat = A.Settings().announceChannel, NS.Compat
+    if want ~= "auto" then
+        local has = HAS[want]
+        return (has and has(Compat)) and want or nil
+    end
     if Compat.InGroup(Compat.InstanceGroupCategory()) then return "INSTANCE_CHAT" end
     if Compat.InRaid() then return "RAID" end
     if Compat.InGroup() then return "PARTY" end
@@ -456,12 +468,13 @@ end
 
 local function gone(a)
     if a.test then return false end
-    if a.target == A.GROUP then return not NS.Compat.InGroup() end
+    if a.target == A.GROUP then return A.AnnounceChannel() == nil end
     return NS.Roster.Resolve(a.target) == nil
 end
 
 --- GROUP_ROSTER_UPDATE: every ask queued to a member who left is canceled (spec §9.2 step 6), and
---- every queued announce once you are out of a group. Answers how many were canceled.
+--- every queued announce once it has no channel (A.AnnounceChannel nil: out of a group, or out of
+--- the stored channel's kind of group). Answers how many were canceled.
 --- @return number
 function A.OnRosterChanged()
     local book, n = store().book, 0

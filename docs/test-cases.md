@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_harness.lua (10)
+### test_harness.lua (12)
 
 - harness: the addon's file list is the TOC's, Namespace first and Profiles last
 - harness: every LibKa0s file comes from LibKa0s.xml, in its order
@@ -16,6 +16,8 @@ Total.
 - toc: the fixed field order, a single Retail Interface line and the X-Standard field
 - toc: the icon is the 128x128 logo, and the file exists
 - toc: OptionalDeps names Pawn and CanIMogIt, and no hard Dependencies
+- toc: no Conventional comment states the order of handlers on a shared event (toc-file-§5)
+- toc: no position labeled Conventional is load-bearing under toc-file-§5 (a) or (b)
 - repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
 - repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
 - repo: every authored file opens with the bootstrap and a comment naming its path
@@ -42,17 +44,23 @@ Total.
 - parity: the Compat seam carries every library member it wires
 - parity: the Compat seam publishes the same members on both load paths
 
-### test_setup.lua (18)
+### test_setup.lua (24)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [DW] prefix
 - core: the close-button wrapper passes the addon folder as the third argument
 - core: no file but the wrapper calls a close-button factory directly
+- core: no file builds a typed × close mark (the close control degrades to nothing)
+- core: a raising shared handler costs only itself; the first error is raised after the rest ran
 - media: FONT_MONO is the shipped face live, and a real client font degraded
 - bus: the catalog holds the ten messages of the design, each Ka0s_DropWatcher_<Event>
 - bus: a tracked target's registrations come down with the stand-down and back with the stand-up
 - bus: the seam answers tracked once; without the library the modules take their receivers down
 - perf: every declared bucket is reached by a real bracket
+- perf: evaluate and quality.gate declare themselves within feed.add
+- perf: a capture of Receive alone observes evaluate and quality.gate inside feed.add
+- perf: a later load and a gear re-judge are observed at top level, so the record reads mixed
+- perf: a Receive that raises does not leave later work counted inside feed.add
 - perf: with capture off the bracket notes nothing
 - perf: the `perf` hold stands the addon down, and the verbs keep answering
 - perf: the descriptor's SavedVariables global is declared in the TOC
@@ -107,7 +115,7 @@ Total.
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 
-### test_settings_pages.lua (36)
+### test_settings_pages.lua (37)
 
 - pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -120,6 +128,7 @@ Total.
 - when to show: Defaults repaints the table
 - when to show: a profile switch repaints the table and re-hosts it
 - when to show: the table is built once, parked when the tab goes, and re-hosted when it comes back
+- when to show: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)
 - when to show: the per-situation rows are still schema rows, skipRender, with no subsection
 - when to show: the pure rows carry each situation's label, values and live cells
 - feed: the Quality tab closes with the threshold in force now, repainted on a write
@@ -550,7 +559,7 @@ Total.
 - drops strip: shortened under the compact cards, and put back in the full layout
 - drops strip: the compact countdown tick moves its next expiry too
 
-### test_offer_panel.lua (16)
+### test_offer_panel.lua (17)
 
 - offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look
 - offer panel: no class bar; every second row striped as the main window's; the name in its class color
@@ -564,6 +573,7 @@ Total.
 - offer panel: with Edit before sending on, Offer and Announce open the box for their kind
 - offer panel: Announce to group announces the drop
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
+- handlers: Post my tradeables to a stored PARTY while solo says not announced and sends nothing
 - handlers: Offer and Announce say why they did nothing
 - offer panel: it keeps its own least height beside the compact window
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
@@ -635,13 +645,14 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
 
-### test_compat.lua (66)
+### test_compat.lua (67)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
 - compat: with canaccessvalue present the degraded CanAccess asks it
 - compat: ChatSender prefers C_ChatInfo.SendChatMessage
 - compat: ChatSender falls back to the global, then to nil
+- compat: IsAddOnLoaded answers a plain boolean, and false without the API
 - compat: FormatToPattern captures %s and %d and escapes every magic character
 - compat: DecodeDuration reads every enUS unit and their sums
 - compat: DecodeDuration refuses anything that is not wholly a duration
@@ -1214,7 +1225,7 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
-### test_asks.lua (23)
+### test_asks.lua (26)
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
@@ -1229,6 +1240,8 @@ Total.
 - fail: the deprecated global sender is the fallback
 - announce: auto picks INSTANCE_CHAT, then RAID, then PARTY, and never SAY or YELL
 - announce: outside a group it fails noChannel
+- announce: a stored PARTY while solo fails noChannel, confirms nothing, and may be retried
+- announce: a stored RAID or INSTANCE_CHAT without that kind of group fails noChannel
 - queue: under a restriction the ask is queued, and the lift sends it at once
 - flush: one send every 1.5 seconds, first in first out
 - flush: a restriction back mid-flush stops it; the rest wait for the next trigger
@@ -1237,6 +1250,7 @@ Total.
 - cancel: pressing a queued ask cancels it; the lift sends nothing and the button is ready
 - cancel: an ask queued to a looter who leaves is dropped; others stay
 - cancel: a queued announce is dropped once you leave the group
+- cancel: a queued announce to a stored channel is dropped once that kind of group is gone
 - test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
 - stand-down: a request is refused, the flush timer is canceled and the queue is dropped
 
@@ -1308,7 +1322,7 @@ Total.
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
-### test_toast.lua (31)
+### test_toast.lua (32)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1321,6 +1335,7 @@ Total.
 - toast edge: a looter of unknown class is a plain name in row 3's muted tone
 - toast edge: a right-click anywhere closes it as the close mark does; the left button does not
 - toast edge: in test mode the left button still drags it and a left click keeps it
+- toast edge: without LibKa0s the close mark degrades to nothing; Ask takes its corner, a right-click still closes
 - toast edge: a right-click on the item button closes it too
 - toast edge: one at a time; the next waits its turn, and each drop toasts once
 - toast edge: the queue keeps the newest MAX_QUEUE drops
@@ -1529,17 +1544,20 @@ Total.
 - sim panel: the picker starts the chosen scenario, with a raid's member count
 - sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it
 
-### test_disabled.lua (9)
+### test_disabled.lua (12)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /dw disable, nothing is registered, scheduled or shown
 - disabled 2: through the write seam, nothing is registered, scheduled or shown
-- disabled 3: no SavedVariables write from a game event while disabled
-- disabled 4: every reserved verb keeps answering while disabled
-- disabled 5: a feature verb answers with the one refusal line and does nothing
+- disabled 3: every feature event, fired anyway while disabled, reaches its handler and writes, prints and shows nothing
+- disabled 4: every reserved verb, and the bare command, keeps answering while disabled
+- disabled 5: every feature verb answers with the one refusal line and writes nothing
 - disabled 6: the stand-up re-registers from current state and the window comes back
 - disabled 7: a disabled profile loads stood down, with nothing registered
-- disabled 8: the launcher's menu grays every entry but Enabled
+- disabled 8: the launcher's left-click opens settings and writes nothing; its menu grays every entry but Enabled
+- disabled 9: under the perf hold alone, each feature refusal names the capture, never 'is disabled'
+- disabled 10: while disabled, each feature refusal is the one refusal line, unwrapped
+- disabled 11: the latch holds in both orders, perf first and disabled first
 
 ### test_diagnostics.lua (15)
 
@@ -1564,6 +1582,11 @@ Total.
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
+
+### test_locale.lua (2)
+
+- locale: the scan finds routed literals in the addon's files
+- locale: enUS carries every string routed through NS.L
 
 ### test_eol.lua (2)
 
@@ -1631,13 +1654,13 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_harness.lua | 10 |
+| test_harness.lua | 12 |
 | test_surface_parity.lua | 18 |
-| test_setup.lua | 18 |
+| test_setup.lua | 24 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
-| test_settings_pages.lua | 36 |
+| test_settings_pages.lua | 37 |
 | test_slash.lua | 26 |
 | test_window.lua | 14 |
 | test_window_shell.lua | 58 |
@@ -1654,11 +1677,11 @@ Total.
 | test_own_drops.lua | 15 |
 | test_tip_marks.lua | 19 |
 | test_drops_strip.lua | 14 |
-| test_offer_panel.lua | 16 |
+| test_offer_panel.lua | 17 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 30 |
-| test_compat.lua | 66 |
+| test_compat.lua | 67 |
 | test_text_parse.lua | 9 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
@@ -1682,11 +1705,11 @@ Total.
 | test_char_filter.lua | 19 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
-| test_asks.lua | 23 |
+| test_asks.lua | 26 |
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
-| test_toast.lua | 31 |
+| test_toast.lua | 32 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 19 |
@@ -1695,13 +1718,14 @@ Total.
 | test_sim_e2e.lua | 19 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 19 |
-| test_disabled.lua | 9 |
+| test_disabled.lua | 12 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
+| test_locale.lua | 2 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1402** |
+| **Total** | **1422** |
