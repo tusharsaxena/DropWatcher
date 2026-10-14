@@ -223,6 +223,14 @@ test("cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade
     assertEqual(byKey(sent, "ask").text, "Offered"); assertEqual(byKey(sent, "ask").state, "sent")
     local dead = D.Actions(drop({ isMine = true, them = NONE, trade = { state = "no", reasonKey = "bonusRoll" } }), { now = 100 })
     assertFalse(byKey(dead, "ask").enabled, "a drop of yours that cannot be traded")
+    -- No action in the first slot, gray, its reason in the tooltip (feedback-11 spec §1); an Ask too.
+    local none = byKey(dead, "ask")
+    assertEqual(none.text, "No action"); assertEqual(none.icon, "ban"); assertEqual(none.state, "none")
+    assertEqual(none.tip[1], "No action"); assertTrue(none.tip[2]:find("Bonus roll", 1, true) ~= nil)
+    local noAsk = byKey(D.Actions(drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }),
+        { askState = "ready", now = 100, trade = OK_TRADE }), "ask")
+    assertEqual(noAsk.text, "No action"); assertEqual(noAsk.icon, "ban"); assertFalse(noAsk.enabled)
+    assertEqual(noAsk.state, "none"); assertEqual(noAsk.tip[2], "It is not an upgrade for you.")
     assertTrue(byKey(acts, "hide") == nil, "no Hide this item (feedback-4 spec §2)")
     local legacy = D.Actions(drop({ trade = { state = "no", reasonKey = "legacy" } }), { askState = "ready", now = 100, trade = OK_TRADE })
     assertFalse(byKey(legacy, "trade").enabled, "an item its looter can't trade")

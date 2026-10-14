@@ -170,6 +170,8 @@ test("layout: every action button's icon and word fit its width (feedback-7 spec
         { K.ASK_W, WC.ASK_LOOK, "Ask (row and compact card)" },
         { K.ASK_W, MC.OWN_OFFER_LOOK, "your own drop's Offer" },
         { K.PANEL_BTN_W, MC.OFFER_LOOK, "the Offer panel's Offer" },
+        { K.ASK_W, { none = WC.NO_ACTION }, "No action on a row, a card or the detail card (feedback-11 spec §1)" },
+        { K.PANEL_BTN_W, { none = WC.NO_ACTION }, "No action in the Offer panel" },
     }
     for _, set in ipairs(sets) do
         for state, l in pairs(set[2]) do

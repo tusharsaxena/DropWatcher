@@ -656,11 +656,26 @@ local ASK_LOOK = {
 }
 WC.ASK_LOOK = ASK_LOOK   -- read by the suites: every state has an icon
 
+-- NO ACTION (feedback-11 spec §1): where a drop has no action, every view's action slot shows this
+-- placeholder button, gray, dimmed and not clickable, never a dash or an empty slot; its tooltip
+-- is titled `No action` and gives the reason.
+WC.NO_ACTION = { text = L["No action"], icon = "ban" }
+
+--- The placeholder action (feedback-11 spec §1) in WindowCells.Ask's shape: `offered` false, the
+--- `No action` label and `ban` mark, state `none` (gray, WC.ActionTone), the reason in its tooltip.
+--- @param reason string why the drop has no action
+--- @return table { offered = false, text, icon, enabled = false, tip, state = "none" }
+function WC.NoAction(reason)
+    return { offered = false, text = WC.NO_ACTION.text, icon = WC.NO_ACTION.icon, enabled = false,
+        tip = { L["No action"], reason }, state = "none" }
+end
+
 -- WHOSE MOVE IT IS (feedback-4 spec §1): an action button's tone by its state. Your move is red
 -- (Ask, Retry, an Announce not yet sent), waiting on someone else yellow (Asked, Queued, Offered,
 -- Announced), done green (Traded, traded away).
 local ACTION_TONE = {
     ready = "red", failed = "red", queued = "yellow", sent = "yellow", traded = "good", tradedAway = "good",
+    none = "bad",   -- No action, gray (feedback-11 spec §1)
 }
 
 -- OFFER IN CYAN (feedback-6 spec §2): a button of kind `offer` (one that reads Offer) is cyan while it
@@ -690,7 +705,8 @@ local function askTip(state, who, reason, template)
     return L["Ask"], L["Whisper %s your ask template for this item."]:format(who), L["One ask per item per looter."]
 end
 
---- The Ask button's look: `offered` false shows a dash with the reason; else the label, the
+--- The Ask button's look: `offered` false is WC.NoAction's (the gray No action with the reason,
+--- feedback-11 spec §1); else the label, the
 --- catalog mark (`chat` ask, `clock` queued, `confirm` asked or traded, `reset` retry) and whether
 --- it can be clicked.
 --- @param drop table
@@ -702,7 +718,7 @@ end
 --- @return table { offered, text, icon, enabled, tip, state, template }
 function WC.Ask(drop, state, reason, transmogAsk)
     local no, template = noAskReason(drop, transmogAsk)
-    if no and state ~= "traded" then return { offered = false, text = DASH, enabled = false, tip = { L["No ask"], no } } end
+    if no and state ~= "traded" then return WC.NoAction(no) end
     local look = ASK_LOOK[state] or ASK_LOOK.ready
     local s = ASK_LOOK[state] and state or "ready"
     return { offered = true, text = look.text, icon = look.icon, enabled = look.enabled,

@@ -140,7 +140,7 @@ test("own drops: No upgrades is muted and says why: nobody's, checking, solo", f
     assertEqual(dead.text, "–"); assertTrue(dead.tip[2]:find("Not tradeable", 1, true) ~= nil)
 end)
 
-test("own drops: Offer is labeled and toned by the furthest offer sent, a dash where it cannot be traded", function()
+test("own drops: Offer is labeled and toned by the furthest offer sent, No action where it cannot be traded", function()
     local M = MC()
     local ready = M.OwnOffer(own(), "ready")
     assertTrue(ready.offered and ready.offer and ready.enabled)
@@ -156,7 +156,8 @@ test("own drops: Offer is labeled and toned by the furthest offer sent, a dash w
     end
     assertEqual(M.OwnOffer(own(), nil).state, "ready")
     local dead = M.OwnOffer(own({ trade = { state = "no", reasonKey = "bonusRoll" } }), "ready")
-    assertFalse(dead.offered); assertEqual(dead.text, "–"); assertEqual(dead.tip[1], "No offer")
+    assertFalse(dead.offered); assertEqual(dead.text, "No action"); assertEqual(dead.tip[1], "No action")
+    assertEqual(dead.icon, "ban"); assertEqual(dead.state, "none"); assertTrue(dead.offer)
     assertTrue(dead.tip[2]:find("Bonus roll", 1, true) ~= nil)
 end)
 
@@ -234,7 +235,6 @@ test("own drops table: listed with the others: Trade's word, Upgrade for N in Th
     assertEqual(b.tone, "cyan", "your move until an offer is sent: cyan, not Ask's red (feedback-6 spec §2)")
     local cyan = NS.Constants.TONE.cyan
     assertEqual(select(2, b.label:GetTextColor()), cyan.g); assertEqual(select(3, b.label:GetTextColor()), cyan.b)
-    assertFalse(r.cells.actions.dash:IsShown())
     assertFalse(rowFor(drawn, 2).cells.actions.ask.offer, "another player's row keeps its Ask")
     local hd = textOf(drawn.headers[1].text)
     assertTrue(hd:find("2 drops", 1, true) ~= nil and hd:find("yours", 1, true) == nil, hd)
@@ -259,7 +259,7 @@ test("own drops table: Offer opens the Offer panel and reveals a kept upgrade's 
     assertEqual(textOf(r.cells.them.text), "Upgrade for 2")
 end)
 
-test("own drops table: Offer turns yellow once offered and green once given away; a dash when untradeable", function()
+test("own drops table: Offer turns yellow once offered and green once given away; No action when untradeable", function()
     local NS = shown(own())
     NS.Asks.FurthestStateOf = function(kind) return kind == "offer" and "sent" or "ready" end
     NS.Window.Refresh()
@@ -271,9 +271,10 @@ test("own drops table: Offer turns yellow once offered and green once given away
     assertEqual(textOf(b.label), "Traded"); assertEqual(b.tone, "good")
     local NS2 = shown(own({ trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }))
     local a = rowFor(NS2.WindowGroup.Drawn(), 1).cells.actions
-    assertFalse(a.ask:IsShown()); assertTrue(a.dash:IsShown())
-    assertEqual(NS2.Window.TooltipOf(a.dashTip)[1], "No offer")
-    assertTrue(NS2.Window.TooltipOf(a.dashTip)[2]:find("Bonus roll", 1, true) ~= nil)
+    assertTrue(a.ask:IsShown()); assertEqual(textOf(a.ask.label), "No action"); assertEqual(a.ask.tone, "bad")
+    assertFalse(a.ask:IsEnabled())
+    assertEqual(NS2.Window.TooltipOf(a.ask)[1], "No action")
+    assertTrue(NS2.Window.TooltipOf(a.ask)[2]:find("Bonus roll", 1, true) ~= nil)
 end)
 
 test("own drops: the detail card shows Offer in place of Ask and Upgrade for N for Them", function()

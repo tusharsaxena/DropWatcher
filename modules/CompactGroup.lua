@@ -22,8 +22,8 @@ local _, NS = ...
 --           feedback-10 spec §2)
 --   line 2  looter (class color, ⊕ from another realm) · slot · type · trade            [ Ask ]
 --           (the full table's states; Offer on your own drop, which opens the Offer panel:
---           NS.WindowOwn, feedback-5 spec §2; with neither the slot is left empty, its reason
---           tooltip still over it)
+--           NS.WindowOwn, feedback-5 spec §2; with neither the gray `No action` button, its reason
+--           in its tooltip, feedback-11 spec §1)
 --   line 3  You 321/308 ▼13   Them 298/296 ⊘ Can't use
 --           (the full table's Me and Them cells without their icons, feedback-6 spec §1; the labels
 --           gold and Them a fixed gap after You, feedback-10 spec §2; your own drop: line 2's looter
@@ -214,10 +214,6 @@ local function buildAsk(card)
     local W = NS.Window
     card.ask = W.TextButton(card, K.ASK_W, "chat", NS.L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     W.AttachTooltip(card.ask, function() return tipOf(card.ask) end, "row")
-    -- No action: the slot is left empty (feedback-10 spec §2), its reason a tooltip over it.
-    card.dashTip = CreateFrame("Frame", nil, card)
-    card.dashTip:SetAllPoints(card.ask)
-    W.AttachTooltip(card.dashTip, function() return tipOf(card.dashTip) end, "row")
 end
 
 --- Line 1's item level then the name (feedback-10 spec §2): the level at `x` on line 1, the name
@@ -331,16 +327,14 @@ end
 CG.PaintText = paintText
 
 -- The Ask button in the full table's states (WindowGroup's paintActions, the same cell), your own
--- drop's Offer, or an empty slot with its reason tooltip where neither is offered.
+-- drop's Offer, or the gray No action with its reason where neither is offered (feedback-11 spec §1).
 local function paintAsk(card, a, id)
     local b = card.ask
     b.dropId, b.offer = id, a.offer == true
-    b:SetShown(a.offered)
-    card.dashTip:SetShown(not a.offered)
     NS.Window.SetButtonMark(b, a.text, a.icon)
     b:SetEnabled(a.enabled)
     b:SetAlpha(a.enabled and 1 or 0.6)
-    b.tipLines, card.dashTip.tipLines = a.tip, a.tip
+    b.tipLines = a.tip
     b.state = a.state
     NS.WindowGroup.ToneButton(b, a.state, a.kind)   -- whose move it is (feedback-4 spec §1; Offer cyan, feedback-6 §2)
 end
@@ -424,6 +418,8 @@ function CG.PaintHalf(card, key, half)
     else
         at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
     end
+    -- Them, the line's last half, runs to the card's right inset and is cut there (feedback-11 spec §0).
+    if key == "them" then h.text:SetPoint("RIGHT", card, "RIGHT", -CG.PAD, 0) end
 end
 
 -- What every card of one repaint shares: your gear and class, the transmog ask setting and your realm.

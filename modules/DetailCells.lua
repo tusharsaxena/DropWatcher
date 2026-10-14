@@ -420,7 +420,7 @@ end
 -- is its state's (feedback-7 spec §1: `external-link` while it reads Offer, feedback-10 spec §1), as
 -- on the row; Trade keeps `transfer`, so the two never share a mark.
 local function offerAction(o)
-    local a = act("ask", o.offered and o.text or L["Offer"], o.icon or "external-link", o.offered, unpack(o.tip))
+    local a = act("ask", o.text, o.icon or "external-link", o.offered, unpack(o.tip))
     a.state, a.offer, a.kind = o.state, true, o.kind
     return a
 end
@@ -428,7 +428,11 @@ end
 -- The Ask, its mark its state's (feedback-7 spec §1: `chat`, `clock`, `confirm`, `reset`), as on the row.
 local function askAction(drop, ask)
     local who = looterName(drop)
-    if not ask.offered then return act("ask", L["Ask"], "chat", false, L["Ask"], ask.tip[2]) end
+    if not ask.offered then   -- No action, gray, its reason (feedback-11 spec §1)
+        local a = act("ask", ask.text, ask.icon, false, unpack(ask.tip))
+        a.state = ask.state
+        return a
+    end
     local text = ask.state == "ready" and L["Ask %s"]:format(who) or ask.text
     local a = act("ask", text, ask.icon or "chat", ask.enabled, unpack(ask.tip))
     a.state = ask.state

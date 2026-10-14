@@ -240,11 +240,10 @@ local function compactCards(NS, tab)
     return NS[DRAWN[tab]].Drawn().rows
 end
 
--- A card's action word: its button's label, or the full row's dash where the card leaves the slot
--- empty (feedback-10 spec §2).
-local function askWord(a, dash)
-    if a:IsShown() then return textOf(a.label) end
-    return dash and textOf(dash) or "–"
+-- An action button's word: its label (Ask, Offer, their states, or No action: feedback-11 spec §1).
+local function askWord(a)
+    assertTrue(a:IsShown(), "an action button is always shown")
+    return textOf(a.label)
 end
 
 test("modes: test mode's Drops cards show every state, each saying what its full row says", function()
@@ -252,7 +251,7 @@ test("modes: test mode's Drops cards show every state, each saying what its full
     local full = fullPieces(NS, "group", function(c)
         return { me = textOf(c.me.text), them = textOf(c.them.text), trade = textOf(c.trade.text),
             meLevel = textOf(c.me.level), themLevel = textOf(c.them.level),
-            ask = askWord(c.actions.ask, c.actions.dash), tradeTip = c.trade.tipLines }
+            ask = askWord(c.actions.ask), tradeTip = c.trade.tipLines }
     end)
     local seen = { ask = {}, trade = {}, fresh = {}, you = {}, them = {}, eq = {} }
     local cards = compactCards(NS, "group")
@@ -266,7 +265,7 @@ test("modes: test mode's Drops cards show every state, each saying what its full
         assertEqual(textOf(c.you.level), f.meLevel, what .. ": your worn level, as the Me cell's")
         assertEqual(textOf(c.them.level), f.themLevel, what .. ": their worn level, as the Them cell's")
         assertEqual(plain(textOf(c.trade.text)), f.trade, what .. ": trade")
-        assertEqual(askWord(card.ask, card.dash), f.ask, what .. ": ask")
+        assertEqual(askWord(card.ask), f.ask, what .. ": ask")
         assertEqual(c.trade.hit.tipLines[1], f.tradeTip[1], what .. ": the trade reason")
         seen.ask[f.ask] = true
         seen.trade[f.trade] = true
@@ -275,9 +274,9 @@ test("modes: test mode's Drops cards show every state, each saying what its full
         seen.them[textOf(c.them.glyph)] = true
         seen.eq[textOf(c.them.level)] = true
     end
-    hasAll(seen.ask, { "Ask", "Queued", "Asked", "Retry", "–" }, "ask")
+    hasAll(seen.ask, { "Ask", "Queued", "Asked", "Retry", "No action" }, "ask")
     hasAll(seen.trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
-    hasAll(seen.fresh, { "(cached)", "(…)", "(range)", "(combat)", "(!)", "" }, "inspect freshness, bracketed or left out")
+    hasAll(seen.fresh, { "(cached)", "(range)", "(combat)", "(!)", "" }, "inspect freshness, bracketed or left out (pending: Them says it)")
     hasAll(seen.you, { "▲", "≈", "▼", "⊘" }, "your verdict")
     hasAll(seen.them, { "▲", "≈", "▼", "⊘" }, "their verdict")
     hasAll(seen.eq, { "…", "range", "combat", "!", "290", "300" }, "their worn levels")
@@ -288,7 +287,7 @@ test("modes: test mode's own drops on Drops show Offer as the full rows, no coun
     NS.WindowFilterBar.Set("group", "view", {})
     local full = fullPieces(NS, "group", function(c, r)
         return { mine = r.drop.isMine == true, window = textOf(c.tradeWindow.text),
-            windowTip = c.tradeWindow.tipLines, offer = askWord(c.actions.ask, c.actions.dash),
+            windowTip = c.tradeWindow.tipLines, offer = askWord(c.actions.ask),
             isOffer = c.actions.ask.offer == true }
     end)
     local seen = { window = {}, offer = {} }
@@ -298,7 +297,7 @@ test("modes: test mode's own drops on Drops show Offer as the full rows, no coun
         if f and f.mine then
             n = n + 1
             local what = "card " .. tostring(card.dropId)
-            assertEqual(askWord(card.ask, card.dash), f.offer, what .. ": Offer")
+            assertEqual(askWord(card.ask), f.offer, what .. ": Offer")
             assertEqual(card.ask.offer == true, f.isOffer, what .. ": your own drop's button is Offer")
             assertTrue(card.cells.countdown == nil, what .. ": no trade window on the card (feedback-10 spec §2)")
             seen.window[f.window:gsub("%d", "9")] = true
@@ -307,7 +306,7 @@ test("modes: test mode's own drops on Drops show Offer as the full rows, no coun
     end
     assertEqual(n, 5, "every sample of yours")
     hasAll(seen.window, { "9:99:99", "~9:99:99", "No limit (BoE)" }, "Trade window")
-    hasAll(seen.offer, { "Offer", "–" }, "Offer, or the dash of a dead drop")
+    hasAll(seen.offer, { "Offer", "No action" }, "Offer, or No action on a dead drop")
 end)
 
 test("modes: test mode's History cards show every outcome, each saying what its full row says", function()

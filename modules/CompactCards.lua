@@ -20,7 +20,8 @@ local _, NS = ...
 --                        nothing (CC.FreshMark; feedback-10 spec §2)
 --                line 2: looter (class color, ⊕ when cross-realm, ` [YOU]` in gold on your own drop:
 --                        feedback-7 spec §2), slot, type, trade; ask (right: Offer on your own drop;
---                        an empty slot with neither). No trade window countdown (feedback-10 spec §2)
+--                        No action with neither, feedback-11 spec §1). No trade window countdown
+--                        (feedback-10 spec §2)
 --                line 3: you and them, each a half: the label, then the full table's Me or Them
 --                        cell without its icons (`Upgrade for N` on your own drop, feedback-7 spec §2)
 --   History      line 1: ilvl, item; outcome (right, in its tone)
@@ -232,14 +233,14 @@ function CC.Freshness(drop, now)
         tip = { L["Inspect of %s"]:format(who), WC.InspectLine(drop.inspect, who, now) } }
 end
 
---- Line 1's freshness as the card draws it (feedback-10 spec §2): `(2m)`, `(cached)`, `(…)`, or nil
---- where there is nothing to say (your own drop, no inspect to speak of: the dash), so the card
---- draws no placeholder.
+--- Line 1's freshness as the card draws it (feedback-10 spec §2): `(2m)`, `(cached)`, `(range)`, or nil
+--- where there is nothing to say (your own drop, no inspect to speak of: the dash) or where Them
+--- already says it (a read still pending, `…`: feedback-11 spec §0), so the card draws no placeholder.
 --- @param cell table|nil CC.Freshness's answer
 --- @return string|nil
 function CC.FreshMark(cell)
     local t = type(cell) == "table" and cell.text
-    if type(t) ~= "string" or t == "" or t == DASH then return nil end
+    if type(t) ~= "string" or t == "" or t == DASH or t == "…" then return nil end
     return "(" .. t .. ")"
 end
 
@@ -338,8 +339,7 @@ local PLAIN = {
     group = function(card)
         local fresh = CC.FreshMark(card.fresh)
         local one = ("%s %s"):format(card.ilvl.text, card.item.text) .. (fresh and (" " .. fresh) or "")
-        local two = card.ask.offered and lineTwo(card, card.ask) or lineTwo(card, { text = "" }):gsub("%s+$", "")
-        return { one, two,
+        return { one, lineTwo(card, card.ask),
             CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) }
     end,
     history = function(card)

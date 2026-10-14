@@ -124,7 +124,7 @@ C.WINDOW = {
     OFFER_MIN_H = 320,    -- its least height beside the compact window (head, six candidates, foot)
     -- A candidate's Offer button: every state's icon and word (Offer, Offered, Queued, Retry) fits
     -- with room on both sides (feedback-7 spec §1); inside the row past the Actions column's x.
-    PANEL_BTN_W = 72,
+    PANEL_BTN_W = 80,     -- fits `No action` beside its icon (feedback-11 spec §1)
     DOCK_GAP    = 4,      -- between the window and the docked panel
     TIP_GAP     = 2,      -- between the window (or a docked panel) and an item tooltip beside it
     -- Where a fresh profile, and Reset position, put the window.

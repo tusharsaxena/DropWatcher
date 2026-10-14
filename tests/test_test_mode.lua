@@ -469,7 +469,7 @@ test("window: the rows show every ask state, every Them gear state and every tra
     local ask, eq, trade, levels = {}, {}, {}, 0
     for _, r in ipairs(drawn.rows) do
         local a = r.cells.actions
-        ask[a.ask:IsShown() and textOf(a.ask.label) or textOf(a.dash)] = true
+        ask[textOf(a.ask.label)] = true
         local text = textOf(r.cells.them.level)
         eq[text] = true
         local worn = wornOf(NS, r.dropId)
@@ -479,7 +479,7 @@ test("window: the rows show every ask state, every Them gear state and every tra
         end
         trade[textOf(r.cells.trade.text)] = true
     end
-    hasAll(ask, { "Ask", "Queued", "Asked", "Retry", "–" }, "ask")
+    hasAll(ask, { "Ask", "Queued", "Asked", "Retry", "No action" }, "ask")
     hasAll(eq, { "…", "range", "combat", "!" }, "their gear: the reason word")
     assertTrue(levels >= 5, "the inspected looters' worn levels")
     hasAll(trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
@@ -531,7 +531,7 @@ test("labels: your own rows on Drops say Offer, and no cell of theirs ends in an
     local offers = 0
     for _, r in ipairs(NS.WindowGroup.Drawn().rows) do
         local a = r.cells.actions
-        if a.ask:IsShown() and a.ask.offer then
+        if a.ask:IsShown() and a.ask.offer and a.ask:IsEnabled() then   -- No action on a dead drop (feedback-11 spec §1)
             assertEqual(textOf(a.ask.label), "Offer")
             offers = offers + 1
         end

@@ -142,7 +142,11 @@ test("offer panel: Offer opens it docked right, the candidates ranked with Their
     assertEqual(r1.eq.glyph.__font[1], NS.Constants.FONT_MONO, "the glyph in the monospace face")
     assertTrue(r1.offer:IsShown()); assertTrue(r1.trade == nil and r1.pill == nil, "no Trade button and no pill")
     local r4 = p.rows[4]
-    assertFalse(r4.offer:IsShown()); assertTrue(r4.dash:IsShown())
+    assertTrue(r4.offer:IsShown()); assertTrue(r4.dash == nil, "no dash (feedback-11 spec §1)")
+    assertEqual(textOf(r4.offer.label), "No action"); assertFalse(r4.offer:IsEnabled()); assertEqual(r4.offer.tone, "bad")
+    assertEqual(r4.offer.art:GetTexture(), NS.Icon("ban"))
+    assertEqual(NS.Window.TooltipOf(r4.offer)[1], "No action")
+    assertEqual(NS.Window.TooltipOf(r4.offer)[2], "Offer is shown for members it is an upgrade or an equal for.")
     assertEqual(textOf(p.panel.note.text), "5 members · sorted by gain")
     local heads = {}
     for key, h in pairs(p.panel.heads) do heads[#heads + 1] = key .. "=" .. textOf(h.text) end

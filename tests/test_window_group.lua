@@ -199,7 +199,9 @@ end)
 test("cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you", function()
     local W = WC()
     local mine = W.Ask(drop({ isMine = true }), "ready")
-    assertFalse(mine.offered); assertEqual(mine.text, "–")
+    assertFalse(mine.offered); assertEqual(mine.text, "No action", "the placeholder (feedback-11 spec §1)")
+    assertEqual(mine.icon, "ban"); assertEqual(mine.state, "none"); assertEqual(mine.tip[1], "No action")
+    assertEqual(W.ActionTone(mine.state), "bad", "gray")
     assertEqual(mine.tip[2], "Your own drop: Offer shows who it would help.", "reworded (feedback-5 spec §2)")
     local no = W.Ask(drop({ trade = { state = "no", reasonKey = "bonusRoll" } }), "ready")
     assertFalse(no.offered); assertTrue(no.tip[2]:find("Bonus roll") ~= nil)
@@ -511,8 +513,7 @@ test("table: every shown cell has a reason tooltip; nothing is blank", function(
             end
         end
         local a = row.cells.actions
-        local tipHost = a.ask:IsShown() and a.ask or a.dashTip
-        assertTrue(#W.TooltipOf(tipHost) >= 2, "the Ask cell has a reason")
+        assertTrue(#W.TooltipOf(a.ask) >= 2, "the Ask cell has a reason (No action's too)")
         assertTrue(a.dismiss == nil, "no dismiss mark (feedback-4 spec §2)")
     end
     for _, label in pairs(drawn.pane.colHead.labels) do
@@ -649,16 +650,18 @@ test("table: the Ask button asks through the shared handler, and AskStateChanged
     assertEqual(textOf(ask.label), "Asked"); assertFalse(ask:IsEnabled())
 end)
 
-test("table: a drop with no ask offered shows a dash with its reason", function()
+test("table: a drop with no ask offered shows the gray No action button with its reason (feedback-11 §1)", function()
     local NS, drawn = shownTable()
     local a = rowFor(drawn, 2).cells.actions
     assertTrue(a.ask:IsShown(), "a sidegrade for you may be asked for")
     seed(NS, { GROUP }, { drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }) })
     NS.Window.Refresh()
     a = rowFor(NS.WindowGroup.Drawn(), 1).cells.actions
-    assertFalse(a.ask:IsShown()); assertTrue(a.dash:IsShown())
-    assertEqual(textOf(a.dash), "–")
-    assertEqual(NS.Window.TooltipOf(a.dashTip)[2], "It is not an upgrade for you.")
+    assertTrue(a.ask:IsShown(), "a button, never a dash"); assertTrue(a.dash == nil and a.dashTip == nil)
+    assertEqual(textOf(a.ask.label), "No action"); assertEqual(a.ask.art:GetTexture(), NS.Icon("ban"))
+    assertFalse(a.ask:IsEnabled()); assertEqual(a.ask.tone, "bad", "gray")
+    assertEqual(NS.Window.TooltipOf(a.ask)[1], "No action")
+    assertEqual(NS.Window.TooltipOf(a.ask)[2], "It is not an upgrade for you.")
 end)
 
 test("table: no row can be dismissed: no ×, no handler, no dismissed state (feedback-4 spec §2)", function()

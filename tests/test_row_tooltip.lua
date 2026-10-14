@@ -205,8 +205,6 @@ test("row tooltip: Drops, every cell, Ask and the header open at the row's top r
     local a = row.cells.actions
     a.ask.tipLines = { "Ask", "why" }
     expectRowTop(NS, m, win, row, a.ask, "group ask")
-    a.dashTip.tipLines = { "–", "why" }
-    expectRowTop(NS, m, win, row, a.dashTip, "group dash")
     local h = drawn.headers[1]
     assertTrue(h.tipRow == true)
     expectRowTop(NS, m, win, h, h, "group header")

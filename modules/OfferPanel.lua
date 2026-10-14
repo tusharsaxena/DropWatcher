@@ -13,7 +13,8 @@ local _, NS = ...
 -- for an upgrade or an equal, the Offer button (the Trade button went with feedback-7 spec §0); the
 -- list scrolls in a raid. The foot strip holds Announce to group and a note on the order. What each
 -- part says is modules/MineCells.lua's and modules/SideCells.lua's (pure); this file is the frame
--- edge. Nothing is ever blank: a member with no button shows a dash with the reason.
+-- edge. Nothing is ever blank: a member with no Offer shows the gray No action with the reason
+-- (feedback-11 spec §1).
 --
 -- THE DOCK. The panel is a child of the main window, so it hides, scales and fades with it. It is
 -- docked to the window's right edge, else its left when the screen has no room on the right, else
@@ -49,7 +50,7 @@ local COLS = {
     { key = "eq", label = L["Their eq"], x = 124,
       tip = L["What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."]:format(
           TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
-    { key = "actions", label = L["Actions"], x = 318, tip = L["Offer whispers them your offer template for this item."] },
+    { key = "actions", label = L["Actions"], x = 314, tip = L["Offer whispers them your offer template for this item."] },
 }
 OP.COLS = COLS
 
@@ -94,10 +95,6 @@ local function rowButtons(row)
     row.offer = W.TextButton(row, K.PANEL_BTN_W, "external-link", L["Offer"], function(b) NS.PressOffer(b.dropId, b.target) end)
     row.offer:SetPoint("LEFT", row, "LEFT", COLS[3].x, 0)
     attach(row.offer, "row")
-    row.dash = tipFrame(row, "row")
-    row.dash:SetPoint("LEFT", row, "LEFT", COLS[3].x, 0)
-    row.dash:SetSize(K.PANEL_BTN_W, K.OFFER_ROW_H)
-    row.dash.text:SetText("–")
 end
 
 local function newRow(content)
@@ -278,12 +275,21 @@ local function paintHeader(p, drop, now, warnAt)
     p.line.tipLines = h.tip
 end
 
+-- A member it is not an upgrade or equal for, or a drop that cannot be traded: the gray No action
+-- with its reason (feedback-11 spec §1).
+local function noOffer(drop)
+    if drop.trade and drop.trade.state == "no" then
+        local WC = NS.WindowCells
+        return WC.NoAction(L["Not tradeable: %s"]:format(WC.TradeReason(drop.trade, L["you"])))
+    end
+    return NS.WindowCells.NoAction(L["Offer is shown for members it is an upgrade or an equal for."])
+end
+
 local function paintButtons(row, e, drop)
     local show = e.offerable and drop.trade and drop.trade.state ~= "no"
-    row.offer:SetShown(show)
-    row.dash:SetShown(not show)
     if not show then
-        row.dash.tipLines = { L["No offer"], L["Offer is shown for members it is an upgrade or an equal for."] }
+        row.offer.dropId, row.offer.target = nil, nil
+        NS.WindowOwn.SetButtonLook(row.offer, noOffer(drop))
         return
     end
     row.offer.dropId, row.offer.target = drop.id, e.name

@@ -44,8 +44,8 @@ local _, NS = ...
 -- The keep?
 -- rule holds: while it is an upgrade for you and not revealed, the count is not said and Them
 -- reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's shape), toned by the furthest
--- offer sent (cyan while it is your move, feedback-6 spec §2); a dash with the reason when it
--- cannot be traded.
+-- offer sent (cyan while it is your move, feedback-6 spec §2); the gray No action with the reason
+-- when it cannot be traded (WindowCells.NoAction, feedback-11 spec §1).
 
 NS.MineCells = NS.MineCells or {}
 local MC = NS.MineCells
@@ -359,7 +359,8 @@ MC.OWN_OFFER_LOOK = OWN_OFFER_LOOK   -- read by the suites: every state has an i
 --- Actions on your own drop (feedback-5 spec §2), in WindowCells.Ask's shape with `offer` true:
 --- Offer, which opens the Offer panel (always clickable), labeled and toned by `toneState` (cyan
 --- until an offer was sent, feedback-6 spec §2: `kind` "offer"; yellow once offered or queued,
---- green once given away); a dash with the reason on a drop that cannot be traded.
+--- green once given away); No action with the reason on a drop that cannot be traded
+--- (WindowCells.NoAction, feedback-11 spec §1).
 --- @param drop table one of your drops
 --- @param toneState string|nil the offer half of the tone states (`ready`, `queued`, `sent`, `failed`,
 ---   `tradedAway`)
@@ -367,8 +368,9 @@ MC.OWN_OFFER_LOOK = OWN_OFFER_LOOK   -- read by the suites: every state has an i
 function MC.OwnOffer(drop, toneState)
     local t = tradeOf(drop)
     if t.state == "no" then
-        return { offered = false, offer = true, text = DASH, enabled = false,
-            tip = { L["No offer"], L["Not tradeable: %s"]:format(WC.TradeReason(t, L["you"])) } }
+        local none = WC.NoAction(L["Not tradeable: %s"]:format(WC.TradeReason(t, L["you"])))
+        none.offer = true
+        return none
     end
     local s = OWN_OFFER_LOOK[toneState] and toneState or "ready"
     local l = OWN_OFFER_LOOK[s]

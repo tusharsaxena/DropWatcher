@@ -488,11 +488,6 @@ local function actionsCell(row)
     f.ask = NS.Window.TextButton(f, K.ASK_W, "chat", L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     f.ask:SetPoint("LEFT", f, "LEFT", 0, 0)
     NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end, "row")
-    f.dash = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    f.dash:SetPoint("CENTER", f.ask, "CENTER", 0, 0)
-    f.dashTip = CreateFrame("Frame", nil, f)
-    f.dashTip:SetAllPoints(f.ask)
-    NS.Window.AttachTooltip(f.dashTip, function() return tipOf(f.dashTip) end, "row")
     return f
 end
 
@@ -664,14 +659,10 @@ end
 local function paintActions(f, drop)
     local a = WG.Action(drop)
     f.ask.dropId, f.ask.offer = drop.id, a.offer == true
-    f.ask:SetShown(a.offered)
-    f.dashTip:SetShown(not a.offered)
-    f.dash:SetShown(not a.offered)
-    f.dash:SetText(a.text)
-    NS.Window.SetButtonMark(f.ask, a.text, a.icon)
+    NS.Window.SetButtonMark(f.ask, a.text, a.icon)   -- No action where there is none (feedback-11 spec §1)
     f.ask:SetEnabled(a.enabled)
     f.ask:SetAlpha(a.enabled and 1 or 0.6)
-    f.ask.tipLines, f.dashTip.tipLines = a.tip, a.tip
+    f.ask.tipLines = a.tip
     f.ask.state = a.state
     WG.ToneButton(f.ask, a.state, a.kind)
 end

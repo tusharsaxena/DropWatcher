@@ -166,8 +166,8 @@ test("compact cards: the Drops card reads the spec's three lines", function()
     -- The item level before the name, the inspect freshness on the right (feedback-10 spec §2).
     assertEqual(lines[1], "295 Vile Vial of Volatile Venom (2m)", "the freshness in brackets after the name")
     -- Line 2's right side is the action (feedback-10 spec §2); the engine offers no Ask for a
-    -- downgrade, so the slot is left empty.
-    assertEqual(lines[2], "Lysandra · Trinket · Trinkets · Likely")
+    -- downgrade, so No action (feedback-11 spec §1).
+    assertEqual(lines[2], "Lysandra · Trinket · Trinkets · Likely  No action")
     assertEqual(lines[3], "You 321/308 ▼13  Them 298/296 ⊘ Can't use")
     assertEqual(card.kind, "group"); assertEqual(card.id, 7); assertEqual(card.link, LINK)
 end)
@@ -190,7 +190,8 @@ test("compact cards: the freshness mark is bracketed, and left out where there i
     local C = CC()
     assertEqual(C.FreshMark({ text = "2m" }), "(2m)")
     assertEqual(C.FreshMark({ text = "cached" }), "(cached)")
-    assertEqual(C.FreshMark({ text = "…" }), "(…)")
+    assertTrue(C.FreshMark({ text = "…" }) == nil, "pending: Them's … already says it (feedback-11 spec §0)")
+    assertEqual(C.FreshMark({ text = "range" }), "(range)")
     assertTrue(C.FreshMark({ text = "–" }) == nil, "the dash is no placeholder")
     assertTrue(C.FreshMark({ text = "" }) == nil)
     assertTrue(C.FreshMark(nil) == nil)
@@ -240,7 +241,7 @@ test("compact cards: the Ask button keeps its states, and a drop you cannot ask 
         assertFalse(card.ask.text:find("…", 1, true) ~= nil, "no ellipsis")
     end
     local no = C.Group(groupDrop(), groupCtx())
-    assertFalse(no.ask.offered); assertEqual(C.Plain(no)[2], "Lysandra · Trinket · Trinkets · Likely", "an empty slot")
+    assertFalse(no.ask.offered); assertEqual(C.Plain(no)[2], "Lysandra · Trinket · Trinkets · Likely  No action")
     assertTrue(has(no.ask.tip, "not an upgrade for you"))
 end)
 
@@ -259,7 +260,7 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
     assertEqual(card.looter.you, "[YOU]"); assertEqual(card.looter.text, "Me")
     local dead = C.Group(groupDrop({ isMine = true, them = NONE, looter = me,
         trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), groupCtx())
-    assertEqual(C.Plain(dead)[2], "Me [YOU] · Trinket · Trinkets · No", "an empty slot where it cannot be traded")
+    assertEqual(C.Plain(dead)[2], "Me [YOU] · Trinket · Trinkets · No  No action", "where it cannot be traded")
     assertTrue(has(dead.ask.tip, "Bonus roll loot"))
 end)
 
@@ -308,8 +309,8 @@ test("compact cards: a drop whose details have not loaded is never blank", funct
     local card = C.Group(groupDrop({ facts = NONE, me = NONE, them = NONE, trade = NONE, inspect = NONE,
         link = NONE }), groupCtx())
     local lines = C.Plain(card)
-    assertEqual(lines[1], "? ? (…)")
-    assertEqual(lines[2], "Lysandra · – · – · Unknown")
+    assertEqual(lines[1], "? ?", "pending: nothing after the name, Them says it")
+    assertEqual(lines[2], "Lysandra · – · – · Unknown  No action")
     assertEqual(lines[3], "You –  Them –", "not worn, or not loaded: the dash says why")
 end)
 

@@ -273,7 +273,7 @@ test("compact group: Ask presses the ask; no card can be dismissed", function()
     assertTrue(cardFor(drawn, 2).dismiss == nil); assertTrue(NS.DismissDrop == nil)
 end)
 
-test("compact group: an ask in flight shows the full table's state; no ask offered shows the dash and why", function()
+test("compact group: an ask in flight shows the full table's state; no ask offered shows No action and why", function()
     local NS, _ = shownCards()
     local ready = cardFor(NS.WindowGroup.Drawn(), 1).ask
     assertTrue(ready.art:IsShown() and ready.art:GetTexture() == NS.Icon("chat"), "Ask wears chat (feedback-7 spec §1)")
@@ -285,8 +285,9 @@ test("compact group: an ask in flight shows the full table's state; no ask offer
     seed(NS, { GROUP }, { drop({ trade = { state = "no", reasonKey = "legacy", basis = "rule" } }) })
     NS.Window.Refresh()
     card = cardFor(NS.WindowGroup.Drawn(), 1)
-    assertFalse(card.ask:IsShown()); assertTrue(card.dash == nil, "the slot is left empty (feedback-10 spec §2)")
-    assertTrue(card.dashTip:IsShown()); assertEqual(NS.Window.TooltipOf(card.dashTip)[1], "No ask", "its reason still there")
+    assertTrue(card.ask:IsShown()); assertTrue(card.dash == nil and card.dashTip == nil, "a button, no dash (feedback-11 spec §1)")
+    assertEqual(textOf(card.ask.label), "No action"); assertFalse(card.ask:IsEnabled()); assertEqual(card.ask.tone, "bad")
+    assertEqual(NS.Window.TooltipOf(card.ask)[1], "No action", "its reason in the tooltip")
 end)
 
 test("compact group: the text follows the Font size row and the card's height follows the text", function()
@@ -344,7 +345,7 @@ test("compact group: test mode fills a card for every sample, no piece blank, an
         local mark = NS.CompactCards.FreshMark(card.model.fresh)
         assertEqual(textOf(c.fresh.text), mark or "", "card " .. tostring(card.dropId) .. ": fresh")
         assertEqual(c.fresh.text:IsShown(), mark ~= nil)
-        assertTrue(card.ask:IsShown() or card.dashTip:IsShown(), "Ask, or the empty slot's reason")
+        assertTrue(card.ask:IsShown(), "Ask, Offer or No action: never an empty slot (feedback-11 spec §1)")
     end
     for _, card in ipairs(drawn.rows) do NS.WindowGroup.ToggleExpand(card.dropId) end
     assertTrue(NS.WindowGroup.Drawn().card:IsShown(), "the last one opened")
@@ -494,6 +495,10 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     local m3 = CG.Metrics(nil)
     local youEnd = halfEnd("you", CG.TextLeft(m3, CG.LEAD))
     local themX = youEnd + CG.HALVES_GAP
+    -- Them's last piece is bounded at the card's right inset, cut there rather than past it (feedback-11 spec §0).
+    local rp = c.them.text.__points[2]
+    assertEqual(rp[1], "RIGHT"); assertEqual(rp[2], card); assertEqual(rp[4], -CG.PAD)
+    assertTrue(c.you.text.__points[2] == nil, "You is not bounded: Them follows it")
     local themEnd = halfEnd("them", themX)
     assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
         card:GetWidth() - CG.PAD))
