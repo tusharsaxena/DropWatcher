@@ -1,0 +1,4 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-K0	M20	DropWatcher	The compact card: pending once, full-width lines 1 and 3		S	FEED	fb11 §0
+DW-K1	M20	DropWatcher	No action placeholder button in every view		M	FEED	fb11 §1
+DW-K2	M20	DropWatcher	Review fixes, docs sync, automated-test bundle	DW-K0 DW-K1	S		fb11 §2
