@@ -376,6 +376,16 @@ tracked bus registrations taken down, test mode ended, each module's teardown, w
 stand-up re-registers and re-applies the window from current settings. The perf harness's suspend
 takes the same latch's `perf` hold.
 
+```
+a press or verb while the latch is down (Ask, Offer, Announce to group, Trade, Retry inspect,
+Scan group / `/dw scan`, Post my tradeables, `/dw test`, `/dw sim start`)
+  └─> NS.StoodDownRefusal()  (core/LifecycleSetup.lua, read before any other guard)
+        ├─> `disabled` hold taken ─> SlashCommands:DisabledLine()  ("… is disabled — enable it with /dw enable")
+        └─> `perf` hold alone     ─> "Not available during a performance capture."
+      ─> NS.Print(line), alone (never inside `Not asked: …`); the Press* calls return
+         ("refused", NS.StoodDownReason()) = `disabled` | `perf`; nothing sent, queued or inspected
+```
+
 ## The situation
 
 ```

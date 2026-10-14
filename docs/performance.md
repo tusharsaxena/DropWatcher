@@ -10,7 +10,11 @@ page covers what is this addon's.
 capture ring, the latch from `core/LifecycleSetup.lua` is handed over so Suspend and Resume take and
 release its `perf` hold, and the `perf` verb is the addon's (`settings/Slash.lua`), printing the
 lines the library returns. A suspended addon is inert through the same stand-down the disabled
-state uses, and the window's show decision refuses at its source while the latch is held.
+state uses, and the window's show decision refuses at its source while the latch is held. A feature
+pressed or typed during a suspended run (Ask, Offer, Announce, Trade, Scan group, Post my
+tradeables, `/dw test`, `/dw sim start`) answers `Not available during a performance capture.`
+through `NS.StoodDownRefusal()`, never the disabled line's `enable it with /dw enable`, since
+`enabled` is still on (DW-P16; smoke check DIAG-2).
 
 ## The buckets
 
@@ -50,7 +54,18 @@ stack reallocation, about 1.8 KB, once DW-C2 deepened the refresh path. That put
 at 14249.9 bytes against `refreshCaptureOn`'s 14248.1 and failed the pair's check (found by bisecting
 the M12 commits).
 
+Re-run 2026-10-14 after the M24 remediation (DW-P16..DW-P27): every pair still matches, off and on
+allocating the same bytes (`refreshCaptureOff`/`On` 14240.8, `refreshCompactCaptureOff`/`On` 10432.9,
+`parseCaptureOff`/`On` 664.2), each under its ceiling, and `showDecisionStoodDown` 0.
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the
 capture store and says how a capture becomes a bundle.
+
+The nesting of `evaluate` and `quality.gate` is confirmed in game, not headless: a two-arm capture
+whose report reads each bucket observed inside `feed.add` and at top level (an item judged later,
+once it loads, is judged outside the bracket) is smoke check DIAG-4, recorded with
+`/dev-copilot:wow-perf-analysis` as a `docs/perf-analysis/<YYYYMMDD-HHMMSS>/` bundle. The
+`within = "feed.add"` declarations it confirms land with DW-P24 (LibKa0s Perf 15); until a capture
+is supplied by the owner the check stays pending, and none is ever invented.
