@@ -550,7 +550,7 @@ Total.
 - drops strip: shortened under the compact cards, and put back in the full layout
 - drops strip: the compact countdown tick moves its next expiry too
 
-### test_offer_panel.lua (16)
+### test_offer_panel.lua (17)
 
 - offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look
 - offer panel: no class bar; every second row striped as the main window's; the name in its class color
@@ -564,6 +564,7 @@ Total.
 - offer panel: with Edit before sending on, Offer and Announce open the box for their kind
 - offer panel: Announce to group announces the drop
 - handlers: Post my tradeables announces every tradeable drop of yours, line by line
+- handlers: Post my tradeables to a stored PARTY while solo says not announced and sends nothing
 - handlers: Offer and Announce say why they did nothing
 - offer panel: it keeps its own least height beside the compact window
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
@@ -1214,7 +1215,7 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
-### test_asks.lua (23)
+### test_asks.lua (26)
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
@@ -1229,6 +1230,8 @@ Total.
 - fail: the deprecated global sender is the fallback
 - announce: auto picks INSTANCE_CHAT, then RAID, then PARTY, and never SAY or YELL
 - announce: outside a group it fails noChannel
+- announce: a stored PARTY while solo fails noChannel, confirms nothing, and may be retried
+- announce: a stored RAID or INSTANCE_CHAT without that kind of group fails noChannel
 - queue: under a restriction the ask is queued, and the lift sends it at once
 - flush: one send every 1.5 seconds, first in first out
 - flush: a restriction back mid-flush stops it; the rest wait for the next trigger
@@ -1237,6 +1240,7 @@ Total.
 - cancel: pressing a queued ask cancels it; the lift sends nothing and the button is ready
 - cancel: an ask queued to a looter who leaves is dropped; others stay
 - cancel: a queued announce is dropped once you leave the group
+- cancel: a queued announce to a stored channel is dropped once that kind of group is gone
 - test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
 - stand-down: a request is refused, the flush timer is canceled and the queue is dropped
 
@@ -1656,7 +1660,7 @@ Total.
 | test_own_drops.lua | 15 |
 | test_tip_marks.lua | 19 |
 | test_drops_strip.lua | 14 |
-| test_offer_panel.lua | 16 |
+| test_offer_panel.lua | 17 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 30 |
@@ -1684,7 +1688,7 @@ Total.
 | test_char_filter.lua | 19 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
-| test_asks.lua | 23 |
+| test_asks.lua | 26 |
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
@@ -1706,4 +1710,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1404** |
+| **Total** | **1408** |

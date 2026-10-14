@@ -1348,7 +1348,9 @@ frame shows your own outgoing whisper, and the addon prints one line `Whispered 
 the print reads `sent`. Run it again → `refused alreadyAsked`, and nothing is whispered. Swap
 `"ask"` for `"announce"` (the target is ignored) → "[item] is up for grabs, whisper me." in party
 chat (raid chat in a raid, instance chat in a dungeon finder group) and `Announced in <channel>:
-[item]`. The failure looks like a Lua error, no whisper with `sent` printed, a broken link, or a
+[item]`. In a party (not a raid), `/dw set messages.announceChannel RAID` and announce again → the
+print reads `failed noChannel`, nothing is posted and no `Announced` line appears; Post my
+tradeables prints `Not announced: You are not in a group, ...` (DW-P17). Set it back to `auto`. The failure looks like a Lua error, no whisper with `sent` printed, a broken link, or a
 `[MSG] send failed` line (record its reason). Result:
 
 **ASK-2. Queued under a restriction, flushed at the kill.** In a dungeon, pull a boss and, during

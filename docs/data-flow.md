@@ -610,7 +610,8 @@ a click (row button, Offer panel, DW-33) or auto-ask (DW-54)
          canSend = test or Restrictions.CanSendChat()
   queue ─> AskStateChanged(dropID, "queued", kind, target)
   send  ─> pcall(Compat.ChatSender(), text, "WHISPER", nil, Name-Realm)
-           (announce: INSTANCE_CHAT, else RAID, else PARTY; noChannel outside a group)
+           (announce: INSTANCE_CHAT, else RAID, else PARTY; a stored channel only while in that
+            kind of group; else noChannel)
            test: NS.Print("Test mode, not sent: ...") instead
         ─> Messaging.MarkSent, "Whispered Name: [item]"      or Messaging.MarkFailed(reason)
         ─> AskStateChanged(dropID, "sent" | "failed", kind, target, reason)
@@ -621,7 +622,7 @@ CHALLENGE_MODE_COMPLETED ─> Restrictions.Refresh┘     Messaging.ShouldFlush 
                                                       every 1.5s (C_Timer); stops while chat is
                                                       restricted again
 GROUP_ROSTER_UPDATE (after the roster re-read) ─> Asks.OnRosterChanged
-  ─> Messaging.CancelTarget for each member who left (and "group" outside a group)
+  ─> Messaging.CancelTarget for each member who left (and "group" once the announce has no channel)
   ─> AskStateChanged(dropID, "ready", kind, target, "left")
 ```
 

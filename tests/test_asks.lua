@@ -250,6 +250,37 @@ test("announce: outside a group it fails noChannel", function()
     assertEqual(#m.chatSent, 0)
 end)
 
+test("announce: a stored PARTY while solo fails noChannel, confirms nothing, and may be retried", function()
+    local NS, m, A = party()
+    local id = drop(NS, m, 300, nil)
+    NS.db.profile.messages = { announceChannel = "PARTY" }
+    m.setGroup({})
+    assertNil(A.AnnounceChannel(), "a stored channel is never sent blind")
+    local state, reason = A.Request("announce", nil, id)
+    assertEqual(state, "failed"); assertEqual(reason, "noChannel")
+    assertEqual(#m.chatSent, 0)
+    assertEqual(printed(m, "Announced in"), 0)
+    assertTrue(A.StateOf("announce", nil, id) ~= "sent", "not marked sent, so Ask once does not block it")
+    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR") })
+    assertEqual((A.Request("announce", nil, id)), "sent", "a failed announce may be retried")
+    assertEqual(m.chatSent[1].chatType, "PARTY")
+end)
+
+test("announce: a stored RAID or INSTANCE_CHAT without that kind of group fails noChannel", function()
+    local NS, m, A = party()
+    local id = drop(NS, m, 300, nil)
+    NS.db.profile.messages = { announceChannel = "RAID", oneAsk = false }
+    local state, reason = A.Request("announce", nil, id)
+    assertEqual(state, "failed"); assertEqual(reason, "noChannel", "a party is not a raid")
+    NS.db.profile.messages.announceChannel = "INSTANCE_CHAT"
+    state, reason = A.Request("announce", nil, id)
+    assertEqual(state, "failed"); assertEqual(reason, "noChannel", "a party is not an instance group")
+    assertEqual(#m.chatSent, 0)
+    m.instanceGroup = true
+    assertEqual((A.Request("announce", nil, id)), "sent")
+    assertEqual(m.chatSent[1].chatType, "INSTANCE_CHAT")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The queue and the flush
 -- ---------------------------------------------------------------------------------------------
@@ -383,6 +414,19 @@ test("cancel: a queued announce is dropped once you leave the group", function()
     assertEqual(A.StateOf("announce", nil, id), "queued", "still in a group")
     m.setGroup({})
     assertEqual(A.OnRosterChanged(), 1)
+    assertEqual(A.StateOf("announce", nil, id), "ready")
+end)
+
+test("cancel: a queued announce to a stored channel is dropped once that kind of group is gone", function()
+    local NS, m, A = party()
+    local id = drop(NS, m, 300, nil)
+    NS.db.profile.messages = { announceChannel = "INSTANCE_CHAT" }
+    m.instanceGroup = true
+    restrict(m)
+    assertEqual((A.Request("announce", nil, id)), "queued")
+    assertEqual(A.OnRosterChanged(), 0, "still in an instance group")
+    m.instanceGroup = false
+    assertEqual(A.OnRosterChanged(), 1, "still in a party, but not the stored channel's group")
     assertEqual(A.StateOf("announce", nil, id), "ready")
 end)
 

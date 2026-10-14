@@ -258,7 +258,9 @@ no client. An ask is refused before the core when its recipient is not in the gr
 is offline (`notInGroup`, `self`, `offline`); the registry files a whisper under the member's
 Name-Realm, and an announce under `group`, one per drop whatever the channel. A raise inside the
 sender is the failure's reason (a secret or empty one reads `error`); no sender is `noApi`, and an
-announce outside a group `noChannel`. The first queued ask goes at once when a flush starts and
+announce outside a group, or to a stored channel whose kind of group you are not in, `noChannel`
+(a stored PARTY, RAID or INSTANCE_CHAT is never sent blind; a queued one is canceled once that
+group is gone). The first queued ask goes at once when a flush starts and
 the rest every 1.5 seconds; a restriction back mid-flush stops it until the next trigger. Test
 mode, and a test drop, print the text instead of sending, mark the ask sent and never queue it.
 The stand-down drops the queued asks, because no trigger reaches them while down; the sent
