@@ -163,12 +163,8 @@ local function loadReads(src)
     return set
 end
 
-test("toc: no position labeled Conventional is load-bearing under toc-file-§5 (a) or (b)", function()
-    -- red under: relabel core\Compat.lua's comment (it takes NS.TextParse, published one line up in
-    -- core\, at load) back to `# Conventional:`
-    local positions = tocPositions()
-    local bad = {}
-    local function flag(ok, why) if not ok then bad[#bad + 1] = why end end
+-- Each authored position's source and the members it publishes, keyed by file.
+local function sourcesOf(positions)
     local src, pub = {}, {}
     for _, p in ipairs(positions) do
         if p.section ~= "libs" then
@@ -176,7 +172,11 @@ test("toc: no position labeled Conventional is load-bearing under toc-file-§5 (
             pub[p.file] = publishes(src[p.file])
         end
     end
-    -- (b) shared events: the file that declares each NS.FEATURE_EVENTS row, by its method name.
+    return src, pub
+end
+
+-- (b) shared events: the files that declare each NS.FEATURE_EVENTS row, by its method name.
+local function eventFiles(positions, src)
     local NS = T.newAddon()
     local filesOf = {}
     for _, row in ipairs(NS.FEATURE_EVENTS) do
@@ -187,32 +187,51 @@ test("toc: no position labeled Conventional is load-bearing under toc-file-§5 (
             end
         end
     end
+    return filesOf
+end
+
+-- (b) a row on an event another file also handles.
+local function flagSharedEvents(p, filesOf, flag)
+    for event, files in pairs(filesOf) do
+        if files[p.file] then
+            local n = 0
+            for _ in pairs(files) do n = n + 1 end
+            flag(n == 1, p.file .. " has a row on the shared event " .. event .. ": LOAD-BEARING")
+        end
+    end
+end
+
+-- (a) a file-scope read of a member another file of the same section publishes.
+local function flagSectionReads(p, s, positions, pub, flag)
+    local own = pub[p.file]
+    for name in pairs(loadReads(s)) do
+        if not own[name] then
+            for _, q in ipairs(positions) do
+                if q.file ~= p.file and q.section == p.section and pub[q.file] and pub[q.file][name] then
+                    flag(false, p.file .. " reads NS." .. name .. " (" .. q.file
+                        .. ", same section) at load: LOAD-BEARING")
+                end
+            end
+        end
+    end
+end
+
+test("toc: no position labeled Conventional is load-bearing under toc-file-§5 (a) or (b)", function()
+    -- red under: relabel core\Compat.lua's comment (it takes NS.TextParse, published one line up in
+    -- core\, at load) back to `# Conventional:`
+    local positions = tocPositions()
+    local bad = {}
+    local function flag(ok, why) if not ok then bad[#bad + 1] = why end end
+    local src, pub = sourcesOf(positions)
+    local filesOf = eventFiles(positions, src)
     for _, p in ipairs(positions) do
         if p.label == "Conventional" and src[p.file] then
             local s = src[p.file]
             -- (b) a step on a list walked in TOC order
             flag(s:find("NS%.STAND_DOWN%[#") == nil and s:find("NS%.STAND_UP%[#") == nil,
                 p.file .. " appends a NS.STAND_DOWN / NS.STAND_UP step: LOAD-BEARING")
-            -- (b) a row on an event another file also handles
-            for event, files in pairs(filesOf) do
-                if files[p.file] then
-                    local n = 0
-                    for _ in pairs(files) do n = n + 1 end
-                    flag(n == 1, p.file .. " has a row on the shared event " .. event .. ": LOAD-BEARING")
-                end
-            end
-            -- (a) a file-scope read of a member another file of the same section publishes
-            local own = pub[p.file]
-            for name in pairs(loadReads(s)) do
-                if not own[name] then
-                    for _, q in ipairs(positions) do
-                        if q.file ~= p.file and q.section == p.section and pub[q.file] and pub[q.file][name] then
-                            flag(false, p.file .. " reads NS." .. name .. " (" .. q.file
-                                .. ", same section) at load: LOAD-BEARING")
-                        end
-                    end
-                end
-            end
+            flagSharedEvents(p, filesOf, flag)
+            flagSectionReads(p, s, positions, pub, flag)
         end
     end
     assertTrue(#bad == 0, "Conventional positions that are load-bearing:\n" .. table.concat(bad, "\n"))
