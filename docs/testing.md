@@ -51,7 +51,9 @@ DW-P25). The addon's own:
 `test_harness` (the load, the repository's shape, and the TOC's position labels: no `Conventional:`
 comment on a load-bearing position, nor one stating handler order, toc-file-§5), `test_setup` (each
 adopted module's wiring, and the shared event dispatcher running every handler when one raises, the
-first error raised after the rest; review F03, DW-P18),
+first error raised after the rest; review F03, DW-P18; and `evaluate` and `quality.gate` declared
+within `feed.add`, observed inside it on a Receive-only capture, mixed with top level on a later
+load or re-judge, and the depth counter cleared when Receive raises; review F06, DW-P24),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
 reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
 into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles), `test_schema`, `test_schema_rows` (every

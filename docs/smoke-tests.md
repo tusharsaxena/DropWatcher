@@ -57,7 +57,7 @@ click hints. A missing icon (a blank or green square) is the failure. Result:
 **INSTALL-3. Reload keeps settings.** Set Master scale to 1.25 and lock the window, `/reload` →
 both are kept; the debug flag and test mode are not (session-only). Result:
 
-**INSTALL-4. The re-vendored LibKa0s (DW-P22).** Run once the DW-P22 re-vendor has landed. `/reload`
+**INSTALL-4. The re-vendored LibKa0s (DW-P22).** The DW-P22 re-vendor has landed (`ff567d3`). `/reload`
 → no Lua error and no new chat line; `/dump LibStub.minors["LibKa0s-Perf-1.0"]` → `15`. `/dw diagnostics`
 and `/dw perf` open as DIAG-1 and DIAG-2 describe. A lower minor means an older copy of the library
 loaded first from another addon; record which addons were enabled. Result:
@@ -309,8 +309,8 @@ situation=dungeon testMode=false restriction=none queuedSends=0`; pull a boss an
 spec's Pawn scale>` with Pawn installed (`ready=false scale=none` without it), and `retries pending=0
 spent=0 timer=off` out of loot. Result:
 
-**DIAG-4. Perf nesting confirmed by a capture (DW-P24, review C-04).** Run once DW-P22 (LibKa0s
-Perf 15) and DW-P24 (`evaluate` and `quality.gate` declared within `feed.add`) have landed. In a
+**DIAG-4. Perf nesting confirmed by a capture (DW-P24, review C-04).** DW-P22 (LibKa0s Perf 15,
+`ff567d3`) and DW-P24 (`evaluate` and `quality.gate` declared within `feed.add`, `917449f`) have landed. In a
 dungeon, in a group: the standard two-arm `/dw perf` protocol, the clean arm first and the suspended
 arm second, no `/reload` between the arms, with at least one boss kill and its loot in the clean arm.
 → the report's nesting lines read `evaluate observed inside feed.add and at top level` and
@@ -2075,28 +2075,28 @@ stray `%s` or `%d`, and no Lua error. Result:
 | LOC-2 | DW-P19, the completed enUS catalog | No client pass recorded yet |
 | COMPAT-4 | DW-P20, the optional-addon probe through Compat | No client pass recorded yet |
 | PANEL-8, DEGRADED-2, TOAST-4 | DW-P21, When to show's OnRelease park; the toast's close degrading to nothing | No client pass recorded yet |
-| INSTALL-4 | DW-P22, the LibKa0s v1.72.0 re-vendor | Owed once DW-P22 lands; no client pass recorded yet |
-| DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | DW-P22 and DW-P24 have landed; owed the owner's capture recorded under `docs/perf-analysis/`; none is invented |
+| INSTALL-4 | DW-P22, the LibKa0s v1.72.0 re-vendor | DW-P22 has landed (`ff567d3`); no client pass recorded yet |
+| DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | DW-P22 (`ff567d3`) and DW-P24 (`917449f`) have landed; owed the owner's capture recorded under `docs/perf-analysis/`; none is invented |
 | SLASH-7 | Review 2026-10-14, the cross-addon census's in-client half | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 
 The review's in-client checks (`reviews/2026-10-14/03_SMOKE_TESTS.md`, a frozen bundle) live above
 under these IDs, and this table is where their sign-off is recorded. The owner fills it; an agent
-never marks a row passed. DW-P26 (TOC labels) and DW-P27 (the documentation spill) change no code
-the client runs, and have no in-client check.
+never marks a row passed. DW-P25 (the disabled-state suite), DW-P26 (TOC labels) and DW-P27 (the
+documentation spill) change no code the client runs, and have no in-client check.
 
 | Review ID | Check here | Tested? | Pass/Fail | Notes |
 |---|---|---|---|---|
 | C-01 | STATE-5 (its combat and zone half) | | | |
 | C-02 (ANN-1, ANN-1b) | ASK-10, ASK-1 | | | |
 | C-03 | ROSTER-3 | | | |
-| C-04 | DIAG-4 | | | Pending the owner's capture (DW-P22 and DW-P24 landed) |
+| C-04 | DIAG-4 | | | DW-P22 and DW-P24 landed; owed the owner's capture |
 | C-05 | LOC-2 | | | |
 | C-06 | COMPAT-4 | | | |
 | C-07 | none | n/a | | Comment only |
 | C-08 | STATE-5, DIAG-2 | | | |
-| U-1/U-2 re-vendor | INSTALL-4 | | | Pending DW-P22 |
+| U-1/U-2 re-vendor | INSTALL-4 | | | DW-P22 landed (`ff567d3`); owed the owner's client pass |
 | DW-P21 (F11, F12) | PANEL-8, DEGRADED-2, TOAST-4 | | | |
 | Regression | INSTALL-1..3, PROFILE-1, STATE-1, STATE-3, PANEL-3, SIM-1 | | | |
 | Cross-addon | SLASH-7 | | | |

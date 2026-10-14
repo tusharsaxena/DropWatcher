@@ -63,8 +63,8 @@ stack reallocation, about 1.8 KB, once DW-C2 deepened the refresh path. That put
 at 14249.9 bytes against `refreshCaptureOn`'s 14248.1 and failed the pair's check (found by bisecting
 the M12 commits).
 
-Re-run 2026-10-14 after the M24 remediation (DW-P16..DW-P27), and again after DW-P24 (no scenario
-reaches `feed.add`, so the figures do not move): every pair still matches, off and on
+Re-run 2026-10-14 after the M24 remediation (DW-P16..DW-P27), again after DW-P24 (no scenario
+reaches `feed.add`, so the figures do not move), and 2026-10-15 after DW-P25 (tests only): every pair still matches, off and on
 allocating the same bytes (`refreshCaptureOff`/`On` 14240.8, `refreshCompactCaptureOff`/`On` 10432.9,
 `parseCaptureOff`/`On` 664.2), each under its ceiling, and `showDecisionStoodDown` 0.
 
