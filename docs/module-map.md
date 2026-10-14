@@ -7,7 +7,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 
 | # | File | Kind | Responsibility |
 |---|---|---|---|
-| 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string |
+| 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string; it carries every string the code routes through `NS.L` (`test_locale`) |
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[DW]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip |
 | 4 | `core/TextParse.lua` | kernel (pure) | `NS.TextParse`: the pure text parsers behind the Compat seam's tooltip and duration readers (DW-61): `EscapePattern`, `FormatToPattern`, `ExpandPlural` (the `\|4a:b;` plural grammar), the duration decoder (`DecodeDuration`, `TradeTimeRemaining`, design spec §7.4) and the tooltip line scan (`ScanLines`, handed Compat's secret guards), the item level, upgrade track and class list lines (`ItemLevel`, `UpgradeLine`, `ClassSet`). No client call and no global read: core/Compat.lua reads the localized GlobalStrings and passes them in |

@@ -7,7 +7,8 @@
    literal), `page`, `group` (its tab), `label`, `tooltip` and a `validate` check; the file splices
    every row in with `NS.SchemaRuntime.AddRows`. A row that only matters when another is on takes a
    `disabledIf` predicate.
-3. Add every new `label` and `tooltip` string to `locales/enUS.lua`.
+3. Add every new `label` and `tooltip` string to `locales/enUS.lua`; `test_locale` fails on any
+   string routed through `NS.L` that has no entry there.
 4. React in the row's `onChange` (or in `Settings.REACTIONS` when other surfaces write the same
    path). Never write the profile directly.
 5. Read it with `NS.Setting(path)` in the module that uses it.

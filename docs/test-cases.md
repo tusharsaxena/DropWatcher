@@ -1572,6 +1572,11 @@ Total.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
+### test_locale.lua (2)
+
+- locale: the scan finds routed literals in the addon's files
+- locale: enUS carries every string routed through NS.L
+
 ### test_eol.lua (2)
 
 - eol: every tracked file carries the terminator .gitattributes declares for it
@@ -1705,10 +1710,11 @@ Total.
 | test_disabled.lua | 11 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
+| test_locale.lua | 2 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1409** |
+| **Total** | **1411** |
