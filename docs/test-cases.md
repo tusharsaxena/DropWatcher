@@ -396,7 +396,7 @@ Total.
 - table: the Item column takes the slack, never less than its minimum
 - table: a row too narrow for every column sheds Type, Slot, Looter, Trade window and Ilvl, in that order
 - table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
-- cells: KeepsHeader keeps a group the View hid whole, and one whose drops have no recorder
+- cells: KeepsHeader keeps a group the View hid whole; Character leaves one out, recorder or not
 - table: built at the least width, every column shows and Ask stays inside the row (feedback-4 §4)
 - rows: the pure metrics read Default as the template's size and keep the row height in range
 - rows: a stored row height and font size stay as the player set them
@@ -1162,7 +1162,7 @@ Total.
 - test mode: the sample groups carry real instance names and realistic difficulties
 - sim: a dungeon boss and a key run name the pool's instance and the client's difficulty
 
-### test_char_filter.lua (18)
+### test_char_filter.lua (19)
 
 - char filter: a recorder key is Name-Realm; a name that carries its realm is kept
 - char filter: the class icon is the classicon atlas as inline markup, nothing with no class
@@ -1178,6 +1178,7 @@ Total.
 - filter bar: the Character dropdown sits after Content, multi-select, Current by default
 - filter bar: Drops lists All, Current and you alone; History every recorder
 - filter bar: History shows your drops under Current, every recorder chosen, and unknown only under All
+- filter bar: a group Character and Content leave empty shows no header, full or compact (feedback-12 spec §1)
 - filter bar: a drop the Character filter hides is named in the header's reason
 - filter bar: a Character selection is a set of keys; anything else is refused
 - filter bar: Drops keeps every drop under any Character choice it offers
@@ -1676,7 +1677,7 @@ Total.
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 14 |
-| test_char_filter.lua | 18 |
+| test_char_filter.lua | 19 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 23 |
@@ -1701,4 +1702,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1399** |
+| **Total** | **1400** |

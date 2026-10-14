@@ -270,7 +270,8 @@ fallback; test mode's and the simulator's realistic instance and difficulty name
 `Canonical`, `Label` and `IsCurrent`, `Characters` and `Options`; your recorder read live and
 unknown until the realm is; every drop record, test placeholder and History entry stamped with who
 saw it; the dropdown after Content on every tab, multi-select and Current by default, the session
-tabs listing you alone and History every recorder; History filtered by it, unknown only under All;
+tabs listing you alone and History every recorder; History filtered by it, unknown only under All,
+a group it leaves empty with no `0 shown` header in either layout (feedback-12 spec §1);
 `HiddenBy`'s `char` reason and its label; test mode's alt group is `test_test_mode`'s and a
 simulated run's recorder `test_sim_e2e`'s),
 `test_trade_timer` (your own drops' trade timer: the `TradeTimeRemaining` line read
@@ -307,7 +308,7 @@ the bus: a live drop recorded and a test drop never, `DropUpdated`, a sent ask, 
 a completed trade marking `received` and the Ask button `Traded`, one given away, and an
 unfinished or changed trade marking nothing; Clear history behind its
 confirmation; the diagnostics line; and the History tab built headless: kept groups newest first,
-the outcome column, a reason on every cell, a header toggle, Content's This session, the row menu
+the outcome column in the action buttons' tones (feedback-12 spec §0), a reason on every cell, a header toggle, Content's This session, the row menu
 with and without the client's menu, the empty line and `HistoryChanged`'s repaint),
 `test_history_retention` (Keep history for, feedback-2 spec §5: the labels, choices and footer, a
 group's age by its newest entry, Count deleting nothing and Prune deleting whole groups; the row,

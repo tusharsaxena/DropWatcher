@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1399%2F1399_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1400%2F1400_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -36,7 +36,8 @@ blocks addon chat, an orange lock in the title bar says so and counts the asks w
 group's header says where it dropped, the instance, the boss and the difficulty the game names
 (`Gate of the Setting Sun · Commander Ri'mok · Timewalking`, or `Mythic+ 12` for a key), then how
 long ago, then counts its drops: `2 drops · 1 shown` means the filters hide one (a group whose every
-drop the View hides still shows its header, `· 0 shown`), and it ends with the character that saw
+drop the View hides still shows its header, `· 0 shown`; one that Search, Content or Character
+leaves empty is left out), and it ends with the character that saw
 it, in class color. Hovering the header names the party on one `Group:` line and lists what the
 filters hid and why. History keeps the place, the character and the party with each group. Each drop
 sits a little in from its header, with a small arrow at its left: it points down while the row is
@@ -83,7 +84,10 @@ The **History** tab remembers what the feed showed, across logouts and across yo
 30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never
 delete, and asks before a shorter time deletes anything. Its footer says how many bosses or key runs
 and drops it holds, and for how long. Each drop says what became of it: asked, offered, expired,
-received or traded away, the last two once a trade with that item goes through. Right-click a row to
+received or traded away, the last two once a trade with that item goes through. The words take the
+action buttons' colors: yellow while it waited on someone (asked, offered), green once done (received,
+traded away), red when it fell through (expired) and gray when nothing came of it (seen, declined), in
+both the table and the compact cards. Right-click a row to
 mark it declined. The **Character** dropdown in the bar starts on **Current**, the character you're
 playing; on History it lists every character that saw a drop, with its class icon, so pick another,
 several, or **All** (the only choice that shows drops kept before Drop Watcher noted who saw them).

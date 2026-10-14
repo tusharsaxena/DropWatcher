@@ -104,8 +104,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     each header: the shown drops, every drop of the group, and the hidden ones with
   │     the control that hid each (ctx.hiddenBy = WindowFilterBar.HiddenBy) ─> WindowCells.Header:
   │     `2 drops · 1 shown`, the tooltip naming each hidden drop and its filter (feedback-2 spec §0);
-  │     a group the View hid whole keeps its header, `n drops · 0 shown`; one Search, Content or a
-  │     Character choice hid whole is left out (WindowCells.KeepsHeader); the header's chevron
+  │     a group the View hid whole keeps its header, `n drops · 0 shown`; one Search, Content or
+  │     Character hid whole is left out, a group with no recorder too (WindowCells.KeepsHeader,
+  │     feedback-12 spec §1); the header's chevron
   │     gold (C.GOLD, feedback-5 §0)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   ├─> each row, indented K.ROW_INDENT, its chevron first (WindowGroup.PaintChevron: down, up while
