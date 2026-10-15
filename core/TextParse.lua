@@ -129,6 +129,16 @@ function TextParse.ItemLevel(text, fmt)
     return tonumber(text:match("^" .. TextParse.FormatToPattern(fmt)))
 end
 
+--- The value on a stat line written from `fmt` (ITEM_MOD_AGILITY's "%c%s Agility" in enUS, `%c`
+--- the sign), whatever its sign and with its grouping marks dropped ("+1,689" reads 1689), or nil.
+--- @return number|nil
+function TextParse.StatLine(text, fmt)
+    local pattern = TextParse.FormatToPattern((fmt:gsub("%%c", "\3"))):gsub("\3", "[%%+%%-]")
+    local value = text:match("^" .. pattern .. "$")
+    if not value then return nil end
+    return tonumber((value:gsub("%D", "")))
+end
+
 --- The track name and ranks on an ITEM_UPGRADE_TOOLTIP_FORMAT_STRING line ("Upgrade Level: %s
 --- %d/%d" in enUS), as `{ trackString, currentLevel, maxLevel, source = "tooltip" }`, or nil.
 --- @return table|nil

@@ -680,6 +680,33 @@ function Compat.ItemClassRestriction(link)
         parseClasses)
 end
 
+-- Each primary stat's tooltip GlobalString, by the GetItemStats key it answers for.
+local PRIMARY_STAT_LINES = {
+    ITEM_MOD_STRENGTH_SHORT = "ITEM_MOD_STRENGTH", ITEM_MOD_AGILITY_SHORT = "ITEM_MOD_AGILITY",
+    ITEM_MOD_INTELLECT_SHORT = "ITEM_MOD_INTELLECT",
+}
+
+--- Every primary stat an item carries, as `{ [STAT_KEY] = n }`, read off its hyperlink tooltip with
+--- the localized ITEM_MOD_* lines; nil when it shows none. GetItemStats answers the primary stat of
+--- the spec playing alone, but the tooltip lists them all, the inactive ones grayed.
+--- @param link string
+--- @return table|nil
+function Compat.ItemPrimaryStats(link)
+    if not plainString(link) then return nil end
+    local data = tooltipData("GetHyperlink", link)
+    if type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
+    local out
+    for key, name in pairs(PRIMARY_STAT_LINES) do
+        local fmt = globalString(name)
+        local value = fmt and scanLines(data.lines, nil, function(text) return TextParse.StatLine(text, fmt) end)
+        if value then
+            out = out or {}
+            out[key] = value
+        end
+    end
+    return out
+end
+
 -- ── The Pawn seam (optional dependency; design spec §5.4) ───────────────────────────────────
 -- Pawn is CC BY-NC-ND: its API is called, never copied. Every call is behind PawnIsReady and in
 -- pcall (its error is never this addon's). Nil means "not ready yet": the scorer retries.

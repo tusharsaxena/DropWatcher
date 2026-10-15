@@ -162,7 +162,10 @@ local function usable(facts, candidate)
         return "unknown", "tierToken"
     end
     local specID = num(candidate.specID)
-    if specID and hasEntries(facts.specs) then
+    -- The client's spec list covers the class it was read on alone (`specsClass`); any other class
+    -- is left to the class tables.
+    local listed = facts.specsClass == nil or facts.specsClass == candidate.classFile
+    if specID and listed and hasEntries(facts.specs) then
         if facts.specs[specID] then return "ok" end
         return "cant", "specList"
     end

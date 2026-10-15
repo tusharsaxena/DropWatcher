@@ -83,6 +83,16 @@ test("textparse: ItemLevel and UpgradeLine read their lines and nothing else", f
     assertNil(TP().UpgradeLine("Upgrade Level: Hero", "Upgrade Level: %s %d/%d"))
 end)
 
+test("textparse: StatLine reads a primary stat line's value, grouping marks dropped", function()
+    assertEqual(TP().StatLine("+86 Agility", "%c%s Agility"), 86)
+    assertEqual(TP().StatLine("+1,689 Strength", "%c%s Strength"), 1689)
+    assertEqual(TP().StatLine("+1.689 Stärke", "%c%s Stärke"), 1689, "another locale's grouping mark")
+    assertEqual(TP().StatLine("-12 Intellect", "%c%s Intellect"), 12, "the value, whatever the sign")
+    assertNil(TP().StatLine("+86 Agility", "%c%s Intellect"), "another stat's line")
+    assertNil(TP().StatLine("+1,689 Stamina", "%c%s Agility"))
+    assertNil(TP().StatLine("Agility", "%c%s Agility"), "no value")
+end)
+
 test("textparse: ClassSet maps the listed names and asks for the map only on a match", function()
     local asked = 0
     local function byName() asked = asked + 1; return { Warrior = "WARRIOR", Paladin = "PALADIN" } end
