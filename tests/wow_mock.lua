@@ -227,6 +227,10 @@ local GLOBAL_STRINGS = {
     ITEM_UPGRADE_TOOLTIP_FORMAT_STRING = "Upgrade Level: %s %d/%d",
     ITEM_CLASSES_ALLOWED = "Classes: %s",
     LIST_DELIMITER = ", ",
+    -- The primary stat lines of an item's tooltip (`%c` is the sign).
+    ITEM_MOD_STRENGTH = "%c%s Strength",
+    ITEM_MOD_AGILITY = "%c%s Agility",
+    ITEM_MOD_INTELLECT = "%c%s Intellect",
     -- The loot lines modules/LootParser.lua reads, and the echoes it rejects.
     LOOT_ITEM = "%s receives loot: %s.",
     LOOT_ITEM_MULTIPLE = "%s receives loot: %sx%d.",

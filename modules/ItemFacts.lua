@@ -5,7 +5,7 @@ local _, NS = ...
 --   facts = { link, itemID, name, ilvl, ilvlSource, baseIlvl, equipLoc, classID, subClassID,
 --             quality, qualitySource, bindType, setID, warbound, warboundUntilEquip,
 --             track = { name, rank, max, tier, stringID, maxItemLevel, source } | nil,
---             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil,
+--             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil, specsClass,
 --             unique = { cat, max } | nil, isTierToken, classes = { [classFile] = true } | nil,
 --             transmogKnown = true | false | nil }
 --
@@ -117,6 +117,23 @@ local function readClasses(facts)
     facts.isTierToken = facts.classes ~= nil and C.SLOT_PLAN[facts.equipLoc or ""] == nil
 end
 
+-- GetItemStats answers the primary stat of the spec playing alone; the tooltip's lines add the
+-- others, so the kernel judges a three-stat cloak for every spec (not the looter's or yours).
+local function readStats(link)
+    local stats = NS.Compat.GetItemStats(link)
+    for key, value in pairs(NS.Compat.ItemPrimaryStats(link) or {}) do stats[key] = value end
+    return stats
+end
+
+-- GetItemSpecInfo lists the specs of the class playing alone; `specsClass` says which, so the
+-- kernel holds only that class to the list.
+local function readSpecs(facts)
+    facts.specs = NS.Compat.GetItemSpecs(facts.link)
+    if not facts.specs then return end
+    local _, classFile = NS.Compat.UnitClass("player")
+    if not NS.Compat.IsSecret(classFile) and type(classFile) == "string" then facts.specsClass = classFile end
+end
+
 local function readBinds(facts)
     local untilEquip = NS.Compat.IsItemBindToAccountUntilEquip(facts.link)
     facts.warboundUntilEquip = untilEquip
@@ -149,10 +166,10 @@ function IF.Read(link)
         ilvl = ilvl, ilvlSource = ilvlSource,
         equipLoc = info.equipLoc, classID = info.classID, subClassID = info.subClassID,
         quality = quality, qualitySource = qualitySource, bindType = info.bindType,
-        setID = info.setID, track = readTrack(link), stats = NS.Compat.GetItemStats(link),
-        specs = NS.Compat.GetItemSpecs(link), unique = readUnique(link, itemID),
-        transmogKnown = readTransmog(link, info.equipLoc),
+        setID = info.setID, track = readTrack(link), stats = readStats(link),
+        unique = readUnique(link, itemID), transmogKnown = readTransmog(link, info.equipLoc),
     }
+    readSpecs(facts)
     readBinds(facts)
     readClasses(facts)
     return facts

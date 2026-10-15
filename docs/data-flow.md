@@ -441,7 +441,8 @@ ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
   ItemRead.EffectiveItemLevel ─> ilvl + ilvlSource (gear: `detailed`, else `base`;
                                  anything else: the detailed level all the same, else the base)
   Compat.GetItemUpgradeInfo ─> track (+ tier)
-  Compat.GetItemStats ─> stats                 Compat.GetItemSpecs ─> specs
+  Compat.GetItemStats + ItemPrimaryStats ─> stats (every primary stat, off the tooltip)
+  Compat.GetItemSpecs ─> specs, specsClass (the class playing: the list covers it alone)
   Compat.GetItemUniqueness ─> unique           Compat.IsItemBindToAccount* ─> warbound
   Compat.ItemClassRestriction ─> classes, isTierToken
   Compat.PlayerHasTransmog ─> transmogKnown  (CanIMogIt when loaded, else C_TransmogCollection)

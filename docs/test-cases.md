@@ -645,7 +645,7 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
 
-### test_compat.lua (67)
+### test_compat.lua (68)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -688,6 +688,7 @@ Total.
 - compat: GetItemUniqueness reads the category and the item's own uniqueness
 - compat: PlayerHasTransmog answers the collection, nil when absent or secret
 - compat: ItemClassRestriction reads the classes line by type, else by text
+- compat: ItemPrimaryStats reads every primary stat line, the inactive ones too
 - compat: CanRequestItemLoad needs the load request and a timer
 - compat: without Pawn every reader answers nil and nothing raises
 - compat: Pawn loaded but not initialized is not ready
@@ -715,7 +716,7 @@ Total.
 - compat: ContextMenu builds one button per entry through MenuUtil, else answers false
 - compat: no other shipped file names a seam-only client API in code
 
-### test_text_parse.lua (9)
+### test_text_parse.lua (10)
 
 - textparse: the module is pure — it names no client global and reads no _G
 - textparse: EscapePattern makes every magic character literal
@@ -724,6 +725,7 @@ Total.
 - textparse: DecodeDuration sums the terms it is given and refuses leftovers
 - textparse: TradeTimeRemaining reads only the whole trade line
 - textparse: ItemLevel and UpgradeLine read their lines and nothing else
+- textparse: StatLine reads a primary stat line's value, grouping marks dropped
 - textparse: ClassSet maps the listed names and asks for the map only on a match
 - textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed
 
@@ -757,7 +759,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (34)
+### test_evaluate.lua (36)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -775,6 +777,8 @@ Total.
 - evaluate: a unique drop whose own slot holds the category replaces that item
 - evaluate: compareOwned takes the better of equipped and owned per slot
 - evaluate: a known spec is judged by the item's own spec list
+- evaluate: a spec list read for another class leaves the candidate to the class tables
+- evaluate: the primary stat check takes every primary the item carries
 - evaluate: spec unknown falls back to ClassData for armor, jewelry, shields and off hands
 - evaluate: a known spec with no item spec list uses the spec's own class data
 - evaluate: the primary stat decides when every spec agrees, and is ambiguous otherwise
@@ -946,10 +950,13 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
-### test_item_facts.lua (18)
+### test_item_facts.lua (21)
 
 - item facts: a cached ring reads every field of spec §5.1
 - item facts: a chest reads its appearance, account binds and no specs or track
+- item facts: the stats carry every primary stat on the tooltip, not the playing spec's alone
+- item facts: the spec list says which class the client read it for
+- item facts: a three-stat cloak read on a hunter suits a Blood death knight and a Retribution paladin
 - item facts: the track tier, by string id first, then by enUS name, else unset
 - item facts: the track falls back to the tooltip's upgrade line
 - item facts: an item unique on its own takes its item id as the category
@@ -1681,11 +1688,11 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 30 |
-| test_compat.lua | 67 |
-| test_text_parse.lua | 9 |
+| test_compat.lua | 68 |
+| test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
-| test_evaluate.lua | 34 |
+| test_evaluate.lua | 36 |
 | test_scoring.lua | 15 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
@@ -1693,7 +1700,7 @@ Total.
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
-| test_item_facts.lua | 18 |
+| test_item_facts.lua | 21 |
 | test_item_read.lua | 24 |
 | test_gear.lua | 20 |
 | test_loot_parser.lua | 27 |
@@ -1728,4 +1735,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1422** |
+| **Total** | **1429** |

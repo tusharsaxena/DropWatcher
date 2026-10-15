@@ -517,6 +517,26 @@ test("compat: ItemClassRestriction reads the classes line by type, else by text"
     assertNil(Compat.ItemClassRestriction(RING))
 end)
 
+test("compat: ItemPrimaryStats reads every primary stat line, the inactive ones too", function()
+    local Compat, m = fresh()
+    -- The Fireproof Drape as a hunter's client shows it: Agility active, the other two grayed.
+    m.tooltips.hyperlink[RING] = tooltip({ { nil, "Back" }, { nil, "+86 Agility" },
+        { nil, "+1,689 Stamina" }, { nil, "+38 Critical Strike" }, { nil, "+86 Intellect" },
+        { nil, "+86 Strength" } })
+    local p = Compat.ItemPrimaryStats(RING)
+    assertEqual(p.ITEM_MOD_AGILITY_SHORT, 86); assertEqual(p.ITEM_MOD_STRENGTH_SHORT, 86)
+    assertEqual(p.ITEM_MOD_INTELLECT_SHORT, 86)
+    assertNil(p.ITEM_MOD_STAMINA_SHORT, "primary stats only")
+    m.tooltips.hyperlink[RING] = tooltip({ { nil, "+1,689 Stamina" } })
+    assertNil(Compat.ItemPrimaryStats(RING), "no primary stat line")
+    m.ITEM_MOD_AGILITY, m.ITEM_MOD_STRENGTH, m.ITEM_MOD_INTELLECT = nil, nil, nil
+    m.tooltips.hyperlink[RING] = tooltip({ { nil, "+86 Agility" } })
+    assertNil(Compat.ItemPrimaryStats(RING), "no GlobalString to read the line with")
+    m.C_TooltipInfo = nil
+    assertNil(Compat.ItemPrimaryStats(RING))
+    assertNil(Compat.ItemPrimaryStats(nil))
+end)
+
 test("compat: CanRequestItemLoad needs the load request and a timer", function()
     local Compat, m = fresh()
     assertTrue(Compat.CanRequestItemLoad())

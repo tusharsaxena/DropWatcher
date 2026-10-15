@@ -79,6 +79,45 @@ test("item facts: a chest reads its appearance, account binds and no specs or tr
     assertTrue(f.warbound); assertFalse(f.warboundUntilEquip)
 end)
 
+-- The client answers GetItemStats and GetItemSpecInfo for the character playing, not the item: a
+-- three-stat cloak read on a Beast Mastery hunter answers Agility alone and the hunter's specs
+-- alone, while its tooltip lists all three primary stats (the drop of 2026-10-15, issue: a Fireproof
+-- Drape judged useless to a Blood death knight and a Retribution paladin).
+local CLOAK = "|cnIQ4:|Hitem:193763::::::::90:253:::::|h[Fireproof Drape]|h|r"
+
+local function huntersCloak(m)
+    m.units.player = { guid = "Player-1-00000001", name = "Hunter", class = "Hunter",
+        classFile = "HUNTER", connected = true }
+    m.addItem(CLOAK, { name = "Fireproof Drape", quality = 4, ilvl = 311, equipLoc = "INVTYPE_CLOAK",
+        classID = 4, subClassID = 1, bindType = 1,
+        stats = { ITEM_MOD_AGILITY_SHORT = 86, ITEM_MOD_STAMINA_SHORT = 1689 }, specs = { 253, 254, 255 } })
+    m.tooltips.hyperlink[CLOAK] = { lines = { { leftText = "+86 Agility" },
+        { leftText = "+1,689 Stamina" }, { leftText = "+86 Intellect" }, { leftText = "+86 Strength" } } }
+end
+
+test("item facts: the stats carry every primary stat on the tooltip, not the playing spec's alone", function()
+    local _, _, IF = enabled(huntersCloak)
+    local s = IF.Get(CLOAK).stats
+    assertEqual(s.ITEM_MOD_AGILITY_SHORT, 86); assertEqual(s.ITEM_MOD_STRENGTH_SHORT, 86)
+    assertEqual(s.ITEM_MOD_INTELLECT_SHORT, 86); assertEqual(s.ITEM_MOD_STAMINA_SHORT, 1689)
+end)
+
+test("item facts: the spec list says which class the client read it for", function()
+    local _, _, IF = enabled(huntersCloak)
+    local f = IF.Get(CLOAK)
+    assertTrue(f.specs[253]); assertEqual(f.specsClass, "HUNTER")
+end)
+
+test("item facts: a three-stat cloak read on a hunter suits a Blood death knight and a Retribution paladin", function()
+    local NS, _, IF = enabled(huntersCloak)
+    local f = IF.Get(CLOAK)
+    -- red under: GetItemSpecInfo's hunter-only list refused both (specList), and GetItemStats'
+    -- Agility alone refused both again (primaryStat)
+    assertEqual(NS.Evaluate.Equippability(f, { classFile = "DEATHKNIGHT", specID = 250 }), "ok")
+    assertEqual(NS.Evaluate.Equippability(f, { classFile = "PALADIN", specID = 70 }), "ok")
+    assertEqual(NS.Evaluate.Equippability(f, { classFile = "HUNTER", specID = 253 }), "ok")
+end)
+
 test("item facts: the track tier, by string id first, then by enUS name, else unset", function()
     local NS, m, IF = enabled(function(m) m.addItem(RING, ring()) end)
     assertEqual(IF.TrackTier(nil, "Champion"), 4)

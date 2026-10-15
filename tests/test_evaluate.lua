@@ -441,6 +441,38 @@ test("evaluate: a known spec is judged by the item's own spec list", function()
     assertEqual(E.Evaluate(helm, who("MAGE", 64)).equip, "cant")
 end)
 
+test("evaluate: a spec list read for another class leaves the candidate to the class tables", function()
+    local E = load()
+    -- GetItemSpecInfo answers the playing character's class alone: a hunter's read of a cloak.
+    local cloak = armor(650, "INVTYPE_CLOAK", A.CLOTH, { specs = { [253] = true, [254] = true, [255] = true },
+        specsClass = "HUNTER", stats = { [STR] = 86, [AGI] = 86, [INT] = 86 } })
+    -- red under: the list refusing every spec outside the hunter's class
+    assertEqual(E.Equippability(cloak, who("DEATHKNIGHT", 250)), "ok")
+    assertEqual(E.Equippability(cloak, who("PALADIN", 70)), "ok")
+    assertEqual(E.Equippability(cloak, who("MAGE", 64)), "ok")
+    -- The read's own class is still held to it.
+    local status, why = E.Equippability(armor(650, "INVTYPE_CLOAK", A.CLOTH,
+        { specs = { [253] = true }, specsClass = "HUNTER" }), who("HUNTER", 254))
+    assertEqual(status, "cant"); assertEqual(why, "specList")
+    -- Outside the list's class the class tables decide, primary stat included.
+    assertEqual(E.Equippability(armor(650, "INVTYPE_HEAD", A.PLATE,
+        { specs = { [65] = true }, specsClass = "PALADIN", stats = { [STR] = 80, [INT] = 80 } }), who("WARRIOR", 71)), "ok")
+    status, why = E.Equippability(armor(650, "INVTYPE_HEAD", A.PLATE,
+        { specs = { [65] = true }, specsClass = "PALADIN", stats = { [INT] = 80 } }), who("WARRIOR", 71))
+    assertEqual(status, "cant"); assertEqual(why, "primaryStat")
+end)
+
+test("evaluate: the primary stat check takes every primary the item carries", function()
+    local E = load()
+    local plate = armor(650, "INVTYPE_HEAD", A.PLATE, { stats = { [STR] = 80, [INT] = 80 } })
+    assertEqual(E.Equippability(plate, who("PALADIN", 65)), "ok", "Holy: Intellect")
+    assertEqual(E.Equippability(plate, who("PALADIN", 66)), "ok", "Protection: Strength")
+    local trinket = armor(650, "INVTYPE_TRINKET", A.GENERIC, { stats = { [AGI] = 80 } })
+    local status, why = E.Equippability(trinket, who("DEATHKNIGHT", 250))
+    assertEqual(status, "cant", "a single-stat item still refuses the other primaries")
+    assertEqual(why, "primaryStat")
+end)
+
 test("evaluate: spec unknown falls back to ClassData for armor, jewelry, shields and off hands", function()
     local E = load()
     -- { facts, classFile, expected equip, reason or nil }

@@ -82,8 +82,9 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `GetItemInfo(link)` | `C_Item.GetItemInfo`; copies `{ name, quality, itemLevel, equipLoc, classID, subClassID, bindType, setID }`, plain fields only. A nil or secret name means uncached | `nil` |
 | | `ItemEquipLoc(link)` | `C_Item.GetItemInfoInstant`'s fourth return, the `INVTYPE_*` equip location (`""` for an item you cannot wear); needs no item cache, so the gear snapshot skips bag items with no slot plan before asking for their facts | `nil` |
 | | `GetDetailedItemLevel(link)` | `C_Item.GetDetailedItemLevelInfo`; the effective level | `nil` |
-| | `GetItemStats(link)` | `C_Item.GetItemStats`; every plain string key with a plain number, unknown keys included | `{}` |
-| | `GetItemSpecs(link)` | `C_Item.GetItemSpecInfo`; the list as a set `{ [specID] = true }`, nil for an empty list | `nil` |
+| | `GetItemStats(link)` | `C_Item.GetItemStats`; every plain string key with a plain number, unknown keys included. The client answers the primary stat of the spec playing alone, so `ItemPrimaryStats` supplies the others | `{}` |
+| | `ItemPrimaryStats(link)` | `C_TooltipInfo.GetHyperlink`'s lines read with `ITEM_MOD_STRENGTH`, `_AGILITY` and `_INTELLECT` (`%c` the sign, grouping marks dropped): every primary stat the item carries, the grayed ones included, as `{ [ITEM_MOD_*_SHORT] = n }` | `nil` |
+| | `GetItemSpecs(link)` | `C_Item.GetItemSpecInfo`; the list as a set `{ [specID] = true }`, nil for an empty list. The client lists the specs of the class playing alone, so `modules/ItemFacts.lua` records that class as `specsClass` | `nil` |
 | | `GetItemUniqueness(link)` | `C_Item.GetItemUniquenessByID`'s `(isUnique, name, count, categoryID)`; answers `(categoryID, max)`, categoryID nil for an item unique on its own | `nil, nil` |
 | | `PlayerHasTransmog(link)` | CanIMogIt's `PlayerKnowsTransmog` when that optional addon is loaded (the look known from any source; its `IsTransmogable` false answers nil), each call in `pcall` with a non-boolean answer ignored; else `C_TransmogCollection.PlayerHasTransmogByItemInfo`; a secret answer is nil | `nil` |
 | | `TransmogSource()` | which source answers `PlayerHasTransmog` now: `CanIMogIt`, `C_TransmogCollection` or `none` (the diagnostics' integrations section) | `"none"` |
@@ -221,7 +222,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/Roster.lua` | `NormalizedRealm`, `GlobalString` (`UNKNOWNOBJECT`, a name not yet arrived); `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected` (`core/CompatWorld.lua`) |
 | `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |
 | `core/ItemRead.lua` | `GetItemInfo`, `GetDetailedItemLevel`; `BagItemLevelQuality` (`core/CompatItem.lua`) |
-| `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `PlayerHasTransmog` |
+| `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `ItemPrimaryStats`, `PlayerHasTransmog`; `UnitClass` (`core/CompatWorld.lua`: the class a spec list was read for) |
 | `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc`; `UnitClass` (`core/CompatWorld.lua`) |
 | `modules/LootParser.lua` | `FormatToPattern`, `GlobalString`; `UnitName`, `UnitGUID` (`core/CompatWorld.lua`) |
 | `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |
