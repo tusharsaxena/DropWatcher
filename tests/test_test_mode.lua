@@ -556,12 +556,14 @@ test("window: every cell of every sample row says something and has a reason", f
     end
 end)
 
--- The worn item a sample's looter was inspected wearing, or nil.
+-- The levels a sample's looter was inspected wearing in its slots (`295`, `295/300`), or nil.
 local function wornOf(NS, dropId)
-    local insp = NS.TestMode.InspectOf(NS.LootFeed.Get(dropId))
+    local d = NS.LootFeed.Get(dropId)
+    local insp = NS.TestMode.InspectOf(d)
     if not (insp and insp.gear) then return nil end
-    local _, worn = next(insp.gear)
-    return worn
+    local WC = NS.WindowCells
+    local items = WC.SlotItems(insp.gear, WC.EqSlots(d.facts.equipLoc))
+    return #items > 0 and WC.Levels(items) or nil
 end
 
 test("window: the rows show every ask state, every Them gear state and every trade chip", function()
@@ -574,7 +576,7 @@ test("window: the rows show every ask state, every Them gear state and every tra
         eq[text] = true
         local worn = wornOf(NS, r.dropId)
         if worn then
-            assertEqual(text, tostring(worn.ilvl), "the worn item's real level")
+            assertEqual(text, worn, "the worn items' real levels")
             levels = levels + 1
         end
         trade[textOf(r.cells.trade.text)] = true
@@ -583,6 +585,63 @@ test("window: the rows show every ask state, every Them gear state and every tra
     hasAll(eq, { "…", "range", "combat", "!" }, "their gear: the reason word")
     assertTrue(levels >= 5, "the inspected looters' worn levels")
     hasAll(trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
+end)
+
+-- Your real gear, every slot at 999, so a sample showing it is caught (feedback-18).
+local function wearReal(NS, m)
+    for slot = 1, 17 do
+        local l = ("|cnIQ4:|Hitem:%d::::::::90:::::999|h[Real %d]|h|r"):format(60000 + slot, slot)
+        m.addItem(l, { name = "Real", quality = 4, ilvl = 999, equipLoc = "INVTYPE_HEAD", classID = 4, subClassID = 4,
+            bindType = 1, stats = {} })
+        m.inventory.player[slot] = l
+    end
+    NS.Gear.Refresh("test")
+end
+
+-- A gear map's levels as the Me cell writes them: `292`, `331/335`.
+local function levelsOf(NS, drop)
+    local WC = NS.WindowCells
+    local items = WC.SlotItems(drop.testGear, WC.EqSlots(drop.facts.equipLoc))
+    return #items > 0 and WC.Levels(items) or nil
+end
+
+test("window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)", function()
+    local NS, _, m = T.enableAddon()
+    wearReal(NS, m)
+    m.seedGearJournal()
+    NS.SetTestMode(true)
+    for _, g in ipairs(NS.LootFeed.Groups("test")) do NS.State.windowGroup.collapsed[g.key] = false end
+    NS.ShowWindow()
+    NS.Window.Refresh()
+    local rows, checked = NS.WindowGroup.Drawn().rows, 0
+    for _, r in ipairs(rows) do
+        local d = NS.LootFeed.Get(r.dropId)
+        local level = textOf(r.cells.me.level) or ""
+        -- red under: `You 999`, your real gear beside a verdict judged against the sample's worn item
+        assertFalse(level:find("999", 1, true) ~= nil, "row " .. d.id .. ": " .. level)
+        local want = levelsOf(NS, d)
+        if want then
+            assertEqual(level, want, "row " .. d.id)
+            checked = checked + 1
+        end
+        local base = d.me and d.me.baseline
+        if base then
+            local first = d.testGear[NS.WindowCells.EqSlots(d.facts.equipLoc)[1]]
+            assertEqual(first.link, base.link, "row " .. d.id .. ": the card's Replaces is the first slot's")
+            for _, worn in pairs(d.testGear) do
+                if worn then assertTrue(worn.ilvl >= base.ilvl, "the baseline is the lower one it replaces") end
+            end
+        end
+    end
+    assertTrue(checked >= 10, "most samples show a worn level: " .. checked)
+    NS.SetWindowMode("compact")
+    NS.Window.Refresh()
+    for _, card in ipairs(NS.WindowGroup.Drawn().rows) do
+        local d = NS.LootFeed.Get(card.dropId)
+        local level = textOf(card.cells.you.level) or ""
+        assertFalse(level:find("999", 1, true) ~= nil, "card " .. d.id .. ": " .. level)
+        assertEqual(level, levelsOf(NS, d) or level, "card " .. d.id)
+    end
 end)
 
 test("window: a sample's Them shows its own worn item, and its detail card its own inspect", function()

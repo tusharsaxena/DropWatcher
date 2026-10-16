@@ -432,7 +432,8 @@ end
 local function cardCtx(drop, shared)
     local state, reason = NS.WindowGroup.AskState(drop)
     local insp = NS.TestMode.InspectOf(drop)
-    local ctx = { now = shared.now, equipped = shared.equipped, classFile = shared.classFile, gear = insp and insp.gear, askState = state,
+    local ctx = { now = shared.now, equipped = NS.TestMode.GearOf(drop, shared.equipped), classFile = shared.classFile,
+        gear = insp and insp.gear, askState = state,
         askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm }
     if drop.isMine then   -- your own drop's Offer and Upgrade for N (feedback-5 spec §2)
         local WO = NS.WindowOwn

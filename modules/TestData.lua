@@ -27,6 +27,10 @@ local _, NS = ...
 -- Each drop's age is its countdown's: four hours less what is left. One drop's look is collected
 -- and one's is not, for the look chips and the transmog ask.
 --
+-- YOUR GEAR. A sample carries the worn items its Me verdict was judged against (`testGear`,
+-- TD.GearFor), as it carries the looter's (`testInspect.gear`), so the Me cell, the compact card and
+-- the detail card all read the same items and never your real gear (feedback-18).
+--
 -- THE ITEMS. A sample draws on its group's place: an unused item of its slot there, else (a drop
 -- that must be armor, `strict`) one of that slot from the same content, else any unused item there,
 -- else one of the same content (its slot first), and only then any pool item of its slot, so a
@@ -188,6 +192,23 @@ local function worn(self, equipLoc, target, notLink)
     return best and { link = best.link, ilvl = best.ilvl } or nil
 end
 
+--- A worn item of `equipLoc`'s slot at `floor` or above, the nearest to it, none of `skip`'s links;
+--- nil when the pool has none.
+--- @param equipLoc string
+--- @param floor number
+--- @param skip table { [link] = true }
+--- @return table|nil { link, ilvl }
+local function above(self, equipLoc, floor, skip)
+    local slot, best = slotOf(equipLoc), nil
+    for _, e in ipairs(self.gear) do
+        if slotOf(e.equipLoc) == slot and type(e.ilvl) == "number" and e.ilvl >= floor and not skip[e.link]
+            and (not best or e.ilvl < best.ilvl) then
+            best = e
+        end
+    end
+    return best and { link = best.link, ilvl = best.ilvl } or nil
+end
+
 --- The item source the samples draw on. `drops` are the pool's drops and `gear` its gear (each
 --- { link, itemID, equipLoc, ilvl, and from the journal instance, encounterID, encounter,
 --- difficulty, worldBoss, classID, subClassID }); `factsOf(entry)` answers an entry's item facts or
@@ -196,10 +217,10 @@ end
 --- @param gear table
 --- @param factsOf function
 --- @return table src { Drop(self, spec, where), Worn(self, equipLoc, target, notLink),
----   Place(self, content, n) }
+---   Above(self, equipLoc, floor, skip), Place(self, content, n) }
 function TD.Source(drops, gear, factsOf)
     return { drops = drops or {}, gear = gear or {}, factsOf = factsOf or function() return nil end,
-        used = {}, places = {}, Drop = drop, Worn = worn, Place = place }
+        used = {}, places = {}, Drop = drop, Worn = worn, Above = above, Place = place }
 end
 
 -- ── the people ──────────────────────────────────────────────────────────────────────────────
@@ -331,14 +352,39 @@ local function tradeOf(row, item, them, inspect)
     return trade(t[1], t[2], args, t[3], t[4])
 end
 
--- The looter's inspect entry (status, age, the worn item in the drop's slot, the spec), and the
+--- The worn items in a drop's slots, as the Me and Them cells read them ({ [inventory slot] =
+--- { link, ilvl } | false }; feedback-18): the one the verdict was judged against (`eval`'s baseline,
+--- else the pool item nearest the drop's level), and in a pair's or a one-hander's other slot
+--- another of that slot at least as high, so the baseline is the one the drop replaces; a
+--- two-hander's or a ranged weapon's off hand empty. Nothing for an `unknown` verdict (no gear to
+--- judge by) or an item that is not worn. Pure.
+--- @param src table TD.Source's
+--- @param item table { link, facts }
+--- @param eval table|nil the evaluation the cell shows
+--- @return table gear
+function TD.GearFor(src, item, eval)
+    local loc = item.facts.equipLoc
+    local plan = C.SLOT_PLAN[loc]
+    if not plan or (eval and eval.verdict == "unknown") then return {} end
+    local first = eval and eval.baseline or src:Worn(loc, item.facts.ilvl, item.link)
+    if not first then return {} end
+    local gear = { [plan.slots[1]] = first }
+    local other = plan.slots[2]
+    if other and (plan.kind == "pair" or plan.kind == "weapon1H") then
+        gear[other] = src:Above(loc, first.ilvl, { [first.link] = true, [item.link] = true }) or first
+    elseif other then
+        gear[other] = false
+    end
+    return gear
+end
+
+-- The looter's inspect entry (status, age, the worn items in the drop's slots, the spec), and the
 -- drop's own inspect, the same without the gear, as the feed records it.
-local function inspected(row, now, them, equipLoc)
+local function inspected(src, row, now, them, item)
     local i = row.inspect
     local status, age, reason = i[1], i[2], i[3]
     local good = status == "fresh" or status == "cached"
-    local gear = {}
-    if good and them and them.baseline then gear[slotOf(equipLoc)] = them.baseline end
+    local gear = good and TD.GearFor(src, item, them) or {}
     local at = age and now - age or nil
     return { status = status, reason = reason, at = at, gear = gear,
             specID = good and MEMBERS[row.who].specID or nil },
@@ -349,9 +395,9 @@ local function other(src, now, row, where)
     local item = src:Drop(row, where)
     if not item then return nil end
     if row.look ~= nil then item.facts.transmogKnown = row.look end
-    local them = ev(src, item, row.them)
-    local testInspect, insp = inspected(row, now, them, item.facts.equipLoc)
-    return { looter = looter(row.who), link = item.link, facts = item.facts, me = ev(src, item, row.me),
+    local them, me = ev(src, item, row.them), ev(src, item, row.me)
+    local testInspect, insp = inspected(src, row, now, them, item)
+    return { looter = looter(row.who), link = item.link, facts = item.facts, me = me, testGear = TD.GearFor(src, item, me),
         them = them, trade = tradeOf(row, item, them, insp), testInspect = testInspect, inspect = insp,
         testAsk = row.ask }
 end
@@ -394,7 +440,8 @@ local function mine(src, now, you, row, where)
         local e = cand(src, item, c)
         candidates[e.guid] = e
     end
-    return { looter = you, link = item.link, facts = item.facts, me = ev(src, item, row.me),
+    local me = ev(src, item, row.me)
+    return { looter = you, link = item.link, facts = item.facts, me = me, testGear = TD.GearFor(src, item, me),
         trade = tradeMine(now, row.trade), candidates = candidates }
 end
 

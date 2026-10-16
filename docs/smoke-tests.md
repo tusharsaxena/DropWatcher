@@ -250,8 +250,10 @@ Adventure Guide → it is where you left it (tier, instance, difficulty, filters
 Great Vault preview shows is unchanged. Open History → about twenty-two groups from yesterday back to four
 weeks ago: Mythic+ 10 runs, Heroic dungeon bosses (one or two drops each, five people), Heroic, Mythic and
 LFR raid bosses (four or five drops, twenty or twenty-five people) and world bosses with no instance and
-no difficulty, the situation word `Open world group` instead. `/dw test` off → your own History is back.
-Result:
+no difficulty, the situation word `Open world group` instead. On Drops, expand any row whose Me has a
+level → the detail card's `Replaces … · N` is the row's first `You` level (a ring or trinket row reads
+`N/M`, M at least N), never your own equipped item's level, in both layouts (feedback-18). `/dw test` off →
+your own History is back. Result:
 
 ## Compat
 

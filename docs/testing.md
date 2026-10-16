@@ -205,7 +205,8 @@ items the nearest of their slot, an empty pool giving none; feedback-17's realis
 size its content brings (five, twenty, twenty-five), the session's four groups and sixteen drops,
 History's twenty-plus groups across every content within 30 days, each group one real place whose
 loot is that boss's or dungeon's at the group's difficulty, the keys' loot read at Mythic+ 10 with the
-journal's preview put back; the History sample with every outcome;
+journal's preview put back; feedback-18's Me: with your real gear all at 999, every sample's You in both
+layouts is its own worn gear, the first slot the item its detail card replaces; the History sample with every outcome;
 `AddTest` and the test feed filled from the mock journal's pool (`seedGearJournal`) and emptied
 with test mode, while the pool loads, with no pool at all, by combat and by the stand-down; the
 History tab's samples never written to `global.history`; the window built headless with every

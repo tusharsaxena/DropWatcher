@@ -643,7 +643,7 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (32)
+### test_test_mode.lua (33)
 
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -669,6 +669,7 @@ Total.
 - window: test mode draws every sample, under the key run and the three bosses, with real icons
 - window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Them gear state and every trade chip
+- window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)
 - window: a sample's Them shows its own worn item, and its detail card its own inspect
 - window: Drops lists your samples with the others, and its strip counts the tradeable ones
 - window: the empty state comes back once test mode ends with nothing in the live feed
@@ -1750,7 +1751,7 @@ Total.
 | test_offer_panel.lua | 17 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 32 |
+| test_test_mode.lua | 33 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
@@ -1800,4 +1801,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1478** |
+| **Total** | **1479** |
