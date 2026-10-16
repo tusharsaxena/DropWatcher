@@ -148,7 +148,7 @@ test("compact history: the strip is the kept-history line and the toggle, no Cle
     local K = NS.Constants.WINDOW
     -- red under: Clear history on the compact strip beside the toggle
     assertTrue(drawn.strip.clear == nil, "Clear history lives in Settings")
-    assertEqual(drawn.strip.fold:GetWidth(), K.FOOTER_BUTTON_W)
+    assertEqual(drawn.strip.fold:GetWidth(), K.FOOTER_ICON_W, "the toggle its icon (feedback-16)")
     assertEqual(textOf(drawn.strip.info), "2 groups, 3 drops · kept for 30 days")
     NS.SetWindowMode("full")
     drawn = NS.WindowHistory.Drawn()

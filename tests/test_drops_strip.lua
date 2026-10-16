@@ -208,7 +208,7 @@ test("drops strip: Scan group goes through the shared handler", function()
     assertEqual(scanned, 1)
 end)
 
-test("drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the toggle and Post", function()
+test("drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the same without Sort, icon wide", function()
     local NS = T.enableAddon()
     local DS = NS.DropsStrip
     local function keys(row)
@@ -218,8 +218,9 @@ test("drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compa
     end
     assertEqual(keys(DS.Row(true, false)), "sort,fold,scan,post")
     assertEqual(keys(DS.Row(false, false)), "sort,fold,scan,post-", "Post hidden, the rest keep their places")
-    assertEqual(keys(DS.Row(true, true)), "fold,post")
-    assertEqual(keys(DS.Row(false, true)), "fold,post-")
+    assertEqual(keys(DS.Row(true, true)), "fold,scan,post")
+    assertEqual(keys(DS.Row(false, true)), "fold,scan,post-")
+    assertEqual(DS.Row(true, true)[1].w, NS.Constants.WINDOW.FOOTER_ICON_W, "compact's buttons are icons")
 end)
 
 test("drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary", function()
@@ -328,16 +329,16 @@ end)
 
 -- ── the strip, compact layout ───────────────────────────────────────────────────────────────
 
-test("drops strip: under the compact cards, the summary shortened, Post my tradeables as in the full layout", function()
+test("drops strip: under the compact cards, the summary shortened, Post my tradeables its icon", function()
     local NS, drawn = shownMine(true)
     local K, FR = NS.Constants.WINDOW, NS.FooterRow
     assertTrue(drawn.compact)
     local strip = drawn.pane.summary
     assertTrue(strip:IsShown())
     assertEqual(textOf(strip.info.text), "3 tradeable · next 0:08:41")
-    assertEqual(textOf(strip.post.label), "Post my tradeables"); assertEqual(strip.post:GetWidth(), K.FOOTER_BUTTON_W)
-    assertEqual(select(3, anchorOf(strip.post)), -(K.FOOTER_BUTTON_W + FR.GAP), "left of the toggle")
-    assertFalse(strip.scan:IsShown(), "compact's Scan group is the title bar's icon")
+    assertEqual(strip.post:GetWidth(), K.FOOTER_ICON_W); assertFalse(strip.post.label:IsShown())
+    assertEqual(select(3, anchorOf(strip.post)), -2 * (K.FOOTER_ICON_W + FR.GAP), "left of Scan group")
+    assertTrue(strip.scan:IsShown(), "Scan group on the strip, as in full (feedback-16)")
     assertEqual(NS.Window.TooltipOf(strip.post)[1], "Post my tradeables", "the tooltip is unchanged")
     assertEqual(drawn.summary.count, 3)
     assertEqual(bottomOf(drawn.scroll), K.STRIP_H, "the cards end over it")

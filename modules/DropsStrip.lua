@@ -1,8 +1,8 @@
 local _, NS = ...
 -- modules/DropsStrip.lua — the Drops tab's summary strip (feedback-5 spec §3, DW-E3): how many of
 -- your drops the tab lists you can still trade, the next of their trade windows to run out, Post my
--- tradeables, Expand all / Collapse all and (full layout) Scan group, under the table (or the
--- compact cards) and above the footer.
+-- tradeables, Expand all / Collapse all and Scan group, under the table (or the compact cards) and
+-- above the footer.
 --
 -- WHEN IT SHOWS. Always, in both layouts (feedback-7 spec §4 for the full one; feedback-15 spec §2
 -- for compact, where the toggle lives there now): with nothing tradeable its summary is empty and
@@ -10,11 +10,12 @@ local _, NS = ...
 -- Window.TabContext's `matches`), collapsed under their header or not. What it says is
 -- NS.MineCells.Summary's (pure): `2 tradeable · next expiry 0:08:41`.
 --
--- THE ROW (feedback-15 spec §2, NS.FooterRow), right-aligned, every button the one footer width
--- (K.FOOTER_BUTTON_W) with the same label in both layouts. Full: `[Post my tradeables] [Scan group]
--- [Expand all] [Sort]`, the tab's Sort (NS.WindowFooter's control, anchored here through
--- `pane.sortHost`) at the strip's right edge (NS.WindowFooter.SORT_INSET). Compact: `[Post my
--- tradeables] [Expand all]` (Sort is in the Filters panel, Scan group the title bar's icon). Post,
+-- THE ROW (feedback-15 spec §2, NS.FooterRow), right-aligned. Full, every button the one footer
+-- width (K.FOOTER_BUTTON_W) with its label: `[Post my tradeables] [Scan group] [Expand all] [Sort]`,
+-- the tab's Sort (NS.WindowFooter's control, anchored here through `pane.sortHost`) at the strip's
+-- right edge (NS.WindowFooter.SORT_INSET). Compact, the same buttons as their marks alone
+-- (K.FOOTER_ICON_W, FooterRow.SetCompact; feedback-16), their tooltips naming them: `[Post] [Scan
+-- group] [Expand all]` (Sort is in the Filters panel; Scan group is the title bar's icon too). Post,
 -- the leftmost, shows only while one of your drops the tab lists can be traded; the summary ends
 -- where the row starts, one line, cut with an ellipsis when the row is narrow.
 --
@@ -27,10 +28,10 @@ local _, NS = ...
 -- yours you can still trade; Scan group through NS.ScanGroup, as the title bar's and the empty
 -- state's do.
 --
--- THE EMPTY STATE (board 06 D, feedback-7 spec §4) is built here too (DS.BuildEmpty, peeled out of
--- modules/WindowGroup.lua, which shows it while the feed holds no drop at all): `No drops yet`, a
--- line on what the table will hold, and Preview with test data (NS.SetTestMode) beside Scan group,
--- centered as a pair under the text.
+-- THE EMPTY STATE (board 06 D) is built here too (DS.BuildEmpty, peeled out of
+-- modules/WindowGroup.lua, which shows it while the feed holds no drop at all): `No drops yet` and a
+-- line on what the table will hold. Its Preview with test data and Scan group buttons (feedback-7
+-- spec §4) left it in feedback-16: Scan group is on the strip and the title bar, test mode `/dw test`.
 
 NS.DropsStrip = NS.DropsStrip or {}
 local DS = NS.DropsStrip
@@ -62,17 +63,17 @@ function DS.SummaryText(s)
 end
 
 --- The strip's row, right to left, for NS.FooterRow.Slots (pure): full `Sort · Expand/Collapse ·
---- Scan group · Post my tradeables`, compact `Expand/Collapse · Post my tradeables`, Post shown
---- only while something of yours is tradeable (feedback-15 spec §2).
+--- Scan group · Post my tradeables`, compact `Expand/Collapse · Scan group · Post` as icons, Post
+--- shown only while something of yours is tradeable (feedback-15 spec §2, feedback-16).
 --- @param tradeable boolean
 --- @param compact boolean
 --- @return table
 function DS.Row(tradeable, compact)
-    local w = K.FOOTER_BUTTON_W
+    local w = NS.FooterRow.Width(compact)
     local row = {}
     if not compact then row[#row + 1] = { key = "sort", w = NS.WindowFooter.SORT_W } end
     row[#row + 1] = { key = "fold", w = w }
-    if not compact then row[#row + 1] = { key = "scan", w = w } end
+    row[#row + 1] = { key = "scan", w = w }
     row[#row + 1] = { key = "post", w = w, shown = tradeable }
     return row
 end
@@ -120,19 +121,11 @@ end
 
 -- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
 
-local function previewTip()
-    return L["Preview with test data"], L["Turns test mode on: sample drops of real items in every state, so the window can be checked anywhere. Nothing is whispered, and combat ends it."]
-end
-
-local PREVIEW_W, PAIR_GAP = 160, 8
-
--- No drop at all yet: what the table will hold, and the two ways to fill it now, centered as a pair
--- under the text (feedback-7 spec §4) in both layouts: they sit in one frame as wide as both and
--- their gap, centered on the text, so the wider Preview does not push the pair left.
+-- No drop at all yet: what the table will hold, in both layouts (no button: feedback-16).
 --- Build the Drops pane's empty state (board 06 D), hidden; WindowGroup shows it while the feed
 --- holds no drop at all.
 --- @param pane table the Drops pane
---- @return table frame { title, text, pair, preview, scan }
+--- @return table frame { title, text }
 function DS.BuildEmpty(pane)
     local e = CreateFrame("Frame", nil, pane)
     e:SetSize(K.EMPTY_W, K.EMPTY_H)
@@ -143,16 +136,6 @@ function DS.BuildEmpty(pane)
     e.text = e:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     e.text:SetPoint("TOP", e.title, "BOTTOM", 0, -8)
     e.text:SetText(L["Loot your group receives appears here, grouped by boss."])
-    local W = NS.Window
-    e.pair = CreateFrame("Frame", nil, e)
-    e.pair:SetSize(PREVIEW_W + PAIR_GAP + K.SCAN_W, K.CONTROL_H)
-    e.pair:SetPoint("TOP", e.text, "BOTTOM", 0, -12)
-    e.preview = W.TextButton(e.pair, PREVIEW_W, "eye", L["Preview with test data"], function() NS.SetTestMode(true) end)
-    e.preview:SetPoint("LEFT", e.pair, "LEFT", 0, 0)
-    W.AttachTooltip(e.preview, previewTip)
-    e.scan = W.TextButton(e.pair, K.SCAN_W, "people", L["Scan group"], function() NS.ScanGroup() end)
-    e.scan:SetPoint("RIGHT", e.pair, "RIGHT", 0, 0)
-    W.AttachTooltip(e.scan, NS.WindowTitleBar.ScanTip)
     e:Hide()
     return e
 end
@@ -171,6 +154,7 @@ end
 local function placeButtons(strip, tradeable, compact)
     local FR = NS.FooterRow
     local slots = FR.Slots(DS.Row(tradeable, compact), FR.GAP, compact and 0 or NS.WindowFooter.SORT_INSET)
+    for _, b in ipairs({ strip.fold, strip.scan, strip.post }) do FR.SetCompact(b, compact) end
     FR.Place(strip, strip.fold, slots.fold)
     FR.Place(strip, strip.scan, slots.scan)
     FR.Place(strip, strip.post, slots.post)

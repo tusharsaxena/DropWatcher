@@ -162,8 +162,18 @@ test("footer row: compact Drops is always shown: the toggle at the right, Post m
     local strip = drawn.pane.summary
     -- red under: compact hid the strip while nothing of yours was tradeable
     assertTrue(strip:IsShown(), "nothing tradeable, the toggle still there")
-    assertTrue(strip.fold:IsShown()); assertEqual(select(3, anchorOf(strip.fold)), 0)
-    assertFalse(strip.post:IsShown()); assertFalse(strip.scan:IsShown(), "Scan group is the title bar's icon")
+    local step = K.FOOTER_ICON_W + FR.GAP
+    -- red under: compact's buttons 150 wide with their labels, and no Scan group on its strip (feedback-16)
+    for _, b in ipairs({ strip.fold, strip.scan }) do
+        assertTrue(b:IsShown()); assertEqual(b:GetWidth(), K.FOOTER_ICON_W, "icon only")
+        assertFalse(b.label:IsShown(), "no label"); assertTrue(b.art:IsShown(), "its mark")
+        assertEqual(b.art.__points[1][1], "CENTER", "the mark centered")
+    end
+    assertEqual(select(3, anchorOf(strip.fold)), 0)
+    assertEqual(select(3, anchorOf(strip.scan)), -step, "Scan group beside the toggle, as in full")
+    assertEqual(NS.Window.TooltipOf(strip.scan)[1], "Scan group", "the tooltip names it")
+    assertFalse(strip.post:IsShown())
+    assertEqual(select(2, rightOf(strip.info)), -(2 * step))
     assertEqual(textOf(strip.info.text), "")
     NS.SetWindowMode("full")
     NS.LootFeed.Drops()[3].isMine = true
@@ -172,11 +182,17 @@ test("footer row: compact Drops is always shown: the toggle at the right, Post m
     NS.SetWindowMode("compact")
     drawn = NS.WindowGroup.Drawn()
     assertTrue(strip.post:IsShown())
-    assertEqual(textOf(strip.post.label), "Post my tradeables", "the same label in both layouts")
-    assertEqual(strip.post:GetWidth(), K.FOOTER_BUTTON_W)
-    assertEqual(select(3, anchorOf(strip.post)), -(K.FOOTER_BUTTON_W + FR.GAP))
-    assertEqual(select(2, rightOf(strip.info)), -(2 * K.FOOTER_BUTTON_W + 2 * FR.GAP))
+    assertEqual(strip.post:GetWidth(), K.FOOTER_ICON_W); assertFalse(strip.post.label:IsShown())
+    assertEqual(NS.Window.TooltipOf(strip.post)[1], "Post my tradeables", "the tooltip names it")
+    assertEqual(select(3, anchorOf(strip.post)), -(2 * step))
+    assertEqual(select(2, rightOf(strip.info)), -(3 * step))
     assertTrue(drawn.summary ~= nil)
+    NS.SetWindowMode("full")
+    for _, b in ipairs({ strip.fold, strip.scan, strip.post }) do
+        assertEqual(b:GetWidth(), K.FOOTER_BUTTON_W, "full takes the width back")
+        assertTrue(b.label:IsShown()); assertEqual(b.art.__points[1][1], "LEFT")
+    end
+    assertEqual(textOf(strip.post.label), "Post my tradeables")
 end)
 
 test("footer row: History, full Sort then the toggle, compact the toggle; no Clear history", function()
@@ -195,7 +211,9 @@ test("footer row: History, full Sort then the toggle, compact the toggle; no Cle
     NS.SetWindowMode("compact")
     assertTrue(NS.WindowHistory.Drawn().compact == true)
     assertEqual(select(3, anchorOf(strip.fold)), 0)
-    assertEqual(select(2, rightOf(strip.info)), -(K.FOOTER_BUTTON_W + FR.GAP))
+    assertEqual(strip.fold:GetWidth(), K.FOOTER_ICON_W, "icon only in compact")
+    assertFalse(strip.fold.label:IsShown())
+    assertEqual(select(2, rightOf(strip.info)), -(K.FOOTER_ICON_W + FR.GAP))
 end)
 
 -- ── Expand all / Collapse all ───────────────────────────────────────────────────────────────
@@ -206,6 +224,8 @@ test("footer row: the Drops toggle opens every shown header, then closes them, i
         local fold = drawn.pane.summary.fold
         assertEqual(collapsedHeaders(drawn), 2, mode .. ": the older two collapsed by default")
         assertEqual(textOf(fold.label), "Expand all", mode)
+        -- red under: the expand-down / collapse-up marks (feedback-16 picks the chevrons)
+        assertEqual(fold.art:GetTexture(), NS.Icon("chevron-down"), mode)
         assertTrue(fold:IsEnabled())
         assertEqual(NS.Window.TooltipOf(fold)[1], "Expand all")
         fold:__fire("OnClick")
@@ -213,6 +233,7 @@ test("footer row: the Drops toggle opens every shown header, then closes them, i
         assertEqual(collapsedHeaders(drawn), 0, mode .. ": every one open")
         assertEqual(#drawn.rows, 3, mode)
         assertEqual(textOf(fold.label), "Collapse all", mode)
+        assertEqual(fold.art:GetTexture(), NS.Icon("chevron-up"), mode)
         assertEqual(NS.Window.TooltipOf(fold)[1], "Collapse all")
         fold:__fire("OnClick")
         drawn = NS.WindowGroup.Drawn()

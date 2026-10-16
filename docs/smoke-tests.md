@@ -36,7 +36,7 @@ passed.
 | TOAST-1..4 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
-| COMPACT-1..8 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15) |
+| COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 
 ## Before you start
@@ -189,8 +189,8 @@ each ticking the state it shows and toggling it. Result:
 
 **STATE-3. Test mode populates every drop state.** Solo, outside an instance and out of combat, open the
 window with no drop yet → the Drops tab shows `No drops yet`,
-`Loot your group receives appears here, grouped by boss.` and two buttons, each with a tooltip; Scan group
-answers in chat. Click Preview with test data → test mode turns on, bright-red `TEST MODE` text sits beside
+`Loot your group receives appears here, grouped by boss.` (no button since feedback-16). Type `/dw test`
+→ test mode turns on, bright-red `TEST MODE` text sits beside
 the title and an amber banner (`Nothing is whispered. Combat ends it.`) above the table, both with the same
 tooltip; View reads All. Two groups show, `Placeholder boss` open and `Placeholder key run` collapsed;
 expand it (since DW-84 the items are real: see STATE-4). Across the rows: Me shows ▲ ≈ ▼, Can't use, Not
@@ -410,7 +410,7 @@ the item wins: record the item and both verdicts. Result:
 **FEED-8. The window's shell.** `/dw show` on a clean `/reload` → a window about 1038 × 600 (since DW-F1; 1132 from DW-E4)
 with the Ka0s edge (a hard black line with a gray line inside it), the gold `Ka0s Drop Watcher` title
 centered on the title bar (no logo), a `Scan group` button with a people mark (since DW-G4 on the Drops
-strip in the full layout, the title bar's icon in compact: FEED-63), a minimize mark and the close
+strip, the title bar's icon in compact too: FEED-63, feedback-16), a minimize mark and the close
 mark; the `Drops` tab gold with a gold underline, `History` gray (two tabs since DW-E3); the filter bar reads
 `View: All`, `Quality: Rare+`, `Content: This session` (`This instance` until feedback-13, FEED-75) and the `Filter looter or item…` box (no checkbox:
 DW-A1 made them View values, FEED-20); the footer reads `Inspect: no group`, `No loot seen yet` (or
@@ -1054,7 +1054,8 @@ row reads `[Post my tradeables] [Scan group] [Expand all] [Sort]`; FEED-78.) Res
 `15-empty-state-full.png` and `16-empty-state-compact.png` show the pair pushed left. With no drop at all
 (out of test mode, `/dw clear`) → `No drops yet`, its line, then `Preview with test data`
 and `Scan group` side by side with a small gap, the pair's middle under the text's middle, in the full and
-the compact layout. Result:
+the compact layout. **Superseded by feedback-16 (2026-10-16):** the empty state has no button; COMPACT-9
+checks it. Result:
 
 **FEED-65. When to show as one table (DW-H0, feedback-8 spec §0).** The headless `test_settings_pages`
 (the `when to show:` cases) covers the rows, the paint, the writes, the dimming, Defaults, a profile switch
@@ -1218,7 +1219,8 @@ stay as they were. `/dw compact` → Drops' strip shows even with nothing of you
 right and `Post my tradeables` (full label, same width) left of it while something is tradeable, no `Post`;
 Sort is in the Filters panel and Scan group the title bar's icon; History's strip reads `Expand all` with
 `Clear history` (no `Clear`) left of it; the toggle opens and closes the cards' headers on both tabs. (Since
-DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6.) Result:
+DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6. Since feedback-16 compact's
+strip buttons are icons alone and Drops' carries Scan group too: COMPACT-9.) Result:
 
 ## Roster
 
@@ -2011,6 +2013,16 @@ gold header starts beside its chevron, the difficulty reads `LFR`, and a long in
 ends in `…` on its own piece while the age, the count and the recorder stay on the line; hovering the header
 shows the whole names in the long form. Result:
 
+**COMPACT-9. The compact strips are icons, the toggle chevrons, the empty state bare (feedback-16).** The
+headless `test_footer_row`, `test_drops_strip` and `test_window_group` cover the placement. `/dw compact` with
+something of yours tradeable → the Drops strip reads, right to left, an up/down chevron (Expand all /
+Collapse all), the people mark (Scan group) and the speech bubble (Post my tradeables), each a small square
+with no label, and hovering each names it with its line; the summary on the left has room. Nothing of yours
+tradeable → the chevron and the people mark. History's strip → the chevron alone. Click each → it does what
+its full button does. `/dw full` → the labeled buttons again, the toggle's mark a chevron there too. With
+no drop at all (`/dw clear`, out of test mode) → `No drops yet` and its line, no button, in both layouts.
+Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -2165,6 +2177,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
 | COMPACT-2, COMPACT-7 | DW-C2, compact Drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
 | COMPACT-8 | feedback-15, compact headers left aligned, LFR, per-piece limits | No client pass recorded yet |
+| COMPACT-9 | feedback-16, compact strip buttons icon only with Scan group, chevron toggle, empty state without buttons | No client pass recorded yet |
 | COMPACT-3, COMPACT-4 | DW-C3, compact cards of your own drops (on Drops since DW-E3) and History cards, the countdown, Offer and the strip, the docked Offer panel | No client pass recorded yet |
 | COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |
 | ASK-1 (its `noChannel` sentence), ASK-10 | DW-P17, a stored announce channel honors the not-in-a-group refusal, Post my tradeables included | No client pass recorded yet |

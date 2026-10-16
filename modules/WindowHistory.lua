@@ -598,9 +598,12 @@ local function drawEntries(pane, entries, layout, width, now)
 end
 
 -- The strip's row, right to left (feedback-15 spec §2, §3): full `Sort · Expand/Collapse`, compact
--- `Expand/Collapse`; the tab's Sort is anchored in its slot by NS.WindowFooter.AnchorSort.
+-- `Expand/Collapse` as its mark alone (feedback-16); the tab's Sort is anchored in its slot by
+-- NS.WindowFooter.AnchorSort.
 local function placeStrip(strip, compact)
-    local FR, WF, w = NS.FooterRow, NS.WindowFooter, K.FOOTER_BUTTON_W
+    local FR, WF = NS.FooterRow, NS.WindowFooter
+    local w = FR.Width(compact)
+    FR.SetCompact(strip.fold, compact)
     local row = { { key = "fold", w = w } }
     if not compact then table.insert(row, 1, { key = "sort", w = WF.SORT_W }) end
     local slots = FR.Slots(row, FR.GAP, compact and 0 or WF.SORT_INSET)

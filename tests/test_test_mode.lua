@@ -550,7 +550,8 @@ end)
 
 test("labels: no button the addon builds is labeled with a trailing ellipsis", function()
     local files = { "modules/WindowTitleBar.lua", "modules/WindowGroup.lua", "modules/DropsStrip.lua",
-        "modules/OfferPanel.lua", "modules/WindowHistory.lua", "modules/DetailCard.lua", "modules/Toast.lua" }
+        "modules/OfferPanel.lua", "modules/WindowHistory.lua", "modules/DetailCard.lua", "modules/Toast.lua",
+        "modules/FooterRow.lua", "modules/HistoryCard.lua" }
     local buttons = 0
     for _, path in ipairs(files) do
         local fh = assert(io.open(path, "rb"))

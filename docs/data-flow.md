@@ -77,8 +77,8 @@ filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, 
                              (Sort on the active tab's strip in the full layout, re-anchored by
                              WindowFooter.AnchorSort on every full pass; feedback-10 §3)
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine;
-                             the Drops strip's button in the full layout, the title bar's icon in
-                             compact, the empty state's; feedback-7 §4)
+                             the Drops strip's button (its icon alone in compact, feedback-16)
+                             and the title bar's icon in compact; feedback-7 §4)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
 resize (grip released) ────> the whole repaint (the table's columns take the new width); never
                              under the layout's least width, its default (full 1038, compact 440;
@@ -175,8 +175,8 @@ row hover ─────> a cell, button or header: Window.AttachTooltip ("row"
                  released on the next Begin, on hide and on OnTooltipCleared
 NS.SetWindowMode ─> SchemaRuntime.Set("window.mode") ─> WindowCompact.OnModeChanged ─> Apply
 row click ─────> WindowGroup.ToggleExpand(id) ─> State.windowGroup.expanded ─> repaint
-no drop at all > the empty state (DropsStrip.BuildEmpty; the two buttons centered as a pair,
-                 feedback-7 §4): Preview with test data ─> NS.SetTestMode(true); Scan group ─> NS.ScanGroup
+no drop at all > the empty state (DropsStrip.BuildEmpty: `No drops yet` and its line, no button
+                 since feedback-16)
 ```
 
 In the compact layout (`WindowGroup.IsCompact()`, compact spec §2) the same refresh computes the
@@ -199,7 +199,7 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     CompactGroup.PlaceThem's fixed gap after You, cut at the card's right inset (feedback-11 §0);
   │     feedback-6 §1, feedback-7 §2)
   └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
-        `[Post my tradeables] [Expand all]` at the one footer width (feedback-15 §2)
+        `[Post] [Scan group] [Expand all]` as icons alone, FOOTER_ICON_W wide (feedback-16)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
 piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
 switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)

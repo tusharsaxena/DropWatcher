@@ -409,7 +409,7 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (50)
+### test_window_group.lua (48)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -452,9 +452,7 @@ Total.
 - table: with no countdown running (nothing tradeable, or the column off) no each-second ticker runs
 - table: a column the profile turns off is not drawn
 - table: the filter bar filters the rows, and the empty line says why nothing shows
-- table: with no drop at all the empty state says so, with Preview with test data and Scan group
-- table: the empty state's two buttons are centered as a pair under its text
-- table: the empty state's buttons turn test mode on and scan the group
+- table: with no drop at all the empty state says so, and holds no button
 - table: PressAsk says why it asked nobody: your own drop, a gone drop, the addon disabled
 - cells: ActionTone is red for your move, yellow while waiting, green once done
 - cells: an Offer is cyan while it is your move, its other states as any button's (feedback-6 spec §2)
@@ -570,14 +568,14 @@ Total.
 - drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)
 - drops strip: Sort follows the active tab to History's strip, right of the toggle, and back
 - drops strip: Scan group goes through the shared handler
-- drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the toggle and Post
+- drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the same without Sort, icon wide
 - drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary
 - drops strip: compact, shown while none of your listed drops can be traded: no summary, no Post (feedback-15 spec §2)
 - drops strip: it counts the drops the tab lists, its filters applied, collapsed or not
 - drops strip: its next expiry moves each second with the countdowns
 - drops strip: its next expiry keeps the each-second ticker running with no row's countdown drawn
 - drops strip: Post my tradeables goes through the shared handler
-- drops strip: under the compact cards, the summary shortened, Post my tradeables as in the full layout
+- drops strip: under the compact cards, the summary shortened, Post my tradeables its icon
 - drops strip: the compact countdown tick moves its next expiry too
 
 ### test_footer_row.lua (8)
@@ -1737,7 +1735,7 @@ Total.
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 50 |
+| test_window_group.lua | 48 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 21 |
 | test_detail_card.lua | 21 |
@@ -1798,4 +1796,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1476** |
+| **Total** | **1474** |
