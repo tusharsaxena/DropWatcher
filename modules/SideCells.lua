@@ -14,6 +14,9 @@ local _, NS = ...
 -- side, red down); `Can't use` and `Not wanted` stay words (gray). An unknown verdict's `?` is left
 -- out when the gear part already says why (a state word), and shown when it does not. A dash in the
 -- gear part goes when the verdict part has something to say.
+-- OFF-SPEC (feedback-19 spec §1): a verdict cell of NS.OffSpecCells (`offSpec` set) is followed by
+-- its spec's name, `▲20 Holy`, in the offspec cyan, and the Me cell's gear part is the item it was
+-- compared with (OffSpecCells.Eq: a bag item, a worn one or `empty`), not what you wear.
 -- YOUR OWN DROP'S THEM is MineCells.Details's `Upgrade for N` (or `No upgrades`, `Hidden`), its tones and its tooltip.
 -- History keeps no worn items, so its cells are the verdict part alone (SC.Merge with no gear).
 -- THE OFFER PANEL'S THEIR EQ (feedback-7 spec §0) is the same cell for one candidate (SC.Candidate):
@@ -32,7 +35,8 @@ local _, NS = ...
 -- (modules/WindowGroup.lua, modules/WindowHistory.lua) and the compact cards' line 3 reads it
 -- (modules/CompactCards.lua).
 --
---   cell = { items, level, levelTone, glyph, text, tone, tip, verdict, upgrades, hidden }
+--   cell = { items, level, levelTone, glyph, text, tone, tip, verdict, upgrades, hidden,
+--            offSpec, mainVerdict }   (the last two an off-spec cell's)
 --   (`level` nil with no gear part; `text` "" when the verdict part is left out)
 
 NS.SideCells = NS.SideCells or {}
@@ -41,6 +45,7 @@ local L  = NS.L
 local WC = NS.WindowCells
 local MC = NS.MineCells
 local TM = NS.TipMarks
+local OC = NS.OffSpecCells
 
 local DASH = "–"
 
@@ -76,7 +81,7 @@ local function gearGrid(eq, v)
     local items = eq.gridItems or (type(eq.items) == "table" and eq.items) or {}
     local empty = eq.empty or 0
     if #items == 0 and empty == 0 then return nil end
-    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta), v.base))
+    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta, v.offSpec and v.tone), v.base))
 end
 
 -- The verdict's title, the gear grid (else the verdict's own), the gear's lines after its title,
@@ -109,18 +114,21 @@ function SC.Merge(v, eq)
     local level, levelTone = gearPart(eq)
     local glyph, text = verdictPart(v, level)
     if level == DASH and (glyph or text ~= "") then level, levelTone = nil, nil end
+    if v.spec then text = text == "" and v.spec or ("%s %s"):format(text, v.spec) end   -- `▲20 Holy`
     return { items = type(eq) == "table" and eq.items or {}, level = level, levelTone = levelTone,
         glyph = glyph, text = text, tone = v.tone, tip = mergedTip(eq, v), verdict = v.verdict,
-        upgrades = v.upgrades, hidden = v.hidden }
+        upgrades = v.upgrades, hidden = v.hidden, offSpec = v.offSpec, mainVerdict = v.mainVerdict }
 end
 
---- The Me cell: what you wear in the drop's slot (your gear snapshot's) and the drop judged for you.
+--- The Me cell: what you wear in the drop's slot (your gear snapshot's) and the drop judged for you;
+--- for an off-spec verdict, the item it was compared with in place of what you wear.
 --- @param drop table
 --- @param equipped table|nil the gear snapshot's `equipped`
 --- @param classFile string|nil your class (the snapshot's), for the tooltip grid's `You`
 --- @return table cell
 function SC.Me(drop, equipped, classFile)
-    return SC.Merge(WC.Me(drop, classFile), WC.MyEq(drop, equipped))
+    local v = WC.Me(drop, classFile)
+    return SC.Merge(v, v.offSpec and OC.Eq(v) or WC.MyEq(drop, equipped))
 end
 
 --- The Them cell: what the looter wears there (their inspect read's) and the drop judged for them;

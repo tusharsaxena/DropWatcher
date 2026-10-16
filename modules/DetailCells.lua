@@ -12,6 +12,12 @@ local _, NS = ...
 -- card and the row it expands never disagree; on your own drop (feedback-5 spec §2) the Them row's
 -- `Upgrade for N` (feedback-7 spec §2) and the Offer in place of Ask are modules/MineCells.lua's, as the row's are.
 --
+-- OFF-SPEC (feedback-19 spec §1). A `cantUse` with an off-spec part (NS.OffSpec.Of) takes its FOR
+-- YOU chip (`OFF-SPEC UPGRADE`, in the offspec cyan) and its Replaces, Item level, Track and Stats
+-- rows from that part, with a Spec row first (NS.OffSpecCells.SpecRow); a bag item it was compared
+-- with sets no `wornSlot`, so its tooltip is read from its link. The score row says off-spec is
+-- judged on item level alone.
+--
 -- NO GLYPHS. The card draws in the default face, which has no `→` and no `▲ ≈ ▼` (feedback-6 spec
 -- §3, DW-F5): the verdict chip's mark, the Item level and Track rows' arrow and the Track row's mark
 -- are NS.TipMarks' inline textures (TM.Mark, TM.Arrow), never the table cells' monospace glyphs.
@@ -65,6 +71,11 @@ local BIND_CHIP = {
 local VERDICT_CHIP = {
     upgrade = L["UPGRADE"], sidegrade = L["SIDEGRADE"], downgrade = L["DOWNGRADE"],
     cantUse = L["CAN'T USE"], doesntWant = L["DOESN'T WANT"], unknown = L["UNKNOWN"],
+}
+
+-- An off-spec verdict's chip (feedback-19 spec §1).
+local OFF_SPEC_CHIP = {
+    upgrade = L["OFF-SPEC UPGRADE"], sidegrade = L["OFF-SPEC SIDEGRADE"], downgrade = L["OFF-SPEC DOWNGRADE"],
 }
 
 local TRADE_CHIP = {
@@ -297,9 +308,12 @@ local SCORER_LINE = {
     none    = { label = L["Score"], none = L["No scorer is in use: the verdict uses item level alone."] },
 }
 
-local function scoreRow(eval, scorer)
+local function scoreRow(eval, scorer, offSpec)
     if scorer == true then scorer = "pawn" end
     local line = SCORER_LINE[scorer] or SCORER_LINE.none
+    if offSpec then
+        return row("score", line.label, DASH, "muted", L["Score"], L["Off-spec is judged on item level alone."])
+    end
     local sd = type(eval) == "table" and num(eval.scoreDelta) or nil
     if sd then
         return row("score", line.label, ("%+.1f"):format(sd), sd >= 0 and "good" or "bad", L["Score"],
@@ -322,9 +336,10 @@ end
 
 local function verdictChip(cell)
     -- The arrow first (feedback-4 spec §0), as a texture: the chip's face has no glyph (DW-F5).
-    local mark = cell.glyph and TM.Mark(cell.verdict) or ""
+    local mark = cell.glyph and TM.Mark(cell.verdict, cell.offSpec and cell.tone) or ""
     if mark ~= "" then mark = mark .. " " end
-    return { text = mark .. (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown), tone = cell.tone, tip = cell.tip }
+    local words = cell.offSpec and OFF_SPEC_CHIP or VERDICT_CHIP
+    return { text = mark .. (words[cell.verdict] or VERDICT_CHIP.unknown), tone = cell.tone, tip = cell.tip }
 end
 DC.VerdictChip = verdictChip   -- the History card's verdicts too (modules/HistoryCard.lua)
 
@@ -340,8 +355,10 @@ end
 --- @return table side
 function DC.ForYou(drop, scorer, classFile)
     local cell = WC.Me(drop, classFile)
-    local rows = sideRows(drop.me, facts(drop), cell.tone, L["you"], true)
-    rows[#rows + 1] = scoreRow(drop.me, scorer)
+    local off = NS.OffSpec.Of(drop.me)
+    local rows = sideRows(off or drop.me, facts(drop), cell.tone, L["you"], true)
+    if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off)) end
+    rows[#rows + 1] = scoreRow(drop.me, scorer, off ~= nil)
     return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }
 end
 

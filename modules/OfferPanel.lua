@@ -49,7 +49,7 @@ local COLS = {
     { key = "member", label = L["Member"], x = 8, tip = L["A member of your group, in their class color."] },
     { key = "eq", label = L["Their eq"], x = 124,
       tip = L["What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."]:format(
-          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) .. " " .. NS.OffSpecCells.LEGEND },
     { key = "actions", label = L["Actions"], x = 314, tip = L["Offer whispers them your offer template for this item."] },
 }
 OP.COLS = COLS

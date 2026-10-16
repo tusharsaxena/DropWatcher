@@ -72,15 +72,17 @@ function TM.Escape(path, r, g, b)
 end
 
 --- A verdict's mark for a tooltip: the tinted texture escape, its fallback character when the media
---- library is absent, or "" for a verdict with no mark.
+--- library is absent, or "" for a verdict with no mark. `tone` (a C.TONE key) tints it instead of
+--- the verdict's own: an off-spec verdict's cyan (feedback-19 spec §1).
 --- @param verdict string `upgrade`, `sidegrade` or `downgrade`
+--- @param tone string|nil
 --- @return string
-function TM.Mark(verdict)
+function TM.Mark(verdict, tone)
     local m = TM.MARK[verdict]
     if not m then return "" end
     local path = NS.Icon(m.icon)
     if not path then return FALLBACK[verdict] end
-    local t = C.TONE[m.tone]
+    local t = C.TONE[tone] or C.TONE[m.tone]
     return TM.Escape(path, t.r, t.g, t.b)
 end
 
@@ -183,16 +185,18 @@ end
 
 --- The arrow cell: the verdict's glyph (NS.WindowCells.GLYPH, the monospace face) and the unsigned
 --- item-level difference, both in the verdict's tone (TM.MARK's: green, yellow, red); the glyph
---- alone with no difference (into an empty slot). "" for a verdict with no glyph.
+--- alone with no difference (into an empty slot). "" for a verdict with no glyph. `tone` (a C.TONE
+--- key) replaces the verdict's: an off-spec verdict's cyan (feedback-19 spec §1).
 --- @param verdict string|nil
 --- @param delta number|nil the signed difference
+--- @param tone string|nil
 --- @return table|string { glyph, text, tone } or ""
-function TM.ArrowCell(verdict, delta)
+function TM.ArrowCell(verdict, delta, tone)
     local glyph, m = WC.GLYPH[verdict], TM.MARK[verdict]
     if not (glyph and m) then return "" end
     local text = ""
     if type(delta) == "number" and delta == delta then text = tostring(round(math.abs(delta))) end
-    return { glyph = glyph, text = text, tone = m.tone }
+    return { glyph = glyph, text = text, tone = C.TONE[tone] and tone or m.tone }
 end
 
 --- The muted `empty` cell: nothing is worn there.

@@ -34,6 +34,12 @@ local _, NS = ...
 -- §6.2), and choosing a mode goes through NS.SetQualityMode (core/DropWatcher.lua), the handler the
 -- settings row shares. It is the same on every tab, and only the Drops tab honors it.
 --
+-- OFF-SPEC (feedback-19 spec §1). A drop your current spec can't use but another of your specs can
+-- (NS.OffSpec.Of on `me`) counts as an upgrade for Upgrade for me and Interesting when the off-spec
+-- verdict is one, and as usable for Usable by me when it is an upgrade or a sidegrade. Gain sorts its
+-- off-spec difference a hundredth below a main-spec upgrade of the same size, so main spec comes
+-- first. The looter's off-spec changes nothing: a Can't use on their main spec still gives it.
+--
 -- PURE: IsInteresting, IsTradeableMine, Matches, HiddenBy, ViewLabel and Comparator take plain
 -- tables and read nothing else, so the suites drive them case by case. Build, Sync and Layout are
 -- the frame edge.
@@ -283,6 +289,17 @@ local function verdictOf(side)
     return type(side) == "table" and side.verdict or nil
 end
 
+-- The off-spec verdict a `cantUse` carries (feedback-19 spec §1), or nil.
+local function offVerdictOf(side)
+    local off = NS.OffSpec.Of(side)
+    return off and off.verdict or nil
+end
+
+-- An upgrade for you: on your current spec, or on another of yours when this one can't use it.
+local function upgradeForMe(drop)
+    return verdictOf(drop.me) == "upgrade" or offVerdictOf(drop.me) == "upgrade"
+end
+
 -- The looter has no use for it: a downgrade, an item they cannot use, or one they would not want.
 local LOOTER_GIVES = { downgrade = true, cantUse = true, doesntWant = true }
 
@@ -295,7 +312,7 @@ function FB.IsInteresting(drop)
     if type(drop) ~= "table" then return false end
     local state = tradeState(drop)
     if drop.isMine then return TRADEABLE[state] == true end
-    if verdictOf(drop.me) == "upgrade" then return true end
+    if upgradeForMe(drop) then return true end
     return LOOTER_GIVES[verdictOf(drop.them)] == true and TRADEABLE[state] == true
 end
 
@@ -334,13 +351,15 @@ end
 
 -- Your verdict that Usable by me hides: you can't use it, or your own preferences exclude it.
 local NOT_USABLE = { cantUse = true, doesntWant = true }
+-- ... unless another of your specs takes it (feedback-19 spec §1).
+local OFF_USABLE = { upgrade = true, sidegrade = true }
 
 -- Each View value's test: true when the drop passes it.
 local VIEW_PASS = {
     interesting = function(d) return FB.IsInteresting(d) end,
     likely      = function(d) return TRADEABLE[tradeState(d)] == true end,
-    usable      = function(d) return not NOT_USABLE[verdictOf(d.me)] end,
-    upgrade     = function(d) return verdictOf(d.me) == "upgrade" end,
+    usable      = function(d) return not NOT_USABLE[verdictOf(d.me)] or OFF_USABLE[offVerdictOf(d.me)] == true end,
+    upgrade     = function(d) return upgradeForMe(d) end,
 }
 
 -- The first selected View value the tab uses that the drop fails, in menu order, or nil.
@@ -409,7 +428,13 @@ end
 local function num(v) return type(v) == "number" and v or nil end
 local function atOf(d) return num(d.at) or 0 end
 local function ilvlOf(d) return type(d.facts) == "table" and num(d.facts.ilvl) or -math.huge end
-local function gainOf(d) return type(d.me) == "table" and num(d.me.ilvlDelta) or -math.huge end
+-- An off-spec difference sorts this much below a main-spec one of the same size (feedback-19 §1).
+local OFF_SPEC_BELOW = 0.01
+local function gainOf(d)
+    local off = NS.OffSpec.Of(d.me)
+    if off then return num(off.ilvlDelta) and off.ilvlDelta - OFF_SPEC_BELOW or -math.huge end
+    return type(d.me) == "table" and num(d.me.ilvlDelta) or -math.huge
+end
 
 -- Each order's key, larger first; `oldest` turns the first round. Ties go to the newer id.
 local ORDER = {

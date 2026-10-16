@@ -309,6 +309,12 @@ modules\WindowCells.lua
 # tooltip's non-wrapping line and its gear grid's rows; reads NS.Constants and NS.L at load, and
 # NS.Icon, NS.Compat and NS.GroupRoster at call time.
 modules\TipMarks.lua
+# LOAD-BEARING: takes NS.WindowCells and NS.TipMarks (modules\, above) at load, and sits above
+# modules\SideCells.lua, modules\WindowGroup.lua and modules\OfferPanel.lua (which read it at load).
+# Publishes NS.OffSpecCells, how an off-spec verdict looks (feedback-19 spec §1: its cell, the Me
+# cell's gear half from the off-spec baseline, the cards' Spec row, the legend's line); reads NS.L at
+# load, and NS.OffSpec and NS.Compat (a spec's name) at call time. NS.WindowCells calls it at call time.
+modules\OffSpecCells.lua
 # LOAD-BEARING: reads NS.TipMarks (modules\TipMarks.lua, above) at load. Publishes NS.TipGrid, the
 # frame edge that paints a tooltip's grid (feedback-7 spec §3: columns on a pooled child frame of
 # GameTooltip); reads NS.Constants at load. modules\Window.lua (above) calls it at hover time.

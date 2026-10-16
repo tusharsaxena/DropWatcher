@@ -7,7 +7,7 @@ local _, NS = ...
 --       { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
 --         roster = { { name, realm, class, me }, ... }, drops = {
 --           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
---             me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
+--             me = { verdict, ilvlDelta, scoreDelta, offSpec? }, them = { ... } | nil,
 --             trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
 --
 -- `at` is time() (seconds since the epoch), never GetTime(), so it means the same after a reload.
@@ -110,10 +110,18 @@ function H.Normalize(hist)
     return hist
 end
 
+-- An off-spec part (feedback-19 spec §1), kept as small: the spec, the main spec, the verdict and
+-- its difference; no baseline and no reasons.
+local function offSnap(eval)
+    local off = NS.OffSpec.Of(eval)
+    if not off then return nil end
+    return { specID = num(off.specID), mainSpecID = num(off.mainSpecID), verdict = off.verdict, ilvlDelta = num(off.ilvlDelta) }
+end
+
 -- A verdict, kept small: the verdict and its deltas, nothing that names a frame or a table.
 local function verdictSnap(eval)
     if type(eval) ~= "table" or type(eval.verdict) ~= "string" then return nil end
-    return { verdict = eval.verdict, ilvlDelta = num(eval.ilvlDelta), scoreDelta = num(eval.scoreDelta) }
+    return { verdict = eval.verdict, ilvlDelta = num(eval.ilvlDelta), scoreDelta = num(eval.scoreDelta), offSpec = offSnap(eval) }
 end
 
 -- The trade estimate, kept small: its arguments only when they are plain numbers or strings.
@@ -174,12 +182,13 @@ local function unexpire(e)
 end
 
 -- Two snapshots (verdictSnap, tradeSnap, or nil) hold the same values: one level of fields, and
--- the args list one level deeper.
+-- the args list and the off-spec part one level deeper.
+local DEEPER = { args = true, offSpec = true }
 local function sameSnap(a, b)
     if a == nil or b == nil then return a == b end
     for k, v in pairs(a) do
-        if k == "args" then
-            if not sameSnap(v, b.args) then return false end
+        if DEEPER[k] then
+            if not sameSnap(v, b[k]) then return false end
         elseif b[k] ~= v then
             return false
         end

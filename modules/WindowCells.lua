@@ -25,7 +25,8 @@ local _, NS = ...
 --
 -- THE TONES (C.TONE; feedback-4 spec §0). One tone per verdict, in the Me and the Them column
 -- alike: an upgrade `good` (green), a sidegrade `yellow`, a downgrade `red`; an item that cannot be
--- used or is not wanted `bad` (gray) and an unknown one `muted`. Trade's No is `red` too.
+-- used or is not wanted `bad` (gray) and an unknown one `muted`. Trade's No is `red` too. A Can't use
+-- another of the class's specs can use is that spec's verdict in `offspec` cyan (NS.OffSpecCells).
 
 NS.WindowCells = NS.WindowCells or {}
 local WC = NS.WindowCells
@@ -83,6 +84,7 @@ local EVAL_REASON = {
     badCandidate = L["No gear to compare with."],
     error = L["The comparison failed; /dw debug on logs why."],
 }
+WC.EVAL_REASON = EVAL_REASON   -- the off-spec cell's words too (modules/OffSpecCells.lua)
 
 local TRADE_LABEL = { yes = L["Yes"], likely = L["Likely"], unknown = L["Unknown"], no = L["No"] }
 -- Trade's tones: Yes and Likely green, Unknown muted, No the palette's red (feedback-7 spec §2:
@@ -223,16 +225,20 @@ end
 --- One verdict cell (the Me or the Them column; both take the same tones). Its tooltip's comparison
 --- is a grid row naming `who`; the cell keeps `who`, `delta` and `base` (the worn item it was judged
 --- against) for NS.SideCells, which lays the worn gear out in that grid.
+--- A `cantUse` whose off-spec part another spec can use (NS.OffSpec.Of) is that part's cell instead
+--- (NS.OffSpecCells.Verdict, feedback-19 spec §1).
 --- @param eval table|nil NS.Evaluate's answer
---- @param _side string `me` or `them`
+--- @param side string `me` or `them`
 --- @param title string the tooltip's subject (`For you`, `For Seta`)
 --- @param ilvl number|nil the drop's item level
 --- @param who string|nil the grid's name cell, colored (NS.TipMarks.ClassName)
 --- @return table cell
-function WC.Verdict(eval, _side, title, ilvl, who)
+function WC.Verdict(eval, side, title, ilvl, who)
     if type(eval) ~= "table" or type(eval.verdict) ~= "string" then
         eval = { verdict = "unknown", reasons = {} }
     end
+    local off = NS.OffSpec.Of(eval)
+    if off then return NS.OffSpecCells.Verdict(eval, off, side, title, ilvl, who) end
     local text, glyph = verdictText(eval)
     local v = eval.verdict
     local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl, who)

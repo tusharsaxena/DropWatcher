@@ -758,6 +758,24 @@ L["Click to collapse this group."] = "Click to collapse this group."
 L["%s ago"] = "%s ago"
 L["(collapsed)"] = "(collapsed)"
 
+-- modules/OffSpecCells.lua (feedback-19 spec §1)
+L["Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."] =
+    "Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."
+L["Off-spec upgrade for %s"] = "Off-spec upgrade for %s"
+L["Off-spec sidegrade for %s"] = "Off-spec sidegrade for %s"
+L["Off-spec downgrade for %s"] = "Off-spec downgrade for %s"
+L["Off-spec"] = "Off-spec"
+L["Your spec"] = "Your spec"
+L["%s can't use it: %s"] = "%s can't use it: %s"
+L["%s can't use it."] = "%s can't use it."
+L["an empty slot"] = "an empty slot"
+L["Compared with your best %s item: %s."] = "Compared with your best %s item: %s."
+L["Compared with their best %s item: %s."] = "Compared with their best %s item: %s."
+L["Your best %s item"] = "Your best %s item"
+L["%s (off-spec): %s can't use it"] = "%s (off-spec): %s can't use it"
+L["Your current spec can't use it, so it is judged for another spec of your class, on item level alone."] =
+    "Your current spec can't use it, so it is judged for another spec of your class, on item level alone."
+
 -- modules/MineCells.lua
 L["Bonus roll"] = "Bonus roll"
 L["Warbound"] = "Warbound"
@@ -988,6 +1006,12 @@ L["Its looter can't trade it."] = "Its looter can't trade it."
 L["Trade · %s"] = "Trade · %s"
 L["A trade can't be opened now."] = "A trade can't be opened now."
 L["Open a trade with %s, so they can put the item in."] = "Open a trade with %s, so they can put the item in."
+
+-- modules/DetailCells.lua: an off-spec verdict (feedback-19 spec §1)
+L["OFF-SPEC UPGRADE"] = "OFF-SPEC UPGRADE"
+L["OFF-SPEC SIDEGRADE"] = "OFF-SPEC SIDEGRADE"
+L["OFF-SPEC DOWNGRADE"] = "OFF-SPEC DOWNGRADE"
+L["Off-spec is judged on item level alone."] = "Off-spec is judged on item level alone."
 
 -- modules/DetailCard.lua
 L["the looter is not in your group"] = "the looter is not in your group"

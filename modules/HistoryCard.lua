@@ -94,9 +94,13 @@ local function deltaRows(eval, tone)
     return { ilvl, score }
 end
 
+-- An off-spec verdict (feedback-19 spec §1): its chip, a Spec row and its own deltas.
 local function forYou(drop, classFile)
     local cell = WC.Me(drop, classFile)
-    return { title = L["FOR YOU · AT THE TIME"], verdict = DC.VerdictChip(cell), rows = deltaRows(drop.me, cell.tone) }
+    local off = NS.OffSpec.Of(drop.me)
+    local rows = deltaRows(off or drop.me, cell.tone)
+    if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off)) end
+    return { title = L["FOR YOU · AT THE TIME"], verdict = DC.VerdictChip(cell), rows = rows }
 end
 
 local function looterRow(drop)

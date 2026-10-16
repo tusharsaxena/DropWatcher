@@ -16,8 +16,11 @@ local _, NS = ...
 -- flags, never the main spec's), with the same sidegrade band and heirloom rule, compareOwned off
 -- and NO scorer: off-spec is item level only, so it never waits on a score.
 --
---   eval.offSpec = { specID, verdict = "upgrade" | "sidegrade" | "downgrade", ilvlDelta, trackDelta,
---                    baseline (nil for an empty slot), baselineSlot, reasons }
+--   eval.offSpec = { specID, mainSpecID, verdict = "upgrade" | "sidegrade" | "downgrade", ilvlDelta,
+--                    trackDelta, baseline (nil for an empty slot), baselineSlot, reasons }
+--
+-- `mainSpecID` is the candidate's own spec, so a reader can say which spec could not use it (the
+-- cells and cards, modules/OffSpecCells.lua). OS.Of answers the off-spec part a reader may show.
 --
 -- THE BEST SPEC. Upgrade beats sidegrade beats downgrade; then the larger ilvlDelta (an empty slot
 -- the largest); then the lower spec id. doesntWant, cantUse and unknown are never kept. The main
@@ -109,11 +112,21 @@ local function better(res, best)
     return gain(res) > gain(best)
 end
 
-local function shape(res, specID)
+local function shape(res, specID, mainSpecID)
     return {
-        specID = specID, verdict = res.verdict, ilvlDelta = res.ilvlDelta, trackDelta = res.trackDelta,
+        specID = specID, mainSpecID = mainSpecID, verdict = res.verdict, ilvlDelta = res.ilvlDelta, trackDelta = res.trackDelta,
         baseline = res.baseline, baselineSlot = res.baselineSlot, reasons = res.reasons,
     }
+end
+
+--- The off-spec part of a verdict (NS.Evaluate's, or a History snapshot) that a reader shows: the
+--- main verdict is `cantUse` and the part's verdict is one of the three; nil otherwise.
+--- @param eval any
+--- @return table|nil
+function OS.Of(eval)
+    if not (isTable(eval) and eval.verdict == "cantUse" and isTable(eval.offSpec)) then return nil end
+    if RANK[eval.offSpec.verdict] then return eval.offSpec end
+    return nil
 end
 
 --- Sets `out.offSpec` when another spec of the candidate's class can use what the main spec
@@ -128,5 +141,5 @@ function OS.Attach(out, facts, candidate, opts, run)
         local res = x ~= specID and judge(facts, candidate, x, sub, run)
         if res and RANK[res.verdict] and better(res, best) then best, bestID = res, x end
     end
-    if best then out.offSpec = shape(best, bestID) end
+    if best then out.offSpec = shape(best, bestID, specID) end
 end

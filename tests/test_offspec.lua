@@ -66,6 +66,7 @@ test("offspec: a Protection paladin's Intellect axe is an off-spec upgrade for H
     assertTrue(hasReason(res, "primaryStat"))
     assertTrue(type(res.offSpec) == "table", "an off-spec verdict")
     assertEqual(res.offSpec.specID, HOLY)
+    assertEqual(res.offSpec.mainSpecID, PROT, "the spec that could not use it, for the cells' words")
     assertEqual(res.offSpec.verdict, "upgrade")
     assertNil(res.offSpec.ilvlDelta, "an empty slot has no difference")
     assertNil(res.offSpec.baseline)

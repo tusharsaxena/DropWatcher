@@ -170,7 +170,7 @@ history = { retentionDays = 30, v = 1, groups = {
     { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
       roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
-          me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
+          me = { verdict, ilvlDelta, scoreDelta, offSpec? }, them = { ... } | nil,
           trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
 ```
 
@@ -181,7 +181,9 @@ history = { retentionDays = 30, v = 1, groups = {
   `run` or `area`, `situation` the situation key and `at` its first drop's time.
 - `at` is `time()` (seconds since the epoch), so it reads the same after a reload; `looter` is the
   Name-Realm and `class` its classFile; `me`, `them` and `trade` are the verdicts and the trade
-  estimate as last judged while the drop was in the feed, plain fields only.
+  estimate as last judged while the drop was in the feed, plain fields only. A `cantUse` that another
+  spec of the class can use keeps `offSpec = { specID, mainSpecID, verdict, ilvlDelta }` (feedback-19
+  spec §1): no baseline and no reasons. No migration step: the field is optional.
 - `roster` is who was in the group (feedback-2 spec §3, `modules/GroupRoster.lua`): each a short
   `name`, the normalized `realm` only when it is not the recorder's, the `class` (classFile) and
   `me` on the recorder's own entry, the recorder first. Every recorded drop merges the feed group's

@@ -114,7 +114,7 @@ WG.COLUMNS = {
     { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
     { key = "me", label = L["Me"], width = 127, shed = 7,
       tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
-          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) .. " " .. NS.OffSpecCells.LEGEND },
     { key = "them", label = L["Them"], width = 127, shed = 5,
       tip = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."] },
     { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
@@ -646,12 +646,13 @@ end
 
 -- A Me or Them cell (NS.SideCells): the worn items' icons, their item level (plain, or a muted
 -- word), then the glyph and the difference or word in the verdict's tone. `unit` names whose
--- inventory an icon's tooltip reads (yours: the client's own tooltip for your slot), else the link.
+-- inventory an icon's tooltip reads (yours: the client's own tooltip for your slot), else the link;
+-- an item with no slot (an off-spec bag item, feedback-19 spec §1) always reads its link.
 local function paintSide(f, c, unit)
     paintText(f, c)
     for i, b in ipairs(f.icons) do
         local it = c.items[i]
-        setItem(b, it and it.link or nil, it and unit and { unit = unit, slot = it.slot } or nil)
+        setItem(b, it and it.link or nil, it and unit and it.slot and { unit = unit, slot = it.slot } or nil)
     end
     f.level:SetText(c.level or "")
     setTone(f.level, c.levelTone)
