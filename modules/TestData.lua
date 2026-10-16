@@ -36,8 +36,9 @@ local _, NS = ...
 -- showcase: an off-spec upgrade into an empty slot, one over a bag item, a sidegrade and a downgrade,
 -- and your own drop with a candidate whose off-spec is an upgrade (Kaelith, Retribution, for Holy;
 -- the trinket's too). Ashveil's chest is the rule's other side: a wrong armor type is a class-wide
--- refusal, so it stays Can't use with no off-spec. History has an off-spec drop you asked for and
--- one you received. An off-spec sample's Me cell reads its off-spec baseline (`testOffGear`,
+-- refusal, so it stays Can't use with no off-spec. Every off-spec sample is tradeable, so its Ask
+-- shows the off-spec rule (the downgrade's No action is "not an upgrade", not a trade refusal).
+-- History has an off-spec drop you asked for and one you received; the alt's group keeps none. An off-spec sample's Me cell reads its off-spec baseline (`testOffGear`,
 -- TD.OffGearFor), not the gear your current spec wears there.
 --
 -- YOUR GEAR. A sample carries the worn items its Me verdict was judged against (`testGear`,
@@ -497,9 +498,8 @@ end
 -- This session, oldest first: a key run four hours ago, then four Heroic raid bosses, the last the
 -- off-spec showcase. Each group's `theirs` are the other members' drops, board 03 row by row: the
 -- looter, the slot (`strict`: it must be that slot, being armor), Me and Them as { verdict, change,
--- reason = key, off = off-spec }, the trade
--- { state, reasonKey, basis, age }, the inspect { status, age, reason }, the ask state, and the
--- look's state. `yours` are yours, board 04: the slot, Me, the trade and the candidates. Every drop
+-- reason = key, off = off-spec }, the trade { state, reasonKey, basis, age }, the inspect
+-- { status, age, reason }, the ask state, and the look's state. `yours` are yours, board 04: the slot, Me, the trade and the candidates. Every drop
 -- is the group's age; a countdown's is four hours less what is left.
 local SESSION = {
     { content = "key", n = 1, party = PARTIES[1], ago = 15000,
@@ -574,7 +574,7 @@ local SESSION = {
           them = { "downgrade", -3 }, trade = { "likely", "notUpgrade", "inspect", 50 }, inspect = { "cached", 50 } },
         { who = "thornbrew", slot = "INVTYPE_FEET", strict = true,
           me = { "cantUse", reason = "primaryStat", off = { 65, "downgrade", -11 } },
-          them = { "upgrade", 5 }, trade = { "no", "upgradeForLooter", "inspect", 55 }, inspect = { "fresh", 55 } },
+          them = { "downgrade", -4 }, trade = { "likely", "notUpgrade", "inspect", 55 }, inspect = { "fresh", 55 } },
       } },
 }
 TD.SESSION = SESSION
@@ -674,10 +674,11 @@ local function membersOf(content, n)
     return PARTIES[(n - 1) % #PARTIES + 1]
 end
 
--- A History snapshot (NS.History's): an off-spec part as its own, { specID, mainSpecID, verdict, ilvlDelta }.
-local function snap(spec)
+-- A History snapshot (NS.History's): an off-spec part as its own, { specID, mainSpecID, verdict, ilvlDelta },
+-- unless `plain` (the alt's: a Warlock has no Holy spec, so its Can't use stays plain).
+local function snap(spec, plain)
     if not spec then return nil end
-    local off = spec.off
+    local off = not plain and spec.off or nil
     return { verdict = spec[1], ilvlDelta = spec[2],
         offSpec = off and { specID = off[1], mainSpecID = OFF_MAIN, verdict = off[2], ilvlDelta = off[3] } or nil }
 end
@@ -690,7 +691,7 @@ local function historyEntry(src, seer, row, who, at, where)
     return {
         itemLink = item.link, itemID = item.itemID or NS.Item.ItemIDFromLink(item.link),
         looter = m and m.name or seer.name, class = m and m.classFile or seer.classFile, isMine = m == nil or nil,
-        ilvl = f.ilvl, equipLoc = f.equipLoc, quality = f.quality, me = snap(row.me), them = snap(row.them),
+        ilvl = f.ilvl, equipLoc = f.equipLoc, quality = f.quality, me = snap(row.me, seer.alt), them = snap(row.them),
         trade = { state = row.trade[1], reasonKey = row.trade[2], basis = "rule", args = {} },
         outcome = row.outcome, before = row.before, at = at, test = true,
         seenBy = seer.seenBy, seenByClass = seer.classFile,
@@ -700,7 +701,7 @@ end
 -- The alt as a seer: on your realm (the one in your recorder key), else realm-less.
 local function altSeer(you)
     local realm = type(you.seenBy) == "string" and you.seenBy:match("%-(.+)$") or nil
-    return { name = ALT.name, classFile = ALT.classFile, isSelf = true,
+    return { name = ALT.name, classFile = ALT.classFile, isSelf = true, alt = true,
         seenBy = NS.CharFilter.Key(ALT.name, realm) }
 end
 

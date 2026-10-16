@@ -245,6 +245,11 @@ test("test mode data: off-spec samples show every off-spec verdict, an empty slo
             if base then assertEqual(first.link, base.link) else assertEqual(first, false) end
             local askable = off.verdict == "upgrade" or off.verdict == "sidegrade"
             assertEqual(M.AskTemplate(s), askable and "askOffSpec" or nil, off.verdict)
+            -- the Ask cell shows the off-spec rule, not a trade refusal hiding it
+            assertTrue(s.trade.state ~= "no", "a tradeable sample: " .. off.verdict)
+            local ask = NS.WindowCells.Ask(s, nil, nil, false)
+            if askable then assertEqual(ask.template, "askOffSpec", off.verdict)
+            else assertEqual(ask.tip[2], "It is not an upgrade for you.", off.verdict) end
         elseif s.me.verdict == "cantUse" then
             assertTrue(s.me.offSpec == nil, "no off-spec rescue")
             if s.me.reasons[1].key == "armorType" then armorRefusal = true end
@@ -287,6 +292,7 @@ test("test mode data: History holds an off-spec entry you asked for and one you 
             local off = NS.OffSpec.Of(e.me)
             if off then
                 outcomes[e.outcome] = true
+                assertEqual(g.seenBy, YOU.seenBy, "only your own: the Warlock alt has no Holy spec")
                 assertEqual(off.specID, 65); assertEqual(off.mainSpecID, 66)
                 assertTrue(off.baseline == nil and off.reasons == nil, "a snapshot keeps no baseline or reasons")
             end

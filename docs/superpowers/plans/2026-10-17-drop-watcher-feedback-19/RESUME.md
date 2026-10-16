@@ -14,3 +14,4 @@ owner's go-ahead.
 - 2026-10-17 — DW-O2 review: auto-ask re-reads off-spec at fire time (a re-judged drop keeps main spec first); suite 1534/0/1, lint 0/0, perf green, max CCN 14.
 - 2026-10-17 — DW-O3 landed: Offer for off-spec (two candidate statuses ranked after main-spec equals, offerable, gain sort, cyan Their eq with the spec name, Upgrade for N main-spec only); suite 1545/0/1, lint 0/0, perf green, max CCN 14.
 - 2026-10-17 — DW-O4 landed: off-spec test-mode samples and showcase (22 drops, 5 groups), testOffGear, docs synced, FEED-80/81, ASK-11, TOAST-5 pending; suite 1549/0/1, lint 0/0, perf green, max CCN 14.
+- 2026-10-17 — DW-O4 review: the alt's History group keeps no off-spec snapshot; the off-spec downgrade sample is tradeable so its No action shows the off-spec rule; suite 1549/0/1, lint 0/0, perf green, max CCN 14.

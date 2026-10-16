@@ -1612,7 +1612,8 @@ upgrade into an empty slot) offers Ask; hover it → `Ask for off-spec`, `Ask fo
 off-spec.`. Click it → chat prints `Test mode, not sent: Hi Brightmane, if you don't need [item],
 could I have it for my off-spec? …` (the For off-spec template, Settings › Messages › Templates, its
 gain `an empty-slot upgrade`) and the button reads Asked. Kragmar's bracers (an
-off-spec sidegrade) also offer Ask; Thornbrew's boots (an off-spec downgrade) read `No action`. In a
+off-spec sidegrade) also offer Ask; Thornbrew's boots (an off-spec downgrade, tradeable) read `No action`,
+hover → `It is not an upgrade for you.`. In a
 real group, with a drop your current spec can't use but another spec of your class gains from, Ask
 whispers the looter that text with the off-spec difference as the gain; a second Ask on the same
 drop is refused (one ask per item per looter). Result:
