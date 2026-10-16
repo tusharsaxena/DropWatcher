@@ -107,7 +107,8 @@ local VIEW_ROWS = {
     { key = "upgrade", label = L["View: Upgrade for me"],
       tip = L["A fresh tab lists only the drops that are an upgrade for you."] },
 }
-local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"], "all", L["All"] }
+-- Drops' Content values (feedback-15 spec §1): History's All is no Drops value, so no seed.
+local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"] }
 local SORTS    = choices{ "newest", L["Newest"], "oldest", L["Oldest"], "ilvl", L["Item level"], "gain", L["Gain"] }
 local ILVL_MODES = choices{ "off", L["Off"], "absolute", L["Absolute"], "relative", L["Relative to my gear"] }
 local SCORERS  = choices{ "auto", L["Automatic"], "pawn", L["Pawn"], "weights", L["My weights"], "none", L["None"] }
@@ -221,7 +222,7 @@ local function feed()
         bool("feed.view." .. v.key, F.view[v.key], v.label, v.tip, filters)
     end
     pick("feed.content", F.content, CONTENTS, L["Content"],
-        L["Which drops the Drops tab lists when it opens: this instance's, this session's, or all of them. History always opens on All."], filters)
+        L["Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."], filters)
     pick("feed.sort", F.sort, SORTS, L["Sort"], L["How a fresh tab sorts its rows."], filters)
     bool("feed.gearOnly", F.gearOnly, L["Gear only"],
         L["List armor, weapons, jewelry and trinkets only."], filters)

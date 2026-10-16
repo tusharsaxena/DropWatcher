@@ -1329,7 +1329,7 @@ Total.
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
-### test_feed_restore.lua (10)
+### test_feed_restore.lua (12)
 
 - session: an initial login starts it now; a zone change moves nothing; a reload keeps it
 - session: with no stored value (a first run, a corrupt row) it is now, and it holds
@@ -1343,6 +1343,15 @@ Total.
 - restore: restored drops are not counted new on a window minimized before the reload
 - history: a live timer read undoes Expired; a rule estimate, declined and received do not
 - session: This instance survives a reload in the same instance, and only then
+
+### test_content_tabs.lua (6)
+
+- content per tab: Drops offers This instance and This session, History adds All
+- content per tab: the Content menu lists the active tab's values, in both layouts
+- content per tab: the Content tooltip is the same on both tabs and names each value
+- content per tab: Drops' This session starts at the stored session start, in the client clock
+- content per tab: the feed.content row offers This instance and This session, default This session
+- database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
 ### test_toast.lua (32)
 
@@ -1731,7 +1740,8 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
-| test_feed_restore.lua | 10 |
+| test_feed_restore.lua | 12 |
+| test_content_tabs.lua | 6 |
 | test_toast.lua | 32 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
@@ -1751,4 +1761,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1439** |
+| **Total** | **1447** |

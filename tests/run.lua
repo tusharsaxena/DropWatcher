@@ -182,6 +182,7 @@ Kit.run{
         "test_history",
         "test_history_retention",
         "test_feed_restore",
+        "test_content_tabs",
         "test_toast",
         "test_auto_ask",
         "test_sim_core",

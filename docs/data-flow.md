@@ -686,7 +686,8 @@ every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint:
 
 The History tab's body reads `NS.History.Groups()` (oldest first) through the pure
 `WindowHistory.Entries`, filtered by the tab's state with This instance and This session turned
-into `time()` marks (`WindowHistory.Context`); each entry is painted with the Drops table's
+into `time()` marks (`WindowHistory.Context`; the Drops tab turns the session start the other way,
+into the client clock, `Session.StartClock`, DW-Q1); each entry is painted with the Drops table's
 cell composers over a drop-shaped copy (`WindowHistory.AsDrop`); its Me and Them are the merged
 cells' verdict part alone (`WindowHistory.MeCell` / `ThemCell` over `SideCells.Merge`, `▼4`), since
 a kept entry holds no worn items (feedback-6 §1). In the compact layout the same

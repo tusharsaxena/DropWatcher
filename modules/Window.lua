@@ -566,9 +566,12 @@ function Window.TabContext(tab)
     local FB = NS.WindowFilterBar
     local st, honors = FB.State(tab), FB.HONORS[tab]
     local feed = feedName()
-    -- The placeholders ignore the situation, so This instance does not cut them (spec §11.6). The
+    -- The placeholders ignore the situation and the login, so neither This instance nor This session
+    -- cuts them (spec §11.6); This session is the login in the client clock (feedback-15 spec §1). The
     -- Character dropdown reads your recorder key (modules/CharFilter.lua).
-    local ctx = { instanceSince = feed ~= "test" and instanceSince or nil, current = NS.CharFilter.CurrentKey() }
+    local live = feed ~= "test"
+    local ctx = { instanceSince = live and instanceSince or nil, current = NS.CharFilter.CurrentKey(),
+        sessionSince = live and NS.Session.StartClock() or nil }
     return {
         tab = tab, feed = feed, filter = st, honors = honors, ctx = ctx,
         matches = function(drop) return FB.Matches(drop, st, ctx, honors) end,

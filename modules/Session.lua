@@ -55,6 +55,14 @@ function S.Start()
     return r.start
 end
 
+--- When this session started in the client clock (GetTime()), for the Drops tab's This session
+--- (feedback-15 spec §1, DW-Q1): the start turned as This instance's is, less a second, since time()
+--- counts whole seconds and a drop in the login's own second must not fall before it.
+--- @return number
+function S.StartClock()
+    return GetTime() - (time() - S.Start()) - 1
+end
+
 --- Whether this load is a /reload (PLAYER_ENTERING_WORLD's isReloadingUi). False before the event.
 --- @return boolean
 function S.IsReload() return reloaded end

@@ -204,7 +204,7 @@ local function readDefaults(tab)
     local fixed = FB.TAB_FIXED[tab] or {}
     local content = NS.Setting("feed.content")
     local ok = false
-    for _, v in ipairs(FB.VALUES.content) do if v == content then ok = true end end
+    for _, v in ipairs(FB.ContentValues(tab)) do if v == content then ok = true end end
     defaults.content = fixed.content or (ok and content or P.content)
     defaults.charAll = fixed.char ~= nil
     defaults.qualityDefault = P.quality.mode

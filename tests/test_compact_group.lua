@@ -388,6 +388,7 @@ end)
 
 test("compact group: no card shows a trade window; every card keeps its freshness on line 1", function()
     local NS, _, m = T.enableAddon()
+    NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = 100
     local group = { key = "enc:3", label = "Commander Ri'mok", kind = "encounter", situation = "dungeon", at = 90,
         drops = { 1, 2, 3 } }

@@ -55,7 +55,8 @@
 --                  where no link is worn (an incomplete read); InspectFrame is nil until a case sets
 --                  one. hooksecurefunc(name, fn) and hooksecurefunc(table, name, fn) really hook
 --   C_Timer.NewTicker  a repeating ticker on the same queue and clock (modules/TradeTimer.lua)
---   advance        advance(seconds): the mocked clock. Moves GetTime() forward and runs every
+--   advance        advance(seconds): the mocked clock. Moves GetTime() forward (and time(), which follows it
+--                  in whole seconds from the load's epoch unless a case sets `time`) and runs every
 --                  queued timer that falls due on the way, in due order, each at its own due time,
 --                  through the kit's own __fireTimers (so a taken-back entry is skipped by its rule)
 --                  (C_Timer entries are stamped with their due time when queued; AceTimer's carry
@@ -591,6 +592,12 @@ local function installClock(M)
         end
         M.__now = target
     end
+    -- time() moves with GetTime(), as the client's two clocks do (whole seconds from the load's
+    -- epoch): the Drops tab's This session turns the stored login (time()) into the client clock
+    -- (modules/Session.lua's StartClock, feedback-15 spec §1), which a still epoch would read as a
+    -- login that keeps moving forward. A case that sets `time` itself replaces it.
+    local epoch0 = os.time()
+    M.time = function() return epoch0 + math.floor(M.__now) end
 end
 
 -- The drop tables' client surface (modules/WindowGroup.lua through core/Compat.lua): item icons,

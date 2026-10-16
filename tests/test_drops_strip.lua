@@ -87,6 +87,7 @@ end
 -- Your four drops on Drops (board 04's rows), every View value shown.
 local function shownMine(compact)
     local NS, _, m = T.enableAddon()
+    NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = NOW
     seed(NS, boardDrops(), { groupOf("Den of Nalorakk", NOW - 3000, { 1, 2, 3, 4 }, ROSTER) })
     NS.Asks.StateOf = function() return "ready" end
@@ -214,6 +215,7 @@ end)
 
 test("drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary", function()
     local NS, _, m = T.enableAddon()
+    NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = NOW
     local WF = NS.WindowFooter
     local dead = drop({ id = 4, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } })
@@ -239,6 +241,7 @@ end)
 
 test("drops strip: compact, hidden while none of your listed drops can be traded; the cards take its room back", function()
     local NS, _, m = T.enableAddon()
+    NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = NOW
     local dead = drop({ id = 4, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } })
     seed(NS, { dead, OTHER }, { groupOf("Boss", NOW - 3000, { 4, 9 }, ROSTER) })

@@ -512,8 +512,8 @@ L["Usable by me: you can use it, and you have not marked its type as unwanted."]
 L["Upgrade for me: an upgrade over what you wear (or your best owned piece)."] =
     "Upgrade for me: an upgrade over what you wear (or your best owned piece)."
 L["Content"] = "Content"
-L["This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."] =
-    "This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."
+L["This instance shows the drops since you entered this instance or started this key. This session shows every drop since you logged in; a /reload keeps them. All (History only) shows every kept day."] =
+    "This instance shows the drops since you entered this instance or started this key. This session shows every drop since you logged in; a /reload keeps them. All (History only) shows every kept day."
 L["Search"] = "Search"
 L["Show only the drops whose item or looter name contains this text."] =
     "Show only the drops whose item or looter name contains this text."
@@ -1086,7 +1086,6 @@ L["A fresh tab lists only the drops that are an upgrade for you."] =
     "A fresh tab lists only the drops that are an upgrade for you."
 L["This instance"] = "This instance"
 L["This session"] = "This session"
-L["All"] = "All"
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
@@ -1123,8 +1122,8 @@ L["The least quality the two matching modes ever ask for, and what an empty slot
 L["Always show upgrades for me"] = "Always show upgrades for me"
 L["A drop below the minimum still shows when it is an upgrade for you."] =
     "A drop below the minimum still shows when it is an upgrade for you."
-L["Which drops the Drops tab lists when it opens: this instance's, this session's, or all of them. History always opens on All."] =
-    "Which drops the Drops tab lists when it opens: this instance's, this session's, or all of them. History always opens on All."
+L["Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."] =
+    "Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."
 L["How a fresh tab sorts its rows."] = "How a fresh tab sorts its rows."
 L["Gear only"] = "Gear only"
 L["List armor, weapons, jewelry and trinkets only."] = "List armor, weapons, jewelry and trinkets only."

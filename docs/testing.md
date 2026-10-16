@@ -56,7 +56,7 @@ within `feed.add`, observed inside it on a Receive-only capture, mixed with top 
 load or re-judge, and the depth counter cleared when Receive raises; review F06, DW-P24),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
 reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
-into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles), `test_schema`, `test_schema_rows` (every
+into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load), `test_settings_pages` (the settings
@@ -340,6 +340,10 @@ merging with each other while a live line merges in; the quality gate kept and t
 and filters skipped; no auto-open, toast or automatic ask for a restored drop; the false Expired a
 live timer read undoes, and nothing else does; This instance kept across a reload in the same
 situation and instance only),
+`test_content_tabs` (Content per tab, feedback-15 spec §1: Drops offers This instance and This session,
+History adds All, a value the tab does not offer refused; the dropdown's rows the active tab's in both
+layouts; the one tooltip; Drops' This session from the stored login in the client clock; the
+`feed.content` row's two values; step 8 turning a stored `all` into `session`, per profile, idempotent),
 `test_toast` (the toast: the pure qualifier, someone else's upgrade for you of `toast.minGain` or
 more (or into an empty slot, whatever the least gain) with a `likely` or `yes` trade, and every
 reason it refuses, and the board 06 C texts, `empty` for an empty slot; then
