@@ -250,6 +250,44 @@ test("restore: restored drops are not counted new on a window minimized before t
     assertEqual(NS.Window.NewCount(), 1, "a live drop still counts")
 end)
 
+test("restore: a drop asked for before the reload reads Asked, not Ask, after it", function()
+    local NS, m = seeded({ group("enc:2:5@" .. T0, {
+        entry({ itemID = 301, itemLink = link(301), at = T0 + 1, outcome = "asked" }),
+        entry({ itemID = 302, itemLink = link(302), at = T0 + 2, outcome = "expired", beforeExpired = "asked" }),
+        entry({ itemID = 303, itemLink = link(303), at = T0 + 3, outcome = "declined", before = "asked" }),
+        entry({ itemID = 304, itemLink = link(304), at = T0 + 4 }),
+    }) })
+    reload(m)
+    local drops, WG = NS.LootFeed.Drops(), NS.WindowGroup
+    assertEqual(#drops, 4)
+    -- red under: the Asks book is this load's alone, so a restored asked drop read `ready` (Ask)
+    assertEqual((WG.AskState(drops[1])), "sent", "asked")
+    assertFalse(WG.Action(drops[1]).enabled, "so it cannot be sent twice")
+    assertEqual((WG.AskState(drops[2])), "sent", "asked, then expired")
+    assertEqual((WG.AskState(drops[3])), "sent", "asked, then declined")
+    assertEqual((WG.AskState(drops[4])), "ready", "never asked")
+end)
+
+test("restore: drops cleared from the Drops tab before the reload stay cleared", function()
+    local NS, m = world()
+    login(m)
+    brakkLoots(m, 300)
+    m.__epoch = T0 + 10
+    NS.LootFeed.Clear("live")   -- `/dw clear`, and Clear on boss kill
+    brakkLoots(m, 301)
+    assertEqual(links(NS.LootFeed), "301")
+    local NS2, m2 = nextLoad(NS, 600)
+    reload(m2)
+    -- red under: FeedRestore.Pick skipping only `gone` entries (300 back after the reload)
+    assertEqual(links(NS2.LootFeed), "301", "only the drops after the clear")
+    local NS3, m3 = nextLoad(NS2, 900)
+    login(m3)
+    brakkLoots(m3, 302)
+    local NS4, m4 = nextLoad(NS3, 950)
+    reload(m4)
+    assertEqual(links(NS4.LootFeed), "302", "a new login's session is not held by the old clear")
+end)
+
 -- ── the false Expired undone ────────────────────────────────────────────────────────────────
 
 test("history: a live timer read undoes Expired; a rule estimate, declined and received do not", function()

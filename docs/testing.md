@@ -351,7 +351,9 @@ their History group's key, label, place and roster, dated by the client clock, j
 linked to their entries, nothing recorded twice; an initial login restoring nothing; this session's
 and this character's entries only, gone ones skipped, the newest `MAX_DROPS`; restored drops never
 merging with each other while a live line merges in; the quality gate kept and the situation gate
-and filters skipped; no auto-open, toast or automatic ask for a restored drop; the false Expired a
+and filters skipped; no auto-open, toast or automatic ask for a restored drop; a drop asked for
+before the reload reading Asked after it; drops cleared from the Drops tab (`/dw clear`, Clear on
+boss kill) staying cleared; the false Expired a
 live timer read undoes, and nothing else does; This instance kept across a reload in the same
 situation and instance only),
 `test_content_tabs` (Content per tab, feedback-15 spec §1: Drops offers This instance and This session,

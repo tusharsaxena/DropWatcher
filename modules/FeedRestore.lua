@@ -10,8 +10,9 @@ local _, NS = ...
 --
 -- WHAT. The account's log (NS.History.Store, never a test-mode or simulation log): the groups whose
 -- key ends in `@<session start>`, their entries the current character saw (`seenBy ==
--- CharFilter.CurrentKey()`), entries marked `gone` skipped, oldest first by `at`, the newest
--- LootFeed.MAX_DROPS of them.
+-- CharFilter.CurrentKey()`), entries marked `gone` skipped, and those dated before the live feed's
+-- last clear (`/dw clear`, Clear on boss kill: NS.Session.Cleared), so a clear outlasts a reload,
+-- oldest first by `at`, the newest LootFeed.MAX_DROPS of them.
 --
 -- HOW. Each entry is one receipt for LootFeed.Restore (`restore`): the link, the looter (Name-Realm,
 -- classFile, and the GUID when the roster places them now, else none), your own when `isMine`; its
@@ -41,14 +42,16 @@ end
 
 -- ── the pure core ───────────────────────────────────────────────────────────────────────────
 
---- The entries to restore: this session's (`@<start>`), seen by `current`, not gone, oldest first
---- by `at` (a tie keeps the log's order), the newest `max`.
+--- The entries to restore: this session's (`@<start>`), seen by `current`, not gone, not dated
+--- before `cleared` (a drop in the clear's own second is kept), oldest first by `at` (a tie keeps
+--- the log's order), the newest `max`.
 --- @param groups table the log's groups, oldest first
 --- @param start number the session start
 --- @param current string|nil your recorder key
 --- @param max number
+--- @param cleared number|nil the live feed's last clear (time()), or nil
 --- @return table { { group, entry, feedKey }, ... }
-function FR.Pick(groups, start, current, max)
+function FR.Pick(groups, start, current, max, cleared)
     local suffix, out = "@" .. tostring(start), {}
     if not current then return out end
     for _, g in ipairs(type(groups) == "table" and groups or {}) do
@@ -56,7 +59,8 @@ function FR.Pick(groups, start, current, max)
         if #key > #suffix and key:sub(-#suffix) == suffix then
             local feedKey = key:sub(1, -#suffix - 1)
             for _, e in ipairs(type(g.drops) == "table" and g.drops or {}) do
-                if not e.gone and e.seenBy == current and type(e.itemLink) == "string" then
+                local early = cleared and (num(e.at) or 0) < cleared
+                if not e.gone and not early and e.seenBy == current and type(e.itemLink) == "string" then
                     out[#out + 1] = { group = g, entry = e, feedKey = feedKey, n = #out + 1 }
                 end
             end
@@ -106,7 +110,8 @@ function FR.Run()
     local H, LF = NS.History, NS.LootFeed
     local hist = H.Store()
     if not hist then return 0 end
-    local picks = FR.Pick(hist.groups, H.SessionStart(), NS.CharFilter.CurrentKey(), LF.MAX_DROPS)
+    local picks = FR.Pick(hist.groups, H.SessionStart(), NS.CharFilter.CurrentKey(), LF.MAX_DROPS,
+        NS.Session.Cleared())
     local epochNow, clockNow = time(), GetTime()
     for _, p in ipairs(picks) do
         local e = p.entry

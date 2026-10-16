@@ -31,8 +31,11 @@ the code reads every case the design leaves open, module by module, is in
   brings this session's drops back to the Drops tab from the History log (`modules/FeedRestore.lua`),
   linked to their entries, but a reload mid-key starts a new key header for the drops looted after
   it (the feed's open-run key is not kept across a reload), and a full relog starts an empty Drops
-  tab. An entry of an earlier session takes no more ask or trade-estimate outcomes (it is in no
-  live feed); a completed trade still matches it by item id. HIST-2 and HIST-5 are the in-game
+  tab. Drops cleared from the Drops tab (`/dw clear`, Clear on boss kill) stay cleared, and a drop
+  you asked for still reads `Asked`, but the Asks book is not kept: your own drop's Offer and
+  Announce read untoned again after a reload, and its Offer panel offers each candidate anew (the
+  History keeps that it was `offered`, not to whom). An entry of an earlier session takes no more
+  ask or trade-estimate outcomes (it is in no live feed); a completed trade still matches it by item id. HIST-2 and HIST-5 are the in-game
   checks.
 - **The History tab's detail card** (feedback-15 spec §4, DW-Q4) draws only what an entry keeps:
   the verdicts and their item-level and score deltas, the trade estimate's state, reason and basis,

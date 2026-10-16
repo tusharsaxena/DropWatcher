@@ -721,6 +721,7 @@ function LF.Clear(name)
     local s = store()
     local which = name == "test" and "test" or "live"
     s[which] = newFeed()
+    if which == "live" then NS.Session.MarkCleared() end   -- a reload keeps it cleared (FeedRestore)
     NS.Debug(TAG, "feed cleared: %s", which)
     notifyRemoved(which)
 end

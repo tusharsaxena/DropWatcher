@@ -1637,7 +1637,9 @@ In a dungeon, after a few drops (one of them yours, still tradeable), note the D
 and rows, then `/reload` → the Drops tab shows the same drops under the same boss or key headers
 (Content: This session), each judged again: Me against your gear now, Them as the inspects return,
 your own drop's countdown, Offer and Post my tradeables back once the bag scan matches it. No
-window opens on its own, no toast shows and no automatic ask is sent for them. Loot one more item →
+window opens on its own, no toast shows and no automatic ask is sent for them; a drop you asked for
+before the reload reads `Asked` (not `Ask`). `/dw clear`, loot one item, `/reload` → only that item
+comes back (the same after Clear on boss kill). Loot one more item →
 it joins the feed as usual, and the History tab gains that one drop only (no restored drop is
 recorded twice). Log out and back in → the Drops tab is empty (the session is the login) while
 History keeps everything; This session there now starts at the login.

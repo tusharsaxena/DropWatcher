@@ -659,11 +659,13 @@ DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec
                           (live drops only)        group = feed group @ session; Trim: 50 a group,
                                                    CEILING 5,000 drops in all, the oldest first)
 PLAYER_ENTERING_WORLD ─> Session.OnEnteringWorld (before the situation's handler): isInitialLogin
-                          ─> char.session.start = time(); isReloadingUi ─> kept; neither ─> nothing
+                          ─> char.session.start = time(), cleared dropped; isReloadingUi ─> kept;
+                          neither ─> nothing
                           (History.SessionStart reads it: the group keys' @<start>, This session)
 first PLAYER_ENTERING_WORLD, isReloadingUi ─> FeedRestore.Run (after the situation's and the
                           retention's handlers): global.history's groups keyed @<start>, entries
-                          seenBy you, not gone, oldest first, the newest 200 ─> each:
+                          seenBy you, not gone, not dated before char.session.cleared (the last
+                          live LootFeed.Clear), oldest first, the newest 200 ─> each:
                           LootFeed.Restore(Receipt: GetTime() - (time() - at), the History group's
                           feed key, label, kind, situation, place, roster; looter's GUID from the
                           roster now) ─> History.Adopt(id, entry) ─> DropAdded: not recorded again

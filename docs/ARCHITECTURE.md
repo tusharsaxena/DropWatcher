@@ -80,7 +80,7 @@ specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
 every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's and
 the simulation panel's positions, auto-ask's one-time notice, the history's own record, the per-character session
-(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, seven steps), and
+(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, eight steps), and
 no structural registry exists yet. The shape, every default, the named state with its writers, the
 session-only state and each migration step are in [`schema.md`](schema.md).
 
@@ -220,7 +220,8 @@ What the addon does not do yet, or cannot know without the client. In short: no 
 recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
 unconfirmed; a non-English client shows no upgrade-track change; a delve's tier and a tier token's
 slot are not read; your gear is a per-slot best, not a loadout planner; a reload brings the
-session's drops back but starts a new key header mid-key, and a relog starts an empty Drops tab
+session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
+header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
 (the session is the login); the History card shows only what a kept entry holds; and a simulation does not exercise every live
 path (a member's spec, cross-source de-duplication, a situation's tracking switch). Every limitation,
 with its smoke-check id, is in [`known-limitations.md`](known-limitations.md).

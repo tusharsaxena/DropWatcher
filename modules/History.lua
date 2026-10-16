@@ -477,14 +477,25 @@ function H.OutcomeOf(dropId)
     return e and e.outcome
 end
 
---- The Ask button's state once the history knows the drop was received (`traded`), else the
---- state given (the Drops row and the detail card read it through here).
+-- Whether an entry was asked for: `asked` now, or the outcome an `expired` or a hand-set
+-- `declined` replaced (`beforeExpired`, `before`).
+local function wasAsked(e)
+    return e.outcome == "asked" or e.beforeExpired == "asked" or e.before == "asked"
+end
+
+--- The Ask button's state once the history knows the drop was received (`traded`); `sent` when the
+--- Asks book has nothing for it (`ready`) but its entry was asked for, as a drop restored after a
+--- reload is (the book lives for one load, the entry across it: one ask per item per looter holds,
+--- feedback-15 spec §0); else the state given (the Drops row and the detail card read it here).
 --- @param drop table
 --- @param state string|nil
 --- @param reason any
 --- @return string|nil state, any reason
 function H.AskState(drop, state, reason)
-    if type(drop) == "table" and not drop.test and H.OutcomeOf(drop.id) == "received" then return "traded" end
+    if type(drop) ~= "table" or drop.test then return state, reason end
+    if H.OutcomeOf(drop.id) == "received" then return "traded" end
+    local e = state == "ready" and H.EntryOf(drop.id)
+    if e and wasAsked(e) then return "sent" end
     return state, reason
 end
 

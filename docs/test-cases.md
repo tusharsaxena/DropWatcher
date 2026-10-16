@@ -1360,7 +1360,7 @@ Total.
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
-### test_feed_restore.lua (12)
+### test_feed_restore.lua (14)
 
 - session: an initial login starts it now; a zone change moves nothing; a reload keeps it
 - session: with no stored value (a first run, a corrupt row) it is now, and it holds
@@ -1372,6 +1372,8 @@ Total.
 - restore: a restored drop opens no window, queues no toast and asks nothing
 - restore: an area group made after the reload never takes a key from before it
 - restore: restored drops are not counted new on a window minimized before the reload
+- restore: a drop asked for before the reload reads Asked, not Ask, after it
+- restore: drops cleared from the Drops tab before the reload stay cleared
 - history: a live timer read undoes Expired; a rule estimate, declined and received do not
 - session: This instance survives a reload in the same instance, and only then
 
@@ -1773,7 +1775,7 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
-| test_feed_restore.lua | 12 |
+| test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 32 |
 | test_auto_ask.lua | 24 |
@@ -1794,4 +1796,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1472** |
+| **Total** | **1474** |

@@ -3,7 +3,7 @@ local _, NS = ...
 -- character's session started, and where This instance starts, both kept per character so a
 -- /reload changes neither.
 --
---   DropWatcherDB.char[<character>].session = { start, instance = { at, situation, instance } }
+--   DropWatcherDB.char[<character>].session = { start, instance = { at, situation, instance }, cleared }
 --
 -- THE START. `start` is time() (the epoch, so it means the same after a reload). PLAYER_ENTERING_WORLD
 -- with `isInitialLogin` sets it to now; with `isReloadingUi` the stored value is kept; with neither (a
@@ -17,6 +17,10 @@ local _, NS = ...
 -- map id (GetInstanceInfo's eighth answer, nil outside an instance). After a reload, the first
 -- situation announcement that names the same situation and instance gives back the stored moment,
 -- turned into the client clock (GetTime() - (time() - at)), instead of now (MarkSituation).
+--
+-- THE CLEAR. `cleared` is the time() of the last live LootFeed.Clear (`/dw clear`, Clear on boss
+-- kill): a reload restores only the entries dated from it on (modules/FeedRestore.lua), so what was
+-- cleared stays cleared. A login drops it with the old session.
 --
 -- THE ORDER. Its PLAYER_ENTERING_WORLD row runs before modules/Situations.lua's (the TOC loads it
 -- first), so a reload is known before the reload's first SituationChanged reaches the window. An
@@ -63,6 +67,13 @@ function S.StartClock()
     return GetTime() - (time() - S.Start()) - 1
 end
 
+--- The live feed was emptied now (LootFeed.Clear): remember when, for a reload's restore.
+function S.MarkCleared() record().cleared = time() end
+
+--- When the live feed was last emptied this session (time()), or nil.
+--- @return number|nil
+function S.Cleared() return num(record().cleared) end
+
 --- Whether this load is a /reload (PLAYER_ENTERING_WORLD's isReloadingUi). False before the event.
 --- @return boolean
 function S.IsReload() return reloaded end
@@ -73,7 +84,7 @@ function S.OnEnteringWorld(isInitialLogin, isReloadingUi)
     if not seen then reloaded = isReloadingUi == true and not isInitialLogin end
     seen = true
     if isInitialLogin == true then
-        record().start = time()
+        record().start, record().cleared = time(), nil
         NS.Debug(TAG, "session: a login, started at %d", record().start)
     elseif isReloadingUi == true then
         NS.Debug(TAG, "session: a reload, kept from %d", S.Start())

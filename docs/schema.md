@@ -253,11 +253,13 @@ it is named.
   after the stand-up when the addon started disabled, and on a confirmed shorter window). Neither
   replaces `global.history` whole, since the retention row's value lives in it.
 - `global.minimap.minimapPos` is LibDBIcon's own write into the table the launcher hands it.
-- `char.session.start` and `char.session.instance` are the session (feedback-15 spec §0). Owner
-  `modules/Session.lua`; writers `Session.Start` (now, when nothing valid is stored),
-  `Session.OnEnteringWorld` (an initial login; the stand-up after a disabled start) and
-  `Session.MarkSituation` (each `SituationChanged` the window hears, but a reload's first one in
-  the stored place).
+- `char.session.start`, `char.session.instance` and `char.session.cleared` are the session
+  (feedback-15 spec §0). Owner `modules/Session.lua`; writers `Session.Start` (now, when nothing
+  valid is stored), `Session.OnEnteringWorld` (an initial login, which also drops `cleared`; the
+  stand-up after a disabled start), `Session.MarkSituation` (each `SituationChanged` the window
+  hears, but a reload's first one in the stored place) and `Session.MarkCleared` (`time()` at each
+  live `LootFeed.Clear`, `/dw clear` or Clear on boss kill: a reload restores no entry dated
+  before it).
 
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to
 the simulation's session-only log instead (`NS.Sim.HistoryLog`, `modules/Sim.lua`), never
