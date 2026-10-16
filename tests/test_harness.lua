@@ -63,7 +63,7 @@ test("toc: the fixed field order, a single Retail Interface line and the X-Stand
     for i, kv in ipairs(fields) do order[i] = kv[1] end
     assertEqual(table.concat(order, ","), "Interface,Title,Notes,Author,Version,IconTexture,"
         .. "SavedVariables,OptionalDeps,DefaultState,Category-enUS,X-License,X-Standard,X-Curse-Project-ID")
-    assertEqual(field(fields, "Interface"), "120100")
+    assertEqual(field(fields, "Interface"), "120105")
     assertEqual(field(fields, "Title"), "Ka0s Drop Watcher")
     assertEqual(field(fields, "X-Standard"), "https://github.com/tusharsaxena/WowAddonStandards")
     assertEqual(field(fields, "SavedVariables"), "DropWatcherDB, DropWatcherPerfDB")

@@ -9,7 +9,7 @@ marked as such rather than listed as a requirement.
 
 ## Runtime (in-game) — what a player needs
 
-- **World of Warcraft (Retail).** Single `## Interface: 120100` line in `DropWatcher.toc` — Retail
+- **World of Warcraft (Retail).** Single `## Interface: 120105` line in `DropWatcher.toc` — Retail
   only.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load

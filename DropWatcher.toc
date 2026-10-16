@@ -1,4 +1,4 @@
-## Interface: 120100
+## Interface: 120105
 ## Title: Ka0s Drop Watcher
 ## Notes: Watches your group's loot, shows who each drop is an upgrade for and whether it can be traded, and asks for it politely in one click.
 ## Author: add1kted2ka0s
