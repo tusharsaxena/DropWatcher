@@ -43,9 +43,10 @@ local _, NS = ...
 -- PLAYER_SPECIALIZATION_CHANGED arm one THROTTLE-second timer; the events inside it share one
 -- rebuild. A link not cached yet is requested through ItemFacts.Request, and its load arms the
 -- same timer. A rebuild whose signature (spec, class, every worn and owned link with its level,
--- and every bag gear item in the pool) moved sends GearChanged (no payload). The first read, lazily from a caller, announces
--- nothing: nobody has judged against the old one. Stood down, the timer is canceled and the
--- snapshot dropped; the stand-up rebuilds it.
+-- and every bag gear item in the pool, in sorted order so sorting your bags moves nothing) moved
+-- sends GearChanged (no payload). The first read, lazily from a caller, announces nothing: nobody
+-- has judged against the old one. Stood down, the timer is canceled and the snapshot dropped; the
+-- stand-up rebuilds it.
 
 NS.Gear = NS.Gear or {}
 local G = NS.Gear
@@ -238,13 +239,17 @@ local function entryKey(e)
     return e.link .. "@" .. tostring(e.ilvl)
 end
 
--- The bag items go in too, so a change to one only another spec could wear still moves it.
+-- The bag items go in too, so a change to one only another spec could wear still moves it. They
+-- go in sorted: sorting your bags moves no gear.
 local function signature(snap, bagItems)
     local parts = { tostring(snap.classFile), tostring(snap.specID) }
     for _, slot in ipairs(SLOTS) do
         parts[#parts + 1] = slot .. "=" .. entryKey(snap.equipped[slot]) .. "/" .. entryKey(snap.owned[slot] or false)
     end
-    for _, e in ipairs(bagItems) do parts[#parts + 1] = entryKey(e) end
+    local bags = {}
+    for _, e in ipairs(bagItems) do bags[#bags + 1] = entryKey(e) end
+    table.sort(bags)
+    parts[#parts + 1] = table.concat(bags, ",")
     return table.concat(parts, ";")
 end
 

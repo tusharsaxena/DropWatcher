@@ -320,6 +320,21 @@ test("gear: a bag change that touches only an off-spec item still sends GearChan
     assertEqual(G.OffSpecGear(65)[SLOT.MAINHAND].link, link(3010))
 end)
 
+test("gear: sorting your bags moves no gear, so it sends no GearChanged", function()
+    local NS, m, G = enabled(function(m)
+        protPaladin(m)
+        carry(m, 0, 1, 3010, mace(600))
+        carry(m, 0, 2, 3012, mace(590))
+    end)
+    G.Snapshot()
+    local seen = listen(NS)
+    m.bags[0][1], m.bags[0][2] = m.bags[0][2], m.bags[0][1]
+    m.__fire("BAG_UPDATE_DELAYED")
+    m.advance(G.THROTTLE)
+    -- red under: the signature hashed the bag gear in bag order
+    assertEqual(seen.n, 0)
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The events, the throttle and GearChanged
 -- ---------------------------------------------------------------------------------------------
