@@ -516,7 +516,9 @@ end
 
 --- Spec §5.1's candidate for a member, for NS.Evaluate.Evaluate, or nil before any read. Its
 --- class is the roster's, its spec the inspect's (else the roster's); `owned` is unknown for
---- another player and left nil, as are the `prefs`.
+--- another player and left nil, as are the `prefs`. `offSpecGear(specID)` (feedback-19 spec §0)
+--- is the worn gear alone, since an inspect cannot see bags: each worn item that spec could wear,
+--- false where it could not (NS.OffSpec.WornGear).
 --- @param guid string
 --- @return table|nil
 function I.Candidate(guid)
@@ -525,9 +527,11 @@ function I.Candidate(guid)
     local m = NS.Roster.Get(guid)
     local classFile = m and m.classFile
     local specID = e.specID or (m and m.specID)
+    local gear = gearOf(e)
     return {
-        classFile = classFile, specID = specID, isPlayer = false, gear = gearOf(e),
+        classFile = classFile, specID = specID, isPlayer = false, gear = gear,
         dualWield = CD.DualWieldFor(classFile, specID), titanGrip = CD.TitanGripFor(classFile, specID),
+        offSpecGear = function(x) return NS.OffSpec.WornGear(gear, NS.OffSpec.Who(classFile, x)) end,
     }
 end
 

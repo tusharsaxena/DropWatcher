@@ -120,6 +120,10 @@ modules\Sim.lua
 # Conventional: publishes NS.Evaluate, the pure verdict kernel; read by the feature modules at call
 # time only, and itself reads NS.Constants and NS.ClassData (core\, above) at load.
 modules\Evaluate.lua
+# Conventional: publishes NS.OffSpec, the pure off-spec pass NS.Evaluate's run calls at call time;
+# read by modules\Gear.lua and modules\Inspect.lua at call time only, and itself reads NS.ClassData
+# (core\, above) at load. NS.Evaluate (above) is read at call time.
+modules\OffSpec.lua
 # Conventional: publishes NS.Scoring, the scorers behind the kernel's opts.scorer (Pawn, your weights,
 # none); read by the feed and the diagnostics at call time only, and itself reads NS.ClassData
 # (core\, above) at load. NS.Compat's Pawn seam, NS.Setting and NS.DebugOnce are read at call time.

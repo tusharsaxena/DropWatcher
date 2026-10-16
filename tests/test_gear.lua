@@ -233,6 +233,94 @@ test("gear: the candidate judges a drop against the worn item, and against the b
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- Off-spec gear (feedback-19 spec §0)
+-- ---------------------------------------------------------------------------------------------
+
+local INT, STR = "ITEM_MOD_INTELLECT_SHORT", "ITEM_MOD_STRENGTH_SHORT"
+local function mace(ilvl) return def("INVTYPE_WEAPON", ilvl, 2, 4, { stats = { [INT] = 90 } }) end
+local function sword(ilvl) return def("INVTYPE_WEAPON", ilvl, 2, 7, { stats = { [STR] = 90 } }) end
+
+-- A Protection paladin wearing a Strength sword and a plate helm.
+local function protPaladin(m)
+    m.__context.class, m.__context.classToken = "Paladin", "PALADIN"
+    m.specID = 66
+    wear(m, SLOT.MAINHAND, 3001, sword(620))
+    wear(m, SLOT.HEAD, 3002, plate("INVTYPE_HEAD", 610))
+end
+
+test("gear: the pool keeps every gear item read, the off-spec ones too", function()
+    local _, _, G = enabled(function(m)
+        protPaladin(m)
+        carry(m, 0, 1, 3010, mace(600))
+        carry(m, 0, 2, 3011, def("", 1, 7, 0, { name = "Reagent" }))
+    end)
+    local s = G.Snapshot()
+    assertNil(s.owned[SLOT.OFFHAND]); assertEqual(s.owned[SLOT.MAINHAND].ilvl, 620, "the main spec's best")
+    local links = {}
+    for _, e in ipairs(s.pool) do links[#links + 1] = e.link end
+    table.sort(links)
+    -- red under: the Intellect mace dropped by the main-spec filter before anything could keep it
+    assertEqual(table.concat(links, " "), table.concat({ link(3001), link(3002), link(3010) }, " "))
+end)
+
+test("gear: OffSpecGear is the best item per slot that spec could wear, false where nothing fits", function()
+    local _, _, G = enabled(function(m)
+        protPaladin(m)
+        carry(m, 0, 1, 3010, mace(600))
+        carry(m, 0, 2, 3012, mace(590))
+    end)
+    local holy = G.OffSpecGear(65)
+    assertEqual(holy[SLOT.MAINHAND].link, link(3010), "the bag mace, not the worn sword")
+    assertEqual(holy[SLOT.MAINHAND].bag, 0)
+    assertEqual(holy[SLOT.HEAD].link, link(3002), "the worn helm suits Holy too")
+    assertEqual(holy[SLOT.NECK], false, "an empty slot")
+    assertEqual(holy[SLOT.OFFHAND], false, "Holy does not dual wield")
+    local ret = G.OffSpecGear(70)
+    assertEqual(ret[SLOT.MAINHAND].link, link(3001))
+    assertTrue(G.OffSpecGear(65) == holy, "memoized on the snapshot")
+    G.Refresh("test")
+    assertTrue(G.OffSpecGear(65) ~= holy, "a rebuild drops the memo")
+    assertNil(G.OffSpecGear("x")); assertNil(G.OffSpecGear(71), "a spec of another class")
+end)
+
+test("gear: a worn slot still loading is unknown in the off-spec gear too", function()
+    local NS, _, G = enabled(function(m)
+        protPaladin(m)
+        wear(m, SLOT.CHEST, 3003, plate("INVTYPE_CHEST", 600))
+        m.items[link(3003)].loadsNeeded = 1
+    end)
+    NS.State.gear = nil
+    assertNil(G.OffSpecGear(65)[SLOT.CHEST])
+end)
+
+test("gear: the candidate brings its off-spec gear, and the kernel judges Holy against the bag mace", function()
+    local NS, m, G = enabled(function(m)
+        protPaladin(m)
+        carry(m, 0, 1, 3010, mace(600))
+    end)
+    local c = G.Candidate()
+    assertTrue(c.offSpecGear == G.OffSpecGear)
+    assertTrue(c.gear == G.Snapshot().equipped, "gear and owned stay as they were")
+    local drop = NS.ItemFacts.Get(m.addItem(link(3020), def("INVTYPE_WEAPON", 650, 2, 0, { stats = { [INT] = 100 } })))
+    local r = NS.Evaluate.Evaluate(drop, c, {})
+    assertEqual(r.verdict, "cantUse")
+    assertEqual(r.offSpec.specID, 65); assertEqual(r.offSpec.verdict, "upgrade")
+    assertEqual(r.offSpec.ilvlDelta, 50); assertEqual(r.offSpec.baseline.link, link(3010))
+end)
+
+test("gear: a bag change that touches only an off-spec item still sends GearChanged", function()
+    local NS, m, G = enabled(protPaladin)
+    G.Snapshot()
+    local seen = listen(NS)
+    carry(m, 0, 1, 3010, mace(600))
+    m.__fire("BAG_UPDATE_DELAYED")
+    m.advance(G.THROTTLE)
+    -- red under: the signature hashed the main spec's owned slots alone
+    assertEqual(seen.n, 1)
+    assertEqual(G.OffSpecGear(65)[SLOT.MAINHAND].link, link(3010))
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- The events, the throttle and GearChanged
 -- ---------------------------------------------------------------------------------------------
 

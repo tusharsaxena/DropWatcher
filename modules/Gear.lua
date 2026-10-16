@@ -5,6 +5,8 @@ local _, NS = ...
 --
 --   snapshot = { equipped = { [slot] = entry | false },   -- false = empty; absent = still loading
 --                owned    = { [slot] = entry },           -- the best you own per slot, worn or not
+--                pool     = { entry, ... },               -- every gear item read, worn and in bags
+--                bySpec   = { [specID] = gear },          -- OffSpecGear's memo
 --                classFile, specID, dualWield, titanGrip,
 --                loading  = n,                            -- links still loading
 --                signature }
@@ -17,8 +19,14 @@ local _, NS = ...
 --
 -- THE CANDIDATE. Candidate() answers spec §5.1's candidate for you: classFile (UnitClass), specID
 -- (NS.Compat.PlayerSpecID), dualWield and titanGrip (NS.ClassData for that spec, else for the
--- class when every spec agrees, else nil), `gear` = equipped and `owned`. `prefs` is left for the
--- feed to add from the `comparison.undesired` setting.
+-- class when every spec agrees, else nil), `gear` = equipped, `owned` and `offSpecGear`. `prefs` is
+-- left for the feed to add from the `comparison.undesired` setting.
+--
+-- OFF-SPEC (feedback-19 spec §0). The snapshot keeps every gear item it reads, worn and in bags,
+-- before your spec's filter, as `pool`. OffSpecGear(specID) places that pool for another spec of
+-- your class (the items it can equip, by its own hand flags) the way `owned` is placed, and answers
+-- the kernel's gear for it: the best item per slot, false where nothing fits, a worn slot still
+-- loading absent. It is built lazily, once per spec per snapshot.
 --
 -- OWNED. A bag item is first read for its equip location (NS.Compat.ItemEquipLoc, no item cache
 -- needed), and only one with a slot plan is requested from the item facts, so reagents and
@@ -34,8 +42,8 @@ local _, NS = ...
 -- THE EDGE AND THE THROTTLE. PLAYER_EQUIPMENT_CHANGED, BAG_UPDATE_DELAYED and the player's
 -- PLAYER_SPECIALIZATION_CHANGED arm one THROTTLE-second timer; the events inside it share one
 -- rebuild. A link not cached yet is requested through ItemFacts.Request, and its load arms the
--- same timer. A rebuild whose signature (spec, class and every worn and owned link with its
--- level) moved sends GearChanged (no payload). The first read, lazily from a caller, announces
+-- same timer. A rebuild whose signature (spec, class, every worn and owned link with its level,
+-- and every bag gear item in the pool) moved sends GearChanged (no payload). The first read, lazily from a caller, announces
 -- nothing: nobody has judged against the old one. Stood down, the timer is canceled and the
 -- snapshot dropped; the stand-up rebuilds it.
 
@@ -126,11 +134,19 @@ local function readIdentity()
     }
 end
 
--- Whether a bag item is gear you could put on. `who` carries the candidate's identity fields.
-local function wearable(facts, who)
+-- Whether a bag item is gear anyone could put on: not a tier token, with a slot plan and a level.
+local function isGear(facts)
     if facts.isTierToken or not C.SLOT_PLAN[facts.equipLoc or ""] then return false end
-    if type(facts.ilvl) ~= "number" then return false end
-    return NS.Evaluate.Equippability(facts, who) == "ok"
+    return type(facts.ilvl) == "number"
+end
+
+-- The entries `who` (a candidate's identity fields) could put on.
+local function wearable(items, who)
+    local out = {}
+    for _, e in ipairs(items) do
+        if NS.Evaluate.Equippability(e, who) == "ok" then out[#out + 1] = e end
+    end
+    return out
 end
 
 -- Whether a bag link may be gear, by its equip location (no item cache needed): one with no slot
@@ -141,13 +157,14 @@ local function mayBeGear(link)
     return equipLoc == nil or C.SLOT_PLAN[equipLoc] ~= nil
 end
 
-local function readBags(who, waiting)
+-- Every gear item in your bags, whoever could wear it.
+local function readBags(waiting)
     local items = {}
     for _, bag in ipairs(C.BAG_IDS) do
         for bagSlot = 1, NS.Compat.BagSlotCount(bag) do
             local link = NS.Compat.BagItemLink(bag, bagSlot)
             local facts = link and mayBeGear(link) and factsOf(link, waiting)
-            if facts and wearable(facts, who) then
+            if facts and isGear(facts) then
                 local e = copy(facts)
                 e.bag, e.bagSlot = bag, bagSlot
                 items[#items + 1] = e
@@ -221,12 +238,24 @@ local function entryKey(e)
     return e.link .. "@" .. tostring(e.ilvl)
 end
 
-local function signature(snap)
+-- The bag items go in too, so a change to one only another spec could wear still moves it.
+local function signature(snap, bagItems)
     local parts = { tostring(snap.classFile), tostring(snap.specID) }
     for _, slot in ipairs(SLOTS) do
         parts[#parts + 1] = slot .. "=" .. entryKey(snap.equipped[slot]) .. "/" .. entryKey(snap.owned[slot] or false)
     end
+    for _, e in ipairs(bagItems) do parts[#parts + 1] = entryKey(e) end
     return table.concat(parts, ";")
+end
+
+-- Every worn entry, then every bag gear entry: the pool OffSpecGear places.
+local function poolOf(equipped, bagItems)
+    local out = {}
+    for _, slot in ipairs(SLOTS) do
+        if type(equipped[slot]) == "table" then out[#out + 1] = equipped[slot] end
+    end
+    for _, e in ipairs(bagItems) do out[#out + 1] = e end
+    return out
 end
 
 --- A fresh snapshot read from the client, unstored. With `prevEquipped` (a bag-only rebuild) each
@@ -238,9 +267,11 @@ function G.Read(prevEquipped)
     local snap = readIdentity()
     snap.equipped = readEquipped(waiting, prevEquipped)
     -- The identity fields are the candidate Equippability needs; the snapshot is that table.
-    snap.owned = readOwned(snap.equipped, readBags(snap, waiting), snap)
+    local bagItems = readBags(waiting)
+    snap.owned = readOwned(snap.equipped, wearable(bagItems, snap), snap)
+    snap.pool, snap.bySpec = poolOf(snap.equipped, bagItems), {}
     snap.loading = waiting.n
-    snap.signature = signature(snap)
+    snap.signature = signature(snap, bagItems)
     return snap
 end
 
@@ -314,8 +345,33 @@ function G.Candidate()
     local s = G.Snapshot()
     return {
         classFile = s.classFile, specID = s.specID, dualWield = s.dualWield, titanGrip = s.titanGrip,
-        gear = s.equipped, owned = s.owned, isPlayer = true,
+        gear = s.equipped, owned = s.owned, isPlayer = true, offSpecGear = G.OffSpecGear,
     }
+end
+
+-- Spec `specID`'s gear from the pool: its best per slot, false where nothing fits, a worn slot
+-- still loading absent.
+local function offSpecGearOf(s, specID)
+    local who = NS.OffSpec.Who(s.classFile, specID)
+    local owned, gear = readOwned({}, wearable(s.pool, who), who), {}
+    for _, slot in ipairs(SLOTS) do
+        if s.equipped[slot] ~= nil then gear[slot] = owned[slot] or false end
+    end
+    return gear
+end
+
+--- Another spec of your class's gear for the verdict kernel (feedback-19 spec §0): the best item
+--- you own per slot that the spec could wear (worn or in a bag), false where nothing fits, and a
+--- worn slot still loading absent. nil for a spec that is not one of your class's. Memoized on the
+--- snapshot; read it, never write it.
+--- @param specID number
+--- @return table|nil
+function G.OffSpecGear(specID)
+    local s = G.Snapshot()
+    local row = type(specID) == "number" and CD.SPECS[specID]
+    if not row or row.class ~= s.classFile then return nil end
+    if not s.bySpec[specID] then s.bySpec[specID] = offSpecGearOf(s, specID) end
+    return s.bySpec[specID]
 end
 
 --- The quality worn in each slot, `{ [slot] = quality | false }` (false = empty), for the

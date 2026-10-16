@@ -10,7 +10,8 @@ local _, NS = ...
 --                 stats = { [STAT_KEY] = n }, track = { name, rank, max, tier },
 --                 unique = { cat, max }, isTierToken, classes = { [classFile] = true } }
 --   candidate = { classFile, specID, dualWield, titanGrip, gear = { [slot] = facts | false },
---                 owned = { [slot] = facts }, prefs = { undesired = { [SubClassKey] = true } } }
+--                 owned = { [slot] = facts }, prefs = { undesired = { [SubClassKey] = true } },
+--                 offSpecGear = function(specID), undesiredBySpec = { [specID] = { [SubClassKey] = true } } }
 --   opts      = { sidegradeBand = 0, compareOwned = false, heirloomProtect = false,
 --                 scorer = function(facts, candidate, drop) }
 --
@@ -19,6 +20,9 @@ local _, NS = ...
 --
 -- In `gear`, false is an empty slot and nil a slot nobody has read yet. A tier token's equipLoc is
 -- the slot the token makes. A scorer answers a number, "pending" (Pawn not ready), or nil.
+--
+-- A `cantUse` that depends on the spec also carries `offSpec`, the best verdict for another spec of
+-- the class (modules/OffSpec.lua); the verdict itself stays `cantUse`.
 --
 -- It NEVER THROWS: any nil or unexpected input answers verdict "unknown" with a reason, and the
 -- public entry point runs the whole evaluation under pcall as the last line of defense.
@@ -465,6 +469,8 @@ local function run(facts, candidate, opts)
     local base = compare(out, facts, candidate, opts)
     out.verdict = verdictOf(out, base, math.abs(num(opts.sidegradeBand) or 0))
     protect(out, base, opts)
+    -- The off-spec pass (modules/OffSpec.lua): only a spec refusal, only with offSpecGear.
+    if NS.OffSpec then NS.OffSpec.Attach(out, facts, candidate, opts, run) end
     return out
 end
 

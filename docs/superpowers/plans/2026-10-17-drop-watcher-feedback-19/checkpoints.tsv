@@ -1,2 +1,3 @@
 date	milestone	evidence
 2026-10-17	M26	spec and plan written; branch cut from master 419bc1e; suite green (1480/0/1), lint 0/0
+2026-10-17	M26	DW-O0: modules/OffSpec.lua (Attach, Who, WornGear) hooked into Evaluate run; Gear pool + OffSpecGear + signature over bag gear; Inspect worn offSpecGear; LootFeed undesiredBySpec (993 lines); suite 1497/0/1 (+17: test_offspec 11, test_gear 5, test_inspect 1), lint 0/0, perf 7 scenarios green, complexity 0 warnings max CCN 14

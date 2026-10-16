@@ -160,6 +160,7 @@ Kit.run{
         "test_constants",
         "test_class_data",
         "test_evaluate",
+        "test_offspec",
         "test_scoring",
         "test_quality_gate",
         "test_situations",

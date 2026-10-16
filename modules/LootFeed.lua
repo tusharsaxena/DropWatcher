@@ -238,6 +238,7 @@ local function myCandidate(cfg)
     local cand = NS.Gear.Candidate()
     local undesired = cfg.undesired and cand.specID and cfg.undesired[cand.specID]
     if type(undesired) == "table" then cand.prefs = { undesired = undesired } end
+    cand.undesiredBySpec = cfg.undesired   -- each off-spec's own list (modules/OffSpec.lua)
     return cand
 end
 
