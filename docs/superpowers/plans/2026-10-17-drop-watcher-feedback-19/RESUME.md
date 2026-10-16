@@ -10,3 +10,4 @@ owner's go-ahead.
 - 2026-10-17 — DW-O0 review: Gear signature over sorted bag gear (a bag sort no longer re-judges the feed); suite 1498/0/1, lint 0/0, perf green, max CCN 14.
 - 2026-10-17 — DW-O1 landed: how off-spec looks (offspec tone, modules/OffSpecCells.lua, Me cell gear half, marks, detail/History cards, History snapshot, filter bar, legends); suite 1518/0/1, lint 0/0, perf green, max CCN 14.
 - 2026-10-17 — DW-O1 review: History off-spec tooltip names the compared level, not an empty slot (snapshots keep no baseline); suite 1519/0/1, lint 0/0, perf green, max CCN 14.
+- 2026-10-17 — DW-O2 landed: off-spec ask (askOffSpec template, row, editor, {mygain} via OffSpec.EvalFor, Ask tooltip), toast third value and title, auto-ask lag and main-first re-arm; suite 1533/0/1, lint 0/0, perf green, max CCN 14.

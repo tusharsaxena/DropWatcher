@@ -114,7 +114,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
-| `messages.templates.<kind>` | design spec §9.1's text | Templates | the `ask`, `transmog`, `offer` and `announce` templates; an empty one is refused. `transmog` is the ask's wording for a drop that is no gain for you but whose look you have not collected (DW-53) |
+| `messages.templates.<kind>` | design spec §9.1's text | Templates | the `ask`, `transmog`, `askOffSpec`, `offer` and `announce` templates; an empty one is refused. `transmog` is the ask's wording for a drop that is no gain for you but whose look you have not collected (DW-53); `askOffSpec` is its wording for a drop your current spec can't use but another spec of your class gains from (feedback-19 spec §2; no migration, AceDB backfills the default) |
 | `messages.transmogAsk` | `false` | Sending | also offer an ask, with the `transmog` template, on a drop that is no gain for you but whose look you have not collected (DW-53) |
 | `messages.editFirst` | `false` | Sending | open the Edit message box before an ask, offer or announce (the host handlers) |
 | `messages.oneAsk` | `true` | Sending | each (drop, target, kind) is sent once |

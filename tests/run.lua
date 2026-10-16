@@ -162,6 +162,7 @@ Kit.run{
         "test_evaluate",
         "test_offspec",
         "test_offspec_cells",
+        "test_offspec_ask",
         "test_scoring",
         "test_quality_gate",
         "test_situations",

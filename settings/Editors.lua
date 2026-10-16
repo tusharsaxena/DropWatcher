@@ -222,12 +222,16 @@ E.TOKEN_TIPS = {
 E.TEMPLATE_LABEL = {
     ask      = L["Ask (whisper to the looter)"],
     transmog = L["Ask for transmog (whisper to the looter)"],
+    askOffSpec = L["Ask for off-spec (whisper to the looter)"],
     offer    = L["Offer (whisper to a candidate)"],
     announce = L["Announce (group, raid or instance)"],
 }
 
 -- A template's short name, for the preview's header.
-E.KIND_NAME = { ask = L["Ask"], transmog = L["Ask for transmog"], offer = L["Offer"], announce = L["Announce"] }
+E.KIND_NAME = {
+    ask = L["Ask"], transmog = L["Ask for transmog"], askOffSpec = L["Ask for off-spec"], offer = L["Offer"],
+    announce = L["Announce"],
+}
 
 local RED = "|cffff4040%s|r"
 
@@ -271,6 +275,13 @@ local function lookMissing(rec)
     return isTable(rec.facts) and rec.facts.transmogKnown == false
 end
 
+local OFF_GAIN = { upgrade = true, sidegrade = true }
+
+local function offSpecGain(rec)
+    local off = NS.OffSpec.Of(rec.me)
+    return off ~= nil and OFF_GAIN[off.verdict] == true
+end
+
 local SAMPLE = {
     ask = function(rec, strict)
         if isMine(rec) or not isTable(rec.looter) then return nil end
@@ -281,6 +292,12 @@ local SAMPLE = {
     transmog = function(rec, strict)
         if isMine(rec) or not isTable(rec.looter) then return nil end
         if strict and not lookMissing(rec) then return nil end
+        return { name = rec.looter.name, guid = rec.looter.guid }
+    end,
+    -- A drop your spec can't use but another of your specs gains from, when there is one.
+    askOffSpec = function(rec, strict)
+        if isMine(rec) or not isTable(rec.looter) then return nil end
+        if strict and not offSpecGain(rec) then return nil end
         return { name = rec.looter.name, guid = rec.looter.guid }
     end,
     offer = function(rec)
@@ -295,7 +312,7 @@ local SAMPLE = {
 
 --- The drop a template's preview is written for, newest first: for an ask another member's drop
 --- and its looter (one that is an upgrade for you when there is one; for the transmog ask one whose
---- look you have not collected), for an offer your own drop and the candidate who gains most, for an announce your
+--- look you have not collected; for the off-spec ask one another of your specs gains from), for an offer your own drop and the candidate who gains most, for an announce your
 --- own drop. Nil when no drop in `drops` fits.
 --- @param kind string
 --- @param drops table drop records, oldest first

@@ -91,6 +91,7 @@ NS.C = {
                 offer    = "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?",
                 announce = "{item} is up for grabs, whisper me.",
                 transmog = "Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!",
+                askOffSpec = "Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!",
             },
             transmogAsk     = false,    -- offer the For transmog ask on a drop whose look you lack
             editFirst       = false,    -- open the edit box before a send

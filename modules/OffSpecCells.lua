@@ -22,6 +22,9 @@ local _, NS = ...
 -- Protection can't use it`; their chips and rows are modules/DetailCells.lua's and
 -- modules/HistoryCard.lua's, read from the off-spec part.
 --
+-- THE ASK (feedback-19 spec §2). OC.AskTip is the Ask button's tooltip when it fills the
+-- `askOffSpec` template: "Ask for it for your Holy off-spec."
+--
 -- PURE but for the spec names: plain tables in, plain tables out; a spec's name is read at call time
 -- from NS.Compat.SpecName (the client's GetSpecializationInfoByID), with words when it gives none.
 -- The marks are NS.TipMarks' with the offspec tone (TM.Mark / TM.ArrowCell's override).
@@ -167,4 +170,16 @@ function OC.SpecRow(off)
     return { key = "spec", label = L["Spec"], tone = TONE,
         text = L["%s (off-spec): %s can't use it"]:format(OC.SpecName(off.specID), mainName(off)),
         tip = { L["Spec"], L["Your current spec can't use it, so it is judged for another spec of your class, on item level alone."] } }
+end
+
+--- The Ask button's tooltip for an off-spec ask (feedback-19 spec §2, NS.WindowCells.Ask's
+--- `askOffSpec` template): it names the spec the drop is asked for.
+--- @param drop table a feed record
+--- @param who string the looter's short name
+--- @return string title, string ...
+function OC.AskTip(drop, who)
+    local off = NS.OffSpec.Of(type(drop) == "table" and drop.me or nil)
+    return L["Ask for off-spec"], L["Ask for it for your %s off-spec."]:format(OC.SpecName(off and off.specID)),
+        L["Whisper %s your For off-spec template: your current spec can't use it."]:format(who),
+        L["One ask per item per looter."]
 end

@@ -282,6 +282,8 @@ local function messages()
         L["What you whisper a looter to ask for their drop."], templates)
     text("messages.templates.transmog", M.templates.transmog, L["Ask for transmog"],
         L["What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."], templates)
+    text("messages.templates.askOffSpec", M.templates.askOffSpec, L["Ask for off-spec"],
+        L["What you whisper a looter to ask for a drop your current spec can't use but another of your specs gains from."], templates)
     text("messages.templates.offer", M.templates.offer, L["Offer"],
         L["What you whisper someone your own drop would help."], templates)
     text("messages.templates.announce", M.templates.announce, L["Announce"],

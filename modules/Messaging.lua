@@ -8,7 +8,7 @@ local _, NS = ...
 -- defaults are data in core/Constants.lua (C.MESSAGE_*).
 --
 --   req  = { kind = "ask" | "offer" | "announce", target, dropID, ctx = token values, text?,
---            template? = the template to fill instead of the kind's (an ask's `transmog`) }
+--            template? = the template to fill instead of the kind's (an ask's `transmog` or `askOffSpec`) }
 --   opts = { canSend = true, oneAsk = true, templates = { [kind] = text }, now }
 --
 -- Request answers { action = "send" | "queue" | "refuse", ask, reason, length }. An ask record is
@@ -39,7 +39,7 @@ for _, name in ipairs(C.MESSAGE_TEMPLATES) do TEMPLATE[name] = true end
 -- Templates and tokens (spec §9.1)
 -- ---------------------------------------------------------------------------------------------
 
---- The template named `name` (a kind, or `transmog`): the owner's text in `templates` when it is
+--- The template named `name` (a kind, `transmog` or `askOffSpec`): the owner's text in `templates` when it is
 --- a non-empty string, else the default (defaults/Profile.lua's `messages.templates`). Nil for an
 --- unknown name.
 function M.Template(name, templates)
@@ -52,10 +52,12 @@ end
 -- The verdicts for you an ask is offered for, with the plain ask template.
 local USEFUL = { upgrade = true, sidegrade = true }
 
---- Which template an ask for `drop` fills (design spec §4 transmog-known, §9.1): `ask` when the
---- drop is an upgrade or a sidegrade for you; else `transmog` when `transmogAsk` is on and you
---- have not collected its appearance (facts.transmogKnown is false, not merely unknown); else nil,
---- no ask is offered. Reads the drop record alone.
+--- Which template an ask for `drop` fills (design spec §4 transmog-known, §9.1; feedback-19 spec
+--- §2): `ask` when the drop is an upgrade or a sidegrade for you; else `askOffSpec` when your spec
+--- cannot use it but another spec of your class gains (NS.OffSpec.Of: an upgrade or a sidegrade);
+--- else `transmog` when `transmogAsk` is on and you have not collected its appearance
+--- (facts.transmogKnown is false, not merely unknown); else nil, no ask is offered. Main spec
+--- always comes first. Reads the drop record alone.
 --- @param drop table a feed record
 --- @param transmogAsk boolean the `messages.transmogAsk` setting
 --- @return string|nil
@@ -63,6 +65,8 @@ function M.AskTemplate(drop, transmogAsk)
     if not isTable(drop) then return nil end
     local v = isTable(drop.me) and drop.me.verdict or nil
     if USEFUL[v] then return "ask" end
+    local off = NS.OffSpec.Of(drop.me)
+    if off and USEFUL[off.verdict] then return "askOffSpec" end
     local f = isTable(drop.facts) and drop.facts or nil
     if transmogAsk == true and f and f.transmogKnown == false then return "transmog" end
     return nil

@@ -28,6 +28,11 @@ local _, NS = ...
 -- is considered on DropAdded and again on each DropUpdated until it has toasted once (an inspect can
 -- turn its trade `likely` later).
 --
+-- OFF-SPEC (feedback-19 spec §2). A drop your spec can't use toasts the same way when another spec
+-- of your class finds it an upgrade (NS.OffSpec.Of), the least gain tested on the off-spec
+-- difference; Qualifies says so with a third value, `offSpec`, and row 1 reads `Off-spec upgrade
+-- for you (Holy)`. Its Ask sends the off-spec template, which the shared ask path picks.
+--
 -- ONE AT A TIME. Qualifying drops wait in a queue (MAX_QUEUE, the oldest dropped first); the next
 -- shows when the current one goes. A toast goes after `toast.duration` seconds (default 8), when its
 -- close mark is clicked, or on a right-click anywhere on it (the close mark's path: the drop is not
@@ -108,19 +113,31 @@ local function gainPasses(eval, minGain)
     return gain >= (num(minGain) or 0)
 end
 
+-- The verdict a drop qualifies through: your own `upgrade`, else (your spec can't use it) another
+-- spec's off-spec upgrade (NS.OffSpec.Of, feedback-19 spec §2) and `offSpec`; nil when neither.
+local function upgradeOf(me)
+    if me.verdict == "upgrade" then return me end
+    local off = NS.OffSpec.Of(me)
+    if off and off.verdict == "upgrade" then return off, "offSpec" end
+    return nil
+end
+
 --- Whether `drop` earns a toast: someone else's drop, an upgrade for you by at least `minGain` item
 --- levels (or into an empty slot, whatever `minGain`), with a trade estimate of `likely` or `yes`.
+--- A drop your spec can't use qualifies the same way through another spec's off-spec upgrade, its
+--- gain tested on the off-spec difference; the third value then says so.
 --- @param drop table a feed record
 --- @param minGain number
---- @return boolean ok, string|nil why (`mine`, `notUpgrade`, `gain` or `trade`) when not
+--- @return boolean ok, string|nil why (`mine`, `notUpgrade`, `gain` or `trade`) when not,
+--- string|nil how (`offSpec` when it qualifies through the off-spec result)
 function Toast.Qualifies(drop, minGain)
     if type(drop) ~= "table" or drop.isMine then return false, "mine" end
-    local me = type(drop.me) == "table" and drop.me or {}
-    if me.verdict ~= "upgrade" then return false, "notUpgrade" end
-    if not gainPasses(me, minGain) then return false, "gain" end
+    local eval, how = upgradeOf(type(drop.me) == "table" and drop.me or {})
+    if not eval then return false, "notUpgrade" end
+    if not gainPasses(eval, minGain) then return false, "gain" end
     local t = type(drop.trade) == "table" and drop.trade.state
     if not TRADE_WORD[t] then return false, "trade" end
-    return true
+    return true, nil, how
 end
 
 --- The width rows 2 to 4 have: the toast's, less the insets, the icon and the gap after it.
@@ -142,6 +159,13 @@ local function shortReason(trade, who)
     return (NS.WindowCells.TradeReason(trade, who):gsub("%.$", ""))
 end
 
+-- Row 1: `Big upgrade for you`, or for an off-spec upgrade `Off-spec upgrade for you (Holy)`.
+local function titleOf(drop)
+    local off, how = upgradeOf(type(drop.me) == "table" and drop.me or {})
+    if how ~= "offSpec" then return L["Big upgrade for you"] end
+    return L["Off-spec upgrade for you (%s)"]:format(NS.OffSpecCells.SpecName(off.specID))
+end
+
 --- The toast's parts for a qualifying drop (feedback-9 spec §0), each row's pieces apart:
 --- { title, link, item, itemText (the name in its quality color), ilvl, looter, classFile,
 --- looterText (in its class color), me, them ({ glyph, text, tone } each), trade, tradeTone,
@@ -156,7 +180,7 @@ function Toast.Compose(drop)
     local name = WC.ItemName(drop.link) or "?"
     local trade = type(drop.trade) == "table" and drop.trade or {}
     return {
-        title = L["Big upgrade for you"], link = drop.link,
+        title = titleOf(drop), link = drop.link,
         item = name, itemText = NS.TipMarks.ItemName(name, f.quality, drop.link), ilvl = num(f.ilvl),
         looter = who, classFile = looter.classFile, looterText = NS.TipMarks.ClassName(who, looter.classFile),
         me = verdictPart(WC.Me(drop)), them = verdictPart(WC.Them(drop)),

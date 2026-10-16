@@ -164,7 +164,7 @@ modules\FeedRecords.lua
 modules\FeedCounts.lua
 # Conventional: publishes NS.Messaging, the pure messaging core (templates, the one-ask guard and
 # the send queue); read by the messaging edge at call time only, and itself reads NS.Constants
-# (core\, above) at load.
+# (core\, above) at load and NS.OffSpec (above: the off-spec ask's pick) at call time.
 modules\Messaging.lua
 # LOAD-BEARING: its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
 # above. Publishes NS.Restrictions, the restriction tracker; appends its
@@ -244,8 +244,8 @@ modules\TradeHelper.lua
 # NS.STAND_UP and its handlers to NS.addon (core\DropWatcher.lua), all above. Its shared-event rows
 # rely on this position: GROUP_ROSTER_UPDATE after modules\Roster.lua's (the roster is fresh for
 # a left-group cancel), ENCOUNTER_END after modules\LootFeed.lua's, and CHALLENGE_MODE_COMPLETED
-# after modules\Situations.lua's and modules\LootFeed.lua's. NS.Restrictions, NS.Roster and
-# NS.LootFeed (above) are read at call time.
+# after modules\Situations.lua's and modules\LootFeed.lua's. NS.Restrictions, NS.Roster,
+# NS.LootFeed and NS.OffSpec (the off-spec gain; above) are read at call time.
 modules\Asks.lua
 # LOAD-BEARING: its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
 # above. Publishes NS.History, the account-wide log (kept by days) of the feed's drops and their
@@ -420,7 +420,8 @@ modules\TestMode.lua
 # the modules above. Publishes NS.Toast, the opt-in upgrade toast; appends its handlers to NS.addon
 # and registers its DropAdded, DropUpdated and AskStateChanged receivers on a NS.Bus target at load.
 # NS.LootFeed, NS.Asks, NS.Window, NS.WindowGroup, NS.WindowCells, NS.SideCells (the verdicts),
-# NS.WindowRows (the item level's mark), NS.TipMarks (the quality and class colors), NS.Setting and
+# NS.WindowRows (the item level's mark), NS.TipMarks (the quality and class colors), NS.OffSpec and
+# NS.OffSpecCells (an off-spec upgrade and its title), NS.Setting and
 # the host handlers are read at call time: the frame is built on the first toast.
 modules\Toast.lua
 # LOAD-BEARING: appends its ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE,

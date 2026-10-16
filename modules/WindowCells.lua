@@ -641,7 +641,7 @@ end
 -- ── the Ask button ──────────────────────────────────────────────────────────────────────────
 
 -- Why no ask is offered for `drop`, or nil when one is; the template it fills when one is
--- (NS.Messaging.AskTemplate: `ask`, or `transmog` for a look you lack with `transmogAsk` on).
+-- (NS.Messaging.AskTemplate: `ask`, `askOffSpec` for another spec's gain, or `transmog`).
 local function noAskReason(drop, transmogAsk)
     if drop.isMine then return L["Your own drop: Offer shows who it would help."] end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
@@ -698,7 +698,7 @@ function WC.ActionTone(state, kind)
     return kind == "offer" and OFFER_TONE[state] or ACTION_TONE[state]
 end
 
-local function askTip(state, who, reason, template)
+local function askTip(state, who, reason, template, drop)
     if state == "queued" then
         return L["Queued"], L["Chat is restricted right now: the ask to %s is sent when it lifts."]:format(who), L["Click to cancel it."]
     end
@@ -709,6 +709,7 @@ local function askTip(state, who, reason, template)
         return L["Ask for transmog"], L["Whisper %s your For transmog template: it is no gain for you, but you have not collected its look."]:format(who),
             L["One ask per item per looter."]
     end
+    if template == "askOffSpec" then return NS.OffSpecCells.AskTip(drop, who) end
     return L["Ask"], L["Whisper %s your ask template for this item."]:format(who), L["One ask per item per looter."]
 end
 
@@ -729,7 +730,7 @@ function WC.Ask(drop, state, reason, transmogAsk)
     local look = ASK_LOOK[state] or ASK_LOOK.ready
     local s = ASK_LOOK[state] and state or "ready"
     return { offered = true, text = look.text, icon = look.icon, enabled = look.enabled,
-        tip = { askTip(s, looterName(drop), reason, template) }, state = s, template = template or "ask" }
+        tip = { askTip(s, looterName(drop), reason, template, drop) }, state = s, template = template or "ask" }
 end
 
 -- ── the encounter header ────────────────────────────────────────────────────────────────────

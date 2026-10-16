@@ -775,6 +775,10 @@ L["Your best %s item"] = "Your best %s item"
 L["%s (off-spec): %s can't use it"] = "%s (off-spec): %s can't use it"
 L["Your current spec can't use it, so it is judged for another spec of your class, on item level alone."] =
     "Your current spec can't use it, so it is judged for another spec of your class, on item level alone."
+L["Ask for off-spec"] = "Ask for off-spec"
+L["Ask for it for your %s off-spec."] = "Ask for it for your %s off-spec."
+L["Whisper %s your For off-spec template: your current spec can't use it."] =
+    "Whisper %s your For off-spec template: your current spec can't use it."
 
 -- modules/MineCells.lua
 L["Bonus roll"] = "Bonus roll"
@@ -1124,6 +1128,7 @@ L["not an upgrade for %s"] = "not an upgrade for %s"
 L["group loot: four hours to trade"] = "group loot: four hours to trade"
 L["bind on equip"] = "bind on equip"
 L["Big upgrade for you"] = "Big upgrade for you"
+L["Off-spec upgrade for you (%s)"] = "Off-spec upgrade for you (%s)"
 L["Looted by %s · You"] = "Looted by %s · You"
 L["· Them"] = "· Them"
 
@@ -1225,6 +1230,8 @@ L["Templates"] = "Templates"
 L["What you whisper a looter to ask for their drop."] = "What you whisper a looter to ask for their drop."
 L["What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."] =
     "What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."
+L["What you whisper a looter to ask for a drop your current spec can't use but another of your specs gains from."] =
+    "What you whisper a looter to ask for a drop your current spec can't use but another of your specs gains from."
 L["What you whisper someone your own drop would help."] = "What you whisper someone your own drop would help."
 L["What you tell the group about a drop you can trade."] = "What you tell the group about a drop you can trade."
 L["Sending"] = "Sending"
@@ -1306,6 +1313,7 @@ L["The item levels the looter, or the candidate, would gain."] =
 L["The item levels you would gain."] = "The item levels you would gain."
 L["Ask (whisper to the looter)"] = "Ask (whisper to the looter)"
 L["Ask for transmog (whisper to the looter)"] = "Ask for transmog (whisper to the looter)"
+L["Ask for off-spec (whisper to the looter)"] = "Ask for off-spec (whisper to the looter)"
 L["Offer (whisper to a candidate)"] = "Offer (whisper to a candidate)"
 L["Announce (group, raid or instance)"] = "Announce (group, raid or instance)"
 L["the group"] = "the group"
@@ -1334,7 +1342,7 @@ L["Click a token to put it in the message you last edited. Each is filled in whe
     "Click a token to put it in the message you last edited. Each is filled in when the message is sent."
 L["Your messages"] = "Your messages"
 L["Reset templates"] = "Reset templates"
-L["Put the four messages back to the shipped wording."] = "Put the four messages back to the shipped wording."
+L["Put the five messages back to the shipped wording."] = "Put the five messages back to the shipped wording."
 
 -- settings/Pages.lua
 L["Feed"] = "Feed"

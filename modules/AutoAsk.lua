@@ -10,6 +10,12 @@ local _, NS = ...
 -- auto-ask was turned on are considered, so turning it on never asks for the drops already there;
 -- a profile switch, copy or reset that turns it on counts the same (OnProfileReloaded).
 --
+-- OFF-SPEC (feedback-19 spec §2). A drop your spec can't use qualifies through another spec's
+-- off-spec upgrade (Qualifies' third value, `offSpec`), with the same least gain on the off-spec
+-- difference and no setting of its own. Main spec always goes first: an off-spec ask is due
+-- AA.OFFSPEC_LAG seconds after its main-spec time, and one that comes due while any main-spec ask
+-- is still waiting is armed again OFFSPEC_LAG seconds on, until none is.
+--
 -- THE TIMING (DueAt, pure). The ask is due `messages.autoAsk.delay` seconds (3 to 30, default 10)
 -- after the later of the drop and the last ENCOUNTER_END. While an encounter is in progress
 -- (between ENCOUNTER_START and ENCOUNTER_END) nothing is due: the waiting asks are held, and the
@@ -25,7 +31,8 @@ local _, NS = ...
 -- qualifying, never asked, not received, its looter still in the group) and the ask goes through
 -- the messaging edge's Request (modules/Asks.lua), which guards, queues under a restriction, sends
 -- and confirms it in chat like a click would; the edit-first box is never opened for it. It fills
--- the plain `ask` template (an upgrade never takes the transmog one). In test mode nothing is
+-- the plain `ask` template, or `askOffSpec` for an off-spec upgrade (the edge's pick,
+-- NS.Messaging.AskTemplate; an upgrade never takes the transmog one). In test mode nothing is
 -- sent: the messaging edge prints the text instead.
 --
 -- CANCELED (spec §9.4) when you ask yourself (any AskStateChanged for the drop's ask), when the
@@ -46,6 +53,7 @@ local L = NS.L
 local TAG = "MSG"
 
 AA.MIN_DELAY, AA.MAX_DELAY = 3, 30
+AA.OFFSPEC_LAG = 5   -- seconds an off-spec ask waits after its main-spec time (main spec goes first)
 
 -- ── the pure core ───────────────────────────────────────────────────────────────────────────
 
@@ -55,16 +63,18 @@ local function num(v)
 end
 
 --- When an ask is due: `delay` seconds after the later of the drop (`droppedAt`) and the last
---- encounter's end (`endedAt`, nil when none). Every time is GetTime()'s.
+--- encounter's end (`endedAt`, nil when none), plus `lag` (an off-spec ask's AA.OFFSPEC_LAG; none
+--- when nil). Every time is GetTime()'s.
 --- @param droppedAt number
 --- @param endedAt number|nil
 --- @param delay number
+--- @param lag number|nil
 --- @return number
-function AA.DueAt(droppedAt, endedAt, delay)
+function AA.DueAt(droppedAt, endedAt, delay, lag)
     local base = num(droppedAt) or 0
     local ended = num(endedAt)
     if ended and ended > base then base = ended end
-    return base + (num(delay) or 0)
+    return base + (num(delay) or 0) + (num(lag) or 0)
 end
 
 --- The delay in force, clamped to MIN_DELAY..MAX_DELAY; a value that is not a number is the
@@ -88,7 +98,7 @@ end
 
 -- ── the edge's state ────────────────────────────────────────────────────────────────────────
 
-local pending = {}       -- [drop id] = { target, at, timer, dueAt }: the asks waiting
+local pending = {}       -- [drop id] = { target, at, test, offSpec, timer, dueAt }: the asks waiting
 local considered = {}    -- [drop id] = true: scheduled, sent or canceled once; never again
 local enabledAt = 0      -- GetTime() when auto-ask was last turned on (0: at load)
 local wasOn              -- the last `enabled` seen (nil until first read)
@@ -110,12 +120,13 @@ local function stopTimer(p)
     p.timer, p.dueAt = nil, nil
 end
 
--- Arm one waiting ask's timer, unless an encounter is in progress (its end arms it).
-local function arm(id)
+-- Arm one waiting ask's timer, unless an encounter is in progress (its end arms it): due at `dueAt`
+-- when given, else DueAt's time (an off-spec ask OFFSPEC_LAG later).
+local function arm(id, dueAt)
     local p = pending[id]
     stopTimer(p)
     if inEncounter then return end
-    p.dueAt = AA.DueAt(p.at, endedAt, AA.Config().delay)
+    p.dueAt = dueAt or AA.DueAt(p.at, endedAt, AA.Config().delay, p.offSpec and AA.OFFSPEC_LAG or nil)
     p.timer = C_Timer.NewTimer(math.max(p.dueAt - now(), 0), function()
         p.timer = nil
         AA.Fire(id)
@@ -157,7 +168,9 @@ function AA.Consider(id)
     local rec = NS.LootFeed.Get(id)
     if blocker(rec, cfg) or not fresh(rec) then return false end
     considered[id] = true
-    pending[id] = { target = NS.AskTargetOf(rec), at = rec.test and now() or rec.at, test = rec.test == true }
+    local _, _, how = NS.Toast.Qualifies(rec, cfg.minGain)
+    pending[id] = { target = NS.AskTargetOf(rec), at = rec.test and now() or rec.at, test = rec.test == true,
+        offSpec = how == "offSpec" }
     counts.scheduled = counts.scheduled + 1
     arm(id)
     NS.Debug(TAG, "auto-ask scheduled: drop %s to %s%s", tostring(id), pending[id].target,
@@ -191,7 +204,16 @@ local function looterGone(p)
     return not p.test and NS.Roster.Resolve(p.target) == nil
 end
 
---- A waiting ask is due: checked once more, then requested through the messaging edge.
+-- Whether a main-spec ask is still waiting: an off-spec one goes after it.
+local function mainWaiting()
+    for _, p in pairs(pending) do
+        if not p.offSpec then return true end
+    end
+    return false
+end
+
+--- A waiting ask is due: checked once more, then requested through the messaging edge (an off-spec
+--- one is armed again instead while a main-spec ask still waits).
 --- @param id any
 --- @return string|nil state NS.Asks.Request's answer, nil when it was not sent
 function AA.Fire(id)
@@ -205,6 +227,12 @@ function AA.Fire(id)
     if why then
         counts.canceled = counts.canceled + 1
         NS.Debug(TAG, "auto-ask dropped when due: drop %s (%s)", tostring(id), why)
+        return nil
+    end
+    if p.offSpec and mainWaiting() then
+        pending[id] = p
+        arm(id, now() + AA.OFFSPEC_LAG)
+        NS.Debug(TAG, "auto-ask off-spec held: drop %s waits for a main-spec ask", tostring(id))
         return nil
     end
     local state, reason = NS.Asks.Request("ask", p.target, id)

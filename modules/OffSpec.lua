@@ -20,7 +20,8 @@ local _, NS = ...
 --                    trackDelta, baseline (nil for an empty slot), baselineSlot, reasons }
 --
 -- `mainSpecID` is the candidate's own spec, so a reader can say which spec could not use it (the
--- cells and cards, modules/OffSpecCells.lua). OS.Of answers the off-spec part a reader may show.
+-- cells and cards, modules/OffSpecCells.lua). OS.Of answers the off-spec part a reader may show,
+-- OS.EvalFor the verdict a gain reader reads (the off-spec part when it counts, else the eval).
 --
 -- THE BEST SPEC. Upgrade beats sidegrade beats downgrade; then the larger ilvlDelta (an empty slot
 -- the largest); then the lower spec id. doesntWant, cantUse and unknown are never kept. The main
@@ -127,6 +128,14 @@ function OS.Of(eval)
     if not (isTable(eval) and eval.verdict == "cantUse" and isTable(eval.offSpec)) then return nil end
     if RANK[eval.offSpec.verdict] then return eval.offSpec end
     return nil
+end
+
+--- The verdict a gain reader reads (feedback-19 spec §2: {mygain}, the toast's least gain): the
+--- off-spec part when it is the one that counts (OS.Of), else `eval` itself.
+--- @param eval any
+--- @return any
+function OS.EvalFor(eval)
+    return OS.Of(eval) or eval
 end
 
 --- Sets `out.offSpec` when another spec of the candidate's class can use what the main spec

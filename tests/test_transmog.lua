@@ -93,7 +93,7 @@ end)
 test("transmog template: its default text, the owner's own, and a request that names it", function()
     local NS = T.newAddon()
     local M, C = NS.Messaging, NS.Constants
-    assertEqual(table.concat(C.MESSAGE_TEMPLATES, ","), "ask,transmog,offer,announce")
+    assertEqual(table.concat(C.MESSAGE_TEMPLATES, ","), "ask,transmog,askOffSpec,offer,announce", "off-spec (feedback-19 spec §2) follows transmog")
     local default = NS.C.PROFILE.messages.templates.transmog
     assertTrue(default:find("for transmog", 1, true) ~= nil)
     assertTrue(#default <= C.MESSAGE_MAX_LEN)

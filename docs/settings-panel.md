@@ -121,14 +121,14 @@ window closes. (Likely tradeable only moved to Feed › Filters as View: Likely 
 ## Messages
 
 **Templates** (board 08): the token chips (`{player}` … `{mygain}`, each with what it fills in);
-clicking one puts it at the cursor of the message you last edited and stores it. Then the four
-editors, Ask, Ask for transmog, Offer and Announce: Enter (or the box's Okay) stores the text through the seam, which
+clicking one puts it at the cursor of the message you last edited and stores it. Then the five
+editors, Ask, Ask for transmog, Ask for off-spec (feedback-19 spec §2), Offer and Announce: Enter (or the box's Okay) stores the text through the seam, which
 refuses an empty one, and each label counts the template's bytes against 255 as you type. Then the
 preview of the message being edited, written for a real drop when the feed has one that fits (an
-upgrade for you for an ask, one whose look you have not collected for the transmog ask, your own
+upgrade for you for an ask, one whose look you have not collected for the transmog ask, an off-spec gain for the off-spec ask, your own
 drop and its best candidate for an offer) and for a sample over your own
 gear otherwise (since DW-84): who it goes to, the text as sent, its length, and a red note for a text past
-the limit or an unknown token. Reset templates puts the four back.
+the limit or an unknown token. Reset templates puts the five back.
 
 **Sending:** Ask for transmog (off: also offer an ask, with the For transmog template, on a drop
 that is no gain for you but whose look you have not collected), Edit before sending, Ask once,

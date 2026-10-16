@@ -180,7 +180,10 @@ end
 -- A verdict's item-level gain: its ilvlDelta, or for an upgrade into an empty slot (no baseline, so
 -- no delta) the words `an empty-slot upgrade`, never the drop's item level, which is no gain;
 -- Messaging.Expand drops the template's `+` before a worded gain, so `+{mygain}` never reads `+?`.
+-- A main `cantUse` with an off-spec gain reads the off-spec result (NS.OffSpec.EvalFor,
+-- feedback-19 spec §2), so the off-spec ask's `+{mygain}` is the off-spec difference.
 local function gainOf(eval)
+    eval = NS.OffSpec.EvalFor(eval)
     if type(eval) ~= "table" then return nil end
     local d = eval.ilvlDelta
     if type(d) == "number" and d == d then return d end
