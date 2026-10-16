@@ -208,6 +208,22 @@ main verdict is `cantUse` and whose off-spec verdict is an upgrade or a sidegrad
 - `ev` and `cand` read the new `off` tuple.
 - The test-mode coverage asserts that an off-spec verdict is shown.
 
+**The off-spec showcase** (owner request, 2026-10-17). Test mode carries a few samples whose only job is to show the
+off-spec rules. Each has the reason the main spec refuses it, so the detail card and the tooltips explain it.
+They are added on top of the samples above, and `TD.SESSION` / `TD.HISTORY` counts move with them; the pinned counts
+in `tests/test_test_mode.lua` are updated deliberately:
+- **Off-spec upgrade into an empty slot.** An Intellect one-hander looted by a groupmate. The main spec refuses it on
+  `primaryStat`, and no owned item fits the Holy-style spec, so it reads `▲ new` in cyan with the spec name. It is
+  askable with the off-spec whisper.
+- **Off-spec upgrade over a bag item.** The baseline is a lower item in your bags, not your worn one.
+- **Off-spec sidegrade** (≈, cyan): askable, but not a toast or auto-ask candidate.
+- **Off-spec downgrade** (▼, cyan): you already own something better for that spec, so it is not askable.
+- **A class-wide refusal stays `Can't use`.** A wrong-armor-type item (`armorType`) gets no off-spec rescue, to
+  show the rule's other side.
+- **Offer: a groupmate's off-spec.** One of your own drops has a candidate whose off-spec is an upgrade. They rank
+  below a main-spec upgrade candidate and above a downgrade.
+- **History:** two off-spec entries, one `asked` for your off-spec and one `received`.
+
 **Docs.**
 - `docs/schema.md`: the template row, `feed.view` definitions and the History snapshot.
 - `docs/settings-panel.md`: Templates, five messages.
