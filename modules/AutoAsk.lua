@@ -14,7 +14,8 @@ local _, NS = ...
 -- off-spec upgrade (Qualifies' third value, `offSpec`), with the same least gain on the off-spec
 -- difference and no setting of its own. Main spec always goes first: an off-spec ask is due
 -- AA.OFFSPEC_LAG seconds after its main-spec time, and one that comes due while any main-spec ask
--- is still waiting is armed again OFFSPEC_LAG seconds on, until none is.
+-- is still waiting is armed again OFFSPEC_LAG seconds on, until none is. Whether an ask is off-spec
+-- is read again when it comes due, so a re-judge since it was scheduled moves it either way.
 --
 -- THE TIMING (DueAt, pure). The ask is due `messages.autoAsk.delay` seconds (3 to 30, default 10)
 -- after the later of the drop and the last ENCOUNTER_END. While an encounter is in progress
@@ -229,6 +230,8 @@ function AA.Fire(id)
         NS.Debug(TAG, "auto-ask dropped when due: drop %s (%s)", tostring(id), why)
         return nil
     end
+    -- Read again: a re-judge since Consider (a spec or gear change) can move it either way.
+    p.offSpec = select(3, NS.Toast.Qualifies(NS.LootFeed.Get(id), cfg.minGain)) == "offSpec"
     if p.offSpec and mainWaiting() then
         pending[id] = p
         arm(id, now() + AA.OFFSPEC_LAG)

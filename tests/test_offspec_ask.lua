@@ -272,3 +272,22 @@ test("off-spec auto-ask: the least gain applies to the off-spec difference", fun
     m.advance(30)
     assertEqual(#whispered(m), 0)
 end)
+
+test("off-spec auto-ask: whether an ask is off-spec is read again when it comes due (a re-judge moves it)", function()
+    local NS, m, make = party()
+    local rec = make({ id = 1, me = { verdict = "upgrade", ilvlDelta = 12 } }); added(NS, 1)   -- main, due at 10
+    m.advance(2)
+    make({ id = 2, link = "|cffa335ee|Hitem:213::|h[Helm]|h|r", itemID = 213,
+        me = { verdict = "upgrade", ilvlDelta = 12 } }); added(NS, 2)                         -- main, due at 12
+    rec.me = cantMain(off())        -- a spec change re-judges drop 1: now an off-spec upgrade only
+    m.advance(8.5)
+    assertEqual(#whispered(m), 0, "drop 1 is off-spec now: it waits for the main-spec ask")
+    m.advance(2)
+    local w = whispered(m)
+    assertEqual(#w, 1)
+    assertTrue(w[1]:find("[Helm]", 1, true) ~= nil, w[1])
+    m.advance(5)
+    w = whispered(m)
+    assertEqual(#w, 2, "then drop 1, with the off-spec template")
+    assertTrue(w[2]:find("for my off-spec?", 1, true) ~= nil, w[2])
+end)
