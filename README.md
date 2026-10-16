@@ -6,7 +6,7 @@
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
 ![Tests](https://img.shields.io/badge/Tests-1480%2F1480_passing-green)
 
-When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
+When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
 It watches what your party or raid receives and compares each item with your gear and with the looter's. Your own drops are listed with everyone else's, with the time left to trade each one and the people it would help. Out of the box it stays in its window. Alerts and sounds are opt-in, and nobody gets a whisper unless you click Ask or turn on auto-ask.
 
@@ -103,7 +103,7 @@ Please raise them on GitHub:
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The window with its Drops and History tabs, the detail card and the Offer panel<br>- One-click asks, offers and announces, queued while encounter restrictions block chat<br>- Trade estimates and a trade countdown on every drop, exact on your own<br>- Pawn scores, or your own stat weights<br>- The opt-in toast and auto-ask<br>- A compact view of the same window, which it opens in during a run<br>- Settings pages, the minimap button, the `/dw` command and test mode |
+| 1.0.0 | 2026-10-17 | - First release: the window's Drops and History tabs, with Me and Them verdicts, the trade estimate and a trade countdown on each drop<br>- Ask, Offer and Announce each send with one click, and wait while encounter restrictions block chat<br>- History keeps 30 days of drops across logouts and alts, and the Drops tab comes back after a `/reload`<br>- Pawn scores or your own stat weights, plus the opt-in toast and auto-ask<br>- The compact view for runs, the settings pages, the minimap button, `/dw test` and `/dw sim` |
 
 ## Credits
 

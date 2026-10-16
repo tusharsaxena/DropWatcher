@@ -51,7 +51,7 @@ passed.
 login, the addon listed in the AddOns list with the gem logo. Result:
 
 **INSTALL-2. Minimap button and broker.** Look at the minimap → the gem button is there; hover it →
-the tooltip reads `Ka0s Drop Watcher  v0.1.0`, `Enabled: Yes`, `Locked`, `Test mode`, then the two
+the tooltip reads `Ka0s Drop Watcher  v1.0.0`, `Enabled: Yes`, `Locked`, `Test mode`, then the two
 click hints. A missing icon (a blank or green square) is the failure. Result:
 
 **INSTALL-3. Reload keeps settings.** Set Master scale to 1.25 and lock the window, `/reload` →

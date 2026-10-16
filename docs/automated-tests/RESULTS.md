@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261017-012204`](20261017-012204/) | `80df719` | clean | 0.1.0 → 1.0.0 | 0/0 | 178 | 1480/1/1481 | pass | 45215 | 5611 | 7.4 | 2.5 | 14 | 0 | **green** |
 | [`20261017-011710`](20261017-011710/) | `05b777c` | clean | 0.1.0 → 1.0.0 | 0/0 | 178 | 1480/1/1481 | pass | 45208 | 5609 | 7.4 | 2.5 | 19 | 1 | **green** |
 | [`20261015-001310`](20261015-001310/) | `0109f2a` | clean | 0.1.0 | 0/0 | 170 | 1422/1/1423 | pass | 42998 | 5377 | 7.3 | 2.4 | 14 | 0 | **green** |
 | [`20261014-231415`](20261014-231415/) | `fb8128c` | clean | 0.1.0 | 0/0 | 170 | 1417/1/1418 | pass | 42869 | 5359 | 7.3 | 2.4 | 14 | 0 | **green** |
@@ -55,10 +56,10 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 ## Test suite
 
 **1481 cases** — 1480 passed, 0 failed, 1 skipped. The generated inventory
-[`20261017-011710/test-cases.md`](20261017-011710/test-cases.md) is the authority on which cases existed at this run;
+[`20261017-012204/test-cases.md`](20261017-012204/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **1423 → 1481** since the previous run.
+Unchanged from the previous run at 1481 cases.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -75,25 +76,25 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **7 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261017-011710/perf.json`](20261017-011710/perf.json).
+[`20261017-012204/perf.json`](20261017-012204/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.09439 | 0.00 | 14096.8 |
-| `refreshCaptureOn` | 1000 | 0.08867 | 1.00 | 14096.8 |
-| `refreshCompactCaptureOff` | 1000 | 0.09085 | 0.00 | 10864.9 |
-| `refreshCompactCaptureOn` | 1000 | 0.07949 | 1.00 | 10864.9 |
-| `showDecisionStoodDown` | 1000 | 0.00017 | 0.00 | 0.0 |
-| `parseCaptureOff` | 1000 | 0.01226 | 0.00 | 664.2 |
-| `parseCaptureOn` | 1000 | 0.01282 | 1.00 | 664.2 |
+| `refreshCaptureOff` | 1000 | 0.08716 | 0.00 | 14096.8 |
+| `refreshCaptureOn` | 1000 | 0.08328 | 1.00 | 14096.8 |
+| `refreshCompactCaptureOff` | 1000 | 0.08477 | 0.00 | 10864.9 |
+| `refreshCompactCaptureOn` | 1000 | 0.07622 | 1.00 | 10864.9 |
+| `showDecisionStoodDown` | 1000 | 0.00013 | 0.00 | 0.0 |
+| `parseCaptureOff` | 1000 | 0.01530 | 0.00 | 664.2 |
+| `parseCaptureOn` | 1000 | 0.01296 | 1.00 | 664.2 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261017-011710`](20261017-011710/) — **this run's measurement, not its diff.** Max CCN **19** across 5609
-functions, **1** of them warned on; 2 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261017-012204`](20261017-012204/) — **this run's measurement, not its diff.** Max CCN **14** across 5611
+functions, **0** of them warned on; 2 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -105,13 +106,14 @@ cell is this file saying something crossed and nobody has ruled on it yet.
 
 | Function | CCN | Location | Disposition |
 |---|---|---|---|
-| `FR.Pick` | 19 | `modules/FeedRestore.lua` |  |
+
+None.
 
 ### Files by `layout-§1` band
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-| 1000–1500 (on notice) | `core/Compat.lua` | 1009 |  |
+| 1000–1500 (on notice) | `core/Compat.lua` | 1009 | **Newly crossed** — feedback-17's journal shims took it from 960 to 1009 lines. Split the Encounter Journal shims into a family file (`core/CompatJournal.lua`) before it grows further. |
 | 1000–1500 (on notice) | `locales/enUS.lua` | 1329 | **Accepted** — a flat `L["..."] = "..."` string table with no logic; it grew past 1000 when DW-P19 added every routed enUS key (F07, D8). Split it by surface before it nears the 1500 cap. |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
