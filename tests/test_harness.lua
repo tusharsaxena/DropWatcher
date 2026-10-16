@@ -62,18 +62,19 @@ test("toc: the fixed field order, a single Retail Interface line and the X-Stand
     local order = {}
     for i, kv in ipairs(fields) do order[i] = kv[1] end
     assertEqual(table.concat(order, ","), "Interface,Title,Notes,Author,Version,IconTexture,"
-        .. "SavedVariables,OptionalDeps,DefaultState,Category-enUS,X-License,X-Standard")
+        .. "SavedVariables,OptionalDeps,DefaultState,Category-enUS,X-License,X-Standard,X-Curse-Project-ID")
     assertEqual(field(fields, "Interface"), "120100")
     assertEqual(field(fields, "Title"), "Ka0s Drop Watcher")
     assertEqual(field(fields, "X-Standard"), "https://github.com/tusharsaxena/WowAddonStandards")
     assertEqual(field(fields, "SavedVariables"), "DropWatcherDB, DropWatcherPerfDB")
     assertEqual(field(fields, "X-License"), "MIT")
-    -- Unpublished: the project id is a comment, never a placeholder (toc-file-§1).
-    local commented = false
-    for _, line in ipairs(lines) do
-        if line:find("^# X%-Curse%-Project%-ID:") then commented = true end
-    end
-    assertTrue(commented and field(fields, "X-Curse-Project-ID") == nil)
+    -- Published: the CurseForge project id is a real field, last (toc-file-§1), and no commented
+    -- placeholder is left behind. red under: the unpublished comment kept
+    assertEqual(field(fields, "X-Curse-Project-ID"), "1748054")
+    for _, line in ipairs(lines) do assertTrue(line:find("^# X%-Curse%-Project%-ID:") == nil, line) end
+    local fh = assert(io.open(T.root .. "/README.md", "rb"))
+    local readme = fh:read("*a"); fh:close()
+    assertTrue(readme:find("img.shields.io/curseforge/v/1748054", 1, true) ~= nil, "the README's CurseForge badge")
 end)
 
 test("toc: the icon is the 128x128 logo, and the file exists", function()

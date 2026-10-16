@@ -1,6 +1,7 @@
 # Ka0s Drop Watcher
 
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
+![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
 ![Tests](https://img.shields.io/badge/Tests-1476%2F1476_passing-green)
@@ -88,9 +89,11 @@ and drops it holds, and for how long. Each drop says what became of it: asked, o
 received or traded away, the last two once a trade with that item goes through. The words take the
 action buttons' colors: yellow while it waited on someone (asked, offered), green once done (received,
 traded away), red when it fell through (expired) and gray when nothing came of it (seen, declined), in
-both the table and the compact cards. Right-click a row to
-mark it declined. Drops opens on **Content: This session** and **Character: Current**, the character
-you're playing. History opens on everything: **View: All**, **Content: All** and **Character: All**.
+both the table and the compact cards. Click a row to open its detail card: what it meant for you and the group at the time, the trade
+estimate, when and where, and **Link in chat**, **Mark declined** and **Show in Drops** (while the drop is
+still on the Drops tab). Right-click a row to mark it declined. Drops opens on **Content: This session** and **Character: Current**, the character
+you're playing. History opens on everything: **View: All**, **Content: All** and **Character: All**. A `/reload` keeps
+this session's drops on Drops; a drop you cleared stays cleared.
 Its Character dropdown lists every character that saw a drop, with its class icon, so you can narrow
 it to one or several. Drops kept before Drop Watcher noted who saw them show only under All.
 

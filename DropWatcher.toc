@@ -10,7 +10,7 @@
 ## Category-enUS: Group
 ## X-License: MIT
 ## X-Standard: https://github.com/tusharsaxena/WowAddonStandards
-# X-Curse-Project-ID: not published on CurseForge yet
+## X-Curse-Project-ID: 1748054
 
 # Libraries (must load first) -- vendored in libs/, .xml where the lib ships one, else .lua
 libs\LibStub\LibStub.lua
