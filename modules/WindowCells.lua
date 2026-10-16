@@ -801,9 +801,10 @@ end
 --- @param group table
 --- @param situationLabel string|nil
 --- @return table parts, string|nil who
-function WC.Place(group, situationLabel)
+function WC.Place(group, situationLabel, whoMax)
     local GP = NS.GroupPlace
-    return GP.Parts(group, situationLabel), GP.Who(group, NS.Compat.ClassColor)
+    local parts, roles = GP.Parts(group, situationLabel, GP.ShortNames())
+    return parts, GP.Who(group, NS.Compat.ClassColor, whoMax), roles
 end
 
 --- A header tooltip: the title, the kind's line, the `Group: ...` line (the party, class-colored;

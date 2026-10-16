@@ -64,19 +64,26 @@ function GP.DifficultyName(id, name, keyLevel)
 end
 
 --- A header's place, in order: the instance (an encounter's only), the label, then the difficulty
---- or, without one, `situationLabel`. A part the one before it already says is left out.
+--- or, without one, `situationLabel`. A part the one before it already says is left out. A
+--- difficulty `shortNames` holds (keyed lower-case; GP.ShortNames') reads short, a stored one too.
 --- @param group table { label, kind, instance, difficulty }
 --- @param situationLabel string|nil the generic situation word
---- @return table parts
-function GP.Parts(group, situationLabel)
-    local out = {}
-    local function push(v)
-        if v and not same(v, out[#out]) then out[#out + 1] = v end
+--- @param shortNames table|nil { [lower-case name] = short name }
+--- @return table parts, table roles (`instance`, `label`, `difficulty` or `situation`, per part)
+function GP.Parts(group, situationLabel, shortNames)
+    local out, roles = {}, {}
+    local function push(v, role)
+        if v and not same(v, out[#out]) then out[#out + 1], roles[#out + 1] = v, role end
     end
-    if group.kind == "encounter" then push(plain(group.instance)) end
-    push(plain(group.label) or "?")
-    push(plain(group.difficulty) or plain(situationLabel))
-    return out
+    if group.kind == "encounter" then push(plain(group.instance), "instance") end
+    push(plain(group.label) or "?", "label")
+    local difficulty = plain(group.difficulty)
+    if difficulty then
+        push(type(shortNames) == "table" and shortNames[difficulty:lower()] or difficulty, "difficulty")
+    else
+        push(plain(situationLabel), "situation")
+    end
+    return out, roles
 end
 
 --- The character that saw a group: its own recorder, else (a History group kept before DW-B4) the
@@ -94,11 +101,13 @@ end
 --- The recorder's short name for a header, in its class color; nil when the group names none.
 --- @param group table
 --- @param colorOf function|nil classFile -> r, g, b
+--- @param max number|nil cut the name to this many characters (NS.CompactCards.Truncate)
 --- @return string|nil
-function GP.Who(group, colorOf)
+function GP.Who(group, colorOf, max)
     local key, class = GP.Recorder(group)
     if not key then return nil end
     local name = key:match("^([^%-]+)") or key
+    if max then name = NS.CompactCards.Truncate(name, max) end
     if not class or type(colorOf) ~= "function" then return name end
     return NS.GroupRoster.Colored(name, colorOf(class))
 end
@@ -113,6 +122,18 @@ end
 local function plainNumber(v)
     if NS.Compat.IsSecret(v) or type(v) ~= "number" then return nil end
     return v
+end
+
+--- The difficulties a header names short (feedback-15): Looking For Raid, as the client names its
+--- two LFR difficulties now and as an English client stored it, reads `LFR`.
+--- @return table { [lower-case name] = short name }
+function GP.ShortNames()
+    local out = { ["looking for raid"] = L["LFR"] }
+    for _, id in ipairs({ C.DIFFICULTY.LFR_LEGACY, C.DIFFICULTY.LFR }) do
+        local name = plainString(NS.Compat.DifficultyName(id))
+        if name then out[name:lower()] = L["LFR"] end
+    end
+    return out
 end
 
 --- Where you are now: { instance, difficulty }, both nil outside an instance.

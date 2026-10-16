@@ -292,7 +292,7 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
-### test_compact_cards.lua (26)
+### test_compact_cards.lua (27)
 
 - compact cards: Truncate cuts by characters, not bytes, and marks the cut with …
 - compact cards: Age is the short duration, then whole days
@@ -318,6 +318,7 @@ Total.
 - compact cards: the header's short form drops `ago` and `drops`
 - compact cards: a filter that hides drops reads `1 of 2`, the hidden ones in the tooltip
 - compact cards: a long instance name is cut, the full name in the tooltip
+- compact cards: an LFR header fits the default width, each piece cut to its own limit
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the long form
 
@@ -1196,12 +1197,13 @@ Total.
 - group header: a raid's party is not in the header; its tooltip line names ten and +n
 - history header: the recorder alone; an older group with no place and no roster keeps its label
 
-### test_group_place.lua (14)
+### test_group_place.lua (15)
 
 - group place: a keystone's difficulty reads Mythic+ and its level; any other is the client's name
 - group place: an encounter names its instance, its boss, then its difficulty
 - group place: a key run's and an area's label is the instance, named once
 - group place: with no difficulty name the situation word stands in; an older group keeps its label
+- group place: Looking For Raid reads LFR, a stored name too, and Parts names each part's role
 - group place: Who names the recorder alone, its short name class-colored; History falls back to an entry
 - compat: DifficultyName answers the client's name, nil for an unknown id or no API
 - compat: KeystoneLevel answers the active key, else the completed run's, else nil
@@ -1729,7 +1731,7 @@ Total.
 | test_window.lua | 14 |
 | test_window_shell.lua | 58 |
 | test_window_compact.lua | 25 |
-| test_compact_cards.lua | 26 |
+| test_compact_cards.lua | 27 |
 | test_compact_group.lua | 20 |
 | test_compact_history.lua | 10 |
 | test_history_card.lua | 15 |
@@ -1767,7 +1769,7 @@ Total.
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
-| test_group_place.lua | 14 |
+| test_group_place.lua | 15 |
 | test_char_filter.lua | 19 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
@@ -1796,4 +1798,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1474** |
+| **Total** | **1476** |

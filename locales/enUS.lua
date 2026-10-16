@@ -436,6 +436,7 @@ L["Nothing to post: none of your drops can be traded now."] = "Nothing to post: 
 
 -- modules/GroupPlace.lua
 L["Mythic+"] = "Mythic+"
+L["LFR"] = "LFR"
 
 -- modules/History.lua
 L["History cleared."] = "History cleared."

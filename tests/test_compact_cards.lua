@@ -399,8 +399,8 @@ test("compact cards: the header's short form drops `ago` and `drops`", function(
     local NS = T.newAddon()
     local C = NS.CompactCards
     local h = C.Header(encounter(), 2, NOW, "Dungeon", false, nil, nil, 0)
-    assertEqual(stripColor(h.text), "Gate of the Setting Sun · Commander Ri'mok · Timewalking · 3m · 2 · Tiamât")
-    assertFalse(h.cut)
+    assertEqual(stripColor(h.text), "Gate of the S… · Commander Ri'… · Timewalking · 3m · 2 · Tiamât")
+    assertTrue(h.cut)
     local full = NS.WindowCells.Header(encounter(), 2, NOW, "Dungeon", false, nil, nil, 0)
     assertEqual(h.tip[1], full.tip[1]); assertEqual(h.tip[2], full.text, "the long form opens the tooltip")
     assertEqual(#h.tip, #full.tip + 1, "and every line of the full view's tooltip follows")
@@ -424,10 +424,26 @@ test("compact cards: a long instance name is cut, the full name in the tooltip",
     local g = encounter({ instance = "The Most Excessively Long Instance Name Ever" })
     local h = C.Header(g, 1, NOW, "Dungeon", true, nil, nil, 0)
     assertTrue(h.cut)
-    assertEqual(stripColor(h.text):match("^[^·]+"), "The Most Excessively Lo… ")
+    assertEqual(stripColor(h.text):match("^[^·]+"), "The Most Exce… ")
     assertTrue(has(h.tip, "The Most Excessively Long Instance Name Ever"))
     assertFalse(h.text:find("collapsed", 1, true) ~= nil, "the chevron says it")
     assertTrue(has(h.tip, "Click to expand this group."))
+end)
+
+test("compact cards: an LFR header fits the default width, each piece cut to its own limit", function()
+    local NS = T.newAddon()
+    local C = NS.CompactCards
+    local g = encounter({ label = "Vashnik the Malignant", instance = "The Venomous Abyss", difficulty = "Looking For Raid",
+        seenBy = "Sacrilègeous-Realm", at = NOW - 2 * 86400 })
+    -- red under: one cut for the instance alone, the line running past the pane and cutting the recorder
+    local h = C.Header(g, 2, NOW, "Raid", false, nil, nil, 0)
+    assertEqual(stripColor(h.text), "The Venomous… · Vashnik the M… · LFR · 2d · 2 · Sacrilèg…")
+    assertTrue(h.cut)
+    assertTrue(has(h.tip, "The Venomous Abyss · Vashnik the Malignant · LFR"), "the long form, whole, in the tooltip")
+    local M = C.HEADER_MAX
+    assertTrue(M.instance + M.label + M.difficulty + M.age + M.count + M.who + 5 * 3 <= C.HEADER_CHARS,
+        "an encounter's six pieces, each at its limit, fit the line a default-width pane holds")
+    assertTrue(M.label + M.situation + M.age + M.count + M.who + 4 * 3 <= C.HEADER_CHARS, "and an area's five")
 end)
 
 test("compact cards: a group with no time or recorder, and the open world's area header", function()
@@ -442,7 +458,7 @@ test("compact cards: the History header reads days once a day old, its tooltip t
     local C = NS.CompactCards
     local g = encounter({ at = 1000000 - 2 * 86400 - 60 })
     local h = C.HistoryHeader(g, 4, 1000000, "Dungeon", false)
-    assertEqual(stripColor(h.text), "Gate of the Setting Sun · Commander Ri'mok · Timewalking · 2d · 4 · Tiamât")
+    assertEqual(stripColor(h.text), "Gate of the S… · Commander Ri'… · Timewalking · 2d · 4 · Tiamât")
     assertTrue(has(h.tip, "2 days ago"))
     assertTrue(has(h.tip, "Kept in the history across sessions."))
 end)

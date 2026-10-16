@@ -134,7 +134,7 @@ local function whereRow(group, situationLabel)
     if type(group) ~= "table" then
         return row("where", L["Where"], DASH, "muted", L["Where"], L["Kept before the place was recorded."])
     end
-    local text = table.concat(NS.GroupPlace.Parts(group, situationLabel), " · ")
+    local text = table.concat(NS.GroupPlace.Parts(group, situationLabel, NS.GroupPlace.ShortNames()), " · ")
     return row("where", L["Where"], text, "plain", L["Where"], L["The instance, the encounter and the difficulty."])
 end
 
