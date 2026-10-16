@@ -150,11 +150,17 @@ local function setBottom(scroll, pane, top, topY, bottom)
 end
 
 -- The row in the layout in force (DS.Row through NS.FooterRow.Slots; the tab's Sort is anchored
--- by NS.WindowFooter.AnchorSort in its slot), and the summary ending where it starts.
+-- by NS.WindowFooter.AnchorSort in its slot), and the summary ending where it starts. The placement
+-- depends on the layout and on whether Post shows, nothing else, so a repaint that changes neither
+-- builds no table and re-anchors nothing (the refresh's allocation ceiling, docs/performance.md).
 local function placeButtons(strip, tradeable, compact)
+    if strip.dwPlacedCompact == compact and strip.dwPlacedPost == tradeable then return end
+    strip.dwPlacedCompact, strip.dwPlacedPost = compact, tradeable
     local FR = NS.FooterRow
     local slots = FR.Slots(DS.Row(tradeable, compact), FR.GAP, compact and 0 or NS.WindowFooter.SORT_INSET)
-    for _, b in ipairs({ strip.fold, strip.scan, strip.post }) do FR.SetCompact(b, compact) end
+    FR.SetCompact(strip.fold, compact)
+    FR.SetCompact(strip.scan, compact)
+    FR.SetCompact(strip.post, compact)
     FR.Place(strip, strip.fold, slots.fold)
     FR.Place(strip, strip.scan, slots.scan)
     FR.Place(strip, strip.post, slots.post)
