@@ -22,6 +22,8 @@ local _, NS = ...
 -- THE OFFER PANEL'S THEIR EQ (feedback-7 spec §0) is the same cell for one candidate (SC.Candidate):
 -- what they wear from their inspect read (else the worn item their verdict was judged against), and
 -- the verdict on your drop for them; `…` while checking, `Unavailable` when nothing could be read.
+-- An off-spec candidate (feedback-19 spec §3) is that spec's cell, `311 ▲14 Holy` in the offspec
+-- cyan, beside the item it was judged against.
 --
 -- THE TOOLTIP (feedback-7 spec §3) is the verdict's title, then the worn gear as a grid
 -- (NS.TipMarks.GearRows: `[Name] [ilvl] [worn item] [▲diff]`, a row per worn item, the arrow on the
@@ -161,11 +163,15 @@ end
 
 -- The gear part of one candidate: their read (WindowCells.SlotItems, the Them cell's rule: both
 -- rings, both trinkets, a slot read empty counted), else the item their verdict was judged against.
+-- An off-spec candidate (feedback-19 spec §3) shows only the item the off-spec verdict was judged
+-- against (MineCells' `baseline`, the off-spec one), else an empty slot: what the main spec wears
+-- there is not what the drop was compared with.
 -- `items` and `empty` are the tooltip grid's rows (SC.Merge); its other lines, the read's age.
 local function candidateEq(drop, e, insp, now)
     local slots = WC.EqSlots(type(drop.facts) == "table" and drop.facts.equipLoc or nil) or {}
     local ok = WC.ReadOk(insp)
-    local items, empty = WC.SlotItems(ok and insp.gear or nil, slots)
+    local offSpec = NS.OffSpec.Of(e.eval) ~= nil
+    local items, empty = WC.SlotItems(ok and not offSpec and insp.gear or nil, slots)
     local c = { items = items, empty = empty, tone = "muted", tip = { L["%s wears"]:format(e.short) } }
     if #items > 0 then
         c.text, c.tone = WC.Levels(items), "plain"
@@ -173,7 +179,7 @@ local function candidateEq(drop, e, insp, now)
         fromBaseline(c, e.baseline)
     end
     if not c.text then
-        if empty > 0 or (e.eval and e.eval.verdict == "upgrade") then
+        if empty > 0 or (e.eval and NS.OffSpec.EvalFor(e.eval).verdict == "upgrade") then
             c.text, c.empty = L["empty slot"], math.max(empty, 1)
         else
             c.text = DASH

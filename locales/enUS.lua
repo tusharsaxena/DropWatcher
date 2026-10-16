@@ -807,6 +807,9 @@ L["An upgrade for them: a higher item level than what they wear there."] =
 L["About what they wear there: within the sidegrade band."] = "About what they wear there: within the sidegrade band."
 L["Lower than what they wear there."] = "Lower than what they wear there."
 L["Their class or spec cannot use it."] = "Their class or spec cannot use it."
+L["An upgrade for one of their other specs (off-spec)."] = "An upgrade for one of their other specs (off-spec)."
+L["About what one of their other specs has there (off-spec): within the sidegrade band."] =
+    "About what one of their other specs has there (off-spec): within the sidegrade band."
 L["Usable, but not wanted for their spec."] = "Usable, but not wanted for their spec."
 L["Their gear was read, but the item it would replace was not."] =
     "Their gear was read, but the item it would replace was not."
@@ -1053,8 +1056,8 @@ L["Nobody else in your group to offer it to."] = "Nobody else in your group to o
 L["Not tradeable, so there is nothing to announce."] = "Not tradeable, so there is nothing to announce."
 L["%d members · sorted by gain"] = "%d members · sorted by gain"
 L["Order"] = "Order"
-L["Upgrades first, by how much they gain; then equal, no upgrade, can't use, checking and unavailable. The list scrolls in a raid."] =
-    "Upgrades first, by how much they gain; then equal, no upgrade, can't use, checking and unavailable. The list scrolls in a raid."
+L["Upgrades first, by how much they gain; then equal, then off-spec upgrades and equals, no upgrade, can't use, checking and unavailable. The list scrolls in a raid."] =
+    "Upgrades first, by how much they gain; then equal, then off-spec upgrades and equals, no upgrade, can't use, checking and unavailable. The list scrolls in a raid."
 
 -- modules/WindowHistory.lua
 L["The drop judged for you, as it was last judged while it was in the feed."] =

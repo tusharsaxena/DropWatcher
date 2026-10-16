@@ -11,7 +11,8 @@ local _, NS = ...
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape: `candidates`, `trade`
 -- with its `expiresAt`, `me`) and plain inputs (the clock, the warning threshold, an ask's state)
 -- and answers a plain table; nothing here reads a module, the client or a saved variable (only
--- NS.TipMarks: Upgrade for N's tooltip lines take the class and quality colors), so test_mine_cells drives each state case by case. The frame edges that paint them are
+-- NS.TipMarks: Upgrade for N's tooltip lines take the class and quality colors; and NS.OffSpec, pure,
+-- for a candidate's off-spec part), so test_mine_cells drives each state case by case. The frame edges that paint them are
 -- modules/WindowGroup.lua, modules/CompactGroup.lua and modules/DetailCard.lua (the Trade window
 -- column, the compact card's countdown and your own drop's cells, through modules/WindowOwn.lua),
 -- modules/DropsStrip.lua (the strip) and modules/OfferPanel.lua (the panel). The shared verdict
@@ -29,7 +30,9 @@ local _, NS = ...
 -- widest answer).
 --
 -- THE CANDIDATES (spec §11.4). Every other member, judged for your drop by the feed: upgrades first
--- by their gain, then equal, no upgrade, can't use, checking and unavailable, each tie by name; each
+-- by their gain, then equal, then off-spec upgrades and equals (feedback-19 spec §3: a member whose
+-- current spec can't use it but another spec of theirs gains, by that spec's gain; offerable too),
+-- no upgrade, can't use, checking and unavailable, each tie by name; each
 -- carries its judgment (`eval`) and a line explaining its status (`explain`), which the Offer
 -- panel's Their eq cell draws in the Drops table's Them look (NS.SideCells.Candidate; the status
 -- pills and the `eq -> drop` text went with feedback-7 spec §0). An
@@ -38,7 +41,7 @@ local _, NS = ...
 --
 -- YOUR OWN DROP ON DROPS (feedback-5 spec §2; feedback-7 spec §2). Trade reads its word alone
 -- (`Yes`, not `Yes (2)`), its tooltip saying how many members it upgrades; Them reads `Upgrade for N`
--- (NS.SideCells.Them), green, or `No upgrades`, muted, its tooltip naming each upgrade by gain as a
+-- (NS.SideCells.Them; main-spec upgrades only), green, or `No upgrades`, muted, its tooltip naming each upgrade by gain as a
 -- grid row (feedback-7 spec §3, NS.TipMarks.GearRows): `Butterz  276  Bloodthorn Treads  ▲11`, the
 -- name in its class color, the item in its quality color, the table's glyph and the gain in green.
 -- The keep?
@@ -188,11 +191,15 @@ end
 
 -- ── the candidates ──────────────────────────────────────────────────────────────────────────
 
--- Each status's rank (lower first) and the line explaining it (the Their eq cell's tooltip).
-local RANK = { upgrade = 1, sidegrade = 2, downgrade = 3, cantUse = 4, doesntWant = 4, unknown = 5, checking = 6, unavailable = 7 }
+-- Each status's rank (lower first) and the line explaining it (the Their eq cell's tooltip). An
+-- off-spec upgrade or equal (feedback-19 spec §3) ranks after every main-spec one.
+local RANK = { upgrade = 1, sidegrade = 2, offSpecUpgrade = 3, offSpecSidegrade = 4, downgrade = 5,
+    cantUse = 6, doesntWant = 6, unknown = 7, checking = 8, unavailable = 9 }
 local EXPLAIN = {
     upgrade = L["An upgrade for them: a higher item level than what they wear there."],
     sidegrade = L["About what they wear there: within the sidegrade band."],
+    offSpecUpgrade = L["An upgrade for one of their other specs (off-spec)."],
+    offSpecSidegrade = L["About what one of their other specs has there (off-spec): within the sidegrade band."],
     downgrade = L["Lower than what they wear there."],
     cantUse = L["Their class or spec cannot use it."],
     doesntWant = L["Usable, but not wanted for their spec."],
@@ -201,29 +208,35 @@ local EXPLAIN = {
     unavailable = L["Their gear could not be read: out of range, offline or not inspected yet."],
 }
 
--- The status a candidate shows: its verdict when judged, else checking or unavailable.
+-- A Can't use another spec of theirs gains from (NS.OffSpec.Of): its off-spec status, else nil.
+local OFF_STATUS = { upgrade = "offSpecUpgrade", sidegrade = "offSpecSidegrade" }
+
+-- The status a candidate shows: its verdict when judged (an off-spec upgrade or equal its own),
+-- else checking or unavailable.
 local function statusOf(c)
     if c.status == "ready" then
         local v = type(c.eval) == "table" and c.eval.verdict or "unknown"
+        local off = NS.OffSpec.Of(c.eval)
+        v = off and OFF_STATUS[off.verdict] or v
         return RANK[v] and v or "unknown"
     end
     if c.status == "checking" then return "checking" end
     return "unavailable"
 end
 
-local function gainOf(c)
-    return type(c.eval) == "table" and num(c.eval.ilvlDelta) or nil
-end
+local OFFERABLE = { upgrade = true, sidegrade = true, offSpecUpgrade = true, offSpecSidegrade = true }
 
--- One candidate, ready to draw.
+-- One candidate, ready to draw: its gain and baseline the off-spec part's when that is the one
+-- that counts (NS.OffSpec.EvalFor), so byRank sorts each tier by gain.
 local function entryOf(c)
     local status = statusOf(c)
     local who = WC.ShortName(c.name)
     local eval = type(c.eval) == "table" and c.eval or nil
+    local judged = eval and NS.OffSpec.EvalFor(eval)
     return { guid = c.guid, name = c.name, short = who, classFile = c.classFile, status = status,
-        rank = RANK[status], gain = gainOf(c), eval = eval, explain = EXPLAIN[status],
-        baseline = eval and type(eval.baseline) == "table" and eval.baseline or nil,
-        offerable = status == "upgrade" or status == "sidegrade" }
+        rank = RANK[status], gain = judged and num(judged.ilvlDelta) or nil, eval = eval, explain = EXPLAIN[status],
+        baseline = judged and type(judged.baseline) == "table" and judged.baseline or nil,
+        offerable = OFFERABLE[status] == true }
 end
 
 local function byRank(a, b)
@@ -253,6 +266,7 @@ local function countChecking(list)
     return n
 end
 
+-- Upgrade for N counts main-spec upgrades only (feedback-19 spec §3).
 local function upgradesOf(list)
     local ups = {}
     for _, e in ipairs(list) do if e.status == "upgrade" then ups[#ups + 1] = e end end
@@ -263,7 +277,8 @@ end
 
 local HIDDEN_LINE = L["An upgrade for you: nobody is offered it unless you choose to. Offer shows who it would help."]
 
--- The keep? rule: an upgrade for you whose Offer panel you have not opened this session.
+-- The keep? rule: an upgrade for you whose Offer panel you have not opened this session (a
+-- main-spec upgrade: an off-spec one never keeps a drop hidden, feedback-19 spec §3).
 local function keepHidden(drop, revealed)
     return type(drop.me) == "table" and drop.me.verdict == "upgrade" and not revealed
 end

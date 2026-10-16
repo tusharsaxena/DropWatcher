@@ -6,11 +6,12 @@ local _, NS = ...
 -- WHAT IT HOLDS, top to bottom: the title (`Who could use this?` and `YOUR DROP`) with the shared
 -- close mark; the item header (a real item button, the name in its quality color, and `You: -5 ilvl ·
 -- 305 · Trade window 1:47:12`); the column labels (Member, Their eq, Actions); the candidates,
--- ranked (upgrades first by their gain), every second row striped as the main window's, each with
+-- ranked (upgrades first by their gain; off-spec upgrades and equals after the main-spec ones,
+-- feedback-19 spec §3), every second row striped as the main window's, each with
 -- the name in its class color, Their eq in the Drops table's Them look (feedback-7 spec §0: the
 -- worn item icons, their item level, the verdict glyph and the difference, `321/308 ▼4`, or a word:
 -- `Can't use`, `…`, `Unavailable`; NS.SideCells.Candidate, painted by WindowGroup.PaintSide) and,
--- for an upgrade or an equal, the Offer button (the Trade button went with feedback-7 spec §0); the
+-- for an upgrade or an equal (an off-spec one too), the Offer button (the Trade button went with feedback-7 spec §0); the
 -- list scrolls in a raid. The foot strip holds Announce to group and a note on the order. What each
 -- part says is modules/MineCells.lua's and modules/SideCells.lua's (pure); this file is the frame
 -- edge. Nothing is ever blank: a member with no Offer shows the gray No action with the reason
@@ -346,7 +347,7 @@ local function paintFoot(p, drop, n)
     end
     p.note.text:SetText(L["%d members · sorted by gain"]:format(n))
     setTone(p.note.text, "muted")
-    p.note.tipLines = { L["Order"], L["Upgrades first, by how much they gain; then equal, no upgrade, can't use, checking and unavailable. The list scrolls in a raid."] }
+    p.note.tipLines = { L["Order"], L["Upgrades first, by how much they gain; then equal, then off-spec upgrades and equals, no upgrade, can't use, checking and unavailable. The list scrolls in a raid."] }
 end
 
 --- Repaint the panel from its drop, or close it when the drop is gone. Called by Window.Refresh.
