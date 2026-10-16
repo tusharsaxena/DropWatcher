@@ -476,7 +476,7 @@ end
 --- A pane's compact view: its own scroll frame over the pane (above a strip `bottom` pixels tall),
 --- hidden until the first compact repaint, and the card and header pools.
 --- @param pane table
---- @param bottom number|nil the strip under the cards (History's Clear history; the Drops strip
+--- @param bottom number|nil the strip under the cards (History's kept-history line; the Drops strip
 ---   moves the view's bottom edge itself, modules/DropsStrip.lua)
 --- @return table cv { scroll, content, cardPool, headPool }
 function CG.BuildView(pane, bottom)

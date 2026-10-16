@@ -15,6 +15,8 @@ local _, NS = ...
 --   Settings.PageEditors.PrefsTab      Comparison › Preferences: the same sub-strip, then one
 --                                      checkbox per item type your class's loot comes in.
 --   Settings.PageEditors.QualityReadout  Feed › Quality's afterGroup: the threshold in force now.
+--   Settings.PageEditors.ClearHistoryButton  Window › Layout: Clear history, beside Keep history for
+--                                      (pairWith; feedback-15 spec §3, DW-Q3).
 --   Settings.PageEditors.SituationTable  General › When to show's afterGroup: one table line per
 --                                      situation (Track, Auto-open, Quality), pooled for the session;
 --                                      ParkSituationTable takes it off its placeholder before a render.
@@ -55,6 +57,24 @@ end
 function P.QualityReadout(ctx)
     local w = H().TextRow(ctx, readoutText(), { fontObject = "GameFontHighlight" })
     if w then addRefresher(ctx, function() w:SetText(readoutText()) end) end
+end
+
+-- ── Window › Layout: Clear history (feedback-15 spec §3, DW-Q3) ─────────────────────────────
+
+--- Keep history for's right half (the flow engine's pairWith seam, options-ui-§6): Clear history,
+--- an action rather than a setting, so no schema row. A cell-filling button takes the library's
+--- inset width rather than a flush half. Its confirmation is the History module's (H.AskClear),
+--- which clears test mode's or a simulation's session-only log while one is on.
+--- @param line table the flow line Keep history for sits alone on
+function P.ClearHistoryButton(_, line)
+    local h = H()
+    local b = h.AceGUI:Create("Button")
+    b:SetText(L["Clear history"])
+    b:SetRelativeWidth(h.BUTTON_PAIR_REL)
+    b:SetCallback("OnClick", function() NS.History.AskClear() end)
+    h.AttachTooltip(b, L["Clear history"], L["Empty the drop history on every character, after a confirmation."])
+    line:AddChild(b)
+    return b
 end
 
 -- ── General › When to show: the situations table ────────────────────────────────────────────

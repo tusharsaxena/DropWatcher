@@ -551,8 +551,8 @@ function H.SetEntryDeclined(e, on)
     end
 end
 
---- Empty the history (the History tab's Clear history, behind its confirmation). The retention
---- row stays.
+--- Empty the history (Settings › Window › Layout's Clear history, behind its confirmation). The
+--- retention row stays.
 function H.Clear()
     local hist = H.Log()
     if not hist then return end
@@ -560,6 +560,31 @@ function H.Clear()
     hist.groups = {}
     NS.Print(L["History cleared."])
     changed()
+end
+
+-- ── Clear history's confirmation (feedback-15 spec §3, DW-Q3) ───────────────────────────────
+--
+-- Here rather than in a window file: the settings row (settings/PageEditors.lua) asks for it, and
+-- the History module is the one both the settings and the UI already depend on. Accepting clears
+-- what Log() answers, so with test mode or a simulation on it is that session-only log.
+
+H.CLEAR_POPUP = "DROPWATCHER_CLEAR_HISTORY"
+
+local function ensureClearPopup()
+    if StaticPopupDialogs[H.CLEAR_POPUP] then return end
+    StaticPopupDialogs[H.CLEAR_POPUP] = {
+        text = L["Clear the drop history on every character? This cannot be undone."],
+        button1 = YES or "Yes", button2 = NO or "No",
+        timeout = 0, whileDead = true, hideOnEscape = true,
+        preferredIndex = 3,   -- clear of the slots Blizzard's own popups take first
+        OnAccept = function() H.Clear() end,
+    }
+end
+
+--- Clear history's button: asks first (a StaticPopup); the history is emptied only on Yes.
+function H.AskClear()
+    ensureClearPopup()
+    StaticPopup_Show(H.CLEAR_POPUP)
 end
 
 -- ── the trade window ────────────────────────────────────────────────────────────────────────

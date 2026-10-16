@@ -248,7 +248,7 @@ it is named.
   per account.
 - `global.history.v` and `global.history.groups` are the history's own record. Owner
   `modules/History.lua`, which writes them on a recorded drop, an outcome, a completed trade, the
-  safety ceiling and Clear history; `modules/HistoryRetention.lua` deletes the groups older than
+  safety ceiling and Clear history (Settings › Window › Layout); `modules/HistoryRetention.lua` deletes the groups older than
   Keep history for (once per session, five seconds after the first `PLAYER_ENTERING_WORLD`, or
   after the stand-up when the addon started disabled, and on a confirmed shorter window). Neither
   replaces `global.history` whole, since the retention row's value lives in it.

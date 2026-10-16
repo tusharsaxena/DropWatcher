@@ -7,8 +7,8 @@ local _, NS = ...
 -- THE TAB'S SORT is built here, once, and kept here (Parts, Refresh's state), but it no longer sits
 -- in the footer (feedback-10 spec §3): in the full layout it is at the right edge of the active tab's
 -- strip (`pane.sortHost`: Drops' summary strip, after Post my tradeables, Scan group and Expand all;
--- History's, after Clear history and Expand all; feedback-15 spec §2), re-anchored on every pass so it follows a tab switch; in the compact layout
--- it is in the Filters panel (modules/CompactChrome.lua).
+-- History's, after Expand all; feedback-15 spec §2, §3), re-anchored on every pass so it follows a
+-- tab switch; in the compact layout it is in the Filters panel (modules/CompactChrome.lua).
 --
 -- Compose is PURE: plain inputs in, each segment's text and tooltip out, so test_window drives it
 -- case by case. Read gathers the inputs through the engine's read-only accessors (the roster, the

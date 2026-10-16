@@ -208,7 +208,7 @@ step under `pcall`, so one that raises never skips the rest nor the later stand-
 failure is a `SIM` debug line. While its combat edge is up, the simulator answers
 `InCombatLockdown` and the player's combat flag `true` through the seam and never `false`, so a
 caller that must not act in combat is never told it may (DW-90).
-The addon's two confirmations, Clear history (`modules/WindowHistory.lua`) and Reset all settings
+The addon's two confirmations, Clear history (`modules/History.lua`'s `AskClear`, since DW-Q3) and Reset all settings
 (`settings/Schema.lua`), set `preferredIndex = 3`, so neither shares a StaticPopup slot with
 Blizzard's own dialogs (DW-62).
 

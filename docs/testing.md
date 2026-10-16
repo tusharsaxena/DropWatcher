@@ -65,7 +65,9 @@ table (one line per situation, its gold headers and stripe, each cell's value, a
 path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, parked
 by its placeholder's own `OnRelease` outside the renderer (options-ui-§19, DW-P21), the rows still schema rows and `skipRender`), the Feed page's "in force now" readout, the Comparison page's per-spec
 weights and unwanted types written whole through the seam, the Messages page's live counters,
-preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
+preview, token chips and Reset templates, Window › Layout's Clear history beside Keep history for
+(asking first, clearing on Yes, test mode's samples only while it is on; feedback-15 spec §3), each
+page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group (the compact layout's
 title-bar icon; the full layout's is on the Drops strip, feedback-7 spec §4), the tabs and their lazy
@@ -95,8 +97,8 @@ the least compact width, 440, at which line 2's fullest pieces end before the ac
 feedback-5 spec §0, §4),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
-repainting, the collapsing headers, every tooltip at the card's top right, Clear history at the one
-footer width in both layouts, the text size and test mode's samples),
+repainting, the collapsing headers, every tooltip at the card's top right, the strip without Clear
+history in both layouts, the text size and test mode's samples),
 `test_compact_chrome` (the window's chrome in the compact layout, DW-C4: the short tab labels, `TEST`
 and `SIM`, the badge's count, the footer's one line and its tooltip, the Filters count, label and
 tooltip, pure; then headless: the short title centered with its word, the badge at the left with its
@@ -171,12 +173,12 @@ the ticker running, Post my tradeables through its handler, and the compact stri
 shortened, shown there with nothing tradeable too; feedback-5 spec §3, DW-E3; feedback-7 spec §4,
 feedback-10 spec §3 and feedback-15 spec §2: one right-aligned row, `[Post my tradeables] [Scan group]
 [Expand all] [Sort]`, Post at Sort's size, Scan group through its handler, Sort following the active
-tab to History's strip after the toggle and Clear history and back, the pure `Row`, and the full
+tab to History's strip right of the toggle and back, the pure `Row`, and the full
 layout's strip shown with nothing tradeable, Scan group in its place),
 `test_footer_row` (one footer button kind and Expand all / Collapse all, feedback-15 spec §2: the pure
 `Slots`, `FoldState` and `FoldAll`; every footer button `FOOTER_BUTTON_W` wide with the same label in
 both layouts, each tab's row right to left in both layouts, the info ending where the row starts, the
-compact Drops strip always shown; the toggle's words, both directions, on both tabs in both layouts,
+compact Drops strip always shown, no Clear history on History's strip; the toggle's words, both directions, on both tabs in both layouts,
 off with no header, each tab's collapsed state its own), `test_offer_panel` (the Offer panel opened from your own drop's
 Offer, built headless: docked beside the full or compact window on the side with room, the
 candidates ranked with Their eq in the Them look (both worn items from the read), no class bar and
@@ -325,7 +327,7 @@ by hand, the trade match by partner then item id and your own drops traded away;
 the bus: a live drop recorded and a test drop never, `DropUpdated`, a sent ask, offer or announce;
 a completed trade marking `received` and the Ask button `Traded`, one given away, and an
 unfinished or changed trade marking nothing; Clear history behind its
-confirmation; the diagnostics line; and the History tab built headless: kept groups newest first,
+confirmation (`History.AskClear`; the strip has none since DW-Q3); the diagnostics line; and the History tab built headless: kept groups newest first,
 the outcome column in the action buttons' tones (feedback-12 spec §0), a reason on every cell, a header toggle, Content's This session, the row menu
 with and without the client's menu, the empty line and `HistoryChanged`'s repaint),
 `test_history_retention` (Keep history for, feedback-2 spec §5: the labels, choices and footer, a

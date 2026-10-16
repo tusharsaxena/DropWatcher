@@ -19,8 +19,9 @@ local _, NS = ...
 -- THE HEADERS are the full table's header button, painted with the short form
 -- (NS.CompactCards.HistoryHeader: `2d` once a day old); a click collapses the group as before.
 --
--- THE STRIP is the full layout's (NS.WindowHistory places it for both): the kept-history line,
--- Expand all / Collapse all and Clear history at the one footer width (feedback-15 spec §2).
+-- THE STRIP is the full layout's (NS.WindowHistory places it for both): the kept-history line and
+-- Expand all / Collapse all at the one footer width (feedback-15 spec §2); Clear history lives in
+-- Settings › Window › Layout (feedback-15 spec §3).
 
 NS.CompactHistory = NS.CompactHistory or {}
 local CH = NS.CompactHistory

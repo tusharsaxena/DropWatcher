@@ -111,10 +111,10 @@ C.WINDOW = {
     COUNTDOWN_FONT = 10,  -- the small template's own text size, for such a row at Default
     COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
-    STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Clear history)
+    STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Expand all)
     -- One footer button kind (feedback-15 spec §2, modules/FooterRow.lua): every button on a tab's
-    -- strip (Post my tradeables, Scan group, Expand all / Collapse all, Clear history) is this wide in
-    -- both layouts, sized so `Post my tradeables` fits beside its icon; the tab's Sort takes it too
+    -- strip (Post my tradeables, Scan group, Expand all / Collapse all) is this wide in both
+    -- layouts, sized so `Post my tradeables` fits beside its icon; the tab's Sort takes it too
     -- (NS.WindowFooter.SORT_W).
     FOOTER_BUTTON_W = 150,
     SCAN_W      = 110,    -- the empty state's Scan group, beside Preview with test data (not a footer button)

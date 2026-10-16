@@ -9,14 +9,14 @@ local _, NS = ...
 --
 --             Full                                                 Compact
 --   Drops     Sort · Expand/Collapse · Scan group · Post my tradeables   Expand/Collapse · Post my tradeables
---   History   Sort · Expand/Collapse · Clear history                     Expand/Collapse · Clear history
+--   History   Sort · Expand/Collapse                                     Expand/Collapse
 --
 -- Post my tradeables shows only while one of your drops the tab lists can be traded; a hidden
 -- control takes no room. In compact, Sort stays in the Filters panel (modules/CompactChrome.lua) and
 -- Scan group the title bar's icon. FR.Slots is that placement, pure; the info text on the strip's
 -- left ends GAP short of the leftmost control (its `left`), one line, so a narrow row cuts it with an
--- ellipsis rather than run it under the buttons. (Clear history leaves the strips for Settings in
--- DW-Q3, feedback-15 spec §3.)
+-- ellipsis rather than run it under the buttons. (Clear history left the strips for Settings ›
+-- Window › Layout in DW-Q3, feedback-15 spec §3.)
 --
 -- THE TOGGLE. One button per strip: `Expand all` while any header the filters show is collapsed,
 -- `Collapse all` once every one is open (FR.FoldState, pure). A click sets every shown header of the

@@ -326,10 +326,14 @@ end)
 test("history: Clear history asks first, and empties the log only on Yes; the retention row stays", function()
     local NS, m = enabled({ rec() })
     added(NS, 1)
-    NS.WindowHistory.AskClear()
-    assertEqual(m.popupsShown[#m.popupsShown][1], NS.WindowHistory.CLEAR_POPUP)
+    -- red under: the popup is the History tab's (WindowHistory.AskClear), not the History module's
+    -- (feedback-15 spec §3: the settings row reaches it without a UI dependency)
+    assertTrue(NS.WindowHistory.AskClear == nil, "the tab no longer owns it")
+    NS.History.AskClear()
+    assertEqual(m.popupsShown[#m.popupsShown][1], NS.History.CLEAR_POPUP)
     assertEqual(#NS.History.Groups(), 1, "nothing cleared before the answer")
-    local popup = m.StaticPopupDialogs[NS.WindowHistory.CLEAR_POPUP]
+    local popup = m.StaticPopupDialogs[NS.History.CLEAR_POPUP]
+    assertEqual(popup.text, "Clear the drop history on every character? This cannot be undone.")
     -- red under: a popup without preferredIndex (DW-62 review F-006): slot 3, clear of Blizzard's own
     assertEqual(popup.preferredIndex, 3)
     popup.OnAccept()
@@ -452,12 +456,13 @@ test("history tab: a right-click marks a row declined, through the menu when the
     assertTrue(e.outcome ~= "declined")
 end)
 
-test("history tab: with nothing kept it says what it will hold, and Clear history is off", function()
+test("history tab: with nothing kept it says what it will hold, and the strip has no Clear history", function()
     local _, drawn = shownTab(function(_, hist) hist.groups = {} end)
     assertEqual(#drawn.entries, 0)
     assertTrue(drawn.pane.placeholder:IsShown())
     assertEqual(textOf(drawn.pane.placeholder), "Drops from earlier encounters appear here.")
-    assertFalse(drawn.strip.clear:IsEnabled())
+    -- red under: Clear history still on the strip (feedback-15 spec §3 moves it to Settings)
+    assertTrue(drawn.strip.clear == nil)
 end)
 
 test("history tab: HistoryChanged repaints the shown window on the next frame", function()

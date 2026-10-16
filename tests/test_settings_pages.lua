@@ -1,10 +1,11 @@
 -- tests/test_settings_pages.lua — the settings pages of design spec §12.2: the page list and each
 -- page's strip, the rows each page draws, the dimmed rows, General › When to show's table, the Feed
 -- page's "in force now" readout, the Comparison page's per-spec editors, the Messages page's
--- template editors (live counters, token chips, preview, Reset templates), each page's Defaults
--- button, and the pure halves of the editors (settings/Editors.lua). Built headless under the
--- kit's AceGUI recorder: a page's body is drawn on its first OnShow, and a tab is reached by
--- clicking the strip's button.
+-- template editors (live counters, token chips, preview, Reset templates), Window › Layout's
+-- Clear history beside Keep history for (feedback-15 spec §3), each page's Defaults button, and
+-- the pure halves of the editors (settings/Editors.lua). Built headless under the kit's AceGUI
+-- recorder: a page's body is drawn on its first OnShow, and a tab is reached by clicking the
+-- strip's button.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -513,6 +514,51 @@ test("messages: Reset templates puts the three back and repaints the boxes", fun
     assertEqual(NS.Setting("messages.templates.ask"), D.ask)
     assertEqual(NS.Setting("messages.templates.offer"), D.offer)
     assertEqual(boxes.ask.text, D.ask)
+end)
+
+-- ── Window › Layout: Clear history (feedback-15 spec §3, DW-Q3) ─────────────────────────────
+
+-- The flow line holding a widget, among the widgets a render drew.
+local function lineOf(list, w)
+    for _, g in ipairs(list) do
+        for _, c in ipairs(g.children or {}) do
+            if c == w then return g end
+        end
+    end
+end
+
+test("window: Layout draws Clear history beside Keep history for; it asks first and clears only on Yes", function()
+    local NS, _, m = T.enableAddon()
+    local ctx = open(NS, m, "window")
+    local drawn = tab(m, ctx, "Layout")
+    local keep = find(drawn, "Dropdown", "Keep history for")
+    local clear = find(drawn, "Button", "Clear history")
+    -- red under: no Clear history button on the Window page (it sat on the History tab's strip)
+    assertTrue(keep ~= nil and clear ~= nil, "both are drawn")
+    assertTrue(lineOf(drawn, keep) ~= nil and lineOf(drawn, keep) == lineOf(drawn, clear), "on one line")
+    local H = NS.History
+    local hist = H.Store()
+    hist.groups = { { key = "enc:1@1", label = "Boss A", kind = "encounter", at = 1, drops = {} } }
+    clear:__fire("OnClick")
+    assertEqual(m.popupsShown[#m.popupsShown][1], H.CLEAR_POPUP)
+    assertEqual(#H.Store().groups, 1, "nothing cleared before the answer")
+    m.StaticPopupDialogs[H.CLEAR_POPUP].OnAccept()
+    assertEqual(#H.Store().groups, 0)
+end)
+
+test("window: with test mode on, Clear history clears the samples and leaves the account's log", function()
+    local NS, _, m = T.enableAddon()
+    m.seedGearJournal()   -- the samples are drawn from the journal's gear (tests/test_test_mode.lua)
+    local H = NS.History
+    H.Store().groups = { { key = "enc:1@1", label = "Boss A", kind = "encounter", at = 1, drops = {} } }
+    NS.SetTestMode(true)
+    assertTrue(#H.Groups() > 0, "the samples are shown")
+    local ctx = open(NS, m, "window")
+    find(tab(m, ctx, "Layout"), "Button", "Clear history"):__fire("OnClick")
+    m.StaticPopupDialogs[H.CLEAR_POPUP].OnAccept()
+    assertEqual(#H.Groups(), 0, "the samples cleared")
+    NS.SetTestMode(false)
+    assertEqual(#H.Store().groups, 1, "the account's log untouched")
 end)
 
 -- ── Defaults, page by page ──────────────────────────────────────────────────────────────────

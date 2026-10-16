@@ -2,7 +2,7 @@
 -- spec §2, DW-Q2): every footer button is C.WINDOW.FOOTER_BUTTON_W wide with the same icon and label
 -- in both layouts (no short `Post` or `Clear`); right to left the full Drops row is Sort, the toggle,
 -- Scan group and Post my tradeables, compact Drops the toggle and Post, full History Sort and the
--- toggle, compact History the toggle (Clear history beside it until DW-Q3 moves it to Settings); the
+-- toggle, compact History the toggle (Clear history lives in Settings, feedback-15 spec §3); the
 -- info text on the left ends where the buttons start; the compact Drops strip is always shown. The
 -- toggle reads `Expand all` while a header the filters show is collapsed and `Collapse all` once
 -- every one is open, sets every shown header of the active tab, and is off with none. Built headless
@@ -179,23 +179,23 @@ test("footer row: compact Drops is always shown: the toggle at the right, Post m
     assertTrue(drawn.summary ~= nil)
 end)
 
-test("footer row: History, full Sort then the toggle, compact the toggle; Clear history at the one width", function()
+test("footer row: History, full Sort then the toggle, compact the toggle; no Clear history", function()
     local NS, drawn = shownHistory()
     local K, WF, FR = NS.Constants.WINDOW, NS.WindowFooter, NS.FooterRow
     local strip = drawn.strip
     local step = K.FOOTER_BUTTON_W + FR.GAP
-    -- red under: no toggle on History's strip; Clear history CLEAR_W (124) wide
+    -- red under: no toggle on History's strip
     assertTrue(strip.fold ~= nil and strip.fold:IsShown())
+    assertEqual(strip.fold:GetWidth(), K.FOOTER_BUTTON_W)
     assertEqual(select(3, anchorOf(strip.fold)), -(WF.SORT_INSET + step))
-    assertEqual(strip.clear:GetWidth(), K.FOOTER_BUTTON_W)
-    assertEqual(select(3, anchorOf(strip.clear)), -(WF.SORT_INSET + 2 * step))
+    -- red under: Clear history beside the toggle (DW-Q3 moves it to Settings, feedback-15 spec §3)
+    assertTrue(strip.clear == nil, "Clear history left the strip")
     assertTrue((rightOf(strip.info)) == strip)
+    assertEqual(select(2, rightOf(strip.info)), -(WF.SORT_INSET + step + K.FOOTER_BUTTON_W + FR.GAP))
     NS.SetWindowMode("compact")
     assertTrue(NS.WindowHistory.Drawn().compact == true)
     assertEqual(select(3, anchorOf(strip.fold)), 0)
-    assertEqual(textOf(strip.clear.label), "Clear history", "no short Clear")
-    assertEqual(strip.clear:GetWidth(), K.FOOTER_BUTTON_W)
-    assertEqual(select(3, anchorOf(strip.clear)), -step)
+    assertEqual(select(2, rightOf(strip.info)), -(K.FOOTER_BUTTON_W + FR.GAP))
 end)
 
 -- ── Expand all / Collapse all ───────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1455%2F1455_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1457%2F1457_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -78,11 +78,12 @@ once. Every action button carries an icon for what it does (Offer's is a box wit
 Ask, yellow once you have and green once you've given it away. While any of your listed drops can still be traded, a strip under the
 table counts them and gives the next one to run out (`2 tradeable · next expiry 0:08:41`), and
 **Post my tradeables**, at the strip's right beside Scan group and the Sort dropdown, lists all of them in
-group chat in one line. On History, Sort sits at the strip's right beside Clear history.
+group chat in one line. On History, Sort sits at the strip's right beside Expand all.
 
 The **History** tab remembers what the feed showed, across logouts and across your characters, for
 30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never
-delete, and asks before a shorter time deletes anything. Its footer says how many bosses or key runs
+delete, and asks before a shorter time deletes anything; **Clear history** beside it empties the log on every
+character, after a confirmation. Its footer says how many bosses or key runs
 and drops it holds, and for how long. Each drop says what became of it: asked, offered, expired,
 received or traded away, the last two once a trade with that item goes through. The words take the
 action buttons' colors: yellow while it waited on someone (asked, offered), green once done (received,

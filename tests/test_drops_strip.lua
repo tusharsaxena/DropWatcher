@@ -184,7 +184,7 @@ test("drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Ex
     assertEqual(NS.Window.TooltipOf(strip.scan)[1], "Scan group")
 end)
 
-test("drops strip: Sort follows the active tab to History's strip, after the toggle and Clear history, and back", function()
+test("drops strip: Sort follows the active tab to History's strip, right of the toggle, and back", function()
     local NS, drawn = shownMine()
     local WF, FR, K = NS.WindowFooter, NS.FooterRow, NS.Constants.WINDOW
     local _, sort = WF.Parts()
@@ -193,9 +193,9 @@ test("drops strip: Sort follows the active tab to History's strip, after the tog
     assertTrue(sort:GetParent() == hstrip, "on History's strip")
     local _, rel, _, x = sort:GetPoint(1)
     assertTrue(rel == hstrip); assertEqual(x, -WF.SORT_INSET)
-    local _, crel, _, cx = hstrip.clear:GetPoint(1)
-    assertTrue(crel == hstrip)
-    assertEqual(cx, -(WF.SORT_INSET + 2 * (K.FOOTER_BUTTON_W + FR.GAP)), "Clear history left of the toggle, left of Sort")
+    local _, frel, _, fx = hstrip.fold:GetPoint(1)
+    assertTrue(frel == hstrip)
+    assertEqual(fx, -(WF.SORT_INSET + K.FOOTER_BUTTON_W + FR.GAP), "the toggle left of Sort")
     NS.Window.SelectTab("group")
     assertTrue(sort:GetParent() == drawn.pane.summary, "back on Drops' strip")
 end)

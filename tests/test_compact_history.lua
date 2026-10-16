@@ -1,8 +1,8 @@
 -- tests/test_compact_history.lua — the History tab in the compact layout (compact spec §3, DW-C3):
 -- the kept entries drawn headless under the mock as pooled three-line cards under one-line
 -- headers, each line what NS.CompactCards.History says (the outcome in its tone, the time, both
--- verdicts), the row menu on a right-click, the header's collapse, Clear history at the one footer
--- width and every tooltip at the card's top right.
+-- verdicts), the row menu on a right-click, the header's collapse, the strip without Clear history (it
+-- lives in Settings) and every tooltip at the card's top right.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -141,17 +141,17 @@ test("compact history: every tooltip opens at the card's top right, just outside
     end
 end)
 
-test("compact history: Clear history keeps its label and width in the compact layout (feedback-15 spec §2)", function()
+test("compact history: the strip is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)", function()
     local NS, drawn = shownCompact()
     local K = NS.Constants.WINDOW
-    local clear = drawn.strip.clear
-    assertEqual(textOf(clear.label), "Clear history"); assertEqual(clear:GetWidth(), K.FOOTER_BUTTON_W)
-    assertEqual(NS.Window.TooltipOf(clear)[1], "Clear history", "the tooltip is unchanged")
+    -- red under: Clear history on the compact strip beside the toggle
+    assertTrue(drawn.strip.clear == nil, "Clear history lives in Settings")
+    assertEqual(drawn.strip.fold:GetWidth(), K.FOOTER_BUTTON_W)
     assertEqual(textOf(drawn.strip.info), "2 groups, 3 drops · kept for 30 days")
     NS.SetWindowMode("full")
     drawn = NS.WindowHistory.Drawn()
     assertTrue(drawn.compact == nil and #drawn.rows == 2, "the table again")
-    assertEqual(textOf(clear.label), "Clear history"); assertEqual(clear:GetWidth(), K.FOOTER_BUTTON_W)
+    assertTrue(drawn.strip.clear == nil)
 end)
 
 test("compact history: cards are pooled and follow the Font size row", function()

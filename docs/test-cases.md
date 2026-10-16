@@ -115,7 +115,7 @@ Total.
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 
-### test_settings_pages.lua (37)
+### test_settings_pages.lua (39)
 
 - pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -144,6 +144,8 @@ Total.
 - messages: an empty template is refused by the seam and the box shows the stored one again
 - messages: a token chip goes into the template last edited and is stored at once
 - messages: Reset templates puts the three back and repaints the boxes
+- window: Layout draws Clear history beside Keep history for; it asks first and clears only on Yes
+- window: with test mode on, Clear history clears the samples and leaves the account's log
 - pages: a page's Defaults resets that page's rows and no other page's
 - editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
 - editors: a spec's stats are its primary stat, Stamina and the four secondaries
@@ -350,7 +352,7 @@ Total.
 - compact history: marking an entry declined repaints its card
 - compact history: a header click opens a collapsed group
 - compact history: every tooltip opens at the card's top right, just outside the window
-- compact history: Clear history keeps its label and width in the compact layout (feedback-15 spec §2)
+- compact history: the strip is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
@@ -547,7 +549,7 @@ Total.
 - drops tab: the tabs are Drops and History, and the retired `mine` opens Drops
 - drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
 - drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)
-- drops strip: Sort follows the active tab to History's strip, after the toggle and Clear history, and back
+- drops strip: Sort follows the active tab to History's strip, right of the toggle, and back
 - drops strip: Scan group goes through the shared handler
 - drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the toggle and Post
 - drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary
@@ -565,7 +567,7 @@ Total.
 - footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
 - footer row: full Drops, right to left: Sort, the toggle, Scan group, Post my tradeables, one width
 - footer row: compact Drops is always shown: the toggle at the right, Post my tradeables left of it
-- footer row: History, full Sort then the toggle, compact the toggle; Clear history at the one width
+- footer row: History, full Sort then the toggle, compact the toggle; no Clear history
 - footer row: the Drops toggle opens every shown header, then closes them, in both layouts
 - footer row: the toggle is off when the tab shows no header
 - footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
@@ -1315,7 +1317,7 @@ Total.
 - history tab: rows take the Window page's row height and font size
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
 - history tab: a right-click marks a row declined, through the menu when the client has one
-- history tab: with nothing kept it says what it will hold, and Clear history is off
+- history tab: with nothing kept it says what it will hold, and the strip has no Clear history
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
@@ -1702,7 +1704,7 @@ Total.
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
-| test_settings_pages.lua | 37 |
+| test_settings_pages.lua | 39 |
 | test_slash.lua | 26 |
 | test_window.lua | 14 |
 | test_window_shell.lua | 58 |
@@ -1773,4 +1775,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1455** |
+| **Total** | **1457** |

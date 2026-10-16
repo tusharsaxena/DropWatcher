@@ -683,9 +683,9 @@ TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TR
           5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
-Clear history ─> StaticPopup ─> History.Clear   (left of Expand all, which is left of the tab's
-                                                   Sort on the full strip; in compact, left of
-                                                   Expand all at the right edge; feedback-15 §2)
+Settings › Window › Layout › Clear history (beside Keep history for, pairWith; feedback-15 §3)
+                 ─> History.AskClear ─> StaticPopup ─> Yes: History.Clear (Log(): the account's,
+                                                   or test mode's / the simulation's session log)
 Expand all / Collapse all ─> WindowHistory.FoldAll(pane.entries, collapse) ─> FooterRow.FoldAll
                  ─> State.windowHistory.collapsed ─> repaint (its own state, not the Drops tab's)
 every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint: one pass next frame,

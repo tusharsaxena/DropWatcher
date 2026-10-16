@@ -32,7 +32,7 @@ passed.
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
-| HIST-1..5 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0 |
+| HIST-1..6 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3 |
 | TOAST-1..4 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
@@ -1215,7 +1215,8 @@ history` (each the same width) and the toggle works there on its own: History's 
 stay as they were. `/dw compact` → Drops' strip shows even with nothing of yours tradeable, `Expand all` at its
 right and `Post my tradeables` (full label, same width) left of it while something is tradeable, no `Post`;
 Sort is in the Filters panel and Scan group the title bar's icon; History's strip reads `Expand all` with
-`Clear history` (no `Clear`) left of it; the toggle opens and closes the cards' headers on both tabs. Result:
+`Clear history` (no `Clear`) left of it; the toggle opens and closes the cards' headers on both tabs. (Since
+DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6.) Result:
 
 ## Roster
 
@@ -1644,8 +1645,8 @@ Then `/dw history` → the tab opens on View:
 All, Content: All and Character: All (feedback-13 spec §0), the drops are under their encounter's header (the newest open), each row
 with its Outcome; a header of an older day reads `n days ago`. Right-click a row → a menu with
 `Mark as declined`; choose it → the row reads `Declined`; right-click again → `Clear declined`
-puts the earlier outcome back. Content: This session → only this login's drops, a reload's included. Clear history →
-a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
+puts the earlier outcome back. Content: This session → only this login's drops, a reload's included. Settings ›
+Window › Layout › Clear history (since DW-Q3; HIST-6) → a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
 reads `History cleared.` Result:
 
 **HIST-3. Keep history for (DW-A5, feedback-2 spec §5).** On the first login on this build, `/dw
@@ -1683,6 +1684,16 @@ returns to what it read before (`Seen`, `Asked` or `Offered`); a drop whose trad
 out stays `Expired`, and a row you marked `Declined` keeps that. In a dungeon with drops from the
 first boss, Content: This instance, `/reload` → the same drops still show (This instance kept its
 start); leave and enter another instance, or log out and in → This instance starts again. Result:
+
+**HIST-6. Clear history lives in Settings (DW-Q3, feedback-15 spec §3).** The headless
+`test_settings_pages`, `test_history`, `test_footer_row` and `test_compact_history` cover it. The
+History tab's strip reads, right to left, Sort and `Expand all` in the full layout and `Expand all`
+alone in compact: no `Clear history` on either. `/dw config` → Window › Layout → `Clear history` sits
+on the line of Keep history for, at its right; hover it → its tooltip. Click it → the confirmation
+`Clear the drop history on every character? This cannot be undone.`; No keeps everything; Yes
+empties the History tab on this and your other characters and chat reads `History cleared.`. With
+`/dw test` on, Yes empties only the sample groups: turn test mode off → the account's history is
+still there. Result:
 
 ## Toast
 
@@ -1941,7 +1952,8 @@ realm), slot, trade and the time on the right (`17:02`, or `Oct 9` past a day); 
 verdicts. Right-click a card → Mark as declined; its outcome reads Declined; right-click again →
 Clear declined. The strip's button reads `Clear` with the Clear history tooltip, and it still asks
 first. Switch to full → `Clear history` again (left of Sort since DW-J3: FEED-70). (Superseded by feedback-15,
-2026-10-16: it reads `Clear history` at the one footer width in both layouts; FEED-78.) Result:
+2026-10-16: it reads `Clear history` at the one footer width in both layouts; FEED-78. Then by DW-Q3: Clear
+history left both strips for Settings; HIST-6.) Result:
 
 **COMPACT-5. The compact chrome and the Filters ▾ menu (DW-C4).** Switch to the compact layout →
 the title reads `Drop Watcher`, centered; turn test mode on → `TEST` in red beside it, the two
@@ -2104,6 +2116,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | HIST-3 | DW-A5, Keep history for, its confirmation, the login prune and step 4 | No client pass recorded yet |
 | HIST-4 | DW-A9, the prune after a disabled start, a stale confirmation | No client pass recorded yet |
 | HIST-2, HIST-5 | DW-Q0, the session is the login: the Drops tab across a reload, the undone Expired, This instance across a reload | No client pass recorded yet |
+| HIST-6 | DW-Q3, Clear history in Settings › Window › Layout beside Keep history for; none on History's strips | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
 | TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |
 | TOAST-3 | DW-62, an empty-slot upgrade toasts and auto-asks | No client pass recorded yet |

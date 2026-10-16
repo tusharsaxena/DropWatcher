@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/WindowHistory.lua — the History tab (design spec §10, §11.1): the drops kept across
 -- sessions (modules/History.lua), under a collapsible header per encounter or run, in the Drops
--- table's row style, read-only, with Clear history behind a confirmation.
+-- table's row style, read-only (Clear history lives in Settings, feedback-15 spec §3).
 --
 -- THE COLUMNS. Item (a real item button and the name), Ilvl, Slot, Looter (in class color; ` [YOU]`
 -- in gold after your own name, feedback-7 spec §2), Me,
@@ -32,9 +32,10 @@ local _, NS = ...
 -- THE COMPACT LAYOUT draws the same entries as cards: modules/CompactHistory.lua (DW-C3).
 --
 -- THE STRIP (feedback-15 spec §2, NS.FooterRow): the kept-history line on the left, one line, cut
--- with an ellipsis where the row starts; right to left, the tab's Sort (full layout only), Expand all
--- / Collapse all (WH.FoldAll) and Clear history, each button the one footer width with the same
--- label in both layouts.
+-- with an ellipsis where the row starts; right to left, the tab's Sort (full layout only) and Expand
+-- all / Collapse all (WH.FoldAll), each button the one footer width with the same label in both
+-- layouts. Clear history left the strip for Settings › Window › Layout (feedback-15 spec §3, DW-Q3;
+-- its confirmation is NS.History.AskClear).
 --
 -- THE UI LISTENS. HistoryChanged repaints the shown window on the next frame, the Drops rows
 -- included (their Ask button reads `Traded` once a trade settles the drop). Collapsed groups are
@@ -87,7 +88,6 @@ local OUTCOME = {
 
 local NO_HISTORY = L["Drops from earlier encounters appear here."]
 local NO_MATCH = L["No kept drop matches the filters. View: All, Character: All and Content: All show everything."]
-local CLEAR_POPUP = "DROPWATCHER_CLEAR_HISTORY"
 
 -- ── the view state (session-only) ───────────────────────────────────────────────────────────
 
@@ -426,31 +426,6 @@ local function paintHeader(h, e, now)
     h.chevron:SetTexture(NS.Icon(e.collapsed and "chevron-right" or "chevron-down"))
 end
 
--- ── Clear history ───────────────────────────────────────────────────────────────────────────
-
-local function ensurePopup()
-    if StaticPopupDialogs[CLEAR_POPUP] then return end
-    StaticPopupDialogs[CLEAR_POPUP] = {
-        text = L["Clear the drop history on every character? This cannot be undone."],
-        button1 = YES or "Yes", button2 = NO or "No",
-        timeout = 0, whileDead = true, hideOnEscape = true,
-        preferredIndex = 3,   -- clear of the slots Blizzard's own popups take first
-        OnAccept = function() NS.History.Clear() end,
-    }
-end
-
---- Clear history's button: asks first (a StaticPopup); the history is emptied only on Yes.
-function WH.AskClear()
-    ensurePopup()
-    StaticPopup_Show(CLEAR_POPUP)
-end
-
-WH.CLEAR_POPUP = CLEAR_POPUP
-
-local function clearTip()
-    return L["Clear history"], L["Empty the drop history on every character, after a confirmation."]
-end
-
 -- ── the pane ────────────────────────────────────────────────────────────────────────────────
 
 local function buildHeads(pane)
@@ -485,8 +460,6 @@ local function buildStrip(pane)
     strip.info:SetJustifyH("LEFT")
     strip.info:SetWordWrap(false)   -- one line: the game cuts it with an ellipsis when narrow
     local FR = NS.FooterRow
-    strip.clear = FR.Button(strip, "clear", L["Clear history"], WH.AskClear)
-    NS.Window.AttachTooltip(strip.clear, clearTip)
     strip.fold = FR.BuildFold(strip, function(collapse) WH.FoldAll(pane.entries, collapse) end)
     pane.strip = strip
     pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
@@ -547,16 +520,14 @@ local function drawEntries(pane, entries, layout, width, now)
     pane.content:SetSize(width, max(y, 1))
 end
 
--- The strip's row, right to left (feedback-15 spec §2): full `Sort · Expand/Collapse · Clear
--- history`, compact `Expand/Collapse · Clear history`; the tab's Sort is anchored in its slot by
--- NS.WindowFooter.AnchorSort.
+-- The strip's row, right to left (feedback-15 spec §2, §3): full `Sort · Expand/Collapse`, compact
+-- `Expand/Collapse`; the tab's Sort is anchored in its slot by NS.WindowFooter.AnchorSort.
 local function placeStrip(strip, compact)
     local FR, WF, w = NS.FooterRow, NS.WindowFooter, K.FOOTER_BUTTON_W
-    local row = { { key = "fold", w = w }, { key = "clear", w = w } }
+    local row = { { key = "fold", w = w } }
     if not compact then table.insert(row, 1, { key = "sort", w = WF.SORT_W }) end
     local slots = FR.Slots(row, FR.GAP, compact and 0 or WF.SORT_INSET)
     FR.Place(strip, strip.fold, slots.fold)
-    FR.Place(strip, strip.clear, slots.clear)
     FR.PlaceInfo(strip, strip.info, slots.left)
 end
 
@@ -564,8 +535,6 @@ local function paintStrip(pane, groups, entries, compact)
     local st = NS.History.Stats()
     local strip = pane.strip
     strip.info:SetText(NS.HistoryRetention.FooterText(#groups, st.drops, st.days))
-    strip.clear:SetEnabled(#groups > 0)
-    strip.clear:SetAlpha(#groups > 0 and 1 or 0.5)
     placeStrip(strip, compact)
     NS.FooterRow.PaintFold(strip.fold, entries)
 end
