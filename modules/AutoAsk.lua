@@ -133,6 +133,7 @@ end
 -- Why a drop is not (or no longer) to be asked for, or nil when it is.
 local function blocker(rec, cfg)
     if not rec then return "gone" end
+    if rec.source == "restore" then return "restored" end   -- seen before a reload (feedback-15 spec §0)
     if not NS.Toast.Qualifies(rec, cfg.minGain) then return "notQualifying" end
     local target = NS.AskTargetOf(rec)
     if not target then return "noTarget" end

@@ -5,3 +5,4 @@ DW-Q0 → DW-Q4 (see the plan). Keep the green gate. Push after each item; never
 
 ## Log
 - 2026-10-16 — spec and plan written; branch cut from master `1c82395`; suite green (1429/0/1), lint 0/0.
+- 2026-10-16 — DW-Q0 landed: Session.lua and FeedRestore.lua (TOC), LF.Restore, H.Adopt, beforeExpired undo, This instance across a reload; restored drops skip auto-open, toast and auto-ask; suite green (1439/0/1), lint 0/0.

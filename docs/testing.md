@@ -330,6 +330,16 @@ shorter one asking first with Yes pruning and No writing the agreed window back,
 at once; the login prune once per session, deferred, taken back by the stand-down and armed again
 by the stand-up, Never delete keeping everything; test mode's ten-day-old alt sample pruned by a
 7-day window while the account's log is kept),
+`test_feed_restore` (the session is the login and the Drops tab survives a reload, feedback-15
+spec §0: the per-character session start an initial login sets, a reload keeps and a zone change
+leaves, stable with no stored value; after a reload this session's drops back in the feed under
+their History group's key, label, place and roster, dated by the client clock, judged anew and
+linked to their entries, nothing recorded twice; an initial login restoring nothing; this session's
+and this character's entries only, gone ones skipped, the newest `MAX_DROPS`; restored drops never
+merging with each other while a live line merges in; the quality gate kept and the situation gate
+and filters skipped; no auto-open, toast or automatic ask for a restored drop; the false Expired a
+live timer read undoes, and nothing else does; This instance kept across a reload in the same
+situation and instance only),
 `test_toast` (the toast: the pure qualifier, someone else's upgrade for you of `toast.minGain` or
 more (or into an empty slot, whatever the least gain) with a `likely` or `yes` trade, and every
 reason it refuses, and the board 06 C texts, `empty` for an empty slot; then

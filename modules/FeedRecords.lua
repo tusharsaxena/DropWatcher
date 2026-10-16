@@ -109,7 +109,8 @@ end
 
 --- The group a drop joins in its feed, made by its first drop. An area group continues while it is
 --- the latest group; an area visited again later starts a new one. A new group keeps the place its
---- spec names (instance, difficulty) and the drop's recorder (feedback-3 spec §4).
+--- spec names (instance, difficulty) and the drop's recorder (feedback-3 spec §4). A restored drop's
+--- spec carries its History group's feed key (feedback-15 spec §0): an area's is taken as it is.
 --- @param feed table { groups, groupByKey }
 --- @param rec table the drop, with `group` = { key, label, kind, encounterID, mapID, instance,
 ---   difficulty }
@@ -117,7 +118,7 @@ end
 function FM.Materialize(feed, rec)
     local spec = rec.group
     local g = feed.groupByKey[spec.key]
-    if spec.kind == "area" then
+    if spec.kind == "area" and rec.source ~= "restore" then
         local last = feed.groups[#feed.groups]
         if last and last.kind == "area" and last.label == spec.label then return last end
         g = nil

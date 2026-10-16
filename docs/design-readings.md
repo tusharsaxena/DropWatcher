@@ -297,9 +297,12 @@ estimate as last judged while it was in the feed; a group is one feed group of o
 boss killed again tomorrow is a new group. **Outcomes** move forward only (seen, then asked or
 offered, then expired, then received or traded away); an announce counts as `offered`; `declined`
 is the player's and an automatic move never undoes it, but a completed trade does. **Which entry**
-a live drop is lives in a session-only index, because drop ids restart each session, so after a
-reload the old entries take no more outcomes from asks or the trade estimate; a completed trade
-still matches them by item id. **A completed trade** is the client's "Trade complete."
+a live drop is lives in an index of the load, because drop ids restart each load; since
+feedback-15 spec §0 (DW-Q0) a reload rebuilds this session's drops from their entries and links
+each back (`History.Adopt`), so only an earlier session's entries take no more outcomes from asks or
+the trade estimate; a completed trade still matches them by item id. **A false Expired** (a rule
+estimate gone `no expired` on a drop still tradeable) is undone by the trade timer's live `yes`
+alone: the outcome returns to the one `expired` replaced (`beforeExpired`). **A completed trade** is the client's "Trade complete."
 (`UI_INFO_MESSAGE` with `LE_GAME_ERR_TRADE_COMPLETE`, the pattern RCLootCouncil and TradeLog use),
 before `TRADE_CLOSED` or within 5 seconds after it; `TRADE_CLOSED` alone, even after both sides
 accepted, is a cancel or a failure (out of range, a full bag) and completes nothing. The items are

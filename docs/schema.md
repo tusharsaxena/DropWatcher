@@ -171,11 +171,12 @@ history = { retentionDays = 30, v = 1, groups = {
       roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
           me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
-          trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
+          trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
 ```
 
 - A group is one feed group of one session: its `key` is the feed group's key and the session's
-  start (`enc:<id>:<t>@<time()>`), its `label` the encounter, run or area name, `kind` `encounter`,
+  start (`enc:<id>:<t>@<time()>`; the session is the login, kept by a reload: `char.session.start`
+  below, feedback-15 spec §0), its `label` the encounter, run or area name, `kind` `encounter`,
   `run` or `area`, `situation` the situation key and `at` its first drop's time.
 - `at` is `time()` (seconds since the epoch), so it reads the same after a reload; `looter` is the
   Name-Realm and `class` its classFile; `me`, `them` and `trade` are the verdicts and the trade
@@ -198,12 +199,28 @@ history = { retentionDays = 30, v = 1, groups = {
   by `seenBy`. An entry kept before DW-A4 has neither: it is "unknown", which only `Character: All`
   shows. No migration step: the fields are optional.
 - `outcome` is `seen`, `asked`, `offered`, `received`, `tradedAway`, `expired` or `declined`;
-  `before` is the outcome a hand-set `declined` replaced.
+  `before` is the outcome a hand-set `declined` replaced, and `beforeExpired` the one an automatic
+  `expired` replaced (feedback-15 spec §0): the trade timer's live `yes` puts it back, so a false
+  Expired is undone (an entry expired before the field existed returns to `seen`). No migration
+  step: the field is optional.
 - How long it is kept: a group goes whole once its newest entry's `at` is older than
   `history.retentionDays` days (never under `0`), at the session's prune or a confirmed shorter
   window. Beside that, 50 drops per group and a safety ceiling of 5,000 drops in all
   (`NS.History.CEILING`, a constant the diagnostics report), the oldest going first, keep
   SavedVariables bounded even under Never delete. The history's shape has its own stamp, `v`.
+
+## `DropWatcherDB.char`
+
+Per character (AceDB's `char` section, keyed by character; savedvariables-§1), no defaults declared
+and no setting row: the session (feedback-15 spec §0, DW-Q0, `modules/Session.lua`).
+
+| Key | Default | What it is |
+|---|---|---|
+| `session.start` | absent until the first read or login | the session start, `time()`: an initial login's `PLAYER_ENTERING_WORLD` sets it to now, a reload keeps it, a zone change moves nothing; absent or not a number, it is now (stored). History's group keys (`@<start>`) and every tab's This session read it (`NS.History.SessionStart`) |
+| `session.instance` | absent until the first `SituationChanged` | `{ at, situation, instance }`: where This instance started, `at` the epoch, `situation` the situation key, `instance` the instance map id (nil outside one); a reload's first situation announcement that names the same situation and instance restores the window's This instance from it |
+
+The kit's AceDB fake has no `char` section, so headless the record is session-only unless a suite
+seeds `db.char` (`test_feed_restore` does).
 
 ## State written outside the seam (architecture-§5)
 
@@ -235,6 +252,11 @@ it is named.
   after the stand-up when the addon started disabled, and on a confirmed shorter window). Neither
   replaces `global.history` whole, since the retention row's value lives in it.
 - `global.minimap.minimapPos` is LibDBIcon's own write into the table the launcher hands it.
+- `char.session.start` and `char.session.instance` are the session (feedback-15 spec §0). Owner
+  `modules/Session.lua`; writers `Session.Start` (now, when nothing valid is stored),
+  `Session.OnEnteringWorld` (an initial login; the stand-up after a disabled start) and
+  `Session.MarkSituation` (each `SituationChanged` the window hears, but a reload's first one in
+  the stored place).
 
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to
 the simulation's session-only log instead (`NS.Sim.HistoryLog`, `modules/Sim.lua`), never

@@ -32,7 +32,7 @@ passed.
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
-| HIST-1..4 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51; Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9 |
+| HIST-1..5 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0 |
 | TOAST-1..4 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
@@ -1606,11 +1606,20 @@ History row keeps its outcome. If no `completed` line appears after a real trade
 `/etrace` shows for `TRADE_ACCEPT_UPDATE`, `TRADE_CLOSED` and `UI_INFO_MESSAGE` (its message type
 beside `/dump LE_GAME_ERR_TRADE_COMPLETE`) around the accept, and in which order. Result:
 
-**HIST-2. The History tab.** After a few drops, `/reload` and `/dw history` → the tab opens on View:
+**HIST-2. The History tab, and the Drops tab across a reload (DW-51; DW-Q0, feedback-15 spec §0).**
+In a dungeon, after a few drops (one of them yours, still tradeable), note the Drops tab's headers
+and rows, then `/reload` → the Drops tab shows the same drops under the same boss or key headers
+(Content: This session), each judged again: Me against your gear now, Them as the inspects return,
+your own drop's countdown, Offer and Post my tradeables back once the bag scan matches it. No
+window opens on its own, no toast shows and no automatic ask is sent for them. Loot one more item →
+it joins the feed as usual, and the History tab gains that one drop only (no restored drop is
+recorded twice). Log out and back in → the Drops tab is empty (the session is the login) while
+History keeps everything; This session there now starts at the login.
+Then `/dw history` → the tab opens on View:
 All, Content: All and Character: All (feedback-13 spec §0), the drops are under their encounter's header (the newest open), each row
 with its Outcome; a header of an older day reads `n days ago`. Right-click a row → a menu with
 `Mark as declined`; choose it → the row reads `Declined`; right-click again → `Clear declined`
-puts the earlier outcome back. Content: This session → only today's drops. Clear history →
+puts the earlier outcome back. Content: This session → only this login's drops, a reload's included. Clear history →
 a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
 reads `History cleared.` Result:
 
@@ -1640,6 +1649,15 @@ open and pick 90 days (deletes nothing) → the confirmation closes; if it stays
 deletes nothing and the dropdown still reads 90. Pick 7 days, then 14 days while the first
 confirmation is open → only the 14-day question counts: Yes deletes what 14 days puts out of reach
 and the dropdown reads 14. Result:
+
+**HIST-5. The undone Expired, and This instance across a reload (DW-Q0, feedback-15 spec §0).**
+The headless `test_feed_restore` covers both. A drop of yours whose History row reads `Expired`
+while its bag tooltip still shows a trade time (a false Expired from a rule estimate, the owner's
+2026-10-16 report): once the trade timer reads it (open the bags, or wait for the scan) → the row
+returns to what it read before (`Seen`, `Asked` or `Offered`); a drop whose trade time really ran
+out stays `Expired`, and a row you marked `Declined` keeps that. In a dungeon with drops from the
+first boss, Content: This instance, `/reload` → the same drops still show (This instance kept its
+start); leave and enter another instance, or log out and in → This instance starts again. Result:
 
 ## Toast
 
@@ -2056,6 +2074,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
 | HIST-3 | DW-A5, Keep history for, its confirmation, the login prune and step 4 | No client pass recorded yet |
 | HIST-4 | DW-A9, the prune after a disabled start, a stale confirmation | No client pass recorded yet |
+| HIST-2, HIST-5 | DW-Q0, the session is the login: the Drops tab across a reload, the undone Expired, This instance across a reload | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
 | TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |
 | TOAST-3 | DW-62, an empty-slot upgrade toasts and auto-asks | No client pass recorded yet |

@@ -17,8 +17,9 @@
 --   popupsHidden   every StaticPopup_Hide(which) call's `which`, in order
 --   ldbObjects     LibDataBroker objects by name; minimapButtons LibDBIcon registrations by name
 --   fireEvent      fireEvent(name, ...) dispatches a game event to AceEvent handlers
---   instance       GetInstanceInfo's name and difficultyID; the instance type and inInstance are
---                  the base's __context.instanceType / __context.inInstance (IsInInstance reads them)
+--   instance       GetInstanceInfo's name, difficultyID and instanceID (its eighth answer); the
+--                  instance type and inInstance are the base's __context.instanceType /
+--                  __context.inInstance (IsInInstance reads them)
 --   challengeModeActive  C_ChallengeMode.IsChallengeModeActive()'s answer; challengeMaps[mapID] is
 --                  the keystone dungeon's name C_ChallengeMode.GetMapUIInfo answers
 --   lootHistory    C_LootHistory.GetSortedInfoForDrop's answers, keyed "encounterID:lootListID"
@@ -811,7 +812,8 @@ local function build()
     M.challengeModeActive = false
     M.unknownDifficulties = {}
     M.GetInstanceInfo = function()
-        return M.instance.name, M.__context.instanceType, M.instance.difficultyID, M.instance.difficultyName
+        return M.instance.name, M.__context.instanceType, M.instance.difficultyID, M.instance.difficultyName,
+            nil, nil, nil, M.instance.instanceID
     end
     M.difficultyNames = { [1] = "Normal", [2] = "Heroic", [8] = "Mythic Keystone", [14] = "Normal",
         [15] = "Heroic", [16] = "Mythic", [17] = "Looking For Raid", [23] = "Mythic", [24] = "Timewalking",

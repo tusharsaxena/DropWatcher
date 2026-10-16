@@ -141,7 +141,8 @@ the simulator's own safety checks read the real world. `test_sim_core` holds all
 adds the stable reads of the group, a unit and the instance to `NS.Compat`: `GroupSize`
 (`GetNumGroupMembers`), `InRaid`, `InGroup(category)`, `InstanceGroupCategory`
 (`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`,
-`InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`), `DifficultyKnown`
+`InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`; its fifth answer the instance map id, the
+client's eighth, since feedback-15 spec §0), `DifficultyKnown`
 (`GetDifficultyInfo`) and `ChallengeModeActive` (`C_ChallengeMode.IsChallengeModeActive`); since
 DW-B4 (feedback-3 spec §4) `DifficultyName` (`GetDifficultyInfo`'s name, plain, else nil) and
 `KeystoneLevel` (`C_ChallengeMode.GetActiveKeystoneInfo`'s level, else
@@ -233,6 +234,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/TradeHelper.lua` | `InitiateTrade`, `InTradeRange` |
 | `modules/Asks.lua` | `ChatSender`, `GlobalString`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |
 | `modules/Scoring.lua` | `PawnIsReady`, `PawnUpgradeInfo`, `PawnScaleForSpec`, `PawnItemValue` |
+| `modules/Session.lua` | `IsSecret`; `InstanceState`, `InstanceInfo` (`core/CompatWorld.lua`: the instance map id This instance is kept by) |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
 | `modules/WindowGroup.lua` | `ItemIcon`, `ClassColor`, `InsertChatLink`, `DressUpItem`, `BagItemLink`, `InventoryItemLink`; `TooltipBagItem`, `TooltipInventoryItem`, `TooltipHyperlink` (`core/CompatItem.lua`) |
 | `modules/DetailCard.lua` | `InsertChatLink`, `SpecName` |

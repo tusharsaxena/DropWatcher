@@ -1,2 +1,3 @@
 date	milestone	evidence
 2026-10-16	M25	spec and plan written; branch cut from master 1c82395; suite green (1429/0/1), lint 0/0
+2026-10-16	M25	DW-Q0: the session is the login (modules/Session.lua, char.session start and This instance mark), the Drops tab rebuilt from this session's History entries after a reload (modules/FeedRestore.lua, LootFeed.Restore, History.Adopt), the false Expired undone by a live timer read (beforeExpired), This instance kept across a reload; red: test_feed_restore (10 cases: empty feed after reload, lazy session start, no beforeExpired, instanceSince reset, restored drop auto-opening/toasting/auto-asking); suite green (1439/0/1), lint 0/0

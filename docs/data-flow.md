@@ -49,11 +49,13 @@ Filters panel, which closes with the window); the window calls no engine module.
 RestrictionChanged(reason) ─> the badge (`Encounter · n queued`, hidden while reason is nil)
 AskStateChanged ───────────> the badge's queued count (NS.Asks.Queued, read); shown: the active
                              tab's body (each row's Ask button)
-SituationChanged ──────────> "This instance" starts now; footer, Quality label
+SituationChanged(key) ─────> "This instance" starts now (Session.MarkSituation: a reload's first one in
+                             the stored situation and instance gives back the stored start); footer,
+                             Quality label
 DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read); a drop of the feed shown (live, or test
                              mode's while it is on):
                                ├─> hidden, in an auto-open situation: opens it (every drop, your
-                               │   own included; no latch; DW-83, FB-12)
+                               │   own included; no latch; DW-83, FB-12; never a restored drop)
                                ├─> minimized: stays minimized, `n new` counts it
                                └─> shown: tabs, filter bar, footer, active body
 DropUpdated ───────────────> shown: the same repaint
@@ -530,6 +532,9 @@ CHAT_MSG_LOOT ─> LootParser sink ─> source `chat` (your own `pushed` lines s
 ENCOUNTER_LOOT_RECEIVED(encounterID, itemID, link, qty, name, classFile) ─> source `encounter`
 LOOT_HISTORY_UPDATE_DROP(encounterID, lootListID) ─> Compat.LootHistoryDrop ─> a winner? once ─> `history`
 LootFeed.Add(link, looter, opts) ─> source `manual` (skips the situation gate; opts.test skips every gate)
+FeedRestore (after a reload) ─> LootFeed.Restore(r, adopt) ─> source `restore`: dated, placed and
+  grouped as its History entry was; skips the situation gate and the filters, never merged (a later
+  live line merges into it); adopt(id) = History.Adopt before its DropAdded (see The history)
   every payload secret-guarded; the looter resolved through the roster
 LootFeed.Receive   [Perf bucket `feed.add`]
   same item id + same looter (GUID, else name without realm) within 120s, not yet from this source
@@ -646,6 +651,15 @@ The stand-down cancels the flush timer and drops the queued asks; the sent regis
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
                           (live drops only)        group = feed group @ session; Trim: 50 a group,
                                                    CEILING 5,000 drops in all, the oldest first)
+PLAYER_ENTERING_WORLD ─> Session.OnEnteringWorld (before the situation's handler): isInitialLogin
+                          ─> char.session.start = time(); isReloadingUi ─> kept; neither ─> nothing
+                          (History.SessionStart reads it: the group keys' @<start>, This session)
+first PLAYER_ENTERING_WORLD, isReloadingUi ─> FeedRestore.Run (after the situation's and the
+                          retention's handlers): global.history's groups keyed @<start>, entries
+                          seenBy you, not gone, oldest first, the newest 200 ─> each:
+                          LootFeed.Restore(Receipt: GetTime() - (time() - at), the History group's
+                          feed key, label, kind, situation, place, roster; looter's GUID from the
+                          roster now) ─> History.Adopt(id, entry) ─> DropAdded: not recorded again
 first PLAYER_ENTERING_WORLD, or the stand-up after a disabled start
                           ─> 5s (canceled by the stand-down) ─> HistoryRetention.LoginPrune:
                           groups whose newest entry is older than retentionDays ─> HistoryChanged
@@ -654,6 +668,7 @@ Keep history for row ─> HistoryRetention.OnChanged ─> deletes nothing: taken
                           (HistoryRetention.Answer: only the latest pending choice; a later change
                           retires the open popup)
 DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
+                          (beforeExpired kept); `yes` on the timer's read ─> back to beforeExpired
                           (HistoryChanged only when the entry changed)
 AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)
 TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TRADE_ACCEPT_UPDATE(either
@@ -681,7 +696,7 @@ entries go to `CompactHistory.Refresh(pane, entries, compact)` (DW-C3): `Compact
 ## The toast
 
 ```
-DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet?
+DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet? not restored?
     ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain (or into an empty
        slot, whatever minGain), trade likely / yes
     ─> queue (newest 5) ─> Pump: nothing on screen, not held (combat without toast.inCombat)
@@ -707,7 +722,7 @@ drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.Res
 ```
 DropAdded(id) / DropUpdated(id) ─> AutoAsk.Consider: messages.autoAsk.enabled? not considered yet?
     ─> Toast.Qualifies(rec, autoAsk.minGain), the looter known, the ask still ready, not received,
-       recorded after auto-ask was turned on ─> pending (one C_Timer each)
+       recorded after auto-ask was turned on, not restored after a reload ─> pending (one C_Timer each)
     ─> due = DueAt(drop, last ENCOUNTER_END, autoAsk.delay)   (held while an encounter is in progress)
 ENCOUNTER_START ─> timers stopped        ENCOUNTER_END ─> every waiting ask due delay after now
 PLAYER_ENTERING_WORLD / ZONE_CHANGED_NEW_AREA, held, no Encounter restriction ─> as ENCOUNTER_END

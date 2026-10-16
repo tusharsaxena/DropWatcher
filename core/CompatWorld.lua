@@ -86,12 +86,14 @@ function Compat.InstanceState()
     return inInstance == true, instanceType
 end
 
---- GetInstanceInfo(): name, instanceType, difficultyID, difficultyName, raw. Nil without the API.
---- @return any, any, any, any
+--- GetInstanceInfo(): name, instanceType, difficultyID, difficultyName and the instance map id
+--- (its eighth answer; modules/Session.lua's This instance, feedback-15 spec §0), raw. Nil without
+--- the API.
+--- @return any, any, any, any, any
 function Compat.InstanceInfo()
     if not GetInstanceInfo then return nil end
-    local name, instanceType, difficultyID, difficultyName = GetInstanceInfo()
-    return name, instanceType, difficultyID, difficultyName
+    local name, instanceType, difficultyID, difficultyName, _, _, _, instanceID = GetInstanceInfo()
+    return name, instanceType, difficultyID, difficultyName, instanceID
 end
 
 --- Whether the client knows difficulty `id` (GetDifficultyInfo answers for it). False for a

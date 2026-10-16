@@ -1329,6 +1329,19 @@ Total.
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
+### test_feed_restore.lua (10)
+
+- session: an initial login starts it now; a zone change moves nothing; a reload keeps it
+- session: with no stored value (a first run, a corrupt row) it is now, and it holds
+- restore: after a reload this session's drops come back under their headers, linked to their entries
+- restore: an initial login starts an empty feed
+- restore: this session's and this character's entries only, gone ones skipped, the newest MAX_DROPS
+- restore: restored drops never merge; a live line for the same drop merges into one
+- restore: the quality gate still runs; the situation gate and the feed filters do not
+- restore: a restored drop opens no window, queues no toast and asks nothing
+- history: a live timer read undoes Expired; a rule estimate, declined and received do not
+- session: This instance survives a reload in the same instance, and only then
+
 ### test_toast.lua (32)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
@@ -1716,6 +1729,7 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
+| test_feed_restore.lua | 10 |
 | test_toast.lua | 32 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
@@ -1735,4 +1749,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1429** |
+| **Total** | **1439** |
