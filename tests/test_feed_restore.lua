@@ -217,6 +217,39 @@ test("restore: a restored drop opens no window, queues no toast and asks nothing
     assertEqual(NS.AutoAsk.Stats().scheduled, 1, "and asked for")
 end)
 
+test("restore: an area group made after the reload never takes a key from before it", function()
+    -- Before the reload, drops hidden by the filters used ids 1-2 and a trash drop made
+    -- `area:The Rookery:3`; after it the restored drops take ids 1-2 and the next live one id 3.
+    local NS, m = seeded({
+        group("area:The Rookery:3@" .. T0, { entry({ itemID = 301, itemLink = link(301), at = T0 + 1 }) },
+            { kind = "area", label = "The Rookery" }),
+        group("enc:2:5@" .. T0, { entry({ itemID = 302, itemLink = link(302), at = T0 + 2 }) }),
+    })
+    reload(m)
+    assertEqual(links(NS.LootFeed), "301,302")
+    brakkLoots(m, 303)
+    local g = NS.LootFeed.Groups()
+    -- red under: the area key suffixed by the drop's id alone (s.seq restarts at 1 every load)
+    assertEqual(#g, 3, "a new area group")
+    assertTrue(g[3].key ~= g[1].key, "its own key")
+    assertEqual(#g[1].drops, 1, "the restored group untouched")
+    local hist = NS.History.Store().groups
+    assertEqual(#hist, 3, "a History group of its own")
+    assertEqual(#hist[1].drops, 1, "nothing filed into the group from before the reload")
+end)
+
+test("restore: restored drops are not counted new on a window minimized before the reload", function()
+    local NS, m = seeded({ group("enc:2:5@" .. T0, { entry(), entry({ itemID = 301, itemLink = link(301) }) }) })
+    NS.addon.db.profile.window.minimized = true
+    assertTrue(NS.Window.IsMinimized())
+    reload(m)
+    assertEqual(#NS.LootFeed.Drops(), 2)
+    -- red under: onDropAdded counting every drop added while minimized, a restored one too
+    assertEqual(NS.Window.NewCount(), 0, "seen before the reload")
+    brakkLoots(m, 308)
+    assertEqual(NS.Window.NewCount(), 1, "a live drop still counts")
+end)
+
 -- ── the false Expired undone ────────────────────────────────────────────────────────────────
 
 test("history: a live timer read undoes Expired; a rule estimate, declined and received do not", function()

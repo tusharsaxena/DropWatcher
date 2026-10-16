@@ -56,7 +56,8 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
                              mode's while it is on):
                                ├─> hidden, in an auto-open situation: opens it (every drop, your
                                │   own included; no latch; DW-83, FB-12; never a restored drop)
-                               ├─> minimized: stays minimized, `n new` counts it
+                               ├─> minimized: stays minimized, `n new` counts it (never a
+                               │   restored drop)
                                └─> shown: tabs, filter bar, footer, active body
 DropUpdated ───────────────> shown: the same repaint
 GearChanged ───────────────> shown: the same repaint (the Me cells' gear, My eq until DW-F1; DW-83)

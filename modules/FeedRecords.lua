@@ -111,6 +111,9 @@ end
 --- the latest group; an area visited again later starts a new one. A new group keeps the place its
 --- spec names (instance, difficulty) and the drop's recorder (feedback-3 spec §4). A restored drop's
 --- spec carries its History group's feed key (feedback-15 spec §0): an area's is taken as it is.
+--- A new area's key carries the drop's id and its time: the id restarts at 1 every load and a
+--- restored group keeps the key it had before the reload, so the time (GetTime(), which a reload
+--- does not reset, as the enc and run keys use) keeps a key made after it from meeting one before.
 --- @param feed table { groups, groupByKey }
 --- @param rec table the drop, with `group` = { key, label, kind, encounterID, mapID, instance,
 ---   difficulty }
@@ -122,7 +125,7 @@ function FM.Materialize(feed, rec)
         local last = feed.groups[#feed.groups]
         if last and last.kind == "area" and last.label == spec.label then return last end
         g = nil
-        spec.key = spec.key .. ":" .. rec.id
+        spec.key = spec.key .. ":" .. rec.id .. ":" .. tostring(rec.at)
     end
     if g then return g end
     g = { key = spec.key, label = spec.label, kind = spec.kind, encounterID = spec.encounterID,

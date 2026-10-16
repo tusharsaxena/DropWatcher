@@ -881,7 +881,8 @@ end
 -- (no secure template, no protected child), so opening it in combat is allowed and taints nothing.
 -- A test drop's open is test mode's (openedByTestMode), so turning test mode off closes it again:
 -- NS.SetTestMode fills the feed before Window.OnTestModeChanged, so the drops can open it first.
--- A drop restored after a reload (feedback-15 spec §0) was seen before it: it opens nothing.
+-- A drop restored after a reload (feedback-15 spec §0) was seen before it: it opens nothing, and
+-- a window minimized before the reload does not count it new.
 local function maybeAutoOpen(rec)
     if NS.State.windowOpen == true or setting("autoOpen") == false or rec.source == "restore" then return end
     local Sit = NS.Situations
@@ -901,7 +902,7 @@ local function onDropAdded(id)
         return
     end
     maybeAutoOpen(rec)
-    if isMinimized() then newCount = newCount + 1 end
+    if isMinimized() and rec.source ~= "restore" then newCount = newCount + 1 end
     scheduleRepaint()
 end
 

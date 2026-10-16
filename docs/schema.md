@@ -175,8 +175,9 @@ history = { retentionDays = 30, v = 1, groups = {
 ```
 
 - A group is one feed group of one session: its `key` is the feed group's key and the session's
-  start (`enc:<id>:<t>@<time()>`; the session is the login, kept by a reload: `char.session.start`
-  below, feedback-15 spec §0), its `label` the encounter, run or area name, `kind` `encounter`,
+  start (`enc:<id>:<t>@<time()>`, an area's `area:<name>:<drop id>:<t>@<time()>`, its `<t>` the
+  GetTime() a reload does not reset, so no key made after a reload meets one from before it; the
+  session is the login, kept by a reload: `char.session.start` below, feedback-15 spec §0), its `label` the encounter, run or area name, `kind` `encounter`,
   `run` or `area`, `situation` the situation key and `at` its first drop's time.
 - `at` is `time()` (seconds since the epoch), so it reads the same after a reload; `looter` is the
   Name-Realm and `class` its classFile; `me`, `them` and `trade` are the verdicts and the trade

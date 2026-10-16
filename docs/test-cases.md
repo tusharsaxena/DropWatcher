@@ -1339,6 +1339,8 @@ Total.
 - restore: restored drops never merge; a live line for the same drop merges into one
 - restore: the quality gate still runs; the situation gate and the feed filters do not
 - restore: a restored drop opens no window, queues no toast and asks nothing
+- restore: an area group made after the reload never takes a key from before it
+- restore: restored drops are not counted new on a window minimized before the reload
 - history: a live timer read undoes Expired; a rule estimate, declined and received do not
 - session: This instance survives a reload in the same instance, and only then
 
