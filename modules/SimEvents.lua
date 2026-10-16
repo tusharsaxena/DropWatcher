@@ -54,7 +54,7 @@ local L = NS.L
 local TAG = "SIM"
 
 --- Seconds your own simulated drop stays tradeable, unless the scenario says otherwise.
-E.TRADE_WINDOW = 2 * 60 * 60
+E.TRADE_WINDOW = 4 * 60 * 60
 --- Seconds the "ending soon" drops stay tradeable, and how many of them a session has.
 E.ENDING_SOON = 9 * 60
 E.ENDING_SOON_COUNT = 1

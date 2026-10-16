@@ -200,7 +200,8 @@ from an `INT_SPELL_DURATION_<UNIT>` global (`"%d |4hour:hrs;"`, `"%d min"` and `
 the shim reads the globals and passes them in):
 
 1. Each unit's template is expanded into every spelling of its `|4…;` plural grammar (two forms in
-   enUS and deDE, three in ruRU), and each spelling becomes an anchored pattern through
+   enUS and deDE, three in ruRU), plus the template itself unexpanded (the 12.1.5 bag tooltip line
+   carries `3 |4hour:hrs; 49 min` raw), and each spelling becomes an anchored pattern through
    `FormatToPattern` (`TextParse.ExpandPlural`, `TextParse.FormatToPattern`).
 2. The spellings are tried longest first, so `hrs` is never cut short by a shorter spelling that is
    its prefix.

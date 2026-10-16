@@ -83,7 +83,7 @@ local TRADE_WORD = { likely = L["Likely tradeable"], yes = L["Tradeable"] }
 -- other is the Trade cell's own reason (WindowCells.TradeReason), cut at the row's end.
 local SHORT_REASON = {
     notUpgrade = function(who) return L["not an upgrade for %s"]:format(who) end,
-    groupLoot = function() return L["group loot: two hours to trade"] end,
+    groupLoot = function() return L["group loot: four hours to trade"] end,
     boe = function() return L["bind on equip"] end,
 }
 

@@ -1349,7 +1349,7 @@ a PvP reward shows `No` (legacy). Result:
 whose equipped item in that slot is at or above the drop's item level shows `Likely` with both item
 levels; one above their equipped item shows `No` (an upgrade for them); before the looter is
 inspected the chip shows `Unknown` with the inspect state. Confirm one `Likely` by asking for the
-item and seeing the trade succeed. More than two hours after the drop, the chip shows `No` (expired)
+item and seeing the trade succeed. More than four hours after the drop, the chip shows `No` (expired)
 within half a minute, with no other event needed (the sweep). For your own BoP drop that is not an
 upgrade, the chip shows `Yes` with the timer's countdown once the bag scan has read it, and `No`
 (expired) once the countdown ends. Result:
@@ -1743,7 +1743,7 @@ a member's drop → it is queued, nothing is printed. `/dw sim kill` → within 
 **SIM-5. Your own drops' trade windows and a simulated trade (DW-72).** The headless `test_sim_events`
 covers the same ground. `/dw sim start dungeon`, then `/dw
 sim loot 2 me` → Drops shows both with Offer, the first with about 9 minutes left in its Trade window (it warns at once, since
-the warning is at 10 minutes) and the second with about 2 hours; your real bags are unchanged.
+the warning is at 10 minutes) and the second with about 4 hours; your real bags are unchanged.
 Open a member's drop's detail card and press Trade → chat prints `[sim] Would open a trade with <unit>.`
 and no trade window opens. `/dw sim trade <its id>` → the History tab shows it `Traded away`; loot a
 member's drop and `/dw sim trade <its id>` → `Received`. After `/dw sim stop` the History tab shows

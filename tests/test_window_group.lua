@@ -108,7 +108,7 @@ test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", fu
     assertEqual(reason({ state = "no", reasonKey = "bonusRoll", basis = "bind" }), "Bonus roll loot can't be traded.")
     assertEqual(reason({ state = "no", reasonKey = "warbound", basis = "bind" }), "Warbound: it can't be traded.")
     assertEqual(reason({ state = "no", reasonKey = "legacy", basis = "rule" }), "Loot from this content can't be traded.")
-    assertEqual(reason({ state = "likely", reasonKey = "groupLoot", basis = "rule" }), "Group loot: its winner may trade it for two hours.")
+    assertEqual(reason({ state = "likely", reasonKey = "groupLoot", basis = "rule" }), "Group loot: its winner may trade it for four hours.")
     assertEqual(reason({ state = "no", reasonKey = "expired", args = { 8000, 7200 } }), "The trade window (2h) has passed.")
     assertEqual(reason({ state = "yes", reasonKey = "timer", args = { 7140 } }), "Your own item: 1h 59m left to trade it.")
     assertEqual(reason({ state = "no", reasonKey = "upgradeForLooter", args = { 311, 298 } }),
@@ -697,12 +697,12 @@ test("cells: another player's drop is always the estimate, its tooltip naming th
     -- an exact expiry on another player's record is not trusted: only their own bags know it
     local theirs = drop({ trade = { state = "likely", reasonKey = "notUpgrade", basis = "inspect", expiresAt = 200 } })
     local cd = MC.Countdown(theirs, 100)
-    assertFalse(cd.exact); assertEqual(MC.Clock(cd.left), "2:00:00")
+    assertFalse(cd.exact); assertEqual(MC.Clock(cd.left), "4:00:00")
     local c = MC.TradeWindow(theirs, 100, 600)
-    assertEqual(c.text, "~2:00:00"); assertEqual(c.tone, "plain"); assertFalse(c.bold); assertEqual(c.fraction, 1)
-    assertTrue(joined(c.tip):find("about 2:00:00 left for Seta to trade it") ~= nil, joined(c.tip))
+    assertEqual(c.text, "~4:00:00"); assertEqual(c.tone, "plain"); assertFalse(c.bold); assertEqual(c.fraction, 1)
+    assertTrue(joined(c.tip):find("about 4:00:00 left for Seta to trade it") ~= nil, joined(c.tip))
     assertTrue(joined(c.tip):find("your bags") == nil, "never your bags on their drop")
-    local soon = MC.TradeWindow(drop({ at = 100 - 7000 }), 100, 600)
+    local soon = MC.TradeWindow(drop({ at = 100 - 14200 }), 100, 600)
     assertEqual(soon.text, "~0:03:20", "the words `ending soon` are not drawn")
     assertTrue(soon.bold); assertTrue(soon.soon); assertEqual(soon.tone, "warn")
     assertTrue(joined(soon.tip):find("Ending soon: once it runs out, Seta keeps it.", 1, true) ~= nil, joined(soon.tip))
@@ -729,7 +729,7 @@ test("table: Trade window paints every drop's countdown over its bar; the row gr
     local C, WR = NS.Constants, NS.WindowRows
     m.__now = 100
     seed(NS, { { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1, 2, 3, 4 } } }, {
-        drop(), drop({ id = 2, at = 100 - 7000 }),
+        drop(), drop({ id = 2, at = 100 - 14200 }),
         drop({ id = 3, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }),
         drop({ id = 4, trade = { state = "yes", reasonKey = "boe", basis = "bind" } }) })
     NS.WindowFilterBar.Set("group", "view", "all")
@@ -743,7 +743,7 @@ test("table: Trade window paints every drop's countdown over its bar; the row gr
     drawn = NS.WindowGroup.Drawn()
     f = rowFor(drawn, 1).cells.tradeWindow
     assertTrue(f:IsShown()); assertEqual(f:GetWidth(), 76)
-    assertEqual(textOf(f.text), "~2:00:00", "another player's drop: the estimate from when it dropped")
+    assertEqual(textOf(f.text), "~4:00:00", "another player's drop: the estimate from when it dropped")
     assertTrue(joined(f.tipLines):find("left for Seta") ~= nil, joined(f.tipLines))
     assertTrue(f.bar:IsShown()); assertEqual(f.fraction, 1); assertEqual(colors[#colors][1], C.TONE.good.r)
     assertEqual(colors.width, 76 - NS.WindowGroup.TRADE_WINDOW_PAD, "a full bar spans the column but its padding")
@@ -775,18 +775,18 @@ end
 test("table: the countdowns move each second while one runs, repainting the Trade window cells alone", function()
     local NS, drawn, m = shownTable()
     assertEqual(tickers(m, 1), 1, "a countdown runs, so the each-second ticker does")
-    assertEqual(textOf(rowFor(drawn, 1).cells.tradeWindow.text), "~2:00:00")
+    assertEqual(textOf(rowFor(drawn, 1).cells.tradeWindow.text), "~4:00:00")
     local entries = 0
     local real = NS.WindowCells.Entries
     NS.WindowCells.Entries = function(...) entries = entries + 1; return real(...) end
     m.advance(1)
-    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:59")
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~3:59:59")
     m.advance(2)
-    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:57")
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~3:59:57")
     assertEqual(entries, 0, "the table is not rebuilt: only the countdowns repaint")
     m.__now = m.__now + 12
     NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
-    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~1:59:45", "TradeTimerTick moves it too")
+    assertEqual(textOf(rowFor(NS.WindowGroup.Drawn(), 1).cells.tradeWindow.text), "~3:59:45", "TradeTimerTick moves it too")
     NS.Window.SelectTab("history")
     NS.Window.Refresh()
     assertEqual(tickers(m, 1), 0, "another tab: no countdown ticker")

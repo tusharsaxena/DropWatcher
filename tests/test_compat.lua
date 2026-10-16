@@ -179,6 +179,11 @@ test("compat: ParseTradeTimeRemaining reads the whole trade line and nothing els
     assertEqual(Compat.ParseTradeTimeRemaining(TRADE_LINE), 7140)
     assertNil(Compat.ParseTradeTimeRemaining("Binds when picked up"))
     assertNil(Compat.ParseTradeTimeRemaining(TRADE_LINE .. " extra"))
+    -- The 12.1.5 client's line, captured in game 2026-10-16: its template and its unexpanded grammar.
+    m.BIND_TRADE_TIME_REMAINING = "You may trade this item with players that were also eligible to "
+        .. "loot this item for the next %s (including time offline)."
+    assertEqual(Compat.ParseTradeTimeRemaining(m.BIND_TRADE_TIME_REMAINING:format("3 |4hour:hrs; 49 min")),
+        13740)
     m.BIND_TRADE_TIME_REMAINING = nil
     assertNil(Compat.ParseTradeTimeRemaining(TRADE_LINE), "no global, no guess")
 end)

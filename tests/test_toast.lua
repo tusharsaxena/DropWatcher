@@ -90,7 +90,7 @@ test("toast: Compose keeps the table's words, the empty slot and each trade reas
     t = C(drop({ trade = { state = "yes", reasonKey = "boe" } }))
     assertEqual(t.trade, "Tradeable"); assertEqual(t.tradeTone, "good"); assertEqual(t.reason, "bind on equip")
     t = C(drop({ trade = { state = "likely", reasonKey = "groupLoot" } }))
-    assertEqual(t.reason, "group loot: two hours to trade")
+    assertEqual(t.reason, "group loot: four hours to trade")
     t = C(drop({ trade = { state = "likely", reasonKey = "error", args = { "x" } } }))
     assertEqual(t.reason, "The estimate failed: x", "any other reason is the Trade cell's, its period dropped")
     t = C(drop({ looter = false, facts = false }))

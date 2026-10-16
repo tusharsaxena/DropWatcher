@@ -403,7 +403,7 @@ C.TRADE_ACCOUNT_BIND = {
     [C.BIND.TO_BNET_ACCOUNT_EQUIPPED] = true,
 }
 
-C.TRADE_WINDOW = 7200   -- seconds a tradeable drop stays tradeable
+C.TRADE_WINDOW = 14400  -- seconds a tradeable drop stays tradeable (four hours since 12.1.5, seen in game 2026-10-16)
 
 -- The rule names in Settings › Trade's display order, and the rule an unknown situation takes.
 C.TRADE_RULE_NAMES = { "personal", "group", "legacy" }

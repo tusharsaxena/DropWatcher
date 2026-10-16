@@ -65,7 +65,7 @@ test("diagnostics: the restrictions section names the answers, the reasons and t
     assertTrue(text:find("restrictions: reason=encounter canSendChat=false canInspect=true canTrade=true", 1, true) ~= nil, text)
     assertTrue(text:find("restrictions: active", 1, true) ~= nil)
     assertTrue(text:find("encounter, map", 1, true) ~= nil or text:find("encounter,map", 1, true) ~= nil, text)
-    assertTrue(text:find("restrictions: last announced encounter|false|true|true", 1, true) ~= nil, text)
+    assertTrue(text:find("restrictions: last announced encounter/false/true/true", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the roster section lists the stored members without reading the client", function()

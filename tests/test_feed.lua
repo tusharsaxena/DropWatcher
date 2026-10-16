@@ -632,7 +632,7 @@ test("trade: a group drop past its rule's window turns no expired on the sweep",
     m.advance(0)
     local rec = only(LF)
     assertEqual(rec.trade.state, "likely")
-    m.advance(7200 - LF.TRADE_SWEEP)
+    m.advance(14400 - LF.TRADE_SWEEP)
     assertEqual(rec.trade.state, "likely", "inside the window")
     assertFalse(has(seen.updated, rec.id .. ":trade"), "an unchanged estimate sends nothing")
     m.advance(LF.TRADE_SWEEP * 2)
@@ -661,6 +661,8 @@ test("trade: your own drop takes the timer's exact read: yes with expiresAt, the
     m.advance(3600 + 60)
     assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "expired")
     assertEqual(rec.trade.basis, "timer")
+    -- red under: the fold carrying no window, so the reason read "The trade window (0s) has passed."
+    assertEqual(rec.trade.args[2], NS.Constants.TRADE_WINDOW)
 end)
 
 test("trade: your own drop the rule called no, with a live timer, asks for its candidates then", function()
