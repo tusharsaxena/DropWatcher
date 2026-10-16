@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1476%2F1476_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1474%2F1474_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -105,7 +105,7 @@ says who looted it, the slot, the type and whether they can trade it, with Ask (
 the right, or the gray **No action** button when there's no action; the card leaves the trade countdown to the table
 and the strip. The bottom one reads like the table's Me and Them without the
 icons, `You` and `Them` in gold: `You 321/308 ▼8  Them 276 ▲12` (`Them Upgrade for 2` on your own). History cards show what became of the drop, and the strip under
-the Drops cards is shorter (`2 tradeable · next 0:08:41`, with Expand all / Collapse all and **Post my tradeables**). Quality, Content, Character
+the Drops cards is shorter (`2 tradeable · next 0:08:41`, with Post my tradeables, Scan group and Expand all / Collapse all as icons; hover one for its name). Quality, Content, Character
 and Sort fold into a **Filters** button beside View, and Scan group is the icon in the title bar. Hovering still explains everything, and
 clicking a Drops card opens the same detail card. The button next to minimize switches views, as do
 `/dw compact` and `/dw full`, and each view remembers its own size and place. When a drop opens the

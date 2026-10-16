@@ -7,18 +7,21 @@ local _, NS = ...
 -- fits beside its icon) with the same icon and label in both layouts: no short `Post` or `Clear`.
 -- The row, right to left, a GAP between two controls:
 --
---             Full                                                 Compact
---   Drops     Sort · Expand/Collapse · Scan group · Post my tradeables   Expand/Collapse · Post my tradeables
+--             Full                                                 Compact (icon only)
+--   Drops     Sort · Expand/Collapse · Scan group · Post my tradeables   Expand/Collapse · Scan group · Post
 --   History   Sort · Expand/Collapse                                     Expand/Collapse
 --
 -- Post my tradeables shows only while one of your drops the tab lists can be traded; a hidden
--- control takes no room. In compact, Sort stays in the Filters panel (modules/CompactChrome.lua) and
--- Scan group the title bar's icon. FR.Slots is that placement, pure; the info text on the strip's
+-- control takes no room. In compact, Sort stays in the Filters panel (modules/CompactChrome.lua),
+-- and every button is its mark alone, K.FOOTER_ICON_W wide and centered, its tooltip naming it
+-- (FR.SetCompact; feedback-16: three labeled buttons do not fit the 440 pane; Scan group joins the
+-- strip, as in full, and stays the title bar's icon too). FR.Slots is that placement, pure; the info text on the strip's
 -- left ends GAP short of the leftmost control (its `left`), one line, so a narrow row cuts it with an
 -- ellipsis rather than run it under the buttons. (Clear history left the strips for Settings ›
 -- Window › Layout in DW-Q3, feedback-15 spec §3.)
 --
--- THE TOGGLE. One button per strip: `Expand all` while any header the filters show is collapsed,
+-- THE TOGGLE. One button per strip, its mark a chevron (down to expand, up to collapse; feedback-16):
+-- `Expand all` while any header the filters show is collapsed,
 -- `Collapse all` once every one is open (FR.FoldState, pure). A click sets every shown header of the
 -- active tab (FR.FoldAll over the tab's own collapsed map: Drops' NS.State.windowGroup, History's
 -- NS.State.windowHistory, so each tab keeps its own); a group the filters hide keeps its state. A
@@ -95,6 +98,27 @@ function FR.Button(parent, icon, text, onClick)
     return NS.Window.TextButton(parent, K.FOOTER_BUTTON_W, icon, text, onClick)
 end
 
+--- The width of a strip button in the layout in force: the labeled one, or compact's icon alone.
+--- @param compact boolean
+--- @return number
+function FR.Width(compact)
+    return compact and K.FOOTER_ICON_W or K.FOOTER_BUTTON_W
+end
+
+--- Draw a strip button labeled (full) or as its mark alone, centered (compact); its tooltip
+--- names it either way.
+--- @param b table FR.Button's
+--- @param compact boolean
+function FR.SetCompact(b, compact)
+    compact = compact == true
+    if b.dwCompact == compact then return end
+    b.dwCompact = compact
+    b:SetWidth(FR.Width(compact))
+    b.label:SetShown(not compact)
+    b.art:ClearAllPoints()
+    if compact then b.art:SetPoint("CENTER", b, "CENTER", 0, 0) else b.art:SetPoint("LEFT", b, "LEFT", 6, 0) end
+end
+
 --- Put one control `inset` pixels left of the strip's right edge, or hide it (inset nil).
 --- @param strip table
 --- @param b table
@@ -129,7 +153,7 @@ end
 --- @return table the button
 function FR.BuildFold(strip, apply)
     local b
-    b = FR.Button(strip, "expand-down", L["Expand all"], function()
+    b = FR.Button(strip, "chevron-down", L["Expand all"], function()
         if b.foldState then apply(b.foldState == "collapse") end
     end)
     NS.Window.AttachTooltip(b, function() return foldTip(b) end)
@@ -143,9 +167,9 @@ function FR.PaintFold(b, entries)
     local state = FR.FoldState(entries)
     b.foldState = state
     if state == "collapse" then
-        NS.Window.SetButtonMark(b, L["Collapse all"], "collapse-up")
+        NS.Window.SetButtonMark(b, L["Collapse all"], "chevron-up")
     else
-        NS.Window.SetButtonMark(b, L["Expand all"], "expand-down")
+        NS.Window.SetButtonMark(b, L["Expand all"], "chevron-down")
     end
     b:SetEnabled(state ~= nil)
     b:SetAlpha(state and 1 or 0.5)

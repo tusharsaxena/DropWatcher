@@ -102,9 +102,9 @@ C.WINDOW = {
     ACTION_H    = 22,     -- an action button
     EDITOR_W    = 380,    -- the Edit message box
     EDITOR_H    = 156,
-    -- The Drops table's empty state (board 06 D): its title, line and two buttons.
+    -- The Drops table's empty state (board 06 D): its title and line (its two buttons gone, feedback-16).
     EMPTY_W     = 360,
-    EMPTY_H     = 90,
+    EMPTY_H     = 50,
     -- A Drops row with its Trade window column (feedback-5 spec §1), the Drops strip
     -- (modules/DropsStrip.lua, feedback-5 spec §3) and the Offer panel (modules/OfferPanel.lua),
     -- design spec §11.4, board 04.
@@ -114,11 +114,12 @@ C.WINDOW = {
     BAR_H       = 3,      -- the trade window's bar
     STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Expand all)
     -- One footer button kind (feedback-15 spec §2, modules/FooterRow.lua): every button on a tab's
-    -- strip (Post my tradeables, Scan group, Expand all / Collapse all) is this wide in both
-    -- layouts, sized so `Post my tradeables` fits beside its icon; the tab's Sort takes it too
-    -- (NS.WindowFooter.SORT_W).
+    -- strip (Post my tradeables, Scan group, Expand all / Collapse all) is this wide in the full
+    -- layout, sized so `Post my tradeables` fits beside its icon; the tab's Sort takes it too
+    -- (NS.WindowFooter.SORT_W). The compact layout draws them icon only, FOOTER_ICON_W wide, their
+    -- tooltips naming them (feedback-16).
     FOOTER_BUTTON_W = 150,
-    SCAN_W      = 110,    -- the empty state's Scan group, beside Preview with test data (not a footer button)
+    FOOTER_ICON_W = 24,
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
     OFFER_FOOT_H = 32,    -- its Announce to group strip

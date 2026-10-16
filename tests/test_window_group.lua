@@ -838,7 +838,7 @@ test("table: the filter bar filters the rows, and the empty line says why nothin
     assertFalse(drawn.pane.colHead:IsShown())
 end)
 
-test("table: with no drop at all the empty state says so, with Preview with test data and Scan group", function()
+test("table: with no drop at all the empty state says so, and holds no button", function()
     local NS = T.enableAddon()
     NS.ShowWindow()
     local drawn = NS.WindowGroup.Drawn()
@@ -848,44 +848,11 @@ test("table: with no drop at all the empty state says so, with Preview with test
     assertFalse(drawn.pane.colHead:IsShown())
     assertEqual(textOf(e.title), "No drops yet")
     assertEqual(textOf(e.text), "Loot your group receives appears here, grouped by boss.")
-    assertEqual(textOf(e.preview.label), "Preview with test data")
-    assertEqual(textOf(e.scan.label), "Scan group")
-    assertEqual(NS.Window.TooltipOf(e.preview)[1], "Preview with test data")
-    assertEqual(NS.Window.TooltipOf(e.scan)[1], "Scan group")
-end)
-
-test("table: the empty state's two buttons are centered as a pair under its text", function()
-    local NS = T.enableAddon()
-    NS.ShowWindow()
-    local K = NS.Constants.WINDOW
-    local e = NS.WindowGroup.Drawn().empty
-    local point, rel, relPoint, x = e.pair:GetPoint(1)
-    assertEqual(point, "TOP"); assertTrue(rel == e.text); assertEqual(relPoint, "BOTTOM"); assertEqual(x, 0)
-    local gap = e.pair:GetWidth() - e.preview:GetWidth() - e.scan:GetWidth()
-    assertEqual(gap, 8, "a fixed gap between them")
-    assertEqual(e.scan:GetWidth(), K.SCAN_W)
-    local p1, r1 = e.preview:GetPoint(1)
-    assertEqual(p1, "LEFT"); assertTrue(r1 == e.pair)
-    local p2, r2 = e.scan:GetPoint(1)
-    assertEqual(p2, "RIGHT"); assertTrue(r2 == e.pair)
+    -- red under: Preview with test data and Scan group in the middle of the window (feedback-16)
+    assertTrue(e.pair == nil and e.preview == nil and e.scan == nil, "no button in the empty state")
     NS.SetWindowMode("compact")
     assertTrue(NS.WindowGroup.Drawn().empty == e, "the compact layout's empty state is the same frame")
-end)
-
-test("table: the empty state's buttons turn test mode on and scan the group", function()
-    local NS, _, m = T.enableAddon()
-    m.seedGearJournal()
-    NS.ShowWindow()
-    local e = NS.WindowGroup.Drawn().empty
-    local scanned = 0
-    NS.ScanGroup = function() scanned = scanned + 1 end
-    e.scan:__fire("OnClick")
-    assertEqual(scanned, 1)
-    e.preview:__fire("OnClick")
-    assertTrue(NS.State.testMode)
-    local drawn = NS.WindowGroup.Drawn()
-    assertFalse(drawn.empty:IsShown())
-    assertTrue(#drawn.rows > 0, "the placeholders are drawn")
+    assertTrue(e.pair == nil, "nor in compact")
 end)
 
 -- ── the host handler ────────────────────────────────────────────────────────────────────────
