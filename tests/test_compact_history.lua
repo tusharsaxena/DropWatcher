@@ -57,6 +57,8 @@ test("compact history: kept groups as one-line headers, the newest open, each en
     assertEqual(#drawn.headers, 2); assertEqual(#drawn.rows, 2, "the older group is collapsed")
     assertFalse(drawn.pane.scroll:IsShown()); assertFalse(drawn.pane.colHead:IsShown())
     local h1, h2 = plain(textOf(drawn.headers[1].text)), plain(textOf(drawn.headers[2].text))
+    -- red under: a header text left at the game's default CENTER
+    assertEqual(drawn.headers[1].text:GetJustifyH(), "LEFT", "the header reads from the left")
     assertEqual(h1, "Boss New · Dungeon · 2m · 2 · Testchar", "the short form, then the recorder")
     assertTrue(h2:find("3d", 1, true) ~= nil, h2)
     assertTrue(NS.Window.TooltipOf(drawn.headers[1])[2]:find("2m ago", 1, true) ~= nil, "the long form in the tooltip")

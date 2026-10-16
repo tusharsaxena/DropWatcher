@@ -586,6 +586,7 @@ local function newHeader(content)
     h.chevron:SetVertexColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as its text (feedback-5 spec §0)
     h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
+    h.text:SetJustifyH("LEFT")   -- the compact headers size the text to the line; it reads from the left
     h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
     h:SetScript("OnClick", function(self) WG.ToggleGroup(self.groupKey, self.collapsed) end)
     NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")

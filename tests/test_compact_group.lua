@@ -118,6 +118,8 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(#drawn.headers, 1); assertEqual(#drawn.rows, 2)
     local h = drawn.headers[1]
     assertEqual(textOf(h.text), "Commander Ri'mok · Dungeon · 10s · 2")
+    -- red under: a header text left at the game's default CENTER, centered across the sized line
+    assertEqual(h.text:GetJustifyH(), "LEFT", "the header reads from the left")
     assertTrue(h.tipRow == true)
     local tip = NS.Window.TooltipOf(h)
     assertTrue(#tip >= 3, "the long form and its lines in the tooltip")

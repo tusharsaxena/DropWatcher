@@ -128,6 +128,9 @@ local function decorateText(f)
         local c = self.__vertex or { 1, 1, 1, 1 }
         return c[1], c[2], c[3], c[4]
     end
+    -- Horizontal justification; unset answers the game's default, CENTER.
+    f.SetJustifyH = function(self, j) self.__justifyH = j; return self end
+    f.GetJustifyH = function(self) return self.__justifyH or "CENTER" end
     f.SetFont = function(self, file, size, flags) self.__font = { file, size, flags }; return self end
     f.GetFont = function(self)
         local font = self.__font or { "Fonts\\FRIZQT__.TTF", 10, "" }
