@@ -112,11 +112,12 @@ C.WINDOW = {
     COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
     STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Clear history)
-    -- Post my tradeables is the tab's Sort size in the full layout (NS.WindowFooter.SORT_W,
-    -- feedback-7 spec §4); Scan group, between it and Sort on the strip (feedback-10 spec §3) and in
-    -- the empty state, is SCAN_W.
-    SCAN_W      = 110,
-    CLEAR_W     = 124,    -- the History tab's Clear history (its strip is STRIP_H tall)
+    -- One footer button kind (feedback-15 spec §2, modules/FooterRow.lua): every button on a tab's
+    -- strip (Post my tradeables, Scan group, Expand all / Collapse all, Clear history) is this wide in
+    -- both layouts, sized so `Post my tradeables` fits beside its icon; the tab's Sort takes it too
+    -- (NS.WindowFooter.SORT_W).
+    FOOTER_BUTTON_W = 150,
+    SCAN_W      = 110,    -- the empty state's Scan group, beside Preview with test data (not a footer button)
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
     OFFER_FOOT_H = 32,    -- its Announce to group strip

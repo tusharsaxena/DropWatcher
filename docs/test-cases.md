@@ -350,7 +350,7 @@ Total.
 - compact history: marking an entry declined repaints its card
 - compact history: a header click opens a collapsed group
 - compact history: every tooltip opens at the card's top right, just outside the window
-- compact history: Clear history is shortened in the compact layout and put back in the full one
+- compact history: Clear history keeps its label and width in the compact layout (feedback-15 spec §2)
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
@@ -546,18 +546,29 @@ Total.
 
 - drops tab: the tabs are Drops and History, and the retired `mine` opens Drops
 - drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
-- drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Sort] (feedback-10 spec §3)
-- drops strip: Sort follows the active tab to History's strip, after Clear history, and back
+- drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)
+- drops strip: Sort follows the active tab to History's strip, after the toggle and Clear history, and back
 - drops strip: Scan group goes through the shared handler
-- drops strip: the slots, pure: Sort at the edge, Scan group beside it, Post beside that or hidden
+- drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the toggle and Post
 - drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary
-- drops strip: compact, hidden while none of your listed drops can be traded; the cards take its room back
+- drops strip: compact, shown while none of your listed drops can be traded: no summary, no Post (feedback-15 spec §2)
 - drops strip: it counts the drops the tab lists, its filters applied, collapsed or not
 - drops strip: its next expiry moves each second with the countdowns
 - drops strip: its next expiry keeps the each-second ticker running with no row's countdown drawn
 - drops strip: Post my tradeables goes through the shared handler
-- drops strip: shortened under the compact cards, and put back in the full layout
+- drops strip: under the compact cards, the summary shortened, Post my tradeables as in the full layout
 - drops strip: the compact countdown tick moves its next expiry too
+
+### test_footer_row.lua (8)
+
+- footer row: the slots, pure: right to left, a gap between, a hidden control takes no room
+- footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
+- footer row: full Drops, right to left: Sort, the toggle, Scan group, Post my tradeables, one width
+- footer row: compact Drops is always shown: the toggle at the right, Post my tradeables left of it
+- footer row: History, full Sort then the toggle, compact the toggle; Clear history at the one width
+- footer row: the Drops toggle opens every shown header, then closes them, in both layouts
+- footer row: the toggle is off when the tab shows no header
+- footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
 
 ### test_offer_panel.lua (17)
 
@@ -1708,6 +1719,7 @@ Total.
 | test_own_drops.lua | 15 |
 | test_tip_marks.lua | 19 |
 | test_drops_strip.lua | 14 |
+| test_footer_row.lua | 8 |
 | test_offer_panel.lua | 17 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
@@ -1761,4 +1773,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1447** |
+| **Total** | **1455** |

@@ -33,9 +33,9 @@ local _, NS = ...
 --
 -- THE STRIP (feedback-5 spec §3, feedback-7 spec §4). Under the table (or the compact cards), above
 -- the footer: `n tradeable · next expiry 0:08:41`, Post my tradeables (while one of your drops the
--- tab lists can be traded) and, in the full layout, Scan group, so there it is always shown; compact
--- shows it only while one can be traded (modules/DropsStrip.lua, built with the pane and repainted
--- with it).
+-- tab lists can be traded), Expand all / Collapse all (WG.FoldAll, feedback-15 spec §2) and, in the
+-- full layout, Scan group; always shown, in both layouts (modules/DropsStrip.lua, built with the
+-- pane and repainted with it).
 --
 -- THE COUNTDOWNS MOVE each second while a shown row or the strip has one (feedback-5 spec §1;
 -- the strip counts your drops under a collapsed header too): Window.lua's
@@ -162,6 +162,14 @@ end
 function WG.ToggleGroup(key, collapsedNow)
     view().collapsed[key] = not collapsedNow
     NS.Debug("UI", "group %s %s", tostring(key), collapsedNow and "expanded" or "collapsed")
+    repaint()
+end
+
+--- Collapse, or open, every header the tab shows (Expand all / Collapse all, feedback-15 spec §2).
+--- @param entries table|nil the drawn entries (WC.Entries')
+--- @param collapse boolean
+function WG.FoldAll(entries, collapse)
+    NS.FooterRow.FoldAll(entries, view().collapsed, collapse)
     repaint()
 end
 

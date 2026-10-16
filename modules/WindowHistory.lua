@@ -31,6 +31,11 @@ local _, NS = ...
 --
 -- THE COMPACT LAYOUT draws the same entries as cards: modules/CompactHistory.lua (DW-C3).
 --
+-- THE STRIP (feedback-15 spec §2, NS.FooterRow): the kept-history line on the left, one line, cut
+-- with an ellipsis where the row starts; right to left, the tab's Sort (full layout only), Expand all
+-- / Collapse all (WH.FoldAll) and Clear history, each button the one footer width with the same
+-- label in both layouts.
+--
 -- THE UI LISTENS. HistoryChanged repaints the shown window on the next frame, the Drops rows
 -- included (their Ask button reads `Traded` once a trade settles the drop). Collapsed groups are
 -- session-only (NS.State.windowHistory).
@@ -97,6 +102,14 @@ end
 
 local function repaint()
     if NS.Window.IsShown() then NS.Window.Refresh() end
+end
+
+--- Collapse, or open, every header the tab shows (Expand all / Collapse all, feedback-15 spec §2).
+--- @param entries table|nil the drawn entries (WH.Entries')
+--- @param collapse boolean
+function WH.FoldAll(entries, collapse)
+    NS.FooterRow.FoldAll(entries, view().collapsed, collapse)
+    repaint()
 end
 
 --- Collapse or expand one kept group.
@@ -469,10 +482,12 @@ local function buildStrip(pane)
     strip.line:SetPoint("TOPLEFT", strip, "TOPLEFT", 0, 0)
     strip.line:SetPoint("TOPRIGHT", strip, "TOPRIGHT", 0, 0)
     strip.info = strip:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    strip.info:SetPoint("LEFT", strip, "LEFT", 2, 0)
-    strip.clear = NS.Window.TextButton(strip, K.CLEAR_W, "clear", L["Clear history"], WH.AskClear)
-    strip.clear:SetPoint("RIGHT", strip, "RIGHT", 0, 0)
+    strip.info:SetJustifyH("LEFT")
+    strip.info:SetWordWrap(false)   -- one line: the game cuts it with an ellipsis when narrow
+    local FR = NS.FooterRow
+    strip.clear = FR.Button(strip, "clear", L["Clear history"], WH.AskClear)
     NS.Window.AttachTooltip(strip.clear, clearTip)
+    strip.fold = FR.BuildFold(strip, function(collapse) WH.FoldAll(pane.entries, collapse) end)
     pane.strip = strip
     pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
 end
@@ -532,11 +547,27 @@ local function drawEntries(pane, entries, layout, width, now)
     pane.content:SetSize(width, max(y, 1))
 end
 
-local function paintStrip(pane, groups)
+-- The strip's row, right to left (feedback-15 spec §2): full `Sort · Expand/Collapse · Clear
+-- history`, compact `Expand/Collapse · Clear history`; the tab's Sort is anchored in its slot by
+-- NS.WindowFooter.AnchorSort.
+local function placeStrip(strip, compact)
+    local FR, WF, w = NS.FooterRow, NS.WindowFooter, K.FOOTER_BUTTON_W
+    local row = { { key = "fold", w = w }, { key = "clear", w = w } }
+    if not compact then table.insert(row, 1, { key = "sort", w = WF.SORT_W }) end
+    local slots = FR.Slots(row, FR.GAP, compact and 0 or WF.SORT_INSET)
+    FR.Place(strip, strip.fold, slots.fold)
+    FR.Place(strip, strip.clear, slots.clear)
+    FR.PlaceInfo(strip, strip.info, slots.left)
+end
+
+local function paintStrip(pane, groups, entries, compact)
     local st = NS.History.Stats()
-    pane.strip.info:SetText(NS.HistoryRetention.FooterText(#groups, st.drops, st.days))
-    pane.strip.clear:SetEnabled(#groups > 0)
-    pane.strip.clear:SetAlpha(#groups > 0 and 1 or 0.5)
+    local strip = pane.strip
+    strip.info:SetText(NS.HistoryRetention.FooterText(#groups, st.drops, st.days))
+    strip.clear:SetEnabled(#groups > 0)
+    strip.clear:SetAlpha(#groups > 0 and 1 or 0.5)
+    placeStrip(strip, compact)
+    NS.FooterRow.PaintFold(strip.fold, entries)
 end
 
 local function paintEmpty(pane, entries, groups, compact)
@@ -565,7 +596,7 @@ local function refresh(pane, tc)
     pane.scroll:SetShown(not compact)
     if not compact then drawTable(pane, entries) end
     pane.entries = entries
-    paintStrip(pane, groups)
+    paintStrip(pane, groups, entries, compact)
     NS.CompactHistory.Refresh(pane, entries, compact)
     paintEmpty(pane, entries, groups, compact)
 end

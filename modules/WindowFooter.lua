@@ -6,8 +6,8 @@ local _, NS = ...
 --
 -- THE TAB'S SORT is built here, once, and kept here (Parts, Refresh's state), but it no longer sits
 -- in the footer (feedback-10 spec §3): in the full layout it is at the right edge of the active tab's
--- strip (`pane.sortHost`: Drops' summary strip, after Post my tradeables and Scan group; History's,
--- after Clear history), re-anchored on every pass so it follows a tab switch; in the compact layout
+-- strip (`pane.sortHost`: Drops' summary strip, after Post my tradeables, Scan group and Expand all;
+-- History's, after Clear history and Expand all; feedback-15 spec §2), re-anchored on every pass so it follows a tab switch; in the compact layout
 -- it is in the Filters panel (modules/CompactChrome.lua).
 --
 -- Compose is PURE: plain inputs in, each segment's text and tooltip out, so test_window drives it
@@ -165,9 +165,10 @@ local function buildSegment(host, key, prev)
     return s
 end
 
---- The Sort control's width (Post my tradeables takes it too, feedback-7 spec §4) and its right
---- edge's inset from its strip's right edge (feedback-10 spec §3).
-WF.SORT_W = 150
+--- The Sort control's width (the one footer button width, K.FOOTER_BUTTON_W, so it lines up with the
+--- strip's buttons; feedback-15 spec §2) and its right edge's inset from its strip's right edge
+--- (feedback-10 spec §3).
+WF.SORT_W = K.FOOTER_BUTTON_W
 WF.SORT_INSET = 0
 
 local function buildSort(host)

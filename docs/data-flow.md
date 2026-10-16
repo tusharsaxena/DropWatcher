@@ -142,14 +142,19 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
         ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` and Post my
-        tradeables while one is tradeable; full layout (feedback-7 §4, feedback-10 §3): always
-        shown, right-aligned `[Post my tradeables] [Scan group] [Sort]`, the tab's Sort at the
-        strip's right edge (the pane's sortHost, WindowFooter.AnchorSort), Scan group 8px left of
-        it, Post at Sort's size 8px left of Scan group, DropsStrip.Slots(postShown,
-        WindowFooter.SORT_INSET, SORT_W, K.SCAN_W, GAP); Scan group keeps its place while Post is
-        hidden; the scroll frame's bottom moved up over it
+        tradeables while one is tradeable; always shown, in both layouts (feedback-15 §2), the row
+        right-aligned, full `[Post my tradeables] [Scan group] [Expand all] [Sort]` (the tab's Sort
+        at the strip's right edge: the pane's sortHost, WindowFooter.AnchorSort), each button
+        K.FOOTER_BUTTON_W, 8px apart, FooterRow.Slots(DropsStrip.Row(tradeable, compact), GAP,
+        SORT_INSET); Post, the leftmost, hidden with nothing tradeable; the summary ends where the
+        row starts (FooterRow.PlaceInfo, one line); FooterRow.PaintFold(fold, pane.entries); the
+        scroll frame's bottom moved up over it
 
 header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint
+Expand all / Collapse all ─> WindowGroup.FoldAll(pane.entries, collapse) ─> FooterRow.FoldAll:
+                 every header with a shown drop ─> State.windowGroup.collapsed ─> repaint
+                 (FooterRow.FoldState: `Expand all` while one is collapsed, `Collapse all` once
+                 every one is open, off with none; feedback-15 §2)
 Ask ───────────> WindowOwn.PressAction ─> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id)
                  ─> AskStateChanged ─> repaint
 Offer ─────────> WindowOwn.PressAction ─> OfferPanel.Open(id) ─> WindowOwn.Reveal(id) (your own drop)
@@ -193,7 +198,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     icons, `You 321/308 ▼8`, `Them Upgrade for 2` on your own, the labels gold and Them
   │     CompactGroup.PlaceThem's fixed gap after You, cut at the card's right inset (feedback-11 §0);
   │     feedback-6 §1, feedback-7 §2)
-  └─> DropsStrip.Paint(pane, ctx, true): the strip shortened, DropsStrip.SummaryText, `Post`
+  └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
+        `[Post my tradeables] [Expand all]` at the one footer width (feedback-15 §2)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
 piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
 switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)
@@ -677,8 +683,11 @@ TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TR
           5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
-Clear history ─> StaticPopup ─> History.Clear   (left of the tab's Sort on the full strip,
-                                                   at its right edge in compact; feedback-10 §3)
+Clear history ─> StaticPopup ─> History.Clear   (left of Expand all, which is left of the tab's
+                                                   Sort on the full strip; in compact, left of
+                                                   Expand all at the right edge; feedback-15 §2)
+Expand all / Collapse all ─> WindowHistory.FoldAll(pane.entries, collapse) ─> FooterRow.FoldAll
+                 ─> State.windowHistory.collapsed ─> repaint (its own state, not the Drops tab's)
 every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint: one pass next frame,
                                    shared with DropUpdated's
                                    (the History tab; a received drop's Ask reads Traded)

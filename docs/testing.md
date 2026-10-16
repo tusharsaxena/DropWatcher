@@ -95,8 +95,8 @@ the least compact width, 440, at which line 2's fullest pieces end before the ac
 feedback-5 spec §0, §4),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
-repainting, the collapsing headers, every tooltip at the card's top right, Clear shortened and put
-back, the text size and test mode's samples),
+repainting, the collapsing headers, every tooltip at the card's top right, Clear history at the one
+footer width in both layouts, the text size and test mode's samples),
 `test_compact_chrome` (the window's chrome in the compact layout, DW-C4: the short tab labels, `TEST`
 and `SIM`, the badge's count, the footer's one line and its tooltip, the Filters count, label and
 tooltip, pure; then headless: the short title centered with its word, the badge at the left with its
@@ -104,7 +104,7 @@ tooltip, Scan group as an icon button, the short tabs at their width with the fu
 tooltips, View, the search box and Filters on one row with Quality, Content, Character and Sort
 moved into the Filters panel and filtering as on the full bar, the panel closing on hide, minimize
 and the switch, the full layout taking every control back (Sort to the tab's strip, feedback-10
-spec §3), the shortened strip, the one-line footer
+spec §3), the one-line footer
 under the ticker, and the filter state kept across a switch),
 `test_compact_modes` (the two layouts over one engine, DW-C5, compact spec §5: the same drop set, the
 full table and the compact cards drawing the same drops and headers in the same order on every tab,
@@ -167,12 +167,17 @@ drawn-width count, and an audit that no text test mode draws in the default face
 detail card, the Offer panel or History in either layout, carries one), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, its next expiry moving each second and keeping
-the ticker running, Post my tradeables through its handler, and the compact strip shortened and put
-back, hidden there while none can be traded; feedback-5 spec §3, DW-E3; feedback-7 spec §4 and
-feedback-10 spec §3: one right-aligned row, `[Post my tradeables] [Scan group] [Sort]`, Post at Sort's
-size, Scan group through its handler, Sort following the active tab to History's strip after Clear
-history and back, the pure `Slots`, and the full layout's strip shown with nothing tradeable, Scan
-group beside Sort), `test_offer_panel` (the Offer panel opened from your own drop's
+the ticker running, Post my tradeables through its handler, and the compact strip's summary
+shortened, shown there with nothing tradeable too; feedback-5 spec §3, DW-E3; feedback-7 spec §4,
+feedback-10 spec §3 and feedback-15 spec §2: one right-aligned row, `[Post my tradeables] [Scan group]
+[Expand all] [Sort]`, Post at Sort's size, Scan group through its handler, Sort following the active
+tab to History's strip after the toggle and Clear history and back, the pure `Row`, and the full
+layout's strip shown with nothing tradeable, Scan group in its place),
+`test_footer_row` (one footer button kind and Expand all / Collapse all, feedback-15 spec §2: the pure
+`Slots`, `FoldState` and `FoldAll`; every footer button `FOOTER_BUTTON_W` wide with the same label in
+both layouts, each tab's row right to left in both layouts, the info ending where the row starts, the
+compact Drops strip always shown; the toggle's words, both directions, on both tabs in both layouts,
+off with no header, each tab's collapsed state its own), `test_offer_panel` (the Offer panel opened from your own drop's
 Offer, built headless: docked beside the full or compact window on the side with room, the
 candidates ranked with Their eq in the Them look (both worn items from the read), no class bar and
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's

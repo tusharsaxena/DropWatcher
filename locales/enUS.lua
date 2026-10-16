@@ -371,10 +371,13 @@ L["range"] = "range"
 L["Them"] = "Them"
 L["When"] = "When"
 L["The time it dropped was not kept."] = "The time it dropped was not kept."
--- Compact mode's Drops and History strips (modules/DropsStrip.lua, modules/CompactHistory.lua)
+-- Compact mode's Drops strip (modules/DropsStrip.lua)
 L["next %s"] = "next %s"
-L["Post"] = "Post"
-L["Clear"] = "Clear"
+-- Expand all / Collapse all on the tabs' strips (modules/FooterRow.lua, feedback-15 spec §2)
+L["Expand all"] = "Expand all"
+L["Collapse all"] = "Collapse all"
+L["Open every group this tab shows. Collapse all closes them again."] = "Open every group this tab shows. Collapse all closes them again."
+L["Close every group this tab shows."] = "Close every group this tab shows."
 -- Compact mode's chrome (modules/CompactChrome.lua, compact spec §4)
 L["Drops"] = "Drops"
 L["History"] = "History"

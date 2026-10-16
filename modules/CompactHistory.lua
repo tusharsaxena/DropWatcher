@@ -19,15 +19,12 @@ local _, NS = ...
 -- THE HEADERS are the full table's header button, painted with the short form
 -- (NS.CompactCards.HistoryHeader: `2d` once a day old); a click collapses the group as before.
 --
--- THE STRIP keeps the kept-history line and Clear history, its button shortened to `Clear` (the
--- same tooltip, the same confirmation); the full layout puts it back.
+-- THE STRIP is the full layout's (NS.WindowHistory places it for both): the kept-history line,
+-- Expand all / Collapse all and Clear history at the one footer width (feedback-15 spec §2).
 
 NS.CompactHistory = NS.CompactHistory or {}
 local CH = NS.CompactHistory
 local K  = NS.Constants.WINDOW
-local L  = NS.L
-
-CH.CLEAR_W = 64    -- the strip's shortened Clear button
 
 -- ── building a card ─────────────────────────────────────────────────────────────────────────
 
@@ -108,29 +105,16 @@ local function toggle(h) NS.WindowHistory.ToggleGroup(h.groupKey, h.collapsed) e
 
 local SPEC = { newCard = newCard, paint = paintCard, header = historyHeader, toggle = toggle }
 
--- The strip's Clear history, shortened in the compact layout and put back in the full one: at the
--- strip's right edge in compact, left of the tab's Sort in full (feedback-10 spec §3).
-local function paintStrip(pane, compact)
-    local clear = pane.strip and pane.strip.clear
-    if not clear then return end
-    clear:SetWidth(compact and CH.CLEAR_W or K.CLEAR_W)
-    clear.label:SetText(compact and L["Clear"] or L["Clear history"])
-    local WF = NS.WindowFooter
-    clear:ClearAllPoints()
-    clear:SetPoint("RIGHT", pane.strip, "RIGHT", compact and 0 or -(WF.SORT_INSET + WF.SORT_W + NS.DropsStrip.GAP), 0)
-end
-
 -- The pane's own scroll view, above its strip.
 local function buildView(pane) return NS.CompactGroup.BuildView(pane, K.STRIP_H) end
 
 --- Draw the compact layout's cards for the tab's entries (WindowHistory's refresh, every repaint),
---- or, in the full layout, hide them and put the strip back.
+--- or, in the full layout, hide them.
 --- @param pane table the History pane
 --- @param entries table NS.WindowHistory.Entries' answer
 --- @param compact boolean
 function CH.Refresh(pane, entries, compact)
     local CG = NS.CompactGroup
-    paintStrip(pane, compact)
     local cv = CG.Swap(pane, compact, buildView)
     if not cv then return end
     local st = { nowEpoch = time(), dateFn = date, ownRealm = NS.Compat.NormalizedRealm() }

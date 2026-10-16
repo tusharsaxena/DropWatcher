@@ -337,10 +337,15 @@ modules\RowTooltip.lua
 # (modules\DetailCard.lua, below) and the host handlers (core\DropWatcher.lua) are read at call time,
 # when the tab is built and repainted.
 modules\WindowGroup.lua
+# Conventional: publishes NS.FooterRow, the strips' one footer button kind, their row's placement
+# and Expand all / Collapse all (feedback-15 spec §2); takes NS.Constants and NS.L at load.
+# NS.Window is read at call time, when modules\DropsStrip.lua and modules\WindowHistory.lua (below)
+# build and paint their strips.
+modules\FooterRow.lua
 # Conventional: publishes NS.DropsStrip, the Drops tab's summary strip (your tradeable drops, the
-# next expiry, Post my tradeables and Scan group, Post shortened in the compact layout) and its empty
-# state (Preview with test data and Scan group); takes NS.Constants and NS.L at load. NS.Window,
-# NS.WindowTitleBar, NS.WindowFooter, NS.MineCells, the feed and the host handlers are read at call
+# next expiry, Post my tradeables, Scan group and Expand all / Collapse all) and its empty state
+# (Preview with test data and Scan group); takes NS.Constants and NS.L at load. NS.Window,
+# NS.WindowTitleBar, NS.WindowFooter, NS.FooterRow, NS.MineCells, the feed and the host handlers are read at call
 # time, when NS.WindowGroup builds and repaints the tab.
 modules\DropsStrip.lua
 # LOAD-BEARING: takes NS.WindowCells, NS.TipMarks and NS.MineCells (modules\, above) at load.

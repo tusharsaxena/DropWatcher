@@ -57,8 +57,8 @@ one-line responsibility and why its position is load-bearing or conventional is 
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
   after a reload, `FeedRestore.lua`; the toast, auto-ask); the simulator's
-  inputs, scenarios and step panel; then the window: its shell, chrome, two tabs, pure cell
-  composers, tooltip placement, compact mode's switch and bodies, test mode and the diagnostics.
+  inputs, scenarios and step panel; then the window: its shell, chrome, two tabs, their strips' one
+  footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers, tooltip placement, compact mode's switch and bodies, test mode and the diagnostics.
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only and `/dw sim` verbs, and Profiles, last.
 

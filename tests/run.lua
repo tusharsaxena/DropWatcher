@@ -149,6 +149,7 @@ Kit.run{
         "test_own_drops",
         "test_tip_marks",
         "test_drops_strip",
+        "test_footer_row",
         "test_offer_panel",
         "test_mine_cells",
         "test_row_tooltip",
