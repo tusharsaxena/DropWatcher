@@ -562,7 +562,7 @@ Total.
 - tip marks: Chars counts what a text draws: an escape two, a color code none, a UTF-8 character one
 - audit: no text in the default face carries a glyph: Drops, the detail card, the Offer panel, History
 
-### test_drops_strip.lua (14)
+### test_drops_strip.lua (15)
 
 - drops tab: the tabs are Drops and History, and the retired `mine` opens Drops
 - drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
@@ -571,6 +571,7 @@ Total.
 - drops strip: Scan group goes through the shared handler
 - drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the same without Sort, icon wide
 - drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary
+- drops strip: a repaint that changes neither the layout nor Post re-anchors nothing; either change places it again
 - drops strip: compact, shown while none of your listed drops can be traded: no summary, no Post (feedback-15 spec §2)
 - drops strip: it counts the drops the tab lists, its filters applied, collapsed or not
 - drops strip: its next expiry moves each second with the countdowns
@@ -1746,7 +1747,7 @@ Total.
 | test_detail_card.lua | 21 |
 | test_own_drops.lua | 15 |
 | test_tip_marks.lua | 19 |
-| test_drops_strip.lua | 14 |
+| test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
 | test_offer_panel.lua | 17 |
 | test_mine_cells.lua | 14 |
@@ -1801,4 +1802,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1479** |
+| **Total** | **1480** |

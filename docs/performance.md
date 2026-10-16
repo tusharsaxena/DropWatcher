@@ -68,6 +68,15 @@ reaches `feed.add`, so the figures do not move), and 2026-10-15 after DW-P25 (te
 allocating the same bytes (`refreshCaptureOff`/`On` 14240.8, `refreshCompactCaptureOff`/`On` 10432.9,
 `parseCaptureOff`/`On` 664.2), each under its ceiling, and `showDecisionStoodDown` 0.
 
+Re-run 2026-10-16: the four refresh scenarios had gone over their ceilings, `refreshCaptureOff`/`On`
+16048.8 and `refreshCompactCaptureOff`/`On` 12672.9 (14240.8 and 10432.9 before feedback-15; the run sits
+outside the green gate, so nothing failed). Bisected to feedback-15's footer row (DW-Q2) and
+feedback-16's icon-only compact strip: the Drops strip built its row and slot tables and re-anchored its
+three buttons and its text on every repaint, in both layouts, and History's strip its row. Each strip now
+places itself only when what decides it changes (the layout, and on Drops whether Post shows), pinned by
+`test_drops_strip`. After it: `refreshCaptureOff`/`On` 14096.8 and `refreshCompactCaptureOff`/`On`
+10864.9, every pair matching and under its ceiling; the parse pair and `showDecisionStoodDown` unmoved.
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the

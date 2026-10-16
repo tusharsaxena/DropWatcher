@@ -250,6 +250,27 @@ test("drops strip: full layout, nothing tradeable: shown with Scan group beside 
     assertEqual(x, -(WF.SORT_INSET + 2 * step), "still in its place, Post beside it")
 end)
 
+test("drops strip: a repaint that changes neither the layout nor Post re-anchors nothing; either change places it again", function()
+    local NS, drawn = shownMine(false)
+    local strip = drawn.pane.summary
+    local clears = 0
+    for _, f in ipairs({ strip.fold, strip.scan, strip.post, strip.info }) do
+        local real = f.ClearAllPoints
+        f.ClearAllPoints = function(self) clears = clears + 1; return real(self) end
+    end
+    -- red under: every repaint building the row and re-anchoring the three buttons and the text
+    NS.Window.Refresh(); NS.Window.Refresh()
+    assertEqual(clears, 0, "the refresh's allocation ceiling (docs/performance.md)")
+    seed(NS, { drop({ id = 4, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }) },
+        { groupOf("Boss", NOW - 3000, { 4 }, ROSTER) })
+    NS.Window.Refresh()
+    assertTrue(clears > 0, "nothing tradeable any more: placed again"); assertFalse(strip.post:IsShown())
+    clears = 0
+    NS.SetWindowMode("compact")
+    assertTrue(clears > 0, "the compact layout: placed again")
+    assertEqual(strip.scan:GetWidth(), NS.Constants.WINDOW.FOOTER_ICON_W)
+end)
+
 test("drops strip: compact, shown while none of your listed drops can be traded: no summary, no Post (feedback-15 spec §2)", function()
     local NS, _, m = T.enableAddon()
     NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)

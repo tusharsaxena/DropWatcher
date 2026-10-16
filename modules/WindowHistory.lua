@@ -601,8 +601,11 @@ end
 
 -- The strip's row, right to left (feedback-15 spec §2, §3): full `Sort · Expand/Collapse`, compact
 -- `Expand/Collapse` as its mark alone (feedback-16); the tab's Sort is anchored in its slot by
--- NS.WindowFooter.AnchorSort.
+-- NS.WindowFooter.AnchorSort. Placed again only when the layout changes, so a repaint builds no
+-- table and re-anchors nothing.
 local function placeStrip(strip, compact)
+    if strip.dwPlacedCompact == compact then return end
+    strip.dwPlacedCompact = compact
     local FR, WF = NS.FooterRow, NS.WindowFooter
     local w = FR.Width(compact)
     FR.SetCompact(strip.fold, compact)
