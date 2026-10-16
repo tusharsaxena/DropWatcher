@@ -1,0 +1,6 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-Q0	M25	DropWatcher	The session is the login; the Drops tab rebuilt from history after a reload		L	HIST	fb15 §0
+DW-Q1	M25	DropWatcher	Content per tab: Drops This instance and This session; migration v8	DW-Q0	M	FEED	fb15 §1
+DW-Q2	M25	DropWatcher	One footer button kind; Expand all / Collapse all on both tabs and layouts	DW-Q1	M	FEED,COMPACT	fb15 §2
+DW-Q3	M25	DropWatcher	Clear history leaves the footers for a Settings row	DW-Q2	S	HIST	fb15 §3
+DW-Q4	M25	DropWatcher	The History tab expands a detail card from the snapshot	DW-Q3	L	HIST,COMPACT	fb15 §4
