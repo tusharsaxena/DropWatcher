@@ -36,8 +36,8 @@ local _, NS = ...
 -- and ⊕ are drawn in the monospace face (JetBrains Mono carries all three).
 --
 -- THE HEADER'S SHORT FORM. `Instance · Boss · Difficulty · 3m · 2 · Recorder`: no `ago`, no
--- `drops`, `1 of 2` while a filter hides some; an instance name longer than PLACE_MAX characters is
--- cut with `…`. Its tooltip opens with the long form (the full view's header text) and keeps the
+-- `drops`, `1 of 2` while a filter hides some; each piece longer than its HEADER_MAX characters is
+-- cut with `…` (Looking For Raid reads LFR, GroupPlace.ShortNames). Its tooltip opens with the long form (the full view's header text) and keeps the
 -- full view's lines: the kind, the party, the hidden drops and the click hint.
 
 NS.CompactCards = NS.CompactCards or {}
@@ -55,8 +55,11 @@ local DASH = "–"
 CC.NO_GLYPH = "⊘"
 --- The mark of a looter from another realm (the realm is in the tooltip).
 CC.CROSS_REALM = "⊕"
---- The longest header place part, in characters, before it is cut with `…`.
-CC.PLACE_MAX = 24
+-- The header's pieces, each cut to its own number of characters (feedback-15), so a line with
+-- every piece at its limit fits HEADER_CHARS, about what a default-width pane (COMPACT_WIDTH 440)
+-- holds in the header's font. The situation word stands in for a difficulty, never beside one.
+CC.HEADER_CHARS = 76
+CC.HEADER_MAX = { instance = 14, label = 14, difficulty = 11, situation = 16, age = 7, count = 6, who = 9 }
 
 local DAY = 86400
 
@@ -98,7 +101,7 @@ function CC.Truncate(s, n)
         i = i + charLen(s:byte(i))
     end
     if count <= n or n < 1 then return s, false end
-    return s:sub(1, cuts[n] - 1) .. "…", true
+    return (s:sub(1, cuts[n] - 1):gsub("%s+$", "")) .. "…", true
 end
 
 --- A short age: `40s`, `3m`, `1h 59m`, then `1d`, `3d`.
@@ -368,12 +371,6 @@ function CC.Count(shown, hidden)
     return L["%d of %d"]:format(shown, shown + nHidden)
 end
 
--- The place parts with the first (the instance, or the label) cut to PLACE_MAX characters.
-local function shortPlace(parts)
-    local cut = false
-    if #parts > 0 then parts[1], cut = CC.Truncate(parts[1], CC.PLACE_MAX) end
-    return parts, cut
-end
 
 -- The short form's tooltip: the full view's title, its long form, then its other lines.
 local function shortTip(full)
@@ -383,13 +380,21 @@ local function shortTip(full)
 end
 
 local function shortHeader(group, shown, age, situationLabel, hidden, full)
-    local parts, who = WC.Place(group, situationLabel)
-    local cut
-    parts, cut = shortPlace(parts)
-    parts[#parts + 1] = age
-    parts[#parts + 1] = CC.Count(shown, hidden)
+    local M = CC.HEADER_MAX
+    local parts, who, roles = WC.Place(group, situationLabel, M.who)
+    local cut, any = false, false
+    for i, role in ipairs(roles) do
+        parts[i], cut = CC.Truncate(parts[i], M[role]); any = any or cut
+    end
+    local function push(v, max)
+        if v then parts[#parts + 1], cut = CC.Truncate(v, max); any = any or cut end
+    end
+    push(age, M.age)
+    push(CC.Count(shown, hidden), M.count)
     parts[#parts + 1] = who
-    return { text = table.concat(parts, " · "), tip = shortTip(full), cut = cut }
+    local key = who and NS.GroupPlace.Recorder(group)
+    if key then any = select(2, CC.Truncate(key:match("^([^%-]+)") or key, M.who)) or any end
+    return { text = table.concat(parts, " · "), tip = shortTip(full), cut = any }
 end
 
 --- A Drops header's short form (compact spec §2): `Instance · Boss · Difficulty ·

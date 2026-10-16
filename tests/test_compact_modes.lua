@@ -68,8 +68,9 @@ local FILTERS = {
     { "view", { interesting = true } },
     { "view", { likely = true } },
     { "view", { usable = true, upgrade = true } },
+    { "content", "instance" },
     { "content", "session" },
-    { "content", "all" },
+    { "content", "all" },     -- History's alone: Drops refuses it (feedback-15 spec §1)
     { "char", {} },
     { "search", "vault" },
     { "search", "seta" },

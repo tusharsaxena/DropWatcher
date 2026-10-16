@@ -83,7 +83,7 @@ button and profiles reach them as any row.
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
 | `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you shows below the threshold |
 | `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade` | `false` each | Filters | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me), the values combine as AND, and all off is All, the default |
-| `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Filters | the Drops tab's Content when it opens, and a fresh tab's Sort (History always opens on Content: All) |
+| `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Filters | the Drops tab's Content when it opens (`instance` or `session`; `all` is History's alone since DW-Q1, feedback-15 spec §1, and step 8 turns a stored one into `session`), and a fresh tab's Sort (History always opens on Content: All) |
 | `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Filters | armor, weapons, jewelry and trinkets only; tier tokens too |
 | `feed.minIlvlMode` | `"off"` | Filters | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Filters | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
@@ -171,11 +171,13 @@ history = { retentionDays = 30, v = 1, groups = {
       roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
           me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
-          trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
+          trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
 ```
 
 - A group is one feed group of one session: its `key` is the feed group's key and the session's
-  start (`enc:<id>:<t>@<time()>`), its `label` the encounter, run or area name, `kind` `encounter`,
+  start (`enc:<id>:<t>@<time()>`, an area's `area:<name>:<drop id>:<t>@<time()>`, its `<t>` the
+  GetTime() a reload does not reset, so no key made after a reload meets one from before it; the
+  session is the login, kept by a reload: `char.session.start` below, feedback-15 spec §0), its `label` the encounter, run or area name, `kind` `encounter`,
   `run` or `area`, `situation` the situation key and `at` its first drop's time.
 - `at` is `time()` (seconds since the epoch), so it reads the same after a reload; `looter` is the
   Name-Realm and `class` its classFile; `me`, `them` and `trade` are the verdicts and the trade
@@ -198,12 +200,28 @@ history = { retentionDays = 30, v = 1, groups = {
   by `seenBy`. An entry kept before DW-A4 has neither: it is "unknown", which only `Character: All`
   shows. No migration step: the fields are optional.
 - `outcome` is `seen`, `asked`, `offered`, `received`, `tradedAway`, `expired` or `declined`;
-  `before` is the outcome a hand-set `declined` replaced.
+  `before` is the outcome a hand-set `declined` replaced, and `beforeExpired` the one an automatic
+  `expired` replaced (feedback-15 spec §0): the trade timer's live `yes` puts it back, so a false
+  Expired is undone (an entry expired before the field existed returns to `seen`). No migration
+  step: the field is optional.
 - How long it is kept: a group goes whole once its newest entry's `at` is older than
   `history.retentionDays` days (never under `0`), at the session's prune or a confirmed shorter
   window. Beside that, 50 drops per group and a safety ceiling of 5,000 drops in all
   (`NS.History.CEILING`, a constant the diagnostics report), the oldest going first, keep
   SavedVariables bounded even under Never delete. The history's shape has its own stamp, `v`.
+
+## `DropWatcherDB.char`
+
+Per character (AceDB's `char` section, keyed by character; savedvariables-§1), no defaults declared
+and no setting row: the session (feedback-15 spec §0, DW-Q0, `modules/Session.lua`).
+
+| Key | Default | What it is |
+|---|---|---|
+| `session.start` | absent until the first read or login | the session start, `time()`: an initial login's `PLAYER_ENTERING_WORLD` sets it to now, a reload keeps it, a zone change moves nothing; absent or not a number, it is now (stored). History's group keys (`@<start>`) and every tab's This session read it (`NS.History.SessionStart`) |
+| `session.instance` | absent until the first `SituationChanged` | `{ at, situation, instance }`: where This instance started, `at` the epoch, `situation` the situation key, `instance` the instance map id (nil outside one); a reload's first situation announcement that names the same situation and instance restores the window's This instance from it |
+
+The kit's AceDB fake has no `char` section, so headless the record is session-only unless a suite
+seeds `db.char` (`test_feed_restore` does).
 
 ## State written outside the seam (architecture-§5)
 
@@ -230,11 +248,18 @@ it is named.
   per account.
 - `global.history.v` and `global.history.groups` are the history's own record. Owner
   `modules/History.lua`, which writes them on a recorded drop, an outcome, a completed trade, the
-  safety ceiling and Clear history; `modules/HistoryRetention.lua` deletes the groups older than
+  safety ceiling and Clear history (Settings › Window › Layout); `modules/HistoryRetention.lua` deletes the groups older than
   Keep history for (once per session, five seconds after the first `PLAYER_ENTERING_WORLD`, or
   after the stand-up when the addon started disabled, and on a confirmed shorter window). Neither
   replaces `global.history` whole, since the retention row's value lives in it.
 - `global.minimap.minimapPos` is LibDBIcon's own write into the table the launcher hands it.
+- `char.session.start`, `char.session.instance` and `char.session.cleared` are the session
+  (feedback-15 spec §0). Owner `modules/Session.lua`; writers `Session.Start` (now, when nothing
+  valid is stored), `Session.OnEnteringWorld` (an initial login, which also drops `cleared`; the
+  stand-up after a disabled start), `Session.MarkSituation` (each `SituationChanged` the window
+  hears, but a reload's first one in the stored place) and `Session.MarkCleared` (`time()` at each
+  live `LootFeed.Clear`, `/dw clear` or Clear on boss kill: a reload restores no entry dated
+  before it).
 
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to
 the simulation's session-only log instead (`NS.Sim.HistoryLog`, `modules/Sim.lua`), never
@@ -251,7 +276,8 @@ below.
 `NS.State.debug` (the logging flag), `NS.State.testMode`, `NS.State.windowOpen`,
 `NS.State.windowFilters` (the filter bar's state per tab, `{ view = { [value] = true },
 char = { [Name-Realm] = true }, content, search, sort }`, seeded from the `feed.view.<value>`,
-`feed.content` and `feed.sort` rows when they hold a valid value; `char` starts on Current, your
+`feed.content` and `feed.sort` rows when they hold a value the tab offers (Content: Drops This instance and This
+session, History All too, `WindowFilterBar.CONTENTS`, DW-Q1); `char` starts on Current, your
 key, or the `current` sentinel until your key is known; History then takes
 `WindowFilterBar.TAB_FIXED`'s View: All, Content: All and Character: All, feedback-13 spec §0),
 `NS.State.windowGroup` (the Drops table's collapsed groups and the row whose detail card is open; no
@@ -279,7 +305,7 @@ on any tab (feedback-4 spec §2, DW-D2).
 ## Migrations
 
 `core/Database.lua`: the load pass is `NS:RunMigrations`, `NS.MIGRATIONS` is a list of steps
-`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 7). The runner
+`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 8). The runner
 runs in `OnInitialize` straight after `AceDB:New`, before anything reads the profile, and again on
 every profile event. It owns the stamp: a step's `to` is stored only after the step returned, so a
 step that raises is retried on the next load. A `perProfile` step runs for every stored profile in
@@ -294,5 +320,6 @@ the raw SavedVariables, not only the active one. The default stays `0`.
 | 5 | 4 → 5, per profile: compact mode (DW-C0, compact spec §1). The retired compact preset, `window.compact = true`, becomes `window.mode = "compact"` (the preset wins over a `mode` the defaults answer), and the key goes; the single-layout geometry `window.point`, `.width` and `.height` moves into `window.geometry.full`, keeping any value already there. A profile already in the new shape passes through (`NS.MigrateWindowMode`) |
 | 6 | 5 → 6, per profile: own drops are always listed on Drops (DW-E2, feedback-5 spec §2). The retired switch `feed.showOwn` (Show my own loot in Group drops) is removed; nothing else changes (`NS.RetireShowOwn`) |
 | 7 | 6 → 7, per profile: My eq merged into Me and Their eq into Them (DW-F1, feedback-6 spec §1). The retired `window.columns.myEq` and `window.columns.theirEq` toggles are removed, since `me` and `them` now toggle the cells that show the worn gear; only the two keys go (`NS.RetireEqColumns`) |
+| 8 | 7 → 8, per profile: Content: All is History's alone (DW-Q1, feedback-15 spec §1). The Drops tab offers This instance and This session (its feed holds this session's drops alone), so a stored `feed.content = "all"` becomes `"session"`, the row's default; anything else passes through (`NS.MigrateContentAll`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

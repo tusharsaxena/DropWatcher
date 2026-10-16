@@ -1,9 +1,10 @@
 # Ka0s Drop Watcher
 
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
+![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1429%2F1429_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1476%2F1476_passing-green)
 
 When a ring drops for somebody else in your group, Drop Watcher tells you whether it beats yours,
 whether it beats theirs, and whether they could hand it over at all. If you want it, one click
@@ -77,19 +78,22 @@ the difference), and each member gets an **Offer** whisper; **Announce to group*
 once. Every action button carries an icon for what it does (Offer's is a box with an arrow leaving it, handing the item out). The row's Offer is cyan until you've offered it, so it reads apart from
 Ask, yellow once you have and green once you've given it away. While any of your listed drops can still be traded, a strip under the
 table counts them and gives the next one to run out (`2 tradeable · next expiry 0:08:41`), and
-**Post my tradeables**, at the strip's right beside Scan group and the Sort dropdown, lists all of them in
-group chat in one line. On History, Sort sits at the strip's right beside Clear history.
+**Post my tradeables**, at the strip's right beside Scan group, Expand all / Collapse all and the Sort dropdown,
+lists all of them in group chat in one line. On History, Sort sits at the strip's right beside Expand all.
 
 The **History** tab remembers what the feed showed, across logouts and across your characters, for
 30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never
-delete, and asks before a shorter time deletes anything. Its footer says how many bosses or key runs
+delete, and asks before a shorter time deletes anything; **Clear history** beside it empties the log on every
+character, after a confirmation. Its footer says how many bosses or key runs
 and drops it holds, and for how long. Each drop says what became of it: asked, offered, expired,
 received or traded away, the last two once a trade with that item goes through. The words take the
 action buttons' colors: yellow while it waited on someone (asked, offered), green once done (received,
 traded away), red when it fell through (expired) and gray when nothing came of it (seen, declined), in
-both the table and the compact cards. Right-click a row to
-mark it declined. Drops opens on **Content: This session** and **Character: Current**, the character
-you're playing. History opens on everything: **View: All**, **Content: All** and **Character: All**.
+both the table and the compact cards. Click a row to open its detail card: what it meant for you and the group at the time, the trade
+estimate, when and where, and **Link in chat**, **Mark declined** and **Show in Drops** (while the drop is
+still on the Drops tab). Right-click a row to mark it declined. Drops opens on **Content: This session** and **Character: Current**, the character
+you're playing. History opens on everything: **View: All**, **Content: All** and **Character: All**. A `/reload` keeps
+this session's drops on Drops; a drop you cleared stays cleared.
 Its Character dropdown lists every character that saw a drop, with its class icon, so you can narrow
 it to one or several. Drops kept before Drop Watcher noted who saw them show only under All.
 
@@ -101,7 +105,7 @@ says who looted it, the slot, the type and whether they can trade it, with Ask (
 the right, or the gray **No action** button when there's no action; the card leaves the trade countdown to the table
 and the strip. The bottom one reads like the table's Me and Them without the
 icons, `You` and `Them` in gold: `You 321/308 ▼8  Them 276 ▲12` (`Them Upgrade for 2` on your own). History cards show what became of the drop, and the strip under
-the Drops cards is shorter (`2 tradeable · next 0:08:41` and **Post**). Quality, Content, Character
+the Drops cards is shorter (`2 tradeable · next 0:08:41`, with Expand all / Collapse all and **Post my tradeables**). Quality, Content, Character
 and Sort fold into a **Filters** button beside View, and Scan group is the icon in the title bar. Hovering still explains everything, and
 clicking a Drops card opens the same detail card. The button next to minimize switches views, as do
 `/dw compact` and `/dw full`, and each view remembers its own size and place. When a drop opens the

@@ -453,7 +453,8 @@ end
 function Toast.Consider(id)
     if toasted[id] or setting("enabled") ~= true then return false end
     local rec = NS.LootFeed.Get(id)
-    if not (rec and Toast.Qualifies(rec, setting("minGain"))) then return false end
+    -- A drop restored after a reload (feedback-15 spec §0) was toasted, if ever, before it.
+    if not rec or rec.source == "restore" or not Toast.Qualifies(rec, setting("minGain")) then return false end
     toasted[id] = true
     enqueue(id)
     NS.Debug(TAG, "toast queued: drop %s (%d waiting)%s", tostring(id), #queue, held() and ", held in combat" or "")

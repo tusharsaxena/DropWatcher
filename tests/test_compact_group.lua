@@ -117,7 +117,9 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertTrue(drawn.compact == true)
     assertEqual(#drawn.headers, 1); assertEqual(#drawn.rows, 2)
     local h = drawn.headers[1]
-    assertEqual(textOf(h.text), "Commander Ri'mok · Dungeon · 10s · 2")
+    assertEqual(textOf(h.text), "Commander Ri'… · Dungeon · 10s · 2")
+    -- red under: a header text left at the game's default CENTER, centered across the sized line
+    assertEqual(h.text:GetJustifyH(), "LEFT", "the header reads from the left")
     assertTrue(h.tipRow == true)
     local tip = NS.Window.TooltipOf(h)
     assertTrue(#tip >= 3, "the long form and its lines in the tooltip")
@@ -388,6 +390,7 @@ end)
 
 test("compact group: no card shows a trade window; every card keeps its freshness on line 1", function()
     local NS, _, m = T.enableAddon()
+    NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = 100
     local group = { key = "enc:3", label = "Commander Ri'mok", kind = "encounter", situation = "dungeon", at = 90,
         drops = { 1, 2, 3 } }

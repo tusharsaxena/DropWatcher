@@ -55,6 +55,22 @@ test("group place: with no difficulty name the situation word stands in; an olde
     assertEqual(joined(GP.Parts({}, nil)), "?")
 end)
 
+test("group place: Looking For Raid reads LFR, a stored name too, and Parts names each part's role", function()
+    local GP = T.newAddon().GroupPlace
+    local g = { kind = "encounter", label = "Vashnik the Malignant", instance = "The Venomous Abyss",
+        difficulty = "Looking For Raid" }
+    -- red under: a header that spells out the client's Looking For Raid
+    local parts, roles = GP.Parts(g, "Raid", GP.ShortNames())
+    assertEqual(joined(parts), "The Venomous Abyss · Vashnik the Malignant · LFR")
+    assertEqual(table.concat(roles, ","), "instance,label,difficulty")
+    assertEqual(joined(GP.Parts({ kind = "area", label = "Open world" }, "Solo", GP.ShortNames())), "Open world · Solo")
+    assertEqual(table.concat(select(2, GP.Parts({ kind = "area", label = "Open world" }, "Solo")), ","),
+        "label,situation", "the situation word stands in for the difficulty")
+    assertEqual(joined(GP.Parts(g, "Raid")), "The Venomous Abyss · Vashnik the Malignant · Looking For Raid",
+        "with no short names the client's name stands")
+    assertEqual(GP.Who({ seenBy = "Sacrilègeous-Realm" }, nil, 10), "Sacrilège…", "the recorder cut to a limit")
+end)
+
 test("group place: Who names the recorder alone, its short name class-colored; History falls back to an entry", function()
     local GP = T.newAddon().GroupPlace
     local function colorOf(c) if c == "MAGE" then return 1, 0, 0 end end

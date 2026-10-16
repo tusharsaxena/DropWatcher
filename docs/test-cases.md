@@ -115,7 +115,7 @@ Total.
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 
-### test_settings_pages.lua (37)
+### test_settings_pages.lua (39)
 
 - pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -144,6 +144,8 @@ Total.
 - messages: an empty template is refused by the seam and the box shows the stored one again
 - messages: a token chip goes into the template last edited and is stored at once
 - messages: Reset templates puts the three back and repaints the boxes
+- window: Layout draws Clear history beside Keep history for; it asks first and clears only on Yes
+- window: with test mode on, Clear history clears the samples and leaves the account's log
 - pages: a page's Defaults resets that page's rows and no other page's
 - editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
 - editors: a spec's stats are its primary stat, Stamina and the four secondaries
@@ -290,7 +292,7 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
-### test_compact_cards.lua (26)
+### test_compact_cards.lua (27)
 
 - compact cards: Truncate cuts by characters, not bytes, and marks the cut with …
 - compact cards: Age is the short duration, then whole days
@@ -316,6 +318,7 @@ Total.
 - compact cards: the header's short form drops `ago` and `drops`
 - compact cards: a filter that hides drops reads `1 of 2`, the hidden ones in the tooltip
 - compact cards: a long instance name is cut, the full name in the tooltip
+- compact cards: an LFR header fits the default width, each piece cut to its own limit
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the long form
 
@@ -350,10 +353,28 @@ Total.
 - compact history: marking an entry declined repaints its card
 - compact history: a header click opens a collapsed group
 - compact history: every tooltip opens at the card's top right, just outside the window
-- compact history: Clear history is shortened in the compact layout and put back in the full one
+- compact history: the strip is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
+
+### test_history_card.lua (15)
+
+- history card: the header's chips name slot, type, item level and the outcome in its tone
+- history card: For you is the verdict then, with its deltas, marked at the time
+- history card: For the group names the looter and the Them verdict with its deltas
+- history card: on your own drop the looter is you and the upgrade list is not kept
+- history card: the trade box is the recorded estimate in the Drops card's words
+- history card: when and where reads the time, the place and the character that saw it
+- history card: the actions link, mark or clear declined, and show the drop while it is live
+- history card: a row click expands the card under it; the row below moves down; one at a time
+- history card: a right-click still opens the row menu and expands nothing
+- history card: the columns start after the row's indent and chevron, as on Drops
+- history card: the card paints the snapshot, each part with a tooltip
+- history card: Link in chat links the item; Mark declined marks it and reads Clear declined
+- history card: Show in Drops selects the Drops tab, opens the drop's header and expands its card
+- history card: compact cards expand the stacked card under the clicked card
+- history card: the stacked card's actions fit one line at the compact width
 
 ### test_compact_chrome.lua (20)
 
@@ -546,18 +567,29 @@ Total.
 
 - drops tab: the tabs are Drops and History, and the retired `mine` opens Drops
 - drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
-- drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Sort] (feedback-10 spec §3)
-- drops strip: Sort follows the active tab to History's strip, after Clear history, and back
+- drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)
+- drops strip: Sort follows the active tab to History's strip, right of the toggle, and back
 - drops strip: Scan group goes through the shared handler
-- drops strip: the slots, pure: Sort at the edge, Scan group beside it, Post beside that or hidden
+- drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the toggle and Post
 - drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary
-- drops strip: compact, hidden while none of your listed drops can be traded; the cards take its room back
+- drops strip: compact, shown while none of your listed drops can be traded: no summary, no Post (feedback-15 spec §2)
 - drops strip: it counts the drops the tab lists, its filters applied, collapsed or not
 - drops strip: its next expiry moves each second with the countdowns
 - drops strip: its next expiry keeps the each-second ticker running with no row's countdown drawn
 - drops strip: Post my tradeables goes through the shared handler
-- drops strip: shortened under the compact cards, and put back in the full layout
+- drops strip: under the compact cards, the summary shortened, Post my tradeables as in the full layout
 - drops strip: the compact countdown tick moves its next expiry too
+
+### test_footer_row.lua (8)
+
+- footer row: the slots, pure: right to left, a gap between, a hidden control takes no room
+- footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
+- footer row: full Drops, right to left: Sort, the toggle, Scan group, Post my tradeables, one width
+- footer row: compact Drops is always shown: the toggle at the right, Post my tradeables left of it
+- footer row: History, full Sort then the toggle, compact the toggle; no Clear history
+- footer row: the Drops toggle opens every shown header, then closes them, in both layouts
+- footer row: the toggle is off when the tab shows no header
+- footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
 
 ### test_offer_panel.lua (17)
 
@@ -1165,12 +1197,13 @@ Total.
 - group header: a raid's party is not in the header; its tooltip line names ten and +n
 - history header: the recorder alone; an older group with no place and no roster keeps its label
 
-### test_group_place.lua (14)
+### test_group_place.lua (15)
 
 - group place: a keystone's difficulty reads Mythic+ and its level; any other is the client's name
 - group place: an encounter names its instance, its boss, then its difficulty
 - group place: a key run's and an area's label is the instance, named once
 - group place: with no difficulty name the situation word stands in; an older group keeps its label
+- group place: Looking For Raid reads LFR, a stored name too, and Parts names each part's role
 - group place: Who names the recorder alone, its short name class-colored; History falls back to an entry
 - compat: DifficultyName answers the client's name, nil for an unknown id or no API
 - compat: KeystoneLevel answers the active key, else the completed run's, else nil
@@ -1304,11 +1337,11 @@ Total.
 - history tab: rows take the Window page's row height and font size
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
 - history tab: a right-click marks a row declined, through the menu when the client has one
-- history tab: with nothing kept it says what it will hold, and Clear history is off
+- history tab: with nothing kept it says what it will hold, and the strip has no Clear history
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
-- history tab: rows do not expand, so they draw no chevron and are not indented; the headers' chevrons are gold
+- history tab: rows draw the Drops rows' chevron and indent; the headers' chevrons are gold
 
 ### test_history_retention.lua (16)
 
@@ -1328,6 +1361,32 @@ Total.
 - retention: enabled later in a session that started disabled, the prune still runs once
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
+
+### test_feed_restore.lua (14)
+
+- session: an initial login starts it now; a zone change moves nothing; a reload keeps it
+- session: with no stored value (a first run, a corrupt row) it is now, and it holds
+- restore: after a reload this session's drops come back under their headers, linked to their entries
+- restore: an initial login starts an empty feed
+- restore: this session's and this character's entries only, gone ones skipped, the newest MAX_DROPS
+- restore: restored drops never merge; a live line for the same drop merges into one
+- restore: the quality gate still runs; the situation gate and the feed filters do not
+- restore: a restored drop opens no window, queues no toast and asks nothing
+- restore: an area group made after the reload never takes a key from before it
+- restore: restored drops are not counted new on a window minimized before the reload
+- restore: a drop asked for before the reload reads Asked, not Ask, after it
+- restore: drops cleared from the Drops tab before the reload stay cleared
+- history: a live timer read undoes Expired; a rule estimate, declined and received do not
+- session: This instance survives a reload in the same instance, and only then
+
+### test_content_tabs.lua (6)
+
+- content per tab: Drops offers This instance and This session, History adds All
+- content per tab: the Content menu lists the active tab's values, in both layouts
+- content per tab: the Content tooltip is the same on both tabs and names each value
+- content per tab: Drops' This session starts at the stored session start, in the client clock
+- content per tab: the feed.content row offers This instance and This session, default This session
+- database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
 ### test_toast.lua (32)
 
@@ -1667,14 +1726,15 @@ Total.
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 12 |
-| test_settings_pages.lua | 37 |
+| test_settings_pages.lua | 39 |
 | test_slash.lua | 26 |
 | test_window.lua | 14 |
 | test_window_shell.lua | 58 |
 | test_window_compact.lua | 25 |
-| test_compact_cards.lua | 26 |
+| test_compact_cards.lua | 27 |
 | test_compact_group.lua | 20 |
 | test_compact_history.lua | 10 |
+| test_history_card.lua | 15 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 50 |
@@ -1684,6 +1744,7 @@ Total.
 | test_own_drops.lua | 15 |
 | test_tip_marks.lua | 19 |
 | test_drops_strip.lua | 14 |
+| test_footer_row.lua | 8 |
 | test_offer_panel.lua | 17 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
@@ -1708,7 +1769,7 @@ Total.
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
-| test_group_place.lua | 14 |
+| test_group_place.lua | 15 |
 | test_char_filter.lua | 19 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
@@ -1716,6 +1777,8 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
+| test_feed_restore.lua | 14 |
+| test_content_tabs.lua | 6 |
 | test_toast.lua | 32 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
@@ -1735,4 +1798,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1429** |
+| **Total** | **1476** |

@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21) |
-| FEED-1..76 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); General › When to show as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0) |
+| FEED-1..78 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); General › When to show as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2) |
 | ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
 | ITEM-1..5 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -32,11 +32,11 @@ passed.
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
-| HIST-1..4 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51; Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9 |
+| HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
 | TOAST-1..4 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
-| COMPACT-1..7 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2) |
+| COMPACT-1..8 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 
 ## Before you start
@@ -860,7 +860,8 @@ dungeon) → under the table, above the footer, a strip reads `2 tradeable · ne
 Filter your drops out (Search for another item) → the count follows what the tab lists; with none of the
 listed drops tradeable the strip goes and the table takes its room back. Click Post my tradeables → the
 one-line post (ASK-7). `/dw compact` → the strip under the cards reads `2 tradeable · next 0:08:41` with a
-`Post` button, the same tooltip; switch to full → the full strip again. Result:
+`Post` button, the same tooltip; switch to full → the full strip again. (Superseded by feedback-15, 2026-10-16:
+the compact strip is always shown and its button reads `Post my tradeables` at the full width; FEED-78.) Result:
 
 **FEED-46. Two tabs, Drops and History (DW-E3, feedback-5 spec §3).** The headless `test_drops_strip` (`the
 tabs are Drops and History`) and `test_slash` cover it. `/dw show` → the tab strip reads `Drops` and
@@ -1045,7 +1046,8 @@ height, and works (`/dw debug on` shows the scan). The title bar has no Scan gro
 lock (under a boss's chat lockdown) sits beside the layout toggle. With drops listed but nothing of yours
 tradeable (out of test mode and a group, `/dw sim start dungeon`, then `/dw sim loot 2` until none lands on
 you) → the strip still shows, with no summary, Post gone and Scan group in Post's place above Sort. On History → no Scan group. `/dw compact` → the title bar's Scan group icon is back and
-the shortened strip is unchanged. Result:
+the shortened strip is unchanged. (Superseded by feedback-15, 2026-10-16: Scan group is Post's width, the
+row reads `[Post my tradeables] [Scan group] [Expand all] [Sort]`; FEED-78.) Result:
 
 **FEED-64. The empty state's buttons centered as a pair (DW-G4, feedback-7 spec §4).** The headless
 `test_window_group` (`the empty state's two buttons are centered as a pair`) covers the arithmetic. Research
@@ -1139,7 +1141,9 @@ nothing of yours tradeable (as FEED-63) → Post is gone and Scan group stays be
 Click History → Sort is at the right edge of History's strip, Clear history just left of it; set Sort to
 Oldest there, back to Drops → Sort is on the Drops strip again and reads Drops' own value. `/dw compact` →
 Sort is in the Filters panel, Clear at the History strip's right edge; `/dw full` → Sort back on the active
-tab's strip. Hover Sort → its tooltip opens above it. Result:
+tab's strip. Hover Sort → its tooltip opens above it. **Superseded by feedback-15 (2026-10-16)** (DW-Q2,
+DW-Q3): Expand all / Collapse all sits between Scan group and Sort on Drops and beside Sort on History, and
+Clear history left both strips for Settings › Window › Layout; FEED-78 and HIST-6 check that. Result:
 
 **FEED-71. Pending once, and the card's full width (DW-K0, feedback-11 spec §0).** The headless
 `test_compact_cards` (`the freshness mark is bracketed, and left out where there is nothing to say`),
@@ -1191,6 +1195,30 @@ button reads `Filters` with no count; pick `Character: Current` there → `Filte
 another player loot a drop during a pull, then hover its Me and Them cells (and a compact card's You and Them)
 while still in combat → the gear grid shows, its columns perhaps a little wider than out of combat, and BugSack
 records nothing from `TipGrid.lua`. Hover again out of combat → the columns fit as before. Result:
+
+**FEED-77. Content per tab (DW-Q1, feedback-15 spec §1).** The headless `test_content_tabs`, `test_compact_chrome`
+and `test_compact_modes` cover it. `/dw` → open Drops' Content → `This instance` and `This session` only; hover
+it → the tooltip names This instance (since you entered this instance or started this key), This session (since
+you logged in; a /reload keeps them) and All (History only). Select History, open Content → `This instance`,
+`This session` and `All`, the tab still on `All`, the same tooltip. Drops on `This session`, `/reload` → every drop
+since the login is still listed. `/dw compact` → the Filters panel's Content offers the same values per tab. On a
+profile whose Settings › Feed › Content was `All` before this version → it reads `This session`, and so does
+Drops. Result:
+
+**FEED-78. One footer button kind, and Expand all / Collapse all (DW-Q2, feedback-15 spec §2).** The headless
+`test_footer_row`, `test_drops_strip` and `test_compact_history` cover it. `/dw test` in the full layout → the
+Drops strip reads, right to left, Sort, `Expand all`, `Scan group` and `Post my tradeables`, the three buttons
+exactly as wide as Sort, about 8 pixels apart, each with its icon; the `n tradeable · next expiry` text on the
+left ends before Post, and narrowing the window cuts it with `…` rather than run it under the buttons. With
+the older groups collapsed (the default) click `Expand all` → every group opens and the button reads `Collapse
+all`; click it → every group closes and it reads `Expand all`; open one header by hand → still `Expand all`.
+Search for something no drop matches → the button is grayed out. Select History → Sort, `Expand all`, `Clear
+history` (each the same width) and the toggle works there on its own: History's groups open or close, Drops'
+stay as they were. `/dw compact` → Drops' strip shows even with nothing of yours tradeable, `Expand all` at its
+right and `Post my tradeables` (full label, same width) left of it while something is tradeable, no `Post`;
+Sort is in the Filters panel and Scan group the title bar's icon; History's strip reads `Expand all` with
+`Clear history` (no `Clear`) left of it; the toggle opens and closes the cards' headers on both tabs. (Since
+DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6.) Result:
 
 ## Roster
 
@@ -1606,12 +1634,23 @@ History row keeps its outcome. If no `completed` line appears after a real trade
 `/etrace` shows for `TRADE_ACCEPT_UPDATE`, `TRADE_CLOSED` and `UI_INFO_MESSAGE` (its message type
 beside `/dump LE_GAME_ERR_TRADE_COMPLETE`) around the accept, and in which order. Result:
 
-**HIST-2. The History tab.** After a few drops, `/reload` and `/dw history` → the tab opens on View:
+**HIST-2. The History tab, and the Drops tab across a reload (DW-51; DW-Q0, feedback-15 spec §0).**
+In a dungeon, after a few drops (one of them yours, still tradeable), note the Drops tab's headers
+and rows, then `/reload` → the Drops tab shows the same drops under the same boss or key headers
+(Content: This session), each judged again: Me against your gear now, Them as the inspects return,
+your own drop's countdown, Offer and Post my tradeables back once the bag scan matches it. No
+window opens on its own, no toast shows and no automatic ask is sent for them; a drop you asked for
+before the reload reads `Asked` (not `Ask`). `/dw clear`, loot one item, `/reload` → only that item
+comes back (the same after Clear on boss kill). Loot one more item →
+it joins the feed as usual, and the History tab gains that one drop only (no restored drop is
+recorded twice). Log out and back in → the Drops tab is empty (the session is the login) while
+History keeps everything; This session there now starts at the login.
+Then `/dw history` → the tab opens on View:
 All, Content: All and Character: All (feedback-13 spec §0), the drops are under their encounter's header (the newest open), each row
 with its Outcome; a header of an older day reads `n days ago`. Right-click a row → a menu with
 `Mark as declined`; choose it → the row reads `Declined`; right-click again → `Clear declined`
-puts the earlier outcome back. Content: This session → only today's drops. Clear history →
-a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
+puts the earlier outcome back. Content: This session → only this login's drops, a reload's included. Settings ›
+Window › Layout › Clear history (since DW-Q3; HIST-6) → a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
 reads `History cleared.` Result:
 
 **HIST-3. Keep history for (DW-A5, feedback-2 spec §5).** On the first login on this build, `/dw
@@ -1640,6 +1679,40 @@ open and pick 90 days (deletes nothing) → the confirmation closes; if it stays
 deletes nothing and the dropdown still reads 90. Pick 7 days, then 14 days while the first
 confirmation is open → only the 14-day question counts: Yes deletes what 14 days puts out of reach
 and the dropdown reads 14. Result:
+
+**HIST-5. The undone Expired, and This instance across a reload (DW-Q0, feedback-15 spec §0).**
+The headless `test_feed_restore` covers both. A drop of yours whose History row reads `Expired`
+while its bag tooltip still shows a trade time (a false Expired from a rule estimate, the owner's
+2026-10-16 report): once the trade timer reads it (open the bags, or wait for the scan) → the row
+returns to what it read before (`Seen`, `Asked` or `Offered`); a drop whose trade time really ran
+out stays `Expired`, and a row you marked `Declined` keeps that. In a dungeon with drops from the
+first boss, Content: This instance, `/reload` → the same drops still show (This instance kept its
+start); leave and enter another instance, or log out and in → This instance starts again. Result:
+
+**HIST-6. Clear history lives in Settings (DW-Q3, feedback-15 spec §3).** The headless
+`test_settings_pages`, `test_history`, `test_footer_row` and `test_compact_history` cover it. The
+History tab's strip reads, right to left, Sort and `Expand all` in the full layout and `Expand all`
+alone in compact: no `Clear history` on either. `/dw config` → Window › Layout → `Clear history` sits
+on the line of Keep history for, at its right; hover it → its tooltip. Click it → the confirmation
+`Clear the drop history on every character? This cannot be undone.`; No keeps everything; Yes
+empties the History tab on this and your other characters and chat reads `History cleared.`. With
+`/dw test` on, Yes empties only the sample groups: turn test mode off → the account's history is
+still there. Result:
+
+**HIST-7. The History tab's detail card (DW-Q4, feedback-15 spec §4).** The headless
+`test_history_card` covers it. On the History tab each row has the Drops rows' chevron and is
+indented under its header. Click a row → a card opens under it in the Drops card's style (the rows
+below move down, the chevron points up, the row is tinted gold): the item and its chips (slot, type,
+`ilvl N`, the outcome in its color), FOR YOU · AT THE TIME with the verdict and its deltas, FOR THE
+GROUP with the looter and the Them verdict (on your own drop `Name [YOU]` and a Them line saying it
+is not kept), the trade estimate in the Drops card's words, WHEN AND WHERE (the time, the instance,
+boss and difficulty, the character that saw it). Click another row → the card moves; click the open
+row → it closes. Right-click a row → the menu still opens and nothing expands. Link in chat → the
+item's link in the chat box. Mark declined → the outcome reads `Declined` and the button `Clear
+declined`; Clear declined → the earlier outcome. On a drop of this session still in the Drops tab,
+Show in Drops → the Drops tab, the drop's header open and its card expanded; on an earlier
+session's entry it is off and its tooltip says why. `/dw compact` → the same card, stacked, under
+the clicked card. Result:
 
 ## Toast
 
@@ -1884,7 +1957,8 @@ with a full bar on a bind-on-equip one (superseded by feedback-10, 2026-10-14: O
 item level before the name on line 1, and the card shows no countdown or bar; FEED-69). Line 3: You and Them, Them reading `(Details)` (or `Hidden` on
 your upgrade; `(Multiple)` until DW-F3) with the full table's tooltip (FEED-43). No Announce on the card (since DW-E2) and no Hide
 (since DW-D2). The countdown moves every second (gone from the card since DW-J2: FEED-69). The strip under the cards reads `n tradeable · next
-0:08:41` with a `Post` button whose tooltip is Post my tradeables'. Click Offer → the Offer panel opens beside the compact window
+0:08:41` with a `Post` button whose tooltip is Post my tradeables' (`Post my tradeables` at the full width, beside
+Expand all, since DW-Q2: FEED-78). Click Offer → the Offer panel opens beside the compact window
 at its usual width, on the right; drag the window to the screen's right edge → it moves to the left side;
 make the window short → the panel keeps a usable height. Switch to full → the strip and the table are back
 as before. Run `/dw sim start` and step it → your own drops fill the cards the same way. Result:
@@ -1896,7 +1970,9 @@ Asked, Offered, Received, Traded away, Expired, Declined); the looter in class c
 realm), slot, trade and the time on the right (`17:02`, or `Oct 9` past a day); `You` and `Them`
 verdicts. Right-click a card → Mark as declined; its outcome reads Declined; right-click again →
 Clear declined. The strip's button reads `Clear` with the Clear history tooltip, and it still asks
-first. Switch to full → `Clear history` again (left of Sort since DW-J3: FEED-70). Result:
+first. Switch to full → `Clear history` again (left of Sort since DW-J3: FEED-70). (Superseded by feedback-15,
+2026-10-16: it reads `Clear history` at the one footer width in both layouts; FEED-78. Then by DW-Q3: Clear
+history left both strips for Settings; HIST-6.) Result:
 
 **COMPACT-5. The compact chrome and the Filters ▾ menu (DW-C4).** Switch to the compact layout →
 the title reads `Drop Watcher`, centered; turn test mode on → `TEST` in red beside it, the two
@@ -1907,7 +1983,7 @@ at the bar's left is its lock and `1`, its tooltip the full reason and queue. Th
 and `History` (since DW-E3; `Group`, `Mine · n` and `History` before), with their tooltips. The filter bar is one row: View, the
 search box reading `Filter…`, and `Filters` on the right. Click Filters → a small panel under it
 holds Quality, Content, Character and Sort; open each → the same choices as the full bar and the
-tab's Sort, Character still multi-select with Current. Pick Content: All and Character: All →
+tab's Sort, Character still multi-select with Current (Content: This instance and This session on Drops, All too on History, since DW-Q1). Pick Content: This instance and Character: All →
 the button reads `Filters · 2`, and its tooltip lists every value with a dot on those two. Pick a
 Sort → the cards reorder, and the count does not change. Click Filters again, minimize, close or
 switch to full → the panel closes. The footer is one line, `Inspect 4/4 · Mythic+`-style, and its
@@ -1928,6 +2004,12 @@ stays the player's choice. Turn the option off → an auto-open in a run keeps t
 card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn levels and Ask)
 and a header → each tooltip rises from the card's top-right corner, just outside the window's right edge (or
 its left edge when the window sits against the right of the screen), never over the cards. Result:
+
+**COMPACT-8. Compact headers read from the left and fit the pane (feedback-15).** At the default compact
+width (440), open History and Drops with an LFR encounter's group (or `/dw sim` a raid finder boss) → every
+gold header starts beside its chevron, the difficulty reads `LFR`, and a long instance, boss or recorder name
+ends in `…` on its own piece while the age, the count and the recorder stay on the line; hovering the header
+shows the whole names in the long form. Result:
 
 ## Non-English client
 
@@ -2038,13 +2120,15 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-67 | DW-J0, the filled downgrade glyph `▼` in the tables, compact cards, toast, tooltip grids and the Offer panel | No client pass recorded yet |
 | FEED-68 | DW-J1, Offer wears `external-link` on the row, the compact card, the detail card and the Offer panel | No client pass recorded yet |
 | FEED-69 | DW-J2, compact cards: ilvl before the name, `(freshness)` after it or nothing, the button right on line 2 or an empty slot (`No action` since DW-K1: FEED-72; no `(…)` since DW-K0: FEED-71), no countdown or bar, gold You/Them close together; History's cards too | No client pass recorded yet |
-| FEED-70 | DW-J3, Sort on the Drops strip right of Scan group and Post, on History's right of Clear history, following tab and layout switches; no Sort in the footer | No client pass recorded yet |
+| FEED-70 | DW-J3, Sort on the Drops strip right of Scan group and Post, on History's right of Clear history (Clear history moved to Settings by feedback-15, DW-Q3), following tab and layout switches; no Sort in the footer | No client pass recorded yet |
 | FEED-71 | DW-K0, compact cards: no `(…)` after the name while Them reads `…`, the other freshness marks still bracketed; Them cut at the card's right inset, line 1's name the full width | No client pass recorded yet |
 | FEED-72 | DW-K1, the gray `⊘ No action` button wherever a drop has no action: Drops rows, compact cards, the detail card's first action, Offer panel rows; not clickable, its tooltip `No action` and the reason; fits 84px and the Offer panel's 80px | No client pass recorded yet |
 | FEED-73 | DW-L0, History's outcomes in the action buttons' colors, the table and the compact cards | No client pass recorded yet |
 | FEED-74 | DW-L1, no `0 shown` header where Character or Content left a group empty, the table and the compact cards | No client pass recorded yet |
 | FEED-75 | DW-M0, each tab's default filters: Drops This session and Current, History All throughout | No client pass recorded yet |
 | FEED-76 | DW-N0, no Lua error from a gear tooltip in combat (a secret width) | No client pass recorded yet |
+| FEED-77 | DW-Q1, Content per tab: Drops This instance and This session, History adds All; the tooltip; step 8 | No client pass recorded yet |
+| FEED-78 | DW-Q2, one footer button kind; Expand all / Collapse all on both tabs and layouts; the compact Drops strip always shown | No client pass recorded yet |
 | STATE-4 | DW-84, test mode with real items, History test data, no trailing ellipsis | No client pass recorded yet |
 | ASK-5..7 | DW-33, your own drops (the My drops tab until DW-E3), the Offer panel and Post my tradeables | No client pass recorded yet |
 | SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |
@@ -2056,6 +2140,9 @@ stray `%s` or `%d`, and no Lua error. Result:
 | HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
 | HIST-3 | DW-A5, Keep history for, its confirmation, the login prune and step 4 | No client pass recorded yet |
 | HIST-4 | DW-A9, the prune after a disabled start, a stale confirmation | No client pass recorded yet |
+| HIST-2, HIST-5 | DW-Q0, the session is the login: the Drops tab across a reload, the undone Expired, This instance across a reload | No client pass recorded yet |
+| HIST-6 | DW-Q3, Clear history in Settings › Window › Layout beside Keep history for; none on History's strips | No client pass recorded yet |
+| HIST-7 | DW-Q4, the History tab's detail card from the snapshot, both layouts; Link in chat, Mark / Clear declined, Show in Drops | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
 | TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |
 | TOAST-3 | DW-62, an empty-slot upgrade toasts and auto-asks | No client pass recorded yet |
@@ -2077,6 +2164,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | SIM-13 | DW-B5, the loot step honors test mode's feed (`feed.showOwn` and My drops' filters retired since DW-E2/DW-E3) | No client pass recorded yet |
 | COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
 | COMPACT-2, COMPACT-7 | DW-C2, compact Drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
+| COMPACT-8 | feedback-15, compact headers left aligned, LFR, per-piece limits | No client pass recorded yet |
 | COMPACT-3, COMPACT-4 | DW-C3, compact cards of your own drops (on Drops since DW-E3) and History cards, the countdown, Offer and the strip, the docked Offer panel | No client pass recorded yet |
 | COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |
 | ASK-1 (its `noChannel` sentence), ASK-10 | DW-P17, a stored announce channel honors the not-in-a-group refusal, Post my tradeables included | No client pass recorded yet |

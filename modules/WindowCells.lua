@@ -611,7 +611,8 @@ function WC.ArmorType(drop)
     return c
 end
 
-local SOURCE_WORD = { chat = L["chat"], encounter = L["the encounter"], history = L["the loot history"], manual = L["/dw add"] }
+local SOURCE_WORD = { chat = L["chat"], encounter = L["the encounter"], history = L["the loot history"],
+    manual = L["/dw add"], restore = L["the History, after a reload"] }   -- restore: feedback-15 spec §0
 
 --- The Looter column: the short name (the edge colors it by class) and, on your own drop, `you`:
 --- the ` [YOU]` mark the edge draws after the name in gold, never cut (feedback-7 spec §2).
@@ -800,9 +801,10 @@ end
 --- @param group table
 --- @param situationLabel string|nil
 --- @return table parts, string|nil who
-function WC.Place(group, situationLabel)
+function WC.Place(group, situationLabel, whoMax)
     local GP = NS.GroupPlace
-    return GP.Parts(group, situationLabel), GP.Who(group, NS.Compat.ClassColor)
+    local parts, roles = GP.Parts(group, situationLabel, GP.ShortNames())
+    return parts, GP.Who(group, NS.Compat.ClassColor, whoMax), roles
 end
 
 --- A header tooltip: the title, the kind's line, the `Group: ...` line (the party, class-colored;

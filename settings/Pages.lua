@@ -5,9 +5,10 @@ local addonName, NS = ...
 -- `page` is its key (settings/SchemaRows.lua), one tab per `group` in declaration order
 -- (options-ui-§13). Where a tab has rows the flow engine cannot draw, a host tab keyed by that group
 -- takes its place in the strip (settings/PageEditors.lua); the Quality tab closes with its
--- "in force now" readout through an `afterGroup` hook. Each page's Defaults button resets that page's
--- rows only (options-ui-§13). Registered here, in the order the settings list shows them: General
--- (settings/Panel.lua) before, Profiles (settings/Profiles.lua) after.
+-- "in force now" readout through an `afterGroup` hook, and Window › Layout's Keep history for has
+-- Clear history beside it through `pairWith` (feedback-15 spec §3). Each page's Defaults button
+-- resets that page's rows only (options-ui-§13). Registered here, in the order the settings list
+-- shows them: General (settings/Panel.lua) before, Profiles (settings/Profiles.lua) after.
 
 local DW       = NS.addon
 local Settings = DW.Settings
@@ -16,7 +17,7 @@ local L        = NS.L
 local PE       = Settings.PageEditors
 
 --- The pages after General, in list order: key, title, the Defaults tooltip, and the render's
---- host tabs and afterGroup hooks.
+--- host tabs, afterGroup hooks and pairWith partners.
 local PAGES = {
     { key = "feed", title = L["Feed"],
       tip = L["Reset the Feed page's settings (quality and filters) to their defaults."],
@@ -33,7 +34,8 @@ local PAGES = {
       tip = L["Reset the Messages page's settings (templates, sending and auto-ask) to their defaults."],
       tabs = { { key = L["Templates"], render = function(ctx, rows) PE.TemplatesTab(ctx, rows) end } } },
     { key = "window", title = L["Window"],
-      tip = L["Reset the Window page's settings (columns, layout and toast) to their defaults."] },
+      tip = L["Reset the Window page's settings (columns, layout and toast) to their defaults."],
+      pairWith = { [Settings.HISTORY_RETENTION_PATH] = function(ctx, line) PE.ClearHistoryButton(ctx, line) end } },
 }
 
 local function builder(page)
@@ -45,7 +47,7 @@ local function builder(page)
         local opts = { tabs = page.tabs }
         Helpers.SetRenderer(ctx, function(c)
             Helpers.ClearScroll(c)
-            Helpers.RenderTabbedSchema(c, page.key, page.afterGroup, nil, opts)
+            Helpers.RenderTabbedSchema(c, page.key, page.afterGroup, page.pairWith, opts)
         end)
         return _G.Settings.RegisterCanvasLayoutSubcategory(parentCategory, ctx.panel, page.title)
     end

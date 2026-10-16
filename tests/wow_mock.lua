@@ -17,8 +17,9 @@
 --   popupsHidden   every StaticPopup_Hide(which) call's `which`, in order
 --   ldbObjects     LibDataBroker objects by name; minimapButtons LibDBIcon registrations by name
 --   fireEvent      fireEvent(name, ...) dispatches a game event to AceEvent handlers
---   instance       GetInstanceInfo's name and difficultyID; the instance type and inInstance are
---                  the base's __context.instanceType / __context.inInstance (IsInInstance reads them)
+--   instance       GetInstanceInfo's name, difficultyID and instanceID (its eighth answer); the
+--                  instance type and inInstance are the base's __context.instanceType /
+--                  __context.inInstance (IsInInstance reads them)
 --   challengeModeActive  C_ChallengeMode.IsChallengeModeActive()'s answer; challengeMaps[mapID] is
 --                  the keystone dungeon's name C_ChallengeMode.GetMapUIInfo answers
 --   lootHistory    C_LootHistory.GetSortedInfoForDrop's answers, keyed "encounterID:lootListID"
@@ -54,7 +55,8 @@
 --                  where no link is worn (an incomplete read); InspectFrame is nil until a case sets
 --                  one. hooksecurefunc(name, fn) and hooksecurefunc(table, name, fn) really hook
 --   C_Timer.NewTicker  a repeating ticker on the same queue and clock (modules/TradeTimer.lua)
---   advance        advance(seconds): the mocked clock. Moves GetTime() forward and runs every
+--   advance        advance(seconds): the mocked clock. Moves GetTime() forward (and time(), which follows it
+--                  in whole seconds from the load's epoch unless a case sets `time`) and runs every
 --                  queued timer that falls due on the way, in due order, each at its own due time,
 --                  through the kit's own __fireTimers (so a taken-back entry is skipped by its rule)
 --                  (C_Timer entries are stamped with their due time when queued; AceTimer's carry
@@ -126,6 +128,9 @@ local function decorateText(f)
         local c = self.__vertex or { 1, 1, 1, 1 }
         return c[1], c[2], c[3], c[4]
     end
+    -- Horizontal justification; unset answers the game's default, CENTER.
+    f.SetJustifyH = function(self, j) self.__justifyH = j; return self end
+    f.GetJustifyH = function(self) return self.__justifyH or "CENTER" end
     f.SetFont = function(self, file, size, flags) self.__font = { file, size, flags }; return self end
     f.GetFont = function(self)
         local font = self.__font or { "Fonts\\FRIZQT__.TTF", 10, "" }
@@ -590,6 +595,12 @@ local function installClock(M)
         end
         M.__now = target
     end
+    -- time() moves with GetTime(), as the client's two clocks do (whole seconds from the load's
+    -- epoch): the Drops tab's This session turns the stored login (time()) into the client clock
+    -- (modules/Session.lua's StartClock, feedback-15 spec §1), which a still epoch would read as a
+    -- login that keeps moving forward. A case that sets `time` itself replaces it.
+    local epoch0 = os.time()
+    M.time = function() return epoch0 + math.floor(M.__now) end
 end
 
 -- The drop tables' client surface (modules/WindowGroup.lua through core/Compat.lua): item icons,
@@ -811,7 +822,8 @@ local function build()
     M.challengeModeActive = false
     M.unknownDifficulties = {}
     M.GetInstanceInfo = function()
-        return M.instance.name, M.__context.instanceType, M.instance.difficultyID, M.instance.difficultyName
+        return M.instance.name, M.__context.instanceType, M.instance.difficultyID, M.instance.difficultyName,
+            nil, nil, nil, M.instance.instanceID
     end
     M.difficultyNames = { [1] = "Normal", [2] = "Heroic", [8] = "Mythic Keystone", [14] = "Normal",
         [15] = "Heroic", [16] = "Mythic", [17] = "Looking For Raid", [23] = "Mythic", [24] = "Timewalking",

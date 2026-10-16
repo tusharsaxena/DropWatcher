@@ -39,6 +39,22 @@ local function ilvlCheck(facts, cfg, ctx)
     return true
 end
 
+--- The average item level of `equipped` ({ [slot] = { ilvl } }, NS.Gear's snapshot), the shirt and
+--- the tabard aside (C.QUALITY_IGNORED_SLOT), or nil when none is known: the relative minimum's
+--- `ctx.myIlvl`. Pure; peeled out of the feed (feedback-15 spec §0), which stays under 1000 lines.
+--- @param equipped table|nil
+--- @return number|nil
+function FF.AverageIlvl(equipped)
+    local sum, n = 0, 0
+    for slot, e in pairs(type(equipped) == "table" and equipped or {}) do
+        if e and type(e.ilvl) == "number" and not C.QUALITY_IGNORED_SLOT[slot] then
+            sum, n = sum + e.ilvl, n + 1
+        end
+    end
+    if n == 0 then return nil end
+    return sum / n
+end
+
 --- Spec §6.3's filters: heirlooms and cosmetics always out; tier tokens by `includeTokens`; with
 --- `gearOnly`, armor and weapons only (jewelry and trinkets are armor); the minimum item level by
 --- `minIlvlMode` (`absolute` against `minIlvl`, `relative` against `ctx.myIlvl - relativeIlvl`).

@@ -23,7 +23,8 @@ predicate, `settings/SchemaRows.lua`), never hidden, and keeps its value.
 `settings/Panel.lua` registers General, `settings/Pages.lua` the five after it,
 `settings/Profiles.lua` the last. Three tabs, one closing line and one table have no row the flow
 engine can draw; they are host tabs and `afterGroup` hooks handed to the library's tabbed renderer
-(`settings/PageEditors.lua`, over the pure `settings/Editors.lua`).
+(`settings/PageEditors.lua`, over the pure `settings/Editors.lua`), and Window › Layout's Clear history
+button is Keep history for's `pairWith` partner, the right half of its line.
 
 ## General → Master controls
 
@@ -90,8 +91,8 @@ when its own setting overrides the feed's mode. It repaints with every write.
 
 **Filters:** View: Interesting, View: Likely tradeable, View: Usable by me and View: Upgrade for me
 (the View the Drops tab opens on, one checkbox per value; all unticked is View: All, the default,
-DW-A1), Content (the Drops tab's, This session by default; History always opens on All, feedback-13
-spec §0) and Sort (what a fresh tab starts with), Gear only, Tier tokens, Minimum item level
+DW-A1), Content (the Drops tab's, This instance or This session, This session by default; History
+always opens on All, feedback-13 spec §0; All left the row in DW-Q1, feedback-15 spec §1, schema step 8) and Sort (what a fresh tab starts with), Gear only, Tier tokens, Minimum item level
 with its absolute and relative values (each live in its mode only), Clear on boss kill. (Show my own
 loot in Group drops is retired: Drops always lists your own drops, feedback-5 spec §2; schema step 6
 removes the stored value.)
@@ -140,5 +141,5 @@ prints auto-ask's one-time notice; turning it off cancels the asks waiting to go
 **Columns:** a checkbox per optional Drops column, generated from its column list (Ilvl, Slot, Type since DW-D3, feedback-4 spec §3, Looter, Me, Them, Trade, Trade window since DW-E1, feedback-5 spec §1, and Actions; My eq and Their eq, there since DW-83, went with DW-F1, feedback-6 spec §1, when Me and Them took the worn gear, so Me and Them hide the gear with the verdict), for the full layout's Drops table (History shows every column); the compact cards carry every fact on their three lines and ignore them. **Layout:** Layout (Full or Compact, compact spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`), Open in compact view during a run (on by default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends), Row height (18 by default, both
 tabs of the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the compact layout's cards size from their text), Font size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact spec §5), Keep history
 for (7 to 180 days or Never delete, default 30; account-wide; a shorter time that would delete groups
-asks first, and No puts the previous time back). **Toast:** Show a toast, then its least gain, duration, combat and sound
+asks first, and No puts the previous time back), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a setting, so no schema row; Keep history for's `pairWith` partner in `settings/PageEditors.lua`; it asks first, `NS.History.AskClear`, and Yes empties the log on every character, or test mode's or a simulation's session-only log while one is on). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.

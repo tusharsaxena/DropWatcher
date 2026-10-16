@@ -77,7 +77,7 @@ local activeTab = "group"
 local newCount = 0               -- drops added to the shown feed since the window was minimized
 local restrictionReason          -- RestrictionChanged's last `reason` (nil: nothing restricted)
 local restrictionSeen = false    -- a RestrictionChanged has arrived since the stand-up
-local instanceSince              -- GetTime() of the last situation change: "This instance"
+local instanceSince              -- GetTime() of the last situation change (kept across a reload)
 local footerTicker
 local countdownTicker            -- each second while Drops shows a running countdown
 local repaintPending = false     -- a bus repaint is queued for the next frame
@@ -566,9 +566,12 @@ function Window.TabContext(tab)
     local FB = NS.WindowFilterBar
     local st, honors = FB.State(tab), FB.HONORS[tab]
     local feed = feedName()
-    -- The placeholders ignore the situation, so This instance does not cut them (spec §11.6). The
+    -- The placeholders ignore the situation and the login, so neither This instance nor This session
+    -- cuts them (spec §11.6); This session is the login in the client clock (feedback-15 spec §1). The
     -- Character dropdown reads your recorder key (modules/CharFilter.lua).
-    local ctx = { instanceSince = feed ~= "test" and instanceSince or nil, current = NS.CharFilter.CurrentKey() }
+    local live = feed ~= "test"
+    local ctx = { instanceSince = live and instanceSince or nil, current = NS.CharFilter.CurrentKey(),
+        sessionSince = live and NS.Session.StartClock() or nil }
     return {
         tab = tab, feed = feed, filter = st, honors = honors, ctx = ctx,
         matches = function(drop) return FB.Matches(drop, st, ctx, honors) end,
@@ -881,8 +884,10 @@ end
 -- (no secure template, no protected child), so opening it in combat is allowed and taints nothing.
 -- A test drop's open is test mode's (openedByTestMode), so turning test mode off closes it again:
 -- NS.SetTestMode fills the feed before Window.OnTestModeChanged, so the drops can open it first.
+-- A drop restored after a reload (feedback-15 spec §0) was seen before it: it opens nothing, and
+-- a window minimized before the reload does not count it new.
 local function maybeAutoOpen(rec)
-    if NS.State.windowOpen == true or setting("autoOpen") == false then return end
+    if NS.State.windowOpen == true or setting("autoOpen") == false or rec.source == "restore" then return end
     local Sit = NS.Situations
     local key = Sit.Current()
     if not Sit.ShouldAutoOpen(key) then return end
@@ -900,7 +905,7 @@ local function onDropAdded(id)
         return
     end
     maybeAutoOpen(rec)
-    if isMinimized() then newCount = newCount + 1 end
+    if isMinimized() and rec.source ~= "restore" then newCount = newCount + 1 end
     scheduleRepaint()
 end
 
@@ -909,8 +914,10 @@ local function onRestriction(reason)
     scheduleRepaint()
 end
 
-local function onSituation()
-    instanceSince = GetTime()
+-- This instance starts now, or, on a reload's first announcement in the same place, where it
+-- started before the reload (NS.Session.MarkSituation, feedback-15 spec §0).
+local function onSituation(key)
+    instanceSince = NS.Session.MarkSituation(key)
     scheduleRepaint()
 end
 
@@ -927,7 +934,7 @@ local function listen()
         if frame then NS.WindowTitleBar.PaintBadge(frame) end
         scheduleRepaint()
     end)
-    target:RegisterMessage(M.SITUATION_CHANGED, function() onSituation() end)
+    target:RegisterMessage(M.SITUATION_CHANGED, function(_, key) onSituation(key) end)
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() scheduleRepaint() end)
     -- The Me cell reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).

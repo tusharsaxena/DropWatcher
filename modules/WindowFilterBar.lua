@@ -11,6 +11,11 @@ local _, NS = ...
 -- a valid value, else from DEFAULTS, which are those rows' defaults. History then takes its own
 -- fixed defaults (TAB_FIXED: View, Content and Character all All, feedback-13 spec §0).
 --
+-- CONTENT IS PER TAB (feedback-15 spec §1, DW-Q1). Drops offers This instance and This session (its
+-- feed holds this session's drops alone, so an All would be This session again); History adds All,
+-- every kept day. The one Content dropdown takes the active tab's values on Sync, in both layouts
+-- (the compact Filters panel holds the same control), and a value the tab does not offer is refused.
+--
 -- THE VIEW IS A SET (feedback-2 spec §1, FB2-1..3). Like Loot History's `Direction: 3 selected`
 -- (../LootHistory/modules/BrowserFilterBar.lua) the View dropdown is multi-select: Interesting,
 -- Likely tradeable, Usable by me and Upgrade for me combine as AND, and All (the empty set, the
@@ -49,11 +54,23 @@ FB.VIEWS = { "interesting", "likely", "usable", "upgrade" }
 local IS_VIEW = {}
 for _, v in ipairs(FB.VIEWS) do IS_VIEW[v] = true end
 
--- Each single-select control's values, in menu order.
+-- Each single-select control's values, in menu order. Content's are per tab (FB.CONTENTS).
 FB.VALUES = {
-    content = { "instance", "session", "all" },
     sort    = { "newest", "oldest", "ilvl", "gain" },
 }
+
+-- Each tab's Content values, in menu order (feedback-15 spec §1): All on History only.
+FB.CONTENTS = {
+    group   = { "instance", "session" },
+    history = { "instance", "session", "all" },
+}
+
+--- The Content values a tab offers, in menu order (Drops' for an unknown tab).
+--- @param tab string|nil
+--- @return table
+function FB.ContentValues(tab)
+    return FB.CONTENTS[tab] or FB.CONTENTS.group
+end
 
 -- Which controls each tab honors (the tab's Sort included). `views` is the View values the tab
 -- uses; the rest are grayed in its menu and ignored by its filter.
@@ -106,7 +123,7 @@ local VIEW_TIP = {
     { key = "upgrade", text = L["Upgrade for me: an upgrade over what you wear (or your best owned piece)."] },
 }
 local TIPS = {
-    content = { L["Content"], L["This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."] },
+    content = { L["Content"], L["This instance shows the drops since you entered this instance or started this key. This session shows every drop since you logged in; a /reload keeps them. All (History only) shows every kept day."] },
     search = { L["Search"], L["Show only the drops whose item or looter name contains this text."] },
     char = { L["Character"], L["Show only the drops these characters saw. History is kept for every character on the account; Drops holds this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] },
 }
@@ -141,10 +158,12 @@ local function validChar(v)
     return true
 end
 
-local function valid(key, v)
+-- Whether `v` is a value `key` takes on `tab` (Content's values are the tab's own).
+local function valid(key, v, tab)
     if key == "view" then return validView(v) end
     if key == "char" then return validChar(v) end
     if key == "search" then return type(v) == "string" end
+    if key == "content" then return inList(FB.ContentValues(tab), v) end
     return FB.VALUES[key] ~= nil and inList(FB.VALUES[key], v)
 end
 
@@ -191,7 +210,7 @@ function FB.Defaults(tab)
     d.char = CF.Canonical(DEFAULTS.char, CF.CurrentKey())
     for k, path in pairs(SEED) do
         local v = NS.Setting(path)
-        if valid(k, v) then d[k] = v end
+        if valid(k, v, tab) then d[k] = v end
     end
     for k, v in pairs(FB.TAB_FIXED[tab] or {}) do d[k] = SETS[k] and copySet(v) or v end
     return d
@@ -218,7 +237,8 @@ local function shown(key, value)
     return FB.ViewLabel(value)
 end
 
---- Change one control's value on one tab. An invalid value is refused; the window redraws the tab.
+--- Change one control's value on one tab. An invalid value is refused (Content: one the tab does
+--- not offer, FB.ContentValues); the window redraws the tab.
 --- The View takes a set ({ [value] = true }, empty for All), stored as a copy; so does the Character
 --- dropdown ({ [Name-Realm] = true }), the CURRENT sentinel swapped for your key when it is known.
 --- @param tab string
@@ -226,7 +246,7 @@ end
 --- @param value any
 --- @return boolean changed
 function FB.Set(tab, key, value)
-    if not valid(key, value) then return false end
+    if not valid(key, value, tab) then return false end
     if key == "char" then value = CF.Canonical(value, CF.CurrentKey()) end
     local st = FB.State(tab)
     if same(key, st[key], value) then return false end
@@ -301,8 +321,9 @@ local function matchesSearch(drop, text)
 end
 
 -- `instance`: the drops since the situation last changed (ctx.instanceSince); `session` the drops
--- since ctx.sessionSince, which only the History tab sets (modules/WindowHistory.lua: a live feed
--- holds this session's drops alone); `all` passes every drop.
+-- since ctx.sessionSince, the login (modules/Session.lua): Drops' in the client clock
+-- (Window.TabContext), History's in time() (modules/WindowHistory.lua); `all` (History only) passes
+-- every drop.
 local function matchesContent(drop, content, ctx)
     local since
     if content == "instance" then since = ctx and ctx.instanceSince end
@@ -487,10 +508,23 @@ end
 
 -- ── the controls (frame edge) ───────────────────────────────────────────────────────────────
 
-local function options(key)
+local function options(key, values)
     local out = {}
-    for _, v in ipairs(FB.VALUES[key]) do out[#out + 1] = { value = v, label = FB.LABELS[key][v] } end
+    for _, v in ipairs(values or FB.VALUES[key]) do out[#out + 1] = { value = v, label = FB.LABELS[key][v] } end
     return out
+end
+
+-- A tab's Content rows never change: built once per tab, so the bar's Sync writes them only on a
+-- tab switch (putOptions).
+local contentRows = {}  -- [tab] = options
+
+local function contentOptions(tab)
+    local rows = contentRows[tab]
+    if not rows then
+        rows = options("content", FB.ContentValues(tab))
+        contentRows[tab] = rows
+    end
+    return rows
 end
 
 local function activeTab() return NS.Window.ActiveTab() end
@@ -561,7 +595,7 @@ end
 local function pickDropdown(host, key, width)
     local dd = NS.MakeDropdown(host, width)
     if not dd then return nil end
-    dd:SetOptions(options(key))
+    dd:SetOptions(key == "content" and contentOptions("group") or options(key))
     dd.onSelect = function(v) FB.Set(activeTab(), key, v) end
     NS.Window.AttachTooltip(dd, grayedTip(key, TIPS[key]), "above")
     return dd
@@ -752,7 +786,10 @@ local function putState(tab, st)
     syncing = true
     putView(tab, st)
     putChar(tab, st)
-    if controls.content then controls.content:SelectValue(st.content) end
+    if controls.content then
+        putOptions(controls.content, contentOptions(tab))
+        controls.content:SelectValue(st.content)
+    end
     if controls.quality then
         local mode, _, label = FB.QualityReadout()
         controls.quality:SetValue(mode, label)

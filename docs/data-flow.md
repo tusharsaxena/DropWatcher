@@ -49,12 +49,15 @@ Filters panel, which closes with the window); the window calls no engine module.
 RestrictionChanged(reason) ─> the badge (`Encounter · n queued`, hidden while reason is nil)
 AskStateChanged ───────────> the badge's queued count (NS.Asks.Queued, read); shown: the active
                              tab's body (each row's Ask button)
-SituationChanged ──────────> "This instance" starts now; footer, Quality label
+SituationChanged(key) ─────> "This instance" starts now (Session.MarkSituation: a reload's first one in
+                             the stored situation and instance gives back the stored start); footer,
+                             Quality label
 DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read); a drop of the feed shown (live, or test
                              mode's while it is on):
                                ├─> hidden, in an auto-open situation: opens it (every drop, your
-                               │   own included; no latch; DW-83, FB-12)
-                               ├─> minimized: stays minimized, `n new` counts it
+                               │   own included; no latch; DW-83, FB-12; never a restored drop)
+                               ├─> minimized: stays minimized, `n new` counts it (never a
+                               │   restored drop)
                                └─> shown: tabs, filter bar, footer, active body
 DropUpdated ───────────────> shown: the same repaint
 GearChanged ───────────────> shown: the same repaint (the Me cells' gear, My eq until DW-F1; DW-83)
@@ -139,14 +142,19 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
         ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` and Post my
-        tradeables while one is tradeable; full layout (feedback-7 §4, feedback-10 §3): always
-        shown, right-aligned `[Post my tradeables] [Scan group] [Sort]`, the tab's Sort at the
-        strip's right edge (the pane's sortHost, WindowFooter.AnchorSort), Scan group 8px left of
-        it, Post at Sort's size 8px left of Scan group, DropsStrip.Slots(postShown,
-        WindowFooter.SORT_INSET, SORT_W, K.SCAN_W, GAP); Scan group keeps its place while Post is
-        hidden; the scroll frame's bottom moved up over it
+        tradeables while one is tradeable; always shown, in both layouts (feedback-15 §2), the row
+        right-aligned, full `[Post my tradeables] [Scan group] [Expand all] [Sort]` (the tab's Sort
+        at the strip's right edge: the pane's sortHost, WindowFooter.AnchorSort), each button
+        K.FOOTER_BUTTON_W, 8px apart, FooterRow.Slots(DropsStrip.Row(tradeable, compact), GAP,
+        SORT_INSET); Post, the leftmost, hidden with nothing tradeable; the summary ends where the
+        row starts (FooterRow.PlaceInfo, one line); FooterRow.PaintFold(fold, pane.entries); the
+        scroll frame's bottom moved up over it
 
 header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint
+Expand all / Collapse all ─> WindowGroup.FoldAll(pane.entries, collapse) ─> FooterRow.FoldAll:
+                 every header with a shown drop ─> State.windowGroup.collapsed ─> repaint
+                 (FooterRow.FoldState: `Expand all` while one is collapsed, `Collapse all` once
+                 every one is open, off with none; feedback-15 §2)
 Ask ───────────> WindowOwn.PressAction ─> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id)
                  ─> AskStateChanged ─> repaint
 Offer ─────────> WindowOwn.PressAction ─> OfferPanel.Open(id) ─> WindowOwn.Reveal(id) (your own drop)
@@ -190,7 +198,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     icons, `You 321/308 ▼8`, `Them Upgrade for 2` on your own, the labels gold and Them
   │     CompactGroup.PlaceThem's fixed gap after You, cut at the card's right inset (feedback-11 §0);
   │     feedback-6 §1, feedback-7 §2)
-  └─> DropsStrip.Paint(pane, ctx, true): the strip shortened, DropsStrip.SummaryText, `Post`
+  └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
+        `[Post my tradeables] [Expand all]` at the one footer width (feedback-15 §2)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
 piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
 switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)
@@ -530,6 +539,9 @@ CHAT_MSG_LOOT ─> LootParser sink ─> source `chat` (your own `pushed` lines s
 ENCOUNTER_LOOT_RECEIVED(encounterID, itemID, link, qty, name, classFile) ─> source `encounter`
 LOOT_HISTORY_UPDATE_DROP(encounterID, lootListID) ─> Compat.LootHistoryDrop ─> a winner? once ─> `history`
 LootFeed.Add(link, looter, opts) ─> source `manual` (skips the situation gate; opts.test skips every gate)
+FeedRestore (after a reload) ─> LootFeed.Restore(r, adopt) ─> source `restore`: dated, placed and
+  grouped as its History entry was; skips the situation gate and the filters, never merged (a later
+  live line merges into it); adopt(id) = History.Adopt before its DropAdded (see The history)
   every payload secret-guarded; the looter resolved through the roster
 LootFeed.Receive   [Perf bucket `feed.add`]
   same item id + same looter (GUID, else name without realm) within 120s, not yet from this source
@@ -646,6 +658,17 @@ The stand-down cancels the flush timer and drops the queued asks; the sent regis
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
                           (live drops only)        group = feed group @ session; Trim: 50 a group,
                                                    CEILING 5,000 drops in all, the oldest first)
+PLAYER_ENTERING_WORLD ─> Session.OnEnteringWorld (before the situation's handler): isInitialLogin
+                          ─> char.session.start = time(), cleared dropped; isReloadingUi ─> kept;
+                          neither ─> nothing
+                          (History.SessionStart reads it: the group keys' @<start>, This session)
+first PLAYER_ENTERING_WORLD, isReloadingUi ─> FeedRestore.Run (after the situation's and the
+                          retention's handlers): global.history's groups keyed @<start>, entries
+                          seenBy you, not gone, not dated before char.session.cleared (the last
+                          live LootFeed.Clear), oldest first, the newest 200 ─> each:
+                          LootFeed.Restore(Receipt: GetTime() - (time() - at), the History group's
+                          feed key, label, kind, situation, place, roster; looter's GUID from the
+                          roster now) ─> History.Adopt(id, entry) ─> DropAdded: not recorded again
 first PLAYER_ENTERING_WORLD, or the stand-up after a disabled start
                           ─> 5s (canceled by the stand-down) ─> HistoryRetention.LoginPrune:
                           groups whose newest entry is older than retentionDays ─> HistoryChanged
@@ -654,6 +677,7 @@ Keep history for row ─> HistoryRetention.OnChanged ─> deletes nothing: taken
                           (HistoryRetention.Answer: only the latest pending choice; a later change
                           retires the open popup)
 DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
+                          (beforeExpired kept); `yes` on the timer's read ─> back to beforeExpired
                           (HistoryChanged only when the entry changed)
 AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)
 TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TRADE_ACCEPT_UPDATE(either
@@ -661,8 +685,17 @@ TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TR
           5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
-Clear history ─> StaticPopup ─> History.Clear   (left of the tab's Sort on the full strip,
-                                                   at its right edge in compact; feedback-10 §3)
+row (or compact card) click ─> WindowHistory.ToggleExpand(entry) ─> State.windowHistory.expanded
+                 ─> repaint: HistoryCard.Paint(card, drop, width, WindowHistory.CardContext(drop))
+                    under the row (feedback-15 §4; the snapshot only: HistoryCard.Model)
+card Mark declined / Clear declined ─> History.SetEntryDeclined
+card Show in Drops (History.DropOf(entry) finds it live) ─> WindowGroup.Reveal(id): its header
+                 opened, its card expanded ─> Window.SelectTab("group")
+Settings › Window › Layout › Clear history (beside Keep history for, pairWith; feedback-15 §3)
+                 ─> History.AskClear ─> StaticPopup ─> Yes: History.Clear (Log(): the account's,
+                                                   or test mode's / the simulation's session log)
+Expand all / Collapse all ─> WindowHistory.FoldAll(pane.entries, collapse) ─> FooterRow.FoldAll
+                 ─> State.windowHistory.collapsed ─> repaint (its own state, not the Drops tab's)
 every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint: one pass next frame,
                                    shared with DropUpdated's
                                    (the History tab; a received drop's Ask reads Traded)
@@ -670,18 +703,21 @@ every change ─> HistoryChanged ─> WindowHistory ─> Window.ScheduleRepaint:
 
 The History tab's body reads `NS.History.Groups()` (oldest first) through the pure
 `WindowHistory.Entries`, filtered by the tab's state with This instance and This session turned
-into `time()` marks (`WindowHistory.Context`); each entry is painted with the Drops table's
+into `time()` marks (`WindowHistory.Context`; the Drops tab turns the session start the other way,
+into the client clock, `Session.StartClock`, DW-Q1); each entry is painted with the Drops table's
 cell composers over a drop-shaped copy (`WindowHistory.AsDrop`); its Me and Them are the merged
 cells' verdict part alone (`WindowHistory.MeCell` / `ThemCell` over `SideCells.Merge`, `▼4`), since
 a kept entry holds no worn items (feedback-6 §1). In the compact layout the same
 entries go to `CompactHistory.Refresh(pane, entries, compact)` (DW-C3): `CompactCards.History(drop,
 { time(), date, Compat.NormalizedRealm() })` per card through `CompactGroup`'s kit, headers by
-`CompactCards.HistoryHeader`, a right-click on a card to `WindowHistory.OpenMenu`.
+`CompactCards.HistoryHeader`, a right-click on a card to `WindowHistory.OpenMenu`. A row's or a
+card's click opens its entry's detail card under it (`HistoryCard`, DW-Q4), side by side in the
+table and stacked in the compact layout; both layouts read the one open entry.
 
 ## The toast
 
 ```
-DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet?
+DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet? not restored?
     ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain (or into an empty
        slot, whatever minGain), trade likely / yes
     ─> queue (newest 5) ─> Pump: nothing on screen, not held (combat without toast.inCombat)
@@ -707,7 +743,7 @@ drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.Res
 ```
 DropAdded(id) / DropUpdated(id) ─> AutoAsk.Consider: messages.autoAsk.enabled? not considered yet?
     ─> Toast.Qualifies(rec, autoAsk.minGain), the looter known, the ask still ready, not received,
-       recorded after auto-ask was turned on ─> pending (one C_Timer each)
+       recorded after auto-ask was turned on, not restored after a reload ─> pending (one C_Timer each)
     ─> due = DueAt(drop, last ENCOUNTER_END, autoAsk.delay)   (held while an encounter is in progress)
 ENCOUNTER_START ─> timers stopped        ENCOUNTER_END ─> every waiting ask due delay after now
 PLAYER_ENTERING_WORLD / ZONE_CHANGED_NEW_AREA, held, no Encounter restriction ─> as ENCOUNTER_END

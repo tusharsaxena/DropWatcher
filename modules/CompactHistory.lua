@@ -8,9 +8,16 @@ local _, NS = ...
 -- Read-only, as the table is: a right-click on a card opens the row menu (Mark as declined, or
 -- Clear declined: NS.WindowHistory.OpenMenu).
 --
+-- THE DETAIL CARD (feedback-15 spec §4, DW-Q4). A card draws the Drops cards' chevron before its
+-- item button and is indented under its header as they are (K.ROW_INDENT); a click on it, on any
+-- piece of it, or a plain click on its item button expands NS.HistoryCard's card, built `stacked`
+-- for this view, under it (WindowHistory.ToggleExpand: the table's one open entry), the cards below
+-- moving down by its height.
+--
 -- THE CARD. What each piece says, its tone and its tooltip are NS.CompactCards.History's:
 --
---   line 1  ilvl item (the item level before the name, feedback-10 spec §2)   outcome (in its tone)
+--   line 1  ⌄ ilvl item (the chevron, then the item level before the name, feedback-10 spec §2)
+--           outcome (in its tone)
 --   line 2  looter (class color, ⊕ from another realm) · slot · type · trade       17:02 (dimmed)
 --   line 3  You ▼4   Them ≈0
 --           (the full table's Me and Them: a kept entry holds no worn items, so the verdict alone;
@@ -19,24 +26,28 @@ local _, NS = ...
 -- THE HEADERS are the full table's header button, painted with the short form
 -- (NS.CompactCards.HistoryHeader: `2d` once a day old); a click collapses the group as before.
 --
--- THE STRIP keeps the kept-history line and Clear history, its button shortened to `Clear` (the
--- same tooltip, the same confirmation); the full layout puts it back.
+-- THE STRIP is the full layout's (NS.WindowHistory places it for both): the kept-history line and
+-- Expand all / Collapse all at the one footer width (feedback-15 spec §2); Clear history lives in
+-- Settings › Window › Layout (feedback-15 spec §3).
 
 NS.CompactHistory = NS.CompactHistory or {}
 local CH = NS.CompactHistory
 local K  = NS.Constants.WINDOW
-local L  = NS.L
-
-CH.CLEAR_W = 64    -- the strip's shortened Clear button
 
 -- ── building a card ─────────────────────────────────────────────────────────────────────────
 
--- A right-click on the card, or on any piece of it, opens the row menu.
+-- A right-click on the card, or on any piece of it, opens the row menu; a piece's left click is the
+-- card's (the card's own left click is its OnClick).
 local function onPiece(card, button)
-    if button == "RightButton" then NS.WindowHistory.OpenMenu(card.entry, card) end
+    if button == "RightButton" then return NS.WindowHistory.OpenMenu(card.entry, card) end
+    if button == "LeftButton" then NS.WindowHistory.ToggleExpand(card.entry) end
 end
 
-local function onMouseUp(self, button) onPiece(self, button) end
+local function onMouseUp(self, button)
+    if button == "RightButton" then onPiece(self, button) end
+end
+
+local function onClick(self) NS.WindowHistory.ToggleExpand(self.entry) end
 
 local function newCard(content)
     local CG, WG = NS.CompactGroup, NS.WindowGroup
@@ -46,8 +57,10 @@ local function newCard(content)
     card.onPiece = onPiece
     CG.Background(card)
     card.selected:Hide()
+    card.chevron = WG.RowChevron(card)   -- placed on line 1 (layout)
     card.icon = WG.ItemButton(card, K.ROW_ICON)
-    card.icon:SetPoint("LEFT", card, "LEFT", CG.PAD + CG.QUALITY_W, 0)
+    card.icon:SetPoint("LEFT", card, "LEFT", CG.PAD + CG.QUALITY_W + CG.LEAD, 0)
+    card.icon:SetScript("OnClick", NS.WindowHistory.OnItemClick)
     local item = CG.Piece(card, "item")
     item.hit.showItem = true   -- the game's own tooltip (WindowGroup.ItemHover)
     WG.ItemHover(item.hit, card.icon)
@@ -57,6 +70,7 @@ local function newCard(content)
     CG.BuildHalf(card, "you")
     CG.BuildHalf(card, "them")
     card:SetScript("OnMouseUp", onMouseUp)
+    card:SetScript("OnClick", onClick)
     return card
 end
 
@@ -65,9 +79,10 @@ local function layout(card, m)
     if card.dwLine == m.line then return end
     card.dwLine = m.line
     local CG = NS.CompactGroup
-    local at, x, P, c = CG.At, CG.TextLeft(m), CG.PAD, card.cells
+    local at, x, P, c = CG.At, CG.TextLeft(m, CG.LEAD), CG.PAD, card.cells
     local y1 = CG.LineY(m, 1)
     card.icon:SetSize(m.icon, m.icon)
+    at(card.chevron, "LEFT", card, "TOPLEFT", P + CG.QUALITY_W, y1)
     at(c.outcome.text, "RIGHT", card, "TOPRIGHT", -P, y1)
     CG.PlaceLineOne(card, x, y1, c.outcome.text)
     at(c.looter.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
@@ -84,6 +99,10 @@ local function paintCard(card, drop, _, m, st)
     card:SetHeight(m.height)
     layout(card, m)
     NS.WindowRows.ApplyRowFont(card, m.fontSize)
+    local open = st.expanded == drop.entry
+    card.selected:SetShown(open)
+    WG.PaintChevron(card.chevron, open)
+    card.icon.entry = drop.entry
     local cc = NS.CompactCards.History(drop, st)
     card.model = cc
     WG.SetItem(card.icon, drop.link)
@@ -106,34 +125,42 @@ end
 
 local function toggle(h) NS.WindowHistory.ToggleGroup(h.groupKey, h.collapsed) end
 
-local SPEC = { newCard = newCard, paint = paintCard, header = historyHeader, toggle = toggle }
-
--- The strip's Clear history, shortened in the compact layout and put back in the full one: at the
--- strip's right edge in compact, left of the tab's Sort in full (feedback-10 spec §3).
-local function paintStrip(pane, compact)
-    local clear = pane.strip and pane.strip.clear
-    if not clear then return end
-    clear:SetWidth(compact and CH.CLEAR_W or K.CLEAR_W)
-    clear.label:SetText(compact and L["Clear"] or L["Clear history"])
-    local WF = NS.WindowFooter
-    clear:ClearAllPoints()
-    clear:SetPoint("RIGHT", pane.strip, "RIGHT", compact and 0 or -(WF.SORT_INSET + WF.SORT_W + NS.DropsStrip.GAP), 0)
+-- The open entry's card under its card, stacked and indented with it; answers the height it takes
+-- (0 for another card). `width` is the card's.
+local function drawDetail(cv, drop, y, width, st)
+    if drop.entry ~= st.expanded then return 0 end
+    local card = cv.card
+    card:ClearAllPoints()
+    card:SetPoint("TOPLEFT", cv.content, "TOPLEFT", K.ROW_INDENT, -y)
+    local h = NS.HistoryCard.Paint(card, drop, width, NS.WindowHistory.CardContext(drop))
+    card:Show()
+    cv.cardEntry = drop.entry
+    return h + NS.CompactGroup.GAP
 end
 
--- The pane's own scroll view, above its strip.
-local function buildView(pane) return NS.CompactGroup.BuildView(pane, K.STRIP_H) end
+local SPEC = { newCard = newCard, paint = paintCard, header = historyHeader, toggle = toggle, after = drawDetail,
+    indent = K.ROW_INDENT }
+
+-- The pane's own scroll view, above its strip, with its stacked detail card.
+local function buildView(pane)
+    local cv = NS.CompactGroup.BuildView(pane, K.STRIP_H)
+    cv.card = NS.HistoryCard.Build(cv.content, true)
+    return cv
+end
 
 --- Draw the compact layout's cards for the tab's entries (WindowHistory's refresh, every repaint),
---- or, in the full layout, hide them and put the strip back.
+--- or, in the full layout, hide them.
 --- @param pane table the History pane
 --- @param entries table NS.WindowHistory.Entries' answer
 --- @param compact boolean
 function CH.Refresh(pane, entries, compact)
     local CG = NS.CompactGroup
-    paintStrip(pane, compact)
     local cv = CG.Swap(pane, compact, buildView)
     if not cv then return end
-    local st = { nowEpoch = time(), dateFn = date, ownRealm = NS.Compat.NormalizedRealm() }
+    local st = { nowEpoch = time(), dateFn = date, ownRealm = NS.Compat.NormalizedRealm(),
+        expanded = NS.WindowHistory.Expanded() }
+    cv.card:Hide()
+    cv.cardEntry = nil
     CG.Draw(cv, entries, CG.CardWidth(pane), SPEC, st)
     CG.Settle(pane, cv)
 end
@@ -145,5 +172,5 @@ function CH.Drawn(pane)
     local cv = pane.compactView
     if not cv then return nil end
     return { compact = true, rows = cv.cardPool.active, headers = cv.headPool.active, entries = pane.entries,
-        pane = pane, strip = pane.strip, scroll = cv.scroll }
+        pane = pane, strip = pane.strip, scroll = cv.scroll, card = cv.card, cardEntry = cv.cardEntry }
 end

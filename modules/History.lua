@@ -8,7 +8,7 @@ local _, NS = ...
 --         roster = { { name, realm, class, me }, ... }, drops = {
 --           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
 --             me = { verdict, ilvlDelta, scoreDelta }, them = { ... } | nil,
---             trade = { state, reasonKey, basis, args }, outcome, before, at } } } } }
+--             trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
 --
 -- `at` is time() (seconds since the epoch), never GetTime(), so it means the same after a reload.
 -- `roster` is who was in the group (feedback-2 spec §3, modules/GroupRoster.lua): copied from the
@@ -21,8 +21,10 @@ local _, NS = ...
 -- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
 -- has neither.
 -- `looter` is the Name-Realm and `class` its classFile. `before` is the outcome a hand-set
--- `declined` replaced, so clearing it puts that back. The table is the account's: History never
--- replaces `global.history` whole (the retention row lives in it), only its `groups` list.
+-- `declined` replaced, so clearing it puts that back; `beforeExpired` the one an automatic `expired`
+-- replaced (feedback-15 spec §0), so a live timer read can put that back. The table is the
+-- account's: History never replaces `global.history` whole (the retention row lives in it), only
+-- its `groups` list.
 --
 -- HOW LONG IT IS KEPT (feedback-2 spec §5). By age, not by count: modules/HistoryRetention.lua
 -- deletes the groups older than `global.history.retentionDays` (Keep history for, default 30 days).
@@ -42,17 +44,23 @@ local _, NS = ...
 -- `global.history`; a real drop that arrives meanwhile is still the account's (LogFor).
 --
 -- RECORDING. A live drop's DropAdded records it (a test drop never is) under its feed group, keyed
--- by the group's key and this session's start, so a group of an earlier session never collects
--- today's drops. DropUpdated refreshes its verdicts and trade estimate, and its link, level and
--- quality when a merge or the bag read improved them (BUG-1); a trade estimate that
--- turns `no expired` makes its outcome `expired`. Which entry a live drop is lives in a session-only
--- index (drop ids restart each session), so after a reload the old entries are read-only.
+-- by the group's key and this session's start (NS.Session.Start: the login, kept by a reload,
+-- feedback-15 spec §0), so a group of an earlier session never collects today's drops. DropUpdated
+-- refreshes its verdicts and trade estimate, and its link, level and quality when a merge or the
+-- bag read improved them (BUG-1); a trade estimate that turns `no expired` makes its outcome
+-- `expired`. Which entry a live drop is lives in an index of this load (drop ids restart each
+-- load). After a reload, modules/FeedRestore.lua rebuilds this session's drops and links each to
+-- its entry (Adopt) before its DropAdded, so it is not recorded again and its DropUpdated
+-- refreshes that entry; any other old entry is read-only.
 --
 -- THE OUTCOMES (spec §10): `seen` at first, `asked` when your ask is sent (AskStateChanged `sent`,
 -- kind `ask`), `offered` when your offer or announce is, `expired`, `received` and `tradedAway`
 -- from a completed trade, and `declined`, set by hand from a History row's menu. An automatic
 -- outcome only moves forward (seen, then asked or offered, then expired, then received or traded
 -- away); `declined` is the player's and stands until they clear it, unless a trade then completes.
+-- One exception (feedback-15 spec §0): a trade estimate `yes` on the trade timer's own read (basis
+-- `timer`) puts an `expired` back to the outcome it replaced (`beforeExpired`; `seen` for an entry
+-- expired before that field existed). A rule estimate never does.
 --
 -- TRADE COMPLETION (spec §10). TRADE_SHOW opens a trade with its partner (UnitName("NPC")); every
 -- TRADE_PLAYER_ITEM_CHANGED / TRADE_TARGET_ITEM_CHANGED re-reads the window's items (core/Compat.lua,
@@ -143,14 +151,25 @@ function H.Snapshot(rec, now)
     return e
 end
 
---- Advance an entry's outcome: only forward (H.RANK), so `asked` never undoes `expired`.
+--- Advance an entry's outcome: only forward (H.RANK), so `asked` never undoes `expired`. An
+--- advance to `expired` keeps the outcome it replaced in `beforeExpired` (Refresh's undo).
 --- @param e table
 --- @param outcome string
 --- @return boolean changed
 function H.Advance(e, outcome)
     local to, from = H.RANK[outcome], H.RANK[e.outcome] or 0
     if not to or to <= from then return false end
+    e.beforeExpired = outcome == "expired" and (e.outcome or "seen") or nil
     e.outcome, e.before = outcome, nil
+    return true
+end
+
+-- A false Expired undone (feedback-15 spec §0): the trade timer reads the drop live (`yes`, basis
+-- `timer`), so the outcome returns to the one `expired` replaced. A hand-set outcome is untouched.
+local function unexpire(e)
+    local t = e.trade
+    if e.outcome ~= "expired" or not (t and t.state == "yes" and t.basis == "timer") then return false end
+    e.outcome, e.beforeExpired = e.beforeExpired or "seen", nil
     return true
 end
 
@@ -200,8 +219,8 @@ local function takeSnaps(e, rec)
 end
 
 --- Take a drop record's latest verdicts, trade estimate, more complete link, level and quality;
---- a trade gone `no expired` makes the
---- outcome `expired` (H.Advance).
+--- a trade gone `no expired` makes the outcome `expired` (H.Advance), and the trade timer's live
+--- `yes` puts back the outcome it replaced (feedback-15 spec §0).
 --- @param e table
 --- @param rec table
 --- @return boolean outcomeChanged
@@ -210,6 +229,7 @@ function H.Refresh(e, rec)
     local moved = takeSnaps(e, rec)
     local t = e.trade
     local advanced = t ~= nil and t.state == "no" and t.reasonKey == "expired" and H.Advance(e, "expired")
+    advanced = advanced or unexpire(e)
     return advanced, advanced or moved
 end
 
@@ -357,8 +377,7 @@ end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
 
-local index = {}        -- [live drop id] = its entry, this session only
-local sessionStart      -- time() at the first recording: today's group keys carry it
+local index = {}        -- [live drop id] = its entry, this load only
 local trade             -- the trade: { partner, accepted, given, received, offer, closedAt } or nil
 
 local function clock() return time() end
@@ -407,11 +426,11 @@ function H.ReleaseLog(log)
     changed()
 end
 
---- When this session's recording started (time()), for the History tab's This session.
+--- When this session started (time()): the login, kept across a reload (NS.Session.Start,
+--- feedback-15 spec §0). Today's group keys carry it; the History tab's This session reads it.
 --- @return number
 function H.SessionStart()
-    sessionStart = sessionStart or clock()
-    return sessionStart
+    return NS.Session.Start()
 end
 
 --- The groups, oldest first (empty before the database exists). Read them, never write them.
@@ -419,6 +438,14 @@ end
 function H.Groups()
     local hist = H.Log()
     return hist and hist.groups or {}
+end
+
+--- Link a live drop to its kept entry (modules/FeedRestore.lua, feedback-15 spec §0), before the
+--- drop's DropAdded: OnDropAdded then records nothing, and DropUpdated refreshes this entry.
+--- @param dropId any
+--- @param e table the entry
+function H.Adopt(dropId, e)
+    if type(e) == "table" then index[dropId] = e end
 end
 
 --- A live drop's entry this session, or nil (never recorded, or since deleted).
@@ -430,6 +457,18 @@ function H.EntryOf(dropId)
     return e
 end
 
+--- The live drop a kept entry is, this load: its id while the feed still holds it, else nil (the
+--- History card's Show in Drops, feedback-15 spec §4).
+--- @param e table the entry
+--- @return any|nil
+function H.DropOf(e)
+    if type(e) ~= "table" or e.gone then return nil end
+    for id, x in pairs(index) do
+        if x == e and NS.LootFeed.Get(id) then return id end
+    end
+    return nil
+end
+
 --- A live drop's outcome this session, or nil.
 --- @param dropId any
 --- @return string|nil
@@ -438,14 +477,25 @@ function H.OutcomeOf(dropId)
     return e and e.outcome
 end
 
---- The Ask button's state once the history knows the drop was received (`traded`), else the
---- state given (the Drops row and the detail card read it through here).
+-- Whether an entry was asked for: `asked` now, or the outcome an `expired` or a hand-set
+-- `declined` replaced (`beforeExpired`, `before`).
+local function wasAsked(e)
+    return e.outcome == "asked" or e.beforeExpired == "asked" or e.before == "asked"
+end
+
+--- The Ask button's state once the history knows the drop was received (`traded`); `sent` when the
+--- Asks book has nothing for it (`ready`) but its entry was asked for, as a drop restored after a
+--- reload is (the book lives for one load, the entry across it: one ask per item per looter holds,
+--- feedback-15 spec §0); else the state given (the Drops row and the detail card read it here).
 --- @param drop table
 --- @param state string|nil
 --- @param reason any
 --- @return string|nil state, any reason
 function H.AskState(drop, state, reason)
-    if type(drop) == "table" and not drop.test and H.OutcomeOf(drop.id) == "received" then return "traded" end
+    if type(drop) ~= "table" or drop.test then return state, reason end
+    if H.OutcomeOf(drop.id) == "received" then return "traded" end
+    local e = state == "ready" and H.EntryOf(drop.id)
+    if e and wasAsked(e) then return "sent" end
     return state, reason
 end
 
@@ -524,8 +574,8 @@ function H.SetEntryDeclined(e, on)
     end
 end
 
---- Empty the history (the History tab's Clear history, behind its confirmation). The retention
---- row stays.
+--- Empty the history (Settings › Window › Layout's Clear history, behind its confirmation). The
+--- retention row stays.
 function H.Clear()
     local hist = H.Log()
     if not hist then return end
@@ -533,6 +583,31 @@ function H.Clear()
     hist.groups = {}
     NS.Print(L["History cleared."])
     changed()
+end
+
+-- ── Clear history's confirmation (feedback-15 spec §3, DW-Q3) ───────────────────────────────
+--
+-- Here rather than in a window file: the settings row (settings/PageEditors.lua) asks for it, and
+-- the History module is the one both the settings and the UI already depend on. Accepting clears
+-- what Log() answers, so with test mode or a simulation on it is that session-only log.
+
+H.CLEAR_POPUP = "DROPWATCHER_CLEAR_HISTORY"
+
+local function ensureClearPopup()
+    if StaticPopupDialogs[H.CLEAR_POPUP] then return end
+    StaticPopupDialogs[H.CLEAR_POPUP] = {
+        text = L["Clear the drop history on every character? This cannot be undone."],
+        button1 = YES or "Yes", button2 = NO or "No",
+        timeout = 0, whileDead = true, hideOnEscape = true,
+        preferredIndex = 3,   -- clear of the slots Blizzard's own popups take first
+        OnAccept = function() H.Clear() end,
+    }
+end
+
+--- Clear history's button: asks first (a StaticPopup); the history is emptied only on Yes.
+function H.AskClear()
+    ensureClearPopup()
+    StaticPopup_Show(H.CLEAR_POPUP)
 end
 
 -- ── the trade window ────────────────────────────────────────────────────────────────────────

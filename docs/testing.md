@@ -56,7 +56,7 @@ within `feed.add`, observed inside it on a Receive-only capture, mixed with top 
 load or re-judge, and the depth counter cleared when Receive raises; review F06, DW-P24),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
 reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
-into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles), `test_schema`, `test_schema_rows` (every
+into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load), `test_settings_pages` (the settings
@@ -65,7 +65,9 @@ table (one line per situation, its gold headers and stripe, each cell's value, a
 path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, parked
 by its placeholder's own `OnRelease` outside the renderer (options-ui-§19, DW-P21), the rows still schema rows and `skipRender`), the Feed page's "in force now" readout, the Comparison page's per-spec
 weights and unwanted types written whole through the seam, the Messages page's live counters,
-preview, token chips and Reset templates, each page's Defaults, and the editors' pure halves),
+preview, token chips and Reset templates, Window › Layout's Clear history beside Keep history for
+(asking first, clearing on Yes, test mode's samples only while it is on; feedback-15 spec §3), each
+page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
 chrome built headless: the title bar, the restriction badge, Scan group (the compact layout's
 title-bar icon; the full layout's is on the Drops strip, feedback-7 spec §4), the tabs and their lazy
@@ -82,7 +84,7 @@ name and the freshness bracketed right after it or left out (`FreshMark`; a pend
 Them's `…` saying it, feedback-11 spec §0), `No action` on line 2 with no action (feedback-11 spec
 §1, where feedback-10 left the slot empty), no trade window on the card with or without a countdown,
 feedback-10 spec §2; your own card's Offer, `Upgrade for N` and ` [YOU]`, feedback-5 spec §2, feedback-7 spec §2; line 3's `You 321/308 ▼8`, feedback-6 spec §1), each piece's tone and
-tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
+tooltip checked against the full view's composer, the cross-realm mark, and the header's short form, an LFR header cut piece by piece to fit the default width, feedback-15),
 `test_compact_group` (the Drops tab in the compact layout, DW-C2: the card's metrics and the
 scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
 headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
@@ -95,8 +97,15 @@ the least compact width, 440, at which line 2's fullest pieces end before the ac
 feedback-5 spec §0, §4),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
-repainting, the collapsing headers, every tooltip at the card's top right, Clear shortened and put
-back, the text size and test mode's samples),
+repainting, the collapsing headers, every tooltip at the card's top right, the strip without Clear
+history in both layouts, the text size and test mode's samples),
+`test_history_card` (the History tab's detail card, feedback-15 spec §4, DW-Q4: the pure `Model`
+over a kept entry, the header's chips, For you at the time, For the group and your own drop's, the
+recorded trade estimate, when and where and the actions; then headless, a row click expanding it
+under the row with the chevron up and the rows below moved, one at a time, a right-click still the
+menu, the columns after the indent and chevron, Link in chat, Mark and Clear declined, Show in Drops
+selecting the Drops tab with the drop's header open and its card expanded, and the stacked card
+under a compact card),
 `test_compact_chrome` (the window's chrome in the compact layout, DW-C4: the short tab labels, `TEST`
 and `SIM`, the badge's count, the footer's one line and its tooltip, the Filters count, label and
 tooltip, pure; then headless: the short title centered with its word, the badge at the left with its
@@ -104,7 +113,7 @@ tooltip, Scan group as an icon button, the short tabs at their width with the fu
 tooltips, View, the search box and Filters on one row with Quality, Content, Character and Sort
 moved into the Filters panel and filtering as on the full bar, the panel closing on hide, minimize
 and the switch, the full layout taking every control back (Sort to the tab's strip, feedback-10
-spec §3), the shortened strip, the one-line footer
+spec §3), the one-line footer
 under the ticker, and the filter state kept across a switch),
 `test_compact_modes` (the two layouts over one engine, DW-C5, compact spec §5: the same drop set, the
 full table and the compact cards drawing the same drops and headers in the same order on every tab,
@@ -167,12 +176,17 @@ drawn-width count, and an audit that no text test mode draws in the default face
 detail card, the Offer panel or History in either layout, carries one), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, its next expiry moving each second and keeping
-the ticker running, Post my tradeables through its handler, and the compact strip shortened and put
-back, hidden there while none can be traded; feedback-5 spec §3, DW-E3; feedback-7 spec §4 and
-feedback-10 spec §3: one right-aligned row, `[Post my tradeables] [Scan group] [Sort]`, Post at Sort's
-size, Scan group through its handler, Sort following the active tab to History's strip after Clear
-history and back, the pure `Slots`, and the full layout's strip shown with nothing tradeable, Scan
-group beside Sort), `test_offer_panel` (the Offer panel opened from your own drop's
+the ticker running, Post my tradeables through its handler, and the compact strip's summary
+shortened, shown there with nothing tradeable too; feedback-5 spec §3, DW-E3; feedback-7 spec §4,
+feedback-10 spec §3 and feedback-15 spec §2: one right-aligned row, `[Post my tradeables] [Scan group]
+[Expand all] [Sort]`, Post at Sort's size, Scan group through its handler, Sort following the active
+tab to History's strip right of the toggle and back, the pure `Row`, and the full
+layout's strip shown with nothing tradeable, Scan group in its place),
+`test_footer_row` (one footer button kind and Expand all / Collapse all, feedback-15 spec §2: the pure
+`Slots`, `FoldState` and `FoldAll`; every footer button `FOOTER_BUTTON_W` wide with the same label in
+both layouts, each tab's row right to left in both layouts, the info ending where the row starts, the
+compact Drops strip always shown, no Clear history on History's strip; the toggle's words, both directions, on both tabs in both layouts,
+off with no header, each tab's collapsed state its own), `test_offer_panel` (the Offer panel opened from your own drop's
 Offer, built headless: docked beside the full or compact window on the side with room, the
 candidates ranked with Their eq in the Them look (both worn items from the read), no class bar and
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's
@@ -271,8 +285,8 @@ group taking the party with its first drop and a mid-run joiner on the roster ev
 next drop, its History group keeping it; the Drops and History headers naming only the
 recorder (feedback-3 spec §4), and an older History group with no `Group:` line; test mode's sample
 rosters are `test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
-`test_group_place` (feedback-3 spec §4, DW-B4: `GroupPlace`'s pure `DifficultyName`, `Parts` and
-`Who`; Compat's `DifficultyName` and `KeystoneLevel`; the owner's Timewalking drop through the real
+`test_group_place` (feedback-3 spec §4, DW-B4: `GroupPlace`'s pure `DifficultyName`, `Parts` (with its roles and
+`ShortNames`' LFR, feedback-15) and `Who`; Compat's `DifficultyName` and `KeystoneLevel`; the owner's Timewalking drop through the real
 feed, its header `Gate of the Setting Sun · Commander Ri'mok · Timewalking · 1 drop · Testchar` and
 its History group keeping the place and the recorder; a group keeping the place it opened in; a
 key's end chest reading `Mythic+ <level>` after the run completed; the open world's situation-word
@@ -320,7 +334,7 @@ by hand, the trade match by partner then item id and your own drops traded away;
 the bus: a live drop recorded and a test drop never, `DropUpdated`, a sent ask, offer or announce;
 a completed trade marking `received` and the Ask button `Traded`, one given away, and an
 unfinished or changed trade marking nothing; Clear history behind its
-confirmation; the diagnostics line; and the History tab built headless: kept groups newest first,
+confirmation (`History.AskClear`; the strip has none since DW-Q3); the diagnostics line; and the History tab built headless: kept groups newest first,
 the outcome column in the action buttons' tones (feedback-12 spec §0), a reason on every cell, a header toggle, Content's This session, the row menu
 with and without the client's menu, the empty line and `HistoryChanged`'s repaint),
 `test_history_retention` (Keep history for, feedback-2 spec §5: the labels, choices and footer, a
@@ -330,6 +344,22 @@ shorter one asking first with Yes pruning and No writing the agreed window back,
 at once; the login prune once per session, deferred, taken back by the stand-down and armed again
 by the stand-up, Never delete keeping everything; test mode's ten-day-old alt sample pruned by a
 7-day window while the account's log is kept),
+`test_feed_restore` (the session is the login and the Drops tab survives a reload, feedback-15
+spec §0: the per-character session start an initial login sets, a reload keeps and a zone change
+leaves, stable with no stored value; after a reload this session's drops back in the feed under
+their History group's key, label, place and roster, dated by the client clock, judged anew and
+linked to their entries, nothing recorded twice; an initial login restoring nothing; this session's
+and this character's entries only, gone ones skipped, the newest `MAX_DROPS`; restored drops never
+merging with each other while a live line merges in; the quality gate kept and the situation gate
+and filters skipped; no auto-open, toast or automatic ask for a restored drop; a drop asked for
+before the reload reading Asked after it; drops cleared from the Drops tab (`/dw clear`, Clear on
+boss kill) staying cleared; the false Expired a
+live timer read undoes, and nothing else does; This instance kept across a reload in the same
+situation and instance only),
+`test_content_tabs` (Content per tab, feedback-15 spec §1: Drops offers This instance and This session,
+History adds All, a value the tab does not offer refused; the dropdown's rows the active tab's in both
+layouts; the one tooltip; Drops' This session from the stored login in the client clock; the
+`feed.content` row's two values; step 8 turning a stored `all` into `session`, per profile, idempotent),
 `test_toast` (the toast: the pure qualifier, someone else's upgrade for you of `toast.minGain` or
 more (or into an empty slot, whatever the least gain) with a `likely` or `yes` trade, and every
 reason it refuses, and the board 06 C texts, `empty` for an empty slot; then

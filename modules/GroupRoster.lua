@@ -175,14 +175,15 @@ function GR.Current()
     return GR.FromMembers(Ro.Members(), NS.Compat.NormalizedRealm())
 end
 
---- A feed group takes the members of the drop just added to it: a test drop's spec roster, else the
---- group's members now (the snapshot grows, never shrinks).
+--- A feed group takes the members of the drop just added to it: a test drop's spec roster (and a
+--- restored drop's, its History group's: feedback-15 spec §0), else the group's members now (the
+--- snapshot grows, never shrinks).
 --- @param group table a feed group
 --- @param rec table the drop's record
 --- @return boolean changed
 function GR.Note(group, rec)
     group.roster = group.roster or {}
-    if rec.test then
+    if rec.test or rec.source == "restore" then
         local spec = type(rec.group) == "table" and rec.group.roster or nil
         return GR.Merge(group.roster, spec)
     end

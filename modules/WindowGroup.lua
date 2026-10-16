@@ -33,9 +33,9 @@ local _, NS = ...
 --
 -- THE STRIP (feedback-5 spec §3, feedback-7 spec §4). Under the table (or the compact cards), above
 -- the footer: `n tradeable · next expiry 0:08:41`, Post my tradeables (while one of your drops the
--- tab lists can be traded) and, in the full layout, Scan group, so there it is always shown; compact
--- shows it only while one can be traded (modules/DropsStrip.lua, built with the pane and repainted
--- with it).
+-- tab lists can be traded), Expand all / Collapse all (WG.FoldAll, feedback-15 spec §2) and, in the
+-- full layout, Scan group; always shown, in both layouts (modules/DropsStrip.lua, built with the
+-- pane and repainted with it).
 --
 -- THE COUNTDOWNS MOVE each second while a shown row or the strip has one (feedback-5 spec §1;
 -- the strip counts your drops under a collapsed header too): Window.lua's
@@ -165,6 +165,14 @@ function WG.ToggleGroup(key, collapsedNow)
     repaint()
 end
 
+--- Collapse, or open, every header the tab shows (Expand all / Collapse all, feedback-15 spec §2).
+--- @param entries table|nil the drawn entries (WC.Entries')
+--- @param collapse boolean
+function WG.FoldAll(entries, collapse)
+    NS.FooterRow.FoldAll(entries, view().collapsed, collapse)
+    repaint()
+end
+
 --- Expand one row's detail card, or collapse it when it is the one expanded (design spec §11.3):
 --- one row at a time.
 --- @param id number the drop's id
@@ -179,6 +187,19 @@ end
 --- The drop whose detail card is open, or nil.
 --- @return number|nil
 function WG.Expanded() return view().expanded end
+
+--- Open a live drop's header and expand its card (the History card's Show in Drops, feedback-15
+--- spec §4); false when the feed no longer holds it.
+--- @param id number
+--- @return boolean
+function WG.Reveal(id)
+    local rec = NS.LootFeed.Get(id)
+    if not rec then return false end
+    local v = view()
+    if rec.groupKey ~= nil then v.collapsed[rec.groupKey] = false end
+    v.expanded = id
+    return true
+end
 
 -- ── the pure halves ─────────────────────────────────────────────────────────────────────────
 
@@ -565,6 +586,7 @@ local function newHeader(content)
     h.chevron:SetVertexColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as its text (feedback-5 spec §0)
     h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
+    h.text:SetJustifyH("LEFT")   -- the compact headers size the text to the line; it reads from the left
     h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
     h:SetScript("OnClick", function(self) WG.ToggleGroup(self.groupKey, self.collapsed) end)
     NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")

@@ -180,6 +180,17 @@ function NS.RetireEqColumns(profile)
     if type(cols) == "table" then cols.myEq, cols.theirEq = nil, nil end
 end
 
+-- ── step 8: Content: All is History's alone (DW-Q1, feedback-15 spec §1) ────────────────────
+
+--- Step 8's work on one stored profile: `feed.content` no longer offers `all` (the Drops tab holds
+--- this session's drops alone; History opens on All by itself), so a stored `all` becomes
+--- `session`, the row's default. Idempotent: anything else passes through.
+--- @param profile table a raw stored profile
+function NS.MigrateContentAll(profile)
+    local feed = type(profile) == "table" and profile.feed
+    if type(feed) == "table" and feed.content == "all" then feed.content = "session" end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -195,6 +206,8 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.RetireShowOwn(profile) end },
     { to = 7, perProfile = true,         -- 6 -> 7: the eq columns merged into Me and Them; toggles go
       run = function(_, profile) NS.RetireEqColumns(profile) end },
+    { to = 8, perProfile = true,         -- 7 -> 8: Content: All is History's alone; a stored one is session
+      run = function(_, profile) NS.MigrateContentAll(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

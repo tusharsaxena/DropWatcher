@@ -20,8 +20,9 @@ local _, NS = ...
 -- (`encounter`, which names the encounter) and C_LootHistory's won group-loot drops on
 -- LOOT_HISTORY_UPDATE_DROP (`history`, each drop taken once). Your own `pushed` lines (quest
 -- rewards, containers, purchases) are not drops and are skipped. Add(link, looter, opts) is the
--- fourth door (`manual`): `/dw add`. Test mode's placeholders come through AddTest(spec), put in
--- the test feed as given (modules/TestMode.lua).
+-- fourth door (`manual`): `/dw add`; Restore(r, adopt) the fifth (`restore`, modules/FeedRestore.lua,
+-- feedback-15 spec §0): past the situation gate and the filters, never merged with another restored
+-- drop. Test mode's placeholders come through AddTest(spec), put in the test feed as given.
 --
 -- DEDUPE. One drop is reported by up to all three sources. A receipt merges into a drop seen in
 -- the last DEDUPE_WINDOW seconds with the same item id and the same looter (the same GUID; when
@@ -248,17 +249,8 @@ local function judgeMe(rec, cfg)
     rec.me = evaluate(rec.facts, myCandidate(cfg), opts)
 end
 
--- Your average equipped item level (shirt and tabard aside), or nil.
-local function myIlvl()
-    local sum, n = 0, 0
-    for slot, e in pairs(NS.Gear.Snapshot().equipped) do
-        if e and type(e.ilvl) == "number" and not C.QUALITY_IGNORED_SLOT[slot] then
-            sum, n = sum + e.ilvl, n + 1
-        end
-    end
-    if n == 0 then return nil end
-    return sum / n
-end
+-- Your average equipped item level (shirt and tabard aside), or nil (NS.FeedFilter.AverageIlvl).
+local function myIlvl() return NS.FeedFilter.AverageIlvl(NS.Gear.Snapshot().equipped) end
 
 local function qualityGate(rec, cfg)
     local t0 = Perf.on and debugprofilestop()
@@ -514,7 +506,7 @@ local start
 local function judge(rec, facts)
     rec.facts = facts
     local cfg = LF.Config()
-    if not rec.test then
+    if not rec.test and rec.source ~= "restore" then
         local ctx = { myIlvl = cfg.minIlvlMode == "relative" and myIlvl() or nil }
         local ok, why = NS.FeedFilter.Filter(facts, cfg, ctx)
         if not ok then return hide(rec, why) end
@@ -551,15 +543,15 @@ end
 
 local function newRecord(s, r)
     s.seq = s.seq + 1
-    local t = now()
+    local t = r.at or now()
     local sim, situation = origin()
     -- Stamped with who saw it (seenBy, seenByClass: the Character dropdown, feedback-2 spec §4).
     return NS.CharFilter.Stamp({
         id = s.seq, feed = r.test and "test" or "live", test = r.test, force = r.force, link = r.link,
         itemID = r.itemID, qty = r.qty or 1, kind = r.kind or "loot", bonusRoll = r.kind == "bonus",
-        looter = r.looter, isMine = r.looter.isSelf == true, at = t, situation = situation,
+        looter = r.looter, isMine = r.looter.isSelf == true, at = t, situation = r.situation or situation,
         encounterID = r.encounterID, sources = { [r.source] = 1 }, source = r.source,
-        group = groupSpec(s, r.encounterID, t), state = "new", sim = sim,
+        group = r.group or groupSpec(s, r.encounterID, t), state = "new", sim = sim,
     })
 end
 
@@ -646,6 +638,17 @@ function LF.Receive(r)
     return id, status
 end
 
+--- A drop of this session rebuilt from its History entry after a reload (modules/FeedRestore.lua):
+--- `r` as Receive's plus `at`, `situation` and `group`. No situation gate, filter or merge;
+--- `adopt(id)` runs before its DropAdded. Answers as Receive.
+function LF.Restore(r, adopt)
+    local s = store()
+    local rec = newRecord(s, r)
+    s.recent[#s.recent + 1] = rec
+    adopt(rec.id)
+    return start(rec)
+end
+
 --- Inject a drop: `/dw add` and test mode. `looter` is a name, "Name-Realm" or GUID (you when nil);
 --- one the roster cannot place is judged without an inspect. A manual drop skips the situation
 --- gate and never merges; `opts.test` puts it in the test feed and skips every gate and inspect.
@@ -718,6 +721,7 @@ function LF.Clear(name)
     local s = store()
     local which = name == "test" and "test" or "live"
     s[which] = newFeed()
+    if which == "live" then NS.Session.MarkCleared() end   -- a reload keeps it cleared (FeedRestore)
     NS.Debug(TAG, "feed cleared: %s", which)
     notifyRemoved(which)
 end

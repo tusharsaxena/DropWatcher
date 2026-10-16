@@ -727,6 +727,7 @@ end
 test("table: Trade window paints every drop's countdown over its bar; the row grows by the bar's room", function()
     local NS, _, m = T.enableAddon()
     local C, WR = NS.Constants, NS.WindowRows
+    NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = 100
     seed(NS, { { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1, 2, 3, 4 } } }, {
         drop(), drop({ id = 2, at = 100 - 14200 }),

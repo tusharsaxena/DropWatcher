@@ -371,10 +371,13 @@ L["range"] = "range"
 L["Them"] = "Them"
 L["When"] = "When"
 L["The time it dropped was not kept."] = "The time it dropped was not kept."
--- Compact mode's Drops and History strips (modules/DropsStrip.lua, modules/CompactHistory.lua)
+-- Compact mode's Drops strip (modules/DropsStrip.lua)
 L["next %s"] = "next %s"
-L["Post"] = "Post"
-L["Clear"] = "Clear"
+-- Expand all / Collapse all on the tabs' strips (modules/FooterRow.lua, feedback-15 spec §2)
+L["Expand all"] = "Expand all"
+L["Collapse all"] = "Collapse all"
+L["Open every group this tab shows. Collapse all closes them again."] = "Open every group this tab shows. Collapse all closes them again."
+L["Close every group this tab shows."] = "Close every group this tab shows."
 -- Compact mode's chrome (modules/CompactChrome.lua, compact spec §4)
 L["Drops"] = "Drops"
 L["History"] = "History"
@@ -433,6 +436,7 @@ L["Nothing to post: none of your drops can be traded now."] = "Nothing to post: 
 
 -- modules/GroupPlace.lua
 L["Mythic+"] = "Mythic+"
+L["LFR"] = "LFR"
 
 -- modules/History.lua
 L["History cleared."] = "History cleared."
@@ -512,8 +516,8 @@ L["Usable by me: you can use it, and you have not marked its type as unwanted."]
 L["Upgrade for me: an upgrade over what you wear (or your best owned piece)."] =
     "Upgrade for me: an upgrade over what you wear (or your best owned piece)."
 L["Content"] = "Content"
-L["This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."] =
-    "This instance shows the drops since the situation last changed (entering an instance, starting a key). This session shows every drop since login. All shows every drop, and on the History tab the earlier sessions' too."
+L["This instance shows the drops since you entered this instance or started this key. This session shows every drop since you logged in; a /reload keeps them. All (History only) shows every kept day."] =
+    "This instance shows the drops since you entered this instance or started this key. This session shows every drop since you logged in; a /reload keeps them. All (History only) shows every kept day."
 L["Search"] = "Search"
 L["Show only the drops whose item or looter name contains this text."] =
     "Show only the drops whose item or looter name contains this text."
@@ -721,6 +725,7 @@ L["chat"] = "chat"
 L["the encounter"] = "the encounter"
 L["the loot history"] = "the loot history"
 L["/dw add"] = "/dw add"
+L["the History, after a reload"] = "the History, after a reload"
 L["You looted it."] = "You looted it."
 L["Looted by %s."] = "Looted by %s."
 L["Reported by %s."] = "Reported by %s."
@@ -1060,6 +1065,35 @@ L["Clear history"] = "Clear history"
 L["Empty the drop history on every character, after a confirmation."] =
     "Empty the drop history on every character, after a confirmation."
 
+-- modules/HistoryCard.lua (feedback-15 spec §4)
+L["ilvl %s"] = "ilvl %s"
+L["%s against what was worn then."] = "%s against what was worn then."
+L["No item-level change was kept."] = "No item-level change was kept."
+L["The scorer's change then."] = "The scorer's change then."
+L["No score change was kept."] = "No score change was kept."
+L["FOR YOU · AT THE TIME"] = "FOR YOU · AT THE TIME"
+L["Who it was an upgrade for is not kept in the history."] = "Who it was an upgrade for is not kept in the history."
+L["No time was kept."] = "No time was kept."
+L["When it dropped."] = "When it dropped."
+L["Where"] = "Where"
+L["Kept before the place was recorded."] = "Kept before the place was recorded."
+L["The instance, the encounter and the difficulty."] = "The instance, the encounter and the difficulty."
+L["Seen by"] = "Seen by"
+L["Kept before the character that saw it was recorded."] = "Kept before the character that saw it was recorded."
+L["The character that saw it: %s."] = "The character that saw it: %s."
+L["WHEN AND WHERE"] = "WHEN AND WHERE"
+L["Put back the outcome it had before you marked it declined."] =
+    "Put back the outcome it had before you marked it declined."
+L["Mark declined"] = "Mark declined"
+L["A completed trade settled it: it keeps that outcome."] = "A completed trade settled it: it keeps that outcome."
+L["Mark it declined: you passed on it. The row's right-click menu does the same."] =
+    "Mark it declined: you passed on it. The row's right-click menu does the same."
+L["Show in Drops"] = "Show in Drops"
+L["It is not in the Drops tab: only this session's drops are, until the feed is cleared."] =
+    "It is not in the Drops tab: only this session's drops are, until the feed is cleared."
+L["Select the Drops tab, open this drop's group and expand its card."] =
+    "Select the Drops tab, open this drop's group and expand its card."
+
 -- modules/Toast.lua
 L["Tradeable"] = "Tradeable"
 L["not an upgrade for %s"] = "not an upgrade for %s"
@@ -1085,7 +1119,6 @@ L["A fresh tab lists only the drops that are an upgrade for you."] =
     "A fresh tab lists only the drops that are an upgrade for you."
 L["This instance"] = "This instance"
 L["This session"] = "This session"
-L["All"] = "All"
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
@@ -1122,8 +1155,8 @@ L["The least quality the two matching modes ever ask for, and what an empty slot
 L["Always show upgrades for me"] = "Always show upgrades for me"
 L["A drop below the minimum still shows when it is an upgrade for you."] =
     "A drop below the minimum still shows when it is an upgrade for you."
-L["Which drops the Drops tab lists when it opens: this instance's, this session's, or all of them. History always opens on All."] =
-    "Which drops the Drops tab lists when it opens: this instance's, this session's, or all of them. History always opens on All."
+L["Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."] =
+    "Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."
 L["How a fresh tab sorts its rows."] = "How a fresh tab sorts its rows."
 L["Gear only"] = "Gear only"
 L["List armor, weapons, jewelry and trinkets only."] = "List armor, weapons, jewelry and trinkets only."

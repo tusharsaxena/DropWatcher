@@ -10,7 +10,7 @@
 ## Category-enUS: Group
 ## X-License: MIT
 ## X-Standard: https://github.com/tusharsaxena/WowAddonStandards
-# X-Curse-Project-ID: not published on CurseForge yet
+## X-Curse-Project-ID: 1748054
 
 # Libraries (must load first) -- vendored in libs/, .xml where the lib ships one, else .lua
 libs\LibStub\LibStub.lua
@@ -128,9 +128,16 @@ modules\Scoring.lua
 # time only, and itself reads NS.Constants (core\, above), NS.L (locales\, above) and NS.C
 # (defaults\, above) at load.
 modules\QualityGate.lua
+# LOAD-BEARING: appends its PLAYER_ENTERING_WORLD row to NS.FEATURE_EVENTS after modules\Sim.lua's
+# and before modules\Situations.lua's (below), so a reload is known before its first
+# SituationChanged reaches the window; its NS.STAND_UP step runs before modules\Situations.lua's too.
+# Publishes NS.Session, the session start and the This instance mark kept per character
+# (feedback-15 spec §0); appends its handler to NS.addon (core\DropWatcher.lua, above) at load.
+# NS.Compat is read at call time.
+modules\Session.lua
 # LOAD-BEARING: appends its PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA, GROUP_ROSTER_UPDATE,
 # CHALLENGE_MODE_START and CHALLENGE_MODE_COMPLETED rows to NS.FEATURE_EVENTS after modules\Sim.lua's
-# and before every module below that shares those events, so the situation handler runs before theirs
+# (and modules\Session.lua's PLAYER_ENTERING_WORLD row) and before every module below that shares those events, so the situation handler runs before theirs
 # and they read a fresh situation; its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after
 # those of the modules above. Publishes NS.Situations, the situation classifier and its edge; appends
 # its handler to NS.addon (core\DropWatcher.lua, above) at load, and reads NS.Constants, NS.State,
@@ -251,6 +258,13 @@ modules\History.lua
 # NS.SchemaRuntime (settings\Schema.lua, below) are read at call time; settings\SchemaRows.lua
 # (below) reads its Choices at load.
 modules\HistoryRetention.lua
+# LOAD-BEARING: appends its PLAYER_ENTERING_WORLD row to NS.FEATURE_EVENTS after
+# modules\Situations.lua's and modules\HistoryRetention.lua's (above) and before modules\AutoAsk.lua's
+# (below), so a reload's feed is rebuilt on a fresh situation. Publishes NS.FeedRestore, the Drops
+# tab rebuilt from this session's History entries after a reload (feedback-15 spec §0); appends its
+# handler to NS.addon (core\DropWatcher.lua) at load. NS.History, NS.LootFeed, NS.Roster,
+# NS.GroupRoster and NS.CharFilter (above) are read at call time.
+modules\FeedRestore.lua
 # LOAD-BEARING: its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
 # above. Publishes NS.Window; reads NS.Perf, NS.L, NS.Constants, NS.Bus and NS.MSG (core\ and
 # locales\, above) at load, and registers its bus receivers (RestrictionChanged, AskStateChanged,
@@ -323,10 +337,15 @@ modules\RowTooltip.lua
 # (modules\DetailCard.lua, below) and the host handlers (core\DropWatcher.lua) are read at call time,
 # when the tab is built and repainted.
 modules\WindowGroup.lua
+# Conventional: publishes NS.FooterRow, the strips' one footer button kind, their row's placement
+# and Expand all / Collapse all (feedback-15 spec §2); takes NS.Constants and NS.L at load.
+# NS.Window is read at call time, when modules\DropsStrip.lua and modules\WindowHistory.lua (below)
+# build and paint their strips.
+modules\FooterRow.lua
 # Conventional: publishes NS.DropsStrip, the Drops tab's summary strip (your tradeable drops, the
-# next expiry, Post my tradeables and Scan group, Post shortened in the compact layout) and its empty
-# state (Preview with test data and Scan group); takes NS.Constants and NS.L at load. NS.Window,
-# NS.WindowTitleBar, NS.WindowFooter, NS.MineCells, the feed and the host handlers are read at call
+# next expiry, Post my tradeables, Scan group and Expand all / Collapse all) and its empty state
+# (Preview with test data and Scan group); takes NS.Constants and NS.L at load. NS.Window,
+# NS.WindowTitleBar, NS.WindowFooter, NS.FooterRow, NS.MineCells, the feed and the host handlers are read at call
 # time, when NS.WindowGroup builds and repaints the tab.
 modules\DropsStrip.lua
 # LOAD-BEARING: takes NS.WindowCells, NS.TipMarks and NS.MineCells (modules\, above) at load.
@@ -338,6 +357,11 @@ modules\DetailCells.lua
 # at load. NS.WindowGroup builds it (above, at call time); NS.Window, NS.TipMarks (a chip's estimated
 # width), the engine modules and the host handlers are read at call time.
 modules\DetailCard.lua
+# LOAD-BEARING: takes NS.WindowCells and NS.DetailCells (modules\, above) at load. Publishes
+# NS.HistoryCard, the History tab's detail card drawn from a kept entry's snapshot (feedback-15 spec
+# §4); takes NS.Constants and NS.L at load. NS.DetailCard (above: its frame pieces), NS.WindowHistory
+# (below: it builds the card), NS.WindowGroup, NS.History and NS.Window are read at call time.
+modules\HistoryCard.lua
 # LOAD-BEARING: takes NS.MineCells, NS.SideCells and NS.TipMarks (modules\, above; the Their eq
 # column's tooltip calls TipMarks.Mark) at load. Publishes NS.OfferPanel, the "Who could use this?"
 # panel; takes NS.Constants, NS.L and NS.State at load. NS.Window, NS.WindowGroup (SideCell,
@@ -391,13 +415,14 @@ modules\TestMode.lua
 modules\Toast.lua
 # LOAD-BEARING: appends its ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE,
 # PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows to NS.FEATURE_EVENTS after every other file's
-# on those events (modules\Sim.lua's, modules\Situations.lua's, modules\Roster.lua's,
-# modules\Inspect.lua's, modules\LootFeed.lua's, modules\Asks.lua's and
-# modules\HistoryRetention.lua's), so its handler runs last; its NS.STAND_DOWN / NS.STAND_UP steps
-# run in TOC order, after those of the modules above. Publishes NS.AutoAsk, the opt-in auto-ask;
-# appends its handlers to NS.addon and registers its DropAdded, DropUpdated, AskStateChanged and
-# HistoryChanged receivers on a NS.Bus target at load. NS.LootFeed, NS.Toast's qualifier, NS.Asks,
-# NS.Roster, NS.Restrictions, NS.History, NS.Setting and NS.AskTargetOf are read at call time.
+# on those events (modules\Sim.lua's, modules\Session.lua's, modules\Situations.lua's,
+# modules\Roster.lua's, modules\Inspect.lua's, modules\LootFeed.lua's, modules\Asks.lua's,
+# modules\HistoryRetention.lua's and modules\FeedRestore.lua's), so its handler runs last; its
+# NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules above. Publishes
+# NS.AutoAsk, the opt-in auto-ask; appends its handlers to NS.addon and registers its DropAdded,
+# DropUpdated, AskStateChanged and HistoryChanged receivers on a NS.Bus target at load. NS.LootFeed,
+# NS.Toast's qualifier, NS.Asks, NS.Roster, NS.Restrictions, NS.History, NS.Setting and
+# NS.AskTargetOf are read at call time.
 modules\AutoAsk.lua
 # Conventional: publishes NS.SimRoster, the simulator's invented group and its gear (pure, but for
 # Create); reads NS.Constants and NS.ClassData at load. NS.Sim, NS.SimPool (below) and NS.Compat are
