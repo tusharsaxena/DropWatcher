@@ -77,8 +77,8 @@ the difference), and each member gets an **Offer** whisper; **Announce to group*
 once. Every action button carries an icon for what it does (Offer's is a box with an arrow leaving it, handing the item out). The row's Offer is cyan until you've offered it, so it reads apart from
 Ask, yellow once you have and green once you've given it away. While any of your listed drops can still be traded, a strip under the
 table counts them and gives the next one to run out (`2 tradeable · next expiry 0:08:41`), and
-**Post my tradeables**, at the strip's right beside Scan group and the Sort dropdown, lists all of them in
-group chat in one line. On History, Sort sits at the strip's right beside Expand all.
+**Post my tradeables**, at the strip's right beside Scan group, Expand all / Collapse all and the Sort dropdown,
+lists all of them in group chat in one line. On History, Sort sits at the strip's right beside Expand all.
 
 The **History** tab remembers what the feed showed, across logouts and across your characters, for
 30 days by default: Settings › Window › Layout › **Keep history for** takes 7 to 180 days, or Never
@@ -102,7 +102,7 @@ says who looted it, the slot, the type and whether they can trade it, with Ask (
 the right, or the gray **No action** button when there's no action; the card leaves the trade countdown to the table
 and the strip. The bottom one reads like the table's Me and Them without the
 icons, `You` and `Them` in gold: `You 321/308 ▼8  Them 276 ▲12` (`Them Upgrade for 2` on your own). History cards show what became of the drop, and the strip under
-the Drops cards is shorter (`2 tradeable · next 0:08:41` and **Post**). Quality, Content, Character
+the Drops cards is shorter (`2 tradeable · next 0:08:41`, with Expand all / Collapse all and **Post my tradeables**). Quality, Content, Character
 and Sort fold into a **Filters** button beside View, and Scan group is the icon in the title bar. Hovering still explains everything, and
 clicking a Drops card opens the same detail card. The button next to minimize switches views, as do
 `/dw compact` and `/dw full`, and each view remembers its own size and place. When a drop opens the

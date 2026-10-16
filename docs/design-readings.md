@@ -533,6 +533,10 @@ right-aligned, `[Post my tradeables] [Scan group] [Sort]`, 8px apart, Post still
 Post is hidden Scan group keeps its place beside Sort (nothing slides); on History, Clear history sits left of
 Sort. The footer keeps only its health segments, and compact keeps Sort in the Filters panel. That it reads
 right in game is FEED-70.
+**Superseded by feedback-15 (2026-10-16)** (feedback-15 spec §2–§3, DW-Q2 and DW-Q3): every strip button is one
+width, the Drops strip reads `[Post my tradeables] [Scan group] [Expand all] [Sort]`, History's reads
+`[Expand all] [Sort]`, and Clear history lives in Settings › Window › Layout beside Keep history for. That it
+reads right in game is FEED-78 and HIST-6.
 **Superseded by feedback-11 (2026-10-14)** (feedback-11 spec §1, DW-K1): a member it is no upgrade or equal
 for, and every member while the drop cannot be traded, shows the gray `No action` button with its reason in
 Actions where the dash stood, and a drop of yours that cannot be traded shows it on its row; `K.PANEL_BTN_W` is

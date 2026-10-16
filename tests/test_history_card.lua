@@ -57,6 +57,8 @@ test("history card: the header's chips name slot, type, item level and the outco
     assertEqual(table.concat(texts, ","), "Neck,Jewelry,ilvl 610,Expired")
     assertEqual(m.chips[4].tone, "red", "the outcome's own tone")
     assertEqual(m.chips[4].tip[1], "Outcome: Expired")
+    -- red under: a chip that keeps the table cell's right-click hint (the card has no row menu)
+    for _, line in ipairs(m.chips[4].tip) do assertNil(tostring(line):find("Right%-click"), line) end
     for _, c in ipairs(m.chips) do assertTrue(#c.tip >= 1, c.text .. " has a tooltip") end
 end)
 

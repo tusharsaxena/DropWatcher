@@ -75,7 +75,9 @@ local function chips(drop)
     local ilvl = WC.Ilvl(drop)
     local text = num(drop.facts.ilvl) and L["ilvl %s"]:format(ilvl.text) or ilvl.text
     out[#out + 1] = { text = text, tone = ilvl.tone, tip = ilvl.tip }
-    out[#out + 1] = chipOf(NS.WindowHistory.Outcome(drop))
+    -- The Outcome cell's tooltip without its row-menu hint: the card's own buttons mark declined.
+    local outcome = NS.WindowHistory.Outcome(drop)
+    out[#out + 1] = { text = outcome.text, tone = outcome.tone, tip = { outcome.tip[1], outcome.tip[2] } }
     return out
 end
 
