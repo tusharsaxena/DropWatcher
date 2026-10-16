@@ -26,7 +26,7 @@ local _, NS = ...
 -- DW-B4) falls back to the generic situation word, so an older group keeps its current label. Who
 -- names the recorder alone, its short name in its class color: you on Drops, the
 -- character that saw it on History. The party is no longer named in the header; its tooltip keeps
--- one `Group: ...` line (modules/GroupRoster.lua's TipLine).
+-- `Group (n)` rows (modules/GroupRoster.lua's TipRows).
 --
 -- PURE: DifficultyName, Parts, Recorder and Who take plain values (and a color function) and read
 -- nothing else; test_group_place drives them. Read and Stamp are the edge: they read NS.Compat at

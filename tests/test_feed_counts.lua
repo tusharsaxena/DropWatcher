@@ -225,7 +225,7 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
     assertEqual(h.hidden[1].why, "interesting")
     local hd = WC.Header(h.group, h.count, nil, nil, false, h.hidden, ctx.filter)
     assertEqual(uncolored(hd.text), "Den of Nalorakk · Mythic+ 12 · 2 drops · 1 shown · Testchar")
-    local tip = table.concat(hd.tip, "\n")
+    local tip = T.tipJoined(hd.tip, "\n")
     assertTrue(tip:find("Yoke of the Charging Bear (Bùnian): View: Interesting", 1, true) ~= nil, tip)
     FB.State("group").view = {}
     local all = WC.Entries(LF.Groups(ctx.feed), LF.Get, NS.Window.TabContext("group"), {})
@@ -256,8 +256,8 @@ test("header: History names its hidden drops too, and a long list is cut with a 
     local g = { label = "Den of Nalorakk", kind = "run", at = 0 }
     local h = WH.Header(g, 1, nil, nil, false, hidden, { search = "x" })
     assertEqual(h.text, "Den of Nalorakk · 11 drops · 1 shown")
-    assertEqual(h.tip[3], "Hidden by the filters:")
-    assertEqual(h.tip[4], "Yoke of the Charging Bear (Keghunt): Search")
+    assertEqual(h.tip[4], "Hidden by the filters:", "after the rows and the kind")
+    assertEqual(h.tip[5], "Yoke of the Charging Bear (Keghunt): Search")
     assertEqual(h.tip[#h.tip - 1], "and 2 more")
     assertEqual(h.tip[#h.tip], "Click to collapse this group.")
     assertEqual(WH.Header(g, 3, nil, nil, true).text, "Den of Nalorakk · 3 drops (collapsed)")

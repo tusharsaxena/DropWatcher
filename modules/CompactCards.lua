@@ -37,8 +37,9 @@ local _, NS = ...
 --
 -- THE HEADER'S SHORT FORM. `Instance · Boss · Difficulty · 3m · 2 · Recorder`: no `ago`, no
 -- `drops`, `1 of 2` while a filter hides some; each piece longer than its HEADER_MAX characters is
--- cut with `…` (Looking For Raid reads LFR, GroupPlace.ShortNames). Its tooltip opens with the long form (the full view's header text) and keeps the
--- full view's lines: the kind, the party, the hidden drops and the click hint.
+-- cut with `…` (Looking For Raid reads LFR, GroupPlace.ShortNames). Its tooltip is the full view's
+-- (feedback-17): the title, the facts as rows in full (WC.HeaderFacts: the place, when, the count,
+-- who saw it and the group), the kind, the hidden drops and the click hint.
 
 NS.CompactCards = NS.CompactCards or {}
 local CC = NS.CompactCards
@@ -371,14 +372,6 @@ function CC.Count(shown, hidden)
     return L["%d of %d"]:format(shown, shown + nHidden)
 end
 
-
--- The short form's tooltip: the full view's title, its long form, then its other lines.
-local function shortTip(full)
-    local tip = { full.tip[1], full.text }
-    for i = 2, #full.tip do tip[#tip + 1] = full.tip[i] end
-    return tip
-end
-
 local function shortHeader(group, shown, age, situationLabel, hidden, full)
     local M = CC.HEADER_MAX
     local parts, who, roles = WC.Place(group, situationLabel, M.who)
@@ -394,11 +387,11 @@ local function shortHeader(group, shown, age, situationLabel, hidden, full)
     parts[#parts + 1] = who
     local key = who and NS.GroupPlace.Recorder(group)
     if key then any = select(2, CC.Truncate(key:match("^([^%-]+)") or key, M.who)) or any end
-    return { text = table.concat(parts, " · "), tip = shortTip(full), cut = any }
+    return { text = table.concat(parts, " · "), tip = full.tip, cut = any }
 end
 
 --- A Drops header's short form (compact spec §2): `Instance · Boss · Difficulty ·
---- 3m · 2 · Recorder`, its tooltip the long form (WC.Header) and its lines. The chevron says whether
+--- 3m · 2 · Recorder`, its tooltip the full view's (WC.Header). The chevron says whether
 --- it is collapsed, so the text does not.
 --- @param group table a feed group
 --- @param shown number
@@ -415,7 +408,7 @@ function CC.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
 end
 
 --- A History header's short form: as CC.Header, its age in days once a day old (`2d`), its tooltip
---- the long form (NS.WindowHistory.Header).
+--- the full view's (NS.WindowHistory.Header).
 --- @param group table a History group
 --- @param shown number
 --- @param nowEpoch number|nil time()

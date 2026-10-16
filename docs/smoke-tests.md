@@ -192,7 +192,9 @@ window with no drop yet → the Drops tab shows `No drops yet`,
 `Loot your group receives appears here, grouped by boss.` (no button since feedback-16). Type `/dw test`
 → test mode turns on, bright-red `TEST MODE` text sits beside
 the title and an amber banner (`Nothing is whispered. Combat ends it.`) above the table, both with the same
-tooltip; View reads All. Two groups show, `Placeholder boss` open and `Placeholder key run` collapsed;
+tooltip; View reads All. Two groups show, `Placeholder boss` open and `Placeholder key run` collapsed
+(superseded by feedback-17, 2026-10-16: a key run and three Heroic raid bosses, each named for the real
+boss or dungeon; STATE-6);
 expand it (since DW-84 the items are real: see STATE-4). Across the rows: Me shows ▲ ≈ ▼, Can't use, Not
 wanted and `?`; Them shows ▲ ≈ ▼, Can't use and `?`; Trade shows Yes, Likely, Unknown and No; Them's gear part (Their eq until DW-F1)
 shows worn item levels, `empty`, `…`, `range`, `combat`, `!` and `–`, the read's age on hover; Actions shows Ask, Queued,
@@ -216,7 +218,8 @@ real items of the current season's dungeons (or your own gear, with the chat lin
 head row a helm, the ring rows rings), and the Ilvl column shows each item's real level: hover an item → the
 game's own tooltip agrees with it. Them shows a real worn item and its level for the inspected looters.
 The looter names stay invented (Seta, Butterz, …). Every state of STATE-3 is still there. Open History → two
-groups, `Placeholder key run` (a day ago) and `Placeholder boss` (two hours ago), whose rows read Seen,
+groups, `Placeholder key run` (a day ago) and `Placeholder boss` (two hours ago) (superseded by feedback-17,
+2026-10-16: twenty-two groups over four weeks; STATE-6), whose rows read Seen,
 Asked, Offered, Received, Traded away, Expired and Declined, over real items. `/dw test` off → the History
 tab shows your own kept groups again, untouched (none of the samples among them, after a `/reload` too). On
 Drops your own sample's button reads `Offer`, with no ellipsis; an expired row's Trade window reads `Window
@@ -233,6 +236,24 @@ exactly `Ka0s Drop Watcher is disabled — enable it with /dw enable`, byte for 
 inside `Not asked: …` and never `The addon is disabled.`. Then enter and leave combat with a training
 dummy and travel to another zone without reloading → no `[DW]` chat line and no window, and nothing
 in the feed changes (review C-01's in-client half). `/dw enable` after. Result:
+
+**STATE-6. Test mode's data looks like real play (feedback-17).** The headless `test_test_mode`,
+`test_sim_pool` and `test_group_place` cover the shape. Solo, outside an instance and out of combat, close
+the Adventure Guide and `/dw test` → Drops shows four groups: a key run named for one of the season's
+dungeons at `Mythic+ 10`, and three Heroic raid bosses, each named for a real boss of a current raid (never
+`Placeholder boss`). Expand all → the key run holds two drops and each boss four or five; every drop under
+a boss is that boss's own loot (open the Adventure Guide on that boss at Heroic: the items are listed
+there), and the key run's are the dungeon's. Ilvl → the key run's drops read the item level a +10's
+end-of-run loot has this season, and the bosses' the Heroic raid's (if the key run's drops read the base
+Mythic Keystone level instead, the client ignores the journal's preview level: report it). Open the
+Adventure Guide → it is where you left it (tier, instance, difficulty, filters), and the Mythic+ level the
+Great Vault preview shows is unchanged. Open History → about twenty-two groups from yesterday back to four
+weeks ago: Mythic+ 10 runs, Heroic dungeon bosses (one or two drops each, five people), Heroic, Mythic and
+LFR raid bosses (four or five drops, twenty or twenty-five people) and world bosses with no instance and
+no difficulty, the situation word `Open world group` instead. On Drops, expand any row whose Me has a
+level → the detail card's `Replaces … · N` is the row's first `You` level (a ring or trinket row reads
+`N/M`, M at least N), never your own equipped item's level, in both layouts (feedback-18). `/dw test` off →
+your own History is back. Result:
 
 ## Compat
 
@@ -597,7 +618,8 @@ and another join mid-run, then let a drop fall (or just wait for the roster chan
 is added to that line, the leaver stays named. Open History → the same group's tooltip names the
 same party; `/reload` → it still does. A History group kept before DW-A3 has no `Group:` line and
 still reads correctly. In a raid (or `/dw test`, whose Placeholder boss is a raid of eight) → the
-line names all eight (ten at most, then `+n`). `/dw sim start key` then `/dw sim run` → the run's
+line names all eight (ten at most, then `+n`) (superseded by feedback-17, 2026-10-16: `Group (n)` rows naming
+everyone five a row, and `/dw test`'s raid bosses are twenty; FEED-79). `/dw sim start key` then `/dw sim run` → the run's
 tooltip names you and the simulated group, and the simulation's History does too. Result:
 
 **FEED-23. The Character dropdown (DW-A4, feedback-2 spec §4).** Open the window: after Content the
@@ -611,7 +633,8 @@ Current → exactly the alt again, and the Current row lights gold. Pick All →
 kept before this version (no recorder) shows its rows only now (under Current or a character it
 is left out, no `0 shown` header, since feedback-12 spec §1). Hover a group header while the dropdown hides
 some of its drops → the tooltip names them with `Character: Current`. Turn on `/dw test` → History
-lists you and `Emberwick`, and Current hides the alt's `Placeholder boss (alt)` until All. `/dw sim
+lists you and `Emberwick`, and Current hides the alt's `Placeholder boss (alt)` until All (since
+feedback-17 the alt's group is named for its real boss, ten days old). `/dw sim
 start key` then `/dw sim run` → the simulated run shows under Current on every tab. Result:
 
 **FEED-24. The tables' font and row height beside Loot History's (DW-A8, feedback-2 spec §8, FB2-9).**
@@ -1223,6 +1246,16 @@ Sort is in the Filters panel and Scan group the title bar's icon; History's stri
 DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6. Since feedback-16 compact's
 strip buttons are icons alone and Drops' carries Scan group, the title bar none: COMPACT-9.) Result:
 
+**FEED-79. A group's tooltip is rows (feedback-17).** The headless `test_window_group`,
+`test_group_roster`, `test_compact_cards` and `test_feed_counts` cover it. `/dw test`, then hover a raid
+boss's header in the full layout → the gold title is the boss, then rows with gold labels and the
+values lined up in one column: `Instance`, `Difficulty`, `When` (`4m ago`), `Drops` (`5`, or `5 · 3 shown`
+while a filter hides some), `Seen by` (you in class color) and `Group (20)` with five names a row, every
+member named in class color; then the gray `Drops from one boss encounter.`, any hidden drops, and the
+click hint last. The key run's header has no `Instance` row (its title is the dungeon). History's headers
+read the same with `2 days ago` and the gray `Kept in the history across sessions.`. `/dw compact` → the
+same tooltip on the compact headers, with no one-line `Instance · Boss · … · 10 drops · …` summary. Result:
+
 ## Roster
 
 The resolver's rules are headless-tested (`test_roster`); these checks confirm the client's spelling
@@ -1661,7 +1694,7 @@ debug on` → one held `[Migrate] v3 -> v4` line, and every kept group is still 
 footer reads `n groups, m drops · kept for 30 days` (no `of 20 groups kept`). Settings › Window ›
 Layout › Keep history for lists 7, 14, 30, 60, 90 and 180 days and Never delete. Pick 90 → taken at
 once, no question. With a group older than 7 days kept (or `/dw test`, whose `Placeholder boss
-(alt)` is ten days old), pick 7 days → a confirmation, `This deletes n groups (m drops) older than 7
+(alt)` is ten days old; since feedback-17 nine of its groups are older than 7 days), pick 7 days → a confirmation, `This deletes n groups (m drops) older than 7
 days.`; No → the dropdown reads 90 again, chat says nothing was deleted, and every group stays; pick
 7 again and Yes → the older groups leave the tab at once. Pick 7 days with an older group kept and
 `/reload` while the confirmation is still open → after the login the dropdown reads the window
@@ -1927,7 +1960,7 @@ after the update. Result:
 **COMPACT-2. Drops cards (DW-C2).** Turn test mode on (`/dw test`) and switch to the compact layout
 (`/dw compact`) → each drop is a three-line card about 50 pixels tall under a one-line header
 (`Instance · Boss · Difficulty · 3m · 2 · <you>`, no `ago` and no `drops`; its tooltip has the long form and
-any hidden drops; its chevron gold since DW-E0). Each card sits indented under its header with a
+any hidden drops (superseded by feedback-17, 2026-10-16: the full view's rows, no long form; FEED-79); its chevron gold since DW-E0). Each card sits indented under its header with a
 muted-white chevron before its icon (DW-E0: FEED-39). Line 1: the icon spans the three lines, the item name in its quality color with a thin
 bar of that color at the left edge, the item level right-aligned and `Ask` (no × since DW-D2). Line 2: the
 looter in class color (⊕ on one from another realm, the realm in its tooltip), the slot, the type (since
@@ -2012,7 +2045,7 @@ its left edge when the window sits against the right of the screen), never over 
 width (440), open History and Drops with an LFR encounter's group (or `/dw sim` a raid finder boss) → every
 gold header starts beside its chevron, the difficulty reads `LFR`, and a long instance, boss or recorder name
 ends in `…` on its own piece while the age, the count and the recorder stay on the line; hovering the header
-shows the whole names in the long form. Result:
+shows the whole names in the long form (since feedback-17, in the tooltip's rows: FEED-79). Result:
 
 **COMPACT-9. The compact strips are icons, the toggle chevrons, the empty state bare (feedback-16).** The
 headless `test_footer_row`, `test_drops_strip` and `test_window_group` cover the placement. `/dw compact` with
@@ -2180,6 +2213,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | COMPACT-2, COMPACT-7 | DW-C2, compact Drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
 | COMPACT-8 | feedback-15, compact headers left aligned, LFR, per-piece limits | No client pass recorded yet |
 | COMPACT-9 | feedback-16, compact strip buttons icon only with Scan group, chevron toggle, empty state without buttons | No client pass recorded yet |
+| STATE-6, FEED-79 | feedback-17, test data from real bosses at M+10, Heroic, Mythic, LFR and world bosses; the group tooltip as rows | No client pass recorded yet |
 | COMPACT-3, COMPACT-4 | DW-C3, compact cards of your own drops (on Drops since DW-E3) and History cards, the countdown, Offer and the strip, the docked Offer panel | No client pass recorded yet |
 | COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |
 | ASK-1 (its `noChannel` sentence), ASK-10 | DW-P17, a stored announce channel honors the not-in-a-group refusal, Post my tradeables included | No client pass recorded yet |

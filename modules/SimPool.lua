@@ -8,6 +8,9 @@ local _, NS = ...
 -- Heroic for a raid and Raid Finder for LFR. Drops come from that difficulty. The pool reads every
 -- difficulty of the side (FAMILY), so the members' gear (modules/SimRoster.lua) has a spread of
 -- item levels to draw a band from. Every read goes through NS.Compat's journal shims (compat-§1).
+-- `everything` (test mode's) reads both sides, and a build's `keystoneLevel` sets the journal's
+-- Mythic+ loot preview while it reads the Mythic Keystone difficulty, so those links carry that
+-- key level's item level where the client supports the preview.
 --
 -- THE JOURNAL'S SELECTION is the player's: each read saves it (tier, instance, encounter,
 -- difficulty, class and slot filters) and restores it afterward, even when the read raises. The
@@ -27,7 +30,9 @@ local _, NS = ...
 -- `fallback` in the pool.
 --
 --   pool  = { sim = true, source = "journal"|"fallback", difficulty, raid, pending, entries }
---   entry = { link, itemID, encounterID, difficulty, instance, equipLoc, ilvl, classID, subClassID }
+--   entry = { link, itemID, encounterID, encounter, difficulty, instance, raid, worldBoss, equipLoc,
+--             ilvl, classID, subClassID }   (encounter: the boss's name; worldBoss: the tier's
+--             world bosses, Compat.JournalInstances)
 --
 -- The build lives on the running session (State.sim.pool, State.sim.poolBuild) and its timers are
 -- the session's (NS.Sim.After), so the stop ends both. Test mode (modules/TestMode.lua) builds the
@@ -58,6 +63,7 @@ P.SOURCES = {
     openWorldGroup = { raid = false, difficulty = D.HEROIC_DUNGEON },
     raid           = { raid = true,  difficulty = D.HEROIC_RAID },
     raidLFR        = { raid = true,  difficulty = D.LFR },
+    everything     = { both = true },
 }
 
 --- Every difficulty the pool reads, per side, lowest first.
@@ -147,26 +153,43 @@ end
 
 -- ── reading the journal ────────────────────────────────────────────────────────────────────
 
--- Every loot entry of the newest tier's instances on `side`, at each of the side's difficulties.
-local function readAll(tiers, source, filter)
+-- Every loot entry of the selected tier's instances on one side, at each of the side's
+-- difficulties, into `out`; answers how many entries are still loading.
+local function readSide(out, seen, isRaid, filter, keystoneLevel)
     local Compat = NS.Compat
-    local out, pending, seen = {}, 0, {}
-    Compat.JournalSelect({ tier = tiers })
-    local instances = Compat.JournalInstances(source.raid)
-    for _, difficulty in ipairs(P.FAMILY[source.raid and "raid" or "dungeon"]) do
+    local pending, names = 0, {}
+    local function nameOf(id)
+        if id and names[id] == nil then names[id] = Compat.JournalEncounterName(id) or false end
+        return id and names[id] or nil
+    end
+    local instances = Compat.JournalInstances(isRaid)
+    for _, difficulty in ipairs(P.FAMILY[isRaid and "raid" or "dungeon"]) do
         for _, inst in ipairs(instances) do
             Compat.JournalSelect({ instanceID = inst.id, difficulty = difficulty,
-                classID = filter.classID, specID = filter.specID })
+                classID = filter.classID, specID = filter.specID,
+                keystoneLevel = difficulty == D.MYTHIC_KEYSTONE and keystoneLevel or nil })
             local loot, waiting = Compat.JournalLoot()
             pending = pending + waiting
             for _, e in ipairs(loot) do
                 if not seen[e.link] then
                     seen[e.link] = true
                     out[#out + 1] = { link = e.link, itemID = e.itemID, encounterID = e.encounterID,
-                        difficulty = difficulty, instance = inst.name }
+                        encounter = nameOf(e.encounterID) or nil, difficulty = difficulty, instance = inst.name,
+                        raid = isRaid, worldBoss = inst.worldBoss }
                 end
             end
         end
+    end
+    return pending
+end
+
+-- Every loot entry of the newest tier on the source's side (both sides for `everything`).
+local function readAll(tiers, source, filter, keystoneLevel)
+    local out, pending, seen = {}, 0, {}
+    NS.Compat.JournalSelect({ tier = tiers })
+    local sides = source.both and { false, true } or { source.raid == true }
+    for _, isRaid in ipairs(sides) do
+        pending = pending + readSide(out, seen, isRaid, filter, keystoneLevel)
     end
     return out, pending
 end
@@ -176,14 +199,15 @@ end
 --- frame is open: not read), `noTier` or `error` (the read raised; the selection is restored).
 --- @param source table P.Source's row
 --- @param filter table P.Filter's answer
+--- @param keystoneLevel number|nil the Mythic+ level the Mythic Keystone loot is previewed at
 --- @return table|nil entries, number pending, string|nil why
-function P.ReadJournal(source, filter)
+function P.ReadJournal(source, filter, keystoneLevel)
     local Compat = NS.Compat
     local sel = Compat.JournalSelection()
     if not sel then return nil, 0, "absent" end
     if sel.shown then return nil, 0, "shown" end
     if not sel.tiers or sel.tiers < 1 then return nil, 0, "noTier" end
-    local ok, entries, pending = pcall(readAll, sel.tiers, source, filter)
+    local ok, entries, pending = pcall(readAll, sel.tiers, source, filter, keystoneLevel)
     Compat.JournalSelect(sel)
     if not ok then
         NS.Debug(TAG, "journal read failed: %s", NS.SafeToString(entries))
@@ -285,7 +309,7 @@ attempt = function(b)
         builds[b] = nil
         return
     end
-    local entries, pending, why = P.ReadJournal(b.source, b.filter)
+    local entries, pending, why = P.ReadJournal(b.source, b.filter, b.keystoneLevel)
     if entries then b.entries, b.pending = entries, pending end
     local left = b.deadline - GetTime()
     if settled(entries, pending, why, left) then return finish(b) end
@@ -296,7 +320,8 @@ end
 
 --- Build a pool into `holder` (its `pool` and `poolBuild`) and call `done(pool)` when it is ready
 --- (at once when nothing has to load). `host` = { alive = fn() -> boolean, after = fn(delay, fn),
---- fallbackLine }; `opts` = { situation, classFilter = `mine`|`any`, timeout }.
+--- fallbackLine }; `opts` = { situation (`everything`: both sides), classFilter = `mine`|`any`,
+--- timeout, keystoneLevel }.
 --- @param holder table
 --- @param host table
 --- @param opts table|nil
@@ -306,7 +331,7 @@ function P.BuildInto(holder, host, opts, done)
     local snap = NS.Gear.Snapshot()
     local b = {
         holder = holder, host = host, done = done, source = P.Source(opts.situation),
-        filter = P.Filter(opts.classFilter, snap.classFile, snap.specID),
+        filter = P.Filter(opts.classFilter, snap.classFile, snap.specID), keystoneLevel = tonumber(opts.keystoneLevel),
         deadline = GetTime() + (tonumber(opts.timeout) or P.TIMEOUT),
     }
     holder.pool, holder.poolBuild = nil, b

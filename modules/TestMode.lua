@@ -8,20 +8,22 @@ local _, NS = ...
 -- reads, and populate and clear.
 --
 -- THE ITEMS (FB-9). Turning test mode on builds the simulator's item pool (modules/SimPool.lua,
--- BuildInto: the Encounter Journal at the current season's Mythic Keystone difficulty, every
--- class's loot, falling back to your own equipped and bag gear) into test mode's own holder
+-- BuildInto: the current season's dungeons and raids from the Encounter Journal at every
+-- difficulty, the Mythic Keystone loot previewed at the samples' key level (TestData.KEY_LEVEL),
+-- every class's loot, falling back to your own equipped and bag gear) into test mode's own holder
 -- (State.testPool). The drops fill in when it is ready: at once when the journal has loaded, else
 -- after EJ_LOOT_DATA_RECIEVED or the pool's timeout, never with an invented item meanwhile (the
 -- Drops tab says it is gathering them). Each item's facts are the item cache's
 -- (NS.ItemFacts.Get), else the pool's level and slot with the link's quality.
 --
 -- THE HISTORY (FB-10). While test mode is on, the History tab reads test mode's own session-only
--- log (State.testHistory, NS.History.Log): two sample groups covering every outcome. It is never
+-- log (State.testHistory, NS.History.Log): four weeks of sample groups covering every outcome. It is never
 -- written to `global.history` and goes when test mode turns off.
 --
 -- THE HOOKS. A sample carries its own inspect entry (`testInspect`, read in place of
--- NS.Inspect.Get) and its own ask state (`testAsk`, shown while the messaging edge holds none for
--- it): TM.InspectOf and TM.AskState are what the Drops table and the detail card read. A click
+-- NS.Inspect.Get), its own worn gear (`testGear`, read in place of your gear snapshot) and its own
+-- ask state (`testAsk`, shown while the messaging edge holds none for it): TM.InspectOf, TM.GearOf
+-- and TM.AskState are what the Drops table, its compact cards and the detail card read. A click
 -- on a sample's Ask, Offer or Announce goes through the messaging edge, which prints the text
 -- instead of sending it (modules/Asks.lua): nothing is ever whispered in test mode.
 --
@@ -42,8 +44,9 @@ local TAG = "State"
 
 local savedView   -- the Drops tab's View before test mode set it to All
 
---- The pool test mode builds: the dungeons at Mythic Keystone, every class's loot.
-TM.POOL = { situation = "mythicPlus", classFilter = "any" }
+--- The pool test mode builds: the season's dungeons and raids at every difficulty, its keys at the
+--- samples' level, every class's loot.
+TM.POOL = { situation = "everything", classFilter = "any", keystoneLevel = TD.KEY_LEVEL }
 
 --- Every sample drop over `src` (modules/TestData.lua). Pure.
 --- @param now number GetTime()
@@ -78,6 +81,17 @@ function TM.AskState(drop, state, reason)
     local own = type(drop) == "table" and drop.test and drop.testAsk
     if state == "ready" and type(own) == "table" then return own.state, own.reason end
     return state, reason
+end
+
+--- Your worn gear as a drop's Me cell reads it: a sample's own (`testGear`, the items its Me
+--- verdict was judged against; feedback-18), else `equipped` (your gear snapshot's), so a sample
+--- never shows your real gear beside a verdict judged against another item.
+--- @param drop table
+--- @param equipped table|nil
+--- @return table|nil
+function TM.GearOf(drop, equipped)
+    if type(drop) == "table" and drop.test then return drop.testGear or {} end
+    return equipped
 end
 
 -- ── the items ───────────────────────────────────────────────────────────────────────────────

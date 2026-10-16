@@ -181,7 +181,7 @@ function FM.TestRecord(id, spec, link, itemID, t)
         isMine = who.isSelf == true, at = t - (tonumber(spec.ago) or 0),
         situation = spec.situation, sources = { manual = 1 }, source = "manual", group = spec.group,
         facts = spec.facts, me = spec.me, them = spec.them, trade = spec.trade, inspect = spec.inspect,
-        candidates = spec.candidates, testAsk = spec.testAsk, testInspect = spec.testInspect,
+        candidates = spec.candidates, testAsk = spec.testAsk, testInspect = spec.testInspect, testGear = spec.testGear,
         state = "new",
     }
 end

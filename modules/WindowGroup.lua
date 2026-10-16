@@ -758,7 +758,9 @@ local function paintRow(row, drop, layout, now, metrics)
     classTone(cells.looter.text, lc.classFile)
     NS.WindowRows.PaintMark(cells.looter, lc.you, layout.looter)   -- ` [YOU]` (feedback-7 spec §2)
     paintText(cells.trade, NS.WindowOwn.Trade(drop))
-    paintSide(cells.me, SC.Me(drop, myGear()), "player")
+    local equipped, classFile = myGear()
+    -- A sample's Me shows its own worn items, their tooltips the links (feedback-18).
+    paintSide(cells.me, SC.Me(drop, NS.TestMode.GearOf(drop, equipped), classFile), not drop.test and "player" or nil)
     paintSide(cells.them, WG.ThemCell(drop, inspectGear(drop), now))
     if layout.tradeWindow then paintTradeWindow(cells.tradeWindow, drop, now, metrics.warnAt, metrics.fontSize) end
     paintActions(cells.actions, drop)

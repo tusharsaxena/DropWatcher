@@ -402,8 +402,12 @@ test("compact cards: the header's short form drops `ago` and `drops`", function(
     assertEqual(stripColor(h.text), "Gate of the S… · Commander Ri'… · Timewalking · 3m · 2 · Tiamât")
     assertTrue(h.cut)
     local full = NS.WindowCells.Header(encounter(), 2, NOW, "Dungeon", false, nil, nil, 0)
-    assertEqual(h.tip[1], full.tip[1]); assertEqual(h.tip[2], full.text, "the long form opens the tooltip")
-    assertEqual(#h.tip, #full.tip + 1, "and every line of the full view's tooltip follows")
+    assertEqual(joined(h.tip), joined(full.tip), "the full view's tooltip (feedback-17)")
+    local tip = stripColor(T.tipJoined(h.tip, "\n"))
+    -- red under: the long form on one line, the place, time, count and recorder run together
+    assertTrue(tip:find("Instance  Gate of the Setting Sun\nDifficulty  Timewalking\nWhen  3m ago\nDrops  2\n"
+        .. "Seen by  Tiamât", 1, true) ~= nil, tip)
+    assertFalse(tip:find(" · 3m ago · ", 1, true) ~= nil, "no long form")
 end)
 
 test("compact cards: a filter that hides drops reads `1 of 2`, the hidden ones in the tooltip", function()
@@ -413,7 +417,7 @@ test("compact cards: a filter that hides drops reads `1 of 2`, the hidden ones i
     local h = C.Header(encounter(), 1, NOW, "Dungeon", false, hidden, { view = "upgrades" })
     assertTrue(stripColor(h.text):find(" · 3m · 1 of 2 · ", 1, true) ~= nil, h.text)
     assertTrue(has(h.tip, "Hidden by the filters:"))
-    assertTrue(has(h.tip, "2 drops · 1 shown"), "the reconciling counts in the long form")
+    assertTrue(stripColor(joined(h.tip)):find("Drops  2 · 1 shown", 1, true) ~= nil, "the reconciling counts")
     assertFalse(has(h.tip, "yours"), "no `yours` count (feedback-5 spec §2)")
     assertEqual(C.Count(0, nil), "0"); assertEqual(C.Count(3, {}), "3")
 end)
@@ -439,7 +443,10 @@ test("compact cards: an LFR header fits the default width, each piece cut to its
     local h = C.Header(g, 2, NOW, "Raid", false, nil, nil, 0)
     assertEqual(stripColor(h.text), "The Venomous… · Vashnik the M… · LFR · 2d · 2 · Sacrilèg…")
     assertTrue(h.cut)
-    assertTrue(has(h.tip, "The Venomous Abyss · Vashnik the Malignant · LFR"), "the long form, whole, in the tooltip")
+    local tip = stripColor(joined(h.tip))
+    assertEqual(h.tip[1], "Vashnik the Malignant", "the boss, whole, titles the tooltip")
+    assertTrue(tip:find("Instance  The Venomous Abyss", 1, true) ~= nil, tip)
+    assertTrue(tip:find("Difficulty  Looking For Raid", 1, true) ~= nil, "the difficulty's full name")
     local M = C.HEADER_MAX
     assertTrue(M.instance + M.label + M.difficulty + M.age + M.count + M.who + 5 * 3 <= C.HEADER_CHARS,
         "an encounter's six pieces, each at its limit, fit the line a default-width pane holds")
@@ -453,7 +460,7 @@ test("compact cards: a group with no time or recorder, and the open world's area
     assertEqual(C.Header(g, 1, nil, "Solo", false).text, "Dornogal · Solo · 1")
 end)
 
-test("compact cards: the History header reads days once a day old, its tooltip the long form", function()
+test("compact cards: the History header reads days once a day old, its tooltip the full view's", function()
     local NS = T.newAddon()
     local C = NS.CompactCards
     local g = encounter({ at = 1000000 - 2 * 86400 - 60 })

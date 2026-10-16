@@ -133,6 +133,37 @@ test("compat journal: Instances lists the tier's dungeons or raids; Loot answers
     assertEqual(#NS.Compat.JournalInstances(false), 0)
 end)
 
+test("compat journal: world bosses are flagged, bosses named, the keys' preview level set and put back (fb17)", function()
+    local NS, _, m = T.newAddon()
+    local Compat, j = NS.Compat, m.journal
+    m.seedGearJournal()
+    Compat.JournalSelect({ tier = #j.tiers })
+    local raids = Compat.JournalInstances(true)
+    assertEqual(raids[1].name, "Test Spire"); assertNil(raids[1].worldBoss)
+    assertEqual(raids[2].name, "Test Wilds"); assertTrue(raids[2].worldBoss == true, "shown without a difficulty")
+    assertNil(Compat.JournalInstances(false)[1].worldBoss, "a dungeon is never one")
+    assertEqual(Compat.JournalEncounterName(3021), "Spire Colossus")
+    assertNil(Compat.JournalEncounterName(1)); assertNil(Compat.JournalEncounterName(nil))
+    j.keystoneLevel = 7
+    local sel = Compat.JournalSelection()
+    assertEqual(sel.keystoneLevel, 7)
+    Compat.JournalSelect({ keystoneLevel = 10 })
+    assertEqual(j.keystoneLevel, 10)
+    Compat.JournalSelect(sel)
+    assertEqual(j.keystoneLevel, 7, "a saved selection restores it")
+    m.C_EncounterJournal.GetPreviewMythicPlusLevel = nil
+    Compat.JournalSelect({ keystoneLevel = 10 })
+    assertEqual(j.keystoneLevel, 7, "never set where it cannot be read back")
+    local entries = NS.SimPool.ReadJournal(NS.SimPool.Source("everything"), { classID = 0, specID = 0 }, 10)
+    local sides = {}
+    for _, e in ipairs(entries) do
+        sides[e.raid and "raid" or "dungeon"] = true
+        if e.worldBoss then sides.world = true end
+        assertTrue(e.encounter ~= nil, "each entry names its boss")
+    end
+    assertTrue(sides.raid and sides.dungeon and sides.world, "everything reads both sides")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The pool's pure parts
 -- ---------------------------------------------------------------------------------------------

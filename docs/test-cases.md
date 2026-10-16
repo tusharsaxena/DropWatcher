@@ -320,7 +320,7 @@ Total.
 - compact cards: a long instance name is cut, the full name in the tooltip
 - compact cards: an LFR header fits the default width, each piece cut to its own limit
 - compact cards: a group with no time or recorder, and the open world's area header
-- compact cards: the History header reads days once a day old, its tooltip the long form
+- compact cards: the History header reads days once a day old, its tooltip the full view's
 
 ### test_compact_group.lua (20)
 
@@ -409,7 +409,7 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (48)
+### test_window_group.lua (49)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -423,6 +423,7 @@ Total.
 - cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you
 - cells: Item, Ilvl, Slot and Looter are never blank, each with a reason tooltip
 - cells: an encounter header reads `Label · Situation · age · n drops`
+- cells: a header's tooltip is its facts in rows, gold labels, every member named five a row (feedback-17)
 - table: the default columns, and a column the profile turns off
 - table: the Item column takes the slack, never less than its minimum
 - table: a row too narrow for every column sheds Type, Slot, Looter, Trade window and Ilvl, in that order
@@ -642,17 +643,19 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (30)
+### test_test_mode.lua (33)
 
-- test mode data: each sample group names who was in it, you first; the boss is a raid's (fb2 §3)
+- test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
+- test mode data: the session drops what such groups see; History holds far more, every content (fb17)
+- test mode data: each group is one real place, its loot that place's at the group's difficulty (fb17)
 - test mode data: the other members' drops cover every Me and Them verdict (board 03)
 - test mode data: every trade estimate, inspect state and ask state is there
 - test mode data: your own drops cover every countdown and every candidate status (board 04)
-- test mode data: two groups, a boss and a key run, every item a pool item that keeps its slot
+- test mode data: a key run and three bosses, every item a pool item that keeps its slot
 - test mode data: worn items are other pool items of the slot, nearest the level the change implies
 - test mode data: the trade reason's two levels are the drop's and the looter's worn item's
 - test mode data: an empty pool gives no sample, and a pool short of a slot borrows a real item
-- test mode data: the History sample has your two groups, every outcome, and an alt's, oldest first
+- test mode data: the History sample has your groups, every outcome, and an alt's, oldest first
 - feed: AddTest puts a sample in the test feed as given, never in the live one
 - feed: AddTest refuses a spec with no item, no looter or no group, and while stood down
 - test mode: on fills the test feed from the item pool, off empties it; the live feed is never touched
@@ -663,9 +666,10 @@ Total.
 - test mode: the Drops tab shows View: All while on, and the player's View comes back
 - history: test mode shows its sample groups, every outcome, and never writes the account's history
 - history: the account's kept groups come back when test mode ends
-- window: test mode draws every sample, under the boss and the key run, with real icons
+- window: test mode draws every sample, under the key run and the three bosses, with real icons
 - window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Them gear state and every trade chip
+- window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)
 - window: a sample's Them shows its own worn item, and its detail card its own inspect
 - window: Drops lists your samples with the others, and its strip counts the tradeable ones
 - window: the empty state comes back once test mode ends with nothing in the live feed
@@ -1185,14 +1189,14 @@ Total.
 - roster merge: the snapshot only grows, you first, the same character never twice
 - roster merge and copy: the entries are copied, never shared
 - roster names: the first few, class-colored, then +n; none for no roster
-- roster tooltip: one Group line, the realm when it is not yours, class-colored (fb3 §4)
+- roster tooltip: Group (n) rows, five names a row, the realm when it is not yours, class-colored (fb17)
 - feed roster: the group takes everyone in it when its first drop makes it, you first
 - feed roster: someone who joins mid-run is added on the roster event, and to the History group
 - feed roster: a joiner is also taken by the next drop, with no roster event between
 - feed roster: a roster event with no group open yet changes nothing and raises nothing
 - history roster: Record copies the group's roster in and merges it with each entry
-- group header: you alone after the count, class-colored; the tooltip's Group line names the party
-- group header: a raid's party is not in the header; its tooltip line names ten and +n
+- group header: you alone after the count, class-colored; the tooltip's Group rows name the party
+- group header: a raid's party is not in the header; its tooltip rows name all twenty
 - history header: the recorder alone; an older group with no place and no roster keeps its label
 
 ### test_group_place.lua (15)
@@ -1476,11 +1480,12 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (19)
+### test_sim_pool.lua (20)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
 - compat journal: Instances lists the tier's dungeons or raids; Loot answers the loaded and the pending
+- compat journal: world bosses are flagged, bosses named, the keys' preview level set and put back (fb17)
 - sim pool: each situation reads its side and difficulty; the class filter is yours or none
 - sim pool: a read takes every instance of the newest tier at every difficulty and restores the selection
 - sim pool: the selection is restored even when a read raises
@@ -1735,7 +1740,7 @@ Total.
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 48 |
+| test_window_group.lua | 49 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 21 |
 | test_detail_card.lua | 21 |
@@ -1746,7 +1751,7 @@ Total.
 | test_offer_panel.lua | 17 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 30 |
+| test_test_mode.lua | 33 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
@@ -1780,7 +1785,7 @@ Total.
 | test_toast.lua | 32 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
-| test_sim_pool.lua | 19 |
+| test_sim_pool.lua | 20 |
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
 | test_sim_e2e.lua | 19 |
@@ -1796,4 +1801,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1474** |
+| **Total** | **1479** |
