@@ -1,0 +1,7 @@
+id	milestone	repo	title	depends_on	effort	smoke	spec_refs
+DW-O0	M26	DropWatcher	The off-spec verdict: modules/OffSpec.lua, the Evaluate hook, Gear's pool and OffSpecGear, Inspect's worn off-spec gear		L	FEED,GEAR	fb19 §0
+DW-O1	M26	DropWatcher	How off-spec looks: the offspec tone, WC.Verdict branch, gear half, marks, detail and History cards, History snapshot, filter bar, legends	DW-O0	L	FEED,HIST,COMPACT	fb19 §1
+DW-O2	M26	DropWatcher	Ask, the askOffSpec whisper and its row, token gains, the toast and auto-ask (main spec first)	DW-O1	M	ASK,TOAST	fb19 §2
+DW-O3	M26	DropWatcher	Offer: the off-spec candidate statuses, rank, gain sort and cyan cell	DW-O2	M	FEED	fb19 §3
+DW-O4	M26	DropWatcher	Samples, docs and smoke checks: test-mode off-spec samples, schema/settings/data-flow/module-map/known-limitations/scope/README, FEED-80/81, ASK-11, TOAST-5	DW-O3	M	STATE	fb19 §4
+DW-O5	M26	DropWatcher	Review: branch diff against the spec and the standard; caps, CCN, perf ceilings, test badge	DW-O4	M		fb19 §5
