@@ -42,6 +42,20 @@ end
 
 -- ── the pure core ───────────────────────────────────────────────────────────────────────────
 
+-- The feed key of a group of this session (its key ends in `suffix`, `@<start>`), without the
+-- suffix; nil for any other group.
+local function sessionFeedKey(g, suffix)
+    local key = type(g.key) == "string" and g.key or ""
+    if #key > #suffix and key:sub(-#suffix) == suffix then return key:sub(1, -#suffix - 1) end
+    return nil
+end
+
+-- Whether an entry comes back: not gone, not dated before the clear, seen by `current`, a link.
+local function pickable(e, current, cleared)
+    if e.gone or e.seenBy ~= current or type(e.itemLink) ~= "string" then return false end
+    return not (cleared and (num(e.at) or 0) < cleared)
+end
+
 --- The entries to restore: this session's (`@<start>`), seen by `current`, not gone, not dated
 --- before `cleared` (a drop in the clear's own second is kept), oldest first by `at` (a tie keeps
 --- the log's order), the newest `max`.
@@ -55,12 +69,10 @@ function FR.Pick(groups, start, current, max, cleared)
     local suffix, out = "@" .. tostring(start), {}
     if not current then return out end
     for _, g in ipairs(type(groups) == "table" and groups or {}) do
-        local key = type(g.key) == "string" and g.key or ""
-        if #key > #suffix and key:sub(-#suffix) == suffix then
-            local feedKey = key:sub(1, -#suffix - 1)
+        local feedKey = sessionFeedKey(g, suffix)
+        if feedKey then
             for _, e in ipairs(type(g.drops) == "table" and g.drops or {}) do
-                local early = cleared and (num(e.at) or 0) < cleared
-                if not e.gone and not early and e.seenBy == current and type(e.itemLink) == "string" then
+                if pickable(e, current, cleared) then
                     out[#out + 1] = { group = g, entry = e, feedKey = feedKey, n = #out + 1 }
                 end
             end
