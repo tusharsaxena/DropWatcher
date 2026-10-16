@@ -1064,6 +1064,35 @@ L["Clear history"] = "Clear history"
 L["Empty the drop history on every character, after a confirmation."] =
     "Empty the drop history on every character, after a confirmation."
 
+-- modules/HistoryCard.lua (feedback-15 spec §4)
+L["ilvl %s"] = "ilvl %s"
+L["%s against what was worn then."] = "%s against what was worn then."
+L["No item-level change was kept."] = "No item-level change was kept."
+L["The scorer's change then."] = "The scorer's change then."
+L["No score change was kept."] = "No score change was kept."
+L["FOR YOU · AT THE TIME"] = "FOR YOU · AT THE TIME"
+L["Who it was an upgrade for is not kept in the history."] = "Who it was an upgrade for is not kept in the history."
+L["No time was kept."] = "No time was kept."
+L["When it dropped."] = "When it dropped."
+L["Where"] = "Where"
+L["Kept before the place was recorded."] = "Kept before the place was recorded."
+L["The instance, the encounter and the difficulty."] = "The instance, the encounter and the difficulty."
+L["Seen by"] = "Seen by"
+L["Kept before the character that saw it was recorded."] = "Kept before the character that saw it was recorded."
+L["The character that saw it: %s."] = "The character that saw it: %s."
+L["WHEN AND WHERE"] = "WHEN AND WHERE"
+L["Put back the outcome it had before you marked it declined."] =
+    "Put back the outcome it had before you marked it declined."
+L["Mark declined"] = "Mark declined"
+L["A completed trade settled it: it keeps that outcome."] = "A completed trade settled it: it keeps that outcome."
+L["Mark it declined: you passed on it. The row's right-click menu does the same."] =
+    "Mark it declined: you passed on it. The row's right-click menu does the same."
+L["Show in Drops"] = "Show in Drops"
+L["It is not in the Drops tab: only this session's drops are, until the feed is cleared."] =
+    "It is not in the Drops tab: only this session's drops are, until the feed is cleared."
+L["Select the Drops tab, open this drop's group and expand its card."] =
+    "Select the Drops tab, open this drop's group and expand its card."
+
 -- modules/Toast.lua
 L["Tradeable"] = "Tradeable"
 L["not an upgrade for %s"] = "not an upgrade for %s"

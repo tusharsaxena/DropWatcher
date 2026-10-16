@@ -357,6 +357,24 @@ Total.
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
 
+### test_history_card.lua (15)
+
+- history card: the header's chips name slot, type, item level and the outcome in its tone
+- history card: For you is the verdict then, with its deltas, marked at the time
+- history card: For the group names the looter and the Them verdict with its deltas
+- history card: on your own drop the looter is you and the upgrade list is not kept
+- history card: the trade box is the recorded estimate in the Drops card's words
+- history card: when and where reads the time, the place and the character that saw it
+- history card: the actions link, mark or clear declined, and show the drop while it is live
+- history card: a row click expands the card under it; the row below moves down; one at a time
+- history card: a right-click still opens the row menu and expands nothing
+- history card: the columns start after the row's indent and chevron, as on Drops
+- history card: the card paints the snapshot, each part with a tooltip
+- history card: Link in chat links the item; Mark declined marks it and reads Clear declined
+- history card: Show in Drops selects the Drops tab, opens the drop's header and expands its card
+- history card: compact cards expand the stacked card under the clicked card
+- history card: the stacked card's actions fit one line at the compact width
+
 ### test_compact_chrome.lua (20)
 
 - chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)
@@ -1321,7 +1339,7 @@ Total.
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
-- history tab: rows do not expand, so they draw no chevron and are not indented; the headers' chevrons are gold
+- history tab: rows draw the Drops rows' chevron and indent; the headers' chevrons are gold
 
 ### test_history_retention.lua (16)
 
@@ -1712,6 +1730,7 @@ Total.
 | test_compact_cards.lua | 26 |
 | test_compact_group.lua | 20 |
 | test_compact_history.lua | 10 |
+| test_history_card.lua | 15 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 50 |
@@ -1775,4 +1794,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1457** |
+| **Total** | **1472** |

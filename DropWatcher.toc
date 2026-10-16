@@ -357,6 +357,11 @@ modules\DetailCells.lua
 # at load. NS.WindowGroup builds it (above, at call time); NS.Window, NS.TipMarks (a chip's estimated
 # width), the engine modules and the host handlers are read at call time.
 modules\DetailCard.lua
+# LOAD-BEARING: takes NS.WindowCells and NS.DetailCells (modules\, above) at load. Publishes
+# NS.HistoryCard, the History tab's detail card drawn from a kept entry's snapshot (feedback-15 spec
+# §4); takes NS.Constants and NS.L at load. NS.DetailCard (above: its frame pieces), NS.WindowHistory
+# (below: it builds the card), NS.WindowGroup, NS.History and NS.Window are read at call time.
+modules\HistoryCard.lua
 # LOAD-BEARING: takes NS.MineCells, NS.SideCells and NS.TipMarks (modules\, above; the Their eq
 # column's tooltip calls TipMarks.Mark) at load. Publishes NS.OfferPanel, the "Who could use this?"
 # panel; takes NS.Constants, NS.L and NS.State at load. NS.Window, NS.WindowGroup (SideCell,

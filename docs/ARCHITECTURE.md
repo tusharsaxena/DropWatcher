@@ -58,7 +58,9 @@ one-line responsibility and why its position is load-bearing or conventional is 
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
   after a reload, `FeedRestore.lua`; the toast, auto-ask); the simulator's
   inputs, scenarios and step panel; then the window: its shell, chrome, two tabs, their strips' one
-  footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers, tooltip placement, compact mode's switch and bodies, test mode and the diagnostics.
+  footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers, the two
+  detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
+  tooltip placement, compact mode's switch and bodies, test mode and the diagnostics.
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only and `/dw sim` verbs, and Profiles, last.
 
@@ -219,7 +221,7 @@ recorded client pass yet, so the encounter-time chat and loot readings and the r
 unconfirmed; a non-English client shows no upgrade-track change; a delve's tier and a tier token's
 slot are not read; your gear is a per-slot best, not a loadout planner; a reload brings the
 session's drops back but starts a new key header mid-key, and a relog starts an empty Drops tab
-(the session is the login); and a simulation does not exercise every live
+(the session is the login); the History card shows only what a kept entry holds; and a simulation does not exercise every live
 path (a member's spec, cross-source de-duplication, a situation's tracking switch). Every limitation,
 with its smoke-check id, is in [`known-limitations.md`](known-limitations.md).
 

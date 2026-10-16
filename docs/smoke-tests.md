@@ -1695,6 +1695,21 @@ empties the History tab on this and your other characters and chat reads `Histor
 `/dw test` on, Yes empties only the sample groups: turn test mode off → the account's history is
 still there. Result:
 
+**HIST-7. The History tab's detail card (DW-Q4, feedback-15 spec §4).** The headless
+`test_history_card` covers it. On the History tab each row has the Drops rows' chevron and is
+indented under its header. Click a row → a card opens under it in the Drops card's style (the rows
+below move down, the chevron points up, the row is tinted gold): the item and its chips (slot, type,
+`ilvl N`, the outcome in its color), FOR YOU · AT THE TIME with the verdict and its deltas, FOR THE
+GROUP with the looter and the Them verdict (on your own drop `Name [YOU]` and a Them line saying it
+is not kept), the trade estimate in the Drops card's words, WHEN AND WHERE (the time, the instance,
+boss and difficulty, the character that saw it). Click another row → the card moves; click the open
+row → it closes. Right-click a row → the menu still opens and nothing expands. Link in chat → the
+item's link in the chat box. Mark declined → the outcome reads `Declined` and the button `Clear
+declined`; Clear declined → the earlier outcome. On a drop of this session still in the Drops tab,
+Show in Drops → the Drops tab, the drop's header open and its card expanded; on an earlier
+session's entry it is off and its tooltip says why. `/dw compact` → the same card, stacked, under
+the clicked card. Result:
+
 ## Toast
 
 **TOAST-1. The upgrade toast.** Settings › Window › Toast › Show a toast on, then `/dw test` → a
@@ -2117,6 +2132,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | HIST-4 | DW-A9, the prune after a disabled start, a stale confirmation | No client pass recorded yet |
 | HIST-2, HIST-5 | DW-Q0, the session is the login: the Drops tab across a reload, the undone Expired, This instance across a reload | No client pass recorded yet |
 | HIST-6 | DW-Q3, Clear history in Settings › Window › Layout beside Keep history for; none on History's strips | No client pass recorded yet |
+| HIST-7 | DW-Q4, the History tab's detail card from the snapshot, both layouts; Link in chat, Mark / Clear declined, Show in Drops | No client pass recorded yet |
 | TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
 | TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |
 | TOAST-3 | DW-62, an empty-slot upgrade toasts and auto-asks | No client pass recorded yet |

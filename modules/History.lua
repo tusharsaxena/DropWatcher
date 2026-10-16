@@ -457,6 +457,18 @@ function H.EntryOf(dropId)
     return e
 end
 
+--- The live drop a kept entry is, this load: its id while the feed still holds it, else nil (the
+--- History card's Show in Drops, feedback-15 spec §4).
+--- @param e table the entry
+--- @return any|nil
+function H.DropOf(e)
+    if type(e) ~= "table" or e.gone then return nil end
+    for id, x in pairs(index) do
+        if x == e and NS.LootFeed.Get(id) then return id end
+    end
+    return nil
+end
+
 --- A live drop's outcome this session, or nil.
 --- @param dropId any
 --- @return string|nil

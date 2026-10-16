@@ -67,8 +67,8 @@ test("layout: at the least width no tab sheds a column, and one pixel less would
     assertEqual(K.MIN_WIDTH, K.WIDTH, "the least width is a new profile's width")
     assertEqual(K.COMPACT_MIN_W, K.COMPACT_WIDTH, "in both layouts")
     local row = K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W
-    -- Drops' columns start after the row's indent and chevron (feedback-5 spec §0).
-    local lead = { WindowGroup = NS.WindowGroup.LEAD, WindowHistory = 0 }
+    -- Both tabs' columns start after the row's indent and chevron (feedback-5 spec §0; History feedback-15 spec §4).
+    local lead = { WindowGroup = NS.WindowGroup.LEAD, WindowHistory = NS.WindowGroup.LEAD }
     for _, tab in ipairs({ "WindowGroup", "WindowHistory" }) do
         local cols = NS[tab].COLUMNS
         assertEqual(#NS.WindowGroup.Fit(cols, row - lead[tab]), #cols, tab .. " keeps every column")

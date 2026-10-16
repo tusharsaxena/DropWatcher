@@ -188,6 +188,19 @@ end
 --- @return number|nil
 function WG.Expanded() return view().expanded end
 
+--- Open a live drop's header and expand its card (the History card's Show in Drops, feedback-15
+--- spec §4); false when the feed no longer holds it.
+--- @param id number
+--- @return boolean
+function WG.Reveal(id)
+    local rec = NS.LootFeed.Get(id)
+    if not rec then return false end
+    local v = view()
+    if rec.groupKey ~= nil then v.collapsed[rec.groupKey] = false end
+    v.expanded = id
+    return true
+end
+
 -- ── the pure halves ─────────────────────────────────────────────────────────────────────────
 
 --- The columns shown: the default ones less each one the profile turns off (`columns[key] =

@@ -326,6 +326,7 @@ local function verdictChip(cell)
     if mark ~= "" then mark = mark .. " " end
     return { text = mark .. (VERDICT_CHIP[cell.verdict] or VERDICT_CHIP.unknown), tone = cell.tone, tip = cell.tip }
 end
+DC.VerdictChip = verdictChip   -- the History card's verdicts too (modules/HistoryCard.lua)
 
 local function sideRows(eval, f, tone, whose, mine)
     local ilvl = num(f.ilvl)

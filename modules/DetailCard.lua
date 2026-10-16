@@ -115,6 +115,10 @@ local function paintChip(c, chip)
     c:SetWidth(floor(textWidth(c.text, chip.text) + 12))
 end
 
+-- The frame pieces the History tab's card is drawn with too (modules/HistoryCard.lua, feedback-15
+-- spec §4): one visual language for both cards.
+DCard.Box, DCard.NewChip, DCard.PaintChip = box, newChip, paintChip
+
 -- ── building: the header ────────────────────────────────────────────────────────────────────
 
 local function buildHeader(card)
@@ -139,6 +143,7 @@ local function buildHeader(card)
         card.chips[i] = c
     end
 end
+DCard.BuildHeader = buildHeader   -- the item button, the name and its chips
 
 -- ── building: a comparison box ──────────────────────────────────────────────────────────────
 
@@ -171,6 +176,7 @@ local function newSide(card)
     for i = 1, MAX_SIDE_ROWS do side.rows[i] = newSideRow(side, i) end
     return side
 end
+DCard.NewSide = newSide   -- a titled box with a verdict chip and its lines
 
 -- ── building: the trade box and the actions ─────────────────────────────────────────────────
 
@@ -189,6 +195,7 @@ local function buildTrade(card)
     attach(t)
     card.trade = t
 end
+DCard.BuildTrade = buildTrade   -- `card.trade`, the trade estimate box
 
 local ON_CLICK = {
     ask   = function(b) NS.WindowOwn.PressAction(b) end,   -- Offer on your own drop (`b.offer`)
@@ -260,14 +267,18 @@ end
 local ACTION_GAP, ACTION_LINE_GAP = 6, 4
 
 --- The actions flowed into lines `avail` pixels wide, in their order (Ask, Edit message, Link in
---- chat, Retry inspect, Trade): a button that does not fit after the last one on a
---- line starts the next. Each one's x and line (0 first), and the number of lines.
+--- chat, Retry inspect, Trade; or `keys` at `widths`, the History card's): a button that does not
+--- fit after the last one on a line starts the next. Each one's x and line (0 first), and the
+--- number of lines.
 --- @param avail number
+--- @param keys table|nil the buttons' keys, left to right (the Drops card's by default)
+--- @param widths table|nil [key] = width
 --- @return table { [key] = { x, line } }, number lines
-function DCard.FlowActions(avail)
+function DCard.FlowActions(avail, keys, widths)
+    keys, widths = keys or ACTION_KEYS, widths or ACTION_W
     local out, x, line = {}, 0, 0
-    for _, key in ipairs(ACTION_KEYS) do
-        local w = ACTION_W[key]
+    for _, key in ipairs(keys) do
+        local w = widths[key]
         if x > 0 and x + w > avail then x, line = 0, line + 1 end
         out[key] = { x = x, line = line }
         x = x + w + ACTION_GAP
@@ -319,6 +330,7 @@ local function fitChips(card, width)
     end
     for i = DCard.ChipsThatFit(widths, avail) + 1, #widths do card.chips[i]:Hide() end
 end
+DCard.FitChips = fitChips
 
 local function paintHeader(card, drop, width)
     local name = NS.WindowCells.ItemName(drop.link) or "?"
@@ -351,10 +363,12 @@ local function paintSideRow(r, line, width)
     NS.WindowRows.PlaceMark(r.value, r.mark, line.you, max(width - 20 - x, 20))
 end
 
+-- A box with no `verdict` (the History card's When and where) hides its chip.
 local function paintSide(side, model, width)
     side:SetWidth(width)
     side.title:SetText(model.title)
-    paintChip(side.verdict, model.verdict)
+    side.verdict:SetShown(model.verdict ~= nil)
+    if model.verdict then paintChip(side.verdict, model.verdict) end
     for i, r in ipairs(side.rows) do paintSideRow(r, model.rows[i], width) end
 end
 
@@ -364,6 +378,7 @@ local function paintTrade(t, model)
     t.meta:SetText(model.meta)
     t.tipLines = { model.tip[1], model.text, model.meta, model.tip[2] }
 end
+DCard.PaintSide, DCard.PaintTrade = paintSide, paintTrade
 
 -- The ask's state; `traded` once the history settled the drop received (modules/History.lua).
 local function askState(drop)

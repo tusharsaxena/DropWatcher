@@ -99,6 +99,13 @@ feedback-5 spec §0, §4),
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
 repainting, the collapsing headers, every tooltip at the card's top right, the strip without Clear
 history in both layouts, the text size and test mode's samples),
+`test_history_card` (the History tab's detail card, feedback-15 spec §4, DW-Q4: the pure `Model`
+over a kept entry, the header's chips, For you at the time, For the group and your own drop's, the
+recorded trade estimate, when and where and the actions; then headless, a row click expanding it
+under the row with the chevron up and the rows below moved, one at a time, a right-click still the
+menu, the columns after the indent and chevron, Link in chat, Mark and Clear declined, Show in Drops
+selecting the Drops tab with the drop's header open and its card expanded, and the stacked card
+under a compact card),
 `test_compact_chrome` (the window's chrome in the compact layout, DW-C4: the short tab labels, `TEST`
 and `SIM`, the badge's count, the footer's one line and its tooltip, the Filters count, label and
 tooltip, pure; then headless: the short title centered with its word, the badge at the left with its

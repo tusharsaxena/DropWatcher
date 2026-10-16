@@ -29,7 +29,8 @@ C.WINDOW = {
     --            and `Not wanted`, feedback-6 spec §1: tests/test_side_cells.lua measures both)
     --   lead     ROW_INDENT 12 + CHEVRON_X 4 + ROW_CHEVRON 10 + CHEVRON_GAP 4 = 30 (WindowGroup.LEAD)
     --   chrome   SCROLL_W 22 + 2 x INSET 6 = 34
-    --   974 + 30 + 34 = 1038. History's columns (no lead) fit with room to spare.
+    --   974 + 30 + 34 = 1038. History's columns (the same lead since feedback-15 spec §4) fit with room
+    --   to spare.
     -- tests/test_drops_layout.lua pins that no tab sheds a column there and the filter bar fits.
     WIDTH       = 1038,
     HEIGHT      = 600,

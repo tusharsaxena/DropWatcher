@@ -34,6 +34,12 @@ the code reads every case the design leaves open, module by module, is in
   tab. An entry of an earlier session takes no more ask or trade-estimate outcomes (it is in no
   live feed); a completed trade still matches it by item id. HIST-2 and HIST-5 are the in-game
   checks.
+- **The History tab's detail card** (feedback-15 spec §4, DW-Q4) draws only what an entry keeps:
+  the verdicts and their item-level and score deltas, the trade estimate's state, reason and basis,
+  the place and who saw it. It has no stats, worn item, track or trade rule to show, and on your own
+  drop it says who it was an upgrade for is not kept. Show in Drops is off for an entry no longer in
+  the Drops tab (an earlier session's, or after Clear), and the Drops tab's own filters may still
+  hide the drop it opens. HIST-7 is the in-game check.
 - **The trade-time warning** can arrive up to a minute late while the window is closed (the ticker
   slows to once a minute).
 - **A keystone chest** has no `ENCOUNTER_END`, so auto-ask times its drops from the drop itself.

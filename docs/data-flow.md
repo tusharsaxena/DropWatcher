@@ -683,6 +683,12 @@ TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TR
           5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
+row (or compact card) click ─> WindowHistory.ToggleExpand(entry) ─> State.windowHistory.expanded
+                 ─> repaint: HistoryCard.Paint(card, drop, width, WindowHistory.CardContext(drop))
+                    under the row (feedback-15 §4; the snapshot only: HistoryCard.Model)
+card Mark declined / Clear declined ─> History.SetEntryDeclined
+card Show in Drops (History.DropOf(entry) finds it live) ─> WindowGroup.Reveal(id): its header
+                 opened, its card expanded ─> Window.SelectTab("group")
 Settings › Window › Layout › Clear history (beside Keep history for, pairWith; feedback-15 §3)
                  ─> History.AskClear ─> StaticPopup ─> Yes: History.Clear (Log(): the account's,
                                                    or test mode's / the simulation's session log)
@@ -702,7 +708,9 @@ cells' verdict part alone (`WindowHistory.MeCell` / `ThemCell` over `SideCells.M
 a kept entry holds no worn items (feedback-6 §1). In the compact layout the same
 entries go to `CompactHistory.Refresh(pane, entries, compact)` (DW-C3): `CompactCards.History(drop,
 { time(), date, Compat.NormalizedRealm() })` per card through `CompactGroup`'s kit, headers by
-`CompactCards.HistoryHeader`, a right-click on a card to `WindowHistory.OpenMenu`.
+`CompactCards.HistoryHeader`, a right-click on a card to `WindowHistory.OpenMenu`. A row's or a
+card's click opens its entry's detail card under it (`HistoryCard`, DW-Q4), side by side in the
+table and stacked in the compact layout; both layouts read the one open entry.
 
 ## The toast
 

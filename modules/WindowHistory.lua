@@ -17,8 +17,16 @@ local _, NS = ...
 -- A row's height, item button and text size are the Drops rows' (modules/WindowRows.lua, the
 -- Window page's Layout rows; feedback-2 spec §8, FB2-9).
 --
--- READ-ONLY. No row asks, offers or expands. A right-click on a row opens its menu (core/Compat.lua's
+-- READ-ONLY. No row asks or offers. A right-click on a row opens its menu (core/Compat.lua's
 -- ContextMenu): Mark as declined, or Clear declined; a client without the menu toggles it at once.
+--
+-- THE DETAIL CARD (feedback-15 spec §4, DW-Q4). A row draws the Drops rows' chevron and is indented
+-- as they are (K.ROW_INDENT, the columns after WindowGroup.LEAD); a click on it (a cell, or a plain
+-- click on its item button) expands NS.HistoryCard's card under it, the rows below moving down by
+-- its height, the chevron up while it is open. One row at a time: the view's own `expanded`, the
+-- entry itself (a kept entry's list place moves as the log grows), session-only. A row filtered out
+-- or collapsed under its header takes its card with it. The compact cards expand the same way
+-- (modules/CompactHistory.lua); both layouts read the one `expanded`.
 --
 -- THE FILTER. The tab honors View, Character, Content, the search box and Sort
 -- (modules/WindowFilterBar.lua). History is account-wide, so Character (All by default since
@@ -104,6 +112,31 @@ local function repaint()
     if NS.Window.IsShown() then NS.Window.Refresh() end
 end
 
+--- Expand one kept entry's detail card, or collapse it when it is the one open (feedback-15 spec
+--- §4): one at a time.
+--- @param e table|nil the entry
+function WH.ToggleExpand(e)
+    if type(e) ~= "table" then return end
+    local v = view()
+    if v.expanded == e then v.expanded = nil else v.expanded = e end
+    repaint()
+end
+
+--- The entry whose detail card is open, or nil.
+--- @return table|nil
+function WH.Expanded() return view().expanded end
+
+--- The card's context for a drawn entry (HistoryCard.Model's): the clock, your class, the kept
+--- group's situation in words and the live drop it is, if any.
+--- @param drop table WH.AsDrop's
+--- @return table
+function WH.CardContext(drop)
+    local snap = NS.Gear.Snapshot()
+    local g = type(drop.group) == "table" and drop.group or {}
+    return { nowEpoch = time(), dateFn = date, classFile = type(snap) == "table" and snap.classFile or nil,
+        situationLabel = NS.WindowFooter.SITUATION_LABEL[g.situation], liveId = NS.History.DropOf(drop.entry) }
+end
+
 --- Collapse, or open, every header the tab shows (Expand all / Collapse all, feedback-15 spec §2).
 --- @param entries table|nil the drawn entries (WH.Entries')
 --- @param collapse boolean
@@ -123,13 +156,14 @@ end
 -- ── the pure halves ─────────────────────────────────────────────────────────────────────────
 
 --- An entry as the drop record the cell composers read: { id, link, at, isMine, looter, facts,
---- me, them, trade, outcome, entry }.
+--- me, them, trade, outcome, entry, group }.
 --- @param e table a history entry
 --- @param id number its place in the list (Sort's tiebreak)
+--- @param group table|nil the kept group it is in (the detail card's When and where)
 --- @return table
-function WH.AsDrop(e, id)
+function WH.AsDrop(e, id, group)
     return {
-        id = id, link = e.itemLink, at = e.at, isMine = e.isMine == true, outcome = e.outcome, entry = e,
+        id = id, link = e.itemLink, at = e.at, isMine = e.isMine == true, outcome = e.outcome, entry = e, group = group,
         looter = { name = e.looter, classFile = e.class }, seenBy = e.seenBy, seenByClass = e.seenByClass,
         facts = { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = e.quality },
         me = e.me, them = e.them, trade = e.trade,
@@ -194,7 +228,7 @@ end
 local function visibleDrops(group, ctx, base)
     local shown, hidden = {}, {}
     for i, e in ipairs(group.drops or {}) do
-        local d = WH.AsDrop(e, base + i)
+        local d = WH.AsDrop(e, base + i, group)
         if ctx.matches(d) then
             shown[#shown + 1] = d
         else
@@ -286,15 +320,29 @@ function WH.OpenMenu(e, owner)
     if not NS.Compat.ContextMenu(owner, { { text = text, fn = act } }) then act() end
 end
 
+-- The row's own mouse-up opens the menu (its left click is OnClick); a cell's is its row's click.
 local function onMouseUp(self, button)
     local row = self.row or self
     if button == "RightButton" then WH.OpenMenu(row.entry, row) end
 end
 
+local function cellMouseUp(self, button)
+    if button == "LeftButton" then return WH.ToggleExpand(self.row.entry) end
+    onMouseUp(self, button)
+end
+
+--- A kept entry's item button: shift-click links and ctrl-click tries on (WindowGroup.OnItemClick);
+--- a plain click expands the entry's card (`self.entry`), as a row click does.
+--- @param self table the item button
+function WH.OnItemClick(self)
+    if IsShiftKeyDown() or IsControlKeyDown() then return NS.WindowGroup.OnItemClick(self) end
+    WH.ToggleExpand(self.entry)
+end
+
 local function textCell(row, key)
     local f = CreateFrame("Frame", nil, row)
     f.key, f.row = key, row
-    f:SetScript("OnMouseUp", onMouseUp)
+    f:SetScript("OnMouseUp", cellMouseUp)
     f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
@@ -314,6 +362,7 @@ end
 local function itemCell(row)
     local f = textCell(row, "item")
     f.button = NS.WindowGroup.ItemButton(f, K.ROW_ICON)
+    f.button:SetScript("OnClick", WH.OnItemClick)
     NS.WindowGroup.ItemHover(f, f.button)
     f.showItem = true   -- the real item tooltip on the name too (DW-80)
     f.button:SetPoint("LEFT", f, "LEFT", 0, 0)
@@ -329,6 +378,11 @@ local function newRow(content)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     row.stripe:SetColorTexture(1, 1, 1, 0.03)
+    row.selected = row:CreateTexture(nil, "BACKGROUND")
+    row.selected:SetAllPoints(row)
+    row.selected:SetColorTexture(C.GOLD.r, C.GOLD.g, C.GOLD.b, 0.08)
+    row.chevron = NS.WindowGroup.RowChevron(row)   -- the Drops rows' expand indicator (feedback-15 spec §4)
+    row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
     for _, col in ipairs(WH.COLUMNS) do
         local make = (col.key == "item" and itemCell) or (GLYPH_COLS[col.key] and glyphCell) or textCell
@@ -336,6 +390,7 @@ local function newRow(content)
     end
     NS.WindowRows.MarkedCell(row.cells.looter)   -- ` [YOU]` after your own name (feedback-7 spec §2)
     row:SetScript("OnMouseUp", onMouseUp)
+    row:SetScript("OnClick", function(self) WH.ToggleExpand(self.entry) end)
     return row
 end
 
@@ -365,7 +420,7 @@ local function placeCells(row, layout, height)
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
-            f:SetPoint("LEFT", row, "LEFT", at.x, 0)
+            f:SetPoint("LEFT", row, "LEFT", NS.WindowGroup.CHEVRON_LEAD + at.x, 0)   -- after the chevron
             f:SetSize(at.w, height)
             f.text:SetWidth(max(at.w - (TEXT_INSET[key] or 0), 10))
         end
@@ -400,6 +455,9 @@ local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = 
 
 local function paintRow(row, drop, layout, metrics)
     row.entry = drop.entry
+    local open = view().expanded == drop.entry
+    row.selected:SetShown(open)
+    NS.WindowGroup.PaintChevron(row.chevron, open)
     row:SetHeight(metrics.height)
     placeCells(row, layout, metrics.height)
     NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
@@ -408,6 +466,7 @@ local function paintRow(row, drop, layout, metrics)
     paintText(cells.item, WC.Item(drop))
     tone(cells.item.text, qualityColor(drop.facts.quality))
     NS.WindowGroup.SetItem(cells.item.button, drop.link)
+    cells.item.button.entry = drop.entry
     cells.item.tipLines = nil
     for key, fn in pairs(SIMPLE) do paintText(cells[key], fn(drop)) end
     local lc = WC.Looter(drop)
@@ -476,6 +535,7 @@ local function build(pane)
     scroll:SetScrollChild(content)
     pane.scroll, pane.content = scroll, content
     pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
+    pane.card = NS.HistoryCard.Build(content)
     pane.entries = {}
 end
 
@@ -485,7 +545,7 @@ local function paintHeads(pane, layout)
         f:SetShown(at ~= nil)
         if at then
             f:ClearAllPoints()
-            f:SetPoint("LEFT", pane.colHead, "LEFT", at.x, 0)
+            f:SetPoint("LEFT", pane.colHead, "LEFT", NS.WindowGroup.LEAD + at.x, 0)   -- over their cells
             f:SetSize(at.w, K.COLHEAD_H)
         end
     end
@@ -500,22 +560,39 @@ local function rowWidth(pane)
     return w - K.SCROLL_W
 end
 
+-- `x` indents a row and its card (K.ROW_INDENT, as on Drops); a header takes the full width.
+local function place(frame, content, y, width, x)
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", content, "TOPLEFT", x or 0, -y)
+    frame:SetWidth(width - (x or 0))
+end
+
+-- The open entry's card under its row, indented with it; answers the height it takes.
+local function drawCard(pane, drop, y, width)
+    place(pane.card, pane.content, y, width, K.ROW_INDENT)
+    local h = NS.HistoryCard.Paint(pane.card, drop, width - K.ROW_INDENT, WH.CardContext(drop))
+    pane.card:Show()
+    pane.cardEntry = drop.entry
+    return h
+end
+
 local function drawEntries(pane, entries, layout, width, now)
     local y, metrics = 0, NS.WindowRows.Metrics()
+    local expanded = view().expanded
     for i, e in ipairs(entries) do
         local pool, make, h = pane.rowPool, newRow, metrics.height
         if e.kind == "header" then pool, make, h = pane.headPool, newHeader, K.GROUP_H end
         local f = NS.Pool.Acquire(pool, function() return make(pane.content) end)
-        f:ClearAllPoints()
-        f:SetPoint("TOPLEFT", pane.content, "TOPLEFT", 0, -y)
-        f:SetWidth(width)
         if e.kind == "header" then
+            place(f, pane.content, y, width)
             paintHeader(f, e, now)
         else
+            place(f, pane.content, y, width, K.ROW_INDENT)
             f.stripe:SetShown(i % 2 == 0)
             paintRow(f, e.drop, layout, metrics)
         end
         y = y + h
+        if e.kind ~= "header" and e.drop.entry == expanded then y = y + drawCard(pane, e.drop, y, width) end
     end
     pane.content:SetSize(width, max(y, 1))
 end
@@ -548,7 +625,7 @@ end
 
 local function drawTable(pane, entries)
     local width = rowWidth(pane)
-    local layout, kept = NS.WindowGroup.Layout(WH.COLUMNS, width)
+    local layout, kept = NS.WindowGroup.Layout(WH.COLUMNS, width - NS.WindowGroup.LEAD)   -- after the indent and chevron
     paintHeads(pane, layout)
     drawEntries(pane, entries, layout, width, time())
     pane.columns = kept
@@ -562,6 +639,8 @@ local function refresh(pane, tc)
     local compact = NS.WindowGroup.IsCompact()
     NS.Pool.ReleaseAll(pane.rowPool)
     NS.Pool.ReleaseAll(pane.headPool)
+    pane.card:Hide()
+    pane.cardEntry = nil
     pane.scroll:SetShown(not compact)
     if not compact then drawTable(pane, entries) end
     pane.entries = entries
@@ -570,7 +649,8 @@ local function refresh(pane, tc)
     paintEmpty(pane, entries, groups, compact)
 end
 
---- The drawn pane, for the suites: { rows, headers, entries, columns, pane, strip } or nil.
+--- The drawn pane, for the suites: { rows, headers, entries, columns, pane, strip, card, cardEntry }
+--- or nil (`cardEntry` nil while no card is open on screen).
 --- @return table|nil
 function WH.Drawn()
     local f = NS.Window.Frame()
@@ -578,7 +658,7 @@ function WH.Drawn()
     if not (pane and pane.rowPool) then return nil end
     if NS.WindowGroup.IsCompact() then return NS.CompactHistory.Drawn(pane) end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
-        columns = pane.columns, pane = pane, strip = pane.strip }
+        columns = pane.columns, pane = pane, strip = pane.strip, card = pane.card, cardEntry = pane.cardEntry }
 end
 
 NS.Window.RegisterTab("history", { build = build, refresh = refresh })

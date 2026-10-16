@@ -140,6 +140,7 @@ Kit.run{
         "test_compact_cards",
         "test_compact_group",
         "test_compact_history",
+        "test_history_card",
         "test_compact_chrome",
         "test_compact_modes",
         "test_window_group",
