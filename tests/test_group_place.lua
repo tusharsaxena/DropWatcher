@@ -219,9 +219,14 @@ test("test mode: the sample groups carry real instance names and realistic diffi
     for _, s in ipairs(TD.Placeholders(1000, you, src)) do seen[s.group.kind] = s.group end
     assertEqual(seen.run.label, "Ara-Kara, City of Echoes", "the key run is a real dungeon")
     assertEqual(seen.run.difficulty, "Mythic+ 10")
-    assertEqual(seen.encounter.instance, "The Rookery"); assertEqual(seen.encounter.difficulty, "Heroic")
+    local real = { ["Ara-Kara, City of Echoes"] = true, ["The Rookery"] = true }
+    assertTrue(real[seen.encounter.instance] == true, "a boss sits in a real instance"); assertEqual(seen.encounter.difficulty, "Heroic")
     for _, g in ipairs(TD.History(5000, you, src).groups) do
-        assertTrue(g.instance ~= nil and g.difficulty ~= nil, g.key .. ": a sample History group names its place")
+        if g.situation == "openWorldGroup" then
+            assertTrue(g.instance == nil and g.difficulty == nil, g.key .. ": a world boss names no instance (feedback-17)")
+        else
+            assertTrue(g.instance ~= nil and g.difficulty ~= nil, g.key .. ": a sample History group names its place")
+        end
         assertTrue(g.seenBy ~= nil, g.key .. ": and its recorder")
     end
 end)

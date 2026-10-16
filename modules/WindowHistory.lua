@@ -205,7 +205,7 @@ end
 --- A kept group's header: `Instance · Boss · Difficulty · 2 days ago · 4 drops · Recorder` (the
 --- place and the character that saw it, class-colored, feedback-3 spec §4; a group kept before them
 --- reads `Label · Situation`; `... · 4 drops · 3 shown` while the filter hides some, feedback-2 spec
---- §0), and its tooltip naming the kept party on one line and each hidden drop.
+--- §0), and its tooltip its facts as rows (NS.WindowCells.HeaderFacts) and each hidden drop.
 --- @param group table { label, kind, situation, at, instance, difficulty, seenBy, seenByClass, roster }
 --- @param shown number
 --- @param now number time()
@@ -216,13 +216,15 @@ end
 --- @return table { text, tip }
 function WH.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     local parts, who = WC.Place(group, situationLabel)
-    if type(group.at) == "number" and type(now) == "number" then parts[#parts + 1] = WH.Ago(now - group.at) end
+    local when = (type(group.at) == "number" and type(now) == "number") and WH.Ago(now - group.at) or nil
+    parts[#parts + 1] = when
     parts[#parts + 1] = WC.DropCount(shown, hidden)
     parts[#parts + 1] = who
     local text = table.concat(parts, " · ")
     if collapsed then text = text .. " " .. L["(collapsed)"] end
-    return { text = text, tip = WC.HeaderTip(tostring(group.label or "?"), L["Kept in the history across sessions."],
-        hidden, filter, collapsed, group.roster) }
+    local rows = WC.HeaderFacts(group, situationLabel, when, shown, hidden)
+    return { text = text, tip = WC.HeaderTip(tostring(group.label or "?"), rows,
+        L["Kept in the history across sessions."], hidden, filter, collapsed) }
 end
 
 local function visibleDrops(group, ctx, base)

@@ -927,7 +927,9 @@ end
 -- Reads and selections only; the save and restore, the async wait and the fallback are SimPool's.
 
 --- The journal's selection: { shown, tiers, tier, difficulty, classID, specID, slot, instanceID,
---- encounterID } (shown and the last two are the frame's, nil before it loads). Nil without EJ_*.
+--- encounterID, keystoneLevel } (shown and the two ids are the frame's, nil before it loads;
+--- keystoneLevel is the loot preview's Mythic+ level, nil without GetPreviewMythicPlusLevel). Nil
+--- without EJ_*.
 --- @return table|nil
 function Compat.JournalSelection()
     if not (EJ_GetNumTiers and EJ_GetCurrentTier and EJ_GetDifficulty and EJ_GetLootFilter) then return nil end
@@ -937,17 +939,23 @@ function Compat.JournalSelection()
     return { shown = not Compat.IsSecret(shown) and shown == true, tiers = plainNumber(EJ_GetNumTiers()),
         tier = EJ_GetCurrentTier(), difficulty = EJ_GetDifficulty(), classID = classID, specID = specID,
         slot = ej and ej.GetSlotFilter and ej.GetSlotFilter(), instanceID = frame and frame.instanceID,
-        encounterID = frame and frame.encounterID }
+        encounterID = frame and frame.encounterID,
+        keystoneLevel = ej and ej.GetPreviewMythicPlusLevel and plainNumber(ej.GetPreviewMythicPlusLevel()) }
 end
 
 local function journalExtras(ej, sel)
     if sel.encounterID and EJ_SelectEncounter then EJ_SelectEncounter(sel.encounterID) end
     if sel.slot == nil and ej.ResetSlotFilter then ej.ResetSlotFilter() end
     if sel.slot ~= nil and ej.SetSlotFilter then ej.SetSlotFilter(sel.slot) end
+    -- The preview level is set only where it can be read back, so a save and restore can undo it.
+    if sel.keystoneLevel and ej.GetPreviewMythicPlusLevel and ej.SetPreviewMythicPlusLevel then
+        ej.SetPreviewMythicPlusLevel(sel.keystoneLevel)
+    end
 end
 
 --- Select what `sel` names, in the journal's order: tier, instanceID, difficulty, the class filter
---- (classID 0 or nil: every class), encounterID, the slot filter (nil: every slot). False without.
+--- (classID 0 or nil: every class), encounterID, the slot filter (nil: every slot), the loot
+--- preview's Mythic+ level (`keystoneLevel`, when the client can read it back). False without.
 --- @return boolean
 function Compat.JournalSelect(sel)
     if not (EJ_SelectTier and EJ_SelectInstance and EJ_SetDifficulty and EJ_SetLootFilter) then return false end
@@ -959,16 +967,30 @@ function Compat.JournalSelect(sel)
     return true
 end
 
---- The selected tier's instances as { { id, name } }: its raids when `isRaid`, else its dungeons.
+--- The selected tier's instances as { { id, name, worldBoss } }: its raids when `isRaid`, else its
+--- dungeons. `worldBoss` is true for the tier's world bosses, the one raid entry the journal shows
+--- without a difficulty (EJ_GetInstanceInfo's ninth return, shouldDisplayDifficulty, false).
 --- @return table
 function Compat.JournalInstances(isRaid)
     local out = {}
     for i = 1, EJ_GetInstanceByIndex and 200 or 0 do
         local id, name = EJ_GetInstanceByIndex(i, isRaid == true)
         if not plainNumber(id) then break end
-        out[#out + 1] = { id = id, name = plainString(name) }
+        local shows
+        if isRaid == true and EJ_GetInstanceInfo then shows = select(9, EJ_GetInstanceInfo(id)) end
+        out[#out + 1] = { id = id, name = plainString(name), worldBoss = shows == false or nil }
     end
     return out
+end
+
+--- An encounter's name (EJ_GetEncounterInfo's first return), or nil for no API, an unknown id or a
+--- secret or empty answer.
+--- @param encounterID number|nil
+--- @return string|nil
+function Compat.JournalEncounterName(encounterID)
+    if not (plainNumber(encounterID) and EJ_GetEncounterInfo) then return nil end
+    local name = plainString((EJ_GetEncounterInfo(encounterID)))
+    return name ~= "" and name or nil
 end
 
 --- The selected instance's loot under the filters, { { itemID, link, encounterID } }, and how many

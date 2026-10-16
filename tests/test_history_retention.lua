@@ -248,14 +248,18 @@ test("retention: in test mode a shorter window prunes test mode's older sample, 
     NS.History.Store().groups = { group("kept", now, { 3 }) }
     NS.SetTestMode(true)
     local H = NS.History
-    assertEqual(#H.Groups(), 3, "test mode's samples")
+    assertEqual(#H.Groups(), #NS.TestData.HISTORY, "test mode's samples")
+    local week, drops = 0, 0
+    for _, g in ipairs(NS.TestData.HISTORY) do
+        if g.ago < 7 * 86400 then week, drops = week + 1, drops + g.drops end
+    end
     assertTrue(NS.SchemaRuntime.Set(PATH, 7))
     local shown = m.popupsShown[#m.popupsShown]
-    assertEqual(shown[1], NS.HistoryRetention.POPUP, "the alt's sample group is older than 7 days")
+    assertEqual(shown[1], NS.HistoryRetention.POPUP, "the alt's sample group and the older ones are past 7 days")
     m.StaticPopupDialogs[NS.HistoryRetention.POPUP].OnAccept(nil, shown[4])
-    assertEqual(#H.Groups(), 2)
+    assertEqual(#H.Groups(), week)
     assertEqual(#H.Store().groups, 1, "the account's three-day-old group stays")
     NS.Window.SelectTab("history")
-    assertEqual(NS.WindowHistory.Drawn().strip.info:GetText(), "2 groups, 7 drops · kept for 7 days")
+    assertEqual(NS.WindowHistory.Drawn().strip.info:GetText(), ("%d groups, %d drops · kept for 7 days"):format(week, drops))
     NS.SetTestMode(false)
 end)

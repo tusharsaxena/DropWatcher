@@ -57,7 +57,7 @@ files["core/Compat.lua"] = {
     "MenuUtil", "PlaySound", "SOUNDKIT",
     "EncounterJournal", "C_EncounterJournal", "EJ_GetNumTiers", "EJ_GetCurrentTier", "EJ_SelectTier",
     "EJ_GetInstanceByIndex", "EJ_SelectInstance", "EJ_SelectEncounter", "EJ_GetDifficulty", "EJ_SetDifficulty",
-    "EJ_GetLootFilter", "EJ_SetLootFilter", "EJ_GetNumLoot", "C_ChallengeMode", "UnitName",
+    "EJ_GetLootFilter", "EJ_SetLootFilter", "EJ_GetNumLoot", "EJ_GetInstanceInfo", "EJ_GetEncounterInfo", "C_ChallengeMode", "UnitName",
   },
 }
 

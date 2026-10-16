@@ -280,7 +280,10 @@ test("modes: test mode's Drops cards show every state, each saying what its full
     hasAll(seen.fresh, { "(cached)", "(range)", "(combat)", "(!)", "" }, "inspect freshness, bracketed or left out (pending: Them says it)")
     hasAll(seen.you, { "▲", "≈", "▼", "⊘" }, "your verdict")
     hasAll(seen.them, { "▲", "≈", "▼", "⊘" }, "their verdict")
-    hasAll(seen.eq, { "…", "range", "combat", "!", "290", "300" }, "their worn levels")
+    hasAll(seen.eq, { "…", "range", "combat", "!" }, "their gear's states")
+    local levels = 0
+    for k in pairs(seen.eq) do if tostring(k):match("^%d+$") then levels = levels + 1 end end
+    assertTrue(levels >= 2, "and their worn levels")
 end)
 
 test("modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card", function()
@@ -322,7 +325,9 @@ test("modes: test mode's History cards show every outcome, each saying what its 
     end)
     local seen = {}
     local cards = compactCards(NS, "history")
-    assertEqual(#cards, 9, "every kept sample, the alt's too (Character: All, feedback-13 spec §0)")
+    local kept = 0
+    for _, g in ipairs(NS.TestData.HISTORY) do kept = kept + g.drops end
+    assertEqual(#cards, kept, "every kept sample, the alt's too (Character: All, feedback-13 spec §0)")
     for _, card in ipairs(cards) do
         local c, f = card.cells, full[idOf("history", card)]
         local what = "entry " .. tostring(card.dropId)

@@ -333,9 +333,11 @@ test("compact group: test mode fills a card for every sample, no piece blank, an
     NS.WindowFilterBar.Set("group", "view", "all")
     NS.SetWindowMode("compact")
     NS.ShowWindow()
+    for _, g in ipairs(NS.LootFeed.Groups("test")) do NS.State.windowGroup.collapsed[g.key] = false end
+    NS.Window.Refresh()
     local drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact == true)
-    assertTrue(#drawn.rows >= 6, "the samples, as cards: " .. #drawn.rows)
+    assertEqual(#drawn.rows, #NS.LootFeed.Drops("test"), "the samples, as cards, every group opened")
     for _, card in ipairs(drawn.rows) do
         local c = card.cells
         for _, key in ipairs({ "item", "ilvl", "looter", "slot", "trade", "you", "them" }) do

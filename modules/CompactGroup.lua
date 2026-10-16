@@ -45,8 +45,8 @@ local _, NS = ...
 -- apply.
 --
 -- THE HEADERS are the full table's header button (NS.WindowGroup.NewHeader, so a click collapses
--- the group the same way), painted with the short form (NS.CompactCards.Header), the long form and
--- the hidden-drop lines in its tooltip.
+-- the group the same way), painted with the short form (NS.CompactCards.Header), the full view's
+-- tooltip (its facts as rows, the hidden-drop lines) on it.
 --
 -- THE DETAIL CARD is NS.DetailCard's, built `stacked` for this pane: under the open card, at the
 -- compact width, its two comparisons one under the other; the cards below move down by its height.

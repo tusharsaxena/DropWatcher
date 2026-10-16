@@ -201,7 +201,11 @@ every cell, button and header of both tabs placed by it, the column labels and t
 `test_test_mode`
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
 and candidate status covered by the data, over pool items that keep their slot and level, the worn
-items the nearest of their slot, an empty pool giving none; the History sample with every outcome;
+items the nearest of their slot, an empty pool giving none; feedback-17's realism: each group the
+size its content brings (five, twenty, twenty-five), the session's four groups and sixteen drops,
+History's twenty-plus groups across every content within 30 days, each group one real place whose
+loot is that boss's or dungeon's at the group's difficulty, the keys' loot read at Mythic+ 10 with the
+journal's preview put back; the History sample with every outcome;
 `AddTest` and the test feed filled from the mock journal's pool (`seedGearJournal`) and emptied
 with test mode, while the pool loads, with no pool at all, by combat and by the stand-down; the
 History tab's samples never written to `global.history`; the window built headless with every
@@ -279,11 +283,12 @@ and money lines never read as loot; every hidden and refused receipt counted by 
 under FEED and reported in the `drops` diagnostics section; the group headers' `2 drops · 1 shown`
 and the tooltip naming each hidden drop and its filter, on Drops and History),
 `test_group_roster` (feedback-2 spec §3: the roster snapshot's pure core, `Entry`, `Merge` (it
-only grows, you first, never the same character twice), `Copy`, `Names` (ten names then `+n`,
-class-colored, the realm when not yours) and `TipLine` (the tooltip's one `Group: ...` line); a feed
+only grows, you first, never the same character twice), `Copy`, `Names` (the first few then `+n`,
+every name by default, class-colored, the realm when not yours) and `TipRows` (the tooltip's
+`Group (n)` rows, five names a row, every member, feedback-17); a feed
 group taking the party with its first drop and a mid-run joiner on the roster event or with the
 next drop, its History group keeping it; the Drops and History headers naming only the
-recorder (feedback-3 spec §4), and an older History group with no `Group:` line; test mode's sample
+recorder (feedback-3 spec §4), and an older History group with no `Group` rows; test mode's sample
 rosters are `test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
 `test_group_place` (feedback-3 spec §4, DW-B4: `GroupPlace`'s pure `DifficultyName`, `Parts` (with its roles and
 `ShortNames`' LFR, feedback-15) and `Who`; Compat's `DifficultyName` and `KeystoneLevel`; the owner's Timewalking drop through the real
@@ -393,8 +398,9 @@ isolated so the driver and the rest of the cleanup go on,
 a stop that takes its drops, groups, inspect entries and restrictions and leaves a real drop, a
 queued ask canceled before the lift so it never goes out, the situation re-read, the automatic stop
 on joining a group or entering an instance, and the stand-down),
-`test_sim_pool` (the simulator's item pool and group: the four journal shims and their absent
-answers, each situation's side and difficulty, a read of every instance of the newest tier at every
+`test_sim_pool` (the simulator's item pool and group: the journal shims and their absent
+answers, the world-boss flag, the boss names and the keys' preview level set and restored, an
+`everything` read covering both sides (feedback-17), each situation's side and difficulty, a read of every instance of the newest tier at every
 difficulty with the player's selection restored, even when a read raises, no read while the
 journal's frame is shown, the wait for `EJ_LOOT_DATA_RECIEVED` and its timeout keeping what loaded,
 the class filter, the own-items fallback reported once, the stop ending a waiting build; the seeded

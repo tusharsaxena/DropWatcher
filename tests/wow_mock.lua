@@ -84,7 +84,11 @@
 --                  GetTradePlayerItemLink(i) / GetTradeTargetItemLink(i); units.NPC is the partner;
 --                  LE_GAME_ERR_TRADE_COMPLETE / ERR_TRADE_COMPLETE the completion message
 --   journal        the Encounter Journal (core/Compat.lua's Journal* shims, modules/SimPool.lua):
---                  journal.tiers[i] = { dungeons = { { id, name } }, raids = { ... } };
+--                  journal.tiers[i] = { dungeons = { { id, name } }, raids = { { id, name, worldBoss } } }
+--                  (worldBoss: EJ_GetInstanceInfo's shouldDisplayDifficulty is false);
+--                  journal.encounters[encounterID] is EJ_GetEncounterInfo's name; journal.keystoneLevel
+--                  the loot preview's Mythic+ level (C_EncounterJournal Get/SetPreviewMythicPlusLevel),
+--                  journal.previews every level set;
 --                  journal.loot[instanceID][difficulty] = { { itemID, link, encounterID, classes,
 --                  loadsNeeded } } (classes = { [classID] = true } limits it under a class filter;
 --                  while loadsNeeded > 0 the entry has no link); the selection is journal.tier,
@@ -92,7 +96,8 @@
 --                  counts EJ_SelectInstance calls and journal.reads every GetLootInfoByIndex.
 --                  EncounterJournal (the frame) is nil until a case sets one; loadJournal() loads
 --                  every entry and fires EJ_LOOT_DATA_RECIEVED once per entry it loaded;
---                  seedGearJournal() adds a newest tier whose one dungeon drops gear for every slot
+--                  seedGearJournal() adds a newest tier whose dungeon, raid and world boss drop gear
+--                  for every slot
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -704,7 +709,7 @@ end
 
 local function installJournal(M)
     local j = { tiers = { { dungeons = {}, raids = {} } }, loot = {}, tier = 1, difficulty = 1, classID = 0,
-        specID = 0, slot = 15, selects = 0, reads = 0 }
+        specID = 0, slot = 15, selects = 0, reads = 0, encounters = {}, keystoneLevel = 0, previews = {} }
     M.journal = j
     M.EJ_GetNumTiers = function() return #j.tiers end
     M.EJ_GetCurrentTier = function() return j.tier end
@@ -715,6 +720,16 @@ local function installJournal(M)
         if inst then return inst.id, inst.name end
     end
     M.EJ_SelectInstance = function(id) j.instanceID, j.encounterID, j.selects = id, nil, j.selects + 1 end
+    M.EJ_GetInstanceInfo = function(id)
+        for _, tier in ipairs(j.tiers) do
+            for _, side in ipairs({ tier.dungeons or {}, tier.raids or {} }) do
+                for _, inst in ipairs(side) do
+                    if inst.id == id then return inst.name, nil, nil, nil, nil, nil, nil, nil, not inst.worldBoss end
+                end
+            end
+        end
+    end
+    M.EJ_GetEncounterInfo = function(id) return j.encounters[id] end
     M.EJ_SelectEncounter = function(id) j.encounterID = id end
     M.EJ_GetDifficulty = function() return j.difficulty end
     M.EJ_SetDifficulty = function(d) j.difficulty = d end
@@ -725,6 +740,8 @@ local function installJournal(M)
         GetSlotFilter = function() return j.slot end,
         SetSlotFilter = function(v) j.slot = v end,
         ResetSlotFilter = function() j.slot = 15 end,
+        GetPreviewMythicPlusLevel = function() return j.keystoneLevel end,
+        SetPreviewMythicPlusLevel = function(v) j.keystoneLevel, j.previews[#j.previews + 1] = v, v end,
         GetLootInfoByIndex = function(i)
             j.reads = j.reads + 1
             local e = journalEntries(M)[i]
@@ -750,9 +767,11 @@ local function installJournal(M)
     end
 end
 
--- A journal with gear for every slot (test mode's sample drops, modules/TestMode.lua): one dungeon,
--- "Test Vault" (901), in the newest tier, dropping two items per equip location at Mythic Keystone
--- (level 300), Mythic (290) and Heroic (280), every one cached, loaded and with its own icon.
+-- A journal with gear for every slot (test mode's sample drops, modules/TestMode.lua), in a newest
+-- tier: one dungeon, "Test Vault" (901), at Mythic Keystone (level 300), Mythic (290) and Heroic
+-- (280); one raid, "Test Spire" (902), at Raid Finder (270), Heroic (295) and Mythic (305); and the
+-- tier's world bosses, "Test Wilds" (903, shown without a difficulty), at Normal (285). Each drops
+-- two items per equip location, spread over four bosses, every one cached, loaded and with its icon.
 local GEAR_SLOTS = {
     { "INVTYPE_HEAD", "Helm" }, { "INVTYPE_NECK", "Choker" }, { "INVTYPE_SHOULDER", "Pauldrons" },
     { "INVTYPE_CLOAK", "Cloak" }, { "INVTYPE_CHEST", "Breastplate" }, { "INVTYPE_WRIST", "Bracers" },
@@ -760,27 +779,41 @@ local GEAR_SLOTS = {
     { "INVTYPE_FEET", "Boots" }, { "INVTYPE_FINGER", "Ring" }, { "INVTYPE_TRINKET", "Idol" },
     { "INVTYPE_WEAPON", "Sword" },
 }
-local GEAR_LEVELS = { { 8, 300 }, { 23, 290 }, { 2, 280 } }
+local GEAR_INSTANCES = {
+    { id = 901, name = "Test Vault", word = "Vault", side = "dungeons", base = 70000, levels = { { 8, 300 }, { 23, 290 }, { 2, 280 } },
+      bosses = { "Warden Ossik", "The Gilded Pair", "Archivist Vell", "Keeper Morrow" } },
+    { id = 902, name = "Test Spire", word = "Spire", side = "raids", base = 72000, levels = { { 17, 270 }, { 15, 295 }, { 16, 305 } },
+      bosses = { "Spire Colossus", "Lady Sethra", "The Hollow Choir", "Vorath the Last" } },
+    { id = 903, name = "Test Wilds", word = "Wilds", side = "raids", worldBoss = true, base = 74000, levels = { { 14, 285 } },
+      bosses = { "Grumbleroot", "Skyshatter" } },
+}
 
 local function seedGearJournal(M)
     local j = M.journal
-    j.tiers[#j.tiers + 1] = { dungeons = { { id = 901, name = "Test Vault" } }, raids = {} }
-    j.loot[901] = {}
-    for d, row in ipairs(GEAR_LEVELS) do
-        local list = {}
-        for i, slot in ipairs(GEAR_SLOTS) do
-            for copy = 1, 2 do
-                local id = 70000 + i * 100 + copy * 10 + d
-                local name = ("Vault %s %d"):format(slot[2], copy)
-                local link = ("|cnIQ4:|Hitem:%d::::::::90:::::%d|h[%s]|h|r"):format(id, row[2], name)
-                local weapon = slot[1] == "INVTYPE_WEAPON"
-                M.addItem(link, { name = name, quality = 4, ilvl = row[2], equipLoc = slot[1],
-                    classID = weapon and 2 or 4, subClassID = weapon and 7 or 4, bindType = 1, stats = {} })
-                M.itemIcons[id], M.itemIcons[link] = 5000000 + id, 5000000 + id
-                list[#list + 1] = { itemID = id, link = link, encounterID = 3000 + i }
+    local tier = { dungeons = {}, raids = {} }
+    j.tiers[#j.tiers + 1] = tier
+    for k, inst in ipairs(GEAR_INSTANCES) do
+        local side = tier[inst.side]
+        side[#side + 1] = { id = inst.id, name = inst.name, worldBoss = inst.worldBoss }
+        for b, name in ipairs(inst.bosses) do j.encounters[3000 + k * 10 + b] = name end
+        j.loot[inst.id] = {}
+        for d, row in ipairs(inst.levels) do
+            local list = {}
+            for i, slot in ipairs(GEAR_SLOTS) do
+                for copy = 1, 2 do
+                    local id = inst.base + i * 100 + copy * 10 + d
+                    local name = ("%s %s %d"):format(inst.word, slot[2], copy)
+                    local link = ("|cnIQ4:|Hitem:%d::::::::90:::::%d|h[%s]|h|r"):format(id, row[2], name)
+                    local weapon = slot[1] == "INVTYPE_WEAPON"
+                    M.addItem(link, { name = name, quality = 4, ilvl = row[2], equipLoc = slot[1],
+                        classID = weapon and 2 or 4, subClassID = weapon and 7 or 4, bindType = 1, stats = {} })
+                    M.itemIcons[id], M.itemIcons[link] = 5000000 + id, 5000000 + id
+                    local boss = 3000 + k * 10 + (i + copy) % #inst.bosses + 1
+                    list[#list + 1] = { itemID = id, link = link, encounterID = boss }
+                end
             end
+            j.loot[inst.id][row[1]] = list
         end
-        j.loot[901][row[1]] = list
     end
 end
 

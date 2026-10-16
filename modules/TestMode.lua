@@ -8,15 +8,16 @@ local _, NS = ...
 -- reads, and populate and clear.
 --
 -- THE ITEMS (FB-9). Turning test mode on builds the simulator's item pool (modules/SimPool.lua,
--- BuildInto: the Encounter Journal at the current season's Mythic Keystone difficulty, every
--- class's loot, falling back to your own equipped and bag gear) into test mode's own holder
+-- BuildInto: the current season's dungeons and raids from the Encounter Journal at every
+-- difficulty, the Mythic Keystone loot previewed at the samples' key level (TestData.KEY_LEVEL),
+-- every class's loot, falling back to your own equipped and bag gear) into test mode's own holder
 -- (State.testPool). The drops fill in when it is ready: at once when the journal has loaded, else
 -- after EJ_LOOT_DATA_RECIEVED or the pool's timeout, never with an invented item meanwhile (the
 -- Drops tab says it is gathering them). Each item's facts are the item cache's
 -- (NS.ItemFacts.Get), else the pool's level and slot with the link's quality.
 --
 -- THE HISTORY (FB-10). While test mode is on, the History tab reads test mode's own session-only
--- log (State.testHistory, NS.History.Log): two sample groups covering every outcome. It is never
+-- log (State.testHistory, NS.History.Log): four weeks of sample groups covering every outcome. It is never
 -- written to `global.history` and goes when test mode turns off.
 --
 -- THE HOOKS. A sample carries its own inspect entry (`testInspect`, read in place of
@@ -42,8 +43,9 @@ local TAG = "State"
 
 local savedView   -- the Drops tab's View before test mode set it to All
 
---- The pool test mode builds: the dungeons at Mythic Keystone, every class's loot.
-TM.POOL = { situation = "mythicPlus", classFilter = "any" }
+--- The pool test mode builds: the season's dungeons and raids at every difficulty, its keys at the
+--- samples' level, every class's loot.
+TM.POOL = { situation = "everything", classFilter = "any", keystoneLevel = TD.KEY_LEVEL }
 
 --- Every sample drop over `src` (modules/TestData.lua). Pure.
 --- @param now number GetTime()

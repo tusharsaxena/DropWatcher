@@ -61,7 +61,8 @@ test("compact history: kept groups as one-line headers, the newest open, each en
     assertEqual(drawn.headers[1].text:GetJustifyH(), "LEFT", "the header reads from the left")
     assertEqual(h1, "Boss New · Dungeon · 2m · 2 · Testchar", "the short form, then the recorder")
     assertTrue(h2:find("3d", 1, true) ~= nil, h2)
-    assertTrue(NS.Window.TooltipOf(drawn.headers[1])[2]:find("2m ago", 1, true) ~= nil, "the long form in the tooltip")
+    assertTrue(plain(T.tipJoined(NS.Window.TooltipOf(drawn.headers[1]))):find("When  2m ago", 1, true) ~= nil,
+        "the full time in the tooltip's rows")
     local card = cardWith(drawn, "Asked")
     local c = card.cells
     assertTrue(card.tipRow == true)

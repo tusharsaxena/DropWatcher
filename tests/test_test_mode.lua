@@ -70,22 +70,111 @@ local function idOf(link) return tonumber(link:match("item:(%d+)")) end
 
 -- ── the data (pure) ─────────────────────────────────────────────────────────────────────────
 
-test("test mode data: each sample group names who was in it, you first; the boss is a raid's (fb2 §3)", function()
+-- The group size each content brings (feedback-17): a party, a raid of twenty, Raid Finder's 25.
+local SIZE = { key = 5, heroicDungeon = 5, worldBoss = 5, raidHeroic = 20, raidMythic = 20, raidLFR = 25 }
+
+test("test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)", function()
     local NS, specs = placeholders()
     local sizes = {}
     for _, s in ipairs(specs) do
         local r = s.group.roster
         assertTrue(r ~= nil and r[1].me == true and r[1].name == "Tester", s.group.key .. ": you first")
         sizes[s.group.kind] = #r
+        for _, e in ipairs(r) do
+            if s.looter.name == e.name then sizes.looterIn = (sizes.looterIn or 0) + 1 end
+        end
     end
     assertEqual(sizes.run, 5, "the key run: a party of five")
-    assertEqual(sizes.encounter, 8, "the boss: a raid")
-    local text = NS.GroupRoster.TipLine(specs[#specs].group.roster):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-    assertEqual(text, "Group: Tester, Seta, Littlewolf, Uniquerogue, Butterz, Kaelith, Mistveil, Dawnfeather")
+    assertEqual(sizes.encounter, 20, "a Heroic raid boss: twenty")
+    assertEqual(sizes.looterIn, #specs, "every looter is in their group")
     local src = source(NS)
-    for _, g in ipairs(NS.TestData.History(1000, YOU, src).groups) do
+    local TD = NS.TestData
+    for i, g in ipairs(TD.History(1000, YOU, src).groups) do
         assertTrue(g.roster ~= nil and g.roster[1].me == true, g.key .. ": the sample history keeps a roster")
+        local plan = TD.HISTORY[tonumber(g.key:match("(%d+)$"))]
+        assertEqual(#g.roster, SIZE[plan.content], g.key .. " (" .. plan.content .. ")")
+        assertTrue(i > 0)
     end
+end)
+
+test("test mode data: the session drops what such groups see; History holds far more, every content (fb17)", function()
+    local NS = T.newAddon()
+    local TD = NS.TestData
+    local per, sessionDrops = {}, 0
+    for _, s in ipairs(TD.SESSION) do
+        local n = #s.yours + #s.theirs
+        sessionDrops = sessionDrops + n
+        if s.content == "key" then assertEqual(n, 2, "a key run's chest: two items")
+        else assertTrue(n >= 4 and n <= 5, "a raid boss of twenty: four or five, not " .. n) end
+    end
+    assertEqual(#TD.SESSION, 4); assertEqual(sessionDrops, 16)
+    local total = 0
+    for _, g in ipairs(TD.HISTORY) do
+        per[g.content] = true
+        total = total + g.drops
+        local most = ({ key = 2, heroicDungeon = 2, worldBoss = 3, raidHeroic = 5, raidMythic = 5, raidLFR = 5 })[g.content]
+        assertTrue(g.drops >= 1 and g.drops <= most, g.content .. ": " .. g.drops)
+    end
+    assertTrue(#TD.HISTORY >= 20 and total >= 60, #TD.HISTORY .. " groups, " .. total .. " drops")
+    hasAll(per, { "key", "heroicDungeon", "raidHeroic", "raidMythic", "raidLFR", "worldBoss" }, "content")
+    for _, g in ipairs(TD.HISTORY) do assertTrue(g.ago <= 28 * 86400, "inside the default 30 days") end
+end)
+
+-- A journal-shaped pool: two dungeons (Mythic Keystone 300, Heroic 280), a raid (Raid Finder 270,
+-- Heroic 295, Mythic 305) and a world boss (285), four bosses each with an item for every slot.
+local function journalPool()
+    local drops, id = {}, 20000
+    local function add(instance, difficulty, ilvl, worldBoss)
+        for boss = 1, 4 do
+            for _, loc in ipairs(SLOTS) do
+                id = id + 1
+                drops[#drops + 1] = { link = poolLink(id, ilvl), itemID = id, equipLoc = loc, ilvl = ilvl,
+                    instance = instance, difficulty = difficulty, worldBoss = worldBoss,
+                    encounterID = #instance * 10 + boss, encounter = instance .. " boss " .. boss }
+            end
+        end
+    end
+    add("Ashen Vault", 8, 300); add("Ashen Vault", 2, 280); add("Mire Hold", 8, 300); add("Mire Hold", 2, 280)
+    add("The Spire", 17, 270); add("The Spire", 15, 295); add("The Spire", 16, 305); add("Wilds", 14, 285, true)
+    return drops
+end
+
+test("test mode data: each group is one real place, its loot that place's at the group's difficulty (fb17)", function()
+    local NS = T.newAddon()
+    local TD = NS.TestData
+    local drops = journalPool()
+    local byLink = {}
+    for _, e in ipairs(drops) do byLink[e.link] = e end
+    local function factsOf(e) return { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = 4 } end
+    local LEVEL = { mythicPlus = 300, dungeon = 280, raid = 295, raidLFR = 270, openWorldGroup = 285 }
+    for _, s in ipairs(TD.Placeholders(1000, YOU, TD.Source(drops, drops, factsOf))) do
+        local e, g = byLink[s.link], s.group
+        assertEqual(e.ilvl, g.kind == "run" and 300 or 295, "this session's raid bosses are Heroic, its key a +10: " .. g.key)
+        if g.kind == "run" then
+            assertEqual(g.label, e.instance, "a key run is its dungeon"); assertEqual(g.difficulty, "Mythic+ 10")
+        else
+            assertEqual(g.label, e.encounter, "a boss's drop is that boss's"); assertEqual(g.instance, e.instance)
+            assertEqual(g.difficulty, "Heroic")
+        end
+    end
+    local log = TD.History(5000000, YOU, TD.Source(drops, drops, factsOf))
+    local seen = {}
+    for _, g in ipairs(log.groups) do
+        seen[g.situation] = true
+        for _, d in ipairs(g.drops) do
+            local e = byLink[d.itemLink]
+            if g.situation == "raid" then
+                assertTrue(e.ilvl == (g.difficulty == "Mythic" and 305 or 295), g.key .. ": " .. g.difficulty)
+            else
+                assertEqual(e.ilvl, LEVEL[g.situation], g.key)
+            end
+            if g.kind == "encounter" then assertEqual(e.encounter, g.label, g.key .. ": the boss's own loot") end
+        end
+        if g.situation == "openWorldGroup" then
+            assertTrue(g.instance == nil and g.difficulty == nil, "a world boss names no instance or difficulty")
+        end
+    end
+    hasAll(seen, { "mythicPlus", "dungeon", "raid", "raidLFR", "openWorldGroup" }, "situation")
 end)
 
 test("test mode data: the other members' drops cover every Me and Them verdict (board 03)", function()
@@ -131,7 +220,7 @@ test("test mode data: your own drops cover every countdown and every candidate s
     hasAll(pills, { "upgrade", "sidegrade", "downgrade", "cantUse", "checking", "unavailable" }, "status")
 end)
 
-test("test mode data: two groups, a boss and a key run, every item a pool item that keeps its slot", function()
+test("test mode data: a key run and three bosses, every item a pool item that keeps its slot", function()
     local NS, specs, ids = placeholders()
     local groups, slots = {}, {}
     for _, s in ipairs(specs) do
@@ -194,21 +283,26 @@ test("test mode data: an empty pool gives no sample, and a pool short of a slot 
     for _, s in ipairs(specs) do assertTrue(ids[idOf(s.link)] == true) end
 end)
 
-test("test mode data: the History sample has your two groups, every outcome, and an alt's, oldest first", function()
+test("test mode data: the History sample has your groups, every outcome, and an alt's, oldest first", function()
     local NS = T.newAddon()
     local src, ids = source(NS)
-    local log = NS.TestData.History(200000, YOU, src)
-    assertEqual(#log.groups, 3)
-    assertTrue(log.groups[1].at < log.groups[2].at and log.groups[2].at < log.groups[3].at, "oldest first")
-    -- The Character dropdown (feedback-2 spec §4): the oldest group is the alt's, on your realm.
-    local alt = log.groups[1]
-    assertEqual(alt.label, "Placeholder boss (alt)")
+    local log = NS.TestData.History(5000000, YOU, src)
+    assertEqual(#log.groups, #NS.TestData.HISTORY)
+    for i = 2, #log.groups do assertTrue(log.groups[i - 1].at < log.groups[i].at, "oldest first") end
+    -- The Character dropdown (feedback-2 spec §4): one group is the alt's, on your realm.
+    local alts = {}
+    for _, g in ipairs(log.groups) do
+        if g.seenBy == "Emberwick-Testrealm" then alts[#alts + 1] = g
+        else
+            for _, e in ipairs(g.drops) do assertEqual(e.seenBy, "Tester-Testrealm") end
+        end
+    end
+    assertEqual(#alts, 1)
+    local alt = alts[1]
+    assertEqual(5000000 - alt.at, 10 * 86400, "ten days old")
     assertEqual(alt.drops[1].seenBy, "Emberwick-Testrealm"); assertEqual(alt.drops[1].seenByClass, "WARLOCK")
     assertEqual(alt.roster[1].name, "Emberwick", "the alt's roster names the alt first")
     assertEqual(alt.drops[2].looter, "Emberwick", "the alt's own drop")
-    for i = 2, 3 do
-        for _, e in ipairs(log.groups[i].drops) do assertEqual(e.seenBy, "Tester-Testrealm") end
-    end
     local outcomes, mine = {}, 0
     for _, g in ipairs(log.groups) do
         for _, e in ipairs(g.drops) do
@@ -275,11 +369,14 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
     NS.SetTestMode(true)
     assertEqual(#LF.Drops("test"), 16)
     assertEqual(#LF.Drops("live"), 0)
+    assertEqual(m.journal.previews[1], 10, "the keys' loot read at Mythic+ 10")
+    assertEqual(m.journal.keystoneLevel, 0, "and the journal's own preview put back")
     local ids = journalIds(m)
     for _, rec in ipairs(LF.Drops("test")) do
         assertTrue(ids[rec.itemID] == true, "a journal item, never an unknown id: " .. tostring(rec.link))
-        assertTrue(rec.link:find("[Vault ", 1, true) ~= nil, rec.link)
-        assertEqual(rec.facts.ilvl, 300, "the Mythic Keystone drop's own level")
+        assertTrue(rec.link:find("[Vault ", 1, true) ~= nil or rec.link:find("[Spire ", 1, true) ~= nil, rec.link)
+        -- feedback-17: the key run's loot is its dungeon's at Mythic Keystone, the bosses' their raid's at Heroic
+        assertEqual(rec.facts.ilvl, rec.situation == "mythicPlus" and 300 or 295, "the drop's own level")
         assertTrue(NS.Compat.ItemIcon(rec.link) ~= 134400, "a real icon, not the question mark")
     end
     NS.SetTestMode(false)
@@ -364,7 +461,7 @@ test("history: test mode shows its sample groups, every outcome, and never write
     local H = NS.History
     NS.SetTestMode(true)
     local groups, outcomes = H.Groups(), {}
-    assertEqual(#groups, 3, "yours and the alt's")
+    assertEqual(#groups, #NS.TestData.HISTORY, "yours and the alt's")
     for _, g in ipairs(groups) do
         for _, e in ipairs(g.drops) do outcomes[e.outcome] = true end
     end
@@ -373,16 +470,17 @@ test("history: test mode shows its sample groups, every outcome, and never write
     NS.Window.SelectTab("history")
     NS.Window.Refresh()
     local drawn = NS.WindowHistory.Drawn()
-    assertEqual(#drawn.headers, 3, "Character: All, History's default, shows the alt's group (feedback-13 spec §0)")
+    local n = #NS.TestData.HISTORY
+    assertEqual(#drawn.headers, n, "Character: All, History's default, shows the alt's group (feedback-13 spec §0)")
     assertTrue(#drawn.rows >= 1)
     local dd = NS.WindowFilterBar.Controls().char
     dd:ToggleSelected("current"); dd.onMultiSelect(dd._selected)
-    assertEqual(#NS.WindowHistory.Drawn().headers, 2, "Character: Current hides the alt's group (feedback-2 spec §4)")
+    assertEqual(#NS.WindowHistory.Drawn().headers, n - 1, "Character: Current hides the alt's group (feedback-2 spec §4)")
     local listed = {}
     for _, o in ipairs(dd._options) do listed[#listed + 1] = o.value end
     assertEqual(table.concat(listed, ","), "all,current,Emberwick-Testrealm,Testchar-Testrealm")
     dd:ToggleSelected("all"); dd.onMultiSelect(dd._selected)
-    assertEqual(#NS.WindowHistory.Drawn().headers, 3, "All shows it")
+    assertEqual(#NS.WindowHistory.Drawn().headers, n, "All shows it")
     H.Clear()
     assertEqual(#H.Groups(), 0, "Clear history clears the samples")
     assertEqual(#H.Store().groups, 0)
@@ -398,8 +496,8 @@ test("history: the account's kept groups come back when test mode ends", functio
         { itemLink = "|cnIQ4:|Hitem:1::::::::90:::::|h[Old]|h|r", outcome = "seen", at = 1 } } }
     H.Store().groups = { kept }
     NS.SetTestMode(true)
-    assertEqual(#H.Groups(), 3)
-    assertEqual(H.Groups()[1].label, "Placeholder boss (alt)")
+    assertEqual(#H.Groups(), #NS.TestData.HISTORY)
+    for _, g in ipairs(H.Groups()) do assertTrue(g ~= kept and g.drops[1].test == true, "only the samples") end
     NS.SetTestMode(false)
     assertEqual(#H.Groups(), 1)
     assertTrue(H.Groups()[1] == kept)
@@ -417,7 +515,7 @@ local function shownTest()
     return NS, NS.WindowGroup.Drawn(), m
 end
 
-test("window: test mode draws every sample, under the boss and the key run, with real icons", function()
+test("window: test mode draws every sample, under the key run and the three bosses, with real icons", function()
     local NS, drawn = shownTest()
     local f = NS.Window.Frame()
     assertTrue(f.banner:IsShown()); assertTrue(f.testText:IsShown())
@@ -425,7 +523,7 @@ test("window: test mode draws every sample, under the boss and the key run, with
     assertTrue(textOf(f.banner.text):find("Nothing is whispered") ~= nil)
     assertTrue(textOf(f.banner.text):find("real items", 1, true) ~= nil)
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
-    assertEqual(#drawn.headers, 2)
+    assertEqual(#drawn.headers, 4)
     local mine = 0
     for _, d in ipairs(NS.LootFeed.Drops("test")) do
         if d.isMine then mine = mine + 1 end
@@ -492,7 +590,7 @@ test("window: a sample's Them shows its own worn item, and its detail card its o
     local crown
     for _, r in ipairs(drawn.rows) do
         local d = NS.LootFeed.Get(r.dropId)
-        if d.looter.name == "Seta" and d.facts.equipLoc == "INVTYPE_HEAD" then crown = r end
+        if d.looter.name == "Seta" and d.them and d.them.baseline then crown = r end
     end
     assertTrue(crown.cells.them.icons[1]:IsShown(), "the worn item's button")
     NS.WindowGroup.ToggleExpand(crown.dropId)

@@ -234,11 +234,33 @@ test("cells: an encounter header reads `Label · Situation · age · n drops`", 
     local g = { key = "enc:1", label = "Boss 3", kind = "encounter", at = 100 }
     local h = W.Header(g, 4, 220, "Dungeon", false)
     assertEqual(h.text, "Boss 3 · Dungeon · 2m ago · 4 drops")
-    assertEqual(h.tip[2], "Drops from one boss encounter.")
-    assertEqual(h.tip[3], "Click to collapse this group.")
+    assertEqual(T.tipText(h.tip[2]):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""), "Difficulty  Dungeon\nWhen  2m ago\nDrops  4")
+    assertEqual(h.tip[3], "|cffb3b3b8Drops from one boss encounter.|r", "the kind under the rows, in gray")
+    assertEqual(h.tip[4], "Click to collapse this group.")
     local c = W.Header(g, 1, 220, nil, true)
     assertEqual(c.text, "Boss 3 · 2m ago · 1 drop (collapsed)")
-    assertEqual(c.tip[3], "Click to expand this group.")
+    assertEqual(c.tip[4], "Click to expand this group.")
+end)
+
+local function plainTip(tip) return (T.tipJoined(tip, "\n"):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")) end
+
+test("cells: a header's tooltip is its facts in rows, gold labels, every member named five a row (feedback-17)", function()
+    local W = WC()
+    local roster = { { name = "You", class = "MAGE", me = true } }
+    for i = 2, 12 do roster[i] = { name = "R" .. i, class = "ROGUE" } end
+    local g = { key = "enc:1", label = "Lady Sethra", kind = "encounter", at = 100, instance = "Test Spire",
+        difficulty = "Looking For Raid", seenBy = "You-Realm", seenByClass = "MAGE", roster = roster }
+    local h = W.Header(g, 3, 220, "Raid", false)
+    -- red under: one `Spire · Lady Sethra · LFR · 2m ago · 3 drops · You (collapsed)` line, then `Group: ...` wrapping
+    assertEqual(h.tip[1], "Lady Sethra")
+    assertEqual(plainTip(h.tip), table.concat({ "Lady Sethra", "Instance  Test Spire", "Difficulty  Looking For Raid",
+        "When  2m ago", "Drops  3", "Seen by  You", "Group (12)  You, R2, R3, R4, R5,", "R6, R7, R8, R9, R10,", "R11, R12",
+        "Drops from one boss encounter.", "Click to collapse this group." }, "\n"))
+    assertEqual(h.tip[2].grid[1][1], "|cffffd100Instance|r", "the labels in gold")
+    local run = W.Header({ key = "r", label = "Test Vault", kind = "run", instance = "Test Vault", difficulty = "Mythic+ 10" },
+        2, nil, "Mythic+", true)
+    assertEqual(plainTip(run.tip), "Test Vault\nDifficulty  Mythic+ 10\nDrops  2\n"
+        .. "Drops from one Mythic+ run, the chest included.\nClick to expand this group.", "a key run: its title is the dungeon")
 end)
 
 -- ── the columns and the order (pure) ────────────────────────────────────────────────────────

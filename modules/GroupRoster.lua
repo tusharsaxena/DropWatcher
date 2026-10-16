@@ -20,11 +20,12 @@ local _, NS = ...
 --
 -- THE HEADER. Since feedback-3 spec §4 (DW-B4) the header itself names only the character that saw
 -- the drop (modules/GroupPlace.lua's Who), never the party. The roster is still captured and kept,
--- and the tooltip's TipLine names it: `Group: ` and the first TIP_NAMES names, each class-colored,
--- with the realm when it is not yours, then `+n`. A History group recorded before the roster
--- existed has none, and its tooltip has no such line.
+-- and the tooltip's TipRows name it (feedback-17): a `Group (n)` row beside the first TIP_PER_ROW
+-- names, then the rest TIP_PER_ROW a row under it, every member named, each class-colored, with the
+-- realm when it is not yours. A History group recorded before the roster existed has none, and its
+-- tooltip has no such rows.
 --
--- PURE: Entry, FromMembers, Merge, Copy, Names and TipLine take plain tables (and a color function)
+-- PURE: Entry, FromMembers, Merge, Copy, Names and TipRows take plain tables (and a color function)
 -- and read nothing else; test_group_roster drives them. Current, Note and Grow are the edge: they
 -- read NS.Roster, NS.Compat, NS.LootFeed, NS.History and NS.Window at call time.
 
@@ -32,8 +33,8 @@ NS.GroupRoster = NS.GroupRoster or {}
 local GR = NS.GroupRoster
 local L = NS.L
 
--- The tooltip's Group line names at most this many members; the rest are counted as `+n`.
-GR.TIP_NAMES = 10
+-- The tooltip's Group rows name this many members a row.
+GR.TIP_PER_ROW = 5
 
 -- ── the pure core ───────────────────────────────────────────────────────────────────────────
 
@@ -141,12 +142,12 @@ end
 --- The first `limit` names, each in its class color with the realm when it is not yours, then
 --- `+n`. Nil for no roster.
 --- @param list table|nil
---- @param limit number|nil (GR.TIP_NAMES)
+--- @param limit number|nil (every name)
 --- @param colorOf function|nil classFile -> r, g, b
 --- @return string|nil
 function GR.Names(list, limit, colorOf)
     if type(list) ~= "table" or #list == 0 then return nil end
-    local cap = math.max(1, tonumber(limit) or GR.TIP_NAMES)
+    local cap = math.max(1, tonumber(limit) or #list)
     local parts = {}
     for i = 1, math.min(cap, #list) do
         local e = list[i]
@@ -156,13 +157,24 @@ function GR.Names(list, limit, colorOf)
     return table.concat(parts, ", ")
 end
 
---- A header tooltip's one roster line, `Group: You, Seta, ...` (GR.Names). Nil for no roster.
+--- A header tooltip's roster rows, { label, names } each (feedback-17): `Group (n)` beside the first
+--- GR.TIP_PER_ROW names, then the rest that many a row under an empty label, every member named
+--- (GR.Names), a row that more follow ending in a comma. Empty for no roster.
 --- @param list table|nil
 --- @param colorOf function|nil
---- @return string|nil
-function GR.TipLine(list, colorOf)
-    local names = GR.Names(list, GR.TIP_NAMES, colorOf)
-    return names and L["Group: %s"]:format(names) or nil
+--- @return table rows
+function GR.TipRows(list, colorOf)
+    local rows = {}
+    if type(list) ~= "table" or #list == 0 then return rows end
+    local per = GR.TIP_PER_ROW
+    for i = 1, #list, per do
+        local slice = {}
+        for k = i, math.min(i + per - 1, #list) do slice[#slice + 1] = list[k] end
+        local names = GR.Names(slice, nil, colorOf)
+        if i + per <= #list then names = names .. "," end
+        rows[#rows + 1] = { i == 1 and L["Group (%d)"]:format(#list) or "", names }
+    end
+    return rows
 end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
