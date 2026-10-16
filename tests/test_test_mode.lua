@@ -107,7 +107,7 @@ test("test mode data: the session drops what such groups see; History holds far 
         if s.content == "key" then assertEqual(n, 2, "a key run's chest: two items")
         else assertTrue(n >= 4 and n <= 5, "a raid boss of twenty: four or five, not " .. n) end
     end
-    assertEqual(#TD.SESSION, 4); assertEqual(sessionDrops, 16)
+    assertEqual(#TD.SESSION, 5); assertEqual(sessionDrops, 22)
     local total = 0
     for _, g in ipairs(TD.HISTORY) do
         per[g.content] = true
@@ -217,10 +217,110 @@ test("test mode data: your own drops cover every countdown and every candidate s
         for _, c in ipairs(MC.Candidates(drop)) do pills[c.status] = true end
     end
     hasAll(kinds, { "exact", "soon", "estimated", "boe", "expired" }, "countdown")
-    hasAll(pills, { "upgrade", "sidegrade", "downgrade", "cantUse", "checking", "unavailable" }, "status")
+    hasAll(pills, { "upgrade", "sidegrade", "offSpecUpgrade", "downgrade", "cantUse", "checking", "unavailable" },
+        "status")
 end)
 
-test("test mode data: a key run and three bosses, every item a pool item that keeps its slot", function()
+-- ── off-spec (feedback-19 spec §4) ──────────────────────────────────────────────────────────
+
+test("test mode data: off-spec samples show every off-spec verdict, an empty slot, a bag item and a worn one", function()
+    local NS, specs = placeholders()
+    local OS, M = NS.OffSpec, NS.Messaging
+    local verdicts, kinds, armorRefusal = {}, {}, false
+    for _, s in ipairs(others(specs)) do
+        local off = OS.Of(s.me)
+        if off then
+            verdicts[off.verdict] = true
+            assertEqual(off.specID, 65); assertEqual(off.mainSpecID, 66)
+            assertEqual(s.me.reasons[1].key, "primaryStat", "the main spec's reason is spec-dependent")
+            local base = off.baseline
+            if not base then kinds.empty = true; assertEqual(off.ilvlDelta, nil, "an empty slot has no difference")
+            elseif base.slot then kinds.worn = true else kinds.bag = true end
+            if base then assertTrue(base.link ~= s.link, "a pool item, not the drop itself") end
+            -- the gear its Me cell reads is the off-spec baseline's, never the main spec's
+            local rec = { test = true, testGear = s.testGear, testOffGear = s.testOffGear }
+            local gear = NS.TestMode.GearOf(rec, { [1] = "real" })
+            assertTrue(gear == s.testOffGear and gear ~= nil, "TM.GearOf answers testOffGear")
+            local first = gear[NS.WindowCells.EqSlots(s.facts.equipLoc)[1]]
+            if base then assertEqual(first.link, base.link) else assertEqual(first, false) end
+            local askable = off.verdict == "upgrade" or off.verdict == "sidegrade"
+            assertEqual(M.AskTemplate(s), askable and "askOffSpec" or nil, off.verdict)
+        elseif s.me.verdict == "cantUse" then
+            assertTrue(s.me.offSpec == nil, "no off-spec rescue")
+            if s.me.reasons[1].key == "armorType" then armorRefusal = true end
+        end
+    end
+    hasAll(verdicts, { "upgrade", "sidegrade", "downgrade" }, "off-spec verdict")
+    hasAll(kinds, { "empty", "worn", "bag" }, "off-spec baseline")
+    assertTrue(armorRefusal, "a class-wide refusal stays Can't use")
+end)
+
+test("test mode data: an Offer candidate's off-spec upgrade ranks below main-spec upgrades, above a downgrade", function()
+    local NS, specs = placeholders()
+    local MC = NS.MineCells
+    local shown = 0
+    for _, s in ipairs(yours(specs)) do
+        local drop = { at = 1000 - s.ago, trade = s.trade, candidates = s.candidates, facts = s.facts, me = s.me }
+        local list = MC.Candidates(drop)
+        for i, c in ipairs(list) do
+            if c.status == "offSpecUpgrade" then
+                shown = shown + 1
+                assertTrue(c.offerable, "offerable")
+                local e = drop.candidates[c.guid]
+                assertEqual(e.eval.reasons[1].key, "specList")
+                for j, o in ipairs(list) do
+                    if o.status == "upgrade" then assertTrue(j < i, "below a main-spec upgrade") end
+                    if o.status == "downgrade" then assertTrue(j > i, "above a downgrade") end
+                end
+            end
+        end
+    end
+    assertEqual(shown, 2, "the trinket's candidate and the off-spec showcase's")
+end)
+
+test("test mode data: History holds an off-spec entry you asked for and one you received", function()
+    local NS = T.newAddon()
+    local log = NS.TestData.History(5000000, YOU, (source(NS)))
+    local outcomes = {}
+    for _, g in ipairs(log.groups) do
+        for _, e in ipairs(g.drops) do
+            local off = NS.OffSpec.Of(e.me)
+            if off then
+                outcomes[e.outcome] = true
+                assertEqual(off.specID, 65); assertEqual(off.mainSpecID, 66)
+                assertTrue(off.baseline == nil and off.reasons == nil, "a snapshot keeps no baseline or reasons")
+            end
+        end
+    end
+    hasAll(outcomes, { "asked", "received" }, "off-spec outcome")
+end)
+
+test("window: test mode shows an off-spec verdict, cyan with the spec's name, and its detail card's Spec row", function()
+    local NS, _, m = T.enableAddon()
+    m.specNames[65], m.specNames[66] = "Holy", "Protection"
+    m.seedGearJournal()
+    NS.SetTestMode(true)
+    for _, g in ipairs(NS.LootFeed.Groups("test")) do NS.State.windowGroup.collapsed[g.key] = false end
+    NS.Window.Refresh()
+    local shown = 0
+    for _, r in ipairs(NS.WindowGroup.Drawn().rows) do
+        local d = NS.LootFeed.Get(r.dropId)
+        if NS.OffSpec.Of(d.me) then
+            shown = shown + 1
+            assertTrue((textOf(r.cells.me.text) or ""):find("Holy", 1, true) ~= nil, "the spec's name")
+            assertEqual(select(2, r.cells.me.text:GetTextColor()), NS.Constants.TONE.offspec.g, "in the offspec cyan")
+            local words = {}
+            for _, l in ipairs(r.cells.me.tipLines) do if type(l) == "string" then words[#words + 1] = l end end
+            local tip = table.concat(words, "\n")
+            assertTrue(tip:find("Protection can't use it", 1, true) ~= nil, tip)
+            local rows = NS.DetailCells.ForYou(d, nil, "PALADIN").rows
+            assertEqual(rows[1].key, "spec"); assertEqual(rows[1].text, "Holy (off-spec): Protection can't use it")
+        end
+    end
+    assertEqual(shown, 5, "the Crescent row and four showcase rows")
+end)
+
+test("test mode data: a key run and four bosses, every item a pool item that keeps its slot", function()
     local NS, specs, ids = placeholders()
     local groups, slots = {}, {}
     for _, s in ipairs(specs) do
@@ -232,7 +332,7 @@ test("test mode data: a key run and three bosses, every item a pool item that ke
     end
     hasAll(groups, { "encounter", "run" }, "group")
     hasAll(slots, { "INVTYPE_HEAD", "INVTYPE_FINGER", "INVTYPE_TRINKET", "INVTYPE_CLOAK", "INVTYPE_WEAPON" }, "slot")
-    assertEqual(#specs, 16)
+    assertEqual(#specs, 22)
     assertTrue(NS.TestData.MEMBERS.seta.name == "Seta", "the names are invented")
 end)
 
@@ -279,7 +379,7 @@ test("test mode data: an empty pool gives no sample, and a pool short of a slot 
     assertEqual(#TD.History(1000, YOU, TD.Source({}, {}, nil)).groups, 0)
     local src, ids = source(NS, { "INVTYPE_FINGER" })
     local specs = TD.Placeholders(1000, YOU, src)
-    assertEqual(#specs, 16, "every state still shows")
+    assertEqual(#specs, 22, "every state still shows")
     for _, s in ipairs(specs) do assertTrue(ids[idOf(s.link)] == true) end
 end)
 
@@ -367,7 +467,7 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
     local LF = NS.LootFeed
     m.seedGearJournal()
     NS.SetTestMode(true)
-    assertEqual(#LF.Drops("test"), 16)
+    assertEqual(#LF.Drops("test"), 22)
     assertEqual(#LF.Drops("live"), 0)
     assertEqual(m.journal.previews[1], 10, "the keys' loot read at Mythic+ 10")
     assertEqual(m.journal.keystoneLevel, 0, "and the journal's own preview put back")
@@ -382,7 +482,7 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
     NS.SetTestMode(false)
     assertEqual(#LF.Drops("test"), 0)
     NS.SetTestMode(true)
-    assertEqual(#LF.Drops("test"), 16, "turned on again: filled again, not doubled")
+    assertEqual(#LF.Drops("test"), 22, "turned on again: filled again, not doubled")
 end)
 
 test("test mode: while the pool loads the tab says so and holds no drop; the drops fill in when it is ready", function()
@@ -399,7 +499,7 @@ test("test mode: while the pool loads the tab says so and holds no drop; the dro
     m.loadJournal()
     m.advance(1)
     assertFalse(NS.TestMode.IsLoading())
-    assertEqual(#NS.LootFeed.Drops("test"), 16)
+    assertEqual(#NS.LootFeed.Drops("test"), 22)
 end)
 
 test("test mode: turned off while the pool loads, nothing arrives later", function()
@@ -515,7 +615,7 @@ local function shownTest()
     return NS, NS.WindowGroup.Drawn(), m
 end
 
-test("window: test mode draws every sample, under the key run and the three bosses, with real icons", function()
+test("window: test mode draws every sample, under the key run and the four bosses, with real icons", function()
     local NS, drawn = shownTest()
     local f = NS.Window.Frame()
     assertTrue(f.banner:IsShown()); assertTrue(f.testText:IsShown())
@@ -523,7 +623,7 @@ test("window: test mode draws every sample, under the key run and the three boss
     assertTrue(textOf(f.banner.text):find("Nothing is whispered") ~= nil)
     assertTrue(textOf(f.banner.text):find("real items", 1, true) ~= nil)
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
-    assertEqual(#drawn.headers, 4)
+    assertEqual(#drawn.headers, 5)
     local mine = 0
     for _, d in ipairs(NS.LootFeed.Drops("test")) do
         if d.isMine then mine = mine + 1 end
@@ -601,7 +701,7 @@ end
 -- A gear map's levels as the Me cell writes them: `292`, `331/335`.
 local function levelsOf(NS, drop)
     local WC = NS.WindowCells
-    local items = WC.SlotItems(drop.testGear, WC.EqSlots(drop.facts.equipLoc))
+    local items = WC.SlotItems(NS.TestMode.GearOf(drop), WC.EqSlots(drop.facts.equipLoc))
     return #items > 0 and WC.Levels(items) or nil
 end
 
@@ -666,9 +766,9 @@ test("window: Drops lists your samples with the others, and its strip counts the
     for _, e in ipairs(drawn.entries) do
         if e.kind == "drop" and e.drop.isMine then mine = mine + 1 end
     end
-    assertEqual(#drawn.pane.ownDrops, 5, "every sample of yours is listed")
-    assertTrue(mine <= 5)
-    assertEqual(drawn.summary.count, 4, "the tradeable ones")
+    assertEqual(#drawn.pane.ownDrops, 6, "every sample of yours is listed")
+    assertTrue(mine <= 6)
+    assertEqual(drawn.summary.count, 5, "the tradeable ones")
     assertTrue(drawn.pane.summary:IsShown())
     assertEqual(textOf(NS.Window.Frame().tabs.group.label), "Drops")
 end)

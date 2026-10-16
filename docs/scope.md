@@ -22,8 +22,12 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   the filters and the minimum-quality gate decide what shows before anyone is inspected.
 - **The verdicts.** Each drop is judged for you (against your gear snapshot) and for its looter
   (against the inspect broker's read of their gear), by item level and, when one is in use, a score:
-  Pawn, your own per-spec weights (with the Pawn scale string import), or none. The detail card also
-  says whether you have collected the look (CanIMogIt when installed).
+  Pawn, your own per-spec weights (with the Pawn scale string import), or none. The verdict is an
+  upgrade, a sidegrade, a downgrade, can't use, doesn't want or unknown. A drop your current spec
+  can't use but another spec of your class can is also judged for that spec, on item level alone
+  against the best item you own for it, and shows as an off-spec upgrade, sidegrade or downgrade in
+  cyan with the spec's name (feedback-19); a looter's off-spec is judged on what they wear. The
+  detail card also says whether you have collected the look (CanIMogIt when installed).
 - **The trade estimate.** Yes, likely, unknown or no, with its reason: the bind, the trade window,
   the situation's rule and the looter's item level. Your own drops get the exact countdown read
   from the item's tooltip, with one chat warning at ten minutes.

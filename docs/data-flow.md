@@ -7,7 +7,7 @@
  ENCOUNTER_LOOT ├─> LootParser ─> LootFeed ┼─> DetailCard, OfferPanel, Toast
  LOOT_HISTORY  ─┘                     │    └─> History
    Situations ──gate──────────────────┤
-   QualityGate ──gate─────────────────┼─> ItemFacts ─> Evaluate ─> verdicts
+   QualityGate ──gate─────────────────┼─> ItemFacts ─> Evaluate ─> verdicts (+ OffSpec.Attach)
                                       │     Roster ─┐      ▲
                                       │     Inspect ┴─> candidate gear/spec
                                       │     Gear (me) ┘
@@ -230,7 +230,10 @@ Ask, Offer, Announce, Post my tradeables on a sample ─> NS.Asks ─> printed (
 
 A placeholder is never judged, re-estimated or inspected: its verdicts, trade, inspect entry
 (`testInspect`) and ask state (`testAsk`) are the data's. The ask state shows only while the
-messaging edge holds none for it, so a click on Ask moves it like a live row's.
+messaging edge holds none for it, so a click on Ask moves it like a live row's. Its off-spec part is
+the data's too (feedback-19 spec §4): an off-spec sample carries `eval.offSpec` as the off-spec pass
+shapes it, and its Me cell reads `testOffGear` (TestMode.GearOf), the item the off-spec verdict was
+judged against, in place of `testGear`.
 
 ## The simulator (simulator spec §1, §2, §4, §5, §6)
 
@@ -618,6 +621,51 @@ panel's Trade button) was retired with that button (feedback-7 spec §0).
 
 Nothing is sent on the bus; the trade itself is the client's. Stood down, every call refuses with
 `stoodDown`.
+
+## The off-spec verdict (feedback-19)
+
+```
+Evaluate.run(facts, candidate, opts) ─> the main verdict (unchanged)
+  └─> OffSpec.Attach(out, facts, candidate, opts, run)    only for cantUse with a spec-dependent
+        │                                                 reason: primaryStat, specList, shield,
+        │                                                 offhand, dualWield (never armorType,
+        │                                                 weaponType or classRestricted)
+        ├─> each other spec X of ClassData.CLASS_SPECS[class]: run(facts, derived candidate, opts)
+        │     derived: X's dualWield and titanGrip, undesiredBySpec[X], the same sidegradeBand and
+        │     heirloomProtect, no scorer, no compareOwned; gear = candidate.offSpecGear(X) (pcall)
+        │       you:    Gear.OffSpecGear(X), the best item per slot X could equip, worn or in your bags
+        │       looter: Inspect's worn gear through OffSpec.WornGear (worn gear only)
+        └─> the best of upgrade > sidegrade > downgrade (then the larger gain, an empty slot largest,
+            then the lower spec id) ─> eval.offSpec = { specID, mainSpecID, verdict, ilvlDelta,
+            trackDelta, baseline, baselineSlot, reasons }
+
+readers: OffSpec.Of(eval) (cantUse with an off-spec upgrade, sidegrade or downgrade, else nil)
+         OffSpec.EvalFor(eval) (that part, else eval: every gain reader, {mygain}, {gain}, the toast)
+```
+
+**The tones.** A main-spec verdict keeps its tone (upgrade green, sidegrade yellow, downgrade red,
+can't use gray). An off-spec verdict is drawn in `C.TONE.offspec` (cyan, apart from Offer's
+`C.TONE.cyan`) for all three of its verdicts, with the spec's name after the difference:
+WindowCells.Verdict ─> OffSpecCells.Verdict ─> SideCells.Merge, `291 ▲20 Holy`; the Me cell's gear
+half is the item it was compared with (OffSpecCells.Eq), the detail and History cards take the
+OFF-SPEC chip and a Spec row (`Holy (off-spec): Protection can't use it`), and History keeps
+`offSpec = { specID, mainSpecID, verdict, ilvlDelta }`.
+
+**The ask precedence.** Main spec always comes first:
+
+```
+Messaging.AskTemplate(drop): main upgrade or sidegrade ─> ask
+                             off-spec upgrade or sidegrade ─> askOffSpec
+                             look not collected (messages.transmogAsk) ─> transmog
+                             else nil (no Ask)      one ask per item per looter, kind `ask`
+Toast.Qualifies(drop, minGain) ─> ok, why, offSpec   (the least gain on the off-spec difference)
+AutoAsk: an off-spec ask is due AA.OFFSPEC_LAG (5s) after its main-spec time, and re-arms 5s on
+         while any main-spec ask is still pending
+MineCells.Candidates: upgrade 1, sidegrade 2, offSpecUpgrade 3, offSpecSidegrade 4, downgrade 5,
+         cantUse and doesntWant 6, unknown 7, checking 8, unavailable 9
+```
+
+`Upgrade for N`, the Trade count, keep? and the trade estimate stay main-spec only.
 
 ## Asking, offering and announcing (design spec §9.2-§9.3)
 

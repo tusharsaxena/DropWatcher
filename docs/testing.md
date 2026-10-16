@@ -202,11 +202,15 @@ every cell, button and header of both tabs placed by it, the column labels and t
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
 and candidate status covered by the data, over pool items that keep their slot and level, the worn
 items the nearest of their slot, an empty pool giving none; feedback-17's realism: each group the
-size its content brings (five, twenty, twenty-five), the session's four groups and sixteen drops,
+size its content brings (five, twenty, twenty-five), the session's five groups and twenty-two drops,
 History's twenty-plus groups across every content within 30 days, each group one real place whose
 loot is that boss's or dungeon's at the group's difficulty, the keys' loot read at Mythic+ 10 with the
 journal's preview put back; feedback-18's Me: with your real gear all at 999, every sample's You in both
-layouts is its own worn gear, the first slot the item its detail card replaces; the History sample with every outcome;
+layouts is its own worn gear, the first slot the item its detail card replaces; feedback-19's off-spec
+samples: every off-spec verdict, an empty slot, a bag item and a worn one, askable only for an upgrade or a
+sidegrade, a wrong armor type left Can't use, an Offer candidate's off-spec ranked below main-spec
+upgrades and above a downgrade, History's asked and received off-spec entries, and the drawn Me cell
+cyan with the spec's name and its detail card's Spec row; the History sample with every outcome;
 `AddTest` and the test feed filled from the mock journal's pool (`seedGearJournal`) and emptied
 with test mode, while the pool loads, with no pool at all, by combat and by the stand-down; the
 History tab's samples never written to `global.history`; the window built headless with every

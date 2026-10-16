@@ -13,3 +13,4 @@ owner's go-ahead.
 - 2026-10-17 — DW-O2 landed: off-spec ask (askOffSpec template, row, editor, {mygain} via OffSpec.EvalFor, Ask tooltip), toast third value and title, auto-ask lag and main-first re-arm; suite 1533/0/1, lint 0/0, perf green, max CCN 14.
 - 2026-10-17 — DW-O2 review: auto-ask re-reads off-spec at fire time (a re-judged drop keeps main spec first); suite 1534/0/1, lint 0/0, perf green, max CCN 14.
 - 2026-10-17 — DW-O3 landed: Offer for off-spec (two candidate statuses ranked after main-spec equals, offerable, gain sort, cyan Their eq with the spec name, Upgrade for N main-spec only); suite 1545/0/1, lint 0/0, perf green, max CCN 14.
+- 2026-10-17 — DW-O4 landed: off-spec test-mode samples and showcase (22 drops, 5 groups), testOffGear, docs synced, FEED-80/81, ASK-11, TOAST-5 pending; suite 1549/0/1, lint 0/0, perf green, max CCN 14.

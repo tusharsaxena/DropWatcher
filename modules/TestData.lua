@@ -17,15 +17,28 @@ local _, NS = ...
 -- (LFR_25); and they drop what such a group sees: a key run's chest two items, a dungeon boss one
 -- or two, a raid boss four or five.
 --
--- THE DROPS (the Drops tab: this session). A key run earlier on, then three Heroic raid bosses
--- tonight, sixteen drops between them. The other members' eleven cover board 03 (Me and Them:
+-- THE DROPS (the Drops tab: this session). A key run earlier on, then four Heroic raid bosses
+-- tonight, twenty-two drops between them. The other members' sixteen cover board 03 (Me and Them:
 -- upgrade, sidegrade, downgrade, can't use, doesn't want, unknown; Trade: yes, likely, unknown, no;
 -- inspect: fresh, cached, pending, out of range, combat, failed, not in the group; Ask: ready,
--- queued, asked, retry, traded and the dash) and your five cover board 04 (an exact countdown, one
+-- queued, asked, retry, traded and the dash) and your six cover board 04 (an exact countdown, one
 -- ending soon, an estimated one, a bind-on-equip drop and an expired one, with candidates in every
--- status the Offer panel shows: upgrade, equal, no upgrade, can't use, checking and unavailable).
+-- status the Offer panel shows: upgrade, equal, off-spec upgrade, no upgrade, can't use, checking
+-- and unavailable).
 -- Each drop's age is its countdown's: four hours less what is left. One drop's look is collected
 -- and one's is not, for the look chips and the transmog ask.
+--
+-- OFF-SPEC (feedback-19 spec §4). Your samples' spec is Protection (paladin, OFF_MAIN) and the
+-- off-spec they show is Holy: a Me of `{ "cantUse", reason = "primaryStat", off = { 65, verdict,
+-- change, bag = true? } }` carries eval.offSpec as NS.OffSpec.Attach shapes it, its baseline a worn
+-- item (with its slot) or a bag one (`bag`, none), or no baseline and no change for an empty slot.
+-- Seta's legs are the owner's Crescent (an off-spec upgrade over a worn item); the last boss is the
+-- showcase: an off-spec upgrade into an empty slot, one over a bag item, a sidegrade and a downgrade,
+-- and your own drop with a candidate whose off-spec is an upgrade (Kaelith, Retribution, for Holy;
+-- the trinket's too). Ashveil's chest is the rule's other side: a wrong armor type is a class-wide
+-- refusal, so it stays Can't use with no off-spec. History has an off-spec drop you asked for and
+-- one you received. An off-spec sample's Me cell reads its off-spec baseline (`testOffGear`,
+-- TD.OffGearFor), not the gear your current spec wears there.
 --
 -- YOUR GEAR. A sample carries the worn items its Me verdict was judged against (`testGear`,
 -- TD.GearFor), as it carries the looter's (`testInspect.gear`), so the Me cell, the compact card and
@@ -319,18 +332,37 @@ end
 
 local function round(n) return math.floor(n + 0.5) end
 
+-- The spec your samples' off-spec is judged against: Protection, whose off-spec is Holy (65).
+local OFF_MAIN = 66
+TD.OFF_MAIN = OFF_MAIN
+
+-- The item a change implies (a pool item near that level), or nil for no change.
+local function baselineOf(src, item, delta)
+    if type(delta) ~= "number" then return nil end
+    local w = src:Worn(item.facts.equipLoc, round(item.facts.ilvl - delta), item.link)
+    return w and { link = w.link, ilvl = w.ilvl } or nil
+end
+
+-- The off-spec part NS.OffSpec.Attach shapes (`off` = { specID, verdict, change, bag }): a worn
+-- baseline carries the drop's first slot, a bag one (`bag`) none, no change an empty slot.
+local function offSpecOf(src, item, off, mainSpecID)
+    if not off then return nil end
+    local base = baselineOf(src, item, off[3])
+    local plan = C.SLOT_PLAN[item.facts.equipLoc]
+    if base and not off.bag and plan then base.slot = plan.slots[1] end
+    return { specID = off[1], mainSpecID = mainSpecID or OFF_MAIN, verdict = off[2], ilvlDelta = off[3],
+        baseline = base, baselineSlot = base and base.slot or nil, reasons = {} }
+end
+
 -- An evaluation as NS.Evaluate answers it: the verdict, the change, the worn item (a pool item
--- near the level the change implies) and the kernel's reason key (`reason`).
+-- near the level the change implies), the kernel's reason key (`reason`) and the off-spec part
+-- (`off`, judged for `spec.mainSpec`, else OFF_MAIN).
 local function ev(src, item, spec)
     if not spec then return nil end
     local verdict, delta = spec[1], spec[2]
     local reasons = spec.reason and { { key = spec.reason } } or {}
-    local base
-    if type(delta) == "number" then
-        local w = src:Worn(item.facts.equipLoc, round(item.facts.ilvl - delta), item.link)
-        base = w and { link = w.link, ilvl = w.ilvl } or nil
-    end
-    return { verdict = verdict, ilvlDelta = delta, reasons = reasons, baseline = base }
+    return { verdict = verdict, ilvlDelta = delta, reasons = reasons, baseline = baselineOf(src, item, delta),
+        offSpec = offSpecOf(src, item, spec.off, spec.mainSpec) }
 end
 
 local function trade(state, reasonKey, args, basis, age)
@@ -378,6 +410,19 @@ function TD.GearFor(src, item, eval)
     return gear
 end
 
+--- The gear an off-spec sample's Me cell reads (feedback-19 spec §4): the item its off-spec verdict
+--- was judged against in the drop's first slot (a bag item's too), `false` there for an empty slot;
+--- nil when `eval` has no off-spec part NS.OffSpec.Of shows. Pure.
+--- @param item table { link, facts }
+--- @param eval table|nil the evaluation the cell shows
+--- @return table|nil gear
+function TD.OffGearFor(item, eval)
+    local off = NS.OffSpec.Of(eval)
+    local plan = C.SLOT_PLAN[item.facts.equipLoc]
+    if not (off and plan) then return nil end
+    return { [plan.slots[1]] = off.baseline and { link = off.baseline.link, ilvl = off.baseline.ilvl } or false }
+end
+
 -- The looter's inspect entry (status, age, the worn items in the drop's slots, the spec), and the
 -- drop's own inspect, the same without the gear, as the feed records it.
 local function inspected(src, row, now, them, item)
@@ -398,11 +443,14 @@ local function other(src, now, row, where)
     local them, me = ev(src, item, row.them), ev(src, item, row.me)
     local testInspect, insp = inspected(src, row, now, them, item)
     return { looter = looter(row.who), link = item.link, facts = item.facts, me = me, testGear = TD.GearFor(src, item, me),
-        them = them, trade = tradeOf(row, item, them, insp), testInspect = testInspect, inspect = insp,
-        testAsk = row.ask }
+        testOffGear = TD.OffGearFor(item, me), them = them, trade = tradeOf(row, item, them, insp),
+        testInspect = testInspect, inspect = insp, testAsk = row.ask }
 end
 
--- One candidate for your own drop: `{ who, verdict, change }`, judged, checking or unavailable.
+-- One candidate for your own drop: `{ who, verdict, change, off = off-spec }`, judged, checking or
+-- unavailable. A Can't use is a wrong armor type, else (one with an off-spec) a spec list.
+local REFUSAL = { [true] = "specList", [false] = "armorType" }
+
 local function cand(src, item, c)
     local m = MEMBERS[c[1]]
     local e = { guid = m.guid, name = m.name, classFile = m.classFile }
@@ -410,7 +458,8 @@ local function cand(src, item, c)
         e.status = c[2]
         return e
     end
-    e.status, e.eval = "ready", ev(src, item, { c[2], c[3], reason = c[2] == "cantUse" and "armorType" or nil })
+    e.status, e.eval = "ready", ev(src, item, { c[2], c[3], reason = c[2] == "cantUse" and REFUSAL[c.off ~= nil] or nil,
+        off = c.off, mainSpec = m.specID })
     return e
 end
 
@@ -442,12 +491,13 @@ local function mine(src, now, you, row, where)
     end
     local me = ev(src, item, row.me)
     return { looter = you, link = item.link, facts = item.facts, me = me, testGear = TD.GearFor(src, item, me),
-        trade = tradeMine(now, row.trade), candidates = candidates }
+        testOffGear = TD.OffGearFor(item, me), trade = tradeMine(now, row.trade), candidates = candidates }
 end
 
--- This session, oldest first: a key run four hours ago, then three Heroic raid bosses. Each group's
--- `theirs` are the other members' drops, board 03 row by row: the looter, the slot (`strict`: it
--- must be that slot, being armor), Me and Them as { verdict, change, reason = key }, the trade
+-- This session, oldest first: a key run four hours ago, then four Heroic raid bosses, the last the
+-- off-spec showcase. Each group's `theirs` are the other members' drops, board 03 row by row: the
+-- looter, the slot (`strict`: it must be that slot, being armor), Me and Them as { verdict, change,
+-- reason = key, off = off-spec }, the trade
 -- { state, reasonKey, basis, age }, the inspect { status, age, reason }, the ask state, and the
 -- look's state. `yours` are yours, board 04: the slot, Me, the trade and the candidates. Every drop
 -- is the group's age; a countdown's is four hours less what is left.
@@ -472,12 +522,14 @@ local SESSION = {
           trade = { "no", "bonusRoll", "bind" }, inspect = { "failed", nil, "timeout" } },
         { who = "littlewolf", slot = "INVTYPE_WEAPON", look = false, me = { "doesntWant", reason = "undesired" },
           trade = { "unknown", "noInspect" }, inspect = { "combatParked" } },
+        { who = "ashveil", slot = "INVTYPE_CHEST", strict = true, me = { "cantUse", reason = "armorType" },
+          them = { "upgrade", 7 }, trade = { "no", "upgradeForLooter", "inspect", 120 }, inspect = { "fresh", 120 } },
       } },
     { content = "raidHeroic", n = 2, party = RAID_20, ago = 7800,
       yours = {
         { slot = "INVTYPE_TRINKET", me = { "downgrade", -6 }, trade = { "timer", 6600 }, cands = {
             { "seta", "upgrade", 14 }, { "butterz", "upgrade", 6 }, { "littlewolf", "sidegrade", 0 },
-            { "kaelith", "downgrade", -7 }, { "uniquerogue", "cantUse" }, { "mistveil", "checking" },
+            { "kaelith", "cantUse", off = { 65, "upgrade", 9 } }, { "uniquerogue", "downgrade", -7 }, { "mistveil", "checking" },
             { "dawnfeather", "unavailable" } } },
       },
       theirs = {
@@ -485,7 +537,7 @@ local SESSION = {
           trade = { "unknown", "noInspect" }, inspect = { "outOfRange" }, ask = { state = "sent" } },
         { who = "kaelith", slot = "INVTYPE_WRIST", me = { "downgrade", -8 }, them = { "upgrade", 12 },
           trade = { "no", "upgradeForLooter", "inspect", 75 }, inspect = { "fresh", 75 } },
-        { who = "seta", slot = "INVTYPE_LEGS", strict = true, me = { "cantUse", reason = "armorType" },
+        { who = "seta", slot = "INVTYPE_LEGS", strict = true, me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade", 20 } },
           trade = { "unknown", "noInspect" }, inspect = { "pending" } },
         { who = "dawnfeather", slot = "INVTYPE_FEET", me = { "sidegrade", -1 },
           trade = { "unknown", "noInspect" }, inspect = { "unavailable", nil, "notInGroup" } },
@@ -506,6 +558,23 @@ local SESSION = {
         { who = "mistveil", slot = "INVTYPE_SHOULDER", strict = true, me = { "upgrade", 6 },
           them = { "cantUse", reason = "armorType" }, trade = { "likely", "notUpgrade", "inspect", 20 },
           inspect = { "fresh", 20 }, ask = { state = "traded" } },
+      } },
+    { content = "raidHeroic", n = 4, party = RAID_20, ago = 60,
+      yours = {
+        { slot = "INVTYPE_WEAPON", me = { "downgrade", -9 }, trade = { "groupLoot" }, cands = {
+            { "seta", "upgrade", 6 }, { "kaelith", "cantUse", off = { 65, "upgrade", 14 } }, { "mistveil", "downgrade", -5 } } },
+      },
+      theirs = {
+        { who = "brightmane", slot = "INVTYPE_WEAPON", me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade" } },
+          them = { "sidegrade", 1 }, trade = { "likely", "notUpgrade", "inspect", 30 }, inspect = { "fresh", 30 } },
+        { who = "solenne", slot = "INVTYPE_HAND", strict = true,
+          me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade", 13, bag = true } },
+          them = { "downgrade", -6 }, trade = { "likely", "notUpgrade", "inspect", 45 }, inspect = { "fresh", 45 } },
+        { who = "kragmar", slot = "INVTYPE_WRIST", strict = true, me = { "cantUse", reason = "primaryStat", off = { 65, "sidegrade", 1 } },
+          them = { "downgrade", -3 }, trade = { "likely", "notUpgrade", "inspect", 50 }, inspect = { "cached", 50 } },
+        { who = "thornbrew", slot = "INVTYPE_FEET", strict = true,
+          me = { "cantUse", reason = "primaryStat", off = { 65, "downgrade", -11 } },
+          them = { "upgrade", 5 }, trade = { "no", "upgradeForLooter", "inspect", 55 }, inspect = { "fresh", 55 } },
       } },
 }
 TD.SESSION = SESSION
@@ -543,7 +612,8 @@ TD.ALT = ALT
 local MIN, HOUR, DAY = 60, 3600, 86400
 
 -- The other members' drops in turn: Me and Them, the trade { state, reasonKey }, the outcome
--- (`before` under a declined one), and `armor` for a drop a class can be barred from.
+-- (`before` under a declined one), and `armor` for a drop a class can be barred from; Me's `off` is
+-- an off-spec part (feedback-19 spec §4).
 local THEIRS = {
     { me = { "downgrade", -6 }, them = { "upgrade", 9 }, trade = { "no", "upgradeForLooter" }, outcome = "seen" },
     { me = { "upgrade", 7 }, them = { "downgrade", -4 }, trade = { "likely", "notUpgrade" }, outcome = "asked" },
@@ -554,6 +624,10 @@ local THEIRS = {
     { me = { "upgrade", 3 }, them = { "sidegrade", -1 }, trade = { "likely", "notUpgrade" }, outcome = "declined",
       before = "seen" },
     { me = { "downgrade", -3 }, them = { "downgrade", -2 }, trade = { "likely", "notUpgrade" }, outcome = "seen" },
+    { me = { "cantUse", off = { 65, "upgrade", 11 } }, them = { "downgrade", -5 }, trade = { "likely", "notUpgrade" },
+      outcome = "asked" },
+    { me = { "cantUse", off = { 65, "upgrade", 16 } }, them = { "sidegrade", 0 }, trade = { "likely", "notUpgrade" },
+      outcome = "received" },
 }
 
 -- Your own drops in turn.
@@ -600,9 +674,12 @@ local function membersOf(content, n)
     return PARTIES[(n - 1) % #PARTIES + 1]
 end
 
+-- A History snapshot (NS.History's): an off-spec part as its own, { specID, mainSpecID, verdict, ilvlDelta }.
 local function snap(spec)
     if not spec then return nil end
-    return { verdict = spec[1], ilvlDelta = spec[2] }
+    local off = spec.off
+    return { verdict = spec[1], ilvlDelta = spec[2],
+        offSpec = off and { specID = off[1], mainSpecID = OFF_MAIN, verdict = off[2], ilvlDelta = off[3] } or nil }
 end
 
 -- `seer` is whoever saw the group: you, or the alt (`seenBy`, its recorder key, and its class).

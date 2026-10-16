@@ -308,7 +308,7 @@ test("modes: test mode's own drops on Drops show Offer as the full rows, no coun
             seen.offer[f.offer] = true
         end
     end
-    assertEqual(n, 5, "every sample of yours")
+    assertEqual(n, 6, "every sample of yours")
     hasAll(seen.window, { "9:99:99", "~9:99:99", "No limit (BoE)" }, "Trade window")
     hasAll(seen.offer, { "Offer", "No action" }, "Offer, or No action on a dead drop")
 end)

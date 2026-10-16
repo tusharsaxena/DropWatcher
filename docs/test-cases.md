@@ -644,7 +644,7 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (33)
+### test_test_mode.lua (37)
 
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -652,7 +652,11 @@ Total.
 - test mode data: the other members' drops cover every Me and Them verdict (board 03)
 - test mode data: every trade estimate, inspect state and ask state is there
 - test mode data: your own drops cover every countdown and every candidate status (board 04)
-- test mode data: a key run and three bosses, every item a pool item that keeps its slot
+- test mode data: off-spec samples show every off-spec verdict, an empty slot, a bag item and a worn one
+- test mode data: an Offer candidate's off-spec upgrade ranks below main-spec upgrades, above a downgrade
+- test mode data: History holds an off-spec entry you asked for and one you received
+- window: test mode shows an off-spec verdict, cyan with the spec's name, and its detail card's Spec row
+- test mode data: a key run and four bosses, every item a pool item that keeps its slot
 - test mode data: worn items are other pool items of the slot, nearest the level the change implies
 - test mode data: the trade reason's two levels are the drop's and the looter's worn item's
 - test mode data: an empty pool gives no sample, and a pool short of a slot borrows a real item
@@ -667,7 +671,7 @@ Total.
 - test mode: the Drops tab shows View: All while on, and the player's View comes back
 - history: test mode shows its sample groups, every outcome, and never writes the account's history
 - history: the account's kept groups come back when test mode ends
-- window: test mode draws every sample, under the key run and the three bosses, with real icons
+- window: test mode draws every sample, under the key run and the four bosses, with real icons
 - window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Them gear state and every trade chip
 - window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)
@@ -832,6 +836,76 @@ Total.
 - evaluate: garbage inside the tables never throws
 - evaluate: an internal failure is caught and reported as unknown
 - evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
+
+### test_offspec.lua (11)
+
+- offspec: a Protection paladin's Intellect axe is an off-spec upgrade for Holy over an empty hand
+- offspec: against the best Holy item owned, the off-spec verdict takes the band
+- offspec: a refusal on the class skips the pass; so does a drop the main spec can use
+- offspec: an unknown spec is skipped
+- offspec: the spec list and the dual-wield flag are spec refusals too
+- offspec: the best spec wins: verdict, then the larger difference (an empty slot largest), then the lower id
+- offspec: doesntWant, cantUse and unknown are never chosen; with none left there is no off-spec
+- offspec: item level only: the scorer is never asked, so it never waits on a score
+- offspec: junk off-spec gear and junk undesired lists are tolerated and skip the spec
+- offspec: Who derives a spec's candidate from ClassData, never from the main spec
+- offspec: WornGear keeps each worn item the spec could wear, false where it could not
+
+### test_offspec_cells.lua (21)
+
+- off-spec cells: the offspec tone is its own cyan, apart from Offer's
+- off-spec cells: OffSpec.Of answers the off-spec part of a Can't use, else nil
+- off-spec cells: the Me verdict is the off-spec one, in the offspec tone, with the spec's name
+- off-spec cells: a sidegrade, a downgrade and an empty slot keep their glyphs, all in the offspec tone
+- off-spec cells: an unknown spec name falls back to words, and the looter's cell says their
+- off-spec cells: a Can't use with no off-spec is unchanged
+- off-spec cells: the Me cell's gear half is the off-spec baseline, a bag item with no slot
+- off-spec cells: a Can't use with no off-spec keeps the worn gear
+- off-spec cells: the compact line reads You 291 ▲20 Holy
+- off-spec cells: TipMarks' Mark and ArrowCell take a tone override
+- off-spec cells: the detail card's FOR YOU takes its chip and rows from the off-spec result
+- off-spec cells: the detail card's Can't use with no off-spec is unchanged
+- off-spec cells: the History snapshot keeps the off-spec part small
+- off-spec cells: an unchanged off-spec part never reports a change
+- off-spec cells: the History card takes its chip, Spec row and deltas from the snapshot
+- off-spec cells: a History row's tooltip names the level compared with, not an empty slot
+- off-spec cells: Upgrades and Interesting count an off-spec upgrade, not a sidegrade
+- off-spec cells: Usable by me counts an off-spec upgrade or sidegrade
+- off-spec cells: Gain sorts the off-spec difference below a main-spec upgrade of the same size
+- off-spec cells: the Me column's tooltip and the Offer panel's legend name the cyan
+- table: an off-spec Me cell paints the baseline's icon, its tooltip from the link for a bag item
+
+### test_offspec_ask.lua (15)
+
+- off-spec ask: AskTemplate takes the main spec, then the off-spec, then transmog
+- off-spec ask: the template is listed after transmog, with its default text inside the limit
+- off-spec ask: its row sits after the transmog template on the Templates tab
+- off-spec ask: the editor names it and previews it over an off-spec drop
+- off-spec ask: Reset templates speaks of five messages
+- off-spec ask: EvalFor answers the off-spec result when it counts, else the eval itself
+- off-spec ask: {mygain} reads the off-spec result, and an empty slot its words
+- off-spec ask: the Ask button fills askOffSpec, and its tooltip names the spec
+- off-spec toast: Qualifies adds a third value, offSpec, and tests the off-spec gain
+- off-spec toast: Compose titles it Off-spec upgrade for you (Holy)
+- off-spec auto-ask: DueAt takes an optional lag; the off-spec lag is 5 seconds
+- off-spec auto-ask: an off-spec upgrade is asked for the lag after the delay, with its own template
+- off-spec auto-ask: main spec goes first; an off-spec ask due while a main one waits is re-armed
+- off-spec auto-ask: the least gain applies to the off-spec difference
+- off-spec auto-ask: whether an ask is off-spec is read again when it comes due (a re-judge moves it)
+
+### test_offspec_offer.lua (11)
+
+- off-spec offer: an off-spec upgrade or sidegrade is its own status, ranked after main-spec equals
+- off-spec offer: doesntWant ranks with cantUse, and an off-spec downgrade stays Can't use
+- off-spec offer: both off-spec statuses are offerable, read the off-spec gain and baseline
+- off-spec offer: an off-spec upgrade into an empty slot sorts last in its tier
+- off-spec offer: each off-spec status explains itself
+- off-spec offer: Upgrade for N counts main-spec upgrades only
+- off-spec offer: an off-spec upgrade for you does not hide the drop
+- off-spec offer: the candidate cell is cyan with the spec's name, 311 ▲14 Holy
+- off-spec offer: the candidate cell's gear is the item compared with, not the main spec's worn pair
+- off-spec offer: the Offer whisper's {gain} reads the candidate's off-spec gain
+- off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cyan, with Offer
 
 ### test_scoring.lua (15)
 
@@ -1036,7 +1110,7 @@ Total.
 - BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
 - BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
 
-### test_gear.lua (20)
+### test_gear.lua (26)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
 - gear: the candidate carries the class, the spec and the hand flags from ClassData
@@ -1051,6 +1125,12 @@ Total.
 - gear: a bag item with no slot plan (a reagent, a potion) is never asked of the item facts
 - gear: a tier token and a secret bag link are not owned gear
 - gear: the candidate judges a drop against the worn item, and against the bags with compareOwned
+- gear: the pool keeps every gear item read, the off-spec ones too
+- gear: OffSpecGear is the best item per slot that spec could wear, false where nothing fits
+- gear: a worn slot still loading is unknown in the off-spec gear too
+- gear: the candidate brings its off-spec gear, and the kernel judges Holy against the bag mace
+- gear: a bag change that touches only an off-spec item still sends GearChanged
+- gear: sorting your bags moves no gear, so it sends no GearChanged
 - gear: the gear events share one throttled rebuild, which announces a change once
 - gear: a bag event in combat arms nothing; the combat's end rebuilds once
 - gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again
@@ -1089,7 +1169,7 @@ Total.
 - loot parser: the event's twelfth argument is the GUID it uses
 - loot parser: stood down, CHAT_MSG_LOOT reaches nothing; the counters survive
 
-### test_inspect.lua (32)
+### test_inspect.lua (33)
 
 - inspect: a request sends one NotifyInspect, and the ready read stores gear and spec
 - inspect: a slot's level comes from its tooltip, else from the link
@@ -1119,6 +1199,7 @@ Total.
 - inspect: entering an instance warms up too; untracked or busy, nothing is queued
 - inspect: Scan queues every other member that has no good read
 - inspect: the candidate carries the roster's class, the read spec and the hand flags
+- inspect: the candidate's off-spec gear is the worn gear each other spec could wear
 - inspect: InspectDone waits for the read's items to load
 - inspect: one debug line per job
 - inspect: secret GUIDs, units and specs are never used
@@ -1752,12 +1833,16 @@ Total.
 | test_offer_panel.lua | 17 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 33 |
+| test_test_mode.lua | 37 |
 | test_compat.lua | 68 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 36 |
+| test_offspec.lua | 11 |
+| test_offspec_cells.lua | 21 |
+| test_offspec_ask.lua | 15 |
+| test_offspec_offer.lua | 11 |
 | test_scoring.lua | 15 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
@@ -1767,9 +1852,9 @@ Total.
 | test_roster.lua | 13 |
 | test_item_facts.lua | 21 |
 | test_item_read.lua | 24 |
-| test_gear.lua | 20 |
+| test_gear.lua | 26 |
 | test_loot_parser.lua | 27 |
-| test_inspect.lua | 32 |
+| test_inspect.lua | 33 |
 | test_feed.lua | 44 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
@@ -1802,4 +1887,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1480** |
+| **Total** | **1549** |

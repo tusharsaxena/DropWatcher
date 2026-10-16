@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1480%2F1480_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1549%2F1549_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -48,13 +48,13 @@ It watches what your party or raid receives and compares each item with your gea
 
 Type `/dw show`, or right-click the minimap button and pick **Show window**. Drag it by the title bar, resize it from the corner and lock it with `/dw lock`. You won't often open it yourself, though: in a dungeon, key or raid it pops up when someone loots an item it shows. During a run it opens as a narrow column of cards, the compact view, and goes back to the full table afterwards. The button next to minimize switches views, as do `/dw compact` and `/dw full`, and each view keeps its own size and place.
 
-**Drops** lists every drop, yours included, under the boss or key run it came from. The two columns that matter are **Me** and **Them**: is this an upgrade for you, and is it one for the person who looted it? Each shows the gear worn in that slot and the item-level difference, green ▲ for an upgrade, yellow ≈ for a sidegrade and red ▼ for a downgrade. **Trade** says whether the looter can hand it over at all, and **Trade window** counts down how long they have. If you want it, **Ask** whispers them once. During a boss fight the whisper waits until the fight ends. Click a row for the full reasoning, or hover any cell for the short version.
+**Drops** lists every drop, yours included, under the boss or key run it came from. The two columns that matter are **Me** and **Them**: is this an upgrade for you, and is it one for the person who looted it? Each shows the gear worn in that slot and the item-level difference, green ▲ for an upgrade, yellow ≈ for a sidegrade and red ▼ for a downgrade. If your current spec can't use an item but another spec of your class can, Me tells you how it would do in that spec instead, in cyan with the spec's name: `▲20 Holy` means 20 item levels over the best Holy item you own. **Trade** says whether the looter can hand it over at all, and **Trade window** counts down how long they have. If you want it, **Ask** whispers them once, and for an off-spec item the whisper says that's what it's for. During a boss fight the whisper waits until the fight ends. Click a row for the full reasoning, or hover any cell for the short version.
 
-Your own drops show who in the group would gain from them. **Offer** opens a panel that ranks everyone by how much they'd gain, with a whisper button per person and **Announce to group** to tell everyone at once. While any of your drops can still be traded, the strip at the bottom counts them, and **Post my tradeables** lists them in group chat in one line. That strip also has **Scan group**, which reads everyone's gear before the loot starts so you aren't waiting on inspects later, and **Expand all**.
+Your own drops show who in the group would gain from them. **Offer** opens a panel that ranks everyone by how much they'd gain (anyone who could only use it in another spec comes after the people who'd use it now), with a whisper button per person and **Announce to group** to tell everyone at once. While any of your drops can still be traded, the strip at the bottom counts them, and **Post my tradeables** lists them in group chat in one line. That strip also has **Scan group**, which reads everyone's gear before the loot starts so you aren't waiting on inspects later, and **Expand all**.
 
 **History** remembers what the feed showed for 30 days, across logouts and alts, and what became of each drop: asked, offered, expired, received, traded away or declined. Click a row for its detail card, or right-click it to mark it declined. How long it keeps things, and the button that clears it, are under Settings › Window › Layout. A `/reload` loses nothing: this session's drops come back on the Drops tab.
 
-Two extras are off until you turn them on: the **toast**, a popup when someone loots a big upgrade you could ask for, and **auto-ask**, which sends the whisper for you after the boss dies. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
+Two extras are off until you turn them on: the **toast**, a popup when someone loots a big upgrade you could ask for, and **auto-ask**, which sends the whisper for you after the boss dies. Both handle off-spec upgrades with their own wording, and your main spec still comes first: auto-ask holds an off-spec whisper until any main-spec one has gone out. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
 
 ## How the loot watching works
 
@@ -70,6 +70,7 @@ Two extras are off until you turn them on: the **toast**, a popup when someone l
 | Question | Answer |
 |---|---|
 | Does it whisper people on its own? | Only if you turn on auto-ask (Settings › Messages › Auto-ask). Otherwise every whisper is a click. |
+| Does it look at my other specs? | Yes, when your current spec can't use a drop. It compares the drop with the best item you own for each of your other specs, worn or in your bags, by item level only. For other players it can only see what they have on. |
 | Does it need Pawn? | No. With Pawn installed, its scale scores each drop next to the item level. Without it you can enter your own stat weights, paste a Pawn scale string in Settings › Comparison, or go by item level alone. |
 | Does it work in raids? | Yes. Dungeons, keys and raids are watched out of the box. Delves, scenarios and the open world are off until you turn them on under General › When to show. |
 | Can it tell me whether I have the look? | Yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. |

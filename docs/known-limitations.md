@@ -25,6 +25,13 @@ the code reads every case the design leaves open, module by module, is in
 - **Your gear** is a per-slot best, not a loadout planner: unique-equipped limits and a
   two-hander's claim on both hands are not weighed, and the reagent bag, the bank and the warband
   bank are not read.
+- **Off-spec** (feedback-19). A drop your current spec can't use is judged for the other specs of
+  your class on item level alone: no scorer is asked for an off-spec, so a stat-weight preference
+  never moves it, and its tooltip and the detail card say so. A looter's or a candidate's off-spec
+  is judged on the gear they wear (their inspect read), never their bags, so an item they keep in
+  their bags for that spec is not counted and an off-spec can read better for them than it is. Every
+  other spec of the class counts, with no setting to leave one out. FEED-80, FEED-81, ASK-11 and
+  TOAST-5 are the in-game checks.
 - **A drop you traded away** is `tradedAway` in the history and its Offer button on Drops reads
   `Traded`, but its Trade window cell reads as expired rather than `Traded to …`.
 - **A reload and a relog** (feedback-15 spec §0, DW-Q0). The session is the login: a `/reload`

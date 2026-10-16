@@ -838,7 +838,7 @@ test("shell: in a dungeon, turning test mode off closes the window its drops ope
     local NS, m = inDungeon()
     m.seedGearJournal()
     NS.SetTestMode(true)
-    assertEqual(#NS.LootFeed.Drops("test"), 16, "the test drops are in"); assertTrue(NS.IsWindowShown())
+    assertEqual(#NS.LootFeed.Drops("test"), 22, "the test drops are in"); assertTrue(NS.IsWindowShown())
     NS.SetTestMode(false)
     assertFalse(NS.IsWindowShown(), "test mode opened it, so off closes it")
     NS.ShowWindow()

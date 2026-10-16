@@ -53,12 +53,15 @@ one-line responsibility and why its position is load-bearing or conventional is 
   addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
 - `modules/`: the simulator's session; the login session (`Session.lua`, the session start and This
-  instance kept per character across a reload); the pure engine kernels and the scorers; the edges
+  instance kept per character across a reload); the pure engine kernels (the verdict kernel and its
+  off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
+  of your class) and the scorers; the edges
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
   after a reload, `FeedRestore.lua`; the toast, auto-ask); the simulator's
   inputs, scenarios and step panel; then the window: its shell, chrome, two tabs, their strips' one
-  footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers, the two
+  footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
+  off-spec verdict's look, `OffSpecCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
   tooltip placement, compact mode's switch and bodies, test mode and the diagnostics.
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
@@ -219,7 +222,7 @@ Blizzard's own dialogs (DW-62).
 What the addon does not do yet, or cannot know without the client. In short: no in-game check has a
 recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
 unconfirmed; a non-English client shows no upgrade-track change; a delve's tier and a tier token's
-slot are not read; your gear is a per-slot best, not a loadout planner; a reload brings the
+slot are not read; your gear is a per-slot best, not a loadout planner; an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
 session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
 header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
 (the session is the login); the History card shows only what a kept entry holds; and a simulation does not exercise every live
@@ -238,10 +241,10 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Covers |
 |---|---|
 | `scope.md` | What the addon is for, what exists at this version, and what it deliberately does not do |
-| `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order |
+| `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included) |
 | `schema.md` | The SavedVariables shape, every default, and the migration path |
 | `settings-panel.md` | The `Page \| Covers` table and the page → tab → row tree |
-| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask |
+| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence |
 | `common-tasks.md` | Recipes for the changes made most often here |
 
 ### Conditional (documentation-§3, Tier 2)

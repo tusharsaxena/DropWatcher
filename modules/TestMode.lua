@@ -21,7 +21,8 @@ local _, NS = ...
 -- written to `global.history` and goes when test mode turns off.
 --
 -- THE HOOKS. A sample carries its own inspect entry (`testInspect`, read in place of
--- NS.Inspect.Get), its own worn gear (`testGear`, read in place of your gear snapshot) and its own
+-- NS.Inspect.Get), its own worn gear (`testGear`, read in place of your gear snapshot; `testOffGear`
+-- for an off-spec sample, the item its off-spec verdict was judged against) and its own
 -- ask state (`testAsk`, shown while the messaging edge holds none for it): TM.InspectOf, TM.GearOf
 -- and TM.AskState are what the Drops table, its compact cards and the detail card read. A click
 -- on a sample's Ask, Offer or Announce goes through the messaging edge, which prints the text
@@ -84,13 +85,14 @@ function TM.AskState(drop, state, reason)
 end
 
 --- Your worn gear as a drop's Me cell reads it: a sample's own (`testGear`, the items its Me
---- verdict was judged against; feedback-18), else `equipped` (your gear snapshot's), so a sample
---- never shows your real gear beside a verdict judged against another item.
+--- verdict was judged against; feedback-18; for an off-spec sample `testOffGear`, the item its
+--- off-spec verdict was judged against, feedback-19 spec §4), else `equipped` (your gear
+--- snapshot's), so a sample never shows your real gear beside a verdict judged against another item.
 --- @param drop table
 --- @param equipped table|nil
 --- @return table|nil
 function TM.GearOf(drop, equipped)
-    if type(drop) == "table" and drop.test then return drop.testGear or {} end
+    if type(drop) == "table" and drop.test then return drop.testOffGear or drop.testGear or {} end
     return equipped
 end
 
