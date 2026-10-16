@@ -253,7 +253,7 @@ LFR raid bosses (four or five drops, twenty or twenty-five people) and world bos
 no difficulty, the situation word `Open world group` instead. On Drops, expand any row whose Me has a
 level → the detail card's `Replaces … · N` is the row's first `You` level (a ring or trinket row reads
 `N/M`, M at least N), never your own equipped item's level, in both layouts (feedback-18). `/dw test` off →
-your own History is back. Result:
+your own History is back. Result: passed in the client, 2026-10-16 (the owner).
 
 ## Compat
 
@@ -1254,7 +1254,7 @@ while a filter hides some), `Seen by` (you in class color) and `Group (20)` with
 member named in class color; then the gray `Drops from one boss encounter.`, any hidden drops, and the
 click hint last. The key run's header has no `Instance` row (its title is the dungeon). History's headers
 read the same with `2 days ago` and the gray `Kept in the history across sessions.`. `/dw compact` → the
-same tooltip on the compact headers, with no one-line `Instance · Boss · … · 10 drops · …` summary. Result:
+same tooltip on the compact headers, with no one-line `Instance · Boss · … · 10 drops · …` summary. Result: passed in the client, 2026-10-16 (the owner).
 
 ## Roster
 
@@ -2213,7 +2213,6 @@ stray `%s` or `%d`, and no Lua error. Result:
 | COMPACT-2, COMPACT-7 | DW-C2, compact Drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
 | COMPACT-8 | feedback-15, compact headers left aligned, LFR, per-piece limits | No client pass recorded yet |
 | COMPACT-9 | feedback-16, compact strip buttons icon only with Scan group, chevron toggle, empty state without buttons | No client pass recorded yet |
-| STATE-6, FEED-79 | feedback-17, test data from real bosses at M+10, Heroic, Mythic, LFR and world bosses; the group tooltip as rows | No client pass recorded yet |
 | COMPACT-3, COMPACT-4 | DW-C3, compact cards of your own drops (on Drops since DW-E3) and History cards, the countdown, Offer and the strip, the docked Offer panel | No client pass recorded yet |
 | COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |
 | ASK-1 (its `noChannel` sentence), ASK-10 | DW-P17, a stored announce channel honors the not-in-a-group refusal, Post my tradeables included | No client pass recorded yet |
