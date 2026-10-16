@@ -68,11 +68,14 @@ TextParse.DURATION_UNITS = {
 }
 
 -- Every unit term as an anchored pattern with its multiplier, longest spelling first so "hrs" is
--- tried before a "hr" that is its prefix.
+-- tried before a "hr" that is its prefix. A grammar template is a spelling too: a bag item's
+-- TradeTimeRemaining tooltip line carries the term unexpanded ("3 |4hour:hrs; 49 min", seen 12.1.5).
 local function durationTerms(units)
     local terms = {}
     for _, unit in ipairs(units) do
-        for _, spelling in ipairs(TextParse.ExpandPlural(unit.template)) do
+        local spellings = TextParse.ExpandPlural(unit.template)
+        if spellings[1] ~= unit.template then spellings[#spellings + 1] = unit.template end
+        for _, spelling in ipairs(spellings) do
             terms[#terms + 1] = { spelling = spelling, seconds = unit.seconds,
                 pattern = "^" .. TextParse.FormatToPattern(spelling) }
         end

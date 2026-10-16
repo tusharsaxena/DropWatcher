@@ -657,7 +657,7 @@ L["Bind on equip: anyone can trade this."] = "Bind on equip: anyone can trade th
 L["Warbound: it can't be traded."] = "Warbound: it can't be traded."
 L["Bonus roll loot can't be traded."] = "Bonus roll loot can't be traded."
 L["Loot from this content can't be traded."] = "Loot from this content can't be traded."
-L["Group loot: its winner may trade it for two hours."] = "Group loot: its winner may trade it for two hours."
+L["Group loot: its winner may trade it for four hours."] = "Group loot: its winner may trade it for four hours."
 L["The item's details have not loaded yet."] = "The item's details have not loaded yet."
 L["The trade window (%s) has passed."] = "The trade window (%s) has passed."
 L["Your own item: %s left to trade it."] = "Your own item: %s left to trade it."
@@ -1063,7 +1063,7 @@ L["Empty the drop history on every character, after a confirmation."] =
 -- modules/Toast.lua
 L["Tradeable"] = "Tradeable"
 L["not an upgrade for %s"] = "not an upgrade for %s"
-L["group loot: two hours to trade"] = "group loot: two hours to trade"
+L["group loot: four hours to trade"] = "group loot: four hours to trade"
 L["bind on equip"] = "bind on equip"
 L["Big upgrade for you"] = "Big upgrade for you"
 L["Looted by %s · You"] = "Looted by %s · You"

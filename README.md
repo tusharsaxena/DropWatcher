@@ -150,7 +150,7 @@ Everything else lives under **Settings → AddOns → Ka0s Drop Watcher**, and `
   default), the minimum quality and the filters decide that before anyone is inspected.
 - Each drop is compared with what you wear in that slot, and with what the looter wears once their
   gear has been inspected. Inspects go one at a time and never in combat.
-- The trade estimate looks at the bind type, the two-hour trade window and the game's rule that a
+- The trade estimate looks at the bind type, the four-hour trade window and the game's rule that a
   looter can only trade an item that isn't an upgrade for them by item level.
 - Your own drops get an exact countdown read from the item's tooltip, and a list of who in the group
   would gain from them.

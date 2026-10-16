@@ -541,7 +541,7 @@ every drop of yours in the tab's feed, a drop that cannot be traded included (a 
 last row); `My drops · n` counts only the tradeable ones, and Hide is session-only. Since 2026-10-13
 (feedback-4 spec §2, DW-D2) there is no Hide: such a row shows the dash with its reason, and every drop of
 yours stays listed. **The countdown** is exact once the trade timer has read the item (`trade.expiresAt`);
-before that it is estimated from when the item dropped and the two-hour window and reads `~1:48:20`. It
+before that it is estimated from when the item dropped and the four-hour window and reads `~3:48:20`. It
 repaints on every `TradeTimerTick` (each second while a timer is live and the window shown) and on the
 footer's 5-second ticker, which is what moves an estimate. At `trade.warnAt` or less it reads `ending soon`,
 in bold and amber; the chat warning is the trade timer's. A bind-on-equip drop reads `No limit (BoE)`.

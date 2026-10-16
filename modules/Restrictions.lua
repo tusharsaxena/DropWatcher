@@ -134,10 +134,11 @@ end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
 
-local UNRESTRICTED = "none|true|true|true"
+-- Slash-separated: a pipe would read as a UI escape (`|t`) in the debug log and the diagnostics.
+local UNRESTRICTED = "none/true/true/true"
 
 local function signature(s)
-    return ("%s|%s|%s|%s"):format(s.reason or "none", tostring(s.canSendChat),
+    return ("%s/%s/%s/%s"):format(s.reason or "none", tostring(s.canSendChat),
         tostring(s.canInspect), tostring(s.canTrade))
 end
 

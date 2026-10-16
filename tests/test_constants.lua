@@ -213,10 +213,10 @@ end)
 
 test("constants: the trade rules are the spec §7.2 table, and every situation has a rule", function()
     local c, rules = C(), D().trade.rules
-    assertEqual(c.TRADE_RULES.personal.window, 7200)
+    assertEqual(c.TRADE_RULES.personal.window, 14400)
     assertEqual(c.TRADE_RULES.personal.ilvlRule, "notUpgradeForLooter")
     assertEqual(c.TRADE_RULES.personal.tradeable, true)
-    assertEqual(c.TRADE_RULES.group.window, 7200)
+    assertEqual(c.TRADE_RULES.group.window, 14400)
     assertEqual(c.TRADE_RULES.group.ilvlRule, "none")
     assertEqual(c.TRADE_RULES.legacy.tradeable, false)
     for _, s in ipairs(c.SITUATIONS) do

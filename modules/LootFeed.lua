@@ -312,7 +312,8 @@ function LF.FoldTimer(rec, est)
     local e = TT.ForDrop(rec.id)
     if not e or e.permanent then return est end
     if e.expired then
-        return { state = "no", reasonKey = "expired", basis = "timer", args = {}, rule = est.rule }
+        return { state = "no", reasonKey = "expired", basis = "timer", args = { 0, C.TRADE_WINDOW },
+            rule = est.rule }
     end
     if not e.expiresAt then return est end
     return { state = "yes", reasonKey = "timer", basis = "timer", args = { TT.Remaining(e) },

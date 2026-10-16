@@ -110,7 +110,7 @@ test("layout: the Trade window column is its widest answer plus its bar's paddin
         seen[text] = true
         if #text * CHAR > widest then widest, widestText = #text * CHAR, text end
     end
-    for _, want in ipairs({ "~2:00:00", "2:00:00", "Their upgrade", "Your upgrade", "No limit (BoE)", "Bonus roll",
+    for _, want in ipairs({ "~4:00:00", "4:00:00", "Their upgrade", "Your upgrade", "No limit (BoE)", "Bonus roll",
         "Window passed", "Legacy loot", "Warbound", "Not loaded", "Checking", "Not tradeable" }) do
         assertTrue(seen[want], want .. " is one of its answers")
     end
