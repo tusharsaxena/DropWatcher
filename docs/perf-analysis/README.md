@@ -36,8 +36,9 @@ battery in [`automated-tests/`](../automated-tests/RESULTS.md).
 
 ## Captures
 
-No capture has been taken yet: nobody has played this build. The first one is a later, separate run
-of `/dev-copilot:wow-perf-analysis` with a real client paste.
+One capture so far. Smoke check DIAG-4 (the `feed.add` nesting) is still waiting for one that
+observes loot inside the clean arm.
 
 | Stamp | Addon version | Label | What it measured | Bundle |
 |---|---|---|---|---|
+| 20261017-010913 | 0.1.0 | `2026-10-17 01:04` | Two trash pulls in Murder Row, party of 5, 19.1 s and 15.0 s. No bucket fired, so it measured no addon code; the -2.35 ms/frame delta is backwards (the pulls differed) | [ANALYSIS](20261017-010913/ANALYSIS.md) |
