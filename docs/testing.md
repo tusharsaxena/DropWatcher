@@ -84,7 +84,7 @@ name and the freshness bracketed right after it or left out (`FreshMark`; a pend
 Them's `…` saying it, feedback-11 spec §0), `No action` on line 2 with no action (feedback-11 spec
 §1, where feedback-10 left the slot empty), no trade window on the card with or without a countdown,
 feedback-10 spec §2; your own card's Offer, `Upgrade for N` and ` [YOU]`, feedback-5 spec §2, feedback-7 spec §2; line 3's `You 321/308 ▼8`, feedback-6 spec §1), each piece's tone and
-tooltip checked against the full view's composer, the cross-realm mark, and the header's short form),
+tooltip checked against the full view's composer, the cross-realm mark, and the header's short form, an LFR header cut piece by piece to fit the default width, feedback-15),
 `test_compact_group` (the Drops tab in the compact layout, DW-C2: the card's metrics and the
 scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
 headless: one pooled card per drop under a one-line header, each piece's text, color and full-view
@@ -285,8 +285,8 @@ group taking the party with its first drop and a mid-run joiner on the roster ev
 next drop, its History group keeping it; the Drops and History headers naming only the
 recorder (feedback-3 spec §4), and an older History group with no `Group:` line; test mode's sample
 rosters are `test_test_mode`'s and a simulated run's `test_sim_e2e`'s),
-`test_group_place` (feedback-3 spec §4, DW-B4: `GroupPlace`'s pure `DifficultyName`, `Parts` and
-`Who`; Compat's `DifficultyName` and `KeystoneLevel`; the owner's Timewalking drop through the real
+`test_group_place` (feedback-3 spec §4, DW-B4: `GroupPlace`'s pure `DifficultyName`, `Parts` (with its roles and
+`ShortNames`' LFR, feedback-15) and `Who`; Compat's `DifficultyName` and `KeystoneLevel`; the owner's Timewalking drop through the real
 feed, its header `Gate of the Setting Sun · Commander Ri'mok · Timewalking · 1 drop · Testchar` and
 its History group keeping the place and the recorder; a group keeping the place it opened in; a
 key's end chest reading `Mythic+ <level>` after the run completed; the open world's situation-word

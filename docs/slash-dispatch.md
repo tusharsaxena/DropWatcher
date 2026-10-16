@@ -19,7 +19,7 @@ The bare command opens the settings panel.
 | `show` / `hide` / `toggle` | window | no | `NS.ShowWindow` / `NS.HideWindow` / `NS.ToggleWindow` |
 | `test` | window | no | `NS.ToggleTestMode` |
 | `scan` | feature | no | `NS.ScanGroup`, the window's Scan group button |
-| `clear` | feature | no | `SlashVerbs.Clear`: empties the live feed (`NS.LootFeed.Clear("live")`) and repaints; the test feed and the history stay |
+| `clear` | feature | no | `SlashVerbs.Clear`: empties the live feed (`NS.LootFeed.Clear("live")`, which stores the clear with `Session.MarkCleared` so a `/reload` does not bring the cleared drops back) and repaints; the test feed and the history stay |
 | `history` / `mine` | feature | no | `SlashVerbs.OpenTab`: opens the window, expands it when minimized and selects the tab; `mine` selects Drops, where your own drops are listed since the My drops tab was retired (feedback-5 spec §3) |
 | `compact` | feature | no | `SlashVerbs.Compact`: `NS.ToggleWindowMode` (the `window.mode` row through the seam, the title-bar toggle's handler), then prints the layout, `Compact view.` or `Full view.` (compact spec §1) |
 | `full` | feature | no | `SlashVerbs.Full`: `NS.SetWindowMode("full")`, then prints `Full view.` |

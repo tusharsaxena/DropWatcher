@@ -1141,7 +1141,9 @@ nothing of yours tradeable (as FEED-63) → Post is gone and Scan group stays be
 Click History → Sort is at the right edge of History's strip, Clear history just left of it; set Sort to
 Oldest there, back to Drops → Sort is on the Drops strip again and reads Drops' own value. `/dw compact` →
 Sort is in the Filters panel, Clear at the History strip's right edge; `/dw full` → Sort back on the active
-tab's strip. Hover Sort → its tooltip opens above it. Result:
+tab's strip. Hover Sort → its tooltip opens above it. **Superseded by feedback-15 (2026-10-16)** (DW-Q2,
+DW-Q3): Expand all / Collapse all sits between Scan group and Sort on Drops and beside Sort on History, and
+Clear history left both strips for Settings › Window › Layout; FEED-78 and HIST-6 check that. Result:
 
 **FEED-71. Pending once, and the card's full width (DW-K0, feedback-11 spec §0).** The headless
 `test_compact_cards` (`the freshness mark is bracketed, and left out where there is nothing to say`),
@@ -2118,7 +2120,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-67 | DW-J0, the filled downgrade glyph `▼` in the tables, compact cards, toast, tooltip grids and the Offer panel | No client pass recorded yet |
 | FEED-68 | DW-J1, Offer wears `external-link` on the row, the compact card, the detail card and the Offer panel | No client pass recorded yet |
 | FEED-69 | DW-J2, compact cards: ilvl before the name, `(freshness)` after it or nothing, the button right on line 2 or an empty slot (`No action` since DW-K1: FEED-72; no `(…)` since DW-K0: FEED-71), no countdown or bar, gold You/Them close together; History's cards too | No client pass recorded yet |
-| FEED-70 | DW-J3, Sort on the Drops strip right of Scan group and Post, on History's right of Clear history, following tab and layout switches; no Sort in the footer | No client pass recorded yet |
+| FEED-70 | DW-J3, Sort on the Drops strip right of Scan group and Post, on History's right of Clear history (Clear history moved to Settings by feedback-15, DW-Q3), following tab and layout switches; no Sort in the footer | No client pass recorded yet |
 | FEED-71 | DW-K0, compact cards: no `(…)` after the name while Them reads `…`, the other freshness marks still bracketed; Them cut at the card's right inset, line 1's name the full width | No client pass recorded yet |
 | FEED-72 | DW-K1, the gray `⊘ No action` button wherever a drop has no action: Drops rows, compact cards, the detail card's first action, Offer panel rows; not clickable, its tooltip `No action` and the reason; fits 84px and the Offer panel's 80px | No client pass recorded yet |
 | FEED-73 | DW-L0, History's outcomes in the action buttons' colors, the table and the compact cards | No client pass recorded yet |
