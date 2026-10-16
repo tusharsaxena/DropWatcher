@@ -1837,7 +1837,7 @@ Seta's head item (real items since DW-84) → its header has a gray `Look known`
 Littlewolf's one-hand weapon → a green `New look` chip, and its Ask is a dash (`It is not an upgrade
 for you.`; superseded by feedback-11, 2026-10-14: the gray `No action` button with its reason; FEED-72). Settings › Messages › Sending › Ask for transmog on → the weapon's Ask is offered, its tooltip reads `Ask for
 transmog`; press it → chat prints the For transmog template (`… could I have it for transmog? …`),
-not the plain ask. Messages › Templates shows four editors; edit Ask for transmog and its preview
+not the plain ask. Messages › Templates shows five editors (Ask for off-spec among them); edit Ask for transmog and its preview
 follows. In a group, on a real drop someone else looted that is no gain for you: `/dump
 C_TransmogCollection.PlayerHasTransmogByItemInfo(link)` → `false` for a look you lack, and the card
 shows `New look`; the Ask whispers the For transmog text. With CanIMogIt installed, `/dw diagnostics`

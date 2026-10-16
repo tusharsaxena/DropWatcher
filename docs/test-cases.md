@@ -851,7 +851,7 @@ Total.
 - offspec: Who derives a spec's candidate from ClassData, never from the main spec
 - offspec: WornGear keeps each worn item the spec could wear, false where it could not
 
-### test_offspec_cells.lua (21)
+### test_offspec_cells.lua (23)
 
 - off-spec cells: the offspec tone is its own cyan, apart from Offer's
 - off-spec cells: OffSpec.Of answers the off-spec part of a Can't use, else nil
@@ -861,6 +861,8 @@ Total.
 - off-spec cells: a Can't use with no off-spec is unchanged
 - off-spec cells: the Me cell's gear half is the off-spec baseline, a bag item with no slot
 - off-spec cells: a Can't use with no off-spec keeps the worn gear
+- off-spec cells: the looter's Them cell pairs its off-spec verdict with the item it was judged against
+- off-spec cells: the detail card's looter side takes its rows from the off-spec result
 - off-spec cells: the compact line reads You 291 ▲20 Holy
 - off-spec cells: TipMarks' Mark and ArrowCell take a tone override
 - off-spec cells: the detail card's FOR YOU takes its chip and rows from the off-spec result
@@ -1110,7 +1112,7 @@ Total.
 - BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
 - BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
 
-### test_gear.lua (26)
+### test_gear.lua (27)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
 - gear: the candidate carries the class, the spec and the hand flags from ClassData
@@ -1127,7 +1129,8 @@ Total.
 - gear: the candidate judges a drop against the worn item, and against the bags with compareOwned
 - gear: the pool keeps every gear item read, the off-spec ones too
 - gear: OffSpecGear is the best item per slot that spec could wear, false where nothing fits
-- gear: a worn slot still loading is unknown in the off-spec gear too
+- gear: a worn slot still loading leaves no off-spec gear until it loads
+- gear: a bag item still loading leaves no off-spec gear, so no slot reads as empty
 - gear: the candidate brings its off-spec gear, and the kernel judges Holy against the bag mace
 - gear: a bag change that touches only an off-spec item still sends GearChanged
 - gear: sorting your bags moves no gear, so it sends no GearChanged
@@ -1840,7 +1843,7 @@ Total.
 | test_class_data.lua | 12 |
 | test_evaluate.lua | 36 |
 | test_offspec.lua | 11 |
-| test_offspec_cells.lua | 21 |
+| test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
 | test_scoring.lua | 15 |
@@ -1852,7 +1855,7 @@ Total.
 | test_roster.lua | 13 |
 | test_item_facts.lua | 21 |
 | test_item_read.lua | 24 |
-| test_gear.lua | 26 |
+| test_gear.lua | 27 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 33 |
 | test_feed.lua | 44 |
@@ -1887,4 +1890,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1549** |
+| **Total** | **1552** |

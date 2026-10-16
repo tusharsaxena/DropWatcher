@@ -634,6 +634,7 @@ Evaluate.run(facts, candidate, opts) ─> the main verdict (unchanged)
         │     derived: X's dualWield and titanGrip, undesiredBySpec[X], the same sidegradeBand and
         │     heirloomProtect, no scorer, no compareOwned; gear = candidate.offSpecGear(X) (pcall)
         │       you:    Gear.OffSpecGear(X), the best item per slot X could equip, worn or in your bags
+        │               (nil while any item still loads: X is skipped until the load's GearChanged)
         │       looter: Inspect's worn gear through OffSpec.WornGear (worn gear only)
         └─> the best of upgrade > sidegrade > downgrade (then the larger gain, an empty slot largest,
             then the lower spec id) ─> eval.offSpec = { specID, mainSpecID, verdict, ilvlDelta,
@@ -647,8 +648,10 @@ readers: OffSpec.Of(eval) (cantUse with an off-spec upgrade, sidegrade or downgr
 can't use gray). An off-spec verdict is drawn in `C.TONE.offspec` (cyan, apart from Offer's
 `C.TONE.cyan`) for all three of its verdicts, with the spec's name after the difference:
 WindowCells.Verdict ─> OffSpecCells.Verdict ─> SideCells.Merge, `291 ▲20 Holy`; the Me cell's gear
-half is the item it was compared with (OffSpecCells.Eq), the detail and History cards take the
-OFF-SPEC chip and a Spec row (`Holy (off-spec): Protection can't use it`), and History keeps
+half is the item it was compared with (OffSpecCells.Eq), the looter's Them cell too (with the
+inspect's age), the detail and History cards take the OFF-SPEC chip and a Spec row
+(`Holy (off-spec): Protection can't use it`; the looter's side keyed `offSpec`, before their own
+inspected spec row), and History keeps
 `offSpec = { specID, mainSpecID, verdict, ilvlDelta }`.
 
 **The ask precedence.** Main spec always comes first:

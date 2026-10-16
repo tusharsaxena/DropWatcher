@@ -25,8 +25,8 @@ local _, NS = ...
 -- OFF-SPEC (feedback-19 spec §0). The snapshot keeps every gear item it reads, worn and in bags,
 -- before your spec's filter, as `pool`. OffSpecGear(specID) places that pool for another spec of
 -- your class (the items it can equip, by its own hand flags) the way `owned` is placed, and answers
--- the kernel's gear for it: the best item per slot, false where nothing fits, a worn slot still
--- loading absent. It is built lazily, once per spec per snapshot.
+-- the kernel's gear for it: the best item per slot, false where nothing fits, and nil while any item
+-- still loads. It is built lazily, once per spec per snapshot.
 --
 -- OWNED. A bag item is first read for its equip location (NS.Compat.ItemEquipLoc, no item cache
 -- needed), and only one with a slot plan is requested from the item facts, so reagents and
@@ -354,8 +354,7 @@ function G.Candidate()
     }
 end
 
--- Spec `specID`'s gear from the pool: its best per slot, false where nothing fits, a worn slot
--- still loading absent.
+-- Spec `specID`'s gear from the pool: its best per slot, false where nothing fits.
 local function offSpecGearOf(s, specID)
     local who = NS.OffSpec.Who(s.classFile, specID)
     local owned, gear = readOwned({}, wearable(s.pool, who), who), {}
@@ -366,15 +365,16 @@ local function offSpecGearOf(s, specID)
 end
 
 --- Another spec of your class's gear for the verdict kernel (feedback-19 spec §0): the best item
---- you own per slot that the spec could wear (worn or in a bag), false where nothing fits, and a
---- worn slot still loading absent. nil for a spec that is not one of your class's. Memoized on the
---- snapshot; read it, never write it.
+--- you own per slot that the spec could wear (worn or in a bag), false where nothing fits. nil for a
+--- spec that is not one of your class's, and nil while any item still loads: a bag item still loading
+--- is not in the pool, so its slot would read as empty. The load's rebuild sends GearChanged and the
+--- feed re-judges. Memoized on the snapshot; read it, never write it.
 --- @param specID number
 --- @return table|nil
 function G.OffSpecGear(specID)
     local s = G.Snapshot()
     local row = type(specID) == "number" and CD.SPECS[specID]
-    if not row or row.class ~= s.classFile then return nil end
+    if not row or row.class ~= s.classFile or s.loading > 0 then return nil end
     if not s.bySpec[specID] then s.bySpec[specID] = offSpecGearOf(s, specID) end
     return s.bySpec[specID]
 end

@@ -16,7 +16,8 @@ local _, NS = ...
 -- gear part goes when the verdict part has something to say.
 -- OFF-SPEC (feedback-19 spec §1): a verdict cell of NS.OffSpecCells (`offSpec` set) is followed by
 -- its spec's name, `▲20 Holy`, in the offspec cyan, and the Me cell's gear part is the item it was
--- compared with (OffSpecCells.Eq: a bag item, a worn one or `empty`), not what you wear.
+-- compared with (OffSpecCells.Eq: a bag item, a worn one or `empty`), not what you wear. The looter's
+-- Them cell does the same (a worn item or `empty`), keeping the inspect's age.
 -- YOUR OWN DROP'S THEM is MineCells.Details's `Upgrade for N` (or `No upgrades`, `Hidden`), its tones and its tooltip.
 -- History keeps no worn items, so its cells are the verdict part alone (SC.Merge with no gear).
 -- THE OFFER PANEL'S THEIR EQ (feedback-7 spec §0) is the same cell for one candidate (SC.Candidate):
@@ -134,6 +135,7 @@ function SC.Me(drop, equipped, classFile)
 end
 
 --- The Them cell: what the looter wears there (their inspect read's) and the drop judged for them;
+--- for an off-spec verdict, the item it was judged against (else `empty slot`) with the read's age;
 --- on your own drop `Upgrade for N` (MineCells.Details), every member it upgrades in the tooltip.
 --- @param drop table
 --- @param gear table|nil the looter's inspect gear
@@ -142,7 +144,11 @@ end
 --- @return table cell
 function SC.Them(drop, gear, now, revealed)
     if drop.isMine then return SC.Merge(MC.Details(drop, revealed, L["Them"])) end
-    return SC.Merge(WC.Them(drop, now), WC.TheirEq(drop, gear, now))
+    local v = WC.Them(drop, now)
+    if not v.offSpec then return SC.Merge(v, WC.TheirEq(drop, gear, now)) end
+    local eq = OC.Eq(v)
+    eq.tip[#eq.tip + 1] = WC.InspectLine(drop.inspect, WC.ShortName(type(drop.looter) == "table" and drop.looter.name or nil), now)
+    return SC.Merge(v, eq)
 end
 
 -- ── the Offer panel's Their eq (feedback-7 spec §0) ─────────────────────────────────────────

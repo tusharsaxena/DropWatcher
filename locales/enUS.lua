@@ -775,6 +775,8 @@ L["Your best %s item"] = "Your best %s item"
 L["%s (off-spec): %s can't use it"] = "%s (off-spec): %s can't use it"
 L["Your current spec can't use it, so it is judged for another spec of your class, on item level alone."] =
     "Your current spec can't use it, so it is judged for another spec of your class, on item level alone."
+L["Their current spec can't use it, so it is judged for another spec of their class, on their worn item level alone."] =
+    "Their current spec can't use it, so it is judged for another spec of their class, on their worn item level alone."
 L["Ask for off-spec"] = "Ask for off-spec"
 L["Ask for it for your %s off-spec."] = "Ask for it for your %s off-spec."
 L["Whisper %s your For off-spec template: your current spec can't use it."] =

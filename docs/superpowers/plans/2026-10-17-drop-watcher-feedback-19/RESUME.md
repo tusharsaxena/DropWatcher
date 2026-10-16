@@ -15,3 +15,4 @@ owner's go-ahead.
 - 2026-10-17 — DW-O3 landed: Offer for off-spec (two candidate statuses ranked after main-spec equals, offerable, gain sort, cyan Their eq with the spec name, Upgrade for N main-spec only); suite 1545/0/1, lint 0/0, perf green, max CCN 14.
 - 2026-10-17 — DW-O4 landed: off-spec test-mode samples and showcase (22 drops, 5 groups), testOffGear, docs synced, FEED-80/81, ASK-11, TOAST-5 pending; suite 1549/0/1, lint 0/0, perf green, max CCN 14.
 - 2026-10-17 — DW-O4 review: the alt's History group keeps no off-spec snapshot; the off-spec downgrade sample is tradeable so its No action shows the off-spec rule; suite 1549/0/1, lint 0/0, perf green, max CCN 14.
+- 2026-10-17 — DW-O5 review fixes: off-spec gear waits for loading items, empty-slot samples carry emptySlot, the looter Them cell and card side read the off-spec baseline, TMOG-1 five editors; suite 1552/0/1, lint 0/0, perf green, max CCN 15.

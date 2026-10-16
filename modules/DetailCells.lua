@@ -16,7 +16,8 @@ local _, NS = ...
 -- YOU chip (`OFF-SPEC UPGRADE`, in the offspec cyan) and its Replaces, Item level, Track and Stats
 -- rows from that part, with a Spec row first (NS.OffSpecCells.SpecRow); a bag item it was compared
 -- with sets no `wornSlot`, so its tooltip is read from its link. The score row says off-spec is
--- judged on item level alone.
+-- judged on item level alone. The looter's side does the same from their off-spec part, its Spec
+-- row keyed `offSpec` ahead of their own inspected `spec` row.
 --
 -- NO GLYPHS. The card draws in the default face, which has no `→` and no `▲ ≈ ▼` (feedback-6 spec
 -- §3, DW-F5): the verdict chip's mark, the Item level and Track rows' arrow and the Track row's mark
@@ -388,7 +389,9 @@ function DC.ForLooter(drop, inspect, specName, now, revealed)
     local who = looterName(drop)
     local title = L["FOR %s (LOOTER)"]:format(who:upper())
     local cell = WC.Them(drop, now)
-    local rows = sideRows(drop.them, facts(drop), cell.tone, who)
+    local off = NS.OffSpec.Of(drop.them)
+    local rows = sideRows(off or drop.them, facts(drop), cell.tone, who)
+    if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off, "them")) end
     rows[#rows + 1] = specRow(drop, inspect, specName, now)
     return { title = title, verdict = verdictChip(cell), rows = rows }
 end

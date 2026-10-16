@@ -234,7 +234,14 @@ test("test mode data: off-spec samples show every off-spec verdict, an empty slo
             assertEqual(off.specID, 65); assertEqual(off.mainSpecID, 66)
             assertEqual(s.me.reasons[1].key, "primaryStat", "the main spec's reason is spec-dependent")
             local base = off.baseline
-            if not base then kinds.empty = true; assertEqual(off.ilvlDelta, nil, "an empty slot has no difference")
+            if not base then
+                kinds.empty = true; assertEqual(off.ilvlDelta, nil, "an empty slot has no difference")
+                -- red under: the sample's off-spec reasons were empty, not the kernel's emptySlot, so
+                -- it failed the gain test and its whisper read +?
+                assertEqual(off.reasons[1] and off.reasons[1].key, "emptySlot", "as the kernel says it")
+                local ok, _, how = NS.Toast.Qualifies(s, 5)
+                assertTrue(ok, "an empty-slot off-spec upgrade passes any least gain"); assertEqual(how, "offSpec")
+                assertEqual(NS.Asks.TokenContext("ask", s).mygain, NS.L["an empty-slot upgrade"])
             elseif base.slot then kinds.worn = true else kinds.bag = true end
             if base then assertTrue(base.link ~= s.link, "a pool item, not the drop itself") end
             -- the gear its Me cell reads is the off-spec baseline's, never the main spec's

@@ -283,14 +283,32 @@ test("gear: OffSpecGear is the best item per slot that spec could wear, false wh
     assertNil(G.OffSpecGear("x")); assertNil(G.OffSpecGear(71), "a spec of another class")
 end)
 
-test("gear: a worn slot still loading is unknown in the off-spec gear too", function()
-    local NS, _, G = enabled(function(m)
+test("gear: a worn slot still loading leaves no off-spec gear until it loads", function()
+    local NS, m, G = enabled(function(m)
         protPaladin(m)
         wear(m, SLOT.CHEST, 3003, plate("INVTYPE_CHEST", 600))
         m.items[link(3003)].loadsNeeded = 1
     end)
     NS.State.gear = nil
-    assertNil(G.OffSpecGear(65)[SLOT.CHEST])
+    assertNil(G.OffSpecGear(65), "nil while an item loads")
+    m.__fireTimers(); m.__fireTimers()
+    assertEqual(G.OffSpecGear(65)[SLOT.CHEST].link, link(3003))
+end)
+
+test("gear: a bag item still loading leaves no off-spec gear, so no slot reads as empty", function()
+    local NS, m, G = enabled(function(m)
+        protPaladin(m)
+        carry(m, 0, 1, 3010, mace(600))
+        m.items[link(3010)].loadsNeeded = 1
+    end)
+    NS.State.gear = nil
+    -- red under: the loading mace was left out of the pool, so Holy's main hand read false (empty)
+    -- and a drop judged against it was an empty-slot upgrade
+    assertNil(G.OffSpecGear(65), "nil while an item loads")
+    local seen = listen(NS)
+    m.__fireTimers(); m.__fireTimers()
+    assertEqual(seen.n, 1, "its arrival re-judges")
+    assertEqual(G.OffSpecGear(65)[SLOT.MAINHAND].link, link(3010))
 end)
 
 test("gear: the candidate brings its off-spec gear, and the kernel judges Holy against the bag mace", function()

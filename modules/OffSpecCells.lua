@@ -163,13 +163,18 @@ function OC.Eq(v)
     return c
 end
 
---- The cards' Spec row: `Holy (off-spec): Protection can't use it`.
+--- The cards' Spec row: `Holy (off-spec): Protection can't use it`. The looter's (`them`) is keyed
+--- `offSpec`, since their side keeps its own `spec` row (the inspected spec and the read's age).
 --- @param off table the off-spec part (NS.OffSpec.Of)
+--- @param side string|nil `them` for the looter's card side, else yours
 --- @return table row { key, label, text, tone, tip }
-function OC.SpecRow(off)
-    return { key = "spec", label = L["Spec"], tone = TONE,
+function OC.SpecRow(off, side)
+    local them = side == "them"
+    return { key = them and "offSpec" or "spec", label = L["Spec"], tone = TONE,
         text = L["%s (off-spec): %s can't use it"]:format(OC.SpecName(off.specID), mainName(off)),
-        tip = { L["Spec"], L["Your current spec can't use it, so it is judged for another spec of your class, on item level alone."] } }
+        tip = { L["Spec"], them
+            and L["Their current spec can't use it, so it is judged for another spec of their class, on their worn item level alone."]
+            or L["Your current spec can't use it, so it is judged for another spec of your class, on item level alone."] } }
 end
 
 --- The Ask button's tooltip for an off-spec ask (feedback-19 spec §2, NS.WindowCells.Ask's

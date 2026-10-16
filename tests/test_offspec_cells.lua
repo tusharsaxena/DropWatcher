@@ -166,6 +166,41 @@ test("off-spec cells: a Can't use with no off-spec keeps the worn gear", functio
     assertEqual(c.level, "300"); assertEqual(c.text, "Can't use"); assertEqual(c.tone, "bad")
 end)
 
+test("off-spec cells: the looter's Them cell pairs its off-spec verdict with the item it was judged against", function()
+    local NS = addon()
+    local S = NS.SideCells
+    local d = drop({ them = cantMain(off({ ilvlDelta = NONE, baseline = NONE, reasons = { { key = "emptySlot" } } })) })
+    local c = S.Them(d, MINE, 100)
+    -- red under: the looter's main-spec worn 300 stood beside `▲ Holy`, `300 ▲ Holy`
+    assertEqual(c.level, "empty", "an empty slot for Holy, not the 300 Protection wears"); assertEqual(#c.items, 0)
+    assertEqual(c.glyph, "▲"); assertEqual(c.text, "Holy"); assertEqual(c.tone, "offspec")
+    assertTrue(has(c.tip, "Compared with their best Holy item: an empty slot."), joined(c.tip))
+    assertTrue(has(c.tip, NS.WindowCells.InspectLine(d.inspect, "Seta", 100)), "the read's age kept: " .. joined(c.tip))
+    local worn = S.Them(drop({ them = cantMain(off({ baseline = { link = WORN, ilvl = 290, slot = 16 }, ilvlDelta = 21 })) }), MINE, 100)
+    assertEqual(worn.level, "290", "the worn item Holy was judged against"); assertEqual(worn.text, "21 Holy")
+    local plain = S.Them(drop({ them = cantMain(nil) }), MINE, 100)
+    assertEqual(plain.level, "300", "a Can't use with no off-spec keeps what they wear")
+end)
+
+test("off-spec cells: the detail card's looter side takes its rows from the off-spec result", function()
+    local DC = addon().DetailCells
+    local d = drop({ them = cantMain(off({ ilvlDelta = NONE, baseline = NONE, reasons = { { key = "emptySlot" } } })) })
+    local side = DC.ForLooter(d, { at = 60 }, "Protection", 100)
+    assertEqual(T.marks(side.verdict.text), "[arrow-up] OFF-SPEC UPGRADE")
+    -- red under: Replaces, Item level and Track came from Protection's Can't use, with no off-spec row
+    assertEqual(side.rows[1].key, "offSpec", "first")
+    assertEqual(side.rows[1].text, "Holy (off-spec): Protection can't use it"); assertEqual(side.rows[1].tone, "offspec")
+    assertTrue(side.rows[1].tip[2]:find("Their current spec") ~= nil, side.rows[1].tip[2])
+    assertEqual(byKey(side.rows, "replaces").text, "Empty slot")
+    assertTrue(byKey(side.rows, "spec").text:find("Protection", 1, true) ~= nil, "the looter's spec row stays")
+    local worn = DC.ForLooter(drop({ them = cantMain(off({ baseline = { link = WORN, ilvl = 290, slot = 16 }, ilvlDelta = 21 })) }),
+        { at = 60 }, "Protection", 100)
+    assertEqual(byKey(worn.rows, "replaces").text, "Worn Sword · 290"); assertNil(byKey(worn.rows, "replaces").wornSlot)
+    assertEqual(T.marks(byKey(worn.rows, "ilvl").text), "290 [arrow-right] 311 · +21")
+    local plain = DC.ForLooter(drop({ them = cantMain(nil) }), { at = 60 }, "Protection", 100)
+    assertNil(byKey(plain.rows, "offSpec")); assertEqual(plain.verdict.text, "CAN'T USE")
+end)
+
 test("off-spec cells: the compact line reads You 291 ▲20 Holy", function()
     local NS = addon()
     local h = NS.CompactCards.Half("You", NS.SideCells.Me(drop(), MINE))

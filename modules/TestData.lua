@@ -345,14 +345,16 @@ local function baselineOf(src, item, delta)
 end
 
 -- The off-spec part NS.OffSpec.Attach shapes (`off` = { specID, verdict, change, bag }): a worn
--- baseline carries the drop's first slot, a bag one (`bag`) none, no change an empty slot.
+-- baseline carries the drop's first slot, a bag one (`bag`) none, no change an empty slot (and the
+-- kernel's emptySlot reason, which the toast's gain test and the {mygain} words read).
 local function offSpecOf(src, item, off, mainSpecID)
     if not off then return nil end
     local base = baselineOf(src, item, off[3])
     local plan = C.SLOT_PLAN[item.facts.equipLoc]
     if base and not off.bag and plan then base.slot = plan.slots[1] end
     return { specID = off[1], mainSpecID = mainSpecID or OFF_MAIN, verdict = off[2], ilvlDelta = off[3],
-        baseline = base, baselineSlot = base and base.slot or nil, reasons = {} }
+        baseline = base, baselineSlot = base and base.slot or nil,
+        reasons = (base == nil and off[3] == nil) and { { key = "emptySlot" } } or {} }
 end
 
 -- An evaluation as NS.Evaluate answers it: the verdict, the change, the worn item (a pool item
