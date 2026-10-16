@@ -624,6 +624,8 @@ halves ending about 46px short of the card's edge.
 where it read `Them (Details)`, its trade piece drops the count, your name carries a gold ` [YOU]`, Trade's
 `No` is red, Ask and Offer wear their icons, and the compact layout keeps Scan group as its title-bar icon
 while the full layout's moves to the Drops strip. The empty state's two buttons are centered as a pair.
+(Superseded by feedback-16, 2026-10-16: Scan group is the Drops strip's in both layouts, compact's as its
+icon, the title bar has none, and the empty state has no button.)
 **Superseded by feedback-10 (2026-10-14)** (feedback-10 spec §2, DW-J2): line 1 reads the item level then the
 name (`292 Item name`, `CompactGroup.ILVL_GAP` apart, the name cut first so the level always shows), with the
 inspect freshness in brackets right after the name on a Drops card (`(2m)`, moved from line 2; left out where

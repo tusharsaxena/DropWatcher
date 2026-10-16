@@ -205,7 +205,7 @@ Total.
 
 ### test_window_shell.lua (58)
 
-- shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo
+- shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
 - shell: the default size is 1038 x 600, the least width every column fits (feedback-4 spec §4)
 - shell: Escape and every close path close the dropdowns' shared menu too
@@ -273,7 +273,7 @@ Total.
 - compact: step 5 maps the retired preset to the compact layout and moves the geometry
 - compact: step 5 runs for every stored profile on load
 - compact: a fresh profile stores the full layout, and opens in a run compact by default
-- compact: the title-bar toggle sits between Scan group and minimize, with a catalog mark
+- compact: the title-bar toggle sits left of minimize, with a catalog mark
 - compact: the toggle swaps the layout: compact is 440 x 460 at the full window's top right
 - compact: each layout remembers its own size and position
 - compact: switching keeps the tab, the minimized state, and builds no second window
@@ -388,7 +388,7 @@ Total.
 - chrome: compact shows the short title, TEST beside it, the title and the word centered together
 - chrome: a simulation reads SIM in compact, in its cyan
 - chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
-- chrome: Scan group is an icon button in compact, with its tooltip and its click; full hides it
+- chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
 - chrome: the two tabs keep a reduced width, their names in their tooltips
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
 - chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does

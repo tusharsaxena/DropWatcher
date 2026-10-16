@@ -69,8 +69,8 @@ preview, token chips and Reset templates, Window › Layout's Clear history besi
 (asking first, clearing on Yes, test mode's samples only while it is on; feedback-15 spec §3), each
 page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
-chrome built headless: the title bar, the restriction badge, Scan group (the compact layout's
-title-bar icon; the full layout's is on the Drops strip, feedback-7 spec §4), the tabs and their lazy
+chrome built headless: the title bar (no Scan group since feedback-16: the Drops strip's, in both
+layouts, feedback-7 spec §4), the restriction badge, the tabs and their lazy
 panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values,
 label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, the
 default size, 1038 x 600, as the least width, a tooltip on

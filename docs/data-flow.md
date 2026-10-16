@@ -77,8 +77,8 @@ filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, 
                              (Sort on the active tab's strip in the full layout, re-anchored by
                              WindowFooter.AnchorSort on every full pass; feedback-10 §3)
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine;
-                             the Drops strip's button (its icon alone in compact, feedback-16)
-                             and the title bar's icon in compact; feedback-7 §4)
+                             the Drops strip's button, its icon alone in compact (the title
+                             bar's removed by feedback-16); feedback-7 §4)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
 resize (grip released) ────> the whole repaint (the table's columns take the new width); never
                              under the layout's least width, its default (full 1038, compact 440;

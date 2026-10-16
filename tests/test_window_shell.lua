@@ -33,7 +33,7 @@ local function textOf(region) return region and region:GetText() end
 
 -- ── the title bar ───────────────────────────────────────────────────────────────────────────
 
-test("shell: the title bar holds the centered gold title, the badge, Scan group, minimize and close, and no logo", function()
+test("shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo", function()
     local NS, f = shown()
     assertEqual(f.logo, nil, "no logo in the title bar: the launcher and the TOC keep it")
     for _, r in ipairs(f.titleBar.__regions) do
@@ -48,8 +48,7 @@ test("shell: the title bar holds the centered gold title, the badge, Scan group,
     local r, g, b = f.title:GetTextColor()
     assertEqual(table.concat({ r, g, b }, ","), "1,0.82,0", "ApplySkin tints the title gold")
     assertFalse(f.badge:IsShown(), "no badge while nothing is restricted")
-    assertEqual(textOf(f.scanButton.label), "Scan group")
-    assertTrue(f.scanButton.art:GetTexture() ~= nil, "Scan group wears a catalog mark beside its label")
+    assertTrue(f.scanButton == nil, "Scan group is the Drops strip's, not the title bar's")
     assertTrue(f.minimizeButton.art:IsShown() and not f.minimizeButton.glyph:IsShown(), "the catalog mark, not the glyph")
     assertTrue(f.closeButton ~= nil)
     assertTrue(NS.HasWidgets())
@@ -160,14 +159,15 @@ end)
 -- ── Scan group ──────────────────────────────────────────────────────────────────────────────
 
 test("shell: Scan group asks the inspect broker through the shared handler, and says what it did", function()
-    local NS, f, m = shown()
+    local NS, _, m = shown()
     local causes = {}
     NS.Inspect.Scan = function(cause) causes[#causes + 1] = cause; return 3 end
-    f.scanButton:__fire("OnClick")
+    local scan = NS.WindowGroup.Drawn().pane.summary.scan
+    scan:__fire("OnClick")
     assertEqual(table.concat(causes, ","), "scan")
     assertTrue(m.prints[#m.prints]:find("Inspecting 3 group members") ~= nil)
     NS.Inspect.Scan = function() return 0 end
-    f.scanButton:__fire("OnClick")
+    scan:__fire("OnClick")
     assertTrue(m.prints[#m.prints]:find("Nothing to inspect") ~= nil)
 end)
 
@@ -876,7 +876,7 @@ test("shell: every control on the chrome has a tooltip with a reason", function(
     local W, c = NS.Window, NS.WindowFilterBar.Controls()
     local segs, sort = NS.WindowFooter.Parts()
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
-    local widgets = { f.scanButton, f.minimizeButton, f.badge, f.newChip, f.tabs.group,
+    local widgets = { NS.WindowGroup.Drawn().pane.summary.scan, f.minimizeButton, f.badge, f.newChip, f.tabs.group,
         f.tabs.history, c.view, c.quality, c.content, c.search, sort,
         segs.inspect, segs.loot, segs.situation, segs.pawn }
     for i, w in ipairs(widgets) do

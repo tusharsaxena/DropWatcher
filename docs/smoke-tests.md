@@ -410,7 +410,7 @@ the item wins: record the item and both verdicts. Result:
 **FEED-8. The window's shell.** `/dw show` on a clean `/reload` → a window about 1038 × 600 (since DW-F1; 1132 from DW-E4)
 with the Ka0s edge (a hard black line with a gray line inside it), the gold `Ka0s Drop Watcher` title
 centered on the title bar (no logo), a `Scan group` button with a people mark (since DW-G4 on the Drops
-strip, the title bar's icon in compact too: FEED-63, feedback-16), a minimize mark and the close
+strip in both layouts: FEED-63; no Scan group in the title bar since feedback-16), a minimize mark and the close
 mark; the `Drops` tab gold with a gold underline, `History` gray (two tabs since DW-E3); the filter bar reads
 `View: All`, `Quality: Rare+`, `Content: This session` (`This instance` until feedback-13, FEED-75) and the `Filter looter or item…` box (no checkbox:
 DW-A1 made them View values, FEED-20); the footer reads `Inspect: no group`, `No loot seen yet` (or
@@ -1047,7 +1047,8 @@ lock (under a boss's chat lockdown) sits beside the layout toggle. With drops li
 tradeable (out of test mode and a group, `/dw sim start dungeon`, then `/dw sim loot 2` until none lands on
 you) → the strip still shows, with no summary, Post gone and Scan group in Post's place above Sort. On History → no Scan group. `/dw compact` → the title bar's Scan group icon is back and
 the shortened strip is unchanged. (Superseded by feedback-15, 2026-10-16: Scan group is Post's width, the
-row reads `[Post my tradeables] [Scan group] [Expand all] [Sort]`; FEED-78.) Result:
+row reads `[Post my tradeables] [Scan group] [Expand all] [Sort]`; FEED-78. Superseded by feedback-16: the
+title bar has no Scan group in compact either, it is the compact strip's icon; COMPACT-9.) Result:
 
 **FEED-64. The empty state's buttons centered as a pair (DW-G4, feedback-7 spec §4).** The headless
 `test_window_group` (`the empty state's two buttons are centered as a pair`) covers the arithmetic. Research
@@ -1220,7 +1221,7 @@ right and `Post my tradeables` (full label, same width) left of it while somethi
 Sort is in the Filters panel and Scan group the title bar's icon; History's strip reads `Expand all` with
 `Clear history` (no `Clear`) left of it; the toggle opens and closes the cards' headers on both tabs. (Since
 DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6. Since feedback-16 compact's
-strip buttons are icons alone and Drops' carries Scan group too: COMPACT-9.) Result:
+strip buttons are icons alone and Drops' carries Scan group, the title bar none: COMPACT-9.) Result:
 
 ## Roster
 
@@ -2019,7 +2020,8 @@ something of yours tradeable → the Drops strip reads, right to left, an up/dow
 Collapse all), the people mark (Scan group) and the speech bubble (Post my tradeables), each a small square
 with no label, and hovering each names it with its line; the summary on the left has room. Nothing of yours
 tradeable → the chevron and the people mark. History's strip → the chevron alone. Click each → it does what
-its full button does. `/dw full` → the labeled buttons again, the toggle's mark a chevron there too. With
+its full button does. The title bar has no Scan group in either layout. `/dw full` → the labeled
+buttons again, the toggle's mark a chevron there too. With
 no drop at all (`/dw clear`, out of test mode) → `No drops yet` and its line, no button, in both layouts.
 Result:
 
@@ -2126,7 +2128,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-61 | DW-G2, `Upgrade for N` / `No upgrades` / `Hidden`; Trade's `Yes` without its count, the count in the tooltip | No client pass recorded yet |
 | FEED-62 | DW-G3, columnar gear tooltips: aligned columns, the table's glyph, glyph and number toned; no leftover grid | No client pass recorded yet |
 | FEED-63 | DW-G4, Post my tradeables at Sort's size directly above it, Scan group beside it or in its slot; compact's icon kept (superseded by DW-J3: FEED-70) | No client pass recorded yet |
-| FEED-64 | DW-G4, the empty state's Preview with test data and Scan group centered as a pair, both layouts | No client pass recorded yet |
+| FEED-64 | DW-G4, the empty state's Preview with test data and Scan group centered as a pair, both layouts (superseded by feedback-16: the empty state has no button, COMPACT-9) | No client pass recorded yet |
 | FEED-65 | DW-H0, General › When to show as one table: renders, toggles, disables, Defaults and a profile switch repaint it | No client pass recorded yet |
 | FEED-66 | DW-I0, the toast's four rows beside a four-row icon: quality and class colors, You/Them verdict marks, the trade reason, the 56-pixel icon, right-click closes | No client pass recorded yet |
 | FEED-67 | DW-J0, the filled downgrade glyph `▼` in the tables, compact cards, toast, tooltip grids and the Offer panel | No client pass recorded yet |
