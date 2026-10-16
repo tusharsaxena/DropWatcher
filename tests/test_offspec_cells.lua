@@ -263,6 +263,20 @@ test("off-spec cells: the History card takes its chip, Spec row and deltas from 
     assertEqual(plain.me.verdict.text, "CAN'T USE"); assertNil(byKey(plain.me.rows, "spec"))
 end)
 
+-- A snapshot keeps no baseline, so its tooltip names the level it was compared with, never an
+-- empty slot it did not have; only a snapshot with no difference was an empty slot.
+test("off-spec cells: a History row's tooltip names the level compared with, not an empty slot", function()
+    local NS = addon()
+    local e = { itemLink = AXE, itemID = 212, looter = "Seta-Realm", class = "PRIEST", outcome = "seen", at = 1,
+        ilvl = 311, equipLoc = "INVTYPE_WEAPON", quality = 4,
+        me = { verdict = "cantUse", offSpec = { specID = HOLY, mainSpecID = PROT, verdict = "upgrade", ilvlDelta = 20 } } }
+    local c = NS.WindowCells.Me(NS.WindowHistory.AsDrop(e, 1, { key = "g", label = "G" }))
+    assertTrue(has(c.tip, "Compared with your best Holy item: 291."), joined(c.tip))
+    e.me.offSpec.ilvlDelta = nil
+    c = NS.WindowCells.Me(NS.WindowHistory.AsDrop(e, 1, { key = "g", label = "G" }))
+    assertTrue(has(c.tip, "Compared with your best Holy item: an empty slot."), joined(c.tip))
+end)
+
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
 
 local VIEW_ONLY = { view = true }

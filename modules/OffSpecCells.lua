@@ -74,18 +74,24 @@ local function cantLine(eval, off)
     return L["%s can't use it."]:format(mainName(off))
 end
 
--- What the drop was compared with: `Bag Mace 291`, `291`, or an empty slot.
-local function baseWords(base)
-    if type(base) ~= "table" then return L["an empty slot"] end
+-- What the drop was compared with: `Bag Mace 291`, `291`, or an empty slot. A History snapshot
+-- keeps no baseline, only the difference, so its level is the drop's less that difference; with no
+-- difference either, it was an empty slot.
+local function baseWords(off, ilvl)
+    local base, d = off.baseline, num(off.ilvlDelta)
+    if type(base) ~= "table" then
+        if d and ilvl then return tostring(math.floor(ilvl - d + 0.5)) end
+        return d and "?" or L["an empty slot"]
+    end
     local n = num(base.ilvl)
     local level = n and tostring(math.floor(n + 0.5)) or "?"
     local name = WC.ItemName(base.link)
     return name and ("%s %s"):format(name, level) or level
 end
 
-local function compareLine(side, spec, base)
+local function compareLine(side, spec, off, ilvl)
     local fmt = side == "me" and L["Compared with your best %s item: %s."] or L["Compared with their best %s item: %s."]
-    return fmt:format(spec, baseWords(base))
+    return fmt:format(spec, baseWords(off, ilvl))
 end
 
 local function trackLine(td)
@@ -106,7 +112,7 @@ end
 
 local function tipOf(eval, off, side, title, ilvl, who, spec)
     local lines = { ("%s: %s"):format(title, TITLE[off.verdict]:format(spec)), cantLine(eval, off),
-        compareLine(side, spec, off.baseline) }
+        compareLine(side, spec, off, ilvl) }
     lines[#lines + 1] = gridLine(off, ilvl, who)
     lines[#lines + 1] = trackLine(off.trackDelta)
     for _, r in ipairs(type(off.reasons) == "table" and off.reasons or {}) do
