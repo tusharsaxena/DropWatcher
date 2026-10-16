@@ -12,14 +12,37 @@ It watches what your party or raid receives and compares each item with your gea
 
 ## Screenshots
 
-_Screenshots are on the way._
+**_Drops (compact view)_**
 
-<!-- Add each as a caption line and an image, as the other Ka0s addons do:
+![Drops (compact view)](https://media.forgecdn.net/attachments/2064/342/dropwatcher-screenshot-01-png.png)
 
-**_Drops tab_**
+**_Drop details (compact view)_**
 
-![Drops tab](<url>)
--->
+![Drop details (compact view)](https://media.forgecdn.net/attachments/2064/343/dropwatcher-screenshot-02-png.png)
+
+**_History (compact view)_**
+
+![History (compact view)](https://media.forgecdn.net/attachments/2064/344/dropwatcher-screenshot-03-png.png)
+
+**_Drops (full view)_**
+
+![Drops (full view)](https://media.forgecdn.net/attachments/2064/345/dropwatcher-screenshot-04-png.png)
+
+**_Drop details (full view)_**
+
+![Drop details (full view)](https://media.forgecdn.net/attachments/2064/346/dropwatcher-screenshot-05-png.png)
+
+**_History (full view)_**
+
+![History (full view)](https://media.forgecdn.net/attachments/2064/347/dropwatcher-screenshot-06-png.png)
+
+**_Offer window_**
+
+![Offer window](https://media.forgecdn.net/attachments/2064/348/dropwatcher-screenshot-07-png.png)
+
+**_Toast_**
+
+![Toast](https://media.forgecdn.net/attachments/2064/349/dropwatcher-screenshot-08-png.png)
 
 ## Usage
 
