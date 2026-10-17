@@ -36,6 +36,7 @@ end
 local function WC() return T.newAddon().WindowCells end
 
 local function joined(tip) return T.tipJoined(tip) end
+local P = T.tipPlain   -- a tooltip line as read: `• Rule: personal loot` (feedback-21)
 
 -- ── the verdict cells ───────────────────────────────────────────────────────────────────────
 
@@ -81,18 +82,20 @@ end)
 test("cells: Them is a dash on your own drop and `?` with the inspect's reason while unread", function()
     local W = WC()
     local mine = W.Them(drop({ isMine = true, them = NONE }), 100)
-    assertEqual(mine.text, "–"); assertEqual(mine.tip[2], "Your own drop: Offer shows who it would help.")
+    assertEqual(mine.text, "–"); assertEqual(P(mine.tip[2]), "• Why: your own drop")
+    assertEqual(P(mine.tip[3]), "Offer shows who it would help.", "the closing hint, unbulleted")
     local cases = {
-        pending = "Waiting to inspect Seta", outOfRange = "out of range", combatParked = "combat to end",
-        unavailable = "not in your group",
+        pending = "• Inspect: waiting (one inspect at a time)", outOfRange = "• Inspect: out of range",
+        combatParked = "• Inspect: waiting for combat to end", unavailable = "• Inspect: not in your group",
     }
-    for status, words in pairs(cases) do
+    for status, row in pairs(cases) do
         local c = W.Them(drop({ them = NONE, inspect = { status = status } }), 100)
         assertEqual(c.text, "?", status)
-        assertTrue(c.tip[2]:find(words, 1, true) ~= nil, status .. ": " .. c.tip[2])
+        assertEqual(P(c.tip[2]), row, status)
     end
     local failed = W.Them(drop({ them = NONE, inspect = { status = "failed", reason = "timeout" } }), 100)
-    assertTrue(failed.tip[2]:find("no answer came") ~= nil)
+    assertEqual(P(failed.tip[2]), "• Inspect: failed (no answer came)")
+    assertEqual(P(failed.tip[3]), "• Retry: from the detail card")
 end)
 
 -- ── the Trade column ────────────────────────────────────────────────────────────────────────
@@ -101,23 +104,29 @@ test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", fu
     local W = WC()
     local likely = W.Trade(drop())
     assertEqual(likely.text, "Likely"); assertEqual(likely.tone, "good")
-    assertEqual(likely.tip[2], "Personal loot: 311 is not an upgrade over the 324 Seta wears, so they may trade it.")
-    assertEqual(likely.tip[3], "Inspected 40s ago.")
-    local function reason(t) return W.Trade(drop({ trade = t })).tip[2] end
-    assertEqual(reason({ state = "yes", reasonKey = "boe", basis = "bind" }), "Bind on equip: anyone can trade this.")
-    assertEqual(reason({ state = "no", reasonKey = "bonusRoll", basis = "bind" }), "Bonus roll loot can't be traded.")
-    assertEqual(reason({ state = "no", reasonKey = "warbound", basis = "bind" }), "Warbound: it can't be traded.")
-    assertEqual(reason({ state = "no", reasonKey = "legacy", basis = "rule" }), "Loot from this content can't be traded.")
-    assertEqual(reason({ state = "likely", reasonKey = "groupLoot", basis = "rule" }), "Group loot: its winner may trade it for four hours.")
-    assertEqual(reason({ state = "no", reasonKey = "expired", args = { 8000, 7200 } }), "The trade window (2h) has passed.")
-    assertEqual(reason({ state = "yes", reasonKey = "timer", args = { 7140 } }), "Your own item: 1h 59m left to trade it.")
-    assertEqual(reason({ state = "no", reasonKey = "upgradeForLooter", args = { 311, 298 } }),
-        "311 is an upgrade over the 298 Seta wears, so the game won't let them trade it.")
-    assertEqual(reason({ state = "no", reasonKey = "upgradeForLooter", args = { 311 } }),
-        "It fills an empty slot for Seta, so the game won't let them trade it.")
-    assertTrue(reason({ state = "unknown", reasonKey = "noInspect", args = { "outOfRange" } }):find("out of range") ~= nil)
+    -- red under: the four sentences the owner could not read (feedback-21); a row per fact instead
+    assertEqual(T.tipPlainJoined(likely.tip, "\n"), table.concat({ "Trade: Likely", "• Rule: personal loot", "• This item: 311",
+        "• Seta wears: 324, so it is not an upgrade for them", "• Inspected: 40s ago",
+        "• Basis: an estimate (another player's drop)" }, "\n"))
+    local function reason(t) return T.tipPlainJoined({ unpack(W.Trade(drop({ trade = t })).tip, 2) }) end
+    assertEqual(reason({ state = "yes", reasonKey = "boe", basis = "bind" }), "• Rule: bind on equip | • Tradeable: by anyone, until equipped")
+    assertEqual(reason({ state = "no", reasonKey = "bonusRoll", basis = "bind" }), "• Rule: bonus roll loot | • Tradeable: no")
+    assertEqual(reason({ state = "no", reasonKey = "warbound", basis = "bind" }), "• Rule: warbound | • Tradeable: no")
+    assertEqual(reason({ state = "no", reasonKey = "legacy", basis = "rule" }),
+        "• Rule: legacy loot | • Tradeable: no | • Basis: an estimate (another player's drop)")
+    assertEqual(reason({ state = "likely", reasonKey = "groupLoot", basis = "rule" }),
+        "• Rule: group loot | • Tradeable: by its winner, for 4h | • Basis: an estimate (another player's drop)")
+    assertTrue(reason({ state = "no", reasonKey = "expired", args = { 8000, 7200 } }):find("• Trade window: 2h, passed", 1, true) == 1)
+    assertTrue(reason({ state = "yes", reasonKey = "timer", args = { 7140 } }):find("• Rule: your own item | • Left to trade: 1h 59m", 1, true) == 1)
+    assertTrue(reason({ state = "no", reasonKey = "upgradeForLooter", args = { 311, 298 } }):find(
+        "• Rule: personal loot | • This item: 311 | • Seta wears: 298, so it is an upgrade they can't trade", 1, true) == 1)
+    assertTrue(reason({ state = "no", reasonKey = "upgradeForLooter", args = { 311 } }):find(
+        "• Rule: personal loot | • For Seta: fills an empty slot, so they can't trade it", 1, true) == 1)
+    assertTrue(reason({ state = "unknown", reasonKey = "noInspect", args = { "outOfRange" } }):find(
+        "• Seta's gear: not read yet (out of range)", 1, true) ~= nil)
+    for _, l in ipairs(likely.tip) do assertTrue(not P(l):find("%. "), "no sentences: " .. P(l)) end
     local none = W.Trade(drop({ trade = NONE }))
-    assertEqual(none.text, "Unknown"); assertEqual(none.tip[2], "Not estimated yet.")
+    assertEqual(none.text, "Unknown"); assertEqual(P(none.tip[2]), "• Estimate: not made yet")
     assertEqual(W.Trade(drop({ trade = { state = "no", reasonKey = "legacy" } })).tone, "red",
         "No in the palette's red, not the gray `bad` (feedback-7 spec §2)")
     assertEqual(W.Trade(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } })).tone, "good")
@@ -131,8 +140,9 @@ test("cells: Trade's Yes or Likely reads Can't use in dim red on another player'
     -- red under: Likely in green beside Can't use, as if there were something to ask for (feedback-21)
     assertEqual(c.text, "Can't use"); assertEqual(c.tone, "redMuted"); assertEqual(c.state, "likely", "the estimate kept")
     assertEqual(c.tip[1], "Trade: Can't use")
-    assertEqual(c.tip[2], W.TradeReason(drop().trade, "Seta"), "the trade reason kept")
-    assertEqual(c.tip[3], "You can't use it, so there is nothing for you to ask for.", "after the reason")
+    assertEqual(P(c.tip[2]), "• Rule: personal loot", "the trade reason kept, as its rows")
+    assertEqual(P(c.tip[4]), "• Seta wears: 324, so it is not an upgrade for them")
+    assertEqual(P(c.tip[5]), "• For you: can't use, nothing to ask for", "after the reason")
     local yes = W.Trade(drop({ me = cant, trade = { state = "yes", reasonKey = "boe", basis = "bind" } }))
     assertEqual(yes.text, "Can't use"); assertEqual(yes.tone, "redMuted"); assertEqual(yes.state, "yes")
     local no = W.Trade(drop({ me = cant, trade = { state = "no", reasonKey = "legacy" } }))
@@ -160,16 +170,17 @@ test("cells: Their eq shows both rings' levels for a ring, one for a helm, and t
     assertEqual(#helm.items, 1); assertEqual(helm.text, "324"); assertEqual(helm.tone, "plain")
     assertEqual(helm.items[1].slot, 1, "each item names its slot")
     assertEqual(helm.tip[1], "Seta wears")
-    assertEqual(helm.tip[2], "Inspected 40s ago.", "the items are the merged cell's grid (SideCells), not lines")
+    assertEqual(P(helm.tip[2]), "• Inspected: 40s ago", "the items are the merged cell's grid (SideCells), not lines")
     assertEqual(helm.empty, 0)
     local ring = W.TheirEq(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER" }, link = RING }), gear, 100)
     assertEqual(#ring.items, 2, "rings compare with both worn rings")
     assertEqual(ring.text, "300/296")
     local cached = W.TheirEq(drop({ inspect = { status = "cached", at = 40 } }), gear, 100)
-    assertEqual(cached.tip[#cached.tip], "From the inspect cache, read 1m ago.")
+    assertEqual(P(cached.tip[#cached.tip - 1]), "• Inspected: 1m ago")
+    assertEqual(P(cached.tip[#cached.tip]), "• Source: the inspect cache")
     local none = W.TheirEq(drop(), nil, 100)
     assertEqual(#none.items, 0); assertEqual(none.text, "–")
-    assertTrue(joined(none.tip):find("Nothing read") ~= nil)
+    assertEqual(P(none.tip[2]), "• Slot: nothing read yet")
     local empty = W.TheirEq(drop(), { [1] = false }, 100)
     assertEqual(empty.text, "empty slot"); assertEqual(empty.empty, 1, "the slot worn empty, for the grid")
 end)
@@ -212,14 +223,16 @@ test("cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure", functio
     local W = WC()
     local ready = W.Ask(drop(), "ready")
     assertTrue(ready.offered and ready.enabled); assertEqual(ready.text, "Ask"); assertEqual(ready.icon, "chat", "a whisper to the looter (feedback-7 spec §1)")
-    assertTrue(ready.tip[2]:find("Whisper Seta") ~= nil)
+    assertEqual(T.tipPlainJoined(ready.tip), "Ask | • Whispers: Seta | • Template: your ask template | • Limit: one per item per looter")
     local queued = W.Ask(drop(), "queued")
     assertEqual(queued.text, "Queued"); assertEqual(queued.icon, "clock"); assertTrue(queued.enabled, "a click cancels it")
+    assertEqual(T.tipPlainJoined(queued.tip), "Queued | • To: Seta | • Waiting: chat is restricted right now | • Sends: when it lifts"
+        .. " | Click to cancel it.")
     local sent = W.Ask(drop(), "sent")
     assertEqual(sent.text, "Asked"); assertEqual(sent.icon, "confirm"); assertFalse(sent.enabled)
     local failed = W.Ask(drop(), "failed", "throttled")
     assertEqual(failed.text, "Retry"); assertEqual(failed.icon, "reset")
-    assertTrue(failed.tip[2]:find("throttled") ~= nil)
+    assertEqual(P(failed.tip[3]), "• Not sent: throttled")
 end)
 
 test("cells: no Ask is offered on your own drop, an untradeable one or one that is no use to you", function()
@@ -228,11 +241,12 @@ test("cells: no Ask is offered on your own drop, an untradeable one or one that 
     assertFalse(mine.offered); assertEqual(mine.text, "No action", "the placeholder (feedback-11 spec §1)")
     assertEqual(mine.icon, "ban"); assertEqual(mine.state, "none"); assertEqual(mine.tip[1], "No action")
     assertEqual(W.ActionTone(mine.state), "bad", "gray")
-    assertEqual(mine.tip[2], "Your own drop: Offer shows who it would help.", "reworded (feedback-5 spec §2)")
+    assertEqual(P(mine.tip[2]), "• Why: your own drop", "reworded (feedback-5 spec §2)")
     local no = W.Ask(drop({ trade = { state = "no", reasonKey = "bonusRoll" } }), "ready")
-    assertFalse(no.offered); assertTrue(no.tip[2]:find("Bonus roll") ~= nil)
+    assertFalse(no.offered)
+    assertEqual(T.tipPlainJoined(no.tip), "No action | • Why: its looter can't trade it | • Rule: bonus roll loot | • Tradeable: no")
     local down = W.Ask(drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }), "ready")
-    assertFalse(down.offered); assertEqual(down.tip[2], "It is not an upgrade for you.")
+    assertFalse(down.offered); assertEqual(P(down.tip[2]), "• Why: not an upgrade for you")
     assertTrue(W.Ask(drop({ me = { verdict = "sidegrade", ilvlDelta = 1, reasons = {} } }), "ready").offered)
 end)
 
@@ -247,11 +261,12 @@ test("cells: Item, Ilvl, Slot and Looter are never blank, each with a reason too
         assertTrue(#c.tip >= 2, "a cell's reason: " .. tostring(c.tip[1]))
     end
     assertEqual(W.Ilvl(drop()).text, "311")
-    assertEqual(W.Ilvl(drop()).tip[2], "Upgrade track: Hero 2/6.")
+    assertEqual(P(W.Ilvl(drop()).tip[2]), "• Upgrade track: Hero 2/6")
     assertEqual(W.Slot(drop()).text, "Head")
-    assertEqual(W.Slot(drop({ facts = { equipLoc = "INVTYPE_TRINKET" } })).tip[2], "Compared with the lower of the two items that could be replaced.")
+    assertEqual(P(W.Slot(drop({ facts = { equipLoc = "INVTYPE_TRINKET" } })).tip[2]), "• Compared with: the lower of the two worn there")
     local lc = W.Looter(drop())
-    assertEqual(lc.text, "Seta"); assertEqual(lc.classFile, "PRIEST"); assertEqual(lc.tip[3], "Reported by chat.")
+    assertEqual(lc.text, "Seta"); assertEqual(lc.classFile, "PRIEST")
+    assertEqual(P(lc.tip[2]), "• Looted by: Seta-Realm"); assertEqual(P(lc.tip[3]), "• Reported by: chat")
     assertEqual(W.Item(drop()).text, "Crown of Roaring Storms")
 end)
 
@@ -260,12 +275,12 @@ test("cells: an encounter header reads `Label · Situation · age · n drops`", 
     local g = { key = "enc:1", label = "Boss 3", kind = "encounter", at = 100 }
     local h = W.Header(g, 4, 220, "Dungeon", false)
     assertEqual(h.text, "Boss 3 · Dungeon · 2m ago · 4 drops")
-    assertEqual(T.tipText(h.tip[2]):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""), "Difficulty  Dungeon\nWhen  2m ago\nDrops  4")
-    assertEqual(h.tip[3], "|cffb3b3b8Drops from one boss encounter.|r", "the kind under the rows, in gray")
-    assertEqual(h.tip[4], "Click to collapse this group.")
+    assertEqual(P(h.tip[2]), "Difficulty  Dungeon\nWhen  2m ago\nDrops  4\nFrom  one boss encounter",
+        "the kind is the grid's last row (feedback-21)")
+    assertEqual(P(h.tip[3]), "Click to collapse this group.")
     local c = W.Header(g, 1, 220, nil, true)
     assertEqual(c.text, "Boss 3 · 2m ago · 1 drop (collapsed)")
-    assertEqual(c.tip[4], "Click to expand this group.")
+    assertEqual(P(c.tip[3]), "Click to expand this group.")
 end)
 
 local function plainTip(tip) return (T.tipJoined(tip, "\n"):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")) end
@@ -281,12 +296,12 @@ test("cells: a header's tooltip is its facts in rows, gold labels, every member 
     assertEqual(h.tip[1], "Lady Sethra")
     assertEqual(plainTip(h.tip), table.concat({ "Lady Sethra", "Instance  Test Spire", "Difficulty  Looking For Raid",
         "When  2m ago", "Drops  3", "Seen by  You", "Group (12)  You, R2, R3, R4, R5,", "R6, R7, R8, R9, R10,", "R11, R12",
-        "Drops from one boss encounter.", "Click to collapse this group." }, "\n"))
+        "From  one boss encounter", "Click to collapse this group." }, "\n"))
     assertEqual(h.tip[2].grid[1][1], "|cffffd100Instance|r", "the labels in gold")
     local run = W.Header({ key = "r", label = "Test Vault", kind = "run", instance = "Test Vault", difficulty = "Mythic+ 10" },
         2, nil, "Mythic+", true)
     assertEqual(plainTip(run.tip), "Test Vault\nDifficulty  Mythic+ 10\nDrops  2\n"
-        .. "Drops from one Mythic+ run, the chest included.\nClick to expand this group.", "a key run: its title is the dungeon")
+        .. "From  one Mythic+ run, the chest included\nClick to expand this group.", "a key run: its title is the dungeon")
 end)
 
 -- ── the columns and the order (pure) ────────────────────────────────────────────────────────
@@ -655,7 +670,7 @@ test("table: Them shows the looter's worn item from their inspect read before th
     assertFalse(eq.icons[2]:IsShown(), "a helm: one item")
     assertEqual(textOf(eq.level), "324", "the worn item's level; its age is in the tooltip")
     assertEqual(textOf(eq.glyph) .. textOf(eq.text), "▼13", "then the verdict")
-    assertEqual(NS.Window.TooltipOf(eq)[3], "Inspected 40s ago.")
+    assertEqual(P(NS.Window.TooltipOf(eq)[3]), "• Inspected: 40s ago")
 end)
 
 test("table: Me shows your worn item from the gear snapshot, its icon showing your own slot", function()
@@ -709,7 +724,7 @@ test("table: a drop with no ask offered shows the gray No action button with its
     assertEqual(textOf(a.ask.label), "No action"); assertEqual(a.ask.art:GetTexture(), NS.Icon("ban"))
     assertFalse(a.ask:IsEnabled()); assertEqual(a.ask.tone, "bad", "gray")
     assertEqual(NS.Window.TooltipOf(a.ask)[1], "No action")
-    assertEqual(NS.Window.TooltipOf(a.ask)[2], "It is not an upgrade for you.")
+    assertEqual(P(NS.Window.TooltipOf(a.ask)[2]), "• Why: not an upgrade for you")
 end)
 
 test("table: no row can be dismissed: no ×, no handler, no dismissed state (feedback-4 spec §2)", function()
@@ -748,15 +763,16 @@ test("cells: another player's drop is always the estimate, its tooltip naming th
     assertFalse(cd.exact); assertEqual(MC.Clock(cd.left), "4:00:00")
     local c = MC.TradeWindow(theirs, 100, 600)
     assertEqual(c.text, "~4:00:00"); assertEqual(c.tone, "plain"); assertFalse(c.bold); assertEqual(c.fraction, 1)
-    assertTrue(joined(c.tip):find("about 4:00:00 left for Seta to trade it") ~= nil, joined(c.tip))
+    assertEqual(T.tipPlainJoined(c.tip), "Trade window | • Left: about 4:00:00 | • Source: estimated from when it dropped"
+        .. " | • Exact time: only in Seta's bags")
     assertTrue(joined(c.tip):find("your bags") == nil, "never your bags on their drop")
     local soon = MC.TradeWindow(drop({ at = 100 - 14200 }), 100, 600)
     assertEqual(soon.text, "~0:03:20", "the words `ending soon` are not drawn")
     assertTrue(soon.bold); assertTrue(soon.soon); assertEqual(soon.tone, "warn")
-    assertTrue(joined(soon.tip):find("Ending soon: once it runs out, Seta keeps it.", 1, true) ~= nil, joined(soon.tip))
+    assertEqual(P(soon.tip[#soon.tip]), "• Ending soon: then Seta keeps it")
     local up = MC.TradeWindow(drop({ trade = { state = "no", reasonKey = "upgradeForLooter", basis = "inspect", args = { 311, 300 } } }), 100)
     assertEqual(up.text, "Their upgrade"); assertEqual(up.tone, "bad"); assertEqual(up.fraction, 0)
-    assertTrue(up.tip[2]:find("300 Seta wears") ~= nil, up.tip[2])
+    assertEqual(P(up.tip[4]), "• Seta wears: 300, so it is an upgrade they can't trade")
     local yours = MC.TradeWindow(drop({ isMine = true, trade = { state = "no", reasonKey = "upgradeForLooter", args = { 311 } } }), 100)
     assertEqual(yours.text, "Your upgrade")
     local boe = MC.TradeWindow(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), 100)
@@ -793,7 +809,7 @@ test("table: Trade window paints every drop's countdown over its bar; the row gr
     f = rowFor(drawn, 1).cells.tradeWindow
     assertTrue(f:IsShown()); assertEqual(f:GetWidth(), 76)
     assertEqual(textOf(f.text), "~4:00:00", "another player's drop: the estimate from when it dropped")
-    assertTrue(joined(f.tipLines):find("left for Seta") ~= nil, joined(f.tipLines))
+    assertTrue(T.tipPlainJoined(f.tipLines):find("only in Seta's bags", 1, true) ~= nil, T.tipPlainJoined(f.tipLines))
     assertTrue(f.bar:IsShown()); assertEqual(f.fraction, 1); assertEqual(colors[#colors][1], C.TONE.good.r)
     assertEqual(colors.width, 76 - NS.WindowGroup.TRADE_WINDOW_PAD, "a full bar spans the column but its padding")
     assertFalse(f.bold)

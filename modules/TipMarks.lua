@@ -34,6 +34,14 @@ local _, NS = ...
 -- one per worn item (two for rings, trinkets and one-hand weapons), the name on the first, the
 -- arrow on the row of the item the drop would replace, `empty` (muted) for a slot worn empty.
 -- modules/TipGrid.lua paints a grid; TM.Text reads one as plain text for the suites.
+--
+-- THE ROWS (feedback-21). A tooltip is its title, then one row per data point, never a sentence:
+-- `• Label: value` (TM.Row), the bullet and the label in the idle gray (C.IDLE), the value plain or
+-- in a C.TONE tone; the label's colon is a routed format, so a locale can space it. A short closing
+-- hint (`Click to cancel it.`) is the one free text a tooltip keeps: TM.Hint, unbulleted and gray.
+-- The bullet is TM.BULLET: the media library has no dot-like icon to draw as an escape, so it is the
+-- `•` character, which the tooltip face draws (the View and Filters tooltips have drawn it since
+-- DW-A1), unlike the glyphs above.
 
 NS.TipMarks = NS.TipMarks or {}
 local TM = NS.TipMarks
@@ -160,6 +168,37 @@ function TM.ItemName(name, quality, link)
     if code then return code .. name .. "|r" end
     return name
 end
+
+-- ── the rows (feedback-21) ──────────────────────────────────────────────────────────────────
+
+--- The bullet every row opens with.
+TM.BULLET = "•"
+
+local function idle(text) return NS.GroupRoster.Colored(text, C.IDLE.r, C.IDLE.g, C.IDLE.b) end
+
+--- The bullet, in the idle gray.
+--- @return string
+function TM.Bullet() return idle(TM.BULLET) end
+
+--- One data point of a tooltip: `• Label: value`, the bullet and the label gray, the value plain or
+--- in `tone` (a C.TONE key). Nil when there is no value, so a fact not known drops out of the list;
+--- with no label, the bullet and the value alone.
+--- @param label string|nil
+--- @param value any
+--- @param tone string|nil
+--- @return string|nil
+function TM.Row(label, value, tone)
+    if value == nil then return nil end
+    local text, t = tostring(value), C.TONE[tone]
+    if t then text = NS.GroupRoster.Colored(text, t.r, t.g, t.b) end
+    if label == nil then return ("%s %s"):format(TM.Bullet(), text) end
+    return ("%s %s"):format(idle(("%s %s"):format(TM.BULLET, L["%s:"]:format(label))), text)
+end
+
+--- A tooltip's closing hint: unbulleted, in the idle gray.
+--- @param text string
+--- @return string
+function TM.Hint(text) return idle(text) end
 
 -- ── the grid (feedback-7 spec §3) ───────────────────────────────────────────────────────────
 

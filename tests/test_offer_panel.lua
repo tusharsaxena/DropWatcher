@@ -147,7 +147,7 @@ test("offer panel: Offer opens it docked right, the candidates ranked with Their
     assertEqual(textOf(r4.offer.label), "No action"); assertFalse(r4.offer:IsEnabled()); assertEqual(r4.offer.tone, "bad")
     assertEqual(r4.offer.art:GetTexture(), NS.Icon("ban"))
     assertEqual(NS.Window.TooltipOf(r4.offer)[1], "No action")
-    assertEqual(NS.Window.TooltipOf(r4.offer)[2], "Offer is shown for members it is an upgrade or an equal for.")
+    assertEqual(T.tipPlain(NS.Window.TooltipOf(r4.offer)[2]), "• Offer: for members it upgrades or equals")
     assertEqual(textOf(p.panel.note.text), "5 members · sorted by gain")
     local heads = {}
     for key, h in pairs(p.panel.heads) do heads[#heads + 1] = key .. "=" .. textOf(h.text) end
@@ -200,7 +200,7 @@ test("offer panel: every part has a reason tooltip; Their eq's holds the old pil
     local tip = T.tipJoined(lines)
     assertEqual(lines[1], "For Seta: Upgrade")
     assertTrue(NS.TipMarks.IsGrid(lines[2]), "the worn gear as a grid (feedback-7 spec §3)")
-    assertTrue(tip:find("An upgrade for them", 1, true) ~= nil, tip)
+    assertTrue(T.tipPlainJoined(lines):find("• For them: a higher item level", 1, true) ~= nil, tip)
     assertTrue(W.TooltipOf(p.rows[5].eq)[1] == "Fifth: Checking")
     assertTrue(table.concat(W.TooltipOf(p.panel.heads.actions), " "):find("Trade", 1, true) == nil, "no Trade sentence")
     assertTrue(#W.TooltipOf(p.panel.line) >= 3); assertTrue(#W.TooltipOf(p.panel.announce) >= 2)
@@ -230,7 +230,7 @@ test("offer panel: Their eq shows both worn items from the member's inspect read
     local r = NS.OfferPanel.Drawn().rows[1]
     assertTrue(r.eq.icons[1]:IsShown() and r.eq.icons[2]:IsShown(), "both rings")
     assertEqual(eqOf(r), "308/292 ▲ 6")
-    assertTrue(T.tipJoined(NS.Window.TooltipOf(r.eq)):find("Inspected 30s ago.", 1, true) ~= nil)
+    assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(r.eq)):find("• Inspected: 30s ago", 1, true) ~= nil)
 end)
 
 test("offer panel: opening an upgrade for you reveals who it would help on its row", function()

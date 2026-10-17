@@ -42,6 +42,8 @@ local function drop(over)
     return d
 end
 
+local P = T.tipPlain   -- a tooltip row as read (feedback-21)
+
 local function DC() return T.newAddon().DetailCells end
 
 local function texts(list)
@@ -93,14 +95,15 @@ test("cells: For you without a score says why: no scorer, Pawn or your weights n
     local D = DC()
     local d = drop({ me = { verdict = "upgrade", ilvlDelta = 19, reasons = {}, baseline = { link = OLD, ilvl = 292 } } })
     local off = byKey(D.ForYou(d, "none").rows, "score")
-    assertEqual(off.text, "–"); assertTrue(off.tip[2]:find("No scorer is in use") ~= nil)
-    assertTrue(byKey(D.ForYou(d, false).rows, "score").tip[2]:find("No scorer is in use") ~= nil)
-    assertTrue(byKey(D.ForYou(d, true).rows, "score").tip[2]:find("not scored it yet") ~= nil)
+    assertEqual(off.text, "–"); assertEqual(P(off.tip[2]), "• Score: no scorer in use (item level alone)")
+    assertEqual(P(byKey(D.ForYou(d, false).rows, "score").tip[2]), "• Score: no scorer in use (item level alone)")
+    assertEqual(P(byKey(D.ForYou(d, true).rows, "score").tip[2]), "• Score: not scored by Pawn yet")
     local w = byKey(D.ForYou(d, "weights").rows, "score")
-    assertEqual(w.label, "Weights"); assertTrue(w.tip[2]:find("Your weights") ~= nil)
+    assertEqual(w.label, "Weights"); assertEqual(P(w.tip[2]), "• Score: your weights score nothing for this spec")
+    assertEqual(P(w.tip[3]), "Set them in Settings, Comparison.", "where to set them, the closing hint")
     assertEqual(byKey(D.ForYou(d, "pawn").rows, "score").label, "Pawn")
     local track = byKey(D.ForYou(d, true).rows, "track")
-    assertEqual(track.text, "Hero 2/6"); assertTrue(track.tip[2]:find("worn item's track") ~= nil)
+    assertEqual(track.text, "Hero 2/6"); assertEqual(T.tipPlainJoined(track.tip), "Track | • This item: Hero 2/6 | • Worn: not read")
 end)
 
 test("cells: an empty slot and an unread baseline each say so, never blank", function()
@@ -122,7 +125,8 @@ test("cells: For the looter compares their inspected gear and names their spec a
     local unread = D.ForLooter(drop({ them = NONE, inspect = { status = "pending" } }), nil, nil, 100)
     assertEqual(unread.verdict.text, "UNKNOWN")
     assertEqual(byKey(unread.rows, "spec").text, "spec unknown")
-    assertTrue(byKey(unread.rows, "spec").tip[2]:find("not been inspected") ~= nil)
+    assertEqual(P(byKey(unread.rows, "spec").tip[2]), "• Inspected: not yet")
+    assertEqual(T.tipPlainJoined(byKey(side.rows, "spec").tip), "Spec | • Seta's spec: Discipline | • Inspected: 40s ago")
 end)
 
 test("cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member", function()
@@ -199,7 +203,8 @@ test("cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Re
     local on = {}
     for _, a in ipairs(acts) do on[#on + 1] = a.key .. "=" .. tostring(a.enabled) end
     assertEqual(table.concat(on, ","), "ask=true,edit=true,link=true,retry=false,trade=true")
-    assertTrue(byKey(acts, "retry").tip[2]:find("read 40s ago") ~= nil)
+    assertEqual(T.tipPlainJoined(byKey(acts, "retry").tip),
+        "Retry inspect | • Inspected: 40s ago | • Read again: when it changes or grows old")
     for _, a in ipairs(acts) do assertTrue(#a.tip >= 2, a.key .. " says why") end
 end)
 
@@ -208,10 +213,10 @@ test("cells: a disabled action says why: Trade out of range, Retry already queue
     local acts = D.Actions(drop(), { askState = "sent", inspect = { status = "pending" }, now = 100, trade = FAR })
     local trade = byKey(acts, "trade")
     assertEqual(trade.text, "Trade · out of range"); assertFalse(trade.enabled)
-    assertEqual(trade.tip[2], "That player is out of trade range.")
-    assertFalse(byKey(acts, "retry").enabled); assertTrue(byKey(acts, "retry").tip[2]:find("already queued") ~= nil)
+    assertEqual(P(trade.tip[2]), "• Why: out of range")
+    assertFalse(byKey(acts, "retry").enabled); assertEqual(P(byKey(acts, "retry").tip[2]), "• Inspect: already queued")
     assertEqual(byKey(acts, "ask").text, "Asked"); assertFalse(byKey(acts, "ask").enabled)
-    assertFalse(byKey(acts, "edit").enabled); assertEqual(byKey(acts, "edit").tip[2], "The ask is already asked.")
+    assertFalse(byKey(acts, "edit").enabled); assertEqual(P(byKey(acts, "edit").tip[2]), "• Ask: already asked")
     local failed = D.Actions(drop(), { askState = "failed", inspect = { status = "failed", reason = "timeout" }, now = 100, trade = FAR })
     assertTrue(byKey(failed, "retry").enabled, "a failed inspect may be retried")
     assertTrue(byKey(failed, "edit").enabled, "a failed ask may be edited and sent again")
@@ -231,8 +236,8 @@ test("cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade
         assertFalse(a.enabled, key); assertTrue(#a.tip >= 2 and a.tip[2] ~= "", key)
         assertTrue(a.tip[2]:find("My drops", 1, true) == nil, key .. ": no word of My drops")
     end
-    assertEqual(byKey(acts, "edit").tip[2], "Your own drop: Offer shows who it would help.")
-    assertEqual(byKey(acts, "trade").tip[2], "Your own drop: Offer shows who it would help, with an Offer button for each member.",
+    assertEqual(P(byKey(acts, "edit").tip[2]), "• Why: your own drop")
+    assertEqual(T.tipPlainJoined(byKey(acts, "trade").tip), "Trade | • Why: your own drop | Offer shows who it would help, with an Offer for each.",
         "no word of the Offer panel's Trade button, which went with feedback-7 spec §0")
     local sent = D.Actions(drop({ isMine = true, them = NONE }), { now = 100, offerTone = "sent" })
     assertEqual(byKey(sent, "ask").text, "Offered"); assertEqual(byKey(sent, "ask").state, "sent")
@@ -241,11 +246,11 @@ test("cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade
     -- No action in the first slot, gray, its reason in the tooltip (feedback-11 spec §1); an Ask too.
     local none = byKey(dead, "ask")
     assertEqual(none.text, "No action"); assertEqual(none.icon, "ban"); assertEqual(none.state, "none")
-    assertEqual(none.tip[1], "No action"); assertTrue(none.tip[2]:find("Bonus roll", 1, true) ~= nil)
+    assertEqual(T.tipPlainJoined(none.tip), "No action | • Why: not tradeable | • Rule: bonus roll loot | • Tradeable: no")
     local noAsk = byKey(D.Actions(drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }),
         { askState = "ready", now = 100, trade = OK_TRADE }), "ask")
     assertEqual(noAsk.text, "No action"); assertEqual(noAsk.icon, "ban"); assertFalse(noAsk.enabled)
-    assertEqual(noAsk.state, "none"); assertEqual(noAsk.tip[2], "It is not an upgrade for you.")
+    assertEqual(noAsk.state, "none"); assertEqual(P(noAsk.tip[2]), "• Why: not an upgrade for you")
     assertTrue(byKey(acts, "hide") == nil, "no Hide this item (feedback-4 spec §2)")
     local legacy = D.Actions(drop({ trade = { state = "no", reasonKey = "legacy" } }), { askState = "ready", now = 100, trade = OK_TRADE })
     assertFalse(byKey(legacy, "trade").enabled, "an item its looter can't trade")
@@ -369,7 +374,7 @@ test("card: the actions go through their host handlers; Trade is off with its re
     NS.RetryInspect(1)
     assertEqual(inspected[1][1], SETA); assertEqual(inspected[1][2], NS.Inspect.PRIORITY.looter)
     assertFalse(a.trade:IsEnabled()); assertEqual(textOf(a.trade.label), "Trade · out of range")
-    assertEqual(NS.Window.TooltipOf(a.trade)[2], "That player is out of trade range.")
+    assertEqual(P(NS.Window.TooltipOf(a.trade)[2]), "• Why: out of range")
     NS.TradeHelper.CanTradeWith = function() return true end
     NS.Window.Refresh()
     a = NS.WindowGroup.Drawn().card.actions

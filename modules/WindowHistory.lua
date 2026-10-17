@@ -63,20 +63,26 @@ local max, floor = math.max, math.floor
 
 WH.COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
-      tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
-    { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
+      tip = { TM.Row(L["Shows"], L["the drop"]),
+          TM.Hint(L["Hover its icon for the game's tooltip; shift-click links it, ctrl-click tries it on."]) } },
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = { TM.Row(L["Shows"], L["the drop's item level"]) } },
+    { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = { TM.Row(L["Shows"], L["where the drop is worn"]) } },
     { key = "armorType", label = L["Type"], width = 64, shed = 0,
-      tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
-    { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
+      tip = { TM.Row(L["Shows"], L["what kind of item it is"]),
+          TM.Row(L["Values"], L["Cloth, Leather, Mail, Plate, Jewelry, Trinkets, Cloak, Weapons"]) } },
+    { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = { TM.Row(L["Shows"], L["who looted it, in their class color"]) } },
     { key = "me", label = L["Me"], width = 70, shed = 6,
-      tip = L["The drop judged for you, as it was last judged while it was in the feed."] },
+      tip = { TM.Row(L["Shows"], L["the drop judged for you"]), TM.Row(L["As of"], L["its last judgment in the feed"]) } },
     { key = "them", label = L["Them"], width = 70, shed = 3,
-      tip = L["The drop judged for its looter, as it was last judged. In the same colors as Me: %s green, %s yellow, %s red."]:format(
-          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) },
-    { key = "trade", label = L["Trade"], width = 70, shed = 5, tip = L["The last trade estimate: Yes, Likely, Unknown or No."] },
+      tip = { TM.Row(L["Shows"], L["the drop judged for its looter"]), TM.Row(L["As of"], L["its last judgment in the feed"]),
+          TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
+              TM.Mark("downgrade"))) } },
+    { key = "trade", label = L["Trade"], width = 70, shed = 5,
+      tip = { TM.Row(L["Shows"], L["the last trade estimate"]), TM.Row(L["Values"], L["Yes, Likely, Unknown or No"]) } },
     { key = "outcome", label = L["Outcome"], width = 92,
-      tip = L["What became of it: seen, asked, offered, received, traded away, expired or declined. Right-click a row to mark it declined."] },
+      tip = { TM.Row(L["Shows"], L["what became of it"]),
+          TM.Row(L["Values"], L["seen, asked, offered, received, traded away, expired, declined"]),
+          TM.Hint(L["Right-click a row to mark it declined."]) } },
 }
 local GLYPH_COLS = { me = true, them = true }
 
@@ -85,13 +91,13 @@ local GLYPH_COLS = { me = true, them = true }
 -- (Received, Traded away), gray where nothing came of it (Seen, Declined, as No action), and red where
 -- it fell through (Expired, as Retry).
 local OUTCOME = {
-    seen       = { L["Seen"], "bad", L["Shown in the feed; nothing more happened."] },
-    asked      = { L["Asked"], "yellow", L["You asked its looter for it."] },
-    offered    = { L["Offered"], "yellow", L["You offered or announced your drop."] },
-    received   = { L["Received"], "good", L["A completed trade gave you this item."] },
-    tradedAway = { L["Traded away"], "good", L["A completed trade passed your drop on."] },
-    expired    = { L["Expired"], "red", L["Its trade window passed."] },
-    declined   = { L["Declined"], "bad", L["Marked declined by you."] },
+    seen       = { L["Seen"], "bad", L["shown in the feed, nothing more"] },
+    asked      = { L["Asked"], "yellow", L["you asked its looter for it"] },
+    offered    = { L["Offered"], "yellow", L["you offered or announced your drop"] },
+    received   = { L["Received"], "good", L["a completed trade gave it to you"] },
+    tradedAway = { L["Traded away"], "good", L["a completed trade passed it on"] },
+    expired    = { L["Expired"], "red", L["its trade window passed"] },
+    declined   = { L["Declined"], "bad", L["you marked it declined"] },
 }
 
 local NO_HISTORY = L["Drops from earlier encounters appear here."]
@@ -177,7 +183,7 @@ function WH.Outcome(drop)
     local o = OUTCOME[drop.outcome] or OUTCOME.seen
     local hint = drop.outcome == "declined" and L["Right-click to clear declined."]
         or L["Right-click to mark it declined."]
-    return { text = o[1], tone = o[2], tip = { L["Outcome: %s"]:format(o[1]), o[3], hint } }
+    return { text = o[1], tone = o[2], tip = { L["Outcome: %s"]:format(o[1]), TM.Row(L["Means"], o[3]), TM.Hint(hint) } }
 end
 
 --- The Them verdict alone (WH.ThemCell is the merged cell the table and the card draw): as the
@@ -189,7 +195,7 @@ function WH.ThemVerdict(drop)
     if drop.isMine or type(drop.them) == "table" then return WC.Them(drop) end
     local who = WC.ShortName(drop.looter.name)
     return { text = "?", tone = "muted", verdict = "unknown",
-        tip = { L["For %s: Unknown"]:format(who), L["Their gear was not read while the drop was in the feed."] } }
+        tip = { L["For %s: Unknown"]:format(who), TM.Row(L["Their gear"], L["not read while it was in the feed"]) } }
 end
 
 --- How long ago, in words: `40s`, `1h 59m`, then `1 day`, `3 days`.
@@ -224,7 +230,7 @@ function WH.Header(group, shown, now, situationLabel, collapsed, hidden, filter)
     if collapsed then text = text .. " " .. L["(collapsed)"] end
     local rows = WC.HeaderFacts(group, situationLabel, when, shown, hidden)
     return { text = text, tip = WC.HeaderTip(tostring(group.label or "?"), rows,
-        L["Kept in the history across sessions."], hidden, filter, collapsed) }
+        L["the history, kept across sessions"], hidden, filter, collapsed) }
 end
 
 local function visibleDrops(group, ctx, base)
@@ -501,7 +507,7 @@ local function buildHeads(pane)
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
         f.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as Loot History's (feedback-4 spec §4)
         f.text:SetText(col.label)
-        NS.Window.AttachTooltip(f, function() return col.label, col.tip end)
+        NS.Window.AttachTooltip(f, function() return col.label, unpack(col.tip) end)
         head.labels[col.key] = f
     end
     pane.colHead = head

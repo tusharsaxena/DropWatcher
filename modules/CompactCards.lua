@@ -48,6 +48,7 @@ local L  = NS.L
 local WC = NS.WindowCells
 local MC = NS.MineCells
 local SC = NS.SideCells
+local TM = NS.TipMarks
 
 local floor = math.floor
 
@@ -213,7 +214,7 @@ function CC.Looter(drop, ownRealm)
     local who = type(drop.looter) == "table" and drop.looter.name or nil
     local cross, realm = CC.CrossRealm(who, ownRealm)
     c.crossRealm = cross
-    if cross then c.tip[#c.tip + 1] = L["From another realm: %s."]:format(realm) end
+    if cross then c.tip[#c.tip + 1] = TM.Row(L["Realm"], realm) end
     return c
 end
 
@@ -239,11 +240,11 @@ end
 --- @return table cell
 function CC.Freshness(drop, now)
     if drop.isMine then
-        return { text = DASH, tone = "muted", tip = { L["Inspect"], L["Your own drop: your gear is always current."] } }
+        return { text = DASH, tone = "muted", tip = { L["Inspect"], TM.Row(L["Your gear"], L["always current"]) } }
     end
     local who = WC.ShortName(type(drop.looter) == "table" and drop.looter.name or nil)
     return { text = freshText(drop.inspect, now), tone = "muted",
-        tip = { L["Inspect of %s"]:format(who), WC.InspectLine(drop.inspect, who, now) } }
+        tip = WC.Append({ L["Inspect of %s"]:format(who) }, WC.InspectRows(drop.inspect, now)) }
 end
 
 --- Line 1's freshness as the card draws it (feedback-10 spec §2): `(2m)`, `(cached)`, `(range)`, or nil
@@ -307,12 +308,12 @@ end
 function CC.When(at, nowEpoch, dateFn)
     at, nowEpoch = num(at), num(nowEpoch)
     if not (at and type(dateFn) == "function") then
-        return { text = "?", tone = "muted", tip = { L["When"], L["The time it dropped was not kept."] } }
+        return { text = "?", tone = "muted", tip = { L["When"], TM.Row(L["Dropped"], L["not kept"]) } }
     end
     local recent = nowEpoch and nowEpoch - at < DAY
     local text = recent and dateFn("%H:%M", at) or dayOf(dateFn, at)
-    local tip = { L["When"], dateFn("%Y-%m-%d %H:%M", at) }
-    if nowEpoch then tip[#tip + 1] = NS.WindowHistory.Ago(nowEpoch - at) end
+    local tip = { L["When"], TM.Row(L["Dropped"], dateFn("%Y-%m-%d %H:%M", at)) }
+    if nowEpoch then tip[3] = TM.Row(L["That is"], NS.WindowHistory.Ago(nowEpoch - at)) end
     return { text = text, tone = "muted", tip = tip }
 end
 

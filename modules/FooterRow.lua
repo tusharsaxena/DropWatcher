@@ -142,9 +142,10 @@ end
 
 local function foldTip(b)
     if b.foldState == "collapse" then
-        return L["Collapse all"], L["Close every group this tab shows."]
+        return L["Collapse all"], NS.TipMarks.Row(L["Closes"], L["every group this tab shows"])
     end
-    return L["Expand all"], L["Open every group this tab shows. Collapse all closes them again."]
+    return L["Expand all"], NS.TipMarks.Row(L["Opens"], L["every group this tab shows"]),
+        NS.TipMarks.Hint(L["Collapse all closes them again."])
 end
 
 --- Build a strip's Expand all / Collapse all. `apply(collapse)` sets the tab's headers and repaints.

@@ -256,7 +256,7 @@ test("test mode data: off-spec samples show every off-spec verdict, an empty slo
             assertTrue(s.trade.state ~= "no", "a tradeable sample: " .. off.verdict)
             local ask = NS.WindowCells.Ask(s, nil, nil, false)
             if askable then assertEqual(ask.template, "askOffSpec", off.verdict)
-            else assertEqual(ask.tip[2], "It is not an upgrade for you.", off.verdict) end
+            else assertEqual(T.tipPlain(ask.tip[2]), "• Why: not an upgrade for you", off.verdict) end
         elseif s.me.verdict == "cantUse" then
             assertTrue(s.me.offSpec == nil, "no off-spec rescue")
             if s.me.reasons[1].key == "armorType" then armorRefusal = true end
@@ -323,9 +323,9 @@ test("window: test mode shows an off-spec verdict, cyan with the spec's name, an
             assertTrue((textOf(r.cells.me.text) or ""):find("Holy", 1, true) ~= nil, "the spec's name")
             assertEqual(select(2, r.cells.me.text:GetTextColor()), NS.Constants.TONE.offspec.g, "in the offspec cyan")
             local words = {}
-            for _, l in ipairs(r.cells.me.tipLines) do if type(l) == "string" then words[#words + 1] = l end end
+            for _, l in ipairs(r.cells.me.tipLines) do if type(l) == "string" then words[#words + 1] = T.tipPlain(l) end end
             local tip = table.concat(words, "\n")
-            assertTrue(tip:find("Protection can't use it", 1, true) ~= nil, tip)
+            assertTrue(tip:find("• Protection: can't use it", 1, true) ~= nil, tip)
             local rows = NS.DetailCells.ForYou(d, nil, "PALADIN").rows
             assertEqual(rows[1].key, "spec"); assertEqual(rows[1].text, "Holy (off-spec): Protection can't use it")
         end

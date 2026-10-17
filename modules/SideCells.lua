@@ -29,8 +29,8 @@ local _, NS = ...
 -- THE TOOLTIP (feedback-7 spec §3) is the verdict's title, then the worn gear as a grid
 -- (NS.TipMarks.GearRows: `[Name] [ilvl] [worn item] [▲diff]`, a row per worn item, the arrow on the
 -- one the drop would replace, `empty` for a slot worn empty), then the gear's own lines (the
--- inspect's age, or why nothing was read) and the verdict's (its explanation, the track, the score
--- and the reasons). The verdict's own one-row grid gives way to the gear's; with no gear listed it
+-- inspect's age, or why nothing was read) and the verdict's (its Means, Track, Score and Why rows:
+-- feedback-21). The verdict's own one-row grid gives way to the gear's; with no gear listed it
 -- stays. A line already said is not said twice.
 --
 -- PURE. Every composer takes the drop record and plain inputs and answers a plain table; nothing here
@@ -147,7 +147,7 @@ function SC.Them(drop, gear, now, revealed)
     local v = WC.Them(drop, now)
     if not v.offSpec then return SC.Merge(v, WC.TheirEq(drop, gear, now)) end
     local eq = OC.Eq(v)
-    eq.tip[#eq.tip + 1] = WC.InspectLine(drop.inspect, WC.ShortName(type(drop.looter) == "table" and drop.looter.name or nil), now)
+    WC.Append(eq.tip, WC.InspectRows(drop.inspect, now))
     return SC.Merge(v, eq)
 end
 
@@ -191,12 +191,12 @@ local function candidateEq(drop, e, insp, now)
             c.text = DASH
         end
     end
-    if ok then c.tip[#c.tip + 1] = WC.InspectLine(insp, e.short, now) end
+    if ok then WC.Append(c.tip, WC.InspectRows(insp, now)) end
     return c
 end
 
 -- The verdict part of one candidate: WindowCells.Verdict's for a judged one, else `…` or
--- `Unavailable`; the status's explanation (MineCells.Candidates' `explain`) under the title.
+-- `Unavailable`; the status's explanation (MineCells.Candidates' `explain`, a row) under the title.
 local UNREAD = { checking = { "…", L["Checking"] }, unavailable = { L["Unavailable"], L["Unavailable"] } }
 
 local function candidateVerdict(drop, e)

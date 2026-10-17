@@ -86,8 +86,9 @@ local function byShort(list, short)
     for _, e in ipairs(list) do if e.short == short then return e end end
 end
 
+-- Whether the tooltip carries `line`, read plain (a row's colors out: feedback-21).
 local function has(tip, line)
-    for _, l in ipairs(tip) do if T.tipText(l) == line then return true end end
+    for _, l in ipairs(tip) do if T.tipPlain(l) == line then return true end end
     return false
 end
 
@@ -146,9 +147,9 @@ end)
 test("off-spec offer: each off-spec status explains itself", function()
     local MC = addon().MineCells
     local list = MC.Candidates(drop())
-    assertEqual(byShort(list, "Kaelith").explain, "An upgrade for one of their other specs (off-spec).")
-    assertEqual(byShort(list, "Fourth").explain, "About what one of their other specs has there (off-spec): within the sidegrade band.")
-    assertEqual(byShort(list, "Sixa").explain, "Their class or spec cannot use it.", "a plain Can't use is unchanged")
+    assertEqual(T.tipPlain(byShort(list, "Kaelith").explain), "• For them: an upgrade for another of their specs (off-spec)")
+    assertEqual(T.tipPlain(byShort(list, "Fourth").explain), "• For them: about what another of their specs has there (off-spec)")
+    assertEqual(T.tipPlain(byShort(list, "Sixa").explain), "• For them: their class or spec can't use it", "a plain Can't use is unchanged")
 end)
 
 -- ── Upgrade for N and the keep-hidden rule stay main-spec only ──────────────────────────────
@@ -188,8 +189,8 @@ test("off-spec offer: the candidate cell is cyan with the spec's name, 311 ▲14
     assertEqual(c.glyph, "▲"); assertEqual(c.text, "14 Holy"); assertEqual(c.tone, "offspec")
     assertEqual(c.offSpec, HOLY); assertEqual(c.mainVerdict, "cantUse"); assertEqual(c.verdict, "upgrade")
     assertEqual(#c.items, 1); assertEqual(c.items[1].link, MACE)
-    assertTrue(has(c.tip, "An upgrade for one of their other specs (off-spec)."), "the status's explanation")
-    assertTrue(has(c.tip, "Protection can't use it: Its primary stat does not suit the spec."), "what the main spec cannot do")
+    assertTrue(has(c.tip, "• For them: an upgrade for another of their specs (off-spec)"), "the status's explanation")
+    assertTrue(has(c.tip, "• Protection: can't use it (its primary stat doesn't suit the spec)"), "what the main spec cannot do")
 end)
 
 test("off-spec offer: the candidate cell's gear is the item compared with, not the main spec's worn pair", function()
@@ -197,7 +198,7 @@ test("off-spec offer: the candidate cell's gear is the item compared with, not t
     local read = { status = "fresh", at = 60, gear = { [16] = { link = WORN, ilvl = 300 }, [17] = { link = SHIELD, ilvl = 318 } } }
     local c = cell(NS, cand("Kaelith", "PALADIN", "ready", cantMain(off())), read)
     assertEqual(c.level, "311", "not the 300/318 Protection wears"); assertEqual(#c.items, 1)
-    assertTrue(has(c.tip, "Inspected 40s ago."), "the read's age is kept")
+    assertTrue(has(c.tip, "• Inspected: 40s ago"), "the read's age is kept")
     local side = cell(NS, cand("Fourth", "PALADIN", "ready", cantMain(off({ verdict = "sidegrade", ilvlDelta = 1 }))), read)
     assertEqual(side.glyph .. side.text, "≈1 Holy"); assertEqual(side.tone, "offspec")
     local empty = cell(NS, cand("Empty", "PALADIN", "ready",
@@ -261,5 +262,5 @@ test("off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cy
     assertEqual(select(2, k.eq.glyph:GetTextColor()), TONE.offspec.g, "the glyph in the offspec cyan")
     assertEqual(select(3, k.eq.text:GetTextColor()), TONE.offspec.b, "and the difference with the spec's name")
     assertTrue(k.offer:IsShown()); assertEqual(textOf(k.offer.label), "Offer")
-    assertTrue(NS.Window.TooltipOf(p.panel.note)[2]:find("off%-spec upgrades and equals") ~= nil, "the order note names the tier")
+    assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(p.panel.note)):find("off%-spec upgrades and equals") ~= nil, "the order note names the tier")
 end)

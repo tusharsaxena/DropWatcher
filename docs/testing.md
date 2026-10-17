@@ -462,7 +462,7 @@ stop or automatic stop repainting it, Run all, Pause and Resume, Restart and Sto
 the picker starting the chosen scenario with a raid's count, and the dragged position remembered,
 forgotten by Reset position and the panel hidden at stand-down),
 `test_diagnostics`, `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
-entry in `locales/enUS.lua`, the key-on-miss fallback bypassed; one direction only, since some keys
+entry in `locales/enUS.lua` or `locales/enUS_Settings.lua`, the key-on-miss fallback bypassed; one direction only, since some keys
 are reached dynamically; review F07, decision D8). Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

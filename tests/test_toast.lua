@@ -69,7 +69,8 @@ test("toast: Compose answers the four rows' parts (feedback-9 spec §0)", functi
     assertEqual(t.trade, "Likely tradeable"); assertEqual(t.tradeTone, "good")
     assertEqual(t.reason, "not an upgrade for Seta")
     assertEqual(t.tip[1], "Trade: Likely")
-    assertEqual(t.tip[2], NS.WindowCells.TradeReason(drop().trade, "Seta"))
+    assertEqual(t.tip[2], NS.WindowCells.Trade(drop()).tip[2], "the Trade cell's rows")
+    assertEqual(T.tipPlain(t.tip[2]), "• Rule: personal loot")
 end)
 
 test("toast: Compose keeps the table's words, the empty slot and each trade reason", function()
@@ -205,7 +206,7 @@ test("toast edge: the four rows beside a four-row icon, painted (feedback-9 spec
     -- The tooltip is the Trade cell's: the full reason.
     local tip = NS.Window.TooltipOf(f)
     assertEqual(tip[1], "Trade: Likely")
-    assertEqual(tip[2], "Personal loot: it is not an upgrade for Seta, so they may trade it.")
+    assertEqual(T.tipPlainJoined({ tip[2], tip[3] }), "• Rule: personal loot | • For Seta: not an upgrade, so they may trade it")
     -- The arrow texture and the signed gain are gone; no glyph is drawn in the default face.
     for _, r in ipairs(f.__regions) do
         local tx = r.__objType == "FontString" and r.__text

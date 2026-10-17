@@ -7,7 +7,9 @@
 -- carries → ▲ ▼ ≈ ⊘ or ⊕ outside a grid's glyph cell (drawn in the monospace face). Then the arrow between two values (TM.Arrow) and the drawn-width count
 -- (TM.Chars), and the same audit over every text drawn in the default face (DW-F5): the detail card's
 -- chips and rows and the Offer panel take textures (the toast's default-face audit is in test_toast);
--- only monospace text keeps glyphs.
+-- only monospace text keeps glyphs. THE ROWS (feedback-21): TM.Row, TM.Hint and TM.BULLET's strings,
+-- a case per tooltip family asserting the row shape (after the title, rows, grids and a closing hint,
+-- never prose), and the test-mode audit asserting it over every tooltip the window attaches.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -81,6 +83,158 @@ test("tip marks: a non-wrapping line and its text; names in class and quality co
         "else the link's own color")
     assertEqual(TM.ItemName("Treads", nil, "|cnIQ4:|Hitem:1::|h[Treads]|h|r"), "|cnIQ4:Treads|r", "a named color too")
     assertEqual(TM.ItemName("Treads", nil, nil), "Treads", "else plain")
+end)
+
+-- THE ROW SHAPE (feedback-21): after its title a tooltip is rows (`• Label: value`, the bullet and
+-- the label in the idle gray), grids, and at the end a closing hint (unbulleted, all gray); never a
+-- line of prose.
+local IDLE = "|cff9e9ea3"
+local function isRow(line) return line:sub(1, #IDLE + #"•") == IDLE .. "•" end
+local function isHint(line) return not isRow(line) and line:sub(1, #IDLE) == IDLE and line:sub(-2) == "|r" end
+
+local function assertRowShape(tip, where)
+    local hinted = false
+    for i, line in ipairs(tip) do
+        if i > 1 and type(line) == "string" then
+            local plain = T.tipPlain(line)
+            assertTrue(isRow(line) or isHint(line), where .. ": not a row or a hint: " .. plain)
+            assertFalse(hinted and isRow(line), where .. ": a row after the closing hint: " .. plain)
+            hinted = hinted or isHint(line)
+        end
+    end
+end
+
+-- ── the rows (feedback-21) ──────────────────────────────────────────────────────────────────
+
+test("tip marks: a row is `• Label: value`, the bullet and label gray, the value plain or in its tone", function()
+    local TM = T.newAddon().TipMarks
+    assertEqual(TM.BULLET, "•", "a character the tooltip face draws: the media library has no dot-like icon")
+    assertEqual(TM.Bullet(), "|cff9e9ea3•|r")
+    assertEqual(TM.Row("Rule", "personal loot"), "|cff9e9ea3• Rule:|r personal loot")
+    assertEqual(TM.Row("Inspected", 40), "|cff9e9ea3• Inspected:|r 40", "a value need not be a string")
+    assertEqual(TM.Row("Ending soon", "then Seta keeps it", "warn"), "|cff9e9ea3• Ending soon:|r |cffffa626then Seta keeps it|r")
+    assertEqual(TM.Row("Rule", "x", "nope"), "|cff9e9ea3• Rule:|r x", "an unknown tone: plain")
+    assertTrue(TM.Row("Rule", nil) == nil, "no value: the row drops out")
+    assertEqual(TM.Row(nil, "Pawn: on"), "|cff9e9ea3•|r Pawn: on", "no label: the bullet and the value")
+    assertEqual(TM.Hint("Click to cancel it."), "|cff9e9ea3Click to cancel it.|r", "the closing hint: gray, no bullet")
+    assertEqual(T.tipPlain(TM.Row("Rule", "personal loot")), "• Rule: personal loot")
+    assertEqual(TM.Chars(TM.Row("Rule", "x")), #"• Rule: x" - 2, "color codes draw nothing (the bullet is 3 bytes, 1 character)")
+    assertTrue(isRow(TM.Row("Rule", "x")) and isHint(TM.Hint("x")) and not isHint(TM.Row("Rule", "x")))
+end)
+
+-- A judged drop: an upgrade for you, a downgrade for its looter, likely tradeable.
+local LINK = "|cffa335ee|Hitem:212::|h[Crown of Roaring Storms]|h|r"
+local function rowDrop(over)
+    local d = {
+        id = 1, at = 100, link = LINK, isMine = false, sources = { chat = 1 },
+        looter = { name = "Seta-Realm", guid = "Player-1-0000000A", classFile = "PRIEST" },
+        facts = { ilvl = 311, equipLoc = "INVTYPE_HEAD", quality = 4, track = { name = "Hero", rank = 2, max = 6 } },
+        me = { verdict = "upgrade", ilvlDelta = 19, reasons = {}, baseline = { link = LINK, ilvl = 292 } },
+        them = { verdict = "downgrade", ilvlDelta = -13, reasons = { { key = "uniqueEquipped" } } },
+        trade = { state = "likely", reasonKey = "notUpgrade", args = { 311, 324 }, basis = "inspect", age = 40 },
+        inspect = { status = "fresh", at = 60 },
+    }
+    for k, v in pairs(over or {}) do d[k] = v end
+    return d
+end
+
+local function shapes(list, where)
+    for i, tip in ipairs(list) do assertRowShape(tip, where .. " #" .. i) end
+end
+
+test("tip rows: the table's cells (WindowCells, SideCells) are rows, the Trade cell's reason one row per fact", function()
+    local NS = T.newAddon()
+    local WC, SC = NS.WindowCells, NS.SideCells
+    local d, mine = rowDrop(), rowDrop({ isMine = true })
+    local tips = { WC.Trade(d).tip, WC.Me(d).tip, WC.Them(d, 100).tip, WC.Item(d).tip, WC.Ilvl(d).tip, WC.Slot(d).tip,
+        WC.ArmorType(d).tip, WC.Looter(d).tip, WC.MyEq(d, {}).tip, WC.TheirEq(d, nil, 100).tip, WC.Them(mine, 100).tip,
+        WC.Them(rowDrop({ them = false, inspect = { status = "failed", reason = "timeout" } }), 100).tip,
+        WC.Ask(d, "ready").tip, WC.Ask(d, "queued").tip, WC.Ask(d, "failed", "busy").tip, WC.Ask(mine, "ready").tip,
+        WC.Ask(rowDrop({ trade = { state = "no", reasonKey = "bonusRoll" } }), "ready").tip,
+        WC.Header({ key = "e", label = "Boss", kind = "encounter", at = 40 }, 1, 100, "Dungeon", false,
+            { { drop = d, why = "search" } }, {}).tip,
+        SC.Me(d, {}).tip, SC.Them(d, nil, 100).tip }
+    for _, key in ipairs({ "boe", "warbound", "bonusRoll", "legacy", "groupLoot", "badFacts", "expired", "timer", "error",
+        "upgradeForLooter", "upgradeForYou", "noInspect" }) do
+        tips[#tips + 1] = WC.Trade(rowDrop({ trade = { state = "no", reasonKey = key, args = { 311, 300 } } })).tip
+    end
+    shapes(tips, "cells")
+    -- the worked example's shape (feedback-21): a row per fact, never a sentence
+    for i = 2, #tips[1] do assertTrue(not T.tipPlain(tips[1][i]):find("%. "), T.tipPlain(tips[1][i])) end
+end)
+
+test("tip rows: your own drop's cells and buttons (MineCells) and the off-spec cells are rows", function()
+    local NS = T.newAddon()
+    local MC, OC, WC = NS.MineCells, NS.OffSpecCells, NS.WindowCells
+    local own = rowDrop({ isMine = true, trade = { state = "yes", reasonKey = "timer", basis = "timer", expiresAt = 200 } })
+    local off = rowDrop({ me = { verdict = "cantUse", reasons = { { key = "primaryStat" } },
+        offSpec = { specID = 65, verdict = "upgrade", change = { ilvlDelta = 9 } } } })
+    shapes({ MC.TradeWindow(own, 100, 600).tip, MC.TradeWindow(rowDrop(), 100, 600).tip, MC.Details(own).tip,
+        MC.OwnTrade(own).tip, MC.OwnOffer(own, "sent").tip, MC.OfferButton("queued", nil, "Seta").tip,
+        MC.AnnounceButton("failed", "busy").tip, MC.Summary({ own }, 100).tip, MC.PanelHeader(own, 100).tip,
+        WC.Me(off).tip, WC.Ask(off, "ready").tip, OC.SpecRow(NS.OffSpec.Of(off.me)).tip }, "mine and off-spec")
+end)
+
+test("tip rows: the detail card's chips, sides, trade box and actions (DetailCells) are rows", function()
+    local NS = T.newAddon()
+    local DC = NS.DetailCells
+    local d = rowDrop()
+    local tips = {}
+    local function add(list) for _, x in ipairs(list) do tips[#tips + 1] = x.tip end end
+    add(DC.Chips(d))
+    add(DC.ForYou(d, "weights").rows); add(DC.ForLooter(d, { status = "fresh", at = 60 }, "Discipline", 100).rows)
+    add(DC.ForLooter(rowDrop({ isMine = true }), nil, nil, 100).rows)
+    add(DC.Actions(d, { askState = "sent", inspect = { status = "pending" }, now = 100, trade = { ok = false, reason = "range" } }))
+    tips[#tips + 1] = DC.TradeBox(d).tip
+    shapes(tips, "detail card")
+end)
+
+test("tip rows: the compact cards and chrome (CompactCards, CompactChrome) are rows", function()
+    local NS = T.newAddon()
+    local CC, CH = NS.CompactCards, NS.CompactChrome
+    local d = rowDrop({ looter = { name = "Seta-Argent Dawn", classFile = "PRIEST" } })
+    shapes({ CC.Freshness(d, 100).tip, CC.Freshness(rowDrop({ isMine = true }), 100).tip, CC.Looter(d, "Realm").tip,
+        CC.When(100, 200, function() return "17:02" end).tip, CC.When(nil, 200).tip,
+        CH.FiltersTip({ quality = "Quality: Rare+", content = "This session" }, { "quality" }),
+        CH.FooterTip(NS.WindowFooter.Compose({ members = 4, good = 3, lastLootAgo = 60, situation = "dungeon", pawn = "on" })) },
+        "compact")
+end)
+
+test("tip rows: History's cells and card (WindowHistory, HistoryCard) are rows", function()
+    local NS = T.newAddon()
+    local WH, HC = NS.WindowHistory, NS.HistoryCard
+    local d = rowDrop({ outcome = "asked", group = { label = "Boss", kind = "encounter" } })
+    local m = HC.Model(d, { nowEpoch = 200, dateFn = function() return "2026-10-18 17:02" end })
+    local tips = { WH.Outcome(d).tip, WH.ThemVerdict(rowDrop({ them = false })).tip,
+        WH.Header({ label = "Boss", kind = "run", at = 0 }, 1, nil, nil, false).tip, m.trade.tip }
+    for _, key in ipairs({ "me", "them", "where" }) do for _, r in ipairs(m[key].rows) do tips[#tips + 1] = r.tip end end
+    for _, a in ipairs(m.actions) do tips[#tips + 1] = a.tip end
+    for _, c in ipairs(m.chips) do tips[#tips + 1] = c.tip end
+    shapes(tips, "history")
+end)
+
+test("tip rows: the column headers and the Offer panel's columns are rows, the settings keep their prose", function()
+    local NS = T.newAddon()
+    for _, cols in ipairs({ NS.WindowGroup.COLUMNS, NS.WindowHistory.COLUMNS, NS.OfferPanel.COLS }) do
+        for _, col in ipairs(cols) do assertRowShape({ col.label, unpack(col.tip) }, "column " .. col.key) end
+    end
+    for _, col in ipairs(NS.WindowGroup.COLUMNS) do
+        if col.key ~= "item" then assertTrue(type(col.desc) == "string" and col.desc:find("%.$"), col.key .. "'s settings prose") end
+    end
+end)
+
+test("tip rows: the chrome's own tooltips (title bar, footer, simulator panel) are rows", function()
+    local NS = T.newAddon()
+    local TB, WF = NS.WindowTitleBar, NS.WindowFooter
+    local tips = { { TB.ScanTip() }, { TB.TestTip() } }
+    local seg = WF.Compose({ members = 0, situation = "solo", tracking = false, pawn = "off" })
+    for _, s in pairs(seg) do tips[#tips + 1] = s.tip end
+    local sim = WF.Compose({ members = 4, good = 4, sim = { members = 4 }, situation = "raid", lastLootAgo = 5 })
+    for _, s in pairs(sim) do tips[#tips + 1] = s.tip end
+    local steps = { { kind = "pull" }, { kind = "loot", n = 2 }, { kind = "kill" }, { kind = "lockdownOn" } }
+    for _, r in ipairs(NS.SimPanel.Compose({ running = true, ready = true, scenario = "dungeon", steps = steps, pos = 1,
+        now = 30, startedAt = 10 })) do tips[#tips + 1] = r.tip end
+    shapes(tips, "chrome")
 end)
 
 -- ── the tooltip (modules/Window.lua) ────────────────────────────────────────────────────────
@@ -276,14 +430,17 @@ test("audit: no column tooltip on Drops or History carries a verdict glyph; thei
     local NS = T.newAddon()
     for _, cols in ipairs({ NS.WindowGroup.COLUMNS, NS.WindowHistory.COLUMNS }) do
         for _, col in ipairs(cols) do
-            assertTrue(glyphIn(col.tip) == nil, col.key .. ": " .. (glyphIn(col.tip) or ""))
+            local tip = T.tipJoined(col.tip)
+            assertTrue(glyphIn(tip) == nil, col.key .. ": " .. (glyphIn(tip) or ""))
+            assertTrue(glyphIn(col.desc or "") == nil, col.key .. "'s settings description")
         end
     end
     local me = NS.WindowGroup.COLUMNS[6]
     assertEqual(me.key, "me")
-    assertTrue(me.tip:find(NS.TipMarks.Mark("upgrade") .. " upgrade (green)", 1, true) ~= nil, me.tip)
-    assertTrue(me.tip:find(NS.TipMarks.Mark("sidegrade") .. " sidegrade (yellow)", 1, true) ~= nil)
-    assertTrue(me.tip:find(NS.TipMarks.Mark("downgrade") .. " downgrade (red)", 1, true) ~= nil)
+    local TM = NS.TipMarks
+    assertTrue(T.tipJoined(me.tip):find(("%s upgrade, %s sidegrade, %s downgrade"):format(TM.Mark("upgrade"),
+        TM.Mark("sidegrade"), TM.Mark("downgrade")), 1, true) ~= nil, "the Colors row: each mark a tinted texture")
+    assertTrue(me.desc:find(TM.Mark("upgrade") .. " upgrade (green)", 1, true) ~= nil, "the settings prose too")
 end)
 
 test("audit: no localized string in the addon's source puts a verdict glyph in a tooltip", function()
@@ -338,16 +495,18 @@ end
 local function auditTips(NS, widgets, where)
     local n = 0
     for _, w in ipairs(widgets) do
-        for _, line in ipairs(NS.Window.TooltipOf(w)) do
+        local tip = NS.Window.TooltipOf(w)
+        for _, line in ipairs(tip) do
             local text = faceText(NS, line)
             assertTrue(glyphIn(text) == nil, where .. ": " .. text)
             n = n + 1
         end
+        assertRowShape(tip, where .. " (" .. tostring(tip[1]) .. ")")
     end
     return n
 end
 
-test("audit: every tooltip of test mode's drops, both layouts, the detail card and History is glyph-free", function()
+test("audit: every tooltip of test mode's drops, both layouts, the detail card and History is glyph-free and in rows", function()
     local NS, _, m = T.enableAddon()
     local widgets = attached(NS)
     m.seedGearJournal()

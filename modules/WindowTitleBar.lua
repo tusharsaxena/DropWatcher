@@ -26,13 +26,18 @@ local REASON_LABEL = {
     encounter = L["Encounter"], challengeMode = L["Mythic+ key"], pvpMatch = L["PvP match"],
     chat = L["Chat restricted"], chatLockdown = L["Chat lockdown"], combat = L["Combat"],
 }
+-- Each restriction's rows (feedback-21): why, what it holds back, and what becomes of an ask.
 local REASON_TIP = {
-    encounter     = L["A boss encounter is in progress: addons cannot whisper or inspect until it ends. Asks wait in the queue and are sent then."],
-    challengeMode = L["A Mythic+ key is running: addon chat is restricted until it ends. Asks wait in the queue and are sent then."],
-    pvpMatch      = L["A PvP match is in progress: addon chat is restricted until it ends. Asks wait in the queue."],
-    chat          = L["The client restricts addon chat right now. Asks wait in the queue and are sent once it lifts."],
-    chatLockdown  = L["Chat messaging is locked down right now. Asks wait in the queue and are sent once it lifts."],
-    combat        = L["You are in combat: inspects and trades wait until it ends. Asks are still sent."],
+    encounter     = { { L["Why"], L["a boss encounter is in progress"] }, { L["Blocked"], L["whispers and inspects"] },
+        { L["Asks"], L["wait in the queue, sent when it ends"] } },
+    challengeMode = { { L["Why"], L["a Mythic+ key is running"] }, { L["Blocked"], L["addon chat"] },
+        { L["Asks"], L["wait in the queue, sent when it ends"] } },
+    pvpMatch      = { { L["Why"], L["a PvP match is in progress"] }, { L["Blocked"], L["addon chat"] },
+        { L["Asks"], L["wait in the queue"] } },
+    chat          = { { L["Why"], L["the client restricts addon chat"] }, { L["Asks"], L["wait in the queue, sent once it lifts"] } },
+    chatLockdown  = { { L["Why"], L["chat messaging is locked down"] }, { L["Asks"], L["wait in the queue, sent once it lifts"] } },
+    combat        = { { L["Why"], L["you are in combat"] }, { L["Waiting"], L["inspects and trades, until it ends"] },
+        { L["Asks"], L["still sent"] } },
 }
 local KIND_LABEL = { ask = L["Ask"], offer = L["Offer"], announce = L["Announce"] }
 local BADGE_LIST_MAX = 8
@@ -62,47 +67,56 @@ end
 
 local function badgeTooltip()
     local reason = NS.Window.RestrictionReason()
+    local TM = NS.TipMarks
     local lines = { TB.BadgeText(reason, 0) or L["Not restricted"] }
-    if REASON_TIP[reason] then lines[2] = REASON_TIP[reason] end
+    for _, r in ipairs(REASON_TIP[reason] or {}) do lines[#lines + 1] = TM.Row(r[1], r[2]) end
     local queued = queuedAsks()
     for i, a in ipairs(queued) do
         if i > BADGE_LIST_MAX then
-            lines[#lines + 1] = L["and %d more"]:format(#queued - BADGE_LIST_MAX)
+            lines[#lines + 1] = TM.Row(L["Queued"], L["%d more"]:format(#queued - BADGE_LIST_MAX))
             break
         end
-        lines[#lines + 1] = L["Queued: %s to %s"]:format(KIND_LABEL[a.kind] or tostring(a.kind), tostring(a.target))
+        lines[#lines + 1] = TM.Row(L["Queued"], L["%s to %s"]:format(KIND_LABEL[a.kind] or tostring(a.kind), tostring(a.target)))
     end
     return unpack(lines)
 end
 
 local function minimizeTip()
+    local TM = NS.TipMarks
     if NS.Window.IsMinimized() then
-        return L["Expand"], L["Show the whole window again. Double-clicking the title bar does the same."]
+        return L["Expand"], TM.Row(L["Shows"], L["the whole window again"]),
+            TM.Hint(L["Double-clicking the title bar does the same."])
     end
-    return L["Minimize"], L["Collapse the window to its title bar. Its position is kept, and a counter shows the drops that arrive meanwhile."]
+    return L["Minimize"], TM.Row(L["Collapses"], L["the window to its title bar"]), TM.Row(L["Position"], L["kept"]),
+        TM.Row(L["Counter"], L["the drops that arrive meanwhile"])
 end
 
 -- The layout toggle's tooltip: what a click switches to, and the setting that stores it.
 local function modeTip()
-    local WC = NS.WindowCompact
+    local WC, TM = NS.WindowCompact, NS.TipMarks
     local compact = WC.Mode() == "compact"
     local lines = compact
-        and { L["Full view"], L["Show the full window again, with every column of the drop tables. /dw full does the same."] }
-        or { L["Compact view"], L["Show the window narrow, each drop a short card, so it stays out of the way. /dw compact does the same."] }
-    lines[#lines + 1] = L["Stored as the Layout setting on the Window settings page."]
+        and { L["Full view"], TM.Row(L["Shows"], L["the full window, every column of the drop tables"]),
+            TM.Row(L["Typed"], L["/dw full"]) }
+        or { L["Compact view"], TM.Row(L["Shows"], L["the window narrow, each drop a short card"]),
+            TM.Row(L["Typed"], L["/dw compact"]) }
+    lines[#lines + 1] = TM.Row(L["Stored as"], L["Window settings, Layout"])
     if WC.InRun() then
-        lines[#lines + 1] = L["Open in compact view during a run is holding it compact until this run ends."]
+        lines[#lines + 1] = TM.Row(L["Held compact"], L["until this run ends (Open in compact view during a run)"])
     end
     return unpack(lines)
 end
 
 --- Scan group's tooltip, on the Drops strip's button.
 function TB.ScanTip()
-    return L["Scan group"], L["Inspects every other member of your group, one at a time and out of combat, so each drop can be judged for its looter."]
+    local TM = NS.TipMarks
+    return L["Scan group"], TM.Row(L["Inspects"], L["every other member of your group"]),
+        TM.Row(L["When"], L["one at a time, out of combat"]), TM.Row(L["So"], L["each drop is judged for its looter"])
 end
 
 local function newTip()
-    return L["%d new"]:format(NS.Window.NewCount()), L["Drops that arrived since you minimized the window. Expand it to see them."]
+    return L["%d new"]:format(NS.Window.NewCount()), NS.TipMarks.Row(L["Arrived"], L["since you minimized the window"]),
+        NS.TipMarks.Hint(L["Expand it to see them."])
 end
 
 --- Test mode's text color: Ka0s Loot History's bright red (feedback spec §1, FB-3).
@@ -118,18 +132,21 @@ TB.MODE_GAP = 10
 function TB.SimTip()
     local st = NS.Sim.Status()
     local scenario = st.active and tostring(st.scenario) or L["none"]
+    local TM = NS.TipMarks
     return L["Simulation"],
-        L["Scenario: %s (%s)"]:format(scenario, NS.WindowFooter.SituationLabel(st.situation)),
-        L["A made-up group session runs through the real engine: nothing is sent, and your saved history is not touched."],
-        L["/dw sim lists its verbs; /dw sim stop ends it."]
+        TM.Row(L["Scenario"], ("%s (%s)"):format(scenario, NS.WindowFooter.SituationLabel(st.situation))),
+        TM.Row(L["Runs"], L["a made-up group session, through the real engine"]),
+        TM.Row(L["Sent"], L["nothing"]), TM.Row(L["Your history"], L["not touched"]),
+        TM.Hint(L["/dw sim lists its verbs; /dw sim stop ends it."])
 end
 
 --- Test mode's title text and banner (design spec §11.6, board 06 E) share one tooltip.
 function TB.TestTip()
+    local TM = NS.TipMarks
     return L["Test mode"],
-        L["Sample drops of real items show every verdict, trade, inspect and ask state, so the layout can be checked anywhere."],
-        L["Ask, Offer and Announce print their text in your chat frame instead of sending it."],
-        L["Combat ends it, and so do /dw test, the launcher menu and the Master controls checkbox."]
+        TM.Row(L["Shows"], L["sample drops of real items, in every state"]),
+        TM.Row(L["Ask, Offer, Announce"], L["print in your chat frame, never sent"]),
+        TM.Row(L["Ended by"], L["combat, /dw test, the launcher menu, Master controls"])
 end
 
 -- ── buttons ─────────────────────────────────────────────────────────────────────────────────

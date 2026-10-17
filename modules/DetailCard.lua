@@ -386,7 +386,7 @@ local function paintTrade(t, model)
     paintChip(t.chip, { text = model.chip.text, tone = model.chip.tone, tip = model.tip })
     t.text:SetText(model.text)
     t.meta:SetText(model.meta)
-    t.tipLines = { model.tip[1], model.text, model.meta, model.tip[2] }
+    t.tipLines = model.tip
 end
 DCard.PaintSide, DCard.PaintTrade = paintSide, paintTrade
 
@@ -495,10 +495,11 @@ local SENDERS = {
     announce = function(e, opts) NS.PressAnnounce(e.dropId, opts) end,
 }
 
+-- The Send button's rows by what the box sends: where the text goes, then its limit.
 local SEND_TIP = {
-    ask = L["Whisper the looter this text. One ask per item per looter."],
-    offer = L["Whisper this member this text. One offer per item per member."],
-    announce = L["Post this text to the group's channel."],
+    ask = { { L["Whispers"], L["the looter"] }, { L["Limit"], L["one per item per looter"] } },
+    offer = { { L["Whispers"], L["this member"] }, { L["Limit"], L["one per item per member"] } },
+    announce = { { L["Posts to"], L["the group's channel"] } },
 }
 
 local function sendEditor(e)
@@ -512,11 +513,15 @@ local function editorButtons(e)
     e.send = NS.Window.TextButton(e, 80, "chat", L["Send"], function() sendEditor(e) end)
     e.send:SetPoint("BOTTOMRIGHT", e, "BOTTOMRIGHT", -10, 10)
     NS.Window.AttachTooltip(e.send, function()
-        return L["Send"], SEND_TIP[e.kind]
+        local out = { L["Send"] }
+        for _, r in ipairs(SEND_TIP[e.kind] or {}) do out[#out + 1] = NS.TipMarks.Row(r[1], r[2]) end
+        return unpack(out)
     end)
     e.cancel = NS.Window.TextButton(e, 80, "cancel", L["Cancel"], function() e:Hide() end)
     e.cancel:SetPoint("RIGHT", e.send, "LEFT", -6, 0)
-    NS.Window.AttachTooltip(e.cancel, function() return L["Cancel"], L["Close the box without sending."] end)
+    NS.Window.AttachTooltip(e.cancel, function()
+        return L["Cancel"], NS.TipMarks.Row(L["Closes"], L["the box, without sending"])
+    end)
 end
 
 local function editorBox(e)

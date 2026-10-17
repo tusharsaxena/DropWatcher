@@ -47,11 +47,14 @@ local panel   -- built on the first Open
 -- The columns (feedback-7 spec §0): Their eq is at least the Drops table's Them width, so
 -- `321/308 ▼13` and two icons fit; Actions holds the Offer button.
 local COLS = {
-    { key = "member", label = L["Member"], x = 8, tip = L["A member of your group, in their class color."] },
+    { key = "member", label = L["Member"], x = 8, tip = { TM.Row(L["Shows"], L["a member of your group, in their class color"]) } },
     { key = "eq", label = L["Their eq"], x = 124,
-      tip = L["What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."]:format(
-          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) .. " " .. NS.OffSpecCells.LEGEND },
-    { key = "actions", label = L["Actions"], x = 314, tip = L["Offer whispers them your offer template for this item."] },
+      tip = { TM.Row(L["Shows"], L["what they wear there (two for rings, trinkets, one-hand weapons), its item level"]),
+          TM.Row(L["Then"], L["your drop judged for them, and the item-level difference"]),
+          TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
+              TM.Mark("downgrade"))),
+          NS.OffSpecCells.Legend(), TM.Hint(L["Hover for why."]) } },
+    { key = "actions", label = L["Actions"], x = 314, tip = { TM.Row(L["Offer"], L["whispers them your offer template"]) } },
 }
 OP.COLS = COLS
 
@@ -154,7 +157,7 @@ local function buildHeads(p)
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
         f.text:SetText(col.label)
         f.text:SetTextColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
-        NS.Window.AttachTooltip(f, function() return col.label, col.tip end)
+        NS.Window.AttachTooltip(f, function() return col.label, unpack(col.tip) end)
         p.heads[col.key] = f
     end
 end
@@ -281,9 +284,9 @@ end
 local function noOffer(drop)
     if drop.trade and drop.trade.state == "no" then
         local WC = NS.WindowCells
-        return WC.NoAction(L["Not tradeable: %s"]:format(WC.TradeReason(drop.trade, L["you"])))
+        return WC.NoAction(WC.Append({ TM.Row(L["Why"], L["not tradeable"]) }, WC.TradeRows(drop.trade, L["you"])))
     end
-    return NS.WindowCells.NoAction(L["Offer is shown for members it is an upgrade or an equal for."])
+    return NS.WindowCells.NoAction({ TM.Row(L["Offer"], L["for members it upgrades or equals"]) })
 end
 
 local function paintButtons(row, e, drop)
@@ -311,7 +314,7 @@ local function paintRow(row, e, drop, now)
     row.guid = e.guid
     NS.WindowGroup.ClassTone(row.member.text, e.classFile, "plain")
     row.member.text:SetText(e.short)
-    row.member.tipLines = { e.short, e.name ~= e.short and tostring(e.name) or L["A member of your group."] }
+    row.member.tipLines = { e.short, TM.Row(L["Name"], tostring(e.name)) }
     NS.WindowGroup.PaintSide(row.eq, SC.Candidate(drop, e, readOf(drop, e), now))
     paintButtons(row, e, drop)
 end
@@ -343,11 +346,13 @@ local function paintFoot(p, drop, n)
     if not tradeable then
         p.announce:SetEnabled(false)
         p.announce:SetAlpha(0.5)
-        p.announce.tipLines = { L["Announce to group"], L["Not tradeable, so there is nothing to announce."] }
+        p.announce.tipLines = { L["Announce to group"], TM.Row(L["Tradeable"], L["no"]), TM.Row(L["To announce"], L["nothing"]) }
     end
     p.note.text:SetText(L["%d members · sorted by gain"]:format(n))
     setTone(p.note.text, "muted")
-    p.note.tipLines = { L["Order"], L["Upgrades first, by how much they gain; then equal, then off-spec upgrades and equals, no upgrade, can't use, checking and unavailable. The list scrolls in a raid."] }
+    p.note.tipLines = { L["Order"], TM.Row(L["First"], L["upgrades, by how much they gain"]),
+        TM.Row(L["Then"], L["equals, off-spec upgrades and equals"]),
+        TM.Row(L["Last"], L["no upgrade, can't use, checking, unavailable"]), TM.Hint(L["The list scrolls in a raid."]) }
 end
 
 --- Repaint the panel from its drop, or close it when the drop is gone. Called by Window.Refresh.

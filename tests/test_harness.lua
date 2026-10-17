@@ -31,7 +31,8 @@ test("harness: the addon's file list is the TOC's, Namespace first and Profiles 
     local files = T.loadAddon.tocFiles
     assertTrue(#files >= 20, "the TOC lists the addon's files")
     assertEqual(files[1], "locales/enUS.lua")
-    assertEqual(files[2], "core/Namespace.lua")
+    assertEqual(files[2], "locales/enUS_Settings.lua", "the settings panel's strings, peeled at the cap")
+    assertEqual(files[3], "core/Namespace.lua")
     assertEqual(files[#files], "settings/Profiles.lua")
 end)
 

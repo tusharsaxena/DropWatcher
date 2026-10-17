@@ -102,26 +102,49 @@ WG.TRADE_WINDOW_PAD = 6
 WG.SIDE = { ICON_GAP = 2, LEVEL_GAP = 4, VERDICT_GAP = 4, GLYPH_GAP = 3 }
 
 -- The default columns, left to right (design spec §11.1). `flex` takes the width the others leave.
+-- `tip` is the header's tooltip rows (feedback-21); `desc` the prose the settings panel's Columns
+-- checkbox shows for it (settings/SchemaRows.lua), which stays prose.
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
 -- also on the row's detail card. Item and Actions never go.
 WG.COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
-      tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
-    { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
+      tip = { TM.Row(L["Shows"], L["the drop"]),
+          TM.Hint(L["Hover its icon for the game's tooltip; shift-click links it, ctrl-click tries it on."]) } },
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = { TM.Row(L["Shows"], L["the drop's item level"]) },
+      desc = L["The drop's item level."] },
+    { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = { TM.Row(L["Shows"], L["where the drop is worn"]) },
+      desc = L["Where the drop is worn."] },
     { key = "armorType", label = L["Type"], width = 64, shed = 0,
-      tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
-    { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
+      tip = { TM.Row(L["Shows"], L["what kind of item it is"]),
+          TM.Row(L["Values"], L["Cloth, Leather, Mail, Plate, Jewelry, Trinkets, Cloak, Weapons"]) },
+      desc = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
+    { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = { TM.Row(L["Shows"], L["who looted it, in their class color"]) },
+      desc = L["Who looted it, in their class color."] },
     { key = "me", label = L["Me"], width = 127, shed = 7,
-      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
-          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) .. " " .. NS.OffSpecCells.LEGEND },
+      desc = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade"))
+          .. " " .. L["Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."],
+      tip = { TM.Row(L["Shows"], L["what you wear there (two for rings, trinkets, one-hand weapons), its item level"]),
+          TM.Row(L["Then"], L["the drop judged for you, and the item-level difference"]),
+          TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
+              TM.Mark("downgrade"))),
+          NS.OffSpecCells.Legend(), TM.Hint(L["Hover an icon for the item."]) } },
     { key = "them", label = L["Them"], width = 127, shed = 5,
-      tip = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."] },
-    { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+      desc = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."],
+      tip = { TM.Row(L["Shows"], L["what the looter wears there, its item level"]),
+          TM.Row(L["Then"], L["the drop judged for them, in the same colors"]),
+          TM.Row(L["Your own drop"], L["Upgrade for N, who it would help"]), TM.Hint(L["Hover for how old their read is."]) } },
+    { key = "trade", label = L["Trade"], width = 70, shed = 6,
+      tip = { TM.Row(L["Shows"], L["whether the looter can trade it"]), TM.Row(L["Values"], L["Yes, Likely, Unknown or No"]) },
+      desc = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
     { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3,
-      tip = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] },
+      desc = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."],
+      tip = { TM.Row(L["Shows"], L["the time left to trade it, over its bar"]),
+          TM.Row(L["Exact"], L["your own item, once it is in your bags"]), TM.Row(L["Estimated"], L["from when it dropped"]),
+          TM.Row(L["Amber and bold"], L["ending soon"]) } },
     { key = "actions", label = L["Actions"], width = K.ASK_W,
-      tip = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."] },
+      desc = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."],
+      tip = { TM.Row(L["Shows"], L["Ask the looter for it, once"]), TM.Row(L["Your own drop"], L["Offer, who it would help"]) } },
 }
 local WHITE = { r = 1, g = 1, b = 1 }   -- an untoned button's label (GameFontHighlightSmall)
 
@@ -791,7 +814,7 @@ local function buildHeads(pane)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
         f.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as Loot History's (feedback-4 spec §4)
-        NS.Window.AttachTooltip(f, function() return f.label, col.tip end)
+        NS.Window.AttachTooltip(f, function() return f.label, unpack(col.tip) end)
         head.labels[col.key] = f
     end
     pane.colHead = head

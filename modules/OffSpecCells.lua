@@ -8,11 +8,11 @@ local _, NS = ...
 -- THE CELL (OC.Verdict) is what NS.WindowCells.Verdict answers when its eval carries an off-spec
 -- part: the off-spec glyph and difference (▲ ≈ ▼) in the offspec tone for every off-spec verdict;
 -- `verdict` is the off-spec verdict, `offSpec` its spec id, `mainVerdict` the main `cantUse` and
--- `spec` the spec's name, which NS.SideCells writes after the difference. Its tooltip says what the
--- main spec cannot do and what the drop was compared with: "Off-spec upgrade for Holy",
--- "Protection can't use it: Its primary stat does not suit the spec.", "Compared with your best
--- Holy item: Bag Mace 291." (`their` on the looter's side), the comparison's grid row, the track and
--- the off-spec pass's own reasons.
+-- `spec` the spec's name, which NS.SideCells writes after the difference. Its tooltip's rows say
+-- what the main spec cannot do and what the drop was compared with (feedback-21): "Off-spec upgrade
+-- for Holy", "• Protection: can't use it (its primary stat doesn't suit the spec)", "• Compared
+-- with: your best Holy item, Bag Mace 291" (`their` on the looter's side), the comparison's grid
+-- row, the Track row and the off-spec pass's own reasons as Why rows.
 --
 -- THE GEAR HALF (OC.Eq) of the Me cell is the off-spec baseline, not your worn gear: the bag or worn
 -- item the drop was compared with, or `empty`. A bag item carries no inventory slot, so its icon's
@@ -23,7 +23,7 @@ local _, NS = ...
 -- modules/HistoryCard.lua's, read from the off-spec part.
 --
 -- THE ASK (feedback-19 spec §2). OC.AskTip is the Ask button's tooltip when it fills the
--- `askOffSpec` template: "Ask for it for your Holy off-spec."
+-- `askOffSpec` template: "• For: your Holy off-spec".
 --
 -- PURE but for the spec names: plain tables in, plain tables out; a spec's name is read at call time
 -- from NS.Compat.SpecName (the client's GetSpecializationInfoByID), with words when it gives none.
@@ -38,8 +38,9 @@ local TM = NS.TipMarks
 local TONE = "offspec"
 OC.TONE = TONE
 
---- The legend's line (the Me column's tooltip, the Offer panel's Their eq).
-OC.LEGEND = L["Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."]
+--- The legend's row (the Me column's tooltip, the Offer panel's Their eq), read at call time.
+--- @return string
+function OC.Legend() return TM.Row(L["Cyan"], L["an off-spec upgrade (another of your specs can use it)"]) end
 
 local TITLE = {
     upgrade = L["Off-spec upgrade for %s"], sidegrade = L["Off-spec sidegrade for %s"],
@@ -71,10 +72,10 @@ local function refusal(eval)
     return nil
 end
 
-local function cantLine(eval, off)
+local function cantRow(eval, off)
     local why = refusal(eval)
-    if why then return L["%s can't use it: %s"]:format(mainName(off), why) end
-    return L["%s can't use it."]:format(mainName(off))
+    if why then return TM.Row(mainName(off), L["can't use it (%s)"]:format(why)) end
+    return TM.Row(mainName(off), L["can't use it"])
 end
 
 -- What the drop was compared with: `Bag Mace 291`, `291`, or an empty slot. A History snapshot
@@ -92,16 +93,9 @@ local function baseWords(off, ilvl)
     return name and ("%s %s"):format(name, level) or level
 end
 
-local function compareLine(side, spec, off, ilvl)
-    local fmt = side == "me" and L["Compared with your best %s item: %s."] or L["Compared with their best %s item: %s."]
-    return fmt:format(spec, baseWords(off, ilvl))
-end
-
-local function trackLine(td)
-    if type(td) ~= "table" then return nil end
-    if td.sign > 0 then return L["Upgrade track: a higher track or rank."] end
-    if td.sign < 0 then return L["Upgrade track: a lower track or rank."] end
-    return L["Upgrade track: the same track and rank."]
+local function compareRow(side, spec, off, ilvl)
+    local fmt = side == "me" and L["your best %s item, %s"] or L["their best %s item, %s"]
+    return TM.Row(L["Compared with"], fmt:format(spec, baseWords(off, ilvl)))
 end
 
 -- The comparison as one grid row, as the main verdict's, its arrow in the offspec tone.
@@ -114,13 +108,11 @@ local function gridLine(off, ilvl, who)
 end
 
 local function tipOf(eval, off, side, title, ilvl, who, spec)
-    local lines = { ("%s: %s"):format(title, TITLE[off.verdict]:format(spec)), cantLine(eval, off),
-        compareLine(side, spec, off, ilvl) }
+    local lines = { ("%s: %s"):format(title, TITLE[off.verdict]:format(spec)), cantRow(eval, off),
+        compareRow(side, spec, off, ilvl) }
     lines[#lines + 1] = gridLine(off, ilvl, who)
-    lines[#lines + 1] = trackLine(off.trackDelta)
-    for _, r in ipairs(type(off.reasons) == "table" and off.reasons or {}) do
-        lines[#lines + 1] = WC.EVAL_REASON[r.key] or tostring(r.key)
-    end
+    lines[#lines + 1] = WC.TrackRow(off.trackDelta)
+    WC.ReasonRows(off.reasons, lines)
     return lines
 end
 
@@ -172,9 +164,9 @@ function OC.SpecRow(off, side)
     local them = side == "them"
     return { key = them and "offSpec" or "spec", label = L["Spec"], tone = TONE,
         text = L["%s (off-spec): %s can't use it"]:format(OC.SpecName(off.specID), mainName(off)),
-        tip = { L["Spec"], them
-            and L["Their current spec can't use it, so it is judged for another spec of their class, on their worn item level alone."]
-            or L["Your current spec can't use it, so it is judged for another spec of your class, on item level alone."] } }
+        tip = { L["Spec"], TM.Row(L["Current spec"], L["can't use it"]),
+            TM.Row(L["Judged for"], them and L["another spec of their class"] or L["another spec of your class"]),
+            TM.Row(L["Judged on"], them and L["their worn item level alone"] or L["item level alone"]) } }
 end
 
 --- The Ask button's tooltip for an off-spec ask (feedback-19 spec §2, NS.WindowCells.Ask's
@@ -184,7 +176,7 @@ end
 --- @return string title, string ...
 function OC.AskTip(drop, who)
     local off = NS.OffSpec.Of(type(drop) == "table" and drop.me or nil)
-    return L["Ask for off-spec"], L["Ask for it for your %s off-spec."]:format(OC.SpecName(off and off.specID)),
-        L["Whisper %s your For off-spec template: your current spec can't use it."]:format(who),
-        L["One ask per item per looter."]
+    return L["Ask for off-spec"], TM.Row(L["For"], L["your %s off-spec"]:format(OC.SpecName(off and off.specID))),
+        TM.Row(L["Whispers"], who), TM.Row(L["Template"], L["For off-spec"]),
+        TM.Row(L["Why"], L["your current spec can't use it"]), TM.Row(L["Limit"], L["one per item per looter"])
 end

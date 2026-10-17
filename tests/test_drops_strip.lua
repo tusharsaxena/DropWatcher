@@ -126,7 +126,7 @@ test("drops tab: the tabs are Drops and History, and the retired `mine` opens Dr
     assertEqual(textOf(f.tabs.group.label), "Drops", "no count on the label")
     assertEqual(textOf(f.tabs.history.label), "History")
     local tip = W.TooltipOf(f.tabs.group)
-    assertEqual(tip[1], "Drops"); assertTrue(tip[2]:find("your own included", 1, true) ~= nil, tip[2])
+    assertEqual(tip[1], "Drops"); assertEqual(T.tipPlain(tip[2]), "• Holds: every drop your group receives, yours included")
     W.SelectTab("history")
     assertEqual(W.ActiveTab(), "history")
     assertTrue(W.SelectTab("mine"), "a stored `mine` still opens a tab")

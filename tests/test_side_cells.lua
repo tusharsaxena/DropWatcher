@@ -43,10 +43,12 @@ local TRINKET = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }
 
 local function SC() return T.newAddon().SideCells end
 
+-- Whether the tooltip carries `line`, read plain (a row's colors out: feedback-21).
 local function has(tip, line)
-    for _, l in ipairs(tip) do if l == line then return true end end
+    for _, l in ipairs(tip) do if l == line or T.tipPlain(l) == line then return true end end
     return false
 end
+local P = T.tipPlain
 
 -- ── the composers ───────────────────────────────────────────────────────────────────────────
 
@@ -124,15 +126,15 @@ test("side cells: the tooltip is the verdict's title, the worn gear as a grid, t
     assertEqual(me.tip[1], "For you: Upgrade")
     assertEqual(T.tipText(me.tip[2]), "|cff40c7ebYou|r  292  " .. OLD_BAND .. "  ▲19", "[Name] [ilvl] [item] [arrow and difference]")
     assertEqual(me.tip[2].grid[1][4].tone, "good", "the glyph and the difference in the verdict's tone")
-    assertEqual(me.tip[3], "A higher item level, and a higher score when scoring is on.")
+    assertEqual(P(me.tip[3]), "• Means: a higher item level (and score, when scored)")
     assertFalse(has(me.tip, "You wear"), "the X wears line gives way to the grid")
     for _, l in ipairs(me.tip) do assertTrue(T.tipText(l):find("against", 1, true) == nil, "no comparison prose: " .. T.tipText(l)) end
     local them = S.Them(drop(), HERS, 100)
     assertEqual(them.tip[1], "For Seta: Downgrade")
     assertEqual(T.tipText(them.tip[2]), "|cffffffffSeta|r  324  " .. OLD_BAND .. "  ▼13", "the looter in their class color")
     assertEqual(them.tip[2].grid[1][4].tone, "red")
-    assertEqual(them.tip[3], "Inspected 40s ago.", "the read's age after the grid")
-    assertEqual(them.tip[4], "A lower item level and no score gain.")
+    assertEqual(P(them.tip[3]), "• Inspected: 40s ago", "the read's age after the grid")
+    assertEqual(P(them.tip[4]), "• Means: a lower item level, no score gain")
     local range = S.Them(drop({ them = NONE, inspect = { status = "outOfRange" } }), nil, 100)
     local seen = {}
     for _, l in ipairs(range.tip) do
@@ -248,10 +250,10 @@ test("side cells: the Offer panel's Their eq reads like Them: both worn items fr
     local up = candidate(NS, mine(), entry("ready", { verdict = "upgrade", ilvlDelta = 15, baseline = base, reasons = {} }), read)
     assertEqual(#up.items, 2, "both trinkets from the inspect read"); assertEqual(up.level, "298/296"); assertEqual(up.levelTone, "plain")
     assertEqual(up.glyph .. up.text, "▲15"); assertEqual(up.tone, "good")
-    assertEqual(up.tip[1], "For Butterz: Upgrade"); assertTrue(has(up.tip, "Inspected 40s ago."), "the read's age")
+    assertEqual(up.tip[1], "For Butterz: Upgrade"); assertTrue(has(up.tip, "• Inspected: 40s ago"), "the read's age")
     assertEqual(T.tipText(up.tip[2]), "|cff40c7ebButterz|r  298  " .. OLD_BAND .. "\n296  " .. OLDER_BAND .. "  ▲15",
         "both trinkets from the read, the arrow on the one judged against")
-    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, "An upgrade for them: a higher item level than what they wear there."),
+    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, "• For them: a higher item level than they wear there"),
         "the old pill's explanation moved into the tooltip")
     local noRead = candidate(NS, mine(), entry("ready", { verdict = "downgrade", ilvlDelta = -4, baseline = base, reasons = {} }))
     assertEqual(#noRead.items, 1, "without a read, the item it was judged against"); assertEqual(noRead.items[1].link, OLD2)
@@ -267,7 +269,7 @@ test("side cells: the Offer panel's Their eq says Can't use, …, Unavailable an
     assertTrue(cant.level == nil, "no dash beside the word"); assertEqual(cant.text, "Can't use"); assertEqual(cant.tone, "redMuted")
     local checking = candidate(NS, mine(), entry("checking"))
     assertEqual(checking.text, "…"); assertEqual(checking.tone, "muted"); assertEqual(checking.tip[1], "Butterz: Checking")
-    assertEqual(checking.tip[2], "Their gear is being inspected; the verdict follows.")
+    assertEqual(P(checking.tip[2]), "• For them: their gear is being inspected")
     local gone = candidate(NS, mine(), entry("unavailable"))
     assertEqual(gone.text, "Unavailable"); assertEqual(gone.tone, "muted"); assertTrue(#gone.tip >= 2)
     local unknown = candidate(NS, mine(), entry("ready", { verdict = "unknown", reasons = {} }))
@@ -404,9 +406,9 @@ test("widths: the column set and the shed order keep Me and Them where the verdi
     for _, col in ipairs(WG.COLUMNS) do
         if col.key == "me" or col.key == "them" then
             assertEqual(col.label, col.key == "me" and "Me" or "Them")
-            assertTrue(col.tip:find("wears", 1, true) ~= nil or col.tip:find("wear", 1, true) ~= nil,
-                col.key .. "'s tooltip describes the gear half")
-            assertTrue(col.tip:find("judged", 1, true) ~= nil, col.key .. "'s tooltip describes the verdict half")
+            local tip = T.tipPlainJoined(col.tip)
+            assertTrue(tip:find("wear", 1, true) ~= nil, col.key .. "'s tooltip describes the gear half")
+            assertTrue(tip:find("judged", 1, true) ~= nil, col.key .. "'s tooltip describes the verdict half")
         end
     end
 end)

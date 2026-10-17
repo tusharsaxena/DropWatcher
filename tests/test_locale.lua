@@ -1,4 +1,5 @@
--- tests/test_locale.lua — locales/enUS.lua carries every string the code routes through NS.L
+-- tests/test_locale.lua — locales/enUS.lua (with locales/enUS_Settings.lua, the settings panel's
+-- strings peeled out of it at the layout-§1 cap) carries every string the code routes through NS.L
 -- (localization-§1, §3; review F07, decision D8). The key-on-miss fallback answers an absent key with
 -- itself, so a missing entry renders fine on enUS and hides from the translator's base; this suite
 -- reads the table RAW so the fallback cannot answer for it.
@@ -7,7 +8,7 @@
 -- The reverse is not asserted, because some keys are reached dynamically (core/SimSeam.lua's
 -- `L[line]`, the refusal and situation-label tables) and have no literal call site.
 --
--- red under: delete any one entry from locales/enUS.lua
+-- red under: delete any one entry from locales/enUS.lua or locales/enUS_Settings.lua
 
 local T = _G.DW_TEST
 local test, assertTrue = T.test, T.assertTrue
@@ -23,11 +24,12 @@ local function addonFiles()
     return out
 end
 
--- enUS.lua's table, loaded against a stub namespace, metatable stripped.
+-- The enUS files' table, loaded in TOC order against a stub namespace, metatable stripped.
+local ENUS_FILES = { "locales/enUS.lua", "locales/enUS_Settings.lua" }
+
 local function enUS()
-    local chunk = assert(loadfile("locales/enUS.lua"))
     local NS = {}
-    chunk("DropWatcher", NS)
+    for _, path in ipairs(ENUS_FILES) do assert(loadfile(path))("DropWatcher", NS) end
     local L = NS.L
     assertTrue(type(L) == "table", "locales/enUS.lua publishes NS.L")
     return L

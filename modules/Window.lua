@@ -59,9 +59,10 @@ local TAB_SET = { group = true, history = true }
 -- A retired tab's key opens the tab that took its drops.
 local TAB_ALIAS = { mine = "group" }
 local TAB_LABEL = { group = L["Drops"], history = L["History"] }
+-- Each tab's tooltip rows (feedback-21): { label, value } pairs.
 local TAB_TIP = {
-    group   = L["Every drop your group receives, your own included, one row each, grouped by boss or key run."],
-    history = L["Drops from earlier encounters, kept across sessions."],
+    group   = { { L["Holds"], L["every drop your group receives, yours included"] }, { L["Grouped by"], L["boss or key run"] } },
+    history = { { L["Holds"], L["drops from earlier encounters"] }, { L["Kept"], L["across sessions"] } },
 }
 -- What a tab with no body yet says, so the window is never blank.
 local TAB_PLACEHOLDER = {
@@ -283,7 +284,9 @@ end
 
 -- A tab's tooltip: its label and what it holds.
 local function tabTip(key)
-    return TAB_LABEL[key], TAB_TIP[key]
+    local out = { TAB_LABEL[key] }
+    for _, r in ipairs(TAB_TIP[key] or {}) do out[#out + 1] = NS.TipMarks.Row(r[1], r[2]) end
+    return unpack(out)
 end
 
 --- RestrictionChanged's last reason; before the first one, the tracker's own answer. Nil while

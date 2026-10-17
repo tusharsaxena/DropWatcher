@@ -339,7 +339,7 @@ local function window()
     local columns = { page = "window", group = L["Columns"], onChange = repaintWindow }
     for _, col in ipairs(NS.WindowGroup.COLUMNS) do
         if col.key ~= "item" then
-            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.tip, columns)
+            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.desc, columns)
         end
     end
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }

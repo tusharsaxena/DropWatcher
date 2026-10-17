@@ -65,7 +65,8 @@ local function CC() return T.newAddon().CompactCards end
 -- A tooltip's lines joined; a non-wrapping line (NS.TipMarks.NoWrap) by its text, a grid by its cells.
 local function joined(tip) return T.tipJoined(tip) end
 
-local function has(tip, words) return joined(tip):find(words, 1, true) ~= nil end
+-- Whether the tooltip, read plain (a row's colors out: feedback-21), carries `words`.
+local function has(tip, words) return T.tipPlainJoined(tip):find(words, 1, true) ~= nil end
 
 -- ── the pieces ──────────────────────────────────────────────────────────────────────────────
 
@@ -128,7 +129,7 @@ test("compact cards: a cross-realm looter takes no mark, the realm in the toolti
     local other = C.Looter(groupDrop({ looter = { name = "Bùnian-Argent Dawn", classFile = "DRUID" } }), "Realm")
     -- red under: the ⊕ after the name (feedback-20 retired it)
     assertEqual(other.text, "Bùnian"); assertTrue(other.crossRealm); assertTrue(other.mark == nil)
-    assertTrue(has(other.tip, "From another realm: Argent Dawn."))
+    assertTrue(has(other.tip, "• Realm: Argent Dawn"))
     assertFalse(C.Looter(groupDrop({ looter = { name = "Bùnian-ArgentDawn" } }), "Argent Dawn").crossRealm,
         "realms compare normalized")
     assertFalse(C.Looter(groupDrop(), nil).crossRealm, "your realm unknown: no mark")
@@ -138,21 +139,21 @@ end)
 test("compact cards: inspect freshness reads its age or state, dimmed, and the tooltip says why", function()
     local C = CC()
     local cases = {
-        { { status = "fresh", at = NOW - 120 }, "2m", "Inspected 2m ago." },
-        { { status = "cached", at = NOW - 600 }, "cached", "From the inspect cache, read 10m ago." },
-        { { status = "pending" }, "…", "Waiting to inspect Lysandra" },
-        { { status = "outOfRange" }, "range", "out of range" },
-        { { status = "combatParked" }, "combat", "combat to end" },
-        { { status = "failed", reason = "timeout" }, "!", "no answer came" },
-        { { status = "unavailable" }, "–", "not in your group" },
-        { NONE, "…", "Waiting to inspect" },
-        { { status = "fresh" }, "fresh", "Inspected." },
+        { { status = "fresh", at = NOW - 120 }, "2m", "• Inspected: 2m ago" },
+        { { status = "cached", at = NOW - 600 }, "cached", "• Inspected: 10m ago | • Source: the inspect cache" },
+        { { status = "pending" }, "…", "• Inspect: waiting (one inspect at a time)" },
+        { { status = "outOfRange" }, "range", "• Inspect: out of range" },
+        { { status = "combatParked" }, "combat", "• Inspect: waiting for combat to end" },
+        { { status = "failed", reason = "timeout" }, "!", "• Inspect: failed (no answer came)" },
+        { { status = "unavailable" }, "–", "• Inspect: not in your group" },
+        { NONE, "…", "• Inspect: waiting" },
+        { { status = "fresh" }, "fresh", "• Inspected: age not known" },
     }
     for _, c in ipairs(cases) do
         local f = C.Freshness(groupDrop({ inspect = c[1] }), NOW)
         assertEqual(f.text, c[2], c[2]); assertEqual(f.tone, "muted", c[2])
         assertEqual(f.tip[1], "Inspect of Lysandra")
-        assertTrue(has(f.tip, c[3]), c[2] .. ": " .. joined(f.tip))
+        assertTrue(has(f.tip, c[3]), c[2] .. ": " .. T.tipPlainJoined(f.tip))
     end
     local mine = C.Freshness(groupDrop({ isMine = true }), NOW)
     assertEqual(mine.text, "–"); assertTrue(has(mine.tip, "always current"))
@@ -257,7 +258,7 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
     assertTrue(card.ask.offer and card.ask.offered)
     assertEqual(lines[3], "You 321/308 ▼13  Them No upgrades  Trade Likely")
     assertEqual(card.them.tone, "muted", "nobody's upgrade")
-    assertTrue(has(card.them.tip, "Nobody else in your group."))
+    assertTrue(has(card.them.tip, "• Group: nobody else in it"))
     assertEqual(lines[2], "Me [YOU] · Trinket · Trinkets  Offer",
         "your own name marked (feedback-7 spec §2); line 2's button is Offer (feedback-10 spec §2)")
     assertEqual(card.looter.you, "[YOU]"); assertEqual(card.looter.text, "Me")
@@ -265,7 +266,7 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
         trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), groupCtx())
     assertEqual(C.Plain(dead)[2], "Me [YOU] · Trinket · Trinkets  No action", "where it cannot be traded")
     assertTrue(C.Plain(dead)[3]:find("Trade No$") ~= nil, C.Plain(dead)[3])
-    assertTrue(has(dead.ask.tip, "Bonus roll loot"))
+    assertTrue(has(dead.ask.tip, "• Rule: bonus roll loot"))
 end)
 
 test("compact cards: your own drop's trade tooltip counts its upgrades and Them names them, unless kept", function()
@@ -274,16 +275,16 @@ test("compact cards: your own drop's trade tooltip counts its upgrades and Them 
     local card = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, candidates = candidates(2) }),
         groupCtx({ offerTone = "sent" }))
     assertEqual(card.trade.text, "Likely", "the count is in the tooltip, not the cell (feedback-7 spec §2)")
-    assertTrue(has(card.trade.tip, "Upgrades 2 members: Offer shows who."))
+    assertTrue(has(card.trade.tip, "• Upgrades: 2 members | Offer shows who."))
     assertEqual(card.them.text, "Upgrade for 2"); assertEqual(card.them.tone, "good")
-    assertTrue(has(card.them.tip, "|cffffffffSeta|r  169  "), "a priest's name in white, a grid row (feedback-7 spec §3)")
+    assertTrue(joined(card.them.tip):find("|cffffffffSeta|r  169  ", 1, true) ~= nil, "a priest's name in white, a grid row (feedback-7 spec §3)")
     assertEqual(card.ask.text, "Offered"); assertEqual(card.ask.state, "sent")
     -- An upgrade for you (the keep? rule): no count and Hidden until its Offer panel is opened.
     local up = { verdict = "upgrade", ilvlDelta = 9, reasons = {} }
     local kept = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, me = up, candidates = candidates(2) }),
         groupCtx())
     assertEqual(kept.trade.text, "Likely"); assertEqual(kept.them.text, "Hidden")
-    assertTrue(has(kept.them.tip, "nobody is offered it unless you choose to"))
+    assertTrue(has(kept.them.tip, "• Offered to: nobody, unless you choose"))
     local shown = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, me = up, candidates = candidates(2) }),
         groupCtx({ revealed = true }))
     assertEqual(shown.trade.text, "Likely"); assertEqual(shown.them.text, "Upgrade for 2")
@@ -304,7 +305,7 @@ test("compact cards: a different upgrade track is in the verdict's tooltip, not 
     local d = groupDrop({ me = { verdict = "upgrade", ilvlDelta = 6, reasons = {}, trackDelta = { sign = 1 } } })
     local card = C.Group(d, groupCtx())
     assertEqual(C.HalfText(card.you), "You 321/308 ▲6")
-    assertTrue(has(card.you.tip, "Upgrade track: a higher track or rank."))
+    assertTrue(has(card.you.tip, "• Track: a higher track or rank"))
     assertTrue(has(card.ilvl.tip, "Champion 4/8"))
 end)
 
@@ -384,7 +385,7 @@ test("compact cards: a kept drop whose looter was never read, and your own kept 
     local C = NS.CompactCards
     local unread = C.History(historyDrop(NS, { them = NONE }), { nowEpoch = 1000000, dateFn = fakeDate })
     assertEqual(C.HalfText(unread.them), "Them ?")
-    assertTrue(has(unread.them.tip, "was not read while the drop was in the feed"))
+    assertTrue(has(unread.them.tip, "• Their gear: not read while it was in the feed"))
     local mine = C.History(historyDrop(NS, { isMine = true, them = NONE }), { nowEpoch = 1000000, dateFn = fakeDate })
     assertEqual(C.HalfText(mine.them), "Them –")
 end)
@@ -420,7 +421,7 @@ test("compact cards: a filter that hides drops reads `1 of 2`, the hidden ones i
     local hidden = { { drop = groupDrop(), why = "view" } }
     local h = C.Header(encounter(), 1, NOW, "Dungeon", false, hidden, { view = "upgrades" })
     assertTrue(stripColor(h.text):find(" · 3m · 1 of 2 · ", 1, true) ~= nil, h.text)
-    assertTrue(has(h.tip, "Hidden by the filters:"))
+    assertTrue(has(h.tip, "• Hidden: "))
     assertTrue(stripColor(joined(h.tip)):find("Drops  2 · 1 shown", 1, true) ~= nil, "the reconciling counts")
     assertFalse(has(h.tip, "yours"), "no `yours` count (feedback-5 spec §2)")
     assertEqual(C.Count(0, nil), "0"); assertEqual(C.Count(3, {}), "3")
@@ -471,5 +472,5 @@ test("compact cards: the History header reads days once a day old, its tooltip t
     local h = C.HistoryHeader(g, 4, 1000000, "Dungeon", false)
     assertEqual(stripColor(h.text), "Gate of the S… · Commander Ri'… · Timewalking · 2d · 4 · Tiamât")
     assertTrue(has(h.tip, "2 days ago"))
-    assertTrue(has(h.tip, "Kept in the history across sessions."))
+    assertTrue(has(h.tip, "From  the history, kept across sessions"))
 end)

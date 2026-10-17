@@ -92,7 +92,7 @@ test("sim panel: a key's preview names every step, with its command, before a ru
         assertEqual(r[i].state, "locked", "row " .. i)
         assertFalse(r[i].actionable, "row " .. i .. " is not clickable without a run")
     end
-    assertEqual(r[11].tip[2], "2 loot lines through the real loot handler (CHAT_MSG_LOOT).")
+    assertEqual(T.tipPlainJoined({ r[11].tip[2], r[11].tip[3] }), "• Injects: 2 loot lines | • Through: the real loot handler (CHAT_MSG_LOOT)")
 end)
 
 test("sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states", function()
@@ -111,11 +111,11 @@ test("sim panel: a running timeline's rows are done, current, next and ahead, wi
     assertEqual(r[4].label, "Kill: Matron Seyla")
     assertEqual(r[5].label, "Loot: 3 drops")
     assertFalse(r[2].actionable, "a completed step does nothing")
-    assertEqual(r[2].tip[2], "Ran 15s ago.")
-    assertEqual(r[1].tip[2], "Ran 20s ago.", "the start ran when the session started")
+    assertEqual(T.tipPlain(r[2].tip[2]), "• Ran: 15s ago")
+    assertEqual(T.tipPlain(r[1].tip[2]), "• Ran: 20s ago", "the start ran when the session started")
     assertTrue(r[4].actionable); assertFalse(r[4].ahead)
     assertTrue(r[6].actionable); assertTrue(r[6].ahead)
-    assertEqual(r[6].tip[3], "Click to run every step up to this one, in order.")
+    assertEqual(T.tipPlain(r[6].tip[#r[6].tip]), "Click to run every step up to this one, in order.", "the closing hint")
     assertTrue(r[7].actionable, "Stop is clickable while a run lasts")
     -- A played loot step says what it dropped.
     steps[4].detail, steps[4].ranAt = "2 drops", 20
@@ -261,7 +261,7 @@ test("sim panel: clicking a completed step does nothing, and its tooltip says wh
     assertEqual(pos(NS), 1); assertEqual(#m.prints, before, "nothing ran, nothing printed")
     NS.SimPanel.Refresh()
     local tip = NS.Window.TooltipOf(rows(NS)[2])
-    assertEqual(tip[2], "Ran 7s ago.")
+    assertEqual(T.tipPlain(tip[2]), "• Ran: 7s ago")
 end)
 
 test("sim panel: a typed `/dw sim step` moves the panel too", function()
@@ -309,9 +309,9 @@ test("sim panel: Run all's tooltip names the current step delay (feedback-2 spec
     local NS = addon()
     slash(NS, "sim start dungeon")
     local run = NS.SimPanel.Frame().controls.run
-    assertEqual(NS.Window.TooltipOf(run)[2], "Plays every step left, one every 2 seconds, as `/dw sim run` does.")
+    assertEqual(T.tipPlainJoined(NS.Window.TooltipOf(run)), "Run all | • Plays: every step left | • Every: 2 seconds | • Typed: /dw sim run")
     slash(NS, "set sim.stepDelay 3.5")
-    assertEqual(NS.Window.TooltipOf(run)[2], "Plays every step left, one every 3.5 seconds, as `/dw sim run` does.")
+    assertEqual(T.tipPlain(NS.Window.TooltipOf(run)[3]), "• Every: 3.5 seconds")
 end)
 
 test("sim panel: the typed pause, resume and restart answer as the buttons do", function()

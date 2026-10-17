@@ -131,7 +131,7 @@ test("restore: after a reload this session's drops come back under their headers
     local LF = NS2.LootFeed
     assertEqual(links(LF), "300,301", "oldest first")
     local a, b = LF.Drops()[1], LF.Drops()[2]
-    assertEqual(NS2.WindowCells.Looter(a).tip[3], "Reported by the History, after a reload.")
+    assertEqual(T.tipPlain(NS2.WindowCells.Looter(a).tip[3]), "• Reported by: the History, after a reload")
     assertEqual(a.source, "restore"); assertEqual(a.groupKey, before[1].groupKey, "the feed key, its suffix gone")
     assertEqual(LF.Groups()[1].label, NS.LootFeed.Groups()[1].label)
     assertEqual(#LF.Groups(), 1)

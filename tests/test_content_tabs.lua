@@ -58,13 +58,15 @@ end)
 test("content per tab: the Content tooltip is the same on both tabs and names each value", function()
     local NS = shown()
     local c = NS.WindowFilterBar.Controls()
-    local want = "This instance shows the drops since you entered this instance or started this key. This session shows every drop since you logged in; a /reload keeps them. All (History only) shows every kept day."
+    -- a row per value (feedback-21)
+    local want = "Content | • This instance: the drops since you entered it or started this key"
+        .. " | • This session: every drop since you logged in, kept over a /reload | • All: every kept day (History only)"
     for _, tab in ipairs({ "group", "history" }) do
         NS.Window.SelectTab(tab)
         local tip = NS.Window.TooltipOf(c.content)
         assertEqual(tip[1], "Content", tab)
         -- red under: the old text ("…since the situation last changed…")
-        assertEqual(tip[2], want, tab)
+        assertEqual(T.tipPlainJoined(tip), want, tab)
     end
 end)
 

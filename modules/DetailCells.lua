@@ -62,11 +62,12 @@ local TERTIARY_ORDER = {
 }
 
 
+-- Each bind's chip: { word, its Binds row's value, its Tradeable row's value or nil }.
 local BIND_CHIP = {
-    [C.BIND.ON_ACQUIRE] = { L["BoP"], L["Bind on pickup: it binds to whoever loots it."] },
-    [C.BIND.ON_EQUIP] = { L["BoE"], L["Bind on equip: tradeable until someone wears it."] },
-    [C.BIND.ON_USE] = { L["BoU"], L["Bind on use: tradeable until someone uses it."] },
-    [C.BIND.QUEST] = { L["Quest"], L["A quest item."] },
+    [C.BIND.ON_ACQUIRE] = { L["BoP"], L["on pickup, to whoever loots it"] },
+    [C.BIND.ON_EQUIP] = { L["BoE"], L["on equip"], L["until someone wears it"] },
+    [C.BIND.ON_USE] = { L["BoU"], L["on use"], L["until someone uses it"] },
+    [C.BIND.QUEST] = { L["Quest"], L["a quest item"] },
 }
 
 local VERDICT_CHIP = {
@@ -110,12 +111,16 @@ local function row(key, label, text, tone, title, ...)
     return { key = key, label = label, text = text, tone = tone or "plain", tip = { title, ... } }
 end
 
+-- One tooltip row and the closing hint (NS.TipMarks, feedback-21).
+local function trow(label, value, tone) return TM.Row(label, value, tone) end
+local function hint(text) return TM.Hint(text) end
+
 -- ── the header's chips ──────────────────────────────────────────────────────────────────────
 
 local function slotChip(f)
     local label = WC.SlotLabel(f.equipLoc)
-    if not label then return chip(DASH, L["Slot"], L["Not an item that is worn, or its details have not loaded."]) end
-    return chip(label, L["Slot"], L["Worn in the %s slot."]:format(label))
+    if not label then return chip(DASH, L["Slot"], trow(L["Item"], L["not worn, or not loaded"])) end
+    return chip(label, L["Slot"], trow(L["Worn in"], label))
 end
 
 -- The Type column's answer as a chip (feedback-4 spec §3: Cloth … Plate, Jewelry, Trinkets, Cloak,
@@ -128,11 +133,13 @@ end
 
 local function bindChip(f)
     if f.warbound then
-        return chip(L["Warbound"], L["Bind"], L["Warbound: it binds to the account and can't be traded."])
+        return chip(L["Warbound"], L["Bind"], trow(L["Binds"], L["to the account"]), trow(L["Tradeable"], L["no"]))
     end
     local b = BIND_CHIP[f.bindType]
     if not b then return nil end
-    return chip(b[1], L["Bind"], b[2])
+    local c = chip(b[1], L["Bind"], trow(L["Binds"], b[2]))
+    c.tip[3] = b[3] and trow(L["Tradeable"], b[3]) or nil
+    return c
 end
 
 -- `Hero 2/6`, or nil for no track.
@@ -145,22 +152,23 @@ local function trackChip(f)
     local text, ilvl = trackText(f.track), num(f.ilvl)
     if not text then
         if not ilvl then return nil end
-        return chip(tostring(ilvl), L["Item level %d"]:format(ilvl), L["No upgrade track."])
+        return chip(tostring(ilvl), L["Item level %d"]:format(ilvl), trow(L["Upgrade track"], L["none"]))
     end
-    if ilvl then text = ("%s · %d"):format(text, ilvl) end
-    return chip(text, L["Upgrade track"], L["The upgrade track and rank, then the item level."])
+    local c = chip(ilvl and ("%s · %d"):format(text, ilvl) or text, L["Upgrade track"], trow(L["Track and rank"], text))
+    c.tip[3] = ilvl and trow(L["Item level"], ilvl) or nil
+    return c
 end
 
 -- The look: `New look` when you have not collected the appearance, `Look known` when you have,
 -- nothing when it is not known or the item has none (design spec §4, transmog-known).
 local function transmogChip(f)
     if f.transmogKnown == false then
-        local c = chip(L["New look"], L["Transmog"], L["You have not collected this item's appearance."])
+        local c = chip(L["New look"], L["Transmog"], trow(L["Appearance"], L["not collected yet"], "good"))
         c.tone = "good"
         return c
     end
     if f.transmogKnown == true then
-        local c = chip(L["Look known"], L["Transmog"], L["You have already collected this item's appearance."])
+        local c = chip(L["Look known"], L["Transmog"], trow(L["Appearance"], L["already collected"]))
         c.tone = "muted"
         return c
     end
@@ -173,7 +181,8 @@ local function primaryChip(stats)
         if num(stats[key]) then names[#names + 1] = PRIMARY[key] end
     end
     if #names == 0 then return nil end
-    return chip(table.concat(names, "/"), L["Primary stat"], L["The primary stat it carries: a spec of another primary stat can't use it."])
+    local text = table.concat(names, "/")
+    return chip(text, L["Primary stat"], trow(L["Carries"], text), trow(L["Usable by"], L["specs of that primary stat"]))
 end
 
 local function hasSocket(stats)
@@ -184,10 +193,10 @@ local function hasSocket(stats)
 end
 
 local function extraChips(stats, out)
-    if hasSocket(stats) then out[#out + 1] = chip(L["Socket"], L["Socket"], L["It has a gem socket."]) end
+    if hasSocket(stats) then out[#out + 1] = chip(L["Socket"], L["Socket"], trow(L["Has"], L["a gem socket"])) end
     for _, key in ipairs(TERTIARY_ORDER) do
         if num(stats[key]) then
-            out[#out + 1] = chip(TERTIARY[key], L["Tertiary stat"], L["It carries %s."]:format(TERTIARY[key]))
+            out[#out + 1] = chip(TERTIARY[key], L["Tertiary stat"], trow(L["Carries"], TERTIARY[key]))
         end
     end
 end
@@ -228,34 +237,35 @@ local function replacesRow(eval, whose, mine)
     if base then
         local name = WC.ItemName(base.link) or "?"
         local r = row("replaces", L["Replaces"], ("%s · %s"):format(name, tostring(num(base.ilvl) or "?")), "plain",
-            L["Replaces"], L["The item %s would take off for it: the lower of two where there are two."]:format(whose))
+            L["Replaces"], trow(L["Takes off"], L["the item %s wears there"]:format(whose)),
+            trow(L["Of two"], L["the lower"]))
         r.link = base.link
         r.wornSlot = mine and num(base.slot) or nil
         return r
     end
     if emptySlot(eval) then
-        return row("replaces", L["Replaces"], L["Empty slot"], "good", L["Replaces"], L["The slot is empty, so anything is an upgrade."])
+        return row("replaces", L["Replaces"], L["Empty slot"], "good", L["Replaces"], trow(L["Slot"], L["empty (anything is an upgrade)"]))
     end
-    return row("replaces", L["Replaces"], DASH, "muted", L["Replaces"], L["The item it would replace has not been read."])
+    return row("replaces", L["Replaces"], DASH, "muted", L["Replaces"], trow(L["Worn item"], L["not read"]))
 end
 
 local function ilvlRow(eval, ilvl, tone)
     local d = type(eval) == "table" and num(eval.ilvlDelta) or nil
     if not (d and ilvl) then
         return row("ilvl", L["Item level"], ilvl and tostring(ilvl) or "?", "muted", L["Item level"],
-            L["No item-level change: nothing to compare with yet."])
+            trow(L["Change"], L["nothing to compare with yet"]))
     end
     local from = round(ilvl - d)
     return row("ilvl", L["Item level"], ("%d %s %d · %s"):format(from, TM.Arrow(), ilvl, WC.Signed(d)), tone, L["Item level"],
-        L["%d against %d: %s."]:format(ilvl, from, WC.Signed(d)))
+        trow(L["This item"], ilvl), trow(L["Worn"], from), trow(L["Change"], WC.Signed(d), tone))
 end
 
 local TRACK_MARK = { [1] = "upgrade", [0] = "sidegrade", [-1] = "downgrade" }   -- TM.Mark's verdicts
 
 -- Shown even within one track (board 02, callout 2): a rank change is still a change.
 local function missingTrack(to)
-    if to then return row("track", L["Track"], to, "muted", L["Track"], L["The worn item's track was not read."]) end
-    return row("track", L["Track"], DASH, "muted", L["Track"], L["The drop has no upgrade track."])
+    if to then return row("track", L["Track"], to, "muted", L["Track"], trow(L["This item"], to), trow(L["Worn"], L["not read"])) end
+    return row("track", L["Track"], DASH, "muted", L["Track"], trow(L["This item"], L["no upgrade track"]))
 end
 
 local function trackRow(eval, dropTrack)
@@ -265,10 +275,10 @@ local function trackRow(eval, dropTrack)
     local td = type(eval.trackDelta) == "table" and eval.trackDelta or nil
     if not td then
         return row("track", L["Track"], ("%s %s %s"):format(from, TM.Arrow(), to), "plain", L["Track"],
-            L["The tracks could not be ranked against each other."])
+            trow(L["This item"], to), trow(L["Worn"], from), trow(L["Ranked"], L["no, the tracks don't compare"]))
     end
     return row("track", L["Track"], ("%s %s %s %s"):format(from, TM.Arrow(), to, TM.Mark(TRACK_MARK[td.sign])), "plain", L["Track"],
-        L["The track it moves to, rank included."])
+        trow(L["This item"], to), trow(L["Worn"], from), WC.TrackRow(td))
 end
 
 --- The secondary-stat change from `base` to `item`, the largest first: `+130 Haste -119 Mastery`,
@@ -293,34 +303,36 @@ end
 local function statsRow(eval, dropStats)
     local base = baseOf(eval)
     if not base then
-        return row("stats", L["Stats"], DASH, "muted", L["Stats"], L["No stat change: the item it would replace has not been read."])
+        return row("stats", L["Stats"], DASH, "muted", L["Stats"], trow(L["Worn item"], L["not read"]))
     end
     local text = DC.StatChange(dropStats, base.stats)
-    if not text then return row("stats", L["Stats"], L["no change"], "plain", L["Stats"], L["The same secondary stats."]) end
-    return row("stats", L["Stats"], text, "plain", L["Stats"], L["The secondary stats it gains and loses."])
+    if not text then return row("stats", L["Stats"], L["no change"], "plain", L["Stats"], trow(L["Secondary stats"], L["the same"])) end
+    return row("stats", L["Stats"], text, "plain", L["Stats"], trow(L["Secondary stats"], text))
 end
 
 -- The score line by the scorer in use (modules/Scoring.lua's InUse): its label, and why there is
 -- no score when there is none.
 local SCORER_LINE = {
-    pawn    = { label = L["Pawn"], none = L["Pawn has not scored it yet."] },
+    pawn    = { label = L["Pawn"], none = { L["not scored by Pawn yet"] } },
     weights = { label = L["Weights"],
-                none = L["Your weights for this specialization score nothing yet: set them in Settings, Comparison."] },
-    none    = { label = L["Score"], none = L["No scorer is in use: the verdict uses item level alone."] },
+                none = { L["your weights score nothing for this spec"], L["Set them in Settings, Comparison."] } },
+    none    = { label = L["Score"], none = { L["no scorer in use (item level alone)"] } },
 }
 
 local function scoreRow(eval, scorer, offSpec)
     if scorer == true then scorer = "pawn" end
     local line = SCORER_LINE[scorer] or SCORER_LINE.none
     if offSpec then
-        return row("score", line.label, DASH, "muted", L["Score"], L["Off-spec is judged on item level alone."])
+        return row("score", line.label, DASH, "muted", L["Score"], trow(L["Off-spec"], L["judged on item level alone"]))
     end
     local sd = type(eval) == "table" and num(eval.scoreDelta) or nil
     if sd then
         return row("score", line.label, ("%+.1f"):format(sd), sd >= 0 and "good" or "bad", L["Score"],
-            L["The scorer's change for your spec."])
+            trow(L["Scorer"], line.label), trow(L["Change"], ("%+.1f"):format(sd), sd >= 0 and "good" or "bad"))
     end
-    return row("score", line.label, DASH, "muted", L["Score"], line.none)
+    local r = row("score", line.label, DASH, "muted", L["Score"], trow(L["Score"], line.none[1]))
+    r.tip[3] = line.none[2] and hint(line.none[2]) or nil
+    return r
 end
 
 local function specRow(drop, inspect, specName, now)
@@ -328,11 +340,11 @@ local function specRow(drop, inspect, specName, now)
     local spec = specName or L["spec unknown"]
     local at = type(inspect) == "table" and num(inspect.at) or nil
     if not (at and num(now)) then
-        return row("spec", L["Spec"], spec, "muted", L["Spec"], L["%s has not been inspected yet."]:format(who))
+        return row("spec", L["Spec"], spec, "muted", L["Spec"], trow(L["Inspected"], L["not yet"]))
     end
     local age = WC.Duration(now - at)
     return row("spec", L["Spec"], L["%s · inspected %s ago"]:format(spec, age), "plain", L["Spec"],
-        L["%s's spec and gear were read %s ago."]:format(who, age))
+        trow(L["%s's spec"]:format(who), spec), trow(L["Inspected"], L["%s ago"]:format(age)))
 end
 
 local function verdictChip(cell)
@@ -374,10 +386,10 @@ local function memberRow(e, ilvl)
     local from = base and num(base.ilvl)
     local text = (from and ilvl) and ("%d %s %d · %s"):format(round(from), TM.Arrow(), ilvl, WC.Signed(gain or ilvl - from))
         or L["Empty slot"]
-    local worn = from and L["Replaces %s · %d."]:format(WC.ItemName(base.link) or "?", round(from))
-        or L["The slot is empty, so anything is an upgrade."]
+    local worn = from and trow(L["Replaces"], ("%s · %d"):format(WC.ItemName(base.link) or "?", round(from)))
+        or trow(L["Slot"], L["empty (anything is an upgrade)"])
     local r = row("member", e.short or "?", text, "good", e.short or "?", worn,
-        gain and L["An upgrade for them: %s."]:format(WC.Signed(gain)) or nil)
+        gain and trow(L["Upgrade"], WC.Signed(gain), "good") or nil)
     r.labelClassFile, r.link = e.classFile, base and base.link
     return r
 end
@@ -395,7 +407,7 @@ local function ownSide(drop, revealed)
     for i = 1, shown do rows[#rows + 1] = memberRow(ups[i], ilvl) end
     if shown < #ups then
         rows[#rows + 1] = row("more", "", L["and %d more: Offer shows all"]:format(#ups - shown), "muted",
-            L["Them"], L["Offer lists every member it upgrades."])
+            L["Them"], trow(L["Not shown"], L["%d more"]:format(#ups - shown)), hint(L["Offer lists every member it upgrades."]))
     end
     return { title = L["FOR THE GROUP"], verdict = { text = m.text, tone = m.tone, tip = tip }, rows = rows }
 end
@@ -449,8 +461,11 @@ function DC.TradeBox(drop, situationLabel)
         return { chip = { text = TRADE_CHIP.unknown, tone = "muted" }, text = L["Not estimated yet."],
             meta = L["The estimate is made once the item's details load."], tip = cell.tip }
     end
-    local tip = { cell.tip[1], L["Another player's drop can only be estimated: the game says for sure only to them."] }
-    if drop.isMine then tip[2] = L["Your own drop: the estimate follows your bag's trade timer."] end
+    -- The Trade cell's tooltip (the reason as rows, the read's age, the basis), so the box and the
+    -- row never disagree; your own drop's basis is your bag's timer.
+    local tip = {}
+    for i, l in ipairs(cell.tip) do tip[i] = l end
+    if drop.isMine then tip[#tip + 1] = trow(L["Basis"], L["your bag's trade timer"]) end
     return { chip = { text = TRADE_CHIP[t.state], tone = TRADE_TONE[t.state] },
         text = WC.TradeReason(t, looterName(drop)), meta = metaLine(t, situationLabel), tip = tip }
 end
@@ -488,17 +503,18 @@ local EDITABLE = { ready = true, failed = true }
 
 local function editAction(ask)
     local title = L["Edit message"]
-    if not ask.offered then return act("edit", title, "edit", false, title, ask.tip[2]) end
+    if not ask.offered then return act("edit", title, "edit", false, title, unpack(ask.tip, 2)) end
     if not EDITABLE[ask.state] then
-        return act("edit", title, "edit", false, title, L["The ask is already %s."]:format(ask.text:lower()))
+        return act("edit", title, "edit", false, title, trow(L["Ask"], L["already %s"]:format(ask.text:lower())))
     end
-    return act("edit", title, "edit", true, title, L["Edit the ask before it is sent: the template, filled in, in a box you can change."])
+    return act("edit", title, "edit", true, title, trow(L["Opens"], L["the ask, filled in, in a box you can change"]),
+        trow(L["When"], L["before it is sent"]))
 end
 
 local function linkAction(drop)
     local title = L["Link in chat"]
-    if type(drop.link) ~= "string" then return act("link", title, "link-intact", false, title, L["The item's link is not known."]) end
-    return act("link", title, "link-intact", true, title, L["Put the item's link in the chat box."])
+    if type(drop.link) ~= "string" then return act("link", title, "link-intact", false, title, trow(L["Link"], L["not known"])) end
+    return act("link", title, "link-intact", true, title, trow(L["Puts"], L["the item's link in the chat box"]))
 end
 
 local RETRY_BUSY = { pending = true, combatParked = true }
@@ -511,22 +527,25 @@ local function goodReadAge(inspect, now)
     return at and num(now) and now - at or nil
 end
 
--- Why a retry would do nothing, or nil when it would queue the looter.
+-- Why a retry would do nothing (its tooltip rows), or nil when it would queue the looter.
 local function noRetryReason(drop, inspect, now)
-    if drop.isMine then return L["Your own drop: your gear is always read."] end
+    if drop.isMine then return { trow(L["Why"], L["your own drop"]), trow(L["Your gear"], L["always read"]) } end
     local guid = type(drop.looter) == "table" and drop.looter.guid or nil
-    if not guid then return L["The looter is not known well enough to inspect."] end
-    if type(inspect) == "table" and RETRY_BUSY[inspect.status] then return L["An inspect of them is already queued."] end
+    if not guid then return { trow(L["Why"], L["the looter is not known well enough to inspect"]) } end
+    if type(inspect) == "table" and RETRY_BUSY[inspect.status] then return { trow(L["Inspect"], L["already queued"]) } end
     local age = goodReadAge(inspect, now)
-    if age then return L["Their gear was read %s ago; it is read again when it changes or grows old."]:format(WC.Duration(age)) end
+    if age then
+        return { trow(L["Inspected"], L["%s ago"]:format(WC.Duration(age))), trow(L["Read again"], L["when it changes or grows old"]) }
+    end
     return nil
 end
 
 local function retryAction(drop, inspect, now)
     local title = L["Retry inspect"]
     local why = noRetryReason(drop, inspect, now)
-    if why then return act("retry", title, "reset", false, title, why) end
-    return act("retry", title, "reset", true, title, L["Inspect %s again now, ahead of the warm-up queue."]:format(looterName(drop)))
+    if why then return act("retry", title, "reset", false, title, unpack(why)) end
+    return act("retry", title, "reset", true, title, trow(L["Inspects"], looterName(drop)),
+        trow(L["When"], L["now, ahead of the warm-up queue"]))
 end
 
 -- The disabled Trade button's short reason (board 02: `Trade · out of range`).
@@ -537,17 +556,20 @@ local TRADE_SHORT = {
 
 local function tradeAction(drop, trade)
     local title = L["Trade"]
-    if drop.isMine then return act("trade", title, "transfer", false, title, L["Your own drop: Offer shows who it would help, with an Offer button for each member."]) end
+    if drop.isMine then
+        return act("trade", title, "transfer", false, title, trow(L["Why"], L["your own drop"]),
+            hint(L["Offer shows who it would help, with an Offer for each."]))
+    end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
-        return act("trade", L["Trade · can't"], "transfer", false, title, L["Its looter can't trade it."])
+        return act("trade", L["Trade · can't"], "transfer", false, title, trow(L["Why"], L["its looter can't trade it"]))
     end
     trade = type(trade) == "table" and trade or {}
     if not trade.ok then
         local text = TRADE_SHORT[trade.reason] and L["Trade · %s"]:format(TRADE_SHORT[trade.reason]) or title
-        return act("trade", text, "transfer", false, title, trade.text or L["A trade can't be opened now."])
+        return act("trade", text, "transfer", false, title, trow(L["Why"], TRADE_SHORT[trade.reason] or trade.text or L["a trade can't be opened now"]))
     end
-    return act("trade", title, "transfer", true, title,
-        L["Open a trade with %s, so they can put the item in."]:format(looterName(drop)))
+    return act("trade", title, "transfer", true, title, trow(L["Opens"], L["a trade with %s"]:format(looterName(drop))),
+        trow(L["Then"], L["they put the item in"]))
 end
 
 --- The card's actions (board 02, callout 6), left to right: Ask (Offer on your own drop, with

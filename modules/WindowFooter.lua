@@ -24,6 +24,11 @@ local L  = NS.L
 
 local floor, max = math.floor, math.max
 
+-- A tooltip row and the closing hint: NS.TipMarks loads after this file (DropWatcher.toc), so read
+-- at call time.
+local function row(label, value, tone) return NS.TipMarks.Row(label, value, tone) end
+local function hint(text) return NS.TipMarks.Hint(text) end
+
 -- The situations' display names (design spec §6.1), for the footer and anything else that names one.
 WF.SITUATION_LABEL = {
     mythicPlus = L["Mythic+"], dungeon = L["Dungeon"], followerDungeon = L["Follower dungeon"],
@@ -56,44 +61,48 @@ local function inspectSegment(i)
     local members = tonumber(i.members) or 0
     if members == 0 then
         return { text = L["Inspect: no group"],
-            tip = { L["Inspect"], L["You are not in a group, so there is no one to inspect."] } }
+            tip = { L["Inspect"], row(L["Group"], L["none, so no one to inspect"]) } }
     end
     local text = L["Inspect %d/%d fresh"]:format(i.good or 0, members)
     if (i.outOfRange or 0) > 0 then text = text .. " · " .. L["%d out of range"]:format(i.outOfRange) end
-    return { text = text, tip = { L["Inspect"],
-        L["How many other group members' gear has been read recently: each drop is judged for its looter from that read."],
-        L["Waiting: %d. Out of range: %d. Scan group asks for the rest."]:format(i.pending or 0, i.outOfRange or 0) } }
+    return { text = text, tip = { L["Inspect"], row(L["Read recently"], ("%d/%d"):format(i.good or 0, members)),
+        row(L["Waiting"], i.pending or 0), row(L["Out of range"], i.outOfRange or 0),
+        row(L["Each drop"], L["judged for its looter from that read"]), hint(L["Scan group asks for the rest."]) } }
 end
 
 local function lootSegment(i)
     if type(i.lastLootAgo) ~= "number" then
-        return { text = L["No loot seen yet"], tip = { L["Last loot"],
-            L["No loot line has been read this session. If loot dropped and this stays, see /dw diagnostics."] } }
+        return { text = L["No loot seen yet"], tip = { L["Last loot"], row(L["Loot lines read"], L["none this session"]),
+            hint(L["If loot dropped and this stays, see /dw diagnostics."]) } }
     end
     local ago = WF.Ago(i.lastLootAgo)
     return { text = L["Last loot %s ago"]:format(ago),
-        tip = { L["Last loot"], L["The last loot line read from chat arrived %s ago."]:format(ago) } }
+        tip = { L["Last loot"], row(L["Last loot line"], L["%s ago"]:format(ago)), row(L["Read from"], L["chat"]) } }
 end
 
 local function situationSegment(i)
     local name = WF.SituationLabel(i.situation)
     if type(i.sim) == "table" then
         return { text = L["Simulating: %s · %d members"]:format(name, i.sim.members or 0), tip = { L["Simulation"],
-            L["A simulation is running: the situation and the group are made up. /dw sim stop ends it."] } }
+            row(L["Situation"], name), row(L["Members"], i.sim.members or 0), row(L["Both"], L["made up"]),
+            hint(L["/dw sim stop ends it."]) } }
     end
     if i.tracking == false then
         return { text = L["Not tracking in %s · change in settings"]:format(name), tip = { L["Situation"],
-            L["Loot is not tracked here. Settings > General > When to show turns tracking on for %s."]:format(name) } }
+            row(L["Situation"], name), row(L["Loot tracked"], L["no"]),
+            row(L["Turned on in"], L["Settings > General > When to show"]) } }
     end
     return { text = L["Situation: %s"]:format(name),
-        tip = { L["Situation"], L["Where you are, as the addon reads it. Each situation has its own tracking and auto-open settings."] } }
+        tip = { L["Situation"], row(L["Where you are"], name), row(L["Its own"], L["tracking and auto-open settings"]) } }
 end
 
 local function pawnSegment(i)
     if i.pawn == "on" then
-        return { text = L["Pawn: on"], tip = { L["Pawn"], L["Pawn is ready: verdicts can use its scale."] } }
+        return { text = L["Pawn: on"], tip = { L["Pawn"], row(L["Status"], L["ready"], "good"),
+            row(L["Verdicts"], L["can use its scale"]) } }
     end
-    return { text = L["Pawn: off"], tip = { L["Pawn"], L["Pawn is not loaded, or not ready yet: verdicts do not use it."] } }
+    return { text = L["Pawn: off"], tip = { L["Pawn"], row(L["Status"], L["not loaded, or not ready yet"]),
+        row(L["Verdicts"], L["do not use it"]) } }
 end
 
 --- Each segment's text and tooltip from plain inputs.
@@ -180,7 +189,7 @@ local function buildSort(host)
     dd:SetOptions(opts)
     dd.onSelect = function(v) FB.Set(NS.Window.ActiveTab(), "sort", v) end
     NS.Window.AttachTooltip(dd, function()
-        return L["Sort"], L["The order of the rows on this tab."]
+        return L["Sort"], row(L["Sets"], L["the order of the rows on this tab"])
     end, "above")
     return dd
 end

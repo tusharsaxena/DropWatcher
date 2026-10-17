@@ -160,8 +160,8 @@ test("off-spec ask: the Ask button fills askOffSpec, and its tooltip names the s
     local a = WC.Ask(drop(), "ready", nil)
     assertTrue(a.offered); assertEqual(a.template, "askOffSpec")
     assertEqual(a.tip[1], "Ask for off-spec")
-    assertEqual(a.tip[2], "Ask for it for your Holy off-spec.")
-    assertEqual(a.tip[#a.tip], "One ask per item per looter.")
+    assertEqual(T.tipPlainJoined(a.tip), "Ask for off-spec | • For: your Holy off-spec | • Whispers: Brakk | • Template: For off-spec"
+        .. " | • Why: your current spec can't use it | • Limit: one per item per looter")
     assertFalse(WC.Ask(drop({ me = cantMain(nil) }), "ready", nil).offered, "a plain Can't use has no ask")
     assertEqual(WC.Ask(drop({ me = { verdict = "upgrade", ilvlDelta = 5 } }), "ready", nil).tip[1], "Ask")
 end)

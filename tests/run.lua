@@ -87,6 +87,19 @@ local function tipJoined(tip, sep)
     return table.concat(out, sep or " | ")
 end
 
+-- A tooltip line as the player reads it (feedback-21): tipText with its color codes taken out, so a
+-- row (NS.TipMarks.Row) reads `• Rule: personal loot`.
+local function tipPlain(line)
+    return (tipText(line):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+end
+
+-- A tooltip's lines joined by `sep` (" | " when nil), each read by tipPlain.
+local function tipPlainJoined(tip, sep)
+    local out = {}
+    for i, l in ipairs(tip or {}) do out[i] = tipPlain(l) end
+    return table.concat(out, sep or " | ")
+end
+
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
 -- assertions in beside these keys.
 _G.DW_TEST = Kit.expose{
@@ -97,6 +110,8 @@ _G.DW_TEST = Kit.expose{
     marks       = marks,
     tipText     = tipText,
     tipJoined   = tipJoined,
+    tipPlain    = tipPlain,
+    tipPlainJoined = tipPlainJoined,
     root        = root,
     LibStub     = surfaceMock.LibStub,
     KIT_VERSION = Kit.VERSION,

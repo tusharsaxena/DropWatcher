@@ -149,8 +149,8 @@ test("shell: RestrictionChanged shows the badge, AskStateChanged counts the queu
     assertEqual(textOf(f.badge.text), "Encounter · 1 queued")
     local tip = NS.Window.TooltipOf(f.badge)
     assertEqual(tip[1], "Encounter")
-    assertTrue(tip[2]:find("boss encounter") ~= nil, "which restriction, in words")
-    assertEqual(tip[3], "Queued: Ask to Seta-Realm")
+    assertEqual(T.tipPlain(tip[2]), "• Why: a boss encounter is in progress", "which restriction, in words")
+    assertEqual(T.tipPlain(tip[#tip]), "• Queued: Ask to Seta-Realm")
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, nil, true)
     m.advance(0)
     assertFalse(f.badge:IsShown(), "lifted: the badge goes")
@@ -215,7 +215,7 @@ test("shell: the tab labels carry no count; their tooltips say what each holds",
     NS.Window.Refresh()
     assertEqual(textOf(f.tabs.group.label), "Drops")
     local tip = NS.Window.TooltipOf(f.tabs.group)
-    assertEqual(tip[1], "Drops"); assertEqual(#tip, 2)
+    assertEqual(tip[1], "Drops"); assertEqual(#tip, 3, "what it holds and how it groups them, a row each")
     assertEqual(NS.Window.TooltipOf(f.tabs.history)[1], "History")
     assertEqual(NS.Window.TabLabel("group"), "Drops")
 end)
@@ -309,22 +309,22 @@ test("shell: each tab grays the View values it does not use, and a grayed value 
     assertEqual(textOf(c.view.text), "View: All", "the Drops state comes back")
 end)
 
--- FB2-3: the View tooltip is a bullet list, one line per value.
+-- FB2-3: the View tooltip is a bullet list, one row per value (feedback-21: TipMarks.Row).
 test("shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use", function()
     local NS = shown()
     local W, c = NS.Window, NS.WindowFilterBar.Controls()
     local tip = W.TooltipOf(c.view)
     assertEqual(tip[1], "View")
     assertEqual(#tip, 6, "the title and five values")
-    assertEqual(tip[2], "• All: every drop that passed the situation and quality gates.")
-    assertTrue(tip[3]:find("^• Interesting: ") ~= nil)
-    assertTrue(tip[4]:find("^• Likely tradeable: ") ~= nil)
-    assertTrue(tip[5]:find("^• Usable by me: ") ~= nil)
-    assertTrue(tip[6]:find("^• Upgrade for me: ") ~= nil)
+    assertEqual(T.tipPlain(tip[2]), "• All: every drop past the situation and quality gates")
+    assertTrue(T.tipPlain(tip[3]):find("^• Interesting: ") ~= nil)
+    assertTrue(T.tipPlain(tip[4]):find("^• Likely tradeable: ") ~= nil)
+    assertTrue(T.tipPlain(tip[5]):find("^• Usable by me: ") ~= nil)
+    assertTrue(T.tipPlain(tip[6]):find("^• Upgrade for me: ") ~= nil)
     for i = 2, 6 do assertTrue(tip[i]:find("not on this tab", 1, true) == nil, "Drops uses them all") end
     NS.Window.SelectTab("history")
     tip = W.TooltipOf(c.view)
-    assertTrue(tip[4]:find("(not on this tab)", 1, true) ~= nil and tip[4]:find("^|cff") ~= nil,
+    assertTrue(tip[4]:find("(not on this tab)", 1, true) ~= nil and tip[4]:find("|cff8c8c94", 1, true) ~= nil,
         "History grays Likely tradeable")
     assertTrue(tip[5]:find("not on this tab", 1, true) == nil)
 end)
@@ -441,7 +441,7 @@ test("shell: each tab keeps its own filter state, and grays what it does not use
     assertTrue(FB.State("group").view.interesting)
     NS.Window.SelectTab("history")
     assertEqual(next(FB.State("history").view), nil, "a separate state")
-    assertEqual(NS.Window.TooltipOf(c.quality)[2], "This tab does not use this filter.",
+    assertEqual(T.tipPlain(NS.Window.TooltipOf(c.quality)[2]), "• On this tab: not used",
         "History does not use Quality: grayed, not hidden")
     assertTrue(c.quality:IsShown())
     assertTrue(c.search:IsEnabled())
@@ -897,7 +897,7 @@ test("shell: every control on the chrome has a tooltip with a reason", function(
         assertTrue(#tip >= 2 and type(tip[1]) == "string" and type(tip[2]) == "string", "widget " .. i)
     end
     NS.Window.SelectTab("history")
-    assertEqual(W.TooltipOf(c.quality)[2], "This tab does not use this filter.", "a grayed control says why")
+    assertEqual(T.tipPlain(W.TooltipOf(c.quality)[2]), "• On this tab: not used", "a grayed control says why")
 end)
 
 -- ── degraded ────────────────────────────────────────────────────────────────────────────────
