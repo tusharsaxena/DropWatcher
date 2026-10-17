@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21) |
-| FEED-1..86 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); General › When to show as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86) |
+| FEED-1..89 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); General › When to show as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86); Can't use in dim red on every surface, Not wanted still gray (FEED-87, feedback-21), Trade's `Can't use` on a drop none of your specs can use and Yes or Likely kept beside an off-spec use (FEED-88, feedback-21), every tooltip as bulleted rows, one per fact (FEED-89, feedback-21) |
 | ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
 | ITEM-1..5 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -34,6 +34,7 @@ passed.
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
 | TOAST-1..5 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2) |
+| GLOW-1..8 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the four surfaces and nowhere else (GLOW-1), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
 | COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
@@ -1267,7 +1268,8 @@ item: an empty slot.`. Solenne's gloves: Me reads the bag item's level, then `�
 tooltip is the bag item's own, not an inventory slot's. Kragmar's bracers read `≈1 Holy` and
 Thornbrew's boots `▼11 Holy`, both cyan. Seta's legs (the second boss) read `▲20 Holy` over a worn
 item. Ashveil's chest still reads `Can't use` in dim red with no spec name (a wrong armor type). Hover
-the Me column's header → the legend has the cyan line. Expand Seta's legs → the detail card's FOR
+the Me column's header → the legend has the cyan line. (The tooltips quoted here are rows since
+feedback-21, 2026-10-18: one fact per bulleted row, FEED-89.) Expand Seta's legs → the detail card's FOR
 YOU chip reads `OFF-SPEC UPGRADE`, its first row `Spec  Holy (off-spec): Protection can't use it`,
 then Replaces, Item level and the score row saying off-spec is judged on item level alone. The same
 in compact mode: the card's line reads `You … ▲20 Holy`. Open History → the off-spec entries read the
@@ -1287,7 +1289,7 @@ row's `Upgrade for N` and the Trade count do not count Kaelith. Result:
 `test_compact_cards`, `test_compact_group` and `test_compact_history` cover the pieces and the least
 width. `/dw compact`, `/dw test` → each Drops and History card's line 2 reads looter · slot · type with no
 trade word; line 3 reads `You … Them … Trade Likely`, the three labels gold, the trade word in its tone
-(`Yes`/`Likely` green, a muted green beside your `Can't use`, `No` red, `Unknown` muted), hovering it gives the full table's Trade tooltip. At the
+(`Yes`/`Likely` green, a muted green beside your `Can't use` (superseded by feedback-21, 2026-10-18: `Can't use` in dim red instead of the word; FEED-88), `No` red, `Unknown` muted), hovering it gives the full table's Trade tooltip. At the
 least width (440) the fullest line (two worn levels and `⊘ Not wanted` on each side) still shows the
 trade word, cut with `…` at the card's right edge rather than past it. A looter from another realm has no
 `⊕` after the name on either tab; hovering the name still says `From another realm: <realm>.`. Result:
@@ -1310,7 +1312,8 @@ shows only Them; an upgrade for you shows `Hidden` and no names until its Offer 
 
 **FEED-85. Trade muted beside Can't use; a drop opens the window on Drops (feedback-20).** The headless
 `test_window_group` and `test_window_shell` cover it. In a group, a groupmate loots an item your class
-can't wear that they can trade → its Trade reads `Likely` (or `Yes`) in a muted green, in the table, the
+can't wear that they can trade → its Trade reads `Likely` (or `Yes`) in a muted green (superseded by
+feedback-21, 2026-10-18: it reads `Can't use` in dim red, the muted green removed; FEED-88), in the table, the
 compact card's line 3 and History; hover → the reason, then `You can't use it, so there is nothing for you
 to ask for.`. One another spec of yours could use (off-spec, cyan) keeps the full green. Your own drops keep
 the full green. Close the window on the History tab, then let something drop in an auto-open situation →
@@ -1321,6 +1324,39 @@ Result:
 Finish a Mythic+ key, stay in the dungeon past two minutes, then win a bonus roll (or let a groupmate's
 late loot come in) → it joins the key's header, with no second header for the same dungeon. Leave the
 dungeon and loot something → a new header for where you are. Result:
+
+**FEED-87. Can't use reads dim red everywhere (feedback-21).** The headless `test_window_group`,
+`test_side_cells`, `test_compact_cards`, `test_offspec_cells` and `test_toast` cover the tone. `/dw test`,
+expand every group. Ashveil's chest under the first raid boss: Me reads `Can't use` in a dim red, darker
+and softer than a downgrade's red `▼`, and with no spec name (a wrong armor type). Mistveil's shoulders
+(the third raid boss): Them reads `Can't use` in the same dim red. Littlewolf's weapon still reads `Not
+wanted` in gray, so the two words read apart at a glance. Expand Ashveil's chest → the detail card's FOR
+YOU chip reads `CAN'T USE` in that dim red. Open History → its `Can't use` cells are dim red too; `/dw
+compact` → the cards' `You Can't use` and `Them Can't use` halves the same, on Drops and History. Result:
+
+**FEED-88. Trade reads Can't use when none of your specs can use the drop (feedback-21).** The headless
+`test_window_group` covers it. In a group, a groupmate loots an item your class can't wear (a wrong armor
+type, say plate on a cloth wearer) that they can trade, or `/dw add <such a link> <member>` → its Trade
+reads `Can't use` in the dim red of FEED-87, not `Likely` or `Yes`, in the table, the compact card's line 3
+and History; hover → the title `Trade: Can't use`, the trade rows (Rule, This item, what they wear), then
+`• For you: can't use, nothing to ask for`. A `No` stays red and an `Unknown` stays muted; your own drops
+keep their green. `/dw test`, the last raid boss → Brightmane's one-hander, Solenne's gloves, Kragmar's
+bracers and Thornbrew's boots, all Can't use for your spec but usable by Holy, keep Trade `Likely` in its
+own green (an off-spec use is a use). Result:
+
+**FEED-89. Every tooltip is bulleted rows, one per fact (feedback-21).** The headless `test_tip_marks`
+(its row-shape cases and the test-mode audit) covers the strings. `/dw test`, expand every group, then
+hover Seta's head item's Trade (`Likely`, the third raid boss) → the title `Trade: Likely`, then one row
+per fact, each `• Label: value`: `Rule`, `This item`, `Seta wears`, `Inspected`, `Basis`, the bullet
+and the label gray, the value white or in its tone; no row is a sentence of several clauses. Hover, in
+turn, a Me and a Them cell, an Ilvl, Slot, Type and Looter cell, an Ask (and one `Queued` and one
+`Failed`), a gray `No action`, a group header, a column label, the filter bar's controls, the title bar's
+buttons and badge, the strip's buttons and the footer, the detail card's chips and action buttons, the
+Offer panel's statuses, History's Outcome cells and cards, the toast, and `/dw sim panel`'s steps; then
+`/dw compact` and the cards' halves and Filters ▾ → every one reads the same way: its title, rows, any
+gear grid as columns (the grids are unchanged), and at most one closing hint last, gray and with no
+bullet (the Offer panel's `Hover for why.`). The bullet draws as a dot, never a box or `?`. Settings
+panel tooltips are unchanged prose. Result:
 
 ## Roster
 
@@ -1870,6 +1906,73 @@ whisper. An off-spec sidegrade or downgrade raises no toast. Auto-ask on, with o
 and one off-spec upgrade from the same boss: the main-spec ask is whispered at its delay, and the
 off-spec ask about 5 s after it, never before it. Result:
 
+## Upgrade glow
+
+The glow's decision, its settings and each surface's icon are headless-tested (`test_glow`,
+`test_schema_rows`); the suites load no LibCustomGlow, so what the effect looks like is checked here.
+The settings are Settings › Window › Upgrade glow; the main spec's glow is the left column, the
+off-spec's the right.
+
+**GLOW-1. The main-spec glow on each surface, and nowhere else (feedback-21).** Defaults (Defaults on
+the Window page). `/dw test`, expand every group → the icons of the drops that are an upgrade for your
+current spec glow with the green proc flipbook: Kaelith's neck (the key run), Uniquerogue's trinket (the
+second raid boss), Seta's head, Littlewolf's ring and Mistveil's shoulders (the third). The glow sits
+over the icon art, follows the icon at every Row height, and scrolls and clips with its row. Expand
+Seta's head → the detail card's header icon glows; its Replaces rows do not. Settings › Window › Toast
+› Show a toast on, `/dw test` off and on → the toast's icon glows, and the glow goes with the toast.
+`/dw compact` → the same cards' icons glow, and switching back and forth leaves no glow on an empty
+spot. Never glowing: your own drops (your ring upgrade under the first raid boss included), sidegrades
+(Dawnfeather's boots), downgrades, History's rows and cards, and the Offer panel (open your trinket's).
+Collapse a group and expand it again, and scroll → no glow is left behind on a row now showing another
+drop. In the client, a groupmate's real upgrade for you glows the same. Result:
+
+**GLOW-2. The off-spec glow (feedback-21).** Defaults. `/dw test`, the last raid boss → Brightmane's
+one-hander and Solenne's gloves glow with a cyan pixel border (lines running around the icon), and so
+do Seta's legs under the second raid boss; Kragmar's bracers (an off-spec sidegrade) and Thornbrew's
+boots (an off-spec downgrade) do not, nor Ashveil's chest (Can't use with no off-spec). The cyan reads
+apart from the main glow's green on the same screen. Expand Brightmane's one-hander → its detail card's
+header icon glows cyan; `/dw compact` → its card's too. With a real off-spec upgrade in the client (the
+toast on), the toast's icon glows cyan. Result:
+
+**GLOW-3. The Button style (feedback-21).** Main spec style → Button (rotating rays) → every main-spec
+upgrade icon (GLOW-1's list) at once shows the action-button rays instead of the proc flipbook, no old
+effect left under it. Main spec frequency 2 → the rays turn faster; 0.05 → slower. Main spec color →
+pick a red with alpha half way → the rays turn red and fainter. Defaults puts it back. Result:
+
+**GLOW-4. The Proc style (feedback-21).** Main spec style back to Proc (flipbook) (the default) → the
+green flipbook around each upgrade icon, opening with a burst. Main spec start animation off → the next
+start has no burst (switch a setting or `/dw test` off and on to restart it); on again → the burst is
+back. Main spec duration (seconds) 3 → one loop takes visibly longer. Main spec X offset and Y offset
+5 → the flipbook reaches 5 pixels further past the icon's sides and top and bottom; -5 → inside them.
+Result:
+
+**GLOW-5. The Pixel border style (feedback-21).** Main spec style → Pixel border → lines run around each
+main-spec upgrade icon. Main spec lines 20 → many short lines; 1 → one. Main spec frequency 2 → they run
+faster. Main spec line length (0 = automatic) 20 → long lines; back to 0 → sized from the icon. Main
+spec thickness 6 → thick lines. Main spec dark border on → a dark border inside the lines. Main spec X
+and Y offset move the lines out or in. The off-spec glow (already pixel) answers its own column's rows
+the same and never the main spec's. Result:
+
+**GLOW-6. The Auto cast style (feedback-21).** Main spec style → Auto cast sparkles → sparkles circle
+each main-spec upgrade icon. Main spec particles 12 → more sparkles in each ring; 1 → one. Main spec
+frequency 2 → they circle faster. Main spec scale 3 → bigger sparkles; 0.5 → smaller. The offsets move
+the rings out or in. Off-spec style → Auto cast sparkles too → the off-spec icons sparkle in cyan, the
+main ones in their own color. Result:
+
+**GLOW-7. Each glow turned off (feedback-21).** `/dw test`. Untick Main spec glow → every main-spec
+icon's glow stops at once on every surface (table, compact cards, detail card, toast), and the off-spec
+icons keep theirs. Tick it again → back at once. Untick Off-spec glow → the off-spec icons stop and the
+main ones keep glowing. Both off, `/reload` → nothing glows, and the rows stay off. Profiles › switch to
+a profile with the glows on → the icons glow again without a repaint by hand. Result:
+
+**GLOW-8. A style's knobs dim for another style (feedback-21).** Settings › Window › Upgrade glow with
+the defaults: the main column's Pixel border, Auto cast sparkles and Button (rotating rays) rows are
+dimmed and its Proc (flipbook) and Offset rows live; the off-spec column's Pixel border and Offset rows
+are live and its Auto cast, Button and Proc rows dimmed. Main spec style → Button (rotating rays) → only
+its Button frequency is live in the main column, the Offset rows dimmed too. Untick Off-spec glow → every
+off-spec row below it, its Style and Color included, dims; Main spec's stay as they were. A dimmed row
+keeps its value and is never hidden. Result:
+
 ## Transmog
 
 **TMOG-1. The look chip and the For transmog ask.** `/dw test`, open the Drops tab and expand
@@ -2320,6 +2423,12 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-85 | feedback-20, Trade's muted green beside Can't use; a drop opens a closed window on Drops, an open one keeps its tab | No client pass recorded yet |
 | FEED-84 | feedback-20, your own upgrade's trade reason `Your upgrade` (not `Window passed`); no Looter row on your own detail card, a row per groupmate it upgrades instead | No client pass recorded yet |
 | TOAST-5 | DW-O2, the off-spec toast's title; auto-ask sends main spec first | No client pass recorded yet |
+| FEED-87 | feedback-21, Can't use in dim red on every surface, Not wanted still gray | No client pass recorded yet |
+| FEED-88 | feedback-21, Trade's `Can't use` on a drop none of your specs can use; Yes or Likely kept beside an off-spec use | No client pass recorded yet |
+| FEED-89 | feedback-21, every tooltip as bulleted rows, one per fact | No client pass recorded yet |
+| GLOW-1..2 | feedback-21, the main-spec glow on each of the four surfaces and nowhere else; the off-spec glow | No client pass recorded yet |
+| GLOW-3..6 | feedback-21, each glow style and its knobs: Button, Proc, Pixel border, Auto cast | No client pass recorded yet |
+| GLOW-7..8 | feedback-21, each glow turned off; a style's knobs dimmed for another style | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 

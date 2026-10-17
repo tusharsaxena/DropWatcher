@@ -120,7 +120,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     Me: SideCells.Me(drop, your gear) ─> WindowCells.MyEq + WindowCells.Me merged (SideCells.Merge:
   │       `[icons] 321/308 ▼8`, the difference unsigned; feedback-6 §1, DW-F1);
   │     Trade: WindowOwn.Trade (your own drop: MineCells.OwnTrade, `Yes`, the upgrade count in its
-  │       tooltip; else WindowCells.Trade), No in C.TONE.red (feedback-7 §2);
+  │       tooltip; else WindowCells.Trade), No in C.TONE.red (feedback-7 §2); on another player's
+  │       drop none of your specs can use (main cantUse, no off-spec part), Yes or Likely reads
+  │       `Can't use` in C.TONE.redMuted, the trade rows kept (feedback-21);
   │     Them: WindowGroup.ThemCell ─> SideCells.Them (your own drop: MineCells.Details, `Upgrade for
   │       N` (feedback-7 §2), its tooltip a gear grid, a row per upgrade from MineCells.Candidates,
   │       ranked by gain (TipMarks.GearRows, feedback-7 §3), `Hidden` while unrevealed; else
@@ -136,7 +138,8 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │       kind) ─> WindowGroup.ToneButton (red your move, cyan for an Offer, yellow waiting, green
   │       Traded; feedback-4 §1, feedback-6 §2), its state's icon through Window.SetButtonMark
   │       (Ask `chat`, Offer `external-link`; feedback-7 §1, feedback-10 §1); the
-  │       verdicts one tone each, the arrow first (WindowGroup.PlaceGlyph; §0)
+  │       verdicts one tone each, the arrow first (WindowGroup.PlaceGlyph; §0);
+  │     the item button, after ApplyRowIcon: Glow.Apply(button, drop) (the upgrade glow, below)
                   reads: NS.Gear.Snapshot().equipped (Me's gear; its icons show your inventory slot's
                   own tooltip), NS.TestMode.InspectOf(drop).gear (Them's gear: NS.Inspect.Get(looter guid),
                   or a sample's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
@@ -168,7 +171,10 @@ row hover ─────> a cell, button or header: Window.AttachTooltip ("row"
                  BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2);
                  a line given as `{ text, wrap = false }` (TipMarks.NoWrap) is added unwrapped, so the
                  tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
-                 a font glyph (feedback-6 §3, DW-F3); a `{ grid = rows }` line (TipMarks.Grid,
+                 a font glyph (feedback-6 §3, DW-F3); every tooltip is its title, then one row per
+                 fact, TipMarks.Row(label, value, tone) `• Label: value` (the bullet and label in
+                 C.IDLE, a nil value drops the row), grids, then at most a TipMarks.Hint, gray and
+                 unbulleted (feedback-21); a `{ grid = rows }` line (TipMarks.Grid,
                  feedback-7 §3) ─> TipGrid.Begin, then TipGrid.Add reserves a blank line per row,
                  then after Show TipGrid.Paint draws the cells as columns on a pooled child of
                  GameTooltip (anchored through Compat.TooltipLeftLine; the arrow column the mono
@@ -672,6 +678,34 @@ MineCells.Candidates: upgrade 1, sidegrade 2, offSpecUpgrade 3, offSpecSidegrade
 ```
 
 `Upgrade for N`, the Trade count, keep? and the trade estimate stay main-spec only.
+
+## The upgrade glow (feedback-21)
+
+```
+a repaint of a surface ─> Glow.Apply(button, drop)
+    the full table's Drops row (WindowGroup, after ApplyRowIcon), the compact card (CompactGroup),
+    the detail card's header (DetailCard), the toast (Toast.Show); never History, the Offer panel
+    or the Replaces rows
+  ─> Glow.KindOf(drop): your own drop ─> nil; me.verdict upgrade ─> main;
+       cantUse with OffSpec.Of(me).verdict upgrade ─> offSpec; else nil
+  ─> glow.<kind>.enabled off ─> as nil
+  ─> the same kind, settings generation and button width as last time ─> nothing (no library call)
+  ─> else stop the old effect (key DropWatcherUpgrade), record button.glowKind, start
+       LibCustomGlow-1.0's glow.<kind>.type at frame level 1 over the button:
+       pixel    PixelGlow_Start(button, color, lines, frequency, length or nil, thickness, x, y, border)
+       autocast AutoCastGlow_Start(button, color, particles, frequency, scale, x, y)
+       button   ButtonGlow_Start(button, color, frequency)
+       proc     ProcGlow_Start(button, { color, startAnim, duration, xOffset, yOffset })
+       (no library, headless or a LibStub miss: glowKind recorded, nothing drawn)
+WindowGroup / CompactGroup repaint ─> Glow.StopFree(pool): the rows or cards left unused lose it
+the toast dismissed or held for combat ─> Glow.Stop(frame.icon)
+a glow.* row's write, a profile switch / copy / reset ─> Glow.Refresh(): the generation + 1,
+    Window.Refresh, Toast.RefreshGlow ─> every glowing icon restarts once
+```
+
+Can't use reads `C.TONE.redMuted` (dim red) wherever a verdict is drawn, and Not wanted stays gray
+(`bad`); Trade's `Can't use` (above, the Drops table) is the same dim red, and an off-spec use keeps
+Trade's Yes or Likely in its green.
 
 ## Asking, offering and announcing (design spec §9.2-§9.3)
 

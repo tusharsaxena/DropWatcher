@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1559%2F1559_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1582%2F1582_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -48,7 +48,7 @@ It watches what your party or raid receives and compares each item with your gea
 
 Type `/dw show`, or right-click the minimap button and pick **Show window**. Drag it by the title bar, resize it from the corner and lock it with `/dw lock`. You won't often open it yourself, though: in a dungeon, key or raid it pops up when someone loots an item it shows. During a run it opens as a narrow column of cards, the compact view, and goes back to the full table afterwards. The button next to minimize switches views, as do `/dw compact` and `/dw full`, and each view keeps its own size and place.
 
-**Drops** lists every drop, yours included, under the boss or key run it came from. The two columns that matter are **Me** and **Them**: is this an upgrade for you, and is it one for the person who looted it? Each shows the gear worn in that slot and the item-level difference, green ▲ for an upgrade, yellow ≈ for a sidegrade and red ▼ for a downgrade. If your current spec can't use an item but another spec of your class can, Me tells you how it would do in that spec instead, in cyan with the spec's name: `▲20 Holy` means 20 item levels over the best Holy item you own. **Trade** says whether the looter can hand it over at all, and **Trade window** counts down how long they have. If you want it, **Ask** whispers them once, and for an off-spec item the whisper says that's what it's for. During a boss fight the whisper waits until the fight ends. Click a row for the full reasoning, or hover any cell for the short version.
+**Drops** lists every drop, yours included, under the boss or key run it came from. The two columns that matter are **Me** and **Them**: is this an upgrade for you, and is it one for the person who looted it? Each shows the gear worn in that slot and the item-level difference, green ▲ for an upgrade, yellow ≈ for a sidegrade and red ▼ for a downgrade. If your current spec can't use an item but another spec of your class can, Me tells you how it would do in that spec instead, in cyan with the spec's name: `▲20 Holy` means 20 item levels over the best Holy item you own. An upgrade's icon glows too, green for your current spec and cyan for an off-spec, in the table, the compact cards, the detail card and the toast. **Trade** says whether the looter can hand it over at all (if none of your specs can use the item it reads `Can't use` in dim red, because there's nothing for you to ask for), and **Trade window** counts down how long they have. If you want it, **Ask** whispers them once, and for an off-spec item the whisper says that's what it's for. During a boss fight the whisper waits until the fight ends. Click a row for the full reasoning, or hover any cell for the facts behind it, one per line.
 
 Your own drops show who in the group would gain from them. **Offer** opens a panel that ranks everyone by how much they'd gain (anyone who could only use it in another spec comes after the people who'd use it now), with a whisper button per person and **Announce to group** to tell everyone at once. While any of your drops can still be traded, the strip at the bottom counts them, and **Post my tradeables** lists them in group chat in one line. That strip also has **Scan group**, which reads everyone's gear before the loot starts so you aren't waiting on inspects later, and **Expand all**.
 
@@ -73,6 +73,7 @@ Two extras are off until you turn them on: the **toast**, a popup when someone l
 | Does it look at my other specs? | Yes, when your current spec can't use a drop. It compares the drop with the best item you own for each of your other specs, worn or in your bags, by item level only. For other players it can only see what they have on. |
 | Does it need Pawn? | No. With Pawn installed, its scale scores each drop next to the item level. Without it you can enter your own stat weights, paste a Pawn scale string in Settings › Comparison, or go by item level alone. |
 | Does it work in raids? | Yes. Dungeons, keys and raids are watched out of the box. Delves, scenarios and the open world are off until you turn them on under General › When to show. |
+| Can I change or turn off the glow on upgrades? | Yes, under Settings › Window › Upgrade glow. The main-spec and off-spec glows each have their own switch, style (rotating rays, a proc flash, a pixel border or sparkles), color and animation settings. |
 | Can it tell me whether I have the look? | Yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. |
 
 ## Troubleshooting

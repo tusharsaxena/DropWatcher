@@ -63,7 +63,8 @@ one-line responsibility and why its position is load-bearing or conventional is 
   footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
   off-spec verdict's look, `OffSpecCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
-  tooltip placement, compact mode's switch and bodies, test mode and the diagnostics.
+  tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), compact
+  mode's switch and bodies, test mode and the diagnostics.
 - `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
   the slash-only and `/dw sim` verbs, and Profiles, last.
 
@@ -188,7 +189,9 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 ## Taint Notes
 
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are
-allowed in combat and nothing defers (the toast waits out combat by choice, `toast.inCombat`). Settings writes touch no protected frame. Opening the settings panel is refused
+allowed in combat and nothing defers (the toast waits out combat by choice, `toast.inCombat`). The
+upgrade glow (`modules/Glow.lua`) is LibCustomGlow-1.0's plain frames parented to those windows'
+item buttons, none of them secure, so it starts and stops in combat too. Settings writes touch no protected frame. Opening the settings panel is refused
 in combat by the options library, which also locks a page shown in combat; the addon adds no lock of
 its own and never closes Blizzard's settings window (options-ui-§2). The trade action
 (`InitiateTrade`) and the chat sender are wrapped in
@@ -241,10 +244,10 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Covers |
 |---|---|
 | `scope.md` | What the addon is for, what exists at this version, and what it deliberately does not do |
-| `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included) |
+| `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included, and the upgrade glow `modules/Glow.lua`) |
 | `schema.md` | The SavedVariables shape, every default, and the migration path |
 | `settings-panel.md` | The `Page \| Covers` table and the page → tab → row tree |
-| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence |
+| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence, Can't use and Trade's Can't use in dim red, and the upgrade glow |
 | `common-tasks.md` | Recipes for the changes made most often here |
 
 ### Conditional (documentation-§3, Tier 2)

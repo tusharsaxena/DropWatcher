@@ -17,7 +17,7 @@ predicate, `settings/SchemaRows.lua`), never hidden, and keeps its value.
 | Comparison | `Scoring`, `Weights`, `Preferences` |
 | Trade | `Rules`, `Timers` |
 | Messages | `Templates`, `Sending`, `Auto-ask` |
-| Window | `Columns`, `Layout`, `Toast` |
+| Window | `Columns`, `Layout`, `Toast`, `Upgrade glow` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 `settings/Panel.lua` registers General, `settings/Pages.lua` the five after it,
@@ -143,3 +143,17 @@ tabs of the full layout, a Drops row taller by its countdown bar's room while Tr
 for (7 to 180 days or Never delete, default 30; account-wide; a shorter time that would delete groups
 asks first, and No puts the previous time back), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a setting, so no schema row; Keep history for's `pairWith` partner in `settings/PageEditors.lua`; it asks first, `NS.History.AskClear`, and Yes empties the log on every character, or test mode's or a simulation's session-only log while one is on). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.
+
+**Upgrade glow** (feedback-21): the glow on a drop's icon in the Drops table, the compact card, the
+detail card's header and the toast (never History, the Offer panel or the Replaces rows), two glows
+side by side, the main spec's in the left column and the off-spec's in the right, each knob a
+main | off-spec pair on one line. **Effect:** Main spec glow and Off-spec glow (both on), each
+glow's Style (Button (rotating rays), Proc (flipbook), Pixel border or Auto cast sparkles; Proc and
+Pixel border by default) and Color (a color swatch with alpha; the upgrade green and the off-spec
+cyan). Then one subsection per style, each named as its style reads in the dropdown: **Pixel
+border** (lines, frequency, line length with 0 Automatic, thickness, dark border), **Auto cast
+sparkles** (particles, frequency, scale), **Button (rotating rays)** (frequency), **Proc
+(flipbook)** (duration in seconds, start animation), and **Offset** (X and Y, for Pixel, Proc and
+Auto cast). A glow's Style and Color are dimmed while it is off; a knob also while its glow is in a
+style the knob does not apply to. Every change restarts the glowing icons at once
+(`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#window--upgrade-glow-feedback-21).

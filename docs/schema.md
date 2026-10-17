@@ -134,6 +134,33 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
 
+### Window › Upgrade glow (feedback-21)
+
+Two glows on a drop's icon (`modules/Glow.lua`, LibCustomGlow-1.0): `glow.main` for an upgrade for
+your current spec, `glow.offSpec` for a drop your spec can't use whose off-spec part is an upgrade.
+Each has the same keys, below as `glow.<g>.<key>`; the knob set, its ranges and defaults are shared
+with KickCD's glow slots. On the tab each knob is a main | off-spec pair. A style's knobs are dimmed
+while the glow is in another style, and every row of a glow while it is off. Every row's reaction
+is `NS.Glow.Refresh()` (the window and the toast repainted, each glowing icon restarted once).
+
+| Key | Default | Style | What it is |
+|---|---|---|---|
+| `glow.<g>.enabled` | `true`, `true` | all | the glow on or off |
+| `glow.<g>.type` | `"proc"`, `"pixel"` | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
+| `glow.<g>.color` | the upgrade green `{ r = 0.30, g = 0.85, b = 0.40, a = 1 }`, the off-spec cyan `{ r = 0.30, g = 0.85, b = 0.85, a = 1 }` | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape) |
+| `glow.<g>.pixelLines` | `8` | pixel | how many lines, 1 to 20 |
+| `glow.<g>.pixelFrequency` | `0.25` | pixel | how fast they run, 0.05 to 2 by 0.05 |
+| `glow.<g>.pixelLength` | `0` | pixel | each line's length in pixels, 0 to 20; 0 is Automatic (the library sizes them from the icon; the CLI shows `0 (Automatic)`) |
+| `glow.<g>.pixelThickness` | `2` | pixel | each line's thickness in pixels, 1 to 6 |
+| `glow.<g>.pixelBorder` | `false` | pixel | a dark border inside the lines |
+| `glow.<g>.autocastParticles` | `4` | autocast | sparkles in each ring, 1 to 12 |
+| `glow.<g>.autocastFrequency` | `0.125` | autocast | how fast they circle, 0.05 to 2 by 0.05 |
+| `glow.<g>.autocastScale` | `1` | autocast | their size, 0.5 to 3 by 0.1 |
+| `glow.<g>.buttonFrequency` | `0.125` | button | how fast the rays turn, 0.05 to 2 by 0.05 |
+| `glow.<g>.procDuration` | `1` | proc | seconds per loop of the flipbook, 0.25 to 3 by 0.25 |
+| `glow.<g>.procStartAnim` | `true` | proc | the opening burst when it starts |
+| `glow.<g>.xOffset`, `glow.<g>.yOffset` | `0`, `0` | pixel, autocast, proc | how far the glow reaches past the icon's sides and top and bottom, -10 to 10 |
+
 ### Named state (no row)
 
 | Key | Default | Set by | What it is |

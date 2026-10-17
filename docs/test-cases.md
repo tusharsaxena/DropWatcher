@@ -100,7 +100,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (12)
+### test_schema_rows.lua (17)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -114,6 +114,11 @@ Total.
 - rows: Keep history for is account-wide, and a profile reset leaves it
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
+- glow: both glows have every knob's row on Window › Upgrade glow, with the plan's defaults
+- glow: the main and off-spec rows alternate, so each knob reads across one line
+- glow: an out-of-range knob, an unknown style and a malformed color are refused
+- glow: a knob is dimmed while its glow is in another style, and everything while the glow is off
+- glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
 
 ### test_settings_pages.lua (39)
 
@@ -386,7 +391,7 @@ Total.
 - chrome: the footer's one line is inspect freshness and the situation
 - chrome: the footer's tooltip carries every full segment
 - chrome: the Filters count is Quality, Content and Character off their default, on a tab that honors them
-- chrome: the Filters label counts, and its tooltip lists each value with a dot on the active ones
+- chrome: the Filters label counts, and its tooltip lists each value, the active ones in yellow
 - chrome: compact shows the short title, TEST beside it, the title and the word centered together
 - chrome: a simulation reads SIM in compact, in its cyan
 - chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
@@ -544,12 +549,20 @@ Total.
 - own drops: the detail card's FOR THE GROUP names each member it upgrades, in class color, best first
 - own drops: the detail card has no Looter row; the compact card's line 2 reads Name [YOU]
 
-### test_tip_marks.lua (19)
+### test_tip_marks.lua (27)
 
 - tip marks: the escape is the whole 64x64 canvas at the text's height, tinted as 0..255
 - tip marks: up is arrow-up in green, side is transfer in yellow, down is arrow-down in red
 - tip marks: with the media library absent a mark falls back to a plain character
 - tip marks: a non-wrapping line and its text; names in class and quality colors
+- tip marks: a row is `• Label: value`, the bullet and label gray, the value plain or in its tone
+- tip rows: the table's cells (WindowCells, SideCells) are rows, the Trade cell's reason one row per fact
+- tip rows: your own drop's cells and buttons (MineCells) and the off-spec cells are rows
+- tip rows: the detail card's chips, sides, trade box and actions (DetailCells) are rows
+- tip rows: the compact cards and chrome (CompactCards, CompactChrome) are rows
+- tip rows: History's cells and card (WindowHistory, HistoryCard) are rows
+- tip rows: the column headers and the Offer panel's columns are rows, the settings keep their prose
+- tip rows: the chrome's own tooltips (title bar, footer, simulator panel) are rows
 - tooltip: a non-wrapping line is added with wrap off; every other line still wraps
 - grid: the arrow cell is the table's glyph and the unsigned difference, both in the verdict's tone
 - grid: a member's rows, the name on the first, the arrow on the item it replaces, empty for a slot worn empty
@@ -561,7 +574,7 @@ Total.
 - details: of two worn rings the line names the lower, the one the drop would replace
 - audit: no column tooltip on Drops or History carries a verdict glyph; their marks are textures
 - audit: no localized string in the addon's source puts a verdict glyph in a tooltip
-- audit: every tooltip of test mode's drops, both layouts, the detail card and History is glyph-free
+- audit: every tooltip of test mode's drops, both layouts, the detail card and History is glyph-free and in rows
 - tip marks: the arrow between two values is arrow-right in the muted tone, -> without the library
 - tip marks: Chars counts what a text draws: an escape two, a color code none, a UTF-8 character one
 - audit: no text in the default face carries a glyph: Drops, the detail card, the Offer panel, History
@@ -1517,6 +1530,19 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
+### test_glow.lua (10)
+
+- glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
+- glow: without the library Apply still records its decision; a glow turned off clears it
+- glow: each style starts with the knob table's arguments, under the addon's key
+- glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it
+- glow: the full table's Drops row icon wears its drop's glow; the detail card's header too
+- glow: a pooled row reused for a sidegrade, or left unused, loses its glow
+- glow: the compact card's icon wears it; the table's rows stop theirs in the compact layout
+- glow: the toast's icon wears it and stops it when the toast goes
+- glow: a glow row's write re-applies every drawn icon at once
+- glow: a profile switch re-reads the glow settings
+
 ### test_auto_ask.lua (24)
 
 - auto-ask: DueAt is the delay after the later of the drop and the encounter's end
@@ -1820,7 +1846,7 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 12 |
+| test_schema_rows.lua | 17 |
 | test_settings_pages.lua | 39 |
 | test_slash.lua | 26 |
 | test_window.lua | 15 |
@@ -1837,7 +1863,7 @@ Total.
 | test_side_cells.lua | 21 |
 | test_detail_card.lua | 21 |
 | test_own_drops.lua | 16 |
-| test_tip_marks.lua | 19 |
+| test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
 | test_offer_panel.lua | 17 |
@@ -1879,6 +1905,7 @@ Total.
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 32 |
+| test_glow.lua | 10 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 20 |
@@ -1897,4 +1924,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1559** |
+| **Total** | **1582** |
