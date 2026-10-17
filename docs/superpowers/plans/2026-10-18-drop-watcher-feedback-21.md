@@ -18,7 +18,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 |---|---|---|---|
 | G0 plan | DW | done | (this file) |
 | G1 Can't use dim red + Trade's Can't use | DW | done | ee51fbd |
-| G2 vendor LibCustomGlow-1.0 | DW | todo | |
+| G2 vendor LibCustomGlow-1.0 | DW | done | 4c13b84 |
 | G3 glow settings (schema rows, defaults, Window › Upgrade glow tab) | DW | todo | |
 | G4 glow module + the four surfaces | DW | todo | |
 | G6 tooltip readability pass (every tooltip as bulleted rows) | DW | todo | |
