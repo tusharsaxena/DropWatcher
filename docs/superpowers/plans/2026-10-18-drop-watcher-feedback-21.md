@@ -22,7 +22,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | G3 glow settings (schema rows, defaults, Window › Upgrade glow tab) | DW | done | 9942772 |
 | G4 glow module + the four surfaces | DW | done | 8b36aa3 |
 | G6 tooltip readability pass (every tooltip as bulleted rows) | DW | done | 2bfef72 |
-| G5 docs, smoke checks, test-cases, README badge | DW | todo | |
+| G5 docs, smoke checks, test-cases, README badge | DW | done | 5a5283a |
 | K1 KickCD per-style glow knobs | KickCD | done | `7307777` (KickCD) |
 | R1 review + fixes (both repos) | both | todo | |
 | P1 push both branches | both | todo | |
