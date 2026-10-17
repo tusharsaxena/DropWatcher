@@ -24,7 +24,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | G6 tooltip readability pass (every tooltip as bulleted rows) | DW | done | 2bfef72 |
 | G5 docs, smoke checks, test-cases, README badge | DW | done | 5a5283a |
 | K1 KickCD per-style glow knobs | KickCD | done | `7307777` (KickCD) |
-| R1 review + fixes (both repos) | both | todo | |
+| R1 review + fixes (both repos) | both | KickCD done; DW pending | `d8a74d8` (KickCD) |
 | P1 push both branches | both | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | both | blocked on owner | |
 
@@ -79,12 +79,12 @@ LibCustomGlow-1.0 minor 24 signatures:
 | pixelLines | pixel | 1–20 / 1 | 8 | `N` |
 | pixelFrequency | pixel | 0.05–2 / 0.05 | 0.25 | `frequency` |
 | pixelLength | pixel | 0–20 / 1 (0 = automatic) | 0 | `length` (nil when 0) |
-| pixelThickness | pixel | 1–6 / 1 | 2 | `th` |
-| pixelBorder | pixel | bool | false | `border` |
+| pixelThickness | pixel | 1–6 / 1 | 1 | `th` |
+| pixelBorder | pixel | bool | true | `border` |
 | autocastParticles | autocast | 1–12 / 1 | 4 | `N` |
 | autocastFrequency | autocast | 0.05–2 / 0.05 | 0.125 | `frequency` |
 | autocastScale | autocast | 0.5–3 / 0.1 | 1 | `scale` |
-| buttonFrequency | button | 0.05–2 / 0.05 | 0.125 | `frequency` |
+| buttonFrequency | button | 0.05–2 / 0.05 | 0.25 | `frequency` |
 | procDuration | proc | 0.25–3 / 0.25 | 1 | `duration` |
 | procStartAnim | proc | bool | true | `startAnim` |
 | xOffset, yOffset | pixel, autocast, proc | -10–10 / 1 | 0 | offsets |
@@ -92,6 +92,10 @@ LibCustomGlow-1.0 minor 24 signatures:
 Each addon names the stored keys in its own convention (DropWatcher: `glow.main.<knob>`,
 `glow.offSpec.<knob>`; KickCD: its `units.<unit>.icons.{primary,secondary}Glow<Knob>` pattern), but
 the knob set, ranges and defaults are the table's.
+
+Every default is the value LibCustomGlow-1.0 takes for nil (R1: pixelThickness was 2,
+pixelBorder false and buttonFrequency 0.125, which changed KickCD's existing glows on upgrade;
+button's nil throttle 0.01 is frequency 0.25 under `throttle = 0.25/frequency*0.01`).
 
 ## Tasks
 
