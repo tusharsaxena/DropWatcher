@@ -13,7 +13,8 @@ marked as such rather than listed as a requirement.
   only.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load
-  ordering, not as things to download.
+  ordering, not as things to download. `libs/LibCustomGlow-1.0/` (MIT, minor 24, copied whole from
+  the KickCD sibling's vendored copy) draws the upgrade glow on item icons.
 - **Optional: Pawn and CanIMogIt.** Named in `## OptionalDeps:` so they load first when installed,
   and reached only through `core/Compat.lua` (their API is called under `pcall`, never copied).
   **Pawn**, once it has initialized (`PawnIsInitialized`), drives the `pawn` scorer

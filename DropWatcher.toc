@@ -5,7 +5,7 @@
 ## Version: 1.0.0
 ## IconTexture: Interface\AddOns\DropWatcher\media\logos\dropwatcher.logo.128.tga
 ## SavedVariables: DropWatcherDB, DropWatcherPerfDB
-## OptionalDeps: Pawn, CanIMogIt, Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0
+## OptionalDeps: Pawn, CanIMogIt, Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibCustomGlow-1.0
 ## DefaultState: enabled
 ## Category-enUS: Group
 ## X-License: MIT
@@ -30,6 +30,8 @@ libs\LibSharedMedia-3.0\lib.xml
 # LibDataBroker-1.1.lua sits above its lib.xml. LibKa0s-Launcher-1.0 resolves both at Register time.
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\lib.xml
+# The upgrade glow. It resolves only LibStub at file load.
+libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
 # ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
 libs\LibKa0s\LibKa0s.xml
 
