@@ -135,7 +135,7 @@ end)
 test("off-spec cells: a Can't use with no off-spec is unchanged", function()
     local WC = addon().WindowCells
     local c = WC.Me(drop({ me = cantMain(nil) }))
-    assertEqual(c.text, "Can't use"); assertNil(c.glyph); assertEqual(c.tone, "bad"); assertEqual(c.verdict, "cantUse")
+    assertEqual(c.text, "Can't use"); assertNil(c.glyph); assertEqual(c.tone, "redMuted"); assertEqual(c.verdict, "cantUse")
     assertNil(c.offSpec); assertNil(c.mainVerdict); assertNil(c.spec)
     local junk = WC.Me(drop({ me = cantMain(off({ verdict = "unknown" })) }))
     assertEqual(junk.text, "Can't use", "an off-spec verdict that is not one of the three is ignored")
@@ -163,7 +163,7 @@ end)
 test("off-spec cells: a Can't use with no off-spec keeps the worn gear", function()
     local S = addon().SideCells
     local c = S.Me(drop({ me = cantMain(nil) }), MINE)
-    assertEqual(c.level, "300"); assertEqual(c.text, "Can't use"); assertEqual(c.tone, "bad")
+    assertEqual(c.level, "300"); assertEqual(c.text, "Can't use"); assertEqual(c.tone, "redMuted")
 end)
 
 test("off-spec cells: the looter's Them cell pairs its off-spec verdict with the item it was judged against", function()

@@ -92,7 +92,7 @@ test("compact cards: a verdict reads the glyph and the unsigned difference; a wo
         { { verdict = "upgrade", ilvlDelta = 19, reasons = {} }, "▲19", "good" },
         { { verdict = "sidegrade", ilvlDelta = 0.2, reasons = {} }, "≈0", "yellow" },
         { { verdict = "downgrade", ilvlDelta = -13, reasons = {} }, "▼13", "red" },
-        { { verdict = "cantUse", reasons = {} }, "⊘ Can't use", "bad" },
+        { { verdict = "cantUse", reasons = {} }, "⊘ Can't use", "redMuted" },
         { { verdict = "doesntWant", reasons = {} }, "⊘ Not wanted", "bad" },
         { NONE, "?", "muted" },
     }
@@ -209,7 +209,7 @@ test("compact cards: the Drops card's pieces keep the full view's tones and tool
     assertEqual(joined(card.ilvl.tip), joined(W.Ilvl(d).tip))
     assertEqual(card.trade.tone, "good"); assertEqual(joined(card.trade.tip), joined(W.Trade(d).tip))
     assertEqual(card.slot.text, "Trinket"); assertEqual(joined(card.slot.tip), joined(W.Slot(d).tip))
-    assertEqual(card.you.tone, "red"); assertEqual(card.them.tone, "bad", "can't use is gray in both columns")
+    assertEqual(card.you.tone, "red"); assertEqual(card.them.tone, "redMuted", "can't use is dim red in both columns")
     assertEqual(joined(card.you.tip), joined(NS.SideCells.Me(d, MY_GEAR).tip), "the full view's Me tooltip")
     assertEqual(card.you.label, "You"); assertEqual(card.them.label, "Them")
     assertEqual(joined(card.ask.tip), joined(W.Ask(d, nil, nil, nil).tip))

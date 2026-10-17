@@ -81,7 +81,7 @@ test("toast: Compose keeps the table's words, the empty slot and each trade reas
     assertNil(t.them.glyph, "their gear not read: the word")
     assertEqual(t.them.text, "?"); assertEqual(t.them.tone, "muted")
     t = C(drop({ them = { verdict = "cantUse" } }))
-    assertNil(t.them.glyph); assertEqual(t.them.text, "Can't use"); assertEqual(t.them.tone, "bad")
+    assertNil(t.them.glyph); assertEqual(t.them.text, "Can't use"); assertEqual(t.them.tone, "redMuted")
     t = C(drop({ them = { verdict = "doesntWant" } }))
     assertEqual(t.them.text, "Not wanted"); assertEqual(t.them.tone, "bad")
     t = C(drop({ me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))

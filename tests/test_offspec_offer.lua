@@ -204,7 +204,7 @@ test("off-spec offer: the candidate cell's gear is the item compared with, not t
         cantMain(off({ ilvlDelta = NONE, baseline = NONE, reasons = { { key = "emptySlot" } } }))), read)
     assertEqual(empty.level, "empty"); assertEqual(empty.glyph, "▲"); assertEqual(empty.text, "Holy")
     local plain = cell(NS, cand("Sixa", "ROGUE", "ready", { verdict = "cantUse", reasons = { { key = "armorType" } } }), read)
-    assertEqual(plain.text, "Can't use"); assertEqual(plain.tone, "bad"); assertEqual(plain.level, "300/318", "a plain Can't use is unchanged")
+    assertEqual(plain.text, "Can't use"); assertEqual(plain.tone, "redMuted"); assertEqual(plain.level, "300/318", "a plain Can't use is unchanged")
 end)
 
 -- ── the Offer whisper and the panel's note ──────────────────────────────────────────────────

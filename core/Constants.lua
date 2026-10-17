@@ -144,9 +144,9 @@ C.IDLE = { r = 0.62, g = 0.62, b = 0.64 }
 C.CHEVRON_ROW = { r = 1.0, g = 1.0, b = 1.0, a = 0.55 }
 
 -- The drop tables' tones (design spec §11.2; feedback-4 spec §0 and §1): `good` an upgrade, a
--- tradeable estimate or an action done, `bad` gray (can't use, not tradeable), `warn` amber (a trade
+-- tradeable estimate or an action done, `bad` gray (not wanted, not tradeable), `warn` amber (a trade
 -- window ending soon), `plain` plain text, `muted` what is not known yet; `yellow`, `red`, `cyan`
--- and `offspec` below.
+-- `redMuted` and `offspec` below.
 C.TONE = {
     good  = { r = 0.30, g = 0.85, b = 0.40 },
     bad   = { r = 0.55, g = 0.55, b = 0.58 },
@@ -162,9 +162,9 @@ C.TONE = {
     -- An off-spec verdict (feedback-19 spec §1): your current spec can't use it, another of your
     -- specs can. Its own token, close to Offer's cyan by the owner's choice, so the two can part later.
     offspec = { r = 0.30, g = 0.85, b = 0.85 },
-    -- Trade's Yes or Likely on another player's drop you can't use (feedback-20): tradeable, but
-    -- nothing for you to ask for, so the good green stepped down toward gray.
-    goodMuted = { r = 0.42, g = 0.62, b = 0.47 },
+    -- The Can't use verdict and Trade's Can't use (feedback-21): a dim red, read beside the
+    -- downgrade's `red` and the gray `bad`, so a drop you cannot use reads apart from one not wanted.
+    redMuted = { r = 0.72, g = 0.36, b = 0.34 },
     plain = { r = 0.92, g = 0.92, b = 0.92 },
     muted = { r = 0.70, g = 0.70, b = 0.72 },
 }

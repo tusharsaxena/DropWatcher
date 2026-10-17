@@ -923,7 +923,7 @@ At a larger Font size (Settings › Window › Layout) record whether the longes
 full layout, Drops → no `My eq` or `Their eq` label; Me and Them each read the worn item's icon (two for a
 ring, trinket or one-hand weapon), its item level (`321`, or `321/308` for two) in plain white, then the
 verdict's glyph and the item-level difference with no sign, `▲6` green, `≈1` yellow, `▼8` red, the glyph
-and number in one color and the glyphs drawn, not boxes. `Can't use` and `Not wanted` stay gray words after
+and number in one color and the glyphs drawn, not boxes. `Can't use` (dim red) and `Not wanted` (gray) stay words after
 the gear; nothing worn reads a muted `empty` before the verdict; an unread looter's Them reads `…`,
 `range`, `combat`, `!` or `–` with no `?` after it. Hover Me's icon → the game's tooltip for your equipped
 item; hover Them → its tooltip lists each worn item and the inspect's age, then the verdict's reasons.
@@ -1000,7 +1000,7 @@ columns and the always-gray Trade. `/dw test` → Offer on one of your sample dr
 Member, Their eq and Actions, nothing else. Each Their eq cell reads like the Drops table's Them cell: the
 member's worn icon(s), the item level (`276`, or `321/308` for rings, trinkets and one-hand weapons), then the
 glyph and the difference without a sign in the verdict's color (`▲19` green, `≈0` yellow, `▼4` red), the
-glyphs drawn, never boxes. A member who can't use it reads `Can't use` (gray), one still being read `…`, one
+glyphs drawn, never boxes. A member who can't use it reads `Can't use` (dim red), one still being read `…`, one
 never read `Unavailable` (muted), one wearing nothing there `empty`. The widest cell (`321/308 ▼13` with two
 icons) is not cut and does not run into Actions. Actions holds one Offer button per member (or a dash; superseded by feedback-11, 2026-10-14: the gray `No action` button with its reason; FEED-72); there
 is no second, grayed button. Hover Their eq → the gear grid (FEED-62) and the verdict's explanation, the
@@ -1112,7 +1112,7 @@ mark at its right. Row 2: the item's name in its quality color (purple for epic)
 smaller gray text; with a long name the name is cut, never the level. Row 3: `Looted by Seta`, the name in
 its class color, then `You ▲19` and `Them` with its verdict, each glyph (`▲`, `≈`, `▼`) drawn in the
 monospace face, never a box, glyph and number in one tone (green upgrade, yellow sidegrade, red
-downgrade); a verdict in a word (`Can't use`, `Not wanted`, `?`) reads gray with no glyph; `You`, `Them` and
+downgrade); a verdict in a word (`Can't use` dim red, `Not wanted` gray, `?` muted) reads with no glyph; `You`, `Them` and
 the `·` separators muted; no signed `+19` and no texture arrow. Row 4: `Likely tradeable` in green then the
 reason in gray (`not an upgrade for Seta`), cut with `…` only at the right inset; hover the toast → its
 tooltip is the Trade cell's, with the full reason. Rows 2 to 4 run to the right inset and nothing overlaps
@@ -1266,7 +1266,7 @@ one-hander: Me reads `empty ▲ Holy` with the glyph and `Holy` in cyan, a cyan 
 item: an empty slot.`. Solenne's gloves: Me reads the bag item's level, then `▲13 Holy`; its icon's
 tooltip is the bag item's own, not an inventory slot's. Kragmar's bracers read `≈1 Holy` and
 Thornbrew's boots `▼11 Holy`, both cyan. Seta's legs (the second boss) read `▲20 Holy` over a worn
-item. Ashveil's chest still reads `Can't use` in gray with no spec name (a wrong armor type). Hover
+item. Ashveil's chest still reads `Can't use` in dim red with no spec name (a wrong armor type). Hover
 the Me column's header → the legend has the cyan line. Expand Seta's legs → the detail card's FOR
 YOU chip reads `OFF-SPEC UPGRADE`, its first row `Spec  Holy (off-spec): Protection can't use it`,
 then Replaces, Item level and the score row saying off-spec is judged on item level alone. The same

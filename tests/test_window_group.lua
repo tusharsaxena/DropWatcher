@@ -52,7 +52,7 @@ end)
 test("cells: a verdict with no glyph says a word, and every verdict's tooltip says why", function()
     local W = WC()
     local cant = W.Me(drop({ me = { verdict = "cantUse", reasons = { { key = "armorType" } } } }))
-    assertEqual(cant.text, "Can't use"); assertTrue(cant.glyph == nil); assertEqual(cant.tone, "bad")
+    assertEqual(cant.text, "Can't use"); assertTrue(cant.glyph == nil); assertEqual(cant.tone, "redMuted")
     assertEqual(cant.tip[1], "For you: Can't use")
     assertTrue(joined(cant.tip):find("wrong armor type for the class") ~= nil)
     local unk = W.Me(drop({ me = NONE }))
@@ -67,7 +67,7 @@ test("cells: a verdict with no glyph says a word, and every verdict's tooltip sa
     assertEqual(empty.text, "empty"); assertEqual(empty.glyph, "▲")
 end)
 
-test("cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray", function()
+test("cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use dim red", function()
     local W = WC()
     local down = W.Them(drop(), 100)
     assertEqual(down.text, "-13"); assertEqual(down.glyph, "▼"); assertEqual(down.tone, "red")
@@ -75,7 +75,7 @@ test("cells: the Them column takes the Me tones: their upgrade green, their down
     local up = W.Them(drop({ them = { verdict = "upgrade", ilvlDelta = 12, reasons = {} } }), 100)
     assertEqual(up.tone, "good")
     local cant = W.Them(drop({ them = { verdict = "cantUse", reasons = {} } }), 100)
-    assertEqual(cant.tone, "bad", "gray, as in the Me column")
+    assertEqual(cant.tone, "redMuted", "dim red, as in the Me column")
 end)
 
 test("cells: Them is a dash on your own drop and `?` with the inspect's reason while unread", function()
@@ -124,18 +124,30 @@ test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", fu
     assertEqual(none.tone, "muted")
 end)
 
-test("cells: Trade's Yes or Likely is muted green on another player's drop you can't use", function()
+test("cells: Trade's Yes or Likely reads Can't use in dim red on another player's drop none of your specs can use", function()
     local W = WC()
     local cant = { verdict = "cantUse", reasons = { { key = "armorType" } } }
     local c = W.Trade(drop({ me = cant }))
-    -- red under: Likely in the full green beside Can't use, as if there were something to ask for
-    assertEqual(c.text, "Likely"); assertEqual(c.tone, "goodMuted")
+    -- red under: Likely in green beside Can't use, as if there were something to ask for (feedback-21)
+    assertEqual(c.text, "Can't use"); assertEqual(c.tone, "redMuted"); assertEqual(c.state, "likely", "the estimate kept")
+    assertEqual(c.tip[1], "Trade: Can't use")
+    assertEqual(c.tip[2], W.TradeReason(drop().trade, "Seta"), "the trade reason kept")
     assertEqual(c.tip[3], "You can't use it, so there is nothing for you to ask for.", "after the reason")
-    assertEqual(W.Trade(drop({ me = cant, trade = { state = "no", reasonKey = "legacy" } })).tone, "red", "No stays red")
-    assertEqual(W.Trade(drop({ me = cant, isMine = true })).tone, "good", "your own drop: you give it away")
+    local yes = W.Trade(drop({ me = cant, trade = { state = "yes", reasonKey = "boe", basis = "bind" } }))
+    assertEqual(yes.text, "Can't use"); assertEqual(yes.tone, "redMuted"); assertEqual(yes.state, "yes")
+    local no = W.Trade(drop({ me = cant, trade = { state = "no", reasonKey = "legacy" } }))
+    assertEqual(no.text, "No"); assertEqual(no.tone, "red", "No stays red")
+    local unk = W.Trade(drop({ me = cant, trade = { state = "unknown", reasonKey = "noInspect", args = { "outOfRange" } } }))
+    assertEqual(unk.text, "Unknown"); assertEqual(unk.tone, "muted", "Unknown stays muted")
+    local own = W.Trade(drop({ me = cant, isMine = true }))
+    assertEqual(own.text, "Likely"); assertEqual(own.tone, "good", "your own drop: you give it away")
     local off = { verdict = "cantUse", reasons = { { key = "primaryStat" } },
         offSpec = { specID = 65, verdict = "upgrade", change = { ilvlDelta = 9 } } }
-    assertEqual(W.Trade(drop({ me = off })).tone, "good", "another spec of yours can use it")
+    local o = W.Trade(drop({ me = off }))
+    assertEqual(o.text, "Likely"); assertEqual(o.tone, "good", "another spec of yours can use it: Likely in green")
+    assertEqual(o.tip[1], "Trade: Likely")
+    local wanted = W.Trade(drop())
+    assertEqual(wanted.text, "Likely"); assertEqual(wanted.tone, "good", "an upgrade for you is unchanged")
 end)
 
 -- ── the gear halves (WC.TheirEq, WC.MyEq; NS.SideCells puts them before the verdict) ────────

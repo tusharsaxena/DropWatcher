@@ -648,7 +648,7 @@ readers: OffSpec.Of(eval) (cantUse with an off-spec upgrade, sidegrade or downgr
 ```
 
 **The tones.** A main-spec verdict keeps its tone (upgrade green, sidegrade yellow, downgrade red,
-can't use gray). An off-spec verdict is drawn in `C.TONE.offspec` (cyan, apart from Offer's
+can't use dim red `redMuted` since feedback-21). An off-spec verdict is drawn in `C.TONE.offspec` (cyan, apart from Offer's
 `C.TONE.cyan`) for all three of its verdicts, with the spec's name after the difference:
 WindowCells.Verdict ─> OffSpecCells.Verdict ─> SideCells.Merge, `291 ▲20 Holy`; the Me cell's gear
 half is the item it was compared with (OffSpecCells.Eq), the looter's Them cell too (with the

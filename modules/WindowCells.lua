@@ -25,8 +25,9 @@ local _, NS = ...
 --
 -- THE TONES (C.TONE; feedback-4 spec §0). One tone per verdict, in the Me and the Them column
 -- alike: an upgrade `good` (green), a sidegrade `yellow`, a downgrade `red`; an item that cannot be
--- used or is not wanted `bad` (gray) and an unknown one `muted`. Trade's No is `red` too. A Can't use
--- another of the class's specs can use is that spec's verdict in `offspec` cyan (NS.OffSpecCells).
+-- used `redMuted` (a dim red, feedback-21), one not wanted `bad` (gray) and an unknown one `muted`.
+-- Trade's No is `red` too, and its Can't use `redMuted`. A Can't use another of the class's specs can
+-- use is that spec's verdict in `offspec` cyan (NS.OffSpecCells).
 
 NS.WindowCells = NS.WindowCells or {}
 local WC = NS.WindowCells
@@ -57,7 +58,7 @@ local VERDICT_EXPLAIN = {
     unknown    = L["No inspect yet, no spec, or a protected value."],
 }
 local VERDICT_TONE = {
-    upgrade = "good", sidegrade = "yellow", downgrade = "red", cantUse = "bad", doesntWant = "bad", unknown = "muted",
+    upgrade = "good", sidegrade = "yellow", downgrade = "red", cantUse = "redMuted", doesntWant = "bad", unknown = "muted",
 }
 -- NS.Evaluate's reason keys, in words.
 local EVAL_REASON = {
@@ -344,7 +345,7 @@ function TRADE_REASON.noInspect(a, who)
 end
 
 -- Another player's drop you can't use in any of your specs (an off-spec part is a use): its
--- Trade's Yes or Likely is muted (feedback-20).
+-- Trade's Yes or Likely reads Can't use (feedback-21).
 local function youCantUse(drop)
     local me = drop.me
     return drop.isMine ~= true and type(me) == "table" and me.verdict == "cantUse" and NS.OffSpec.Of(me) == nil
@@ -360,7 +361,9 @@ function WC.TradeReason(trade, who)
     return fn(type(trade.args) == "table" and trade.args or {}, who)
 end
 
---- The Trade column: Yes, Likely, Unknown or No, with the reason (board 03).
+--- The Trade column: Yes, Likely, Unknown or No, with the reason (board 03); a Yes or Likely on
+--- another player's drop none of your specs can use reads Can't use in the verdict's dim red, the
+--- reason kept (feedback-21).
 --- @param drop table
 --- @return table cell
 function WC.Trade(drop)
@@ -371,7 +374,7 @@ function WC.Trade(drop)
     local label = TRADE_LABEL[t.state]
     local c = cell(label, TRADE_TONE[t.state], L["Trade: %s"]:format(label), WC.TradeReason(t, looterName(drop)))
     if c.tone == "good" and youCantUse(drop) then
-        c.tone = "goodMuted"
+        c.text, c.tone, c.tip[1] = L["Can't use"], "redMuted", L["Trade: %s"]:format(L["Can't use"])
         c.tip[#c.tip + 1] = L["You can't use it, so there is nothing for you to ask for."]
     end
     if num(t.age) then c.tip[#c.tip + 1] = L["Inspected %s ago."]:format(WC.Duration(t.age)) end

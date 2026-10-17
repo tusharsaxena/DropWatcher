@@ -415,10 +415,10 @@ Total.
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
-- cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray
+- cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use dim red
 - cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
 - cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
-- cells: Trade's Yes or Likely is muted green on another player's drop you can't use
+- cells: Trade's Yes or Likely reads Can't use in dim red on another player's drop none of your specs can use
 - cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip
 - cells: My eq shows what you wear in the drop's slot, both rings for a ring, and empty slot
 - cells: Their eq says pending, range, combat or failed beside the icons
@@ -480,7 +480,7 @@ Total.
 ### test_side_cells.lua (21)
 
 - side cells: Me reads the worn level, then the glyph and the unsigned difference in the verdict's tone
-- side cells: Can't use and Not wanted stay words after the gear, gray
+- side cells: Can't use and Not wanted stay words after the gear, dim red and gray
 - side cells: two worn items read both levels and carry both icons
 - side cells: nothing worn reads `empty`, muted, and the verdict follows
 - side cells: an unknown verdict's ? goes where the gear part says why, and stays where it does not
