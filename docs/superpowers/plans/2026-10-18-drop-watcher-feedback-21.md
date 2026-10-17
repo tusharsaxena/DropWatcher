@@ -17,7 +17,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | Task | Repo | Status | Commit |
 |---|---|---|---|
 | G0 plan | DW | done | (this file) |
-| G1 Can't use dim red + Trade's Can't use | DW | todo | |
+| G1 Can't use dim red + Trade's Can't use | DW | done | ee51fbd |
 | G2 vendor LibCustomGlow-1.0 | DW | todo | |
 | G3 glow settings (schema rows, defaults, Window › Upgrade glow tab) | DW | todo | |
 | G4 glow module + the four surfaces | DW | todo | |
