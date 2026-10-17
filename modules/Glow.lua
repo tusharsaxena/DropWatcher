@@ -23,7 +23,8 @@ local _, NS = ...
 --
 -- POOLED FRAMES. A pooled row or card repainted for another drop re-applies, so it keeps, changes or
 -- loses its glow; StopFree stops the glow on every row or card a repaint left in its pool's free
--- list. The toast stops its glow when it goes.
+-- list. The toast stops its glow when it goes. A repaint's hide and show of a pooled frame would
+-- replay the proc style's opening burst; spendBurst keeps it to the effect's first appearance.
 --
 -- HEADLESS. Without the library (the suites load no libs/ beyond LibKa0s, or a LibStub miss) Apply
 -- still records its decision on the button (`glowKind`) and draws nothing.
@@ -107,6 +108,18 @@ local STOP = {
     autocast = function(L, b) L.AutoCastGlow_Stop(b, Glow.KEY) end,
 }
 
+-- The proc style's frame replays its opening burst from its own OnShow (the library's
+-- SetupProcGlow), and a repaint hides and shows every pooled row and card (NS.Pool.ReleaseAll, then
+-- Acquire) and the detail card. Once the button has been on screen with the effect started, the
+-- burst has played (or is playing, and finishes into its loop), so the frame is told to show its
+-- loop only from then on. A restart is a fresh Start that arms it again. The loop itself still
+-- starts over on each re-show: the library stops its animations on hide.
+local function spendBurst(b)
+    if b.glowStyle ~= "proc" or not b:IsVisible() then return end
+    local f = b["_ProcGlow" .. Glow.KEY]
+    if type(f) == "table" then f.startAnim = false end
+end
+
 --- Stop the glow on an item button and forget it (a no-op on a button that has none).
 --- @param b table|nil the item button
 function Glow.Stop(b)
@@ -131,11 +144,15 @@ function Glow.Apply(b, drop)
         return nil
     end
     local w = b:GetWidth()
-    if b.glowKind == kind and b.glowGen == gen and b.glowW == w then return kind end
+    if b.glowKind == kind and b.glowGen == gen and b.glowW == w then
+        spendBurst(b)
+        return kind
+    end
     Glow.Stop(b)
     local L, start = lib(), START[cfg.type]
     if L and start then start(L, b, cfg) end
     b.glowKind, b.glowStyle, b.glowGen, b.glowW = kind, cfg.type, gen, w
+    spendBurst(b)
     return kind
 end
 

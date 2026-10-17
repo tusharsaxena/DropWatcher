@@ -142,6 +142,11 @@ Each has the same keys, below as `glow.<g>.<key>`; the knob set, its ranges and 
 with KickCD's glow slots. On the tab each knob is a main | off-spec pair. A style's knobs are dimmed
 while the glow is in another style, and every row of a glow while it is off. Every row's reaction
 is `NS.Glow.Refresh()` (the window and the toast repainted, each glowing icon restarted once).
+The two colors carry no *Use class color* companion: they are palette-definition swatches, one
+color per upgrade category (main-spec green, off-spec cyan, the verdict palette's `good` and
+`offspec`), the one exemption options-ui-§17 allows. A class color would paint both glows the same
+hue and lose what tells them apart. Without a companion, dimming a color row while its glow is off
+is true (nothing reads it), so anti-pattern #74 does not apply.
 
 | Key | Default | Style | What it is |
 |---|---|---|---|

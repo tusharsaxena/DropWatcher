@@ -1256,7 +1256,8 @@ values lined up in one column: `Instance`, `Difficulty`, `When` (`4m ago`), `Dro
 while a filter hides some), `Seen by` (you in class color) and `Group (20)` with five names a row, every
 member named in class color; then the gray `Drops from one boss encounter.`, any hidden drops, and the
 click hint last. The key run's header has no `Instance` row (its title is the dungeon). History's headers
-read the same with `2 days ago` and the gray `Kept in the history across sessions.`. `/dw compact` → the
+read the same with `2 days ago` and the gray `Kept in the history across sessions.` (superseded by
+feedback-21, 2026-10-18: a bulleted `From` row reading `the history, kept across sessions`; FEED-89). `/dw compact` → the
 same tooltip on the compact headers, with no one-line `Instance · Boss · … · 10 drops · …` summary. Result: passed in the client, 2026-10-16 (the owner).
 
 **FEED-80. An off-spec upgrade shows cyan with the spec's name (feedback-19, DW-O1, DW-O4).** The
@@ -1315,7 +1316,7 @@ shows only Them; an upgrade for you shows `Hidden` and no names until its Offer 
 can't wear that they can trade → its Trade reads `Likely` (or `Yes`) in a muted green (superseded by
 feedback-21, 2026-10-18: it reads `Can't use` in dim red, the muted green removed; FEED-88), in the table, the
 compact card's line 3 and History; hover → the reason, then `You can't use it, so there is nothing for you
-to ask for.`. One another spec of yours could use (off-spec, cyan) keeps the full green. Your own drops keep
+to ask for.` (since feedback-21 the bulleted row `For you: can't use, nothing to ask for`; FEED-88, FEED-89). One another spec of yours could use (off-spec, cyan) keeps the full green. Your own drops keep
 the full green. Close the window on the History tab, then let something drop in an auto-open situation →
 the window opens on Drops. With the window open on History, let something drop → it stays on History.
 Result:
@@ -1339,7 +1340,8 @@ compact` → the cards' `You Can't use` and `Them Can't use` halves the same, on
 type, say plate on a cloth wearer) that they can trade, or `/dw add <such a link> <member>` → its Trade
 reads `Can't use` in the dim red of FEED-87, not `Likely` or `Yes`, in the table, the compact card's line 3
 and History; hover → the title `Trade: Can't use`, the trade rows (Rule, This item, what they wear), then
-`• For you: can't use, nothing to ask for`. A `No` stays red and an `Unknown` stays muted; your own drops
+`• For you: can't use, nothing to ask for`. Expand it → the detail card's trade chip reads `CAN'T USE` in
+the same dim red, its tooltip the same; its History card the same. A `No` stays red and an `Unknown` stays muted; your own drops
 keep their green. `/dw test`, the last raid boss → Brightmane's one-hander, Solenne's gloves, Kragmar's
 bracers and Thornbrew's boots, all Can't use for your spec but usable by Holy, keep Trade `Likely` in its
 own green (an off-spec use is a use). Result:
@@ -1940,7 +1942,8 @@ effect left under it. Main spec frequency 2 → the rays turn faster; 0.05 → s
 pick a red with alpha half way → the rays turn red and fainter. Defaults puts it back. Result:
 
 **GLOW-4. The Proc style (feedback-21).** Main spec style back to Proc (flipbook) (the default) → the
-green flipbook around each upgrade icon, opening with a burst. Main spec start animation off → the next
+green flipbook around each upgrade icon, opening with a burst once: expand or collapse a row, or let
+another drop arrive, and the glowing icons keep looping with no second burst. Main spec start animation off → the next
 start has no burst (switch a setting or `/dw test` off and on to restart it); on again → the burst is
 back. Main spec duration (seconds) 3 → one loop takes visibly longer. Main spec X offset and Y offset
 5 → the flipbook reaches 5 pixels further past the icon's sides and top and bottom; -5 → inside them.
@@ -2420,7 +2423,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-82 | feedback-20, the compact card's `Trade <word>` on line 3, gold label, cut at the right edge at 440; no ⊕ after a cross-realm looter | No client pass recorded yet |
 | FEED-83 | feedback-20, the gray `No action`'s tooltip on hover while disabled: row, compact card, detail card | No client pass recorded yet |
 | FEED-86 | feedback-20, a bonus roll minutes after the key, still in the dungeon, joins its group; after leaving, a new group | No client pass recorded yet |
-| FEED-85 | feedback-20, Trade's muted green beside Can't use; a drop opens a closed window on Drops, an open one keeps its tab | No client pass recorded yet |
+| FEED-85 | feedback-20, a drop opens a closed window on Drops, an open one keeps its tab (its Trade's muted green beside Can't use superseded by feedback-21: FEED-88) | No client pass recorded yet |
 | FEED-84 | feedback-20, your own upgrade's trade reason `Your upgrade` (not `Window passed`); no Looter row on your own detail card, a row per groupmate it upgrades instead | No client pass recorded yet |
 | TOAST-5 | DW-O2, the off-spec toast's title; auto-ask sends main spec first | No client pass recorded yet |
 | FEED-87 | feedback-21, Can't use in dim red on every surface, Not wanted still gray | No client pass recorded yet |

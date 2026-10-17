@@ -446,6 +446,8 @@ local function glow()
         L["How the main spec glow looks."], with(at, { disabledIf = off("main") }))
     pick("glow.offSpec.type", G.offSpec.type, GLOW_STYLES, L["Off-spec style"],
         L["How the off-spec glow looks."], with(at, { disabledIf = off("offSpec") }))
+    -- Palette-definition swatches (options-ui-§17's one exemption): one color per upgrade category,
+    -- so no Use class color companion, and nothing reads the swatch while its glow is off.
     for i, key in ipairs(GLOWS) do
         add{ path = "glow." .. key .. ".color", type = "color", default = G[key].color,
              label = i == 1 and L["Main spec color"] or L["Off-spec color"],

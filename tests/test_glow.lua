@@ -155,6 +155,27 @@ test("glow: a repaint that changes nothing calls the library not at all; a setti
     assertEqual(names(lib), "ProcGlow_Stop,ProcGlow_Start", "a new size restarts it")
 end)
 
+-- The library's proc frame replays its opening burst from its own OnShow, and a repaint hides and
+-- shows every pooled row and card: once the button has been on screen the burst is spent.
+test("glow: the proc style's opening burst plays once, not again on every repaint's re-show", function()
+    local NS, _, m = T.enableAddon()
+    local G, lib = NS.Glow, fakeLib(m)
+    lib.ProcGlow_Start = function(r, o) r["_ProcGlow" .. o.key] = { startAnim = o.startAnim } end
+    local b = button(m)
+    G.Apply(b, drop())
+    local f = b["_ProcGlow" .. G.KEY]
+    assertEqual(f.startAnim, false, "started on screen: the burst has played")
+    local hidden = button(m); hidden:Hide()
+    G.Apply(hidden, drop())
+    local hf = hidden["_ProcGlow" .. G.KEY]
+    assertEqual(hf.startAnim, true, "started off screen: the burst waits for its first show")
+    hidden:Show(); G.Apply(hidden, drop())
+    assertEqual(hf.startAnim, false, "the repaint after that first show spends it")
+    assertTrue(NS.SchemaRuntime.Set("glow.main.procDuration", 2))
+    G.Apply(b, drop())
+    assertEqual(b["_ProcGlow" .. G.KEY].startAnim, false, "a restart plays it once more, then spends it")
+end)
+
 -- ── the four surfaces ───────────────────────────────────────────────────────────────────────
 
 local GROUP = { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1, 2, 3 } }

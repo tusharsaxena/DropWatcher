@@ -1251,7 +1251,6 @@ L["Right-click to mark it declined."] = "Right-click to mark it declined."
 L["Outcome: %s"] = "Outcome: %s"
 L["1 day ago"] = "1 day ago"
 L["%d days ago"] = "%d days ago"
-L["Kept in the history across sessions."] = "Kept in the history across sessions."
 L["Mark as declined"] = "Mark as declined"
 L["Clear declined"] = "Clear declined"
 L["Clear the drop history on every character? This cannot be undone."] =

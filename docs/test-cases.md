@@ -506,7 +506,7 @@ Total.
 - table: the Me cell paints its icons, level, glyph and difference left to right
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_detail_card.lua (21)
+### test_detail_card.lua (22)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
@@ -516,6 +516,7 @@ Total.
 - cells: For the looter compares their inspected gear and names their spec and the read's age
 - cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
+- cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use
 - cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
 - cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
 - cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade are off, each with its reason
@@ -1530,12 +1531,13 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
-### test_glow.lua (10)
+### test_glow.lua (11)
 
 - glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
 - glow: without the library Apply still records its decision; a glow turned off clears it
 - glow: each style starts with the knob table's arguments, under the addon's key
 - glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it
+- glow: the proc style's opening burst plays once, not again on every repaint's re-show
 - glow: the full table's Drops row icon wears its drop's glow; the detail card's header too
 - glow: a pooled row reused for a sidegrade, or left unused, loses its glow
 - glow: the compact card's icon wears it; the table's rows stop theirs in the compact layout
@@ -1770,10 +1772,11 @@ Total.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
-### test_locale.lua (2)
+### test_locale.lua (3)
 
 - locale: the scan finds routed literals in the addon's files
 - locale: enUS carries every string routed through NS.L
+- locale: every enUS key is still read by the addon's files
 
 ### test_eol.lua (2)
 
@@ -1861,7 +1864,7 @@ Total.
 | test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 21 |
-| test_detail_card.lua | 21 |
+| test_detail_card.lua | 22 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
@@ -1905,7 +1908,7 @@ Total.
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 32 |
-| test_glow.lua | 10 |
+| test_glow.lua | 11 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 20 |
@@ -1917,11 +1920,11 @@ Total.
 | test_disabled.lua | 12 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
-| test_locale.lua | 2 |
+| test_locale.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1582** |
+| **Total** | **1585** |

@@ -191,6 +191,17 @@ test("cells: the trade box says the state, the reason, the rule in force and how
     assertEqual(no.chip.tone, "red", "No in the palette's red (feedback-7 spec §2)"); assertEqual(no.meta, "Rule: legacy loot, PvP · Basis: the content's rule")
 end)
 
+test("cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use", function()
+    local D = DC()
+    local b = D.TradeBox(drop({ me = { verdict = "cantUse", reasons = { { key = "armorType" } } } }), "Mythic+")
+    assertEqual(b.chip.text, "CAN'T USE"); assertEqual(b.chip.tone, "redMuted")
+    assertEqual(b.tip[1], "Trade: Can't use", "the chip and its own tooltip agree")
+    assertEqual(b.text, "Personal loot: 311 is not an upgrade over the 324 Seta wears, so they may trade it.", "the reason kept")
+    local off = D.TradeBox(drop({ me = { verdict = "cantUse", reasons = {},
+        offSpec = { specID = 65, mainSpecID = 66, verdict = "upgrade", ilvlDelta = 20 } } }), nil)
+    assertEqual(off.chip.text, "LIKELY TRADEABLE", "an off-spec part is a use"); assertEqual(off.chip.tone, "good")
+end)
+
 -- ── the actions ─────────────────────────────────────────────────────────────────────────────
 
 local OK_TRADE = { ok = true }

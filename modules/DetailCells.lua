@@ -466,8 +466,11 @@ function DC.TradeBox(drop, situationLabel)
     local tip = {}
     for i, l in ipairs(cell.tip) do tip[i] = l end
     if drop.isMine then tip[#tip + 1] = trow(L["Basis"], L["your bag's trade timer"]) end
-    return { chip = { text = TRADE_CHIP[t.state], tone = TRADE_TONE[t.state] },
-        text = WC.TradeReason(t, looterName(drop)), meta = metaLine(t, situationLabel), tip = tip }
+    -- The cell's Can't use (a Yes or Likely none of your specs can use, feedback-21) is the chip's
+    -- too, so the chip agrees with its tooltip and with the row; the reason stays the trade's.
+    local face = { text = TRADE_CHIP[t.state], tone = TRADE_TONE[t.state] }
+    if cell.tone == "redMuted" then face = { text = L["CAN'T USE"], tone = "redMuted" } end
+    return { chip = face, text = WC.TradeReason(t, looterName(drop)), meta = metaLine(t, situationLabel), tip = tip }
 end
 
 -- ── the actions ─────────────────────────────────────────────────────────────────────────────

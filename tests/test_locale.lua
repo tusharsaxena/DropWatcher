@@ -4,11 +4,14 @@
 -- itself, so a missing entry renders fine on enUS and hides from the translator's base; this suite
 -- reads the table RAW so the fallback cannot answer for it.
 --
--- One direction only: every literal `L["..."]` / `NS.L["..."]` in an addon file has an enUS entry.
--- The reverse is not asserted, because some keys are reached dynamically (core/SimSeam.lua's
--- `L[line]`, the refusal and situation-label tables) and have no literal call site.
+-- Both directions: every literal `L["..."]` / `NS.L["..."]` in an addon file has an enUS entry,
+-- and every enUS key is a string literal somewhere in the addon's files (localization-§3: enUS
+-- accumulates no key nothing reads). The reverse is looser than an `L[...]` call site, because some
+-- keys are reached dynamically (core/SimSeam.lua's `L[line]`, the refusal and situation-label
+-- tables), but a key whose text appears nowhere is read by nothing.
 --
--- red under: delete any one entry from locales/enUS.lua or locales/enUS_Settings.lua
+-- red under: delete any one entry from locales/enUS.lua or locales/enUS_Settings.lua; or leave an
+-- entry behind after its last reader goes
 
 local T = _G.DW_TEST
 local test, assertTrue = T.test, T.assertTrue
@@ -90,4 +93,25 @@ test("locale: enUS carries every string routed through NS.L", function()
     end
     assertTrue(#missing == 0, #missing .. " routed key(s) missing from locales/enUS.lua:\n"
         .. table.concat(missing, "\n", 1, math.min(#missing, 20)))
+end)
+
+test("locale: every enUS key is still read by the addon's files", function()
+    local parts = {}
+    for _, rel in ipairs(addonFiles()) do
+        local f = assert(io.open(rel, "r"))
+        parts[#parts + 1] = f:read("*a")
+        f:close()
+    end
+    local src = table.concat(parts, "\n")
+    local orphans = {}
+    for _, path in ipairs(ENUS_FILES) do
+        local f = assert(io.open(path, "r"))
+        for line in f:lines() do
+            local raw = line:match("^L%[(\".-\")%]%s*=")   -- the key as written, quotes kept
+            if raw and not src:find(raw, 1, true) then orphans[#orphans + 1] = path .. ": " .. raw end
+        end
+        f:close()
+    end
+    assertTrue(#orphans == 0, #orphans .. " enUS key(s) nothing reads:\n"
+        .. table.concat(orphans, "\n", 1, math.min(#orphans, 20)))
 end)
