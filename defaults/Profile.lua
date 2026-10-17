@@ -20,15 +20,16 @@ end
 -- One upgrade glow's defaults (feedback-21): on or off, its style, its color (a tone of
 -- core/Constants.lua's C.TONE, opaque) and every style's knobs, only the chosen style's read. The
 -- knob set, ranges and defaults are shared with KickCD's glow slots (the feedback-21 plan's knob
--- table); `pixelLength` 0 is automatic (the library sizes the lines from the icon).
+-- table); `pixelLength` 0 is automatic (the library sizes the lines from the icon). Each default is
+-- the value LibCustomGlow-1.0 takes for nil, so an untouched glow draws as the library would.
 local function glow(enabled, style, tone)
     return {
         enabled = enabled,
         type    = style,                                       -- button | proc | pixel | autocast
         color   = { r = tone.r, g = tone.g, b = tone.b, a = 1 },
-        pixelLines = 8, pixelFrequency = 0.25, pixelLength = 0, pixelThickness = 2, pixelBorder = false,
+        pixelLines = 8, pixelFrequency = 0.25, pixelLength = 0, pixelThickness = 1, pixelBorder = true,
         autocastParticles = 4, autocastFrequency = 0.125, autocastScale = 1,
-        buttonFrequency = 0.125,
+        buttonFrequency = 0.25,
         procDuration = 1, procStartAnim = true,
         xOffset = 0, yOffset = 0,                              -- pixel, autocast and proc
     }

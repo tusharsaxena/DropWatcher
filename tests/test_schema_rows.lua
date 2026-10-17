@@ -219,9 +219,9 @@ end)
 -- The knob table of the feedback-21 plan, shared with KickCD's glow slots: key, min, max, default.
 local GLOW_KNOBS = {
     { "pixelLines", 1, 20, 8 }, { "pixelFrequency", 0.05, 2, 0.25 }, { "pixelLength", 0, 20, 0 },
-    { "pixelThickness", 1, 6, 2 }, { "autocastParticles", 1, 12, 4 },
+    { "pixelThickness", 1, 6, 1 }, { "autocastParticles", 1, 12, 4 },
     { "autocastFrequency", 0.05, 2, 0.125 }, { "autocastScale", 0.5, 3, 1 },
-    { "buttonFrequency", 0.05, 2, 0.125 }, { "procDuration", 0.25, 3, 1 },
+    { "buttonFrequency", 0.05, 2, 0.25 }, { "procDuration", 0.25, 3, 1 },
     { "xOffset", -10, 10, 0 }, { "yOffset", -10, 10, 0 },
 }
 
@@ -237,7 +237,7 @@ test("glow: both glows have every knob's row on Window › Upgrade glow, with th
             assertEqual(row.min, k[2], base .. k[1] .. " min"); assertEqual(row.max, k[3], base .. k[1] .. " max")
             assertEqual(row.default, k[4], base .. k[1] .. " default")
         end
-        assertEqual(S.FindRow(base .. "pixelBorder").default, false)
+        assertEqual(S.FindRow(base .. "pixelBorder").default, true)
         assertEqual(S.FindRow(base .. "procStartAnim").default, true)
         assertEqual(S.FindRow(base .. "enabled").default, true, key .. " is on by default")
         assertEqual(S.FindRow(base .. "color").type, "color")

@@ -109,13 +109,13 @@ test("glow: each style starts with the knob table's arguments, under the addon's
     G.Apply(b, drop({ me = offSpec() }))
     assertEqual(names(lib), "ProcGlow_Stop,PixelGlow_Start", "the old style stops first")
     c = lib.calls[2]
-    assertEqual(c[4], 8); assertEqual(c[5], 0.25); assertNil(c[6]); assertEqual(c[7], 2)
-    assertEqual(c[10], false); assertEqual(c[11], G.KEY); assertEqual(c[12], G.FRAME_LEVEL)
-    assertTrue(S("glow.offSpec.pixelLength", 6)); assertTrue(S("glow.offSpec.pixelBorder", true))
+    assertEqual(c[4], 8); assertEqual(c[5], 0.25); assertNil(c[6]); assertEqual(c[7], 1)
+    assertEqual(c[10], true); assertEqual(c[11], G.KEY); assertEqual(c[12], G.FRAME_LEVEL)
+    assertTrue(S("glow.offSpec.pixelLength", 6)); assertTrue(S("glow.offSpec.pixelBorder", false))
     lib.calls = {}
     G.Apply(b, drop({ me = offSpec() }))
     c = lib.calls[2]
-    assertEqual(c[6], 6); assertEqual(c[10], true)
+    assertEqual(c[6], 6); assertEqual(c[10], false)
     assertTrue(S("glow.main.type", "button")); assertTrue(S("glow.main.buttonFrequency", 0.5))
     lib.calls = {}
     G.Apply(b, drop())

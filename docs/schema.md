@@ -156,12 +156,12 @@ is true (nothing reads it), so anti-pattern #74 does not apply.
 | `glow.<g>.pixelLines` | `8` | pixel | how many lines, 1 to 20 |
 | `glow.<g>.pixelFrequency` | `0.25` | pixel | how fast they run, 0.05 to 2 by 0.05 |
 | `glow.<g>.pixelLength` | `0` | pixel | each line's length in pixels, 0 to 20; 0 is Automatic (the library sizes them from the icon; the CLI shows `0 (Automatic)`) |
-| `glow.<g>.pixelThickness` | `2` | pixel | each line's thickness in pixels, 1 to 6 |
-| `glow.<g>.pixelBorder` | `false` | pixel | a dark border inside the lines |
+| `glow.<g>.pixelThickness` | `1` | pixel | each line's thickness in pixels, 1 to 6 |
+| `glow.<g>.pixelBorder` | `true` | pixel | a dark border inside the lines |
 | `glow.<g>.autocastParticles` | `4` | autocast | sparkles in each ring, 1 to 12 |
 | `glow.<g>.autocastFrequency` | `0.125` | autocast | how fast they circle, 0.05 to 2 by 0.05 |
 | `glow.<g>.autocastScale` | `1` | autocast | their size, 0.5 to 3 by 0.1 |
-| `glow.<g>.buttonFrequency` | `0.125` | button | how fast the rays turn, 0.05 to 2 by 0.05 |
+| `glow.<g>.buttonFrequency` | `0.25` | button | how fast the rays turn, 0.05 to 2 by 0.05 |
 | `glow.<g>.procDuration` | `1` | proc | seconds per loop of the flipbook, 0.25 to 3 by 0.25 |
 | `glow.<g>.procStartAnim` | `true` | proc | the opening burst when it starts |
 | `glow.<g>.xOffset`, `glow.<g>.yOffset` | `0`, `0` | pixel, autocast, proc | how far the glow reaches past the icon's sides and top and bottom, -10 to 10 |
