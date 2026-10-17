@@ -23,7 +23,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | G4 glow module + the four surfaces | DW | todo | |
 | G6 tooltip readability pass (every tooltip as bulleted rows) | DW | todo | |
 | G5 docs, smoke checks, test-cases, README badge | DW | todo | |
-| K1 KickCD per-style glow knobs | KickCD | todo | |
+| K1 KickCD per-style glow knobs | KickCD | done | `7307777` (KickCD) |
 | R1 review + fixes (both repos) | both | todo | |
 | P1 push both branches | both | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | both | blocked on owner | |
