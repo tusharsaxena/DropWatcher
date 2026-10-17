@@ -359,13 +359,29 @@ test("own drops table: Looter reads Name [YOU], the name in class color and the 
     assertFalse(other2.mark:IsShown(), "another player's name has no mark")
 end)
 
-test("own drops: the detail card's Looter row and the compact card's line 2 read Name [YOU]", function()
+test("own drops: the detail card's FOR THE GROUP names each member it upgrades, in class color, best first", function()
     local NS = shown(own())
     NS.WindowGroup.ToggleExpand(1)
-    local looter
-    for _, row in ipairs(NS.WindowGroup.Drawn().card.them.rows) do if row.key == "mine" then looter = row end end
-    assertEqual(textOf(looter.value), "Me"); assertTrue(looter.mark:IsShown())
-    assertEqual(textOf(looter.mark), "[YOU]"); assertTrue(isGold(NS, looter.mark))
+    local rows = NS.WindowGroup.Drawn().card.them.rows
+    assertEqual(textOf(rows[1].label), "Them"); assertEqual(textOf(rows[1].value), "Upgrade for 2")
+    -- red under: the box held only `Them  Upgrade for 2`, the names in its tooltip alone
+    assertTrue(rows[2]:IsShown()); assertEqual(textOf(rows[2].label), "Butterz")
+    assertEqual(T.marks(textOf(rows[2].value)), "276 [arrow-right] 287 · +11")
+    assertEqual(textOf(rows[3].label), "Seta")
+    assertFalse(rows[4]:IsShown(), "two upgrades, two names")
+    local r, g, b = rows[2].label:GetTextColor()
+    local mr, mg, mb = NS.Compat.ClassColor("MAGE")
+    assertTrue(r == mr and g == mg and b == mb, "the name in its class color")
+    local tr = rows[1].label:GetTextColor()
+    assertTrue(tr ~= mr, "Them keeps the label gray")
+end)
+
+test("own drops: the detail card has no Looter row; the compact card's line 2 reads Name [YOU]", function()
+    local NS = shown(own())
+    NS.WindowGroup.ToggleExpand(1)
+    for _, row in ipairs(NS.WindowGroup.Drawn().card.them.rows) do
+        if row:IsShown() then assertTrue(row.key ~= "mine", "no Looter row on your own drop") end
+    end
     NS.SetWindowMode("compact")
     local drawn = NS.WindowGroup.Drawn()
     local card = rowFor(drawn, 1)

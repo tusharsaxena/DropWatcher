@@ -337,8 +337,25 @@ test("groups: a keystone run gathers every drop, the chest after completion incl
     encounterLoot(m, 0, 302, "Lyra", "PRIEST")    -- the chest (FEED-6 asks what id it carries)
     m.advance(LF.LOOT_GRACE)
     brakkLoots(m, 303)
-    assertEqual(labels(LF), "run:The Rookery+=3,area:The Rookery=1")
+    assertEqual(labels(LF), "run:The Rookery+=4", "past the grace, still in the instance: the run's")
     assertEqual(LF.Groups()[1].mapID, 505)
+end)
+
+test("groups: a bonus roll minutes after the key, still in the dungeon, joins the run; once you leave it does not", function()
+    local _, m, LF = party(function(m) m.challengeMaps[505] = "The Rookery+" end)
+    for id = 300, 302 do m.addItem(link(id), ring(620)) end
+    m.__fire("CHALLENGE_MODE_START", 505)
+    brakkLoots(m, 300)
+    m.__fire("CHALLENGE_MODE_COMPLETED")
+    m.advance(LF.LOOT_GRACE + 180)    -- away for three minutes, then the bonus roll
+    chat(m, "You receive bonus loot: " .. link(301) .. ".")
+    -- red under: a second `The Rookery` header for the same dungeon, the run's grace having run out
+    assertEqual(labels(LF), "run:The Rookery+=2")
+    m.__context.inInstance, m.__context.instanceType = false, "none"
+    m.instance = { name = "Khaz Algar", difficultyID = 0 }
+    m.__fire("PLAYER_ENTERING_WORLD")
+    LF.Add(link(302), "Brakk")
+    assertEqual(labels(LF), "run:The Rookery+=2,area:Open world=1", "left the instance: a place of its own")
 end)
 
 test("groups: outside an instance the area is the open world", function()
@@ -663,6 +680,33 @@ test("trade: your own drop takes the timer's exact read: yes with expiresAt, the
     assertEqual(rec.trade.basis, "timer")
     -- red under: the fold carrying no window, so the reason read "The trade window (0s) has passed."
     assertEqual(rec.trade.args[2], NS.Constants.TRADE_WINDOW)
+end)
+
+test("trade: your own fresh drop with no trade-time line is your upgrade, not a window passed", function()
+    local NS, m, LF = party()
+    m.addItem(link(300), ring(620))
+    carry(m, 300, nil)
+    chat(m, "You receive loot: " .. link(300) .. ".")
+    m.advance(0)
+    local rec = only(LF)
+    -- red under: a bag item that never showed a window read as `the trade window (4h) has passed`
+    assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "upgradeForYou")
+    assertEqual(rec.trade.basis, "timer")
+    assertEqual(NS.WindowCells.TradeReason(rec.trade, "you"),
+        "620 is an upgrade over the 600 you wear, so the game won't let you trade it.")
+    assertEqual(NS.MineCells.TradeWindow(rec, m.GetTime()).text, "Your upgrade")
+end)
+
+test("trade: your own drop the rule had as tradeable but with no trade-time line says the game gave no window", function()
+    local NS, m, LF = party()
+    m.addItem(link(300), ring(590))
+    carry(m, 300, nil)
+    chat(m, "You receive loot: " .. link(300) .. ".")
+    m.advance(0)
+    local rec = only(LF)
+    assertEqual(rec.trade.reasonKey, "upgradeForYou")
+    assertEqual(NS.WindowCells.TradeReason(rec.trade, "you"),
+        "The game gave it no trade window: it counts as an upgrade for you, so you can't trade it.")
 end)
 
 test("trade: your own drop the rule called no, with a live timer, asks for its candidates then", function()

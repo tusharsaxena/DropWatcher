@@ -34,8 +34,9 @@ local _, NS = ...
 -- matching and the record logic are modules/FeedRecords.lua's (pure).
 --
 -- GROUPING. ENCOUNTER_START / ENCOUNTER_END and CHALLENGE_MODE_START / CHALLENGE_MODE_COMPLETED keep
--- the context. Inside a keystone run, and for LOOT_GRACE seconds after it completes, every drop
--- joins the run's group (the chest included). Otherwise a drop joins the encounter it names, else
+-- the context. Inside a keystone run, and after it completes while you are still in its instance
+-- (else for LOOT_GRACE seconds), every drop joins the run's group (the chest and a late bonus roll
+-- included). Otherwise a drop joins the encounter it names, else
 -- the encounter in progress or killed in the last LOOT_GRACE seconds (a wipe opens no loot window),
 -- else the area's group: the instance's name, or "Open world", continued while it is the latest
 -- group. Groups are made by their first drop, so no group is empty.
@@ -197,9 +198,17 @@ local function areaName()
     return L["Open world"]
 end
 
+-- The instance you are in, as a key a run is compared with: its instance map id, else its name;
+-- nil outside an instance.
+local function instanceKey()
+    if not NS.Compat.InstanceState() then return nil end
+    local name, _, _, _, id = NS.Compat.InstanceInfo()
+    return plainNumber(id) or plainString(name)
+end
+
 -- Where a drop received now belongs: { key, label, kind, encounterID, mapID }.
 local function placeOf(s, encounterID, t)
-    local run = NS.FeedRecords.ActiveRun(s.ctx, t, LF.LOOT_GRACE)
+    local run = NS.FeedRecords.ActiveRun(s.ctx, t, LF.LOOT_GRACE, instanceKey())
     if run then return { key = run.key, label = run.label, kind = "run", mapID = run.mapID } end
     local enc = NS.FeedRecords.ActiveEncounter(s.ctx, t, LF.LOOT_GRACE)
     if encounterID and not (enc and enc.id == encounterID) then
@@ -293,7 +302,10 @@ end
 
 --- Your own drop's estimate with the trade timer's exact read folded in (spec §7.1): `yes`
 --- (`timer`, with `expiresAt` and the seconds left) while its countdown is live, `no expired`
---- (`timer`) once the timer read its window as gone. The rule's estimate stands for anyone else's
+--- (`timer`) once the window it showed has run out. An item that never showed a window (no
+--- trade-time line from its first read) inside the rule's window is `no upgradeForYou` (`timer`):
+--- the game took it as an upgrade for you, with the rule's item levels when it read one. The
+--- rule's estimate stands for anyone else's
 --- drop, a test drop, a bind answer (warbound, bonus roll, BoE), a drop no bag item has matched,
 --- and a BoE entry, which has no window.
 --- @param rec table the drop
@@ -304,6 +316,10 @@ function LF.FoldTimer(rec, est)
     if not (rec.isMine and not rec.test and TT and est.basis ~= "bind") then return est end
     local e = TT.ForDrop(rec.id)
     if not e or e.permanent then return est end
+    if e.expired and not e.hadWindow and est.reasonKey ~= "expired" then
+        local args = est.reasonKey == "upgradeForLooter" and est.args or {}
+        return { state = "no", reasonKey = "upgradeForYou", basis = "timer", args = args, rule = est.rule }
+    end
     if e.expired then
         return { state = "no", reasonKey = "expired", basis = "timer", args = { 0, C.TRADE_WINDOW },
             rule = est.rule }
@@ -899,10 +915,12 @@ end
 function LF.OnRunStart(mapID)
     local t, id = now(), plainNumber(mapID)
     local label = NS.Compat.ChallengeMapName(id) or areaName()
-    store().ctx.run = { mapID = id, key = "run:" .. tostring(id) .. ":" .. t, label = label, startedAt = t }
+    store().ctx.run = { mapID = id, key = "run:" .. tostring(id) .. ":" .. t, label = label, startedAt = t,
+        instance = instanceKey() }
 end
 
---- CHALLENGE_MODE_COMPLETED: the run's group stays open LOOT_GRACE seconds for the chest.
+--- CHALLENGE_MODE_COMPLETED: the run's group stays open while you are in its instance, else
+--- LOOT_GRACE seconds, for the chest and a late bonus roll.
 function LF.OnRunEnd()
     local run = store().ctx.run
     if run and not run.endedAt then run.endedAt = now() end

@@ -20,15 +20,16 @@ local _, NS = ...
 --           game's tooltip, then the inspect freshness in brackets, dimmed: `(2m)`, `(cached)`,
 --           `(…)`, none at all where there is nothing to say; the name is cut, the freshness not;
 --           feedback-10 spec §2)
---   line 2  looter (class color, ⊕ from another realm) · slot · type · trade            [ Ask ]
+--   line 2  looter (class color; another realm named in its tooltip) · slot · type      [ Ask ]
 --           (the full table's states; Offer on your own drop, which opens the Offer panel:
 --           NS.WindowOwn, feedback-5 spec §2; with neither the gray `No action` button, its reason
 --           in its tooltip, feedback-11 spec §1)
---   line 3  You 321/308 ▼13   Them 298/296 ⊘ Can't use
---           (the full table's Me and Them cells without their icons, feedback-6 spec §1; the labels
---           gold and Them a fixed gap after You, feedback-10 spec §2; your own drop: line 2's looter
---           reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2), every member it
---           upgrades in the tooltip)
+--   line 3  You 321/308 ▼13   Them 298/296 ⊘ Can't use   Trade No
+--           (the full table's Me, Them and Trade cells without their icons, feedback-6 spec §1; the
+--           labels gold, each half a fixed gap after the last, feedback-10 spec §2; your own drop:
+--           line 2's looter reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2), every
+--           member it upgrades in the tooltip. Trade sat on line 2 as a bare word before: labeled,
+--           it reads beside the verdicts it follows from)
 --
 -- NO TRADE WINDOW on the card (feedback-10 spec §2): the full table's Trade window column, the
 -- strip's next expiry and the detail card say it; the card has nothing to tick each second.
@@ -60,7 +61,7 @@ local _, NS = ...
 -- THE SHARED KIT. History draws its cards the same way (modules/CompactHistory.lua, DW-C3), so the
 -- frame pieces live here once and are exported: the
 -- pieces and their hit frames (Piece, FontString, MonoString, Background), line 1's item level
--- and name (PlaceLineOne), line 2 and line 3's halves (BuildLineTwo/PaintLineTwo, BuildHalf/PaintHalf,
+-- and name (PlaceLineOne), line 2 and line 3's halves (BuildLineTwo/PaintLineTwo, BuildHalves/PaintHalf,
 -- PlaceThem), the pane's own scroll view (BuildView),
 -- the layout switch (Swap, Settle) and the draw loop over a tab's entries (Draw, driven by a
 -- per-tab `spec` table built once at load: no closure per repaint).
@@ -79,7 +80,7 @@ CG.ICON_MIN, CG.ICON_MAX = 24, 48
 CG.QUALITY_W = 2       -- the quality bar at a card's left edge
 CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Drops card's chevron and the gap before its icon
 CG.ILVL_GAP = 4        -- line 1: between the item level and the name (feedback-10 spec §2)
-CG.HALVES_GAP = 12     -- line 3: between You's last piece and the Them label (feedback-10 spec §2)
+CG.HALVES_GAP = 12     -- line 3: between one half's last piece and the next label (feedback-10 spec §2)
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
 local SEP = "|cff9e9ea3·|r "
@@ -244,23 +245,18 @@ local function buildLineOne(card)
     buildAsk(card)
 end
 
---- Line 2's pieces: looter (and its ⊕, or its gold ` [YOU]` mark on your own drop: feedback-7 spec
---- §2), slot, type (feedback-4 spec §3), trade, then `right` (right-aligned: History's time; nil on
+--- Line 2's pieces: looter (and its gold ` [YOU]` mark on your own drop: feedback-7 spec
+--- §2), slot, type (feedback-4 spec §3), then `right` (right-aligned: History's time; nil on
 --- a Drops card, whose action button sits there).
 --- @param card table
 --- @param right string|nil the right piece's key
 function CG.BuildLineTwo(card, right)
     local looter = piece(card, "looter")
-    looter.glyph = monoString(card)
-    looter.glyph:SetPoint("LEFT", looter.text, "RIGHT", 2, 0)
-    looter.mark = NS.WindowRows.NewMark(card, looter.glyph)
-    looter.hit:SetPoint("BOTTOMRIGHT", looter.glyph, "BOTTOMRIGHT", 0, 0)
+    looter.mark = NS.WindowRows.NewMark(card, looter.text)
     local slot = piece(card, "slot")
-    slot.text:SetPoint("LEFT", looter.glyph, "RIGHT", 4, 0)
+    slot.text:SetPoint("LEFT", looter.text, "RIGHT", 4, 0)
     local kind = piece(card, "armorType")
     kind.text:SetPoint("LEFT", slot.text, "RIGHT", 4, 0)
-    local trade = piece(card, "trade")
-    trade.text:SetPoint("LEFT", kind.text, "RIGHT", 4, 0)
     if right then piece(card, right) end
 end
 
@@ -274,15 +270,23 @@ function CG.BuildHalf(card, key)
     card.cells[key .. "Label"], card.cells[key] = label, half
 end
 
+--- Line 3's three halves: You, Them and Trade.
+--- @param card table
+function CG.BuildHalves(card)
+    for _, key in ipairs({ "you", "them", "trade" }) do CG.BuildHalf(card, key) end
+end
+
 -- The gaps on line 3: between the label, the level and the verdict, and after a glyph.
 CG.HALF_GAP, CG.HALF_GLYPH_GAP = 3, 2
 
---- Line 3's Them half placed CG.HALVES_GAP after You's last piece (feedback-10 spec §2: the halves
---- read close together, not at half the card's width). You's text is its last piece, shown or empty.
+--- Line 3's Them half placed CG.HALVES_GAP after You's last piece, and Trade as far after Them's
+--- (feedback-10 spec §2: the halves read close together, not at a third of the card's width). A
+--- half's text is its last piece, shown or empty.
 --- @param card table
 function CG.PlaceThem(card)
     local c = card.cells
     at(c.themLabel.text, "LEFT", c.you.text, "RIGHT", CG.HALVES_GAP, 0)
+    at(c.tradeLabel.text, "LEFT", c.them.text, "RIGHT", CG.HALVES_GAP, 0)
 end
 
 local function newCard(content)
@@ -293,8 +297,7 @@ local function newCard(content)
     buildBackground(card)
     buildLineOne(card)
     CG.BuildLineTwo(card)
-    CG.BuildHalf(card, "you")
-    CG.BuildHalf(card, "them")
+    CG.BuildHalves(card)
     card:SetScript("OnClick", function(self) NS.WindowGroup.ToggleExpand(self.dropId) end)
     return card
 end
@@ -368,7 +371,7 @@ local function paintLineOne(card, drop, cc, width, m)
     paintAsk(card, cc.ask, drop.id)
 end
 
---- Line 2 painted from a card model: the looter in class color, its ⊕ or ` [YOU]`, slot, type, trade
+--- Line 2 painted from a card model: the looter in class color, its ` [YOU]`, slot, type
 --- and `right`. Slot (and the looter's tooltip) follows the mark while it shows.
 --- @param card table
 --- @param cc table a CompactCards card
@@ -378,16 +381,13 @@ function CG.PaintLineTwo(card, cc, right)
     paintText(c.looter, cc.looter)
     local r, g, b = NS.Compat.ClassColor(cc.looter.classFile)
     if r then c.looter.text:SetTextColor(r, g, b) end
-    c.looter.glyph:SetText(cc.looter.mark or "")
-    setTone(c.looter.glyph, "muted")
     c.looter.mark:SetText(cc.looter.you or "")
     c.looter.mark:SetShown(cc.looter.you ~= nil)
-    local last = cc.looter.you and c.looter.mark or c.looter.glyph
+    local last = cc.looter.you and c.looter.mark or c.looter.text
     at(c.slot.text, "LEFT", last, "RIGHT", 4, 0)
     c.looter.hit:SetPoint("BOTTOMRIGHT", last, "BOTTOMRIGHT", 0, 0)
     paintText(c.slot, cc.slot, SEP)
     paintText(c.armorType, cc.armorType, SEP)
-    paintText(c.trade, cc.trade, SEP)
     if right then paintText(c[right], cc[right]) end
 end
 
@@ -418,8 +418,15 @@ function CG.PaintHalf(card, key, half)
     else
         at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
     end
-    -- Them, the line's last half, runs to the card's right inset and is cut there (feedback-11 spec §0).
-    if key == "them" then h.text:SetPoint("RIGHT", card, "RIGHT", -CG.PAD, 0) end
+    -- Trade, the line's last half, runs to the card's right inset and is cut there (feedback-11 spec §0).
+    if key == "trade" then h.text:SetPoint("RIGHT", card, "RIGHT", -CG.PAD, 0) end
+end
+
+--- Line 3 painted: You, Them and Trade (CompactCards' halves).
+--- @param card table
+--- @param cc table a CompactCards card
+function CG.PaintHalves(card, cc)
+    for _, key in ipairs({ "you", "them", "trade" }) do CG.PaintHalf(card, key, cc[key]) end
 end
 
 -- What every card of one repaint shares: your gear and class, the transmog ask setting and your realm.
@@ -454,8 +461,7 @@ local function paintCard(card, drop, width, m, shared)
     card.model = cc
     paintLineOne(card, drop, cc, width, m)
     CG.PaintLineTwo(card, cc)
-    CG.PaintHalf(card, "you", cc.you)
-    CG.PaintHalf(card, "them", cc.them)
+    CG.PaintHalves(card, cc)
 end
 
 --- A one-line header painted with a short form (`hd`, CompactCards.Header's or HistoryHeader's).

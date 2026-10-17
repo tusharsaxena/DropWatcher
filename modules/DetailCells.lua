@@ -363,17 +363,41 @@ function DC.ForYou(drop, scorer, classFile)
     return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }
 end
 
--- Your own drop's side (feedback-5 spec §2): the looter is you (`Name [YOU]`, feedback-7 spec §2:
--- the name in your class color, the mark in gold), and the Them row reads `Upgrade for N`
--- with every member it upgrades in its tooltip (MineCells.Details), as the row's Them cell does.
+-- The box's rows under Them: one per member it upgrades, the last saying how many more when they
+-- do not all fit (the box has OWN_MEMBER_ROWS under Them).
+local OWN_MEMBER_ROWS = 4
+
+-- One member it upgrades: their name in their class color as the label, the worn item it would
+-- replace as the icon, and `300 → 311 · +11` in green (the For you box's Item level, for them).
+local function memberRow(e, ilvl)
+    local base, gain = e.baseline, num(e.gain)
+    local from = base and num(base.ilvl)
+    local text = (from and ilvl) and ("%d %s %d · %s"):format(round(from), TM.Arrow(), ilvl, WC.Signed(gain or ilvl - from))
+        or L["Empty slot"]
+    local worn = from and L["Replaces %s · %d."]:format(WC.ItemName(base.link) or "?", round(from))
+        or L["The slot is empty, so anything is an upgrade."]
+    local r = row("member", e.short or "?", text, "good", e.short or "?", worn,
+        gain and L["An upgrade for them: %s."]:format(WC.Signed(gain)) or nil)
+    r.labelClassFile, r.link = e.classFile, base and base.link
+    return r
+end
+
+-- Your own drop's side (feedback-5 spec §2): the Them row reads `Upgrade for N` with every member
+-- it upgrades in its tooltip (MineCells.Details), as the row's Them cell does, then a row per
+-- member it upgrades, best first (MineCells.Upgrades, feedback-20). No Looter row: the group is
+-- everyone but you, and the card's line 2 already reads `Name [YOU]`.
 local function ownSide(drop, revealed)
     local m = MC.Details(drop, revealed, L["Them"])
     local tip = m.tip
-    local lc = WC.Looter(drop)
-    local looter = row("mine", L["Looter"], lc.text, "plain", L["Looter"], L["Your own drop: Offer shows who it would help."])
-    looter.classFile, looter.you = lc.classFile, lc.you
-    return { title = L["FOR THE GROUP"], verdict = { text = m.text, tone = m.tone, tip = tip },
-        rows = { looter, { key = "them", label = L["Them"], text = m.text, tone = m.tone, tip = tip } } }
+    local rows = { { key = "them", label = L["Them"], text = m.text, tone = m.tone, tip = tip } }
+    local ups, ilvl = MC.Upgrades(drop, revealed), num(facts(drop).ilvl)
+    local shown = #ups > OWN_MEMBER_ROWS and OWN_MEMBER_ROWS - 1 or #ups
+    for i = 1, shown do rows[#rows + 1] = memberRow(ups[i], ilvl) end
+    if shown < #ups then
+        rows[#rows + 1] = row("more", "", L["and %d more: Offer shows all"]:format(#ups - shown), "muted",
+            L["Them"], L["Offer lists every member it upgrades."])
+    end
+    return { title = L["FOR THE GROUP"], verdict = { text = m.text, tone = m.tone, tip = tip }, rows = rows }
 end
 
 --- The For the looter column (board 02, callout 4): the same comparison against their inspected

@@ -328,9 +328,26 @@ function TRADE_REASON.upgradeForLooter(a, who)
     return L["It fills an empty slot for %s, so the game won't let them trade it."]:format(who)
 end
 
+-- Your own item that never showed a trade window: the game took it as an upgrade for you.
+function TRADE_REASON.upgradeForYou(a)
+    local ilvl, worn = num(a[1]), num(a[2])
+    if ilvl and worn then
+        return L["%d is an upgrade over the %d you wear, so the game won't let you trade it."]:format(ilvl, round(worn))
+    end
+    if ilvl then return L["It fills an empty slot for you, so the game won't let you trade it."] end
+    return L["The game gave it no trade window: it counts as an upgrade for you, so you can't trade it."]
+end
+
 function TRADE_REASON.noInspect(a, who)
     local why = NO_INSPECT_WORD[a[1]] or tostring(a[1] or "?")
     return L["The game's rule needs %s's gear, which is not read yet (%s)."]:format(who, why)
+end
+
+-- Another player's drop you can't use in any of your specs (an off-spec part is a use): its
+-- Trade's Yes or Likely is muted (feedback-20).
+local function youCantUse(drop)
+    local me = drop.me
+    return drop.isMine ~= true and type(me) == "table" and me.verdict == "cantUse" and NS.OffSpec.Of(me) == nil
 end
 
 --- The trade estimate's reason, in words.
@@ -353,6 +370,10 @@ function WC.Trade(drop)
     end
     local label = TRADE_LABEL[t.state]
     local c = cell(label, TRADE_TONE[t.state], L["Trade: %s"]:format(label), WC.TradeReason(t, looterName(drop)))
+    if c.tone == "good" and youCantUse(drop) then
+        c.tone = "goodMuted"
+        c.tip[#c.tip + 1] = L["You can't use it, so there is nothing for you to ask for."]
+    end
     if num(t.age) then c.tip[#c.tip + 1] = L["Inspected %s ago."]:format(WC.Duration(t.age)) end
     if not drop.isMine and t.basis ~= "bind" then
         c.tip[#c.tip + 1] = L["Another player's drop can only be estimated."]

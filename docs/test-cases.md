@@ -186,9 +186,10 @@ Total.
 - slash: `offer` refuses an item not in your bags, and prints its usage without a link
 - slash: every feature verb is refused while disabled
 
-### test_window.lua (14)
+### test_window.lua (15)
 
 - window: built lazily, on the first show, and not before
+- window: a tooltip shows on a disabled button too, so the gray No action says why
 - window: Escape closes it (UISpecialFrames) and it wears the shared close mark
 - window: General visibility `never` keeps it hidden even when opened
 - window: `inCombat` shows it only in combat, re-read on both combat edges
@@ -203,7 +204,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (58)
+### test_window_shell.lua (59)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -253,6 +254,7 @@ Total.
 - shell: a burst of bus messages repaints once, on the next frame
 - shell: a countdown tick on the Drops tab repaints nothing of the window
 - shell: every drop added in an auto-open situation opens the window, each time it is closed
+- shell: a drop opens a closed window on Drops; an open window keeps the tab it shows
 - shell: your own drop opens the window too, whatever showOwn says, and counts as new
 - shell: a minimized window the player closed opens minimized, its count rising
 - shell: a test placeholder opens the window while test mode is on, and a live drop does not then
@@ -298,7 +300,7 @@ Total.
 - compact cards: Age is the short duration, then whole days
 - compact cards: a verdict reads the glyph and the unsigned difference; a worded one takes ⊘
 - compact cards: the worn level comes before the verdict, plain; a word for the state muted
-- compact cards: a cross-realm looter takes ⊕ and the realm in the tooltip
+- compact cards: a cross-realm looter takes no mark, the realm in the tooltip
 - compact cards: inspect freshness reads its age or state, dimmed, and the tooltip says why
 - compact cards: the Drops card reads the spec's three lines
 - compact cards: no trade window on the card; the freshness on line 1 with or without a countdown (feedback-10 §2)
@@ -409,13 +411,14 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (49)
+### test_window_group.lua (50)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
 - cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray
 - cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
 - cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
+- cells: Trade's Yes or Likely is muted green on another player's drop you can't use
 - cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip
 - cells: My eq shows what you wear in the drop's slot, both rings for a ring, and empty slot
 - cells: Their eq says pending, range, combat or failed beside the icons
@@ -506,7 +509,7 @@ Total.
 - cells: For you without a score says why: no scorer, Pawn or your weights not scored yet
 - cells: an empty slot and an unread baseline each say so, never blank
 - cells: For the looter compares their inspected gear and names their spec and the read's age
-- cells: on your own drop the looter's side is FOR THE GROUP, its Looter row Name [YOU], its Them row Upgrade for N
+- cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
 - cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
 - cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
@@ -522,7 +525,7 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_own_drops.lua (15)
+### test_own_drops.lua (16)
 
 - own drops: Trade reads its word alone and counts the upgrades in its tooltip (feedback-7 spec §2)
 - own drops: the keep? rule: an upgrade for you says no count until its Offer panel is opened
@@ -538,7 +541,8 @@ Total.
 - own drops: the Looter cell marks your own drop [YOU], never another player's
 - own drops: the name is cut before the mark: WindowRows.MarkedWidth
 - own drops table: Looter reads Name [YOU], the name in class color and the mark in gold
-- own drops: the detail card's Looter row and the compact card's line 2 read Name [YOU]
+- own drops: the detail card's FOR THE GROUP names each member it upgrades, in class color, best first
+- own drops: the detail card has no Looter row; the compact card's line 2 reads Name [YOU]
 
 ### test_tip_marks.lua (19)
 
@@ -1208,7 +1212,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (44)
+### test_feed.lua (47)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1227,6 +1231,7 @@ Total.
 - groups: clear on boss kill empties the live feed at a kill, not at a wipe
 - groups: loot naming an earlier encounter joins that encounter's group
 - groups: a keystone run gathers every drop, the chest after completion included
+- groups: a bonus roll minutes after the key, still in the dungeon, joins the run; once you leave it does not
 - groups: outside an instance the area is the open world
 - gates: an untracked situation hides the drop before its item is even loaded
 - gates: below the quality threshold a downgrade for you is hidden, and costs no inspect
@@ -1246,6 +1251,8 @@ Total.
 - update: a pending score is retried on one shared timer, five times at most
 - trade: a group drop past its rule's window turns no expired on the sweep
 - trade: your own drop takes the timer's exact read: yes with expiresAt, then no expired
+- trade: your own fresh drop with no trade-time line is your upgrade, not a window passed
+- trade: your own drop the rule had as tradeable but with no trade-time line says the game gave no window
 - trade: your own drop the rule called no, with a live timer, asks for its candidates then
 - trade: a BoE own drop keeps the bind's answer; the timer folds nothing in
 - add: injects a drop past the situation gate; a stranger is judged without an inspect
@@ -1816,8 +1823,8 @@ Total.
 | test_schema_rows.lua | 12 |
 | test_settings_pages.lua | 39 |
 | test_slash.lua | 26 |
-| test_window.lua | 14 |
-| test_window_shell.lua | 58 |
+| test_window.lua | 15 |
+| test_window_shell.lua | 59 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 20 |
@@ -1825,11 +1832,11 @@ Total.
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 49 |
+| test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 21 |
 | test_detail_card.lua | 21 |
-| test_own_drops.lua | 15 |
+| test_own_drops.lua | 16 |
 | test_tip_marks.lua | 19 |
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
@@ -1858,7 +1865,7 @@ Total.
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 33 |
-| test_feed.lua | 44 |
+| test_feed.lua | 47 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
@@ -1890,4 +1897,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1552** |
+| **Total** | **1559** |

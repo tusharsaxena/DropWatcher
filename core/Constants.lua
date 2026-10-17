@@ -162,6 +162,9 @@ C.TONE = {
     -- An off-spec verdict (feedback-19 spec §1): your current spec can't use it, another of your
     -- specs can. Its own token, close to Offer's cyan by the owner's choice, so the two can part later.
     offspec = { r = 0.30, g = 0.85, b = 0.85 },
+    -- Trade's Yes or Likely on another player's drop you can't use (feedback-20): tradeable, but
+    -- nothing for you to ask for, so the good green stepped down toward gray.
+    goodMuted = { r = 0.42, g = 0.62, b = 0.47 },
     plain = { r = 0.92, g = 0.92, b = 0.92 },
     muted = { r = 0.70, g = 0.70, b = 0.72 },
 }

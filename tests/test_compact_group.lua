@@ -130,8 +130,9 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(textOf(c.item.text), "Crown of Roaring Storms")
     assertEqual(textOf(c.ilvl.text), "311")
     assertEqual(textOf(card.ask.label), "Ask"); assertTrue(card.ask:IsShown())
-    assertEqual(textOf(c.looter.text), "Seta"); assertEqual(textOf(c.looter.glyph), "⊕", "from another realm")
-    assertEqual(plain(textOf(c.slot.text)), "· Head"); assertEqual(plain(textOf(c.trade.text)), "· Likely")
+    assertEqual(textOf(c.looter.text), "Seta"); assertTrue(c.looter.glyph == nil, "no ⊕ after another realm's looter")
+    assertEqual(plain(textOf(c.slot.text)), "· Head")
+    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Likely", "line 3, labeled")
     assertEqual(textOf(c.fresh.text), "(40s)", "in brackets (feedback-10 spec §2)")
     assertEqual(textOf(c.youLabel.text), "You")
     assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▲19")
@@ -161,7 +162,7 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(p[2], c.you.text); assertEqual(p[3], "RIGHT"); assertEqual(p[4], CG.HALVES_GAP)
     assertTrue(card.cells.countdown == nil and card.bar == nil, "no trade window on the card")
     local other = cardFor(drawn, 2).cells
-    assertEqual(textOf(other.looter.glyph), "", "same realm: no mark")
+
     assertEqual(textOf(other.you.glyph) .. " " .. textOf(other.you.text), "⊘ Can't use")
     assertEqual(textOf(other.them.level), "range", "the gear part says why")
     assertEqual(textOf(other.them.text), "", "so the ? goes")
@@ -459,8 +460,8 @@ test("compact group: at the least width line 2's pieces end before the action bu
             return #s * m.textCharWidth
         end
         assertTrue(card.ask:IsShown(), which .. ": the button shows")
-        local leftEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + w(c.looter.text) + 2 + w(c.looter.glyph)
-            + 4 + w(c.slot.text) + 4 + w(c.armorType.text) + 4 + w(c.trade.text)
+        local leftEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + w(c.looter.text)
+            + 4 + w(c.slot.text) + 4 + w(c.armorType.text)
         local rightStart = card:GetWidth() - CG.PAD - K.ASK_W
         assertTrue(leftEnd + 4 <= rightStart,
             ("%s: line 2 ends at %d, the button starts at %d"):format(which, leftEnd, rightStart))
@@ -468,8 +469,9 @@ test("compact group: at the least width line 2's pieces end before the action bu
 end)
 
 -- Line 3 at its fullest (feedback-6 spec §1): both halves on a trinket, two worn levels each
--- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: Them starts
--- CG.HALVES_GAP after You ends (feedback-10 spec §2) and ends before the card's right edge.
+-- (`321/308`), then ⊘ and the longest word (`Not wanted`), then the longest trade word (`Unknown`).
+-- Measured as line 2 is: Them starts CG.HALVES_GAP after You ends (feedback-10 spec §2), Trade as
+-- far after Them, and it ends before the card's right edge.
 test("compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict", function()
     local NS, _, m = T.enableAddon()
     local K, CG = NS.Constants.WINDOW, NS.CompactGroup
@@ -478,7 +480,7 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     local unwanted = { verdict = "doesntWant", reasons = { { key = "undesired" } } }
     local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 308 } }
     seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = unwanted,
-        them = unwanted }) })
+        them = unwanted, trade = { state = "unknown", reasonKey = "noInspect", basis = "inspect", args = { "pending" } } }) })
     NS.Gear.Snapshot = function() return { equipped = trinkets } end
     NS.Inspect.Get = function() return { status = "fresh", at = 60, gear = trinkets } end
     NS.WindowFilterBar.Set("group", "view", "all")
@@ -501,10 +503,13 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     local youEnd = halfEnd("you", CG.TextLeft(m3, CG.LEAD))
     local themX = youEnd + CG.HALVES_GAP
     -- Them's last piece is bounded at the card's right inset, cut there rather than past it (feedback-11 spec §0).
-    local rp = c.them.text.__points[2]
+    local rp = c.trade.text.__points[2]
     assertEqual(rp[1], "RIGHT"); assertEqual(rp[2], card); assertEqual(rp[4], -CG.PAD)
     assertTrue(c.you.text.__points[2] == nil, "You is not bounded: Them follows it")
-    local themEnd = halfEnd("them", themX)
-    assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
+    assertTrue(c.them.text.__points[2] == nil, "Them is not bounded: Trade follows it")
+    assertEqual(NS.CompactCards.HalfText(card.model.trade), "Trade Unknown")
+    local tradeX = halfEnd("them", themX) + CG.HALVES_GAP
+    local tradeEnd = tradeX + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
+    assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
         card:GetWidth() - CG.PAD))
 end)

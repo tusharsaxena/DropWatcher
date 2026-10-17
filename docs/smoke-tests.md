@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21) |
-| FEED-1..81 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); General › When to show as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3) |
+| FEED-1..86 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); General › When to show as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86) |
 | ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
 | ITEM-1..5 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -776,7 +776,7 @@ game's tooltip names its armor; a neck or ring reads `Jewelry`; a trinket `Trink
 reason line. History shows the same column after Slot. Settings › Window ›
 Columns has a `Type` box; untick it → the column goes from Drops; tick it back. Expand a row → the
 detail card's chips include the same word (no `Armor type` chip). `/dw compact` → each Drops and
-History card's second line reads looter · slot · type · trade. Result:
+History card's second line reads looter · slot · type (the trade on line 3 since feedback-20: FEED-82). Result:
 
 **FEED-35. Gold column labels (DW-D4, feedback-4 spec §4).** The headless `test_drops_layout`
 (`the column labels are gold`) covers it. Research `01-full-header-white.png` and
@@ -901,7 +901,7 @@ Result:
 `test_compact_group` (the least compact width) cover the arithmetic. FEED-37's checks at 1038 (since DW-F1: FEED-54) and 440: on
 Drops at 1038, the indent, the chevron, every column at its width with Trade window and the 84-pixel Actions,
 nothing shed and nothing cut. `/dw compact` at 440 → every Drops card's line 2 reads looter (a twelve-letter
-cross-realm name with its ⊕), slot, type and a counted trade (`Yes (2)` on your own), then on the right the
+cross-realm name; its ⊕ retired by feedback-20: FEED-82), slot, type and a counted trade (`Yes (2)` on your own), then on the right the
 countdown and its bar, none of it cut; a drop with no countdown shows the inspect freshness there instead
 (`2m`, `cached`, `…`). The countdown moves each second and turns bold amber, its bar amber, under ten
 minutes. (Superseded by feedback-10, 2026-10-14: the card has no countdown or bar, the freshness is on line 1
@@ -991,7 +991,7 @@ title, and every member's eq text (`276 → 295`), show the gray arrow texture (
 2026-10-13: the column is Their eq, in the Them cell's monospace glyphs; FEED-56). With `toast.enabled` on,
 an upgrade for you that someone else loots → the toast's line reads `Looted by <name> · +n` and a green
 up-arrow texture (superseded by feedback-9, 2026-10-13: the toast's verdicts are the table's monospace
-glyphs, `You ▲n · Them ▼n`; FEED-66). The table cells and compact lines still draw `▲ ≈ ▼ ⊘ ⊕` in the monospace face. Result:
+glyphs, `You ▲n · Them ▼n`; FEED-66). The table cells and compact lines still draw `▲ ≈ ▼ ⊘` in the monospace face (no `⊕` since feedback-20: FEED-82). Result:
 
 **FEED-56. The Offer panel's Their eq column, and no Trade button (DW-G0, feedback-7 spec §0).** The headless
 `test_offer_panel` and `test_side_cells` (the `Offer panel's Their eq` cases) cover the cell and its widths.
@@ -1033,7 +1033,8 @@ Trade column, the History Trade column, the compact card's trade piece (`/dw com
 **FEED-60. Your own drop's looter `Name [YOU]` (DW-G2, feedback-7 spec §2).** The headless `test_own_drops`,
 `test_compact_cards` and `test_detail_card` cover the text. Research `09-looter-column.png` shows the plain
 name. `/dw test` → each of your own sample drops reads your name in your class color and ` [YOU]` after it in
-gold, in the Drops and History Looter columns, the compact card's line 2 and the detail card's Looter row.
+gold, in the Drops and History Looter columns and the compact card's line 2 (the detail card's Looter row
+retired by feedback-20: FEED-84).
 At the least width, and on a character with a long name if you have one → the name is cut first,
 `[YOU]` always drawn whole; on the compact card the slot follows the mark without overlap. Result:
 
@@ -1148,7 +1149,7 @@ the name in its quality color (`292 Item name`); with a long name the name is cu
 level at the right; the inspect freshness follows the name in brackets, dimmed (`(2m)`, `(cached)`, `(…)`;
 no `(…)` since feedback-11, 2026-10-14, Them's `…` says it: FEED-71),
 and is left out where there is nothing to say (your own drop: no `–`), a long name cut before it. Line 2:
-looter · slot · type · trade, then the action button at the right (Ask, Offer on your own, their states); with
+looter · slot · type (trade on line 3 since feedback-20: FEED-82), then the action button at the right (Ask, Offer on your own, their states); with
 no action the slot is empty, hovering it still says why (superseded by feedback-11, 2026-10-14: the gray
 `No action` button with its reason; FEED-72); nothing overlapping at 440 with a twelve-letter
 cross-realm looter.
@@ -1281,6 +1282,45 @@ with Their eq `… ▲14 Holy` in cyan beside the item the off-spec was judged a
 → `An upgrade for one of their other specs (off-spec).`. The trinket's panel (the second boss) holds
 Kaelith's off-spec the same way, after Littlewolf's sidegrade and before Uniquerogue's downgrade. The
 row's `Upgrade for N` and the Trade count do not count Kaelith. Result:
+
+**FEED-82. The compact card's trade on line 3, `Trade <word>` (feedback-20).** The headless
+`test_compact_cards`, `test_compact_group` and `test_compact_history` cover the pieces and the least
+width. `/dw compact`, `/dw test` → each Drops and History card's line 2 reads looter · slot · type with no
+trade word; line 3 reads `You … Them … Trade Likely`, the three labels gold, the trade word in its tone
+(`Yes`/`Likely` green, a muted green beside your `Can't use`, `No` red, `Unknown` muted), hovering it gives the full table's Trade tooltip. At the
+least width (440) the fullest line (two worn levels and `⊘ Not wanted` on each side) still shows the
+trade word, cut with `…` at the card's right edge rather than past it. A looter from another realm has no
+`⊕` after the name on either tab; hovering the name still says `From another realm: <realm>.`. Result:
+
+**FEED-83. The gray `No action` button says why on hover (feedback-20).** The headless `test_window`
+covers the widget flag. In a party, a drop with no action (a warbound trinket, a looter's upgrade, a
+downgrade for you) → hover the gray `⊘ No action` on the row, the compact card and the detail card's first
+action → the tooltip `No action` and its reason appears, though the button stays unclickable. Result:
+
+**FEED-84. Your own upgrade reads as your upgrade, not a passed window; no Looter row (feedback-20).**
+The headless `test_feed` and `test_detail_card` cover it. Loot a bind-on-pickup item above the one you
+wear in that slot (personal loot) → its Trade window cell reads `Your upgrade`, never `Window passed`;
+the detail card's trade box reads `311 is an upgrade over the 308 you wear, so the game won't let you
+trade it.`, Basis your bag's timer; the No action tooltip says the same. A tradeable own drop still
+counts down, and once its window runs out reads `Window passed`. Expand any of your own drops → FOR THE
+GROUP has no `Looter Name [YOU]` row: the Them row `Upgrade for N`, then one row per groupmate it upgrades,
+best first, the name in class color, the icon of the item it would replace, `276 → 287 · +11` in green; with
+five or more, three names and `and N more: Offer shows all`. A downgrade-for-you drop nobody gains from
+shows only Them; an upgrade for you shows `Hidden` and no names until its Offer panel is opened. Result:
+
+**FEED-85. Trade muted beside Can't use; a drop opens the window on Drops (feedback-20).** The headless
+`test_window_group` and `test_window_shell` cover it. In a group, a groupmate loots an item your class
+can't wear that they can trade → its Trade reads `Likely` (or `Yes`) in a muted green, in the table, the
+compact card's line 3 and History; hover → the reason, then `You can't use it, so there is nothing for you
+to ask for.`. One another spec of yours could use (off-spec, cyan) keeps the full green. Your own drops keep
+the full green. Close the window on the History tab, then let something drop in an auto-open situation →
+the window opens on Drops. With the window open on History, let something drop → it stays on History.
+Result:
+
+**FEED-86. A late bonus roll joins the key's group (feedback-20).** The headless `test_feed` covers it.
+Finish a Mythic+ key, stay in the dungeon past two minutes, then win a bonus roll (or let a groupmate's
+late loot come in) → it joins the key's header, with no second header for the same dungeon. Leave the
+dungeon and loot something → a new header for where you are. Result:
 
 ## Roster
 
@@ -2009,7 +2049,7 @@ after the update. Result:
 any hidden drops (superseded by feedback-17, 2026-10-16: the full view's rows, no long form; FEED-79); its chevron gold since DW-E0). Each card sits indented under its header with a
 muted-white chevron before its icon (DW-E0: FEED-39). Line 1: the icon spans the three lines, the item name in its quality color with a thin
 bar of that color at the left edge, the item level right-aligned and `Ask` (no × since DW-D2). Line 2: the
-looter in class color (⊕ on one from another realm, the realm in its tooltip), the slot, the type (since
+looter in class color (from another realm: the realm in its tooltip, no ⊕ since feedback-20), the slot, the type (since
 DW-D3: FEED-34), the trade state in its tone, and on the right the countdown and its bar for a drop with
 one (since DW-E1: FEED-47), else the inspect freshness dimmed (`2m`, `cached`, `…`, `range`). (Superseded by
 feedback-10, 2026-10-14: line 1 reads the item level before the name, the freshness at its right; line 2 ends in
@@ -2048,8 +2088,8 @@ as before. Run `/dw sim start` and step it → your own drops fill the cards the
 **COMPACT-4. History cards and their outcomes (DW-C3).** In the compact layout, open History → each
 kept group is a one-line header (`Boss · Dungeon · 2m · 2 · <you>`, `3d` once a day old) and each
 entry a three-line card: the item and its level (the level first since DW-J2: FEED-69) with the outcome on the right in its tone (Seen,
-Asked, Offered, Received, Traded away, Expired, Declined); the looter in class color (⊕ from another
-realm), slot, trade and the time on the right (`17:02`, or `Oct 9` past a day); `You` and `Them`
+Asked, Offered, Received, Traded away, Expired, Declined); the looter in class color (another
+realm in its tooltip, no ⊕ since feedback-20), slot, trade (on line 3 since feedback-20) and the time on the right (`17:02`, or `Oct 9` past a day); `You` and `Them`
 verdicts. Right-click a card → Mark as declined; its outcome reads Declined; right-click again →
 Clear declined. The strip's button reads `Clear` with the Clear history tooltip, and it still asks
 first. Switch to full → `Clear history` again (left of Sort since DW-J3: FEED-70). (Superseded by feedback-15,
@@ -2274,6 +2314,11 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-80 | DW-O1 / DW-O4, an off-spec upgrade cyan with the spec's name, its detail card's chip and Spec row | No client pass recorded yet |
 | FEED-81 | DW-O3 / DW-O4, an off-spec groupmate below main-spec upgrades in the Offer panel | No client pass recorded yet |
 | ASK-11 | DW-O2, Ask on an off-spec drop sends the off-spec whisper | No client pass recorded yet |
+| FEED-82 | feedback-20, the compact card's `Trade <word>` on line 3, gold label, cut at the right edge at 440; no ⊕ after a cross-realm looter | No client pass recorded yet |
+| FEED-83 | feedback-20, the gray `No action`'s tooltip on hover while disabled: row, compact card, detail card | No client pass recorded yet |
+| FEED-86 | feedback-20, a bonus roll minutes after the key, still in the dungeon, joins its group; after leaving, a new group | No client pass recorded yet |
+| FEED-85 | feedback-20, Trade's muted green beside Can't use; a drop opens a closed window on Drops, an open one keeps its tab | No client pass recorded yet |
+| FEED-84 | feedback-20, your own upgrade's trade reason `Your upgrade` (not `Window passed`); no Looter row on your own detail card, a row per groupmate it upgrades instead | No client pass recorded yet |
 | TOAST-5 | DW-O2, the off-spec toast's title; auto-ask sends main spec first | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off

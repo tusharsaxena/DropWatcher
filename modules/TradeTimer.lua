@@ -1,13 +1,16 @@
 local _, NS = ...
 -- modules/TradeTimer.lua — the exact trade countdown on your own drops (design spec §7.4).
 --
---   entry = { guid, dropID, itemID, link, bag, slot, expiresAt | nil, expired, permanent, warned }
+--   entry = { guid, dropID, itemID, link, bag, slot, expiresAt | nil, expired, permanent, warned,
+--             hadWindow }
 --
 -- One entry per bag item that matches one of your recorded drops, keyed by the item's GUID
 -- (NS.Compat.GetBagItemGUID), so a moved item keeps its timer. `expiresAt` is in GetTime()
 -- seconds; `expired` is true once the window has passed, and when the tooltip of a bind-on-pickup
 -- item carries no trade-time line at all (an upgrade you cannot trade, or a window already gone):
--- spec §7.4's `no expired`. A BoE drop never carries that line and has no window: its entry is
+-- spec §7.4's `no expired`. `hadWindow` is set once a read finds the line, so an entry expired
+-- without it never had a window: the game took the item as an upgrade for you (LootFeed.FoldTimer
+-- says so rather than `the window has passed`). A BoE drop never carries that line and has no window: its entry is
 -- `permanent` (no countdown, never expired, never live). The bind is the drop's item facts'
 -- (`rec.facts.bindType`, C.TRADE_BOE_BIND). `warned` is set once the item has warned. Entries are
 -- the module's own: read them, never write them.
@@ -310,7 +313,7 @@ local function readEntry(it, timers, t, rec)
         -- so the countdown does not jump at every scan.
         local at = t + left
         if not (e.expiresAt and math.abs(at - e.expiresAt) < 60) then e.expiresAt = at end
-        e.expired = false
+        e.expired, e.hadWindow = false, true
     elseif isBoE(rec) then
         e.expiresAt, e.expired, e.permanent = nil, false, true
     else

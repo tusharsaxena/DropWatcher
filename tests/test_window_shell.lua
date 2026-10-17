@@ -801,6 +801,19 @@ test("shell: every drop added in an auto-open situation opens the window, each t
     assertTrue(NS.IsWindowShown(), "and again: no once-per-situation latch")
 end)
 
+test("shell: a drop opens a closed window on Drops; an open window keeps the tab it shows", function()
+    local NS = inDungeon()
+    NS.ShowWindow()
+    NS.Window.SelectTab("history")
+    NS.HideWindow()
+    announce(NS, drop({ id = 1 }))
+    -- red under: the window reopening on History, the tab it was closed on, with the drop out of sight
+    assertTrue(NS.IsWindowShown()); assertEqual(NS.Window.ActiveTab(), "group")
+    NS.Window.SelectTab("history")
+    announce(NS, drop({ id = 2 }))
+    assertEqual(NS.Window.ActiveTab(), "history", "browsing History: a drop does not pull you away")
+end)
+
 test("shell: your own drop opens the window too, whatever showOwn says, and counts as new", function()
     local NS = inDungeon()
     local mine = { isMine = true, me = false, trade = { state = "yes" } }

@@ -125,7 +125,7 @@ test("cells: For the looter compares their inspected gear and names their spec a
     assertTrue(byKey(unread.rows, "spec").tip[2]:find("not been inspected") ~= nil)
 end)
 
-test("cells: on your own drop the looter's side is FOR THE GROUP, its Looter row Name [YOU], its Them row Upgrade for N", function()
+test("cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member", function()
     local NS = T.newAddon()
     local D = NS.DetailCells
     local function cand(name, gain, base)
@@ -137,22 +137,37 @@ test("cells: on your own drop the looter's side is FOR THE GROUP, its Looter row
     local mine = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = list }), nil, nil, 100)
     assertEqual(mine.title, "FOR THE GROUP")
     assertEqual(mine.verdict.text, "Upgrade for 2"); assertEqual(mine.verdict.tone, "good")
-    assertEqual(mine.rows[1].tip[2], "Your own drop: Offer shows who it would help.")
-    -- Your own name in your class color, then ` [YOU]` in gold (feedback-7 spec §2), not a muted `you`.
-    local looter = byKey(mine.rows, "mine")
-    assertEqual(looter.text, "Seta"); assertEqual(looter.you, "[YOU]"); assertEqual(looter.tone, "plain")
-    assertEqual(looter.classFile, "PRIEST")
+    -- red under: a Looter row naming you in a box about everyone else
+    assertNil(byKey(mine.rows, "mine"))
     local them = byKey(mine.rows, "them")
-    assertEqual(them.text, "Upgrade for 2"); assertEqual(them.label, "Them")
+    assertEqual(them.text, "Upgrade for 2"); assertEqual(them.label, "Them"); assertEqual(mine.rows[1], them)
+    -- Then each member it upgrades, best first (feedback-20): the name, the worn item, `from → to · +gain`.
+    assertEqual(#mine.rows, 3)
+    local b, s = mine.rows[2], mine.rows[3]
+    assertEqual(b.key, "member"); assertEqual(b.label, "Butterz"); assertEqual(b.tone, "good")
+    assertEqual(T.marks(b.text), "300 [arrow-right] 311 · +11")
+    assertEqual(s.label, "Seta"); assertEqual(T.marks(s.text), "307 [arrow-right] 311 · +4")
     -- One grid row per upgrade (feedback-7 spec §3); no class read, so the names are plain.
     assertEqual(T.tipText(them.tip[2]), "Butterz  300  Bloodthorn Treads  ▲11\nSeta  307  ▲4", "ranked by gain")
     -- The keep? rule: an upgrade for you reads Hidden until revealed.
     local kept = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100)
-    assertEqual(byKey(kept.rows, "them").text, "Hidden")
+    assertEqual(byKey(kept.rows, "them").text, "Hidden"); assertEqual(#kept.rows, 1, "no names while hidden")
     local revealed = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100, true)
     assertEqual(byKey(revealed.rows, "them").text, "Upgrade for 2")
     local nobody = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = {} }), nil, nil, 100)
     assertEqual(nobody.verdict.text, "No upgrades"); assertEqual(nobody.verdict.tone, "muted")
+    assertEqual(#nobody.rows, 1)
+    -- Five upgrades: three names, then how many more, so the box's five lines hold them.
+    local many = {}
+    for i, n in ipairs({ "Aa", "Bb", "Cc", "Dd", "Ee" }) do many[n] = cand(n, 10 - i, { ilvl = 300 + i }) end
+    local five = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = many }), nil, nil, 100)
+    assertEqual(#five.rows, 5)
+    assertEqual(five.rows[4].label, "Cc"); assertEqual(five.rows[5].key, "more")
+    assertEqual(five.rows[5].text, "and 2 more: Offer shows all")
+    -- Not tradeable: nobody can be offered it, so no names.
+    local dead = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = list,
+        trade = { state = "no", reasonKey = "warbound", basis = "bind" } }), nil, nil, 100)
+    assertEqual(#dead.rows, 1)
 end)
 
 -- ── the trade box ───────────────────────────────────────────────────────────────────────────

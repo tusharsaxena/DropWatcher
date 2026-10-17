@@ -62,7 +62,7 @@ Every module reads a setting through `NS.Setting(path)`.
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
 | `autoOpen` | `true` | When to show | master auto-open: `false` keeps every situation from opening the window |
 | `situations.<key>.track` | per design spec §6.1 | When to show | loot is watched in that situation |
-| `situations.<key>.autoOpen` | per design spec §6.1 | When to show | every drop added to the feed there opens a hidden window (since DW-83; it was the first interesting drop, once per situation) |
+| `situations.<key>.autoOpen` | per design spec §6.1 | When to show | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
 | `situations.<key>.quality` | `"global"` | When to show | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
 | `sim.stepDelay` | `2` | Simulation | the seconds the simulator's automatic run (`/dw sim run`, the panel's Run all) waits between steps, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7); read as each next step is set, so a change takes effect from the next step |
 

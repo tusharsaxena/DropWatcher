@@ -154,6 +154,10 @@ local function newSideRow(side, i)
     r:SetPoint("TOPRIGHT", side, "TOPRIGHT", -10, -(24 + (i - 1) * K.SIDE_ROW_H))
     r.label = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     r.label:SetPoint("LEFT", r, "LEFT", 0, 0)
+    r.label:SetWidth(K.SIDE_LABEL - 4)   -- a member's name (your own drop's rows) is cut, not drawn over the icon
+    r.label:SetJustifyH("LEFT")
+    r.label:SetWordWrap(false)
+    r.labelRGB = { r.label:GetTextColor() }   -- the template's gray, put back after a class color
     r.item = NS.WindowGroup.ItemButton(r, K.SIDE_ROW_H - 2)
     r.item:SetPoint("LEFT", r, "LEFT", K.SIDE_LABEL, 0)
     r.value = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -351,6 +355,11 @@ local function paintSideRow(r, line, width)
     r:SetShown(line ~= nil)
     if not line then return end
     r.label:SetText(line.label)
+    if line.labelClassFile then
+        NS.WindowGroup.ClassTone(r.label, line.labelClassFile, "plain")   -- a member's name (feedback-20)
+    else
+        r.label:SetTextColor(unpack(r.labelRGB))
+    end
     r.value:SetText(line.text)
     setTone(r.value, line.tone)
     r.tipLines = line.tip

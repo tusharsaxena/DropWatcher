@@ -13,6 +13,16 @@ test("window: built lazily, on the first show, and not before", function()
     assertEqual(f.__name, "DropWatcherWindow")
 end)
 
+test("window: a tooltip shows on a disabled button too, so the gray No action says why", function()
+    local NS, _, m = T.newAddon()
+    local b = m.CreateFrame("Button")
+    local motion
+    rawset(b, "SetMotionScriptsWhileDisabled", function(_, v) motion = v end)
+    NS.Window.AttachTooltip(b, function() return "No action", "why" end)
+    -- red under: a disabled button fires no OnEnter, so the reason never showed
+    assertEqual(motion, true)
+end)
+
 test("window: Escape closes it (UISpecialFrames) and it wears the shared close mark", function()
     local NS, _, m = T.enableAddon()
     NS.ShowWindow()

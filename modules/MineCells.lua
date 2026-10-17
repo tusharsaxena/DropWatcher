@@ -118,7 +118,8 @@ end
 -- full reason is the cell's tooltip.
 local NO_SHORT = {
     bonusRoll = L["Bonus roll"], warbound = L["Warbound"], legacy = L["Legacy loot"],
-    expired = L["Window passed"], upgradeForLooter = L["Your upgrade"], badFacts = L["Not loaded"],
+    expired = L["Window passed"], upgradeForLooter = L["Your upgrade"], upgradeForYou = L["Your upgrade"],
+    badFacts = L["Not loaded"],
 }
 -- Another player's drop says whose upgrade it is in the same room.
 local NO_SHORT_THEIRS = { upgradeForLooter = L["Their upgrade"] }
@@ -320,6 +321,17 @@ local function upgradeRow(e)
     local items = (base and num(base.ilvl)) and { base } or {}
     return TM.GearRows(TM.ClassName(e.short, e.classFile), items, #items == 0 and 1 or 0,
         TM.ArrowCell("upgrade", e.gain), base)[1]
+end
+
+--- The members your own drop upgrades, ranked by gain (MC.Candidates' entries), as `Upgrade for N`
+--- counts them; none on a drop that cannot be traded, nor under the keep? rule. The detail card's
+--- FOR THE GROUP lists them (feedback-20).
+--- @param drop table one of your drops
+--- @param revealed boolean|nil
+--- @return table
+function MC.Upgrades(drop, revealed)
+    if tradeOf(drop).state == "no" or keepHidden(drop, revealed) then return {} end
+    return upgradesOf(MC.Candidates(drop))
 end
 
 --- Them on your own drop (feedback-7 spec §2): `Upgrade for N`, green, N the members it upgrades;

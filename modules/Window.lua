@@ -237,7 +237,8 @@ end
 --- `{ text, wrap = false }`, which does not: NS.TipMarks.NoWrap, or `{ grid = rows }`, columns:
 --- NS.TipMarks.Grid, painted by NS.TipGrid). Read on every hover, so it is
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
---- Hooked rather than set, so a library widget keeps its own hover tint.
+--- Hooked rather than set, so a library widget keeps its own hover tint. A button shows it while
+--- disabled too (SetMotionScriptsWhileDisabled): the gray No action's tooltip is why there is none.
 --- `place` is nil (below the widget, ANCHOR_BOTTOM), `above` (Window.PlaceAbove: a filter-bar
 --- control, DW-B1) or `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2).
 --- @param widget table
@@ -247,6 +248,7 @@ function Window.AttachTooltip(widget, fn, place)
     widget.tooltip = fn
     widget.tipPlace = place
     if widget.EnableMouse then widget:EnableMouse(true) end
+    if widget.SetMotionScriptsWhileDisabled then widget:SetMotionScriptsWhileDisabled(true) end
     widget:HookScript("OnEnter", showTooltip)
     widget:HookScript("OnLeave", hideTooltip)
 end
@@ -882,6 +884,7 @@ end
 -- next drop. Master `autoOpen` false, or the situation's own `autoOpen` false, turns it off. A
 -- minimized window stays minimized and counts the drop (`n new`). The frame is not protected
 -- (no secure template, no protected child), so opening it in combat is allowed and taints nothing.
+-- It opens on Drops, where the drop is (feedback-20); a window already open keeps the tab it shows.
 -- A test drop's open is test mode's (openedByTestMode), so turning test mode off closes it again:
 -- NS.SetTestMode fills the feed before Window.OnTestModeChanged, so the drops can open it first.
 -- A drop restored after a reload (feedback-15 spec §0) was seen before it: it opens nothing, and
@@ -893,6 +896,7 @@ local function maybeAutoOpen(rec)
     if not Sit.ShouldAutoOpen(key) then return end
     NS.Debug(TAG, "auto-open: drop %s added in %s", tostring(rec.id), tostring(key))
     NS.WindowCompact.OnAutoOpen(key)   -- compact during a run (`window.compactInRuns`)
+    Window.SelectTab("group")
     Window.Open()
     openedByTestMode = rec.test == true
 end

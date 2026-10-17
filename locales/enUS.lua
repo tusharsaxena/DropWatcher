@@ -674,6 +674,12 @@ L["%d is an upgrade over the %d %s wears, so the game won't let them trade it."]
     "%d is an upgrade over the %d %s wears, so the game won't let them trade it."
 L["It fills an empty slot for %s, so the game won't let them trade it."] =
     "It fills an empty slot for %s, so the game won't let them trade it."
+L["%d is an upgrade over the %d you wear, so the game won't let you trade it."] =
+    "%d is an upgrade over the %d you wear, so the game won't let you trade it."
+L["It fills an empty slot for you, so the game won't let you trade it."] =
+    "It fills an empty slot for you, so the game won't let you trade it."
+L["The game gave it no trade window: it counts as an upgrade for you, so you can't trade it."] =
+    "The game gave it no trade window: it counts as an upgrade for you, so you can't trade it."
 L["The game's rule needs %s's gear, which is not read yet (%s)."] =
     "The game's rule needs %s's gear, which is not read yet (%s)."
 L["Trade: Unknown"] = "Trade: Unknown"
@@ -950,6 +956,11 @@ L["Replaces"] = "Replaces"
 L["The item %s would take off for it: the lower of two where there are two."] =
     "The item %s would take off for it: the lower of two where there are two."
 L["Empty slot"] = "Empty slot"
+L["You can't use it, so there is nothing for you to ask for."] = "You can't use it, so there is nothing for you to ask for."
+L["Replaces %s · %d."] = "Replaces %s · %d."
+L["An upgrade for them: %s."] = "An upgrade for them: %s."
+L["and %d more: Offer shows all"] = "and %d more: Offer shows all"
+L["Offer lists every member it upgrades."] = "Offer lists every member it upgrades."
 L["No item-level change: nothing to compare with yet."] = "No item-level change: nothing to compare with yet."
 L["%d against %d: %s."] = "%d against %d: %s."
 L["Track"] = "Track"

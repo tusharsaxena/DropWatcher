@@ -120,13 +120,14 @@ test("compact cards: the worn level comes before the verdict, plain; a word for 
     assertEqual(C.HalfText(range), "Them range", "the ? goes: range says why")
 end)
 
-test("compact cards: a cross-realm looter takes ⊕ and the realm in the tooltip", function()
+test("compact cards: a cross-realm looter takes no mark, the realm in the tooltip", function()
     local C = CC()
     local same = C.Looter(groupDrop(), "Realm")
     assertEqual(same.text, "Lysandra"); assertFalse(same.crossRealm); assertTrue(same.mark == nil)
     assertEqual(same.classFile, "MAGE")
     local other = C.Looter(groupDrop({ looter = { name = "Bùnian-Argent Dawn", classFile = "DRUID" } }), "Realm")
-    assertEqual(other.text, "Bùnian"); assertTrue(other.crossRealm); assertEqual(other.mark, "⊕")
+    -- red under: the ⊕ after the name (feedback-20 retired it)
+    assertEqual(other.text, "Bùnian"); assertTrue(other.crossRealm); assertTrue(other.mark == nil)
     assertTrue(has(other.tip, "From another realm: Argent Dawn."))
     assertFalse(C.Looter(groupDrop({ looter = { name = "Bùnian-ArgentDawn" } }), "Argent Dawn").crossRealm,
         "realms compare normalized")
@@ -167,8 +168,10 @@ test("compact cards: the Drops card reads the spec's three lines", function()
     assertEqual(lines[1], "295 Vile Vial of Volatile Venom (2m)", "the freshness in brackets after the name")
     -- Line 2's right side is the action (feedback-10 spec §2); the engine offers no Ask for a
     -- downgrade, so No action (feedback-11 spec §1).
-    assertEqual(lines[2], "Lysandra · Trinket · Trinkets · Likely  No action")
-    assertEqual(lines[3], "You 321/308 ▼13  Them 298/296 ⊘ Can't use")
+    assertEqual(lines[2], "Lysandra · Trinket · Trinkets  No action")
+    -- red under: the trade word bare on line 2, read as one more fact about the item
+    assertEqual(lines[3], "You 321/308 ▼13  Them 298/296 ⊘ Can't use  Trade Likely")
+    assertEqual(card.trade.label, "Trade")
     assertEqual(card.kind, "group"); assertEqual(card.id, 7); assertEqual(card.link, LINK)
 end)
 
@@ -241,7 +244,7 @@ test("compact cards: the Ask button keeps its states, and a drop you cannot ask 
         assertFalse(card.ask.text:find("…", 1, true) ~= nil, "no ellipsis")
     end
     local no = C.Group(groupDrop(), groupCtx())
-    assertFalse(no.ask.offered); assertEqual(C.Plain(no)[2], "Lysandra · Trinket · Trinkets · Likely  No action")
+    assertFalse(no.ask.offered); assertEqual(C.Plain(no)[2], "Lysandra · Trinket · Trinkets  No action")
     assertTrue(has(no.ask.tip, "not an upgrade for you"))
 end)
 
@@ -252,15 +255,16 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
     local lines = C.Plain(card)
     assertEqual(lines[1], "295 Vile Vial of Volatile Venom", "your own drop needs no inspect: nothing after the name")
     assertTrue(card.ask.offer and card.ask.offered)
-    assertEqual(lines[3], "You 321/308 ▼13  Them No upgrades")
+    assertEqual(lines[3], "You 321/308 ▼13  Them No upgrades  Trade Likely")
     assertEqual(card.them.tone, "muted", "nobody's upgrade")
     assertTrue(has(card.them.tip, "Nobody else in your group."))
-    assertEqual(lines[2], "Me [YOU] · Trinket · Trinkets · Likely  Offer",
+    assertEqual(lines[2], "Me [YOU] · Trinket · Trinkets  Offer",
         "your own name marked (feedback-7 spec §2); line 2's button is Offer (feedback-10 spec §2)")
     assertEqual(card.looter.you, "[YOU]"); assertEqual(card.looter.text, "Me")
     local dead = C.Group(groupDrop({ isMine = true, them = NONE, looter = me,
         trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), groupCtx())
-    assertEqual(C.Plain(dead)[2], "Me [YOU] · Trinket · Trinkets · No  No action", "where it cannot be traded")
+    assertEqual(C.Plain(dead)[2], "Me [YOU] · Trinket · Trinkets  No action", "where it cannot be traded")
+    assertTrue(C.Plain(dead)[3]:find("Trade No$") ~= nil, C.Plain(dead)[3])
     assertTrue(has(dead.ask.tip, "Bonus roll loot"))
 end)
 
@@ -310,8 +314,8 @@ test("compact cards: a drop whose details have not loaded is never blank", funct
         link = NONE }), groupCtx())
     local lines = C.Plain(card)
     assertEqual(lines[1], "? ?", "pending: nothing after the name, Them says it")
-    assertEqual(lines[2], "Lysandra · – · – · Unknown  No action")
-    assertEqual(lines[3], "You –  Them –", "not worn, or not loaded: the dash says why")
+    assertEqual(lines[2], "Lysandra · – · –  No action")
+    assertEqual(lines[3], "You –  Them –  Trade Unknown", "not worn, or not loaded: the dash says why")
 end)
 
 -- ── the History card ────────────────────────────────────────────────────────────────────────
@@ -344,8 +348,8 @@ test("compact cards: the History card reads the spec's three lines", function()
     local lines = C.Plain(card)
     local clock = fakeDate("%H:%M", at)
     assertEqual(lines[1], "311 Yoke of the Charging Bear  Seen", "the item level before the name (feedback-10 spec §2)")
-    assertEqual(lines[2], "Bùnian ⊕ · Neck · Jewelry · Likely  " .. clock)
-    assertEqual(lines[3], "You ▼4  Them ≈0", "a kept entry holds no worn items: the verdict alone")
+    assertEqual(lines[2], "Bùnian · Neck · Jewelry  " .. clock)
+    assertEqual(lines[3], "You ▼4  Them ≈0  Trade Likely", "a kept entry holds no worn items: the verdict alone")
     assertEqual(card.outcome.tone, "bad", "Seen in gray (feedback-12 spec §0)"); assertEqual(card.time.tone, "muted")
     assertTrue(has(card.time.tip, "2m ago"))
 end)

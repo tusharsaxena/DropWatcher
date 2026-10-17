@@ -88,12 +88,21 @@ end
 
 -- ── the context, the groups and the records ─────────────────────────────────────────────────
 
---- The keystone run in force at `t`: in progress, or completed no more than `grace` seconds ago.
+--- The keystone run in force at `t`: in progress, completed no more than `grace` seconds ago, or
+--- completed while you are still in its instance (`here`, the instance you are in, against the
+--- run's `instance`: a bonus roll or a late trade minutes after the chest still belongs to the
+--- run, feedback-20). A new run replaces it.
+--- @param ctx table
+--- @param t number
+--- @param grace number
+--- @param here any|nil the instance you are in now (LootFeed's instanceKey), nil outside one
 --- @return table|nil
-function FM.ActiveRun(ctx, t, grace)
+function FM.ActiveRun(ctx, t, grace, here)
     local run = ctx.run
-    if not run or (run.endedAt and t - run.endedAt > grace) then return nil end
-    return run
+    if not run then return nil end
+    if not run.endedAt or t - run.endedAt <= grace then return run end
+    if here ~= nil and here == run.instance then return run end
+    return nil
 end
 
 --- The encounter in force at `t`: in progress, or killed no more than `grace` seconds ago (a wipe

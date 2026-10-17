@@ -55,7 +55,8 @@ SituationChanged(key) ─────> "This instance" starts now (Session.MarkS
 DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read); a drop of the feed shown (live, or test
                              mode's while it is on):
                                ├─> hidden, in an auto-open situation: opens it (every drop, your
-                               │   own included; no latch; DW-83, FB-12; never a restored drop)
+                               │   own included; no latch; DW-83, FB-12; never a restored drop),
+                               │   on the Drops tab (an open window keeps its tab; feedback-20)
                                ├─> minimized: stays minimized, `n new` counts it (never a
                                │   restored drop)
                                └─> shown: tabs, filter bar, footer, active body
@@ -192,12 +193,12 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     messages.transmogAsk, Compat.NormalizedRealm; your own drop: its WindowOwn.IsRevealed and
   │     offer tone }) ─> three lines of pieces (line 1: ilvl then item, then CompactCards.FreshMark's
   │     `(2m)` right after it or nothing, never `(…)` while Them reads `…` (feedback-11 §0), the name cut by WindowRows.MarkedWidth; line 2: looter · slot ·
-  │     type · trade, ` [YOU]` in gold after your own name, the Ask or Offer on the right (the gray
+  │     type, ` [YOU]` in gold after your own name, the Ask or Offer on the right (the gray
   │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
   │     row's; no trade window countdown, feedback-10 §2; line 3 SideCells' Me and Them without
-  │     icons, `You 321/308 ▼8`, `Them Upgrade for 2` on your own, the labels gold and Them
-  │     CompactGroup.PlaceThem's fixed gap after You, cut at the card's right inset (feedback-11 §0);
-  │     feedback-6 §1, feedback-7 §2)
+  │     icons, then the Trade cell, `You 321/308 ▼8  Them Upgrade for 2  Trade Likely`, the labels
+  │     gold, each half CompactGroup.PlaceThem's fixed gap after the last, Trade cut at the card's
+  │     right inset (feedback-11 §0); feedback-6 §1, feedback-7 §2)
   └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
         `[Post] [Scan group] [Expand all]` as icons alone, FOOTER_ICON_W wide (feedback-16)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
@@ -324,8 +325,10 @@ the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, w
                                   NS.TradeHelper.CanTradeWith(looter) })                  (pure)
   (your own drop: Offer in place of Ask, toned as the row's, and the For the looter Them row
    `Upgrade for N` with the row's tooltip: MineCells.OwnOffer / Details; feedback-5 §2, feedback-6 §3,
-   feedback-7 §2; the Looter row `Name [YOU]`; with no action the first action is the gray
-   `No action` with its reason, WindowCells.NoAction, not a disabled Ask or Offer, feedback-11 §1)
+   feedback-7 §2; no Looter row, the group being everyone but you; under Them a row per member it
+   upgrades, MineCells.Upgrades, the name in class color, feedback-20; with no action the first action
+   is the gray `No action` with its reason, WindowCells.NoAction, not a disabled Ask or Offer,
+   feedback-11 §1, its tooltip shown while disabled: Window.AttachTooltip)
 
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press ─> AskStateChanged ─> repaint
                  (messages.editFirst on, window shown, not queued: ─> DetailCard.OpenEditor(id, "ask"))

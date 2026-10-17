@@ -124,6 +124,20 @@ test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", fu
     assertEqual(none.tone, "muted")
 end)
 
+test("cells: Trade's Yes or Likely is muted green on another player's drop you can't use", function()
+    local W = WC()
+    local cant = { verdict = "cantUse", reasons = { { key = "armorType" } } }
+    local c = W.Trade(drop({ me = cant }))
+    -- red under: Likely in the full green beside Can't use, as if there were something to ask for
+    assertEqual(c.text, "Likely"); assertEqual(c.tone, "goodMuted")
+    assertEqual(c.tip[3], "You can't use it, so there is nothing for you to ask for.", "after the reason")
+    assertEqual(W.Trade(drop({ me = cant, trade = { state = "no", reasonKey = "legacy" } })).tone, "red", "No stays red")
+    assertEqual(W.Trade(drop({ me = cant, isMine = true })).tone, "good", "your own drop: you give it away")
+    local off = { verdict = "cantUse", reasons = { { key = "primaryStat" } },
+        offSpec = { specID = 65, verdict = "upgrade", change = { ilvlDelta = 9 } } }
+    assertEqual(W.Trade(drop({ me = off })).tone, "good", "another spec of yours can use it")
+end)
+
 -- ── the gear halves (WC.TheirEq, WC.MyEq; NS.SideCells puts them before the verdict) ────────
 
 -- Feedback spec §3 (FB-7): the worn item levels in the cell, the read's age in its tooltip.
