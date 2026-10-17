@@ -339,6 +339,7 @@ DCard.FitChips = fitChips
 local function paintHeader(card, drop, width)
     local name = NS.WindowCells.ItemName(drop.link) or "?"
     NS.WindowGroup.SetItem(card.icon, drop.link, NS.WindowGroup.Where(drop))
+    NS.Glow.Apply(card.icon, drop)   -- the upgrade glow (modules/Glow.lua)
     card.name:SetText(name)
     qualityTone(card.name, drop)
     card.nameTip.showItem = true   -- the real item tooltip (WindowGroup.ItemHover, DW-80)

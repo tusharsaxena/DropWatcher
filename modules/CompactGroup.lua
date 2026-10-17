@@ -362,6 +362,7 @@ local function paintLineOne(card, drop, cc, width, m)
     local WG, c = NS.WindowGroup, card.cells
     WG.SetItem(card.icon, drop.link, WG.Where(drop))
     card.icon.dropId = drop.id
+    NS.Glow.Apply(card.icon, drop)   -- the upgrade glow (modules/Glow.lua); sized by layout, above
     card.quality:SetColorTexture(qualityColor(drop))
     c.item.text:SetText(cc.item.text)
     c.item.text:SetTextColor(qualityColor(drop))
@@ -635,6 +636,8 @@ local function groupHeader(e, st)
     return NS.CompactCards.Header(g, e.count, st.now, sit, e.collapsed, e.hidden, e.filter)
 end
 
+local function cardIcon(card) return card.icon end
+
 local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader, after = drawDetail,
     indent = K.ROW_INDENT }
 
@@ -651,6 +654,7 @@ function CG.Refresh(pane, entries, compact)
     cv.card:Hide()
     cv.cardDropId = nil
     CG.Draw(cv, entries, CG.CardWidth(pane), GROUP_SPEC, st)
+    NS.Glow.StopFree(cv.cardPool, cardIcon)   -- the cards this repaint left unused
     CG.Settle(pane, cv)
 end
 

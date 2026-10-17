@@ -753,6 +753,7 @@ local function paintRow(row, drop, layout, now, metrics)
     local cells = row.cells
     paintItem(cells.item, drop)
     cells.item.button.dropId = drop.id
+    NS.Glow.Apply(cells.item.button, drop)   -- after ApplyRowIcon: the glow is sized from the button
     for key, fn in pairs(SIMPLE) do paintText(cells[key], fn(drop)) end
     local lc = WC.Looter(drop)
     paintText(cells.looter, lc)
@@ -904,6 +905,8 @@ local function drawTable(pane, entries)
     pane.columns, pane.layout = kept, layout
 end
 
+local function rowIcon(row) return row.cells.item.button end
+
 -- The table, or (compact) the cards over the same entries; the other one is released and hidden.
 local function refresh(pane, ctx)
     local LF = NS.LootFeed
@@ -913,6 +916,7 @@ local function refresh(pane, ctx)
     NS.Pool.ReleaseAll(pane.headPool)
     pane.scroll:SetShown(not compact)
     if not compact then drawTable(pane, entries) end
+    NS.Glow.StopFree(pane.rowPool, rowIcon)   -- the rows this repaint left unused (all, in compact)
     NS.CompactGroup.Refresh(pane, entries, compact)
     pane.entries = entries
     NS.DropsStrip.Paint(pane, ctx, compact)

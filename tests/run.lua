@@ -190,6 +190,7 @@ Kit.run{
         "test_feed_restore",
         "test_content_tabs",
         "test_toast",
+        "test_glow",
         "test_auto_ask",
         "test_sim_core",
         "test_sim_pool",

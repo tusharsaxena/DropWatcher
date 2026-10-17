@@ -343,6 +343,11 @@ modules\WindowOwn.lua
 # right, like Ka0s Loot History; feedback-3 spec §2, DW-B2); takes NS.Constants at load. NS.MineCells
 # (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
 modules\RowTooltip.lua
+# Conventional: publishes NS.Glow, the upgrade glow on a drop's icon (feedback-21: LibCustomGlow-1.0,
+# libs\, above); reads nothing at load. NS.OffSpec, NS.Setting, NS.C, NS.Window and NS.Toast are read
+# at call time; modules\WindowGroup.lua, modules\DetailCard.lua, modules\CompactGroup.lua and
+# modules\Toast.lua (below) call it when they paint an icon.
+modules\Glow.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Drops body through
 # Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells, NS.SideCells and
 # NS.TipMarks (above, its column tooltips call TipMarks.Mark), NS.Constants, NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
