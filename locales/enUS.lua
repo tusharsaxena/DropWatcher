@@ -1294,6 +1294,75 @@ L["Show in combat"] = "Show in combat"
 L["Show toasts in combat too."] = "Show toasts in combat too."
 L["Play a sound"] = "Play a sound"
 L["Play a sound with each toast."] = "Play a sound with each toast."
+L["Upgrade glow"] = "Upgrade glow"
+L["Pixel border"] = "Pixel border"
+L["Main spec lines"] = "Main spec lines"
+L["Off-spec lines"] = "Off-spec lines"
+L["How many lines run around the icon. Pixel style only."] =
+    "How many lines run around the icon. Pixel style only."
+L["Main spec frequency"] = "Main spec frequency"
+L["Off-spec frequency"] = "Off-spec frequency"
+L["How fast the lines run around the icon. Higher is faster. Pixel style only."] =
+    "How fast the lines run around the icon. Higher is faster. Pixel style only."
+L["Main spec line length (0 = automatic)"] = "Main spec line length (0 = automatic)"
+L["Off-spec line length (0 = automatic)"] = "Off-spec line length (0 = automatic)"
+L["How long each line is, in pixels. 0 sizes the lines from the icon. Pixel style only."] =
+    "How long each line is, in pixels. 0 sizes the lines from the icon. Pixel style only."
+L["Main spec thickness"] = "Main spec thickness"
+L["Off-spec thickness"] = "Off-spec thickness"
+L["How thick each line is, in pixels. Pixel style only."] =
+    "How thick each line is, in pixels. Pixel style only."
+L["Main spec dark border"] = "Main spec dark border"
+L["Off-spec dark border"] = "Off-spec dark border"
+L["Draw a dark border inside the lines. Pixel style only."] =
+    "Draw a dark border inside the lines. Pixel style only."
+L["Auto cast sparkles"] = "Auto cast sparkles"
+L["Main spec particles"] = "Main spec particles"
+L["Off-spec particles"] = "Off-spec particles"
+L["How many sparkles circle the icon in each ring. Auto cast style only."] =
+    "How many sparkles circle the icon in each ring. Auto cast style only."
+L["How fast the sparkles circle the icon. Higher is faster. Auto cast style only."] =
+    "How fast the sparkles circle the icon. Higher is faster. Auto cast style only."
+L["Main spec scale"] = "Main spec scale"
+L["Off-spec scale"] = "Off-spec scale"
+L["How big the sparkles are. Auto cast style only."] =
+    "How big the sparkles are. Auto cast style only."
+L["Button (rotating rays)"] = "Button (rotating rays)"
+L["How fast the rays turn. Higher is faster. Button style only."] =
+    "How fast the rays turn. Higher is faster. Button style only."
+L["Proc (flipbook)"] = "Proc (flipbook)"
+L["Main spec duration (seconds)"] = "Main spec duration (seconds)"
+L["Off-spec duration (seconds)"] = "Off-spec duration (seconds)"
+L["How many seconds one loop of the flipbook takes. Proc style only."] =
+    "How many seconds one loop of the flipbook takes. Proc style only."
+L["Main spec start animation"] = "Main spec start animation"
+L["Off-spec start animation"] = "Off-spec start animation"
+L["Play the burst that opens the proc glow when it starts. Proc style only."] =
+    "Play the burst that opens the proc glow when it starts. Proc style only."
+L["Offset"] = "Offset"
+L["Main spec X offset"] = "Main spec X offset"
+L["Off-spec X offset"] = "Off-spec X offset"
+L["How far the glow reaches past the icon's sides, in pixels. Pixel, Proc and Auto cast styles."] =
+    "How far the glow reaches past the icon's sides, in pixels. Pixel, Proc and Auto cast styles."
+L["Main spec Y offset"] = "Main spec Y offset"
+L["Off-spec Y offset"] = "Off-spec Y offset"
+L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel, Proc and Auto cast styles."] =
+    "How far the glow reaches past the icon's top and bottom, in pixels. Pixel, Proc and Auto cast styles."
+L["Effect"] = "Effect"
+L["Main spec glow"] = "Main spec glow"
+L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card, the drop's card and the toast."] =
+    "Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card, the drop's card and the toast."
+L["Off-spec glow"] = "Off-spec glow"
+L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card, the drop's card and the toast."] =
+    "Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card, the drop's card and the toast."
+L["Main spec style"] = "Main spec style"
+L["How the main spec glow looks."] = "How the main spec glow looks."
+L["Off-spec style"] = "Off-spec style"
+L["How the off-spec glow looks."] = "How the off-spec glow looks."
+L["Main spec color"] = "Main spec color"
+L["Off-spec color"] = "Off-spec color"
+L["The glow's color. Its alpha makes the glow fainter."] =
+    "The glow's color. Its alpha makes the glow fainter."
 
 -- settings/Editors.lua
 L["Strength"] = "Strength"
@@ -1373,5 +1442,5 @@ L["Messages"] = "Messages"
 L["Reset the Messages page's settings (templates, sending and auto-ask) to their defaults."] =
     "Reset the Messages page's settings (templates, sending and auto-ask) to their defaults."
 L["Window"] = "Window"
-L["Reset the Window page's settings (columns, layout and toast) to their defaults."] =
-    "Reset the Window page's settings (columns, layout and toast) to their defaults."
+L["Reset the Window page's settings (columns, layout, toast and upgrade glow) to their defaults."] =
+    "Reset the Window page's settings (columns, layout, toast and upgrade glow) to their defaults."

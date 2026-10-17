@@ -205,7 +205,8 @@ end
 
 -- `map` is a whole-value table row (architecture-§5's value route): the per-spec weights and
 -- undesired-type sets, validated and written whole through the seam, drawn by their own editors.
-local VALID_TYPES = { bool = true, number = true, string = true, map = true }
+-- `color` is the upgrade glows' swatches (feedback-21), drawn by the library's color picker.
+local VALID_TYPES = { bool = true, number = true, string = true, map = true, color = true }
 
 -- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
 -- path: answering nil makes the library skip the resolution check for it (the session rows, and

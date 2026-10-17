@@ -59,7 +59,7 @@ end)
 
 test("rows: every hand-written row names its page, tab, label and a type the schema knows", function()
     local NS = T.newAddon()
-    local types = { bool = true, number = true, string = true, map = true }
+    local types = { bool = true, number = true, string = true, map = true, color = true }
     for _, row in ipairs(NS.addon.Settings.Rows) do
         assertTrue(type(row.page) == "string" and type(row.group) == "string", row.path .. " page and tab")
         assertTrue(type(row.label) == "string" and type(row.tooltip) == "string", row.path .. " label and tooltip")
@@ -212,4 +212,108 @@ test("rows: degraded, the hand-written rows still read, write and refuse", funct
     assertFalse(D.SchemaRuntime.Set("feed.quality.mode", "bogus"))
     assertTrue(D.SchemaRuntime.Set("global.history.retentionDays", 14))
     assertEqual(D.addon.db.global.history.retentionDays, 14)
+end)
+
+-- ── Window › Upgrade glow (feedback-21) ─────────────────────────────────────────────────────
+
+-- The knob table of the feedback-21 plan, shared with KickCD's glow slots: key, min, max, default.
+local GLOW_KNOBS = {
+    { "pixelLines", 1, 20, 8 }, { "pixelFrequency", 0.05, 2, 0.25 }, { "pixelLength", 0, 20, 0 },
+    { "pixelThickness", 1, 6, 2 }, { "autocastParticles", 1, 12, 4 },
+    { "autocastFrequency", 0.05, 2, 0.125 }, { "autocastScale", 0.5, 3, 1 },
+    { "buttonFrequency", 0.05, 2, 0.125 }, { "procDuration", 0.25, 3, 1 },
+    { "xOffset", -10, 10, 0 }, { "yOffset", -10, 10, 0 },
+}
+
+test("glow: both glows have every knob's row on Window › Upgrade glow, with the plan's defaults", function()
+    local NS = T.newAddon()
+    local S, TONE = NS.SchemaRuntime, NS.Constants.TONE
+    for _, key in ipairs({ "main", "offSpec" }) do
+        local base = "glow." .. key .. "."
+        for _, k in ipairs(GLOW_KNOBS) do
+            local row = S.FindRow(base .. k[1])
+            assertTrue(row ~= nil, base .. k[1])
+            assertEqual(row.page, "window"); assertEqual(row.group, "Upgrade glow")
+            assertEqual(row.min, k[2], base .. k[1] .. " min"); assertEqual(row.max, k[3], base .. k[1] .. " max")
+            assertEqual(row.default, k[4], base .. k[1] .. " default")
+        end
+        assertEqual(S.FindRow(base .. "pixelBorder").default, false)
+        assertEqual(S.FindRow(base .. "procStartAnim").default, true)
+        assertEqual(S.FindRow(base .. "enabled").default, true, key .. " is on by default")
+        assertEqual(S.FindRow(base .. "color").type, "color")
+    end
+    assertEqual(NS.Setting("glow.main.type"), "proc")
+    assertEqual(NS.Setting("glow.offSpec.type"), "pixel")
+    local main, off = NS.Setting("glow.main.color"), NS.Setting("glow.offSpec.color")
+    assertTrue(main.r == TONE.good.r and main.g == TONE.good.g and main.b == TONE.good.b and main.a == 1,
+        "main is the upgrade green, opaque")
+    assertTrue(off.r == TONE.offspec.r and off.g == TONE.offspec.g and off.b == TONE.offspec.b and off.a == 1,
+        "off-spec is the off-spec cyan, opaque")
+end)
+
+test("glow: the main and off-spec rows alternate, so each knob reads across one line", function()
+    local NS = T.newAddon()
+    local paths = {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("window")) do
+        if row.group == "Upgrade glow" then paths[#paths + 1] = row.path end
+    end
+    assertEqual(#paths % 2, 0)
+    for i = 1, #paths, 2 do
+        assertEqual(paths[i]:gsub("^glow%.main%.", ""), paths[i + 1]:gsub("^glow%.offSpec%.", ""), paths[i])
+        assertTrue(paths[i]:match("^glow%.main%.") ~= nil and paths[i + 1]:match("^glow%.offSpec%.") ~= nil, paths[i])
+    end
+end)
+
+test("glow: an out-of-range knob, an unknown style and a malformed color are refused", function()
+    local NS = T.bootAddon()
+    local S, p = NS.SchemaRuntime, NS.addon.db.profile
+    assertFalse(S.Set("glow.main.pixelLines", 0), "1 to 20 lines")
+    assertFalse(S.Set("glow.main.pixelLines", 21))
+    assertFalse(S.Set("glow.offSpec.xOffset", 11), "-10 to 10")
+    assertFalse(S.Set("glow.offSpec.procDuration", 0.1), "0.25 to 3 seconds")
+    assertFalse(S.Set("glow.main.type", "sparkle"), "only LibCustomGlow's four styles")
+    assertFalse(S.Set("glow.main.color", { r = 2, g = 0, b = 0 }), "a channel past 1")
+    assertFalse(S.Set("glow.main.color", "green"), "a color is a table")
+    assertFalse(S.Set("glow.main.enabled", "yes"))
+    assertEqual(p.glow.main.pixelLines, 8, "nothing stored")
+    assertTrue(S.Set("glow.main.type", "autocast"))
+    assertTrue(S.Set("glow.offSpec.color", { r = 1, g = 0.5, b = 0, a = 0.5 }))
+    assertEqual(p.glow.offSpec.color.g, 0.5)
+    assertTrue(S.Set("glow.main.pixelLength", 0), "0 is automatic")
+end)
+
+test("glow: a knob is dimmed while its glow is in another style, and everything while the glow is off", function()
+    local NS = T.bootAddon()
+    local S = NS.SchemaRuntime
+    local function dim(path) return S.FindRow(path).disabledIf() == true end
+    -- main is proc, off-spec pixel by default
+    assertFalse(dim("glow.main.procDuration")); assertTrue(dim("glow.main.pixelLines"))
+    assertFalse(dim("glow.offSpec.pixelLines")); assertTrue(dim("glow.offSpec.procDuration"))
+    assertFalse(dim("glow.main.xOffset"), "the offsets serve proc")
+    assertTrue(dim("glow.offSpec.buttonFrequency"))
+    S.Set("glow.main.type", "button")
+    assertTrue(dim("glow.main.xOffset"), "but not button")
+    assertFalse(dim("glow.main.buttonFrequency"))
+    assertFalse(dim("glow.main.type")); assertFalse(dim("glow.main.color"))
+    S.Set("glow.main.enabled", false)
+    assertTrue(dim("glow.main.type") and dim("glow.main.color") and dim("glow.main.buttonFrequency"),
+        "off dims the style, the color and every knob")
+    assertTrue(S.FindRow("glow.main.enabled").disabledIf == nil, "the switch itself is never dimmed")
+    assertFalse(dim("glow.offSpec.pixelLines"), "the other glow is its own")
+end)
+
+test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic", function()
+    local NS = T.enableAddon()
+    local calls = 0
+    NS.Glow = NS.Glow or {}
+    local real = NS.Glow.Refresh
+    NS.Glow.Refresh = function() calls = calls + 1 end
+    assertTrue(NS.SchemaRuntime.Set("glow.main.pixelThickness", 3))
+    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.color", { r = 0, g = 1, b = 0, a = 1 }))
+    assertEqual(calls, 2)
+    NS.Glow.Refresh = real
+    local row = NS.SchemaRuntime.FindRow("glow.main.pixelLength")
+    assertEqual(NS.addon.Settings.FormatValue(row, 0, function(_, v) return tostring(v) end), "0 (Automatic)")
+    NS.addon:OnSlashCommand("set glow.offSpec.color 1 0 0 1")
+    assertEqual(NS.addon.db.profile.glow.offSpec.color.r, 1)
 end)

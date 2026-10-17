@@ -17,6 +17,24 @@ local function situation(track, autoOpen)
     return { track = track, autoOpen = autoOpen, quality = "global" }
 end
 
+-- One upgrade glow's defaults (feedback-21): on or off, its style, its color (a tone of
+-- core/Constants.lua's C.TONE, opaque) and every style's knobs, only the chosen style's read. The
+-- knob set, ranges and defaults are shared with KickCD's glow slots (the feedback-21 plan's knob
+-- table); `pixelLength` 0 is automatic (the library sizes the lines from the icon).
+local function glow(enabled, style, tone)
+    return {
+        enabled = enabled,
+        type    = style,                                       -- button | proc | pixel | autocast
+        color   = { r = tone.r, g = tone.g, b = tone.b, a = 1 },
+        pixelLines = 8, pixelFrequency = 0.25, pixelLength = 0, pixelThickness = 2, pixelBorder = false,
+        autocastParticles = 4, autocastFrequency = 0.125, autocastScale = 1,
+        buttonFrequency = 0.125,
+        procDuration = 1, procStartAnim = true,
+        xOffset = 0, yOffset = 0,                              -- pixel, autocast and proc
+    }
+end
+local TONE = NS.Constants.TONE
+
 NS.C = {
     PROFILE = {
         enabled    = true,       -- master switch (the `disabled` hold reads it)
@@ -136,6 +154,13 @@ NS.C = {
             duration = 8,       -- seconds on screen
             inCombat = false,
             sound    = false,
+        },
+
+        -- The upgrade glow on a drop's icon (feedback-21): `main` for an upgrade for your current
+        -- spec, `offSpec` for one only another of your specs gains from, each with its own style.
+        glow = {
+            main    = glow(true, "proc", TONE.good),
+            offSpec = glow(true, "pixel", TONE.offspec),
         },
 
         -- The simulator (feedback-2 spec §8): the seconds an automatic run waits between steps.
