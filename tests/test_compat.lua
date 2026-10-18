@@ -580,6 +580,7 @@ test("compat: without Pawn every reader answers nil and nothing raises", functio
     assertNil(Compat.PawnItemData("up"))
     assertNil(Compat.PawnUpgradeInfo("up"))
     assertNil(Compat.PawnScaleForSpec(1, 71))
+    assertNil(Compat.PawnVisibleScale(1, 71))
     assertNil(Compat.PawnItemValue("up", "S"))
 end)
 
@@ -643,6 +644,39 @@ test("compat: an error inside Pawn reads as not ready, never as this addon's err
     m.PawnFindScaleForSpec = function() error("Pawn broke") end
     assertNil(next(Compat.PawnUpgradeInfo("up")))
     assertNil(Compat.PawnScaleForSpec(1, 71))
+end)
+
+-- Pawn's scale table (PawnCommon.Scales, Pawn.lua) and its visibility test (PawnIsScaleVisible,
+-- line 5467): a starter (provider) scale per spec, and the scales a player made or imported.
+local function installScales(m, scales, visible)
+    m.PawnCommon = { Scales = scales }
+    m.PawnIsScaleVisible = function(name) return visible[name] == true end
+end
+
+test("compat: your visible Pawn scale is the one you show, a custom one before a starter", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    installScales(m, {
+        Starter = { ClassID = 1, SpecID = 1, Provider = "Wowhead", ProviderActive = true },
+        Mine = { },
+        Fury = { ClassID = 1, SpecID = 2, Provider = "Wowhead", ProviderActive = true },
+        Mage = { ClassID = 8 },
+        Abandoned = { ClassID = 1, SpecID = 1, Provider = "Old" },
+    }, { Starter = true, Mine = true, Fury = true, Mage = true, Abandoned = true })
+    -- red under: a scorer with no visible-scale reader, which takes the hidden-or-not starter scale
+    assertEqual(Compat.PawnVisibleScale(1, 71), "Mine", "a visible custom scale with no class")
+    m.PawnCommon.Scales.Mine = nil
+    assertEqual(Compat.PawnVisibleScale(1, 71), "Starter", "your spec's visible starter scale")
+    m.PawnIsScaleVisible = function(name) return name == "Fury" or name == "Mage" or name == "Abandoned" end
+    assertNil(Compat.PawnVisibleScale(1, 71), "another spec's, another class's or an abandoned scale is not yours")
+    m.PawnCommon.Scales.Arms = { ClassID = 1, SpecID = 1 }
+    m.PawnIsScaleVisible = function(name) return name == "Arms" end
+    assertEqual(Compat.PawnVisibleScale(1, 71), "Arms", "an imported scale that names your spec")
+    assertNil(Compat.PawnVisibleScale(1, 999), "a spec this addon does not know: no scale")
+    m.PawnIsScaleVisible = function() error("Pawn broke") end
+    assertNil(Compat.PawnVisibleScale(1, 71))
+    m.PawnCommon = nil
+    assertNil(Compat.PawnVisibleScale(1, 71))
 end)
 
 test("compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts", function()

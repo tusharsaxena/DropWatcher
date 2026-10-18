@@ -203,6 +203,19 @@ test("scoring: for you, a drop that upgrades no scale is valued on your spec's s
     assertEqual(score({ link = "worn" }, me, drop), 12)
 end)
 
+test("scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn", function()
+    local NS, _, m = T.enableAddon()
+    installPawn(m, { ["S8:1"] = { drop = 90, worn = 10 }, Mine = { drop = 10, worn = 12 } }, { drop = {} })
+    m.PawnCommon = { Scales = { ["S8:1"] = { ClassID = 8, SpecID = 1, Provider = "P", ProviderActive = true },
+        Mine = {} } }
+    m.PawnIsScaleVisible = function(name) return name == "Mine" end
+    local score = NS.Scoring.PawnScorer()
+    local drop, me = { link = "drop" }, { isPlayer = true, classFile = "MAGE", specID = 62 }
+    -- red under: a scorer that falls back to the starter scale you hid (PawnFindScaleForSpec)
+    assertEqual(score(drop, me, drop), 10)
+    assertEqual(score({ link = "worn" }, me, drop), 12)
+end)
+
 test("scoring: for a looter, Pawn uses the scale for their class and spec", function()
     local NS, _, m = T.enableAddon()
     installPawn(m, { ["S1:1"] = { drop = 30, theirs = 25 } }, {})

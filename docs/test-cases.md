@@ -717,7 +717,7 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
 
-### test_compat.lua (71)
+### test_compat.lua (72)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -769,6 +769,7 @@ Total.
 - compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID
 - compat: an item's Pawn value is its unenchanted one, the value Pawn's upgrade test compares
 - compat: an error inside Pawn reads as not ready, never as this addon's error
+- compat: your visible Pawn scale is the one you show, a custom one before a starter
 - compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts
 - compat: InitiateTrade calls through, and reports false when absent
 - compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
@@ -947,7 +948,7 @@ Total.
 - off-spec offer: the Offer whisper's {gain} reads the candidate's off-spec gain
 - off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cyan, with Offer
 
-### test_scoring.lua (15)
+### test_scoring.lua (16)
 
 - scoring: a Pawn v1 string imports its stats under GetItemStats' keys
 - scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
@@ -959,6 +960,7 @@ Total.
 - scoring: InUse and Scorer follow the settings and whether Pawn is initialized
 - scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale
 - scoring: for you, a drop that upgrades no scale is valued on your spec's scale
+- scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn
 - scoring: for a looter, Pawn uses the scale for their class and spec
 - scoring: Pawn answers pending while it is not ready or has not read the item
 - scoring: the kernel hands the scorer the drop beside each item
@@ -1246,11 +1248,13 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (48)
+### test_feed.lua (50)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
 - feed: a looter who leaves the group keeps the read the drop was judged with: spec and worn gear
+- feed: a re-judge after the looter left keeps the read and the verdict the drop was judged with
+- feed: a looter who leaves before any read reads not in your group
 - feed: an upgrade for the looter cannot be traded under the personal rule
 - feed: a bonus roll is never tradeable
 - dedupe: chat, the encounter loot event and the loot history report one drop
@@ -1912,7 +1916,7 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 37 |
-| test_compat.lua | 71 |
+| test_compat.lua | 72 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 13 |
@@ -1921,7 +1925,7 @@ Total.
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
-| test_scoring.lua | 15 |
+| test_scoring.lua | 16 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
@@ -1933,7 +1937,7 @@ Total.
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 33 |
-| test_feed.lua | 48 |
+| test_feed.lua | 50 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
@@ -1967,4 +1971,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1621** |
+| **Total** | **1625** |

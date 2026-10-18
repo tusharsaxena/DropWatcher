@@ -156,6 +156,40 @@ test("feed: a looter who leaves the group keeps the read the drop was judged wit
     assertEqual(insp.gear[11].link, link(200), "the worn ring the verdict was judged against")
 end)
 
+-- feedback-21 R4: a re-judge after the looter left (a score retry, a later source's relink, an
+-- inspect job that ends after the roster prune) kept the read only until it ran.
+test("feed: a re-judge after the looter left keeps the read and the verdict the drop was judged with", function()
+    local NS, m, LF = party()
+    m.addItem(link(300), ring(620))
+    brakkLoots(m, 300)
+    m.inspect.specs.party1 = 71
+    brakkWears(m, 630)
+    m.advance(0)
+    local rec = only(LF)
+    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.__fire("GROUP_ROSTER_UPDATE")
+    -- red under: a judgeLooter that replaces the read with the gear-less notInGroup state
+    LF.Refresh(rec, "source")
+    LF.OnInspectDone(BRAKK)
+    assertEqual(rec.them and rec.them.verdict, "downgrade", "the verdict judged from the kept read")
+    local insp, kept = NS.TestMode.InspectOf(rec)
+    assertTrue(kept, "the drop's own copy of the read")
+    assertEqual(insp.specID, 71)
+    assertEqual(insp.gear[11].link, link(200))
+end)
+
+test("feed: a looter who leaves before any read reads not in your group", function()
+    local _, m, LF = party()
+    m.addItem(link(300), ring(620))
+    brakkLoots(m, 300)
+    local rec = only(LF)
+    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.__fire("GROUP_ROSTER_UPDATE")
+    LF.Refresh(rec, "source")
+    assertEqual(rec.inspect.status, "unavailable"); assertEqual(rec.inspect.reason, "notInGroup")
+    assertNil(rec.them)
+end)
+
 test("feed: an upgrade for the looter cannot be traded under the personal rule", function()
     local _, m, LF = party()
     m.addItem(link(300), ring(620))

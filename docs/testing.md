@@ -248,13 +248,15 @@ never sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader, the trade window's items and partner, the row menu, the optional-addon probe
 `IsAddOnLoaded` (DW-P20), the Pawn seam against a fake shaped like Pawn 2.13.6 (its `PawnIsReady()`,
-the scale asked by spec index, the unenchanted value; feedback-21 H1), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+the scale asked by spec index, the unenchanted value; feedback-21 H1; the scale you show, a custom one
+first, R4), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
 every slot plan and every equippability path, plus nil and garbage inputs), `test_scoring` (the
 scorers: the Pawn scale import, the weights score and its unknown keys, the adapter in use for each
-setting, the Pawn adapter's scales and `pending`, and the sidegrade item level and score reach
+setting, the Pawn adapter's scales (for you, the scale you show in Pawn before a starter one you hid;
+feedback-21 R4) and `pending`, and the sidegrade item level and score reach
 through the kernel and the feed), `test_quality_gate`
 (the minimum-quality gate: each mode, the floor, empty slots, ties, both overrides),
 `test_situations` (the situation classifier's truth table for every key, the per-situation settings
@@ -298,7 +300,7 @@ data arrived, anyone's `INSPECT_READY` read, the combat park, the open inspect w
 invalidation and its echo guard, the roster prune, the warm-up and `Scan`, the candidate judged by
 the verdict kernel, `InspectDone` after the items load, one debug line per job, secrets, and the
 stand-down), `test_feed` (the feed: a member's drop judged for you, its looter's inspect asked for
-and their verdict and trade arriving with `DropUpdated`, the read kept on the drop once its looter leaves the group (feedback-21 H2); the trade re-made over time, a group drop
+and their verdict and trade arriving with `DropUpdated`, the read kept on the drop once its looter leaves the group, through any later re-judge (feedback-21 H2, R4); the trade re-made over time, a group drop
 past its window turning `no expired` on the sweep, your own drop taking the timer's `yes` and then
 `no expired`, a timer moving it off `no` asking for its candidates, a BoE drop keeping its bind; the dedupe across chat, the encounter loot
 event and the loot history in either order, by GUID or by name, a GUID learned from a later source,

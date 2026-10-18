@@ -143,7 +143,8 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
                   reads: NS.Gear.Snapshot().equipped (Me's gear; its icons show your inventory slot's
                   own tooltip), NS.TestMode.InspectOf(drop).gear (Them's gear: NS.Inspect.Get(looter guid),
                   else the read the drop was judged with, `drop.inspect`, once the broker has
-                  forgotten a looter who left the group (feedback-21 H2), or a sample's own entry),
+                  forgotten a looter who left the group (feedback-21 H2; a later re-judge keeps it, R4), or a
+                  sample's own entry),
                   NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)

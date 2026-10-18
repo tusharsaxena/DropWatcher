@@ -31,8 +31,9 @@ can differ from `comparison.scorer`: `auto` takes Pawn once it has **initialized
 your weights are not displaced while it starts, DW-62), else your weights when any spec has one,
 else none; `pawn` with Pawn absent or not yet initialized is none, and `weights` with no weight set is none. The
 diagnostics' Scoring section prints both (`scorer=` and `inUse=`). For you, Pawn's "best visible
-scale" is the one with the highest `PercentUpgrade` for the drop, else your spec's scale when the
-drop upgrades nothing; the drop and its baseline are both valued on that scale
+scale" is the one with the highest `PercentUpgrade` for the drop, else, when the drop upgrades
+nothing, the scale you show in Pawn for your class and spec (a custom or imported one before a
+starter one; `NS.Compat.PawnVisibleScale`, feedback-21 R4), else your spec's starter scale; the drop and its baseline are both valued on that scale
 (`PawnGetSingleValueFromItem`'s unenchanted value, the one Pawn's own upgrade test compares), so
 `scoreDelta` is a value difference, not Pawn's percent. For a looter it is `PawnFindScaleForSpec`
 for their class and spec, the spec given as its place in the class (Pawn numbers its scales so, not

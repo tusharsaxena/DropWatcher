@@ -760,6 +760,36 @@ function Compat.PawnScaleForSpec(classID, specID)
     return (pawnCall(PawnFindScaleForSpec, classID, index))
 end
 
+-- Your visible scales for a class and spec index (PawnCommon.Scales and PawnIsScaleVisible, line
+-- 5467): a scale that names another class or spec is skipped, and so is an abandoned provider's
+-- (PawnGetAllScales, line 5168). A custom scale outranks a starter one, one that names your spec
+-- outranks one that names none, and the name breaks a tie, so the answer never depends on order.
+local function visibleScale(classID, index)
+    local scales = type(PawnCommon) == "table" and PawnCommon.Scales
+    if type(scales) ~= "table" or type(PawnIsScaleVisible) ~= "function" then return nil end
+    local best, rank
+    for name, scale in pairs(scales) do
+        local r = type(name) == "string" and type(scale) == "table"
+            and (scale.ClassID == nil or scale.ClassID == classID)
+            and (scale.SpecID == nil or scale.SpecID == index)
+            and (scale.Provider == nil or scale.ProviderActive)
+            and PawnIsScaleVisible(name) == true
+            and (scale.Provider == nil and 2 or 0) + (scale.SpecID == index and 1 or 0)
+        if r and (rank == nil or r > rank or (r == rank and name < best)) then best, rank = name, r end
+    end
+    return best
+end
+
+--- The Pawn scale YOU show in tooltips for your class and spec, or nil when none is visible: the
+--- one Pawn itself values your gear on, your custom or imported scale included, where
+--- PawnScaleForSpec answers a starter (provider) scale only. `specID` as PawnScaleForSpec's.
+--- @return string|nil
+function Compat.PawnVisibleScale(classID, specID)
+    local index = classID and NS.ClassData.SpecIndex(specID)
+    if index == nil then return nil end
+    return (pawnCall(visibleScale, classID, index))
+end
+
 --- One item's value on scale `scale`, or nil while not ready. PawnGetSingleValueFromItem (line
 --- 1663) answers the enchanted and the unenchanted value; the unenchanted one is kept, the value
 --- Pawn's own upgrade test compares (PawnIsItemAnUpgrade), so worn enchants and gems do not

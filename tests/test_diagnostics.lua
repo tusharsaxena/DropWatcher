@@ -208,6 +208,12 @@ test("diagnostics: the scoring section names the scorer, the one in use, Pawn an
     text = report(NS)
     assertTrue(text:find("scoring: scorer=auto inUse=pawn", 1, true) ~= nil, text)
     assertTrue(text:find("scoring: pawn ready=true scale=Scale8:1", 1, true) ~= nil, text)
+    -- feedback-21 R4: the scale you show in Pawn is the one named, as the scorer uses it.
+    m.PawnCommon = { Scales = { Mine = {} } }
+    m.PawnIsScaleVisible = function(name) return name == "Mine" end
+    text = report(NS)
+    assertTrue(text:find("scoring: pawn ready=true scale=Mine", 1, true) ~= nil, text)
+    m.PawnCommon, m.PawnIsScaleVisible = nil, nil
     -- Configured Pawn without Pawn: the scorer in use is none, not the one configured.
     m.PawnIsReady, m.PawnFindScaleForSpec = nil, nil
     NS.SchemaRuntime.Set("comparison.scorer", "pawn")

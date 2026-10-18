@@ -172,10 +172,13 @@ local function bestVisibleScale(link)
     return best
 end
 
-local function specScale(candidate)
+-- The starter scale for the candidate's class and spec; for you, the scale you show in Pawn first
+-- (a custom or imported one, or the starter you kept visible), so a hidden scale is never used.
+local function specScale(candidate, visibleFirst)
     local classID = CD.CLASS_ID[candidate.classFile]
     if not (classID and num(candidate.specID)) then return nil end
-    return NS.Compat.PawnScaleForSpec(classID, candidate.specID)
+    return visibleFirst and NS.Compat.PawnVisibleScale(classID, candidate.specID)
+        or NS.Compat.PawnScaleForSpec(classID, candidate.specID)
 end
 
 --- The Pawn adapter: a scorer(facts, candidate, drop) for the kernel. One per evaluation pass,
@@ -185,7 +188,7 @@ function S.PawnScorer()
     local mine = {}
     local function scaleFor(candidate, dropLink)
         if not candidate.isPlayer then return specScale(candidate) end
-        if mine[dropLink] == nil then mine[dropLink] = bestVisibleScale(dropLink) or specScale(candidate) or false end
+        if mine[dropLink] == nil then mine[dropLink] = bestVisibleScale(dropLink) or specScale(candidate, true) or false end
         return mine[dropLink] or nil
     end
     return function(facts, candidate, drop)

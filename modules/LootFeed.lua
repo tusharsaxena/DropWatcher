@@ -359,7 +359,9 @@ end
 
 -- The looter's side: their verdict and the trade estimate (yours, for your own drop). `request`
 -- asks for the inspects the drop needs; a re-judge never does, so a failed inspect is not re-queued
--- by its own InspectDone.
+-- by its own InspectDone. A looter who left the group after a read keeps that read and the
+-- verdict judged from it (feedback-21 H2, R4): a later re-judge (a score retry, another source's
+-- relink, an inspect job ending after the roster prune) has nothing newer to judge them on.
 local function judgeLooter(rec, cfg, request)
     if rec.isMine then
         estimate(rec, rec.me, cfg, nil)
@@ -367,10 +369,13 @@ local function judgeLooter(rec, cfg, request)
     end
     local guid = rec.looter.guid
     local inGroup = guid and NS.Roster.Get(guid) ~= nil
-    if request and inGroup and not rec.test then NS.Inspect.Request(guid, NS.Inspect.PRIORITY.looter) end
-    rec.inspect = inspectState(guid)
-    local cand = inGroup and NS.Inspect.Candidate(guid) or nil
-    rec.them = cand and evaluate(rec.facts, cand, evalOpts(cfg)) or nil
+    local kept = not inGroup and type(rec.inspect) == "table" and type(rec.inspect.gear) == "table"
+    if not kept then
+        if request and inGroup and not rec.test then NS.Inspect.Request(guid, NS.Inspect.PRIORITY.looter) end
+        rec.inspect = inspectState(guid)
+        local cand = inGroup and NS.Inspect.Candidate(guid) or nil
+        rec.them = cand and evaluate(rec.facts, cand, evalOpts(cfg)) or nil
+    end
     estimate(rec, rec.them, cfg, rec.inspect)
 end
 
