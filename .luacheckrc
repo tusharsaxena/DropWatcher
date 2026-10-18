@@ -46,7 +46,7 @@ files["core/Compat.lua"] = {
     "Enum", "issecretvalue", "canaccessvalue",
     "C_ChatInfo", "SendChatMessage", "C_TooltipInfo", "C_RestrictedActions", "C_Container",
     "ItemLocation", "DropItemOnUnit", "InitiateTrade", "CursorHasItem", "ClearCursor",
-    "PawnIsInitialized", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnFindScaleForSpec",
+    "PawnIsReady", "PawnIsInitialized", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnFindScaleForSpec",
     "PawnGetSingleValueFromItem", "CanIMogIt", "GetNormalizedRealmName", "GetRealmName",
     "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_MALE", "LOCALIZED_CLASS_NAMES_FEMALE",
     "GetInventoryItemLink",

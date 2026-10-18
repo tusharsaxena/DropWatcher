@@ -246,10 +246,11 @@ samples on Drops; no button label or Trade window cell ending in an ellipsis; As
 never sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader, the trade window's items and partner, the row menu, the optional-addon probe
-`IsAddOnLoaded` (DW-P20), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+`IsAddOnLoaded` (DW-P20), the Pawn seam against a fake shaped like Pawn 2.13.6 (its `PawnIsReady()`,
+the scale asked by spec index, the unenchanted value; feedback-21 H1), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
-(the game-data tables and their lookups), `test_evaluate` (the verdict kernel, table-driven over
+(the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
 every slot plan and every equippability path, plus nil and garbage inputs), `test_scoring` (the
 scorers: the Pawn scale import, the weights score and its unknown keys, the adapter in use for each
 setting, the Pawn adapter's scales and `pending`, and the sidegrade item level and score reach

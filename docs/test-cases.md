@@ -706,7 +706,7 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
 
-### test_compat.lua (68)
+### test_compat.lua (71)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -752,10 +752,13 @@ Total.
 - compat: ItemPrimaryStats reads every primary stat line, the inactive ones too
 - compat: CanRequestItemLoad needs the load request and a timer
 - compat: without Pawn every reader answers nil and nothing raises
+- compat: Pawn's own PawnIsReady() is the readiness test, with no global flag
 - compat: Pawn loaded but not initialized is not ready
 - compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached
+- compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID
+- compat: an item's Pawn value is its unenchanted one, the value Pawn's upgrade test compares
 - compat: an error inside Pawn reads as not ready, never as this addon's error
-- compat: a function-spelled PawnIsInitialized is called
+- compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts
 - compat: InitiateTrade calls through, and reports false when absent
 - compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
 - compat: NormalizedRealm reads the normalized realm, then the plain one stripped
@@ -805,10 +808,11 @@ Total.
 - constants: the trade rules are the spec §7.2 table, and every situation has a rule
 - constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
 
-### test_class_data.lua (12)
+### test_class_data.lua (13)
 
 - classdata: thirteen classes with their client classIDs, each with an armor type
 - classdata: every spec row is well-formed and its class lists it
+- classdata: every spec has its place in its class, 1 to n with none twice
 - classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder
 - classdata: dual wield and Titan's Grip are the right specs
 - classdata: dual wield and Titan's Grip by spec, or by class when every spec agrees
@@ -1895,10 +1899,10 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 37 |
-| test_compat.lua | 68 |
+| test_compat.lua | 71 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
-| test_class_data.lua | 12 |
+| test_class_data.lua | 13 |
 | test_evaluate.lua | 36 |
 | test_offspec.lua | 11 |
 | test_offspec_cells.lua | 23 |
@@ -1950,4 +1954,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1604** |
+| **Total** | **1608** |

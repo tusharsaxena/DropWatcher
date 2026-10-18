@@ -17,7 +17,7 @@ marked as such rather than listed as a requirement.
   the KickCD sibling's vendored copy) draws the upgrade glow on item icons.
 - **Optional: Pawn and CanIMogIt.** Named in `## OptionalDeps:` so they load first when installed,
   and reached only through `core/Compat.lua` (their API is called under `pcall`, never copied).
-  **Pawn**, once it has initialized (`PawnIsInitialized`), drives the `pawn` scorer
+  **Pawn**, once it has initialized (its `PawnIsReady()`), drives the `pawn` scorer
   (`modules/Scoring.lua`, design spec §5.4): `comparison.scorer` `auto` picks it then, and until
   then uses your weights. A nil answer from a ready Pawn reads `pending`, which the feed retries. Its scale strings can also be imported into your own weights. **CanIMogIt**,
   when loaded, answers the transmog-known flag (design spec §4) before `C_TransmogCollection` does.

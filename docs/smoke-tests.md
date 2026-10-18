@@ -31,7 +31,7 @@ passed.
 | ASK-1..11 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2) |
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
-| SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
+| SCORE-1..4 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
 | TOAST-1..6 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10) |
 | GLOW-1..9 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9) |
@@ -278,8 +278,11 @@ duration such as `1 hour 59 min`. Then `/dump C_TooltipInfo.GetInventoryItem("pl
 `/dump C_Item.GetItemUpgradeInfo(GetInventoryItemLink("player", 1))` → a table with
 `trackString`, `currentLevel` and `maxLevel` for a tracked helm. Result:
 
-**COMPAT-3. Pawn.** With Pawn installed and loaded, `/dump type(PawnIsInitialized), PawnIsInitialized`
-→ `boolean`, `true`. Without Pawn → `nil`. Result:
+**COMPAT-3. Pawn.** With Pawn installed and loaded, `/dump PawnIsReady()` → `true` once the UI has
+loaded, and `/dump PawnIsInitialized` → `nil` (Pawn keeps that flag local; the seam asks
+`PawnIsReady()`). `/dump PawnFindScaleForSpec(select(3, UnitClass("player")), GetSpecialization())`
+→ your spec's scale name (Pawn numbers a spec by its place in the class, not by specID). Without
+Pawn, `/dump PawnIsReady` → `nil`. Result:
 
 **COMPAT-4. The optional-addon probe (DW-P20).** Pawn installed and enabled, CanIMogIt not (or the
 other way round). `/reload`, then `/dw debug on` (the line is said once, as logging turns on) → the
@@ -1764,6 +1767,15 @@ Score with on `Automatic`. `/reload` and type `/dw diagnostics` straight away, t
 seconds later → the scoring line never pairs `inUse=pawn` with `pawn ready=false`: before Pawn is
 ready it reads `inUse=weights`, after it `inUse=pawn`. Result:
 
+**SCORE-4. Pawn works out of the box (feedback-21 H1).** Pawn installed with its default settings
+(nothing imported, no weights set), Score with on `Automatic`. `/reload` → the footer reads
+`Pawn: on` and `/dw diagnostics` → `scoring: scorer=auto inUse=pawn` and `pawn ready=true
+scale=<your spec's Pawn scale>`, not `scale=none`. `/dw add <shift-click a piece for your slot>` →
+the detail card's **Pawn** row shows a signed score, never "no scorer in use"; its sign agrees with
+Pawn's own upgrade arrow on that item's tooltip. On a Monk, the scale named is the one for your
+spec (Windwalker is Pawn's third Monk scale, Mistweaver its second). For an inspected looter's drop,
+their side's Pawn row is scored on their spec's scale. Result:
+
 **SCORE-2. Your weights and the Pawn import.** Without Pawn, set Score with to `My weights`. In
 Settings › Comparison › Weights, paste a Pawn scale string (Pawn's Export of your spec's scale) into
 **Import a Pawn scale** and press Enter → chat reads `Imported <name> into <spec>: n weights.` and
@@ -2498,6 +2510,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | TOAST-6 | feedback-21 G10, the toast's Scale: 50 to 200 %, live on a toast on screen, about its saved anchor | No client pass recorded yet |
 | ICON-1..2 | feedback-21 G11, the item icons drawn as before by default, Window › Icons' rows, Icon zoom live on every surface | No client pass recorded yet |
 | ICON-3..4 | feedback-21 G11, the border block, its Use class color and the glow over it; Color by item quality | No client pass recorded yet |
+| SCORE-4, COMPAT-3 | feedback-21 H1, Pawn out of the box: `PawnIsReady()`, its scale asked by spec index | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 

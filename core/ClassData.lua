@@ -121,6 +121,25 @@ CD.SPECS = {
     [1473] = spec("EVOKER", INT, "O"),         -- Augmentation
 }
 
+-- specID -> its place in its class's list (GetSpecialization()'s index, 1-4): the spec numbering
+-- Pawn's scales carry (Pawn 2.13.6 ScaleTemplates.lua, PawnFindScaleForSpec), not the specID.
+-- Not the specIDs' sort order: Monk is Brewmaster 1, Mistweaver 2, Windwalker 3.
+CD.SPEC_INDEX = {
+    [71] = 1, [72] = 2, [73] = 3,                   -- Warrior
+    [65] = 1, [66] = 2, [70] = 3,                   -- Paladin
+    [253] = 1, [254] = 2, [255] = 3,                -- Hunter
+    [259] = 1, [260] = 2, [261] = 3,                -- Rogue
+    [256] = 1, [257] = 2, [258] = 3,                -- Priest
+    [250] = 1, [251] = 2, [252] = 3,                -- Death Knight
+    [262] = 1, [263] = 2, [264] = 3,                -- Shaman
+    [62] = 1, [63] = 2, [64] = 3,                   -- Mage
+    [265] = 1, [266] = 2, [267] = 3,                -- Warlock
+    [268] = 1, [270] = 2, [269] = 3,                -- Monk
+    [102] = 1, [103] = 2, [104] = 3, [105] = 4,     -- Druid
+    [577] = 1, [581] = 2, [1480] = 3,               -- Demon Hunter
+    [1467] = 1, [1468] = 2, [1473] = 3,             -- Evoker
+}
+
 -- classFile -> its specIDs, ascending; derived from SPECS so the two cannot disagree.
 CD.CLASS_SPECS = {}
 for specID, row in pairs(CD.SPECS) do
@@ -138,6 +157,12 @@ for _, list in pairs(CD.CLASS_SPECS) do table.sort(list) end
 function CD.Spec(specID)
     if type(specID) ~= "number" then return nil end
     return CD.SPECS[specID]
+end
+
+--- A spec's place in its class's list (1-4), the numbering Pawn's scales use; nil when unknown.
+function CD.SpecIndex(specID)
+    if type(specID) ~= "number" then return nil end
+    return CD.SPEC_INDEX[specID]
 end
 
 --- The classFile a spec belongs to, or nil.

@@ -709,13 +709,15 @@ end
 
 -- ── The Pawn seam (optional dependency; design spec §5.4) ───────────────────────────────────
 -- Pawn is CC BY-NC-ND: its API is called, never copied. Every call is behind PawnIsReady and in
--- pcall (its error is never this addon's). Nil means "not ready yet": the scorer retries.
+-- pcall (its error is never this addon's). Nil means "not ready yet": the scorer retries. The
+-- shapes below are Pawn 2.13.6's (Pawn.lua; line numbers cite that file).
 
---- True when Pawn is loaded and has finished initializing. PawnIsInitialized is a global flag in
---- Pawn; a function spelling is accepted too.
+--- True when Pawn is loaded and has finished initializing: Pawn's own PawnIsReady() (line 4916),
+--- which answers its file-local PawnIsInitialized (line 28; true, or nil while it initializes).
+--- Without that function, a global PawnIsInitialized (flag or function) is read instead.
 --- @return boolean
 function Compat.PawnIsReady()
-    local flag = PawnIsInitialized
+    local flag = type(PawnIsReady) == "function" and PawnIsReady or PawnIsInitialized
     if type(flag) == "function" then
         local ok, v = pcall(flag)
         return ok and v == true
@@ -723,22 +725,23 @@ function Compat.PawnIsReady()
     return flag == true
 end
 
--- pcall(fn, ...) when Pawn is ready and `fn` is a function; the first return, or nil.
+-- pcall(fn, ...) when Pawn is ready and `fn` is a function; its first two returns, or nil.
 local function pawnCall(fn, ...)
     if not (Compat.PawnIsReady() and type(fn) == "function") then return nil end
-    local ok, v = pcall(fn, ...)
+    local ok, v, w = pcall(fn, ...)
     if not ok then return nil end
-    return v
+    return v, w
 end
 
---- Pawn's item object for a link, or nil while the item is not cached.
+--- Pawn's item object for a link (PawnGetItemData, line 1314), or nil while the item is not cached.
 function Compat.PawnItemData(link)
     if not plainString(link) then return nil end
-    return pawnCall(PawnGetItemData, link)
+    return (pawnCall(PawnGetItemData, link))
 end
 
---- Pawn's upgrade list for a link against YOUR gear: a list of `{ ScaleName, LocalizedScaleName,
---- PercentUpgrade, ExistingItemLink }`, empty when it upgrades nothing; nil while not ready.
+--- Pawn's upgrade list for a link against YOUR gear (PawnIsItemAnUpgrade's first return, line
+--- 3552): a list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, one per
+--- visible scale it upgrades, empty when it upgrades nothing (Pawn answers nil); nil while not ready.
 --- @return table|nil
 function Compat.PawnUpgradeInfo(link)
     local data = Compat.PawnItemData(link)
@@ -747,19 +750,27 @@ function Compat.PawnUpgradeInfo(link)
     return type(list) == "table" and list or {}
 end
 
---- The Pawn scale name for a class and spec, or nil when Pawn has none.
+--- The Pawn scale name for a class and spec, or nil when Pawn has none. `specID` is the client's
+--- specID (71); Pawn's scales carry the spec's place in its class instead (Arms is 1;
+--- PawnFindScaleForSpec, line 4531), so it is translated through NS.ClassData.SpecIndex.
 --- @return string|nil
 function Compat.PawnScaleForSpec(classID, specID)
-    return pawnCall(PawnFindScaleForSpec, classID, specID)
+    local index = classID and NS.ClassData.SpecIndex(specID)
+    if index == nil then return nil end
+    return (pawnCall(PawnFindScaleForSpec, classID, index))
 end
 
---- One item's value on scale `scale`, or nil while not ready.
+--- One item's value on scale `scale`, or nil while not ready. PawnGetSingleValueFromItem (line
+--- 1663) answers the enchanted and the unenchanted value; the unenchanted one is kept, the value
+--- Pawn's own upgrade test compares (PawnIsItemAnUpgrade), so worn enchants and gems do not
+--- outweigh a bare drop. A Pawn that answers one value gives that one.
 --- @return number|nil
 function Compat.PawnItemValue(link, scale)
     if scale == nil then return nil end
     local data = Compat.PawnItemData(link)
     if data == nil then return nil end
-    local v = pawnCall(PawnGetSingleValueFromItem, data, scale)
+    local v, unenchanted = pawnCall(PawnGetSingleValueFromItem, data, scale)
+    if type(unenchanted) == "number" then return unenchanted end
     return type(v) == "number" and v or nil
 end
 

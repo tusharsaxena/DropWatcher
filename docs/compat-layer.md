@@ -89,11 +89,11 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `PlayerHasTransmog(link)` | CanIMogIt's `PlayerKnowsTransmog` when that optional addon is loaded (the look known from any source; its `IsTransmogable` false answers nil), each call in `pcall` with a non-boolean answer ignored; else `C_TransmogCollection.PlayerHasTransmogByItemInfo`; a secret answer is nil | `nil` |
 | | `TransmogSource()` | which source answers `PlayerHasTransmog` now: `CanIMogIt`, `C_TransmogCollection` or `none` (the diagnostics' integrations section) | `"none"` |
 | | `ItemClassRestriction(link)` | `C_TooltipInfo.GetHyperlink`'s `RestrictedRaceClass` line read with `ITEM_CLASSES_ALLOWED`, split on `LIST_DELIMITER`, each name mapped to its classFile through `LOCALIZED_CLASS_NAMES_MALE` and `_FEMALE`; a set | `nil` |
-| Pawn | `PawnIsReady()` | the `PawnIsInitialized` global flag (a function spelling is called) | `false` |
+| Pawn | `PawnIsReady()` | Pawn's own `PawnIsReady()` (its `PawnIsInitialized` is a file local); without that function, a global `PawnIsInitialized` flag or function | `false` |
 | | `PawnItemData(link)` | `PawnGetItemData`; nil while the item is not cached | `nil` |
 | | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
-| | `PawnScaleForSpec(classID, specID)` | `PawnFindScaleForSpec` | `nil` |
-| | `PawnItemValue(link, scale)` | `PawnGetSingleValueFromItem(PawnGetItemData(link), scale)`, a number | `nil` |
+| | `PawnScaleForSpec(classID, specID)` | `PawnFindScaleForSpec(classID, index)`, `index` the spec's place in its class (`NS.ClassData.SpecIndex`; Pawn's scales are numbered so, not by specID) | `nil` |
+| | `PawnItemValue(link, scale)` | `PawnGetSingleValueFromItem(PawnGetItemData(link), scale)`'s unenchanted value (its second return, what Pawn's own upgrade test compares), else its first; a number | `nil` |
 | Trade | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
 | | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |
 | Trade window | `TradeItemLinks()` | `GetTradePlayerItemLink(i)` and `GetTradeTargetItemLink(i)` over slots 1-6 (slot 7 is not traded): answers `given, received`, two lists of links, a secret or empty answer left out | `{}, {}` |
