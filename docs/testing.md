@@ -60,8 +60,9 @@ into the View set, step 4 retiring the History's group cap and pruning nothing, 
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load; Window › Upgrade
-glow, feedback-21: every glow row and its default, the main | off-spec alternation, the refused
-values and colors, a style's knobs dimmed for another style and every row while its glow is off, the
+glow, feedback-21: every glow row and its default, the main | off-spec alternation and each color's
+Use class color beside it (off, player-scoped), the refused values and colors, a style's knobs dimmed
+for another style and the style while its glow is off, the color pair never, the
 `NS.Glow.Refresh` reaction, `/dw set` on a color and `0 (Automatic)`), `test_settings_pages` (the settings
 pages built headless: the page list and each page's strip, a page's rows by its key, When to show's
 table (one line per situation, its gold headers and stripe, each cell's value, a toggle writing its
@@ -181,7 +182,9 @@ detail card, the Offer panel or History in either layout, carries one; the toolt
 family, and an audit that every tooltip test mode attaches is its title, rows and grids, then only a
 closing hint), `test_glow` (the upgrade glow, feedback-21: `Glow.KindOf` on every verdict shape and
 your own drop, the headless `glowKind` and each glow's `enabled`, each style's arguments through a
-fake LibCustomGlow, no library call on an unchanged repaint and a restart on a setting or a size, each
+fake LibCustomGlow, no library call on an unchanged repaint and a restart on a setting or a size, the
+drawn color with and without Use class color (the player's class, the swatch's alpha, the swatch for
+a class with no color), each
 of the four surfaces' icons, a reused or unused pooled row losing it, a glow row's write and a profile
 copy re-applying), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,

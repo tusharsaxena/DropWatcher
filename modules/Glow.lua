@@ -8,7 +8,8 @@ local _, NS = ...
 -- for a drop your spec can't use whose off-spec part (NS.OffSpec.Of) is an upgrade. Sidegrades,
 -- downgrades and your own drops never glow. Each glow is its own Window › Upgrade glow rows
 -- (`glow.main.*`, `glow.offSpec.*`, settings/SchemaRows.lua): on or off, the style (button, proc,
--- pixel, autocast), the color and that style's knobs, the feedback-21 plan's knob table.
+-- pixel, autocast), the color and its Use class color companion, and that style's knobs, the
+-- feedback-21 plan's knob table.
 --
 -- FREE WHEN NOTHING CHANGED. A repaint calls Apply on every painted icon, so Apply remembers on the
 -- button what it drew: the kind, the settings generation and the button's width (the proc, button and
@@ -57,13 +58,16 @@ function Glow.KindOf(drop)
 end
 
 -- A glow's settings as the library takes them: `color` as { r, g, b, a }; false while it is off.
+-- The color is resolved here, through its Use class color companion (NS.ResolveColor,
+-- options-ui-§17): THE PLAYER'S CLASS, hence the nil unit, since the glow says the drop is an
+-- upgrade for you, whoever looted it. The swatch's alpha survives the mode. A write to either row
+-- moves the generation on (Refresh), so the icons restart in the new color.
 local function read(kind)
     local base = "glow." .. kind .. "."
     if NS.Setting(base .. "enabled") ~= true then return false end
     local cfg = {}
     for key in pairs(NS.C.PROFILE.glow[kind]) do cfg[key] = NS.Setting(base .. key) end
-    local c = type(cfg.color) == "table" and cfg.color or {}
-    cfg.color = { c.r or 1, c.g or 1, c.b or 1, c.a or 1 }
+    cfg.color = { NS.ResolveColor(cfg.color, cfg.useClassColor == true, nil) }
     return cfg
 end
 

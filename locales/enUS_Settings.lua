@@ -219,8 +219,11 @@ L["Off-spec style"] = "Off-spec style"
 L["How the off-spec glow looks."] = "How the off-spec glow looks."
 L["Main spec color"] = "Main spec color"
 L["Off-spec color"] = "Off-spec color"
-L["The glow's color. Its alpha makes the glow fainter."] =
-    "The glow's color. Its alpha makes the glow fainter."
+L["The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."] =
+    "The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."
+L["Use class color"] = "Use class color"
+L["Glow in your class color instead of the swatch beside it. The swatch's alpha still applies."] =
+    "Glow in your class color instead of the swatch beside it. The swatch's alpha still applies."
 
 -- settings/Editors.lua
 L["Strength"] = "Strength"

@@ -2,7 +2,7 @@
 -- defaults/Profile.lua and a check the write seam runs (architecture-§5, savedvariables-§2).
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 local NO_LIBKA0S = T.loadAddon.libFiles
 
@@ -241,6 +241,12 @@ test("glow: both glows have every knob's row on Window › Upgrade glow, with th
         assertEqual(S.FindRow(base .. "procStartAnim").default, true)
         assertEqual(S.FindRow(base .. "enabled").default, true, key .. " is on by default")
         assertEqual(S.FindRow(base .. "color").type, "color")
+        local cc = S.FindRow(base .. "useClassColor")
+        assertTrue(cc ~= nil and cc.type == "bool", base .. "useClassColor")
+        assertEqual(cc.default, false, key .. "'s Use class color is off by default (options-ui-§17)")
+        assertEqual(cc.label, "Use class color")
+        assertEqual(cc.classColorSource, "player", "the player's class, whoever looted the drop")
+        assertEqual(S.FindRow(base .. "color").classColorSource, "player")
     end
     assertEqual(NS.Setting("glow.main.type"), "proc")
     assertEqual(NS.Setting("glow.offSpec.type"), "pixel")
@@ -253,15 +259,27 @@ end)
 
 test("glow: the main and off-spec rows alternate, so each knob reads across one line", function()
     local NS = T.newAddon()
-    local paths = {}
+    local rows = {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("window")) do
-        if row.group == "Upgrade glow" then paths[#paths + 1] = row.path end
+        if row.group == "Upgrade glow" then rows[#rows + 1] = row end
     end
-    assertEqual(#paths % 2, 0)
-    for i = 1, #paths, 2 do
-        assertEqual(paths[i]:gsub("^glow%.main%.", ""), paths[i + 1]:gsub("^glow%.offSpec%.", ""), paths[i])
-        assertTrue(paths[i]:match("^glow%.main%.") ~= nil and paths[i + 1]:match("^glow%.offSpec%.") ~= nil, paths[i])
+    assertEqual(#rows % 2, 0)
+    local pairsSeen = 0
+    for i = 1, #rows, 2 do
+        local a, b = rows[i].path, rows[i + 1].path
+        local g = a:match("^glow%.(%a+)%.color$")
+        if g then
+            -- options-ui-§17: a color's Use class color sits IMMEDIATELY to its right, on its line
+            assertEqual(b, "glow." .. g .. ".useClassColor", a)
+            assertTrue(rows[i].startsLine == true, a .. " starts its line")
+            pairsSeen = pairsSeen + 1
+        else
+            assertEqual(a:gsub("^glow%.main%.", ""), b:gsub("^glow%.offSpec%.", ""), a)
+            assertTrue(a:match("^glow%.main%.") ~= nil and b:match("^glow%.offSpec%.") ~= nil, a)
+        end
     end
+    assertEqual(pairsSeen, 2, "a color pair per glow, main first")
+    assertTrue(rows[5].path == "glow.main.color" and rows[7].path == "glow.offSpec.color")
 end)
 
 test("glow: an out-of-range knob, an unknown style and a malformed color are refused", function()
@@ -282,7 +300,7 @@ test("glow: an out-of-range knob, an unknown style and a malformed color are ref
     assertTrue(S.Set("glow.main.pixelLength", 0), "0 is automatic")
 end)
 
-test("glow: a knob is dimmed while its glow is in another style, and everything while the glow is off", function()
+test("glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never", function()
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
     local function dim(path) return S.FindRow(path).disabledIf() == true end
@@ -294,10 +312,14 @@ test("glow: a knob is dimmed while its glow is in another style, and everything 
     S.Set("glow.main.type", "button")
     assertTrue(dim("glow.main.xOffset"), "but not button")
     assertFalse(dim("glow.main.buttonFrequency"))
-    assertFalse(dim("glow.main.type")); assertFalse(dim("glow.main.color"))
+    assertFalse(dim("glow.main.type"))
     S.Set("glow.main.enabled", false)
-    assertTrue(dim("glow.main.type") and dim("glow.main.color") and dim("glow.main.buttonFrequency"),
-        "off dims the style, the color and every knob")
+    assertTrue(dim("glow.main.type") and dim("glow.main.buttonFrequency"), "off dims the style and every knob")
+    -- anti-pattern #74: the swatch is read under either mode (its alpha), so neither half is dimmed
+    for _, key in ipairs({ "main", "offSpec" }) do
+        assertNil(S.FindRow("glow." .. key .. ".color").disabledIf, key .. " color")
+        assertNil(S.FindRow("glow." .. key .. ".useClassColor").disabledIf, key .. " Use class color")
+    end
     assertTrue(S.FindRow("glow.main.enabled").disabledIf == nil, "the switch itself is never dimmed")
     assertFalse(dim("glow.offSpec.pixelLines"), "the other glow is its own")
 end)
@@ -310,7 +332,9 @@ test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color 
     NS.Glow.Refresh = function() calls = calls + 1 end
     assertTrue(NS.SchemaRuntime.Set("glow.main.pixelThickness", 3))
     assertTrue(NS.SchemaRuntime.Set("glow.offSpec.color", { r = 0, g = 1, b = 0, a = 1 }))
-    assertEqual(calls, 2)
+    assertTrue(NS.SchemaRuntime.Set("glow.main.useClassColor", true))
+    assertFalse(NS.SchemaRuntime.Set("glow.main.useClassColor", "yes"), "a boolean")
+    assertEqual(calls, 3)
     NS.Glow.Refresh = real
     local row = NS.SchemaRuntime.FindRow("glow.main.pixelLength")
     assertEqual(NS.addon.Settings.FormatValue(row, 0, function(_, v) return tostring(v) end), "0 (Automatic)")

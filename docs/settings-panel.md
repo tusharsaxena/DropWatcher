@@ -149,11 +149,13 @@ detail card's header and the toast (never History, the Offer panel or the Replac
 side by side, the main spec's in the left column and the off-spec's in the right, each knob a
 main | off-spec pair on one line. **Effect:** Main spec glow and Off-spec glow (both on), each
 glow's Style (Button (rotating rays), Proc (flipbook), Pixel border or Auto cast sparkles; Proc and
-Pixel border by default) and Color (a color swatch with alpha; the upgrade green and the off-spec
-cyan). Then one subsection per style, each named as its style reads in the dropdown: **Pixel
+Pixel border by default), then each glow's Color (a color swatch with alpha; the upgrade green and
+the off-spec cyan) on a line of its own with its **Use class color** (off; the player's class color
+in place of the swatch, its alpha kept) immediately to its right (options-ui-§17). Then one
+subsection per style, each named as its style reads in the dropdown: **Pixel
 border** (lines, frequency, line length with 0 Automatic, thickness, dark border), **Auto cast
 sparkles** (particles, frequency, scale), **Button (rotating rays)** (frequency), **Proc
 (flipbook)** (duration in seconds, start animation), and **Offset** (X and Y, for Pixel, Proc and
-Auto cast). A glow's Style and Color are dimmed while it is off; a knob also while its glow is in a
-style the knob does not apply to. Every change restarts the glowing icons at once
+Auto cast). A glow's Style is dimmed while it is off; a knob also while its glow is in a style the
+knob does not apply to. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
 (`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#window--upgrade-glow-feedback-21).

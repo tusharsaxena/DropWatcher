@@ -117,7 +117,7 @@ Total.
 - glow: both glows have every knob's row on Window › Upgrade glow, with the plan's defaults
 - glow: the main and off-spec rows alternate, so each knob reads across one line
 - glow: an out-of-range knob, an unknown style and a malformed color are refused
-- glow: a knob is dimmed while its glow is in another style, and everything while the glow is off
+- glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never
 - glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
 
 ### test_settings_pages.lua (39)
@@ -1531,12 +1531,14 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
-### test_glow.lua (11)
+### test_glow.lua (13)
 
 - glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
 - glow: without the library Apply still records its decision; a glow turned off clears it
 - glow: each style starts with the knob table's arguments, under the addon's key
 - glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it
+- glow: Use class color draws in the player's class color with the swatch's alpha, and restarts it
+- glow: Use class color with a class that has no color falls through to the swatch
 - glow: the proc style's opening burst plays once, not again on every repaint's re-show
 - glow: the full table's Drops row icon wears its drop's glow; the detail card's header too
 - glow: a pooled row reused for a sidegrade, or left unused, loses its glow
@@ -1908,7 +1910,7 @@ Total.
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 32 |
-| test_glow.lua | 11 |
+| test_glow.lua | 13 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 20 |
@@ -1927,4 +1929,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1585** |
+| **Total** | **1587** |

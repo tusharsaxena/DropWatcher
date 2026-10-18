@@ -155,6 +155,48 @@ test("glow: a repaint that changes nothing calls the library not at all; a setti
     assertEqual(names(lib), "ProcGlow_Stop,ProcGlow_Start", "a new size restarts it")
 end)
 
+-- options-ui-§17: Use class color takes the PLAYER'S class (the mock's Mage), whoever looted the
+-- drop (a Priest here), keeps the swatch's alpha, and falls through to the swatch when the class
+-- has no color.
+test("glow: Use class color draws in the player's class color with the swatch's alpha, and restarts it", function()
+    local NS, _, m = T.enableAddon()
+    local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
+    local b = button(m)
+    assertTrue(S("glow.main.color", { r = 1, g = 0, b = 0, a = 0.5 }))
+    G.Apply(b, drop())
+    local c = lib.calls[1][3].color
+    assertTrue(c[1] == 1 and c[2] == 0 and c[3] == 0 and c[4] == 0.5, "off: the swatch")
+    lib.calls = {}
+    assertTrue(S("glow.main.useClassColor", true))
+    G.Apply(b, drop())
+    assertEqual(names(lib), "ProcGlow_Stop,ProcGlow_Start", "turning it on restarts the glow")
+    c = lib.calls[2][3].color
+    local mage = m.RAID_CLASS_COLORS.MAGE
+    assertTrue(c[1] == mage.r and c[2] == mage.g and c[3] == mage.b, "the player's Mage blue, not the looter's")
+    assertEqual(c[4], 0.5, "the swatch's alpha survives the mode")
+    lib.calls = {}
+    G.Apply(b, drop({ me = offSpec() }))
+    c = lib.calls[2]
+    assertEqual(c[3][1], NS.Constants.TONE.offspec.r, "the off-spec glow's own companion is still off")
+    lib.calls = {}
+    assertTrue(S("glow.main.useClassColor", false))
+    G.Apply(b, drop())
+    c = lib.calls[2][3].color
+    assertTrue(c[1] == 1 and c[2] == 0 and c[3] == 0, "off again: the swatch")
+end)
+
+test("glow: Use class color with a class that has no color falls through to the swatch", function()
+    local NS, _, m = T.enableAddon()
+    local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
+    m.__context.classToken = "NOPE"
+    assertTrue(S("glow.offSpec.useClassColor", true))
+    G.Apply(button(m), drop({ me = offSpec() }))
+    local c, tone = lib.calls[1], NS.Constants.TONE.offspec
+    assertEqual(c[1], "PixelGlow_Start")
+    assertTrue(c[3][1] == tone.r and c[3][2] == tone.g and c[3][3] == tone.b and c[3][4] == 1,
+        "the stored off-spec cyan, never white or a substitute")
+end)
+
 -- The library's proc frame replays its opening burst from its own OnShow, and a repaint hides and
 -- shows every pooled row and card: once the button has been on screen the burst is spent.
 test("glow: the proc style's opening burst plays once, not again on every repaint's re-show", function()

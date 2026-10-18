@@ -139,20 +139,21 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 Two glows on a drop's icon (`modules/Glow.lua`, LibCustomGlow-1.0): `glow.main` for an upgrade for
 your current spec, `glow.offSpec` for a drop your spec can't use whose off-spec part is an upgrade.
 Each has the same keys, below as `glow.<g>.<key>`; the knob set, its ranges and defaults are shared
-with KickCD's glow slots. On the tab each knob is a main | off-spec pair. A style's knobs are dimmed
-while the glow is in another style, and every row of a glow while it is off. Every row's reaction
-is `NS.Glow.Refresh()` (the window and the toast repainted, each glowing icon restarted once).
-The two colors carry no *Use class color* companion: they are palette-definition swatches, one
-color per upgrade category (main-spec green, off-spec cyan, the verdict palette's `good` and
-`offspec`), the one exemption options-ui-§17 allows. A class color would paint both glows the same
-hue and lose what tells them apart. Without a companion, dimming a color row while its glow is off
-is true (nothing reads it), so anti-pattern #74 does not apply.
+with KickCD's glow slots. On the tab each knob is a main | off-spec pair, and each color takes a
+line of its own with its *Use class color* companion immediately to its right (options-ui-§17). A
+style's knobs are dimmed while the glow is in another style, and its style while it is off; the
+color pair never is (anti-pattern #74: the swatch's alpha is read under either mode). Every row's
+reaction is `NS.Glow.Refresh()` (the window and the toast repainted, each glowing icon restarted
+once). The class color is the **player's** (`classColorSource = "player"`): the glow says a drop is
+an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (LibKa0s-Core's
+`ResolveColor`), keeps the swatch's alpha, and falls through to the swatch for a class with no color.
 
 | Key | Default | Style | What it is |
 |---|---|---|---|
 | `glow.<g>.enabled` | `true`, `true` | all | the glow on or off |
 | `glow.<g>.type` | `"proc"`, `"pixel"` | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
-| `glow.<g>.color` | the upgrade green `{ r = 0.30, g = 0.85, b = 0.40, a = 1 }`, the off-spec cyan `{ r = 0.30, g = 0.85, b = 0.85, a = 1 }` | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape) |
+| `glow.<g>.color` | the upgrade green `{ r = 0.30, g = 0.85, b = 0.40, a = 1 }`, the off-spec cyan `{ r = 0.30, g = 0.85, b = 0.85, a = 1 }` | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape); its alpha applies under Use class color too |
+| `glow.<g>.useClassColor` | `false`, `false` | all | Use class color: the glow in the player's class color instead of the swatch, the swatch's alpha kept (player-scoped, options-ui-§17) |
 | `glow.<g>.pixelLines` | `8` | pixel | how many lines, 1 to 20 |
 | `glow.<g>.pixelFrequency` | `0.25` | pixel | how fast they run, 0.05 to 2 by 0.05 |
 | `glow.<g>.pixelLength` | `0` | pixel | each line's length in pixels, 0 to 20; 0 is Automatic (the library sizes them from the icon; the CLI shows `0 (Automatic)`) |

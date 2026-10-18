@@ -689,6 +689,8 @@ a repaint of a surface ─> Glow.Apply(button, drop)
   ─> Glow.KindOf(drop): your own drop ─> nil; me.verdict upgrade ─> main;
        cantUse with OffSpec.Of(me).verdict upgrade ─> offSpec; else nil
   ─> glow.<kind>.enabled off ─> as nil
+  ─> color: NS.ResolveColor(glow.<kind>.color, glow.<kind>.useClassColor): the player's class
+       color with the swatch's alpha while it is on, else (or for a class with no color) the swatch
   ─> the same kind, settings generation and button width as last time ─> nothing (no library call)
   ─> else stop the old effect (key DropWatcherUpgrade), record button.glowKind, start
        LibCustomGlow-1.0's glow.<kind>.type at frame level 1 over the button:
