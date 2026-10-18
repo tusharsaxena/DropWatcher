@@ -694,7 +694,7 @@ end
 --- gate, inspect or timer touches it. `spec.group` is { key, label, kind } (`encounter` or `run`);
 --- `spec.ago` dates it that many seconds back. Sends DropAdded.
 --- @param spec table { link, looter = { name, guid, classFile, isSelf }, group, situation, ago,
----   kind, facts, me, them, trade, inspect, candidates, testAsk, testInspect, testGear, testOffGear }
+---   kind, facts, me, them, trade, inspect, candidates, testAsk, testInspect, testGear, testOffGear, testLeft }
 --- @return number|nil id, string status (`added`, or `stoodDown` / `notItem`)
 function LF.AddTest(spec)
     if stoodDown() then return nil, "stoodDown" end

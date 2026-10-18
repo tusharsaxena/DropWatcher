@@ -25,6 +25,12 @@ local _, NS = ...
 -- ending soon, an estimated one, a bind-on-equip drop and an expired one, with candidates in every
 -- status the Offer panel shows: upgrade, equal, off-spec upgrade, no upgrade, can't use, checking
 -- and unavailable).
+-- CAN'T USE (feedback-21). A drop you can use in no spec reads Can't use on Trade where the
+-- estimate is Yes or Likely: Mistveil's shoulders (Likely), a wrong armor type; Ashveil's chest stays
+-- No (an upgrade for its looter), and every off-spec sample keeps its Likely. Kaelith (second boss)
+-- was read before they left the group, so the detail card keeps their spec and says they are not
+-- in your group; Dawnfeather left before any read, so it says that instead of spec unknown
+-- (feedback-21 H2).
 -- Each drop's age is its countdown's: four hours less what is left. One drop's look is collected
 -- and one's is not, for the look chips and the transmog ask.
 --
@@ -453,7 +459,7 @@ local function other(src, now, row, where)
     local testInspect, insp = inspected(src, row, now, them, item)
     return { looter = looter(row.who), link = item.link, facts = item.facts, me = me, testGear = TD.GearFor(src, item, me),
         testOffGear = TD.OffGearFor(item, me), them = them, trade = tradeOf(row, item, them, insp),
-        testInspect = testInspect, inspect = insp, testAsk = row.ask }
+        testInspect = testInspect, inspect = insp, testAsk = row.ask, testLeft = row.left or nil }
 end
 
 -- One candidate for your own drop: `{ who, verdict, change, off = off-spec }`, judged, checking or
@@ -507,7 +513,8 @@ end
 -- off-spec showcase. Each group's `theirs` are the other members' drops, board 03 row by row: the
 -- looter, the slot (`strict`: it must be that slot, being armor), Me and Them as { verdict, change,
 -- reason = key, off = off-spec }, the trade { state, reasonKey, basis, age }, the inspect
--- { status, age, reason }, the ask state, and the look's state. `yours` are yours, board 04: the slot, Me, the trade and the candidates. Every drop
+-- { status, age, reason }, the ask state, the look's state, and `left` for a looter who has since
+-- left the group (the card keeps their read: `testLeft`). `yours` are yours, board 04: the slot, Me, the trade and the candidates. Every drop
 -- is the group's age; a countdown's is four hours less what is left.
 local SESSION = {
     { content = "key", n = 1, party = PARTIES[1], ago = 15000,
@@ -544,11 +551,11 @@ local SESSION = {
         { who = "uniquerogue", slot = "INVTYPE_TRINKET", me = { "upgrade", 9 },
           trade = { "unknown", "noInspect" }, inspect = { "outOfRange" }, ask = { state = "sent" } },
         { who = "kaelith", slot = "INVTYPE_WRIST", me = { "downgrade", -8 }, them = { "upgrade", 12 },
-          trade = { "no", "upgradeForLooter", "inspect", 75 }, inspect = { "fresh", 75 } },
+          trade = { "no", "upgradeForLooter", "inspect", 75 }, inspect = { "fresh", 75 }, left = true },
         { who = "seta", slot = "INVTYPE_LEGS", strict = true, me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade", 20 } },
           trade = { "unknown", "noInspect" }, inspect = { "pending" } },
         { who = "dawnfeather", slot = "INVTYPE_FEET", me = { "sidegrade", -1 },
-          trade = { "unknown", "noInspect" }, inspect = { "unavailable", nil, "notInGroup" } },
+          trade = { "unknown", "noInspect" }, inspect = { "unavailable", nil, "notInGroup" }, left = true },
       } },
     { content = "raidHeroic", n = 3, party = RAID_20, ago = 240,
       yours = {
@@ -557,15 +564,15 @@ local SESSION = {
       },
       theirs = {
         { who = "seta", slot = "INVTYPE_HEAD", look = true, me = { "upgrade", 19 }, them = { "downgrade", -13 },
-          trade = { "likely", "notUpgrade", "inspect", 40 }, inspect = { "fresh", 40 } },
+          trade = { "likely", "notUpgrade", "inspect", 40 }, inspect = { "fresh", 40 }, ask = { state = "traded" } },
         { who = "littlewolf", slot = "INVTYPE_FINGER", me = { "upgrade", 4 }, them = { "sidegrade", 1 },
           trade = { "likely", "notUpgrade", "inspect", 360 }, inspect = { "cached", 360 }, ask = { state = "queued" } },
         { who = "butterz", slot = "INVTYPE_CLOAK", me = { "sidegrade", 0.4, reason = "scoreDisagrees" },
           them = { "upgrade", 6 }, trade = { "yes", "boe", "bind" }, inspect = { "fresh", 90 },
           ask = { state = "failed", reason = L["the chat throttle"] } },
-        { who = "mistveil", slot = "INVTYPE_SHOULDER", strict = true, me = { "upgrade", 6 },
+        { who = "mistveil", slot = "INVTYPE_SHOULDER", strict = true, me = { "cantUse", reason = "armorType" },
           them = { "cantUse", reason = "armorType" }, trade = { "likely", "notUpgrade", "inspect", 20 },
-          inspect = { "fresh", 20 }, ask = { state = "traded" } },
+          inspect = { "fresh", 20 } },
       } },
     { content = "raidHeroic", n = 4, party = RAID_20, ago = 60,
       yours = {
