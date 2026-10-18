@@ -185,7 +185,7 @@ your own drop, the headless `glowKind` and each glow's `enabled`, each style's a
 fake LibCustomGlow, no library call on an unchanged repaint and a restart on a setting or a size, the
 drawn color with and without Use class color (the player's class, the swatch's alpha, the swatch for
 a class with no color), each
-of the four surfaces' icons, a reused or unused pooled row losing it, a glow row's write and a profile
+of the three surfaces' icons, the toast's never, a reused or unused pooled row losing it, a glow row's write and a profile
 copy re-applying), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, its next expiry moving each second and keeping

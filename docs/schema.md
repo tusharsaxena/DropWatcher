@@ -143,8 +143,8 @@ with KickCD's glow slots. On the tab each knob is a main | off-spec pair, and ea
 line of its own with its *Use class color* companion immediately to its right (options-ui-§17). A
 style's knobs are dimmed while the glow is in another style, and its style while it is off; the
 color pair never is (anti-pattern #74: the swatch's alpha is read under either mode). Every row's
-reaction is `NS.Glow.Refresh()` (the window and the toast repainted, each glowing icon restarted
-once). The class color is the **player's** (`classColorSource = "player"`): the glow says a drop is
+reaction is `NS.Glow.Refresh()` (the window repainted, each glowing icon restarted once; the toast
+never glows). The class color is the **player's** (`classColorSource = "player"`): the glow says a drop is
 an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (LibKa0s-Core's
 `ResolveColor`), keeps the swatch's alpha, and falls through to the swatch for a class with no color.
 

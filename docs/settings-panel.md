@@ -144,8 +144,8 @@ for (7 to 180 days or Never delete, default 30; account-wide; a shorter time tha
 asks first, and No puts the previous time back), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a setting, so no schema row; Keep history for's `pairWith` partner in `settings/PageEditors.lua`; it asks first, `NS.History.AskClear`, and Yes empties the log on every character, or test mode's or a simulation's session-only log while one is on). **Toast:** Show a toast, then its least gain, duration, combat and sound
 rows, live only while it is on.
 
-**Upgrade glow** (feedback-21): the glow on a drop's icon in the Drops table, the compact card, the
-detail card's header and the toast (never History, the Offer panel or the Replaces rows), two glows
+**Upgrade glow** (feedback-21): the glow on a drop's icon in the Drops table, the compact card and
+the detail card's header (never the toast, History, the Offer panel or the Replaces rows), two glows
 side by side, the main spec's in the left column and the off-spec's in the right, each knob a
 main | off-spec pair on one line. **Effect:** Main spec glow and Off-spec glow (both on), each
 glow's Style (Button (rotating rays), Proc (flipbook), Pixel border or Auto cast sparkles; Proc and

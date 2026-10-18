@@ -423,7 +423,6 @@ local function paint(rec)
     frame.tipLines = t.tip
     NS.WindowGroup.SetItem(frame.icon, t.link, NS.WindowGroup.Where(rec))
     frame.icon.dropId = nil
-    NS.Glow.Apply(frame.icon, rec)   -- the upgrade glow (modules/Glow.lua); stopped when the toast goes
     paintAsk(rec)
 end
 
@@ -493,7 +492,6 @@ function Toast.Dismiss()
     remaining = nil
     if frame then
         frame:Hide()
-        NS.Glow.Stop(frame.icon)
     end
     if shownId == nil then return end
     shownId = nil
@@ -543,7 +541,6 @@ function Toast.OnCombatStart()
     shownId, remaining = nil, nil
     if frame then
         frame:Hide()
-        NS.Glow.Stop(frame.icon)
     end
     enqueue(id, true)
     NS.Debug(TAG, "toast held for combat: drop %s", tostring(id))
@@ -613,12 +610,6 @@ end
 function Toast.Stats()
     return { built = frame ~= nil, shown = frame ~= nil and frame:IsShown() == true, dropId = shownId,
         waiting = #queue, held = held(), point = store().point }
-end
-
---- The glow settings changed (NS.Glow.Refresh): the toast on screen re-applies its icon's glow.
-function Toast.RefreshGlow()
-    if not (frame and shownId) then return end
-    NS.Glow.Apply(frame.icon, NS.LootFeed.Get(shownId))
 end
 
 --- The built frame, or nil before the first toast. For the suites.

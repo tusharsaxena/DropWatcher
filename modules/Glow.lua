@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/Glow.lua — the upgrade glow on a drop's icon (feedback-21): LibCustomGlow-1.0's effect
--- on the item button of the four surfaces that show someone's drop to you, the full table's Drops
--- row, the compact card, the detail card's header and the toast. Not History, the Offer panel or
--- the detail card's Replaces rows: they never call Apply.
+-- on the item button of the three surfaces that show someone's drop to you, the full table's Drops
+-- row, the compact card and the detail card's header. Not the toast (it only ever shows an upgrade,
+-- so a glow there says nothing), History, the Offer panel or the detail card's Replaces rows: they
+-- never call Apply.
 --
 -- TWO GLOWS. `main` for an upgrade for your current spec (`me.verdict == "upgrade"`), `offSpec`
 -- for a drop your spec can't use whose off-spec part (NS.OffSpec.Of) is an upgrade. Sidegrades,
@@ -15,17 +16,17 @@ local _, NS = ...
 -- button what it drew: the kind, the settings generation and the button's width (the proc, button and
 -- pixel styles size themselves from it at start). The same three again return at once; anything else stops
 -- the old effect and starts the new one. A glow row's write (and a profile switch) calls Refresh,
--- which moves the generation on and repaints the window and the toast, so every icon restarts once.
+-- which moves the generation on and repaints the window, so every icon restarts once.
 --
 -- ON THE BUTTON, JUST ABOVE THE ICON. The effect's frame is a child of the item button at
 -- FRAME_LEVEL over it (the library's own default is 8): over the icon's art, which is the button's
 -- own texture, and no higher than it needs. The item buttons carry no border and no text over the
--- icon; the text beside an icon belongs to the cell, card or toast that holds the button.
+-- icon; the text beside an icon belongs to the cell or card that holds the button.
 --
 -- POOLED FRAMES. A pooled row or card repainted for another drop re-applies, so it keeps, changes or
 -- loses its glow; StopFree stops the glow on every row or card a repaint left in its pool's free
--- list. The toast stops its glow when it goes. A repaint's hide and show of a pooled frame would
--- replay the proc style's opening burst; spendBurst keeps it to the effect's first appearance.
+-- list. A repaint's hide and show of a pooled frame would replay the proc style's opening burst;
+-- spendBurst keeps it to the effect's first appearance.
 --
 -- HEADLESS. Without the library (the suites load no libs/ beyond LibKa0s, or a LibStub miss) Apply
 -- still records its decision on the button (`glowKind`) and draws nothing.
@@ -168,11 +169,10 @@ function Glow.StopFree(pool, buttonOf)
 end
 
 --- The glow settings changed (a glow row's write, a profile switch): every icon restarts with the
---- new settings on its next paint, and the window and the toast repaint now.
+--- new settings on its next paint, and the window repaints now.
 function Glow.Refresh()
     gen = gen + 1
     configs = {}
     local W = NS.Window
     if W and W.IsShown and W.IsShown() then W.Refresh() end
-    if NS.Toast and NS.Toast.RefreshGlow then NS.Toast.RefreshGlow() end
 end

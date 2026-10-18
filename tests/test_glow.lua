@@ -1,8 +1,9 @@
 -- tests/test_glow.lua — the upgrade glow on a drop's icon (feedback-21): which glow a drop wears
 -- (pure), Apply's decision on the button with and without LibCustomGlow-1.0, each style's call as
--- the knob table maps it, the repaint that changes nothing costing nothing, then the four surfaces
--- painted headless (the full table's row, the compact card, the detail card's header, the toast),
--- a pooled row reused or left unused losing its glow, and a glow row's write re-applying it.
+-- the knob table maps it, the repaint that changes nothing costing nothing, then the three surfaces
+-- painted headless (the full table's row, the compact card, the detail card's header), the toast's
+-- icon never glowing, a pooled row reused or left unused losing its glow, and a glow row's write
+-- re-applying it.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
@@ -218,7 +219,7 @@ test("glow: the proc style's opening burst plays once, not again on every repain
     assertEqual(b["_ProcGlow" .. G.KEY].startAnim, false, "a restart plays it once more, then spends it")
 end)
 
--- ── the four surfaces ───────────────────────────────────────────────────────────────────────
+-- ── the three surfaces, and the toast that never glows ──────────────────────────────────────
 
 local GROUP = { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1, 2, 3 } }
 
@@ -290,20 +291,23 @@ test("glow: the compact card's icon wears it; the table's rows stop theirs in th
     for _, c in ipairs(drawn.pane.compactView.cardPool.free) do assertNil(c.icon.glowKind, "an unused card") end
 end)
 
-test("glow: the toast's icon wears it and stops it when the toast goes", function()
-    local NS = T.enableAddon()
-    local d = drop()
-    NS.LootFeed.Get = function(id) return id == 1 and d or nil end
+test("glow: the toast's icon never glows, for a main-spec or an off-spec upgrade (feedback-21 G9)", function()
+    local NS, _, m = T.enableAddon()
+    local lib = fakeLib(m)
+    local byId = { [1] = drop(), [2] = drop({ id = 2, link = RING, me = offSpec() }) }
+    NS.LootFeed.Get = function(id) return byId[id] end
     assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
     NS.addon:SendMessage(NS.MSG.DROP_ADDED, 1)
     local f = NS.Toast.Frame()
-    assertEqual(f.icon.glowKind, "main")
-    assertTrue(NS.SchemaRuntime.Set("glow.main.enabled", false))
-    assertNil(f.icon.glowKind, "a glow row's write re-applies the toast's")
-    assertTrue(NS.SchemaRuntime.Set("glow.main.enabled", true))
-    assertEqual(f.icon.glowKind, "main")
+    assertEqual(NS.Toast.Stats().dropId, 1)
+    assertNil(f.icon.glowKind, "a main-spec upgrade's toast")
+    assertTrue(NS.SchemaRuntime.Set("glow.main.type", "pixel"))
+    assertNil(f.icon.glowKind, "a glow row's write leaves the toast alone")
     NS.Toast.Dismiss()
-    assertNil(f.icon.glowKind)
+    NS.addon:SendMessage(NS.MSG.DROP_ADDED, 2)
+    assertEqual(NS.Toast.Stats().dropId, 2)
+    assertNil(f.icon.glowKind, "an off-spec upgrade's toast")
+    for _, c in ipairs(lib.calls) do assertTrue(c[2] ~= f.icon, "no library call on the toast's icon: " .. c[1]) end
 end)
 
 test("glow: a glow row's write re-applies every drawn icon at once", function()

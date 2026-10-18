@@ -208,11 +208,11 @@ L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel, Pr
     "How far the glow reaches past the icon's top and bottom, in pixels. Pixel, Proc and Auto cast styles."
 L["Effect"] = "Effect"
 L["Main spec glow"] = "Main spec glow"
-L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card, the drop's card and the toast."] =
-    "Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card, the drop's card and the toast."
+L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card and the drop's card."] =
+    "Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card and the drop's card."
 L["Off-spec glow"] = "Off-spec glow"
-L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card, the drop's card and the toast."] =
-    "Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card, the drop's card and the toast."
+L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."] =
+    "Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."
 L["Main spec style"] = "Main spec style"
 L["How the main spec glow looks."] = "How the main spec glow looks."
 L["Off-spec style"] = "Off-spec style"

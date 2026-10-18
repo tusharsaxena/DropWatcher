@@ -88,7 +88,7 @@ local function repaintWindow()
     if W and W.IsShown and W.IsShown() then W.Refresh() end
 end
 
--- A glow row repaints every glowing icon: the window's surfaces and the toast (modules/Glow.lua).
+-- A glow row repaints every glowing icon: the window's surfaces (modules/Glow.lua).
 local function refreshGlow()
     local G = NS.Glow
     if G and G.Refresh then G.Refresh() end
@@ -439,9 +439,9 @@ local function glow()
         return function() return isOff() or not styles[NS.Setting("glow." .. key .. ".type")] end
     end
     bool("glow.main.enabled", G.main.enabled, L["Main spec glow"],
-        L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card, the drop's card and the toast."], at)
+        L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card and the drop's card."], at)
     bool("glow.offSpec.enabled", G.offSpec.enabled, L["Off-spec glow"],
-        L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card, the drop's card and the toast."], at)
+        L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."], at)
     pick("glow.main.type", G.main.type, GLOW_STYLES, L["Main spec style"],
         L["How the main spec glow looks."], with(at, { disabledIf = off("main") }))
     pick("glow.offSpec.type", G.offSpec.type, GLOW_STYLES, L["Off-spec style"],

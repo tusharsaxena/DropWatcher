@@ -190,8 +190,8 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are
 allowed in combat and nothing defers (the toast waits out combat by choice, `toast.inCombat`). The
-upgrade glow (`modules/Glow.lua`) is LibCustomGlow-1.0's plain frames parented to those windows'
-item buttons, none of them secure, so it starts and stops in combat too. Settings writes touch no protected frame. Opening the settings panel is refused
+upgrade glow (`modules/Glow.lua`) is LibCustomGlow-1.0's plain frames parented to the window's
+item buttons (never the toast's), none of them secure, so it starts and stops in combat too. Settings writes touch no protected frame. Opening the settings panel is refused
 in combat by the options library, which also locks a page shown in combat; the addon adds no lock of
 its own and never closes Blizzard's settings window (options-ui-§2). The trade action
 (`InitiateTrade`) and the chat sender are wrapped in

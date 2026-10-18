@@ -1543,7 +1543,7 @@ Total.
 - glow: the full table's Drops row icon wears its drop's glow; the detail card's header too
 - glow: a pooled row reused for a sidegrade, or left unused, loses its glow
 - glow: the compact card's icon wears it; the table's rows stop theirs in the compact layout
-- glow: the toast's icon wears it and stops it when the toast goes
+- glow: the toast's icon never glows, for a main-spec or an off-spec upgrade (feedback-21 G9)
 - glow: a glow row's write re-applies every drawn icon at once
 - glow: a profile switch re-reads the glow settings
 

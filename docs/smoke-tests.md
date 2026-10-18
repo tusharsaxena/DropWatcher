@@ -34,7 +34,7 @@ passed.
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
 | TOAST-1..5 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2) |
-| GLOW-1..9 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the four surfaces and nowhere else (GLOW-1), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9) |
+| GLOW-1..9 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
 | COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
@@ -1921,7 +1921,8 @@ current spec glow with the green proc flipbook: Kaelith's neck (the key run), Un
 second raid boss), Seta's head, Littlewolf's ring and Mistveil's shoulders (the third). The glow sits
 over the icon art, follows the icon at every Row height, and scrolls and clips with its row. Expand
 Seta's head → the detail card's header icon glows; its Replaces rows do not. Settings › Window › Toast
-› Show a toast on, `/dw test` off and on → the toast's icon glows, and the glow goes with the toast.
+› Show a toast on, `/dw test` off and on → the toast's icon shows no glow (a toast only ever shows an
+upgrade, so a glow there would say nothing; G9).
 `/dw compact` → the same cards' icons glow, and switching back and forth leaves no glow on an empty
 spot. Never glowing: your own drops (your ring upgrade under the first raid boss included), sidegrades
 (Dawnfeather's boots), downgrades, History's rows and cards, and the Offer panel (open your trinket's).
@@ -1934,7 +1935,7 @@ do Seta's legs under the second raid boss; Kragmar's bracers (an off-spec sidegr
 boots (an off-spec downgrade) do not, nor Ashveil's chest (Can't use with no off-spec). The cyan reads
 apart from the main glow's green on the same screen. Expand Brightmane's one-hander → its detail card's
 header icon glows cyan; `/dw compact` → its card's too. With a real off-spec upgrade in the client (the
-toast on), the toast's icon glows cyan. Result:
+toast on), the toast's icon shows no glow (G9). Result:
 
 **GLOW-3. The Button style (feedback-21).** Main spec style → Button (rotating rays) → every main-spec
 upgrade icon (GLOW-1's list) at once shows the action-button rays instead of the proc flipbook, no old
@@ -1963,7 +1964,7 @@ the rings out or in. Off-spec style → Auto cast sparkles too → the off-spec 
 main ones in their own color. Result:
 
 **GLOW-7. Each glow turned off (feedback-21).** `/dw test`. Untick Main spec glow → every main-spec
-icon's glow stops at once on every surface (table, compact cards, detail card, toast), and the off-spec
+icon's glow stops at once on every surface (table, compact cards, detail card), and the off-spec
 icons keep theirs. Tick it again → back at once. Untick Off-spec glow → the off-spec icons stop and the
 main ones keep glowing. Both off, `/reload` → nothing glows, and the rows stay off. Profiles › switch to
 a profile with the glows on → the icons glow again without a repaint by hand. Result:
@@ -2440,7 +2441,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-87 | feedback-21, Can't use in dim red on every surface, Not wanted still gray | No client pass recorded yet |
 | FEED-88 | feedback-21, Trade's `Can't use` on a drop none of your specs can use; Yes or Likely kept beside an off-spec use | No client pass recorded yet |
 | FEED-89 | feedback-21, every tooltip as bulleted rows, one per fact | No client pass recorded yet |
-| GLOW-1..2 | feedback-21, the main-spec glow on each of the four surfaces and nowhere else; the off-spec glow | No client pass recorded yet |
+| GLOW-1..2 | feedback-21, the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (G9); the off-spec glow | No client pass recorded yet |
 | GLOW-3..6 | feedback-21, each glow style and its knobs: Button, Proc, Pixel border, Auto cast | No client pass recorded yet |
 | GLOW-7..8 | feedback-21, each glow turned off; a style's knobs dimmed for another style | No client pass recorded yet |
 | GLOW-9 | feedback-21, Use class color beside each glow color: the player's class, the swatch's alpha, never dimmed | No client pass recorded yet |

@@ -42,7 +42,7 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   on every character, with its outcome and a detail card that expands inline), plus the filter bar, the footer's health line, the
   restriction badge, Scan group, minimize, test mode and auto-open.
 - **The upgrade glow** (feedback-21). A drop that is an upgrade for you glows on its icon in the
-  Drops table, the compact card, the detail card and the toast: one glow for your current spec, one
+  Drops table, the compact card and the detail card (never the toast): one glow for your current spec, one
   for an off-spec, each with its own switch, LibCustomGlow style, color and that style's knobs
   (Window › Upgrade glow). Every tooltip is bulleted rows, one fact per row.
 - **Compact mode** (M12, [`superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md`](superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md)).

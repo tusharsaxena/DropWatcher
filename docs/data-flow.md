@@ -684,8 +684,8 @@ MineCells.Candidates: upgrade 1, sidegrade 2, offSpecUpgrade 3, offSpecSidegrade
 ```
 a repaint of a surface ─> Glow.Apply(button, drop)
     the full table's Drops row (WindowGroup, after ApplyRowIcon), the compact card (CompactGroup),
-    the detail card's header (DetailCard), the toast (Toast.Show); never History, the Offer panel
-    or the Replaces rows
+    the detail card's header (DetailCard); never the toast (it only shows an upgrade, so a glow
+    there says nothing, G9), History, the Offer panel or the Replaces rows
   ─> Glow.KindOf(drop): your own drop ─> nil; me.verdict upgrade ─> main;
        cantUse with OffSpec.Of(me).verdict upgrade ─> offSpec; else nil
   ─> glow.<kind>.enabled off ─> as nil
@@ -700,9 +700,8 @@ a repaint of a surface ─> Glow.Apply(button, drop)
        proc     ProcGlow_Start(button, { color, startAnim, duration, xOffset, yOffset })
        (no library, headless or a LibStub miss: glowKind recorded, nothing drawn)
 WindowGroup / CompactGroup repaint ─> Glow.StopFree(pool): the rows or cards left unused lose it
-the toast dismissed or held for combat ─> Glow.Stop(frame.icon)
 a glow.* row's write, a profile switch / copy / reset ─> Glow.Refresh(): the generation + 1,
-    Window.Refresh, Toast.RefreshGlow ─> every glowing icon restarts once
+    Window.Refresh ─> every glowing icon restarts once
 ```
 
 Can't use reads `C.TONE.redMuted` (dim red) wherever a verdict is drawn, and Not wanted stays gray
