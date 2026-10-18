@@ -463,25 +463,33 @@ local function glow()
         L["How the main spec glow looks."], with(at, { disabledIf = off("main") }))
     pick("glow.offSpec.type", G.offSpec.type, GLOW_STYLES, L["Off-spec style"],
         L["How the off-spec glow looks."], with(at, { disabledIf = off("offSpec") }))
-    -- Each color with its Use class color companion IMMEDIATELY to its right (options-ui-§17), so the
-    -- two colors stop mirroring each other across a line here and take a line each:
-    --     [Main spec color] | [Use class color]
-    --     [Off-spec color]  | [Use class color]
-    -- `startsLine` on the swatch keeps a pair from splitting across two lines, LibKa0s ColorPair's
-    -- row shape, written out here because this file loads before the Options instance exists.
+    -- Main spec left, off-spec right on every line, the colors too (feedback-21 H6, the owner's
+    -- choice): the two swatches share a line and their Use class color companions the next,
+    --     [Main spec color]             | [Off-spec color]
+    --     [Use class color (main spec)] | [Use class color (off-spec)]
+    -- so each companion sits BELOW its swatch, not immediately to its right: a documented deviation
+    -- from options-ui-§17 (docs/ARCHITECTURE.md -> Documented deviations). `startsLine` on each
+    -- left-column row keeps a line from shifting by one, written out here because this file loads
+    -- before the Options instance exists.
     -- PLAYER-SCOPED: the glow says a drop is an upgrade for you, whoever looted it. Never dimmed,
-    -- even while the glow is off: a color pair carries no `disabledIf` on either half (anti-pattern
+    -- even while the glow is off: a color and its companion carry no `disabledIf` (anti-pattern
     -- #74, the swatch's alpha is read under either mode).
+    local CLASS_COLOR = {
+        main    = { L["Use class color (main spec)"],
+                    L["Glow in your class color instead of Main spec color, the swatch above. The swatch's alpha still applies."] },
+        offSpec = { L["Use class color (off-spec)"],
+                    L["Glow in your class color instead of Off-spec color, the swatch above. The swatch's alpha still applies."] },
+    }
     for i, key in ipairs(GLOWS) do
-        local base = "glow." .. key .. "."
-        add{ path = base .. "color", type = "color", default = G[key].color, hasAlpha = true,
+        add{ path = "glow." .. key .. ".color", type = "color", default = G[key].color, hasAlpha = true,
              label = i == 1 and L["Main spec color"] or L["Off-spec color"],
              tooltip = L["The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."],
-             validate = isColor, startsLine = true, classColorSource = "player",
+             validate = isColor, startsLine = i == 1 or nil, classColorSource = "player",
              page = at.page, group = at.group, subgroup = at.subgroup, onChange = refreshGlow }
-        bool(base .. "useClassColor", G[key].useClassColor, L["Use class color"],
-            L["Glow in your class color instead of the swatch beside it. The swatch's alpha still applies."],
-            with(at, { classColorSource = "player" }))
+    end
+    for i, key in ipairs(GLOWS) do
+        bool("glow." .. key .. ".useClassColor", G[key].useClassColor, CLASS_COLOR[key][1], CLASS_COLOR[key][2],
+            with(at, { classColorSource = "player", startsLine = i == 1 or nil }))
     end
     for _, knob in ipairs(GLOW_KNOBS) do
         for i, key in ipairs(GLOWS) do

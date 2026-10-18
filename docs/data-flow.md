@@ -723,7 +723,8 @@ WindowGroup.SetItem(button, link) ─> IconStyle.Apply(button, link)
   ─> else art:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)         icons.zoom, 0 to 0.25
        icons.borderShow off ─> the border frame (if any) hidden
        on ─> the BackdropTemplate child frame (made on first use, one level over the button)
-             SetBackdrop{ edgeFile = LSM:Fetch("border", icons.borderStyle) or the tooltip's edge,
+             SetBackdrop{ edgeFile = LSM:Fetch("border", icons.borderStyle), else WHITE8X8 for
+                                     Solid (the default), else the tooltip's edge,
                           edgeSize = icons.borderSize }
              SetBackdropBorderColor: NS.ResolveColor(icons.borderColor, icons.useClassColorBorder)
                (the player's class), else with icons.borderQuality the item's quality color

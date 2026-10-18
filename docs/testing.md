@@ -60,13 +60,16 @@ into the View set, step 4 retiring the History's group cap and pruning nothing, 
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load; Window › Upgrade
-glow, feedback-21: every glow row and its default, the main | off-spec alternation and each color's
-Use class color beside it (off, player-scoped), the refused values and colors, a style's knobs dimmed
+glow, feedback-21: every glow row and its default (H6: both pixel, `pixelFrequency` 0.1, the colors
+`C.TONE.glowMain` `#FFF468` and `C.TONE.glowOffSpec` `#3FC7EB`, apart from the verdicts' tones), the
+main | off-spec alternation on every line, the two swatches on one line and their Use class color
+companions on the next (off, player-scoped; the pinned options-ui-§17 deviation), the refused values and colors, a style's knobs dimmed
 for another style and the style while its glow is off, the color pair never, the
 `NS.Glow.Refresh` reaction, `/dw set` on a color and `0 (Automatic)`; Window › Toast's Scale, feedback-21
 G10: its 0.5-2 by 0.05 range, `isPercent`, default 1, dimmed with the toast off, the refused values and its
 place after Play a sound; Window › Icons, feedback-21 G11: the Zoom row then the composed Border block in
-order (the composer's labels, the quality extra after the mandated four), every default today's look, the
+order (the composer's labels, the quality extra after the mandated four), the H6 defaults (zoom 0.1, a
+Solid black border 2 pixels thick), the
 color pair player-scoped, starting its line and never dimmed, the refused values, style, thickness and
 quality dimmed with Show border off, `/dw set` on the color, and the degraded load keeping Zoom with the
 border's profile defaults), `test_settings_pages` (the settings
@@ -192,10 +195,12 @@ fake LibCustomGlow, no library call on an unchanged repaint and a restart on a s
 drawn color with and without Use class color (the player's class, the swatch's alpha, the swatch for
 a class with no color), each
 of the three surfaces' icons, the toast's never, a reused or unused pooled row losing it, a glow row's write and a profile
-copy re-applying), `test_icon_style` (every item icon's look, feedback-21 G11: the defaults drawing the
-whole texture with no border and no frame made, the zoom's crop and its clamp, an unchanged repaint making
+copy re-applying), `test_icon_style` (every item icon's look, feedback-21 G11: the H6 defaults (0.1
+cropped a side, the Solid flat edge 2 pixels thick, black, drawn without LibSharedMedia too), Solid
+registered with LibSharedMedia at load, zoom 0 with no border drawing the whole texture with no frame
+made, the zoom's crop and its clamp, an unchanged repaint making
 no call, a row's write restyling every button made so far (one showing nothing too), the border's child
-frame made on first use with LibSharedMedia's texture or the tooltip's edge, its size and swatch, Use class
+frame made on first use with LibSharedMedia's texture, Solid's flat edge or the tooltip's edge, its size and swatch, Use class
 color (the player's class, the swatch's alpha), Color by item quality (the cached item's quality color,
 an uncached link's own color, the swatch's mode for no quality), the Drops row, its Me icons, the detail
 card's header, the compact card and the toast styled live, the glow's frame level over the border, and a

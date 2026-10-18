@@ -140,9 +140,12 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 Two glows on a drop's icon (`modules/Glow.lua`, LibCustomGlow-1.0): `glow.main` for an upgrade for
 your current spec, `glow.offSpec` for a drop your spec can't use whose off-spec part is an upgrade.
 Each has the same keys, below as `glow.<g>.<key>`; the knob set, its ranges and defaults are shared
-with KickCD's glow slots. On the tab each knob is a main | off-spec pair, and each color takes a
-line of its own with its *Use class color* companion immediately to its right (options-ui-§17). A
-style's knobs are dimmed while the glow is in another style, and its style while it is off; the
+with KickCD's glow slots, but `pixelFrequency`'s default, 0.1, which is this addon's own
+(feedback-21 H6; KickCD keeps the library's 0.25). On the tab every row is a main | off-spec pair,
+main left and off-spec right, the colors too: the two swatches share a line and their *Use class
+color (main spec)* | *Use class color (off-spec)* companions the next, so each companion sits below
+its swatch rather than immediately to its right, a documented options-ui-§17 deviation
+(`docs/ARCHITECTURE.md` -> Documented deviations, feedback-21 H6). A style's knobs are dimmed while the glow is in another style, and its style while it is off; the
 color pair never is (anti-pattern #74: the swatch's alpha is read under either mode). Every row's
 reaction is `NS.Glow.Refresh()` (the window repainted, each glowing icon restarted once; the toast
 never glows). The class color is the **player's** (`classColorSource = "player"`): the glow says a drop is
@@ -152,11 +155,11 @@ an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (Li
 | Key | Default | Style | What it is |
 |---|---|---|---|
 | `glow.<g>.enabled` | `true`, `true` | all | the glow on or off |
-| `glow.<g>.type` | `"proc"`, `"pixel"` | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
-| `glow.<g>.color` | the upgrade green `{ r = 0.30, g = 0.85, b = 0.40, a = 1 }`, the off-spec cyan `{ r = 0.30, g = 0.85, b = 0.85, a = 1 }` | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape); its alpha applies under Use class color too |
+| `glow.<g>.type` | `"pixel"`, `"pixel"` | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
+| `glow.<g>.color` | `C.TONE.glowMain`, `#FFF468` (`{ r = 1, g = 244/255, b = 104/255, a = 1 }`), and `C.TONE.glowOffSpec`, `#3FC7EB` (`{ r = 63/255, g = 199/255, b = 235/255, a = 1 }`), tokens of their own (feedback-21 H6) | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape); its alpha applies under Use class color too |
 | `glow.<g>.useClassColor` | `false`, `false` | all | Use class color: the glow in the player's class color instead of the swatch, the swatch's alpha kept (player-scoped, options-ui-§17) |
 | `glow.<g>.pixelLines` | `8` | pixel | how many lines, 1 to 20 |
-| `glow.<g>.pixelFrequency` | `0.25` | pixel | how fast they run, 0.05 to 2 by 0.05 |
+| `glow.<g>.pixelFrequency` | `0.1` | pixel | how fast they run, 0.05 to 2 by 0.05 |
 | `glow.<g>.pixelLength` | `0` | pixel | each line's length in pixels, 0 to 20; 0 is Automatic (the library sizes them from the icon; the CLI shows `0 (Automatic)`) |
 | `glow.<g>.pixelThickness` | `1` | pixel | each line's thickness in pixels, 1 to 6 |
 | `glow.<g>.pixelBorder` | `true` | pixel | a dark border inside the lines |
@@ -173,7 +176,10 @@ an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (Li
 One look for every item icon the addon draws (`modules/IconStyle.lua`, applied from
 `NS.WindowGroup.ItemButton` and `SetItem`): the Drops rows and their Me and Them gear icons, the
 compact cards, the detail card's header and Replaces rows, the toast, History and the Offer panel.
-The defaults draw them as they always were: the whole texture and no border. The Zoom row is
+The defaults (feedback-21 H6, the owner's choice) trim the baked-in edge (zoom 0.1) and draw a
+Solid black border 2 pixels thick, neither class nor quality colored; zoom 0 with Show border off
+draws them as before G11. A profile that stored a value keeps it (AceDB fills only what is unset;
+no migration). The Zoom row is
 hand-written (`settings/SchemaRows.lua`); the Border block is LibKa0s-Options' composed
 `BorderGroup` with its Show border toggle (options-ui-§16, `settings/ComposedRows.lua`, appended
 after the hand-written rows because it needs the Options instance), its one extra after the
@@ -181,13 +187,14 @@ mandated four. Style, thickness and Color by item quality are dimmed while Show 
 color pair never is (anti-pattern #74). Every row's reaction is `NS.IconStyle.Refresh()`: the
 settings generation moves on and every item button made so far, pooled or not, takes the new look
 at once; a profile reload calls it too. Without LibKa0s the composer is hollow and the border rows
-do not exist: `NS.IconStyle` reads these defaults, so no border is drawn.
+do not exist: `NS.IconStyle` reads these defaults, so the Solid black border is drawn and no row
+can change it.
 
 | Key | Default | What it is |
 |---|---|---|
-| `icons.zoom` | `0` | the crop off each side of the icon's texture, 0 to 0.25 by 0.01 (KickCD's shape); 0 is the whole icon |
-| `icons.borderShow` | `false` | Show border: a BackdropTemplate child frame over the button, made the first time it is shown |
-| `icons.borderStyle` | `"Blizzard Tooltip"` | Border style: a LibSharedMedia border name (`LSM30_Border`); a name nothing registers draws the tooltip's edge |
+| `icons.zoom` | `0.1` | the crop off each side of the icon's texture, 0 to 0.25 by 0.01 (KickCD's shape); 0 is the whole icon |
+| `icons.borderShow` | `true` | Show border: a BackdropTemplate child frame over the button, made the first time it is shown |
+| `icons.borderStyle` | `"Solid"` | Border style: a LibSharedMedia border name (`LSM30_Border`); a name nothing registers draws the tooltip's edge. `Solid` is the flat edge `modules/IconStyle.lua` registers at load (`Interface\Buttons\WHITE8X8`, AuraMaster's name for it), drawn even where the media library does not know it |
 | `icons.borderSize` | `2` | Border thickness (px): the backdrop's edge size, 1 to 16 (the composer's 0 floor raised to 1) |
 | `icons.borderColor` | `{ r = 0, g = 0, b = 0, a = 1 }` | Border color, typed `color`; its alpha applies under either companion |
 | `icons.useClassColorBorder` | `false` | Use class color: the border in the **player's** class color (`classColorSource = "player"`: the icons are the player's own view of the loot), through `NS.ResolveColor`, the swatch's alpha kept, the swatch for a class with no color |

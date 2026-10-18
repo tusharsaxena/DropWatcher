@@ -180,6 +180,11 @@ C.TONE = {
     statHaste   = { r = 1.00, g = 0.88, b = 0.45 },
     statMastery = { r = 0.74, g = 0.58, b = 1.00 },
     statVers    = { r = 0.45, g = 0.75, b = 1.00 },
+    -- The upgrade glows' default colors (feedback-21 H6, from the owner's screenshot): the main
+    -- spec's #FFF468 and the off-spec's #3FC7EB, their own tokens so the glows part from the
+    -- verdicts' `good` and `offspec`, each channel the hex byte over 255.
+    glowMain    = { r = 255 / 255, g = 244 / 255, b = 104 / 255 },
+    glowOffSpec = { r = 63 / 255,  g = 199 / 255, b = 235 / 255 },
 }
 
 -- The C.TONE key of each stat the detail card's Stats row names, by its C_Item.GetItemStats key

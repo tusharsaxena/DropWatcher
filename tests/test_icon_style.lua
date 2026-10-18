@@ -1,5 +1,7 @@
 -- tests/test_icon_style.lua — every item icon's look (feedback-21 G11, Window › Icons): the
--- defaults drawing the icons as before (the whole texture, no border), the zoom's crop, the composed
+-- defaults (feedback-21 H6: zoom 0.1, a Solid black border 2 pixels thick, the Solid name registered
+-- with LibSharedMedia and drawn without it) and zoom 0 with no border drawing the icons as before
+-- G11, the zoom's crop, the composed
 -- border (the swatch, its Use class color companion with the player's class and the swatch's
 -- alpha, the item quality color in its place), the repaint that changes nothing costing nothing, a
 -- row's write and a profile switch restyling every button made so far, and the surfaces painted
@@ -46,16 +48,44 @@ end
 
 -- ── one button ──────────────────────────────────────────────────────────────────────────────
 
-test("icon style: by default an item icon is the whole texture with no border, as it was before", function()
+test("icon style: by default an item icon is cropped 0.1 a side in a Solid black border 2 pixels thick", function()
     local NS, _, m = T.enableAddon()
-    local frames = borderFrames(m)
+    local IS, frames = NS.IconStyle, borderFrames(m)
+    local b = fakeButton()
+    IS.Apply(b, EPIC)
+    assertTrue(near(b.art.tc[1], 0.1) and near(b.art.tc[2], 0.9) and near(b.art.tc[3], 0.1)
+        and near(b.art.tc[4], 0.9), "0.1 cropped off each side (feedback-21 H6)")
+    assertEqual(b.iconZoom, 0.1)
+    assertEqual(#frames, 1, "the border's frame made at the first paint")
+    assertEqual(frames[1].drawn.edgeFile, IS.SOLID_EDGE, "no LibSharedMedia here: Solid still draws the flat edge")
+    assertEqual(frames[1].drawn.edgeSize, 2)
+    assertTrue(sameColor(b.iconBorder, 0, 0, 0, 1), "black, opaque")
+    IS.Apply(nil, EPIC); IS.Apply({}, EPIC)   -- no button, or no texture: nothing
+end)
+
+test("icon style: zoom 0 and no border draw an item icon as it was before G11", function()
+    local NS, _, m = T.enableAddon()
+    local S, frames = NS.SchemaRuntime.Set, borderFrames(m)
+    assertTrue(S("icons.zoom", 0)); assertTrue(S("icons.borderShow", false))
     local b = fakeButton()
     NS.IconStyle.Apply(b, EPIC)
     assertTrue(b.art.tc[1] == 0 and b.art.tc[2] == 1 and b.art.tc[3] == 0 and b.art.tc[4] == 1, "no crop")
     assertEqual(b.iconZoom, 0)
     assertNil(b.iconBorder, "no border"); assertNil(b.iconBorderFrame, "and no frame made for one")
     assertEqual(#frames, 0)
-    NS.IconStyle.Apply(nil, EPIC); NS.IconStyle.Apply({}, EPIC)   -- no button, or no texture: nothing
+end)
+
+test("icon style: Solid is registered with LibSharedMedia as the flat white texture, so the dropdown offers it", function()
+    local seen = {}
+    local NS = T.enableAddon({ mock = function(m)
+        local LSM = m.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
+        LSM.Register = function(_, kind, name, path) seen[#seen + 1] = { kind, name, path } end
+    end })
+    local hit
+    for _, r in ipairs(seen) do if r[1] == "border" and r[2] == "Solid" then hit = r end end
+    assertTrue(hit ~= nil, "registered at load")
+    assertEqual(hit[3], NS.IconStyle.SOLID_EDGE); assertEqual(NS.IconStyle.SOLID_EDGE, "Interface\\Buttons\\WHITE8X8")
+    assertEqual(NS.C.PROFILE.icons.borderStyle, NS.IconStyle.SOLID, "the default names it")
 end)
 
 test("icon style: a repaint that changes nothing costs nothing; a row's write restyles every button made so far", function()
@@ -66,11 +96,11 @@ test("icon style: a repaint that changes nothing costs nothing; a row's write re
     IS.Apply(shown, EPIC); IS.Apply(unshown, nil)
     IS.Apply(shown, EPIC); IS.Apply(shown, RARE)
     assertEqual(shown.art.crops, 1, "the same settings again: no call")
-    assertTrue(NS.SchemaRuntime.Set("icons.zoom", 0.1))
+    assertTrue(NS.SchemaRuntime.Set("icons.zoom", 0.15))
     assertEqual(shown.art.crops, 2, "the write restyled it at once")
-    assertTrue(near(shown.art.tc[1], 0.1) and near(shown.art.tc[2], 0.9) and near(shown.art.tc[3], 0.1)
-        and near(shown.art.tc[4], 0.9), "0.1 cropped off each side")
-    assertTrue(near(unshown.art.tc[1], 0.1), "a button showing nothing (a pooled one) too")
+    assertTrue(near(shown.art.tc[1], 0.15) and near(shown.art.tc[2], 0.85) and near(shown.art.tc[3], 0.15)
+        and near(shown.art.tc[4], 0.85), "0.15 cropped off each side")
+    assertTrue(near(unshown.art.tc[1], 0.15), "a button showing nothing (a pooled one) too")
     NS.addon.db.profile.icons.zoom = 0.6   -- written behind the seam, as a hand-edited file is
     IS.Refresh()
     assertEqual(shown.iconZoom, IS.ZOOM_MAX, "clamped to the slider's range")
@@ -79,14 +109,16 @@ end)
 test("icon style: Show border draws the swatch over the icon; Use class color the player's class with its alpha", function()
     local NS, _, m = T.enableAddon()
     local S, frames = NS.SchemaRuntime.Set, borderFrames(m)
+    assertTrue(S("icons.borderShow", false))
     local b = fakeButton()
     NS.IconStyle.Apply(b, EPIC)
+    assertEqual(#frames, 0, "none while the border is off")
     assertTrue(S("icons.borderShow", true))
     assertEqual(#frames, 1, "made on first use")
     local f = frames[1]
     assertTrue(b.iconBorderFrame == f and f.__parent == b, "a child frame of the button")
     assertTrue(f.on == true)
-    assertEqual(f.drawn.edgeFile, NS.IconStyle.BORDER_FALLBACK, "no LibSharedMedia here: the tooltip's edge")
+    assertEqual(f.drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "no LibSharedMedia here: Solid's flat edge")
     assertEqual(f.drawn.edgeSize, 2)
     assertTrue(sameColor(f.edge, 0, 0, 0, 1), "the black swatch")
     assertTrue(S("icons.borderColor", { r = 1, g = 0, b = 0, a = 0.5 })); assertTrue(S("icons.borderSize", 5))
@@ -105,10 +137,12 @@ test("icon style: a border style LibSharedMedia knows draws its texture", functi
     local LSM = m.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
     LSM.Fetch = function(_, kind, name) return kind == "border" and name == "Blizzard Tooltip" and "tex\\tooltip" or nil end
     NS.IconStyle.Apply(fakeButton(), EPIC)
-    assertTrue(NS.SchemaRuntime.Set("icons.borderShow", true))
+    assertTrue(NS.SchemaRuntime.Set("icons.borderStyle", "Blizzard Tooltip"))
     assertEqual(frames[1].drawn.edgeFile, "tex\\tooltip")
     assertTrue(NS.SchemaRuntime.Set("icons.borderStyle", "Gone Addon's Border"))
     assertEqual(frames[1].drawn.edgeFile, NS.IconStyle.BORDER_FALLBACK, "a style nobody registers any more")
+    assertTrue(NS.SchemaRuntime.Set("icons.borderStyle", "Solid"))
+    assertEqual(frames[1].drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "Solid, even where the library lost it")
 end)
 
 test("icon style: Color by item quality draws each item's quality color, the swatch's alpha kept", function()
@@ -180,13 +214,16 @@ local function crop(b) return (b.art:GetTexCoord()) end
 test("icon style: the Drops row's icon, its Me icons and the detail card's header take a row's write live", function()
     local NS = shown({ drop(), drop({ id = 2, link = RARE }) })
     local row = rowFor(NS, 1)
-    assertEqual(crop(row.cells.item.button), 0, "drawn as before")
+    assertTrue(near(crop(row.cells.item.button), 0.1), "the default zoom (feedback-21 H6)")
     NS.WindowGroup.ToggleExpand(1)
     local card = NS.WindowGroup.Drawn().card
     assertTrue(NS.SchemaRuntime.Set("icons.zoom", 0.08))
     assertTrue(near(crop(row.cells.item.button), 0.08), "the row's item icon")
     for i, icon in ipairs(row.cells.me.icons) do assertTrue(near(crop(icon), 0.08), "Me icon " .. i) end
     assertTrue(near(crop(card.icon), 0.08), "the detail card's header")
+    assertTrue(row.cells.item.button.iconBorder ~= nil and card.icon.iconBorder ~= nil, "the default border")
+    assertTrue(NS.SchemaRuntime.Set("icons.borderShow", false))
+    assertNil(row.cells.item.button.iconBorder); assertNil(card.icon.iconBorder)
     assertTrue(NS.SchemaRuntime.Set("icons.borderShow", true))
     assertTrue(row.cells.item.button.iconBorder ~= nil and card.icon.iconBorder ~= nil)
     assertEqual(row.cells.item.button.iconBorderFrame.__backdrop.edgeSize, 2, "drawn on the decorated frame")

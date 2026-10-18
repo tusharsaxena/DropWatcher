@@ -148,12 +148,15 @@ to a toast on screen about the place it was put), live only while it is on.
 
 **Upgrade glow** (feedback-21): the glow on a drop's icon in the Drops table, the compact card and
 the detail card's header (never the toast, History, the Offer panel or the Replaces rows), two glows
-side by side, the main spec's in the left column and the off-spec's in the right, each knob a
-main | off-spec pair on one line. **Effect:** Main spec glow and Off-spec glow (both on), each
-glow's Style (Button (rotating rays), Proc (flipbook), Pixel border or Auto cast sparkles; Proc and
-Pixel border by default), then each glow's Color (a color swatch with alpha; the upgrade green and
-the off-spec cyan) on a line of its own with its **Use class color** (off; the player's class color
-in place of the swatch, its alpha kept) immediately to its right (options-ui-§17). Then one
+side by side, the main spec's in the left column and the off-spec's in the right on every line,
+each knob a main | off-spec pair. **Effect:** Main spec glow and Off-spec glow (both on), each
+glow's Style (Button (rotating rays), Proc (flipbook), Pixel border or Auto cast sparkles; both
+Pixel border by default, feedback-21 H6), then Main spec color | Off-spec color (color swatches
+with alpha; `#FFF468` and `#3FC7EB`, opaque) and below them **Use class color (main spec)** | **Use
+class color (off-spec)** (off; the player's class color in place of the swatch above, its alpha
+kept). Each companion sits below its swatch, not immediately to its right: a documented
+options-ui-§17 deviation, the owner's choice (main spec left, off-spec right on every row;
+[`ARCHITECTURE.md`](ARCHITECTURE.md#documented-deviations)). Then one
 subsection per style, each named as its style reads in the dropdown: **Pixel
 border** (lines, frequency, line length with 0 Automatic, thickness, dark border), **Auto cast
 sparkles** (particles, frequency, scale), **Button (rotating rays)** (frequency), **Proc
@@ -164,9 +167,10 @@ knob does not apply to. A color and its Use class color are never dimmed (anti-p
 
 **Icons** (feedback-21 G11): one look for every item icon the addon draws (the Drops rows and their
 Me and Them gear icons, the compact cards, the detail card's header and Replaces rows, the toast,
-History and the Offer panel). **Zoom:** Icon zoom (0 to 0.25, cropped off each side; 0 by default,
-the whole icon). **Border:** the canonical border block (options-ui-§16), composed by LibKa0s-Options'
-`BorderGroup`: Show border (off), then Border style (a LibSharedMedia border; Blizzard Tooltip) |
+History and the Offer panel). **Zoom:** Icon zoom (0 to 0.25, cropped off each side; 0.1 by default,
+feedback-21 H6; 0 is the whole icon). **Border:** the canonical border block (options-ui-§16), composed by LibKa0s-Options'
+`BorderGroup`: Show border (on), then Border style (a LibSharedMedia border; Solid, the flat edge
+`modules/IconStyle.lua` registers) |
 Border thickness (px) (1 to 16; 2), then Border color (black, opaque) | **Use class color** (off;
 the player's class color, the swatch's alpha kept, options-ui-§17), then the block's one extra,
 **Color by item quality** (off: on, each border takes its item's quality color in place of the

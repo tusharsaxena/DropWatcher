@@ -22,14 +22,15 @@ end
 -- player's class, its alpha the swatch's) and every style's knobs, only the chosen style's read. The
 -- knob set, ranges and defaults are shared with KickCD's glow slots (the feedback-21 plan's knob
 -- table); `pixelLength` 0 is automatic (the library sizes the lines from the icon). Each default is
--- the value LibCustomGlow-1.0 takes for nil, so an untouched glow draws as the library would.
+-- the value LibCustomGlow-1.0 takes for nil, but `pixelFrequency`: 0.1, slower than the library's
+-- 0.25, DropWatcher's own by the owner's choice (feedback-21 H6); KickCD keeps the library's.
 local function glow(enabled, style, tone)
     return {
         enabled = enabled,
         type    = style,                                       -- button | proc | pixel | autocast
         color   = { r = tone.r, g = tone.g, b = tone.b, a = 1 },
         useClassColor = false,                                 -- the player's class color instead
-        pixelLines = 8, pixelFrequency = 0.25, pixelLength = 0, pixelThickness = 1, pixelBorder = true,
+        pixelLines = 8, pixelFrequency = 0.1, pixelLength = 0, pixelThickness = 1, pixelBorder = true,
         autocastParticles = 4, autocastFrequency = 0.125, autocastScale = 1,
         buttonFrequency = 0.25,
         procDuration = 1, procStartAnim = true,
@@ -162,19 +163,23 @@ NS.C = {
 
         -- The upgrade glow on a drop's icon (feedback-21): `main` for an upgrade for your current
         -- spec, `offSpec` for one only another of your specs gains from, each with its own style.
+        -- Both pixel borders, in their own colors (feedback-21 H6, the owner's screenshot): the
+        -- main spec's yellow #FFF468, the off-spec's blue #3FC7EB.
         glow = {
-            main    = glow(true, "proc", TONE.good),
-            offSpec = glow(true, "pixel", TONE.offspec),
+            main    = glow(true, "pixel", TONE.glowMain),
+            offSpec = glow(true, "pixel", TONE.glowOffSpec),
         },
 
         -- Every item icon's look (feedback-21 G11, Window › Icons; modules/IconStyle.lua). The
-        -- defaults draw the icons as they always were: the whole texture (zoom 0) and no border.
-        -- The border rows are LibKa0s-Options' composed block (options-ui-§16), so their values
-        -- live here too, as the Master controls' do; `borderStyle` is a LibSharedMedia border name.
+        -- defaults (feedback-21 H6, the owner's choice) trim the icon's baked-in edge (zoom 0.1) and
+        -- draw a flat black border 2 pixels thick. The border rows are LibKa0s-Options' composed
+        -- block (options-ui-§16), so their values live here too, as the Master controls' do;
+        -- `borderStyle` is a LibSharedMedia border name, "Solid" the flat edge modules/IconStyle.lua
+        -- registers (AuraMaster's name for it). A profile that stored a value keeps it (AceDB).
         icons = {
-            zoom                = 0,                        -- 0 to 0.25, cropped off each side
-            borderShow          = false,
-            borderStyle         = "Blizzard Tooltip",
+            zoom                = 0.1,                      -- 0 to 0.25, cropped off each side
+            borderShow          = true,
+            borderStyle         = "Solid",
             borderSize          = 2,                        -- the edge's width, in pixels
             borderColor         = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,                    -- the player's class color instead

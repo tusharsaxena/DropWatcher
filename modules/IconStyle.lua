@@ -6,8 +6,8 @@ local _, NS = ...
 -- footers' and the cards' action buttons draw an icon of the media library's, not an item's.
 --
 -- THE ZOOM crops the texture symmetrically (KickCD's shape, `icons.zoom` 0 to 0.25 off each side):
--- a little trims the dark edge baked into most item icons. 0, the default, is the whole texture, as
--- the icons were drawn before.
+-- a little trims the dark edge baked into most item icons. 0 is the whole texture, as the icons
+-- were drawn before G11; 0.1 is the default (feedback-21 H6).
 --
 -- THE BORDER is LibKa0s-Options' composed block (options-ui-§16; settings/ComposedRows.lua): Show
 -- border, Border style (a LibSharedMedia border), Border thickness, Border color and its Use class
@@ -16,7 +16,14 @@ local _, NS = ...
 -- takes the item's quality color in place of the swatch, the swatch's alpha kept, as AuraMaster's
 -- border takes a dispel color. The quality is the link's (NS.ItemRead.QualityOf: the client's answer,
 -- else the link's color), in ITEM_QUALITY_COLORS, else the link's own color code: TipMarks.ItemName's
--- source. An item with no quality known keeps the swatch. Off by default, as the border is.
+-- source. An item with no quality known keeps the swatch. Off by default; the border is on, Solid,
+-- black, 2 pixels (feedback-21 H6).
+--
+-- SOLID, the default style, is a flat edge: the client's WHITE8X8 stretched to the border's
+-- thickness and tinted by its color. It is no file this addon ships, so this file registers it with
+-- LibSharedMedia at load under AuraMaster's name, "Solid" (the first registration of a name wins,
+-- and AuraMaster's is the same texture), and the Border style dropdown offers it. Without the media
+-- library the name still draws the flat edge.
 --
 -- A CHILD FRAME, MADE ON FIRST USE. The border is a BackdropTemplate frame over the button (a frame
 -- of its own, so the edge draws over the icon's art, which is the button's texture), made the first
@@ -40,6 +47,14 @@ IS.ZOOM_MAX = 0.25
 -- A border style no addon registers any more (a profile can name one a removed addon supplied)
 -- draws the tooltip's edge, as KickCD's and ConsumableMaster's do.
 IS.BORDER_FALLBACK = "Interface\\Tooltips\\UI-Tooltip-Border"
+-- The flat edge (SOLID above): its LibSharedMedia name and the client texture it draws.
+IS.SOLID = "Solid"
+IS.SOLID_EDGE = "Interface\\Buttons\\WHITE8X8"
+
+do
+    local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
+    if LSM and LSM.Register then LSM:Register("border", IS.SOLID, IS.SOLID_EDGE) end
+end
 
 local gen = 1                                     -- the settings generation: Refresh moves it on
 local cfg                                         -- the settings read at `gen`
@@ -56,6 +71,7 @@ end
 local function borderTexture(name)
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
     local path = LSM and LSM.Fetch and LSM:Fetch("border", name, true)
+    if not path and name == IS.SOLID then path = IS.SOLID_EDGE end
     return path or IS.BORDER_FALLBACK
 end
 

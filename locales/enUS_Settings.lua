@@ -224,9 +224,12 @@ L["Main spec color"] = "Main spec color"
 L["Off-spec color"] = "Off-spec color"
 L["The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."] =
     "The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."
-L["Use class color"] = "Use class color"
-L["Glow in your class color instead of the swatch beside it. The swatch's alpha still applies."] =
-    "Glow in your class color instead of the swatch beside it. The swatch's alpha still applies."
+L["Use class color (main spec)"] = "Use class color (main spec)"
+L["Use class color (off-spec)"] = "Use class color (off-spec)"
+L["Glow in your class color instead of Main spec color, the swatch above. The swatch's alpha still applies."] =
+    "Glow in your class color instead of Main spec color, the swatch above. The swatch's alpha still applies."
+L["Glow in your class color instead of Off-spec color, the swatch above. The swatch's alpha still applies."] =
+    "Glow in your class color instead of Off-spec color, the swatch above. The swatch's alpha still applies."
 L["Icons"] = "Icons"
 L["Zoom"] = "Zoom"
 L["Icon zoom"] = "Icon zoom"

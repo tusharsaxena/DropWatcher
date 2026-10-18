@@ -97,11 +97,12 @@ test("glow: each style starts with the knob table's arguments, under the addon's
     local NS, _, m = T.enableAddon()
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     local b = button(m)
-    -- main: proc, the upgrade green, opaque (defaults/Profile.lua)
+    -- main: proc here (both default to pixel, feedback-21 H6), its own #FFF468, opaque
+    assertTrue(S("glow.main.type", "proc"))
     G.Apply(b, drop())
     local c = lib.calls[1]
     assertEqual(c[1], "ProcGlow_Start"); assertTrue(c[2] == b)
-    local tone = NS.Constants.TONE.good
+    local tone = NS.Constants.TONE.glowMain
     assertEqual(c[3].color[1], tone.r); assertEqual(c[3].color[3], tone.b); assertEqual(c[3].color[4], 1)
     assertEqual(c[3].duration, 1); assertEqual(c[3].startAnim, true); assertEqual(c[3].key, G.KEY)
     assertEqual(c[3].frameLevel, G.FRAME_LEVEL); assertEqual(c[3].xOffset, 0)
@@ -110,7 +111,7 @@ test("glow: each style starts with the knob table's arguments, under the addon's
     G.Apply(b, drop({ me = offSpec() }))
     assertEqual(names(lib), "ProcGlow_Stop,PixelGlow_Start", "the old style stops first")
     c = lib.calls[2]
-    assertEqual(c[4], 8); assertEqual(c[5], 0.25); assertNil(c[6]); assertEqual(c[7], 1)
+    assertEqual(c[4], 8); assertEqual(c[5], 0.1); assertNil(c[6]); assertEqual(c[7], 1)
     assertEqual(c[10], true); assertEqual(c[11], G.KEY); assertEqual(c[12], G.FRAME_LEVEL)
     assertTrue(S("glow.offSpec.pixelLength", 6)); assertTrue(S("glow.offSpec.pixelBorder", false))
     lib.calls = {}
@@ -138,6 +139,7 @@ end)
 test("glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it", function()
     local NS, _, m = T.enableAddon()
     local G, lib = NS.Glow, fakeLib(m)
+    assertTrue(NS.SchemaRuntime.Set("glow.main.type", "proc"))
     local b = button(m)
     G.Apply(b, drop())
     for _ = 1, 5 do G.Apply(b, drop({ id = 9 })) end
@@ -163,6 +165,7 @@ test("glow: Use class color draws in the player's class color with the swatch's 
     local NS, _, m = T.enableAddon()
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     local b = button(m)
+    assertTrue(S("glow.main.type", "proc"))
     assertTrue(S("glow.main.color", { r = 1, g = 0, b = 0, a = 0.5 }))
     G.Apply(b, drop())
     local c = lib.calls[1][3].color
@@ -178,7 +181,7 @@ test("glow: Use class color draws in the player's class color with the swatch's 
     lib.calls = {}
     G.Apply(b, drop({ me = offSpec() }))
     c = lib.calls[2]
-    assertEqual(c[3][1], NS.Constants.TONE.offspec.r, "the off-spec glow's own companion is still off")
+    assertEqual(c[3][1], NS.Constants.TONE.glowOffSpec.r, "the off-spec glow's own companion is still off")
     lib.calls = {}
     assertTrue(S("glow.main.useClassColor", false))
     G.Apply(b, drop())
@@ -192,10 +195,10 @@ test("glow: Use class color with a class that has no color falls through to the 
     m.__context.classToken = "NOPE"
     assertTrue(S("glow.offSpec.useClassColor", true))
     G.Apply(button(m), drop({ me = offSpec() }))
-    local c, tone = lib.calls[1], NS.Constants.TONE.offspec
+    local c, tone = lib.calls[1], NS.Constants.TONE.glowOffSpec
     assertEqual(c[1], "PixelGlow_Start")
     assertTrue(c[3][1] == tone.r and c[3][2] == tone.g and c[3][3] == tone.b and c[3][4] == 1,
-        "the stored off-spec cyan, never white or a substitute")
+        "the stored off-spec blue, never white or a substitute")
 end)
 
 -- The library's proc frame replays its opening burst from its own OnShow, and a repaint hides and
@@ -204,6 +207,7 @@ test("glow: the proc style's opening burst plays once, not again on every repain
     local NS, _, m = T.enableAddon()
     local G, lib = NS.Glow, fakeLib(m)
     lib.ProcGlow_Start = function(r, o) r["_ProcGlow" .. o.key] = { startAnim = o.startAnim } end
+    assertTrue(NS.SchemaRuntime.Set("glow.main.type", "proc"))
     local b = button(m)
     G.Apply(b, drop())
     local f = b["_ProcGlow" .. G.KEY]

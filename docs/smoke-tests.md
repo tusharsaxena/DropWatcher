@@ -34,8 +34,8 @@ passed.
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
 | TOAST-1..6 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10) |
-| GLOW-1..9 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9) |
-| ICON-1..4 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the defaults drawing the icons as before and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4) |
+| GLOW-1..10 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10) |
+| ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid black border) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
 | COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
@@ -2002,7 +2002,7 @@ off-spec's the right.
 
 **GLOW-1. The main-spec glow on each surface, and nowhere else (feedback-21).** Defaults (Defaults on
 the Window page). `/dw test`, expand every group → the icons of the drops that are an upgrade for your
-current spec glow with the green proc flipbook: Kaelith's neck (the key run), Uniquerogue's trinket (the
+current spec glow with the yellow pixel border (lines running around the icon): Kaelith's neck (the key run), Uniquerogue's trinket (the
 second raid boss), Seta's head, Littlewolf's ring and Mistveil's shoulders (the third). The glow sits
 over the icon art, follows the icon at every Row height, and scrolls and clips with its row. Expand
 Seta's head → the detail card's header icon glows; its Replaces rows do not. Settings › Window › Toast
@@ -2015,37 +2015,37 @@ Collapse a group and expand it again, and scroll → no glow is left behind on a
 drop. In the client, a groupmate's real upgrade for you glows the same. Result:
 
 **GLOW-2. The off-spec glow (feedback-21).** Defaults. `/dw test`, the last raid boss → Brightmane's
-one-hander and Solenne's gloves glow with a cyan pixel border (lines running around the icon), and so
+one-hander and Solenne's gloves glow with a blue pixel border, and so
 do Seta's legs under the second raid boss; Kragmar's bracers (an off-spec sidegrade) and Thornbrew's
-boots (an off-spec downgrade) do not, nor Ashveil's chest (Can't use with no off-spec). The cyan reads
-apart from the main glow's green on the same screen. Expand Brightmane's one-hander → its detail card's
-header icon glows cyan; `/dw compact` → its card's too. With a real off-spec upgrade in the client (the
+boots (an off-spec downgrade) do not, nor Ashveil's chest (Can't use with no off-spec). The blue reads
+apart from the main glow's yellow on the same screen. Expand Brightmane's one-hander → its detail card's
+header icon glows blue; `/dw compact` → its card's too. With a real off-spec upgrade in the client (the
 toast on), the toast's icon shows no glow (G9). Result:
 
 **GLOW-3. The Button style (feedback-21).** Main spec style → Button (rotating rays) → every main-spec
-upgrade icon (GLOW-1's list) at once shows the action-button rays instead of the proc flipbook, no old
+upgrade icon (GLOW-1's list) at once shows the action-button rays instead of the pixel border, no old
 effect left under it. Main spec frequency 2 → the rays turn faster; 0.05 → slower. Main spec color →
 pick a red with alpha half way → the rays turn red and fainter. Defaults puts it back. Result:
 
-**GLOW-4. The Proc style (feedback-21).** Main spec style back to Proc (flipbook) (the default) → the
-green flipbook around each upgrade icon, opening with a burst once: expand or collapse a row, or let
+**GLOW-4. The Proc style (feedback-21).** Main spec style → Proc (flipbook) → the yellow flipbook
+around each upgrade icon, opening with a burst once: expand or collapse a row, or let
 another drop arrive, and the glowing icons keep looping with no second burst. Main spec start animation off → the next
 start has no burst (switch a setting or `/dw test` off and on to restart it); on again → the burst is
 back. Main spec duration (seconds) 3 → one loop takes visibly longer. Main spec X offset and Y offset
 5 → the flipbook reaches 5 pixels further past the icon's sides and top and bottom; -5 → inside them.
 Result:
 
-**GLOW-5. The Pixel border style (feedback-21).** Main spec style → Pixel border → lines run around each
-main-spec upgrade icon. Main spec lines 20 → many short lines; 1 → one. Main spec frequency 2 → they run
+**GLOW-5. The Pixel border style (feedback-21).** Main spec style Pixel border (the default, H6) → lines
+run around each main-spec upgrade icon. Main spec lines 20 → many short lines; 1 → one. Main spec frequency 2 → they run
 faster. Main spec line length (0 = automatic) 20 → long lines; back to 0 → sized from the icon. Main
 spec thickness 6 → thick lines. Main spec dark border on → a dark border inside the lines. Main spec X
-and Y offset move the lines out or in. The off-spec glow (already pixel) answers its own column's rows
+and Y offset move the lines out or in. The off-spec glow (pixel too) answers its own column's rows
 the same and never the main spec's. Result:
 
 **GLOW-6. The Auto cast style (feedback-21).** Main spec style → Auto cast sparkles → sparkles circle
 each main-spec upgrade icon. Main spec particles 12 → more sparkles in each ring; 1 → one. Main spec
 frequency 2 → they circle faster. Main spec scale 3 → bigger sparkles; 0.5 → smaller. The offsets move
-the rings out or in. Off-spec style → Auto cast sparkles too → the off-spec icons sparkle in cyan, the
+the rings out or in. Off-spec style → Auto cast sparkles too → the off-spec icons sparkle in blue, the
 main ones in their own color. Result:
 
 **GLOW-7. Each glow turned off (feedback-21).** `/dw test`. Untick Main spec glow → every main-spec
@@ -2055,23 +2055,36 @@ main ones keep glowing. Both off, `/reload` → nothing glows, and the rows stay
 a profile with the glows on → the icons glow again without a repaint by hand. Result:
 
 **GLOW-8. A style's knobs dim for another style (feedback-21).** Settings › Window › Upgrade glow with
-the defaults: the main column's Pixel border, Auto cast sparkles and Button (rotating rays) rows are
-dimmed and its Proc (flipbook) and Offset rows live; the off-spec column's Pixel border and Offset rows
-are live and its Auto cast, Button and Proc rows dimmed. Main spec style → Button (rotating rays) → only
+the defaults (both Pixel border, H6): in each column the Pixel border and Offset rows are live and the
+Auto cast sparkles, Button (rotating rays) and Proc (flipbook) rows dimmed. Main spec style → Proc
+(flipbook) → its Proc and Offset rows live, its Pixel border rows dimmed, the off-spec column as it was.
+Main spec style → Button (rotating rays) → only
 its Button frequency is live in the main column, the Offset rows dimmed too. Untick Off-spec glow → every
 off-spec row below it, its Style included, dims, but Off-spec color and its Use class color stay live
 (a color pair is never dimmed); Main spec's stay as they were. A dimmed row keeps its value and is
 never hidden. Result:
 
-**GLOW-9. Use class color (feedback-21).** Settings › Window › Upgrade glow: Main spec color has Use
-class color (off) immediately to its right on the same line, and Off-spec color its own on the next
-line. `/dw test`. Main spec color → a red with alpha half way, then tick its Use class color → every
+**GLOW-9. Use class color (feedback-21).** Settings › Window › Upgrade glow: Main spec color | Off-spec
+color on one line, Use class color (main spec) | Use class color (off-spec) (both off) on the next, each
+below its own swatch (H6, the documented options-ui-§17 deviation). `/dw test`. Main spec color → a red with alpha half way, then tick its Use class color → every
 main-spec upgrade icon's glow restarts at once in your character's class color, whoever looted the drop,
 as faint as the half alpha. The off-spec icons keep
-their cyan. Untick it → back to the half-alpha red. Hover Main spec color → its tooltip says it is not
-read while Use class color is on, except for its opacity. Tick Off-spec color's Use class color → the
+their blue. Untick it → back to the half-alpha red. Hover Main spec color → its tooltip says it is not
+read while Use class color is on, except for its opacity; hover Use class color (main spec) → it names
+Main spec color, the swatch above. Tick Use class color (off-spec) → the
 off-spec icons glow in your class color too, the main ones as their own pair says. Untick Off-spec glow
 → its color and Use class color stay live. `/reload` → the ticks are kept. Defaults → both off. Result:
+
+**GLOW-10. The defaults, and the color rows main left, off-spec right (feedback-21 H6).** On a profile
+that never touched the tab (or Defaults on the Window page): Settings › Window › Upgrade glow → Main
+spec glow | Off-spec glow both ticked, Main spec style | Off-spec style both Pixel border, Main spec
+color | Off-spec color on one line (a yellow, `#FFF468`, and a blue, `#3FC7EB`, both opaque), Use class
+color (main spec) | Use class color (off-spec) on the next, both unticked, and under Pixel border lines
+8 | 8, frequency 0.10 | 0.10, line length 0 (Automatic) | 0, thickness 1 | 1. Every line of the tab has
+the main spec on the left and the off-spec on the right, no line holding one of each glow's controls
+out of place. `/dw test` → the main-spec upgrades wear a yellow pixel border and the off-spec ones a
+blue one, their lines running slowly round the icon. On a profile that stored a glow's color or style
+before this build → it keeps the stored value; only what it never set takes the new default. Result:
 
 ## Item icons
 
@@ -2079,23 +2092,25 @@ The look's decision, its rows and the surfaces' icons are headless-tested (`test
 `test_schema_rows`, `test_settings_pages`); the suites draw no texture and no backdrop, so what the
 crop and the border look like is checked here. The settings are Settings › Window › Icons.
 
-**ICON-1. Today's look, and the tab (feedback-21 G11).** On a profile that never touched the tab, `/dw
-test` → every item icon looks as it did before: the whole icon, no border, on the Drops rows and their Me
+**ICON-1. The default look, and the tab (feedback-21 G11, H6).** On a profile that never touched the
+tab, `/dw test` → every item icon is cropped a little (its dark rim trimmed) inside a thin flat black
+border, 2 pixels, on the Drops rows and their Me
 and Them gear icons, the compact cards, the detail card's header and Replaces rows, the Offer panel,
 History and the toast. Settings › Window: the strip ends `Upgrade glow`, `Icons`. Icons shows **Zoom**
-(Icon zoom, `0.00`), then **Border**: Show border (unticked) on a line of its own, Border style (Blizzard
-Tooltip) | Border thickness (px) (2), Border color (black) | Use class color (unticked), then Color by
-item quality (unticked). With Show border unticked, Border style, Border thickness and Color by item
-quality are dimmed; Border color and Use class color are not. Hover each → its tooltip. Result:
+(Icon zoom, `0.10`), then **Border**: Show border (ticked) on a line of its own, Border style (Solid) |
+Border thickness (px) (2), Border color (black, opaque) | Use class color (unticked), then Color by item
+quality (unticked). Untick Show border → Border style, Border thickness and Color by item quality dim;
+Border color and Use class color do not. Hover each → its tooltip. Result:
 
 **ICON-2. Icon zoom on every surface.** `/dw test`, expand a row, open your own drop's Offer panel,
 show a toast (Window › Toast › Show a toast, then `/dw test`), and open History beside it in turn. Drag
-Icon zoom to `0.10` → every item icon listed in ICON-1 crops its edges at once, the dark rim most item
-icons carry gone, without a repaint or a reopen; `0.25` → a quarter off each side; `0.00` → the whole icon
-again. Switch to compact (`/dw compact`) → the cards' icons wear the same crop. Result:
+Icon zoom to `0.00` → every item icon listed in ICON-1 shows its whole texture at once, the dark rim most
+item icons carry back, without a repaint or a reopen; `0.25` → a quarter off each side; `0.10` → the
+default crop again. Switch to compact (`/dw compact`) → the cards' icons wear the same crop. Result:
 
-**ICON-3. The border, its class color, and the glow over it.** Tick Show border → every item icon gets
-a thin black tooltip-edge border at once; the three rows dim no more. Border style → another border (any
+**ICON-3. The border, its class color, and the glow over it.** Untick Show border → every item icon's
+border goes at once and the three rows dim; tick it → the thin black Solid border is back and they dim
+no more. Border style → another border (any
 LibSharedMedia border another addon registers is listed) → the icons take it; Border thickness → 8 →
 the edge thickens; Border color → a red at half alpha → the borders turn a faint red. Tick Use class
 color → your character's class color, as faint. The upgrade glow on a main-spec or off-spec upgrade's
@@ -2109,6 +2124,12 @@ the swatch's alpha still applied; a Me or Them gear icon takes its worn item's. 
 not cached yet still shows its link's color; the toast's icon does too. Untick it → back to the swatch
 (or the class color). `/dw get icons.borderQuality` → `true` while ticked; `/dw set icons.borderSize 0`
 is refused. Result:
+
+**ICON-5. Solid in the list, and a stored profile kept (feedback-21 H6).** Border style's dropdown lists
+Solid (once, even with AuraMaster loaded, which registers the same name). Pick Blizzard Tooltip → the
+tooltip's edge; Solid → the flat edge again, its thickness the Border thickness. On a profile that
+stored Icons values before this build (Show border unticked, Icon zoom `0.00`) → after the update it
+keeps both; a value it never stored takes the new default. Result:
 
 ## Transmog
 
@@ -2566,10 +2587,12 @@ stray `%s` or `%d`, and no Lua error. Result:
 | GLOW-1..2 | feedback-21, the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (G9); the off-spec glow | No client pass recorded yet |
 | GLOW-3..6 | feedback-21, each glow style and its knobs: Button, Proc, Pixel border, Auto cast | No client pass recorded yet |
 | GLOW-7..8 | feedback-21, each glow turned off; a style's knobs dimmed for another style | No client pass recorded yet |
-| GLOW-9 | feedback-21, Use class color beside each glow color: the player's class, the swatch's alpha, never dimmed | No client pass recorded yet |
+| GLOW-9 | feedback-21, Use class color below each glow color (H6): the player's class, the swatch's alpha, never dimmed | No client pass recorded yet |
+| GLOW-10 | feedback-21 H6, the glow defaults (both pixel, `#FFF468` and `#3FC7EB`, frequency 0.1) and every row main left, off-spec right | No client pass recorded yet |
 | TOAST-6 | feedback-21 G10, the toast's Scale: 50 to 200 %, live on a toast on screen, about its saved anchor | No client pass recorded yet |
-| ICON-1..2 | feedback-21 G11, the item icons drawn as before by default, Window › Icons' rows, Icon zoom live on every surface | No client pass recorded yet |
+| ICON-1..2 | feedback-21 G11, the default look (H6: zoom 0.1, a Solid black border 2 pixels thick), Window › Icons' rows, Icon zoom live on every surface | No client pass recorded yet |
 | ICON-3..4 | feedback-21 G11, the border block, its Use class color and the glow over it; Color by item quality | No client pass recorded yet |
+| ICON-5 | feedback-21 H6, Solid in the Border style list; a profile's stored Icons values kept | No client pass recorded yet |
 | SCORE-4, COMPAT-3 | feedback-21 H1, Pawn out of the box: `PawnIsReady()`, its scale asked by spec index | No client pass recorded yet |
 | INSPECT-5 | feedback-21 H2, a looter who left the group keeps the read the drop was judged with: Spec named, `Looter: not in your group`; never `spec unknown`; kept through a later re-judge (R4) | No client pass recorded yet |
 | FEED-90 | feedback-21 H3, a gear grid right under the title, the rows' labels muted gold, each worn item of a dual slot its own arrow | No client pass recorded yet |

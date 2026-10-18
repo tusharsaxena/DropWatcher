@@ -18,7 +18,8 @@ local _, NS = ...
 -- is (options-ui-§17, anti-pattern #74: the swatch's alpha is read under either mode).
 --
 -- Without the library the composer is hollow and the block has no rows: modules/IconStyle.lua then
--- reads defaults/Profile.lua's values, which draw no border.
+-- reads defaults/Profile.lua's values (feedback-21 H6: a Solid black border, 2 pixels, no class or
+-- quality color), which no row can change.
 
 local DW       = NS.addon
 local Settings = DW.Settings

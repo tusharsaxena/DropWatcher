@@ -47,7 +47,8 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   (Window › Upgrade glow). Every tooltip is bulleted rows, one fact per row.
 - **Item icon style** (feedback-21 G11). Every item icon the addon draws takes one look from
   Window › Icons: a zoom that crops its edges, and the standard border block (style, thickness,
-  color and Use class color) with Color by item quality. The defaults draw the icons as before.
+  color and Use class color) with Color by item quality. The defaults (feedback-21 H6) trim the icon's
+  baked-in edge and draw a Solid black border 2 pixels thick.
 - **Compact mode** (M12, [`superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md`](superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md)).
   The same window in a second layout, about 440 pixels wide: each drop a three-line card on both
   tabs, a one-row filter bar with a Filters menu, a short title and a one-line footer. It reads

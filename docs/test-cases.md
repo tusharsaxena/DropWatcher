@@ -115,12 +115,12 @@ Total.
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
 - glow: both glows have every knob's row on Window › Upgrade glow, with the plan's defaults
-- glow: the main and off-spec rows alternate, so each knob reads across one line
+- glow: the main and off-spec rows alternate, so each line reads main left, off-spec right
 - glow: an out-of-range knob, an unknown style and a malformed color are refused
 - glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never
 - glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
 - toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a sound, live only with the toast on
-- icons: Window › Icons is the Zoom row then the composed Border block, its defaults today's look
+- icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults
 - icons: the border rows refuse what they cannot draw, and dim with Show border off
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 
@@ -1574,9 +1574,11 @@ Total.
 - glow: a glow row's write re-applies every drawn icon at once
 - glow: a profile switch re-reads the glow settings
 
-### test_icon_style.lua (8)
+### test_icon_style.lua (10)
 
-- icon style: by default an item icon is the whole texture with no border, as it was before
+- icon style: by default an item icon is cropped 0.1 a side in a Solid black border 2 pixels thick
+- icon style: zoom 0 and no border draw an item icon as it was before G11
+- icon style: Solid is registered with LibSharedMedia as the flat white texture, so the dropdown offers it
 - icon style: a repaint that changes nothing costs nothing; a row's write restyles every button made so far
 - icon style: Show border draws the swatch over the icon; Use class color the player's class with its alpha
 - icon style: a border style LibSharedMedia knows draws its texture
@@ -1952,7 +1954,7 @@ Total.
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 34 |
 | test_glow.lua | 13 |
-| test_icon_style.lua | 8 |
+| test_icon_style.lua | 10 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 20 |
@@ -1971,4 +1973,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1625** |
+| **Total** | **1627** |
