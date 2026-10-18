@@ -333,7 +333,7 @@ Total.
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the full view's
 
-### test_compact_group.lua (20)
+### test_compact_group.lua (21)
 
 - compact group: a card is three lines at the text size, about 50 pixels at Default, the icon spanning them
 - compact group: switching layouts carries the scroll offset over as a fraction of the range
@@ -355,6 +355,7 @@ Total.
 - compact group: a second's tick leaves the cards as they are
 - compact group: at the least width line 2's pieces end before the action button
 - compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict
+- compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)
 
 ### test_compact_history.lua (10)
 
@@ -486,11 +487,13 @@ Total.
 - rows: every drop row and its detail card sit ROW_INDENT in from the header; the labels shift over their cells
 - headers: a group header's chevron is gold, as its text, collapsed or open
 
-### test_side_cells.lua (22)
+### test_side_cells.lua (24)
 
 - side cells: Me reads the worn level, then the glyph and the unsigned difference in the verdict's tone
 - side cells: Can't use and Not wanted stay words after the gear, dim red and gray
 - side cells: two worn items read both levels and carry both icons
+- side cells: two worn items both read take a mark each, in the items' order and each its own tone (H7)
+- side cells: one worn item, an empty or unread slot, a word or an off-spec verdict keep one mark (H7)
 - side cells: nothing worn reads `empty`, muted, and the verdict follows
 - side cells: an unknown verdict's ? goes where the gear part says why, and stays where it does not
 - side cells: a dash gear part goes when the verdict says something, and stays alone when it does not
@@ -511,7 +514,7 @@ Total.
 - table: the Me cell paints its icons, level, glyph and difference left to right
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_detail_card.lua (28)
+### test_detail_card.lua (30)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
@@ -533,6 +536,8 @@ Total.
 - cells: the Stats row colors each value by its sign and each stat's name in its own color
 - cells: Replaces reads the item level, then the icon, then the name in its quality color
 - card: the glyphs are drawn in the monospace face; Replaces puts its item level before the icon
+- cells: on a two-item slot read in full, Item level is each worn item's level and mark; Replaces the one taken off (H7)
+- card: a dual Item level paints its second part after the first mark, in the monospace face (H7)
 - card: a looter who left the group: the Spec row reads the drop's kept read, not spec unknown
 - card: the actions go through their host handlers; Trade is off with its reason
 - card: the card has no Hide this item; its row stays
@@ -1521,7 +1526,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (34)
+### test_toast.lua (36)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1530,6 +1535,8 @@ Total.
 - toast edge: off by default; nothing is built or shown
 - toast edge: a qualifying drop shows at once, painted, and goes after its duration
 - toast edge: the four rows beside a four-row icon, painted (feedback-9 spec §0)
+- toast: on a two-item slot read in full each verdict is the cells' dual mark, and the toast widens for it (H7)
+- toast edge: a dual mark is painted part by part, and the toast is only as wide as row 3 needs (H7)
 - toast edge: a verdict in a word takes no glyph's room
 - toast edge: a looter of unknown class is a plain name in row 3's muted tone
 - toast edge: a right-click anywhere closes it as the close mark does; the left button does not
@@ -1901,15 +1908,15 @@ Total.
 | test_window_shell.lua | 59 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
-| test_compact_group.lua | 20 |
+| test_compact_group.lua | 21 |
 | test_compact_history.lua | 10 |
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
-| test_side_cells.lua | 22 |
-| test_detail_card.lua | 28 |
+| test_side_cells.lua | 24 |
+| test_detail_card.lua | 30 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
@@ -1952,7 +1959,7 @@ Total.
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 34 |
+| test_toast.lua | 36 |
 | test_glow.lua | 13 |
 | test_icon_style.lua | 10 |
 | test_auto_ask.lua | 24 |
@@ -1973,4 +1980,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1627** |
+| **Total** | **1634** |

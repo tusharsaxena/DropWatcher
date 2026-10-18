@@ -217,6 +217,72 @@ test("toast edge: the four rows beside a four-row icon, painted (feedback-9 spec
     end
 end)
 
+-- Two trinkets each side, both read (feedback-21 H7): yours 321/300, Seta's 324/296.
+local TRINKET = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }
+local MY_TRINKETS = { [13] = { link = link(601), ilvl = 321 }, [14] = { link = link(602), ilvl = 300 } }
+local HER_TRINKETS = { [13] = { link = link(603), ilvl = 324 }, [14] = { link = link(604), ilvl = 296 } }
+
+local function dualDrop(over)
+    local d = drop({ facts = TRINKET, me = { verdict = "upgrade", ilvlDelta = 11 },
+        them = { verdict = "upgrade", ilvlDelta = 15 }, looter = { name = "Abcdefghijkl-Realm", guid = "Player-1-0000000A", classFile = "PRIEST" } })
+    for k, v in pairs(over or {}) do d[k] = v end
+    return d
+end
+
+local function partsText(p)
+    local a, b = p.parts[1], p.parts[2]
+    return ("%s %s%s / %s %s%s"):format(a.level, a.glyph, a.text, b.level, b.glyph, b.text)
+end
+
+test("toast: on a two-item slot read in full each verdict is the cells' dual mark, and the toast widens for it (H7)", function()
+    local NS = T.newAddon()
+    local Toast, TM = NS.Toast, NS.TipMarks
+    local t = Toast.Compose(dualDrop(), MY_TRINKETS, HER_TRINKETS)
+    assertEqual(partsText(t.me), "321 ▼10 / 300 ▲11"); assertEqual(t.me.parts[1].tone, "red")
+    assertEqual(partsText(t.them), "324 ▼13 / 296 ▲15")
+    assertNil(Toast.Compose(dualDrop()).me.parts, "no gear: the one mark")
+    assertNil(Toast.Compose(dualDrop({ facts = { ilvl = 311, equipLoc = "INVTYPE_HEAD", quality = 4 } }),
+        { [1] = { link = link(605), ilvl = 300 } }).me.parts, "a single slot: the one mark")
+    -- Row 3 at the harness's estimate: `Looted by Abcdefghijkl · You 321 ▼10 / 300 ▲11 · Them 324 ▼13 / 296 ▲15`.
+    local G, S = Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
+    local function verdict(p)
+        local a, b = p.parts[1], p.parts[2]
+        return G + TM.Chars(a.level) * CHAR_W + G + GLYPH_W + S + TM.Chars(a.text) * CHAR_W + G + CHAR_W
+            + G + TM.Chars(b.level) * CHAR_W + G + GLYPH_W + S + TM.Chars(b.text) * CHAR_W
+    end
+    local row3 = TM.Chars(("Looted by %s · You"):format(t.looterText)) * CHAR_W + verdict(t.me)
+        + G + TM.Chars("· Them") * CHAR_W + verdict(t.them)
+    assertTrue(row3 > Toast.RowWidth(), "two dual marks do not fit WIDTH's row: it would be cut")
+    assertTrue(Toast.WidthFor(row3) - (Toast.WIDTH - Toast.RowWidth()) >= row3, "the widened toast holds row 3")
+    assertEqual(Toast.WidthFor(100), Toast.WIDTH, "a short row 3 keeps the least width")
+end)
+
+test("toast edge: a dual mark is painted part by part, and the toast is only as wide as row 3 needs (H7)", function()
+    local d1, d2 = dualDrop(), drop({ id = 2, them = { verdict = "downgrade", ilvlDelta = -13 } })
+    local NS, m = enabled({ d1, d2 })
+    local C = NS.Constants
+    m.textCharWidth = 5
+    NS.Gear.Snapshot = function() return { equipped = MY_TRINKETS } end
+    NS.Inspect.Get = function() return { status = "fresh", at = 0, gear = HER_TRINKETS } end
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    local l = f.meLead
+    assertEqual(l.leadLevel:GetText(), "321"); assertEqual(l.leadGlyph:GetText(), "▼"); assertEqual(l.leadText:GetText(), "10")
+    assertEqual(l.leadGlyph.__font[1], C.FONT_MONO); assertEqual(l.leadText.__textColor[1], C.TONE.red.r)
+    assertEqual(l.sep:GetText(), "/"); assertEqual(f.meLevel:GetText(), "300"); assertTrue(f.meLevel:IsShown())
+    assertEqual(f.meGlyph:GetText(), "▲"); assertEqual(f.meText:GetText(), "11")
+    assertEqual(l.leadLevel.__points[1][2], f.looted); assertEqual(f.meLevel.__points[1][2], l.sep)
+    assertEqual(f.meGlyph.__points[1][2], f.meLevel); assertEqual(f.themLabel.__points[1][2], f.meText)
+    assertEqual(f.themLead.leadLevel:GetText(), "324"); assertEqual(f.themLevel:GetText(), "296")
+    local wide = f:GetWidth()
+    assertTrue(wide > NS.Toast.WIDTH, "two dual marks widen it: " .. wide)
+    NS.Toast.Dismiss()
+    added(NS, 2)
+    assertEqual(NS.Toast.Stats().dropId, 2)
+    assertEqual(f:GetWidth(), NS.Toast.WIDTH, "the next, single-mark toast is back at WIDTH")
+    assertFalse(f.meLead.sep:IsShown() or f.meLevel:IsShown(), "and draws no lead pieces")
+end)
+
 test("toast edge: a verdict in a word takes no glyph's room", function()
     local NS = enabled({ drop({ them = { verdict = "cantUse" } }) })
     added(NS, 1)

@@ -84,6 +84,47 @@ test("side cells: two worn items read both levels and carry both icons", functio
     assertEqual(them.level, "298/296"); assertEqual(#them.items, 2); assertEqual(them.glyph .. them.text, "▲12")
 end)
 
+-- A dual mark's parts as text: `321 ▼10 / 308 ▲3`.
+local function partsText(c)
+    local a, b = c.parts[1], c.parts[2]
+    return ("%s %s%s / %s %s%s"):format(a.level, a.glyph, a.text, b.level, b.glyph, b.text)
+end
+
+test("side cells: two worn items both read take a mark each, in the items' order and each its own tone (H7)", function()
+    local S = SC()
+    -- 311 against your trinkets 321 and 308: the verdict (judged against the lower) on 308, its own on 321.
+    local me = S.Me(drop({ facts = TRINKET, me = { verdict = "upgrade", ilvlDelta = 3, reasons = {} } }), MINE)
+    assertEqual(partsText(me), "321 ▼10 / 308 ▲3")
+    assertEqual(me.parts[1].tone, "red"); assertEqual(me.parts[2].tone, "good", "each part in its own tone")
+    assertEqual(me.level, "321/308", "the single pieces stay for a reader that draws one mark")
+    -- The baseline names the worn item: its row takes the verdict's mark whatever its level.
+    local them = S.Them(drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 13,
+        baseline = { link = OLD1, ilvl = 298 }, reasons = {} } }), HERS, 100)
+    assertEqual(partsText(them), "298 ▲13 / 296 ▲15")
+    -- The sidegrade band: within it either way reads ≈.
+    local band = S.Me(drop({ facts = TRINKET, me = { verdict = "downgrade", ilvlDelta = -10, band = 4,
+        baseline = { link = OLD1, ilvl = 321 }, reasons = {} } }), { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD2, ilvl = 313 } })
+    assertEqual(partsText(band), "321 ▼10 / 313 ≈2"); assertEqual(band.parts[2].tone, "yellow")
+end)
+
+test("side cells: one worn item, an empty or unread slot, a word or an off-spec verdict keep one mark (H7)", function()
+    local S = SC()
+    local up = { verdict = "upgrade", ilvlDelta = 11, reasons = {} }
+    assertEqual(S.Me(drop({ me = up }), MINE).parts, nil, "a single slot")
+    local ring = { ilvl = 311, equipLoc = "INVTYPE_FINGER", quality = 4 }
+    assertEqual(S.Me(drop({ facts = ring, me = up }), MINE).parts, nil, "a ring slot worn empty")
+    assertEqual(S.Me(drop({ facts = TRINKET, me = up }), { [13] = { link = OLD1, ilvl = 321 } }).parts, nil, "one not read")
+    assertEqual(S.Me(drop({ facts = TRINKET, me = up }), { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD2 } }).parts,
+        nil, "a level not read")
+    assertEqual(S.Me(drop({ facts = TRINKET, me = { verdict = "cantUse", reasons = {} } }), MINE).parts, nil, "a word")
+    assertEqual(S.Me(drop({ facts = TRINKET, me = { verdict = "upgrade", reasons = {} } }), MINE).parts, nil, "no difference")
+    assertEqual(S.Them(drop({ facts = TRINKET, them = up, inspect = { status = "pending" } }), nil, 100).parts, nil, "not read")
+    local NS = T.newAddon()
+    assertEqual(NS.WindowHistory.MeCell(drop({ facts = TRINKET, me = up })).parts, nil, "History keeps no worn items")
+    assertEqual(NS.SideCells.Parts({ offSpec = true, verdict = "upgrade", delta = 3, ilvl = 311 },
+        { { ilvl = 321 }, { ilvl = 308 } }, 0), nil, "an off-spec verdict is judged against one item")
+end)
+
 test("side cells: nothing worn reads `empty`, muted, and the verdict follows", function()
     local S = SC()
     local cloak = drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_CLOAK", quality = 4 },
@@ -326,15 +367,23 @@ local CHAR = 5   -- the harness's character measure (the small template's averag
 local function chars(s) return #((s or ""):gsub("[\128-\191]", "")) end
 
 -- A cell's width as WindowGroup.PlaceSide lays it out: the icons, then each piece shown after the
--- last with its gap.
+-- last with its gap; a dual mark (feedback-21 H7) its first part, PART_GAP, `/`, PART_GAP, then the
+-- second part in the single pieces.
 local function sideWidth(WG, K, c)
     local S, x, gap = WG.SIDE, 0, 0
     local n = math.min(#c.items, 2)
     if n > 0 then x, gap = n * K.EQ_ICON + (n - 1) * S.ICON_GAP, S.LEVEL_GAP end
     local function add(w, after) x, gap = x + gap + w, after end
-    if c.level then add(chars(c.level) * CHAR, S.VERDICT_GAP) end
-    if c.glyph then add(CHAR, S.GLYPH_GAP) end
-    if c.text ~= "" then add(chars(c.text) * CHAR, 0) end
+    local level, glyph, text = c.level, c.glyph, c.text
+    if c.parts then
+        local a, b = c.parts[1], c.parts[2]
+        add(chars(a.level) * CHAR, S.VERDICT_GAP); add(CHAR, S.GLYPH_GAP); add(chars(a.text) * CHAR, S.PART_GAP)
+        add(chars(WG.PART_SEP) * CHAR, S.PART_GAP)
+        level, glyph, text = b.level, b.glyph, b.text
+    end
+    if level then add(chars(level) * CHAR, S.VERDICT_GAP) end
+    if glyph then add(CHAR, S.GLYPH_GAP) end
+    if text ~= "" then add(chars(text) * CHAR, 0) end
     return x
 end
 
@@ -386,6 +435,14 @@ test("widths: Me and Them are each their widest cell, measured (two icons, 321/3
     end
     local spec = sideWidth(WG, K, { items = { 1, 2 }, level = "321/308", glyph = "▼", text = "13" })
     assertTrue(widest.me >= spec, "the spec's worst case fits")
+    -- The dual mark at its longest realistic (feedback-21 H7): two worn levels, two two-digit
+    -- differences, `321 ▼10 / 324 ▼23`: 125, inside the 127 that `Not wanted` sets, so no column widens.
+    local dual = sideWidth(WG, K, { items = { 1, 2 }, text = "", parts = {
+        { level = "321", glyph = "▼", text = "10" }, { level = "324", glyph = "▼", text = "23" } } })
+    assertEqual(dual, 125)
+    for _, col in ipairs(WG.COLUMNS) do
+        if widest[col.key] then assertTrue(dual <= col.width, col.key .. ": the dual mark fits, nothing cut") end
+    end
     for _, col in ipairs(WG.COLUMNS) do
         if widest[col.key] then assertEqual(col.width, widest[col.key], col.key .. ": nothing cut, no margin") end
     end
@@ -454,8 +511,14 @@ test("table: the Me cell paints its icons, level, glyph and difference left to r
     local NS, row = shown(drop({ facts = TRINKET, me = { verdict = "downgrade", ilvlDelta = -8, reasons = {} } }))
     local c, C = row.cells.me, NS.Constants
     assertTrue(c.icons[1]:IsShown() and c.icons[2]:IsShown(), "both worn trinkets")
-    assertEqual(textOf(c.level), "321/308"); assertEqual(textOf(c.glyph), "▼"); assertEqual(textOf(c.text), "8")
-    assertEqual(c.level.__points[1][2], c.icons[2], "the level after the second icon")
+    -- A mark each (feedback-21 H7): `321 ▼10 / 308 ▼8`, the first part in the lead pieces.
+    assertEqual(textOf(c.leadLevel), "321"); assertEqual(textOf(c.leadGlyph), "▼"); assertEqual(textOf(c.leadText), "10")
+    assertEqual(textOf(c.sep), "/"); assertTrue(c.sep:IsShown(), "the separator shows")
+    assertEqual(select(2, c.sep:GetTextColor()), C.TONE.muted.g, "the separator muted")
+    assertEqual(c.leadLevel.__points[1][2], c.icons[2], "the first level after the second icon")
+    assertEqual(c.leadGlyph.__points[1][2], c.leadLevel); assertEqual(c.leadText.__points[1][2], c.leadGlyph)
+    assertEqual(c.sep.__points[1][2], c.leadText); assertEqual(c.level.__points[1][2], c.sep, "the second part after it")
+    assertEqual(textOf(c.level), "308"); assertEqual(textOf(c.glyph), "▼"); assertEqual(textOf(c.text), "8")
     assertEqual(c.glyph.__points[1][2], c.level, "the glyph after the level")
     assertEqual(c.text.__points[1][2], c.glyph, "the difference after the glyph")
     assertEqual(c.text.__points[2][1], "RIGHT"); assertEqual(c.text.__points[2][2], c,
@@ -487,4 +550,5 @@ test("table: a word starts after the level, and a cell with nothing worn starts 
     assertEqual(textOf(me.text), "Can't use"); assertEqual(textOf(me.glyph), "")
     assertEqual(me.text.__points[1][2], me.level, "the word after the level")
     assertEqual(me.text.__points[2][2], me, "the word ends at the cell's right edge")
+    assertFalse(me.sep:IsShown() or me.leadLevel:IsShown(), "one worn helm: one mark, no lead pieces (feedback-21 H7)")
 end)

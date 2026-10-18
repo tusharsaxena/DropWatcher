@@ -26,6 +26,11 @@ local _, NS = ...
 -- `arrow` (TM.ArrowCell's `{ glyph, text, tone }`: `▲ 19` on Item level, `▲` on Track, the unsigned
 -- difference in the verdict's tone) after its text. The `→` between two values stays TM.Arrow's
 -- texture; no verdict texture (TM.Mark) is drawn on the card.
+-- TWO WORN ITEMS (feedback-21 H7). On a ring, trinket or one-hand weapon with both worn items read,
+-- the Item level row is the cells' dual mark (NS.SideCells.Parts), `321 ▼10 / 324 ▲3`: its text the
+-- first worn level, `arrow` that item's mark, then `more` = { text = `/ 324`, arrow } the second's.
+-- The Replaces row still names the one item the drop takes off (it draws no mark); a single slot, a
+-- slot worn empty or a level not read keeps the one mark.
 --
 -- THE COLORS (feedback-21 H5). A box's title names its subject in the muted gold (`FOR YOU`,
 -- `FOR LOOTER (SETA)`, the looter's name in their class color); the Stats row's values are muted green
@@ -35,7 +40,8 @@ local _, NS = ...
 --   chip = { text, tone?, glyph?, tip = { title, lines... } }
 --   side = { title, verdict = { text, tone, glyph?, tip },
 --            rows = { { key, label, text, tone, tip, link, lead, arrow, classFile, you } } }
---     (`lead`: the text before the icon; `arrow`: the glyph and the number after the text;
+--     (`lead`: the text before the icon; `arrow`: the glyph and the number after the text; `more`:
+--      a dual mark's second part, { text, arrow }, after the arrow;
 --      `classFile` and `you`: your own drop's Looter row, the name in class color and ` [YOU]` in gold)
 --   box  = { chip = { text, tone }, text, meta, tip }
 --   act  = { key, text, icon, enabled, tip }
@@ -267,15 +273,28 @@ local function replacesRow(eval, whose, mine)
     return row("replaces", L["Replaces"], DASH, "muted", L["Replaces"], trow(L["Worn item"], L["not read"]))
 end
 
+-- A dual mark's Item level row (feedback-21 H7): `321 ▼10 / 324 ▲3`, each worn item's level and its
+-- own mark; the tooltip's Worn and Change rows list both, in the items' order.
+local function dualIlvlRow(ilvl, parts)
+    local a, b = parts[1], parts[2]
+    local function change(p) return WC.Signed(ilvl - (tonumber(p.level) or ilvl)) end
+    local r = row("ilvl", L["Item level"], a.level, "plain", L["Item level"], trow(L["This item"], ilvl),
+        trow(L["Worn"], ("%s / %s"):format(a.level, b.level)), trow(L["Change"], ("%s / %s"):format(change(a), change(b))))
+    r.arrow = a
+    r.more = { text = ("%s %s"):format(toned("/", "muted"), b.level), arrow = b }
+    return r
+end
+
 -- `292 → 311` then the verdict's glyph and the unsigned difference (`▲ 19`, the table's: feedback-21
 -- H5); a verdict with no glyph keeps the signed difference in the text. `glyphTone` replaces the
--- verdict's tone on the glyph (an off-spec verdict's cyan).
-local function ilvlRow(eval, ilvl, tone, glyphTone)
+-- verdict's tone on the glyph (an off-spec verdict's cyan). `parts`: the dual mark (DC.ForYou's).
+local function ilvlRow(eval, ilvl, tone, glyphTone, parts)
     local d = type(eval) == "table" and num(eval.ilvlDelta) or nil
     if not (d and ilvl) then
         return row("ilvl", L["Item level"], ilvl and tostring(ilvl) or "?", "muted", L["Item level"],
             trow(L["Change"], L["nothing to compare with yet"]))
     end
+    if parts then return dualIlvlRow(ilvl, parts) end
     local from = round(ilvl - d)
     local arrow = TM.ArrowCell(eval.verdict, d, glyphTone)
     local text = ("%d %s %d"):format(from, TM.Arrow(), ilvl)
@@ -401,9 +420,18 @@ local function verdictChip(cell)
 end
 DC.VerdictChip = verdictChip   -- the History card's verdicts too (modules/HistoryCard.lua)
 
-local function sideRows(eval, f, tone, whose, mine, glyphTone)
+local function sideRows(eval, f, tone, whose, mine, glyphTone, parts)
     local ilvl = num(f.ilvl)
-    return { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone, glyphTone), trackRow(eval, f.track), statsRow(eval, f.stats) }
+    return { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone, glyphTone, parts), trackRow(eval, f.track),
+        statsRow(eval, f.stats) }
+end
+
+-- The dual mark of a verdict cell against `gear` in the drop's slot (NS.SideCells.Parts), or nil.
+local function partsOf(cell, drop, gear)
+    local slots = gear and WC.EqSlots(facts(drop).equipLoc)
+    if not (slots and #slots == 2) then return nil end
+    local items, empty = WC.SlotItems(gear, slots)
+    return NS.SideCells.Parts(cell, items, empty)
 end
 
 -- A box's title, its subject in the muted gold (feedback-21 H5).
@@ -413,11 +441,13 @@ local function gold(text) return toned(text, "mutedGold") end
 --- @param drop table
 --- @param scorer string|boolean the scorer in use, "pawn" | "weights" | "none" (true reads "pawn")
 --- @param classFile string|nil your class (the gear snapshot's): the verdict tooltip's grid names you in it
+--- @param equipped table|nil your worn gear (the snapshot's `equipped`): the Item level row's dual mark
 --- @return table side
-function DC.ForYou(drop, scorer, classFile)
+function DC.ForYou(drop, scorer, classFile, equipped)
     local cell = WC.Me(drop, classFile)
     local off = NS.OffSpec.Of(drop.me)
-    local rows = sideRows(off or drop.me, facts(drop), cell.tone, L["you"], true, off and cell.tone)
+    local rows = sideRows(off or drop.me, facts(drop), cell.tone, L["you"], true, off and cell.tone,
+        partsOf(cell, drop, equipped))
     if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off)) end
     rows[#rows + 1] = scoreRow(drop.me, scorer, off ~= nil)
     return { title = L["FOR %s"]:format(gold(L["YOU"])), verdict = verdictChip(cell), rows = rows }
@@ -476,7 +506,8 @@ function DC.ForLooter(drop, inspect, specName, now, revealed, left)
     local title = L["FOR %s (%s)"]:format(gold(L["LOOTER"]), TM.ClassName(who:upper(), classFile))
     local cell = WC.Them(drop, now)
     local off = NS.OffSpec.Of(drop.them)
-    local rows = sideRows(off or drop.them, facts(drop), cell.tone, who, nil, off and cell.tone)
+    local gear = type(inspect) == "table" and inspect.gear or nil   -- what the Them cell reads (WindowGroup's)
+    local rows = sideRows(off or drop.them, facts(drop), cell.tone, who, nil, off and cell.tone, partsOf(cell, drop, gear))
     if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off, "them")) end
     rows[#rows + 1] = specRow(drop, inspect, specName, now, left)
     return { title = title, verdict = verdictChip(cell), rows = rows }

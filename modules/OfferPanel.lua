@@ -9,7 +9,8 @@ local _, NS = ...
 -- ranked (upgrades first by their gain; off-spec upgrades and equals after the main-spec ones,
 -- feedback-19 spec §3), every second row striped as the main window's, each with
 -- the name in its class color, Their eq in the Drops table's Them look (feedback-7 spec §0: the
--- worn item icons, their item level, the verdict glyph and the difference, `321/308 ▼4`, or a word:
+-- worn item icons, their item level, the verdict glyph and the difference, `292 ▼4` (a mark per worn
+-- item on a two-item slot read in full, `321 ▼10 / 308 ▲3`, feedback-21 H7), or a word:
 -- `Can't use`, `…`, `Unavailable`; NS.SideCells.Candidate, painted by WindowGroup.PaintSide) and,
 -- for an upgrade or an equal (an off-spec one too), the Offer button (the Trade button went with feedback-7 spec §0); the
 -- list scrolls in a raid. The foot strip holds Announce to group and a note on the order. What each
@@ -45,12 +46,14 @@ local max = math.max
 local panel   -- built on the first Open
 
 -- The columns (feedback-7 spec §0): Their eq is at least the Drops table's Them width, so
--- `321/308 ▼13` and two icons fit; Actions holds the Offer button.
+-- `321/308 ▼13` and two icons fit, and a dual mark's `321 ▼10 / 308 ▲3` (feedback-21 H7); Actions
+-- holds the Offer button.
 local COLS = {
     { key = "member", label = L["Member"], x = 8, tip = { TM.Row(L["Shows"], L["a member of your group, in their class color"]) } },
     { key = "eq", label = L["Their eq"], x = 124,
       tip = { TM.Row(L["Shows"], L["what they wear there (two for rings, trinkets, one-hand weapons), its item level"]),
           TM.Row(L["Then"], L["your drop judged for them, and the item-level difference"]),
+          TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
           TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
               TM.Mark("downgrade"))),
           NS.OffSpecCells.Legend(), TM.Hint(L["Hover for why."]) } },

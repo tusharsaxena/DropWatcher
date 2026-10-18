@@ -669,6 +669,14 @@ test("window: every cell of every sample row says something and has a reason", f
     end
 end)
 
+-- The worn levels a Me or Them cell draws: its level, or a dual mark's two (feedback-21 H7: the
+-- first in the lead pieces), `/`-joined as WindowCells.Levels writes them.
+local function drawnLevels(c)
+    local level = textOf(c.level) or ""
+    if c.sep:IsShown() then return textOf(c.leadLevel) .. "/" .. level end
+    return level
+end
+
 -- The levels a sample's looter was inspected wearing in its slots (`295`, `295/300`), or nil.
 local function wornOf(NS, dropId)
     local d = NS.LootFeed.Get(dropId)
@@ -685,7 +693,7 @@ test("window: the rows show every ask state, every Them gear state and every tra
     for _, r in ipairs(drawn.rows) do
         local a = r.cells.actions
         ask[textOf(a.ask.label)] = true
-        local text = textOf(r.cells.them.level)
+        local text = drawnLevels(r.cells.them)
         eq[text] = true
         local worn = wornOf(NS, r.dropId)
         if worn then
@@ -729,7 +737,7 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
     local rows, checked = NS.WindowGroup.Drawn().rows, 0
     for _, r in ipairs(rows) do
         local d = NS.LootFeed.Get(r.dropId)
-        local level = textOf(r.cells.me.level) or ""
+        local level = drawnLevels(r.cells.me)
         -- red under: `You 999`, your real gear beside a verdict judged against the sample's worn item
         assertFalse(level:find("999", 1, true) ~= nil, "row " .. d.id .. ": " .. level)
         local want = levelsOf(NS, d)
@@ -751,7 +759,7 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
     NS.Window.Refresh()
     for _, card in ipairs(NS.WindowGroup.Drawn().rows) do
         local d = NS.LootFeed.Get(card.dropId)
-        local level = textOf(card.cells.you.level) or ""
+        local level = drawnLevels(card.cells.you)
         assertFalse(level:find("999", 1, true) ~= nil, "card " .. d.id .. ": " .. level)
         assertEqual(level, levelsOf(NS, d) or level, "card " .. d.id)
     end

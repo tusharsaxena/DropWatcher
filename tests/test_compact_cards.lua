@@ -110,7 +110,9 @@ test("compact cards: the worn level comes before the verdict, plain; a word for 
     local NS = T.newAddon()
     local C, S = NS.CompactCards, NS.SideCells
     local you = C.Half("You", S.Me(groupDrop(), MY_GEAR))
-    assertEqual(C.HalfText(you), "You 321/308 ▼13"); assertEqual(you.levelTone, "plain")
+    -- Both trinkets read: a mark each (feedback-21 H7), the drop's 295 against 321 and against 308.
+    assertEqual(C.HalfText(you), "You 321 ▼26 / 308 ▼13"); assertEqual(you.levelTone, "plain")
+    assertEqual(you.parts[1].tone, "red"); assertEqual(you.parts[2].tone, "red")
     assertEqual(#you.items, 2, "both worn trinkets, though line 3 draws no icons")
     local empty = C.Half("You", S.Me(groupDrop(), { [13] = false, [14] = false }))
     assertEqual(C.HalfText(empty), "You empty ▼13"); assertEqual(empty.levelTone, "muted")
@@ -171,7 +173,7 @@ test("compact cards: the Drops card reads the spec's three lines", function()
     -- downgrade, so No action (feedback-11 spec §1).
     assertEqual(lines[2], "Lysandra · Trinket · Trinkets  No action")
     -- red under: the trade word bare on line 2, read as one more fact about the item
-    assertEqual(lines[3], "You 321/308 ▼13  Them 298/296 ⊘ Can't use  Trade Likely")
+    assertEqual(lines[3], "You 321 ▼26 / 308 ▼13  Them 298/296 ⊘ Can't use  Trade Likely")
     assertEqual(card.trade.label, "Trade")
     assertEqual(card.kind, "group"); assertEqual(card.id, 7); assertEqual(card.link, LINK)
 end)
@@ -256,7 +258,7 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
     local lines = C.Plain(card)
     assertEqual(lines[1], "295 Vile Vial of Volatile Venom", "your own drop needs no inspect: nothing after the name")
     assertTrue(card.ask.offer and card.ask.offered)
-    assertEqual(lines[3], "You 321/308 ▼13  Them No upgrades  Trade Likely")
+    assertEqual(lines[3], "You 321 ▼26 / 308 ▼13  Them No upgrades  Trade Likely")
     assertEqual(card.them.tone, "muted", "nobody's upgrade")
     assertTrue(has(card.them.tip, "• Group: nobody else in it"))
     assertEqual(lines[2], "Me [YOU] · Trinket · Trinkets  Offer",
@@ -304,7 +306,8 @@ test("compact cards: a different upgrade track is in the verdict's tooltip, not 
     local C = CC()
     local d = groupDrop({ me = { verdict = "upgrade", ilvlDelta = 6, reasons = {}, trackDelta = { sign = 1 } } })
     local card = C.Group(d, groupCtx())
-    assertEqual(C.HalfText(card.you), "You 321/308 ▲6")
+    -- The verdict's own mark on the trinket it was judged against; the other trinket its own (H7).
+    assertEqual(C.HalfText(card.you), "You 321 ▼26 / 308 ▲6")
     assertTrue(has(card.you.tip, "• Track: a higher track or rank"))
     assertTrue(has(card.ilvl.tip, "Champion 4/8"))
 end)

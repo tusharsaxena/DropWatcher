@@ -462,6 +462,54 @@ test("card: the glyphs are drawn in the monospace face; Replaces puts its item l
     end
 end)
 
+-- A trinket on both sides (feedback-21 H7): you wear 321/300, Seta 324/296; the drop is 311.
+local TRINKET_FACTS = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }
+local MY_TRINKETS = { [13] = { link = OLD, ilvl = 321 }, [14] = { link = RING, ilvl = 300 } }
+local HER_TRINKETS = { [13] = { link = THEIRS, ilvl = 324 }, [14] = { link = RING, ilvl = 296 } }
+
+local function trinketDrop()
+    return drop({ facts = TRINKET_FACTS, me = { verdict = "upgrade", ilvlDelta = 11, reasons = {}, baseline = { link = RING, ilvl = 300 } },
+        them = { verdict = "upgrade", ilvlDelta = 15, reasons = {}, baseline = { link = RING, ilvl = 296 } } })
+end
+
+test("cells: on a two-item slot read in full, Item level is each worn item's level and mark; Replaces the one taken off (H7)", function()
+    local D = DC()
+    local il = byKey(D.ForYou(trinketDrop(), true, nil, MY_TRINKETS).rows, "ilvl")
+    assertEqual(il.text, "321"); assertEqual(il.tone, "plain")
+    assertEqual(il.arrow.glyph .. il.arrow.text, "▼10"); assertEqual(il.arrow.tone, "red")
+    assertEqual(P(il.more.text), "/ 300"); assertEqual(il.more.arrow.glyph .. il.more.arrow.text, "▲11")
+    assertEqual(il.more.arrow.tone, "good", "each part in its own tone")
+    assertEqual(P(il.tip[3]), "• Worn: 321 / 300"); assertEqual(P(il.tip[4]), "• Change: -10 / +11")
+    local rep = byKey(D.ForYou(trinketDrop(), true, nil, MY_TRINKETS).rows, "replaces")
+    assertEqual(rep.lead, "300", "Replaces still names the one the drop takes off"); assertNil(rep.arrow)
+    local them = byKey(D.ForLooter(trinketDrop(), { status = "fresh", at = 60, gear = HER_TRINKETS }, "Shadow", 100).rows, "ilvl")
+    assertEqual(them.text, "324"); assertEqual(them.arrow.glyph .. them.arrow.text, "▼13")
+    assertEqual(them.more.arrow.glyph .. them.more.arrow.text, "▲15")
+    -- One mark: no gear given, one slot read, a single slot.
+    assertNil(byKey(D.ForYou(trinketDrop(), true).rows, "ilvl").more)
+    assertNil(byKey(D.ForYou(trinketDrop(), true, nil, { [13] = MY_TRINKETS[13] }).rows, "ilvl").more)
+    local helm = byKey(D.ForYou(drop(), true, nil, MY_TRINKETS).rows, "ilvl")
+    assertNil(helm.more); assertEqual(helm.arrow.glyph .. helm.arrow.text, "▲19")
+end)
+
+test("card: a dual Item level paints its second part after the first mark, in the monospace face (H7)", function()
+    local NS = shownTable()
+    local C = NS.Constants
+    NS.Gear.Snapshot = function() return { equipped = MY_TRINKETS } end
+    local d = trinketDrop()
+    NS.LootFeed.Get = function(id) return id == 1 and d or nil end
+    NS.LootFeed.Drops = function() return { d } end
+    NS.WindowGroup.ToggleExpand(1)
+    local r = NS.WindowGroup.Drawn().card.me.rows[2]
+    assertEqual(textOf(r.value), "321"); assertEqual(textOf(r.glyph), "▼"); assertEqual(textOf(r.glyphText), "10")
+    assertTrue(r.moreText:IsShown()); assertEqual(T.tipPlain(textOf(r.moreText)), "/ 300")
+    assertTrue(r.glyph2:IsShown()); assertEqual(r.glyph2:GetFont(), C.FONT_MONO)
+    assertEqual(textOf(r.glyph2), "▲"); assertEqual(textOf(r.glyphText2), "11")
+    assertEqual(select(2, r.glyphText2:GetTextColor()), C.TONE.good.g)
+    assertEqual(r.moreText.__points[1][2], r.glyphText, "after the first mark")
+    assertFalse(NS.WindowGroup.Drawn().card.me.rows[3].moreText:IsShown(), "Track keeps one mark")
+end)
+
 -- feedback-21 H2, painted: the broker forgot the looter (they left, the roster event pruned them);
 -- the card reads the drop's own copy of the read, its spec named, and says the looter is gone.
 test("card: a looter who left the group: the Spec row reads the drop's kept read, not spec unknown", function()

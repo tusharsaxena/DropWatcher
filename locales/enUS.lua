@@ -995,6 +995,7 @@ L["Shift-click to link it in chat; ctrl-click to try it on."] =
     "Shift-click to link it in chat; ctrl-click to try it on."
 -- feedback-21: tooltip rows (NS.TipMarks.Row)
 L["%s upgrade, %s sidegrade, %s downgrade"] = "%s upgrade, %s sidegrade, %s downgrade"
+L["a mark each, the drop against each"] = "a mark each, the drop against each"   -- feedback-21 H7
 L["Amber and bold"] = "Amber and bold"
 L["Ask the looter for it, once"] = "Ask the looter for it, once"
 L["Cloth, Leather, Mail, Plate, Jewelry, Trinkets, Cloak, Weapons"] =
@@ -1016,6 +1017,7 @@ L["the drop judged for you, and the item-level difference"] =
 L["the drop's item level"] = "the drop's item level"
 L["the time left to trade it, over its bar"] = "the time left to trade it, over its bar"
 L["Then"] = "Then"
+L["Two worn"] = "Two worn"   -- the Me and Them columns' tooltips (feedback-21 H7)
 L["Upgrade for N, who it would help"] = "Upgrade for N, who it would help"
 L["Values"] = "Values"
 L["what kind of item it is"] = "what kind of item it is"

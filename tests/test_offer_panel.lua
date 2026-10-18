@@ -117,11 +117,12 @@ local function openPanel()
     return NS, NS.OfferPanel.Drawn(), m
 end
 
--- A Their eq cell as drawn: level, glyph and difference (or word), space-joined.
+-- A Their eq cell as drawn: level, glyph and difference (or word), space-joined; a dual mark's first
+-- part and its `/` first (feedback-21 H7).
 local function eqOf(row)
-    local parts = {}
-    for _, fs in ipairs({ row.eq.level, row.eq.glyph, row.eq.text }) do
-        local t = textOf(fs)
+    local parts, e = {}, row.eq
+    for _, fs in ipairs({ e.leadLevel, e.leadGlyph, e.leadText, e.sep, e.level, e.glyph, e.text }) do
+        local t = fs:IsShown() ~= false and textOf(fs)
         if t and t ~= "" then parts[#parts + 1] = t end
     end
     return table.concat(parts, " ")
@@ -229,7 +230,7 @@ test("offer panel: Their eq shows both worn items from the member's inspect read
     NS.OfferPanel.Open(2)
     local r = NS.OfferPanel.Drawn().rows[1]
     assertTrue(r.eq.icons[1]:IsShown() and r.eq.icons[2]:IsShown(), "both rings")
-    assertEqual(eqOf(r), "308/292 ▲ 6")
+    assertEqual(eqOf(r), "308 ▼ 10 / 292 ▲ 6", "a mark per ring (feedback-21 H7): the judged one the verdict's, the other its own")
     assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(r.eq)):find("• Inspected: 30s ago", 1, true) ~= nil)
 end)
 

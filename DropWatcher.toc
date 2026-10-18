@@ -375,7 +375,8 @@ modules\FooterRow.lua
 modules\DropsStrip.lua
 # LOAD-BEARING: takes NS.WindowCells, NS.TipMarks and NS.MineCells (modules\, above) at load.
 # Publishes NS.DetailCells, the detail card's pure composers (chips, both comparisons, the trade box,
-# the actions); takes NS.Constants and NS.L at load.
+# the actions); takes NS.Constants and NS.L at load. NS.SideCells (the Item level row's dual mark)
+# is read at call time.
 modules\DetailCells.lua
 # LOAD-BEARING: takes NS.DetailCells (modules\DetailCells.lua, above) at load. Publishes
 # NS.DetailCard, the detail card's frame edge and the Edit message box; takes NS.Constants and NS.L
@@ -436,8 +437,9 @@ modules\TestMode.lua
 # and registers its DropAdded, DropUpdated and AskStateChanged receivers on a NS.Bus target at load.
 # NS.LootFeed, NS.Asks, NS.Window, NS.WindowGroup, NS.WindowCells, NS.SideCells (the verdicts),
 # NS.WindowRows (the item level's mark), NS.TipMarks (the quality and class colors), NS.OffSpec and
-# NS.OffSpecCells (an off-spec upgrade and its title), NS.Setting and
-# the host handlers are read at call time: the frame is built on the first toast.
+# NS.OffSpecCells (an off-spec upgrade and its title), NS.Gear and NS.TestMode (the worn gear of the
+# dual marks), NS.Setting and the host handlers are read at call time: the frame is built on the
+# first toast.
 modules\Toast.lua
 # LOAD-BEARING: appends its ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE,
 # PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows to NS.FEATURE_EVENTS after every other file's

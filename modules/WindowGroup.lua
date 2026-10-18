@@ -6,7 +6,8 @@ local _, NS = ...
 -- Trinkets, Cloak or Weapons; feedback-4 spec §3), Looter (in class color), Me and Them (what you,
 -- or the looter, wear in that slot and the drop judged for you, or them, in one cell: the worn item's
 -- icon or two, its item level, then ▲ ≈ ▼ and the item-level difference in the verdict's green,
--- yellow or red, `321/308 ▼8`; your gear from its snapshot, theirs from their inspect read, the
+-- yellow or red, `292 ▲19`, and on two worn items both read a mark each, `321 ▼10 / 308 ▲3`
+-- (feedback-21 H7); your gear from its snapshot, theirs from their inspect read, the
 -- read's age in the tooltip; NS.SideCells, feedback-6 spec §1, which merged My eq and Their eq into
 -- them), Trade (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
 -- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
@@ -97,9 +98,13 @@ WG.LEAD = K.ROW_INDENT + WG.CHEVRON_LEAD
 WG.TRADE_WINDOW_PAD = 6
 -- A Me or Them cell's pieces, left to right (feedback-6 spec §1): the worn items' icons (EQ_ICON
 -- each, ICON_GAP apart), LEVEL_GAP, the item level, VERDICT_GAP, the glyph (the monospace face),
--- GLYPH_GAP, the difference or the word. A piece that is not there takes no room and no gap. The
--- columns are their widest cell (tests/test_side_cells.lua measures every kind).
-WG.SIDE = { ICON_GAP = 2, LEVEL_GAP = 4, VERDICT_GAP = 4, GLYPH_GAP = 3 }
+-- GLYPH_GAP, the difference or the word. A piece that is not there takes no room and no gap. A dual
+-- mark (NS.SideCells' `parts`, feedback-21 H7) puts the first worn item's level, glyph and difference
+-- before them, then PART_GAP, a muted `/` and PART_GAP: `321 ▼10 / 324 ▼23`. The columns are their
+-- widest cell (tests/test_side_cells.lua measures every kind, the dual mark at two-digit differences).
+WG.SIDE = { ICON_GAP = 2, LEVEL_GAP = 4, VERDICT_GAP = 4, GLYPH_GAP = 3, PART_GAP = 4 }
+-- Between a dual mark's two parts (feedback-21 H7): a punctuation mark, as WindowCells.Levels' `/`.
+WG.PART_SEP = "/"
 
 -- The default columns, left to right (design spec §11.1). `flex` takes the width the others leave.
 -- `tip` is the header's tooltip rows (feedback-21); `desc` the prose the settings panel's Columns
@@ -126,6 +131,7 @@ WG.COLUMNS = {
           .. " " .. L["Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."],
       tip = { TM.Row(L["Shows"], L["what you wear there (two for rings, trinkets, one-hand weapons), its item level"]),
           TM.Row(L["Then"], L["the drop judged for you, and the item-level difference"]),
+          TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
           TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
               TM.Mark("downgrade"))),
           NS.OffSpecCells.Legend(), TM.Hint(L["Hover an icon for the item."]) } },
@@ -133,6 +139,7 @@ WG.COLUMNS = {
       desc = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."],
       tip = { TM.Row(L["Shows"], L["what the looter wears there, its item level"]),
           TM.Row(L["Then"], L["the drop judged for them, in the same colors"]),
+          TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
           TM.Row(L["Your own drop"], L["Upgrade for N, who it would help"]), TM.Hint(L["Hover for how old their read is."]) } },
     { key = "trade", label = L["Trade"], width = 70, shed = 6,
       tip = { TM.Row(L["Shows"], L["whether the looter can trade it"]), TM.Row(L["Values"], L["Yes, Likely, Unknown or No"]) },
@@ -338,11 +345,14 @@ end
 --- glyph, the difference or word; each after the last piece shown, the first at the cell's edge.
 --- The difference or word ends at the cell's right edge, so a long word (or a larger Font size) is
 --- cut short there rather than spilling into the next column.
---- @param f table the cell (`icons`, `level`, `glyph`, `text`)
+--- A dual mark (`dual`, feedback-21 H7) places the first part's pieces (`leadLevel`, `leadGlyph`,
+--- `leadText`) and the muted `sep` before the second part's, which are the single pieces.
+--- @param f table the cell (`icons`, `level`, `glyph`, `text`; `leadLevel`, `leadGlyph`, `leadText`, `sep`)
 --- @param nIcons number the icons shown (0..2)
 --- @param hasLevel boolean
 --- @param hasGlyph boolean
-function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph)
+--- @param dual boolean|nil
+function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph, dual)
     local S = WG.SIDE
     local last, gap = nil, 0
     if nIcons > 0 then last, gap = f.icons[math.min(nIcons, 2)], S.LEVEL_GAP end
@@ -350,6 +360,15 @@ function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph)
         fs:ClearAllPoints()
         if last then fs:SetPoint("LEFT", last, "RIGHT", gap, 0) else fs:SetPoint("LEFT", f, "LEFT", 0, 0) end
         if wanted then last = fs end
+    end
+    if dual then
+        after(f.leadLevel, true)
+        gap = S.VERDICT_GAP
+        after(f.leadGlyph, true)
+        gap = S.GLYPH_GAP
+        after(f.leadText, true)
+        gap = S.PART_GAP
+        after(f.sep, true)
     end
     after(f.level, hasLevel)
     if hasLevel then gap = S.VERDICT_GAP end
@@ -513,6 +532,45 @@ local function itemCell(row)
     return f
 end
 
+--- A dual mark's first part and its separator (feedback-21 H7) on a Me or Them cell, built once:
+--- `leadLevel` (plain), `leadGlyph` (the monospace face), `leadText` and the muted `sep`; hidden
+--- until a dual cell is painted (WG.PaintLead).
+--- @param f table the cell
+function WG.BuildLead(f)
+    f.leadLevel = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.leadGlyph = f:CreateFontString(nil, "OVERLAY")
+    f.leadGlyph:SetFont(C.FONT_MONO, 12, "")
+    f.leadText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.sep = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    for _, fs in ipairs({ f.leadLevel, f.leadGlyph, f.leadText, f.sep }) do
+        fs:SetWordWrap(false)
+        fs:Hide()
+    end
+end
+
+--- Paint a dual mark's first part and its separator on `f` (WG.BuildLead's pieces; a compact half's
+--- and the toast's segments are the same four): the level plain, the glyph and the difference in the
+--- part's tone, the `/` muted. Hides them with no `parts`. Answers the second part, which the
+--- caller paints in its single pieces, or nil.
+--- @param f table { leadLevel, leadGlyph, leadText, sep }
+--- @param parts table|nil NS.SideCells' `parts`
+--- @return table|nil
+function WG.PaintLead(f, parts)
+    local first = type(parts) == "table" and parts[1] or nil
+    f.leadLevel:SetShown(first ~= nil); f.leadGlyph:SetShown(first ~= nil)
+    f.leadText:SetShown(first ~= nil); f.sep:SetShown(first ~= nil)
+    if not first then return nil end
+    f.leadLevel:SetText(first.level or "")
+    setTone(f.leadLevel, "plain")
+    f.leadGlyph:SetText(first.glyph or "")
+    setTone(f.leadGlyph, first.tone)
+    f.leadText:SetText(first.text or "")
+    setTone(f.leadText, first.tone)
+    f.sep:SetText(WG.PART_SEP)
+    setTone(f.sep, "muted")
+    return parts[2]
+end
+
 -- A Me or Them cell: the worn items' buttons, the item level, the glyph (the monospace face) and
 -- the difference or word (`f.text`); WG.PlaceSide places them. WG.SideCell: the Offer panel's
 -- Their eq cell is built the same (feedback-7 spec §0).
@@ -525,6 +583,7 @@ local function sideCell(row, key)
     f.level:SetWordWrap(false)
     f.glyph = f:CreateFontString(nil, "OVERLAY")
     f.glyph:SetFont(C.FONT_MONO, 12, "")
+    WG.BuildLead(f)
     return f
 end
 WG.SideCell = sideCell
@@ -680,11 +739,16 @@ local function paintSide(f, c, unit)
         local it = c.items[i]
         setItem(b, it and it.link or nil, it and unit and it.slot and { unit = unit, slot = it.slot } or nil)
     end
-    f.level:SetText(c.level or "")
-    setTone(f.level, c.levelTone)
-    f.glyph:SetText(c.glyph or "")
-    setTone(f.glyph, c.tone)
-    WG.PlaceSide(f, #c.items, c.level ~= nil, c.glyph ~= nil)
+    local second = WG.PaintLead(f, c.parts)
+    f.level:SetText((second or c).level or "")
+    setTone(f.level, second and "plain" or c.levelTone)
+    f.glyph:SetText((second or c).glyph or "")
+    setTone(f.glyph, (second or c).tone)
+    if second then
+        f.text:SetText(second.text)
+        setTone(f.text, second.tone)
+    end
+    WG.PlaceSide(f, #c.items, (second or c).level ~= nil, (second or c).glyph ~= nil, second ~= nil)
 end
 WG.PaintSide = paintSide   -- the Offer panel's Their eq cell too (feedback-7 spec §0)
 

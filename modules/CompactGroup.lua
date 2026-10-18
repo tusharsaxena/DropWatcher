@@ -24,7 +24,7 @@ local _, NS = ...
 --           (the full table's states; Offer on your own drop, which opens the Offer panel:
 --           NS.WindowOwn, feedback-5 spec §2; with neither the gray `No action` button, its reason
 --           in its tooltip, feedback-11 spec §1)
---   line 3  You 321/308 ▼13   Them 298/296 ⊘ Can't use   Trade No
+--   line 3  You 321 ▼26 / 308 ▼13   Them 298/296 ⊘ Can't use   Trade No
 --           (the full table's Me, Them and Trade cells without their icons, feedback-6 spec §1; the
 --           labels gold, each half a fixed gap after the last, feedback-10 spec §2; your own drop:
 --           line 2's looter reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2), every
@@ -262,10 +262,12 @@ end
 
 -- One half of line 3 (feedback-6 spec §1): the label (`cells[key .. "Label"]`), then the worn item
 -- level, the glyph and the difference or word (`cells[key]`: `level`, `glyph`, `text`), one tooltip
--- over them all. CG.PaintHalf places each piece after the last one shown.
+-- over them all; a dual mark's first part and its `/` before them (`leadLevel`, `leadGlyph`,
+-- `leadText`, `sep`: feedback-21 H7). CG.PaintHalf places each piece after the last one shown.
 function CG.BuildHalf(card, key)
     local label = { text = fontString(card) }
-    local half = { level = fontString(card), glyph = monoString(card), text = fontString(card) }
+    local half = { level = fontString(card), glyph = monoString(card), text = fontString(card),
+        leadLevel = fontString(card), leadGlyph = monoString(card), leadText = fontString(card), sep = fontString(card) }
     half.hit = hitOver(card, label.text, half.text)
     card.cells[key .. "Label"], card.cells[key] = label, half
 end
@@ -392,10 +394,20 @@ function CG.PaintLineTwo(card, cc, right)
     if right then paintText(c[right], cc[right]) end
 end
 
+-- A dual mark's first part and its `/` after the label (feedback-21 H7); answers the last piece.
+local function placeLead(h, label)
+    at(h.leadLevel, "LEFT", label, "RIGHT", CG.HALF_GAP, 0)
+    at(h.leadGlyph, "LEFT", h.leadLevel, "RIGHT", CG.HALF_GAP, 0)
+    at(h.leadText, "LEFT", h.leadGlyph, "RIGHT", CG.HALF_GLYPH_GAP, 0)
+    at(h.sep, "LEFT", h.leadText, "RIGHT", CG.HALF_GAP, 0)
+    return h.sep
+end
+
 --- One half of line 3 painted (CompactCards.Half's): its label (gold, feedback-10 spec §2), the worn
 --- item level (plain, or
 --- a muted word), the glyph and the difference or word in the verdict's tone, each placed after the
---- last piece shown.
+--- last piece shown. A dual mark (`parts`, feedback-21 H7) draws each worn item's level, glyph and
+--- difference, `You 321 ▼10 / 324 ▼23`, the second part in the single pieces.
 --- @param card table
 --- @param key string `you` or `them`
 --- @param half table
@@ -404,17 +416,20 @@ function CG.PaintHalf(card, key, half)
     local label, h = c[key .. "Label"].text, c[key]
     label:SetText(half.label)
     label:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
-    h.level:SetText(half.level or "")
-    setTone(h.level, half.levelTone)
-    h.glyph:SetText(half.glyph or "")
-    setTone(h.glyph, half.tone)
-    h.text:SetText(half.text)
-    setTone(h.text, half.tone)
+    local second = h.leadLevel and NS.WindowGroup.PaintLead(h, half.parts) or nil
+    local p = second or half
+    h.level:SetText(p.level or "")
+    setTone(h.level, second and "plain" or half.levelTone)
+    h.glyph:SetText(p.glyph or "")
+    setTone(h.glyph, p.tone)
+    h.text:SetText(p.text)
+    setTone(h.text, p.tone)
     h.hit.tipLines = half.tip
-    at(h.level, "LEFT", label, "RIGHT", CG.HALF_GAP, 0)
-    local last = half.level and h.level or label
+    local first = second and placeLead(h, label) or label
+    at(h.level, "LEFT", first, "RIGHT", CG.HALF_GAP, 0)
+    local last = p.level and h.level or first
     at(h.glyph, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
-    if half.glyph then
+    if p.glyph then
         at(h.text, "LEFT", h.glyph, "RIGHT", CG.HALF_GLYPH_GAP, 0)
     else
         at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)

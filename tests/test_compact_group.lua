@@ -513,3 +513,47 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
         card:GetWidth() - CG.PAD))
 end)
+
+-- Line 3 with two dual marks (feedback-21 H7): both halves on trinkets read in full, each worn item's
+-- level, glyph and two-digit difference, `You 321 ▼10 / 324 ▼13`, then the longest trade word. The
+-- first part and its `/` sit between the label and the single pieces, Them still follows You's last
+-- piece, and the line ends inside the card at the least width (no compact width change).
+test("compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)", function()
+    local NS, _, m = T.enableAddon()
+    local K, CG, C = NS.Constants.WINDOW, NS.CompactGroup, NS.Constants
+    m.__now = 100
+    m.textCharWidth = 5
+    local down = { verdict = "downgrade", ilvlDelta = -10, reasons = {} }   -- judged against the lower, 321
+    local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 324 } }
+    seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = down,
+        them = down, trade = { state = "unknown", reasonKey = "noInspect", basis = "inspect", args = { "pending" } } }) })
+    NS.Gear.Snapshot = function() return { equipped = trinkets } end
+    NS.Inspect.Get = function() return { status = "fresh", at = 60, gear = trinkets } end
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.SetWindowMode("compact")
+    NS.ShowWindow()
+    assertEqual(NS.Window.Frame():GetWidth(), K.COMPACT_MIN_W)
+    local card = cardFor(NS.WindowGroup.Drawn(), 1)
+    local c = card.cells
+    assertEqual(NS.CompactCards.HalfText(card.model.you), "You 321 ▼10 / 324 ▼13")
+    assertEqual(NS.CompactCards.HalfText(card.model.them), "Them 321 ▼10 / 324 ▼13")
+    local you = c.you
+    assertEqual(you.leadLevel:GetText(), "321"); assertEqual(you.leadGlyph:GetText(), "▼"); assertEqual(you.leadText:GetText(), "10")
+    assertEqual(you.sep:GetText(), "/"); assertEqual(you.level:GetText(), "324"); assertEqual(you.text:GetText(), "13")
+    assertEqual(you.leadLevel.__points[1][2], c.youLabel.text, "the first part after the label")
+    assertEqual(you.level.__points[1][2], you.sep, "the second part after the separator")
+    assertEqual(select(2, you.leadText:GetTextColor()), C.TONE.red.g, "each part in its tone")
+    assertEqual(c.themLabel.text.__points[1][2], you.text, "Them follows You's last piece")
+    local function w(fs) return #((fs:GetText() or ""):gsub("[\128-\191]", "")) * m.textCharWidth end
+    local function halfEnd(key, x)
+        local h = c[key]
+        return x + w(c[key .. "Label"].text) + CG.HALF_GAP + w(h.leadLevel) + CG.HALF_GAP + w(h.leadGlyph)
+            + CG.HALF_GLYPH_GAP + w(h.leadText) + CG.HALF_GAP + w(h.sep) + CG.HALF_GAP + w(h.level) + CG.HALF_GAP
+            + w(h.glyph) + CG.HALF_GLYPH_GAP + w(h.text)
+    end
+    local themX = halfEnd("you", CG.TextLeft(CG.Metrics(nil), CG.LEAD)) + CG.HALVES_GAP
+    local tradeX = halfEnd("them", themX) + CG.HALVES_GAP
+    local tradeEnd = tradeX + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
+    assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
+        card:GetWidth() - CG.PAD))
+end)

@@ -26,7 +26,8 @@ C.WINDOW = {
     --            + Trade window 76 + Actions 84 (ASK_W) = 764, + 10 gaps x 6 = 824,
     --            + Item 150 (ITEM_MIN) = 974 (Trade window is its widest answer plus its bar's
     --            padding, feedback-6 spec §0; Me and Them their widest cell, two worn icons, `321/308`
-    --            and `Not wanted`, feedback-6 spec §1: tests/test_side_cells.lua measures both)
+    --            and `Not wanted`, feedback-6 spec §1: tests/test_side_cells.lua measures both;
+    --            a dual mark, `321 ▼10 / 324 ▼23`, is 125 inside them, feedback-21 H7)
     --   lead     ROW_INDENT 12 + CHEVRON_X 4 + ROW_CHEVRON 10 + CHEVRON_GAP 4 = 30 (WindowGroup.LEAD)
     --   chrome   SCROLL_W 22 + 2 x INSET 6 = 34
     --   974 + 30 + 34 = 1038. History's columns (the same lead since feedback-15 spec §4) fit with room
@@ -44,7 +45,8 @@ C.WINDOW = {
     -- countdown and its bar were there before), past the indent, chevron, icon, insets and scroll
     -- gutter (tests/test_compact_group.lua measures it). 380 cut it by about 57px.
     -- Line 3's fullest halves since feedback-6 spec §1 (`Them 321/308 ⊘ Not wanted`) end about 46px
-    -- short of the card's edge there (measured too), so line 2 still sets it.
+    -- short of the card's edge there (measured too), so line 2 still sets it. Two dual marks
+    -- (feedback-21 H7, `You 321 ▼10 / 324 ▼13`) are shorter than those halves and fit too (measured).
     COMPACT_WIDTH  = 440,
     COMPACT_HEIGHT = 460,
     COMPACT_MIN_W  = 440,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)

@@ -16,7 +16,10 @@ local _, NS = ...
 -- cells draw a verdict (NS.SideCells.Merge of WindowCells.Me / Them): the monospace glyph
 -- (WindowCells.GLYPH, C.FONT_MONO) and the unsigned difference, both in the verdict's tone, or the
 -- word (`Can't use`, `Not wanted`, `?`); a FontString has one face, so the row is segments laid
--- out left to right. Row 4 is the trade word in the Trade cell's tone (WindowCells.TRADE_TONE) and a
+-- out left to right. On a ring, trinket or one-hand weapon with both worn items read, a verdict is
+-- the cells' dual mark (NS.SideCells.Parts, feedback-21 H7), `You 321 ▼10 / 324 ▲3`: each worn
+-- item's level, glyph and difference in its own tone; the toast then grows wider than WIDTH as far
+-- as row 3 needs (Toast.WidthFor, measured at paint), so neither verdict is cut. Row 4 is the trade word in the Trade cell's tone (WindowCells.TRADE_TONE) and a
 -- short reason, muted (cut with an ellipsis at the right inset); the toast's tooltip is the Trade
 -- cell's, with the full reason (WindowCells.TradeReason). Only row 1 shares its width with Ask and
 -- the close mark; rows 2 to 4 run to the right inset.
@@ -80,7 +83,8 @@ Toast.MAX_QUEUE = 5
 -- The icon spans the four rows; the frame keeps INSET all round (feedback-9 spec §0). TEXT_GAP is
 -- between the icon and the rows, ROW_Y each row's top under the icon's (row 4 sits on its bottom).
 -- WIDTH is 350, not the spec's first 340: row 3 with a 12-character looter, an empty slot and a Them
--- word (`Not wanted`) needs 267 of the rows' width (test_toast).
+-- word (`Not wanted`) needs 267 of the rows' width (test_toast). It is the least width: two dual
+-- marks (feedback-21 H7) need about 364, and only such a toast is drawn wider (Toast.WidthFor).
 Toast.WIDTH, Toast.ICON, Toast.INSET, Toast.TEXT_GAP = 350, 56, 9, 8
 Toast.HEIGHT = Toast.ICON + 2 * Toast.INSET
 Toast.ROW_Y = { 0, -15, -30 }
@@ -153,10 +157,19 @@ function Toast.RowWidth()
 end
 
 -- A verdict as the table's Me and Them cells draw it with no gear part (NS.SideCells.Merge): the
--- glyph and the unsigned difference (or `empty`), else the word; one tone for both.
-local function verdictPart(cell)
+-- glyph and the unsigned difference (or `empty`), else the word; one tone for both. On a two-item
+-- slot with both worn items read (`gear`), the cells' dual mark too (NS.SideCells.Parts,
+-- feedback-21 H7): `parts`, each worn item's level, glyph and difference.
+local function verdictPart(cell, drop, gear)
     local c = NS.SideCells.Merge(cell)
-    return { glyph = c.glyph, text = c.text, tone = c.tone }
+    local WC = NS.WindowCells
+    local slots = gear and WC.EqSlots(type(drop.facts) == "table" and drop.facts.equipLoc or nil)
+    local parts
+    if slots and #slots == 2 then
+        local items, empty = WC.SlotItems(gear, slots)
+        parts = NS.SideCells.Parts(cell, items, empty)
+    end
+    return { glyph = c.glyph, text = c.text, tone = c.tone, parts = parts }
 end
 
 local function shortReason(trade, who)
@@ -174,11 +187,14 @@ end
 
 --- The toast's parts for a qualifying drop (feedback-9 spec §0), each row's pieces apart:
 --- { title, link, item, itemText (the name in its quality color), ilvl, looter, classFile,
---- looterText (in its class color), me, them ({ glyph, text, tone } each), trade, tradeTone,
---- reason (short), tip (the Trade cell's tooltip: its title and the full reason) }.
+--- looterText (in its class color), me, them ({ glyph, text, tone, parts } each: `parts` the dual
+--- mark, feedback-21 H7), trade, tradeTone, reason (short), tip (the Trade cell's tooltip: its title
+--- and the full reason) }.
 --- @param drop table
+--- @param equipped table|nil your worn gear (the gear snapshot's `equipped`), for your dual mark
+--- @param gear table|nil the looter's inspect gear, for theirs
 --- @return table
-function Toast.Compose(drop)
+function Toast.Compose(drop, equipped, gear)
     local WC = NS.WindowCells
     local looter = type(drop.looter) == "table" and drop.looter or {}
     local who = WC.ShortName(looter.name)
@@ -189,7 +205,7 @@ function Toast.Compose(drop)
         title = titleOf(drop), link = drop.link,
         item = name, itemText = NS.TipMarks.ItemName(name, f.quality, drop.link), ilvl = num(f.ilvl),
         looter = who, classFile = looter.classFile, looterText = NS.TipMarks.ClassName(who, looter.classFile),
-        me = verdictPart(WC.Me(drop)), them = verdictPart(WC.Them(drop)),
+        me = verdictPart(WC.Me(drop), drop, equipped), them = verdictPart(WC.Them(drop), drop, not drop.isMine and gear or nil),
         trade = TRADE_WORD[trade.state] or "", tradeTone = WC.TRADE_TONE[trade.state] or "muted",
         reason = trade.reasonKey and shortReason(trade, who) or "", tip = WC.Trade(drop).tip,
     }
@@ -327,14 +343,29 @@ local function buildTop(f)
     setTone(f.ilvl, "muted")
 end
 
+-- A dual mark's first part, its `/` and the second part's worn level (feedback-21 H7), hidden
+-- until a dual verdict is painted: { leadLevel, leadGlyph, leadText, sep } (WindowGroup.PaintLead's
+-- pieces) and the level.
+local function lead(f)
+    local l = { leadLevel = text(f, "GameFontHighlightSmall"), leadGlyph = glyph(f),
+        leadText = text(f, "GameFontHighlightSmall"), sep = text(f, "GameFontHighlightSmall") }
+    for _, fs in pairs(l) do fs:Hide() end
+    local level = text(f, "GameFontHighlightSmall")
+    level:Hide()
+    return l, level
+end
+
 -- Row 3: `Looted by Seta · You`, the Me verdict, `· Them`, the Them verdict (the segments are
 -- placed on each paint: a verdict with no glyph takes no glyph's room; the last runs to the right
--- inset and is cut there, as row 4's reason is).
+-- inset and is cut there, as row 4's reason is). A dual verdict's first part and its second part's
+-- level go before its glyph (`meLead`, `meLevel`; `themLead`, `themLevel`).
 local function buildVerdicts(f)
     f.looted = text(f, "GameFontHighlightSmall", "muted")
     atRow(f.looted, f, 3)
+    f.meLead, f.meLevel = lead(f)
     f.meGlyph, f.meText = glyph(f), text(f, "GameFontHighlightSmall")
     f.themLabel = text(f, "GameFontHighlightSmall", "muted")
+    f.themLead, f.themLevel = lead(f)
     f.themGlyph, f.themText = glyph(f), text(f, "GameFontHighlightSmall")
 end
 
@@ -400,43 +431,86 @@ local function paintAsk(rec)
     b:SetEnabled(a.enabled == true)
 end
 
--- One verdict after `after`: its glyph (when it has one) and its difference or word, in its tone.
--- Answers the last segment placed.
-local function paintVerdict(after, glyphFs, textFs, part)
-    glyphFs:ClearAllPoints()
-    textFs:ClearAllPoints()
-    glyphFs:SetText(part.glyph or "")
-    glyphFs:SetShown(part.glyph ~= nil)
-    textFs:SetText(part.text or "")
-    setTone(glyphFs, part.tone)
-    setTone(textFs, part.tone)
-    if part.glyph then
-        glyphFs:SetPoint("LEFT", after, "RIGHT", Toast.SEG_GAP, 0)
-        textFs:SetPoint("LEFT", glyphFs, "RIGHT", NS.WindowGroup.SIDE.GLYPH_GAP, 0)
-    else
-        textFs:SetPoint("LEFT", after, "RIGHT", Toast.SEG_GAP, 0)
+-- A segment's drawn width on one line (unbounded: the last segment is anchored to the inset).
+local function measure(fs)
+    local fn = fs.GetUnboundedStringWidth or fs.GetStringWidth
+    return fn(fs) or 0
+end
+
+-- `fs` placed SEG_GAP (or `gap`) after `after`; answers it and the row's width so far.
+local function place(fs, after, w, gap)
+    fs:ClearAllPoints()
+    fs:SetPoint("LEFT", after, "RIGHT", gap or Toast.SEG_GAP, 0)
+    return fs, w + (gap or Toast.SEG_GAP) + measure(fs)
+end
+
+-- One verdict after `after`: its glyph (when it has one) and its difference or word, in its tone; a
+-- dual mark (`part.parts`, feedback-21 H7) first draws the first worn item's level, glyph and
+-- difference, the `/` and the second one's level. Answers the last segment placed and the row's
+-- width so far (`w`, grown by what it placed).
+local function paintVerdict(after, glyphFs, textFs, part, l, levelFs, w)
+    local second = NS.WindowGroup.PaintLead(l, part.parts)
+    local p = second or part
+    levelFs:SetShown(second ~= nil)
+    if second then
+        local G = NS.WindowGroup.SIDE.GLYPH_GAP
+        after, w = place(l.leadLevel, after, w)
+        after, w = place(l.leadGlyph, after, w)
+        after, w = place(l.leadText, after, w, G)
+        after, w = place(l.sep, after, w)
+        levelFs:SetText(second.level or "")
+        setTone(levelFs, "plain")
+        after, w = place(levelFs, after, w)
     end
-    return textFs
+    textFs:ClearAllPoints()
+    glyphFs:SetText(p.glyph or "")
+    glyphFs:SetShown(p.glyph ~= nil)
+    textFs:SetText(p.text or "")
+    setTone(glyphFs, p.tone)
+    setTone(textFs, p.tone)
+    if p.glyph then
+        after, w = place(glyphFs, after, w)
+        return place(textFs, after, w, NS.WindowGroup.SIDE.GLYPH_GAP)
+    end
+    glyphFs:ClearAllPoints()
+    return place(textFs, after, w)
+end
+
+--- The toast's width for a row 3 `row3` pixels wide: Toast.WIDTH, or wider when a dual mark
+--- (feedback-21 H7) makes row 3 longer than the rows' width there, so neither verdict is cut.
+--- @param row3 number
+--- @return number
+function Toast.WidthFor(row3)
+    return math.max(Toast.WIDTH, math.ceil(row3) + Toast.WIDTH - Toast.RowWidth())
 end
 
 local function paintRows(t)
     frame.title:SetText(t.title)
     frame.item:SetText(t.itemText)
-    NS.WindowRows.PlaceMark(frame.item, frame.ilvl, t.ilvl and tostring(t.ilvl) or nil, Toast.RowWidth())
     frame.looted:SetText(L["Looted by %s · You"]:format(t.looterText))
-    local last = paintVerdict(frame.looted, frame.meGlyph, frame.meText, t.me)
-    frame.themLabel:ClearAllPoints()
-    frame.themLabel:SetPoint("LEFT", last, "RIGHT", Toast.SEG_GAP, 0)
+    local last, w = paintVerdict(frame.looted, frame.meGlyph, frame.meText, t.me, frame.meLead, frame.meLevel,
+        measure(frame.looted))
     frame.themLabel:SetText(L["· Them"])
-    paintVerdict(frame.themLabel, frame.themGlyph, frame.themText, t.them)
+    last, w = place(frame.themLabel, last, w)
+    paintVerdict(last, frame.themGlyph, frame.themText, t.them, frame.themLead, frame.themLevel, w)
+    frame:SetWidth(Toast.WidthFor(w))
     frame.themText:SetPoint("RIGHT", frame, "RIGHT", -Toast.INSET, 0)
+    NS.WindowRows.PlaceMark(frame.item, frame.ilvl, t.ilvl and tostring(t.ilvl) or nil, frame:GetWidth() - Toast.WIDTH + Toast.RowWidth())
     frame.trade:SetText(t.trade)
     setTone(frame.trade, t.tradeTone)
     frame.reason:SetText(t.reason ~= "" and ("· " .. t.reason) or "")
 end
 
+-- Your worn gear (the snapshot's; a sample's own) and the looter's (their inspect entry's), for the
+-- dual marks (feedback-21 H7).
+local function gearOf(rec)
+    local snap = NS.Gear.Snapshot()
+    local insp = NS.TestMode.InspectOf(rec)
+    return NS.TestMode.GearOf(rec, snap and snap.equipped), insp and insp.gear
+end
+
 local function paint(rec)
-    local t = Toast.Compose(rec)
+    local t = Toast.Compose(rec, gearOf(rec))
     paintRows(t)
     frame.tipLines = t.tip
     NS.WindowGroup.SetItem(frame.icon, t.link, NS.WindowGroup.Where(rec))

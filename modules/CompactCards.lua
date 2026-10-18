@@ -31,8 +31,9 @@ local _, NS = ...
 --
 -- LINE 3 (feedback-6 spec §1) reads as the full table's merged Me and Them cells (NS.SideCells), the
 -- icons left out: the label, the worn item level (plain; `empty`, `…`, `range` muted), then the glyph
--- and the unsigned difference in the verdict's tone: `You 321/308 ▼8`, `Them 276 ▲12`, `Them
--- Upgrade for 2` on your own drop. A verdict the full view says in a word keeps compact mode's ⊘
+-- and the unsigned difference in the verdict's tone: `You 292 ▲19`, `Them 276 ▲12`, `Them
+-- Upgrade for 2` on your own drop. Two worn items both read (rings, trinkets, one-hand weapons) take
+-- a mark each in its own tone, `You 321 ▼10 / 324 ▼23` (SideCells' `parts`, feedback-21 H7). A verdict the full view says in a word keeps compact mode's ⊘
 -- (`You 321 ⊘ Can't use`). One tooltip over the half: the gear's lines, then the verdict's. Glyphs
 -- and ⊘ are drawn in the monospace face (JetBrains Mono carries them).
 --
@@ -129,15 +130,16 @@ end
 --- A Me or Them cell (NS.SideCells) as compact mode draws it: the full view's pieces, tones and
 --- tooltip, with ⊘ before a verdict the full view says in a word.
 --- @param c table a SideCells cell
---- @return table { level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden }
+--- @return table { level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden, parts }
 function CC.Verdict(c)
     local glyph = c.glyph
     if not glyph and WORD_VERDICT[c.verdict] then glyph = CC.NO_GLYPH end
     return { level = c.level, levelTone = c.levelTone, glyph = glyph, text = c.text, tone = c.tone,
-        tip = copyTip(c.tip), verdict = c.verdict, items = c.items or {}, upgrades = c.upgrades, hidden = c.hidden }
+        tip = copyTip(c.tip), verdict = c.verdict, items = c.items or {}, upgrades = c.upgrades, hidden = c.hidden,
+        parts = c.parts }
 end
 
---- One half of line 3: `You 321/308 ▼8`; its label and CC.Verdict's pieces.
+--- One half of line 3: `You 292 ▲19`, `You 321 ▼10 / 308 ▲3`; its label and CC.Verdict's pieces.
 --- @param label string `You` or `Them`
 --- @param side table a SideCells cell (SC.Me, SC.Them, SC.Merge)
 --- @return table { label, level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden }
@@ -158,11 +160,17 @@ function CC.TradeHalf(c)
     return h
 end
 
---- A half's plain text: `You 321/308 ▼8`, `Them range`, `Them Upgrade for 2`, `Trade Likely`.
+--- A half's plain text: `You 321 ▼10 / 324 ▼23` (a dual mark, feedback-21 H7), `You 292 ▲19`,
+--- `Them range`, `Them Upgrade for 2`, `Trade Likely`.
 --- @param h table CC.Half's answer
 --- @return string
 function CC.HalfText(h)
     local parts = { h.label }
+    if h.parts then
+        local a, b = h.parts[1], h.parts[2]
+        parts[2] = ("%s %s%s / %s %s%s"):format(a.level, a.glyph, a.text, b.level, b.glyph, b.text)
+        return table.concat(parts, " ")
+    end
     if h.level then parts[#parts + 1] = h.level end
     local v = CC.VerdictText(h)
     if v ~= "" then parts[#parts + 1] = v end

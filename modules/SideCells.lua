@@ -3,7 +3,7 @@ local _, NS = ...
 -- you (or the looter) wear in the drop's slot and the verdict on the drop, in one cell where My eq,
 -- Their eq, Me and Them were four columns:
 --
---   [icon(s)] [item level] [glyph][difference]      321/308 ▼8 · 276 ▲12 · 311 ≈0 · 334 Can't use
+--   [icon(s)] [item level] [glyph][difference]      321 ▼10 / 308 ▲3 · 276 ▲12 · 311 ≈0 · 334 Can't use
 --
 -- THE GEAR PART is WindowCells.MyEq's or TheirEq's answer: the worn items (the icons are the
 -- edge's; two for rings, trinkets and one-hand weapons) and their item levels (`321`, `321/308`) in
@@ -14,6 +14,13 @@ local _, NS = ...
 -- side, red down); `Can't use` and `Not wanted` stay words (gray). An unknown verdict's `?` is left
 -- out when the gear part already says why (a state word), and shown when it does not. A dash in the
 -- gear part goes when the verdict part has something to say.
+-- TWO WORN ITEMS (feedback-21 H7). Rings, trinkets and one-hand weapons with both items read: each
+-- worn item's level, then its own glyph and difference in its own tone, `321 ▼10 / 324 ▼23` (`parts`,
+-- in the items' order). The item the drop would replace takes the verdict's own mark; the other its
+-- own, the drop's level against its own (NS.TipMarks.ItemArrow, as the tooltip's grid rows). A single
+-- slot, a slot worn empty, a level not read, a verdict with no glyph or no difference, and History
+-- (it keeps no worn items) keep the one mark. Every painter draws `parts` when it is there, the
+-- single pieces (`level`, `glyph`, `text`) otherwise.
 -- OFF-SPEC (feedback-19 spec §1): a verdict cell of NS.OffSpecCells (`offSpec` set) is followed by
 -- its spec's name, `▲20 Holy`, in the offspec cyan, and the Me cell's gear part is the item it was
 -- compared with (OffSpecCells.Eq: a bag item, a worn one or `empty`), not what you wear. The looter's
@@ -40,8 +47,9 @@ local _, NS = ...
 -- (modules/CompactCards.lua).
 --
 --   cell = { items, level, levelTone, glyph, text, tone, tip, verdict, upgrades, hidden,
---            offSpec, mainVerdict }   (the last two an off-spec cell's)
---   (`level` nil with no gear part; `text` "" when the verdict part is left out)
+--            offSpec, mainVerdict, parts }   (offSpec and mainVerdict an off-spec cell's)
+--   (`level` nil with no gear part; `text` "" when the verdict part is left out; `parts` nil, or
+--    two { level, glyph, text, tone } on a dual slot: the level plain, the mark in `tone`)
 
 NS.SideCells = NS.SideCells or {}
 local SC = NS.SideCells
@@ -119,6 +127,27 @@ local function mergedTip(eq, v)
     return out
 end
 
+--- The dual mark (feedback-21 H7): both worn items of a two-item slot, each `{ level, glyph, text,
+--- tone }` (TM.ArrowCell's answer with the worn level on it) in the items' order, the verdict's own
+--- mark on the one the drop would replace (TM.ReplacedRow) and TM.ItemArrow's on the other. Nil when
+--- the cell keeps one mark: not two items, a slot worn empty, a level not read, a verdict with no
+--- glyph or no difference, an off-spec verdict (judged against one item). The toast takes it too.
+--- @param v table a verdict cell (WindowCells.Verdict's: `verdict`, `delta`, `base`, `ilvl`, `band`)
+--- @param items table|nil the worn items { { link, ilvl }, ... }
+--- @param empty number|nil the slots worn empty
+--- @return table|nil parts
+function SC.Parts(v, items, empty)
+    if v.offSpec or type(items) ~= "table" or #items ~= 2 or (empty or 0) > 0 then return nil end
+    local arrow = TM.ArrowCell(v.verdict, v.delta)
+    if type(arrow) ~= "table" or arrow.text == "" then return nil end
+    local at = TM.ReplacedRow(items, 0, v.base)
+    local other = TM.ItemArrow(items[3 - at].ilvl, v.ilvl, v.band)
+    if type(other) ~= "table" or TM.LevelText(items[at]) == "?" then return nil end
+    arrow.level, other.level = TM.LevelText(items[at]), TM.LevelText(items[3 - at])
+    if at == 1 then return { arrow, other } end
+    return { other, arrow }
+end
+
 --- One merged cell: a verdict cell (WindowCells.Me, Them or Verdict; MineCells.Details) after an
 --- equipment cell (WindowCells.MyEq or TheirEq; nil for the verdict alone).
 --- @param v table the verdict cell
@@ -131,7 +160,8 @@ function SC.Merge(v, eq)
     if v.spec then text = text == "" and v.spec or ("%s %s"):format(text, v.spec) end   -- `▲20 Holy`
     return { items = type(eq) == "table" and eq.items or {}, level = level, levelTone = levelTone,
         glyph = glyph, text = text, tone = v.tone, tip = mergedTip(eq, v), verdict = v.verdict,
-        upgrades = v.upgrades, hidden = v.hidden, offSpec = v.offSpec, mainVerdict = v.mainVerdict }
+        upgrades = v.upgrades, hidden = v.hidden, offSpec = v.offSpec, mainVerdict = v.mainVerdict,
+        parts = type(eq) == "table" and SC.Parts(v, eq.items, eq.empty) or nil }
 end
 
 --- The Me cell: what you wear in the drop's slot (your gear snapshot's) and the drop judged for you;
@@ -224,7 +254,7 @@ local function candidateVerdict(drop, e)
 end
 
 --- The Offer panel's Their eq cell (feedback-7 spec §0): one candidate (an entry of
---- MineCells.Candidates) in the Them cell's look, `276 ▲19`, `321/308 ▼4`, `311 ≈0`, `Can't use`,
+--- MineCells.Candidates) in the Them cell's look, `276 ▲19`, `321 ▼17 / 308 ▼4`, `311 ≈0`, `Can't use`,
 --- `…` while checking, `Unavailable` when nothing could be read, `empty ▲` into an empty slot.
 --- @param drop table one of your drops
 --- @param e table the candidate (MineCells.Candidates' entry)

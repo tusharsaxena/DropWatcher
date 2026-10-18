@@ -42,7 +42,8 @@ local _, NS = ...
 -- (C.FONT_MONO, the table cells' face and size) for the verdict glyph ▲ ≈ ▼, which the default face
 -- cannot draw: a chip's `glyph` before its words, a line's `arrow` (`▲ 19`) after its text, the number
 -- in the default face beside it, as the table draws it. A line's `lead` (the Replaces row's item
--- level) goes before its icon.
+-- level) goes before its icon. A dual mark's second part (`more`, feedback-21 H7: `/ 324` and its own
+-- `▲ 3`) follows the arrow in a text and a glyph string of its own (`moreText`, `glyph2`, `glyphText2`).
 
 NS.DetailCard = NS.DetailCard or {}
 local DCard = NS.DetailCard
@@ -207,6 +208,17 @@ local function newSideRow(side, i)
     r.glyphText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     r.glyphText:SetPoint("LEFT", r.glyph, "RIGHT", GLYPH_GAP, 0)
     r.glyphText:SetWordWrap(false)
+    -- A dual mark's second part (feedback-21 H7): `/ 324`, then its own glyph and number.
+    r.moreText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.moreText:SetPoint("LEFT", r.glyphText, "RIGHT", NS.WindowRows.MARK_GAP, 0)
+    r.moreText:SetWordWrap(false)
+    r.moreText:Hide()
+    r.glyph2 = newGlyph(r)
+    r.glyph2:SetPoint("LEFT", r.moreText, "RIGHT", NS.WindowRows.MARK_GAP, 0)
+    r.glyphText2 = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.glyphText2:SetPoint("LEFT", r.glyph2, "RIGHT", GLYPH_GAP, 0)
+    r.glyphText2:SetWordWrap(false)
+    r.glyphText2:Hide()
     attach(r)
     return r
 end
@@ -395,20 +407,32 @@ local function paintHeader(card, drop, width)
     if card.stacked then fitChips(card, width) end
 end
 
+-- One glyph and its number in the arrow's tone; answers their width.
+local function paintGlyph(g, t, arrow)
+    g:SetText(arrow.glyph)
+    t:SetText(arrow.text or "")
+    setTone(g, arrow.tone)
+    setTone(t, arrow.tone)
+    local text = arrow.text or ""
+    return glyphWidth(g) + (text ~= "" and GLYPH_GAP + textWidth(t, text) or 0)
+end
+
 -- A line's glyph and the number after it (`▲ 19`), both in its tone, right after the text (its
 -- width then its own, cut only when the room runs out: NS.WindowRows.MarkedWidth, as the [YOU]
--- mark's); hidden with no `arrow`.
-local function paintArrow(r, arrow, room)
+-- mark's); hidden with no `arrow`. A dual mark's `more` (`/ 324 ▲ 3`, feedback-21 H7) follows it.
+local function paintArrow(r, arrow, room, more)
     local on = type(arrow) == "table" and arrow.glyph ~= nil
+    local two = on and type(more) == "table" and type(more.arrow) == "table" and more.arrow.glyph ~= nil
     r.glyph:SetShown(on)
     r.glyphText:SetShown(on)
+    r.moreText:SetShown(two); r.glyph2:SetShown(two); r.glyphText2:SetShown(two)
     if not on then return end
-    r.glyph:SetText(arrow.glyph)
-    r.glyphText:SetText(arrow.text or "")
-    setTone(r.glyph, arrow.tone)
-    setTone(r.glyphText, arrow.tone)
-    local text = arrow.text or ""
-    local aw = glyphWidth(r.glyph) + (text ~= "" and GLYPH_GAP + textWidth(r.glyphText, text) or 0)
+    local aw = paintGlyph(r.glyph, r.glyphText, arrow)
+    if two then
+        r.moreText:SetText(more.text)
+        setTone(r.moreText, "plain")
+        aw = aw + 2 * NS.WindowRows.MARK_GAP + textWidth(r.moreText, more.text) + paintGlyph(r.glyph2, r.glyphText2, more.arrow)
+    end
     local full = r.value.GetUnboundedStringWidth and r.value:GetUnboundedStringWidth() or nil
     r.value:SetWidth(NS.WindowRows.MarkedWidth(room, full, aw))
 end
@@ -444,7 +468,7 @@ local function paintSideRow(r, line, width)
     NS.WindowGroup.ClassTone(r.value, line.classFile)   -- a name in its class color, over the tone
     local room = max(width - 20 - x, 20)
     NS.WindowRows.PlaceMark(r.value, r.mark, line.you, room)
-    paintArrow(r, line.arrow, room)
+    paintArrow(r, line.arrow, room, line.more)
 end
 
 -- A box with no `verdict` (the History card's When and where) hides its chip.
@@ -541,7 +565,8 @@ function DCard.Paint(card, drop, width, now)
         placeStackedActions(card, width)
     end
     local snap = NS.Gear.Snapshot()
-    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile), sideW)
+    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile,
+        NS.TestMode.GearOf(drop, snap and snap.equipped)), sideW)
     local WO = NS.WindowOwn
     paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id), looterLeft(drop)), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]

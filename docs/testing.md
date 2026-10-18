@@ -107,7 +107,7 @@ collapsing headers; each card indented under its header with the muted-white che
 showing a trade window and a second's tick leaving the cards as they are (feedback-10 spec §2), Them's last piece cut at the
 card's right inset (feedback-11 spec §0), and
 the least compact width, 440, at which line 2's fullest pieces end before the action button,
-feedback-5 spec §0, §4),
+feedback-5 spec §0, §4, and line 3's two dual marks still fit, feedback-21 H7),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
 repainting, the collapsing headers, every tooltip at the card's top right, the strip without Clear
@@ -160,15 +160,17 @@ panel's 80px `PANEL_BTN_W` included, feedback-11 spec §1),
 `test_side_cells` (the Me and Them cells, feedback-6 spec §1, DW-F1, pure: every verdict kind, two
 worn items, an empty slot, every inspect state, your own drop's `Upgrade for N` and `No upgrades`,
 the merged tooltip with its gear grid (two worn items two rows, the arrow on the replaced one, a slot
-worn empty its own row) and History's verdict alone; the Offer panel's Their eq
+worn empty its own row) and History's verdict alone; the dual mark on two worn items both read, a
+mark per item in its own tone, and every case that keeps one (feedback-21 H7); the Offer panel's Their eq
 (`SideCells.Candidate`, feedback-7 spec §0) in every candidate state and at least Them's width; then each column's width measured over every kind at the harness's
-character measure, the shed order, and the cells painted headless on the Drops table),
+character measure (the dual mark's longest realistic cell inside them), the shed order, and the cells
+painted headless on the Drops table),
 `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
 through its host handler, the first action's `No action` with its reason where there is none
 (feedback-11 spec §1), no Hide this item, the card indented with its row, Offer (cyan), `Upgrade for N`, no
-Looter row and a row per member it upgrades on your own drop, a looter who left the group: the Spec row from the drop's kept read, `not in your group` without one (feedback-21 H2), the card's marks as the table's glyphs in the monospace face, the titles' muted gold and class-colored name, the Stats row's colors and the Replaces row's item level first and quality color (feedback-21 H5), and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
+Looter row and a row per member it upgrades on your own drop, a looter who left the group: the Spec row from the drop's kept read, `not in your group` without one (feedback-21 H2), the card's marks as the table's glyphs in the monospace face, the titles' muted gold and class-colored name, the Stats row's colors and the Replaces row's item level first and quality color (feedback-21 H5), the Item level row's dual mark, composed and painted (feedback-21 H7), and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
 the Trade window cell, exact and estimated, another player's naming its looter, ending soon in tone
 and tooltip only; the candidates ranked with their judgment, the buttons' lifecycles and tones
 (`ToneState`), the Trade button gone, every state of every action look table carrying a shipped
@@ -408,7 +410,8 @@ layouts; the one tooltip; Drops' This session from the stored login in the clien
 `feed.content` row's two values; step 8 turning a stored `all` into `session`, per profile, idempotent),
 `test_toast` (the toast: the pure qualifier, someone else's upgrade for you of `toast.minGain` or
 more (or into an empty slot, whatever the least gain) with a `likely` or `yes` trade, and every
-reason it refuses, and the board 06 C texts, `empty` for an empty slot; then
+reason it refuses, and the board 06 C texts, `empty` for an empty slot, the dual marks on a two-item
+slot and the width they widen the toast to (feedback-21 H7); then
 the edge: off by default, a qualifying drop shown and painted and gone after its duration, one at a
 time with each drop once, the queue's cap, a drop that turns likely on its `DropUpdated`, the hover
 pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the

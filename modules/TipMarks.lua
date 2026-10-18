@@ -36,7 +36,9 @@ local _, NS = ...
 -- one per worn item (two for rings, trinkets and one-hand weapons), the name on the first, `empty`
 -- (muted) for a slot worn empty. The row of the item the drop would replace takes the verdict's own
 -- arrow; every other worn item takes its own (feedback-21 H3), the drop's item level against its
--- own, judged by NS.Evaluate.ItemVerdict (the kernel's item-level rule and sidegrade band).
+-- own, judged by NS.Evaluate.ItemVerdict (the kernel's item-level rule and sidegrade band). The
+-- cells' dual marks (`321 ▼10 / 324 ▼23`, NS.SideCells, feedback-21 H7) take the same two arrows
+-- (TM.ItemArrow, TM.ReplacedRow), so a cell and its tooltip never disagree.
 -- A gear grid goes right under the tooltip's title, above its rows (feedback-21 H3).
 -- modules/TipGrid.lua paints a grid; TM.Text reads one as plain text for the suites.
 --
@@ -252,10 +254,14 @@ end
 --- @return table
 function TM.EmptyCell() return { text = L["empty"], tone = "muted" } end
 
+--- A worn item's level as a grid (and a cell's dual mark) shows it: whole, or `?` when not read.
+--- @param it table { ilvl }
+--- @return string
 local function levelText(it)
     local n = type(it.ilvl) == "number" and it.ilvl == it.ilvl and it.ilvl or nil
     return n and tostring(round(n)) or "?"
 end
+TM.LevelText = levelText
 
 -- The worn item's name in its quality color; "" when only its level was read.
 local function itemCell(it)
@@ -280,16 +286,31 @@ local function replacedRow(items, empty, base)
     return at
 end
 
--- A worn item's own arrow (feedback-21 H3): the drop's item level against its own, judged as the
--- kernel judges an item level (NS.Evaluate.ItemVerdict, the sidegrade band included); "" when either
--- level is not known.
-local function ownArrow(it, judge)
-    local n = type(it.ilvl) == "number" and it.ilvl == it.ilvl and it.ilvl or nil
-    local ilvl = type(judge.ilvl) == "number" and judge.ilvl == judge.ilvl and judge.ilvl or nil
-    if not (n and ilvl) then return "" end
-    local d = ilvl - n
-    return TM.ArrowCell(NS.Evaluate.ItemVerdict(d, judge.band), d, judge.tone)
+--- A worn item's own arrow (feedback-21 H3): the drop's item level against the worn one's, judged as
+--- the kernel judges an item level (NS.Evaluate.ItemVerdict, the sidegrade band included); "" when
+--- either level is not known. The cells' dual marks take it too (NS.SideCells, feedback-21 H7).
+--- @param worn number|nil the worn item's level
+--- @param ilvl number|nil the drop's
+--- @param band number|nil the verdict's sidegrade band
+--- @param tone string|nil TM.ArrowCell's tone override
+--- @return table|string
+function TM.ItemArrow(worn, ilvl, band, tone)
+    local n = type(worn) == "number" and worn == worn and worn or nil
+    local i = type(ilvl) == "number" and ilvl == ilvl and ilvl or nil
+    if not (n and i) then return "" end
+    local d = i - n
+    return TM.ArrowCell(NS.Evaluate.ItemVerdict(d, band), d, tone)
 end
+
+local function ownArrow(it, judge) return TM.ItemArrow(it.ilvl, judge.ilvl, judge.band, judge.tone) end
+
+--- The row of `items` the drop would replace (TM.GearRows' arrow row): the baseline's item, else a
+--- slot worn empty (`#items + 1`), else the lowest item level.
+--- @param items table
+--- @param empty number
+--- @param base table|nil
+--- @return number
+function TM.ReplacedRow(items, empty, base) return replacedRow(items, empty, base) end
 
 --- One member's rows of a gear grid: `[who] [ilvl] [item] [arrow]` for each worn item (the item ""
 --- when only its level was read), a muted `empty` row for each slot worn empty (one when nothing is

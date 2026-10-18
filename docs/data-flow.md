@@ -118,7 +118,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     NS.WindowCells.Item / Ilvl / Slot / ArmorType / Looter (your own: the name in class color
   │       and ` [YOU]` in gold beside it, never cut; feedback-7 §2);
   │     Me: SideCells.Me(drop, your gear) ─> WindowCells.MyEq + WindowCells.Me merged (SideCells.Merge:
-  │       `[icons] 321/308 ▼8`, the difference unsigned; feedback-6 §1, DW-F1);
+  │       `[icons] 292 ▲19`, the difference unsigned; feedback-6 §1, DW-F1; two worn items both
+  │       read take a mark each, `[icons] 321 ▼10 / 308 ▲3`, SideCells.Parts: the verdict's on the
+  │       item it was judged against, TipMarks.ItemArrow's on the other, feedback-21 H7);
   │     Trade: WindowOwn.Trade (your own drop: MineCells.OwnTrade, `Yes`, the upgrade count in its
   │       tooltip; else WindowCells.Trade), No in C.TONE.red (feedback-7 §2); on another player's
   │       drop none of your specs can use (main cantUse, no off-spec part), Yes or Likely reads
@@ -207,7 +209,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     type, ` [YOU]` in gold after your own name, the Ask or Offer on the right (the gray
   │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
   │     row's; no trade window countdown, feedback-10 §2; line 3 SideCells' Me and Them without
-  │     icons, then the Trade cell, `You 321/308 ▼8  Them Upgrade for 2  Trade Likely`, the labels
+  │     icons, then the Trade cell, `You 321 ▼10 / 308 ▲3  Them Upgrade for 2  Trade Likely` (a mark
+  │     per worn item on a two-item slot, feedback-21 H7), the labels
   │     gold, each half CompactGroup.PlaceThem's fixed gap after the last, Trade cut at the card's
   │     right inset (feedback-11 §0); feedback-6 §1, feedback-7 §2)
   └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
@@ -329,8 +332,10 @@ the simulator are exclusive: each refuses while the other is on.
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
   ├─> DetailCells.Chips(drop)                                   (pure: the header's chips; Type is
   │                                                               WindowCells.ArmorType's, §3)
-  ├─> DetailCells.ForYou(drop, Scoring.InUse())                 (pure)
+  ├─> DetailCells.ForYou(drop, Scoring.InUse(), classFile, your gear)   (pure)
   ├─> DetailCells.ForLooter(drop, NS.Inspect.Get(guid), Compat.SpecName(specID), now)   (pure)
+  │     (two worn items both read: Item level is the cells' dual mark, `321 ▼10 / 300 ▲11`, its
+  │      second part the row's `more`, SideCells.Parts; Replaces still the one taken off; H7)
   ├─> DetailCells.TradeBox(drop, the situation's label)         (pure)
   └─> DetailCells.Actions(drop, { NS.Asks.StateOf("ask", …), the inspect entry,
                                   NS.TradeHelper.CanTradeWith(looter) })                  (pure)
@@ -840,9 +845,12 @@ DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted 
     ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain (or into an empty
        slot, whatever minGain), trade likely / yes
     ─> queue (newest 5) ─> Pump: nothing on screen, not held (combat without toast.inCombat)
-    ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose (the four rows'
-       parts, feedback-9 spec §0) ─> paint: title; item (quality color) + item level; Looted by
-       <looter> (class color) · You <glyph n> · Them <glyph n> (segments, mono glyphs, toned);
+    ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose(rec, your gear,
+       their inspect gear) (the four rows' parts, feedback-9 spec §0) ─> paint: title; item
+       (quality color) + item level; Looted by <looter> (class color) · You <glyph n> · Them
+       <glyph n> (segments, mono glyphs, toned; on a two-item slot read in full the cells' dual
+       mark, `321 ▼10 / 300 ▲11`, and the frame Toast.WidthFor(row 3) wide, never under WIDTH:
+       feedback-21 H7);
        trade word (Trade tone) + short reason (muted, cut at the inset); tooltip = Trade cell's
        ─> sound?
     ─> C_Timer toast.duration (none for a test drop) ─> Dismiss ─> Pump
