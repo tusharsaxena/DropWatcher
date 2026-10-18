@@ -5,10 +5,14 @@ local _, NS = ...
 --
 --   drop = { id, feed, link, itemID, qty, kind, bonusRoll, looter = { name, guid, classFile, isSelf },
 --            isMine, at, situation, encounterID, groupKey, sources = { [source] = n }, source,
---            facts, me, them, inspect = { status, reason, at } | nil, trade, quality = { mode,
---            threshold, reason }, candidates = { [guid] = { guid, name, classFile, status, eval } },
+--            facts, me, them, inspect = { status, reason, at, specID, gear } | nil, trade, quality = {
+--            mode, threshold, reason }, candidates = { [guid] = { guid, name, classFile, status, eval } },
 --            test, sim (made while a simulation runs), scoreTries }
 --
+-- `inspect` is the looter's read as the drop was last judged with it: its `specID` and `gear` are
+-- the broker's entry's (its slot table is replaced, never edited, by a later read), so the drop
+-- still shows the spec and worn items its verdict came from once the broker has forgotten a
+-- looter who left the group (feedback-21 H2; NS.TestMode.InspectOf reads it then).
 -- `facts` is the item facts cache's own table (read, never write); `me` and `them` are
 -- NS.Evaluate's answers for you and for the looter (`them` nil until the looter's inspect read
 -- exists, and always nil for your own drop); `trade` is NS.TradeRules' estimate; `candidates`,
@@ -282,7 +286,7 @@ local function inspectState(guid)
     if not (guid and NS.Roster.Get(guid)) then return { status = "unavailable", reason = "notInGroup" } end
     local e = NS.Inspect.Get(guid)
     if not e then return { status = "pending" } end
-    return { status = e.status, reason = e.reason, at = e.at }
+    return { status = e.status, reason = e.reason, at = e.at, specID = e.specID, gear = e.gear }
 end
 
 local function estimate(rec, looterEval, cfg, insp)

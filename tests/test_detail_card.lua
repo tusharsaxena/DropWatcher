@@ -129,6 +129,19 @@ test("cells: For the looter compares their inspected gear and names their spec a
     assertEqual(T.tipPlainJoined(byKey(side.rows, "spec").tip), "Spec | • Seta's spec: Discipline | • Inspected: 40s ago")
 end)
 
+-- feedback-21 H2: a looter who left the group is not `spec unknown`: the read the drop kept names
+-- the spec, and the row says they are gone; with no read, the row says why there is none.
+test("cells: a looter who left the group: the kept read's spec, else `not in your group`, never spec unknown", function()
+    local D = DC()
+    local kept = D.ForLooter(drop(), { status = "fresh", at = 60, specID = 256 }, "Discipline", 100, nil, true)
+    local spec = byKey(kept.rows, "spec")
+    assertEqual(spec.text, "Discipline · inspected 40s ago")
+    assertEqual(T.tipPlainJoined(spec.tip), "Spec | • Seta's spec: Discipline | • Inspected: 40s ago | • Looter: not in your group")
+    local none = byKey(D.ForLooter(drop({ them = NONE }), nil, nil, 100, nil, true).rows, "spec")
+    assertEqual(none.text, "not in your group")
+    assertEqual(T.tipPlainJoined(none.tip), "Spec | • Inspected: not yet | • Looter: not in your group")
+end)
+
 test("cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member", function()
     local NS = T.newAddon()
     local D = NS.DetailCells
@@ -366,6 +379,19 @@ test("card: the header, both comparisons and the trade box are painted, each wit
     end
     assertTrue(#W.TooltipOf(card.trade) >= 3)
     assertTrue(card.nameTip.showItem and card.nameTip.itemButton.link ~= nil, "the name shows the real item tooltip")
+end)
+
+-- feedback-21 H2, painted: the broker forgot the looter (they left, the roster event pruned them);
+-- the card reads the drop's own copy of the read, its spec named, and says the looter is gone.
+test("card: a looter who left the group: the Spec row reads the drop's kept read, not spec unknown", function()
+    local NS = shownTable()
+    NS.Inspect.Get = function() return nil end
+    NS.LootFeed.Get(1).inspect = { status = "fresh", at = 60, specID = 256, gear = {} }
+    NS.WindowGroup.ToggleExpand(1)
+    local spec = NS.WindowGroup.Drawn().card.them.rows[5]
+    assertEqual(textOf(spec.value), "Discipline · inspected 40s ago")
+    assertEqual(T.tipPlainJoined(NS.Window.TooltipOf(spec)),
+        "Spec | • Seta's spec: Discipline | • Inspected: 40s ago | • Looter: not in your group")
 end)
 
 test("card: the actions go through their host handlers; Trade is off with its reason", function()

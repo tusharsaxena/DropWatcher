@@ -510,7 +510,7 @@ Total.
 - table: the Me cell paints its icons, level, glyph and difference left to right
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_detail_card.lua (22)
+### test_detail_card.lua (24)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
@@ -518,6 +518,7 @@ Total.
 - cells: For you without a score says why: no scorer, Pawn or your weights not scored yet
 - cells: an empty slot and an unread baseline each say so, never blank
 - cells: For the looter compares their inspected gear and names their spec and the read's age
+- cells: a looter who left the group: the kept read's spec, else `not in your group`, never spec unknown
 - cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
 - cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use
@@ -527,6 +528,7 @@ Total.
 - card: a row click expands it inline; the rows below move down by the card's height
 - card: one row at a time; a click on a cell or the item button opens it too
 - card: the header, both comparisons and the trade box are painted, each with a reason
+- card: a looter who left the group: the Spec row reads the drop's kept read, not spec unknown
 - card: the actions go through their host handlers; Trade is off with its reason
 - card: the card has no Hide this item; its row stays
 - card: a filtered-out or collapsed row hides its card; it comes back with the row
@@ -1234,10 +1236,11 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (47)
+### test_feed.lua (48)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
+- feed: a looter who leaves the group keeps the read the drop was judged with: spec and worn gear
 - feed: an upgrade for the looter cannot be traded under the personal rule
 - feed: a bonus roll is never tradeable
 - dedupe: chat, the encounter loot event and the loot history report one drop
@@ -1890,7 +1893,7 @@ Total.
 | test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 21 |
-| test_detail_card.lua | 22 |
+| test_detail_card.lua | 24 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
@@ -1920,7 +1923,7 @@ Total.
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 33 |
-| test_feed.lua | 47 |
+| test_feed.lua | 48 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
@@ -1954,4 +1957,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1608** |
+| **Total** | **1611** |

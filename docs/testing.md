@@ -165,7 +165,7 @@ the actions with their reasons, state by state, then the card built headless: th
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
 through its host handler, the first action's `No action` with its reason where there is none
 (feedback-11 spec §1), no Hide this item, the card indented with its row, Offer (cyan), `Upgrade for N`, no
-Looter row and a row per member it upgrades on your own drop, and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
+Looter row and a row per member it upgrades on your own drop, a looter who left the group: the Spec row from the drop's kept read, `not in your group` without one (feedback-21 H2), and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
 the Trade window cell, exact and estimated, another player's naming its looter, ending soon in tone
 and tooltip only; the candidates ranked with their judgment, the buttons' lifecycles and tones
 (`ToneState`), the Trade button gone, every state of every action look table carrying a shipped
@@ -297,7 +297,7 @@ data arrived, anyone's `INSPECT_READY` read, the combat park, the open inspect w
 invalidation and its echo guard, the roster prune, the warm-up and `Scan`, the candidate judged by
 the verdict kernel, `InspectDone` after the items load, one debug line per job, secrets, and the
 stand-down), `test_feed` (the feed: a member's drop judged for you, its looter's inspect asked for
-and their verdict and trade arriving with `DropUpdated`; the trade re-made over time, a group drop
+and their verdict and trade arriving with `DropUpdated`, the read kept on the drop once its looter leaves the group (feedback-21 H2); the trade re-made over time, a group drop
 past its window turning `no expired` on the sweep, your own drop taking the timer's `yes` and then
 `no expired`, a timer moving it off `no` asking for its candidates, a BoE drop keeping its bind; the dedupe across chat, the encounter loot
 event and the loot history in either order, by GUID or by name, a GUID learned from a later source,

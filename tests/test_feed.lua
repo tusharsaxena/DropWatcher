@@ -135,6 +135,27 @@ test("feed: the looter's inspect re-judges the drop: their verdict and the trade
     assertEqual(table.concat(seen.updated, ","), rec.id .. ":inspect")
 end)
 
+-- feedback-21 H2: the owner's Senathein. The read judged the drop, then the group broke up; the
+-- roster event drops the broker's entry, and the card read Spec `spec unknown` and the Them cell
+-- `Slot: nothing read yet` beside a verdict judged from that read.
+test("feed: a looter who leaves the group keeps the read the drop was judged with: spec and worn gear", function()
+    local NS, m, LF = party()
+    m.addItem(link(300), ring(620))
+    brakkLoots(m, 300)
+    m.inspect.specs.party1 = 71
+    brakkWears(m, 630)
+    m.advance(0)
+    local rec = only(LF)
+    assertEqual(rec.them.verdict, "downgrade")
+    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.__fire("GROUP_ROSTER_UPDATE")
+    assertNil(NS.Inspect.Get(BRAKK), "the broker forgets a member who left")
+    local insp, kept = NS.TestMode.InspectOf(rec)
+    assertTrue(kept, "the drop's own copy of the read")
+    assertEqual(insp.specID, 71); assertEqual(insp.status, "cached")
+    assertEqual(insp.gear[11].link, link(200), "the worn ring the verdict was judged against")
+end)
+
 test("feed: an upgrade for the looter cannot be traded under the personal rule", function()
     local _, m, LF = party()
     m.addItem(link(300), ring(620))

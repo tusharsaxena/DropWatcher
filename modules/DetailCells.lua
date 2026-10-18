@@ -335,16 +335,20 @@ local function scoreRow(eval, scorer, offSpec)
     return r
 end
 
-local function specRow(drop, inspect, specName, now)
+-- The looter's spec and the read's age. A looter who left the group (`left`) keeps the read the
+-- drop was judged with, and the row says they are gone; with no read it says so in place of
+-- `spec unknown`, since no inspect can reach them now (feedback-21 H2).
+local function specRow(drop, inspect, specName, now, left)
     local who = looterName(drop)
-    local spec = specName or L["spec unknown"]
+    local spec = specName or (left and L["not in your group"]) or L["spec unknown"]
+    local gone = left and trow(L["Looter"], L["not in your group"]) or nil
     local at = type(inspect) == "table" and num(inspect.at) or nil
     if not (at and num(now)) then
-        return row("spec", L["Spec"], spec, "muted", L["Spec"], trow(L["Inspected"], L["not yet"]))
+        return row("spec", L["Spec"], spec, "muted", L["Spec"], trow(L["Inspected"], L["not yet"]), gone)
     end
     local age = WC.Duration(now - at)
     return row("spec", L["Spec"], L["%s · inspected %s ago"]:format(spec, age), "plain", L["Spec"],
-        trow(L["%s's spec"]:format(who), spec), trow(L["Inspected"], L["%s ago"]:format(age)))
+        trow(L["%s's spec"]:format(who), spec), trow(L["Inspected"], L["%s ago"]:format(age)), gone)
 end
 
 local function verdictChip(cell)
@@ -419,8 +423,9 @@ end
 --- @param specName string|nil the looter's spec, in words
 --- @param now number|nil GetTime()
 --- @param revealed boolean|nil your own drop's Offer panel was opened this session (WindowOwn)
+--- @param left boolean|nil the looter is no longer in your group (`inspect` is then the drop's own copy)
 --- @return table side
-function DC.ForLooter(drop, inspect, specName, now, revealed)
+function DC.ForLooter(drop, inspect, specName, now, revealed, left)
     if drop.isMine then return ownSide(drop, revealed) end
     local who = looterName(drop)
     local title = L["FOR %s (LOOTER)"]:format(who:upper())
@@ -428,7 +433,7 @@ function DC.ForLooter(drop, inspect, specName, now, revealed)
     local off = NS.OffSpec.Of(drop.them)
     local rows = sideRows(off or drop.them, facts(drop), cell.tone, who)
     if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off, "them")) end
-    rows[#rows + 1] = specRow(drop, inspect, specName, now)
+    rows[#rows + 1] = specRow(drop, inspect, specName, now, left)
     return { title = title, verdict = verdictChip(cell), rows = rows }
 end
 

@@ -26,7 +26,7 @@ passed.
 | ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
 | ITEM-1..5 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
-| INSPECT-1..4 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26) |
+| INSPECT-1..5 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26); a looter who left keeps their read (feedback-21 H2) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
 | ASK-1..11 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2) |
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
@@ -1506,6 +1506,14 @@ read whose neck, rings or trinkets are empty for that reason. Last, during a war
 Blizzard's inspect window on the member in flight → no `fresh` line with `slots=0` ever; a
 `failed (empty)` line, or a second send, is the expected answer. Result:
 
+**INSPECT-5. A looter who left keeps their read (feedback-21 H2).** In a key or dungeon, a member
+loots a piece once their `[INSPECT]` line has read `fresh` (or `cached`). Open that drop's detail
+card → the Spec row reads `<their spec> · inspected <age> ago`. Leave the group (or let the key's
+group break up) and open the card again → the Spec row still names their spec, its tooltip adds
+`• Looter: not in your group`, and the Them cell's tooltip lists the worn item it was judged
+against, never `Slot: nothing read yet` beside an `Inspected: … ago`. A drop whose looter left
+before any read: the Spec row reads `not in your group`, never `spec unknown`. Result:
+
 ## Trade
 
 The estimator's decision is headless-tested (`test_trade_rules`); TRADE-1..4 confirm it against the
@@ -2511,6 +2519,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | ICON-1..2 | feedback-21 G11, the item icons drawn as before by default, Window › Icons' rows, Icon zoom live on every surface | No client pass recorded yet |
 | ICON-3..4 | feedback-21 G11, the border block, its Use class color and the glow over it; Color by item quality | No client pass recorded yet |
 | SCORE-4, COMPAT-3 | feedback-21 H1, Pawn out of the box: `PawnIsReady()`, its scale asked by spec index | No client pass recorded yet |
+| INSPECT-5 | feedback-21 H2, a looter who left the group keeps the read the drop was judged with: Spec named, `Looter: not in your group`; never `spec unknown` | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 

@@ -411,6 +411,14 @@ local function inspectOf(drop)
     return NS.TestMode.InspectOf(drop)
 end
 
+-- Whether another player's looter has left your group: the broker has forgotten them, so the card
+-- reads the drop's own copy of their read, or says why there is none (feedback-21 H2).
+local function looterLeft(drop)
+    if drop.test or drop.isMine then return false end
+    local guid = type(drop.looter) == "table" and drop.looter.guid
+    return guid ~= nil and NS.Roster.Get(guid) == nil
+end
+
 local function paintActions(card, drop, ctx)
     for _, a in ipairs(DC.Actions(drop, ctx)) do
         local b = card.actions[a.key]
@@ -461,7 +469,7 @@ function DCard.Paint(card, drop, width, now)
     local snap = NS.Gear.Snapshot()
     paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile), sideW)
     local WO = NS.WindowOwn
-    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id)), sideW)
+    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id), looterLeft(drop)), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
     paintTrade(card.trade, DC.TradeBox(drop, situation))
     local state, reason = askState(drop)

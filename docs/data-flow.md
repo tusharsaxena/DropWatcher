@@ -142,7 +142,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     the item button, after ApplyRowIcon: Glow.Apply(button, drop) (the upgrade glow, below)
                   reads: NS.Gear.Snapshot().equipped (Me's gear; its icons show your inventory slot's
                   own tooltip), NS.TestMode.InspectOf(drop).gear (Them's gear: NS.Inspect.Get(looter guid),
-                  or a sample's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
+                  else the read the drop was judged with, `drop.inspect`, once the broker has
+                  forgotten a looter who left the group (feedback-21 H2), or a sample's own entry),
+                  NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
         ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` and Post my
