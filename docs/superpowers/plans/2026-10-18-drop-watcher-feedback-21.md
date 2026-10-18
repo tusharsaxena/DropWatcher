@@ -45,6 +45,10 @@ first task not `done`. Never merge without the owner's go-ahead.
 | H5 detail card: ▲▼ glyphs, For you / For Looter (name), stat colors, Replaces row | DW | done | 76c8678 (glyphs in a monospace string per chip and line; C.TONE.greenMuted + stat tones, C.STAT_TONE; History chips take the glyph too) |
 | R4 review H1-H5 | DW | todo | |
 | P4 push | DW | todo | |
+| H6 glow + icon defaults, glow color rows main-left/off-right (§17 deviation) | DW | todo | |
+| H7 dual-slot arrows everywhere (cells, compact, toast, detail card, tooltips) | DW | todo | |
+| R5 review H6, H7 | DW | todo | |
+| P5 push | DW | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
 
 ## What the owner asked (decided in conversation, 2026-10-18)
@@ -296,6 +300,30 @@ Trade: Likely
     tertiary stat the row can show), one palette in Constants, readable on the dark card.
   - Replaces row: `334 [icon] Scaleguard's Stalwart Greatboots`, item level first, the name in
     its quality color.
+
+### Owner asks during the H series (2026-10-18)
+
+- **H6 — defaults and the color rows.**
+  - Upgrade glow defaults (from the owner's screenshot): both glows on, both `pixel`, pixelLines 8,
+    pixelFrequency **0.1**, pixelLength 0, pixelThickness 1; main color `#FFF468`, off-spec color
+    `#3FC7EB`, both a = 1; every other knob keeps its default. DropWatcher's own defaults by the
+    owner's choice; KickCD keeps the library's nil values.
+  - Layout: main spec always left, off-spec always right, including the colors:
+    `[Main spec color] [Off-spec color]` then `[Use class color (main spec)] [Use class color
+    (off-spec)]`. This breaks options-ui-§17 (companion immediately right of its swatch); the owner
+    chose to **record a deviation**: a row in `docs/ARCHITECTURE.md` -> `## Documented deviations`,
+    `| options-ui-§17 | the class-color companion sits below its swatch in the tab's mirrored
+    two-column layout | owner's choice: main spec left, off-spec right on every row | 2026-10-18 |
+    the next options-ui-§17 edit, or LibKa0s gaining a mirrored color-pair layout |`; adjust any
+    test that enforces §17's adjacency for these two pairs only, citing the row.
+  - Window › Icons defaults: zoom 0.1, Show border on, Border style Solid, thickness 2, Border
+    color `#000000` a = 1, Use class color off, Color by item quality off.
+- **H7 — dual-slot arrows everywhere.** For rings, trinkets and one-hand weapons each worn item
+  shows its own item level, glyph and difference in its own tone, e.g. `You 321 ▼10 / 324 ▼23`,
+  wherever an up/down mark appears: the full table's Me/Them cells, compact card halves, the toast,
+  the detail card (Item level, Replaces), tooltips (H3 covers these). A single slot, or a dual slot
+  with one side empty or unread, keeps one mark. Raise the minimum column width and the minimum
+  window width (full and compact) if the text no longer fits.
 
 ### R1 — review
 
