@@ -511,7 +511,7 @@ Total.
 - table: the Me cell paints its icons, level, glyph and difference left to right
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_detail_card.lua (24)
+### test_detail_card.lua (28)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
@@ -529,6 +529,10 @@ Total.
 - card: a row click expands it inline; the rows below move down by the card's height
 - card: one row at a time; a click on a cell or the item button opens it too
 - card: the header, both comparisons and the trade box are painted, each with a reason
+- cells: the titles name YOU and LOOTER in the muted gold, the looter's name in its class color
+- cells: the Stats row colors each value by its sign and each stat's name in its own color
+- cells: Replaces reads the item level, then the icon, then the name in its quality color
+- card: the glyphs are drawn in the monospace face; Replaces puts its item level before the icon
 - card: a looter who left the group: the Spec row reads the drop's kept read, not spec unknown
 - card: the actions go through their host handlers; Trade is off with its reason
 - card: the card has no Hide this item; its row stays
@@ -1899,7 +1903,7 @@ Total.
 | test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 22 |
-| test_detail_card.lua | 24 |
+| test_detail_card.lua | 28 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
@@ -1963,4 +1967,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1617** |
+| **Total** | **1621** |

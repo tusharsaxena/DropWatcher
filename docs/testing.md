@@ -165,7 +165,7 @@ the actions with their reasons, state by state, then the card built headless: th
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
 through its host handler, the first action's `No action` with its reason where there is none
 (feedback-11 spec §1), no Hide this item, the card indented with its row, Offer (cyan), `Upgrade for N`, no
-Looter row and a row per member it upgrades on your own drop, a looter who left the group: the Spec row from the drop's kept read, `not in your group` without one (feedback-21 H2), and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
+Looter row and a row per member it upgrades on your own drop, a looter who left the group: the Spec row from the drop's kept read, `not in your group` without one (feedback-21 H2), the card's marks as the table's glyphs in the monospace face, the titles' muted gold and class-colored name, the Stats row's colors and the Replaces row's item level first and quality color (feedback-21 H5), and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
 the Trade window cell, exact and estimated, another player's naming its looter, ending soon in tone
 and tooltip only; the candidates ranked with their judgment, the buttons' lifecycles and tones
 (`ToneState`), the Trade button gone, every state of every action look table carrying a shipped

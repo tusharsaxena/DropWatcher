@@ -146,7 +146,7 @@ C.CHEVRON_ROW = { r = 1.0, g = 1.0, b = 1.0, a = 0.55 }
 -- The drop tables' tones (design spec §11.2; feedback-4 spec §0 and §1): `good` an upgrade, a
 -- tradeable estimate or an action done, `bad` gray (not wanted, not tradeable), `warn` amber (a trade
 -- window ending soon), `plain` plain text, `muted` what is not known yet; `yellow`, `red`, `cyan`
--- `redMuted`, `offspec` and `mutedGold` below.
+-- `redMuted`, `offspec`, `mutedGold`, `greenMuted` and the stats' colors below.
 C.TONE = {
     good  = { r = 0.30, g = 0.85, b = 0.40 },
     bad   = { r = 0.55, g = 0.55, b = 0.58 },
@@ -164,12 +164,31 @@ C.TONE = {
     offspec = { r = 0.30, g = 0.85, b = 0.85 },
     -- The Can't use verdict and Trade's Can't use (feedback-21): a dim red, read beside the
     -- downgrade's `red` and the gray `bad`, so a drop you cannot use reads apart from one not wanted.
+    -- The detail card's Stats row draws a stat lost in it too (feedback-21 H5).
     redMuted = { r = 0.72, g = 0.36, b = 0.34 },
+    -- A stat gained on the detail card's Stats row (feedback-21 H5): redMuted's green, dimmer than
+    -- the verdicts' `good`, so a value reads as a value and not as a verdict.
+    greenMuted = { r = 0.42, g = 0.74, b = 0.46 },
     -- A tooltip row's label and bullet (feedback-21 H3): a muted gold, between the title's C.GOLD and
     -- the idle gray C.IDLE, so a label reads apart from its value without competing with the title.
     mutedGold = { r = 0.80, g = 0.68, b = 0.36 },
     plain = { r = 0.92, g = 0.92, b = 0.92 },
     muted = { r = 0.70, g = 0.70, b = 0.72 },
+    -- Each secondary stat's name on the detail card's Stats row (feedback-21 H5; C.STAT_TONE): four
+    -- hues apart from one another and from the values' green and red, readable on the dark card.
+    statCrit    = { r = 1.00, g = 0.62, b = 0.30 },
+    statHaste   = { r = 1.00, g = 0.88, b = 0.45 },
+    statMastery = { r = 0.74, g = 0.58, b = 1.00 },
+    statVers    = { r = 0.45, g = 0.75, b = 1.00 },
+}
+
+-- The C.TONE key of each stat the detail card's Stats row names, by its C_Item.GetItemStats key
+-- (modules/DetailCells.lua's SECONDARY): one fixed color per stat (feedback-21 H5).
+C.STAT_TONE = {
+    ITEM_MOD_CRIT_RATING_SHORT    = "statCrit",
+    ITEM_MOD_HASTE_RATING_SHORT   = "statHaste",
+    ITEM_MOD_MASTERY_RATING_SHORT = "statMastery",
+    ITEM_MOD_VERSATILITY          = "statVers",
 }
 
 -- ---------------------------------------------------------------------------------------------

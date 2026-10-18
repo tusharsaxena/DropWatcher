@@ -19,13 +19,24 @@ local _, NS = ...
 -- judged on item level alone. The looter's side does the same from their off-spec part, its Spec
 -- row keyed `offSpec` ahead of their own inspected `spec` row.
 --
--- NO GLYPHS. The card draws in the default face, which has no `→` and no `▲ ≈ ▼` (feedback-6 spec
--- §3, DW-F5): the verdict chip's mark, the Item level and Track rows' arrow and the Track row's mark
--- are NS.TipMarks' inline textures (TM.Mark, TM.Arrow), never the table cells' monospace glyphs.
+-- THE MARKS (feedback-21 H5). The card draws in the default face, which has no `→` and no `▲ ≈ ▼`
+-- (feedback-6 spec §3, DW-F5). Every up and down mark on it is the table's own glyph
+-- (NS.WindowCells.GLYPH), which modules/DetailCard.lua draws in a monospace string of its own
+-- (C.FONT_MONO), as the table cells draw it: the verdict chip's `glyph` before its words, and a row's
+-- `arrow` (TM.ArrowCell's `{ glyph, text, tone }`: `▲ 19` on Item level, `▲` on Track, the unsigned
+-- difference in the verdict's tone) after its text. The `→` between two values stays TM.Arrow's
+-- texture; no verdict texture (TM.Mark) is drawn on the card.
 --
---   chip = { text, tone?, tip = { title, lines... } }
---   side = { title, verdict = { text, tone, tip }, rows = { { key, label, text, tone, tip, link, classFile, you } } }
---     (`classFile` and `you`: your own drop's Looter row, the name in class color and ` [YOU]` in gold)
+-- THE COLORS (feedback-21 H5). A box's title names its subject in the muted gold (`FOR YOU`,
+-- `FOR LOOTER (SETA)`, the looter's name in their class color); the Stats row's values are muted green
+-- or red by sign and each stat's name takes its own fixed color (C.STAT_TONE); the Replaces row reads
+-- `292 [icon] Old Helm`, the item level first (`lead`), the name in its quality color (TM.ItemName).
+--
+--   chip = { text, tone?, glyph?, tip = { title, lines... } }
+--   side = { title, verdict = { text, tone, glyph?, tip },
+--            rows = { { key, label, text, tone, tip, link, lead, arrow, classFile, you } } }
+--     (`lead`: the text before the icon; `arrow`: the glyph and the number after the text;
+--      `classFile` and `you`: your own drop's Looter row, the name in class color and ` [YOU]` in gold)
 --   box  = { chip = { text, tone }, text, meta, tip }
 --   act  = { key, text, icon, enabled, tip }
 
@@ -114,6 +125,12 @@ end
 -- One tooltip row and the closing hint (NS.TipMarks, feedback-21).
 local function trow(label, value, tone) return TM.Row(label, value, tone) end
 local function hint(text) return TM.Hint(text) end
+
+-- `text` in a C.TONE tone, as an inline color code.
+local function toned(text, tone)
+    local t = C.TONE[tone]
+    return NS.GroupRoster.Colored(text, t.r, t.g, t.b)
+end
 
 -- ── the header's chips ──────────────────────────────────────────────────────────────────────
 
@@ -235,11 +252,12 @@ end
 local function replacesRow(eval, whose, mine)
     local base = baseOf(eval)
     if base then
-        local name = WC.ItemName(base.link) or "?"
-        local r = row("replaces", L["Replaces"], ("%s · %s"):format(name, tostring(num(base.ilvl) or "?")), "plain",
+        -- `292 [icon] Old Helm`: the item level first, the name in its quality color (feedback-21 H5).
+        local name = TM.ItemName(WC.ItemName(base.link) or "?", base.quality, base.link)
+        local r = row("replaces", L["Replaces"], name, "plain",
             L["Replaces"], trow(L["Takes off"], L["the item %s wears there"]:format(whose)),
             trow(L["Of two"], L["the lower"]))
-        r.link = base.link
+        r.link, r.lead = base.link, tostring(num(base.ilvl) and round(base.ilvl) or "?")
         r.wornSlot = mine and num(base.slot) or nil
         return r
     end
@@ -249,18 +267,26 @@ local function replacesRow(eval, whose, mine)
     return row("replaces", L["Replaces"], DASH, "muted", L["Replaces"], trow(L["Worn item"], L["not read"]))
 end
 
-local function ilvlRow(eval, ilvl, tone)
+-- `292 → 311` then the verdict's glyph and the unsigned difference (`▲ 19`, the table's: feedback-21
+-- H5); a verdict with no glyph keeps the signed difference in the text. `glyphTone` replaces the
+-- verdict's tone on the glyph (an off-spec verdict's cyan).
+local function ilvlRow(eval, ilvl, tone, glyphTone)
     local d = type(eval) == "table" and num(eval.ilvlDelta) or nil
     if not (d and ilvl) then
         return row("ilvl", L["Item level"], ilvl and tostring(ilvl) or "?", "muted", L["Item level"],
             trow(L["Change"], L["nothing to compare with yet"]))
     end
     local from = round(ilvl - d)
-    return row("ilvl", L["Item level"], ("%d %s %d · %s"):format(from, TM.Arrow(), ilvl, WC.Signed(d)), tone, L["Item level"],
+    local arrow = TM.ArrowCell(eval.verdict, d, glyphTone)
+    local text = ("%d %s %d"):format(from, TM.Arrow(), ilvl)
+    if arrow == "" then text = ("%s · %s"):format(text, WC.Signed(d)) end
+    local r = row("ilvl", L["Item level"], text, tone, L["Item level"],
         trow(L["This item"], ilvl), trow(L["Worn"], from), trow(L["Change"], WC.Signed(d), tone))
+    r.arrow = arrow ~= "" and arrow or nil
+    return r
 end
 
-local TRACK_MARK = { [1] = "upgrade", [0] = "sidegrade", [-1] = "downgrade" }   -- TM.Mark's verdicts
+local TRACK_MARK = { [1] = "upgrade", [0] = "sidegrade", [-1] = "downgrade" }   -- the glyph per sign
 
 -- Shown even within one track (board 02, callout 2): a rank change is still a change.
 local function missingTrack(to)
@@ -277,26 +303,40 @@ local function trackRow(eval, dropTrack)
         return row("track", L["Track"], ("%s %s %s"):format(from, TM.Arrow(), to), "plain", L["Track"],
             trow(L["This item"], to), trow(L["Worn"], from), trow(L["Ranked"], L["no, the tracks don't compare"]))
     end
-    return row("track", L["Track"], ("%s %s %s %s"):format(from, TM.Arrow(), to, TM.Mark(TRACK_MARK[td.sign])), "plain", L["Track"],
+    local sign = (num(td.sign) or 0) > 0 and 1 or (num(td.sign) or 0) < 0 and -1 or 0
+    local r = row("track", L["Track"], ("%s %s %s"):format(from, TM.Arrow(), to), "plain", L["Track"],
         trow(L["This item"], to), trow(L["Worn"], from), WC.TrackRow(td))
+    r.arrow = TM.ArrowCell(TRACK_MARK[sign])   -- the glyph alone, in its verdict's tone
+    return r
+end
+
+-- A stat change's two words: plain, or (`colored`) the value muted green or red by its sign and the
+-- stat's name in its own color (C.STAT_TONE, feedback-21 H5).
+local function statWords(p, colored)
+    local value, label = WC.Signed(p.d), p.label
+    if not colored then return value, label end
+    local nameTone = C.STAT_TONE[p.key]
+    return toned(value, p.d > 0 and "greenMuted" or "redMuted"), nameTone and toned(label, nameTone) or label
 end
 
 --- The secondary-stat change from `base` to `item`, the largest first: `+130 Haste -119 Mastery`,
---- or nil when neither carries a secondary stat.
+--- or nil when neither carries a secondary stat. `colored`: the Stats row's text, each value in the
+--- muted green or red of its sign and each name in its stat's color (C.STAT_TONE).
 --- @param item table|nil the drop's facts.stats
 --- @param base table|nil the replaced item's facts.stats
+--- @param colored boolean|nil
 --- @return string|nil
-function DC.StatChange(item, base)
+function DC.StatChange(item, base, colored)
     item, base = type(item) == "table" and item or {}, type(base) == "table" and base or {}
     local parts = {}
     for _, key in ipairs(SECONDARY_ORDER) do
         local d = (num(item[key]) or 0) - (num(base[key]) or 0)
-        if d ~= 0 then parts[#parts + 1] = { d = d, label = SECONDARY[key] } end
+        if d ~= 0 then parts[#parts + 1] = { d = d, key = key, label = SECONDARY[key] } end
     end
     if #parts == 0 then return nil end
     table.sort(parts, function(a, b) return abs(a.d) > abs(b.d) end)
     local out = {}
-    for _, p in ipairs(parts) do out[#out + 1] = ("%s %s"):format(WC.Signed(p.d), p.label) end
+    for _, p in ipairs(parts) do out[#out + 1] = ("%s %s"):format(statWords(p, colored)) end
     return table.concat(out, " ")
 end
 
@@ -307,7 +347,8 @@ local function statsRow(eval, dropStats)
     end
     local text = DC.StatChange(dropStats, base.stats)
     if not text then return row("stats", L["Stats"], L["no change"], "plain", L["Stats"], trow(L["Secondary stats"], L["the same"])) end
-    return row("stats", L["Stats"], text, "plain", L["Stats"], trow(L["Secondary stats"], text))
+    return row("stats", L["Stats"], DC.StatChange(dropStats, base.stats, true), "plain", L["Stats"],
+        trow(L["Secondary stats"], text))
 end
 
 -- The score line by the scorer in use (modules/Scoring.lua's InUse): its label, and why there is
@@ -352,18 +393,21 @@ local function specRow(drop, inspect, specName, now, left)
 end
 
 local function verdictChip(cell)
-    -- The arrow first (feedback-4 spec §0), as a texture: the chip's face has no glyph (DW-F5).
-    local mark = cell.glyph and TM.Mark(cell.verdict, cell.offSpec and cell.tone) or ""
-    if mark ~= "" then mark = mark .. " " end
+    -- The glyph first (feedback-4 spec §0), the table's own, in the chip's tone: DetailCard draws it
+    -- in the monospace face (feedback-21 H5).
     local words = cell.offSpec and OFF_SPEC_CHIP or VERDICT_CHIP
-    return { text = mark .. (words[cell.verdict] or VERDICT_CHIP.unknown), tone = cell.tone, tip = cell.tip }
+    return { text = words[cell.verdict] or VERDICT_CHIP.unknown, glyph = cell.glyph and WC.GLYPH[cell.verdict] or nil,
+        tone = cell.tone, tip = cell.tip }
 end
 DC.VerdictChip = verdictChip   -- the History card's verdicts too (modules/HistoryCard.lua)
 
-local function sideRows(eval, f, tone, whose, mine)
+local function sideRows(eval, f, tone, whose, mine, glyphTone)
     local ilvl = num(f.ilvl)
-    return { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone), trackRow(eval, f.track), statsRow(eval, f.stats) }
+    return { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone, glyphTone), trackRow(eval, f.track), statsRow(eval, f.stats) }
 end
+
+-- A box's title, its subject in the muted gold (feedback-21 H5).
+local function gold(text) return toned(text, "mutedGold") end
 
 --- The For you column (board 02, callouts 2 and 3).
 --- @param drop table
@@ -373,10 +417,10 @@ end
 function DC.ForYou(drop, scorer, classFile)
     local cell = WC.Me(drop, classFile)
     local off = NS.OffSpec.Of(drop.me)
-    local rows = sideRows(off or drop.me, facts(drop), cell.tone, L["you"], true)
+    local rows = sideRows(off or drop.me, facts(drop), cell.tone, L["you"], true, off and cell.tone)
     if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off)) end
     rows[#rows + 1] = scoreRow(drop.me, scorer, off ~= nil)
-    return { title = L["FOR YOU"], verdict = verdictChip(cell), rows = rows }
+    return { title = L["FOR %s"]:format(gold(L["YOU"])), verdict = verdictChip(cell), rows = rows }
 end
 
 -- The box's rows under Them: one per member it upgrades, the last saying how many more when they
@@ -384,17 +428,17 @@ end
 local OWN_MEMBER_ROWS = 4
 
 -- One member it upgrades: their name in their class color as the label, the worn item it would
--- replace as the icon, and `300 → 311 · +11` in green (the For you box's Item level, for them).
+-- replace as the icon, and `300 → 311 ▲ 11` in green (the For you box's Item level, for them).
 local function memberRow(e, ilvl)
     local base, gain = e.baseline, num(e.gain)
     local from = base and num(base.ilvl)
-    local text = (from and ilvl) and ("%d %s %d · %s"):format(round(from), TM.Arrow(), ilvl, WC.Signed(gain or ilvl - from))
-        or L["Empty slot"]
+    local text = (from and ilvl) and ("%d %s %d"):format(round(from), TM.Arrow(), ilvl) or L["Empty slot"]
     local worn = from and trow(L["Replaces"], ("%s · %d"):format(WC.ItemName(base.link) or "?", round(from)))
         or trow(L["Slot"], L["empty (anything is an upgrade)"])
     local r = row("member", e.short or "?", text, "good", e.short or "?", worn,
         gain and trow(L["Upgrade"], WC.Signed(gain), "good") or nil)
     r.labelClassFile, r.link = e.classFile, base and base.link
+    r.arrow = (from and ilvl) and TM.ArrowCell("upgrade", gain or ilvl - from) or nil
     return r
 end
 
@@ -428,10 +472,11 @@ end
 function DC.ForLooter(drop, inspect, specName, now, revealed, left)
     if drop.isMine then return ownSide(drop, revealed) end
     local who = looterName(drop)
-    local title = L["FOR %s (LOOTER)"]:format(who:upper())
+    local classFile = type(drop.looter) == "table" and drop.looter.classFile or nil
+    local title = L["FOR %s (%s)"]:format(gold(L["LOOTER"]), TM.ClassName(who:upper(), classFile))
     local cell = WC.Them(drop, now)
     local off = NS.OffSpec.Of(drop.them)
-    local rows = sideRows(off or drop.them, facts(drop), cell.tone, who)
+    local rows = sideRows(off or drop.them, facts(drop), cell.tone, who, nil, off and cell.tone)
     if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off, "them")) end
     rows[#rows + 1] = specRow(drop, inspect, specName, now, left)
     return { title = title, verdict = verdictChip(cell), rows = rows }

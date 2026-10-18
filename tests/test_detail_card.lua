@@ -48,7 +48,7 @@ local function DC() return T.newAddon().DetailCells end
 
 local function texts(list)
     local out = {}
-    for _, c in ipairs(list) do out[#out + 1] = T.marks(c.text) end
+    for _, c in ipairs(list) do out[#out + 1] = T.cardText(c) end
     return table.concat(out, ",")
 end
 
@@ -83,9 +83,9 @@ end)
 test("cells: For you shows what it replaces, the ilvl, track and stat change, and Pawn's score", function()
     local D = DC()
     local side = D.ForYou(drop(), true)
-    assertEqual(side.title, "FOR YOU")
-    assertEqual(T.marks(side.verdict.text), "[arrow-up] UPGRADE"); assertEqual(side.verdict.tone, "good")
-    assertEqual(texts(side.rows), "Old Helm · 292,292 [arrow-right] 311 · +19,Champion 6/6 [arrow-right] Hero 2/6 [arrow-up],+130 Haste -119 Mastery,+2.4")
+    assertEqual(P(side.title), "FOR YOU")
+    assertEqual(T.cardText(side.verdict), "▲ UPGRADE"); assertEqual(side.verdict.tone, "good")
+    assertEqual(texts(side.rows), "292 Old Helm,292 [arrow-right] 311 ▲ 19,Champion 6/6 [arrow-right] Hero 2/6 ▲,+130 Haste -119 Mastery,+2.4")
     assertEqual(byKey(side.rows, "replaces").link, OLD)
     assertEqual(byKey(side.rows, "ilvl").tone, "good")
     for _, r in ipairs(side.rows) do assertTrue(#r.tip >= 2 and r.text ~= "", r.key) end
@@ -119,9 +119,9 @@ end)
 test("cells: For the looter compares their inspected gear and names their spec and the read's age", function()
     local D = DC()
     local side = D.ForLooter(drop(), { status = "fresh", at = 60 }, "Discipline", 100)
-    assertEqual(side.title, "FOR SETA (LOOTER)")
-    assertEqual(T.marks(side.verdict.text), "[arrow-down] DOWNGRADE"); assertEqual(side.verdict.tone, "red", "one tone per verdict")
-    assertEqual(texts(side.rows), "Their Helm · 324,324 [arrow-right] 311 · -13,Myth 1/6 [arrow-right] Hero 2/6 [arrow-down],+95 Haste -80 Crit,Discipline · inspected 40s ago")
+    assertEqual(P(side.title), "FOR LOOTER (SETA)")
+    assertEqual(T.cardText(side.verdict), "▼ DOWNGRADE"); assertEqual(side.verdict.tone, "red", "one tone per verdict")
+    assertEqual(texts(side.rows), "324 Their Helm,324 [arrow-right] 311 ▼ 13,Myth 1/6 [arrow-right] Hero 2/6 ▼,+95 Haste -80 Crit,Discipline · inspected 40s ago")
     local unread = D.ForLooter(drop({ them = NONE, inspect = { status = "pending" } }), nil, nil, 100)
     assertEqual(unread.verdict.text, "UNKNOWN")
     assertEqual(byKey(unread.rows, "spec").text, "spec unknown")
@@ -158,12 +158,12 @@ test("cells: on your own drop the looter's side is FOR THE GROUP, no Looter row,
     assertNil(byKey(mine.rows, "mine"))
     local them = byKey(mine.rows, "them")
     assertEqual(them.text, "Upgrade for 2"); assertEqual(them.label, "Them"); assertEqual(mine.rows[1], them)
-    -- Then each member it upgrades, best first (feedback-20): the name, the worn item, `from → to · +gain`.
+    -- Then each member it upgrades, best first (feedback-20): the name, the worn item, `from → to ▲ gain`.
     assertEqual(#mine.rows, 3)
     local b, s = mine.rows[2], mine.rows[3]
     assertEqual(b.key, "member"); assertEqual(b.label, "Butterz"); assertEqual(b.tone, "good")
-    assertEqual(T.marks(b.text), "300 [arrow-right] 311 · +11")
-    assertEqual(s.label, "Seta"); assertEqual(T.marks(s.text), "307 [arrow-right] 311 · +4")
+    assertEqual(T.cardText(b), "300 [arrow-right] 311 ▲ 11"); assertEqual(b.arrow.tone, "good")
+    assertEqual(s.label, "Seta"); assertEqual(T.cardText(s), "307 [arrow-right] 311 ▲ 4")
     -- One grid row per upgrade (feedback-7 spec §3); no class read, so the names are plain.
     assertEqual(T.tipText(them.tip[2]), "Butterz  300  Bloodthorn Treads  ▲11\nSeta  307  ▲4", "ranked by gain")
     -- The keep? rule: an upgrade for you reads Hidden until revealed.
@@ -358,10 +358,10 @@ test("card: the header, both comparisons and the trade box are painted, each wit
     assertEqual(textOf(card.name), "Crown of Roaring Storms"); assertEqual(card.icon.link, LINK)
     assertEqual(textOf(card.chips[1].text), "Head"); assertEqual(textOf(card.chips[4].text), "Hero 2/6 · 311")
     assertTrue(card.chips[7]:IsShown()); assertFalse(card.chips[8]:IsShown())
-    assertEqual(textOf(card.me.title), "FOR YOU"); assertEqual(T.marks(textOf(card.me.verdict.text)), "[arrow-up] UPGRADE")
-    assertEqual(T.marks(textOf(card.me.rows[2].value)), "292 [arrow-right] 311 · +19")
+    assertEqual(P(textOf(card.me.title)), "FOR YOU"); assertEqual(textOf(card.me.verdict.text), "UPGRADE")
+    assertEqual(T.marks(textOf(card.me.rows[2].value)), "292 [arrow-right] 311")
     assertEqual(card.me.rows[1].item.link, OLD); assertTrue(card.me.rows[1].item:IsShown())
-    assertEqual(textOf(card.them.title), "FOR SETA (LOOTER)")
+    assertEqual(P(textOf(card.them.title)), "FOR LOOTER (SETA)")
     assertEqual(textOf(card.them.rows[5].value), "Discipline · inspected 40s ago")
     assertEqual(textOf(card.trade.chip.text), "LIKELY TRADEABLE")
     assertEqual(textOf(card.trade.meta), "Rule: personal loot, Mythic+ · Basis: inspect 40s ago")
@@ -379,6 +379,87 @@ test("card: the header, both comparisons and the trade box are painted, each wit
     end
     assertTrue(#W.TooltipOf(card.trade) >= 3)
     assertTrue(card.nameTip.showItem and card.nameTip.itemButton.link ~= nil, "the name shows the real item tooltip")
+end)
+
+-- feedback-21 H5: the card's marks are the table's glyphs, its titles name their subject in the
+-- muted gold, the Stats row colors each value by sign and each stat by name, and Replaces reads the
+-- item level first, the name in its quality color.
+local function code(NS, tone)
+    local t = NS.Constants.TONE[tone]
+    local function hex(v) return ("%02x"):format(math.floor(v * 255 + 0.5)) end
+    return "|cff" .. hex(t.r) .. hex(t.g) .. hex(t.b)
+end
+
+test("cells: the titles name YOU and LOOTER in the muted gold, the looter's name in its class color", function()
+    local NS = T.newAddon()
+    local D = NS.DetailCells
+    local gold = code(NS, "mutedGold")
+    assertEqual(D.ForYou(drop(), true).title, "FOR " .. gold .. "YOU|r")
+    local title = D.ForLooter(drop(), nil, nil, 100).title
+    assertEqual(title, "FOR " .. gold .. "LOOTER|r (" .. NS.TipMarks.ClassName("SETA", "PRIEST") .. ")")
+    local plain = D.ForLooter(drop({ looter = { name = "Seta-Realm", guid = SETA } }), nil, nil, 100).title
+    assertEqual(plain, "FOR " .. gold .. "LOOTER|r (SETA)", "no class known: the name plain")
+end)
+
+test("cells: the Stats row colors each value by its sign and each stat's name in its own color", function()
+    local NS = T.newAddon()
+    local D, C = NS.DetailCells, NS.Constants
+    local stats = byKey(D.ForYou(drop(), true).rows, "stats")
+    assertEqual(stats.text, code(NS, "greenMuted") .. "+130|r " .. code(NS, "statHaste") .. "Haste|r "
+        .. code(NS, "redMuted") .. "-119|r " .. code(NS, "statMastery") .. "Mastery|r")
+    assertEqual(P(stats.tip[2]), "• Secondary stats: +130 Haste -119 Mastery", "the tooltip's value stays plain")
+    -- One fixed color per secondary stat, each its own and none the values' green or red.
+    local seen = {}
+    for _, key in ipairs({ "ITEM_MOD_CRIT_RATING_SHORT", "ITEM_MOD_HASTE_RATING_SHORT", "ITEM_MOD_MASTERY_RATING_SHORT",
+        "ITEM_MOD_VERSATILITY" }) do
+        local tone = C.STAT_TONE[key]
+        assertTrue(C.TONE[tone] ~= nil, key .. " has a color")
+        local hex = code(NS, tone)
+        assertNil(seen[hex], key .. "'s color is its own"); seen[hex] = true
+    end
+    assertNil(seen[code(NS, "greenMuted")]); assertNil(seen[code(NS, "redMuted")])
+end)
+
+test("cells: Replaces reads the item level, then the icon, then the name in its quality color", function()
+    local NS, _, m = T.newAddon()
+    local D = NS.DetailCells
+    local rep = byKey(D.ForYou(drop(), true).rows, "replaces")
+    assertEqual(rep.lead, "292"); assertEqual(rep.link, OLD)
+    assertEqual(rep.text, "|cffa335eeOld Helm|r", "the link's own quality color")
+    m.ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 } }
+    local q = byKey(D.ForYou(drop({ me = { verdict = "upgrade", ilvlDelta = 19, reasons = {},
+        baseline = { link = "|Hitem:300::|h[Old Helm]|h", ilvl = 292, quality = 3 } } }), true).rows, "replaces")
+    m.ITEM_QUALITY_COLORS = nil
+    assertEqual(q.text, "|cff0070deOld Helm|r", "the baseline's quality color")
+end)
+
+test("card: the glyphs are drawn in the monospace face; Replaces puts its item level before the icon", function()
+    local NS = shownTable()
+    NS.WindowGroup.ToggleExpand(1)
+    local card = NS.WindowGroup.Drawn().card
+    local C = NS.Constants
+    local chip = card.me.verdict
+    assertTrue(chip.glyph:IsShown()); assertEqual(textOf(chip.glyph), "▲"); assertEqual(chip.glyph:GetFont(), C.FONT_MONO)
+    assertEqual(card.me.rows[2].glyph:GetFont(), C.FONT_MONO)
+    assertEqual(textOf(card.me.rows[2].glyph), "▲"); assertEqual(textOf(card.me.rows[2].glyphText), "19")
+    local r, g, b = card.me.rows[2].glyph:GetTextColor()
+    assertEqual(("%.2f %.2f %.2f"):format(r, g, b), ("%.2f %.2f %.2f"):format(C.TONE.good.r, C.TONE.good.g, C.TONE.good.b))
+    assertEqual(textOf(card.them.verdict.glyph), "▼"); assertEqual(textOf(card.them.rows[3].glyph), "▼", "the Track row's")
+    assertFalse(card.me.rows[4].glyph:IsShown(), "Stats has no glyph")
+    assertFalse(card.trade.chip.glyph:IsShown(), "the trade chip has none")
+    local rep = card.me.rows[1]
+    assertTrue(rep.lead:IsShown()); assertEqual(textOf(rep.lead), "292")
+    assertTrue(rep.item.__points[1][4] > NS.Constants.WINDOW.SIDE_LABEL, "the icon after the item level")
+    -- No verdict texture is left on the card.
+    for _, side in ipairs({ card.me, card.them }) do
+        assertNil(textOf(side.verdict.text):find("arrow%-"), "the chip")
+        for _, row in ipairs(side.rows) do
+            if row:IsShown() then
+                local t = textOf(row.value) or ""
+                assertNil(t:find("arrow%-up") or t:find("arrow%-down"), row.key)
+            end
+        end
+    end
 end)
 
 -- feedback-21 H2, painted: the broker forgot the looter (they left, the roster event pruned them);

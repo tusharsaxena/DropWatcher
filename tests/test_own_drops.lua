@@ -368,7 +368,8 @@ test("own drops: the detail card's FOR THE GROUP names each member it upgrades, 
     assertEqual(textOf(rows[1].label), "Them"); assertEqual(textOf(rows[1].value), "Upgrade for 2")
     -- red under: the box held only `Them  Upgrade for 2`, the names in its tooltip alone
     assertTrue(rows[2]:IsShown()); assertEqual(textOf(rows[2].label), "Butterz")
-    assertEqual(T.marks(textOf(rows[2].value)), "276 [arrow-right] 287 · +11")
+    assertEqual(T.marks(textOf(rows[2].value)), "276 [arrow-right] 287")
+    assertTrue(rows[2].glyph:IsShown()); assertEqual(textOf(rows[2].glyph), "▲"); assertEqual(textOf(rows[2].glyphText), "11")
     assertEqual(textOf(rows[3].label), "Seta")
     assertFalse(rows[4]:IsShown(), "two upgrades, two names")
     local r, g, b = rows[2].label:GetTextColor()

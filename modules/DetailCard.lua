@@ -37,6 +37,12 @@ local _, NS = ...
 -- With `messages.editFirst` on, the host handlers open it for every ask, offer and announce
 -- (OpenEditor's `kind`), and its Send goes back through NS.PressAsk, NS.PressOffer or
 -- NS.PressAnnounce with the edited text.
+--
+-- THE GLYPHS (feedback-21 H5). A chip and a box's line each carry a monospace string of their own
+-- (C.FONT_MONO, the table cells' face and size) for the verdict glyph ▲ ≈ ▼, which the default face
+-- cannot draw: a chip's `glyph` before its words, a line's `arrow` (`▲ 19`) after its text, the number
+-- in the default face beside it, as the table draws it. A line's `lead` (the Replaces row's item
+-- level) goes before its icon.
 
 NS.DetailCard = NS.DetailCard or {}
 local DCard = NS.DetailCard
@@ -98,12 +104,31 @@ local function box(parent)
     return f
 end
 
--- A chip: a bordered label with a tooltip.
+-- A verdict glyph's string: the monospace face, at the table cells' size (feedback-21 H5).
+local GLYPH_SIZE, GLYPH_GAP, CHIP_PAD = 12, 3, 6
+
+local function newGlyph(parent)
+    local g = parent:CreateFontString(nil, "OVERLAY")
+    g:SetFont(C.FONT_MONO, GLYPH_SIZE, "")
+    g:Hide()
+    return g
+end
+
+-- A glyph's drawn width, with an estimate before the client measures it.
+local function glyphWidth(g)
+    local w = g.GetStringWidth and g:GetStringWidth()
+    if type(w) ~= "number" or w <= 0 then w = 8 end
+    return w
+end
+
+-- A chip: a bordered label with a tooltip, and a glyph before it for a verdict.
 local function newChip(parent)
     local c = box(parent)
     c:SetHeight(K.CHIP_H)
     c.text = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     c.text:SetPoint("CENTER", c, "CENTER", 0, 0)
+    c.glyph = newGlyph(c)
+    c.glyph:SetPoint("LEFT", c, "LEFT", CHIP_PAD, 0)
     attach(c)
     return c
 end
@@ -112,7 +137,18 @@ local function paintChip(c, chip)
     c.text:SetText(chip.text)
     setTone(c.text, chip.tone)
     c.tipLines = chip.tip
-    c:SetWidth(floor(textWidth(c.text, chip.text) + 12))
+    local w = textWidth(c.text, chip.text) + 2 * CHIP_PAD
+    c.glyph:SetShown(chip.glyph ~= nil)
+    c.text:ClearAllPoints()
+    if chip.glyph then
+        c.glyph:SetText(chip.glyph)
+        setTone(c.glyph, chip.tone)
+        c.text:SetPoint("LEFT", c.glyph, "RIGHT", GLYPH_GAP, 0)
+        w = w + glyphWidth(c.glyph) + GLYPH_GAP
+    else
+        c.text:SetPoint("CENTER", c, "CENTER", 0, 0)
+    end
+    c:SetWidth(floor(w))
 end
 
 -- The frame pieces the History tab's card is drawn with too (modules/HistoryCard.lua, feedback-15
@@ -158,12 +194,19 @@ local function newSideRow(side, i)
     r.label:SetJustifyH("LEFT")
     r.label:SetWordWrap(false)
     r.labelRGB = { r.label:GetTextColor() }   -- the template's gray, put back after a class color
+    r.lead = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")   -- the Replaces row's item level
+    r.lead:SetPoint("LEFT", r, "LEFT", K.SIDE_LABEL, 0)
+    r.lead:SetWordWrap(false)
     r.item = NS.WindowGroup.ItemButton(r, K.SIDE_ROW_H - 2)
-    r.item:SetPoint("LEFT", r, "LEFT", K.SIDE_LABEL, 0)
     r.value = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     r.value:SetJustifyH("LEFT")
     r.value:SetWordWrap(false)
     r.mark = NS.WindowRows.NewMark(r, r.value)   -- your own drop's ` [YOU]` (feedback-7 spec §2)
+    r.glyph = newGlyph(r)                         -- the verdict glyph after the text (feedback-21 H5)
+    r.glyph:SetPoint("LEFT", r.value, "RIGHT", NS.WindowRows.MARK_GAP, 0)
+    r.glyphText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.glyphText:SetPoint("LEFT", r.glyph, "RIGHT", GLYPH_GAP, 0)
+    r.glyphText:SetWordWrap(false)
     attach(r)
     return r
 end
@@ -352,6 +395,35 @@ local function paintHeader(card, drop, width)
     if card.stacked then fitChips(card, width) end
 end
 
+-- A line's glyph and the number after it (`▲ 19`), both in its tone, right after the text (its
+-- width then its own, cut only when the room runs out: NS.WindowRows.MarkedWidth, as the [YOU]
+-- mark's); hidden with no `arrow`.
+local function paintArrow(r, arrow, room)
+    local on = type(arrow) == "table" and arrow.glyph ~= nil
+    r.glyph:SetShown(on)
+    r.glyphText:SetShown(on)
+    if not on then return end
+    r.glyph:SetText(arrow.glyph)
+    r.glyphText:SetText(arrow.text or "")
+    setTone(r.glyph, arrow.tone)
+    setTone(r.glyphText, arrow.tone)
+    local text = arrow.text or ""
+    local aw = glyphWidth(r.glyph) + (text ~= "" and GLYPH_GAP + textWidth(r.glyphText, text) or 0)
+    local full = r.value.GetUnboundedStringWidth and r.value:GetUnboundedStringWidth() or nil
+    r.value:SetWidth(NS.WindowRows.MarkedWidth(room, full, aw))
+end
+
+-- The line's lead (`292`) at the label's edge, then the icon, then the text; answers the text's x.
+local function placeLead(r, line)
+    r.lead:SetText(line.lead or "")
+    r.lead:SetShown(line.lead ~= nil)
+    local x = K.SIDE_LABEL
+    if line.lead then x = x + floor(textWidth(r.lead, line.lead)) + 4 end
+    r.item:ClearAllPoints()
+    r.item:SetPoint("LEFT", r, "LEFT", x, 0)
+    return x + (line.link and K.SIDE_ROW_H + 2 or 0)
+end
+
 local function paintSideRow(r, line, width)
     r:SetShown(line ~= nil)
     if not line then return end
@@ -367,10 +439,12 @@ local function paintSideRow(r, line, width)
     r.key = line.key
     NS.WindowGroup.SetItem(r.item, line.link, line.wornSlot and { unit = "player", slot = line.wornSlot } or nil)
     r.value:ClearAllPoints()
-    local x = K.SIDE_LABEL + (line.link and K.SIDE_ROW_H + 2 or 0)
+    local x = placeLead(r, line)
     r.value:SetPoint("LEFT", r, "LEFT", x, 0)
     NS.WindowGroup.ClassTone(r.value, line.classFile)   -- a name in its class color, over the tone
-    NS.WindowRows.PlaceMark(r.value, r.mark, line.you, max(width - 20 - x, 20))
+    local room = max(width - 20 - x, 20)
+    NS.WindowRows.PlaceMark(r.value, r.mark, line.you, room)
+    paintArrow(r, line.arrow, room)
 end
 
 -- A box with no `verdict` (the History card's When and where) hides its chip.

@@ -7,8 +7,10 @@ local _, NS = ...
 -- monospace glyphs (NS.WindowCells.GLYPH), which render.
 --
 -- NOT ONLY TOOLTIPS (DW-F5). Every text drawn in the default face (GameFont*, not C.FONT_MONO) takes
--- its marks from here too: the detail card's verdict chips and Item level and Track rows. The `->`
--- between two values in those rows is TM.Arrow, the `arrow-right` icon in the muted tone. (The
+-- its marks from here too. The `->` between two values in the detail card's Item level and Track rows
+-- is TM.Arrow, the `arrow-right` icon in the muted tone. (The card's verdict chips and those rows drew
+-- TM.Mark's textures until feedback-21 H5: they now draw the table's glyphs, TM.ArrowCell's, in a
+-- monospace string of their own, modules/DetailCard.lua. The
 -- toast drew its gain's mark from here until feedback-9 spec §0: its verdicts are now monospace
 -- glyphs in segments of their own, and its names take TM.ItemName and TM.ClassName.) TM.Chars counts
 -- what such a text draws (an escape as two characters, a color code as none), for a width estimated
