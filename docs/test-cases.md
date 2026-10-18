@@ -333,7 +333,7 @@ Total.
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the full view's
 
-### test_compact_group.lua (21)
+### test_compact_group.lua (22)
 
 - compact group: a card is three lines at the text size, about 50 pixels at Default, the icon spanning them
 - compact group: switching layouts carries the scroll offset over as a fraction of the range
@@ -356,6 +356,7 @@ Total.
 - compact group: at the least width line 2's pieces end before the action button
 - compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict
 - compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)
+- compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)
 
 ### test_compact_history.lua (10)
 
@@ -487,13 +488,14 @@ Total.
 - rows: every drop row and its detail card sit ROW_INDENT in from the header; the labels shift over their cells
 - headers: a group header's chevron is gold, as its text, collapsed or open
 
-### test_side_cells.lua (24)
+### test_side_cells.lua (26)
 
 - side cells: Me reads the worn level, then the glyph and the unsigned difference in the verdict's tone
 - side cells: Can't use and Not wanted stay words after the gear, dim red and gray
 - side cells: two worn items read both levels and carry both icons
 - side cells: two worn items both read take a mark each, in the items' order and each its own tone (H7)
 - side cells: one worn item, an empty or unread slot, a word or an off-spec verdict keep one mark (H7)
+- side cells: a drop judged against one of two worn items, or a bag item, keeps one mark (R5)
 - side cells: nothing worn reads `empty`, muted, and the verdict follows
 - side cells: an unknown verdict's ? goes where the gear part says why, and stays where it does not
 - side cells: a dash gear part goes when the verdict says something, and stays alone when it does not
@@ -512,6 +514,7 @@ Total.
 - widths: the Offer panel's Their eq is at least Them's width and fits its widest cell
 - widths: the column set and the shed order keep Me and Them where the verdict columns sat
 - table: the Me cell paints its icons, level, glyph and difference left to right
+- table: a dual mark that does not fit its cell at a larger font is the one mark instead (R5)
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
 ### test_detail_card.lua (30)
@@ -841,7 +844,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (37)
+### test_evaluate.lua (38)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -852,6 +855,7 @@ Total.
 - evaluate: a dual wielder holding a two-hander compares a one-hander against the two-hander
 - evaluate: a two-hander compares against the average of both hands
 - evaluate: Titan's Grip compares a two-hander as a pair over both hands
+- evaluate: `either` marks a baseline picked as the lower of two worn items the drop could take (feedback-21 R5)
 - evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot
 - evaluate: ranged weapons are two-handers for hunters and main hand for wand users
 - evaluate: a gun, crossbow or wand in the main hand is a two-hander for off hands and one-handers
@@ -1908,14 +1912,14 @@ Total.
 | test_window_shell.lua | 59 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
-| test_compact_group.lua | 21 |
+| test_compact_group.lua | 22 |
 | test_compact_history.lua | 10 |
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
-| test_side_cells.lua | 24 |
+| test_side_cells.lua | 26 |
 | test_detail_card.lua | 30 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
@@ -1929,7 +1933,7 @@ Total.
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 13 |
-| test_evaluate.lua | 37 |
+| test_evaluate.lua | 38 |
 | test_offspec.lua | 11 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
@@ -1980,4 +1984,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1634** |
+| **Total** | **1638** |

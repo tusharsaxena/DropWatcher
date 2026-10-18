@@ -107,7 +107,8 @@ collapsing headers; each card indented under its header with the muted-white che
 showing a trade window and a second's tick leaving the cards as they are (feedback-10 spec §2), Them's last piece cut at the
 card's right inset (feedback-11 spec §0), and
 the least compact width, 440, at which line 2's fullest pieces end before the action button,
-feedback-5 spec §0, §4, and line 3's two dual marks still fit, feedback-21 H7),
+feedback-5 spec §0, §4, and line 3's two dual marks still fit, feedback-21 H7, and at a wider
+character measure give way to the one mark each, feedback-21 R5),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
 repainting, the collapsing headers, every tooltip at the card's top right, the strip without Clear
@@ -161,10 +162,11 @@ panel's 80px `PANEL_BTN_W` included, feedback-11 spec §1),
 worn items, an empty slot, every inspect state, your own drop's `Upgrade for N` and `No upgrades`,
 the merged tooltip with its gear grid (two worn items two rows, the arrow on the replaced one, a slot
 worn empty its own row) and History's verdict alone; the dual mark on two worn items both read, a
-mark per item in its own tone, and every case that keeps one (feedback-21 H7); the Offer panel's Their eq
+mark per item in its own tone, and every case that keeps one (feedback-21 H7), a drop judged against
+one of two worn items or a bag item among them (feedback-21 R5); the Offer panel's Their eq
 (`SideCells.Candidate`, feedback-7 spec §0) in every candidate state and at least Them's width; then each column's width measured over every kind at the harness's
 character measure (the dual mark's longest realistic cell inside them), the shed order, and the cells
-painted headless on the Drops table),
+painted headless on the Drops table, a dual mark too wide for its cell painted as the one mark, R5),
 `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
@@ -260,7 +262,8 @@ first, R4), and each shim's fallback with its API absent), `test_text_parse` (th
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
-every slot plan and every equippability path, plus nil and garbage inputs), `test_scoring` (the
+every slot plan and every equippability path, the `either` of a baseline picked from two worn items
+(feedback-21 R5), plus nil and garbage inputs), `test_scoring` (the
 scorers: the Pawn scale import, the weights score and its unknown keys, the adapter in use for each
 setting, the Pawn adapter's scales (for you, the scale you show in Pawn before a starter one you hid;
 feedback-21 R4) and `pending`, and the sidegrade item level and score reach

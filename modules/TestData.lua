@@ -357,14 +357,20 @@ local function offSpecOf(src, item, off, mainSpecID)
         reasons = (base == nil and off[3] == nil) and { { key = "emptySlot" } } or {} }
 end
 
+-- The plans whose second slot the sample gear fills (TD.GearFor's): the drop could take either.
+local EITHER = { pair = true, weapon1H = true }
+
 -- An evaluation as NS.Evaluate answers it: the verdict, the change, the worn item (a pool item
--- near the level the change implies), the kernel's reason key (`reason`) and the off-spec part
--- (`off`, judged for `spec.mainSpec`, else OFF_MAIN).
+-- near the level the change implies), `either` when that is the lower of two the sample wears (the
+-- kernel's, feedback-21 R5), the kernel's reason key (`reason`) and the off-spec part (`off`, judged
+-- for `spec.mainSpec`, else OFF_MAIN).
 local function ev(src, item, spec)
     if not spec then return nil end
     local verdict, delta = spec[1], spec[2]
     local reasons = spec.reason and { { key = spec.reason } } or {}
-    return { verdict = verdict, ilvlDelta = delta, reasons = reasons, baseline = baselineOf(src, item, delta),
+    local base, plan = baselineOf(src, item, delta), C.SLOT_PLAN[item.facts.equipLoc]
+    return { verdict = verdict, ilvlDelta = delta, reasons = reasons, baseline = base,
+        either = (base and plan and EITHER[plan.kind]) or nil,
         offSpec = offSpecOf(src, item, spec.off, spec.mainSpec) }
 end
 

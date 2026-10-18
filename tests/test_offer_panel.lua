@@ -221,7 +221,7 @@ test("offer panel: Their eq shows both worn items from the member's inspect read
     local OLD1, OLD2 = "|cffa335ee|Hitem:300::|h[Old Band]|h|r", "|cffa335ee|Hitem:301::|h[Older Band]|h|r"
     local d = NS.LootFeed.Get(2)
     d.me = { verdict = "downgrade", ilvlDelta = -3, reasons = {} }
-    d.candidates = { x = cand("Butterz", "MAGE", "ready", { verdict = "upgrade", ilvlDelta = 6, baseline = { link = OLD2, ilvl = 292 }, reasons = {} }) }
+    d.candidates = { x = cand("Butterz", "MAGE", "ready", { verdict = "upgrade", ilvlDelta = 6, either = true, baseline = { link = OLD2, ilvl = 292 }, reasons = {} }) }
     NS.Inspect.Get = function(guid)
         if guid ~= "Player-1-Butterz" then return nil end
         return { status = "fresh", at = NOW - 30, gear = { [11] = { link = OLD1, ilvl = 308 }, [12] = { link = OLD2, ilvl = 292 } } }

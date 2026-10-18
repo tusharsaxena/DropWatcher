@@ -350,7 +350,8 @@ test("test mode data: a key run and four bosses, every item a pool item that kee
 end)
 
 test("test mode data: worn items are other pool items of the slot, nearest the level the change implies", function()
-    local _, specs, ids = placeholders()
+    local NS, specs, ids = placeholders()
+    local C = NS.Constants
     local checked = 0
     for _, s in ipairs(specs) do
         for _, eval in ipairs({ s.me, s.them or false }) do
@@ -363,6 +364,9 @@ test("test mode data: worn items are other pool items of the slot, nearest the l
                 for _, lvl in ipairs({ 290, 300, 320 }) do
                     assertTrue(math.abs(base.ilvl - want) <= math.abs(lvl - want), "the nearest level")
                 end
+                -- The lower of two (a ring, a trinket, a one-hander) is the kernel's `either` (R5).
+                local kind = C.SLOT_PLAN[s.facts.equipLoc].kind
+                assertEqual(eval.either, (kind == "pair" or kind == "weapon1H") or nil, s.facts.equipLoc)
             end
         end
         if s.testInspect then

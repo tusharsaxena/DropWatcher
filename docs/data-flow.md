@@ -120,7 +120,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     Me: SideCells.Me(drop, your gear) ─> WindowCells.MyEq + WindowCells.Me merged (SideCells.Merge:
   │       `[icons] 292 ▲19`, the difference unsigned; feedback-6 §1, DW-F1; two worn items both
   │       read take a mark each, `[icons] 321 ▼10 / 308 ▲3`, SideCells.Parts: the verdict's on the
-  │       item it was judged against, TipMarks.ItemArrow's on the other, feedback-21 H7);
+  │       item it was judged against, TipMarks.ItemArrow's on the other, feedback-21 H7; only when
+  │       the kernel's `either` says the drop could take either, the baseline one of the two worn,
+  │       and the pieces fit the cell (WindowGroup.DualFits), else the one mark: feedback-21 R5);
   │     Trade: WindowOwn.Trade (your own drop: MineCells.OwnTrade, `Yes`, the upgrade count in its
   │       tooltip; else WindowCells.Trade), No in C.TONE.red (feedback-7 §2); on another player's
   │       drop none of your specs can use (main cantUse, no off-spec part), Yes or Likely reads
@@ -210,7 +212,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
   │     row's; no trade window countdown, feedback-10 §2; line 3 SideCells' Me and Them without
   │     icons, then the Trade cell, `You 321 ▼10 / 308 ▲3  Them Upgrade for 2  Trade Likely` (a mark
-  │     per worn item on a two-item slot, feedback-21 H7), the labels
+  │     per worn item on a two-item slot, feedback-21 H7; the one mark each when the two would
+  │     push Trade off the card, CompactGroup.LineThreeFits, feedback-21 R5), the labels
   │     gold, each half CompactGroup.PlaceThem's fixed gap after the last, Trade cut at the card's
   │     right inset (feedback-11 §0); feedback-6 §1, feedback-7 §2)
   └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),

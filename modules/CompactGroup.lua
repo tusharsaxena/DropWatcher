@@ -407,16 +407,18 @@ end
 --- item level (plain, or
 --- a muted word), the glyph and the difference or word in the verdict's tone, each placed after the
 --- last piece shown. A dual mark (`parts`, feedback-21 H7) draws each worn item's level, glyph and
---- difference, `You 321 ▼10 / 324 ▼23`, the second part in the single pieces.
+--- difference, `You 321 ▼10 / 324 ▼23`, the second part in the single pieces; with `single`, the one
+--- mark instead (CG.PaintHalves, when the dual marks do not fit: feedback-21 R5).
 --- @param card table
 --- @param key string `you` or `them`
 --- @param half table
-function CG.PaintHalf(card, key, half)
+--- @param single boolean|nil
+function CG.PaintHalf(card, key, half, single)
     local c = card.cells
     local label, h = c[key .. "Label"].text, c[key]
     label:SetText(half.label)
     label:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
-    local second = h.leadLevel and NS.WindowGroup.PaintLead(h, half.parts) or nil
+    local second = h.leadLevel and NS.WindowGroup.PaintLead(h, not single and half.parts or nil) or nil
     local p = second or half
     h.level:SetText(p.level or "")
     setTone(h.level, second and "plain" or half.levelTone)
@@ -438,11 +440,61 @@ function CG.PaintHalf(card, key, half)
     if key == "trade" then h.text:SetPoint("RIGHT", card, "RIGHT", -CG.PAD, 0) end
 end
 
---- Line 3 painted: You, Them and Trade (CompactCards' halves).
+local HALVES = { "you", "them", "trade" }
+
+-- A piece's width on one line (unbounded: Trade is cut at the card's inset), or nil while its
+-- font is not loaded.
+local function pieceWidth(fs)
+    local fn = fs.GetUnboundedStringWidth or fs.GetStringWidth
+    return fn(fs)
+end
+
+-- A half's pieces in CG.PaintHalf's order, after its label, and the gap before each.
+local HALF_PIECES = { "leadLevel", "leadGlyph", "leadText", "sep", "level", "glyph", "text" }
+local HALF_GAPS = { CG.HALF_GAP, CG.HALF_GAP, CG.HALF_GLYPH_GAP, CG.HALF_GAP, CG.HALF_GAP, CG.HALF_GAP, CG.HALF_GLYPH_GAP }
+
+-- A painted half's width: its label and each piece shown; nil while one cannot be measured.
+local function halfWidth(card, key)
+    local h = card.cells[key]
+    local w = pieceWidth(card.cells[key .. "Label"].text)
+    if not w then return nil end
+    for i, k in ipairs(HALF_PIECES) do
+        local fs = h[k]
+        if fs:IsShown() ~= false and (fs:GetText() or "") ~= "" then
+            local pw = pieceWidth(fs)
+            if not pw then return nil end
+            w = w + HALF_GAPS[i] + pw
+        end
+    end
+    return w
+end
+
+--- Whether painted line 3 fits `room`: You, Them and Trade, CG.HALVES_GAP apart. True while a piece
+--- cannot be measured.
+--- @param card table
+--- @param room number the line's width, from its left edge to the card's right inset
+--- @return boolean
+function CG.LineThreeFits(card, room)
+    local w = 2 * CG.HALVES_GAP
+    for _, key in ipairs(HALVES) do
+        local hw = halfWidth(card, key)
+        if not hw then return true end
+        w = w + hw
+    end
+    return w <= room
+end
+
+--- Line 3 painted: You, Them and Trade (CompactCards' halves). With `room` (the line's width), dual
+--- marks (feedback-21 H7) that would push Trade off the card (a larger Font size at the least width)
+--- give way to the one mark each (feedback-21 R5).
 --- @param card table
 --- @param cc table a CompactCards card
-function CG.PaintHalves(card, cc)
-    for _, key in ipairs({ "you", "them", "trade" }) do CG.PaintHalf(card, key, cc[key]) end
+--- @param room number|nil
+function CG.PaintHalves(card, cc, room)
+    for _, key in ipairs(HALVES) do CG.PaintHalf(card, key, cc[key]) end
+    if not room or not (cc.you.parts or cc.them.parts) or CG.LineThreeFits(card, room) then return end
+    CG.PaintHalf(card, "you", cc.you, true)
+    CG.PaintHalf(card, "them", cc.them, true)
 end
 
 -- What every card of one repaint shares: your gear and class, the transmog ask setting and your realm.
@@ -477,7 +529,7 @@ local function paintCard(card, drop, width, m, shared)
     card.model = cc
     paintLineOne(card, drop, cc, width, m)
     CG.PaintLineTwo(card, cc)
-    CG.PaintHalves(card, cc)
+    CG.PaintHalves(card, cc, width - CG.TextLeft(m, CG.LEAD) - CG.PAD)
 end
 
 --- A one-line header painted with a short form (`hd`, CompactCards.Header's or HistoryHeader's).

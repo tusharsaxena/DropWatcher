@@ -264,6 +264,33 @@ test("evaluate: Titan's Grip compares a two-hander as a pair over both hands", f
     assertEqual(res.baselineSlot, S.OFFHAND)
 end)
 
+test("evaluate: `either` marks a baseline picked as the lower of two worn items the drop could take (feedback-21 R5)", function()
+    local E = load()
+    local c = who("WARRIOR", 72)   -- Fury: dual wields, Titan's Grip
+    c.gear[S.FINGER1] = armor(640, "INVTYPE_FINGER", A.GENERIC)
+    c.gear[S.FINGER2] = armor(620, "INVTYPE_FINGER", A.GENERIC)
+    assertEqual(E.Evaluate(armor(630, "INVTYPE_FINGER", A.GENERIC), c).either, true, "rings: either finger")
+    c.gear[S.MAINHAND] = weapon(640, "INVTYPE_WEAPON", W.SWORD_1H)
+    c.gear[S.OFFHAND] = weapon(610, "INVTYPE_WEAPON", W.SWORD_1H)
+    local sword = weapon(630, "INVTYPE_WEAPON", W.SWORD_1H)
+    assertEqual(E.Evaluate(sword, c).either, true, "a dual wielder's one-hander: either hand")
+    c.gear[S.MAINHAND] = weapon(640, "INVTYPE_2HWEAPON", W.SWORD_2H)
+    c.gear[S.OFFHAND] = weapon(620, "INVTYPE_2HWEAPON", W.AXE_2H)
+    assertEqual(E.Evaluate(weapon(630, "INVTYPE_2HWEAPON", W.SWORD_2H), c).either, true, "Titan's Grip: either hand")
+    -- Judged against one item: the main hand only, both hands averaged, one slot empty.
+    local p = who("PALADIN", 66)   -- Protection: no dual wield
+    p.gear[S.MAINHAND] = weapon(640, "INVTYPE_WEAPON", W.MACE_1H)
+    p.gear[S.OFFHAND] = armor(610, "INVTYPE_SHIELD", A.SHIELD)
+    assertNil(E.Evaluate(weapon(630, "INVTYPE_WEAPON", W.MACE_1H), p).either, "no dual wield: the main hand alone")
+    assertNil(E.Evaluate(weapon(630, "INVTYPE_2HWEAPON", W.MACE_2H), p).either, "a two-hander: both hands averaged")
+    local m = who("MAGE", 64)
+    m.gear[S.MAINHAND] = weapon(640, "INVTYPE_WEAPON", W.SWORD_1H)
+    m.gear[S.OFFHAND] = armor(610, "INVTYPE_HOLDABLE", A.GENERIC)
+    assertNil(E.Evaluate(weapon(630, "INVTYPE_RANGEDRIGHT", W.WAND), m).either, "a non-hunter's ranged: the main hand alone")
+    m.gear[S.FINGER1], m.gear[S.FINGER2] = armor(640, "INVTYPE_FINGER", A.GENERIC), false
+    assertNil(E.Evaluate(armor(630, "INVTYPE_FINGER", A.GENERIC), m).either, "one finger empty")
+end)
+
 test("evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot", function()
     local E = load()
     local c = who("MAGE", 64)

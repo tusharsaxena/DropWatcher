@@ -468,8 +468,8 @@ local MY_TRINKETS = { [13] = { link = OLD, ilvl = 321 }, [14] = { link = RING, i
 local HER_TRINKETS = { [13] = { link = THEIRS, ilvl = 324 }, [14] = { link = RING, ilvl = 296 } }
 
 local function trinketDrop()
-    return drop({ facts = TRINKET_FACTS, me = { verdict = "upgrade", ilvlDelta = 11, reasons = {}, baseline = { link = RING, ilvl = 300 } },
-        them = { verdict = "upgrade", ilvlDelta = 15, reasons = {}, baseline = { link = RING, ilvl = 296 } } })
+    return drop({ facts = TRINKET_FACTS, me = { verdict = "upgrade", ilvlDelta = 11, either = true, reasons = {}, baseline = { link = RING, ilvl = 300 } },
+        them = { verdict = "upgrade", ilvlDelta = 15, either = true, reasons = {}, baseline = { link = RING, ilvl = 296 } } })
 end
 
 test("cells: on a two-item slot read in full, Item level is each worn item's level and mark; Replaces the one taken off (H7)", function()

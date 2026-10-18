@@ -733,22 +733,62 @@ end
 -- word), then the glyph and the difference or word in the verdict's tone. `unit` names whose
 -- inventory an icon's tooltip reads (yours: the client's own tooltip for your slot), else the link;
 -- an item with no slot (an off-spec bag item, feedback-19 spec §1) always reads its link.
+-- The item level, glyph and difference or word: a dual mark's second part (its first in the lead
+-- pieces), else the cell's one mark. Answers the second part, or nil.
+local function paintMarks(f, c, parts)
+    local second = WG.PaintLead(f, parts)
+    local p = second or c
+    f.level:SetText(p.level or "")
+    setTone(f.level, second and "plain" or c.levelTone)
+    f.glyph:SetText(p.glyph or "")
+    setTone(f.glyph, p.tone)
+    f.text:SetText(p.text)
+    setTone(f.text, p.tone)
+    return second
+end
+
+-- A piece's width on one line (unbounded: the last piece is cut at the cell's edge), or nil while
+-- its font is not loaded.
+local function pieceWidth(fs)
+    local fn = fs.GetUnboundedStringWidth or fs.GetStringWidth
+    return fn(fs)
+end
+
+-- A dual mark's pieces in WG.PlaceSide's order (WG.DualFits adds the gaps between them).
+local DUAL_PIECES = { "leadLevel", "leadGlyph", "leadText", "sep", "level", "glyph", "text" }
+
+--- Whether a painted dual mark (feedback-21 H7) fits its cell: its pieces at WG.PlaceSide's gaps
+--- after `nIcons` icons, within the cell's width. The columns keep the width the Default size
+--- measures, so at a larger Font size a dual mark can run past the cell into the next column; it
+--- then gives way to the one mark (feedback-21 R5). True while a piece cannot be measured (a font not
+--- yet loaded) or the cell has no width yet.
+--- @param f table a Me or Them cell, its dual mark painted
+--- @param nIcons number the icons shown (0..2)
+--- @return boolean
+function WG.DualFits(f, nIcons)
+    local S, room = WG.SIDE, f:GetWidth() or 0
+    if room <= 0 then return true end
+    local w = 2 * (S.VERDICT_GAP + S.GLYPH_GAP + S.PART_GAP)
+    if nIcons > 0 then w = w + nIcons * K.EQ_ICON + (nIcons - 1) * S.ICON_GAP + S.LEVEL_GAP end
+    for _, key in ipairs(DUAL_PIECES) do
+        local pw = pieceWidth(f[key])
+        if not pw then return true end
+        w = w + pw
+    end
+    return w <= room
+end
+
 local function paintSide(f, c, unit)
     paintText(f, c)
     for i, b in ipairs(f.icons) do
         local it = c.items[i]
         setItem(b, it and it.link or nil, it and unit and it.slot and { unit = unit, slot = it.slot } or nil)
     end
-    local second = WG.PaintLead(f, c.parts)
-    f.level:SetText((second or c).level or "")
-    setTone(f.level, second and "plain" or c.levelTone)
-    f.glyph:SetText((second or c).glyph or "")
-    setTone(f.glyph, (second or c).tone)
-    if second then
-        f.text:SetText(second.text)
-        setTone(f.text, second.tone)
-    end
-    WG.PlaceSide(f, #c.items, (second or c).level ~= nil, (second or c).glyph ~= nil, second ~= nil)
+    local nIcons = math.min(#c.items, 2)
+    local second = paintMarks(f, c, c.parts)
+    if second and not WG.DualFits(f, nIcons) then second = paintMarks(f, c, nil) end
+    local p = second or c
+    WG.PlaceSide(f, #c.items, p.level ~= nil, p.glyph ~= nil, second ~= nil)
 end
 WG.PaintSide = paintSide   -- the Offer panel's Their eq cell too (feedback-7 spec §0)
 

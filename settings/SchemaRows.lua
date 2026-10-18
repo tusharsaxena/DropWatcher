@@ -507,8 +507,9 @@ end
 
 -- ── Window › Icons (feedback-21 G11): every item icon's look ────────────────────────────────
 
--- The zoom, KickCD's shape (0 to 0.25 cropped off each side); 0, the default, is the icons as they
--- always were. The tab's Border block is composed (settings/ComposedRows.lua) and follows it.
+-- The zoom, KickCD's shape (0 to 0.25 cropped off each side); 0 is the icons as they always were,
+-- 0.1 the default (feedback-21 H6) trims the edge baked into most item icons. The tab's Border block
+-- is composed (settings/ComposedRows.lua) and follows it.
 local function icons()
     slider("icons.zoom", P.icons.zoom, 0, 0.25, 0.01, L["Icon zoom"],
         L["Crop each item icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most item icons."],

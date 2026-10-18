@@ -17,9 +17,13 @@ local _, NS = ...
 -- TWO WORN ITEMS (feedback-21 H7). Rings, trinkets and one-hand weapons with both items read: each
 -- worn item's level, then its own glyph and difference in its own tone, `321 ▼10 / 324 ▼23` (`parts`,
 -- in the items' order). The item the drop would replace takes the verdict's own mark; the other its
--- own, the drop's level against its own (NS.TipMarks.ItemArrow, as the tooltip's grid rows). A single
--- slot, a slot worn empty, a level not read, a verdict with no glyph or no difference, and History
--- (it keeps no worn items) keep the one mark. Every painter draws `parts` when it is there, the
+-- own, the drop's level against its own (NS.TipMarks.ItemArrow, as the tooltip's grid rows). Only
+-- when the kernel picked the baseline as the lower of two the drop could take either of (its
+-- `either`, feedback-21 R5): a one-hander for a non dual wielder, a non-hunter's ranged and a
+-- two-hander against both hands averaged were judged against one item, or the pair, and keep the one
+-- mark, as does a baseline neither worn item is (a bag item). A single slot, a slot worn empty, a
+-- level not read, a verdict with no glyph or no difference, and History (it keeps no worn items) keep
+-- the one mark too. Every painter draws `parts` when it is there, the
 -- single pieces (`level`, `glyph`, `text`) otherwise.
 -- OFF-SPEC (feedback-19 spec §1): a verdict cell of NS.OffSpecCells (`offSpec` set) is followed by
 -- its spec's name, `▲20 Holy`, in the offspec cyan, and the Me cell's gear part is the item it was
@@ -36,7 +40,8 @@ local _, NS = ...
 -- THE TOOLTIP (feedback-7 spec §3) is the verdict's title, then the worn gear as a grid right under
 -- it (NS.TipMarks.GearRows: `[Name] [ilvl] [worn item] [▲diff]`, a row per worn item, the verdict's
 -- arrow on the one the drop would replace and each other worn item its own against the drop:
--- feedback-21 H3; `empty` for a slot worn empty), then the gear's own lines (the inspect's age, or
+-- feedback-21 H3, when the drop could take either (`either`: feedback-21 R5); `empty` for a slot worn
+-- empty), then the gear's own lines (the inspect's age, or
 -- why nothing was read) and the verdict's (its Means, Track, Score and Why rows: feedback-21). The
 -- verdict's own one-row grid gives way to the gear's; with no gear listed it stays, under the title.
 -- A line already said is not said twice.
@@ -87,15 +92,17 @@ local function verdictPart(v, level)
     return nil, text
 end
 
--- The worn gear as a grid, or nil when the gear part lists none (a state word, no gear part).
+-- The worn gear as a grid, or nil when the gear part lists none (a state word, no gear part). Each
+-- other worn item takes its own arrow only when the drop could take either (the verdict's `either`,
+-- feedback-21 R5); judged against one item, the other row has none.
 local function gearGrid(eq, v)
     if type(eq) ~= "table" then return nil end
     local items = eq.gridItems or (type(eq.items) == "table" and eq.items) or {}
     local empty = eq.empty or 0
     if #items == 0 and empty == 0 then return nil end
     local tone = v.offSpec and v.tone or nil
-    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta, tone), v.base,
-        { ilvl = v.ilvl, band = v.band, tone = tone }))
+    local judge = (v.either or #items < 2) and { ilvl = v.ilvl, band = v.band, tone = tone } or nil
+    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta, tone), v.base, judge))
 end
 
 -- The verdict's own grid line, or nil.
@@ -127,20 +134,34 @@ local function mergedTip(eq, v)
     return out
 end
 
+-- Which of two worn items the verdict was judged against: the baseline's (by link), else, with no
+-- baseline link, the lower (TM.ReplacedRow); nil when the baseline is neither (a bag item,
+-- comparison.compareOwned: feedback-21 R5).
+local function judgedRow(items, base)
+    local link = type(base) == "table" and base.link or nil
+    local at = TM.ReplacedRow(items, 0, base)
+    if type(link) == "string" and items[at].link ~= link then return nil end
+    return at
+end
+
 --- The dual mark (feedback-21 H7): both worn items of a two-item slot, each `{ level, glyph, text,
 --- tone }` (TM.ArrowCell's answer with the worn level on it) in the items' order, the verdict's own
---- mark on the one the drop would replace (TM.ReplacedRow) and TM.ItemArrow's on the other. Nil when
---- the cell keeps one mark: not two items, a slot worn empty, a level not read, a verdict with no
---- glyph or no difference, an off-spec verdict (judged against one item). The toast takes it too.
---- @param v table a verdict cell (WindowCells.Verdict's: `verdict`, `delta`, `base`, `ilvl`, `band`)
+--- mark on the one the drop would replace (TM.ReplacedRow) and TM.ItemArrow's on the other. Only for
+--- a verdict whose baseline is the lower of two the drop could take either of (`either`, NS.Evaluate's:
+--- feedback-21 R5); nil when the cell keeps one mark: a drop judged against one item (a one-hander
+--- for a non dual wielder, a non-hunter's ranged, a two-hander against both hands averaged), a
+--- baseline neither worn item is (a bag item), not two items, a slot worn empty, a level not read, a
+--- verdict with no glyph or no difference, an off-spec verdict. The toast takes it too.
+--- @param v table a verdict cell (WindowCells.Verdict's: `verdict`, `delta`, `base`, `ilvl`, `band`, `either`)
 --- @param items table|nil the worn items { { link, ilvl }, ... }
 --- @param empty number|nil the slots worn empty
 --- @return table|nil parts
 function SC.Parts(v, items, empty)
-    if v.offSpec or type(items) ~= "table" or #items ~= 2 or (empty or 0) > 0 then return nil end
+    if v.offSpec or not v.either or type(items) ~= "table" or #items ~= 2 or (empty or 0) > 0 then return nil end
     local arrow = TM.ArrowCell(v.verdict, v.delta)
     if type(arrow) ~= "table" or arrow.text == "" then return nil end
-    local at = TM.ReplacedRow(items, 0, v.base)
+    local at = judgedRow(items, v.base)
+    if not at then return nil end
     local other = TM.ItemArrow(items[3 - at].ilvl, v.ilvl, v.band)
     if type(other) ~= "table" or TM.LevelText(items[at]) == "?" then return nil end
     arrow.level, other.level = TM.LevelText(items[at]), TM.LevelText(items[3 - at])

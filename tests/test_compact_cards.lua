@@ -30,7 +30,7 @@ local function groupDrop(over)
         id = 7, at = 90, link = LINK, isMine = false, sources = { chat = 1 },
         looter = { name = "Lysandra-Realm", guid = "Player-1-0000000L", classFile = "MAGE" },
         facts = { ilvl = 295, equipLoc = "INVTYPE_TRINKET", quality = 4, track = { name = "Champion", rank = 4, max = 8 } },
-        me = { verdict = "downgrade", ilvlDelta = -13, reasons = {} },
+        me = { verdict = "downgrade", ilvlDelta = -13, either = true, reasons = {} },
         them = { verdict = "cantUse", reasons = { { key = "classRestricted" } } },
         trade = { state = "likely", reasonKey = "notUpgrade", args = { 295, 298 }, basis = "inspect", age = 120 },
         inspect = { status = "fresh", at = NOW - 120 },
@@ -304,7 +304,7 @@ end)
 
 test("compact cards: a different upgrade track is in the verdict's tooltip, not on line 3", function()
     local C = CC()
-    local d = groupDrop({ me = { verdict = "upgrade", ilvlDelta = 6, reasons = {}, trackDelta = { sign = 1 } } })
+    local d = groupDrop({ me = { verdict = "upgrade", ilvlDelta = 6, either = true, reasons = {}, trackDelta = { sign = 1 } } })
     local card = C.Group(d, groupCtx())
     -- The verdict's own mark on the trinket it was judged against; the other trinket its own (H7).
     assertEqual(C.HalfText(card.you), "You 321 ▼26 / 308 ▲6")

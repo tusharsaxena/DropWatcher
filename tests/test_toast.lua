@@ -223,8 +223,8 @@ local MY_TRINKETS = { [13] = { link = link(601), ilvl = 321 }, [14] = { link = l
 local HER_TRINKETS = { [13] = { link = link(603), ilvl = 324 }, [14] = { link = link(604), ilvl = 296 } }
 
 local function dualDrop(over)
-    local d = drop({ facts = TRINKET, me = { verdict = "upgrade", ilvlDelta = 11 },
-        them = { verdict = "upgrade", ilvlDelta = 15 }, looter = { name = "Abcdefghijkl-Realm", guid = "Player-1-0000000A", classFile = "PRIEST" } })
+    local d = drop({ facts = TRINKET, me = { verdict = "upgrade", ilvlDelta = 11, either = true },
+        them = { verdict = "upgrade", ilvlDelta = 15, either = true }, looter = { name = "Abcdefghijkl-Realm", guid = "Player-1-0000000A", classFile = "PRIEST" } })
     for k, v in pairs(over or {}) do d[k] = v end
     return d
 end

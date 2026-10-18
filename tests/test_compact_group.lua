@@ -523,7 +523,7 @@ test("compact group: at the least width line 3's two dual marks fit, each worn i
     local K, CG, C = NS.Constants.WINDOW, NS.CompactGroup, NS.Constants
     m.__now = 100
     m.textCharWidth = 5
-    local down = { verdict = "downgrade", ilvlDelta = -10, reasons = {} }   -- judged against the lower, 321
+    local down = { verdict = "downgrade", ilvlDelta = -10, either = true, reasons = {} }   -- judged against the lower, 321
     local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 324 } }
     seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = down,
         them = down, trade = { state = "unknown", reasonKey = "noInspect", basis = "inspect", args = { "pending" } } }) })
@@ -556,4 +556,30 @@ test("compact group: at the least width line 3's two dual marks fit, each worn i
     local tradeEnd = tradeX + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
     assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
         card:GetWidth() - CG.PAD))
+end)
+
+-- feedback-21 R5: at a larger Font size line 3's dual marks would push Trade off the card at the
+-- least width; they give way to the one mark each, and the line reads as before H7.
+test("compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)", function()
+    local NS, _, m = T.enableAddon()
+    m.__now = 100
+    m.textCharWidth = 9
+    local down = { verdict = "downgrade", ilvlDelta = -10, either = true, reasons = {} }
+    local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 324 } }
+    seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = down,
+        them = down, trade = { state = "unknown", reasonKey = "noInspect", basis = "inspect", args = { "pending" } } }) })
+    NS.Gear.Snapshot = function() return { equipped = trinkets } end
+    NS.Inspect.Get = function() return { status = "fresh", at = 60, gear = trinkets } end
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.SetWindowMode("compact")
+    NS.ShowWindow()
+    local card = cardFor(NS.WindowGroup.Drawn(), 1)
+    local c = card.cells
+    assertTrue(card.model.you.parts ~= nil, "the model keeps the dual mark")
+    for _, key in ipairs({ "you", "them" }) do
+        local h = c[key]
+        assertFalse(h.sep:IsShown() or h.leadLevel:IsShown(), key .. ": no lead pieces")
+        assertEqual(h.level:GetText(), "321/324"); assertEqual(h.glyph:GetText(), "▼"); assertEqual(h.text:GetText(), "10")
+        assertEqual(h.level.__points[1][2], c[key .. "Label"].text, key .. ": the level after the label")
+    end
 end)

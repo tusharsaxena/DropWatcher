@@ -248,8 +248,9 @@ end
 
 --- One verdict cell (the Me or the Them column; both take the same tones). Its tooltip's comparison
 --- is a grid row naming `who`; the cell keeps `who`, `delta`, `base` (the worn item it was judged
---- against), `ilvl` (the drop's) and `band` (the evaluation's sidegrade band) for NS.SideCells, which
---- lays the worn gear out in that grid, each worn item with its own arrow.
+--- against), `ilvl` (the drop's), `band` (the evaluation's sidegrade band) and `either` (the baseline
+--- is the lower of two the drop could take: feedback-21 R5) for NS.SideCells, which lays the worn gear
+--- out in that grid, each worn item with its own arrow when `either`.
 --- A `cantUse` whose off-spec part another spec can use (NS.OffSpec.Of) is that part's cell instead
 --- (NS.OffSpecCells.Verdict, feedback-19 spec §1).
 --- @param eval table|nil NS.Evaluate's answer
@@ -269,7 +270,7 @@ function WC.Verdict(eval, side, title, ilvl, who)
     local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl, who)
     return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v,
         who = who, delta = num(eval.ilvlDelta), base = type(eval.baseline) == "table" and eval.baseline or nil,
-        ilvl = ilvl, band = num(eval.band) }
+        ilvl = ilvl, band = num(eval.band), either = eval.either == true }
 end
 
 --- The Me verdict: the drop judged for you (NS.SideCells puts it after your worn gear). The grid
