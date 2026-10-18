@@ -40,7 +40,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | P3 push | DW | done | through PF1 |
 | H1 Pawn works out of the box (PawnIsReady) | DW | done | e1f4ea7 (also: scale asked by spec index, unenchanted value) |
 | H2 "spec unknown" on an inspected looter | DW | done | f2bc24e (cause: the group broke up, prune() dropped the entry; the drop now keeps its read) |
-| H3 tooltips: gear line first, muted-gold labels, both dual-slot arrows | DW | todo | |
+| H3 tooltips: gear line first, muted-gold labels, both dual-slot arrows | DW | done | 3e56b53 (C.TONE.mutedGold added; other worn items judged by Evaluate.ItemVerdict, ilvl and band only) |
 | H4 Offer button toggles the Offer panel | DW | todo | |
 | H5 detail card: ▲▼ glyphs, For you / For Looter (name), stat colors, Replaces row | DW | todo | |
 | R4 review H1-H5 | DW | todo | |
