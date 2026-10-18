@@ -34,7 +34,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | P2 push all three branches | all | done | all three on `feat/2026-10-18-feedback-21` (versioning-git; the old `feature/*` remote branches await the owner's OK to delete) |
 | G9 the toast never glows | DW | done | b785c9f |
 | G10 toast scale | DW | done | 4488c30 |
-| G11 item icon style (zoom, border block, quality border) | DW | todo | |
+| G11 item icon style (zoom, border block, quality border) | DW | done | ea750d8 |
 | R3 review G9, G10, G11 | DW | todo | |
 | P3 push | DW | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
