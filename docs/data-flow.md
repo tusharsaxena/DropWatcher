@@ -824,7 +824,11 @@ AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
 LootFeed.Clear / the cap's trim ─> removal sink ─> Toast.Prune: gone drops leave the queue, a gone
     shown drop's toast goes ─> Pump
 toast.enabled off (the row's reaction) / a profile with it off ─> the toast goes, the queue empties
-drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.ResetPosition
+drag (test mode only) ─> profile.toast.point (offsets x toast.scale: UIParent's units)
+Reset position ─> Toast.ResetPosition
+toast.scale (the row's reaction, Toast.ApplyScale) / build / profile reload
+    ─> applyPoint: SetScale(toast.scale), then SetPoint(toast.point's offsets / toast.scale)
+       (the anchor stays where it was put; toast.point is never rewritten)
 ```
 
 ## Auto-ask (design spec §9.4)

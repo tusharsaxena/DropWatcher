@@ -55,6 +55,12 @@ local _, NS = ...
 -- drop's toast stays until it is closed or test mode ends, since placing it takes longer than its
 -- duration.
 --
+-- SCALE. `toast.scale` (0.5 to 2, Window › Toast's Scale, feedback-21 G10) is the frame's own scale,
+-- applied when it is built, by the row's reaction (ApplyScale, live on a toast on screen) and on a
+-- profile reload. The saved point is kept in UIParent's units, not the toast's: a drag stores its
+-- offsets times the scale and they are applied divided by it, so a scale change grows or shrinks
+-- the toast about the anchor the player placed and never rewrites `toast.point`.
+--
 -- SOUND. With `toast.sound` on, each toast plays the client's alert sound (core/Compat.lua's
 -- PlayAlertSound, a SOUNDKIT entry).
 --
@@ -222,16 +228,28 @@ end
 
 -- ── the frame ───────────────────────────────────────────────────────────────────────────────
 
-local function savePoint()
-    local point, _, relativePoint, x, y = frame:GetPoint(1)
-    if point then store().point = { point, relativePoint, x, y } end
+-- `toast.scale`, or 1 for a stored value the write seam would refuse.
+local function scaleOf()
+    local s = setting("scale")
+    if type(s) ~= "number" or s ~= s or s <= 0 then return 1 end
+    return s
 end
 
+-- GetPoint answers in the toast's own (scaled) units; the point is stored in UIParent's.
+local function savePoint()
+    local point, _, relativePoint, x, y = frame:GetPoint(1)
+    local s = frame:GetScale() or 1
+    if point then store().point = { point, relativePoint, (x or 0) * s, (y or 0) * s } end
+end
+
+-- The scale first, then the saved point in the toast's units at that scale: the anchor stays put.
 local function applyPoint()
     local pt = store().point
     if type(pt) ~= "table" then pt = Toast.POINT end
+    local s = scaleOf()
+    frame:SetScale(s)
     frame:ClearAllPoints()
-    frame:SetPoint(pt[1], UIParent, pt[2], pt[3] or 0, pt[4] or 0)
+    frame:SetPoint(pt[1], UIParent, pt[2], (pt[3] or 0) / s, (pt[4] or 0) / s)
 end
 
 local function onDragStart()
@@ -585,9 +603,10 @@ function Toast.OnEnabledChanged(on)
 end
 
 --- A profile switch, copy or reset (core/DropWatcher.lua's reloadProfile): no row reaction runs,
---- so the incoming `toast.enabled` is read here.
+--- so the incoming `toast.enabled` is read here, and a built toast takes the incoming scale and point.
 function Toast.OnProfileReloaded()
     if setting("enabled") ~= true then stopAll("profile") end
+    if frame then applyPoint() end   -- the incoming profile's scale and point
 end
 
 --- Test mode turned on or off (core/DropWatcher.lua NS.SetTestMode): turned off, a test drop's
@@ -596,6 +615,13 @@ end
 function Toast.OnTestModeChanged(on)
     if on then return end
     Toast.Prune()
+end
+
+--- The `toast.scale` row's reaction: a built toast, on screen or not, takes the new scale about its
+--- saved anchor (the point itself is unchanged). Before the first toast there is nothing to scale;
+--- the build applies it.
+function Toast.ApplyScale()
+    if frame then applyPoint() end
 end
 
 --- Forget the saved position: the toast goes back under the top of the screen.

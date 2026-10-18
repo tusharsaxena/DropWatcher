@@ -63,7 +63,9 @@ through the seam, the account-wide Keep history for, the CLI and the degraded lo
 glow, feedback-21: every glow row and its default, the main | off-spec alternation and each color's
 Use class color beside it (off, player-scoped), the refused values and colors, a style's knobs dimmed
 for another style and the style while its glow is off, the color pair never, the
-`NS.Glow.Refresh` reaction, `/dw set` on a color and `0 (Automatic)`), `test_settings_pages` (the settings
+`NS.Glow.Refresh` reaction, `/dw set` on a color and `0 (Automatic)`; Window › Toast's Scale, feedback-21
+G10: its 0.5-2 by 0.05 range, `isPercent`, default 1, dimmed with the toast off, the refused values and its
+place after Play a sound), `test_settings_pages` (the settings
 pages built headless: the page list and each page's strip, a page's rows by its key, When to show's
 table (one line per situation, its gold headers and stripe, each cell's value, a toggle writing its
 path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, parked
@@ -391,7 +393,9 @@ the edge: off by default, a qualifying drop shown and painted and gone after its
 time with each drop once, the queue's cap, a drop that turns likely on its `DropUpdated`, the hover
 pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the
 Ask button through the host handler, the sound, the drag only in test mode with the point saved and
-Reset position, test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim)
+Reset position, `toast.scale` applied live and at the build about the saved anchor, the point saved in
+UIParent's units and unchanged by a scale change, a profile switch taking the incoming scale
+(feedback-21 G10), test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim)
 taking its toast and its place in the queue, an Ask on a gone drop, no typed `×` close mark when the
 close control degrades (DW-P21), turning the toast off
 or switching to a profile with it off, the stand-down and the diagnostics line),

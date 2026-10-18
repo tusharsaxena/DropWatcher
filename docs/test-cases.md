@@ -100,7 +100,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (17)
+### test_schema_rows.lua (18)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -119,6 +119,7 @@ Total.
 - glow: an out-of-range knob, an unknown style and a malformed color are refused
 - glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never
 - glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
+- toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a sound, live only with the toast on
 
 ### test_settings_pages.lua (39)
 
@@ -1496,7 +1497,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (32)
+### test_toast.lua (34)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1521,6 +1522,8 @@ Total.
 - toast edge: Ask goes through the shared host handler, and the button follows its state
 - toast edge: toast.sound plays the client's alert from SOUNDKIT
 - toast edge: only test mode drags it; the position is saved and Reset position forgets it
+- toast edge: toast.scale scales a toast on screen live about its saved anchor, the point unchanged
+- toast edge: the first toast is built at toast.scale, and a profile switch takes the incoming scale
 - toast edge: test mode's placeholder toasts and stays until test mode ends
 - toast edge: a drop that leaves the feed takes its toast and its place in the queue
 - toast edge: the cap's trim takes the trimmed drop's toast, through the real feed
@@ -1854,7 +1857,7 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 17 |
+| test_schema_rows.lua | 18 |
 | test_settings_pages.lua | 39 |
 | test_slash.lua | 26 |
 | test_window.lua | 15 |
@@ -1912,7 +1915,7 @@ Total.
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 32 |
+| test_toast.lua | 34 |
 | test_glow.lua | 13 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
@@ -1932,4 +1935,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1590** |
+| **Total** | **1593** |

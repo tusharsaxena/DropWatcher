@@ -341,3 +341,29 @@ test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color 
     NS.addon:OnSlashCommand("set glow.offSpec.color 1 0 0 1")
     assertEqual(NS.addon.db.profile.glow.offSpec.color.r, 1)
 end)
+
+-- ── Window › Toast: Scale (feedback-21 G10) ─────────────────────────────────────────────────
+
+test("toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a sound, live only with the toast on", function()
+    local NS = T.enableAddon()
+    local S = NS.SchemaRuntime
+    local row = S.FindRow("toast.scale")
+    assertTrue(row ~= nil, "toast.scale has a row")
+    assertEqual(row.page, "window"); assertEqual(row.group, "Toast"); assertEqual(row.label, "Scale")
+    assertEqual(row.type, "number")
+    assertEqual(row.min, 0.5); assertEqual(row.max, 2); assertEqual(row.step, 0.05)
+    assertEqual(row.default, 1, "today's size"); assertEqual(NS.C.PROFILE.toast.scale, 1)
+    assertTrue(row.isPercent == true, "drawn as a percentage, 50 % to 200 %")
+    assertTrue(type(row.onChange) == "function", "applied live (NS.Toast.ApplyScale)")
+    assertTrue(row.disabledIf(), "dimmed while the toast is off")
+    assertTrue(S.Set("toast.enabled", true))
+    assertFalse(row.disabledIf())
+    assertFalse(S.Set("toast.scale", 0.25)); assertFalse(S.Set("toast.scale", 2.5))
+    assertTrue(S.Set("toast.scale", 1.5)); assertEqual(NS.addon.db.profile.toast.scale, 1.5)
+    local order = {}
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("window")) do
+        if r.group == "Toast" then order[#order + 1] = r.path end
+    end
+    assertEqual(order[#order], "toast.scale", "the tab's last row")
+    assertEqual(order[#order - 1], "toast.sound")
+end)

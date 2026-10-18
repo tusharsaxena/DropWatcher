@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1590%2F1590_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1593%2F1593_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -54,7 +54,7 @@ Your own drops show who in the group would gain from them. **Offer** opens a pan
 
 **History** remembers what the feed showed for 30 days, across logouts and alts, and what became of each drop: asked, offered, expired, received, traded away or declined. Click a row for its detail card, or right-click it to mark it declined. How long it keeps things, and the button that clears it, are under Settings › Window › Layout. A `/reload` loses nothing: this session's drops come back on the Drops tab.
 
-Two extras are off until you turn them on: the **toast**, a popup when someone loots a big upgrade you could ask for, and **auto-ask**, which sends the whisper for you after the boss dies. Both handle off-spec upgrades with their own wording, and your main spec still comes first: auto-ask holds an off-spec whisper until any main-spec one has gone out. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
+Two extras are off until you turn them on: the **toast**, a popup when someone loots a big upgrade you could ask for (Settings › Window › Toast sets its size, 50 to 200 %, and it grows or shrinks where you put it), and **auto-ask**, which sends the whisper for you after the boss dies. Both handle off-spec upgrades with their own wording, and your main spec still comes first: auto-ask holds an off-spec whisper until any main-spec one has gone out. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
 
 ## How the loot watching works
 

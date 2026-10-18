@@ -33,7 +33,7 @@ passed.
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..3 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
-| TOAST-1..5 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2) |
+| TOAST-1..6 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10) |
 | GLOW-1..9 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
@@ -1908,6 +1908,18 @@ whisper. An off-spec sidegrade or downgrade raises no toast. Auto-ask on, with o
 and one off-spec upgrade from the same boss: the main-spec ask is whispered at its delay, and the
 off-spec ask about 5 s after it, never before it. Result:
 
+**TOAST-6. The toast's Scale (feedback-21 G10).** The headless `test_toast` (`toast.scale scales a toast
+on screen live`, `the first toast is built at toast.scale`) and `test_schema_rows` (`toast scale`) cover
+it. Settings › Window › Toast: Scale is the tab's last row, under Play a sound, reads `100%` and dims
+while Show a toast is unticked. Tick Show a toast, `/dw test` → the test toast shows at today's size under
+the top of the screen. Drag Scale to `150%` → the toast on screen grows as you release, its top edge's
+middle staying where it was; `50%` → half size, same anchor; `200%` → double, still on screen. Drag the
+toast somewhere else at `200%`, set Scale back to `100%` → it shrinks about where you dropped it, not back
+under the top. `/reload`, `/dw test` → it comes back at the stored scale, in the same place. Window ›
+Layout › Reset position → back under the top, at the stored scale. Switch to a profile whose Scale is
+still `100%` → a toast on screen takes today's size. `/dw get toast.scale` → the stored value (`1.5` at
+`150%`); `/dw set toast.scale 3` is refused. Result:
+
 ## Upgrade glow
 
 The glow's decision, its settings and each surface's icon are headless-tested (`test_glow`,
@@ -2445,6 +2457,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | GLOW-3..6 | feedback-21, each glow style and its knobs: Button, Proc, Pixel border, Auto cast | No client pass recorded yet |
 | GLOW-7..8 | feedback-21, each glow turned off; a style's knobs dimmed for another style | No client pass recorded yet |
 | GLOW-9 | feedback-21, Use class color beside each glow color: the player's class, the swatch's alpha, never dimmed | No client pass recorded yet |
+| TOAST-6 | feedback-21 G10, the toast's Scale: 50 to 200 %, live on a toast on screen, about its saved anchor | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 

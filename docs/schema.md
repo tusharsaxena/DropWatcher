@@ -133,6 +133,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on both tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a Drops row is taller by its countdown bar's room while the Trade window column shows (feedback-5 spec §1). Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
 | `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
+| `toast.scale` | `1` | Toast (feedback-21 G10) | the toast frame's scale, 0.5 to 2 by 0.05, drawn as a percentage (`isPercent`, 50 % to 200 %; the CLI shows the stored number), dimmed while `toast.enabled` is off; its reaction `NS.Toast.ApplyScale()` scales a built toast live, on screen or not, about its saved anchor (`toast.point` is unchanged), and a profile reload re-applies it; before the first toast the build applies it |
 
 ### Window › Upgrade glow (feedback-21)
 
@@ -173,7 +174,7 @@ an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (Li
 |---|---|---|---|
 | `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, full is 1038 x 600 and compact is 440 x 460 at the full window's top right. A stored width under the layout's least (its default: full 1038, compact 440; feedback-4 spec §4, DW-D4, recomputed by feedback-5 spec §4, DW-E4, and feedback-6 spec §0-§1) is raised to it on load |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
-| `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }` |
+| `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }`, the offsets in UIParent's units (feedback-21 G10): a drag stores them times `toast.scale` and they are applied divided by it, so a scale change never moves the anchor; a point saved before G10 was saved at scale 1, so it reads the same |
 | `simPanel.point` | absent | a drag of the simulation panel; Reset position clears it | `{ point, relativePoint, x, y }`; until set, the panel opens beside the window |
 
 Each one's owner and every writer are named under

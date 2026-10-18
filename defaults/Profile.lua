@@ -157,6 +157,7 @@ NS.C = {
             duration = 8,       -- seconds on screen
             inCombat = false,
             sound    = false,
+            scale    = 1,       -- the frame's scale, 0.5 to 2 (Window › Toast's Scale, 50 to 200 %)
         },
 
         -- The upgrade glow on a drop's icon (feedback-21): `main` for an upgrade for your current

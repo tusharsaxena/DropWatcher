@@ -371,6 +371,10 @@ local function window()
         L["How long a toast stays on screen."], toast)
     bool("toast.inCombat", T.inCombat, L["Show in combat"], L["Show toasts in combat too."], toast)
     bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], toast)
+    -- 50 to 200 %, about the toast's saved anchor; live on a toast on screen (feedback-21 G10).
+    slider("toast.scale", T.scale, 0.5, 2, 0.05, L["Scale"],
+        L["The toast's size, from half to double. It grows or shrinks about the place you put it."],
+        with(toast, { isPercent = true, onChange = function() NS.Toast.ApplyScale() end }))
 end
 
 -- ── Window › Upgrade glow (feedback-21): the glow on an upgrade's icon ──────────────────────
