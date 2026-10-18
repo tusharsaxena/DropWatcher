@@ -116,7 +116,7 @@ end
 local function shape(res, specID, mainSpecID)
     return {
         specID = specID, mainSpecID = mainSpecID, verdict = res.verdict, ilvlDelta = res.ilvlDelta, trackDelta = res.trackDelta,
-        baseline = res.baseline, baselineSlot = res.baselineSlot, reasons = res.reasons,
+        baseline = res.baseline, baselineSlot = res.baselineSlot, reasons = res.reasons, band = res.band,
     }
 end
 

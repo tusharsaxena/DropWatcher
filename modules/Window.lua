@@ -59,9 +59,10 @@ local TAB_SET = { group = true, history = true }
 -- A retired tab's key opens the tab that took its drops.
 local TAB_ALIAS = { mine = "group" }
 local TAB_LABEL = { group = L["Drops"], history = L["History"] }
+-- Each tab's tooltip rows (feedback-21): { label, value } pairs.
 local TAB_TIP = {
-    group   = L["Every drop your group receives, your own included, one row each, grouped by boss or key run."],
-    history = L["Drops from earlier encounters, kept across sessions."],
+    group   = { { L["Holds"], L["every drop your group receives, yours included"] }, { L["Grouped by"], L["boss or key run"] } },
+    history = { { L["Holds"], L["drops from earlier encounters"] }, { L["Kept"], L["across sessions"] } },
 }
 -- What a tab with no body yet says, so the window is never blank.
 local TAB_PLACEHOLDER = {
@@ -237,7 +238,8 @@ end
 --- `{ text, wrap = false }`, which does not: NS.TipMarks.NoWrap, or `{ grid = rows }`, columns:
 --- NS.TipMarks.Grid, painted by NS.TipGrid). Read on every hover, so it is
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
---- Hooked rather than set, so a library widget keeps its own hover tint.
+--- Hooked rather than set, so a library widget keeps its own hover tint. A button shows it while
+--- disabled too (SetMotionScriptsWhileDisabled): the gray No action's tooltip is why there is none.
 --- `place` is nil (below the widget, ANCHOR_BOTTOM), `above` (Window.PlaceAbove: a filter-bar
 --- control, DW-B1) or `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2).
 --- @param widget table
@@ -247,6 +249,7 @@ function Window.AttachTooltip(widget, fn, place)
     widget.tooltip = fn
     widget.tipPlace = place
     if widget.EnableMouse then widget:EnableMouse(true) end
+    if widget.SetMotionScriptsWhileDisabled then widget:SetMotionScriptsWhileDisabled(true) end
     widget:HookScript("OnEnter", showTooltip)
     widget:HookScript("OnLeave", hideTooltip)
 end
@@ -281,7 +284,9 @@ end
 
 -- A tab's tooltip: its label and what it holds.
 local function tabTip(key)
-    return TAB_LABEL[key], TAB_TIP[key]
+    local out = { TAB_LABEL[key] }
+    for _, r in ipairs(TAB_TIP[key] or {}) do out[#out + 1] = NS.TipMarks.Row(r[1], r[2]) end
+    return unpack(out)
 end
 
 --- RestrictionChanged's last reason; before the first one, the tracker's own answer. Nil while
@@ -882,6 +887,7 @@ end
 -- next drop. Master `autoOpen` false, or the situation's own `autoOpen` false, turns it off. A
 -- minimized window stays minimized and counts the drop (`n new`). The frame is not protected
 -- (no secure template, no protected child), so opening it in combat is allowed and taints nothing.
+-- It opens on Drops, where the drop is (feedback-20); a window already open keeps the tab it shows.
 -- A test drop's open is test mode's (openedByTestMode), so turning test mode off closes it again:
 -- NS.SetTestMode fills the feed before Window.OnTestModeChanged, so the drops can open it first.
 -- A drop restored after a reload (feedback-15 spec §0) was seen before it: it opens nothing, and
@@ -893,6 +899,7 @@ local function maybeAutoOpen(rec)
     if not Sit.ShouldAutoOpen(key) then return end
     NS.Debug(TAG, "auto-open: drop %s added in %s", tostring(rec.id), tostring(key))
     NS.WindowCompact.OnAutoOpen(key)   -- compact during a run (`window.compactInRuns`)
+    Window.SelectTab("group")
     Window.Open()
     openedByTestMode = rec.test == true
 end

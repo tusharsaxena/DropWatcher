@@ -556,16 +556,22 @@ end)
 -- The Pawn seam
 -- ---------------------------------------------------------------------------------------------
 
--- A Pawn fake: data for every link but "uncached", one 12% upgrade, a scale and a value.
+-- A Pawn fake shaped like Pawn 2.13.6 (Pawn.lua): PawnIsReady() is its public readiness API
+-- (line 4916) and PawnIsInitialized is a file local (line 28), never a global. Data for every link
+-- but "uncached", one 12% upgrade, a scale per class and spec index, and a value pair (enchanted,
+-- unenchanted) as PawnGetSingleValueFromItem answers (line 1663).
 local function installPawn(m)
-    m.PawnIsInitialized = true
+    m.PawnIsReady = function() return true end
     m.PawnGetItemData = function(link) if link ~= "uncached" then return { link = link } end end
     m.PawnIsItemAnUpgrade = function(data)
         if data.link == "up" then return { { ScaleName = "S", PercentUpgrade = 0.12 } } end
         return nil
     end
-    m.PawnFindScaleForSpec = function(classID, specID) return classID .. ":" .. specID end
-    m.PawnGetSingleValueFromItem = function(data, scale) return scale == "S" and #data.link or nil end
+    m.PawnFindScaleForSpec = function(classID, specIndex) return classID .. ":" .. specIndex end
+    m.PawnGetSingleValueFromItem = function(data, scale)
+        if scale == "S" then return #data.link + 1, #data.link end
+        return nil
+    end
 end
 
 test("compat: without Pawn every reader answers nil and nothing raises", function()
@@ -574,14 +580,27 @@ test("compat: without Pawn every reader answers nil and nothing raises", functio
     assertNil(Compat.PawnItemData("up"))
     assertNil(Compat.PawnUpgradeInfo("up"))
     assertNil(Compat.PawnScaleForSpec(1, 71))
+    assertNil(Compat.PawnVisibleScale(1, 71))
     assertNil(Compat.PawnItemValue("up", "S"))
+end)
+
+test("compat: Pawn's own PawnIsReady() is the readiness test, with no global flag", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    -- red under: a seam that reads a global PawnIsInitialized, which Pawn keeps local (H1)
+    assertNil(m.PawnIsInitialized)
+    assertTrue(Compat.PawnIsReady())
+    m.PawnIsReady = function() return nil end
+    assertFalse(Compat.PawnIsReady(), "nil while Pawn is still initializing")
+    m.PawnIsReady = function() error("boom") end
+    assertFalse(Compat.PawnIsReady())
 end)
 
 test("compat: Pawn loaded but not initialized is not ready", function()
     local Compat, m = fresh()
     installPawn(m)
-    m.PawnIsInitialized = false
-    -- red under: a seam that calls Pawn without asking PawnIsInitialized
+    m.PawnIsReady = function() return nil end
+    -- red under: a seam that calls Pawn without asking PawnIsReady
     m.PawnGetItemData = function() error("called before Pawn initialized") end
     assertFalse(Compat.PawnIsReady())
     assertNil(Compat.PawnUpgradeInfo("up"))
@@ -594,11 +613,28 @@ test("compat: Pawn ready answers the upgrade list, an empty list, or nil while u
     assertEqual(Compat.PawnUpgradeInfo("up")[1].PercentUpgrade, 0.12)
     assertNil(next(Compat.PawnUpgradeInfo("same")), "not an upgrade is an empty list")
     assertNil(Compat.PawnUpgradeInfo("uncached"), "uncached is pending")
-    assertEqual(Compat.PawnScaleForSpec(1, 71), "1:71")
-    assertEqual(Compat.PawnItemValue("abc", "S"), 3)
     assertNil(Compat.PawnItemValue("abc", "Other"))
     assertNil(Compat.PawnItemValue("abc", nil))
     assertNil(Compat.PawnItemValue("uncached", "S"))
+end)
+
+test("compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    -- red under: a seam that passes the specID (71), which no Pawn scale carries
+    assertEqual(Compat.PawnScaleForSpec(1, 71), "1:1", "Arms")
+    assertEqual(Compat.PawnScaleForSpec(10, 269), "10:3", "Windwalker")
+    assertNil(Compat.PawnScaleForSpec(1, 999), "a spec this addon does not know: no scale")
+    assertNil(Compat.PawnScaleForSpec(nil, 71))
+end)
+
+test("compat: an item's Pawn value is its unenchanted one, the value Pawn's upgrade test compares", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    -- red under: a seam that keeps the first (enchanted) value, which flatters your enchanted gear
+    assertEqual(Compat.PawnItemValue("abc", "S"), 3)
+    m.PawnGetSingleValueFromItem = function() return 7 end
+    assertEqual(Compat.PawnItemValue("abc", "S"), 7, "no unenchanted value: the one there is")
 end)
 
 test("compat: an error inside Pawn reads as not ready, never as this addon's error", function()
@@ -610,9 +646,45 @@ test("compat: an error inside Pawn reads as not ready, never as this addon's err
     assertNil(Compat.PawnScaleForSpec(1, 71))
 end)
 
-test("compat: a function-spelled PawnIsInitialized is called", function()
+-- Pawn's scale table (PawnCommon.Scales, Pawn.lua) and its visibility test (PawnIsScaleVisible,
+-- line 5467): a starter (provider) scale per spec, and the scales a player made or imported.
+local function installScales(m, scales, visible)
+    m.PawnCommon = { Scales = scales }
+    m.PawnIsScaleVisible = function(name) return visible[name] == true end
+end
+
+test("compat: your visible Pawn scale is the one you show, a custom one before a starter", function()
     local Compat, m = fresh()
     installPawn(m)
+    installScales(m, {
+        Starter = { ClassID = 1, SpecID = 1, Provider = "Wowhead", ProviderActive = true },
+        Mine = { },
+        Fury = { ClassID = 1, SpecID = 2, Provider = "Wowhead", ProviderActive = true },
+        Mage = { ClassID = 8 },
+        Abandoned = { ClassID = 1, SpecID = 1, Provider = "Old" },
+    }, { Starter = true, Mine = true, Fury = true, Mage = true, Abandoned = true })
+    -- red under: a scorer with no visible-scale reader, which takes the hidden-or-not starter scale
+    assertEqual(Compat.PawnVisibleScale(1, 71), "Mine", "a visible custom scale with no class")
+    m.PawnCommon.Scales.Mine = nil
+    assertEqual(Compat.PawnVisibleScale(1, 71), "Starter", "your spec's visible starter scale")
+    m.PawnIsScaleVisible = function(name) return name == "Fury" or name == "Mage" or name == "Abandoned" end
+    assertNil(Compat.PawnVisibleScale(1, 71), "another spec's, another class's or an abandoned scale is not yours")
+    m.PawnCommon.Scales.Arms = { ClassID = 1, SpecID = 1 }
+    m.PawnIsScaleVisible = function(name) return name == "Arms" end
+    assertEqual(Compat.PawnVisibleScale(1, 71), "Arms", "an imported scale that names your spec")
+    assertNil(Compat.PawnVisibleScale(1, 999), "a spec this addon does not know: no scale")
+    m.PawnIsScaleVisible = function() error("Pawn broke") end
+    assertNil(Compat.PawnVisibleScale(1, 71))
+    m.PawnCommon = nil
+    assertNil(Compat.PawnVisibleScale(1, 71))
+end)
+
+test("compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    m.PawnIsReady = nil
+    m.PawnIsInitialized = true
+    assertTrue(Compat.PawnIsReady())
     m.PawnIsInitialized = function() return true end
     assertTrue(Compat.PawnIsReady())
     m.PawnIsInitialized = function() error("boom") end

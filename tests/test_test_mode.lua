@@ -256,7 +256,7 @@ test("test mode data: off-spec samples show every off-spec verdict, an empty slo
             assertTrue(s.trade.state ~= "no", "a tradeable sample: " .. off.verdict)
             local ask = NS.WindowCells.Ask(s, nil, nil, false)
             if askable then assertEqual(ask.template, "askOffSpec", off.verdict)
-            else assertEqual(ask.tip[2], "It is not an upgrade for you.", off.verdict) end
+            else assertEqual(T.tipPlain(ask.tip[2]), "• Why: not an upgrade for you", off.verdict) end
         elseif s.me.verdict == "cantUse" then
             assertTrue(s.me.offSpec == nil, "no off-spec rescue")
             if s.me.reasons[1].key == "armorType" then armorRefusal = true end
@@ -323,9 +323,9 @@ test("window: test mode shows an off-spec verdict, cyan with the spec's name, an
             assertTrue((textOf(r.cells.me.text) or ""):find("Holy", 1, true) ~= nil, "the spec's name")
             assertEqual(select(2, r.cells.me.text:GetTextColor()), NS.Constants.TONE.offspec.g, "in the offspec cyan")
             local words = {}
-            for _, l in ipairs(r.cells.me.tipLines) do if type(l) == "string" then words[#words + 1] = l end end
+            for _, l in ipairs(r.cells.me.tipLines) do if type(l) == "string" then words[#words + 1] = T.tipPlain(l) end end
             local tip = table.concat(words, "\n")
-            assertTrue(tip:find("Protection can't use it", 1, true) ~= nil, tip)
+            assertTrue(tip:find("• Protection: can't use it", 1, true) ~= nil, tip)
             local rows = NS.DetailCells.ForYou(d, nil, "PALADIN").rows
             assertEqual(rows[1].key, "spec"); assertEqual(rows[1].text, "Holy (off-spec): Protection can't use it")
         end
@@ -350,7 +350,8 @@ test("test mode data: a key run and four bosses, every item a pool item that kee
 end)
 
 test("test mode data: worn items are other pool items of the slot, nearest the level the change implies", function()
-    local _, specs, ids = placeholders()
+    local NS, specs, ids = placeholders()
+    local C = NS.Constants
     local checked = 0
     for _, s in ipairs(specs) do
         for _, eval in ipairs({ s.me, s.them or false }) do
@@ -363,6 +364,9 @@ test("test mode data: worn items are other pool items of the slot, nearest the l
                 for _, lvl in ipairs({ 290, 300, 320 }) do
                     assertTrue(math.abs(base.ilvl - want) <= math.abs(lvl - want), "the nearest level")
                 end
+                -- The lower of two (a ring, a trinket, a one-hander) is the kernel's `either` (R5).
+                local kind = C.SLOT_PLAN[s.facts.equipLoc].kind
+                assertEqual(eval.either, (kind == "pair" or kind == "weapon1H") or nil, s.facts.equipLoc)
             end
         end
         if s.testInspect then
@@ -669,6 +673,14 @@ test("window: every cell of every sample row says something and has a reason", f
     end
 end)
 
+-- The worn levels a Me or Them cell draws: its level, or a dual mark's two (feedback-21 H7: the
+-- first in the lead pieces), `/`-joined as WindowCells.Levels writes them.
+local function drawnLevels(c)
+    local level = textOf(c.level) or ""
+    if c.sep:IsShown() then return textOf(c.leadLevel) .. "/" .. level end
+    return level
+end
+
 -- The levels a sample's looter was inspected wearing in its slots (`295`, `295/300`), or nil.
 local function wornOf(NS, dropId)
     local d = NS.LootFeed.Get(dropId)
@@ -685,7 +697,7 @@ test("window: the rows show every ask state, every Them gear state and every tra
     for _, r in ipairs(drawn.rows) do
         local a = r.cells.actions
         ask[textOf(a.ask.label)] = true
-        local text = textOf(r.cells.them.level)
+        local text = drawnLevels(r.cells.them)
         eq[text] = true
         local worn = wornOf(NS, r.dropId)
         if worn then
@@ -729,7 +741,7 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
     local rows, checked = NS.WindowGroup.Drawn().rows, 0
     for _, r in ipairs(rows) do
         local d = NS.LootFeed.Get(r.dropId)
-        local level = textOf(r.cells.me.level) or ""
+        local level = drawnLevels(r.cells.me)
         -- red under: `You 999`, your real gear beside a verdict judged against the sample's worn item
         assertFalse(level:find("999", 1, true) ~= nil, "row " .. d.id .. ": " .. level)
         local want = levelsOf(NS, d)
@@ -751,7 +763,7 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
     NS.Window.Refresh()
     for _, card in ipairs(NS.WindowGroup.Drawn().rows) do
         local d = NS.LootFeed.Get(card.dropId)
-        local level = textOf(card.cells.you.level) or ""
+        local level = drawnLevels(card.cells.you)
         assertFalse(level:find("999", 1, true) ~= nil, "card " .. d.id .. ": " .. level)
         assertEqual(level, levelsOf(NS, d) or level, "card " .. d.id)
     end

@@ -37,6 +37,13 @@ local _, NS = ...
 -- With `messages.editFirst` on, the host handlers open it for every ask, offer and announce
 -- (OpenEditor's `kind`), and its Send goes back through NS.PressAsk, NS.PressOffer or
 -- NS.PressAnnounce with the edited text.
+--
+-- THE GLYPHS (feedback-21 H5). A chip and a box's line each carry a monospace string of their own
+-- (C.FONT_MONO, the table cells' face and size) for the verdict glyph ▲ ≈ ▼, which the default face
+-- cannot draw: a chip's `glyph` before its words, a line's `arrow` (`▲ 19`) after its text, the number
+-- in the default face beside it, as the table draws it. A line's `lead` (the Replaces row's item
+-- level) goes before its icon. A dual mark's second part (`more`, feedback-21 H7: `/ 324` and its own
+-- `▲ 3`) follows the arrow in a text and a glyph string of its own (`moreText`, `glyph2`, `glyphText2`).
 
 NS.DetailCard = NS.DetailCard or {}
 local DCard = NS.DetailCard
@@ -98,12 +105,31 @@ local function box(parent)
     return f
 end
 
--- A chip: a bordered label with a tooltip.
+-- A verdict glyph's string: the monospace face, at the table cells' size (feedback-21 H5).
+local GLYPH_SIZE, GLYPH_GAP, CHIP_PAD = 12, 3, 6
+
+local function newGlyph(parent)
+    local g = parent:CreateFontString(nil, "OVERLAY")
+    g:SetFont(C.FONT_MONO, GLYPH_SIZE, "")
+    g:Hide()
+    return g
+end
+
+-- A glyph's drawn width, with an estimate before the client measures it.
+local function glyphWidth(g)
+    local w = g.GetStringWidth and g:GetStringWidth()
+    if type(w) ~= "number" or w <= 0 then w = 8 end
+    return w
+end
+
+-- A chip: a bordered label with a tooltip, and a glyph before it for a verdict.
 local function newChip(parent)
     local c = box(parent)
     c:SetHeight(K.CHIP_H)
     c.text = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     c.text:SetPoint("CENTER", c, "CENTER", 0, 0)
+    c.glyph = newGlyph(c)
+    c.glyph:SetPoint("LEFT", c, "LEFT", CHIP_PAD, 0)
     attach(c)
     return c
 end
@@ -112,7 +138,18 @@ local function paintChip(c, chip)
     c.text:SetText(chip.text)
     setTone(c.text, chip.tone)
     c.tipLines = chip.tip
-    c:SetWidth(floor(textWidth(c.text, chip.text) + 12))
+    local w = textWidth(c.text, chip.text) + 2 * CHIP_PAD
+    c.glyph:SetShown(chip.glyph ~= nil)
+    c.text:ClearAllPoints()
+    if chip.glyph then
+        c.glyph:SetText(chip.glyph)
+        setTone(c.glyph, chip.tone)
+        c.text:SetPoint("LEFT", c.glyph, "RIGHT", GLYPH_GAP, 0)
+        w = w + glyphWidth(c.glyph) + GLYPH_GAP
+    else
+        c.text:SetPoint("CENTER", c, "CENTER", 0, 0)
+    end
+    c:SetWidth(floor(w))
 end
 
 -- The frame pieces the History tab's card is drawn with too (modules/HistoryCard.lua, feedback-15
@@ -154,12 +191,34 @@ local function newSideRow(side, i)
     r:SetPoint("TOPRIGHT", side, "TOPRIGHT", -10, -(24 + (i - 1) * K.SIDE_ROW_H))
     r.label = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     r.label:SetPoint("LEFT", r, "LEFT", 0, 0)
+    r.label:SetWidth(K.SIDE_LABEL - 4)   -- a member's name (your own drop's rows) is cut, not drawn over the icon
+    r.label:SetJustifyH("LEFT")
+    r.label:SetWordWrap(false)
+    r.labelRGB = { r.label:GetTextColor() }   -- the template's gray, put back after a class color
+    r.lead = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")   -- the Replaces row's item level
+    r.lead:SetPoint("LEFT", r, "LEFT", K.SIDE_LABEL, 0)
+    r.lead:SetWordWrap(false)
     r.item = NS.WindowGroup.ItemButton(r, K.SIDE_ROW_H - 2)
-    r.item:SetPoint("LEFT", r, "LEFT", K.SIDE_LABEL, 0)
     r.value = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     r.value:SetJustifyH("LEFT")
     r.value:SetWordWrap(false)
     r.mark = NS.WindowRows.NewMark(r, r.value)   -- your own drop's ` [YOU]` (feedback-7 spec §2)
+    r.glyph = newGlyph(r)                         -- the verdict glyph after the text (feedback-21 H5)
+    r.glyph:SetPoint("LEFT", r.value, "RIGHT", NS.WindowRows.MARK_GAP, 0)
+    r.glyphText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.glyphText:SetPoint("LEFT", r.glyph, "RIGHT", GLYPH_GAP, 0)
+    r.glyphText:SetWordWrap(false)
+    -- A dual mark's second part (feedback-21 H7): `/ 324`, then its own glyph and number.
+    r.moreText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.moreText:SetPoint("LEFT", r.glyphText, "RIGHT", NS.WindowRows.MARK_GAP, 0)
+    r.moreText:SetWordWrap(false)
+    r.moreText:Hide()
+    r.glyph2 = newGlyph(r)
+    r.glyph2:SetPoint("LEFT", r.moreText, "RIGHT", NS.WindowRows.MARK_GAP, 0)
+    r.glyphText2 = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.glyphText2:SetPoint("LEFT", r.glyph2, "RIGHT", GLYPH_GAP, 0)
+    r.glyphText2:SetWordWrap(false)
+    r.glyphText2:Hide()
     attach(r)
     return r
 end
@@ -335,6 +394,7 @@ DCard.FitChips = fitChips
 local function paintHeader(card, drop, width)
     local name = NS.WindowCells.ItemName(drop.link) or "?"
     NS.WindowGroup.SetItem(card.icon, drop.link, NS.WindowGroup.Where(drop))
+    NS.Glow.Apply(card.icon, drop)   -- the upgrade glow (modules/Glow.lua)
     card.name:SetText(name)
     qualityTone(card.name, drop)
     card.nameTip.showItem = true   -- the real item tooltip (WindowGroup.ItemHover, DW-80)
@@ -347,20 +407,68 @@ local function paintHeader(card, drop, width)
     if card.stacked then fitChips(card, width) end
 end
 
+-- One glyph and its number in the arrow's tone; answers their width.
+local function paintGlyph(g, t, arrow)
+    g:SetText(arrow.glyph)
+    t:SetText(arrow.text or "")
+    setTone(g, arrow.tone)
+    setTone(t, arrow.tone)
+    local text = arrow.text or ""
+    return glyphWidth(g) + (text ~= "" and GLYPH_GAP + textWidth(t, text) or 0)
+end
+
+-- A line's glyph and the number after it (`▲ 19`), both in its tone, right after the text (its
+-- width then its own, cut only when the room runs out: NS.WindowRows.MarkedWidth, as the [YOU]
+-- mark's); hidden with no `arrow`. A dual mark's `more` (`/ 324 ▲ 3`, feedback-21 H7) follows it.
+local function paintArrow(r, arrow, room, more)
+    local on = type(arrow) == "table" and arrow.glyph ~= nil
+    local two = on and type(more) == "table" and type(more.arrow) == "table" and more.arrow.glyph ~= nil
+    r.glyph:SetShown(on)
+    r.glyphText:SetShown(on)
+    r.moreText:SetShown(two); r.glyph2:SetShown(two); r.glyphText2:SetShown(two)
+    if not on then return end
+    local aw = paintGlyph(r.glyph, r.glyphText, arrow)
+    if two then
+        r.moreText:SetText(more.text)
+        setTone(r.moreText, "plain")
+        aw = aw + 2 * NS.WindowRows.MARK_GAP + textWidth(r.moreText, more.text) + paintGlyph(r.glyph2, r.glyphText2, more.arrow)
+    end
+    local full = r.value.GetUnboundedStringWidth and r.value:GetUnboundedStringWidth() or nil
+    r.value:SetWidth(NS.WindowRows.MarkedWidth(room, full, aw))
+end
+
+-- The line's lead (`292`) at the label's edge, then the icon, then the text; answers the text's x.
+local function placeLead(r, line)
+    r.lead:SetText(line.lead or "")
+    r.lead:SetShown(line.lead ~= nil)
+    local x = K.SIDE_LABEL
+    if line.lead then x = x + floor(textWidth(r.lead, line.lead)) + 4 end
+    r.item:ClearAllPoints()
+    r.item:SetPoint("LEFT", r, "LEFT", x, 0)
+    return x + (line.link and K.SIDE_ROW_H + 2 or 0)
+end
+
 local function paintSideRow(r, line, width)
     r:SetShown(line ~= nil)
     if not line then return end
     r.label:SetText(line.label)
+    if line.labelClassFile then
+        NS.WindowGroup.ClassTone(r.label, line.labelClassFile, "plain")   -- a member's name (feedback-20)
+    else
+        r.label:SetTextColor(unpack(r.labelRGB))
+    end
     r.value:SetText(line.text)
     setTone(r.value, line.tone)
     r.tipLines = line.tip
     r.key = line.key
     NS.WindowGroup.SetItem(r.item, line.link, line.wornSlot and { unit = "player", slot = line.wornSlot } or nil)
     r.value:ClearAllPoints()
-    local x = K.SIDE_LABEL + (line.link and K.SIDE_ROW_H + 2 or 0)
+    local x = placeLead(r, line)
     r.value:SetPoint("LEFT", r, "LEFT", x, 0)
     NS.WindowGroup.ClassTone(r.value, line.classFile)   -- a name in its class color, over the tone
-    NS.WindowRows.PlaceMark(r.value, r.mark, line.you, max(width - 20 - x, 20))
+    local room = max(width - 20 - x, 20)
+    NS.WindowRows.PlaceMark(r.value, r.mark, line.you, room)
+    paintArrow(r, line.arrow, room, line.more)
 end
 
 -- A box with no `verdict` (the History card's When and where) hides its chip.
@@ -376,7 +484,7 @@ local function paintTrade(t, model)
     paintChip(t.chip, { text = model.chip.text, tone = model.chip.tone, tip = model.tip })
     t.text:SetText(model.text)
     t.meta:SetText(model.meta)
-    t.tipLines = { model.tip[1], model.text, model.meta, model.tip[2] }
+    t.tipLines = model.tip
 end
 DCard.PaintSide, DCard.PaintTrade = paintSide, paintTrade
 
@@ -399,6 +507,14 @@ end
 -- The looter's inspect entry (a test mode placeholder's own).
 local function inspectOf(drop)
     return NS.TestMode.InspectOf(drop)
+end
+
+-- Whether another player's looter has left your group: the broker has forgotten them, so the card
+-- reads the drop's own copy of their read, or says why there is none (feedback-21 H2).
+local function looterLeft(drop)
+    if drop.test or drop.isMine then return false end
+    local guid = type(drop.looter) == "table" and drop.looter.guid
+    return guid ~= nil and NS.Roster.Get(guid) == nil
 end
 
 local function paintActions(card, drop, ctx)
@@ -449,9 +565,10 @@ function DCard.Paint(card, drop, width, now)
         placeStackedActions(card, width)
     end
     local snap = NS.Gear.Snapshot()
-    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile), sideW)
+    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile,
+        NS.TestMode.GearOf(drop, snap and snap.equipped)), sideW)
     local WO = NS.WindowOwn
-    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id)), sideW)
+    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id), looterLeft(drop)), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
     paintTrade(card.trade, DC.TradeBox(drop, situation))
     local state, reason = askState(drop)
@@ -485,10 +602,11 @@ local SENDERS = {
     announce = function(e, opts) NS.PressAnnounce(e.dropId, opts) end,
 }
 
+-- The Send button's rows by what the box sends: where the text goes, then its limit.
 local SEND_TIP = {
-    ask = L["Whisper the looter this text. One ask per item per looter."],
-    offer = L["Whisper this member this text. One offer per item per member."],
-    announce = L["Post this text to the group's channel."],
+    ask = { { L["Whispers"], L["the looter"] }, { L["Limit"], L["one per item per looter"] } },
+    offer = { { L["Whispers"], L["this member"] }, { L["Limit"], L["one per item per member"] } },
+    announce = { { L["Posts to"], L["the group's channel"] } },
 }
 
 local function sendEditor(e)
@@ -502,11 +620,15 @@ local function editorButtons(e)
     e.send = NS.Window.TextButton(e, 80, "chat", L["Send"], function() sendEditor(e) end)
     e.send:SetPoint("BOTTOMRIGHT", e, "BOTTOMRIGHT", -10, 10)
     NS.Window.AttachTooltip(e.send, function()
-        return L["Send"], SEND_TIP[e.kind]
+        local out = { L["Send"] }
+        for _, r in ipairs(SEND_TIP[e.kind] or {}) do out[#out + 1] = NS.TipMarks.Row(r[1], r[2]) end
+        return unpack(out)
     end)
     e.cancel = NS.Window.TextButton(e, 80, "cancel", L["Cancel"], function() e:Hide() end)
     e.cancel:SetPoint("RIGHT", e.send, "LEFT", -6, 0)
-    NS.Window.AttachTooltip(e.cancel, function() return L["Cancel"], L["Close the box without sending."] end)
+    NS.Window.AttachTooltip(e.cancel, function()
+        return L["Cancel"], NS.TipMarks.Row(L["Closes"], L["the box, without sending"])
+    end)
 end
 
 local function editorBox(e)

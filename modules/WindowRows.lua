@@ -90,10 +90,10 @@ function WR.SetFontSize(fs, size)
     fs:SetFont(base[1], size or base[2], base[3])
 end
 
-local PARTS = { "text", "glyph", "sub", "level", "mark" }
+local PARTS = { "text", "glyph", "sub", "level", "mark", "leadLevel", "leadGlyph", "leadText", "sep" }
 
---- Every text of a row's cells (`row.cells[key].text`, `.glyph`, `.sub`, `.level`, `.mark`) at `size`, once
---- per change.
+--- Every text of a row's cells (`row.cells[key].text`, `.glyph`, `.sub`, `.level`, `.mark`, and a dual
+--- mark's `.leadLevel`, `.leadGlyph`, `.leadText`, `.sep`: feedback-21 H7) at `size`, once per change.
 --- @param row table
 --- @param size number|nil
 function WR.ApplyRowFont(row, size)

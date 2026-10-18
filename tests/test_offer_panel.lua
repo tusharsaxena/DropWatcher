@@ -117,11 +117,12 @@ local function openPanel()
     return NS, NS.OfferPanel.Drawn(), m
 end
 
--- A Their eq cell as drawn: level, glyph and difference (or word), space-joined.
+-- A Their eq cell as drawn: level, glyph and difference (or word), space-joined; a dual mark's first
+-- part and its `/` first (feedback-21 H7).
 local function eqOf(row)
-    local parts = {}
-    for _, fs in ipairs({ row.eq.level, row.eq.glyph, row.eq.text }) do
-        local t = textOf(fs)
+    local parts, e = {}, row.eq
+    for _, fs in ipairs({ e.leadLevel, e.leadGlyph, e.leadText, e.sep, e.level, e.glyph, e.text }) do
+        local t = fs:IsShown() ~= false and textOf(fs)
         if t and t ~= "" then parts[#parts + 1] = t end
     end
     return table.concat(parts, " ")
@@ -147,7 +148,7 @@ test("offer panel: Offer opens it docked right, the candidates ranked with Their
     assertEqual(textOf(r4.offer.label), "No action"); assertFalse(r4.offer:IsEnabled()); assertEqual(r4.offer.tone, "bad")
     assertEqual(r4.offer.art:GetTexture(), NS.Icon("ban"))
     assertEqual(NS.Window.TooltipOf(r4.offer)[1], "No action")
-    assertEqual(NS.Window.TooltipOf(r4.offer)[2], "Offer is shown for members it is an upgrade or an equal for.")
+    assertEqual(T.tipPlain(NS.Window.TooltipOf(r4.offer)[2]), "• Offer: for members it upgrades or equals")
     assertEqual(textOf(p.panel.note.text), "5 members · sorted by gain")
     local heads = {}
     for key, h in pairs(p.panel.heads) do heads[#heads + 1] = key .. "=" .. textOf(h.text) end
@@ -200,7 +201,7 @@ test("offer panel: every part has a reason tooltip; Their eq's holds the old pil
     local tip = T.tipJoined(lines)
     assertEqual(lines[1], "For Seta: Upgrade")
     assertTrue(NS.TipMarks.IsGrid(lines[2]), "the worn gear as a grid (feedback-7 spec §3)")
-    assertTrue(tip:find("An upgrade for them", 1, true) ~= nil, tip)
+    assertTrue(T.tipPlainJoined(lines):find("• For them: a higher item level", 1, true) ~= nil, tip)
     assertTrue(W.TooltipOf(p.rows[5].eq)[1] == "Fifth: Checking")
     assertTrue(table.concat(W.TooltipOf(p.panel.heads.actions), " "):find("Trade", 1, true) == nil, "no Trade sentence")
     assertTrue(#W.TooltipOf(p.panel.line) >= 3); assertTrue(#W.TooltipOf(p.panel.announce) >= 2)
@@ -220,7 +221,7 @@ test("offer panel: Their eq shows both worn items from the member's inspect read
     local OLD1, OLD2 = "|cffa335ee|Hitem:300::|h[Old Band]|h|r", "|cffa335ee|Hitem:301::|h[Older Band]|h|r"
     local d = NS.LootFeed.Get(2)
     d.me = { verdict = "downgrade", ilvlDelta = -3, reasons = {} }
-    d.candidates = { x = cand("Butterz", "MAGE", "ready", { verdict = "upgrade", ilvlDelta = 6, baseline = { link = OLD2, ilvl = 292 }, reasons = {} }) }
+    d.candidates = { x = cand("Butterz", "MAGE", "ready", { verdict = "upgrade", ilvlDelta = 6, either = true, baseline = { link = OLD2, ilvl = 292 }, reasons = {} }) }
     NS.Inspect.Get = function(guid)
         if guid ~= "Player-1-Butterz" then return nil end
         return { status = "fresh", at = NOW - 30, gear = { [11] = { link = OLD1, ilvl = 308 }, [12] = { link = OLD2, ilvl = 292 } } }
@@ -229,8 +230,8 @@ test("offer panel: Their eq shows both worn items from the member's inspect read
     NS.OfferPanel.Open(2)
     local r = NS.OfferPanel.Drawn().rows[1]
     assertTrue(r.eq.icons[1]:IsShown() and r.eq.icons[2]:IsShown(), "both rings")
-    assertEqual(eqOf(r), "308/292 ▲ 6")
-    assertTrue(T.tipJoined(NS.Window.TooltipOf(r.eq)):find("Inspected 30s ago.", 1, true) ~= nil)
+    assertEqual(eqOf(r), "308 ▼ 10 / 292 ▲ 6", "a mark per ring (feedback-21 H7): the judged one the verdict's, the other its own")
+    assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(r.eq)):find("• Inspected: 30s ago", 1, true) ~= nil)
 end)
 
 test("offer panel: opening an upgrade for you reveals who it would help on its row", function()
@@ -253,6 +254,52 @@ test("offer panel: the close mark closes it, and it closes itself when its drop 
     assertFalse(NS.OfferPanel.IsShown())
     assertTrue(p.panel.closeButton ~= nil)
     assertTrue(NS.OfferPanel.Open(99) == nil, "no such drop")
+end)
+
+-- The Offer button toggles (feedback-21 H4): Offer on the drop the panel shows closes it, another
+-- drop's Offer switches the panel to that drop. Every Offer (row, compact card, detail card) goes
+-- through NS.WindowOwn.PressAction.
+local function groupRow(NS, id) return rowFor(NS.WindowGroup.Drawn(), id) end
+
+test("offer panel: a row's Offer closes the panel it opened, and opens it again", function()
+    local NS = openPanel()
+    assertTrue(NS.OfferPanel.IsShown())
+    offerOf(groupRow(NS, 1)):__fire("OnClick")
+    assertFalse(NS.OfferPanel.IsShown(), "the same drop's Offer closes it")
+    assertTrue(NS.State.offerPanel == nil)
+    offerOf(groupRow(NS, 1)):__fire("OnClick")
+    assertTrue(NS.OfferPanel.IsShown()); assertEqual(NS.OfferPanel.DropId(), 1)
+end)
+
+test("offer panel: another drop's Offer switches the open panel to that drop", function()
+    local NS = openPanel()
+    offerOf(groupRow(NS, 2)):__fire("OnClick")
+    assertTrue(NS.OfferPanel.IsShown(), "still open"); assertEqual(NS.OfferPanel.DropId(), 2)
+    assertEqual(textOf(NS.OfferPanel.Drawn().panel.name.text), "Band of Embers")
+    offerOf(groupRow(NS, 2)):__fire("OnClick")
+    assertFalse(NS.OfferPanel.IsShown(), "then its own Offer closes it")
+end)
+
+test("offer panel: a compact card's Offer and the detail card's Offer toggle it too", function()
+    local NS = shownMine(true)
+    offerOf(groupRow(NS, 1)):__fire("OnClick")
+    assertTrue(NS.OfferPanel.IsShown())
+    offerOf(groupRow(NS, 1)):__fire("OnClick")
+    assertFalse(NS.OfferPanel.IsShown(), "the compact card's Offer closes it")
+    local NS2 = shownMine()
+    NS2.WindowGroup.ToggleExpand(1)
+    local b = NS2.WindowGroup.Drawn().card.actions.ask
+    assertTrue(b.offer, "the detail card's Offer")
+    b:__fire("OnClick")
+    assertTrue(NS2.OfferPanel.IsShown()); assertEqual(NS2.OfferPanel.DropId(), 1)
+    NS2.WindowGroup.Drawn().card.actions.ask:__fire("OnClick")
+    assertFalse(NS2.OfferPanel.IsShown(), "the detail card's Offer closes it")
+end)
+
+test("offer panel: /dw offer always opens it, never closes it", function()
+    local NS = openPanel()
+    assertTrue(NS.OfferPanel.Open(1) ~= nil)
+    assertTrue(NS.OfferPanel.IsShown(), "Open is not the toggle")
 end)
 
 test("offer panel: minimizing the window closes the panel and the Edit message box", function()

@@ -26,7 +26,8 @@ C.WINDOW = {
     --            + Trade window 76 + Actions 84 (ASK_W) = 764, + 10 gaps x 6 = 824,
     --            + Item 150 (ITEM_MIN) = 974 (Trade window is its widest answer plus its bar's
     --            padding, feedback-6 spec §0; Me and Them their widest cell, two worn icons, `321/308`
-    --            and `Not wanted`, feedback-6 spec §1: tests/test_side_cells.lua measures both)
+    --            and `Not wanted`, feedback-6 spec §1: tests/test_side_cells.lua measures both;
+    --            a dual mark, `321 ▼10 / 324 ▼23`, is 125 inside them, feedback-21 H7)
     --   lead     ROW_INDENT 12 + CHEVRON_X 4 + ROW_CHEVRON 10 + CHEVRON_GAP 4 = 30 (WindowGroup.LEAD)
     --   chrome   SCROLL_W 22 + 2 x INSET 6 = 34
     --   974 + 30 + 34 = 1038. History's columns (the same lead since feedback-15 spec §4) fit with room
@@ -44,7 +45,8 @@ C.WINDOW = {
     -- countdown and its bar were there before), past the indent, chevron, icon, insets and scroll
     -- gutter (tests/test_compact_group.lua measures it). 380 cut it by about 57px.
     -- Line 3's fullest halves since feedback-6 spec §1 (`Them 321/308 ⊘ Not wanted`) end about 46px
-    -- short of the card's edge there (measured too), so line 2 still sets it.
+    -- short of the card's edge there (measured too), so line 2 still sets it. Two dual marks
+    -- (feedback-21 H7, `You 321 ▼10 / 324 ▼13`) are shorter than those halves and fit too (measured).
     COMPACT_WIDTH  = 440,
     COMPACT_HEIGHT = 460,
     COMPACT_MIN_W  = 440,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
@@ -144,9 +146,9 @@ C.IDLE = { r = 0.62, g = 0.62, b = 0.64 }
 C.CHEVRON_ROW = { r = 1.0, g = 1.0, b = 1.0, a = 0.55 }
 
 -- The drop tables' tones (design spec §11.2; feedback-4 spec §0 and §1): `good` an upgrade, a
--- tradeable estimate or an action done, `bad` gray (can't use, not tradeable), `warn` amber (a trade
+-- tradeable estimate or an action done, `bad` gray (not wanted, not tradeable), `warn` amber (a trade
 -- window ending soon), `plain` plain text, `muted` what is not known yet; `yellow`, `red`, `cyan`
--- and `offspec` below.
+-- `redMuted`, `offspec`, `mutedGold`, `greenMuted` and the stats' colors below.
 C.TONE = {
     good  = { r = 0.30, g = 0.85, b = 0.40 },
     bad   = { r = 0.55, g = 0.55, b = 0.58 },
@@ -162,8 +164,38 @@ C.TONE = {
     -- An off-spec verdict (feedback-19 spec §1): your current spec can't use it, another of your
     -- specs can. Its own token, close to Offer's cyan by the owner's choice, so the two can part later.
     offspec = { r = 0.30, g = 0.85, b = 0.85 },
+    -- The Can't use verdict and Trade's Can't use (feedback-21): a dim red, read beside the
+    -- downgrade's `red` and the gray `bad`, so a drop you cannot use reads apart from one not wanted.
+    -- The detail card's Stats row draws a stat lost in it too (feedback-21 H5).
+    redMuted = { r = 0.72, g = 0.36, b = 0.34 },
+    -- A stat gained on the detail card's Stats row (feedback-21 H5): redMuted's green, dimmer than
+    -- the verdicts' `good`, so a value reads as a value and not as a verdict.
+    greenMuted = { r = 0.42, g = 0.74, b = 0.46 },
+    -- A tooltip row's label and bullet (feedback-21 H3): a muted gold, between the title's C.GOLD and
+    -- the idle gray C.IDLE, so a label reads apart from its value without competing with the title.
+    mutedGold = { r = 0.80, g = 0.68, b = 0.36 },
     plain = { r = 0.92, g = 0.92, b = 0.92 },
     muted = { r = 0.70, g = 0.70, b = 0.72 },
+    -- Each secondary stat's name on the detail card's Stats row (feedback-21 H5; C.STAT_TONE): four
+    -- hues apart from one another and from the values' green and red, readable on the dark card.
+    statCrit    = { r = 1.00, g = 0.62, b = 0.30 },
+    statHaste   = { r = 1.00, g = 0.88, b = 0.45 },
+    statMastery = { r = 0.74, g = 0.58, b = 1.00 },
+    statVers    = { r = 0.45, g = 0.75, b = 1.00 },
+    -- The upgrade glows' default colors (feedback-21 H6, from the owner's screenshot): the main
+    -- spec's #FFF468 and the off-spec's #3FC7EB, their own tokens so the glows part from the
+    -- verdicts' `good` and `offspec`, each channel the hex byte over 255.
+    glowMain    = { r = 255 / 255, g = 244 / 255, b = 104 / 255 },
+    glowOffSpec = { r = 63 / 255,  g = 199 / 255, b = 235 / 255 },
+}
+
+-- The C.TONE key of each stat the detail card's Stats row names, by its C_Item.GetItemStats key
+-- (modules/DetailCells.lua's SECONDARY): one fixed color per stat (feedback-21 H5).
+C.STAT_TONE = {
+    ITEM_MOD_CRIT_RATING_SHORT    = "statCrit",
+    ITEM_MOD_HASTE_RATING_SHORT   = "statHaste",
+    ITEM_MOD_MASTERY_RATING_SHORT = "statMastery",
+    ITEM_MOD_VERSATILITY          = "statVers",
 }
 
 -- ---------------------------------------------------------------------------------------------

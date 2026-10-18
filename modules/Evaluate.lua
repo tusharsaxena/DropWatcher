@@ -228,13 +228,15 @@ local function one(f, slot)
     return { slot = slot, items = { f } }
 end
 
--- The lower of two slots; an empty slot wins, an unknown one leaves the answer unknown.
+-- The lower of two slots; an empty slot wins, an unknown one leaves the answer unknown. Of two
+-- items read, the plan is `either`: the drop could take either slot (feedback-21 R5).
 local function lowerOf(a, sa, b, sb)
     if a == false then return one(a, sa) end
     if b == false then return one(b, sb) end
     if a == nil or b == nil then return nil end
-    if b.ilvl < a.ilvl then return one(b, sb) end
-    return one(a, sa)
+    local plan = b.ilvl < a.ilvl and one(b, sb) or one(a, sa)
+    plan.either = true
+    return plan
 end
 
 local function vsTwoHand(mh)
@@ -431,6 +433,7 @@ local function compare(out, facts, candidate, opts)
     if base.unique then addReason(out.reasons, "uniqueEquipped") end
     if base.vsTwoHand then addReason(out.reasons, "vsTwoHand") end
     out.baseline = base.items[1]
+    out.either = base.either   -- the lower of two the drop could take: a reader judges the other too
     out.ilvlDelta = ilvl - average(base.items, function(f) return f.ilvl end)
     out.trackDelta = E.TrackDelta(facts.track, out.baseline.track)
     out.scoreDelta = scoreDelta(facts, base.items, candidate, opts, out.reasons)
@@ -467,17 +470,35 @@ local function run(facts, candidate, opts)
     out.equip = equip
     if why then addReason(out.reasons, why) end
     local base = compare(out, facts, candidate, opts)
-    out.verdict = verdictOf(out, base, math.abs(num(opts.sidegradeBand) or 0))
+    local band = math.abs(num(opts.sidegradeBand) or 0)
+    out.verdict = verdictOf(out, base, band)
+    if band > 0 then out.band = band end   -- for a tooltip's other worn items (E.ItemVerdict)
     protect(out, base, opts)
     -- The off-spec pass (modules/OffSpec.lua): only a spec refusal, only with offSpecGear.
     if NS.OffSpec then NS.OffSpec.Attach(out, facts, candidate, opts, run) end
     return out
 end
 
+--- One item level's verdict as step 4 takes it with no score (feedback-21 H3): `upgrade`,
+--- `sidegrade` within `band` item levels either side of equal, else `downgrade`. A tooltip's grid
+--- judges the drop against each worn item of a dual slot this way, beside the verdict itself.
+--- @param delta number the drop's item level less the worn item's
+--- @param band number|nil the sidegrade band (an evaluation's `band`; 0 when nil)
+--- @return string|nil nil when delta is not a number
+function E.ItemVerdict(delta, band)
+    local d = num(delta)
+    if not d then return nil end
+    return BY_SIGN[sign(d, math.abs(num(band) or 0))]
+end
+
 --- Evaluates `facts` for `candidate` (design spec §5.2). Answers
---- { verdict, equip, ilvlDelta, trackDelta, scoreDelta, baselineSlot, baseline, reasons }, where
+--- { verdict, equip, ilvlDelta, trackDelta, scoreDelta, baselineSlot, baseline, reasons, band?, either? }, where
 --- verdict is "upgrade", "sidegrade", "downgrade", "cantUse", "doesntWant" or "unknown", and
---- reasons is a list of { key = ... }. Never throws.
+--- reasons is a list of { key = ... }; `band` is the sidegrade band, kept only when it is not 0;
+--- `either` is true when the baseline is the lower of two worn items the drop could take either of
+--- (rings, trinkets, a dual wielder's one-hander, Titan's Grip: feedback-21 R5), nil when the drop
+--- was judged against one item (the main hand alone, both hands averaged, a unique redirection).
+--- Never throws.
 function E.Evaluate(facts, candidate, opts)
     local ok, res = pcall(run, facts, candidate, opts)
     if ok then return res end

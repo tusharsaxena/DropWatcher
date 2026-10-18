@@ -62,8 +62,9 @@ end
 
 local function joined(tip) return T.tipJoined(tip) end
 
+-- Whether the tooltip carries `line`, read plain (a row's colors out: feedback-21).
 local function has(tip, line)
-    for _, l in ipairs(tip) do if T.tipText(l) == line then return true end end
+    for _, l in ipairs(tip) do if T.tipPlain(l) == line then return true end end
     return false
 end
 
@@ -99,8 +100,8 @@ test("off-spec cells: the Me verdict is the off-spec one, in the offspec tone, w
     assertEqual(c.verdict, "upgrade"); assertEqual(c.offSpec, HOLY); assertEqual(c.mainVerdict, "cantUse")
     assertEqual(c.spec, "Holy"); assertEqual(c.delta, 20); assertEqual(c.base.link, BAG)
     assertEqual(c.tip[1], "For you: Off-spec upgrade for Holy")
-    assertTrue(has(c.tip, "Protection can't use it: Its primary stat does not suit the spec."), joined(c.tip))
-    assertTrue(has(c.tip, "Compared with your best Holy item: Bag Mace 291."), joined(c.tip))
+    assertTrue(has(c.tip, "• Protection: can't use it (its primary stat doesn't suit the spec)"), joined(c.tip))
+    assertTrue(has(c.tip, "• Compared with: your best Holy item, Bag Mace 291"), joined(c.tip))
     local grid
     for _, l in ipairs(c.tip) do if NS.TipMarks.IsGrid(l) then grid = l end end
     assertTrue(grid ~= nil, "the comparison as a grid row")
@@ -115,8 +116,8 @@ test("off-spec cells: a sidegrade, a downgrade and an empty slot keep their glyp
     assertEqual(down.glyph .. down.text, "▼-6"); assertEqual(down.tone, "offspec")
     local empty = WC.Me(drop({ me = cantMain(off({ ilvlDelta = NONE, baseline = NONE, reasons = { { key = "emptySlot" } } })) }))
     assertEqual(empty.glyph .. empty.text, "▲empty"); assertEqual(empty.tone, "offspec")
-    assertTrue(has(empty.tip, "Compared with your best Holy item: an empty slot."), joined(empty.tip))
-    assertTrue(has(empty.tip, "The slot is empty, so anything is an upgrade."), "the off-spec pass's own reasons")
+    assertTrue(has(empty.tip, "• Compared with: your best Holy item, an empty slot"), joined(empty.tip))
+    assertTrue(has(empty.tip, "• Why: an empty slot (anything is an upgrade)"), "the off-spec pass's own reasons")
 end)
 
 test("off-spec cells: an unknown spec name falls back to words, and the looter's cell says their", function()
@@ -125,17 +126,17 @@ test("off-spec cells: an unknown spec name falls back to words, and the looter's
     local c = NS.WindowCells.Me(drop())
     assertEqual(c.spec, "Off-spec")
     assertEqual(c.tip[1], "For you: Off-spec upgrade for Off-spec")
-    assertTrue(has(c.tip, "Your spec can't use it: Its primary stat does not suit the spec."), joined(c.tip))
+    assertTrue(has(c.tip, "• Your spec: can't use it (its primary stat doesn't suit the spec)"), joined(c.tip))
     named(NS, m)
     local them = NS.WindowCells.Them(drop({ them = cantMain(off()) }), 100)
     assertEqual(them.tone, "offspec"); assertEqual(them.tip[1], "For Seta: Off-spec upgrade for Holy")
-    assertTrue(has(them.tip, "Compared with their best Holy item: Bag Mace 291."), joined(them.tip))
+    assertTrue(has(them.tip, "• Compared with: their best Holy item, Bag Mace 291"), joined(them.tip))
 end)
 
 test("off-spec cells: a Can't use with no off-spec is unchanged", function()
     local WC = addon().WindowCells
     local c = WC.Me(drop({ me = cantMain(nil) }))
-    assertEqual(c.text, "Can't use"); assertNil(c.glyph); assertEqual(c.tone, "bad"); assertEqual(c.verdict, "cantUse")
+    assertEqual(c.text, "Can't use"); assertNil(c.glyph); assertEqual(c.tone, "redMuted"); assertEqual(c.verdict, "cantUse")
     assertNil(c.offSpec); assertNil(c.mainVerdict); assertNil(c.spec)
     local junk = WC.Me(drop({ me = cantMain(off({ verdict = "unknown" })) }))
     assertEqual(junk.text, "Can't use", "an off-spec verdict that is not one of the three is ignored")
@@ -163,7 +164,7 @@ end)
 test("off-spec cells: a Can't use with no off-spec keeps the worn gear", function()
     local S = addon().SideCells
     local c = S.Me(drop({ me = cantMain(nil) }), MINE)
-    assertEqual(c.level, "300"); assertEqual(c.text, "Can't use"); assertEqual(c.tone, "bad")
+    assertEqual(c.level, "300"); assertEqual(c.text, "Can't use"); assertEqual(c.tone, "redMuted")
 end)
 
 test("off-spec cells: the looter's Them cell pairs its off-spec verdict with the item it was judged against", function()
@@ -174,8 +175,8 @@ test("off-spec cells: the looter's Them cell pairs its off-spec verdict with the
     -- red under: the looter's main-spec worn 300 stood beside `▲ Holy`, `300 ▲ Holy`
     assertEqual(c.level, "empty", "an empty slot for Holy, not the 300 Protection wears"); assertEqual(#c.items, 0)
     assertEqual(c.glyph, "▲"); assertEqual(c.text, "Holy"); assertEqual(c.tone, "offspec")
-    assertTrue(has(c.tip, "Compared with their best Holy item: an empty slot."), joined(c.tip))
-    assertTrue(has(c.tip, NS.WindowCells.InspectLine(d.inspect, "Seta", 100)), "the read's age kept: " .. joined(c.tip))
+    assertTrue(has(c.tip, "• Compared with: their best Holy item, an empty slot"), joined(c.tip))
+    assertTrue(has(c.tip, T.tipPlain(NS.WindowCells.InspectRows(d.inspect, 100)[1])), "the read's age kept: " .. joined(c.tip))
     local worn = S.Them(drop({ them = cantMain(off({ baseline = { link = WORN, ilvl = 290, slot = 16 }, ilvlDelta = 21 })) }), MINE, 100)
     assertEqual(worn.level, "290", "the worn item Holy was judged against"); assertEqual(worn.text, "21 Holy")
     local plain = S.Them(drop({ them = cantMain(nil) }), MINE, 100)
@@ -186,17 +187,19 @@ test("off-spec cells: the detail card's looter side takes its rows from the off-
     local DC = addon().DetailCells
     local d = drop({ them = cantMain(off({ ilvlDelta = NONE, baseline = NONE, reasons = { { key = "emptySlot" } } })) })
     local side = DC.ForLooter(d, { at = 60 }, "Protection", 100)
-    assertEqual(T.marks(side.verdict.text), "[arrow-up] OFF-SPEC UPGRADE")
+    assertEqual(T.cardText(side.verdict), "▲ OFF-SPEC UPGRADE")
     -- red under: Replaces, Item level and Track came from Protection's Can't use, with no off-spec row
     assertEqual(side.rows[1].key, "offSpec", "first")
     assertEqual(side.rows[1].text, "Holy (off-spec): Protection can't use it"); assertEqual(side.rows[1].tone, "offspec")
-    assertTrue(side.rows[1].tip[2]:find("Their current spec") ~= nil, side.rows[1].tip[2])
+    assertEqual(T.tipPlainJoined(side.rows[1].tip), "Spec | • Current spec: can't use it | • Judged for: another spec of their class"
+        .. " | • Judged on: their worn item level alone")
     assertEqual(byKey(side.rows, "replaces").text, "Empty slot")
     assertTrue(byKey(side.rows, "spec").text:find("Protection", 1, true) ~= nil, "the looter's spec row stays")
     local worn = DC.ForLooter(drop({ them = cantMain(off({ baseline = { link = WORN, ilvl = 290, slot = 16 }, ilvlDelta = 21 })) }),
         { at = 60 }, "Protection", 100)
-    assertEqual(byKey(worn.rows, "replaces").text, "Worn Sword · 290"); assertNil(byKey(worn.rows, "replaces").wornSlot)
-    assertEqual(T.marks(byKey(worn.rows, "ilvl").text), "290 [arrow-right] 311 · +21")
+    assertEqual(T.cardText(byKey(worn.rows, "replaces")), "290 Worn Sword"); assertNil(byKey(worn.rows, "replaces").wornSlot)
+    assertEqual(T.cardText(byKey(worn.rows, "ilvl")), "290 [arrow-right] 311 ▲ 21")
+    assertEqual(byKey(worn.rows, "ilvl").arrow.tone, "offspec", "the glyph in the off-spec cyan")
     local plain = DC.ForLooter(drop({ them = cantMain(nil) }), { at = 60 }, "Protection", 100)
     assertNil(byKey(plain.rows, "offSpec")); assertEqual(plain.verdict.text, "CAN'T USE")
 end)
@@ -226,20 +229,20 @@ end)
 test("off-spec cells: the detail card's FOR YOU takes its chip and rows from the off-spec result", function()
     local DC = addon().DetailCells
     local side = DC.ForYou(drop({ me = cantMain(off({ trackDelta = { tier = 1, rank = 0, sign = 1 } })) }), "pawn")
-    assertEqual(T.marks(side.verdict.text), "[arrow-up] OFF-SPEC UPGRADE"); assertEqual(side.verdict.tone, "offspec")
+    assertEqual(T.cardText(side.verdict), "▲ OFF-SPEC UPGRADE"); assertEqual(side.verdict.tone, "offspec")
     local spec = byKey(side.rows, "spec")
     assertEqual(spec.text, "Holy (off-spec): Protection can't use it"); assertEqual(side.rows[1].key, "spec", "first")
     local rep = byKey(side.rows, "replaces")
-    assertEqual(rep.text, "Bag Mace · 291"); assertEqual(rep.link, BAG); assertNil(rep.wornSlot, "a bag item: no worn slot")
-    assertEqual(T.marks(byKey(side.rows, "ilvl").text), "291 [arrow-right] 311 · +20")
+    assertEqual(T.cardText(rep), "291 Bag Mace"); assertEqual(rep.link, BAG); assertNil(rep.wornSlot, "a bag item: no worn slot")
+    assertEqual(T.cardText(byKey(side.rows, "ilvl")), "291 [arrow-right] 311 ▲ 20")
     assertEqual(byKey(side.rows, "ilvl").tone, "offspec")
     assertTrue(byKey(side.rows, "score").tip[2]:find("item level alone") ~= nil, "off-spec is never scored")
     local worn = DC.ForYou(drop({ me = cantMain(off({ baseline = { link = WORN, ilvl = 300, slot = 16 }, ilvlDelta = 11 })) }), "pawn")
     assertEqual(byKey(worn.rows, "replaces").wornSlot, 16, "a worn baseline keeps its slot")
     local side2 = DC.ForYou(drop({ me = cantMain(off({ verdict = "sidegrade", ilvlDelta = 2 })) }), "pawn")
-    assertEqual(T.marks(side2.verdict.text), "[transfer] OFF-SPEC SIDEGRADE")
+    assertEqual(T.cardText(side2.verdict), "≈ OFF-SPEC SIDEGRADE")
     local down = DC.ForYou(drop({ me = cantMain(off({ verdict = "downgrade", ilvlDelta = -4 })) }), "pawn")
-    assertEqual(T.marks(down.verdict.text), "[arrow-down] OFF-SPEC DOWNGRADE")
+    assertEqual(T.cardText(down.verdict), "▼ OFF-SPEC DOWNGRADE")
 end)
 
 test("off-spec cells: the detail card's Can't use with no off-spec is unchanged", function()
@@ -288,7 +291,7 @@ test("off-spec cells: the History card takes its chip, Spec row and deltas from 
         me = { verdict = "cantUse", offSpec = { specID = HOLY, mainSpecID = PROT, verdict = "upgrade", ilvlDelta = 20 } } }
     local d = NS.WindowHistory.AsDrop(e, 1, { key = "g", label = "G" })
     local m = NS.HistoryCard.Model(d, { dateFn = function(f, t) return f .. t end, nowEpoch = 10 })
-    assertEqual(T.marks(m.me.verdict.text), "[arrow-up] OFF-SPEC UPGRADE"); assertEqual(m.me.verdict.tone, "offspec")
+    assertEqual(T.cardText(m.me.verdict), "▲ OFF-SPEC UPGRADE"); assertEqual(m.me.verdict.tone, "offspec")
     assertEqual(byKey(m.me.rows, "spec").text, "Holy (off-spec): Protection can't use it")
     assertEqual(byKey(m.me.rows, "ilvl").text, "+20"); assertEqual(byKey(m.me.rows, "ilvl").tone, "offspec")
     local cell = NS.SideCells.Merge(NS.WindowCells.Me(d))
@@ -306,10 +309,10 @@ test("off-spec cells: a History row's tooltip names the level compared with, not
         ilvl = 311, equipLoc = "INVTYPE_WEAPON", quality = 4,
         me = { verdict = "cantUse", offSpec = { specID = HOLY, mainSpecID = PROT, verdict = "upgrade", ilvlDelta = 20 } } }
     local c = NS.WindowCells.Me(NS.WindowHistory.AsDrop(e, 1, { key = "g", label = "G" }))
-    assertTrue(has(c.tip, "Compared with your best Holy item: 291."), joined(c.tip))
+    assertTrue(has(c.tip, "• Compared with: your best Holy item, 291"), joined(c.tip))
     e.me.offSpec.ilvlDelta = nil
     c = NS.WindowCells.Me(NS.WindowHistory.AsDrop(e, 1, { key = "g", label = "G" }))
-    assertTrue(has(c.tip, "Compared with your best Holy item: an empty slot."), joined(c.tip))
+    assertTrue(has(c.tip, "• Compared with: your best Holy item, an empty slot"), joined(c.tip))
 end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
@@ -352,14 +355,14 @@ end)
 
 -- ── the legends ─────────────────────────────────────────────────────────────────────────────
 
-local CYAN = "Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."
+local CYAN = "• Cyan: an off-spec upgrade (another of your specs can use it)"
 
 test("off-spec cells: the Me column's tooltip and the Offer panel's legend name the cyan", function()
     local NS = addon()
     local me
     for _, c in ipairs(NS.WindowGroup.COLUMNS) do if c.key == "me" then me = c end end
-    assertTrue(T.marks(me.tip):find(CYAN, 1, true) ~= nil, me.tip)
-    assertTrue(T.marks(NS.OfferPanel.COLS[2].tip):find(CYAN, 1, true) ~= nil, NS.OfferPanel.COLS[2].tip)
+    assertTrue(T.tipPlainJoined(me.tip):find(CYAN, 1, true) ~= nil, T.tipPlainJoined(me.tip))
+    assertTrue(T.tipPlainJoined(NS.OfferPanel.COLS[2].tip):find(CYAN, 1, true) ~= nil, T.tipPlainJoined(NS.OfferPanel.COLS[2].tip))
 end)
 
 -- ── painted on the Drops table ──────────────────────────────────────────────────────────────

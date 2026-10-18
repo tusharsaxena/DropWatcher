@@ -5,14 +5,18 @@ local _, NS = ...
 -- (design spec §12.2; `group` is the tab, options-ui-§13), its widget hints and the check the write
 -- seam runs before storing it. Every `default` references defaults/Profile.lua (savedvariables-§2),
 -- never a literal here. The composed Master controls rows are settings/Panel.lua's; these are
--- appended after them, so the General page's `Master controls` tab stays first.
+-- appended after them, so the General page's `Master controls` tab stays first. Window › Icons'
+-- composed border block is settings/ComposedRows.lua's, appended after these (it needs the Options
+-- instance, made after this file), so it follows this file's Zoom row on that tab; it takes this
+-- file's checks from Settings.Checks.
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
 -- specID (architecture-§5's value route): written whole through the seam, drawn by their own
 -- editors (`skipRender`). General › When to show's per-situation rows (`situations.<key>.track`,
 -- `.autoOpen`, `.quality`) are `skipRender` too: its table draws them, one line per situation. The
 -- window's geometry, its minimized flag and the toast's position have no row: they are named
--- non-setting state (docs/schema.md -> State written outside the seam).
+-- non-setting state (docs/schema.md -> State written outside the seam). Window › Upgrade glow's
+-- `glow.<main|offSpec>.color` rows are typed `color`, stored {r=,g=,b=,a=} (the library's codec).
 
 local DW       = NS.addon
 local Settings = DW.Settings
@@ -46,7 +50,17 @@ end
 
 local function nonEmptyString(v) return type(v) == "string" and v:match("%S") ~= nil end
 
+local function unit(n) return type(n) == "number" and n == n and n >= 0 and n <= 1 end
+
+-- A color in the library's default {r=,g=,b=,a=} shape, each channel 0 to 1 (alpha optional).
+local function isColor(v)
+    return type(v) == "table" and unit(v.r) and unit(v.g) and unit(v.b) and (v.a == nil or unit(v.a))
+end
+
 local function isSpecID(k) return type(k) == "number" and k > 0 and k == math.floor(k) end
+
+-- The checks a composed block's rows take too (settings/ComposedRows.lua): the composer emits none.
+Settings.Checks = { isBool = isBool, inRange = inRange, nonEmptyString = nonEmptyString, isColor = isColor }
 
 -- weights: { [specID] = { [STAT_KEY] = number } }.
 local function validWeights(v)
@@ -79,6 +93,19 @@ local function repaintWindow()
     local W = NS.Window
     if W and W.IsShown and W.IsShown() then W.Refresh() end
 end
+
+-- A glow row repaints every glowing icon: the window's surfaces (modules/Glow.lua).
+local function refreshGlow()
+    local G = NS.Glow
+    if G and G.Refresh then G.Refresh() end
+end
+
+-- A Window › Icons row gives every item icon its new look (modules/IconStyle.lua).
+local function refreshIcons()
+    local IS = NS.IconStyle
+    if IS and IS.Refresh then IS.Refresh() end
+end
+Settings.RefreshIcons = refreshIcons
 
 -- ── the value lists ─────────────────────────────────────────────────────────────────────────
 
@@ -117,6 +144,11 @@ local CHANNELS = choices{
 }
 local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
+-- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them.
+local GLOW_STYLES = choices{
+    "button", L["Button (rotating rays)"], "proc", L["Proc (flipbook)"], "pixel", L["Pixel border"],
+    "autocast", L["Auto cast sparkles"],
+}
 
 -- ── the dimming predicates ──────────────────────────────────────────────────────────────────
 
@@ -320,7 +352,7 @@ local function window()
     local columns = { page = "window", group = L["Columns"], onChange = repaintWindow }
     for _, col in ipairs(NS.WindowGroup.COLUMNS) do
         if col.key ~= "item" then
-            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.tip, columns)
+            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.desc, columns)
         end
     end
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }
@@ -352,6 +384,136 @@ local function window()
         L["How long a toast stays on screen."], toast)
     bool("toast.inCombat", T.inCombat, L["Show in combat"], L["Show toasts in combat too."], toast)
     bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], toast)
+    -- 50 to 200 %, about the toast's saved anchor; live on a toast on screen (feedback-21 G10).
+    slider("toast.scale", T.scale, 0.5, 2, 0.05, L["Scale"],
+        L["The toast's size, from half to double. It grows or shrinks about the place you put it."],
+        with(toast, { isPercent = true, onChange = function() NS.Toast.ApplyScale() end }))
+end
+
+-- ── Window › Upgrade glow (feedback-21): the glow on an upgrade's icon ──────────────────────
+
+-- The two glows, side by side: each knob is a main | off-spec pair, so the left column is the main
+-- spec's glow and the right the off-spec's. The tab mixes kinds of control, so each block carries a
+-- subsection heading (options-ui-§7), a style's heading its name in the Style dropdown.
+local GLOWS = { "main", "offSpec" }
+
+-- Each style's knobs, in the feedback-21 plan's knob table order, with its ranges and the styles
+-- it applies to; the defaults are defaults/Profile.lua's. `labels` is { main, off-spec }.
+local GLOW_KNOBS = {
+    { key = "pixelLines", kind = "slider", min = 1, max = 20, step = 1, styles = { pixel = true },
+      heading = L["Pixel border"], labels = { L["Main spec lines"], L["Off-spec lines"] },
+      tip = L["How many lines run around the icon. Pixel style only."] },
+    { key = "pixelFrequency", kind = "slider", min = 0.05, max = 2, step = 0.05, styles = { pixel = true },
+      heading = L["Pixel border"], labels = { L["Main spec frequency"], L["Off-spec frequency"] },
+      tip = L["How fast the lines run around the icon. Higher is faster. Pixel style only."] },
+    { key = "pixelLength", kind = "slider", min = 0, max = 20, step = 1, styles = { pixel = true },
+      zeroText = L["Automatic"], heading = L["Pixel border"],
+      labels = { L["Main spec line length (0 = automatic)"], L["Off-spec line length (0 = automatic)"] },
+      tip = L["How long each line is, in pixels. 0 sizes the lines from the icon. Pixel style only."] },
+    { key = "pixelThickness", kind = "slider", min = 1, max = 6, step = 1, styles = { pixel = true },
+      heading = L["Pixel border"], labels = { L["Main spec thickness"], L["Off-spec thickness"] },
+      tip = L["How thick each line is, in pixels. Pixel style only."] },
+    { key = "pixelBorder", kind = "bool", styles = { pixel = true },
+      heading = L["Pixel border"], labels = { L["Main spec dark border"], L["Off-spec dark border"] },
+      tip = L["Draw a dark border inside the lines. Pixel style only."] },
+    { key = "autocastParticles", kind = "slider", min = 1, max = 12, step = 1, styles = { autocast = true },
+      heading = L["Auto cast sparkles"], labels = { L["Main spec particles"], L["Off-spec particles"] },
+      tip = L["How many sparkles circle the icon in each ring. Auto cast style only."] },
+    { key = "autocastFrequency", kind = "slider", min = 0.05, max = 2, step = 0.05, styles = { autocast = true },
+      heading = L["Auto cast sparkles"], labels = { L["Main spec frequency"], L["Off-spec frequency"] },
+      tip = L["How fast the sparkles circle the icon. Higher is faster. Auto cast style only."] },
+    { key = "autocastScale", kind = "slider", min = 0.5, max = 3, step = 0.1, styles = { autocast = true },
+      heading = L["Auto cast sparkles"], labels = { L["Main spec scale"], L["Off-spec scale"] },
+      tip = L["How big the sparkles are. Auto cast style only."] },
+    { key = "buttonFrequency", kind = "slider", min = 0.05, max = 2, step = 0.05, styles = { button = true },
+      heading = L["Button (rotating rays)"], labels = { L["Main spec frequency"], L["Off-spec frequency"] },
+      tip = L["How fast the rays turn. Higher is faster. Button style only."] },
+    { key = "procDuration", kind = "slider", min = 0.25, max = 3, step = 0.25, styles = { proc = true },
+      heading = L["Proc (flipbook)"], labels = { L["Main spec duration (seconds)"], L["Off-spec duration (seconds)"] },
+      tip = L["How many seconds one loop of the flipbook takes. Proc style only."] },
+    { key = "procStartAnim", kind = "bool", styles = { proc = true },
+      heading = L["Proc (flipbook)"], labels = { L["Main spec start animation"], L["Off-spec start animation"] },
+      tip = L["Play the burst that opens the proc glow when it starts. Proc style only."] },
+    { key = "xOffset", kind = "slider", min = -10, max = 10, step = 1,
+      styles = { pixel = true, autocast = true, proc = true },
+      heading = L["Offset"], labels = { L["Main spec X offset"], L["Off-spec X offset"] },
+      tip = L["How far the glow reaches past the icon's sides, in pixels. Pixel, Proc and Auto cast styles."] },
+    { key = "yOffset", kind = "slider", min = -10, max = 10, step = 1,
+      styles = { pixel = true, autocast = true, proc = true },
+      heading = L["Offset"], labels = { L["Main spec Y offset"], L["Off-spec Y offset"] },
+      tip = L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel, Proc and Auto cast styles."] },
+}
+Settings.GLOW_KNOBS = GLOW_KNOBS
+
+local function glow()
+    local G = P.glow
+    local at = { page = "window", group = L["Upgrade glow"], subgroup = L["Effect"], onChange = refreshGlow }
+    -- A glow's style is dimmed while it is off; a knob also while its glow is in a style the knob
+    -- does not apply to. Its color pair never is (below).
+    local function off(key) return unless("glow." .. key .. ".enabled", true) end
+    local function knobOff(key, styles)
+        local isOff = off(key)
+        return function() return isOff() or not styles[NS.Setting("glow." .. key .. ".type")] end
+    end
+    bool("glow.main.enabled", G.main.enabled, L["Main spec glow"],
+        L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card and the drop's card."], at)
+    bool("glow.offSpec.enabled", G.offSpec.enabled, L["Off-spec glow"],
+        L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."], at)
+    pick("glow.main.type", G.main.type, GLOW_STYLES, L["Main spec style"],
+        L["How the main spec glow looks."], with(at, { disabledIf = off("main") }))
+    pick("glow.offSpec.type", G.offSpec.type, GLOW_STYLES, L["Off-spec style"],
+        L["How the off-spec glow looks."], with(at, { disabledIf = off("offSpec") }))
+    -- Main spec left, off-spec right on every line, the colors too (feedback-21 H6, the owner's
+    -- choice): the two swatches share a line and their Use class color companions the next,
+    --     [Main spec color]             | [Off-spec color]
+    --     [Use class color (main spec)] | [Use class color (off-spec)]
+    -- so each companion sits BELOW its swatch, not immediately to its right: a documented deviation
+    -- from options-ui-§17 (docs/ARCHITECTURE.md -> Documented deviations). `startsLine` on each
+    -- left-column row keeps a line from shifting by one, written out here because this file loads
+    -- before the Options instance exists.
+    -- PLAYER-SCOPED: the glow says a drop is an upgrade for you, whoever looted it. Never dimmed,
+    -- even while the glow is off: a color and its companion carry no `disabledIf` (anti-pattern
+    -- #74, the swatch's alpha is read under either mode).
+    local CLASS_COLOR = {
+        main    = { L["Use class color (main spec)"],
+                    L["Glow in your class color instead of Main spec color, the swatch above. The swatch's alpha still applies."] },
+        offSpec = { L["Use class color (off-spec)"],
+                    L["Glow in your class color instead of Off-spec color, the swatch above. The swatch's alpha still applies."] },
+    }
+    for i, key in ipairs(GLOWS) do
+        add{ path = "glow." .. key .. ".color", type = "color", default = G[key].color, hasAlpha = true,
+             label = i == 1 and L["Main spec color"] or L["Off-spec color"],
+             tooltip = L["The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."],
+             validate = isColor, startsLine = i == 1 or nil, classColorSource = "player",
+             page = at.page, group = at.group, subgroup = at.subgroup, onChange = refreshGlow }
+    end
+    for i, key in ipairs(GLOWS) do
+        bool("glow." .. key .. ".useClassColor", G[key].useClassColor, CLASS_COLOR[key][1], CLASS_COLOR[key][2],
+            with(at, { classColorSource = "player", startsLine = i == 1 or nil }))
+    end
+    for _, knob in ipairs(GLOW_KNOBS) do
+        for i, key in ipairs(GLOWS) do
+            local path = "glow." .. key .. "." .. knob.key
+            local extra = with(at, { subgroup = knob.heading, disabledIf = knobOff(key, knob.styles),
+                                     zeroText = knob.zeroText })
+            if knob.kind == "bool" then
+                bool(path, G[key][knob.key], knob.labels[i], knob.tip, extra)
+            else
+                slider(path, G[key][knob.key], knob.min, knob.max, knob.step, knob.labels[i], knob.tip, extra)
+            end
+        end
+    end
+end
+
+-- ── Window › Icons (feedback-21 G11): every item icon's look ────────────────────────────────
+
+-- The zoom, KickCD's shape (0 to 0.25 cropped off each side); 0 is the icons as they always were,
+-- 0.1 the default (feedback-21 H6) trims the edge baked into most item icons. The tab's Border block
+-- is composed (settings/ComposedRows.lua) and follows it.
+local function icons()
+    slider("icons.zoom", P.icons.zoom, 0, 0.25, 0.01, L["Icon zoom"],
+        L["Crop each item icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most item icons."],
+        { page = "window", group = L["Icons"], subgroup = L["Zoom"], onChange = refreshIcons })
 end
 
 -- ── History (feedback-2 spec §5): kept by days, account-wide ────────────────────────────────
@@ -385,5 +547,7 @@ trade()
 messages()
 window()
 history()
+glow()
+icons()
 
 NS.SchemaRuntime.AddRows(Rows)

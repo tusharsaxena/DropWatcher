@@ -264,6 +264,33 @@ test("evaluate: Titan's Grip compares a two-hander as a pair over both hands", f
     assertEqual(res.baselineSlot, S.OFFHAND)
 end)
 
+test("evaluate: `either` marks a baseline picked as the lower of two worn items the drop could take (feedback-21 R5)", function()
+    local E = load()
+    local c = who("WARRIOR", 72)   -- Fury: dual wields, Titan's Grip
+    c.gear[S.FINGER1] = armor(640, "INVTYPE_FINGER", A.GENERIC)
+    c.gear[S.FINGER2] = armor(620, "INVTYPE_FINGER", A.GENERIC)
+    assertEqual(E.Evaluate(armor(630, "INVTYPE_FINGER", A.GENERIC), c).either, true, "rings: either finger")
+    c.gear[S.MAINHAND] = weapon(640, "INVTYPE_WEAPON", W.SWORD_1H)
+    c.gear[S.OFFHAND] = weapon(610, "INVTYPE_WEAPON", W.SWORD_1H)
+    local sword = weapon(630, "INVTYPE_WEAPON", W.SWORD_1H)
+    assertEqual(E.Evaluate(sword, c).either, true, "a dual wielder's one-hander: either hand")
+    c.gear[S.MAINHAND] = weapon(640, "INVTYPE_2HWEAPON", W.SWORD_2H)
+    c.gear[S.OFFHAND] = weapon(620, "INVTYPE_2HWEAPON", W.AXE_2H)
+    assertEqual(E.Evaluate(weapon(630, "INVTYPE_2HWEAPON", W.SWORD_2H), c).either, true, "Titan's Grip: either hand")
+    -- Judged against one item: the main hand only, both hands averaged, one slot empty.
+    local p = who("PALADIN", 66)   -- Protection: no dual wield
+    p.gear[S.MAINHAND] = weapon(640, "INVTYPE_WEAPON", W.MACE_1H)
+    p.gear[S.OFFHAND] = armor(610, "INVTYPE_SHIELD", A.SHIELD)
+    assertNil(E.Evaluate(weapon(630, "INVTYPE_WEAPON", W.MACE_1H), p).either, "no dual wield: the main hand alone")
+    assertNil(E.Evaluate(weapon(630, "INVTYPE_2HWEAPON", W.MACE_2H), p).either, "a two-hander: both hands averaged")
+    local m = who("MAGE", 64)
+    m.gear[S.MAINHAND] = weapon(640, "INVTYPE_WEAPON", W.SWORD_1H)
+    m.gear[S.OFFHAND] = armor(610, "INVTYPE_HOLDABLE", A.GENERIC)
+    assertNil(E.Evaluate(weapon(630, "INVTYPE_RANGEDRIGHT", W.WAND), m).either, "a non-hunter's ranged: the main hand alone")
+    m.gear[S.FINGER1], m.gear[S.FINGER2] = armor(640, "INVTYPE_FINGER", A.GENERIC), false
+    assertNil(E.Evaluate(armor(630, "INVTYPE_FINGER", A.GENERIC), m).either, "one finger empty")
+end)
+
 test("evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot", function()
     local E = load()
     local c = who("MAGE", 64)
@@ -624,7 +651,19 @@ test("evaluate: the sidegrade band splits upgrade, sidegrade and downgrade", fun
         local res = E.Evaluate(armor(row[1], "INVTYPE_HEAD", A.PLATE), c, { sidegradeBand = row[2] })
         assertEqual(res.verdict, row[3], "case " .. i)
         assertEqual(res.ilvlDelta, row[1] - 640, "delta " .. i)
+        assertEqual(E.ItemVerdict(res.ilvlDelta, res.band), row[3], "ItemVerdict agrees " .. i)
     end
+end)
+
+test("evaluate: ItemVerdict judges one item level as step 4 does, and the band is kept only when it is not 0", function()
+    local E = load()
+    assertEqual(E.ItemVerdict(3), "upgrade"); assertEqual(E.ItemVerdict(0), "sidegrade"); assertEqual(E.ItemVerdict(-1), "downgrade")
+    assertEqual(E.ItemVerdict(-10, 10), "sidegrade", "within the band"); assertEqual(E.ItemVerdict(11, -10), "upgrade", "the band's size")
+    assertTrue(E.ItemVerdict(nil) == nil and E.ItemVerdict(0 / 0) == nil and E.ItemVerdict("3") == nil, "no number: nil")
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE)
+    assertTrue(E.Evaluate(armor(641, "INVTYPE_HEAD", A.PLATE), c).band == nil, "no band: not kept")
+    assertEqual(E.Evaluate(armor(641, "INVTYPE_HEAD", A.PLATE), c, { sidegradeBand = -5 }).band, 5)
 end)
 
 test("evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign", function()

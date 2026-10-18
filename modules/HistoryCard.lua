@@ -39,6 +39,7 @@ local K   = NS.Constants.WINDOW
 local L   = NS.L
 local WC  = NS.WindowCells
 local DC  = NS.DetailCells
+local TM  = NS.TipMarks
 
 local max, floor = math.max, math.floor
 
@@ -86,11 +87,11 @@ local function deltaRows(eval, tone)
     local d = type(eval) == "table" and num(eval.ilvlDelta) or nil
     local sd = type(eval) == "table" and num(eval.scoreDelta) or nil
     local ilvl = d and row("ilvl", L["Item level"], WC.Signed(d), tone, L["Item level"],
-            L["%s against what was worn then."]:format(WC.Signed(d)))
-        or row("ilvl", L["Item level"], DASH, "muted", L["Item level"], L["No item-level change was kept."])
+            TM.Row(L["Change"], WC.Signed(d), tone), TM.Row(L["Against"], L["what was worn then"]))
+        or row("ilvl", L["Item level"], DASH, "muted", L["Item level"], TM.Row(L["Change"], L["not kept"]))
     local score = sd and row("score", L["Score"], ("%+.1f"):format(sd), sd >= 0 and "good" or "bad", L["Score"],
-            L["The scorer's change then."])
-        or row("score", L["Score"], DASH, "muted", L["Score"], L["No score change was kept."])
+            TM.Row(L["Change"], ("%+.1f"):format(sd), sd >= 0 and "good" or "bad"), TM.Row(L["As of"], L["then"]))
+        or row("score", L["Score"], DASH, "muted", L["Score"], TM.Row(L["Change"], L["not kept"]))
     return { ilvl, score }
 end
 
@@ -113,7 +114,7 @@ end
 -- Your own drop: the looter is you; who it was an upgrade for is not in the snapshot.
 local function ownGroup(drop)
     local them = row("them", L["Them"], DASH, "muted", L["Them"],
-        L["Who it was an upgrade for is not kept in the history."])
+        TM.Row(L["Who it upgraded"], L["not kept in the history"]))
     return { title = L["FOR THE GROUP"], verdict = { text = DASH, tone = "muted", tip = them.tip },
         rows = { looterRow(drop), them } }
 end
@@ -128,18 +129,19 @@ end
 
 local function whenRow(drop, ctx)
     local at = num(drop.at)
-    if not (at and ctx.dateFn) then return row("when", L["When"], DASH, "muted", L["When"], L["No time was kept."]) end
-    local text = ctx.dateFn("%Y-%m-%d %H:%M", at)
-    if num(ctx.nowEpoch) then text = ("%s · %s"):format(text, NS.WindowHistory.Ago(ctx.nowEpoch - at)) end
-    return row("when", L["When"], text, "plain", L["When"], L["When it dropped."])
+    if not (at and ctx.dateFn) then return row("when", L["When"], DASH, "muted", L["When"], TM.Row(L["Dropped"], L["not kept"])) end
+    local date = ctx.dateFn("%Y-%m-%d %H:%M", at)
+    local ago = num(ctx.nowEpoch) and NS.WindowHistory.Ago(ctx.nowEpoch - at) or nil
+    return row("when", L["When"], ago and ("%s · %s"):format(date, ago) or date, "plain", L["When"],
+        TM.Row(L["Dropped"], date), TM.Row(L["That is"], ago))
 end
 
 local function whereRow(group, situationLabel)
     if type(group) ~= "table" then
-        return row("where", L["Where"], DASH, "muted", L["Where"], L["Kept before the place was recorded."])
+        return row("where", L["Where"], DASH, "muted", L["Where"], TM.Row(L["Place"], L["kept before it was recorded"]))
     end
     local text = table.concat(NS.GroupPlace.Parts(group, situationLabel, NS.GroupPlace.ShortNames()), " · ")
-    return row("where", L["Where"], text, "plain", L["Where"], L["The instance, the encounter and the difficulty."])
+    return row("where", L["Where"], text, "plain", L["Where"], TM.Row(L["Place"], text))
 end
 
 -- The character that saw it: the entry's own, else its group's recorder.
@@ -147,9 +149,9 @@ local function seenByRow(drop)
     local key, class = drop.seenBy or nil, drop.seenByClass or nil
     if not key and type(drop.group) == "table" then key, class = NS.GroupPlace.Recorder(drop.group) end
     if type(key) ~= "string" then
-        return row("seenBy", L["Seen by"], DASH, "muted", L["Seen by"], L["Kept before the character that saw it was recorded."])
+        return row("seenBy", L["Seen by"], DASH, "muted", L["Seen by"], TM.Row(L["Character"], L["kept before it was recorded"]))
     end
-    local r = row("seenBy", L["Seen by"], WC.ShortName(key), "plain", L["Seen by"], L["The character that saw it: %s."]:format(key))
+    local r = row("seenBy", L["Seen by"], WC.ShortName(key), "plain", L["Seen by"], TM.Row(L["Character"], key))
     r.classFile = class or nil
     return r
 end
@@ -165,30 +167,32 @@ end
 
 local function linkAction(drop)
     local title = L["Link in chat"]
-    if type(drop.link) ~= "string" then return act("link", title, "link-intact", false, title, L["The item's link is not known."]) end
-    return act("link", title, "link-intact", true, title, L["Put the item's link in the chat box."])
+    if type(drop.link) ~= "string" then return act("link", title, "link-intact", false, title, TM.Row(L["Link"], L["not known"])) end
+    return act("link", title, "link-intact", true, title, TM.Row(L["Puts"], L["the item's link in the chat box"]))
 end
 
 local function declinedAction(drop)
     if drop.outcome == "declined" then
         local title = L["Clear declined"]
-        return act("declined", title, "reset", true, title, L["Put back the outcome it had before you marked it declined."])
+        return act("declined", title, "reset", true, title, TM.Row(L["Puts back"], L["the outcome before declined"]))
     end
     local title = L["Mark declined"]
     if SETTLED[drop.outcome] then
-        return act("declined", title, "ban", false, title, L["A completed trade settled it: it keeps that outcome."])
+        return act("declined", title, "ban", false, title, TM.Row(L["Settled by"], L["a completed trade"]),
+            TM.Row(L["Outcome"], L["kept"]))
     end
-    return act("declined", title, "ban", true, title,
-        L["Mark it declined: you passed on it. The row's right-click menu does the same."])
+    return act("declined", title, "ban", true, title, TM.Row(L["Means"], L["you passed on it"]),
+        TM.Hint(L["The row's right-click menu does the same."]))
 end
 
 local function showAction(liveId)
     local title = L["Show in Drops"]
     if liveId == nil then
-        return act("show", title, "arrow-right", false, title,
-            L["It is not in the Drops tab: only this session's drops are, until the feed is cleared."])
+        return act("show", title, "arrow-right", false, title, TM.Row(L["In Drops"], L["no"]),
+            TM.Row(L["Drops holds"], L["this session's drops, until the feed is cleared"]))
     end
-    return act("show", title, "arrow-right", true, title, L["Select the Drops tab, open this drop's group and expand its card."])
+    return act("show", title, "arrow-right", true, title, TM.Row(L["Selects"], L["the Drops tab"]),
+        TM.Row(L["Then"], L["opens its group and expands its card"]))
 end
 
 --- The card's words for a kept entry (pure).

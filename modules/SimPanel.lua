@@ -69,18 +69,26 @@ local KIND_LABEL = {
     lockdownOn = L["Combat and chat lockdown"], lockdownOff = L["Lockdown lifts"],
 }
 
+-- Each step's tooltip rows, { label, value } pairs (NS.TipMarks.Row at call time, feedback-21).
+local THROUGH = { L["Through"], L["the real handlers"] }
 local KIND_TIP = {
-    runStart    = L["CHALLENGE_MODE_START and the ChallengeMode restriction through the real handlers."],
-    runEnd      = L["CHALLENGE_MODE_COMPLETED through the real handlers; the ChallengeMode restriction lifts."],
-    pull        = L["ENCOUNTER_START, the combat edge and the Encounter restriction through the real handlers."],
-    kill        = L["ENCOUNTER_END through the real handlers; combat and the Encounter restriction lift."],
-    lockdownOn  = L["The simulated chat lockdown: an ask made now waits until it lifts."],
-    lockdownOff = L["The chat lockdown lifts: a waiting ask goes out (printed, never sent)."],
-    loot        = L["%s through the real loot handler (CHAT_MSG_LOOT)."],
+    runStart    = { { L["Injects"], L["CHALLENGE_MODE_START, the ChallengeMode restriction"] }, THROUGH },
+    runEnd      = { { L["Injects"], L["CHALLENGE_MODE_COMPLETED"] }, { L["Lifts"], L["the ChallengeMode restriction"] }, THROUGH },
+    pull        = { { L["Injects"], L["ENCOUNTER_START, the combat edge, the Encounter restriction"] }, THROUGH },
+    kill        = { { L["Injects"], L["ENCOUNTER_END"] }, { L["Lifts"], L["combat and the Encounter restriction"] }, THROUGH },
+    lockdownOn  = { { L["Injects"], L["the simulated chat lockdown"] }, { L["Asks"], L["wait until it lifts"] } },
+    lockdownOff = { { L["Lifts"], L["the chat lockdown"] }, { L["Waiting asks"], L["go out (printed, never sent)"] } },
 }
 
-local START_TIP = L["Builds the item pool from the Encounter Journal, invents the group and opens the window."]
-local STOP_TIP = L["Ends the simulation and cleans up everything it made."]
+local START_TIP = { { L["Builds"], L["the item pool, from the Encounter Journal"] }, { L["Invents"], L["the group"] },
+    { L["Opens"], L["the window"] } }
+local STOP_TIP = { { L["Ends"], L["the simulation"] }, { L["Cleans up"], L["everything it made"] } }
+
+-- `list` ({ label, value } pairs) as tooltip rows appended to `lines`.
+local function addRows(lines, list)
+    for _, r in ipairs(list) do lines[#lines + 1] = NS.TipMarks.Row(r[1], r[2]) end
+    return lines
+end
 
 -- ── composing (pure) ────────────────────────────────────────────────────────────────────────
 
@@ -127,8 +135,10 @@ function SP.StepLabel(step, boss)
 end
 
 local function stepTip(step)
-    if step.kind == "loot" then return KIND_TIP.loot:format(lineCount(step.n)) end
-    return KIND_TIP[step.kind] or ""
+    if step.kind == "loot" then
+        return { { L["Injects"], lineCount(step.n) }, { L["Through"], L["the real loot handler (CHAT_MSG_LOOT)"] } }
+    end
+    return KIND_TIP[step.kind] or {}
 end
 
 -- The bosses each pull and kill names: what it named once played, else the simulator's next name
@@ -164,17 +174,22 @@ end
 
 local function ranLine(now, at)
     local ago = NS.WindowFooter.Ago((tonumber(now) or 0) - (tonumber(at) or 0))
-    return L["Ran %s ago."]:format(ago)
+    return NS.TipMarks.Row(L["Ran"], L["%s ago"]:format(ago))
 end
 
+-- A row's tooltip: what it does (`what`, { label, value } pairs), how it is typed, then what a
+-- click does; a played row says when it ran.
 local function tipOf(row, what, m)
+    local TM = NS.TipMarks
     if row.ranAt and not row.actionable then
-        return { row.label, ranLine(m.now, row.ranAt), L["Already played: clicking it does nothing."] }
+        return { row.label, ranLine(m.now, row.ranAt), TM.Row(L["Played"], L["yes, a click does nothing"]) }
     end
-    local act
-    if row.ahead then act = L["Click to run every step up to this one, in order."]
-    elseif row.actionable then act = L["Click to run it."] end
-    return { row.label, what, act or L["Not yet: run the steps before it first."], L["Typed: %s"]:format(row.command) }
+    local lines = addRows({ row.label }, what)
+    lines[#lines + 1] = TM.Row(L["Typed"], row.command)
+    if row.ahead then lines[#lines + 1] = TM.Hint(L["Click to run every step up to this one, in order."])
+    elseif row.actionable then lines[#lines + 1] = TM.Hint(L["Click to run it."])
+    else lines[#lines + 1] = TM.Row(L["Not yet"], L["run the steps before it first"]) end
+    return lines
 end
 
 local function startRow(m)
@@ -202,7 +217,8 @@ end
 local function stopRow(m, index)
     local row = { key = "stop", index = index, label = L["Stop simulation"], command = slashOf("stop"),
         state = m.running and "cancel" or "locked", actionable = m.running == true }
-    row.tip = { row.label, STOP_TIP, L["Typed: %s"]:format(row.command) }
+    row.tip = addRows({ row.label }, STOP_TIP)
+    row.tip[#row.tip + 1] = NS.TipMarks.Row(L["Typed"], row.command)
     return row
 end
 
@@ -476,28 +492,32 @@ local function buildPicker(f)
         bar.scenario:SetPoint("LEFT", bar, "LEFT", 0, 0)
         bar.scenario:SetOptions(scenarioOptions())
         bar.scenario.onSelect = function(v) SP.Choose(v) end
-        NS.Window.AttachTooltip(bar.scenario, function() return L["Scenario"], L["The scenario Start simulates."] end)
+        NS.Window.AttachTooltip(bar.scenario, function()
+            return L["Scenario"], NS.TipMarks.Row(L["Picks"], L["the scenario Start simulates"])
+        end)
     end
     bar.size = NS.MakeDropdown(bar, 120)
     if bar.size then
         bar.size:SetPoint("LEFT", bar, "LEFT", 146, 0)
         bar.size:SetOptions(sizeOptions())
         bar.size.onSelect = function(v) SP.Choose(nil, v) end
-        NS.Window.AttachTooltip(bar.size, function() return L["Members"], L["How many members a raid has besides you."] end)
+        NS.Window.AttachTooltip(bar.size, function()
+            return L["Members"], NS.TipMarks.Row(L["Picks"], L["how many members a raid has besides you"])
+        end)
     end
     bar.start = button(bar, BUTTON_W, L["Start"], function() SP.StartChosen() end,
-        function() return L["Start"], L["Typed: %s"]:format(SP.StartCommand(choice.scenario, choice.size)) end)
+        function() return L["Start"], NS.TipMarks.Row(L["Typed"], SP.StartCommand(choice.scenario, choice.size)) end)
     bar.start:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
     f.picker = bar
 end
 
 local CONTROLS = {
     { key = "run", label = L["Run all"], tip = function()
-        return L["Plays every step left, one every %s seconds, as `/dw sim run` does."]:format(
-            NS.SimScenario.DelayText(NS.SimScenario.StepDelay()))
+        return { { L["Plays"], L["every step left"] },
+            { L["Every"], L["%s seconds"]:format(NS.SimScenario.DelayText(NS.SimScenario.StepDelay())) } }
     end },
-    { key = "pause", label = L["Pause"], tip = L["Pause holds the next step; Resume plays on from it."] },
-    { key = "restart", label = L["Restart"], tip = L["Stops this scenario and starts the same one again."] },
+    { key = "pause", label = L["Pause"], tip = { { L["Pause"], L["holds the next step"] }, { L["Resume"], L["plays on from it"] } } },
+    { key = "restart", label = L["Restart"], tip = { { L["Stops"], L["this scenario"] }, { L["Then"], L["starts the same one again"] } } },
     { key = "stop", label = L["Stop"], tip = STOP_TIP },
 }
 
@@ -513,8 +533,9 @@ local function buildControls(f)
     for i, c in ipairs(CONTROLS) do
         local b = button(bar, BUTTON_W, c.label, function() verb(controlVerb(c.key)) end,
             function()
-                local tip = type(c.tip) == "function" and c.tip() or c.tip
-                return c.label, tip, L["Typed: %s"]:format(slashOf(controlVerb(c.key)))
+                local lines = addRows({ c.label }, type(c.tip) == "function" and c.tip() or c.tip)
+                lines[#lines + 1] = NS.TipMarks.Row(L["Typed"], slashOf(controlVerb(c.key)))
+                return unpack(lines)
             end)
         b:SetPoint("LEFT", bar, "LEFT", (i - 1) * (BUTTON_W + BUTTON_GAP), 0)
         bar[c.key] = b

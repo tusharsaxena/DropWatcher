@@ -305,12 +305,13 @@ local function messaging(out)
     out:add(TAG, "auto-ask: scheduled=%s sent=%s canceled=%s", aa.scheduled, aa.sent, aa.canceled)
 end
 
--- Your Pawn scale, read from the stored gear snapshot's class and spec (never a fresh read).
+-- Your Pawn scale, read from the stored gear snapshot's class and spec (never a fresh read): the
+-- one you show in Pawn, else your spec's starter scale, as the scorer falls back (modules/Scoring.lua).
 local function pawnScale()
     local g = NS.State.gear
     local classID = g and NS.ClassData.CLASS_ID[g.classFile]
     if not (classID and g.specID) then return nil end
-    return NS.Compat.PawnScaleForSpec(classID, g.specID)
+    return NS.Compat.PawnVisibleScale(classID, g.specID) or NS.Compat.PawnScaleForSpec(classID, g.specID)
 end
 
 -- The adapter actually in use (modules/Scoring.lua), which can differ from the one configured:

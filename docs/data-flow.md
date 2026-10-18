@@ -55,7 +55,8 @@ SituationChanged(key) ─────> "This instance" starts now (Session.MarkS
 DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read); a drop of the feed shown (live, or test
                              mode's while it is on):
                                ├─> hidden, in an auto-open situation: opens it (every drop, your
-                               │   own included; no latch; DW-83, FB-12; never a restored drop)
+                               │   own included; no latch; DW-83, FB-12; never a restored drop),
+                               │   on the Drops tab (an open window keeps its tab; feedback-20)
                                ├─> minimized: stays minimized, `n new` counts it (never a
                                │   restored drop)
                                └─> shown: tabs, filter bar, footer, active body
@@ -117,9 +118,15 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     NS.WindowCells.Item / Ilvl / Slot / ArmorType / Looter (your own: the name in class color
   │       and ` [YOU]` in gold beside it, never cut; feedback-7 §2);
   │     Me: SideCells.Me(drop, your gear) ─> WindowCells.MyEq + WindowCells.Me merged (SideCells.Merge:
-  │       `[icons] 321/308 ▼8`, the difference unsigned; feedback-6 §1, DW-F1);
+  │       `[icons] 292 ▲19`, the difference unsigned; feedback-6 §1, DW-F1; two worn items both
+  │       read take a mark each, `[icons] 321 ▼10 / 308 ▲3`, SideCells.Parts: the verdict's on the
+  │       item it was judged against, TipMarks.ItemArrow's on the other, feedback-21 H7; only when
+  │       the kernel's `either` says the drop could take either, the baseline one of the two worn,
+  │       and the pieces fit the cell (WindowGroup.DualFits), else the one mark: feedback-21 R5);
   │     Trade: WindowOwn.Trade (your own drop: MineCells.OwnTrade, `Yes`, the upgrade count in its
-  │       tooltip; else WindowCells.Trade), No in C.TONE.red (feedback-7 §2);
+  │       tooltip; else WindowCells.Trade), No in C.TONE.red (feedback-7 §2); on another player's
+  │       drop none of your specs can use (main cantUse, no off-spec part), Yes or Likely reads
+  │       `Can't use` in C.TONE.redMuted, the trade rows kept (feedback-21);
   │     Them: WindowGroup.ThemCell ─> SideCells.Them (your own drop: MineCells.Details, `Upgrade for
   │       N` (feedback-7 §2), its tooltip a gear grid, a row per upgrade from MineCells.Candidates,
   │       ranked by gain (TipMarks.GearRows, feedback-7 §3), `Hidden` while unrevealed; else
@@ -135,10 +142,14 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │       kind) ─> WindowGroup.ToneButton (red your move, cyan for an Offer, yellow waiting, green
   │       Traded; feedback-4 §1, feedback-6 §2), its state's icon through Window.SetButtonMark
   │       (Ask `chat`, Offer `external-link`; feedback-7 §1, feedback-10 §1); the
-  │       verdicts one tone each, the arrow first (WindowGroup.PlaceGlyph; §0)
+  │       verdicts one tone each, the arrow first (WindowGroup.PlaceGlyph; §0);
+  │     the item button, after ApplyRowIcon: Glow.Apply(button, drop) (the upgrade glow, below)
                   reads: NS.Gear.Snapshot().equipped (Me's gear; its icons show your inventory slot's
                   own tooltip), NS.TestMode.InspectOf(drop).gear (Them's gear: NS.Inspect.Get(looter guid),
-                  or a sample's own entry), NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
+                  else the read the drop was judged with, `drop.inspect`, once the broker has
+                  forgotten a looter who left the group (feedback-21 H2; a later re-judge keeps it, R4), or a
+                  sample's own entry),
+                  NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
         ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` and Post my
@@ -157,7 +168,8 @@ Expand all / Collapse all ─> WindowGroup.FoldAll(pane.entries, collapse) ─> 
                  every one is open, off with none; feedback-15 §2)
 Ask ───────────> WindowOwn.PressAction ─> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id)
                  ─> AskStateChanged ─> repaint
-Offer ─────────> WindowOwn.PressAction ─> OfferPanel.Open(id) ─> WindowOwn.Reveal(id) (your own drop)
+Offer ─────────> WindowOwn.PressAction ─> OfferPanel.Toggle(id): the panel showing this drop closes,
+                 else OfferPanel.Open(id) ─> WindowOwn.Reveal(id) (your own drop; feedback-21 H4)
 Post my tradeables ─> NS.PostTradeables() ─> MineCells.PostLines(your tradeable links)
                  ─> NS.Asks.Request("announce", nil, "post:<n>:<i>", { text }) per line
 item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
@@ -167,7 +179,11 @@ row hover ─────> a cell, button or header: Window.AttachTooltip ("row"
                  BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2);
                  a line given as `{ text, wrap = false }` (TipMarks.NoWrap) is added unwrapped, so the
                  tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
-                 a font glyph (feedback-6 §3, DW-F3); a `{ grid = rows }` line (TipMarks.Grid,
+                 a font glyph (feedback-6 §3, DW-F3); every tooltip is its title, then one row per
+                 fact, TipMarks.Row(label, value, tone) `• Label: value` (the bullet and label in
+                 C.TONE.mutedGold since feedback-21 H3, a nil value drops the row), a gear grid
+                 right under the title (feedback-21 H3), then at most a TipMarks.Hint, gray and
+                 unbulleted (feedback-21); a `{ grid = rows }` line (TipMarks.Grid,
                  feedback-7 §3) ─> TipGrid.Begin, then TipGrid.Add reserves a blank line per row,
                  then after Show TipGrid.Paint draws the cells as columns on a pooled child of
                  GameTooltip (anchored through Compat.TooltipLeftLine; the arrow column the mono
@@ -192,12 +208,14 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     messages.transmogAsk, Compat.NormalizedRealm; your own drop: its WindowOwn.IsRevealed and
   │     offer tone }) ─> three lines of pieces (line 1: ilvl then item, then CompactCards.FreshMark's
   │     `(2m)` right after it or nothing, never `(…)` while Them reads `…` (feedback-11 §0), the name cut by WindowRows.MarkedWidth; line 2: looter · slot ·
-  │     type · trade, ` [YOU]` in gold after your own name, the Ask or Offer on the right (the gray
+  │     type, ` [YOU]` in gold after your own name, the Ask or Offer on the right (the gray
   │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
   │     row's; no trade window countdown, feedback-10 §2; line 3 SideCells' Me and Them without
-  │     icons, `You 321/308 ▼8`, `Them Upgrade for 2` on your own, the labels gold and Them
-  │     CompactGroup.PlaceThem's fixed gap after You, cut at the card's right inset (feedback-11 §0);
-  │     feedback-6 §1, feedback-7 §2)
+  │     icons, then the Trade cell, `You 321 ▼10 / 308 ▲3  Them Upgrade for 2  Trade Likely` (a mark
+  │     per worn item on a two-item slot, feedback-21 H7; the one mark each when the two would
+  │     push Trade off the card, CompactGroup.LineThreeFits, feedback-21 R5), the labels
+  │     gold, each half CompactGroup.PlaceThem's fixed gap after the last, Trade cut at the card's
+  │     right inset (feedback-11 §0); feedback-6 §1, feedback-7 §2)
   └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
         `[Post] [Scan group] [Expand all]` as icons alone, FOOTER_ICON_W wide (feedback-16)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
@@ -317,15 +335,19 @@ the simulator are exclusive: each refuses while the other is on.
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
   ├─> DetailCells.Chips(drop)                                   (pure: the header's chips; Type is
   │                                                               WindowCells.ArmorType's, §3)
-  ├─> DetailCells.ForYou(drop, Scoring.InUse())                 (pure)
+  ├─> DetailCells.ForYou(drop, Scoring.InUse(), classFile, your gear)   (pure)
   ├─> DetailCells.ForLooter(drop, NS.Inspect.Get(guid), Compat.SpecName(specID), now)   (pure)
+  │     (two worn items both read: Item level is the cells' dual mark, `321 ▼10 / 300 ▲11`, its
+  │      second part the row's `more`, SideCells.Parts; Replaces still the one taken off; H7)
   ├─> DetailCells.TradeBox(drop, the situation's label)         (pure)
   └─> DetailCells.Actions(drop, { NS.Asks.StateOf("ask", …), the inspect entry,
                                   NS.TradeHelper.CanTradeWith(looter) })                  (pure)
   (your own drop: Offer in place of Ask, toned as the row's, and the For the looter Them row
    `Upgrade for N` with the row's tooltip: MineCells.OwnOffer / Details; feedback-5 §2, feedback-6 §3,
-   feedback-7 §2; the Looter row `Name [YOU]`; with no action the first action is the gray
-   `No action` with its reason, WindowCells.NoAction, not a disabled Ask or Offer, feedback-11 §1)
+   feedback-7 §2; no Looter row, the group being everyone but you; under Them a row per member it
+   upgrades, MineCells.Upgrades, the name in class color, feedback-20; with no action the first action
+   is the gray `No action` with its reason, WindowCells.NoAction, not a disabled Ask or Offer,
+   feedback-11 §1, its tooltip shown while disabled: Window.AttachTooltip)
 
 Ask ───────────> NS.PressAsk(id) ─> NS.Asks.Press ─> AskStateChanged ─> repaint
                  (messages.editFirst on, window shown, not queued: ─> DetailCard.OpenEditor(id, "ask"))
@@ -345,7 +367,9 @@ while your move, §2). What is theirs alone is the reveal
 state and the Offer panel:
 
 ```
-Offer (row, card, detail card) ─> WindowOwn.PressAction ─> OfferPanel.Open(id)
+Offer (row, card, detail card) ─> WindowOwn.PressAction ─> OfferPanel.Toggle(id)
+      ─> open on this drop: OfferPanel.Close() (feedback-21 H4); else OfferPanel.Open(id)
+      (another drop's Offer switches the panel; `/dw offer` calls Open, never closes)
       ─> State.offerPanel.dropId, WindowOwn.Reveal(id) (State.windowOwn.revealed) ─> repaint
          (the count and Upgrade for N drawn from now on: the keep? rule, MineCells.OwnTrade / Details)
 Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
@@ -645,7 +669,7 @@ readers: OffSpec.Of(eval) (cantUse with an off-spec upgrade, sidegrade or downgr
 ```
 
 **The tones.** A main-spec verdict keeps its tone (upgrade green, sidegrade yellow, downgrade red,
-can't use gray). An off-spec verdict is drawn in `C.TONE.offspec` (cyan, apart from Offer's
+can't use dim red `redMuted` since feedback-21). An off-spec verdict is drawn in `C.TONE.offspec` (cyan, apart from Offer's
 `C.TONE.cyan`) for all three of its verdicts, with the spec's name after the difference:
 WindowCells.Verdict ─> OffSpecCells.Verdict ─> SideCells.Merge, `291 ▲20 Holy`; the Me cell's gear
 half is the item it was compared with (OffSpecCells.Eq), the looter's Them cell too (with the
@@ -669,6 +693,58 @@ MineCells.Candidates: upgrade 1, sidegrade 2, offSpecUpgrade 3, offSpecSidegrade
 ```
 
 `Upgrade for N`, the Trade count, keep? and the trade estimate stay main-spec only.
+
+## The upgrade glow (feedback-21)
+
+```
+a repaint of a surface ─> Glow.Apply(button, drop)
+    the full table's Drops row (WindowGroup, after ApplyRowIcon), the compact card (CompactGroup),
+    the detail card's header (DetailCard); never the toast (it only shows an upgrade, so a glow
+    there says nothing, G9), History, the Offer panel or the Replaces rows
+  ─> Glow.KindOf(drop): your own drop ─> nil; me.verdict upgrade ─> main;
+       cantUse with OffSpec.Of(me).verdict upgrade ─> offSpec; else nil
+  ─> glow.<kind>.enabled off ─> as nil
+  ─> color: NS.ResolveColor(glow.<kind>.color, glow.<kind>.useClassColor): the player's class
+       color with the swatch's alpha while it is on, else (or for a class with no color) the swatch
+  ─> the same kind, settings generation and button width as last time ─> nothing (no library call)
+  ─> else stop the old effect (key DropWatcherUpgrade), record button.glowKind, start
+       LibCustomGlow-1.0's glow.<kind>.type at frame level 2 over the button (over the icon's
+       border, IconStyle's child frame at 1; G11):
+       pixel    PixelGlow_Start(button, color, lines, frequency, length or nil, thickness, x, y, border)
+       autocast AutoCastGlow_Start(button, color, particles, frequency, scale, x, y)
+       button   ButtonGlow_Start(button, color, frequency)
+       proc     ProcGlow_Start(button, { color, startAnim, duration, xOffset, yOffset })
+       (no library, headless or a LibStub miss: glowKind recorded, nothing drawn)
+WindowGroup / CompactGroup repaint ─> Glow.StopFree(pool): the rows or cards left unused lose it
+a glow.* row's write, a profile switch / copy / reset ─> Glow.Refresh(): the generation + 1,
+    Window.Refresh ─> every glowing icon restarts once
+```
+
+## Every item icon's look (feedback-21 G11)
+
+```
+WindowGroup.ItemButton (any surface: the Drops rows and their Me and Them icons, the compact
+    cards, the detail card's header and Replaces rows, the toast, History, the Offer panel)
+  ─> IconStyle.Apply(button, nil): the button is remembered (a weak set), and styled
+WindowGroup.SetItem(button, link) ─> IconStyle.Apply(button, link)
+  ─> the settings generation and (Color by item quality on) the link as last time ─> nothing
+  ─> else art:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)         icons.zoom, 0 to 0.25
+       icons.borderShow off ─> the border frame (if any) hidden
+       on ─> the BackdropTemplate child frame (made on first use, one level over the button)
+             SetBackdrop{ edgeFile = LSM:Fetch("border", icons.borderStyle), else WHITE8X8 for
+                                     Solid (the default), else the tooltip's edge,
+                          edgeSize = icons.borderSize }
+             SetBackdropBorderColor: NS.ResolveColor(icons.borderColor, icons.useClassColorBorder)
+               (the player's class), else with icons.borderQuality the item's quality color
+               (ItemRead.QualityOf ─> ITEM_QUALITY_COLORS, else the link's |cAARRGGBB), the
+               swatch's alpha kept; no quality known ─> the swatch's mode
+an icons.* row's write, a profile switch / copy / reset ─> IconStyle.Refresh(): the generation + 1,
+    every button remembered, pooled or not, re-applied for its b.link
+```
+
+Can't use reads `C.TONE.redMuted` (dim red) wherever a verdict is drawn, and Not wanted stays gray
+(`bad`); Trade's `Can't use` (above, the Drops table) is the same dim red, and an off-spec use keeps
+Trade's Yes or Likely in its green.
 
 ## Asking, offering and announcing (design spec §9.2-§9.3)
 
@@ -772,9 +848,12 @@ DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted 
     ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain (or into an empty
        slot, whatever minGain), trade likely / yes
     ─> queue (newest 5) ─> Pump: nothing on screen, not held (combat without toast.inCombat)
-    ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose (the four rows'
-       parts, feedback-9 spec §0) ─> paint: title; item (quality color) + item level; Looted by
-       <looter> (class color) · You <glyph n> · Them <glyph n> (segments, mono glyphs, toned);
+    ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose(rec, your gear,
+       their inspect gear) (the four rows' parts, feedback-9 spec §0) ─> paint: title; item
+       (quality color) + item level; Looted by <looter> (class color) · You <glyph n> · Them
+       <glyph n> (segments, mono glyphs, toned; on a two-item slot read in full the cells' dual
+       mark, `321 ▼10 / 300 ▲11`, and the frame Toast.WidthFor(row 3) wide, never under WIDTH:
+       feedback-21 H7);
        trade word (Trade tone) + short reason (muted, cut at the inset); tooltip = Trade cell's
        ─> sound?
     ─> C_Timer toast.duration (none for a test drop) ─> Dismiss ─> Pump
@@ -786,7 +865,11 @@ AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
 LootFeed.Clear / the cap's trim ─> removal sink ─> Toast.Prune: gone drops leave the queue, a gone
     shown drop's toast goes ─> Pump
 toast.enabled off (the row's reaction) / a profile with it off ─> the toast goes, the queue empties
-drag (test mode only) ─> profile.toast.point     Reset position ─> Toast.ResetPosition
+drag (test mode only) ─> profile.toast.point (offsets x toast.scale: UIParent's units)
+Reset position ─> Toast.ResetPosition
+toast.scale (the row's reaction, Toast.ApplyScale) / build / profile reload
+    ─> applyPoint: SetScale(toast.scale), then SetPoint(toast.point's offsets / toast.scale)
+       (the anchor stays where it was put; toast.point is never rewritten)
 ```
 
 ## Auto-ask (design spec §9.4)

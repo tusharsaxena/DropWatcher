@@ -43,10 +43,12 @@ local TRINKET = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }
 
 local function SC() return T.newAddon().SideCells end
 
+-- Whether the tooltip carries `line`, read plain (a row's colors out: feedback-21).
 local function has(tip, line)
-    for _, l in ipairs(tip) do if l == line then return true end end
+    for _, l in ipairs(tip) do if l == line or T.tipPlain(l) == line then return true end end
     return false
 end
+local P = T.tipPlain
 
 -- ── the composers ───────────────────────────────────────────────────────────────────────────
 
@@ -64,11 +66,11 @@ test("side cells: Me reads the worn level, then the glyph and the unsigned diffe
     assertEqual(down.glyph .. down.text, "▼8"); assertEqual(down.tone, "red")
 end)
 
-test("side cells: Can't use and Not wanted stay words after the gear, gray", function()
+test("side cells: Can't use and Not wanted stay words after the gear, dim red and gray", function()
     local S = SC()
     local cant = S.Me(drop({ me = { verdict = "cantUse", reasons = { { key = "armorType" } } } }), MINE)
     assertEqual(cant.level, "292"); assertTrue(cant.glyph == nil); assertEqual(cant.text, "Can't use")
-    assertEqual(cant.tone, "bad")
+    assertEqual(cant.tone, "redMuted")
     local unwanted = S.Them(drop({ them = { verdict = "doesntWant", reasons = { { key = "undesired" } } } }), HERS, 100)
     assertEqual(unwanted.level, "324"); assertEqual(unwanted.text, "Not wanted"); assertEqual(unwanted.tone, "bad")
 end)
@@ -80,6 +82,78 @@ test("side cells: two worn items read both levels and carry both icons", functio
     assertEqual(me.glyph .. me.text, "▼8")
     local them = S.Them(drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 12, reasons = {} } }), HERS, 100)
     assertEqual(them.level, "298/296"); assertEqual(#them.items, 2); assertEqual(them.glyph .. them.text, "▲12")
+end)
+
+-- A dual mark's parts as text: `321 ▼10 / 308 ▲3`.
+local function partsText(c)
+    local a, b = c.parts[1], c.parts[2]
+    return ("%s %s%s / %s %s%s"):format(a.level, a.glyph, a.text, b.level, b.glyph, b.text)
+end
+
+test("side cells: two worn items both read take a mark each, in the items' order and each its own tone (H7)", function()
+    local S = SC()
+    -- 311 against your trinkets 321 and 308: the verdict (judged against the lower) on 308, its own on 321.
+    local me = S.Me(drop({ facts = TRINKET, me = { verdict = "upgrade", ilvlDelta = 3, either = true, reasons = {} } }), MINE)
+    assertEqual(partsText(me), "321 ▼10 / 308 ▲3")
+    assertEqual(me.parts[1].tone, "red"); assertEqual(me.parts[2].tone, "good", "each part in its own tone")
+    assertEqual(me.level, "321/308", "the single pieces stay for a reader that draws one mark")
+    -- The baseline names the worn item: its row takes the verdict's mark whatever its level.
+    local them = S.Them(drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 13, either = true,
+        baseline = { link = OLD1, ilvl = 298 }, reasons = {} } }), HERS, 100)
+    assertEqual(partsText(them), "298 ▲13 / 296 ▲15")
+    -- The sidegrade band: within it either way reads ≈.
+    local band = S.Me(drop({ facts = TRINKET, me = { verdict = "downgrade", ilvlDelta = -10, band = 4, either = true,
+        baseline = { link = OLD1, ilvl = 321 }, reasons = {} } }), { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD2, ilvl = 313 } })
+    assertEqual(partsText(band), "321 ▼10 / 313 ≈2"); assertEqual(band.parts[2].tone, "yellow")
+end)
+
+test("side cells: one worn item, an empty or unread slot, a word or an off-spec verdict keep one mark (H7)", function()
+    local S = SC()
+    local up = { verdict = "upgrade", ilvlDelta = 11, either = true, reasons = {} }
+    assertEqual(S.Me(drop({ me = up }), MINE).parts, nil, "a single slot")
+    local ring = { ilvl = 311, equipLoc = "INVTYPE_FINGER", quality = 4 }
+    assertEqual(S.Me(drop({ facts = ring, me = up }), MINE).parts, nil, "a ring slot worn empty")
+    assertEqual(S.Me(drop({ facts = TRINKET, me = up }), { [13] = { link = OLD1, ilvl = 321 } }).parts, nil, "one not read")
+    assertEqual(S.Me(drop({ facts = TRINKET, me = up }), { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD2 } }).parts,
+        nil, "a level not read")
+    assertEqual(S.Me(drop({ facts = TRINKET, me = { verdict = "cantUse", either = true, reasons = {} } }), MINE).parts, nil, "a word")
+    assertEqual(S.Me(drop({ facts = TRINKET, me = { verdict = "upgrade", either = true, reasons = {} } }), MINE).parts, nil, "no difference")
+    assertEqual(S.Them(drop({ facts = TRINKET, them = up, inspect = { status = "pending" } }), nil, 100).parts, nil, "not read")
+    local NS = T.newAddon()
+    assertEqual(NS.WindowHistory.MeCell(drop({ facts = TRINKET, me = up })).parts, nil, "History keeps no worn items")
+    assertEqual(NS.SideCells.Parts({ offSpec = true, either = true, verdict = "upgrade", delta = 3, ilvl = 311 },
+        { { ilvl = 321 }, { ilvl = 308 } }, 0), nil, "an off-spec verdict is judged against one item")
+end)
+
+test("side cells: a drop judged against one of two worn items, or a bag item, keeps one mark (R5)", function()
+    local S = SC()
+    local MACE = "|cffa335ee|Hitem:302::|h[Old Mace]|h|r"
+    local SHIELD = "|cffa335ee|Hitem:303::|h[Old Shield]|h|r"
+    local hands = { [16] = { link = MACE, ilvl = 320 }, [17] = { link = SHIELD, ilvl = 310 } }
+    -- No dual wield: a one-hander is judged against the main hand alone, never the shield.
+    local oneH = { ilvl = 315, equipLoc = "INVTYPE_WEAPON", quality = 4 }
+    local mh = S.Me(drop({ facts = oneH, me = { verdict = "downgrade", ilvlDelta = -5,
+        baseline = { link = MACE, ilvl = 320 }, reasons = {} } }), hands)
+    assertEqual(mh.parts, nil, "the main hand alone: no mark against the shield")
+    assertEqual(mh.level .. " " .. mh.glyph .. mh.text, "320/310 ▼5")
+    -- A two-hander against both hands averaged: the difference is the pair's, not the main hand's.
+    local twoH = { ilvl = 320, equipLoc = "INVTYPE_2HWEAPON", quality = 4 }
+    local avg = S.Me(drop({ facts = twoH, me = { verdict = "upgrade", ilvlDelta = 5,
+        baseline = { link = MACE, ilvl = 330 }, reasons = {} } }),
+        { [16] = { link = MACE, ilvl = 330 }, [17] = { link = SHIELD, ilvl = 300 } })
+    assertEqual(avg.parts, nil, "both hands averaged: one mark")
+    assertEqual(avg.level .. " " .. avg.glyph .. avg.text, "330/300 ▲5")
+    -- Of two, but the baseline is a bag item (compareOwned): neither worn item takes the verdict's mark.
+    local ring = { ilvl = 310, equipLoc = "INVTYPE_FINGER", quality = 4 }
+    local bag = S.Me(drop({ facts = ring, me = { verdict = "downgrade", ilvlDelta = -5, either = true,
+        baseline = { link = LINK, ilvl = 315 }, reasons = {} } }),
+        { [11] = { link = OLD1, ilvl = 300 }, [12] = { link = OLD2, ilvl = 310 } })
+    assertEqual(bag.parts, nil, "a baseline neither worn item is: one mark")
+    -- Of two, the baseline worn: a mark each.
+    local worn = S.Me(drop({ facts = ring, me = { verdict = "upgrade", ilvlDelta = 10, either = true,
+        baseline = { link = OLD1, ilvl = 300 }, reasons = {} } }),
+        { [11] = { link = OLD1, ilvl = 300 }, [12] = { link = OLD2, ilvl = 310 } })
+    assertEqual(partsText(worn), "300 ▲10 / 310 ≈0")
 end)
 
 test("side cells: nothing worn reads `empty`, muted, and the verdict follows", function()
@@ -124,15 +198,15 @@ test("side cells: the tooltip is the verdict's title, the worn gear as a grid, t
     assertEqual(me.tip[1], "For you: Upgrade")
     assertEqual(T.tipText(me.tip[2]), "|cff40c7ebYou|r  292  " .. OLD_BAND .. "  ▲19", "[Name] [ilvl] [item] [arrow and difference]")
     assertEqual(me.tip[2].grid[1][4].tone, "good", "the glyph and the difference in the verdict's tone")
-    assertEqual(me.tip[3], "A higher item level, and a higher score when scoring is on.")
+    assertEqual(P(me.tip[3]), "• Means: a higher item level (and score, when scored)")
     assertFalse(has(me.tip, "You wear"), "the X wears line gives way to the grid")
     for _, l in ipairs(me.tip) do assertTrue(T.tipText(l):find("against", 1, true) == nil, "no comparison prose: " .. T.tipText(l)) end
     local them = S.Them(drop(), HERS, 100)
     assertEqual(them.tip[1], "For Seta: Downgrade")
     assertEqual(T.tipText(them.tip[2]), "|cffffffffSeta|r  324  " .. OLD_BAND .. "  ▼13", "the looter in their class color")
     assertEqual(them.tip[2].grid[1][4].tone, "red")
-    assertEqual(them.tip[3], "Inspected 40s ago.", "the read's age after the grid")
-    assertEqual(them.tip[4], "A lower item level and no score gain.")
+    assertEqual(P(them.tip[3]), "• Inspected: 40s ago", "the read's age after the grid")
+    assertEqual(P(them.tip[4]), "• Means: a lower item level, no score gain")
     local range = S.Them(drop({ them = NONE, inspect = { status = "outOfRange" } }), nil, 100)
     local seen = {}
     for _, l in ipairs(range.tip) do
@@ -143,13 +217,14 @@ test("side cells: the tooltip is the verdict's title, the worn gear as a grid, t
     assertTrue(has(range.tip, "For Seta: Unknown"))
 end)
 
-test("side cells: two worn items are two rows, the arrow on the one the drop would replace; a slot worn empty reads empty", function()
+test("side cells: two worn items are two rows, each with its own arrow against the drop; a slot worn empty reads empty", function()
     local S = SC()
-    local judged = drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 13, baseline = { link = OLD2, ilvl = 296 }, reasons = {} } })
+    local judged = drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 13, either = true, baseline = { link = OLD2, ilvl = 296 }, reasons = {} } })
     local g = S.Them(judged, HERS, 100).tip[2].grid
     assertEqual(#g, 2, "a row per trinket")
-    assertEqual(T.tipText({ grid = { g[1] } }), "|cffffffffSeta|r  298  " .. OLD_BAND, "the name on the first row; no arrow on the kept one")
-    assertEqual(T.tipText({ grid = { g[2] } }), "296  " .. OLDER_BAND .. "  ▲13", "the arrow on the item it replaces")
+    assertEqual(T.tipText({ grid = { g[1] } }), "|cffffffffSeta|r  298  " .. OLD_BAND .. "  ▲13",
+        "the name on the first row; the other worn item its own arrow, 311 against 298 (feedback-21 H3)")
+    assertEqual(T.tipText({ grid = { g[2] } }), "296  " .. OLDER_BAND .. "  ▲13", "the replaced item keeps the verdict's own arrow")
     assertEqual(g[2][1], "")
     local unlinked = drop({ facts = TRINKET, them = { verdict = "upgrade", ilvlDelta = 13, reasons = {} } })
     assertEqual(S.Them(unlinked, HERS, 100).tip[2].grid[2][4].glyph, "▲", "no baseline named: the lower one")
@@ -157,10 +232,34 @@ test("side cells: two worn items are two rows, the arrow on the one the drop wou
         me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } })
     local rg = S.Me(ring, MINE).tip[2].grid
     assertEqual(#rg, 2)
-    assertEqual(rg[1][4], "", "the worn ring is kept")
+    assertEqual(rg[1][4].glyph .. rg[1][4].text, "▲11", "the worn ring its own arrow, 311 against 300")
+    assertEqual(rg[1][4].tone, "good")
     assertEqual(rg[2][3].text, "empty"); assertEqual(rg[2][3].tone, "muted")
     assertEqual(rg[2][4].glyph, "▲"); assertEqual(rg[2][4].text, "", "into an empty slot: the glyph alone")
     assertEqual(rg[1][1], "You", "no class known: plain")
+end)
+
+test("side cells: a dual slot gives each worn item its own arrow and tone against the drop, the band as the kernel's", function()
+    local S = SC()
+    -- You wear trinkets 321 and 308; the drop is 311, judged against the 308 (+3).
+    local d = drop({ facts = TRINKET, me = { verdict = "upgrade", ilvlDelta = 3, either = true, baseline = { link = OLD2, ilvl = 308 }, reasons = {} } })
+    local g = S.Me(d, MINE).tip[2].grid
+    assertEqual(#g, 2)
+    assertEqual(g[1][4].glyph .. g[1][4].text, "▼10", "the higher trinket: a downgrade against it"); assertEqual(g[1][4].tone, "red")
+    assertEqual(g[2][4].glyph .. g[2][4].text, "▲3", "the replaced one: the verdict's"); assertEqual(g[2][4].tone, "good")
+    local banded = drop({ facts = TRINKET, me = { verdict = "sidegrade", ilvlDelta = 3, band = 10, either = true,
+        baseline = { link = OLD2, ilvl = 308 }, reasons = {} } })
+    local bg = S.Me(banded, MINE).tip[2].grid
+    assertEqual(bg[1][4].glyph .. bg[1][4].text, "≈10", "within the sidegrade band: a sidegrade"); assertEqual(bg[1][4].tone, "yellow")
+    local cant = drop({ facts = TRINKET, me = { verdict = "cantUse", reasons = {} } })
+    for _, r in ipairs(S.Me(cant, MINE).tip[2].grid) do assertEqual(r[4], "", "no verdict: no arrow on any row") end
+    -- Judged against one item (a one-hander for a non dual wielder: R5): the other row takes no arrow.
+    local hands = { [16] = { link = OLD1, ilvl = 320 }, [17] = { link = OLD2, ilvl = 310 } }
+    local oneH = drop({ facts = { ilvl = 315, equipLoc = "INVTYPE_WEAPON", quality = 4 }, me = { verdict = "downgrade",
+        ilvlDelta = -5, baseline = { link = OLD1, ilvl = 320 }, reasons = {} } })
+    local hg = S.Me(oneH, hands).tip[2].grid
+    assertEqual(hg[1][4].glyph .. hg[1][4].text, "▼5", "the main hand: the verdict's")
+    assertEqual(hg[2][4], "", "the shield: never compared, no arrow")
 end)
 
 test("side cells: History's verdict alone keeps its own one-row grid from the judged item", function()
@@ -168,7 +267,8 @@ test("side cells: History's verdict alone keeps its own one-row grid from the ju
     local v = S.Merge(T.newAddon().WindowCells.Me(drop({ me = { verdict = "upgrade", ilvlDelta = 6,
         baseline = { link = OLD1, ilvl = 305 }, reasons = {} } })))
     assertEqual(v.tip[1], "For you: Upgrade")
-    assertEqual(T.tipText(v.tip[3]), "You  305  " .. OLD_BAND .. "  ▲6", "after the explanation, where the comparison line was")
+    assertEqual(T.tipText(v.tip[2]), "You  305  " .. OLD_BAND .. "  ▲6", "right under the title, above the rows (feedback-21 H3)")
+    assertEqual(P(v.tip[3]), "• Means: a higher item level (and score, when scored)")
 end)
 
 test("side cells: your own drop's Them is Upgrade for N or No upgrades, in its tones, with every upgrade in the tooltip", function()
@@ -213,7 +313,7 @@ test("side cells: History's Me grid names you in your class color, as on Drops",
     NS.Gear.Snapshot = function() return { classFile = "MAGE", equipped = {} } end
     local d = WH.AsDrop({ itemLink = LINK, looter = "Seta-Realm", class = "PRIEST", ilvl = 311, equipLoc = "INVTYPE_HEAD",
         me = { verdict = "upgrade", ilvlDelta = 6, baseline = { link = OLD1, ilvl = 305 }, reasons = {} } }, 1)
-    assertEqual(T.tipText(WH.MeCell(d).tip[3]), "|cff40c7ebYou|r  305  " .. OLD_BAND .. "  ▲6")
+    assertEqual(T.tipText(WH.MeCell(d).tip[2]), "|cff40c7ebYou|r  305  " .. OLD_BAND .. "  ▲6")
 end)
 
 test("side cells: Them read but not judged names the looter in the grid, in their class color", function()
@@ -245,13 +345,13 @@ test("side cells: the Offer panel's Their eq reads like Them: both worn items fr
     local NS = T.newAddon()
     local base = { link = OLD2, ilvl = 296 }
     local read = { status = "fresh", at = 60, gear = HERS }
-    local up = candidate(NS, mine(), entry("ready", { verdict = "upgrade", ilvlDelta = 15, baseline = base, reasons = {} }), read)
+    local up = candidate(NS, mine(), entry("ready", { verdict = "upgrade", ilvlDelta = 15, either = true, baseline = base, reasons = {} }), read)
     assertEqual(#up.items, 2, "both trinkets from the inspect read"); assertEqual(up.level, "298/296"); assertEqual(up.levelTone, "plain")
     assertEqual(up.glyph .. up.text, "▲15"); assertEqual(up.tone, "good")
-    assertEqual(up.tip[1], "For Butterz: Upgrade"); assertTrue(has(up.tip, "Inspected 40s ago."), "the read's age")
-    assertEqual(T.tipText(up.tip[2]), "|cff40c7ebButterz|r  298  " .. OLD_BAND .. "\n296  " .. OLDER_BAND .. "  ▲15",
-        "both trinkets from the read, the arrow on the one judged against")
-    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, "An upgrade for them: a higher item level than what they wear there."),
+    assertEqual(up.tip[1], "For Butterz: Upgrade"); assertTrue(has(up.tip, "• Inspected: 40s ago"), "the read's age")
+    assertEqual(T.tipText(up.tip[2]), "|cff40c7ebButterz|r  298  " .. OLD_BAND .. "  ▲13\n296  " .. OLDER_BAND .. "  ▲15",
+        "both trinkets from the read, each with its own arrow (feedback-21 H3)")
+    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, "• For them: a higher item level than they wear there"),
         "the old pill's explanation moved into the tooltip")
     local noRead = candidate(NS, mine(), entry("ready", { verdict = "downgrade", ilvlDelta = -4, baseline = base, reasons = {} }))
     assertEqual(#noRead.items, 1, "without a read, the item it was judged against"); assertEqual(noRead.items[1].link, OLD2)
@@ -264,10 +364,10 @@ end)
 test("side cells: the Offer panel's Their eq says Can't use, …, Unavailable and empty in words", function()
     local NS = T.newAddon()
     local cant = candidate(NS, mine(), entry("ready", { verdict = "cantUse", reasons = { { key = "armorType" } } }))
-    assertTrue(cant.level == nil, "no dash beside the word"); assertEqual(cant.text, "Can't use"); assertEqual(cant.tone, "bad")
+    assertTrue(cant.level == nil, "no dash beside the word"); assertEqual(cant.text, "Can't use"); assertEqual(cant.tone, "redMuted")
     local checking = candidate(NS, mine(), entry("checking"))
     assertEqual(checking.text, "…"); assertEqual(checking.tone, "muted"); assertEqual(checking.tip[1], "Butterz: Checking")
-    assertEqual(checking.tip[2], "Their gear is being inspected; the verdict follows.")
+    assertEqual(P(checking.tip[2]), "• For them: their gear is being inspected")
     local gone = candidate(NS, mine(), entry("unavailable"))
     assertEqual(gone.text, "Unavailable"); assertEqual(gone.tone, "muted"); assertTrue(#gone.tip >= 2)
     local unknown = candidate(NS, mine(), entry("ready", { verdict = "unknown", reasons = {} }))
@@ -289,7 +389,7 @@ test("side cells: the Offer panel's Their eq lists a ring slot read empty as its
     local c = candidate(NS, mine(RING), entry("ready", eval), { status = "fresh", at = 60, gear = gear })
     local g = c.tip[2].grid
     assertEqual(#g, 2, "the worn ring and the slot read empty")
-    assertEqual(g[1][4], "", "the worn ring is kept")
+    assertEqual(g[1][4].glyph .. g[1][4].text, "▼9", "the worn ring its own arrow, 311 against 320"); assertEqual(g[1][4].tone, "red")
     assertEqual(g[2][3].text, "empty"); assertEqual(g[2][4].glyph, "▲", "the arrow on the slot the drop would fill")
     local them = NS.SideCells.Them(drop({ facts = RING, them = eval }), gear, 100)
     assertEqual(c.level, "320"); assertEqual(c.level, them.level, "Their eq's level is Them's for the same gear")
@@ -305,22 +405,30 @@ local CHAR = 5   -- the harness's character measure (the small template's averag
 local function chars(s) return #((s or ""):gsub("[\128-\191]", "")) end
 
 -- A cell's width as WindowGroup.PlaceSide lays it out: the icons, then each piece shown after the
--- last with its gap.
+-- last with its gap; a dual mark (feedback-21 H7) its first part, PART_GAP, `/`, PART_GAP, then the
+-- second part in the single pieces.
 local function sideWidth(WG, K, c)
     local S, x, gap = WG.SIDE, 0, 0
     local n = math.min(#c.items, 2)
     if n > 0 then x, gap = n * K.EQ_ICON + (n - 1) * S.ICON_GAP, S.LEVEL_GAP end
     local function add(w, after) x, gap = x + gap + w, after end
-    if c.level then add(chars(c.level) * CHAR, S.VERDICT_GAP) end
-    if c.glyph then add(CHAR, S.GLYPH_GAP) end
-    if c.text ~= "" then add(chars(c.text) * CHAR, 0) end
+    local level, glyph, text = c.level, c.glyph, c.text
+    if c.parts then
+        local a, b = c.parts[1], c.parts[2]
+        add(chars(a.level) * CHAR, S.VERDICT_GAP); add(CHAR, S.GLYPH_GAP); add(chars(a.text) * CHAR, S.PART_GAP)
+        add(chars(WG.PART_SEP) * CHAR, S.PART_GAP)
+        level, glyph, text = b.level, b.glyph, b.text
+    end
+    if level then add(chars(level) * CHAR, S.VERDICT_GAP) end
+    if glyph then add(CHAR, S.GLYPH_GAP) end
+    if text ~= "" then add(chars(text) * CHAR, 0) end
     return x
 end
 
 -- Every kind of cell each column can show, on a two-item slot and a one-item slot.
 local VERDICTS = {
-    { verdict = "upgrade", ilvlDelta = 13, reasons = {} }, { verdict = "downgrade", ilvlDelta = -13, reasons = {} },
-    { verdict = "sidegrade", ilvlDelta = 1, reasons = {} }, { verdict = "cantUse", reasons = {} },
+    { verdict = "upgrade", ilvlDelta = 13, either = true, reasons = {} }, { verdict = "downgrade", ilvlDelta = -13, either = true, reasons = {} },
+    { verdict = "sidegrade", ilvlDelta = 1, either = true, reasons = {} }, { verdict = "cantUse", reasons = {} },
     { verdict = "doesntWant", reasons = {} }, NONE,
 }
 
@@ -365,6 +473,14 @@ test("widths: Me and Them are each their widest cell, measured (two icons, 321/3
     end
     local spec = sideWidth(WG, K, { items = { 1, 2 }, level = "321/308", glyph = "▼", text = "13" })
     assertTrue(widest.me >= spec, "the spec's worst case fits")
+    -- The dual mark at its longest realistic (feedback-21 H7): two worn levels, two two-digit
+    -- differences, `321 ▼10 / 324 ▼23`: 125, inside the 127 that `Not wanted` sets, so no column widens.
+    local dual = sideWidth(WG, K, { items = { 1, 2 }, text = "", parts = {
+        { level = "321", glyph = "▼", text = "10" }, { level = "324", glyph = "▼", text = "23" } } })
+    assertEqual(dual, 125)
+    for _, col in ipairs(WG.COLUMNS) do
+        if widest[col.key] then assertTrue(dual <= col.width, col.key .. ": the dual mark fits, nothing cut") end
+    end
     for _, col in ipairs(WG.COLUMNS) do
         if widest[col.key] then assertEqual(col.width, widest[col.key], col.key .. ": nothing cut, no margin") end
     end
@@ -404,9 +520,9 @@ test("widths: the column set and the shed order keep Me and Them where the verdi
     for _, col in ipairs(WG.COLUMNS) do
         if col.key == "me" or col.key == "them" then
             assertEqual(col.label, col.key == "me" and "Me" or "Them")
-            assertTrue(col.tip:find("wears", 1, true) ~= nil or col.tip:find("wear", 1, true) ~= nil,
-                col.key .. "'s tooltip describes the gear half")
-            assertTrue(col.tip:find("judged", 1, true) ~= nil, col.key .. "'s tooltip describes the verdict half")
+            local tip = T.tipPlainJoined(col.tip)
+            assertTrue(tip:find("wear", 1, true) ~= nil, col.key .. "'s tooltip describes the gear half")
+            assertTrue(tip:find("judged", 1, true) ~= nil, col.key .. "'s tooltip describes the verdict half")
         end
     end
 end)
@@ -430,11 +546,17 @@ end
 local function textOf(fs) return fs:GetText() end
 
 test("table: the Me cell paints its icons, level, glyph and difference left to right", function()
-    local NS, row = shown(drop({ facts = TRINKET, me = { verdict = "downgrade", ilvlDelta = -8, reasons = {} } }))
+    local NS, row = shown(drop({ facts = TRINKET, me = { verdict = "downgrade", ilvlDelta = -8, either = true, reasons = {} } }))
     local c, C = row.cells.me, NS.Constants
     assertTrue(c.icons[1]:IsShown() and c.icons[2]:IsShown(), "both worn trinkets")
-    assertEqual(textOf(c.level), "321/308"); assertEqual(textOf(c.glyph), "▼"); assertEqual(textOf(c.text), "8")
-    assertEqual(c.level.__points[1][2], c.icons[2], "the level after the second icon")
+    -- A mark each (feedback-21 H7): `321 ▼10 / 308 ▼8`, the first part in the lead pieces.
+    assertEqual(textOf(c.leadLevel), "321"); assertEqual(textOf(c.leadGlyph), "▼"); assertEqual(textOf(c.leadText), "10")
+    assertEqual(textOf(c.sep), "/"); assertTrue(c.sep:IsShown(), "the separator shows")
+    assertEqual(select(2, c.sep:GetTextColor()), C.TONE.muted.g, "the separator muted")
+    assertEqual(c.leadLevel.__points[1][2], c.icons[2], "the first level after the second icon")
+    assertEqual(c.leadGlyph.__points[1][2], c.leadLevel); assertEqual(c.leadText.__points[1][2], c.leadGlyph)
+    assertEqual(c.sep.__points[1][2], c.leadText); assertEqual(c.level.__points[1][2], c.sep, "the second part after it")
+    assertEqual(textOf(c.level), "308"); assertEqual(textOf(c.glyph), "▼"); assertEqual(textOf(c.text), "8")
     assertEqual(c.glyph.__points[1][2], c.level, "the glyph after the level")
     assertEqual(c.text.__points[1][2], c.glyph, "the difference after the glyph")
     assertEqual(c.text.__points[2][1], "RIGHT"); assertEqual(c.text.__points[2][2], c,
@@ -455,6 +577,29 @@ test("table: the Me cell paints its icons, level, glyph and difference left to r
     assertEqual(textOf(NS.WindowGroup.Drawn().pane.colHead.labels.me.text), "Me")
 end)
 
+-- feedback-21 R5: the columns keep the width the Default size measures, so at a larger Font size a
+-- dual mark that would run past its cell into the next column gives way to the one mark.
+test("table: a dual mark that does not fit its cell at a larger font is the one mark instead (R5)", function()
+    local function painted(charWidth)
+        local NS, _, m = T.enableAddon()
+        m.__now, m.textCharWidth = 100, charWidth
+        local d = drop({ facts = TRINKET, me = { verdict = "downgrade", ilvlDelta = -8, either = true, reasons = {} } })
+        NS.LootFeed.Groups = function() return { GROUP } end
+        NS.LootFeed.Get = function(id) return id == d.id and d or nil end
+        NS.LootFeed.Drops = function() return { d } end
+        NS.Gear.Snapshot = function() return { equipped = MINE } end
+        NS.WindowFilterBar.Set("group", "view", "all")
+        NS.ShowWindow()
+        return NS.WindowGroup.Drawn().rows[1].cells.me
+    end
+    local fits = painted(3)
+    assertTrue(fits.sep:IsShown(), "it fits: a mark each"); assertEqual(textOf(fits.level), "308")
+    local big = painted(9)
+    assertFalse(big.sep:IsShown() or big.leadLevel:IsShown(), "too wide: no lead pieces")
+    assertEqual(textOf(big.level), "321/308"); assertEqual(textOf(big.glyph), "▼"); assertEqual(textOf(big.text), "8")
+    assertEqual(big.level.__points[1][2], big.icons[2], "placed as the one mark, after the icons")
+end)
+
 test("table: a word starts after the level, and a cell with nothing worn starts at its left edge", function()
     local _, row = shown(drop({ them = NONE, inspect = { status = "outOfRange" } }))
     local c = row.cells.them
@@ -466,4 +611,5 @@ test("table: a word starts after the level, and a cell with nothing worn starts 
     assertEqual(textOf(me.text), "Can't use"); assertEqual(textOf(me.glyph), "")
     assertEqual(me.text.__points[1][2], me.level, "the word after the level")
     assertEqual(me.text.__points[2][2], me, "the word ends at the cell's right edge")
+    assertFalse(me.sep:IsShown() or me.leadLevel:IsShown(), "one worn helm: one mark, no lead pieces (feedback-21 H7)")
 end)

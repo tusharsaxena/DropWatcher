@@ -5,7 +5,7 @@
 ## Version: 1.0.0
 ## IconTexture: Interface\AddOns\DropWatcher\media\logos\dropwatcher.logo.128.tga
 ## SavedVariables: DropWatcherDB, DropWatcherPerfDB
-## OptionalDeps: Pawn, CanIMogIt, Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0
+## OptionalDeps: Pawn, CanIMogIt, Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibCustomGlow-1.0
 ## DefaultState: enabled
 ## Category-enUS: Group
 ## X-License: MIT
@@ -30,12 +30,17 @@ libs\LibSharedMedia-3.0\lib.xml
 # LibDataBroker-1.1.lua sits above its lib.xml. LibKa0s-Launcher-1.0 resolves both at Register time.
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\lib.xml
+# The upgrade glow. It resolves only LibStub at file load.
+libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
 # ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
 libs\LibKa0s\LibKa0s.xml
 
 # Locales
 # LOAD-BEARING: publishes NS.L, which every file below reads at load.
 locales\enUS.lua
+# LOAD-BEARING: reads NS.L (locales\enUS.lua, the line above) at load and fills it with the settings
+# panel's strings: a topic file split out of enUS.lua at the layout-§1 cap (localization-§6).
+locales\enUS_Settings.lua
 
 # Core -- dependency-correct order (layout-§1)
 # LOAD-BEARING: publishes NS.name, NS.BRAND, NS.PREFIX and NS.SLASH, read at load below.
@@ -307,7 +312,7 @@ modules\WindowCells.lua
 # in the default face draws for a verdict mark or an arrow (an inline texture, never a font glyph:
 # tooltips, the detail card, the Offer panel) and a name's quality or class color (the toast), a
 # tooltip's non-wrapping line and its gear grid's rows; reads NS.Constants and NS.L at load, and
-# NS.Icon, NS.Compat and NS.GroupRoster at call time.
+# NS.Icon, NS.Compat, NS.GroupRoster and NS.Evaluate (a worn item's own arrow) at call time.
 modules\TipMarks.lua
 # LOAD-BEARING: takes NS.WindowCells and NS.TipMarks (modules\, above) at load, and sits above
 # modules\SideCells.lua, modules\WindowGroup.lua and modules\OfferPanel.lua (which read it at load).
@@ -341,6 +346,16 @@ modules\WindowOwn.lua
 # right, like Ka0s Loot History; feedback-3 spec §2, DW-B2); takes NS.Constants at load. NS.MineCells
 # (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
 modules\RowTooltip.lua
+# Conventional: publishes NS.Glow, the upgrade glow on a drop's icon (feedback-21: LibCustomGlow-1.0,
+# libs\, above); reads nothing at load. NS.OffSpec, NS.Setting, NS.C and NS.Window are read at call
+# time; modules\WindowGroup.lua, modules\DetailCard.lua and modules\CompactGroup.lua (below) call it
+# when they paint an icon (the toast never glows, G9).
+modules\Glow.lua
+# Conventional: publishes NS.IconStyle, every item icon's look (Window › Icons, feedback-21 G11: the
+# zoom and the composed border); reads nothing at load. NS.Setting, NS.C, NS.ResolveColor,
+# NS.ItemRead and LibSharedMedia-3.0 are read at call time; modules\WindowGroup.lua's ItemButton and
+# SetItem (below) call it on every item button they make and paint.
+modules\IconStyle.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Drops body through
 # Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells, NS.SideCells and
 # NS.TipMarks (above, its column tooltips call TipMarks.Mark), NS.Constants, NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
@@ -360,7 +375,8 @@ modules\FooterRow.lua
 modules\DropsStrip.lua
 # LOAD-BEARING: takes NS.WindowCells, NS.TipMarks and NS.MineCells (modules\, above) at load.
 # Publishes NS.DetailCells, the detail card's pure composers (chips, both comparisons, the trade box,
-# the actions); takes NS.Constants and NS.L at load.
+# the actions); takes NS.Constants and NS.L at load. NS.SideCells (the Item level row's dual mark)
+# is read at call time.
 modules\DetailCells.lua
 # LOAD-BEARING: takes NS.DetailCells (modules\DetailCells.lua, above) at load. Publishes
 # NS.DetailCard, the detail card's frame edge and the Edit message box; takes NS.Constants and NS.L
@@ -421,8 +437,9 @@ modules\TestMode.lua
 # and registers its DropAdded, DropUpdated and AskStateChanged receivers on a NS.Bus target at load.
 # NS.LootFeed, NS.Asks, NS.Window, NS.WindowGroup, NS.WindowCells, NS.SideCells (the verdicts),
 # NS.WindowRows (the item level's mark), NS.TipMarks (the quality and class colors), NS.OffSpec and
-# NS.OffSpecCells (an off-spec upgrade and its title), NS.Setting and
-# the host handlers are read at call time: the frame is built on the first toast.
+# NS.OffSpecCells (an off-spec upgrade and its title), NS.Gear and NS.TestMode (the worn gear of the
+# dual marks), NS.Setting and the host handlers are read at call time: the frame is built on the
+# first toast.
 modules\Toast.lua
 # LOAD-BEARING: appends its ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE,
 # PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows to NS.FEATURE_EVENTS after every other file's
@@ -486,6 +503,10 @@ settings\SchemaRows.lua
 settings\OptionsSetup.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
 settings\Panel.lua
+# LOAD-BEARING: calls Helpers.BorderGroup (settings\OptionsSetup.lua, above) and
+# NS.SchemaRuntime.AddRows at file scope, appending Window › Icons' composed border block after
+# settings\SchemaRows.lua's rows; reads NS.C, NS.L and Settings.Checks at load.
+settings\ComposedRows.lua
 # LOAD-BEARING: publishes Settings.Editors (the pure halves of the pages' own editors), which
 # settings\PageEditors.lua takes at load; reads NS.L, NS.Constants and NS.ClassData at load, and
 # NS.Evaluate and NS.Messaging (modules\, above) at call time.

@@ -151,7 +151,7 @@ test("transmog ask: offered for a missing look only with transmogAsk on, with it
     local on = WC.Ask(drop(), "ready", nil, true)
     assertTrue(on.offered); assertEqual(on.template, "transmog")
     assertEqual(on.tip[1], "Ask for transmog")
-    assertTrue(on.tip[2]:find("not collected its look", 1, true) ~= nil)
+    assertEqual(T.tipPlain(on.tip[4]), "• Why: no gain, but a look you haven't collected")
     local upgrade = WC.Ask(drop({ me = { verdict = "upgrade", ilvlDelta = 5 } }), "ready", nil, true)
     assertEqual(upgrade.template, "ask"); assertEqual(upgrade.tip[1], "Ask")
     assertFalse(WC.Ask(drop({ facts = { transmogKnown = true } }), "ready", nil, true).offered)

@@ -5,16 +5,18 @@ local _, NS = ...
 --
 --   Pawn     an optional dependency, reached only through NS.Compat's Pawn seam. For YOU, the scale
 --            is the best visible one Pawn reports for the drop (PawnIsItemAnUpgrade's highest
---            PercentUpgrade), else your spec's; for a looter, PawnFindScaleForSpec(classID, specID).
---            The drop and the baseline are both valued on that scale (PawnGetSingleValueFromItem),
---            so the kernel's scoreDelta is a difference on one scale. A nil answer from Pawn means
+--            PercentUpgrade), else your spec's; for a looter, their spec's (PawnFindScaleForSpec, asked
+--            by the spec's place in its class, which is how Pawn numbers its scales; NS.Compat).
+--            The drop and the baseline are both valued on that scale (PawnGetSingleValueFromItem's
+--            unenchanted value, the one Pawn's own upgrade test compares), so the kernel's
+--            scoreDelta is a difference on one scale. A nil answer from Pawn means
 --            "not ready": the adapter answers "pending" and LootFeed retries on its shared timer.
 --   Weights  your own per-spec weights, `comparison.weights[specID] = { STAT_KEY = weight }`: the
 --            score is the sum of stat times weight. A Pawn scale string imports into one spec.
 --   None     no scorer: the verdict is item level alone.
 --
--- `auto` uses Pawn once it has initialized (PawnIsInitialized, design spec §5.4: merely loaded is
--- not enough), else your weights when any are set, else none. `pawn` with Pawn absent or not yet
+-- `auto` uses Pawn once it has initialized (Pawn's PawnIsReady(), design spec §5.4: merely loaded
+-- is not enough), else your weights when any are set, else none. `pawn` with Pawn absent or not yet
 -- initialized is none, and so is `weights` with none set: InUse names the adapter actually in use
 -- (the diagnostics' Scoring section prints both).
 --
@@ -170,10 +172,13 @@ local function bestVisibleScale(link)
     return best
 end
 
-local function specScale(candidate)
+-- The starter scale for the candidate's class and spec; for you, the scale you show in Pawn first
+-- (a custom or imported one, or the starter you kept visible), so a hidden scale is never used.
+local function specScale(candidate, visibleFirst)
     local classID = CD.CLASS_ID[candidate.classFile]
     if not (classID and num(candidate.specID)) then return nil end
-    return NS.Compat.PawnScaleForSpec(classID, candidate.specID)
+    return visibleFirst and NS.Compat.PawnVisibleScale(classID, candidate.specID)
+        or NS.Compat.PawnScaleForSpec(classID, candidate.specID)
 end
 
 --- The Pawn adapter: a scorer(facts, candidate, drop) for the kernel. One per evaluation pass,
@@ -183,7 +188,7 @@ function S.PawnScorer()
     local mine = {}
     local function scaleFor(candidate, dropLink)
         if not candidate.isPlayer then return specScale(candidate) end
-        if mine[dropLink] == nil then mine[dropLink] = bestVisibleScale(dropLink) or specScale(candidate) or false end
+        if mine[dropLink] == nil then mine[dropLink] = bestVisibleScale(dropLink) or specScale(candidate, true) or false end
         return mine[dropLink] or nil
     end
     return function(facts, candidate, drop)

@@ -120,20 +120,35 @@ local QUALITY_MODE_LABEL = {
     fixed = L["Fixed minimum"], dynamicSlot = L["Match each slot"], dynamicCharacter = L["Match my gear"],
 }
 
--- The View tooltip's bullet lines (FB2-3): one per value, All first.
+-- The View tooltip's rows (FB2-3, feedback-21): one per value, All first.
 local VIEW_TIP = {
-    { key = "all", text = L["All: every drop that passed the situation and quality gates."] },
-    { key = "interesting", text = L["Interesting: an upgrade for you, or a drop its looter is likely to give away and that can be traded."] },
-    { key = "likely", text = L["Likely tradeable: the trade estimate is yes or likely."] },
-    { key = "usable", text = L["Usable by me: you can use it, and you have not marked its type as unwanted."] },
-    { key = "upgrade", text = L["Upgrade for me: an upgrade over what you wear (or your best owned piece)."] },
+    { key = "all", name = L["All"], text = L["every drop past the situation and quality gates"] },
+    { key = "interesting", name = L["Interesting"], text = L["an upgrade for you, or likely given away and tradeable"] },
+    { key = "likely", name = L["Likely tradeable"], text = L["a trade estimate of yes or likely"] },
+    { key = "usable", name = L["Usable by me"], text = L["you can use it, and its type is not unwanted"] },
+    { key = "upgrade", name = L["Upgrade for me"], text = L["an upgrade over what you wear (or your best owned piece)"] },
 }
+-- Each control's tooltip: its title, then { label, value } rows (NS.TipMarks.Row at call time).
 local TIPS = {
-    content = { L["Content"], L["This instance shows the drops since you entered this instance or started this key. This session shows every drop since you logged in; a /reload keeps them. All (History only) shows every kept day."] },
-    search = { L["Search"], L["Show only the drops whose item or looter name contains this text."] },
-    char = { L["Character"], L["Show only the drops these characters saw. History is kept for every character on the account; Drops holds this session's drops, which are only ever yours. A History drop kept before Drop Watcher recorded who saw it shows only under All."] },
+    content = { L["Content"], { L["This instance"], L["the drops since you entered it or started this key"] },
+        { L["This session"], L["every drop since you logged in, kept over a /reload"] },
+        { L["All"], L["every kept day (History only)"] } },
+    search = { L["Search"], { L["Shows"], L["the drops whose item or looter name contains this text"] } },
+    char = { L["Character"], { L["Shows"], L["the drops these characters saw"] },
+        { L["History"], L["kept for every character on the account"] },
+        { L["Drops"], L["this session's drops, only ever yours"] },
+        { L["Not recorded"], L["a History drop kept before who saw it was recorded shows only under All"] } },
 }
-local GRAYED = L["This tab does not use this filter."]
+local GRAYED = { L["On this tab"], L["not used"] }
+
+-- A TIPS entry as tooltip lines: its title, then a row per pair.
+local function tipLines(t)
+    local out = { t[1] }
+    for i = 2, #t do out[i] = NS.TipMarks.Row(t[i][1], t[i][2]) end
+    return out
+end
+
+local function grayedRow() return NS.TipMarks.Row(GRAYED[1], GRAYED[2]) end
 local GRAY = { 0.5, 0.5, 0.5 }
 
 local controls = {}     -- the built controls: view, quality, content, char (each a dropdown or nil), search
@@ -478,28 +493,27 @@ end
 
 local function qualityTip()
     local mode, _, label = FB.QualityReadout()
-    return label, L["Drops below this quality are hidden from the feed unless they are an upgrade for you. A change applies to new drops."],
-        L["Mode: %s"]:format(QUALITY_MODE_LABEL[mode] or mode)
+    local TM = NS.TipMarks
+    return label, TM.Row(L["Hides"], L["drops below this quality, unless an upgrade for you"]),
+        TM.Row(L["A change"], L["applies to new drops"]), TM.Row(L["Mode"], QUALITY_MODE_LABEL[mode] or mode)
 end
 
 -- ── the View's menu and tooltip ─────────────────────────────────────────────────────────────
 
-local GRAY_CODE = "|cff808080"
-
---- The View tooltip on one tab (FB2-3): the title, then a bullet line per value, the ones the tab
+--- The View tooltip on one tab (FB2-3): the title, then a row per value (feedback-21), the ones the tab
 --- does not use grayed and marked. A tab that uses no View says so instead.
 --- @param tab string
 --- @return table lines
 function FB.ViewTip(tab)
     local honors = FB.HONORS[tab] or ALL
-    if not honors.view then return { L["View"], GRAYED } end
+    if not honors.view then return { L["View"], grayedRow() } end
     local out = { L["View"] }
     for _, line in ipairs(VIEW_TIP) do
-        local text = "• " .. line.text
         if line.key ~= "all" and not honors.views[line.key] then
-            text = GRAY_CODE .. text .. " " .. L["(not on this tab)"] .. "|r"
+            out[#out + 1] = NS.TipMarks.Row(line.name, ("%s %s"):format(line.text, L["(not on this tab)"]), "bad")
+        else
+            out[#out + 1] = NS.TipMarks.Row(line.name, line.text)
         end
-        out[#out + 1] = text
     end
     return out
 end
@@ -554,10 +568,10 @@ end
 
 local function activeTab() return NS.Window.ActiveTab() end
 
-local function grayedTip(key, lines)
+local function grayedTip(key, t)
     return function()
-        if not FB.HONORS[activeTab()][key] then return lines[1], GRAYED end
-        return unpack(lines)
+        if not FB.HONORS[activeTab()][key] then return t[1], grayedRow() end
+        return unpack(tipLines(t))
     end
 end
 
@@ -637,7 +651,7 @@ local function qualityDropdown(host, width)
         FB.Sync(activeTab())
     end
     NS.Window.AttachTooltip(dd, function()
-        if not FB.HONORS[activeTab()].quality then return L["Quality"], GRAYED end
+        if not FB.HONORS[activeTab()].quality then return L["Quality"], grayedRow() end
         return qualityTip()
     end, "above")
     return dd

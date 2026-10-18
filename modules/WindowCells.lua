@@ -25,8 +25,9 @@ local _, NS = ...
 --
 -- THE TONES (C.TONE; feedback-4 spec §0). One tone per verdict, in the Me and the Them column
 -- alike: an upgrade `good` (green), a sidegrade `yellow`, a downgrade `red`; an item that cannot be
--- used or is not wanted `bad` (gray) and an unknown one `muted`. Trade's No is `red` too. A Can't use
--- another of the class's specs can use is that spec's verdict in `offspec` cyan (NS.OffSpecCells).
+-- used `redMuted` (a dim red, feedback-21), one not wanted `bad` (gray) and an unknown one `muted`.
+-- Trade's No is `red` too, and its Can't use `redMuted`. A Can't use another of the class's specs can
+-- use is that spec's verdict in `offspec` cyan (NS.OffSpecCells).
 
 NS.WindowCells = NS.WindowCells or {}
 local WC = NS.WindowCells
@@ -47,44 +48,53 @@ local VERDICT_WORD = {
 }
 -- What a glyph-less verdict shows in its cell.
 local VERDICT_SHORT = { cantUse = L["Can't use"], doesntWant = L["Not wanted"], unknown = "?" }
--- Board 03's explanation of each verdict, the line under every verdict tooltip's title.
-local VERDICT_EXPLAIN = {
-    upgrade    = L["A higher item level, and a higher score when scoring is on."],
-    sidegrade  = L["Within the sidegrade band, or item level and score disagree."],
-    downgrade  = L["A lower item level and no score gain."],
-    cantUse    = L["The wrong armor type, weapon type or primary stat for the spec."],
-    doesntWant = L["Usable, but excluded by your own preferences."],
-    unknown    = L["No inspect yet, no spec, or a protected value."],
+-- Board 03's explanation of each verdict, the Means row under every verdict tooltip's title.
+local VERDICT_MEANS = {
+    upgrade    = L["a higher item level (and score, when scored)"],
+    sidegrade  = L["within the sidegrade band, or level and score disagree"],
+    downgrade  = L["a lower item level, no score gain"],
+    cantUse    = L["wrong armor, weapon or primary stat for the spec"],
+    doesntWant = L["usable, but excluded by your preferences"],
+    unknown    = L["no inspect, no spec, or a protected value"],
 }
 local VERDICT_TONE = {
-    upgrade = "good", sidegrade = "yellow", downgrade = "red", cantUse = "bad", doesntWant = "bad", unknown = "muted",
+    upgrade = "good", sidegrade = "yellow", downgrade = "red", cantUse = "redMuted", doesntWant = "bad", unknown = "muted",
 }
--- NS.Evaluate's reason keys, in words.
+-- NS.Evaluate's reason keys, in words: each a Why row's value (feedback-21).
 local EVAL_REASON = {
-    armorType = L["The wrong armor type for the class."],
-    weaponType = L["A weapon type the class cannot use."],
-    shield = L["The spec cannot use a shield."],
-    offhand = L["The spec cannot use a held off hand."],
-    dualWield = L["The spec cannot dual wield."],
-    primaryStat = L["Its primary stat does not suit the spec."],
-    classRestricted = L["The item is for other classes."],
-    specList = L["The item is not for this spec."],
-    tierToken = L["A tier token: the slot it makes is not read yet."],
-    notGear = L["Not gear that is compared."],
-    noBaseline = L["The item it would replace has not been read."],
-    noIlvl = L["The item level has not been read."],
-    emptySlot = L["The slot is empty, so anything is an upgrade."],
-    uniqueEquipped = L["Unique-equipped: compared with the copy already worn."],
-    vsTwoHand = L["Compared with the two-hander it would replace."],
-    scorePending = L["The score is not ready yet; it is retried."],
-    scoreDisagrees = L["Item level and score disagree, so it is a sidegrade."],
-    heirloomProtected = L["The slot holds an heirloom you protect, so it is a sidegrade."],
-    undesired = L["You marked this item type as not wanted for your spec."],
-    badFacts = L["The item's details have not loaded."],
-    badCandidate = L["No gear to compare with."],
-    error = L["The comparison failed; /dw debug on logs why."],
+    armorType = L["wrong armor type for the class"],
+    weaponType = L["a weapon type the class can't use"],
+    shield = L["the spec can't use a shield"],
+    offhand = L["the spec can't use a held off hand"],
+    dualWield = L["the spec can't dual wield"],
+    primaryStat = L["its primary stat doesn't suit the spec"],
+    classRestricted = L["for other classes"],
+    specList = L["not for this spec"],
+    tierToken = L["a tier token whose slot is not read yet"],
+    notGear = L["not gear that is compared"],
+    noBaseline = L["the item it would replace is not read"],
+    noIlvl = L["its item level is not read"],
+    emptySlot = L["an empty slot (anything is an upgrade)"],
+    uniqueEquipped = L["unique-equipped (compared with the worn copy)"],
+    vsTwoHand = L["compared with the two-hander it would replace"],
+    scorePending = L["the score is not ready yet (retried)"],
+    scoreDisagrees = L["item level and score disagree"],
+    heirloomProtected = L["the slot holds an heirloom you protect"],
+    undesired = L["you marked this item type not wanted"],
+    badFacts = L["the item's details have not loaded"],
+    badCandidate = L["no gear to compare with"],
+    error = L["the comparison failed (/dw debug on logs why)"],
 }
 WC.EVAL_REASON = EVAL_REASON   -- the off-spec cell's words too (modules/OffSpecCells.lua)
+
+--- A verdict's reasons as Why rows (NS.TipMarks.Row), appended to `lines`.
+--- @param reasons table|nil { { key }, ... }
+--- @param lines table
+function WC.ReasonRows(reasons, lines)
+    for _, r in ipairs(type(reasons) == "table" and reasons or {}) do
+        lines[#lines + 1] = NS.TipMarks.Row(L["Why"], EVAL_REASON[r.key] or tostring(r.key))
+    end
+end
 
 local TRADE_LABEL = { yes = L["Yes"], likely = L["Likely"], unknown = L["Unknown"], no = L["No"] }
 -- Trade's tones: Yes and Likely green, Unknown muted, No the palette's red (feedback-7 spec §2:
@@ -92,7 +102,7 @@ local TRADE_LABEL = { yes = L["Yes"], likely = L["Likely"], unknown = L["Unknown
 local TRADE_TONE = { yes = "good", likely = "good", unknown = "muted", no = "red" }
 WC.TRADE_TONE = TRADE_TONE
 
--- An inspect failure's reason, in words.
+-- An inspect failure's reason, in words (the Inspect row's value).
 local FAILED_WORD = {
     identity = L["they could not be found"], timeout = L["no answer came"],
     empty = L["the read came back empty"], incomplete = L["some items did not load"],
@@ -175,40 +185,54 @@ local function cell(text, tone, title, ...)
     return { text = text, tone = tone, tip = { title, ... } }
 end
 
+-- One tooltip row (NS.TipMarks.Row, read at call time) and the closing hint.
+local function row(label, value, tone) return NS.TipMarks.Row(label, value, tone) end
+local function hint(text) return NS.TipMarks.Hint(text) end
+
+-- `rows` appended to `lines`.
+local function append(lines, rows)
+    for _, r in ipairs(rows) do lines[#lines + 1] = r end
+    return lines
+end
+
 -- ── the verdicts: Me and Them ───────────────────────────────────────────────────────────────
 
 local function hasReasons(eval) return type(eval.reasons) == "table" end
 
-local function trackLine(td)
+local TRACK_WORD = { [1] = L["a higher track or rank"], [0] = L["the same track and rank"], [-1] = L["a lower track or rank"] }
+
+--- The Track row of a verdict tooltip from NS.Evaluate's trackDelta, or nil with none (the
+--- off-spec cell's too).
+--- @param td table|nil { sign }
+--- @return string|nil
+function WC.TrackRow(td)
     if type(td) ~= "table" then return nil end
-    if td.sign > 0 then return L["Upgrade track: a higher track or rank."] end
-    if td.sign < 0 then return L["Upgrade track: a lower track or rank."] end
-    return L["Upgrade track: the same track and rank."]
+    return NS.TipMarks.Row(L["Track"], TRACK_WORD[td.sign > 0 and 1 or td.sign < 0 and -1 or 0])
 end
 
--- The comparison as one grid row (feedback-7 spec §3): `[who] [worn ilvl] [worn item] [▲diff]`.
-local function compareLines(eval, ilvl, lines, who)
+-- The comparison as one grid row (feedback-7 spec §3): `[who] [worn ilvl] [worn item] [▲diff]`;
+-- nil without a difference.
+local function compareGrid(eval, ilvl, who)
     local base = type(eval.baseline) == "table" and eval.baseline or nil
     local d = num(eval.ilvlDelta)
-    if d and ilvl then
-        local TM = NS.TipMarks
-        local worn = { link = base and base.link, name = base and base.name, quality = base and base.quality, ilvl = ilvl - d }
-        lines[#lines + 1] = TM.Grid(TM.GearRows(who or "?", { worn }, 0, TM.ArrowCell(eval.verdict, d), worn))
-    end
-    lines[#lines + 1] = trackLine(eval.trackDelta)
-    local sd = num(eval.scoreDelta)
-    if sd then lines[#lines + 1] = L["Score: %+.1f."]:format(sd) end
+    if not (d and ilvl) then return nil end
+    local TM = NS.TipMarks
+    local worn = { link = base and base.link, name = base and base.name, quality = base and base.quality, ilvl = ilvl - d }
+    return TM.Grid(TM.GearRows(who or "?", { worn }, 0, TM.ArrowCell(eval.verdict, d), worn))
 end
 
--- The tooltip of one verdict: its title, board 03's explanation, then the comparison (a grid row)
--- and the kernel's reasons.
+-- The tooltip of one verdict: its title, the comparison (a grid row, right under the title:
+-- feedback-21 H3), board 03's explanation as a Means row, the Track and Score rows and the
+-- kernel's reasons as Why rows.
 local function verdictTip(title, eval, ilvl, who)
     local v = eval.verdict
-    local lines = { title, VERDICT_EXPLAIN[v] or VERDICT_EXPLAIN.unknown }
-    compareLines(eval, ilvl, lines, who)
-    if hasReasons(eval) then
-        for _, r in ipairs(eval.reasons) do lines[#lines + 1] = EVAL_REASON[r.key] or tostring(r.key) end
-    end
+    local lines = { title }
+    lines[#lines + 1] = compareGrid(eval, ilvl, who)
+    lines[#lines + 1] = NS.TipMarks.Row(L["Means"], VERDICT_MEANS[v] or VERDICT_MEANS.unknown)
+    lines[#lines + 1] = WC.TrackRow(eval.trackDelta)
+    local sd = num(eval.scoreDelta)
+    if sd then lines[#lines + 1] = NS.TipMarks.Row(L["Score"], ("%+.1f"):format(sd)) end
+    if hasReasons(eval) then WC.ReasonRows(eval.reasons, lines) end
     return lines
 end
 
@@ -223,8 +247,10 @@ local function verdictText(eval)
 end
 
 --- One verdict cell (the Me or the Them column; both take the same tones). Its tooltip's comparison
---- is a grid row naming `who`; the cell keeps `who`, `delta` and `base` (the worn item it was judged
---- against) for NS.SideCells, which lays the worn gear out in that grid.
+--- is a grid row naming `who`; the cell keeps `who`, `delta`, `base` (the worn item it was judged
+--- against), `ilvl` (the drop's), `band` (the evaluation's sidegrade band) and `either` (the baseline
+--- is the lower of two the drop could take: feedback-21 R5) for NS.SideCells, which lays the worn gear
+--- out in that grid, each worn item with its own arrow when `either`.
 --- A `cantUse` whose off-spec part another spec can use (NS.OffSpec.Of) is that part's cell instead
 --- (NS.OffSpecCells.Verdict, feedback-19 spec §1).
 --- @param eval table|nil NS.Evaluate's answer
@@ -243,7 +269,8 @@ function WC.Verdict(eval, side, title, ilvl, who)
     local v = eval.verdict
     local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl, who)
     return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v,
-        who = who, delta = num(eval.ilvlDelta), base = type(eval.baseline) == "table" and eval.baseline or nil }
+        who = who, delta = num(eval.ilvlDelta), base = type(eval.baseline) == "table" and eval.baseline or nil,
+        ilvl = ilvl, band = num(eval.band), either = eval.either == true }
 end
 
 --- The Me verdict: the drop judged for you (NS.SideCells puts it after your worn gear). The grid
@@ -257,19 +284,22 @@ function WC.Me(drop, classFile)
     return WC.Verdict(drop.me, "me", L["For you"], num(facts(drop).ilvl), who)
 end
 
--- Why the looter's verdict is not known, from the drop's inspect state.
-local function inspectWhy(insp, who, now)
+-- Why the looter's verdict is not known, from the drop's inspect state: its rows.
+local function inspectWhy(insp, now)
     local status = type(insp) == "table" and insp.status or "pending"
-    if status == "pending" then return L["Waiting to inspect %s: one inspect at a time."]:format(who) end
-    if status == "combatParked" then return L["The inspect of %s waits for combat to end."]:format(who) end
-    if status == "outOfRange" then return L["Couldn't inspect %s (out of range). It is retried when in range."]:format(who) end
-    if status == "unavailable" then return L["%s is not in your group, so their gear can't be read."]:format(who) end
+    if status == "pending" then return { row(L["Inspect"], L["waiting (one inspect at a time)"]) } end
+    if status == "combatParked" then return { row(L["Inspect"], L["waiting for combat to end"]) } end
+    if status == "outOfRange" then return { row(L["Inspect"], L["out of range"]), row(L["Retried"], L["once in range"]) } end
+    if status == "unavailable" then return { row(L["Inspect"], L["not in your group"]) } end
     if status == "failed" then
-        return L["Couldn't inspect %s: %s. Retry from the detail card."]:format(who, FAILED_WORD[insp.reason] or tostring(insp.reason))
+        return { row(L["Inspect"], L["failed (%s)"]:format(FAILED_WORD[insp.reason] or tostring(insp.reason))),
+            row(L["Retry"], L["from the detail card"]) }
     end
     local at = num(insp.at)
-    if at and num(now) then return L["Inspected %s ago, but the item it would replace was not read."]:format(WC.Duration(now - at)) end
-    return L["The item it would replace was not read."]
+    local out = {}
+    if at and num(now) then out[1] = row(L["Inspected"], L["%s ago"]:format(WC.Duration(now - at))) end
+    out[#out + 1] = row(L["Worn item"], L["not read"])
+    return out
 end
 
 --- The Them verdict: the drop judged for its looter (the Me verdict's tones), `–` on your own drop
@@ -281,11 +311,12 @@ end
 function WC.Them(drop, now)
     local who = looterName(drop)
     if drop.isMine then
-        return cell(DASH, "muted", L["Them"], L["Your own drop: Offer shows who it would help."])
+        return cell(DASH, "muted", L["Them"], row(L["Why"], L["your own drop"]), hint(L["Offer shows who it would help."]))
     end
     local named = NS.TipMarks.ClassName(who, type(drop.looter) == "table" and drop.looter.classFile or nil)
     if type(drop.them) ~= "table" then
-        local c = cell("?", "muted", L["For %s: Unknown"]:format(who), inspectWhy(drop.inspect, who, now))
+        local c = cell("?", "muted", L["For %s: Unknown"]:format(who))
+        append(c.tip, inspectWhy(drop.inspect, now))
         c.verdict, c.who = "unknown", named   -- the tooltip grid's name while their gear is read but not judged
         return c
     end
@@ -300,6 +331,8 @@ local NO_INSPECT_WORD = {
     notInGroup = L["not in your group"], noBaseline = L["the item they wear there was not read"],
 }
 
+-- The estimate's reason in words: a sentence, for the detail card's trade box and the toast's
+-- reason, which draw it as text.
 local TRADE_REASON = {
     boe = function() return L["Bind on equip: anyone can trade this."] end,
     warbound = function() return L["Warbound: it can't be traded."] end,
@@ -328,12 +361,76 @@ function TRADE_REASON.upgradeForLooter(a, who)
     return L["It fills an empty slot for %s, so the game won't let them trade it."]:format(who)
 end
 
+-- Your own item that never showed a trade window: the game took it as an upgrade for you.
+function TRADE_REASON.upgradeForYou(a)
+    local ilvl, worn = num(a[1]), num(a[2])
+    if ilvl and worn then
+        return L["%d is an upgrade over the %d you wear, so the game won't let you trade it."]:format(ilvl, round(worn))
+    end
+    if ilvl then return L["It fills an empty slot for you, so the game won't let you trade it."] end
+    return L["The game gave it no trade window: it counts as an upgrade for you, so you can't trade it."]
+end
+
 function TRADE_REASON.noInspect(a, who)
     local why = NO_INSPECT_WORD[a[1]] or tostring(a[1] or "?")
     return L["The game's rule needs %s's gear, which is not read yet (%s)."]:format(who, why)
 end
 
---- The trade estimate's reason, in words.
+-- The same reason as tooltip rows (feedback-21): the rule, then each fact it rests on.
+local function ruleRows(rule, label, value)
+    return { row(L["Rule"], rule), row(label, value) }
+end
+
+local TRADE_ROWS = {
+    boe = function() return ruleRows(L["bind on equip"], L["Tradeable"], L["by anyone, until equipped"]) end,
+    warbound = function() return ruleRows(L["warbound"], L["Tradeable"], L["no"]) end,
+    bonusRoll = function() return ruleRows(L["bonus roll loot"], L["Tradeable"], L["no"]) end,
+    legacy = function() return ruleRows(L["legacy loot"], L["Tradeable"], L["no"]) end,
+    groupLoot = function() return ruleRows(L["group loot"], L["Tradeable"], L["by its winner, for 4h"]) end,
+    badFacts = function() return { row(L["Item"], L["details not loaded yet"]) } end,
+    expired = function(a) return { row(L["Trade window"], L["%s, passed"]:format(WC.Duration(a[2]))) } end,
+    timer = function(a) return ruleRows(L["your own item"], L["Left to trade"], WC.Duration(a[1])) end,
+    error = function(a) return { row(L["Estimate"], L["failed (%s)"]:format(tostring(a[1]))) } end,
+}
+
+-- The rule, the drop's item level and what is worn there, ending in what that means.
+local function wornRows(ilvl, worn, whoWears, means)
+    return { row(L["Rule"], L["personal loot"]), row(L["This item"], ilvl), row(whoWears, means:format(round(worn))) }
+end
+
+function TRADE_ROWS.notUpgrade(a, who)
+    local ilvl, theirs = num(a[1]), num(a[2])
+    if ilvl and theirs then return wornRows(ilvl, theirs, L["%s wears"]:format(who), L["%d, so it is not an upgrade for them"]) end
+    return ruleRows(L["personal loot"], L["For %s"]:format(who), L["not an upgrade, so they may trade it"])
+end
+
+function TRADE_ROWS.upgradeForLooter(a, who)
+    local ilvl, theirs = num(a[1]), num(a[2])
+    if ilvl and theirs then return wornRows(ilvl, theirs, L["%s wears"]:format(who), L["%d, so it is an upgrade they can't trade"]) end
+    return ruleRows(L["personal loot"], L["For %s"]:format(who), L["fills an empty slot, so they can't trade it"])
+end
+
+function TRADE_ROWS.upgradeForYou(a)
+    local ilvl, worn = num(a[1]), num(a[2])
+    if ilvl and worn then return wornRows(ilvl, worn, L["You wear"], L["%d, so it is an upgrade you can't trade"]) end
+    if ilvl then return ruleRows(L["personal loot"], L["For you"], L["fills an empty slot, so you can't trade it"]) end
+    return ruleRows(L["personal loot"], L["Trade window"], L["none shown, so it counts as your upgrade"])
+end
+
+function TRADE_ROWS.noInspect(a, who)
+    local why = NO_INSPECT_WORD[a[1]] or tostring(a[1] or "?")
+    return ruleRows(L["personal loot"], L["%s's gear"]:format(who), L["not read yet (%s)"]:format(why))
+end
+
+-- Another player's drop you can't use in any of your specs (an off-spec part is a use): its
+-- Trade's Yes or Likely reads Can't use (feedback-21).
+local function youCantUse(drop)
+    local me = drop.me
+    return drop.isMine ~= true and type(me) == "table" and me.verdict == "cantUse" and NS.OffSpec.Of(me) == nil
+end
+
+--- The trade estimate's reason, in words: the sentence the detail card's trade box and the toast
+--- draw as text (a tooltip takes WC.TradeRows).
 --- @param trade table NS.TradeRules' answer
 --- @param who string the looter's short name
 --- @return string
@@ -343,19 +440,37 @@ function WC.TradeReason(trade, who)
     return fn(type(trade.args) == "table" and trade.args or {}, who)
 end
 
---- The Trade column: Yes, Likely, Unknown or No, with the reason (board 03).
+--- The trade estimate's reason as tooltip rows (feedback-21): `• Rule: personal loot`,
+--- `• This item: 311`, `• Seta wears: 324, so it is not an upgrade for them`.
+--- @param trade table NS.TradeRules' answer
+--- @param who string the looter's short name
+--- @return table rows
+function WC.TradeRows(trade, who)
+    local fn = TRADE_ROWS[trade.reasonKey]
+    if not fn then return { row(L["Reason"], tostring(trade.reasonKey or "?")) } end
+    return fn(type(trade.args) == "table" and trade.args or {}, who)
+end
+
+--- The Trade column: Yes, Likely, Unknown or No, with the reason (board 03); a Yes or Likely on
+--- another player's drop none of your specs can use reads Can't use in the verdict's dim red, the
+--- reason kept (feedback-21).
 --- @param drop table
 --- @return table cell
 function WC.Trade(drop)
     local t = drop.trade
     if type(t) ~= "table" or not TRADE_LABEL[t.state] then
-        return cell(TRADE_LABEL.unknown, "muted", L["Trade: Unknown"], L["Not estimated yet."])
+        return cell(TRADE_LABEL.unknown, "muted", L["Trade: Unknown"], row(L["Estimate"], L["not made yet"]))
     end
     local label = TRADE_LABEL[t.state]
-    local c = cell(label, TRADE_TONE[t.state], L["Trade: %s"]:format(label), WC.TradeReason(t, looterName(drop)))
-    if num(t.age) then c.tip[#c.tip + 1] = L["Inspected %s ago."]:format(WC.Duration(t.age)) end
+    local c = cell(label, TRADE_TONE[t.state], L["Trade: %s"]:format(label))
+    append(c.tip, WC.TradeRows(t, looterName(drop)))
+    if c.tone == "good" and youCantUse(drop) then
+        c.text, c.tone, c.tip[1] = L["Can't use"], "redMuted", L["Trade: %s"]:format(L["Can't use"])
+        c.tip[#c.tip + 1] = row(L["For you"], L["can't use, nothing to ask for"])
+    end
+    if num(t.age) then c.tip[#c.tip + 1] = row(L["Inspected"], L["%s ago"]:format(WC.Duration(t.age))) end
     if not drop.isMine and t.basis ~= "bind" then
-        c.tip[#c.tip + 1] = L["Another player's drop can only be estimated."]
+        c.tip[#c.tip + 1] = row(L["Basis"], L["an estimate (another player's drop)"])
     end
     c.state = t.state
     return c
@@ -438,7 +553,7 @@ function WC.MyEq(drop, equipped)
     local slots = eqSlots(facts(drop).equipLoc)
     if not slots then
         local c = eqCellOf(DASH, "muted", title, {}, 0)
-        c.tip[2] = L["Not an item that is worn, or its details have not loaded."]
+        c.tip[2] = row(L["Item"], L["not worn, or not loaded"])
         return c
     end
     local items, empty, unread = slotItems(equipped, slots)
@@ -450,7 +565,7 @@ function WC.MyEq(drop, equipped)
     else
         c = eqCellOf(L["empty slot"], "muted", title, items, empty)
     end
-    if unread > 0 then c.tip[#c.tip + 1] = L["Your gear is still loading."] end
+    if unread > 0 then c.tip[#c.tip + 1] = row(L["Your gear"], L["still loading"]) end
     return c
 end
 
@@ -466,16 +581,13 @@ end
 --- @return boolean
 function WC.ReadOk(insp) return readOk(insp) end
 
--- The tooltip's line on how old the read is: `Inspected 2m ago.`, or the cache's.
-local function ageLine(insp, now)
+-- The tooltip's rows on how old the read is: `• Inspected: 2m ago`, and the cache's source.
+local function ageRows(insp, now)
     local at = num(insp.at)
     local age = at and num(now) and WC.Duration(now - at) or nil
-    if insp.status == "cached" then
-        if age then return L["From the inspect cache, read %s ago."]:format(age) end
-        return L["From the inspect cache."]
-    end
-    if age then return L["Inspected %s ago."]:format(age) end
-    return L["Inspected."]
+    local out = { row(L["Inspected"], age and L["%s ago"]:format(age) or L["age not known"]) }
+    if insp.status == "cached" then out[2] = row(L["Source"], L["the inspect cache"]) end
+    return out
 end
 
 -- The text and tone when no item is shown: `empty slot` once the read says so, else the state.
@@ -506,21 +618,26 @@ function WC.TheirEq(drop, gear, now)
         local text, tone = theirStatus(drop.inspect, empty, unread)
         c = eqCellOf(text, tone, title, items, empty)
     end
-    if #items == 0 and empty == 0 then c.tip[#c.tip + 1] = L["Nothing read for this slot yet."] end
-    c.tip[#c.tip + 1] = WC.InspectLine(drop.inspect, who, now)
+    if #items == 0 and empty == 0 then c.tip[#c.tip + 1] = row(L["Slot"], L["nothing read yet"]) end
+    append(c.tip, WC.InspectRows(drop.inspect, now))
     return c
 end
 
---- How fresh the looter's inspect is, in words (the Them gear half's last tooltip line, and compact mode's
---- freshness tooltip, modules/CompactCards.lua): how old a good read is, else why there is none.
+--- How fresh the looter's inspect is, as tooltip rows (the Them gear half's last rows, and compact
+--- mode's freshness tooltip, modules/CompactCards.lua): how old a good read is, else why there is none.
 --- @param insp table|nil the drop's inspect state { status, at, reason }
---- @param who string the looter's short name
 --- @param now number|nil GetTime()
---- @return string
-function WC.InspectLine(insp, who, now)
-    if readOk(insp) then return ageLine(insp, now) end
-    return inspectWhy(insp, who, now)
+--- @return table rows
+function WC.InspectRows(insp, now)
+    if readOk(insp) then return ageRows(insp, now) end
+    return inspectWhy(insp, now)
 end
+
+--- `rows` appended to the tooltip `lines` (a composer's helper, NS.SideCells' too).
+--- @param lines table
+--- @param rows table
+--- @return table lines
+function WC.Append(lines, rows) return append(lines, rows) end
 
 -- ── Item, Ilvl, Slot, Looter ────────────────────────────────────────────────────────────────
 
@@ -529,7 +646,7 @@ end
 --- @return table cell, with `link`
 function WC.Item(drop)
     local name = WC.ItemName(drop.link) or "?"
-    local c = cell(name, "plain", name, L["Shift-click the icon to link it in chat; ctrl-click to try it on."])
+    local c = cell(name, "plain", name, hint(L["Shift-click the icon to link it in chat; ctrl-click to try it on."]))
     c.link = drop.link
     return c
 end
@@ -540,11 +657,11 @@ end
 function WC.Ilvl(drop)
     local f = facts(drop)
     local ilvl = num(f.ilvl)
-    if not ilvl then return cell("?", "muted", L["Item level"], L["The item's details have not loaded yet."]) end
+    if not ilvl then return cell("?", "muted", L["Item level"], row(L["Item"], L["details not loaded yet"])) end
     local tr = type(f.track) == "table" and f.track or nil
-    local line = L["No upgrade track."]
-    if tr and tr.name then line = L["Upgrade track: %s %s/%s."]:format(tr.name, tostring(tr.rank or "?"), tostring(tr.max or "?")) end
-    return cell(tostring(ilvl), "plain", L["Item level %d"]:format(ilvl), line)
+    local track = L["none"]
+    if tr and tr.name then track = ("%s %s/%s"):format(tr.name, tostring(tr.rank or "?"), tostring(tr.max or "?")) end
+    return cell(tostring(ilvl), "plain", L["Item level %d"]:format(ilvl), row(L["Upgrade track"], track))
 end
 
 --- The Slot column.
@@ -553,11 +670,11 @@ end
 function WC.Slot(drop)
     local loc = facts(drop).equipLoc
     local label = SLOT_LABEL[loc]
-    if not label then return cell(DASH, "muted", L["Slot"], L["Not an item that is worn, or its details have not loaded."]) end
+    if not label then return cell(DASH, "muted", L["Slot"], row(L["Item"], L["not worn, or not loaded"])) end
     local plan = C.SLOT_PLAN[loc]
-    local line = L["Compared with what is worn there."]
-    if plan and plan.kind ~= "single" then line = L["Compared with the lower of the two items that could be replaced."] end
-    return cell(label, "plain", label, line)
+    local with = L["what is worn there"]
+    if plan and plan.kind ~= "single" then with = L["the lower of the two worn there"] end
+    return cell(label, "plain", label, row(L["Compared with"], with))
 end
 
 -- ── the Type column (feedback-4 spec §3) ────────────────────────────────────────────────────
@@ -568,13 +685,13 @@ local ARMOR_WORD = {
     [C.ARMOR_SUBCLASS.CLOTH] = L["Cloth"], [C.ARMOR_SUBCLASS.LEATHER] = L["Leather"],
     [C.ARMOR_SUBCLASS.MAIL] = L["Mail"], [C.ARMOR_SUBCLASS.PLATE] = L["Plate"],
 }
--- Equip locations whose type is the location's, whatever the subclass: { word, tooltip line }.
+-- Equip locations whose type is the location's, whatever the subclass: { word, Worn by row's value }.
 local LOC_TYPE = {
-    INVTYPE_NECK    = { L["Jewelry"], L["A neck: jewelry any class can wear."] },
-    INVTYPE_FINGER  = { L["Jewelry"], L["A ring: jewelry any class can wear."] },
-    INVTYPE_TRINKET = { L["Trinkets"], L["A trinket any class can wear."] },
+    INVTYPE_NECK    = { L["Jewelry"], L["any class (a neck)"] },
+    INVTYPE_FINGER  = { L["Jewelry"], L["any class (a ring)"] },
+    INVTYPE_TRINKET = { L["Trinkets"], L["any class"] },
     -- Every class wears a cloak, so the cloth the game files it under would mislead.
-    INVTYPE_CLOAK   = { L["Cloak"], L["A cloak: every class wears one."] },
+    INVTYPE_CLOAK   = { L["Cloak"], L["every class"] },
 }
 local WEAPON_LOC = {
     INVTYPE_WEAPON = true, INVTYPE_2HWEAPON = true, INVTYPE_WEAPONMAINHAND = true, INVTYPE_WEAPONOFFHAND = true,
@@ -594,25 +711,25 @@ function WC.ArmorType(drop)
     local loc = f.equipLoc
     local fixed = LOC_TYPE[loc]
     if fixed then
-        local c = cell(fixed[1], "plain", typeTitle(fixed[1]), fixed[2]); c.known = true; return c
+        local c = cell(fixed[1], "plain", typeTitle(fixed[1]), row(L["Worn by"], fixed[2])); c.known = true; return c
     end
     if WEAPON_LOC[loc] then
         local w = L["Weapons"]
-        local c = cell(w, "plain", typeTitle(w), L["Held in a hand: a weapon, a shield or an off hand."]); c.known = true
+        local c = cell(w, "plain", typeTitle(w), row(L["Held in"], L["a hand (weapons, shields, off hands)"])); c.known = true
         return c
     end
     if C.ARMOR_TYPED_EQUIPLOC[loc] then
         local word = f.classID == C.ITEM_CLASS.ARMOR and ARMOR_WORD[f.subClassID] or nil
         if word then
-            local c = cell(word, "plain", typeTitle(word), L["Only classes that wear %s are judged able to use it."]:format(word))
+            local c = cell(word, "plain", typeTitle(word), row(L["Usable by"], L["classes that wear %s"]:format(word)))
             c.known = true
             return c
         end
-        local c = cell(DASH, "muted", L["Type"], L["An armor piece with no armor type, or its details have not loaded."])
+        local c = cell(DASH, "muted", L["Type"], row(L["Item"], L["armor with no type, or not loaded"]))
         c.known = false
         return c
     end
-    local c = cell(DASH, "muted", L["Type"], L["Not an item that is worn (a token, say), or its details have not loaded."])
+    local c = cell(DASH, "muted", L["Type"], row(L["Item"], L["not worn (a token, say), or not loaded"]))
     c.known = false
     return c
 end
@@ -630,9 +747,8 @@ function WC.Looter(drop)
     local from = {}
     for src in pairs(type(drop.sources) == "table" and drop.sources or {}) do from[#from + 1] = SOURCE_WORD[src] or src end
     table.sort(from)
-    local line = drop.isMine and L["You looted it."] or L["Looted by %s."]:format(tostring(who.name or "?"))
-    local c = cell(name, "plain", name, line)
-    if #from > 0 then c.tip[#c.tip + 1] = L["Reported by %s."]:format(table.concat(from, ", ")) end
+    local c = cell(name, "plain", name, row(L["Looted by"], drop.isMine and L["you"] or tostring(who.name or "?")))
+    if #from > 0 then c.tip[#c.tip + 1] = row(L["Reported by"], table.concat(from, ", ")) end
     c.classFile = who.classFile
     if drop.isMine then c.you = L["[YOU]"] end
     return c
@@ -640,16 +756,16 @@ end
 
 -- ── the Ask button ──────────────────────────────────────────────────────────────────────────
 
--- Why no ask is offered for `drop`, or nil when one is; the template it fills when one is
--- (NS.Messaging.AskTemplate: `ask`, `askOffSpec` for another spec's gain, or `transmog`).
+-- Why no ask is offered for `drop` (its tooltip rows), or nil when one is; the template it fills
+-- when one is (NS.Messaging.AskTemplate: `ask`, `askOffSpec` for another spec's gain, or `transmog`).
 local function noAskReason(drop, transmogAsk)
-    if drop.isMine then return L["Your own drop: Offer shows who it would help."] end
+    if drop.isMine then return { row(L["Why"], L["your own drop"]), hint(L["Offer shows who it would help."]) } end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
-        return L["Its looter can't trade it: %s"]:format(WC.TradeReason(drop.trade, looterName(drop)))
+        return append({ row(L["Why"], L["its looter can't trade it"]) }, WC.TradeRows(drop.trade, looterName(drop)))
     end
     local template = NS.Messaging.AskTemplate(drop, transmogAsk)
-    if not template then return L["It is not an upgrade for you."] end
-    if looterName(drop) == "?" then return L["The looter is not known."] end
+    if not template then return { row(L["Why"], L["not an upgrade for you"]) } end
+    if looterName(drop) == "?" then return { row(L["Why"], L["the looter is not known"]) } end
     return nil, template
 end
 
@@ -670,11 +786,11 @@ WC.NO_ACTION = { text = L["No action"], icon = "ban" }
 
 --- The placeholder action (feedback-11 spec §1) in WindowCells.Ask's shape: `offered` false, the
 --- `No action` label and `ban` mark, state `none` (gray, WC.ActionTone), the reason in its tooltip.
---- @param reason string why the drop has no action
+--- @param reasons table why the drop has no action: its tooltip rows (NS.TipMarks.Row)
 --- @return table { offered = false, text, icon, enabled = false, tip, state = "none" }
-function WC.NoAction(reason)
+function WC.NoAction(reasons)
     return { offered = false, text = WC.NO_ACTION.text, icon = WC.NO_ACTION.icon, enabled = false,
-        tip = { L["No action"], reason }, state = "none" }
+        tip = append({ L["No action"] }, reasons), state = "none" }
 end
 
 -- WHOSE MOVE IT IS (feedback-4 spec §1): an action button's tone by its state. Your move is red
@@ -698,19 +814,38 @@ function WC.ActionTone(state, kind)
     return kind == "offer" and OFFER_TONE[state] or ACTION_TONE[state]
 end
 
-local function askTip(state, who, reason, template, drop)
+-- A message button's queued and failed tooltips (the Offer and Announce buttons' too, NS.MineCells):
+-- who it goes to when known, then why it waits or failed, then what a click does.
+--- @param state string `queued` or `failed`
+--- @param who string|nil the whisper's target; nil for a post to the group
+--- @param reason string|nil a failed send's reason
+--- @return string ... the tooltip's rows after its title
+function WC.WaitRows(state, who, reason)
+    local to = who and row(L["To"], who)
     if state == "queued" then
-        return L["Queued"], L["Chat is restricted right now: the ask to %s is sent when it lifts."]:format(who), L["Click to cancel it."]
+        local r = { row(L["Waiting"], L["chat is restricted right now"]), row(L["Sends"], L["when it lifts"]),
+            hint(L["Click to cancel it."]) }
+        if to then table.insert(r, 1, to) end
+        return unpack(r)
     end
-    if state == "traded" then return L["Traded"], L["A completed trade gave you this item."] end
-    if state == "sent" then return L["Asked"], L["You asked %s. One ask per item per looter, so it cannot be sent twice by accident."]:format(who) end
-    if state == "failed" then return L["Retry"], L["The ask to %s was not sent: %s."]:format(who, tostring(reason or "?")), L["Click to try again."] end
+    local r = { row(L["Not sent"], tostring(reason or "?")), hint(L["Click to try again."]) }
+    if to then table.insert(r, 1, to) end
+    return unpack(r)
+end
+
+local ASK_LIMIT = L["one per item per looter"]
+
+local function askTip(state, who, reason, template, drop)
+    if state == "queued" then return L["Queued"], WC.WaitRows(state, who) end
+    if state == "traded" then return L["Traded"], row(L["Received"], L["in a completed trade"]) end
+    if state == "sent" then return L["Asked"], row(L["To"], who), row(L["Limit"], ASK_LIMIT) end
+    if state == "failed" then return L["Retry"], WC.WaitRows(state, who, reason) end
     if template == "transmog" then
-        return L["Ask for transmog"], L["Whisper %s your For transmog template: it is no gain for you, but you have not collected its look."]:format(who),
-            L["One ask per item per looter."]
+        return L["Ask for transmog"], row(L["Whispers"], who), row(L["Template"], L["For transmog"]),
+            row(L["Why"], L["no gain, but a look you haven't collected"]), row(L["Limit"], ASK_LIMIT)
     end
     if template == "askOffSpec" then return NS.OffSpecCells.AskTip(drop, who) end
-    return L["Ask"], L["Whisper %s your ask template for this item."]:format(who), L["One ask per item per looter."]
+    return L["Ask"], row(L["Whispers"], who), row(L["Template"], L["your ask template"]), row(L["Limit"], ASK_LIMIT)
 end
 
 --- The Ask button's look: `offered` false is WC.NoAction's (the gray No action with the reason,
@@ -735,9 +870,10 @@ end
 
 -- ── the encounter header ────────────────────────────────────────────────────────────────────
 
+-- What a group holds: its From row (the last of its facts grid).
 local KIND_LINE = {
-    encounter = L["Drops from one boss encounter."], run = L["Drops from one Mythic+ run, the chest included."],
-    area = L["Drops from this area, outside any boss encounter."],
+    encounter = L["one boss encounter"], run = L["one Mythic+ run, the chest included"],
+    area = L["this area, outside any boss encounter"],
 }
 
 -- At most this many hidden drops are named in a header's tooltip; the rest are counted.
@@ -781,23 +917,23 @@ function WC.DropCount(shown, hidden)
     return text
 end
 
---- A header tooltip's lines for the drops a filter hid: each drop, its looter and the filter that
---- hid it (FB.ReasonLabel), the first WC.HIDDEN_TIP_LINES of them, then how many more.
+--- A header tooltip's rows for the drops a filter hid: `• Hidden: Item (Seta), View: Interesting`,
+--- each drop, its looter and the filter that hid it (FB.ReasonLabel), the first
+--- WC.HIDDEN_TIP_LINES of them, then how many more.
 --- @param hidden table|nil { { drop, why }, ... }
 --- @param filter table|nil the tab's filter state
 --- @return table lines (empty when nothing is hidden)
 function WC.HiddenLines(hidden, filter)
     local out = {}
     if type(hidden) ~= "table" or #hidden == 0 then return out end
-    out[1] = L["Hidden by the filters:"]
     for i, h in ipairs(hidden) do
         if i > WC.HIDDEN_TIP_LINES then
-            out[#out + 1] = L["and %d more"]:format(#hidden - WC.HIDDEN_TIP_LINES)
+            out[#out + 1] = row(L["Hidden"], L["%d more"]:format(#hidden - WC.HIDDEN_TIP_LINES))
             break
         end
         local who = type(h.drop.looter) == "table" and h.drop.looter.name or nil
-        out[#out + 1] = L["%s (%s): %s"]:format(WC.ItemName(h.drop.link) or "?", WC.ShortName(who),
-            NS.WindowFilterBar.ReasonLabel(h.why, filter))
+        out[#out + 1] = row(L["Hidden"], L["%s (%s), %s"]:format(WC.ItemName(h.drop.link) or "?", WC.ShortName(who),
+            NS.WindowFilterBar.ReasonLabel(h.why, filter)))
     end
     return out
 end
@@ -837,38 +973,39 @@ end
 --- @return table rows
 function WC.HeaderFacts(group, situationLabel, when, shown, hidden)
     local rows = {}
-    local function row(label, value)
+    local function fact(label, value)
         if plainText(value) then rows[#rows + 1] = { gold(label), value } end
     end
-    if group.kind ~= "run" then row(L["Instance"], plainText(group.instance)) end
-    row(L["Difficulty"], plainText(group.difficulty) or situationLabel)
-    row(L["When"], when)
+    if group.kind ~= "run" then fact(L["Instance"], plainText(group.instance)) end
+    fact(L["Difficulty"], plainText(group.difficulty) or situationLabel)
+    fact(L["When"], when)
     local nHidden = type(hidden) == "table" and #hidden or 0
     local total = (tonumber(shown) or 0) + nHidden
-    row(L["Drops"], nHidden > 0 and (total .. " · " .. L["%d shown"]:format(shown)) or tostring(total))
-    row(L["Seen by"], NS.GroupPlace.Who(group, NS.Compat.ClassColor))
+    fact(L["Drops"], nHidden > 0 and (total .. " · " .. L["%d shown"]:format(shown)) or tostring(total))
+    fact(L["Seen by"], NS.GroupPlace.Who(group, NS.Compat.ClassColor))
     for _, r in ipairs(NS.GroupRoster.TipRows(group.roster, NS.Compat.ClassColor)) do
         rows[#rows + 1] = { gold(r[1]), r[2] }
     end
     return rows
 end
 
---- A header tooltip: the title, its facts as rows (WC.HeaderFacts, NS.TipMarks.Grid), the kind's
---- line in gray, the hidden drops' lines, then the click hint.
+--- A header tooltip: the title, its facts as a grid (WC.HeaderFacts, NS.TipMarks.Grid) ending in
+--- what the group holds (`From`), the hidden drops' rows, then the click hint.
 --- @param title string
 --- @param rows table WC.HeaderFacts' rows
---- @param line string
+--- @param line string the group's kind: its From row's value
 --- @param hidden table|nil
 --- @param filter table|nil
 --- @param collapsed boolean
 --- @return table
 function WC.HeaderTip(title, rows, line, hidden, filter, collapsed)
     local tip = { title }
-    if type(rows) == "table" and #rows > 0 then tip[#tip + 1] = NS.TipMarks.Grid(rows) end
-    local m = C.TONE.muted
-    tip[#tip + 1] = NS.GroupRoster.Colored(line, m.r, m.g, m.b)
-    for _, l in ipairs(WC.HiddenLines(hidden, filter)) do tip[#tip + 1] = l end
-    tip[#tip + 1] = collapsed and L["Click to expand this group."] or L["Click to collapse this group."]
+    local grid = {}
+    for i, r in ipairs(type(rows) == "table" and rows or {}) do grid[i] = r end
+    grid[#grid + 1] = { gold(L["From"]), line }
+    tip[2] = NS.TipMarks.Grid(grid)
+    append(tip, WC.HiddenLines(hidden, filter))
+    tip[#tip + 1] = hint(collapsed and L["Click to expand this group."] or L["Click to collapse this group."])
     return tip
 end
 

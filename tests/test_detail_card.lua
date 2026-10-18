@@ -42,11 +42,13 @@ local function drop(over)
     return d
 end
 
+local P = T.tipPlain   -- a tooltip row as read (feedback-21)
+
 local function DC() return T.newAddon().DetailCells end
 
 local function texts(list)
     local out = {}
-    for _, c in ipairs(list) do out[#out + 1] = T.marks(c.text) end
+    for _, c in ipairs(list) do out[#out + 1] = T.cardText(c) end
     return table.concat(out, ",")
 end
 
@@ -81,9 +83,9 @@ end)
 test("cells: For you shows what it replaces, the ilvl, track and stat change, and Pawn's score", function()
     local D = DC()
     local side = D.ForYou(drop(), true)
-    assertEqual(side.title, "FOR YOU")
-    assertEqual(T.marks(side.verdict.text), "[arrow-up] UPGRADE"); assertEqual(side.verdict.tone, "good")
-    assertEqual(texts(side.rows), "Old Helm · 292,292 [arrow-right] 311 · +19,Champion 6/6 [arrow-right] Hero 2/6 [arrow-up],+130 Haste -119 Mastery,+2.4")
+    assertEqual(P(side.title), "FOR YOU")
+    assertEqual(T.cardText(side.verdict), "▲ UPGRADE"); assertEqual(side.verdict.tone, "good")
+    assertEqual(texts(side.rows), "292 Old Helm,292 [arrow-right] 311 ▲ 19,Champion 6/6 [arrow-right] Hero 2/6 ▲,+130 Haste -119 Mastery,+2.4")
     assertEqual(byKey(side.rows, "replaces").link, OLD)
     assertEqual(byKey(side.rows, "ilvl").tone, "good")
     for _, r in ipairs(side.rows) do assertTrue(#r.tip >= 2 and r.text ~= "", r.key) end
@@ -93,14 +95,15 @@ test("cells: For you without a score says why: no scorer, Pawn or your weights n
     local D = DC()
     local d = drop({ me = { verdict = "upgrade", ilvlDelta = 19, reasons = {}, baseline = { link = OLD, ilvl = 292 } } })
     local off = byKey(D.ForYou(d, "none").rows, "score")
-    assertEqual(off.text, "–"); assertTrue(off.tip[2]:find("No scorer is in use") ~= nil)
-    assertTrue(byKey(D.ForYou(d, false).rows, "score").tip[2]:find("No scorer is in use") ~= nil)
-    assertTrue(byKey(D.ForYou(d, true).rows, "score").tip[2]:find("not scored it yet") ~= nil)
+    assertEqual(off.text, "–"); assertEqual(P(off.tip[2]), "• Score: no scorer in use (item level alone)")
+    assertEqual(P(byKey(D.ForYou(d, false).rows, "score").tip[2]), "• Score: no scorer in use (item level alone)")
+    assertEqual(P(byKey(D.ForYou(d, true).rows, "score").tip[2]), "• Score: not scored by Pawn yet")
     local w = byKey(D.ForYou(d, "weights").rows, "score")
-    assertEqual(w.label, "Weights"); assertTrue(w.tip[2]:find("Your weights") ~= nil)
+    assertEqual(w.label, "Weights"); assertEqual(P(w.tip[2]), "• Score: your weights score nothing for this spec")
+    assertEqual(P(w.tip[3]), "Set them in Settings, Comparison.", "where to set them, the closing hint")
     assertEqual(byKey(D.ForYou(d, "pawn").rows, "score").label, "Pawn")
     local track = byKey(D.ForYou(d, true).rows, "track")
-    assertEqual(track.text, "Hero 2/6"); assertTrue(track.tip[2]:find("worn item's track") ~= nil)
+    assertEqual(track.text, "Hero 2/6"); assertEqual(T.tipPlainJoined(track.tip), "Track | • This item: Hero 2/6 | • Worn: not read")
 end)
 
 test("cells: an empty slot and an unread baseline each say so, never blank", function()
@@ -116,16 +119,30 @@ end)
 test("cells: For the looter compares their inspected gear and names their spec and the read's age", function()
     local D = DC()
     local side = D.ForLooter(drop(), { status = "fresh", at = 60 }, "Discipline", 100)
-    assertEqual(side.title, "FOR SETA (LOOTER)")
-    assertEqual(T.marks(side.verdict.text), "[arrow-down] DOWNGRADE"); assertEqual(side.verdict.tone, "red", "one tone per verdict")
-    assertEqual(texts(side.rows), "Their Helm · 324,324 [arrow-right] 311 · -13,Myth 1/6 [arrow-right] Hero 2/6 [arrow-down],+95 Haste -80 Crit,Discipline · inspected 40s ago")
+    assertEqual(P(side.title), "FOR LOOTER (SETA)")
+    assertEqual(T.cardText(side.verdict), "▼ DOWNGRADE"); assertEqual(side.verdict.tone, "red", "one tone per verdict")
+    assertEqual(texts(side.rows), "324 Their Helm,324 [arrow-right] 311 ▼ 13,Myth 1/6 [arrow-right] Hero 2/6 ▼,+95 Haste -80 Crit,Discipline · inspected 40s ago")
     local unread = D.ForLooter(drop({ them = NONE, inspect = { status = "pending" } }), nil, nil, 100)
     assertEqual(unread.verdict.text, "UNKNOWN")
     assertEqual(byKey(unread.rows, "spec").text, "spec unknown")
-    assertTrue(byKey(unread.rows, "spec").tip[2]:find("not been inspected") ~= nil)
+    assertEqual(P(byKey(unread.rows, "spec").tip[2]), "• Inspected: not yet")
+    assertEqual(T.tipPlainJoined(byKey(side.rows, "spec").tip), "Spec | • Seta's spec: Discipline | • Inspected: 40s ago")
 end)
 
-test("cells: on your own drop the looter's side is FOR THE GROUP, its Looter row Name [YOU], its Them row Upgrade for N", function()
+-- feedback-21 H2: a looter who left the group is not `spec unknown`: the read the drop kept names
+-- the spec, and the row says they are gone; with no read, the row says why there is none.
+test("cells: a looter who left the group: the kept read's spec, else `not in your group`, never spec unknown", function()
+    local D = DC()
+    local kept = D.ForLooter(drop(), { status = "fresh", at = 60, specID = 256 }, "Discipline", 100, nil, true)
+    local spec = byKey(kept.rows, "spec")
+    assertEqual(spec.text, "Discipline · inspected 40s ago")
+    assertEqual(T.tipPlainJoined(spec.tip), "Spec | • Seta's spec: Discipline | • Inspected: 40s ago | • Looter: not in your group")
+    local none = byKey(D.ForLooter(drop({ them = NONE }), nil, nil, 100, nil, true).rows, "spec")
+    assertEqual(none.text, "not in your group")
+    assertEqual(T.tipPlainJoined(none.tip), "Spec | • Inspected: not yet | • Looter: not in your group")
+end)
+
+test("cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member", function()
     local NS = T.newAddon()
     local D = NS.DetailCells
     local function cand(name, gain, base)
@@ -137,22 +154,37 @@ test("cells: on your own drop the looter's side is FOR THE GROUP, its Looter row
     local mine = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = list }), nil, nil, 100)
     assertEqual(mine.title, "FOR THE GROUP")
     assertEqual(mine.verdict.text, "Upgrade for 2"); assertEqual(mine.verdict.tone, "good")
-    assertEqual(mine.rows[1].tip[2], "Your own drop: Offer shows who it would help.")
-    -- Your own name in your class color, then ` [YOU]` in gold (feedback-7 spec §2), not a muted `you`.
-    local looter = byKey(mine.rows, "mine")
-    assertEqual(looter.text, "Seta"); assertEqual(looter.you, "[YOU]"); assertEqual(looter.tone, "plain")
-    assertEqual(looter.classFile, "PRIEST")
+    -- red under: a Looter row naming you in a box about everyone else
+    assertNil(byKey(mine.rows, "mine"))
     local them = byKey(mine.rows, "them")
-    assertEqual(them.text, "Upgrade for 2"); assertEqual(them.label, "Them")
+    assertEqual(them.text, "Upgrade for 2"); assertEqual(them.label, "Them"); assertEqual(mine.rows[1], them)
+    -- Then each member it upgrades, best first (feedback-20): the name, the worn item, `from → to ▲ gain`.
+    assertEqual(#mine.rows, 3)
+    local b, s = mine.rows[2], mine.rows[3]
+    assertEqual(b.key, "member"); assertEqual(b.label, "Butterz"); assertEqual(b.tone, "good")
+    assertEqual(T.cardText(b), "300 [arrow-right] 311 ▲ 11"); assertEqual(b.arrow.tone, "good")
+    assertEqual(s.label, "Seta"); assertEqual(T.cardText(s), "307 [arrow-right] 311 ▲ 4")
     -- One grid row per upgrade (feedback-7 spec §3); no class read, so the names are plain.
     assertEqual(T.tipText(them.tip[2]), "Butterz  300  Bloodthorn Treads  ▲11\nSeta  307  ▲4", "ranked by gain")
     -- The keep? rule: an upgrade for you reads Hidden until revealed.
     local kept = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100)
-    assertEqual(byKey(kept.rows, "them").text, "Hidden")
+    assertEqual(byKey(kept.rows, "them").text, "Hidden"); assertEqual(#kept.rows, 1, "no names while hidden")
     local revealed = D.ForLooter(drop({ isMine = true, them = NONE, candidates = list }), nil, nil, 100, true)
     assertEqual(byKey(revealed.rows, "them").text, "Upgrade for 2")
     local nobody = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = {} }), nil, nil, 100)
     assertEqual(nobody.verdict.text, "No upgrades"); assertEqual(nobody.verdict.tone, "muted")
+    assertEqual(#nobody.rows, 1)
+    -- Five upgrades: three names, then how many more, so the box's five lines hold them.
+    local many = {}
+    for i, n in ipairs({ "Aa", "Bb", "Cc", "Dd", "Ee" }) do many[n] = cand(n, 10 - i, { ilvl = 300 + i }) end
+    local five = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = many }), nil, nil, 100)
+    assertEqual(#five.rows, 5)
+    assertEqual(five.rows[4].label, "Cc"); assertEqual(five.rows[5].key, "more")
+    assertEqual(five.rows[5].text, "and 2 more: Offer shows all")
+    -- Not tradeable: nobody can be offered it, so no names.
+    local dead = D.ForLooter(drop({ isMine = true, them = NONE, me = down, candidates = list,
+        trade = { state = "no", reasonKey = "warbound", basis = "bind" } }), nil, nil, 100)
+    assertEqual(#dead.rows, 1)
 end)
 
 -- ── the trade box ───────────────────────────────────────────────────────────────────────────
@@ -172,6 +204,17 @@ test("cells: the trade box says the state, the reason, the rule in force and how
     assertEqual(no.chip.tone, "red", "No in the palette's red (feedback-7 spec §2)"); assertEqual(no.meta, "Rule: legacy loot, PvP · Basis: the content's rule")
 end)
 
+test("cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use", function()
+    local D = DC()
+    local b = D.TradeBox(drop({ me = { verdict = "cantUse", reasons = { { key = "armorType" } } } }), "Mythic+")
+    assertEqual(b.chip.text, "CAN'T USE"); assertEqual(b.chip.tone, "redMuted")
+    assertEqual(b.tip[1], "Trade: Can't use", "the chip and its own tooltip agree")
+    assertEqual(b.text, "Personal loot: 311 is not an upgrade over the 324 Seta wears, so they may trade it.", "the reason kept")
+    local off = D.TradeBox(drop({ me = { verdict = "cantUse", reasons = {},
+        offSpec = { specID = 65, mainSpecID = 66, verdict = "upgrade", ilvlDelta = 20 } } }), nil)
+    assertEqual(off.chip.text, "LIKELY TRADEABLE", "an off-spec part is a use"); assertEqual(off.chip.tone, "good")
+end)
+
 -- ── the actions ─────────────────────────────────────────────────────────────────────────────
 
 local OK_TRADE = { ok = true }
@@ -184,7 +227,8 @@ test("cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Re
     local on = {}
     for _, a in ipairs(acts) do on[#on + 1] = a.key .. "=" .. tostring(a.enabled) end
     assertEqual(table.concat(on, ","), "ask=true,edit=true,link=true,retry=false,trade=true")
-    assertTrue(byKey(acts, "retry").tip[2]:find("read 40s ago") ~= nil)
+    assertEqual(T.tipPlainJoined(byKey(acts, "retry").tip),
+        "Retry inspect | • Inspected: 40s ago | • Read again: when it changes or grows old")
     for _, a in ipairs(acts) do assertTrue(#a.tip >= 2, a.key .. " says why") end
 end)
 
@@ -193,10 +237,10 @@ test("cells: a disabled action says why: Trade out of range, Retry already queue
     local acts = D.Actions(drop(), { askState = "sent", inspect = { status = "pending" }, now = 100, trade = FAR })
     local trade = byKey(acts, "trade")
     assertEqual(trade.text, "Trade · out of range"); assertFalse(trade.enabled)
-    assertEqual(trade.tip[2], "That player is out of trade range.")
-    assertFalse(byKey(acts, "retry").enabled); assertTrue(byKey(acts, "retry").tip[2]:find("already queued") ~= nil)
+    assertEqual(P(trade.tip[2]), "• Why: out of range")
+    assertFalse(byKey(acts, "retry").enabled); assertEqual(P(byKey(acts, "retry").tip[2]), "• Inspect: already queued")
     assertEqual(byKey(acts, "ask").text, "Asked"); assertFalse(byKey(acts, "ask").enabled)
-    assertFalse(byKey(acts, "edit").enabled); assertEqual(byKey(acts, "edit").tip[2], "The ask is already asked.")
+    assertFalse(byKey(acts, "edit").enabled); assertEqual(P(byKey(acts, "edit").tip[2]), "• Ask: already asked")
     local failed = D.Actions(drop(), { askState = "failed", inspect = { status = "failed", reason = "timeout" }, now = 100, trade = FAR })
     assertTrue(byKey(failed, "retry").enabled, "a failed inspect may be retried")
     assertTrue(byKey(failed, "edit").enabled, "a failed ask may be edited and sent again")
@@ -216,8 +260,8 @@ test("cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade
         assertFalse(a.enabled, key); assertTrue(#a.tip >= 2 and a.tip[2] ~= "", key)
         assertTrue(a.tip[2]:find("My drops", 1, true) == nil, key .. ": no word of My drops")
     end
-    assertEqual(byKey(acts, "edit").tip[2], "Your own drop: Offer shows who it would help.")
-    assertEqual(byKey(acts, "trade").tip[2], "Your own drop: Offer shows who it would help, with an Offer button for each member.",
+    assertEqual(P(byKey(acts, "edit").tip[2]), "• Why: your own drop")
+    assertEqual(T.tipPlainJoined(byKey(acts, "trade").tip), "Trade | • Why: your own drop | Offer shows who it would help, with an Offer for each.",
         "no word of the Offer panel's Trade button, which went with feedback-7 spec §0")
     local sent = D.Actions(drop({ isMine = true, them = NONE }), { now = 100, offerTone = "sent" })
     assertEqual(byKey(sent, "ask").text, "Offered"); assertEqual(byKey(sent, "ask").state, "sent")
@@ -226,11 +270,11 @@ test("cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade
     -- No action in the first slot, gray, its reason in the tooltip (feedback-11 spec §1); an Ask too.
     local none = byKey(dead, "ask")
     assertEqual(none.text, "No action"); assertEqual(none.icon, "ban"); assertEqual(none.state, "none")
-    assertEqual(none.tip[1], "No action"); assertTrue(none.tip[2]:find("Bonus roll", 1, true) ~= nil)
+    assertEqual(T.tipPlainJoined(none.tip), "No action | • Why: not tradeable | • Rule: bonus roll loot | • Tradeable: no")
     local noAsk = byKey(D.Actions(drop({ me = { verdict = "downgrade", ilvlDelta = -5, reasons = {} } }),
         { askState = "ready", now = 100, trade = OK_TRADE }), "ask")
     assertEqual(noAsk.text, "No action"); assertEqual(noAsk.icon, "ban"); assertFalse(noAsk.enabled)
-    assertEqual(noAsk.state, "none"); assertEqual(noAsk.tip[2], "It is not an upgrade for you.")
+    assertEqual(noAsk.state, "none"); assertEqual(P(noAsk.tip[2]), "• Why: not an upgrade for you")
     assertTrue(byKey(acts, "hide") == nil, "no Hide this item (feedback-4 spec §2)")
     local legacy = D.Actions(drop({ trade = { state = "no", reasonKey = "legacy" } }), { askState = "ready", now = 100, trade = OK_TRADE })
     assertFalse(byKey(legacy, "trade").enabled, "an item its looter can't trade")
@@ -314,10 +358,10 @@ test("card: the header, both comparisons and the trade box are painted, each wit
     assertEqual(textOf(card.name), "Crown of Roaring Storms"); assertEqual(card.icon.link, LINK)
     assertEqual(textOf(card.chips[1].text), "Head"); assertEqual(textOf(card.chips[4].text), "Hero 2/6 · 311")
     assertTrue(card.chips[7]:IsShown()); assertFalse(card.chips[8]:IsShown())
-    assertEqual(textOf(card.me.title), "FOR YOU"); assertEqual(T.marks(textOf(card.me.verdict.text)), "[arrow-up] UPGRADE")
-    assertEqual(T.marks(textOf(card.me.rows[2].value)), "292 [arrow-right] 311 · +19")
+    assertEqual(P(textOf(card.me.title)), "FOR YOU"); assertEqual(textOf(card.me.verdict.text), "UPGRADE")
+    assertEqual(T.marks(textOf(card.me.rows[2].value)), "292 [arrow-right] 311")
     assertEqual(card.me.rows[1].item.link, OLD); assertTrue(card.me.rows[1].item:IsShown())
-    assertEqual(textOf(card.them.title), "FOR SETA (LOOTER)")
+    assertEqual(P(textOf(card.them.title)), "FOR LOOTER (SETA)")
     assertEqual(textOf(card.them.rows[5].value), "Discipline · inspected 40s ago")
     assertEqual(textOf(card.trade.chip.text), "LIKELY TRADEABLE")
     assertEqual(textOf(card.trade.meta), "Rule: personal loot, Mythic+ · Basis: inspect 40s ago")
@@ -337,6 +381,148 @@ test("card: the header, both comparisons and the trade box are painted, each wit
     assertTrue(card.nameTip.showItem and card.nameTip.itemButton.link ~= nil, "the name shows the real item tooltip")
 end)
 
+-- feedback-21 H5: the card's marks are the table's glyphs, its titles name their subject in the
+-- muted gold, the Stats row colors each value by sign and each stat by name, and Replaces reads the
+-- item level first, the name in its quality color.
+local function code(NS, tone)
+    local t = NS.Constants.TONE[tone]
+    local function hex(v) return ("%02x"):format(math.floor(v * 255 + 0.5)) end
+    return "|cff" .. hex(t.r) .. hex(t.g) .. hex(t.b)
+end
+
+test("cells: the titles name YOU and LOOTER in the muted gold, the looter's name in its class color", function()
+    local NS = T.newAddon()
+    local D = NS.DetailCells
+    local gold = code(NS, "mutedGold")
+    assertEqual(D.ForYou(drop(), true).title, "FOR " .. gold .. "YOU|r")
+    local title = D.ForLooter(drop(), nil, nil, 100).title
+    assertEqual(title, "FOR " .. gold .. "LOOTER|r (" .. NS.TipMarks.ClassName("SETA", "PRIEST") .. ")")
+    local plain = D.ForLooter(drop({ looter = { name = "Seta-Realm", guid = SETA } }), nil, nil, 100).title
+    assertEqual(plain, "FOR " .. gold .. "LOOTER|r (SETA)", "no class known: the name plain")
+end)
+
+test("cells: the Stats row colors each value by its sign and each stat's name in its own color", function()
+    local NS = T.newAddon()
+    local D, C = NS.DetailCells, NS.Constants
+    local stats = byKey(D.ForYou(drop(), true).rows, "stats")
+    assertEqual(stats.text, code(NS, "greenMuted") .. "+130|r " .. code(NS, "statHaste") .. "Haste|r "
+        .. code(NS, "redMuted") .. "-119|r " .. code(NS, "statMastery") .. "Mastery|r")
+    assertEqual(P(stats.tip[2]), "• Secondary stats: +130 Haste -119 Mastery", "the tooltip's value stays plain")
+    -- One fixed color per secondary stat, each its own and none the values' green or red.
+    local seen = {}
+    for _, key in ipairs({ "ITEM_MOD_CRIT_RATING_SHORT", "ITEM_MOD_HASTE_RATING_SHORT", "ITEM_MOD_MASTERY_RATING_SHORT",
+        "ITEM_MOD_VERSATILITY" }) do
+        local tone = C.STAT_TONE[key]
+        assertTrue(C.TONE[tone] ~= nil, key .. " has a color")
+        local hex = code(NS, tone)
+        assertNil(seen[hex], key .. "'s color is its own"); seen[hex] = true
+    end
+    assertNil(seen[code(NS, "greenMuted")]); assertNil(seen[code(NS, "redMuted")])
+end)
+
+test("cells: Replaces reads the item level, then the icon, then the name in its quality color", function()
+    local NS, _, m = T.newAddon()
+    local D = NS.DetailCells
+    local rep = byKey(D.ForYou(drop(), true).rows, "replaces")
+    assertEqual(rep.lead, "292"); assertEqual(rep.link, OLD)
+    assertEqual(rep.text, "|cffa335eeOld Helm|r", "the link's own quality color")
+    m.ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 } }
+    local q = byKey(D.ForYou(drop({ me = { verdict = "upgrade", ilvlDelta = 19, reasons = {},
+        baseline = { link = "|Hitem:300::|h[Old Helm]|h", ilvl = 292, quality = 3 } } }), true).rows, "replaces")
+    m.ITEM_QUALITY_COLORS = nil
+    assertEqual(q.text, "|cff0070deOld Helm|r", "the baseline's quality color")
+end)
+
+test("card: the glyphs are drawn in the monospace face; Replaces puts its item level before the icon", function()
+    local NS = shownTable()
+    NS.WindowGroup.ToggleExpand(1)
+    local card = NS.WindowGroup.Drawn().card
+    local C = NS.Constants
+    local chip = card.me.verdict
+    assertTrue(chip.glyph:IsShown()); assertEqual(textOf(chip.glyph), "▲"); assertEqual(chip.glyph:GetFont(), C.FONT_MONO)
+    assertEqual(card.me.rows[2].glyph:GetFont(), C.FONT_MONO)
+    assertEqual(textOf(card.me.rows[2].glyph), "▲"); assertEqual(textOf(card.me.rows[2].glyphText), "19")
+    local r, g, b = card.me.rows[2].glyph:GetTextColor()
+    assertEqual(("%.2f %.2f %.2f"):format(r, g, b), ("%.2f %.2f %.2f"):format(C.TONE.good.r, C.TONE.good.g, C.TONE.good.b))
+    assertEqual(textOf(card.them.verdict.glyph), "▼"); assertEqual(textOf(card.them.rows[3].glyph), "▼", "the Track row's")
+    assertFalse(card.me.rows[4].glyph:IsShown(), "Stats has no glyph")
+    assertFalse(card.trade.chip.glyph:IsShown(), "the trade chip has none")
+    local rep = card.me.rows[1]
+    assertTrue(rep.lead:IsShown()); assertEqual(textOf(rep.lead), "292")
+    assertTrue(rep.item.__points[1][4] > NS.Constants.WINDOW.SIDE_LABEL, "the icon after the item level")
+    -- No verdict texture is left on the card.
+    for _, side in ipairs({ card.me, card.them }) do
+        assertNil(textOf(side.verdict.text):find("arrow%-"), "the chip")
+        for _, row in ipairs(side.rows) do
+            if row:IsShown() then
+                local t = textOf(row.value) or ""
+                assertNil(t:find("arrow%-up") or t:find("arrow%-down"), row.key)
+            end
+        end
+    end
+end)
+
+-- A trinket on both sides (feedback-21 H7): you wear 321/300, Seta 324/296; the drop is 311.
+local TRINKET_FACTS = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }
+local MY_TRINKETS = { [13] = { link = OLD, ilvl = 321 }, [14] = { link = RING, ilvl = 300 } }
+local HER_TRINKETS = { [13] = { link = THEIRS, ilvl = 324 }, [14] = { link = RING, ilvl = 296 } }
+
+local function trinketDrop()
+    return drop({ facts = TRINKET_FACTS, me = { verdict = "upgrade", ilvlDelta = 11, either = true, reasons = {}, baseline = { link = RING, ilvl = 300 } },
+        them = { verdict = "upgrade", ilvlDelta = 15, either = true, reasons = {}, baseline = { link = RING, ilvl = 296 } } })
+end
+
+test("cells: on a two-item slot read in full, Item level is each worn item's level and mark; Replaces the one taken off (H7)", function()
+    local D = DC()
+    local il = byKey(D.ForYou(trinketDrop(), true, nil, MY_TRINKETS).rows, "ilvl")
+    assertEqual(il.text, "321"); assertEqual(il.tone, "plain")
+    assertEqual(il.arrow.glyph .. il.arrow.text, "▼10"); assertEqual(il.arrow.tone, "red")
+    assertEqual(P(il.more.text), "/ 300"); assertEqual(il.more.arrow.glyph .. il.more.arrow.text, "▲11")
+    assertEqual(il.more.arrow.tone, "good", "each part in its own tone")
+    assertEqual(P(il.tip[3]), "• Worn: 321 / 300"); assertEqual(P(il.tip[4]), "• Change: -10 / +11")
+    local rep = byKey(D.ForYou(trinketDrop(), true, nil, MY_TRINKETS).rows, "replaces")
+    assertEqual(rep.lead, "300", "Replaces still names the one the drop takes off"); assertNil(rep.arrow)
+    local them = byKey(D.ForLooter(trinketDrop(), { status = "fresh", at = 60, gear = HER_TRINKETS }, "Shadow", 100).rows, "ilvl")
+    assertEqual(them.text, "324"); assertEqual(them.arrow.glyph .. them.arrow.text, "▼13")
+    assertEqual(them.more.arrow.glyph .. them.more.arrow.text, "▲15")
+    -- One mark: no gear given, one slot read, a single slot.
+    assertNil(byKey(D.ForYou(trinketDrop(), true).rows, "ilvl").more)
+    assertNil(byKey(D.ForYou(trinketDrop(), true, nil, { [13] = MY_TRINKETS[13] }).rows, "ilvl").more)
+    local helm = byKey(D.ForYou(drop(), true, nil, MY_TRINKETS).rows, "ilvl")
+    assertNil(helm.more); assertEqual(helm.arrow.glyph .. helm.arrow.text, "▲19")
+end)
+
+test("card: a dual Item level paints its second part after the first mark, in the monospace face (H7)", function()
+    local NS = shownTable()
+    local C = NS.Constants
+    NS.Gear.Snapshot = function() return { equipped = MY_TRINKETS } end
+    local d = trinketDrop()
+    NS.LootFeed.Get = function(id) return id == 1 and d or nil end
+    NS.LootFeed.Drops = function() return { d } end
+    NS.WindowGroup.ToggleExpand(1)
+    local r = NS.WindowGroup.Drawn().card.me.rows[2]
+    assertEqual(textOf(r.value), "321"); assertEqual(textOf(r.glyph), "▼"); assertEqual(textOf(r.glyphText), "10")
+    assertTrue(r.moreText:IsShown()); assertEqual(T.tipPlain(textOf(r.moreText)), "/ 300")
+    assertTrue(r.glyph2:IsShown()); assertEqual(r.glyph2:GetFont(), C.FONT_MONO)
+    assertEqual(textOf(r.glyph2), "▲"); assertEqual(textOf(r.glyphText2), "11")
+    assertEqual(select(2, r.glyphText2:GetTextColor()), C.TONE.good.g)
+    assertEqual(r.moreText.__points[1][2], r.glyphText, "after the first mark")
+    assertFalse(NS.WindowGroup.Drawn().card.me.rows[3].moreText:IsShown(), "Track keeps one mark")
+end)
+
+-- feedback-21 H2, painted: the broker forgot the looter (they left, the roster event pruned them);
+-- the card reads the drop's own copy of the read, its spec named, and says the looter is gone.
+test("card: a looter who left the group: the Spec row reads the drop's kept read, not spec unknown", function()
+    local NS = shownTable()
+    NS.Inspect.Get = function() return nil end
+    NS.LootFeed.Get(1).inspect = { status = "fresh", at = 60, specID = 256, gear = {} }
+    NS.WindowGroup.ToggleExpand(1)
+    local spec = NS.WindowGroup.Drawn().card.them.rows[5]
+    assertEqual(textOf(spec.value), "Discipline · inspected 40s ago")
+    assertEqual(T.tipPlainJoined(NS.Window.TooltipOf(spec)),
+        "Spec | • Seta's spec: Discipline | • Inspected: 40s ago | • Looter: not in your group")
+end)
+
 test("card: the actions go through their host handlers; Trade is off with its reason", function()
     local NS, _, m = shownTable()
     NS.WindowGroup.ToggleExpand(1)
@@ -354,7 +540,7 @@ test("card: the actions go through their host handlers; Trade is off with its re
     NS.RetryInspect(1)
     assertEqual(inspected[1][1], SETA); assertEqual(inspected[1][2], NS.Inspect.PRIORITY.looter)
     assertFalse(a.trade:IsEnabled()); assertEqual(textOf(a.trade.label), "Trade · out of range")
-    assertEqual(NS.Window.TooltipOf(a.trade)[2], "That player is out of trade range.")
+    assertEqual(P(NS.Window.TooltipOf(a.trade)[2]), "• Why: out of range")
     NS.TradeHelper.CanTradeWith = function() return true end
     NS.Window.Refresh()
     a = NS.WindowGroup.Drawn().card.actions

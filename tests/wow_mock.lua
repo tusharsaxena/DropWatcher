@@ -77,8 +77,9 @@
 --                  C_Item.GetItemQuality's answer on that bag slot's ItemLocation;
 --                  specNames[specID] is GetSpecializationInfoByID's name (the detail card)
 --   textCharWidth  opt-in measured text: a window font string's GetUnboundedStringWidth is its
---                  length times this, and GetStringWidth that bounded by `__boundWidth` (its
---                  anchored width, set by a case) or SetWidth's; nil (the default) answers nil
+--                  length in characters (a glyph one, not its UTF-8 bytes) times this, and
+--                  GetStringWidth that bounded by `__boundWidth` (its anchored width, set by a
+--                  case) or SetWidth's; nil (the default) answers nil
 --   SOUNDKIT, sounds  the alert sound's SOUNDKIT entries; sounds records every PlaySound(id, channel)
 --   tradeItems     the open trade window: tradeItems.player[i] / tradeItems.target[i] are
 --                  GetTradePlayerItemLink(i) / GetTradeTargetItemLink(i); units.NPC is the partner;
@@ -127,6 +128,12 @@ local function decorateText(f)
     end
     f.SetTexture = function(self, tex) self.__texture = tex; return self end
     f.GetTexture = function(self) return self.__texture end
+    -- A texture's crop (Window › Icons' zoom, feedback-21 G11); unset answers the whole texture.
+    f.SetTexCoord = function(self, ...) self.__texCoord = { ... }; return self end
+    f.GetTexCoord = function(self)
+        local c = self.__texCoord or { 0, 1, 0, 1 }
+        return c[1], c[2], c[3], c[4]
+    end
     -- A texture's vertex color (a chevron's tint, feedback-5 spec §0); unset answers white.
     f.SetVertexColor = function(self, r, g, b, a) self.__vertex = { r, g, b, a or 1 }; return self end
     f.GetVertexColor = function(self)
@@ -147,13 +154,14 @@ local function decorateText(f)
 end
 
 -- Measured text on a font string, opt-in: with M.textCharWidth set, its one-line width is its text's
--- length times that, an inline texture escape counting two (GetUnboundedStringWidth), and GetStringWidth is that bounded by the width its
--- anchors give it (`__boundWidth`, which a case sets, else SetWidth's), as on Retail since 10.0.
+-- length in characters (a glyph such as `▼` one, not its UTF-8 bytes: feedback-21 R5) times that,
+-- an inline texture escape counting two (GetUnboundedStringWidth), and GetStringWidth is that
+-- bounded by the width its anchors give it (`__boundWidth`, which a case sets, else SetWidth's), as on Retail since 10.0.
 -- Unset, both answer nil, as a font not yet loaded does.
 local function measureText(M, r)
     r.GetUnboundedStringWidth = function(s)
         local cw = M.textCharWidth
-        return cw and #((s.__text or ""):gsub("|T.-|t", "##")) * cw or nil
+        return cw and #((s.__text or ""):gsub("|T.-|t", "##"):gsub("[\128-\191]", "")) * cw or nil
     end
     r.GetStringWidth = function(s)
         local w = s:GetUnboundedStringWidth()

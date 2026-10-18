@@ -24,6 +24,11 @@ local L  = NS.L
 
 local floor, max = math.floor, math.max
 
+-- A tooltip row and the closing hint: NS.TipMarks loads after this file (DropWatcher.toc), so read
+-- at call time.
+local function row(label, value, tone) return NS.TipMarks.Row(label, value, tone) end
+local function hint(text) return NS.TipMarks.Hint(text) end
+
 -- The situations' display names (design spec §6.1), for the footer and anything else that names one.
 WF.SITUATION_LABEL = {
     mythicPlus = L["Mythic+"], dungeon = L["Dungeon"], followerDungeon = L["Follower dungeon"],
@@ -51,61 +56,95 @@ function WF.Ago(seconds)
 end
 
 -- ── the composer (pure) ─────────────────────────────────────────────────────────────────────
+--
+-- Each segment is two functions of the same inputs: its text, painted on every pass, and its
+-- tooltip rows, built only when they are read (a hover, or Compose for the suites). A repaint
+-- builds no tooltip rows (feedback-21, PF1: the rows' color codes and tables cost every pass).
 
-local function inspectSegment(i)
+local INSPECT, LOOT, SITUATION, PAWN = {}, {}, {}, {}
+
+function INSPECT.text(i)
     local members = tonumber(i.members) or 0
-    if members == 0 then
-        return { text = L["Inspect: no group"],
-            tip = { L["Inspect"], L["You are not in a group, so there is no one to inspect."] } }
-    end
+    if members == 0 then return L["Inspect: no group"] end
     local text = L["Inspect %d/%d fresh"]:format(i.good or 0, members)
     if (i.outOfRange or 0) > 0 then text = text .. " · " .. L["%d out of range"]:format(i.outOfRange) end
-    return { text = text, tip = { L["Inspect"],
-        L["How many other group members' gear has been read recently: each drop is judged for its looter from that read."],
-        L["Waiting: %d. Out of range: %d. Scan group asks for the rest."]:format(i.pending or 0, i.outOfRange or 0) } }
+    return text
 end
 
-local function lootSegment(i)
+function INSPECT.tip(i)
+    local members = tonumber(i.members) or 0
+    if members == 0 then return { L["Inspect"], row(L["Group"], L["none, so no one to inspect"]) } end
+    return { L["Inspect"], row(L["Read recently"], ("%d/%d"):format(i.good or 0, members)),
+        row(L["Waiting"], i.pending or 0), row(L["Out of range"], i.outOfRange or 0),
+        row(L["Each drop"], L["judged for its looter from that read"]), hint(L["Scan group asks for the rest."]) }
+end
+
+function LOOT.text(i)
+    if type(i.lastLootAgo) ~= "number" then return L["No loot seen yet"] end
+    return L["Last loot %s ago"]:format(WF.Ago(i.lastLootAgo))
+end
+
+function LOOT.tip(i)
     if type(i.lastLootAgo) ~= "number" then
-        return { text = L["No loot seen yet"], tip = { L["Last loot"],
-            L["No loot line has been read this session. If loot dropped and this stays, see /dw diagnostics."] } }
+        return { L["Last loot"], row(L["Loot lines read"], L["none this session"]),
+            hint(L["If loot dropped and this stays, see /dw diagnostics."]) }
     end
-    local ago = WF.Ago(i.lastLootAgo)
-    return { text = L["Last loot %s ago"]:format(ago),
-        tip = { L["Last loot"], L["The last loot line read from chat arrived %s ago."]:format(ago) } }
+    return { L["Last loot"], row(L["Last loot line"], L["%s ago"]:format(WF.Ago(i.lastLootAgo))), row(L["Read from"], L["chat"]) }
 end
 
-local function situationSegment(i)
+function SITUATION.text(i)
+    local name = WF.SituationLabel(i.situation)
+    if type(i.sim) == "table" then return L["Simulating: %s · %d members"]:format(name, i.sim.members or 0) end
+    if i.tracking == false then return L["Not tracking in %s · change in settings"]:format(name) end
+    return L["Situation: %s"]:format(name)
+end
+
+function SITUATION.tip(i)
     local name = WF.SituationLabel(i.situation)
     if type(i.sim) == "table" then
-        return { text = L["Simulating: %s · %d members"]:format(name, i.sim.members or 0), tip = { L["Simulation"],
-            L["A simulation is running: the situation and the group are made up. /dw sim stop ends it."] } }
+        return { L["Simulation"], row(L["Situation"], name), row(L["Members"], i.sim.members or 0),
+            row(L["Both"], L["made up"]), hint(L["/dw sim stop ends it."]) }
     end
     if i.tracking == false then
-        return { text = L["Not tracking in %s · change in settings"]:format(name), tip = { L["Situation"],
-            L["Loot is not tracked here. Settings > General > When to show turns tracking on for %s."]:format(name) } }
+        return { L["Situation"], row(L["Situation"], name), row(L["Loot tracked"], L["no"]),
+            row(L["Turned on in"], L["Settings > General > When to show"]) }
     end
-    return { text = L["Situation: %s"]:format(name),
-        tip = { L["Situation"], L["Where you are, as the addon reads it. Each situation has its own tracking and auto-open settings."] } }
+    return { L["Situation"], row(L["Where you are"], name), row(L["Its own"], L["tracking and auto-open settings"]) }
 end
 
-local function pawnSegment(i)
+function PAWN.text(i) return i.pawn == "on" and L["Pawn: on"] or L["Pawn: off"] end
+
+function PAWN.tip(i)
     if i.pawn == "on" then
-        return { text = L["Pawn: on"], tip = { L["Pawn"], L["Pawn is ready: verdicts can use its scale."] } }
+        return { L["Pawn"], row(L["Status"], L["ready"], "good"), row(L["Verdicts"], L["can use its scale"]) }
     end
-    return { text = L["Pawn: off"], tip = { L["Pawn"], L["Pawn is not loaded, or not ready yet: verdicts do not use it."] } }
+    return { L["Pawn"], row(L["Status"], L["not loaded, or not ready yet"]), row(L["Verdicts"], L["do not use it"]) }
+end
+
+local SEGMENT = { inspect = INSPECT, loot = LOOT, situation = SITUATION, pawn = PAWN }
+
+--- One segment's tooltip from plain inputs: its title, then its rows.
+--- @param key string a WF.SEGMENTS key
+--- @param i table WF.Read's inputs
+--- @return table { title, lines... }, or an empty list for an unknown key
+function WF.SegmentTip(key, i)
+    local seg = SEGMENT[key]
+    if not seg then return {} end
+    return seg.tip(type(i) == "table" and i or {})
 end
 
 --- Each segment's text and tooltip from plain inputs.
 --- @param i table { members, good, outOfRange, pending, lastLootAgo, situation, tracking, pawn,
 ---   sim = { members } while a simulation runs }
+--- @param textOnly boolean|nil true for the texts alone (a repaint: the rows wait for a hover)
 --- @return table { inspect, loot, situation, pawn }, each { text, tip = { title, lines... } }
-function WF.Compose(i)
+function WF.Compose(i, textOnly)
     i = type(i) == "table" and i or {}
-    return {
-        inspect = inspectSegment(i), loot = lootSegment(i),
-        situation = situationSegment(i), pawn = pawnSegment(i),
-    }
+    local out = {}
+    for key, seg in pairs(SEGMENT) do
+        out[key] = { text = seg.text(i), tip = not textOnly and seg.tip(i) or nil }
+    end
+    return out
 end
 
 -- ── the reads (edge) ────────────────────────────────────────────────────────────────────────
@@ -157,8 +196,10 @@ local function buildSegment(host, key, prev)
     s.text:SetPoint("LEFT", s, "LEFT", 0, 0)
     s.text:SetTextColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
     if prev then s:SetPoint("LEFT", prev, "RIGHT", 12, 0) else s:SetPoint("LEFT", host, "LEFT", 2, 0) end
+    -- The compact layout's line sets tipLines (NS.CompactChrome.PaintFooter); the full layout's
+    -- segment keeps its read and builds its rows on the hover.
     NS.Window.AttachTooltip(s, function()
-        local tip = s.tipLines or {}
+        local tip = s.tipLines or (s.tipRead and WF.SegmentTip(key, s.tipRead)) or {}
         return unpack(tip)
     end)
     segments[key] = s
@@ -180,7 +221,7 @@ local function buildSort(host)
     dd:SetOptions(opts)
     dd.onSelect = function(v) FB.Set(NS.Window.ActiveTab(), "sort", v) end
     NS.Window.AttachTooltip(dd, function()
-        return L["Sort"], L["The order of the rows on this tab."]
+        return L["Sort"], row(L["Sets"], L["the order of the rows on this tab"])
     end, "above")
     return dd
 end
@@ -222,7 +263,7 @@ end
 function WF.Refresh()
     if not segments.inspect then return end
     local read = WF.Read()
-    local composed = WF.Compose(read)
+    local composed = WF.Compose(read, true)
     if NS.WindowCompact.Mode() == "compact" then
         NS.CompactChrome.PaintFooter(segments, read, composed)
     else
@@ -230,7 +271,7 @@ function WF.Refresh()
         for key, s in pairs(segments) do
             local seg = composed[key]
             s.text:SetText(seg.text)
-            s.tipLines = seg.tip
+            s.tipLines, s.tipRead = nil, read
             s:SetWidth(textWidth(s.text))
         end
     end

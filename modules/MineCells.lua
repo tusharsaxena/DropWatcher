@@ -70,6 +70,10 @@ local function cell(text, tone, title, ...)
     return { text = text, tone = tone, tip = { title, ... } }
 end
 
+-- One tooltip row and the closing hint (NS.TipMarks, feedback-21).
+local function row(label, value, tone) return TM.Row(label, value, tone) end
+local function hint(text) return TM.Hint(text) end
+
 local function facts(drop) return type(drop.facts) == "table" and drop.facts or {} end
 
 local function tradeOf(drop) return type(drop.trade) == "table" and drop.trade or {} end
@@ -118,7 +122,8 @@ end
 -- full reason is the cell's tooltip.
 local NO_SHORT = {
     bonusRoll = L["Bonus roll"], warbound = L["Warbound"], legacy = L["Legacy loot"],
-    expired = L["Window passed"], upgradeForLooter = L["Your upgrade"], badFacts = L["Not loaded"],
+    expired = L["Window passed"], upgradeForLooter = L["Your upgrade"], upgradeForYou = L["Your upgrade"],
+    badFacts = L["Not loaded"],
 }
 -- Another player's drop says whose upgrade it is in the same room.
 local NO_SHORT_THEIRS = { upgradeForLooter = L["Their upgrade"] }
@@ -137,18 +142,17 @@ end
 
 -- `who` is the looter's short name on another player's drop, nil on yours.
 local function windowTip(cd, soon, who)
-    local lines = { L["Trade window"] }
     local left = MC.Clock(cd.left)
+    local lines
     if cd.exact then
-        lines[2] = L["Read from the item's tooltip: %s left to trade it."]:format(left)
-    elseif who then
-        lines[2] = L["Estimated from when it dropped: about %s left for %s to trade it. Only their own bags know the exact time."]:format(left, who)
+        lines = { L["Trade window"], row(L["Left"], left), row(L["Source"], L["the item's tooltip"]) }
     else
-        lines[2] = L["Estimated from when it dropped: about %s left. The exact time is read once the item is in your bags."]:format(left)
+        lines = { L["Trade window"], row(L["Left"], L["about %s"]:format(left)),
+            row(L["Source"], L["estimated from when it dropped"]),
+            row(L["Exact time"], who and L["only in %s's bags"]:format(who) or L["read once it is in your bags"]) }
     end
     if soon then
-        lines[3] = who and L["Ending soon: once it runs out, %s keeps it."]:format(who)
-            or L["Ending soon: trade it now or it stays yours."]
+        lines[#lines + 1] = row(L["Ending soon"], who and L["then %s keeps it"]:format(who) or L["trade it now or it stays yours"], "warn")
     end
     return lines
 end
@@ -166,18 +170,20 @@ function MC.TradeWindow(drop, now, warnAt)
     local who = othersName(drop)
     if t.state == "no" then
         local short = who and NO_SHORT_THEIRS[t.reasonKey] or NO_SHORT[t.reasonKey]
-        local c = cell(short or L["Not tradeable"], "bad", L["Not tradeable"], WC.TradeReason(t, who or L["you"]))
+        local c = cell(short or L["Not tradeable"], "bad", L["Not tradeable"])
+        WC.Append(c.tip, WC.TradeRows(t, who or L["you"]))
         c.fraction = 0
         return c
     end
     if isBoe(t) then
-        local c = cell(L["No limit (BoE)"], "good", L["Trade window"], L["Bind on equip: it stays tradeable until someone equips it."])
+        local c = cell(L["No limit (BoE)"], "good", L["Trade window"], row(L["Rule"], L["bind on equip"]),
+            row(L["Tradeable"], L["until someone equips it"]))
         c.fraction = 1
         return c
     end
     local cd = MC.Countdown(drop, now)
     if not cd then
-        local c = cell(L["Checking"], "muted", L["Trade window"], L["Not estimated yet: the item's details are loading."])
+        local c = cell(L["Checking"], "muted", L["Trade window"], row(L["Estimate"], L["waiting for the item's details"]))
         c.fraction = 0
         return c
     end
@@ -196,16 +202,16 @@ end
 local RANK = { upgrade = 1, sidegrade = 2, offSpecUpgrade = 3, offSpecSidegrade = 4, downgrade = 5,
     cantUse = 6, doesntWant = 6, unknown = 7, checking = 8, unavailable = 9 }
 local EXPLAIN = {
-    upgrade = L["An upgrade for them: a higher item level than what they wear there."],
-    sidegrade = L["About what they wear there: within the sidegrade band."],
-    offSpecUpgrade = L["An upgrade for one of their other specs (off-spec)."],
-    offSpecSidegrade = L["About what one of their other specs has there (off-spec): within the sidegrade band."],
-    downgrade = L["Lower than what they wear there."],
-    cantUse = L["Their class or spec cannot use it."],
-    doesntWant = L["Usable, but not wanted for their spec."],
-    unknown = L["Their gear was read, but the item it would replace was not."],
-    checking = L["Their gear is being inspected; the verdict follows."],
-    unavailable = L["Their gear could not be read: out of range, offline or not inspected yet."],
+    upgrade = L["a higher item level than they wear there"],
+    sidegrade = L["about what they wear there (the sidegrade band)"],
+    offSpecUpgrade = L["an upgrade for another of their specs (off-spec)"],
+    offSpecSidegrade = L["about what another of their specs has there (off-spec)"],
+    downgrade = L["lower than what they wear there"],
+    cantUse = L["their class or spec can't use it"],
+    doesntWant = L["usable, but not wanted for their spec"],
+    unknown = L["gear read, but not the item it would replace"],
+    checking = L["their gear is being inspected"],
+    unavailable = L["gear not read (out of range, offline or not inspected)"],
 }
 
 -- A Can't use another spec of theirs gains from (NS.OffSpec.Of): its off-spec status, else nil.
@@ -234,7 +240,7 @@ local function entryOf(c)
     local eval = type(c.eval) == "table" and c.eval or nil
     local judged = eval and NS.OffSpec.EvalFor(eval)
     return { guid = c.guid, name = c.name, short = who, classFile = c.classFile, status = status,
-        rank = RANK[status], gain = judged and num(judged.ilvlDelta) or nil, eval = eval, explain = EXPLAIN[status],
+        rank = RANK[status], gain = judged and num(judged.ilvlDelta) or nil, eval = eval, explain = row(L["For them"], EXPLAIN[status]),
         baseline = judged and type(judged.baseline) == "table" and judged.baseline or nil,
         offerable = OFFERABLE[status] == true }
 end
@@ -275,7 +281,13 @@ end
 
 -- ── your own drop on Drops (feedback-5 spec §2) ─────────────────────────────────────────────
 
-local HIDDEN_LINE = L["An upgrade for you: nobody is offered it unless you choose to. Offer shows who it would help."]
+-- The keep? rule's rows (feedback-21), appended to a tooltip.
+local function hiddenRows(tip)
+    tip[#tip + 1] = row(L["Hidden"], L["an upgrade for you"])
+    tip[#tip + 1] = row(L["Offered to"], L["nobody, unless you choose"])
+    tip[#tip + 1] = hint(L["Offer shows who it would help."])
+    return tip
+end
 
 -- The keep? rule: an upgrade for you whose Offer panel you have not opened this session (a
 -- main-spec upgrade: an off-spec one never keeps a drop hidden, feedback-19 spec §3).
@@ -298,14 +310,14 @@ function MC.OwnTrade(drop, revealed)
     local c = WC.Trade(drop)
     if c.state == nil or c.state == "no" then return c end
     if keepHidden(drop, revealed) then
-        c.tip[#c.tip + 1] = HIDDEN_LINE
+        hiddenRows(c.tip)
         return c
     end
     local n = MC.UpgradeCount(drop)
     c.upgrades = n
     if n > 0 then
-        c.tip[#c.tip + 1] = n == 1 and L["Upgrades 1 member: Offer shows who."]
-            or L["Upgrades %d members: Offer shows who."]:format(n)
+        c.tip[#c.tip + 1] = row(L["Upgrades"], n == 1 and L["1 member"] or L["%d members"]:format(n), "good")
+        c.tip[#c.tip + 1] = hint(L["Offer shows who."])
     end
     return c
 end
@@ -322,6 +334,17 @@ local function upgradeRow(e)
         TM.ArrowCell("upgrade", e.gain), base)[1]
 end
 
+--- The members your own drop upgrades, ranked by gain (MC.Candidates' entries), as `Upgrade for N`
+--- counts them; none on a drop that cannot be traded, nor under the keep? rule. The detail card's
+--- FOR THE GROUP lists them (feedback-20).
+--- @param drop table one of your drops
+--- @param revealed boolean|nil
+--- @return table
+function MC.Upgrades(drop, revealed)
+    if tradeOf(drop).state == "no" or keepHidden(drop, revealed) then return {} end
+    return upgradesOf(MC.Candidates(drop))
+end
+
 --- Them on your own drop (feedback-7 spec §2): `Upgrade for N`, green, N the members it upgrades;
 --- `No upgrades`, muted, when it upgrades none. Its tooltip lists each upgrade ranked by gain (a grid,
 --- a row each: NS.TipMarks.GearRows), else
@@ -334,10 +357,11 @@ end
 function MC.Details(drop, revealed, title)
     title = title or L["Them"]
     if tradeOf(drop).state == "no" then
-        return cell(DASH, "muted", title, L["Not tradeable, so nobody can be offered it."])
+        return cell(DASH, "muted", title, row(L["Tradeable"], L["no"]), row(L["Offered to"], L["nobody"]))
     end
     if keepHidden(drop, revealed) then
-        local c = cell(L["Hidden"], "muted", title, HIDDEN_LINE)
+        local c = cell(L["Hidden"], "muted", title)
+        hiddenRows(c.tip)
         c.hidden = true
         return c
     end
@@ -346,7 +370,7 @@ function MC.Details(drop, revealed, title)
     local c = #ups > 0 and cell(L["Upgrade for %d"]:format(#ups), "good", title) or cell(L["No upgrades"], "muted", title)
     c.upgrades = #ups
     if #list == 0 then
-        c.tip[2] = L["Nobody else in your group."]
+        c.tip[2] = row(L["Group"], L["nobody else in it"])
         return c
     end
     if #ups > 0 then
@@ -354,9 +378,9 @@ function MC.Details(drop, revealed, title)
         for i, e in ipairs(ups) do rows[i] = upgradeRow(e) end
         c.tip[#c.tip + 1] = TM.Grid(rows)
     end
-    if #ups == 0 then c.tip[#c.tip + 1] = L["Not an upgrade for anyone whose gear was read."] end
+    if #ups == 0 then c.tip[#c.tip + 1] = row(L["Upgrades"], L["nobody whose gear was read"]) end
     local checking = countChecking(list)
-    if checking > 0 then c.tip[#c.tip + 1] = L["%d checking"]:format(checking) end
+    if checking > 0 then c.tip[#c.tip + 1] = row(L["Checking"], checking) end
     return c
 end
 
@@ -365,9 +389,9 @@ end
 -- (feedback-10 spec §1).
 local OWN_OFFER_LOOK = {
     ready = { text = L["Offer"], icon = "external-link" }, failed = { text = L["Offer"], icon = "external-link" },
-    queued = { text = L["Queued"], icon = "clock", line = L["An offer of it is queued until chat allows it."] },
-    sent = { text = L["Offered"], icon = "confirm", line = L["You offered it: the panel shows to whom."] },
-    tradedAway = { text = L["Traded"], icon = "confirm", line = L["You traded it away."] },
+    queued = { text = L["Queued"], icon = "clock", line = L["an offer waits for chat to allow it"] },
+    sent = { text = L["Offered"], icon = "confirm", line = L["offered (the panel shows to whom)"] },
+    tradedAway = { text = L["Traded"], icon = "confirm", line = L["traded away"] },
 }
 MC.OWN_OFFER_LOOK = OWN_OFFER_LOOK   -- read by the suites: every state has an icon
 
@@ -383,14 +407,15 @@ MC.OWN_OFFER_LOOK = OWN_OFFER_LOOK   -- read by the suites: every state has an i
 function MC.OwnOffer(drop, toneState)
     local t = tradeOf(drop)
     if t.state == "no" then
-        local none = WC.NoAction(L["Not tradeable: %s"]:format(WC.TradeReason(t, L["you"])))
+        local none = WC.NoAction(WC.Append({ row(L["Why"], L["not tradeable"]) }, WC.TradeRows(t, L["you"])))
         none.offer = true
         return none
     end
     local s = OWN_OFFER_LOOK[toneState] and toneState or "ready"
     local l = OWN_OFFER_LOOK[s]
-    local tip = { L["Offer"], L["Open the panel of who could use it, ranked by their gain, with Offer for each."] }
-    tip[3] = l.line
+    local tip = { L["Offer"], row(L["Opens"], L["who could use it, by gain"]), row(L["Each"], L["with its own Offer"]),
+        row(L["Again"], L["closes the panel"]) }
+    tip[#tip + 1] = row(L["Status"], l.line)
     return { offered = true, offer = true, text = l.text, icon = l.icon, enabled = true, tip = tip, state = s, kind = "offer" }
 end
 
@@ -411,20 +436,21 @@ local OFFER_LOOK = lookTable(L["Offer"], L["Offered"], "external-link")     -- h
 local ANNOUNCE_LOOK = lookTable(L["Announce"], L["Announced"], "speech-bubble") -- a post to the group
 MC.OFFER_LOOK, MC.ANNOUNCE_LOOK = OFFER_LOOK, ANNOUNCE_LOOK   -- read by the suites: every state has an icon
 
-local QUEUED_LINE = L["Chat is restricted right now: it is sent when it lifts."]
+local OFFER_LIMIT, ANNOUNCE_LIMIT = L["one per item per member"], L["one per item"]
 
 local function offerTip(state, who, reason)
-    if state == "queued" then return L["Queued"], QUEUED_LINE, L["Click to cancel it."] end
-    if state == "sent" then return L["Offered"], L["You offered it to %s. One offer per item per member."]:format(who) end
-    if state == "failed" then return L["Retry"], L["The offer to %s was not sent: %s."]:format(who, tostring(reason or "?")), L["Click to try again."] end
-    return L["Offer"], L["Whisper %s your offer template for this item."]:format(who), L["One offer per item per member."]
+    if state == "queued" then return L["Queued"], WC.WaitRows(state, who) end
+    if state == "sent" then return L["Offered"], row(L["To"], who), row(L["Limit"], OFFER_LIMIT) end
+    if state == "failed" then return L["Retry"], WC.WaitRows(state, who, reason) end
+    return L["Offer"], row(L["Whispers"], who), row(L["Template"], L["your offer template"]), row(L["Limit"], OFFER_LIMIT)
 end
 
 local function announceTip(state, reason)
-    if state == "queued" then return L["Queued"], QUEUED_LINE, L["Click to cancel it."] end
-    if state == "sent" then return L["Announced"], L["You posted it to the group. One announce per item."] end
-    if state == "failed" then return L["Retry"], L["The announce was not sent: %s."]:format(tostring(reason or "?")), L["Click to try again."] end
-    return L["Announce"], L["Post your announce template for this item to the group or raid."], L["One announce per item."]
+    if state == "queued" then return L["Queued"], WC.WaitRows(state) end
+    if state == "sent" then return L["Announced"], row(L["Posted to"], L["the group"]), row(L["Limit"], ANNOUNCE_LIMIT) end
+    if state == "failed" then return L["Retry"], WC.WaitRows(state, nil, reason) end
+    return L["Announce"], row(L["Posts to"], L["the group or raid"]), row(L["Template"], L["your announce template"]),
+        row(L["Limit"], ANNOUNCE_LIMIT)
 end
 
 local function look(tbl, state)
@@ -485,8 +511,9 @@ function MC.Summary(drops, now)
     end
     local text = count == 1 and L["1 tradeable"] or L["%d tradeable"]:format(count)
     if nextLeft then text = text .. " · " .. L["next expiry %s"]:format(MC.Clock(nextLeft)) end
-    return { count = count, next = nextLeft, text = text,
-        tip = { L["Your tradeable drops"], L["How many of your drops you can still trade, and the next trade window to run out."] } }
+    local tip = { L["Your tradeable drops"], row(L["Tradeable"], count) }
+    if nextLeft then tip[3] = row(L["Next to run out"], MC.Clock(nextLeft)) end
+    return { count = count, next = nextLeft, text = text, tip = tip }
 end
 
 --- Post my tradeables' lines (spec §11.4): one announce listing every link, cut into several lines

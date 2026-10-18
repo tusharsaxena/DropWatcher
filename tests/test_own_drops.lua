@@ -55,6 +55,7 @@ local KEEP = { verdict = "upgrade", ilvlDelta = 9, reasons = {} }
 local function MC() return T.newAddon().MineCells end
 
 local function joined(tip) return table.concat(tip, " | ") end
+local P = T.tipPlain   -- a tooltip row as read (feedback-21)
 
 -- One Upgrade for N grid row as feedback-7 spec §3 draws it, built here from its parts so the suite
 -- pins the format rather than reading it back from NS.TipMarks: a mage's name in the class color,
@@ -80,11 +81,11 @@ test("own drops: Trade reads its word alone and counts the upgrades in its toolt
     local M = MC()
     local c = M.OwnTrade(own())
     assertEqual(c.text, "Likely"); assertEqual(c.tone, "good"); assertEqual(c.upgrades, 2)
-    assertEqual(c.tip[#c.tip], "Upgrades 2 members: Offer shows who.")
+    assertEqual(P(c.tip[#c.tip - 1]), "• Upgrades: 2 members"); assertEqual(P(c.tip[#c.tip]), "Offer shows who.")
     local yes = M.OwnTrade(own({ trade = { state = "yes", reasonKey = "timer", basis = "timer", args = { 600 } } }))
     assertEqual(yes.text, "Yes", "not Yes (2)")
     local one = M.OwnTrade(own({ candidates = { x = cand("Seta", "ready", up(4)) } }))
-    assertEqual(one.text, "Likely"); assertEqual(one.tip[#one.tip], "Upgrades 1 member: Offer shows who.")
+    assertEqual(one.text, "Likely"); assertEqual(P(one.tip[#one.tip - 1]), "• Upgrades: 1 member")
     local none = M.OwnTrade(own({ candidates = {} }))
     assertEqual(none.text, "Likely", "the bare word"); assertEqual(none.upgrades, 0)
     assertFalse(joined(none.tip):find("Upgrades", 1, true) ~= nil)
@@ -97,11 +98,11 @@ test("own drops: the keep? rule: an upgrade for you says no count until its Offe
     local M = MC()
     local kept = M.OwnTrade(own({ me = KEEP }))
     assertEqual(kept.text, "Likely"); assertTrue(kept.upgrades == nil)
-    assertEqual(kept.tip[#kept.tip],
-        "An upgrade for you: nobody is offered it unless you choose to. Offer shows who it would help.")
+    assertEqual(T.tipPlainJoined({ unpack(kept.tip, #kept.tip - 2) }),
+        "• Hidden: an upgrade for you | • Offered to: nobody, unless you choose | Offer shows who it would help.")
     local revealed = M.OwnTrade(own({ me = KEEP }), true)
     assertEqual(revealed.text, "Likely"); assertEqual(revealed.upgrades, 2, "revealed")
-    assertEqual(revealed.tip[#revealed.tip], "Upgrades 2 members: Offer shows who.")
+    assertEqual(P(revealed.tip[#revealed.tip - 1]), "• Upgrades: 2 members")
 end)
 
 test("own drops: Them reads Upgrade for N, green, each one ranked by gain", function()
@@ -125,19 +126,19 @@ test("own drops: No upgrades is muted and says why: nobody's, checking, solo", f
     local down = { verdict = "downgrade", ilvlDelta = -6, baseline = { ilvl = 293 }, reasons = {} }
     local nobody = M.Details(own({ candidates = { a = cand("Vaela", "ready", down) } }))
     assertEqual(nobody.text, "No upgrades"); assertEqual(nobody.tone, "muted")
-    assertEqual(nobody.tip[2], "Not an upgrade for anyone whose gear was read.")
+    assertEqual(P(nobody.tip[2]), "• Upgrades: nobody whose gear was read")
     local checking = M.Details(own({ candidates = { a = cand("Vaela", "ready", down), b = cand("Seta", "checking"),
         c = cand("Kael", "checking") } }))
-    assertEqual(checking.tone, "muted"); assertEqual(checking.tip[#checking.tip], "2 checking")
+    assertEqual(checking.tone, "muted"); assertEqual(P(checking.tip[#checking.tip]), "• Checking: 2")
     local solo = M.Details(own({ candidates = {} }))
-    assertEqual(solo.text, "No upgrades"); assertEqual(solo.tone, "muted"); assertEqual(solo.tip[2], "Nobody else in your group.")
+    assertEqual(solo.text, "No upgrades"); assertEqual(solo.tone, "muted"); assertEqual(P(solo.tip[2]), "• Group: nobody else in it")
     assertEqual(#solo.tip, 2)
     local hidden = M.Details(own({ me = KEEP }))
     assertEqual(hidden.text, "Hidden"); assertEqual(hidden.tone, "muted"); assertTrue(hidden.hidden)
-    assertTrue(hidden.tip[2]:find("Offer shows who it would help.", 1, true) ~= nil)
+    assertEqual(P(hidden.tip[#hidden.tip]), "Offer shows who it would help.")
     assertEqual(M.Details(own({ me = KEEP }), true).text, "Upgrade for 2")
     local dead = M.Details(own({ trade = { state = "no", reasonKey = "bonusRoll" } }))
-    assertEqual(dead.text, "–"); assertTrue(dead.tip[2]:find("Not tradeable", 1, true) ~= nil)
+    assertEqual(dead.text, "–"); assertEqual(T.tipPlainJoined(dead.tip), "Them | • Tradeable: no | • Offered to: nobody")
 end)
 
 test("own drops: Offer is labeled and toned by the furthest offer sent, No action where it cannot be traded", function()
@@ -146,7 +147,8 @@ test("own drops: Offer is labeled and toned by the furthest offer sent, No actio
     assertTrue(ready.offered and ready.offer and ready.enabled)
     assertEqual(ready.text, "Offer"); assertEqual(ready.state, "ready"); assertEqual(ready.kind, "offer")
     assertEqual(ready.icon, "external-link", "handing the item out (feedback-7 spec §1)")
-    assertTrue(ready.tip[2]:find("Open the panel of who could use it", 1, true) ~= nil)
+    assertEqual(P(ready.tip[2]), "• Opens: who could use it, by gain")
+    assertEqual(P(ready.tip[4]), "• Again: closes the panel", "the button toggles (feedback-21 H4)")
     local expect = { queued = { "Queued", "clock" }, sent = { "Offered", "confirm" }, tradedAway = { "Traded", "confirm" },
         failed = { "Offer", "external-link" } }
     for state, e in pairs(expect) do
@@ -158,7 +160,7 @@ test("own drops: Offer is labeled and toned by the furthest offer sent, No actio
     local dead = M.OwnOffer(own({ trade = { state = "no", reasonKey = "bonusRoll" } }), "ready")
     assertFalse(dead.offered); assertEqual(dead.text, "No action"); assertEqual(dead.tip[1], "No action")
     assertEqual(dead.icon, "ban"); assertEqual(dead.state, "none"); assertTrue(dead.offer)
-    assertTrue(dead.tip[2]:find("Bonus roll", 1, true) ~= nil)
+    assertEqual(T.tipPlainJoined(dead.tip), "No action | • Why: not tradeable | • Rule: bonus roll loot | • Tradeable: no")
 end)
 
 -- ── the reveal state and the click (modules/WindowOwn.lua) ──────────────────────────────────
@@ -274,7 +276,7 @@ test("own drops table: Offer turns yellow once offered and green once given away
     assertTrue(a.ask:IsShown()); assertEqual(textOf(a.ask.label), "No action"); assertEqual(a.ask.tone, "bad")
     assertFalse(a.ask:IsEnabled())
     assertEqual(NS2.Window.TooltipOf(a.ask)[1], "No action")
-    assertTrue(NS2.Window.TooltipOf(a.ask)[2]:find("Bonus roll", 1, true) ~= nil)
+    assertTrue(T.tipPlainJoined(NS2.Window.TooltipOf(a.ask)):find("bonus roll", 1, true) ~= nil)
 end)
 
 test("own drops: the detail card shows Offer in place of Ask and Upgrade for N for Them", function()
@@ -359,13 +361,30 @@ test("own drops table: Looter reads Name [YOU], the name in class color and the 
     assertFalse(other2.mark:IsShown(), "another player's name has no mark")
 end)
 
-test("own drops: the detail card's Looter row and the compact card's line 2 read Name [YOU]", function()
+test("own drops: the detail card's FOR THE GROUP names each member it upgrades, in class color, best first", function()
     local NS = shown(own())
     NS.WindowGroup.ToggleExpand(1)
-    local looter
-    for _, row in ipairs(NS.WindowGroup.Drawn().card.them.rows) do if row.key == "mine" then looter = row end end
-    assertEqual(textOf(looter.value), "Me"); assertTrue(looter.mark:IsShown())
-    assertEqual(textOf(looter.mark), "[YOU]"); assertTrue(isGold(NS, looter.mark))
+    local rows = NS.WindowGroup.Drawn().card.them.rows
+    assertEqual(textOf(rows[1].label), "Them"); assertEqual(textOf(rows[1].value), "Upgrade for 2")
+    -- red under: the box held only `Them  Upgrade for 2`, the names in its tooltip alone
+    assertTrue(rows[2]:IsShown()); assertEqual(textOf(rows[2].label), "Butterz")
+    assertEqual(T.marks(textOf(rows[2].value)), "276 [arrow-right] 287")
+    assertTrue(rows[2].glyph:IsShown()); assertEqual(textOf(rows[2].glyph), "▲"); assertEqual(textOf(rows[2].glyphText), "11")
+    assertEqual(textOf(rows[3].label), "Seta")
+    assertFalse(rows[4]:IsShown(), "two upgrades, two names")
+    local r, g, b = rows[2].label:GetTextColor()
+    local mr, mg, mb = NS.Compat.ClassColor("MAGE")
+    assertTrue(r == mr and g == mg and b == mb, "the name in its class color")
+    local tr = rows[1].label:GetTextColor()
+    assertTrue(tr ~= mr, "Them keeps the label gray")
+end)
+
+test("own drops: the detail card has no Looter row; the compact card's line 2 reads Name [YOU]", function()
+    local NS = shown(own())
+    NS.WindowGroup.ToggleExpand(1)
+    for _, row in ipairs(NS.WindowGroup.Drawn().card.them.rows) do
+        if row:IsShown() then assertTrue(row.key ~= "mine", "no Looter row on your own drop") end
+    end
     NS.SetWindowMode("compact")
     local drawn = NS.WindowGroup.Drawn()
     local card = rowFor(drawn, 1)

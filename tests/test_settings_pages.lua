@@ -18,7 +18,7 @@ local PAGES = {
     { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Preferences" } },
     { key = "trade",      title = "Trade",      strip = { "Rules", "Timers" } },
     { key = "messages",   title = "Messages",   strip = { "Templates", "Sending", "Auto-ask" } },
-    { key = "window",     title = "Window",     strip = { "Columns", "Layout", "Toast" } },
+    { key = "window",     title = "Window",     strip = { "Columns", "Layout", "Toast", "Upgrade glow", "Icons" } },
 }
 
 local function gui(m) return m.__libs["AceGUI-3.0"] end

@@ -27,14 +27,17 @@ holds the category, else the lowest holder anywhere.
 
 Scoring (DW-50, `modules/Scoring.lua`) settles how it reads design spec §5.4. The adapter in use
 can differ from `comparison.scorer`: `auto` takes Pawn once it has **initialized**
-(`PawnIsInitialized`, spec §5.4; a Pawn that is loaded but not yet initialized does not count, so
+(Pawn's `PawnIsReady()`, spec §5.4; a Pawn that is loaded but not yet initialized does not count, so
 your weights are not displaced while it starts, DW-62), else your weights when any spec has one,
 else none; `pawn` with Pawn absent or not yet initialized is none, and `weights` with no weight set is none. The
 diagnostics' Scoring section prints both (`scorer=` and `inUse=`). For you, Pawn's "best visible
-scale" is the one with the highest `PercentUpgrade` for the drop, else your spec's scale when the
-drop upgrades nothing; the drop and its baseline are both valued on that scale
-(`PawnGetSingleValueFromItem`), so `scoreDelta` is a value difference, not Pawn's percent. For a
-looter it is `PawnFindScaleForSpec(classID, specID)`; with no scale for that spec there is no
+scale" is the one with the highest `PercentUpgrade` for the drop, else, when the drop upgrades
+nothing, the scale you show in Pawn for your class and spec (a custom or imported one before a
+starter one; `NS.Compat.PawnVisibleScale`, feedback-21 R4), else your spec's starter scale; the drop and its baseline are both valued on that scale
+(`PawnGetSingleValueFromItem`'s unenchanted value, the one Pawn's own upgrade test compares), so
+`scoreDelta` is a value difference, not Pawn's percent. For a looter it is `PawnFindScaleForSpec`
+for their class and spec, the spec given as its place in the class (Pawn numbers its scales so, not
+by specID; `NS.ClassData.SpecIndex`); with no scale for that spec there is no
 score (item level alone), not a pending one. The kernel hands every scorer the drop beside the
 item it values (`scorer(facts, candidate, drop)`). Weights are per spec and apply to anyone of
 that spec, a looter included; a spec without weights is not scored. The Pawn scale string import
@@ -594,7 +597,8 @@ bar's room while the Trade window column shows.
 Three of the compat seam's (`core/Compat.lua`)
 readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the
 shape of the trade-time and item-level tooltip lines (whether the `ItemLevel` line carries a
-numeric field), and that `PawnIsInitialized` is a boolean flag. A secret chat-lockdown or
+numeric field), and that Pawn's `PawnIsReady()` answers true once it has initialized (feedback-21 H1:
+its `PawnIsInitialized` is a file local, never a global). A secret chat-lockdown or
 restriction answer reads as locked, a secret bind answer as not bound ([`midnight-quirks.md`](midnight-quirks.md)).
 
 ## Compact mode

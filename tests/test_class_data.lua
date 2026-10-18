@@ -55,6 +55,28 @@ test("classdata: every spec row is well-formed and its class lists it", function
     assertEqual(#CD.CLASS_SPECS.DEMONHUNTER, 3)
 end)
 
+-- Pawn numbers a scale's spec by its place in the class (Pawn 2.13.6 ScaleTemplates.lua), not by
+-- specID: PawnFindScaleForSpec(10, 3) is Windwalker. red under: no SPEC_INDEX, or one by sort order
+test("classdata: every spec has its place in its class, 1 to n with none twice", function()
+    local CD = load()
+    for _, classFile in ipairs(CLASSES) do
+        local seen = {}
+        for _, specID in ipairs(CD.CLASS_SPECS[classFile]) do
+            local i = CD.SpecIndex(specID)
+            assertTrue(type(i) == "number" and i >= 1 and i <= #CD.CLASS_SPECS[classFile], specID .. " index")
+            assertTrue(not seen[i], classFile .. " index " .. tostring(i) .. " twice")
+            seen[i] = true
+        end
+    end
+    assertEqual(CD.SpecIndex(268), 1, "Brewmaster")
+    assertEqual(CD.SpecIndex(270), 2, "Mistweaver")
+    assertEqual(CD.SpecIndex(269), 3, "Windwalker")
+    assertEqual(CD.SpecIndex(105), 4, "Restoration Druid")
+    assertEqual(CD.SpecIndex(1473), 3, "Augmentation")
+    assertEqual(CD.SpecIndex(999), nil)
+    assertEqual(CD.SpecIndex("71"), nil)
+end)
+
 test("classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder", function()
     local CD, C = load()
     local dev = CD.Spec(1480)

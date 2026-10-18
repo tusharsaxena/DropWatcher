@@ -49,6 +49,13 @@ if not lib then
     NS.MakeCloseButton = function() return nil end
     NS.MakeResizable   = function() return nil end
 
+    -- With no resolver every class is unresolvable, so a color is its stored swatch (options-ui-§17:
+    -- an unresolvable class falls through to the swatch, never to a substitute hue).
+    NS.ResolveColor = function(stored)
+        local c = type(stored) == "table" and stored or {}
+        return c.r or 1, c.g or 1, c.b or 1, c.a or 1
+    end
+
     -- The SafeRegister* family as ONE-RUNG pcall bodies (events-frames-taint-§1).
     local function reject(rejected, event)
         if type(rejected) ~= "table" then return end
@@ -86,6 +93,10 @@ NS.SafeRegisterEvents    = lib.SafeRegisterEvents
 NS.SKIN          = lib.SKIN
 NS.ApplySkin     = lib.ApplySkin
 NS.MakeResizable = lib.MakeResizable
+
+-- The one class-color resolver (options-ui-§17): a stored swatch through its Use class color
+-- companion, the swatch's alpha kept, an unresolvable class falling through to the swatch.
+NS.ResolveColor = lib.ResolveColor
 
 -- WRAPPED, TO SAY WHO IS ASKING (standalone-windows, a MUST). Every close control in the addon is
 -- built through here, because a two-argument call to the factory silently draws the fallback glyph:

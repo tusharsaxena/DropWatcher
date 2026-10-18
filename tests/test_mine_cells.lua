@@ -52,8 +52,6 @@ end
 
 local function MC() return T.newAddon().MineCells end
 
-local function joined(tip) return table.concat(tip, " | ") end
-
 -- ── the countdown ───────────────────────────────────────────────────────────────────────────
 
 test("mine cells: Clock reads h:mm:ss", function()
@@ -79,17 +77,20 @@ test("mine cells: the Trade window says the countdown, ending soon, not tradeabl
     local M = MC()
     local c = M.TradeWindow(drop(), NOW, 600)
     assertEqual(c.text, "1:47:12"); assertEqual(c.tone, "plain"); assertFalse(c.bold)
-    assertTrue(joined(c.tip):find("Read from the item's tooltip") ~= nil)
+    assertEqual(T.tipPlainJoined(c.tip), "Trade window | • Left: 1:47:12 | • Source: the item's tooltip")
     local soon = M.TradeWindow(drop({ trade = { state = "yes", reasonKey = "timer", basis = "timer", expiresAt = NOW + 521 } }), NOW, 600)
     assertEqual(soon.text, "0:08:41"); assertTrue(soon.bold); assertEqual(soon.tone, "warn")
-    assertTrue(joined(soon.tip):find("Ending soon: trade it now") ~= nil, "ending soon is in the tooltip, never the cell")
+    assertEqual(T.tipPlain(soon.tip[#soon.tip]), "• Ending soon: trade it now or it stays yours",
+        "ending soon is in the tooltip, never the cell")
     local off = M.TradeWindow(drop({ trade = { state = "yes", reasonKey = "timer", basis = "timer", expiresAt = NOW + 521 } }), NOW, 0)
     assertFalse(off.bold, "a threshold of 0 turns the warning off")
     local est = M.TradeWindow(drop({ trade = { state = "likely", reasonKey = "groupLoot", basis = "rule" } }), NOW, 600)
-    assertEqual(est.text, "~3:48:20"); assertTrue(joined(est.tip):find("Estimated from when it dropped") ~= nil)
+    assertEqual(est.text, "~3:48:20")
+    assertEqual(T.tipPlainJoined(est.tip), "Trade window | • Left: about 3:48:20 | • Source: estimated from when it dropped"
+        .. " | • Exact time: read once it is in your bags")
     local no = M.TradeWindow(drop({ trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), NOW, 600)
     assertEqual(no.text, "Bonus roll"); assertEqual(no.fraction, 0); assertEqual(no.tone, "bad")
-    assertEqual(no.tip[2], "Bonus roll loot can't be traded.")
+    assertEqual(T.tipPlainJoined(no.tip), "Not tradeable | • Rule: bonus roll loot | • Tradeable: no")
     local boe = M.TradeWindow(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), NOW, 600)
     assertEqual(boe.text, "No limit (BoE)"); assertEqual(boe.fraction, 1)
     local none = M.TradeWindow(drop({ trade = NONE }), NOW, 600)
@@ -130,7 +131,8 @@ test("mine cells: Offer and Announce follow the ask's lifecycle; the Trade butto
     end
     assertFalse(M.OfferButton("sent", nil, "Seta").enabled)
     assertEqual(M.OfferButton("queued", nil, "Seta").icon, "clock")
-    assertTrue(M.OfferButton("failed", "throttled", "Seta").tip[2]:find("throttled") ~= nil)
+    assertEqual(T.tipPlainJoined(M.OfferButton("failed", "throttled", "Seta").tip),
+        "Retry | • To: Seta | • Not sent: throttled | Click to try again.")
     assertEqual(M.AnnounceButton("sent").text, "Announced")
     assertEqual(M.AnnounceButton(nil).text, "Announce")
     assertEqual(M.OfferButton("ready", nil, "Seta").kind, "offer", "Offer is cyan (feedback-6 spec §2)")

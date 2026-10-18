@@ -198,7 +198,7 @@ test("compact: the toggle's tooltip names the layout it switches to and the sett
     local NS, f = shown()
     local tip = NS.Window.TooltipOf(f.modeButton)
     assertEqual(tip[1], "Compact view")
-    assertTrue(table.concat(tip, " "):find("Layout setting", 1, true) ~= nil)
+    assertTrue(T.tipPlainJoined(tip):find("• Stored as: Window settings, Layout", 1, true) ~= nil)
     NS.ToggleWindowMode()
     tip = NS.Window.TooltipOf(f.modeButton)
     assertEqual(tip[1], "Full view")

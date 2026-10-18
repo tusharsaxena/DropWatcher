@@ -7,9 +7,9 @@ local _, NS = ...
 -- ALWAYS LISTED. Drops lists every drop, your own included (`feed.showOwn` is retired; a
 -- stored value is ignored). On your own drop the Trade cell's tooltip counts the members it
 -- upgrades, Them reads `Upgrade for N` with every upgrade in its tooltip (feedback-7 spec §2), and Actions
--- is Offer, which opens the Offer panel (modules/OfferPanel.lua) and reveals the drop. What each
--- says is NS.MineCells' (pure: OwnTrade, Details, OwnOffer; NS.SideCells.Them takes Details into
--- the Them cell); this file reads the state they take.
+-- is Offer, which opens the Offer panel (modules/OfferPanel.lua) and reveals the drop; pressed again
+-- it closes the panel. What each says is NS.MineCells' (pure: OwnTrade, Details, OwnOffer;
+-- NS.SideCells.Them takes Details into the Them cell); this file reads the state they take.
 --
 -- THE KEEP? RULE. An upgrade for you is offered to nobody until you open its Offer panel: until then
 -- its count is not said and Them reads `Hidden`. Opening the panel reveals it for the session
@@ -24,7 +24,7 @@ local _, NS = ...
 -- Announce to group) by its ask state: label, catalog mark, whether it clicks, and its tone.
 --
 -- THE CLICK. Every action button that may be an Ask or an Offer goes through WO.PressAction: Offer
--- (`b.offer`) opens the panel, anything else is the Ask (NS.PressAsk).
+-- (`b.offer`) toggles the panel (NS.OfferPanel.Toggle), anything else is the Ask (NS.PressAsk).
 
 NS.WindowOwn = NS.WindowOwn or {}
 local WO    = NS.WindowOwn
@@ -90,11 +90,12 @@ function WO.SetButtonLook(b, look)
     NS.WindowGroup.ToneButton(b, look.toneState or look.state, look.kind)
 end
 
---- An action button's click: Offer opens the Offer panel (`b.offer`), else it is the Ask.
+--- An action button's click: Offer toggles the Offer panel (`b.offer`, NS.OfferPanel.Toggle: it
+--- closes the panel showing this drop, else opens it for the drop), else it is the Ask.
 --- @param b table the button (`b.dropId`, `b.offer`)
 function WO.PressAction(b)
     if b.offer then
-        NS.OfferPanel.Open(b.dropId)
+        NS.OfferPanel.Toggle(b.dropId)
     else
         NS.PressAsk(b.dropId)
     end

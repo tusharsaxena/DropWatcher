@@ -62,7 +62,7 @@ Every module reads a setting through `NS.Setting(path)`.
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
 | `autoOpen` | `true` | When to show | master auto-open: `false` keeps every situation from opening the window |
 | `situations.<key>.track` | per design spec §6.1 | When to show | loot is watched in that situation |
-| `situations.<key>.autoOpen` | per design spec §6.1 | When to show | every drop added to the feed there opens a hidden window (since DW-83; it was the first interesting drop, once per situation) |
+| `situations.<key>.autoOpen` | per design spec §6.1 | When to show | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
 | `situations.<key>.quality` | `"global"` | When to show | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
 | `sim.stepDelay` | `2` | Simulation | the seconds the simulator's automatic run (`/dw sim run`, the panel's Run all) waits between steps, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7); read as each next step is set, so a change takes effect from the next step |
 
@@ -133,6 +133,72 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on both tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a Drops row is taller by its countdown bar's room while the Trade window column shows (feedback-5 spec §1). Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
 | `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
+| `toast.scale` | `1` | Toast (feedback-21 G10) | the toast frame's scale, 0.5 to 2 by 0.05, drawn as a percentage (`isPercent`, 50 % to 200 %; the CLI shows the stored number), dimmed while `toast.enabled` is off; its reaction `NS.Toast.ApplyScale()` scales a built toast live, on screen or not, about its saved anchor (`toast.point` is unchanged), and a profile reload re-applies it; before the first toast the build applies it |
+
+### Window › Upgrade glow (feedback-21)
+
+Two glows on a drop's icon (`modules/Glow.lua`, LibCustomGlow-1.0): `glow.main` for an upgrade for
+your current spec, `glow.offSpec` for a drop your spec can't use whose off-spec part is an upgrade.
+Each has the same keys, below as `glow.<g>.<key>`; the knob set, its ranges and defaults are shared
+with KickCD's glow slots, but `pixelFrequency`'s default, 0.1, which is this addon's own
+(feedback-21 H6; KickCD keeps the library's 0.25). On the tab every row is a main | off-spec pair,
+main left and off-spec right, the colors too: the two swatches share a line and their *Use class
+color (main spec)* | *Use class color (off-spec)* companions the next, so each companion sits below
+its swatch rather than immediately to its right, a documented options-ui-§17 deviation
+(`docs/ARCHITECTURE.md` -> Documented deviations, feedback-21 H6). A style's knobs are dimmed while the glow is in another style, and its style while it is off; the
+color pair never is (anti-pattern #74: the swatch's alpha is read under either mode). Every row's
+reaction is `NS.Glow.Refresh()` (the window repainted, each glowing icon restarted once; the toast
+never glows). The class color is the **player's** (`classColorSource = "player"`): the glow says a drop is
+an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (LibKa0s-Core's
+`ResolveColor`), keeps the swatch's alpha, and falls through to the swatch for a class with no color.
+
+| Key | Default | Style | What it is |
+|---|---|---|---|
+| `glow.<g>.enabled` | `true`, `true` | all | the glow on or off |
+| `glow.<g>.type` | `"pixel"`, `"pixel"` | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
+| `glow.<g>.color` | `C.TONE.glowMain`, `#FFF468` (`{ r = 1, g = 244/255, b = 104/255, a = 1 }`), and `C.TONE.glowOffSpec`, `#3FC7EB` (`{ r = 63/255, g = 199/255, b = 235/255, a = 1 }`), tokens of their own (feedback-21 H6) | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape); its alpha applies under Use class color too |
+| `glow.<g>.useClassColor` | `false`, `false` | all | Use class color: the glow in the player's class color instead of the swatch, the swatch's alpha kept (player-scoped, options-ui-§17) |
+| `glow.<g>.pixelLines` | `8` | pixel | how many lines, 1 to 20 |
+| `glow.<g>.pixelFrequency` | `0.1` | pixel | how fast they run, 0.05 to 2 by 0.05 |
+| `glow.<g>.pixelLength` | `0` | pixel | each line's length in pixels, 0 to 20; 0 is Automatic (the library sizes them from the icon; the CLI shows `0 (Automatic)`) |
+| `glow.<g>.pixelThickness` | `1` | pixel | each line's thickness in pixels, 1 to 6 |
+| `glow.<g>.pixelBorder` | `true` | pixel | a dark border inside the lines |
+| `glow.<g>.autocastParticles` | `4` | autocast | sparkles in each ring, 1 to 12 |
+| `glow.<g>.autocastFrequency` | `0.125` | autocast | how fast they circle, 0.05 to 2 by 0.05 |
+| `glow.<g>.autocastScale` | `1` | autocast | their size, 0.5 to 3 by 0.1 |
+| `glow.<g>.buttonFrequency` | `0.25` | button | how fast the rays turn, 0.05 to 2 by 0.05 |
+| `glow.<g>.procDuration` | `1` | proc | seconds per loop of the flipbook, 0.25 to 3 by 0.25 |
+| `glow.<g>.procStartAnim` | `true` | proc | the opening burst when it starts |
+| `glow.<g>.xOffset`, `glow.<g>.yOffset` | `0`, `0` | pixel, autocast, proc | how far the glow reaches past the icon's sides and top and bottom, -10 to 10 |
+
+### Window › Icons (feedback-21 G11)
+
+One look for every item icon the addon draws (`modules/IconStyle.lua`, applied from
+`NS.WindowGroup.ItemButton` and `SetItem`): the Drops rows and their Me and Them gear icons, the
+compact cards, the detail card's header and Replaces rows, the toast, History and the Offer panel.
+The defaults (feedback-21 H6, the owner's choice) trim the baked-in edge (zoom 0.1) and draw a
+Solid black border 2 pixels thick, neither class nor quality colored; zoom 0 with Show border off
+draws them as before G11. A profile that stored a value keeps it (AceDB fills only what is unset;
+no migration). The Zoom row is
+hand-written (`settings/SchemaRows.lua`); the Border block is LibKa0s-Options' composed
+`BorderGroup` with its Show border toggle (options-ui-§16, `settings/ComposedRows.lua`, appended
+after the hand-written rows because it needs the Options instance), its one extra after the
+mandated four. Style, thickness and Color by item quality are dimmed while Show border is off; the
+color pair never is (anti-pattern #74). Every row's reaction is `NS.IconStyle.Refresh()`: the
+settings generation moves on and every item button made so far, pooled or not, takes the new look
+at once; a profile reload calls it too. Without LibKa0s the composer is hollow and the border rows
+do not exist: `NS.IconStyle` reads these defaults, so the Solid black border is drawn and no row
+can change it.
+
+| Key | Default | What it is |
+|---|---|---|
+| `icons.zoom` | `0.1` | the crop off each side of the icon's texture, 0 to 0.25 by 0.01 (KickCD's shape); 0 is the whole icon |
+| `icons.borderShow` | `true` | Show border: a BackdropTemplate child frame over the button, made the first time it is shown |
+| `icons.borderStyle` | `"Solid"` | Border style: a LibSharedMedia border name (`LSM30_Border`); a name nothing registers draws the tooltip's edge. `Solid` is the flat edge `modules/IconStyle.lua` registers at load (`Interface\Buttons\WHITE8X8`, AuraMaster's name for it), drawn even where the media library does not know it |
+| `icons.borderSize` | `2` | Border thickness (px): the backdrop's edge size, 1 to 16 (the composer's 0 floor raised to 1) |
+| `icons.borderColor` | `{ r = 0, g = 0, b = 0, a = 1 }` | Border color, typed `color`; its alpha applies under either companion |
+| `icons.useClassColorBorder` | `false` | Use class color: the border in the **player's** class color (`classColorSource = "player"`: the icons are the player's own view of the loot), through `NS.ResolveColor`, the swatch's alpha kept, the swatch for a class with no color |
+| `icons.borderQuality` | `false` | Color by item quality: the border in the item's quality color in place of the swatch (and of the class color), the swatch's alpha kept; the quality is TipMarks.ItemName's source (`NS.ItemRead.QualityOf`, the client's answer else the link's color, in `ITEM_QUALITY_COLORS`, else the link's own `|cAARRGGBB` code); an item with no quality known keeps the swatch's mode |
 
 ### Named state (no row)
 
@@ -140,7 +206,7 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 |---|---|---|---|
 | `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, full is 1038 x 600 and compact is 440 x 460 at the full window's top right. A stored width under the layout's least (its default: full 1038, compact 440; feedback-4 spec §4, DW-D4, recomputed by feedback-5 spec §4, DW-E4, and feedback-6 spec §0-§1) is raised to it on load |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
-| `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }` |
+| `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }`, the offsets in UIParent's units (feedback-21 G10): a drag stores them times `toast.scale` and they are applied divided by it, so a scale change never moves the anchor; a point saved before G10 was saved at scale 1, so it reads the same |
 | `simPanel.point` | absent | a drag of the simulation panel; Reset position clears it | `{ point, relativePoint, x, y }`; until set, the panel opens beside the window |
 
 Each one's owner and every writer are named under

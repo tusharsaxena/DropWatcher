@@ -10,7 +10,7 @@ this page describes what exists.
 A Retail addon that watches the loot a party or raid receives, judges each drop for you and for the
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
-LibSharedMedia, LibDataBroker and LibDBIcon are vendored under `libs/`, and so is the whole
+LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the whole
 LibKa0s v1.72.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
@@ -63,8 +63,12 @@ one-line responsibility and why its position is load-bearing or conventional is 
   footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
   off-spec verdict's look, `OffSpecCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
-  tooltip placement, compact mode's switch and bodies, test mode and the diagnostics.
-- `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
+  tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), every item
+  icon's look (`IconStyle.lua`: Window › Icons' zoom and border), compact
+  mode's switch and bodies, test mode and the diagnostics.
+- `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the
+  Options instance emits: Master controls in `Panel.lua`, Window › Icons' border in
+  `ComposedRows.lua`), the options pages and their editors, the slash table,
   the slash-only and `/dw sim` verbs, and Profiles, last.
 
 The window only listens: it reads the engine through read-only accessors and the bus, and every
@@ -75,7 +79,9 @@ button goes through the host handler its slash verb shares.
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher
 and the host verbs alike, and one read, `NS.Setting(path)`. The rows are `settings/Schema.lua`'s
 `Settings.Schema` array: the composed Master controls rows (`settings/Panel.lua`), then every
-hand-written row of design spec §12.1 (`settings/SchemaRows.lua`). Each row's `group` is its tab on
+hand-written row of design spec §12.1 (`settings/SchemaRows.lua`), then the composed blocks of the
+later pages (`settings/ComposedRows.lua`: Window › Icons' border, options-ui-§16; feedback-21 G11),
+which take SchemaRows' checks. Each row's `group` is its tab on
 its page, a `disabledIf` predicate dims a row with nothing to do, its `default` references
 `defaults/Profile.lua`, and its `validate` refuses a value before the seam stores it. The two
 specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
@@ -159,7 +165,7 @@ the way the client's own registrant dispatch and AceAddon's errorCollector behav
 | `PLAYER_ENTERING_WORLD` | `DW.OnSimWorldEvent`, then `DW.OnSessionWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnInspectWorldEvent`, then `DW.OnRetentionWorldEvent`, then `DW.OnRestoreWorldEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | ends a running simulation when the real client is now inside an instance or in a group (`modules/Sim.lua`, read past the seam); then (since DW-Q0) an initial login starts the session now, a reload keeps it (`modules/Session.lua`, `char.session.start`); then re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change; then, inside an instance, arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-A5) the first one of the session arms the History's prune by age five seconds later on a cancelable timer the stand-down takes back (`modules/HistoryRetention.lua`); then (since DW-Q0) the first one of a load that says `isReloadingUi` rebuilds the Drops tab from this session's History entries (`modules/FeedRestore.lua`); then (since DW-62) ends auto-ask's encounter hold when no Encounter restriction is left in force, so a player who left mid-fight is not held for good, or, while it is still in force, lets its later lifting (`RestrictionChanged`) end the hold (`modules/AutoAsk.lua`) |
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop and the situation, as above; then auto-ask's encounter hold, as above |
 | `CHALLENGE_MODE_START` | `DW.OnSituationEvent`, then `DW.OnFeedRunStart`, then `DW.OnCompactRunStart` (through `DW:OnSharedFeatureEvent`) | the same (a keystone started); then opens the run's drop group (`modules/LootFeed.lua`); then (since DW-C0) clears compact mode's completed-key latch and its grace timer (`modules/WindowCompact.lua`) |
-| `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent`, then `DW.OnCompactRunEnd` (the same) | the same (a keystone ended); then keeps the run's group open 120 seconds for the chest; then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`); then (since DW-C0) arms compact mode's grace timer: 120 seconds later the run override ends (a hidden window lets go at once, a shown one when next hidden) and the situation is latched, since a completed key still reads as mythicPlus until the player leaves (`modules/WindowCompact.lua`) |
+| `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent`, then `DW.OnCompactRunEnd` (the same) | the same (a keystone ended); then keeps the run's group open while you stay in its instance, else 120 seconds, for the chest and a late bonus roll (feedback-20); then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`); then (since DW-C0) arms compact mode's grace timer: 120 seconds later the run override ends (a hidden window lets go at once, a shown one when next hidden) and the situation is latched, since a completed key still reads as mythicPlus until the player leaves (`modules/WindowCompact.lua`) |
 | `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`), and on a change its sinks grow the open group's roster and its History group's (`modules/GroupRoster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then `DW.OnAskRosterEvent` cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then `DW.OnAutoAskRosterEvent` cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
@@ -188,7 +194,9 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 ## Taint Notes
 
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are
-allowed in combat and nothing defers (the toast waits out combat by choice, `toast.inCombat`). Settings writes touch no protected frame. Opening the settings panel is refused
+allowed in combat and nothing defers (the toast waits out combat by choice, `toast.inCombat`). The
+upgrade glow (`modules/Glow.lua`) is LibCustomGlow-1.0's plain frames parented to the window's
+item buttons (never the toast's), none of them secure, so it starts and stops in combat too. Settings writes touch no protected frame. Opening the settings panel is refused
 in combat by the options library, which also locks a page shown in combat; the addon adds no lock of
 its own and never closes Blizzard's settings window (options-ui-§2). The trade action
 (`InitiateTrade`) and the chat sender are wrapped in
@@ -241,10 +249,10 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Covers |
 |---|---|
 | `scope.md` | What the addon is for, what exists at this version, and what it deliberately does not do |
-| `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included) |
+| `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included, the upgrade glow `modules/Glow.lua` and every item icon's look `modules/IconStyle.lua`) |
 | `schema.md` | The SavedVariables shape, every default, and the migration path |
 | `settings-panel.md` | The `Page \| Covers` table and the page → tab → row tree |
-| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence |
+| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence, Can't use and Trade's Can't use in dim red, and the upgrade glow |
 | `common-tasks.md` | Recipes for the changes made most often here |
 
 ### Conditional (documentation-§3, Tier 2)
@@ -291,10 +299,13 @@ deviation not in this table is not ratified.
 | library-stack-§7, anti-pattern #47 | The item read (`core/ItemRead.lua`: how complete a link is, the better of two links, an item's identity, the gear level read detailed-then-base, the exact level and quality at a bag location, the quality of a link) is written in this addon, shaped as the API LibKa0s-Item-1.0 would take, not taken from LibKa0s | LibKa0s-Item-1.0 carries identity primitives only (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`). Loot History reads the same levels with its own `GetItemExtras` / `GearItemLevel`, and Bank Ledger resolves items too, so the read has three would-be adopters; the run builds in-addon first and promotes later (ui spec §0). A LibKa0s promotion issue is filed as [LibKa0s#51](https://github.com/tusharsaxena/LibKa0s/issues/51), with the loot-line parser as its second candidate | 2026-10-11 (ui spec §0). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): Item.lua stays at minor 2 and LibKa0s#51 is still open, so the trigger has not fired | LibKa0s-Item-1.0 ships these reads, or Loot History or Bank Ledger adopts them |
 | library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major and LibKa0s#49 is still open, so the trigger has not fired | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
 | library-stack-§7, anti-pattern #47 | The simulation step panel (`modules/SimPanel.lua`) copies LibKa0s-Perf-1.0's step panel (`PerfPanel.lua`): its geometry, its three columns and its per-state colors. The frame is built from Core's skin and close mark (`NS.ApplySkin`, `NS.MakeCloseButton`) and the Widgets dropdown, but the row and state logic is this addon's | PerfPanel is attached to the Perf probe and drives only its fixed perf steps; it takes no host step list, so a simulator timeline cannot use it. The owner asked for its look exactly (sim feedback spec §1) | DW-91, 2026-10-11. Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): PerfPanel.lua stays at minor 6 and LibKa0s#53 is still open, so the trigger has not fired | The LibKa0s step-panel issue ([LibKa0s#53](https://github.com/tusharsaxena/LibKa0s/issues/53)) lands a shared step panel: adopt it and delete the copy |
+| options-ui-§17 | the class-color companion sits below its swatch in the tab's mirrored two-column layout | owner's choice: main spec left, off-spec right on every row | 2026-10-18 | the next options-ui-§17 edit, or LibKa0s gaining a mirrored color-pair layout |
 
 ### Files over the 1500-line cap
 
 The layout-§1 census of authored `.lua` files over the 1500-line cap. Vendored code (`libs/`,
 `tests/_kit/`) is out of scope, and the repository has no generated data.
 
-Nothing is over the cap today.
+Nothing is over the cap today. `locales/enUS.lua` came back under it when the settings panel's
+strings moved to the topic file `locales/enUS_Settings.lua` (feedback-21), split on
+localization-§6's shape, which owes no row here.

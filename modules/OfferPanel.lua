@@ -9,7 +9,8 @@ local _, NS = ...
 -- ranked (upgrades first by their gain; off-spec upgrades and equals after the main-spec ones,
 -- feedback-19 spec §3), every second row striped as the main window's, each with
 -- the name in its class color, Their eq in the Drops table's Them look (feedback-7 spec §0: the
--- worn item icons, their item level, the verdict glyph and the difference, `321/308 ▼4`, or a word:
+-- worn item icons, their item level, the verdict glyph and the difference, `292 ▼4` (a mark per worn
+-- item on a two-item slot read in full, `321 ▼10 / 308 ▲3`, feedback-21 H7), or a word:
 -- `Can't use`, `…`, `Unavailable`; NS.SideCells.Candidate, painted by WindowGroup.PaintSide) and,
 -- for an upgrade or an equal (an off-spec one too), the Offer button (the Trade button went with feedback-7 spec §0); the
 -- list scrolls in a raid. The foot strip holds Announce to group and a note on the order. What each
@@ -45,13 +46,18 @@ local max = math.max
 local panel   -- built on the first Open
 
 -- The columns (feedback-7 spec §0): Their eq is at least the Drops table's Them width, so
--- `321/308 ▼13` and two icons fit; Actions holds the Offer button.
+-- `321/308 ▼13` and two icons fit, and a dual mark's `321 ▼10 / 308 ▲3` (feedback-21 H7); Actions
+-- holds the Offer button.
 local COLS = {
-    { key = "member", label = L["Member"], x = 8, tip = L["A member of your group, in their class color."] },
+    { key = "member", label = L["Member"], x = 8, tip = { TM.Row(L["Shows"], L["a member of your group, in their class color"]) } },
     { key = "eq", label = L["Their eq"], x = 124,
-      tip = L["What they wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then your drop judged for them: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover for why."]:format(
-          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) .. " " .. NS.OffSpecCells.LEGEND },
-    { key = "actions", label = L["Actions"], x = 314, tip = L["Offer whispers them your offer template for this item."] },
+      tip = { TM.Row(L["Shows"], L["what they wear there (two for rings, trinkets, one-hand weapons), its item level"]),
+          TM.Row(L["Then"], L["your drop judged for them, and the item-level difference"]),
+          TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
+          TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
+              TM.Mark("downgrade"))),
+          NS.OffSpecCells.Legend(), TM.Hint(L["Hover for why."]) } },
+    { key = "actions", label = L["Actions"], x = 314, tip = { TM.Row(L["Offer"], L["whispers them your offer template"]) } },
 }
 OP.COLS = COLS
 
@@ -154,7 +160,7 @@ local function buildHeads(p)
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
         f.text:SetText(col.label)
         f.text:SetTextColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
-        NS.Window.AttachTooltip(f, function() return col.label, col.tip end)
+        NS.Window.AttachTooltip(f, function() return col.label, unpack(col.tip) end)
         p.heads[col.key] = f
     end
 end
@@ -281,9 +287,9 @@ end
 local function noOffer(drop)
     if drop.trade and drop.trade.state == "no" then
         local WC = NS.WindowCells
-        return WC.NoAction(L["Not tradeable: %s"]:format(WC.TradeReason(drop.trade, L["you"])))
+        return WC.NoAction(WC.Append({ TM.Row(L["Why"], L["not tradeable"]) }, WC.TradeRows(drop.trade, L["you"])))
     end
-    return NS.WindowCells.NoAction(L["Offer is shown for members it is an upgrade or an equal for."])
+    return NS.WindowCells.NoAction({ TM.Row(L["Offer"], L["for members it upgrades or equals"]) })
 end
 
 local function paintButtons(row, e, drop)
@@ -311,7 +317,7 @@ local function paintRow(row, e, drop, now)
     row.guid = e.guid
     NS.WindowGroup.ClassTone(row.member.text, e.classFile, "plain")
     row.member.text:SetText(e.short)
-    row.member.tipLines = { e.short, e.name ~= e.short and tostring(e.name) or L["A member of your group."] }
+    row.member.tipLines = { e.short, TM.Row(L["Name"], tostring(e.name)) }
     NS.WindowGroup.PaintSide(row.eq, SC.Candidate(drop, e, readOf(drop, e), now))
     paintButtons(row, e, drop)
 end
@@ -343,11 +349,13 @@ local function paintFoot(p, drop, n)
     if not tradeable then
         p.announce:SetEnabled(false)
         p.announce:SetAlpha(0.5)
-        p.announce.tipLines = { L["Announce to group"], L["Not tradeable, so there is nothing to announce."] }
+        p.announce.tipLines = { L["Announce to group"], TM.Row(L["Tradeable"], L["no"]), TM.Row(L["To announce"], L["nothing"]) }
     end
     p.note.text:SetText(L["%d members · sorted by gain"]:format(n))
     setTone(p.note.text, "muted")
-    p.note.tipLines = { L["Order"], L["Upgrades first, by how much they gain; then equal, then off-spec upgrades and equals, no upgrade, can't use, checking and unavailable. The list scrolls in a raid."] }
+    p.note.tipLines = { L["Order"], TM.Row(L["First"], L["upgrades, by how much they gain"]),
+        TM.Row(L["Then"], L["equals, off-spec upgrades and equals"]),
+        TM.Row(L["Last"], L["no upgrade, can't use, checking, unavailable"]), TM.Hint(L["The list scrolls in a raid."]) }
 end
 
 --- Repaint the panel from its drop, or close it when the drop is gone. Called by Window.Refresh.
@@ -365,8 +373,9 @@ function OP.Refresh()
     paintFoot(panel, drop, #list)
 end
 
---- Open the panel for one of your drops (its row's Offer). It reveals who the drop would help when
---- it is an upgrade for you: the player chose to offer it (NS.WindowOwn.Reveal).
+--- Open the panel for one of your drops (its Offer, through OP.Toggle, or `/dw offer`). It reveals
+--- who the drop would help when it is an upgrade for you: the player chose to offer it
+--- (NS.WindowOwn.Reveal).
 --- @param dropID number
 --- @return table|nil the panel, or nil before the window is built or for a drop that is not yours
 function OP.Open(dropID)
@@ -385,6 +394,15 @@ end
 function OP.Close()
     State.offerPanel = nil
     if panel then panel:Hide() end
+end
+
+--- A drop's Offer button (feedback-21 H4): it closes the panel when the panel already shows that
+--- drop, else opens it for the drop (switching from another drop's). `/dw offer` keeps OP.Open.
+--- @param dropID number
+--- @return table|nil the panel when it opened, else nil
+function OP.Toggle(dropID)
+    if dropID ~= nil and OP.IsShown() and OP.DropId() == dropID then return OP.Close() end
+    return OP.Open(dropID)
 end
 
 --- @return boolean

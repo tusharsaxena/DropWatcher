@@ -7,8 +7,11 @@
    literal), `page`, `group` (its tab), `label`, `tooltip` and a `validate` check; the file splices
    every row in with `NS.SchemaRuntime.AddRows`. A row that only matters when another is on takes a
    `disabledIf` predicate.
-3. Add every new `label` and `tooltip` string to `locales/enUS.lua`; `test_locale` fails on any
-   string routed through `NS.L` that has no entry there.
+3. Add every new `label` and `tooltip` string to `locales/enUS_Settings.lua`, the settings panel's
+   topic file split out of `locales/enUS.lua` at the 1500-line cap (localization-§6). A string a
+   module also reads goes in `locales/enUS.lua` instead, under its first reader, and each key lives
+   in one file. `test_locale` fails on any string routed through `NS.L` that has no entry in either,
+   on a key written in both, and on a key in `enUS_Settings.lua` that a file outside `settings/` reads.
 4. React in the row's `onChange` (or in `Settings.REACTIONS` when other surfaces write the same
    path). Never write the profile directly.
 5. Read it with `NS.Setting(path)` in the module that uses it.

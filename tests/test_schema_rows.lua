@@ -2,7 +2,7 @@
 -- defaults/Profile.lua and a check the write seam runs (architecture-§5, savedvariables-§2).
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 local NO_LIBKA0S = T.loadAddon.libFiles
 
@@ -59,7 +59,7 @@ end)
 
 test("rows: every hand-written row names its page, tab, label and a type the schema knows", function()
     local NS = T.newAddon()
-    local types = { bool = true, number = true, string = true, map = true }
+    local types = { bool = true, number = true, string = true, map = true, color = true }
     for _, row in ipairs(NS.addon.Settings.Rows) do
         assertTrue(type(row.page) == "string" and type(row.group) == "string", row.path .. " page and tab")
         assertTrue(type(row.label) == "string" and type(row.tooltip) == "string", row.path .. " label and tooltip")
@@ -212,4 +212,237 @@ test("rows: degraded, the hand-written rows still read, write and refuse", funct
     assertFalse(D.SchemaRuntime.Set("feed.quality.mode", "bogus"))
     assertTrue(D.SchemaRuntime.Set("global.history.retentionDays", 14))
     assertEqual(D.addon.db.global.history.retentionDays, 14)
+end)
+
+-- ── Window › Upgrade glow (feedback-21) ─────────────────────────────────────────────────────
+
+-- The knob table of the feedback-21 plan, shared with KickCD's glow slots: key, min, max, default.
+-- pixelFrequency's 0.1 is DropWatcher's own default (feedback-21 H6); KickCD keeps the library's 0.25.
+local GLOW_KNOBS = {
+    { "pixelLines", 1, 20, 8 }, { "pixelFrequency", 0.05, 2, 0.1 }, { "pixelLength", 0, 20, 0 },
+    { "pixelThickness", 1, 6, 1 }, { "autocastParticles", 1, 12, 4 },
+    { "autocastFrequency", 0.05, 2, 0.125 }, { "autocastScale", 0.5, 3, 1 },
+    { "buttonFrequency", 0.05, 2, 0.25 }, { "procDuration", 0.25, 3, 1 },
+    { "xOffset", -10, 10, 0 }, { "yOffset", -10, 10, 0 },
+}
+
+test("glow: both glows have every knob's row on Window › Upgrade glow, with the plan's defaults", function()
+    local NS = T.newAddon()
+    local S, TONE = NS.SchemaRuntime, NS.Constants.TONE
+    for _, key in ipairs({ "main", "offSpec" }) do
+        local base = "glow." .. key .. "."
+        for _, k in ipairs(GLOW_KNOBS) do
+            local row = S.FindRow(base .. k[1])
+            assertTrue(row ~= nil, base .. k[1])
+            assertEqual(row.page, "window"); assertEqual(row.group, "Upgrade glow")
+            assertEqual(row.min, k[2], base .. k[1] .. " min"); assertEqual(row.max, k[3], base .. k[1] .. " max")
+            assertEqual(row.default, k[4], base .. k[1] .. " default")
+        end
+        assertEqual(S.FindRow(base .. "pixelBorder").default, true)
+        assertEqual(S.FindRow(base .. "procStartAnim").default, true)
+        assertEqual(S.FindRow(base .. "enabled").default, true, key .. " is on by default")
+        assertEqual(S.FindRow(base .. "color").type, "color")
+        local cc = S.FindRow(base .. "useClassColor")
+        assertTrue(cc ~= nil and cc.type == "bool", base .. "useClassColor")
+        assertEqual(cc.default, false, key .. "'s Use class color is off by default (options-ui-§17)")
+        assertEqual(cc.label, key == "main" and "Use class color (main spec)" or "Use class color (off-spec)")
+        assertEqual(cc.classColorSource, "player", "the player's class, whoever looted the drop")
+        assertEqual(S.FindRow(base .. "color").classColorSource, "player")
+    end
+    -- feedback-21 H6, the owner's screenshot: both pixel borders, #FFF468 and #3FC7EB, opaque.
+    assertEqual(NS.Setting("glow.main.type"), "pixel")
+    assertEqual(NS.Setting("glow.offSpec.type"), "pixel")
+    local main, off = NS.Setting("glow.main.color"), NS.Setting("glow.offSpec.color")
+    assertTrue(main.r == TONE.glowMain.r and main.g == TONE.glowMain.g and main.b == TONE.glowMain.b and main.a == 1,
+        "main is its own token, opaque")
+    assertTrue(off.r == TONE.glowOffSpec.r and off.g == TONE.glowOffSpec.g and off.b == TONE.glowOffSpec.b
+        and off.a == 1, "off-spec is its own token, opaque")
+    local function byte(v) return math.floor(v * 255 + 0.5) end
+    local function hex(c) return string.format("%02X%02X%02X", byte(c.r), byte(c.g), byte(c.b)) end
+    assertEqual(hex(TONE.glowMain), "FFF468"); assertEqual(hex(TONE.glowOffSpec), "3FC7EB")
+    assertTrue(TONE.glowMain ~= TONE.good and TONE.glowOffSpec ~= TONE.offspec, "no longer the verdicts' tones")
+end)
+
+test("glow: the main and off-spec rows alternate, so each line reads main left, off-spec right", function()
+    local NS = T.newAddon()
+    local rows = {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("window")) do
+        if row.group == "Upgrade glow" then rows[#rows + 1] = row end
+    end
+    assertEqual(#rows % 2, 0)
+    -- Every row, the colors and their companions too (feedback-21 H6): main left, off-spec right.
+    for i = 1, #rows, 2 do
+        local a, b = rows[i].path, rows[i + 1].path
+        assertEqual(a:gsub("^glow%.main%.", ""), b:gsub("^glow%.offSpec%.", ""), a)
+        assertTrue(a:match("^glow%.main%.") ~= nil and b:match("^glow%.offSpec%.") ~= nil, a)
+    end
+    -- The documented options-ui-§17 deviation (docs/ARCHITECTURE.md -> Documented deviations, the
+    -- owner's choice): the swatches share a line and each Use class color sits BELOW its swatch,
+    -- not immediately to its right. This test pins the deviation for these two pairs only.
+    assertEqual(rows[5].path, "glow.main.color"); assertEqual(rows[6].path, "glow.offSpec.color")
+    assertEqual(rows[7].path, "glow.main.useClassColor"); assertEqual(rows[8].path, "glow.offSpec.useClassColor")
+    assertTrue(rows[5].startsLine == true and rows[7].startsLine == true, "each left-column row starts its line")
+    assertNil(rows[6].startsLine); assertNil(rows[8].startsLine)
+end)
+
+test("glow: an out-of-range knob, an unknown style and a malformed color are refused", function()
+    local NS = T.bootAddon()
+    local S, p = NS.SchemaRuntime, NS.addon.db.profile
+    assertFalse(S.Set("glow.main.pixelLines", 0), "1 to 20 lines")
+    assertFalse(S.Set("glow.main.pixelLines", 21))
+    assertFalse(S.Set("glow.offSpec.xOffset", 11), "-10 to 10")
+    assertFalse(S.Set("glow.offSpec.procDuration", 0.1), "0.25 to 3 seconds")
+    assertFalse(S.Set("glow.main.type", "sparkle"), "only LibCustomGlow's four styles")
+    assertFalse(S.Set("glow.main.color", { r = 2, g = 0, b = 0 }), "a channel past 1")
+    assertFalse(S.Set("glow.main.color", "green"), "a color is a table")
+    assertFalse(S.Set("glow.main.enabled", "yes"))
+    assertEqual(p.glow.main.pixelLines, 8, "nothing stored")
+    assertTrue(S.Set("glow.main.type", "autocast"))
+    assertTrue(S.Set("glow.offSpec.color", { r = 1, g = 0.5, b = 0, a = 0.5 }))
+    assertEqual(p.glow.offSpec.color.g, 0.5)
+    assertTrue(S.Set("glow.main.pixelLength", 0), "0 is automatic")
+end)
+
+test("glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never", function()
+    local NS = T.bootAddon()
+    local S = NS.SchemaRuntime
+    local function dim(path) return S.FindRow(path).disabledIf() == true end
+    -- both pixel by default (feedback-21 H6); main set to proc here
+    assertTrue(S.Set("glow.main.type", "proc"))
+    assertFalse(dim("glow.main.procDuration")); assertTrue(dim("glow.main.pixelLines"))
+    assertFalse(dim("glow.offSpec.pixelLines")); assertTrue(dim("glow.offSpec.procDuration"))
+    assertFalse(dim("glow.main.xOffset"), "the offsets serve proc")
+    assertTrue(dim("glow.offSpec.buttonFrequency"))
+    S.Set("glow.main.type", "button")
+    assertTrue(dim("glow.main.xOffset"), "but not button")
+    assertFalse(dim("glow.main.buttonFrequency"))
+    assertFalse(dim("glow.main.type"))
+    S.Set("glow.main.enabled", false)
+    assertTrue(dim("glow.main.type") and dim("glow.main.buttonFrequency"), "off dims the style and every knob")
+    -- anti-pattern #74: the swatch is read under either mode (its alpha), so neither half is dimmed
+    for _, key in ipairs({ "main", "offSpec" }) do
+        assertNil(S.FindRow("glow." .. key .. ".color").disabledIf, key .. " color")
+        assertNil(S.FindRow("glow." .. key .. ".useClassColor").disabledIf, key .. " Use class color")
+    end
+    assertTrue(S.FindRow("glow.main.enabled").disabledIf == nil, "the switch itself is never dimmed")
+    assertFalse(dim("glow.offSpec.pixelLines"), "the other glow is its own")
+end)
+
+test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic", function()
+    local NS = T.enableAddon()
+    local calls = 0
+    NS.Glow = NS.Glow or {}
+    local real = NS.Glow.Refresh
+    NS.Glow.Refresh = function() calls = calls + 1 end
+    assertTrue(NS.SchemaRuntime.Set("glow.main.pixelThickness", 3))
+    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.color", { r = 0, g = 1, b = 0, a = 1 }))
+    assertTrue(NS.SchemaRuntime.Set("glow.main.useClassColor", true))
+    assertFalse(NS.SchemaRuntime.Set("glow.main.useClassColor", "yes"), "a boolean")
+    assertEqual(calls, 3)
+    NS.Glow.Refresh = real
+    local row = NS.SchemaRuntime.FindRow("glow.main.pixelLength")
+    assertEqual(NS.addon.Settings.FormatValue(row, 0, function(_, v) return tostring(v) end), "0 (Automatic)")
+    NS.addon:OnSlashCommand("set glow.offSpec.color 1 0 0 1")
+    assertEqual(NS.addon.db.profile.glow.offSpec.color.r, 1)
+end)
+
+-- ── Window › Toast: Scale (feedback-21 G10) ─────────────────────────────────────────────────
+
+test("toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a sound, live only with the toast on", function()
+    local NS = T.enableAddon()
+    local S = NS.SchemaRuntime
+    local row = S.FindRow("toast.scale")
+    assertTrue(row ~= nil, "toast.scale has a row")
+    assertEqual(row.page, "window"); assertEqual(row.group, "Toast"); assertEqual(row.label, "Scale")
+    assertEqual(row.type, "number")
+    assertEqual(row.min, 0.5); assertEqual(row.max, 2); assertEqual(row.step, 0.05)
+    assertEqual(row.default, 1, "today's size"); assertEqual(NS.C.PROFILE.toast.scale, 1)
+    assertTrue(row.isPercent == true, "drawn as a percentage, 50 % to 200 %")
+    assertTrue(type(row.onChange) == "function", "applied live (NS.Toast.ApplyScale)")
+    assertTrue(row.disabledIf(), "dimmed while the toast is off")
+    assertTrue(S.Set("toast.enabled", true))
+    assertFalse(row.disabledIf())
+    assertFalse(S.Set("toast.scale", 0.25)); assertFalse(S.Set("toast.scale", 2.5))
+    assertTrue(S.Set("toast.scale", 1.5)); assertEqual(NS.addon.db.profile.toast.scale, 1.5)
+    local order = {}
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("window")) do
+        if r.group == "Toast" then order[#order + 1] = r.path end
+    end
+    assertEqual(order[#order], "toast.scale", "the tab's last row")
+    assertEqual(order[#order - 1], "toast.sound")
+end)
+
+-- ── Window › Icons (feedback-21 G11) ────────────────────────────────────────────────────────
+
+-- The tab's rows in order: the Zoom row, then the composed Border block (options-ui-§16: Show
+-- border leads, the mandated four in order, the quality extra after them).
+local ICON_ROWS = {
+    "icons.zoom", "icons.borderShow", "icons.borderStyle", "icons.borderSize", "icons.borderColor",
+    "icons.useClassColorBorder", "icons.borderQuality",
+}
+
+test("icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults", function()
+    local NS = T.newAddon()
+    local S, I = NS.SchemaRuntime, NS.C.PROFILE.icons
+    local order = {}
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("window")) do
+        if r.group == "Icons" then order[#order + 1] = r.path end
+    end
+    assertEqual(table.concat(order, ","), table.concat(ICON_ROWS, ","))
+    local zoom = S.FindRow("icons.zoom")
+    assertEqual(zoom.subgroup, "Zoom"); assertEqual(zoom.label, "Icon zoom")
+    assertEqual(zoom.min, 0); assertEqual(zoom.max, 0.25); assertEqual(zoom.step, 0.01)
+    assertEqual(zoom.default, 0.1, "the baked-in edge trimmed (feedback-21 H6)")
+    -- The composer's labels, word for word (options-ui-§16), under the Border subsection.
+    local LABELS = { borderShow = "Show border", borderStyle = "Border style", borderSize = "Border thickness (px)",
+        borderColor = "Border color", useClassColorBorder = "Use class color", borderQuality = "Color by item quality" }
+    for leaf, label in pairs(LABELS) do
+        local row = S.FindRow("icons." .. leaf)
+        assertEqual(row.label, label, leaf); assertEqual(row.subgroup, "Border", leaf)
+        assertEqual(row.page, "window", leaf)
+        assertTrue(type(row.onChange) == "function", leaf .. " restyles the icons")
+        assertTrue(type(row.validate) == "function", leaf .. " has a check")
+        if leaf ~= "borderColor" then assertEqual(row.default, I[leaf], leaf .. " default from defaults/Profile.lua") end
+    end
+    assertTrue(type(zoom.onChange) == "function")
+    assertEqual(S.FindRow("icons.borderStyle").dialogControl, "LSM30_Border")
+    -- feedback-21 H6: a Solid black border, 2 pixels, neither class nor quality color.
+    assertEqual(I.borderShow, true, "a border by default"); assertEqual(I.borderQuality, false)
+    assertEqual(I.borderStyle, "Solid"); assertEqual(I.borderSize, 2)
+    local bc = I.borderColor
+    assertTrue(bc.r == 0 and bc.g == 0 and bc.b == 0 and bc.a == 1, "black, opaque")
+    assertEqual(I.useClassColorBorder, false, "options-ui-§17: the companion is off by default")
+    -- The color pair: player-scoped, the swatch starting its line, neither half ever dimmed.
+    local swatch, cc = S.FindRow("icons.borderColor"), S.FindRow("icons.useClassColorBorder")
+    assertEqual(swatch.classColorSource, "player"); assertEqual(cc.classColorSource, "player")
+    assertTrue(swatch.startsLine == true, "the pair cannot split across two lines")
+    assertNil(swatch.disabledIf, "anti-pattern #74"); assertNil(cc.disabledIf)
+end)
+
+test("icons: the border rows refuse what they cannot draw, and dim with Show border off", function()
+    local NS = T.enableAddon()
+    local S = NS.SchemaRuntime
+    assertFalse(S.Set("icons.zoom", 0.3)); assertFalse(S.Set("icons.zoom", -0.01))
+    assertTrue(S.Set("icons.zoom", 0.08)); assertEqual(NS.addon.db.profile.icons.zoom, 0.08)
+    assertFalse(S.Set("icons.borderSize", 0)); assertFalse(S.Set("icons.borderSize", 17))
+    assertFalse(S.Set("icons.borderShow", "yes")); assertFalse(S.Set("icons.borderStyle", ""))
+    assertFalse(S.Set("icons.borderColor", { r = 2, g = 0, b = 0 }))
+    assertFalse(S.FindRow("icons.borderStyle").disabledIf(), "on by default (feedback-21 H6)")
+    assertTrue(S.Set("icons.borderShow", false))
+    for _, leaf in ipairs({ "borderStyle", "borderSize", "borderQuality" }) do
+        assertTrue(S.FindRow("icons." .. leaf).disabledIf(), leaf .. " dimmed while Show border is off")
+    end
+    assertTrue(S.Set("icons.borderShow", true))
+    assertFalse(S.FindRow("icons.borderStyle").disabledIf())
+    assertTrue(S.Set("icons.borderSize", 4)); assertTrue(S.Set("icons.borderQuality", true))
+    NS.addon:OnSlashCommand("set icons.borderColor 1 0 0 1")
+    assertEqual(NS.addon.db.profile.icons.borderColor.r, 1)
+end)
+
+test("icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults", function()
+    local D = T.bootAddon{ skip = NO_LIBKA0S }
+    assertTrue(D.SchemaRuntime.Set("icons.zoom", 0.1))
+    assertNil(D.SchemaRuntime.FindRow("icons.borderShow"), "the composer is hollow")
+    assertEqual(D.Setting("icons.borderShow"), true, "the profile default: a border (feedback-21 H6)")
+    assertEqual(D.Setting("icons.borderStyle"), "Solid")
 end)

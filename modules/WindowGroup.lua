@@ -6,7 +6,8 @@ local _, NS = ...
 -- Trinkets, Cloak or Weapons; feedback-4 spec §3), Looter (in class color), Me and Them (what you,
 -- or the looter, wear in that slot and the drop judged for you, or them, in one cell: the worn item's
 -- icon or two, its item level, then ▲ ≈ ▼ and the item-level difference in the verdict's green,
--- yellow or red, `321/308 ▼8`; your gear from its snapshot, theirs from their inspect read, the
+-- yellow or red, `292 ▲19`, and on two worn items both read a mark each, `321 ▼10 / 308 ▲3`
+-- (feedback-21 H7); your gear from its snapshot, theirs from their inspect read, the
 -- read's age in the tooltip; NS.SideCells, feedback-6 spec §1, which merged My eq and Their eq into
 -- them), Trade (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
 -- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
@@ -97,31 +98,60 @@ WG.LEAD = K.ROW_INDENT + WG.CHEVRON_LEAD
 WG.TRADE_WINDOW_PAD = 6
 -- A Me or Them cell's pieces, left to right (feedback-6 spec §1): the worn items' icons (EQ_ICON
 -- each, ICON_GAP apart), LEVEL_GAP, the item level, VERDICT_GAP, the glyph (the monospace face),
--- GLYPH_GAP, the difference or the word. A piece that is not there takes no room and no gap. The
--- columns are their widest cell (tests/test_side_cells.lua measures every kind).
-WG.SIDE = { ICON_GAP = 2, LEVEL_GAP = 4, VERDICT_GAP = 4, GLYPH_GAP = 3 }
+-- GLYPH_GAP, the difference or the word. A piece that is not there takes no room and no gap. A dual
+-- mark (NS.SideCells' `parts`, feedback-21 H7) puts the first worn item's level, glyph and difference
+-- before them, then PART_GAP, a muted `/` and PART_GAP: `321 ▼10 / 324 ▼23`. The columns are their
+-- widest cell (tests/test_side_cells.lua measures every kind, the dual mark at two-digit differences).
+WG.SIDE = { ICON_GAP = 2, LEVEL_GAP = 4, VERDICT_GAP = 4, GLYPH_GAP = 3, PART_GAP = 4 }
+-- Between a dual mark's two parts (feedback-21 H7): a punctuation mark, as WindowCells.Levels' `/`.
+WG.PART_SEP = "/"
 
 -- The default columns, left to right (design spec §11.1). `flex` takes the width the others leave.
+-- `tip` is the header's tooltip rows (feedback-21); `desc` the prose the settings panel's Columns
+-- checkbox shows for it (settings/SchemaRows.lua), which stays prose.
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
 -- also on the row's detail card. Item and Actions never go.
 WG.COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
-      tip = L["The drop. Hover its icon for the game's tooltip; shift-click links it in chat, ctrl-click tries it on."] },
-    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = L["The drop's item level."] },
-    { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = L["Where the drop is worn."] },
+      tip = { TM.Row(L["Shows"], L["the drop"]),
+          TM.Hint(L["Hover its icon for the game's tooltip; shift-click links it, ctrl-click tries it on."]) } },
+    { key = "ilvl", label = L["Ilvl"], width = 40, shed = 4, tip = { TM.Row(L["Shows"], L["the drop's item level"]) },
+      desc = L["The drop's item level."] },
+    { key = "slot", label = L["Slot"], width = 72, shed = 1, tip = { TM.Row(L["Shows"], L["where the drop is worn"]) },
+      desc = L["Where the drop is worn."] },
     { key = "armorType", label = L["Type"], width = 64, shed = 0,
-      tip = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
-    { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = L["Who looted it, in their class color."] },
+      tip = { TM.Row(L["Shows"], L["what kind of item it is"]),
+          TM.Row(L["Values"], L["Cloth, Leather, Mail, Plate, Jewelry, Trinkets, Cloak, Weapons"]) },
+      desc = L["What kind of item it is: Cloth, Leather, Mail or Plate armor, Jewelry, Trinkets, a Cloak or Weapons."] },
+    { key = "looter", label = L["Looter"], width = 104, shed = 2, tip = { TM.Row(L["Shows"], L["who looted it, in their class color"]) },
+      desc = L["Who looted it, in their class color."] },
     { key = "me", label = L["Me"], width = 127, shed = 7,
-      tip = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
-          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade")) .. " " .. NS.OffSpecCells.LEGEND },
+      desc = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
+          TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade"))
+          .. " " .. L["Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."],
+      tip = { TM.Row(L["Shows"], L["what you wear there (two for rings, trinkets, one-hand weapons), its item level"]),
+          TM.Row(L["Then"], L["the drop judged for you, and the item-level difference"]),
+          TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
+          TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
+              TM.Mark("downgrade"))),
+          NS.OffSpecCells.Legend(), TM.Hint(L["Hover an icon for the item."]) } },
     { key = "them", label = L["Them"], width = 127, shed = 5,
-      tip = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."] },
-    { key = "trade", label = L["Trade"], width = 70, shed = 6, tip = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+      desc = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."],
+      tip = { TM.Row(L["Shows"], L["what the looter wears there, its item level"]),
+          TM.Row(L["Then"], L["the drop judged for them, in the same colors"]),
+          TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
+          TM.Row(L["Your own drop"], L["Upgrade for N, who it would help"]), TM.Hint(L["Hover for how old their read is."]) } },
+    { key = "trade", label = L["Trade"], width = 70, shed = 6,
+      tip = { TM.Row(L["Shows"], L["whether the looter can trade it"]), TM.Row(L["Values"], L["Yes, Likely, Unknown or No"]) },
+      desc = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
     { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3,
-      tip = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] },
+      desc = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."],
+      tip = { TM.Row(L["Shows"], L["the time left to trade it, over its bar"]),
+          TM.Row(L["Exact"], L["your own item, once it is in your bags"]), TM.Row(L["Estimated"], L["from when it dropped"]),
+          TM.Row(L["Amber and bold"], L["ending soon"]) } },
     { key = "actions", label = L["Actions"], width = K.ASK_W,
-      tip = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."] },
+      desc = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."],
+      tip = { TM.Row(L["Shows"], L["Ask the looter for it, once"]), TM.Row(L["Your own drop"], L["Offer, who it would help"]) } },
 }
 local WHITE = { r = 1, g = 1, b = 1 }   -- an untoned button's label (GameFontHighlightSmall)
 
@@ -315,11 +345,14 @@ end
 --- glyph, the difference or word; each after the last piece shown, the first at the cell's edge.
 --- The difference or word ends at the cell's right edge, so a long word (or a larger Font size) is
 --- cut short there rather than spilling into the next column.
---- @param f table the cell (`icons`, `level`, `glyph`, `text`)
+--- A dual mark (`dual`, feedback-21 H7) places the first part's pieces (`leadLevel`, `leadGlyph`,
+--- `leadText`) and the muted `sep` before the second part's, which are the single pieces.
+--- @param f table the cell (`icons`, `level`, `glyph`, `text`; `leadLevel`, `leadGlyph`, `leadText`, `sep`)
 --- @param nIcons number the icons shown (0..2)
 --- @param hasLevel boolean
 --- @param hasGlyph boolean
-function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph)
+--- @param dual boolean|nil
+function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph, dual)
     local S = WG.SIDE
     local last, gap = nil, 0
     if nIcons > 0 then last, gap = f.icons[math.min(nIcons, 2)], S.LEVEL_GAP end
@@ -327,6 +360,15 @@ function WG.PlaceSide(f, nIcons, hasLevel, hasGlyph)
         fs:ClearAllPoints()
         if last then fs:SetPoint("LEFT", last, "RIGHT", gap, 0) else fs:SetPoint("LEFT", f, "LEFT", 0, 0) end
         if wanted then last = fs end
+    end
+    if dual then
+        after(f.leadLevel, true)
+        gap = S.VERDICT_GAP
+        after(f.leadGlyph, true)
+        gap = S.GLYPH_GAP
+        after(f.leadText, true)
+        gap = S.PART_GAP
+        after(f.sep, true)
     end
     after(f.level, hasLevel)
     if hasLevel then gap = S.VERDICT_GAP end
@@ -430,6 +472,7 @@ local function itemButton(parent, size)
     b:SetScript("OnEnter", function(self) itemEnter(self) end)
     b:SetScript("OnLeave", hideTooltip)
     b:SetScript("OnClick", WG.OnItemClick)
+    NS.IconStyle.Apply(b, nil)   -- Window › Icons' look (modules/IconStyle.lua), from the start
     return b
 end
 
@@ -441,12 +484,14 @@ local function setItem(b, link, where)
     b.worn = where and where.unit and where or nil
     local icon = link and NS.Compat.ItemIcon(link)
     b.art:SetTexture(icon or NS.Icon("help"))
+    NS.IconStyle.Apply(b, link)  -- the border's quality color follows the item
     b:SetShown(link ~= nil)
 end
 
 --- A real item button (the game's tooltip on hover, shift-click links, ctrl-click tries on), for
 --- the detail card too. `WG.SetItem(b, link, where)` shows an item on it, or hides it for nil;
 --- `where` is WG.Where(drop) for a drop, { unit, slot } for an item worn, nil for a link only.
+--- Every one wears Window › Icons' zoom and border (NS.IconStyle, feedback-21 G11).
 --- @param parent table
 --- @param size number
 --- @return table
@@ -487,6 +532,45 @@ local function itemCell(row)
     return f
 end
 
+--- A dual mark's first part and its separator (feedback-21 H7) on a Me or Them cell, built once:
+--- `leadLevel` (plain), `leadGlyph` (the monospace face), `leadText` and the muted `sep`; hidden
+--- until a dual cell is painted (WG.PaintLead).
+--- @param f table the cell
+function WG.BuildLead(f)
+    f.leadLevel = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.leadGlyph = f:CreateFontString(nil, "OVERLAY")
+    f.leadGlyph:SetFont(C.FONT_MONO, 12, "")
+    f.leadText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.sep = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    for _, fs in ipairs({ f.leadLevel, f.leadGlyph, f.leadText, f.sep }) do
+        fs:SetWordWrap(false)
+        fs:Hide()
+    end
+end
+
+--- Paint a dual mark's first part and its separator on `f` (WG.BuildLead's pieces; a compact half's
+--- and the toast's segments are the same four): the level plain, the glyph and the difference in the
+--- part's tone, the `/` muted. Hides them with no `parts`. Answers the second part, which the
+--- caller paints in its single pieces, or nil.
+--- @param f table { leadLevel, leadGlyph, leadText, sep }
+--- @param parts table|nil NS.SideCells' `parts`
+--- @return table|nil
+function WG.PaintLead(f, parts)
+    local first = type(parts) == "table" and parts[1] or nil
+    f.leadLevel:SetShown(first ~= nil); f.leadGlyph:SetShown(first ~= nil)
+    f.leadText:SetShown(first ~= nil); f.sep:SetShown(first ~= nil)
+    if not first then return nil end
+    f.leadLevel:SetText(first.level or "")
+    setTone(f.leadLevel, "plain")
+    f.leadGlyph:SetText(first.glyph or "")
+    setTone(f.leadGlyph, first.tone)
+    f.leadText:SetText(first.text or "")
+    setTone(f.leadText, first.tone)
+    f.sep:SetText(WG.PART_SEP)
+    setTone(f.sep, "muted")
+    return parts[2]
+end
+
 -- A Me or Them cell: the worn items' buttons, the item level, the glyph (the monospace face) and
 -- the difference or word (`f.text`); WG.PlaceSide places them. WG.SideCell: the Offer panel's
 -- Their eq cell is built the same (feedback-7 spec §0).
@@ -499,6 +583,7 @@ local function sideCell(row, key)
     f.level:SetWordWrap(false)
     f.glyph = f:CreateFontString(nil, "OVERLAY")
     f.glyph:SetFont(C.FONT_MONO, 12, "")
+    WG.BuildLead(f)
     return f
 end
 WG.SideCell = sideCell
@@ -648,17 +733,62 @@ end
 -- word), then the glyph and the difference or word in the verdict's tone. `unit` names whose
 -- inventory an icon's tooltip reads (yours: the client's own tooltip for your slot), else the link;
 -- an item with no slot (an off-spec bag item, feedback-19 spec §1) always reads its link.
+-- The item level, glyph and difference or word: a dual mark's second part (its first in the lead
+-- pieces), else the cell's one mark. Answers the second part, or nil.
+local function paintMarks(f, c, parts)
+    local second = WG.PaintLead(f, parts)
+    local p = second or c
+    f.level:SetText(p.level or "")
+    setTone(f.level, second and "plain" or c.levelTone)
+    f.glyph:SetText(p.glyph or "")
+    setTone(f.glyph, p.tone)
+    f.text:SetText(p.text)
+    setTone(f.text, p.tone)
+    return second
+end
+
+-- A piece's width on one line (unbounded: the last piece is cut at the cell's edge), or nil while
+-- its font is not loaded.
+local function pieceWidth(fs)
+    local fn = fs.GetUnboundedStringWidth or fs.GetStringWidth
+    return fn(fs)
+end
+
+-- A dual mark's pieces in WG.PlaceSide's order (WG.DualFits adds the gaps between them).
+local DUAL_PIECES = { "leadLevel", "leadGlyph", "leadText", "sep", "level", "glyph", "text" }
+
+--- Whether a painted dual mark (feedback-21 H7) fits its cell: its pieces at WG.PlaceSide's gaps
+--- after `nIcons` icons, within the cell's width. The columns keep the width the Default size
+--- measures, so at a larger Font size a dual mark can run past the cell into the next column; it
+--- then gives way to the one mark (feedback-21 R5). True while a piece cannot be measured (a font not
+--- yet loaded) or the cell has no width yet.
+--- @param f table a Me or Them cell, its dual mark painted
+--- @param nIcons number the icons shown (0..2)
+--- @return boolean
+function WG.DualFits(f, nIcons)
+    local S, room = WG.SIDE, f:GetWidth() or 0
+    if room <= 0 then return true end
+    local w = 2 * (S.VERDICT_GAP + S.GLYPH_GAP + S.PART_GAP)
+    if nIcons > 0 then w = w + nIcons * K.EQ_ICON + (nIcons - 1) * S.ICON_GAP + S.LEVEL_GAP end
+    for _, key in ipairs(DUAL_PIECES) do
+        local pw = pieceWidth(f[key])
+        if not pw then return true end
+        w = w + pw
+    end
+    return w <= room
+end
+
 local function paintSide(f, c, unit)
     paintText(f, c)
     for i, b in ipairs(f.icons) do
         local it = c.items[i]
         setItem(b, it and it.link or nil, it and unit and it.slot and { unit = unit, slot = it.slot } or nil)
     end
-    f.level:SetText(c.level or "")
-    setTone(f.level, c.levelTone)
-    f.glyph:SetText(c.glyph or "")
-    setTone(f.glyph, c.tone)
-    WG.PlaceSide(f, #c.items, c.level ~= nil, c.glyph ~= nil)
+    local nIcons = math.min(#c.items, 2)
+    local second = paintMarks(f, c, c.parts)
+    if second and not WG.DualFits(f, nIcons) then second = paintMarks(f, c, nil) end
+    local p = second or c
+    WG.PlaceSide(f, #c.items, p.level ~= nil, p.glyph ~= nil, second ~= nil)
 end
 WG.PaintSide = paintSide   -- the Offer panel's Their eq cell too (feedback-7 spec §0)
 
@@ -753,6 +883,7 @@ local function paintRow(row, drop, layout, now, metrics)
     local cells = row.cells
     paintItem(cells.item, drop)
     cells.item.button.dropId = drop.id
+    NS.Glow.Apply(cells.item.button, drop)   -- after ApplyRowIcon: the glow is sized from the button
     for key, fn in pairs(SIMPLE) do paintText(cells[key], fn(drop)) end
     local lc = WC.Looter(drop)
     paintText(cells.looter, lc)
@@ -790,7 +921,7 @@ local function buildHeads(pane)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
         f.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as Loot History's (feedback-4 spec §4)
-        NS.Window.AttachTooltip(f, function() return f.label, col.tip end)
+        NS.Window.AttachTooltip(f, function() return f.label, unpack(col.tip) end)
         head.labels[col.key] = f
     end
     pane.colHead = head
@@ -904,6 +1035,8 @@ local function drawTable(pane, entries)
     pane.columns, pane.layout = kept, layout
 end
 
+local function rowIcon(row) return row.cells.item.button end
+
 -- The table, or (compact) the cards over the same entries; the other one is released and hidden.
 local function refresh(pane, ctx)
     local LF = NS.LootFeed
@@ -913,6 +1046,7 @@ local function refresh(pane, ctx)
     NS.Pool.ReleaseAll(pane.headPool)
     pane.scroll:SetShown(not compact)
     if not compact then drawTable(pane, entries) end
+    NS.Glow.StopFree(pane.rowPool, rowIcon)   -- the rows this repaint left unused (all, in compact)
     NS.CompactGroup.Refresh(pane, entries, compact)
     pane.entries = entries
     NS.DropsStrip.Paint(pane, ctx, compact)

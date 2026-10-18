@@ -69,7 +69,8 @@ test("toast: Compose answers the four rows' parts (feedback-9 spec §0)", functi
     assertEqual(t.trade, "Likely tradeable"); assertEqual(t.tradeTone, "good")
     assertEqual(t.reason, "not an upgrade for Seta")
     assertEqual(t.tip[1], "Trade: Likely")
-    assertEqual(t.tip[2], NS.WindowCells.TradeReason(drop().trade, "Seta"))
+    assertEqual(t.tip[2], NS.WindowCells.Trade(drop()).tip[2], "the Trade cell's rows")
+    assertEqual(T.tipPlain(t.tip[2]), "• Rule: personal loot")
 end)
 
 test("toast: Compose keeps the table's words, the empty slot and each trade reason", function()
@@ -81,7 +82,7 @@ test("toast: Compose keeps the table's words, the empty slot and each trade reas
     assertNil(t.them.glyph, "their gear not read: the word")
     assertEqual(t.them.text, "?"); assertEqual(t.them.tone, "muted")
     t = C(drop({ them = { verdict = "cantUse" } }))
-    assertNil(t.them.glyph); assertEqual(t.them.text, "Can't use"); assertEqual(t.them.tone, "bad")
+    assertNil(t.them.glyph); assertEqual(t.them.text, "Can't use"); assertEqual(t.them.tone, "redMuted")
     t = C(drop({ them = { verdict = "doesntWant" } }))
     assertEqual(t.them.text, "Not wanted"); assertEqual(t.them.tone, "bad")
     t = C(drop({ me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))
@@ -205,7 +206,7 @@ test("toast edge: the four rows beside a four-row icon, painted (feedback-9 spec
     -- The tooltip is the Trade cell's: the full reason.
     local tip = NS.Window.TooltipOf(f)
     assertEqual(tip[1], "Trade: Likely")
-    assertEqual(tip[2], "Personal loot: it is not an upgrade for Seta, so they may trade it.")
+    assertEqual(T.tipPlainJoined({ tip[2], tip[3] }), "• Rule: personal loot | • For Seta: not an upgrade, so they may trade it")
     -- The arrow texture and the signed gain are gone; no glyph is drawn in the default face.
     for _, r in ipairs(f.__regions) do
         local tx = r.__objType == "FontString" and r.__text
@@ -214,6 +215,72 @@ test("toast edge: the four rows beside a four-row icon, painted (feedback-9 spec
             assertFalse(tx:find("+19", 1, true) ~= nil, tx)
         end
     end
+end)
+
+-- Two trinkets each side, both read (feedback-21 H7): yours 321/300, Seta's 324/296.
+local TRINKET = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }
+local MY_TRINKETS = { [13] = { link = link(601), ilvl = 321 }, [14] = { link = link(602), ilvl = 300 } }
+local HER_TRINKETS = { [13] = { link = link(603), ilvl = 324 }, [14] = { link = link(604), ilvl = 296 } }
+
+local function dualDrop(over)
+    local d = drop({ facts = TRINKET, me = { verdict = "upgrade", ilvlDelta = 11, either = true },
+        them = { verdict = "upgrade", ilvlDelta = 15, either = true }, looter = { name = "Abcdefghijkl-Realm", guid = "Player-1-0000000A", classFile = "PRIEST" } })
+    for k, v in pairs(over or {}) do d[k] = v end
+    return d
+end
+
+local function partsText(p)
+    local a, b = p.parts[1], p.parts[2]
+    return ("%s %s%s / %s %s%s"):format(a.level, a.glyph, a.text, b.level, b.glyph, b.text)
+end
+
+test("toast: on a two-item slot read in full each verdict is the cells' dual mark, and the toast widens for it (H7)", function()
+    local NS = T.newAddon()
+    local Toast, TM = NS.Toast, NS.TipMarks
+    local t = Toast.Compose(dualDrop(), MY_TRINKETS, HER_TRINKETS)
+    assertEqual(partsText(t.me), "321 ▼10 / 300 ▲11"); assertEqual(t.me.parts[1].tone, "red")
+    assertEqual(partsText(t.them), "324 ▼13 / 296 ▲15")
+    assertNil(Toast.Compose(dualDrop()).me.parts, "no gear: the one mark")
+    assertNil(Toast.Compose(dualDrop({ facts = { ilvl = 311, equipLoc = "INVTYPE_HEAD", quality = 4 } }),
+        { [1] = { link = link(605), ilvl = 300 } }).me.parts, "a single slot: the one mark")
+    -- Row 3 at the harness's estimate: `Looted by Abcdefghijkl · You 321 ▼10 / 300 ▲11 · Them 324 ▼13 / 296 ▲15`.
+    local G, S = Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
+    local function verdict(p)
+        local a, b = p.parts[1], p.parts[2]
+        return G + TM.Chars(a.level) * CHAR_W + G + GLYPH_W + S + TM.Chars(a.text) * CHAR_W + G + CHAR_W
+            + G + TM.Chars(b.level) * CHAR_W + G + GLYPH_W + S + TM.Chars(b.text) * CHAR_W
+    end
+    local row3 = TM.Chars(("Looted by %s · You"):format(t.looterText)) * CHAR_W + verdict(t.me)
+        + G + TM.Chars("· Them") * CHAR_W + verdict(t.them)
+    assertTrue(row3 > Toast.RowWidth(), "two dual marks do not fit WIDTH's row: it would be cut")
+    assertTrue(Toast.WidthFor(row3) - (Toast.WIDTH - Toast.RowWidth()) >= row3, "the widened toast holds row 3")
+    assertEqual(Toast.WidthFor(100), Toast.WIDTH, "a short row 3 keeps the least width")
+end)
+
+test("toast edge: a dual mark is painted part by part, and the toast is only as wide as row 3 needs (H7)", function()
+    local d1, d2 = dualDrop(), drop({ id = 2, them = { verdict = "downgrade", ilvlDelta = -13 } })
+    local NS, m = enabled({ d1, d2 })
+    local C = NS.Constants
+    m.textCharWidth = 5
+    NS.Gear.Snapshot = function() return { equipped = MY_TRINKETS } end
+    NS.Inspect.Get = function() return { status = "fresh", at = 0, gear = HER_TRINKETS } end
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    local l = f.meLead
+    assertEqual(l.leadLevel:GetText(), "321"); assertEqual(l.leadGlyph:GetText(), "▼"); assertEqual(l.leadText:GetText(), "10")
+    assertEqual(l.leadGlyph.__font[1], C.FONT_MONO); assertEqual(l.leadText.__textColor[1], C.TONE.red.r)
+    assertEqual(l.sep:GetText(), "/"); assertEqual(f.meLevel:GetText(), "300"); assertTrue(f.meLevel:IsShown())
+    assertEqual(f.meGlyph:GetText(), "▲"); assertEqual(f.meText:GetText(), "11")
+    assertEqual(l.leadLevel.__points[1][2], f.looted); assertEqual(f.meLevel.__points[1][2], l.sep)
+    assertEqual(f.meGlyph.__points[1][2], f.meLevel); assertEqual(f.themLabel.__points[1][2], f.meText)
+    assertEqual(f.themLead.leadLevel:GetText(), "324"); assertEqual(f.themLevel:GetText(), "296")
+    local wide = f:GetWidth()
+    assertTrue(wide > NS.Toast.WIDTH, "two dual marks widen it: " .. wide)
+    NS.Toast.Dismiss()
+    added(NS, 2)
+    assertEqual(NS.Toast.Stats().dropId, 2)
+    assertEqual(f:GetWidth(), NS.Toast.WIDTH, "the next, single-mark toast is back at WIDTH")
+    assertFalse(f.meLead.sep:IsShown() or f.meLevel:IsShown(), "and draws no lead pieces")
 end)
 
 test("toast edge: a verdict in a word takes no glyph's room", function()
@@ -434,6 +501,45 @@ test("toast edge: only test mode drags it; the position is saved and Reset posit
     NS.Window.ResetPosition()
     assertNil(NS.addon.db.profile.toast.point)
     assertEqual(({ f:GetPoint(1) })[1], "TOP")
+end)
+
+-- feedback-21 G10: toast.scale is the frame's scale, and the saved point is in UIParent's units.
+test("toast edge: toast.scale scales a toast on screen live about its saved anchor, the point unchanged", function()
+    local NS = enabled({ drop() })
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    assertEqual(f:GetScale(), 1, "today's size by default")
+    assertTrue(NS.SchemaRuntime.Set("toast.scale", 2))
+    -- red under: the row without its onChange, or applyPoint without SetScale (modules/Toast.lua)
+    assertEqual(f:GetScale(), 2, "live, on the toast on screen")
+    assertTrue(shown(NS), "still on screen")
+    local point, _, rel, x, y = f:GetPoint(1)
+    assertEqual(point, "TOP"); assertEqual(rel, "TOP"); assertEqual(x, 0)
+    assertEqual(y, -80, "the default -160 in the toast's own units at scale 2: the anchor stays put")
+    assertNil(NS.addon.db.profile.toast.point, "nothing saved by a scale change")
+    -- A drag at scale 2 saves the offsets in UIParent's units, and a scale change keeps them.
+    NS.State.testMode = true
+    f:ClearAllPoints(); f:SetPoint("TOPLEFT", nil, "BOTTOMLEFT", 20, 250)
+    f:GetScript("OnDragStop")(f)
+    local p = NS.addon.db.profile.toast.point
+    assertEqual(p[3], 40); assertEqual(p[4], 500, "times the scale")
+    assertTrue(NS.SchemaRuntime.Set("toast.scale", 0.5))
+    assertEqual(f:GetScale(), 0.5)
+    local _, _, _, x2, y2 = f:GetPoint(1)
+    assertEqual(x2, 80); assertEqual(y2, 1000, "divided by the new scale: the same place on screen")
+    assertEqual(NS.addon.db.profile.toast.point[4], 500, "the saved point is unchanged")
+end)
+
+test("toast edge: the first toast is built at toast.scale, and a profile switch takes the incoming scale", function()
+    local NS = enabled({ drop(), drop({ id = 2 }) })
+    assertTrue(NS.SchemaRuntime.Set("toast.scale", 1.25))
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    assertEqual(f:GetScale(), 1.25, "built at the stored scale")
+    NS.addon.db:SetProfile("Other")
+    -- red under: OnProfileReloaded without re-applying the point (modules/Toast.lua)
+    assertEqual(f:GetScale(), 1, "the incoming profile's default")
+    assertEqual(({ f:GetPoint(1) })[5], -160)
 end)
 
 test("toast edge: test mode's placeholder toasts and stays until test mode ends", function()

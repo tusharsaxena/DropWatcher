@@ -130,8 +130,9 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(textOf(c.item.text), "Crown of Roaring Storms")
     assertEqual(textOf(c.ilvl.text), "311")
     assertEqual(textOf(card.ask.label), "Ask"); assertTrue(card.ask:IsShown())
-    assertEqual(textOf(c.looter.text), "Seta"); assertEqual(textOf(c.looter.glyph), "⊕", "from another realm")
-    assertEqual(plain(textOf(c.slot.text)), "· Head"); assertEqual(plain(textOf(c.trade.text)), "· Likely")
+    assertEqual(textOf(c.looter.text), "Seta"); assertTrue(c.looter.glyph == nil, "no ⊕ after another realm's looter")
+    assertEqual(plain(textOf(c.slot.text)), "· Head")
+    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Likely", "line 3, labeled")
     assertEqual(textOf(c.fresh.text), "(40s)", "in brackets (feedback-10 spec §2)")
     assertEqual(textOf(c.youLabel.text), "You")
     assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▲19")
@@ -161,7 +162,7 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(p[2], c.you.text); assertEqual(p[3], "RIGHT"); assertEqual(p[4], CG.HALVES_GAP)
     assertTrue(card.cells.countdown == nil and card.bar == nil, "no trade window on the card")
     local other = cardFor(drawn, 2).cells
-    assertEqual(textOf(other.looter.glyph), "", "same realm: no mark")
+
     assertEqual(textOf(other.you.glyph) .. " " .. textOf(other.you.text), "⊘ Can't use")
     assertEqual(textOf(other.them.level), "range", "the gear part says why")
     assertEqual(textOf(other.them.text), "", "so the ? goes")
@@ -201,7 +202,7 @@ test("compact group: every piece keeps its full-view reason tooltip", function()
     assertTrue(has(them, "For Seta: Downgrade"))
     assertEqual(W.TooltipOf(c.ilvl.hit)[1], "Item level 311")
     local looter = W.TooltipOf(c.looter.hit)
-    assertEqual(looter[#looter], "From another realm: Otherrealm.")
+    assertEqual(T.tipPlain(looter[#looter]), "• Realm: Otherrealm")
     assertEqual(W.TooltipOf(c.fresh.hit)[1], "Inspect of Seta")
     assertEqual(#W.TooltipOf(c.item.hit), 0, "the item shows the game's own tooltip instead")
     assertTrue(c.item.hit.showItem == true)
@@ -459,8 +460,8 @@ test("compact group: at the least width line 2's pieces end before the action bu
             return #s * m.textCharWidth
         end
         assertTrue(card.ask:IsShown(), which .. ": the button shows")
-        local leftEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + w(c.looter.text) + 2 + w(c.looter.glyph)
-            + 4 + w(c.slot.text) + 4 + w(c.armorType.text) + 4 + w(c.trade.text)
+        local leftEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + w(c.looter.text)
+            + 4 + w(c.slot.text) + 4 + w(c.armorType.text)
         local rightStart = card:GetWidth() - CG.PAD - K.ASK_W
         assertTrue(leftEnd + 4 <= rightStart,
             ("%s: line 2 ends at %d, the button starts at %d"):format(which, leftEnd, rightStart))
@@ -468,8 +469,9 @@ test("compact group: at the least width line 2's pieces end before the action bu
 end)
 
 -- Line 3 at its fullest (feedback-6 spec §1): both halves on a trinket, two worn levels each
--- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: Them starts
--- CG.HALVES_GAP after You ends (feedback-10 spec §2) and ends before the card's right edge.
+-- (`321/308`), then ⊘ and the longest word (`Not wanted`), then the longest trade word (`Unknown`).
+-- Measured as line 2 is: Them starts CG.HALVES_GAP after You ends (feedback-10 spec §2), Trade as
+-- far after Them, and it ends before the card's right edge.
 test("compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict", function()
     local NS, _, m = T.enableAddon()
     local K, CG = NS.Constants.WINDOW, NS.CompactGroup
@@ -478,7 +480,7 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     local unwanted = { verdict = "doesntWant", reasons = { { key = "undesired" } } }
     local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 308 } }
     seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = unwanted,
-        them = unwanted }) })
+        them = unwanted, trade = { state = "unknown", reasonKey = "noInspect", basis = "inspect", args = { "pending" } } }) })
     NS.Gear.Snapshot = function() return { equipped = trinkets } end
     NS.Inspect.Get = function() return { status = "fresh", at = 60, gear = trinkets } end
     NS.WindowFilterBar.Set("group", "view", "all")
@@ -501,10 +503,83 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     local youEnd = halfEnd("you", CG.TextLeft(m3, CG.LEAD))
     local themX = youEnd + CG.HALVES_GAP
     -- Them's last piece is bounded at the card's right inset, cut there rather than past it (feedback-11 spec §0).
-    local rp = c.them.text.__points[2]
+    local rp = c.trade.text.__points[2]
     assertEqual(rp[1], "RIGHT"); assertEqual(rp[2], card); assertEqual(rp[4], -CG.PAD)
     assertTrue(c.you.text.__points[2] == nil, "You is not bounded: Them follows it")
-    local themEnd = halfEnd("them", themX)
-    assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
+    assertTrue(c.them.text.__points[2] == nil, "Them is not bounded: Trade follows it")
+    assertEqual(NS.CompactCards.HalfText(card.model.trade), "Trade Unknown")
+    local tradeX = halfEnd("them", themX) + CG.HALVES_GAP
+    local tradeEnd = tradeX + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
+    assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
         card:GetWidth() - CG.PAD))
+end)
+
+-- Line 3 with two dual marks (feedback-21 H7): both halves on trinkets read in full, each worn item's
+-- level, glyph and two-digit difference, `You 321 ▼10 / 324 ▼13`, then the longest trade word. The
+-- first part and its `/` sit between the label and the single pieces, Them still follows You's last
+-- piece, and the line ends inside the card at the least width (no compact width change).
+test("compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)", function()
+    local NS, _, m = T.enableAddon()
+    local K, CG, C = NS.Constants.WINDOW, NS.CompactGroup, NS.Constants
+    m.__now = 100
+    m.textCharWidth = 5
+    local down = { verdict = "downgrade", ilvlDelta = -10, either = true, reasons = {} }   -- judged against the lower, 321
+    local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 324 } }
+    seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = down,
+        them = down, trade = { state = "unknown", reasonKey = "noInspect", basis = "inspect", args = { "pending" } } }) })
+    NS.Gear.Snapshot = function() return { equipped = trinkets } end
+    NS.Inspect.Get = function() return { status = "fresh", at = 60, gear = trinkets } end
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.SetWindowMode("compact")
+    NS.ShowWindow()
+    assertEqual(NS.Window.Frame():GetWidth(), K.COMPACT_MIN_W)
+    local card = cardFor(NS.WindowGroup.Drawn(), 1)
+    local c = card.cells
+    assertEqual(NS.CompactCards.HalfText(card.model.you), "You 321 ▼10 / 324 ▼13")
+    assertEqual(NS.CompactCards.HalfText(card.model.them), "Them 321 ▼10 / 324 ▼13")
+    local you = c.you
+    assertEqual(you.leadLevel:GetText(), "321"); assertEqual(you.leadGlyph:GetText(), "▼"); assertEqual(you.leadText:GetText(), "10")
+    assertEqual(you.sep:GetText(), "/"); assertEqual(you.level:GetText(), "324"); assertEqual(you.text:GetText(), "13")
+    assertEqual(you.leadLevel.__points[1][2], c.youLabel.text, "the first part after the label")
+    assertEqual(you.level.__points[1][2], you.sep, "the second part after the separator")
+    assertEqual(select(2, you.leadText:GetTextColor()), C.TONE.red.g, "each part in its tone")
+    assertEqual(c.themLabel.text.__points[1][2], you.text, "Them follows You's last piece")
+    local function w(fs) return #((fs:GetText() or ""):gsub("[\128-\191]", "")) * m.textCharWidth end
+    local function halfEnd(key, x)
+        local h = c[key]
+        return x + w(c[key .. "Label"].text) + CG.HALF_GAP + w(h.leadLevel) + CG.HALF_GAP + w(h.leadGlyph)
+            + CG.HALF_GLYPH_GAP + w(h.leadText) + CG.HALF_GAP + w(h.sep) + CG.HALF_GAP + w(h.level) + CG.HALF_GAP
+            + w(h.glyph) + CG.HALF_GLYPH_GAP + w(h.text)
+    end
+    local themX = halfEnd("you", CG.TextLeft(CG.Metrics(nil), CG.LEAD)) + CG.HALVES_GAP
+    local tradeX = halfEnd("them", themX) + CG.HALVES_GAP
+    local tradeEnd = tradeX + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
+    assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
+        card:GetWidth() - CG.PAD))
+end)
+
+-- feedback-21 R5: at a larger Font size line 3's dual marks would push Trade off the card at the
+-- least width; they give way to the one mark each, and the line reads as before H7.
+test("compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)", function()
+    local NS, _, m = T.enableAddon()
+    m.__now = 100
+    m.textCharWidth = 9
+    local down = { verdict = "downgrade", ilvlDelta = -10, either = true, reasons = {} }
+    local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 324 } }
+    seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = down,
+        them = down, trade = { state = "unknown", reasonKey = "noInspect", basis = "inspect", args = { "pending" } } }) })
+    NS.Gear.Snapshot = function() return { equipped = trinkets } end
+    NS.Inspect.Get = function() return { status = "fresh", at = 60, gear = trinkets } end
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.SetWindowMode("compact")
+    NS.ShowWindow()
+    local card = cardFor(NS.WindowGroup.Drawn(), 1)
+    local c = card.cells
+    assertTrue(card.model.you.parts ~= nil, "the model keeps the dual mark")
+    for _, key in ipairs({ "you", "them" }) do
+        local h = c[key]
+        assertFalse(h.sep:IsShown() or h.leadLevel:IsShown(), key .. ": no lead pieces")
+        assertEqual(h.level:GetText(), "321/324"); assertEqual(h.glyph:GetText(), "▼"); assertEqual(h.text:GetText(), "10")
+        assertEqual(h.level.__points[1][2], c[key .. "Label"].text, key .. ": the level after the label")
+    end
 end)

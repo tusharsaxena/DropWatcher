@@ -60,16 +60,21 @@ end
 
 -- ── the hooks the UI reads ──────────────────────────────────────────────────────────────────
 
---- A drop's looter's inspect entry: a placeholder's own, else NS.Inspect.Get's. Nil for your own
---- drop or a looter with no GUID.
+--- A drop's looter's inspect entry: a placeholder's own, else NS.Inspect.Get's, else the read the
+--- drop was judged with (its own `inspect`, when that holds gear): the broker forgets a looter who
+--- left the group (feedback-21 H2). Nil for your own drop, a looter with no GUID, or no read.
 --- @param drop table
---- @return table|nil
+--- @return table|nil entry, boolean|nil kept true when it is the drop's own copy
 function TM.InspectOf(drop)
     if type(drop) ~= "table" or drop.isMine then return nil end
     if drop.test then return drop.testInspect end
     local guid = type(drop.looter) == "table" and drop.looter.guid
     if not guid then return nil end
-    return NS.Inspect.Get(guid)
+    local e = NS.Inspect.Get(guid)
+    if e then return e end
+    local own = drop.inspect
+    if type(own) == "table" and type(own.gear) == "table" then return own, true end
+    return nil
 end
 
 --- The ask state a row shows: the messaging edge's, or a placeholder's own while the edge holds

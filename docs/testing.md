@@ -59,7 +59,20 @@ reaching a stored profile that is not the active one, step 3 folding the View an
 into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
-through the seam, the account-wide Keep history for, the CLI and the degraded load), `test_settings_pages` (the settings
+through the seam, the account-wide Keep history for, the CLI and the degraded load; Window › Upgrade
+glow, feedback-21: every glow row and its default (H6: both pixel, `pixelFrequency` 0.1, the colors
+`C.TONE.glowMain` `#FFF468` and `C.TONE.glowOffSpec` `#3FC7EB`, apart from the verdicts' tones), the
+main | off-spec alternation on every line, the two swatches on one line and their Use class color
+companions on the next (off, player-scoped; the pinned options-ui-§17 deviation), the refused values and colors, a style's knobs dimmed
+for another style and the style while its glow is off, the color pair never, the
+`NS.Glow.Refresh` reaction, `/dw set` on a color and `0 (Automatic)`; Window › Toast's Scale, feedback-21
+G10: its 0.5-2 by 0.05 range, `isPercent`, default 1, dimmed with the toast off, the refused values and its
+place after Play a sound; Window › Icons, feedback-21 G11: the Zoom row then the composed Border block in
+order (the composer's labels, the quality extra after the mandated four), the H6 defaults (zoom 0.1, a
+Solid black border 2 pixels thick), the
+color pair player-scoped, starting its line and never dimmed, the refused values, style, thickness and
+quality dimmed with Show border off, `/dw set` on the color, and the degraded load keeping Zoom with the
+border's profile defaults), `test_settings_pages` (the settings
 pages built headless: the page list and each page's strip, a page's rows by its key, When to show's
 table (one line per situation, its gold headers and stripe, each cell's value, a toggle writing its
 path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, parked
@@ -94,7 +107,8 @@ collapsing headers; each card indented under its header with the muted-white che
 showing a trade window and a second's tick leaving the cards as they are (feedback-10 spec §2), Them's last piece cut at the
 card's right inset (feedback-11 spec §0), and
 the least compact width, 440, at which line 2's fullest pieces end before the action button,
-feedback-5 spec §0, §4),
+feedback-5 spec §0, §4, and line 3's two dual marks still fit, feedback-21 H7, and at a wider
+character measure give way to the one mark each, feedback-21 R5),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
 repainting, the collapsing headers, every tooltip at the card's top right, the strip without Clear
@@ -147,15 +161,18 @@ panel's 80px `PANEL_BTN_W` included, feedback-11 spec §1),
 `test_side_cells` (the Me and Them cells, feedback-6 spec §1, DW-F1, pure: every verdict kind, two
 worn items, an empty slot, every inspect state, your own drop's `Upgrade for N` and `No upgrades`,
 the merged tooltip with its gear grid (two worn items two rows, the arrow on the replaced one, a slot
-worn empty its own row) and History's verdict alone; the Offer panel's Their eq
+worn empty its own row) and History's verdict alone; the dual mark on two worn items both read, a
+mark per item in its own tone, and every case that keeps one (feedback-21 H7), a drop judged against
+one of two worn items or a bag item among them (feedback-21 R5); the Offer panel's Their eq
 (`SideCells.Candidate`, feedback-7 spec §0) in every candidate state and at least Them's width; then each column's width measured over every kind at the harness's
-character measure, the shed order, and the cells painted headless on the Drops table),
+character measure (the dual mark's longest realistic cell inside them), the shed order, and the cells
+painted headless on the Drops table, a dual mark too wide for its cell painted as the one mark, R5),
 `test_detail_card` (the detail card: the header's chips, both comparisons, the trade box and
 the actions with their reasons, state by state, then the card built headless: the row click that
 expands it inline and moves the rows below, one row at a time, a reason on every line, each action
 through its host handler, the first action's `No action` with its reason where there is none
-(feedback-11 spec §1), no Hide this item, the card indented with its row, Offer (cyan), `Upgrade for N` and the
-Looter row's `Name [YOU]` on your own drop, and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
+(feedback-11 spec §1), no Hide this item, the card indented with its row, Offer (cyan), `Upgrade for N`, no
+Looter row and a row per member it upgrades on your own drop, a looter who left the group: the Spec row from the drop's kept read, `not in your group` without one (feedback-21 H2), the card's marks as the table's glyphs in the monospace face, the titles' muted gold and class-colored name, the Stats row's colors and the Replaces row's item level first and quality color (feedback-21 H5), the Item level row's dual mark, composed and painted (feedback-21 H7), and the Edit message box), `test_mine_cells` (`NS.MineCells`, pure: the countdown and
 the Trade window cell, exact and estimated, another player's naming its looter, ending soon in tone
 and tooltip only; the candidates ranked with their judgment, the buttons' lifecycles and tones
 (`ToneState`), the Trade button gone, every state of every action look table carrying a shipped
@@ -173,7 +190,25 @@ painted headless as columns on reserved lines with the glyph in the monospace fa
 `Compat.TooltipLeftLine`; and audits that no column tip, `L[]` string or test-mode
 tooltip on either tab in either layout carries → ▲ ▼ ≈ ⊘ or ⊕; DW-F5: the arrow texture, the
 drawn-width count, and an audit that no text test mode draws in the default face, on Drops, the
-detail card, the Offer panel or History in either layout, carries one), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
+detail card, the Offer panel or History in either layout, carries one; the tooltip rows, feedback-21:
+`TM.Row`'s `• Label: value` and its nil value, `TM.Hint`, `TM.BULLET`, one row-shape case per builder
+family, and an audit that every tooltip test mode attaches is its title, rows and grids, then only a
+closing hint), `test_glow` (the upgrade glow, feedback-21: `Glow.KindOf` on every verdict shape and
+your own drop, the headless `glowKind` and each glow's `enabled`, each style's arguments through a
+fake LibCustomGlow, no library call on an unchanged repaint and a restart on a setting or a size, the
+drawn color with and without Use class color (the player's class, the swatch's alpha, the swatch for
+a class with no color), each
+of the three surfaces' icons, the toast's never, a reused or unused pooled row losing it, a glow row's write and a profile
+copy re-applying), `test_icon_style` (every item icon's look, feedback-21 G11: the H6 defaults (0.1
+cropped a side, the Solid flat edge 2 pixels thick, black, drawn without LibSharedMedia too), Solid
+registered with LibSharedMedia at load, zoom 0 with no border drawing the whole texture with no frame
+made, the zoom's crop and its clamp, an unchanged repaint making
+no call, a row's write restyling every button made so far (one showing nothing too), the border's child
+frame made on first use with LibSharedMedia's texture, Solid's flat edge or the tooltip's edge, its size and swatch, Use class
+color (the player's class, the swatch's alpha), Color by item quality (the cached item's quality color,
+an uncached link's own color, the swatch's mode for no quality), the Drops row, its Me icons, the detail
+card's header, the compact card and the toast styled live, the glow's frame level over the border, and a
+profile copy re-reading it), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, its next expiry moving each second and keeping
 the ticker running, Post my tradeables through its handler, and the compact strip's summary
@@ -192,7 +227,8 @@ candidates ranked with Their eq in the Them look (both worn items from the read)
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's
 explanation), Offer and Announce to group through their host handlers and toned by whose move it
 is (Offer cyan, Offered yellow, Retry and Announce red), a member it is no upgrade or equal for showing
-the gray `No action` with its reason (feedback-11 spec §1), the Edit message box, closing; then the
+the gray `No action` with its reason (feedback-11 spec §1), the Edit message box, closing, the Offer
+button's toggle from a row, a compact card and the detail card (feedback-21 H4); then the
 host handlers Post my tradeables, Offer and Announce),
 `test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
 top just outside the window, else its bottom right outside the left edge, at the UI scale, the row
@@ -220,13 +256,17 @@ samples on Drops; no button label or Trade window cell ending in an ellipsis; As
 never sent), `test_compat` (the compat seam: the
 secret guards on both load paths, the localized duration decoder in three client languages, the
 tooltip line reader, the trade window's items and partner, the row menu, the optional-addon probe
-`IsAddOnLoaded` (DW-P20), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+`IsAddOnLoaded` (DW-P20), the Pawn seam against a fake shaped like Pawn 2.13.6 (its `PawnIsReady()`,
+the scale asked by spec index, the unenchanted value; feedback-21 H1; the scale you show, a custom one
+first, R4), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
-(the game-data tables and their lookups), `test_evaluate` (the verdict kernel, table-driven over
-every slot plan and every equippability path, plus nil and garbage inputs), `test_scoring` (the
+(the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
+every slot plan and every equippability path, the `either` of a baseline picked from two worn items
+(feedback-21 R5), plus nil and garbage inputs), `test_scoring` (the
 scorers: the Pawn scale import, the weights score and its unknown keys, the adapter in use for each
-setting, the Pawn adapter's scales and `pending`, and the sidegrade item level and score reach
+setting, the Pawn adapter's scales (for you, the scale you show in Pawn before a starter one you hid;
+feedback-21 R4) and `pending`, and the sidegrade item level and score reach
 through the kernel and the feed), `test_quality_gate`
 (the minimum-quality gate: each mode, the floor, empty slots, ties, both overrides),
 `test_situations` (the situation classifier's truth table for every key, the per-situation settings
@@ -270,7 +310,7 @@ data arrived, anyone's `INSPECT_READY` read, the combat park, the open inspect w
 invalidation and its echo guard, the roster prune, the warm-up and `Scan`, the candidate judged by
 the verdict kernel, `InspectDone` after the items load, one debug line per job, secrets, and the
 stand-down), `test_feed` (the feed: a member's drop judged for you, its looter's inspect asked for
-and their verdict and trade arriving with `DropUpdated`; the trade re-made over time, a group drop
+and their verdict and trade arriving with `DropUpdated`, the read kept on the drop once its looter leaves the group, through any later re-judge (feedback-21 H2, R4); the trade re-made over time, a group drop
 past its window turning `no expired` on the sweep, your own drop taking the timer's `yes` and then
 `no expired`, a timer moving it off `no` asking for its candidates, a BoE drop keeping its bind; the dedupe across chat, the encounter loot
 event and the loot history in either order, by GUID or by name, a GUID learned from a later source,
@@ -373,12 +413,15 @@ layouts; the one tooltip; Drops' This session from the stored login in the clien
 `feed.content` row's two values; step 8 turning a stored `all` into `session`, per profile, idempotent),
 `test_toast` (the toast: the pure qualifier, someone else's upgrade for you of `toast.minGain` or
 more (or into an empty slot, whatever the least gain) with a `likely` or `yes` trade, and every
-reason it refuses, and the board 06 C texts, `empty` for an empty slot; then
+reason it refuses, and the board 06 C texts, `empty` for an empty slot, the dual marks on a two-item
+slot and the width they widen the toast to (feedback-21 H7); then
 the edge: off by default, a qualifying drop shown and painted and gone after its duration, one at a
 time with each drop once, the queue's cap, a drop that turns likely on its `DropUpdated`, the hover
 pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the
 Ask button through the host handler, the sound, the drag only in test mode with the point saved and
-Reset position, test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim)
+Reset position, `toast.scale` applied live and at the build about the saved anchor, the point saved in
+UIParent's units and unchanged by a scale change, a profile switch taking the incoming scale
+(feedback-21 G10), test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim)
 taking its toast and its place in the queue, an Ask on a gone drop, no typed `×` close mark when the
 close control degrades (DW-P21), turning the toast off
 or switching to a profile with it off, the stand-down and the diagnostics line),
@@ -462,8 +505,12 @@ stop or automatic stop repainting it, Run all, Pause and Resume, Restart and Sto
 the picker starting the chosen scenario with a raid's count, and the dragged position remembered,
 forgotten by Reset position and the panel hidden at stand-down),
 `test_diagnostics`, `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
-entry in `locales/enUS.lua`, the key-on-miss fallback bypassed; one direction only, since some keys
-are reached dynamically; review F07, decision D8). Kit suites,
+entry in `locales/enUS.lua` or `locales/enUS_Settings.lua`, the key-on-miss fallback bypassed, and
+every enUS key's text appears in an addon file, a loose reverse since some keys are reached
+dynamically; review F07, decision D8. Both read the union of the enUS files, listed from the TOC
+and loaded in its order (localization-§6), and it fails on a key written in two of them, on a topic
+file's key read outside its folder, and on a topic file misnamed, out of the block after
+`enUS.lua`, or keeping its own table). Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
 

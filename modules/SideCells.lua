@@ -3,7 +3,7 @@ local _, NS = ...
 -- you (or the looter) wear in the drop's slot and the verdict on the drop, in one cell where My eq,
 -- Their eq, Me and Them were four columns:
 --
---   [icon(s)] [item level] [glyph][difference]      321/308 ▼8 · 276 ▲12 · 311 ≈0 · 334 Can't use
+--   [icon(s)] [item level] [glyph][difference]      321 ▼10 / 308 ▲3 · 276 ▲12 · 311 ≈0 · 334 Can't use
 --
 -- THE GEAR PART is WindowCells.MyEq's or TheirEq's answer: the worn items (the icons are the
 -- edge's; two for rings, trinkets and one-hand weapons) and their item levels (`321`, `321/308`) in
@@ -14,6 +14,17 @@ local _, NS = ...
 -- side, red down); `Can't use` and `Not wanted` stay words (gray). An unknown verdict's `?` is left
 -- out when the gear part already says why (a state word), and shown when it does not. A dash in the
 -- gear part goes when the verdict part has something to say.
+-- TWO WORN ITEMS (feedback-21 H7). Rings, trinkets and one-hand weapons with both items read: each
+-- worn item's level, then its own glyph and difference in its own tone, `321 ▼10 / 324 ▼23` (`parts`,
+-- in the items' order). The item the drop would replace takes the verdict's own mark; the other its
+-- own, the drop's level against its own (NS.TipMarks.ItemArrow, as the tooltip's grid rows). Only
+-- when the kernel picked the baseline as the lower of two the drop could take either of (its
+-- `either`, feedback-21 R5): a one-hander for a non dual wielder, a non-hunter's ranged and a
+-- two-hander against both hands averaged were judged against one item, or the pair, and keep the one
+-- mark, as does a baseline neither worn item is (a bag item). A single slot, a slot worn empty, a
+-- level not read, a verdict with no glyph or no difference, and History (it keeps no worn items) keep
+-- the one mark too. Every painter draws `parts` when it is there, the
+-- single pieces (`level`, `glyph`, `text`) otherwise.
 -- OFF-SPEC (feedback-19 spec §1): a verdict cell of NS.OffSpecCells (`offSpec` set) is followed by
 -- its spec's name, `▲20 Holy`, in the offspec cyan, and the Me cell's gear part is the item it was
 -- compared with (OffSpecCells.Eq: a bag item, a worn one or `empty`), not what you wear. The looter's
@@ -26,12 +37,14 @@ local _, NS = ...
 -- An off-spec candidate (feedback-19 spec §3) is that spec's cell, `311 ▲14 Holy` in the offspec
 -- cyan, beside the item it was judged against.
 --
--- THE TOOLTIP (feedback-7 spec §3) is the verdict's title, then the worn gear as a grid
--- (NS.TipMarks.GearRows: `[Name] [ilvl] [worn item] [▲diff]`, a row per worn item, the arrow on the
--- one the drop would replace, `empty` for a slot worn empty), then the gear's own lines (the
--- inspect's age, or why nothing was read) and the verdict's (its explanation, the track, the score
--- and the reasons). The verdict's own one-row grid gives way to the gear's; with no gear listed it
--- stays. A line already said is not said twice.
+-- THE TOOLTIP (feedback-7 spec §3) is the verdict's title, then the worn gear as a grid right under
+-- it (NS.TipMarks.GearRows: `[Name] [ilvl] [worn item] [▲diff]`, a row per worn item, the verdict's
+-- arrow on the one the drop would replace and each other worn item its own against the drop:
+-- feedback-21 H3, when the drop could take either (`either`: feedback-21 R5); `empty` for a slot worn
+-- empty), then the gear's own lines (the inspect's age, or
+-- why nothing was read) and the verdict's (its Means, Track, Score and Why rows: feedback-21). The
+-- verdict's own one-row grid gives way to the gear's; with no gear listed it stays, under the title.
+-- A line already said is not said twice.
 --
 -- PURE. Every composer takes the drop record and plain inputs and answers a plain table; nothing here
 -- reads a module's state, the client or a saved variable. The full tables paint it
@@ -39,8 +52,9 @@ local _, NS = ...
 -- (modules/CompactCards.lua).
 --
 --   cell = { items, level, levelTone, glyph, text, tone, tip, verdict, upgrades, hidden,
---            offSpec, mainVerdict }   (the last two an off-spec cell's)
---   (`level` nil with no gear part; `text` "" when the verdict part is left out)
+--            offSpec, mainVerdict, parts }   (offSpec and mainVerdict an off-spec cell's)
+--   (`level` nil with no gear part; `text` "" when the verdict part is left out; `parts` nil, or
+--    two { level, glyph, text, tone } on a dual slot: the level plain, the mark in `tone`)
 
 NS.SideCells = NS.SideCells or {}
 local SC = NS.SideCells
@@ -78,21 +92,33 @@ local function verdictPart(v, level)
     return nil, text
 end
 
--- The worn gear as a grid, or nil when the gear part lists none (a state word, no gear part).
+-- The worn gear as a grid, or nil when the gear part lists none (a state word, no gear part). Each
+-- other worn item takes its own arrow only when the drop could take either (the verdict's `either`,
+-- feedback-21 R5); judged against one item, the other row has none.
 local function gearGrid(eq, v)
     if type(eq) ~= "table" then return nil end
     local items = eq.gridItems or (type(eq.items) == "table" and eq.items) or {}
     local empty = eq.empty or 0
     if #items == 0 and empty == 0 then return nil end
-    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta, v.offSpec and v.tone), v.base))
+    local tone = v.offSpec and v.tone or nil
+    local judge = (v.either or #items < 2) and { ilvl = v.ilvl, band = v.band, tone = tone } or nil
+    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta, tone), v.base, judge))
 end
 
--- The verdict's title, the gear grid (else the verdict's own), the gear's lines after its title,
--- then the verdict's; a line already said is not said twice.
+-- The verdict's own grid line, or nil.
+local function verdictGrid(vt)
+    for _, l in ipairs(vt) do
+        if TM.IsGrid(l) then return l end
+    end
+    return nil
+end
+
+-- The verdict's title, the gear grid (else the verdict's own) right under it (feedback-21 H3), the
+-- gear's lines after its title, then the verdict's; a line already said is not said twice.
 local function mergedTip(eq, v)
     local out, seen = {}, {}
     local vt = type(v.tip) == "table" and v.tip or {}
-    local grid = gearGrid(eq, v)
+    local grid = gearGrid(eq, v) or verdictGrid(vt)
     local function add(l, from)
         if from == "verdict" and grid and TM.IsGrid(l) then return end
         if type(l) == "table" or not seen[l] then
@@ -108,6 +134,41 @@ local function mergedTip(eq, v)
     return out
 end
 
+-- Which of two worn items the verdict was judged against: the baseline's (by link), else, with no
+-- baseline link, the lower (TM.ReplacedRow); nil when the baseline is neither (a bag item,
+-- comparison.compareOwned: feedback-21 R5).
+local function judgedRow(items, base)
+    local link = type(base) == "table" and base.link or nil
+    local at = TM.ReplacedRow(items, 0, base)
+    if type(link) == "string" and items[at].link ~= link then return nil end
+    return at
+end
+
+--- The dual mark (feedback-21 H7): both worn items of a two-item slot, each `{ level, glyph, text,
+--- tone }` (TM.ArrowCell's answer with the worn level on it) in the items' order, the verdict's own
+--- mark on the one the drop would replace (TM.ReplacedRow) and TM.ItemArrow's on the other. Only for
+--- a verdict whose baseline is the lower of two the drop could take either of (`either`, NS.Evaluate's:
+--- feedback-21 R5); nil when the cell keeps one mark: a drop judged against one item (a one-hander
+--- for a non dual wielder, a non-hunter's ranged, a two-hander against both hands averaged), a
+--- baseline neither worn item is (a bag item), not two items, a slot worn empty, a level not read, a
+--- verdict with no glyph or no difference, an off-spec verdict. The toast takes it too.
+--- @param v table a verdict cell (WindowCells.Verdict's: `verdict`, `delta`, `base`, `ilvl`, `band`, `either`)
+--- @param items table|nil the worn items { { link, ilvl }, ... }
+--- @param empty number|nil the slots worn empty
+--- @return table|nil parts
+function SC.Parts(v, items, empty)
+    if v.offSpec or not v.either or type(items) ~= "table" or #items ~= 2 or (empty or 0) > 0 then return nil end
+    local arrow = TM.ArrowCell(v.verdict, v.delta)
+    if type(arrow) ~= "table" or arrow.text == "" then return nil end
+    local at = judgedRow(items, v.base)
+    if not at then return nil end
+    local other = TM.ItemArrow(items[3 - at].ilvl, v.ilvl, v.band)
+    if type(other) ~= "table" or TM.LevelText(items[at]) == "?" then return nil end
+    arrow.level, other.level = TM.LevelText(items[at]), TM.LevelText(items[3 - at])
+    if at == 1 then return { arrow, other } end
+    return { other, arrow }
+end
+
 --- One merged cell: a verdict cell (WindowCells.Me, Them or Verdict; MineCells.Details) after an
 --- equipment cell (WindowCells.MyEq or TheirEq; nil for the verdict alone).
 --- @param v table the verdict cell
@@ -120,7 +181,8 @@ function SC.Merge(v, eq)
     if v.spec then text = text == "" and v.spec or ("%s %s"):format(text, v.spec) end   -- `▲20 Holy`
     return { items = type(eq) == "table" and eq.items or {}, level = level, levelTone = levelTone,
         glyph = glyph, text = text, tone = v.tone, tip = mergedTip(eq, v), verdict = v.verdict,
-        upgrades = v.upgrades, hidden = v.hidden, offSpec = v.offSpec, mainVerdict = v.mainVerdict }
+        upgrades = v.upgrades, hidden = v.hidden, offSpec = v.offSpec, mainVerdict = v.mainVerdict,
+        parts = type(eq) == "table" and SC.Parts(v, eq.items, eq.empty) or nil }
 end
 
 --- The Me cell: what you wear in the drop's slot (your gear snapshot's) and the drop judged for you;
@@ -147,7 +209,7 @@ function SC.Them(drop, gear, now, revealed)
     local v = WC.Them(drop, now)
     if not v.offSpec then return SC.Merge(v, WC.TheirEq(drop, gear, now)) end
     local eq = OC.Eq(v)
-    eq.tip[#eq.tip + 1] = WC.InspectLine(drop.inspect, WC.ShortName(type(drop.looter) == "table" and drop.looter.name or nil), now)
+    WC.Append(eq.tip, WC.InspectRows(drop.inspect, now))
     return SC.Merge(v, eq)
 end
 
@@ -191,12 +253,12 @@ local function candidateEq(drop, e, insp, now)
             c.text = DASH
         end
     end
-    if ok then c.tip[#c.tip + 1] = WC.InspectLine(insp, e.short, now) end
+    if ok then WC.Append(c.tip, WC.InspectRows(insp, now)) end
     return c
 end
 
 -- The verdict part of one candidate: WindowCells.Verdict's for a judged one, else `…` or
--- `Unavailable`; the status's explanation (MineCells.Candidates' `explain`) under the title.
+-- `Unavailable`; the status's explanation (MineCells.Candidates' `explain`, a row) under the title.
 local UNREAD = { checking = { "…", L["Checking"] }, unavailable = { L["Unavailable"], L["Unavailable"] } }
 
 local function candidateVerdict(drop, e)
@@ -213,7 +275,7 @@ local function candidateVerdict(drop, e)
 end
 
 --- The Offer panel's Their eq cell (feedback-7 spec §0): one candidate (an entry of
---- MineCells.Candidates) in the Them cell's look, `276 ▲19`, `321/308 ▼4`, `311 ≈0`, `Can't use`,
+--- MineCells.Candidates) in the Them cell's look, `276 ▲19`, `321 ▼17 / 308 ▼4`, `311 ≈0`, `Can't use`,
 --- `…` while checking, `Unavailable` when nothing could be read, `empty ▲` into an empty slot.
 --- @param drop table one of your drops
 --- @param e table the candidate (MineCells.Candidates' entry)

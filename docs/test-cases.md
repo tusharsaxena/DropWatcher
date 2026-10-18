@@ -100,7 +100,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (12)
+### test_schema_rows.lua (21)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -114,6 +114,15 @@ Total.
 - rows: Keep history for is account-wide, and a profile reset leaves it
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
+- glow: both glows have every knob's row on Window › Upgrade glow, with the plan's defaults
+- glow: the main and off-spec rows alternate, so each line reads main left, off-spec right
+- glow: an out-of-range knob, an unknown style and a malformed color are refused
+- glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never
+- glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
+- toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a sound, live only with the toast on
+- icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults
+- icons: the border rows refuse what they cannot draw, and dim with Show border off
+- icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 
 ### test_settings_pages.lua (39)
 
@@ -186,9 +195,10 @@ Total.
 - slash: `offer` refuses an item not in your bags, and prints its usage without a link
 - slash: every feature verb is refused while disabled
 
-### test_window.lua (14)
+### test_window.lua (15)
 
 - window: built lazily, on the first show, and not before
+- window: a tooltip shows on a disabled button too, so the gray No action says why
 - window: Escape closes it (UISpecialFrames) and it wears the shared close mark
 - window: General visibility `never` keeps it hidden even when opened
 - window: `inCombat` shows it only in combat, re-read on both combat edges
@@ -203,7 +213,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (58)
+### test_window_shell.lua (59)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -253,6 +263,7 @@ Total.
 - shell: a burst of bus messages repaints once, on the next frame
 - shell: a countdown tick on the Drops tab repaints nothing of the window
 - shell: every drop added in an auto-open situation opens the window, each time it is closed
+- shell: a drop opens a closed window on Drops; an open window keeps the tab it shows
 - shell: your own drop opens the window too, whatever showOwn says, and counts as new
 - shell: a minimized window the player closed opens minimized, its count rising
 - shell: a test placeholder opens the window while test mode is on, and a live drop does not then
@@ -298,7 +309,7 @@ Total.
 - compact cards: Age is the short duration, then whole days
 - compact cards: a verdict reads the glyph and the unsigned difference; a worded one takes ⊘
 - compact cards: the worn level comes before the verdict, plain; a word for the state muted
-- compact cards: a cross-realm looter takes ⊕ and the realm in the tooltip
+- compact cards: a cross-realm looter takes no mark, the realm in the tooltip
 - compact cards: inspect freshness reads its age or state, dimmed, and the tooltip says why
 - compact cards: the Drops card reads the spec's three lines
 - compact cards: no trade window on the card; the freshness on line 1 with or without a countdown (feedback-10 §2)
@@ -322,7 +333,7 @@ Total.
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the full view's
 
-### test_compact_group.lua (20)
+### test_compact_group.lua (22)
 
 - compact group: a card is three lines at the text size, about 50 pixels at Default, the icon spanning them
 - compact group: switching layouts carries the scroll offset over as a fraction of the range
@@ -344,6 +355,8 @@ Total.
 - compact group: a second's tick leaves the cards as they are
 - compact group: at the least width line 2's pieces end before the action button
 - compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict
+- compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)
+- compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)
 
 ### test_compact_history.lua (10)
 
@@ -384,7 +397,7 @@ Total.
 - chrome: the footer's one line is inspect freshness and the situation
 - chrome: the footer's tooltip carries every full segment
 - chrome: the Filters count is Quality, Content and Character off their default, on a tab that honors them
-- chrome: the Filters label counts, and its tooltip lists each value with a dot on the active ones
+- chrome: the Filters label counts, and its tooltip lists each value, the active ones in yellow
 - chrome: compact shows the short title, TEST beside it, the title and the word centered together
 - chrome: a simulation reads SIM in compact, in its cyan
 - chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
@@ -409,13 +422,14 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (49)
+### test_window_group.lua (50)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
-- cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use gray
+- cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use dim red
 - cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
 - cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
+- cells: Trade's Yes or Likely reads Can't use in dim red on another player's drop none of your specs can use
 - cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip
 - cells: My eq shows what you wear in the drop's slot, both rings for a ring, and empty slot
 - cells: Their eq says pending, range, combat or failed beside the icons
@@ -474,16 +488,20 @@ Total.
 - rows: every drop row and its detail card sit ROW_INDENT in from the header; the labels shift over their cells
 - headers: a group header's chevron is gold, as its text, collapsed or open
 
-### test_side_cells.lua (21)
+### test_side_cells.lua (26)
 
 - side cells: Me reads the worn level, then the glyph and the unsigned difference in the verdict's tone
-- side cells: Can't use and Not wanted stay words after the gear, gray
+- side cells: Can't use and Not wanted stay words after the gear, dim red and gray
 - side cells: two worn items read both levels and carry both icons
+- side cells: two worn items both read take a mark each, in the items' order and each its own tone (H7)
+- side cells: one worn item, an empty or unread slot, a word or an off-spec verdict keep one mark (H7)
+- side cells: a drop judged against one of two worn items, or a bag item, keeps one mark (R5)
 - side cells: nothing worn reads `empty`, muted, and the verdict follows
 - side cells: an unknown verdict's ? goes where the gear part says why, and stays where it does not
 - side cells: a dash gear part goes when the verdict says something, and stays alone when it does not
 - side cells: the tooltip is the verdict's title, the worn gear as a grid, then the read's age and the verdict's lines
-- side cells: two worn items are two rows, the arrow on the one the drop would replace; a slot worn empty reads empty
+- side cells: two worn items are two rows, each with its own arrow against the drop; a slot worn empty reads empty
+- side cells: a dual slot gives each worn item its own arrow and tone against the drop, the band as the kernel's
 - side cells: History's verdict alone keeps its own one-row grid from the judged item
 - side cells: your own drop's Them is Upgrade for N or No upgrades, in its tones, with every upgrade in the tooltip
 - side cells: History's Me and Them are the verdict alone, worded as the Drops table's
@@ -496,9 +514,10 @@ Total.
 - widths: the Offer panel's Their eq is at least Them's width and fits its widest cell
 - widths: the column set and the shed order keep Me and Them where the verdict columns sat
 - table: the Me cell paints its icons, level, glyph and difference left to right
+- table: a dual mark that does not fit its cell at a larger font is the one mark instead (R5)
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_detail_card.lua (21)
+### test_detail_card.lua (30)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
@@ -506,14 +525,23 @@ Total.
 - cells: For you without a score says why: no scorer, Pawn or your weights not scored yet
 - cells: an empty slot and an unread baseline each say so, never blank
 - cells: For the looter compares their inspected gear and names their spec and the read's age
-- cells: on your own drop the looter's side is FOR THE GROUP, its Looter row Name [YOU], its Them row Upgrade for N
+- cells: a looter who left the group: the kept read's spec, else `not in your group`, never spec unknown
+- cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
+- cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use
 - cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
 - cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
 - cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade are off, each with its reason
 - card: a row click expands it inline; the rows below move down by the card's height
 - card: one row at a time; a click on a cell or the item button opens it too
 - card: the header, both comparisons and the trade box are painted, each with a reason
+- cells: the titles name YOU and LOOTER in the muted gold, the looter's name in its class color
+- cells: the Stats row colors each value by its sign and each stat's name in its own color
+- cells: Replaces reads the item level, then the icon, then the name in its quality color
+- card: the glyphs are drawn in the monospace face; Replaces puts its item level before the icon
+- cells: on a two-item slot read in full, Item level is each worn item's level and mark; Replaces the one taken off (H7)
+- card: a dual Item level paints its second part after the first mark, in the monospace face (H7)
+- card: a looter who left the group: the Spec row reads the drop's kept read, not spec unknown
 - card: the actions go through their host handlers; Trade is off with its reason
 - card: the card has no Hide this item; its row stays
 - card: a filtered-out or collapsed row hides its card; it comes back with the row
@@ -522,7 +550,7 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 
-### test_own_drops.lua (15)
+### test_own_drops.lua (16)
 
 - own drops: Trade reads its word alone and counts the upgrades in its tooltip (feedback-7 spec §2)
 - own drops: the keep? rule: an upgrade for you says no count until its Offer panel is opened
@@ -538,14 +566,23 @@ Total.
 - own drops: the Looter cell marks your own drop [YOU], never another player's
 - own drops: the name is cut before the mark: WindowRows.MarkedWidth
 - own drops table: Looter reads Name [YOU], the name in class color and the mark in gold
-- own drops: the detail card's Looter row and the compact card's line 2 read Name [YOU]
+- own drops: the detail card's FOR THE GROUP names each member it upgrades, in class color, best first
+- own drops: the detail card has no Looter row; the compact card's line 2 reads Name [YOU]
 
-### test_tip_marks.lua (19)
+### test_tip_marks.lua (27)
 
 - tip marks: the escape is the whole 64x64 canvas at the text's height, tinted as 0..255
 - tip marks: up is arrow-up in green, side is transfer in yellow, down is arrow-down in red
 - tip marks: with the media library absent a mark falls back to a plain character
 - tip marks: a non-wrapping line and its text; names in class and quality colors
+- tip marks: a row is `• Label: value`, the bullet and label muted gold, the value plain or in its tone
+- tip rows: the table's cells (WindowCells, SideCells) are rows, the Trade cell's reason one row per fact
+- tip rows: your own drop's cells and buttons (MineCells) and the off-spec cells are rows
+- tip rows: the detail card's chips, sides, trade box and actions (DetailCells) are rows
+- tip rows: the compact cards and chrome (CompactCards, CompactChrome) are rows
+- tip rows: History's cells and card (WindowHistory, HistoryCard) are rows
+- tip rows: the column headers and the Offer panel's columns are rows, the settings keep their prose
+- tip rows: the chrome's own tooltips (title bar, footer, simulator panel) are rows
 - tooltip: a non-wrapping line is added with wrap off; every other line still wraps
 - grid: the arrow cell is the table's glyph and the unsigned difference, both in the verdict's tone
 - grid: a member's rows, the name on the first, the arrow on the item it replaces, empty for a slot worn empty
@@ -557,7 +594,7 @@ Total.
 - details: of two worn rings the line names the lower, the one the drop would replace
 - audit: no column tooltip on Drops or History carries a verdict glyph; their marks are textures
 - audit: no localized string in the addon's source puts a verdict glyph in a tooltip
-- audit: every tooltip of test mode's drops, both layouts, the detail card and History is glyph-free
+- audit: every tooltip of test mode's drops, both layouts, the detail card and History is glyph-free and in rows
 - tip marks: the arrow between two values is arrow-right in the muted tone, -> without the library
 - tip marks: Chars counts what a text draws: an escape two, a color code none, a UTF-8 character one
 - audit: no text in the default face carries a glyph: Drops, the detail card, the Offer panel, History
@@ -591,7 +628,7 @@ Total.
 - footer row: the toggle is off when the tab shows no header
 - footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
 
-### test_offer_panel.lua (17)
+### test_offer_panel.lua (21)
 
 - offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look
 - offer panel: no class bar; every second row striped as the main window's; the name in its class color
@@ -601,6 +638,10 @@ Total.
 - offer panel: Their eq shows both worn items from the member's inspect read
 - offer panel: opening an upgrade for you reveals who it would help on its row
 - offer panel: the close mark closes it, and it closes itself when its drop is gone
+- offer panel: a row's Offer closes the panel it opened, and opens it again
+- offer panel: another drop's Offer switches the open panel to that drop
+- offer panel: a compact card's Offer and the detail card's Offer toggle it too
+- offer panel: /dw offer always opens it, never closes it
 - offer panel: minimizing the window closes the panel and the Edit message box
 - offer panel: with Edit before sending on, Offer and Announce open the box for their kind
 - offer panel: Announce to group announces the drop
@@ -684,7 +725,7 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
 
-### test_compat.lua (68)
+### test_compat.lua (72)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -730,10 +771,14 @@ Total.
 - compat: ItemPrimaryStats reads every primary stat line, the inactive ones too
 - compat: CanRequestItemLoad needs the load request and a timer
 - compat: without Pawn every reader answers nil and nothing raises
+- compat: Pawn's own PawnIsReady() is the readiness test, with no global flag
 - compat: Pawn loaded but not initialized is not ready
 - compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached
+- compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID
+- compat: an item's Pawn value is its unenchanted one, the value Pawn's upgrade test compares
 - compat: an error inside Pawn reads as not ready, never as this addon's error
-- compat: a function-spelled PawnIsInitialized is called
+- compat: your visible Pawn scale is the one you show, a custom one before a starter
+- compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts
 - compat: InitiateTrade calls through, and reports false when absent
 - compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
 - compat: NormalizedRealm reads the normalized realm, then the plain one stripped
@@ -783,10 +828,11 @@ Total.
 - constants: the trade rules are the spec §7.2 table, and every situation has a rule
 - constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
 
-### test_class_data.lua (12)
+### test_class_data.lua (13)
 
 - classdata: thirteen classes with their client classIDs, each with an armor type
 - classdata: every spec row is well-formed and its class lists it
+- classdata: every spec has its place in its class, 1 to n with none twice
 - classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder
 - classdata: dual wield and Titan's Grip are the right specs
 - classdata: dual wield and Titan's Grip by spec, or by class when every spec agrees
@@ -798,7 +844,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (36)
+### test_evaluate.lua (38)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -809,6 +855,7 @@ Total.
 - evaluate: a dual wielder holding a two-hander compares a one-hander against the two-hander
 - evaluate: a two-hander compares against the average of both hands
 - evaluate: Titan's Grip compares a two-hander as a pair over both hands
+- evaluate: `either` marks a baseline picked as the lower of two worn items the drop could take (feedback-21 R5)
 - evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot
 - evaluate: ranged weapons are two-handers for hunters and main hand for wand users
 - evaluate: a gun, crossbow or wand in the main hand is a two-hander for off hands and one-handers
@@ -826,6 +873,7 @@ Total.
 - evaluate: a class-restricted item refuses other classes
 - evaluate: an undesired subclass is doesntWant, but only when the item is usable
 - evaluate: the sidegrade band splits upgrade, sidegrade and downgrade
+- evaluate: ItemVerdict judges one item level as step 4 does, and the band is kept only when it is not 0
 - evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign
 - evaluate: the scorer is optional, may be pending, and may fail without harm
 - evaluate: a two-hander's score baseline is the average of both hands' scores
@@ -909,7 +957,7 @@ Total.
 - off-spec offer: the Offer whisper's {gain} reads the candidate's off-spec gain
 - off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cyan, with Offer
 
-### test_scoring.lua (15)
+### test_scoring.lua (16)
 
 - scoring: a Pawn v1 string imports its stats under GetItemStats' keys
 - scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
@@ -921,6 +969,7 @@ Total.
 - scoring: InUse and Scorer follow the settings and whether Pawn is initialized
 - scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale
 - scoring: for you, a drop that upgrades no scale is valued on your spec's scale
+- scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn
 - scoring: for a looter, Pawn uses the scale for their class and spec
 - scoring: Pawn answers pending while it is not ready or has not read the item
 - scoring: the kernel hands the scorer the drop beside each item
@@ -1208,10 +1257,13 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (44)
+### test_feed.lua (50)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
+- feed: a looter who leaves the group keeps the read the drop was judged with: spec and worn gear
+- feed: a re-judge after the looter left keeps the read and the verdict the drop was judged with
+- feed: a looter who leaves before any read reads not in your group
 - feed: an upgrade for the looter cannot be traded under the personal rule
 - feed: a bonus roll is never tradeable
 - dedupe: chat, the encounter loot event and the loot history report one drop
@@ -1227,6 +1279,7 @@ Total.
 - groups: clear on boss kill empties the live feed at a kill, not at a wipe
 - groups: loot naming an earlier encounter joins that encounter's group
 - groups: a keystone run gathers every drop, the chest after completion included
+- groups: a bonus roll minutes after the key, still in the dungeon, joins the run; once you leave it does not
 - groups: outside an instance the area is the open world
 - gates: an untracked situation hides the drop before its item is even loaded
 - gates: below the quality threshold a downgrade for you is hidden, and costs no inspect
@@ -1246,6 +1299,8 @@ Total.
 - update: a pending score is retried on one shared timer, five times at most
 - trade: a group drop past its rule's window turns no expired on the sweep
 - trade: your own drop takes the timer's exact read: yes with expiresAt, then no expired
+- trade: your own fresh drop with no trade-time line is your upgrade, not a window passed
+- trade: your own drop the rule had as tradeable but with no trade-time line says the game gave no window
 - trade: your own drop the rule called no, with a live timer, asks for its candidates then
 - trade: a BoE own drop keeps the bind's answer; the timer folds nothing in
 - add: injects a drop past the situation gate; a stranger is judged without an inspect
@@ -1475,7 +1530,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (32)
+### test_toast.lua (36)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1484,6 +1539,8 @@ Total.
 - toast edge: off by default; nothing is built or shown
 - toast edge: a qualifying drop shows at once, painted, and goes after its duration
 - toast edge: the four rows beside a four-row icon, painted (feedback-9 spec §0)
+- toast: on a two-item slot read in full each verdict is the cells' dual mark, and the toast widens for it (H7)
+- toast edge: a dual mark is painted part by part, and the toast is only as wide as row 3 needs (H7)
 - toast edge: a verdict in a word takes no glyph's room
 - toast edge: a looter of unknown class is a plain name in row 3's muted tone
 - toast edge: a right-click anywhere closes it as the close mark does; the left button does not
@@ -1500,6 +1557,8 @@ Total.
 - toast edge: Ask goes through the shared host handler, and the button follows its state
 - toast edge: toast.sound plays the client's alert from SOUNDKIT
 - toast edge: only test mode drags it; the position is saved and Reset position forgets it
+- toast edge: toast.scale scales a toast on screen live about its saved anchor, the point unchanged
+- toast edge: the first toast is built at toast.scale, and a profile switch takes the incoming scale
 - toast edge: test mode's placeholder toasts and stays until test mode ends
 - toast edge: a drop that leaves the feed takes its toast and its place in the queue
 - toast edge: the cap's trim takes the trimmed drop's toast, through the real feed
@@ -1509,6 +1568,35 @@ Total.
 - toast edge: a profile switch to one with the toast off takes it down
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
+
+### test_glow.lua (13)
+
+- glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
+- glow: without the library Apply still records its decision; a glow turned off clears it
+- glow: each style starts with the knob table's arguments, under the addon's key
+- glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it
+- glow: Use class color draws in the player's class color with the swatch's alpha, and restarts it
+- glow: Use class color with a class that has no color falls through to the swatch
+- glow: the proc style's opening burst plays once, not again on every repaint's re-show
+- glow: the full table's Drops row icon wears its drop's glow; the detail card's header too
+- glow: a pooled row reused for a sidegrade, or left unused, loses its glow
+- glow: the compact card's icon wears it; the table's rows stop theirs in the compact layout
+- glow: the toast's icon never glows, for a main-spec or an off-spec upgrade (feedback-21 G9)
+- glow: a glow row's write re-applies every drawn icon at once
+- glow: a profile switch re-reads the glow settings
+
+### test_icon_style.lua (10)
+
+- icon style: by default an item icon is cropped 0.1 a side in a Solid black border 2 pixels thick
+- icon style: zoom 0 and no border draw an item icon as it was before G11
+- icon style: Solid is registered with LibSharedMedia as the flat white texture, so the dropdown offers it
+- icon style: a repaint that changes nothing costs nothing; a row's write restyles every button made so far
+- icon style: Show border draws the swatch over the icon; Use class color the player's class with its alpha
+- icon style: a border style LibSharedMedia knows draws its texture
+- icon style: Color by item quality draws each item's quality color, the swatch's alpha kept
+- icon style: the Drops row's icon, its Me icons and the detail card's header take a row's write live
+- icon style: the compact card's icon and the toast's icon wear it too
+- icon style: the glow starts over the border, and a profile switch re-reads the look
 
 ### test_auto_ask.lua (24)
 
@@ -1737,10 +1825,14 @@ Total.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
-### test_locale.lua (2)
+### test_locale.lua (6)
 
+- locale: the enUS files are the TOC's, the base file first and its topic files after it
+- locale: every enUS key lives in exactly one enUS file
+- locale: a topic file holds only what its folder alone reads
 - locale: the scan finds routed literals in the addon's files
 - locale: enUS carries every string routed through NS.L
+- locale: every enUS key is still read by the addon's files
 
 ### test_eol.lua (2)
 
@@ -1813,40 +1905,40 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 12 |
+| test_schema_rows.lua | 21 |
 | test_settings_pages.lua | 39 |
 | test_slash.lua | 26 |
-| test_window.lua | 14 |
-| test_window_shell.lua | 58 |
+| test_window.lua | 15 |
+| test_window_shell.lua | 59 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
-| test_compact_group.lua | 20 |
+| test_compact_group.lua | 22 |
 | test_compact_history.lua | 10 |
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 20 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 49 |
+| test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
-| test_side_cells.lua | 21 |
-| test_detail_card.lua | 21 |
-| test_own_drops.lua | 15 |
-| test_tip_marks.lua | 19 |
+| test_side_cells.lua | 26 |
+| test_detail_card.lua | 30 |
+| test_own_drops.lua | 16 |
+| test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
-| test_offer_panel.lua | 17 |
+| test_offer_panel.lua | 21 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 37 |
-| test_compat.lua | 68 |
+| test_compat.lua | 72 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
-| test_class_data.lua | 12 |
-| test_evaluate.lua | 36 |
+| test_class_data.lua | 13 |
+| test_evaluate.lua | 38 |
 | test_offspec.lua | 11 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
-| test_scoring.lua | 15 |
+| test_scoring.lua | 16 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
@@ -1858,7 +1950,7 @@ Total.
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 27 |
 | test_inspect.lua | 33 |
-| test_feed.lua | 44 |
+| test_feed.lua | 50 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
@@ -1871,7 +1963,9 @@ Total.
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 32 |
+| test_toast.lua | 36 |
+| test_glow.lua | 13 |
+| test_icon_style.lua | 10 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 20 |
@@ -1883,11 +1977,11 @@ Total.
 | test_disabled.lua | 12 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
-| test_locale.lua | 2 |
+| test_locale.lua | 6 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1552** |
+| **Total** | **1638** |

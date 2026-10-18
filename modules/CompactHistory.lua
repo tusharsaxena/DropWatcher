@@ -18,10 +18,10 @@ local _, NS = ...
 --
 --   line 1  ⌄ ilvl item (the chevron, then the item level before the name, feedback-10 spec §2)
 --           outcome (in its tone)
---   line 2  looter (class color, ⊕ from another realm) · slot · type · trade       17:02 (dimmed)
---   line 3  You ▼4   Them ≈0
---           (the full table's Me and Them: a kept entry holds no worn items, so the verdict alone;
---           the labels gold, Them a fixed gap after You, as on Drops' cards)
+--   line 2  looter (class color; another realm in its tooltip) · slot · type       17:02 (dimmed)
+--   line 3  You ▼4   Them ≈0   Trade Likely
+--           (the full table's Me, Them and Trade: a kept entry holds no worn items, so the verdict
+--           alone; the labels gold, each half a fixed gap after the last, as on Drops' cards)
 --
 -- THE HEADERS are the full table's header button, painted with the short form
 -- (NS.CompactCards.HistoryHeader: `2d` once a day old); a click collapses the group as before.
@@ -67,8 +67,7 @@ local function newCard(content)
     CG.Piece(card, "ilvl")
     CG.Piece(card, "outcome")
     CG.BuildLineTwo(card, "time")
-    CG.BuildHalf(card, "you")
-    CG.BuildHalf(card, "them")
+    CG.BuildHalves(card)
     card:SetScript("OnMouseUp", onMouseUp)
     card:SetScript("OnClick", onClick)
     return card
@@ -113,8 +112,7 @@ local function paintCard(card, drop, _, m, st)
     CG.PaintText(c.ilvl, cc.ilvl)
     CG.PaintText(c.outcome, cc.outcome)
     CG.PaintLineTwo(card, cc, "time")
-    CG.PaintHalf(card, "you", cc.you)
-    CG.PaintHalf(card, "them", cc.them)
+    CG.PaintHalves(card, cc)
 end
 
 local function historyHeader(e, st)

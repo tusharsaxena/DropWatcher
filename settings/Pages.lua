@@ -34,7 +34,7 @@ local PAGES = {
       tip = L["Reset the Messages page's settings (templates, sending and auto-ask) to their defaults."],
       tabs = { { key = L["Templates"], render = function(ctx, rows) PE.TemplatesTab(ctx, rows) end } } },
     { key = "window", title = L["Window"],
-      tip = L["Reset the Window page's settings (columns, layout and toast) to their defaults."],
+      tip = L["Reset the Window page's settings (columns, layout, toast, upgrade glow and icons) to their defaults."],
       pairWith = { [Settings.HISTORY_RETENTION_PATH] = function(ctx, line) PE.ClearHistoryButton(ctx, line) end } },
 }
 

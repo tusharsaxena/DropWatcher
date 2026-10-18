@@ -46,6 +46,8 @@ local ROW_GAP = 4
 CC.PANEL_ROWS = { "quality", "content", "char", "sort" }
 -- The ones the button counts (compact spec §4: Quality, Content and Character).
 CC.COUNTED = { "quality", "content", "char" }
+-- Each panel row's name, its Filters tooltip row's label.
+local PANEL_LABEL = { quality = L["Quality"], content = L["Content"], char = L["Character"], sort = L["Sort"] }
 
 local SHORT_TAB = { group = L["Drops"], history = L["History"] }
 local WORD = {
@@ -107,12 +109,13 @@ end
 --- @return table lines
 function CC.FooterTip(composed)
     composed = type(composed) == "table" and composed or {}
+    local TM = NS.TipMarks
     local out = { L["Status"] }
     for _, key in ipairs(NS.WindowFooter.SEGMENTS) do
         local seg = composed[key]
-        if seg and seg.text then out[#out + 1] = seg.text end
+        if seg and seg.text then out[#out + 1] = TM.Row(nil, seg.text) end
     end
-    out[#out + 1] = L["The full view's footer shows each of these on its own."]
+    out[#out + 1] = TM.Hint(L["The full view's footer shows each of these on its own."])
     return out
 end
 
@@ -173,20 +176,26 @@ function CC.FiltersLabel(n)
     return L["Filters"]
 end
 
---- The Filters button's tooltip: each value in force, in the panel's order, the ones off their
---- default marked, then what the button holds.
+--- The Filters button's tooltip: a row per value in force, in the panel's order, the ones off their
+--- default in yellow, then what the button holds.
 --- @param labels table { quality, content, char, sort } the collapsed labels in force
 --- @param active table|nil the keys off their default (CC.ActiveKeys)
 --- @return table lines
 function CC.FiltersTip(labels, active)
     local on = {}
     for _, key in ipairs(active or {}) do on[key] = true end
+    local TM = NS.TipMarks
     local out = { L["Filters"] }
     for _, key in ipairs(CC.PANEL_ROWS) do
         local text = labels and labels[key]
-        if text then out[#out + 1] = (on[key] and "• " or "  ") .. text end
+        if text then
+            local label = PANEL_LABEL[key]
+            -- A dropdown's text that names its control already (`Quality: Rare+`) keeps its value.
+            if text:sub(1, #label + 2) == label .. ": " then text = text:sub(#label + 3) end
+            out[#out + 1] = TM.Row(label, text, on[key] and "yellow" or nil)
+        end
     end
-    out[#out + 1] = L["Quality, Content, Character and Sort, as the full view's bar and footer hold them. A dot marks one off its default."]
+    out[#out + 1] = TM.Hint(L["Yellow: off its default."])
     return out
 end
 

@@ -322,7 +322,7 @@ test("sim window: the SIMULATION text with the scenario tooltip, and the footer 
     assertTrue(f.simText:IsShown()); assertFalse(f.testText:IsShown())
     assertEqual(f.simText.text:GetText(), "SIMULATION")
     local title, scenario = NS.WindowTitleBar.SimTip()
-    assertEqual(title, "Simulation"); assertEqual(scenario, "Scenario: raid (Raid)")
+    assertEqual(title, "Simulation"); assertEqual(T.tipPlain(scenario), "• Scenario: raid (Raid)")
     local seg = NS.WindowFooter.Compose(NS.WindowFooter.Read()).situation
     assertEqual(seg.text, "Simulating: Raid · 10 members")
     slash(NS, "sim stop")

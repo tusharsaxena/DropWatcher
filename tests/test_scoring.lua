@@ -140,7 +140,7 @@ test("scoring: InUse and Scorer follow the settings and whether Pawn is initiali
     Set("comparison.weights", { [250] = { [INT] = 1 } })
     assertEqual(S.InUse(), "weights")
     assertEqual(S.Scorer()({ stats = { [INT] = 7 } }, { specID = 250 }), 7)
-    -- Loaded is not enough: the adapter is present only once PawnIsInitialized is true (design spec
+    -- Loaded is not enough: the adapter is present only once PawnIsReady() is true (design spec
     -- §5.4; DW-62 review F-003). Until then auto keeps your weights.
     m.loadedAddons.Pawn = true
     -- red under: an InUse that counts a loaded Pawn (modules/Scoring.lua)
@@ -148,7 +148,7 @@ test("scoring: InUse and Scorer follow the settings and whether Pawn is initiali
     assertEqual(S.Scorer()({ stats = { [INT] = 7 } }, { specID = 250 }), 7)
     Set("comparison.scorer", "pawn")
     assertEqual(S.InUse(), "none", "pawn asked for, not initialized: item level alone")
-    m.PawnIsInitialized = true
+    m.PawnIsReady = function() return true end
     assertEqual(S.InUse(), "pawn")
     Set("comparison.scorer", "auto")
     assertEqual(S.InUse(), "pawn", "auto prefers an initialized Pawn")
@@ -156,7 +156,7 @@ test("scoring: InUse and Scorer follow the settings and whether Pawn is initiali
     assertEqual(S.InUse(), "weights")
     Set("comparison.scorer", "none")
     assertNil(S.Scorer())
-    m.loadedAddons.Pawn, m.PawnIsInitialized = nil, nil
+    m.loadedAddons.Pawn, m.PawnIsReady = nil, nil
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -167,16 +167,13 @@ end)
 -- against your gear (nil: not read yet). Every call is recorded.
 local function installPawn(m, values, upgrades)
     local calls = {}
-    m.PawnIsInitialized = true
+    m.PawnIsReady = function() return true end
     m.PawnGetItemData = function(link) return { link = link } end
     m.PawnIsItemAnUpgrade = function(data)
         calls[#calls + 1] = "upgrade:" .. data.link
         return upgrades[data.link]
     end
-    m.PawnFindScaleForSpec = function(classID, specID)
-        if specID == 999 then return nil end
-        return "S" .. classID .. ":" .. specID
-    end
+    m.PawnFindScaleForSpec = function(classID, specIndex) return "S" .. classID .. ":" .. specIndex end
     m.PawnGetSingleValueFromItem = function(data, scale)
         calls[#calls + 1] = "value:" .. data.link .. "@" .. scale
         return values[scale] and values[scale][data.link]
@@ -199,36 +196,49 @@ end)
 
 test("scoring: for you, a drop that upgrades no scale is valued on your spec's scale", function()
     local NS, _, m = T.enableAddon()
-    installPawn(m, { ["S8:62"] = { drop = 10, worn = 12 } }, { drop = {} })
+    installPawn(m, { ["S8:1"] = { drop = 10, worn = 12 } }, { drop = {} })
     local score = NS.Scoring.PawnScorer()
     local drop, me = { link = "drop" }, { isPlayer = true, classFile = "MAGE", specID = 62 }
     assertEqual(score(drop, me, drop), 10)
     assertEqual(score({ link = "worn" }, me, drop), 12)
 end)
 
+test("scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn", function()
+    local NS, _, m = T.enableAddon()
+    installPawn(m, { ["S8:1"] = { drop = 90, worn = 10 }, Mine = { drop = 10, worn = 12 } }, { drop = {} })
+    m.PawnCommon = { Scales = { ["S8:1"] = { ClassID = 8, SpecID = 1, Provider = "P", ProviderActive = true },
+        Mine = {} } }
+    m.PawnIsScaleVisible = function(name) return name == "Mine" end
+    local score = NS.Scoring.PawnScorer()
+    local drop, me = { link = "drop" }, { isPlayer = true, classFile = "MAGE", specID = 62 }
+    -- red under: a scorer that falls back to the starter scale you hid (PawnFindScaleForSpec)
+    assertEqual(score(drop, me, drop), 10)
+    assertEqual(score({ link = "worn" }, me, drop), 12)
+end)
+
 test("scoring: for a looter, Pawn uses the scale for their class and spec", function()
     local NS, _, m = T.enableAddon()
-    installPawn(m, { ["S1:71"] = { drop = 30, theirs = 25 } }, {})
+    installPawn(m, { ["S1:1"] = { drop = 30, theirs = 25 } }, {})
     local score = NS.Scoring.PawnScorer()
     local drop = { link = "drop" }
     local brakk = { isPlayer = false, classFile = "WARRIOR", specID = 71 }
     assertEqual(score(drop, brakk, drop), 30)
     assertEqual(score({ link = "theirs" }, brakk, drop), 25)
-    assertNil(score(drop, { classFile = "WARRIOR", specID = 999 }, drop), "Pawn has no scale for it: no score")
+    assertNil(score(drop, { classFile = "WARRIOR", specID = 999 }, drop), "a spec Pawn cannot be asked for: no score")
     assertNil(score(drop, { classFile = "WARRIOR" }, drop), "no spec: no score")
     assertNil(score({}, brakk, drop), "no link: no score")
 end)
 
 test("scoring: Pawn answers pending while it is not ready or has not read the item", function()
     local NS, _, m = T.enableAddon()
-    installPawn(m, { ["S1:71"] = { drop = 30 } }, {})
+    installPawn(m, { ["S1:1"] = { drop = 30 } }, {})
     local score = NS.Scoring.PawnScorer()
     local drop = { link = "drop" }
     local brakk = { classFile = "WARRIOR", specID = 71 }
     assertEqual(score({ link = "uncached" }, brakk, drop), "pending", "a nil value is not ready")
     assertEqual(score(drop, { isPlayer = true, classFile = "MAGE", specID = 62 }, drop), "pending",
         "your drop's upgrade list not read yet")
-    m.PawnIsInitialized = false
+    m.PawnIsReady = function() return nil end
     assertEqual(score(drop, brakk, drop), "pending")
 end)
 

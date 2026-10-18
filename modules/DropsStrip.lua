@@ -81,7 +81,9 @@ end
 -- ── the frame ───────────────────────────────────────────────────────────────────────────────
 
 local function postTip()
-    return L["Post my tradeables"], L["Post one line to the group listing every drop you can still trade, cut into several lines when it is longer than chat allows."]
+    local TM = NS.TipMarks
+    return L["Post my tradeables"], TM.Row(L["Posts to"], L["the group"]),
+        TM.Row(L["Lists"], L["every drop you can still trade"]), TM.Row(L["Too long"], L["cut into several lines"])
 end
 
 local function tipOf(f) return unpack(f.tipLines or {}) end
