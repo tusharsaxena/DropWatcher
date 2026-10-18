@@ -46,7 +46,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | R4 review H1-H5 | DW | done | 95e4ce0 (fixed: your visible Pawn scale before the starter, the kept read survives a re-judge, SCORE-4 looter step; the two kept-read findings were one) |
 | P4 push | DW | done | through R4 (aa71012) |
 | H6 glow + icon defaults, glow color rows main-left/off-right (§17 deviation) | DW | done | 4cb09b1 (C.TONE.glowMain / glowOffSpec; Solid registered with LSM by IconStyle, drawn without it too; labels Use class color (main spec) / (off-spec); deviation row in ARCHITECTURE.md) |
-| H7 dual-slot arrows everywhere (cells, compact, toast, detail card, tooltips) | DW | todo | |
+| H7 dual-slot arrows everywhere (cells, compact, toast, detail card, tooltips) | DW | done | bbf8609 (SideCells.Parts, shared with H3's grid via TipMarks.ItemArrow; no column or window width changed: the dual cell is 125 of 127, compact fits at 440; the toast widens only for a dual row 3, Toast.WidthFor; History keeps one mark, no worn items kept; detail card's Replaces unchanged) |
 | R5 review H6, H7 | DW | todo | |
 | P5 push | DW | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
