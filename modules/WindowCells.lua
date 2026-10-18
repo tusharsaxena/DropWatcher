@@ -210,26 +210,28 @@ function WC.TrackRow(td)
     return NS.TipMarks.Row(L["Track"], TRACK_WORD[td.sign > 0 and 1 or td.sign < 0 and -1 or 0])
 end
 
--- The comparison as one grid row (feedback-7 spec §3): `[who] [worn ilvl] [worn item] [▲diff]`.
-local function compareLines(eval, ilvl, lines, who)
+-- The comparison as one grid row (feedback-7 spec §3): `[who] [worn ilvl] [worn item] [▲diff]`;
+-- nil without a difference.
+local function compareGrid(eval, ilvl, who)
     local base = type(eval.baseline) == "table" and eval.baseline or nil
     local d = num(eval.ilvlDelta)
-    if d and ilvl then
-        local TM = NS.TipMarks
-        local worn = { link = base and base.link, name = base and base.name, quality = base and base.quality, ilvl = ilvl - d }
-        lines[#lines + 1] = TM.Grid(TM.GearRows(who or "?", { worn }, 0, TM.ArrowCell(eval.verdict, d), worn))
-    end
+    if not (d and ilvl) then return nil end
+    local TM = NS.TipMarks
+    local worn = { link = base and base.link, name = base and base.name, quality = base and base.quality, ilvl = ilvl - d }
+    return TM.Grid(TM.GearRows(who or "?", { worn }, 0, TM.ArrowCell(eval.verdict, d), worn))
+end
+
+-- The tooltip of one verdict: its title, the comparison (a grid row, right under the title:
+-- feedback-21 H3), board 03's explanation as a Means row, the Track and Score rows and the
+-- kernel's reasons as Why rows.
+local function verdictTip(title, eval, ilvl, who)
+    local v = eval.verdict
+    local lines = { title }
+    lines[#lines + 1] = compareGrid(eval, ilvl, who)
+    lines[#lines + 1] = NS.TipMarks.Row(L["Means"], VERDICT_MEANS[v] or VERDICT_MEANS.unknown)
     lines[#lines + 1] = WC.TrackRow(eval.trackDelta)
     local sd = num(eval.scoreDelta)
     if sd then lines[#lines + 1] = NS.TipMarks.Row(L["Score"], ("%+.1f"):format(sd)) end
-end
-
--- The tooltip of one verdict: its title, board 03's explanation as a Means row, then the
--- comparison (a grid row), the Track and Score rows and the kernel's reasons as Why rows.
-local function verdictTip(title, eval, ilvl, who)
-    local v = eval.verdict
-    local lines = { title, NS.TipMarks.Row(L["Means"], VERDICT_MEANS[v] or VERDICT_MEANS.unknown) }
-    compareLines(eval, ilvl, lines, who)
     if hasReasons(eval) then WC.ReasonRows(eval.reasons, lines) end
     return lines
 end
@@ -245,8 +247,9 @@ local function verdictText(eval)
 end
 
 --- One verdict cell (the Me or the Them column; both take the same tones). Its tooltip's comparison
---- is a grid row naming `who`; the cell keeps `who`, `delta` and `base` (the worn item it was judged
---- against) for NS.SideCells, which lays the worn gear out in that grid.
+--- is a grid row naming `who`; the cell keeps `who`, `delta`, `base` (the worn item it was judged
+--- against), `ilvl` (the drop's) and `band` (the evaluation's sidegrade band) for NS.SideCells, which
+--- lays the worn gear out in that grid, each worn item with its own arrow.
 --- A `cantUse` whose off-spec part another spec can use (NS.OffSpec.Of) is that part's cell instead
 --- (NS.OffSpecCells.Verdict, feedback-19 spec §1).
 --- @param eval table|nil NS.Evaluate's answer
@@ -265,7 +268,8 @@ function WC.Verdict(eval, side, title, ilvl, who)
     local v = eval.verdict
     local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl, who)
     return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v,
-        who = who, delta = num(eval.ilvlDelta), base = type(eval.baseline) == "table" and eval.baseline or nil }
+        who = who, delta = num(eval.ilvlDelta), base = type(eval.baseline) == "table" and eval.baseline or nil,
+        ilvl = ilvl, band = num(eval.band) }
 end
 
 --- The Me verdict: the drop judged for you (NS.SideCells puts it after your worn gear). The grid

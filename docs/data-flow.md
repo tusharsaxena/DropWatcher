@@ -175,7 +175,8 @@ row hover ─────> a cell, button or header: Window.AttachTooltip ("row"
                  tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
                  a font glyph (feedback-6 §3, DW-F3); every tooltip is its title, then one row per
                  fact, TipMarks.Row(label, value, tone) `• Label: value` (the bullet and label in
-                 C.IDLE, a nil value drops the row), grids, then at most a TipMarks.Hint, gray and
+                 C.TONE.mutedGold since feedback-21 H3, a nil value drops the row), a gear grid
+                 right under the title (feedback-21 H3), then at most a TipMarks.Hint, gray and
                  unbulleted (feedback-21); a `{ grid = rows }` line (TipMarks.Grid,
                  feedback-7 §3) ─> TipGrid.Begin, then TipGrid.Add reserves a blank line per row,
                  then after Show TipGrid.Paint draws the cells as columns on a pooled child of

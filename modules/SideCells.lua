@@ -26,12 +26,13 @@ local _, NS = ...
 -- An off-spec candidate (feedback-19 spec §3) is that spec's cell, `311 ▲14 Holy` in the offspec
 -- cyan, beside the item it was judged against.
 --
--- THE TOOLTIP (feedback-7 spec §3) is the verdict's title, then the worn gear as a grid
--- (NS.TipMarks.GearRows: `[Name] [ilvl] [worn item] [▲diff]`, a row per worn item, the arrow on the
--- one the drop would replace, `empty` for a slot worn empty), then the gear's own lines (the
--- inspect's age, or why nothing was read) and the verdict's (its Means, Track, Score and Why rows:
--- feedback-21). The verdict's own one-row grid gives way to the gear's; with no gear listed it
--- stays. A line already said is not said twice.
+-- THE TOOLTIP (feedback-7 spec §3) is the verdict's title, then the worn gear as a grid right under
+-- it (NS.TipMarks.GearRows: `[Name] [ilvl] [worn item] [▲diff]`, a row per worn item, the verdict's
+-- arrow on the one the drop would replace and each other worn item its own against the drop:
+-- feedback-21 H3; `empty` for a slot worn empty), then the gear's own lines (the inspect's age, or
+-- why nothing was read) and the verdict's (its Means, Track, Score and Why rows: feedback-21). The
+-- verdict's own one-row grid gives way to the gear's; with no gear listed it stays, under the title.
+-- A line already said is not said twice.
 --
 -- PURE. Every composer takes the drop record and plain inputs and answers a plain table; nothing here
 -- reads a module's state, the client or a saved variable. The full tables paint it
@@ -84,15 +85,25 @@ local function gearGrid(eq, v)
     local items = eq.gridItems or (type(eq.items) == "table" and eq.items) or {}
     local empty = eq.empty or 0
     if #items == 0 and empty == 0 then return nil end
-    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta, v.offSpec and v.tone), v.base))
+    local tone = v.offSpec and v.tone or nil
+    return TM.Grid(TM.GearRows(v.who or "?", items, empty, TM.ArrowCell(v.verdict, v.delta, tone), v.base,
+        { ilvl = v.ilvl, band = v.band, tone = tone }))
 end
 
--- The verdict's title, the gear grid (else the verdict's own), the gear's lines after its title,
--- then the verdict's; a line already said is not said twice.
+-- The verdict's own grid line, or nil.
+local function verdictGrid(vt)
+    for _, l in ipairs(vt) do
+        if TM.IsGrid(l) then return l end
+    end
+    return nil
+end
+
+-- The verdict's title, the gear grid (else the verdict's own) right under it (feedback-21 H3), the
+-- gear's lines after its title, then the verdict's; a line already said is not said twice.
 local function mergedTip(eq, v)
     local out, seen = {}, {}
     local vt = type(v.tip) == "table" and v.tip or {}
-    local grid = gearGrid(eq, v)
+    local grid = gearGrid(eq, v) or verdictGrid(vt)
     local function add(l, from)
         if from == "verdict" and grid and TM.IsGrid(l) then return end
         if type(l) == "table" or not seen[l] then

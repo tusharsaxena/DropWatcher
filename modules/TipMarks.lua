@@ -31,14 +31,18 @@ local _, NS = ...
 -- `{ text, tone, glyph }`. The arrow cell (TM.ArrowCell) is the table's own glyph
 -- (NS.WindowCells.GLYPH, drawn in the monospace face, so it renders) and the unsigned difference,
 -- both in the verdict's tone; no texture mark inside a grid. TM.GearRows builds a member's rows:
--- one per worn item (two for rings, trinkets and one-hand weapons), the name on the first, the
--- arrow on the row of the item the drop would replace, `empty` (muted) for a slot worn empty.
+-- one per worn item (two for rings, trinkets and one-hand weapons), the name on the first, `empty`
+-- (muted) for a slot worn empty. The row of the item the drop would replace takes the verdict's own
+-- arrow; every other worn item takes its own (feedback-21 H3), the drop's item level against its
+-- own, judged by NS.Evaluate.ItemVerdict (the kernel's item-level rule and sidegrade band).
+-- A gear grid goes right under the tooltip's title, above its rows (feedback-21 H3).
 -- modules/TipGrid.lua paints a grid; TM.Text reads one as plain text for the suites.
 --
 -- THE ROWS (feedback-21). A tooltip is its title, then one row per data point, never a sentence:
--- `• Label: value` (TM.Row), the bullet and the label in the idle gray (C.IDLE), the value plain or
--- in a C.TONE tone; the label's colon is a routed format, so a locale can space it. A short closing
--- hint (`Click to cancel it.`) is the one free text a tooltip keeps: TM.Hint, unbulleted and gray.
+-- `• Label: value` (TM.Row), the bullet and the label in the muted gold (C.TONE.mutedGold,
+-- feedback-21 H3; the idle gray C.IDLE before), the value plain or in a C.TONE tone; the label's
+-- colon is a routed format, so a locale can space it. A short closing hint (`Click to cancel it.`)
+-- is the one free text a tooltip keeps: TM.Hint, unbulleted and in the idle gray.
 -- The bullet is TM.BULLET: the media library has no dot-like icon to draw as an escape, so it is the
 -- `•` character, which the tooltip face draws (the View and Filters tooltips have drawn it since
 -- DW-A1), unlike the glyphs above.
@@ -175,24 +179,28 @@ end
 TM.BULLET = "•"
 
 local function idle(text) return NS.GroupRoster.Colored(text, C.IDLE.r, C.IDLE.g, C.IDLE.b) end
+local function label(text)
+    local t = C.TONE.mutedGold
+    return NS.GroupRoster.Colored(text, t.r, t.g, t.b)
+end
 
---- The bullet, in the idle gray.
+--- The bullet, in the labels' muted gold.
 --- @return string
-function TM.Bullet() return idle(TM.BULLET) end
+function TM.Bullet() return label(TM.BULLET) end
 
---- One data point of a tooltip: `• Label: value`, the bullet and the label gray, the value plain or
---- in `tone` (a C.TONE key). Nil when there is no value, so a fact not known drops out of the list;
---- with no label, the bullet and the value alone.
---- @param label string|nil
+--- One data point of a tooltip: `• Label: value`, the bullet and the label muted gold, the value
+--- plain or in `tone` (a C.TONE key). Nil when there is no value, so a fact not known drops out of
+--- the list; with no label, the bullet and the value alone.
+--- @param name string|nil the label
 --- @param value any
 --- @param tone string|nil
 --- @return string|nil
-function TM.Row(label, value, tone)
+function TM.Row(name, value, tone)
     if value == nil then return nil end
     local text, t = tostring(value), C.TONE[tone]
     if t then text = NS.GroupRoster.Colored(text, t.r, t.g, t.b) end
-    if label == nil then return ("%s %s"):format(TM.Bullet(), text) end
-    return ("%s %s"):format(idle(("%s %s"):format(TM.BULLET, L["%s:"]:format(label))), text)
+    if name == nil then return ("%s %s"):format(TM.Bullet(), text) end
+    return ("%s %s"):format(label(("%s %s"):format(TM.BULLET, L["%s:"]:format(name))), text)
 end
 
 --- A tooltip's closing hint: unbulleted, in the idle gray.
@@ -270,23 +278,45 @@ local function replacedRow(items, empty, base)
     return at
 end
 
+-- A worn item's own arrow (feedback-21 H3): the drop's item level against its own, judged as the
+-- kernel judges an item level (NS.Evaluate.ItemVerdict, the sidegrade band included); "" when either
+-- level is not known.
+local function ownArrow(it, judge)
+    local n = type(it.ilvl) == "number" and it.ilvl == it.ilvl and it.ilvl or nil
+    local ilvl = type(judge.ilvl) == "number" and judge.ilvl == judge.ilvl and judge.ilvl or nil
+    if not (n and ilvl) then return "" end
+    local d = ilvl - n
+    return TM.ArrowCell(NS.Evaluate.ItemVerdict(d, judge.band), d, judge.tone)
+end
+
 --- One member's rows of a gear grid: `[who] [ilvl] [item] [arrow]` for each worn item (the item ""
---- when only its level was read), a muted
---- `empty` row for each slot worn empty (one when nothing is listed at all), the name on the first
---- row only and the arrow on the row of the item the drop would replace; every other last cell "".
+--- when only its level was read), a muted `empty` row for each slot worn empty (one when nothing is
+--- listed at all), the name on the first row only. The row of the item the drop would replace takes
+--- `arrow` (the verdict's own); with `judge` and a verdict arrow, every other worn item takes its own
+--- (the drop's level against its own, feedback-21 H3), and another empty slot the same arrow as the
+--- replaced empty one. Every other last cell "".
 --- @param who string the member's name, colored (TM.ClassName)
 --- @param items table { { link, ilvl, name?, quality? }, ... }
 --- @param empty number|nil how many slots are worn empty
 --- @param arrow table|string TM.ArrowCell's answer
 --- @param base table|nil the worn item the drop was judged against (NS.Evaluate's baseline)
+--- @param judge table|nil { ilvl, band, tone }: the drop's item level, the verdict's sidegrade band
+---   (NS.Evaluate's `band`), the arrow's tone override (an off-spec verdict's)
 --- @return table rows
-function TM.GearRows(who, items, empty, arrow, base)
+function TM.GearRows(who, items, empty, arrow, base, judge)
     items, empty = type(items) == "table" and items or {}, empty or 0
     if #items == 0 and empty == 0 then empty = 1 end
+    local judged = type(judge) == "table" and type(arrow) == "table"
     local rows = {}
-    for _, it in ipairs(items) do rows[#rows + 1] = { "", levelText(it), itemCell(it), "" } end
+    for _, it in ipairs(items) do
+        rows[#rows + 1] = { "", levelText(it), itemCell(it), judged and ownArrow(it, judge) or "" }
+    end
     for _ = 1, empty do rows[#rows + 1] = { "", "", TM.EmptyCell(), "" } end
     rows[1][1] = who
-    rows[replacedRow(items, empty, base)][4] = arrow
+    local at = replacedRow(items, empty, base)
+    rows[at][4] = arrow
+    if judged and at > #items then
+        for i = #items + 1, #rows do rows[i][4] = arrow end
+    end
     return rows
 end

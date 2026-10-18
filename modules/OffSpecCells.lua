@@ -108,9 +108,10 @@ local function gridLine(off, ilvl, who)
 end
 
 local function tipOf(eval, off, side, title, ilvl, who, spec)
-    local lines = { ("%s: %s"):format(title, TITLE[off.verdict]:format(spec)), cantRow(eval, off),
-        compareRow(side, spec, off, ilvl) }
-    lines[#lines + 1] = gridLine(off, ilvl, who)
+    local lines = { ("%s: %s"):format(title, TITLE[off.verdict]:format(spec)) }
+    lines[#lines + 1] = gridLine(off, ilvl, who)   -- right under the title (feedback-21 H3)
+    lines[#lines + 1] = cantRow(eval, off)
+    lines[#lines + 1] = compareRow(side, spec, off, ilvl)
     lines[#lines + 1] = WC.TrackRow(off.trackDelta)
     WC.ReasonRows(off.reasons, lines)
     return lines
@@ -131,7 +132,7 @@ function OC.Verdict(eval, off, side, title, ilvl, who)
     return {
         text = d and WC.Signed(d) or L["empty"], glyph = WC.GLYPH[off.verdict], tone = TONE,
         tip = tipOf(eval, off, side, title, ilvl, who, spec), verdict = off.verdict, who = who, delta = d,
-        base = type(off.baseline) == "table" and off.baseline or nil,
+        base = type(off.baseline) == "table" and off.baseline or nil, ilvl = ilvl, band = num(off.band),
         offSpec = off.specID, mainVerdict = eval.verdict, spec = spec,
     }
 end

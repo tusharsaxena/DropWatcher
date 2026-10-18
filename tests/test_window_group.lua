@@ -60,9 +60,9 @@ test("cells: a verdict with no glyph says a word, and every verdict's tooltip sa
     assertEqual(unk.text, "?"); assertEqual(unk.tone, "muted")
     assertTrue(#unk.tip >= 2, "never a bare title")
     local up = W.Me(drop())
-    assertEqual(T.tipText(up.tip[3]), "You  292  |cffa335eeOld Band|r  ▲19", "the comparison as a grid row (feedback-7 spec §3)")
+    assertEqual(T.tipText(up.tip[2]), "You  292  |cffa335eeOld Band|r  ▲19", "the comparison as a grid row, right under the title (feedback-21 H3)")
     assertTrue(joined(up.tip):find("against", 1, true) == nil, "no comparison prose")
-    assertEqual(T.tipText(W.Me(drop({ isMine = true, looter = { name = "Me-Realm", classFile = "MAGE" } })).tip[3]):sub(1, 18),
+    assertEqual(T.tipText(W.Me(drop({ isMine = true, looter = { name = "Me-Realm", classFile = "MAGE" } })).tip[2]):sub(1, 18),
         "|cff40c7ebYou|r  2", "your own drop: you in your class color")
     local empty = W.Me(drop({ me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }))
     assertEqual(empty.text, "empty"); assertEqual(empty.glyph, "▲")

@@ -86,15 +86,19 @@ test("tip marks: a non-wrapping line and its text; names in class and quality co
 end)
 
 -- THE ROW SHAPE (feedback-21): after its title a tooltip is rows (`• Label: value`, the bullet and
--- the label in the idle gray), grids, and at the end a closing hint (unbulleted, all gray); never a
--- line of prose.
+-- the label in the muted gold: feedback-21 H3), grids (a gear grid right under the title), and at the
+-- end a closing hint (unbulleted, all gray); never a line of prose.
 local IDLE = "|cff9e9ea3"
-local function isRow(line) return line:sub(1, #IDLE + #"•") == IDLE .. "•" end
+local LABEL = "|cffccad5c"   -- C.TONE.mutedGold
+local function isRow(line) return line:sub(1, #LABEL + #"•") == LABEL .. "•" end
 local function isHint(line) return not isRow(line) and line:sub(1, #IDLE) == IDLE and line:sub(-2) == "|r" end
 
 local function assertRowShape(tip, where)
     local hinted = false
     for i, line in ipairs(tip) do
+        if type(line) == "table" and type(line.grid) == "table" then
+            assertEqual(i, 2, where .. ": a grid goes right under the title")
+        end
         if i > 1 and type(line) == "string" then
             local plain = T.tipPlain(line)
             assertTrue(isRow(line) or isHint(line), where .. ": not a row or a hint: " .. plain)
@@ -106,16 +110,16 @@ end
 
 -- ── the rows (feedback-21) ──────────────────────────────────────────────────────────────────
 
-test("tip marks: a row is `• Label: value`, the bullet and label gray, the value plain or in its tone", function()
+test("tip marks: a row is `• Label: value`, the bullet and label muted gold, the value plain or in its tone", function()
     local TM = T.newAddon().TipMarks
     assertEqual(TM.BULLET, "•", "a character the tooltip face draws: the media library has no dot-like icon")
-    assertEqual(TM.Bullet(), "|cff9e9ea3•|r")
-    assertEqual(TM.Row("Rule", "personal loot"), "|cff9e9ea3• Rule:|r personal loot")
-    assertEqual(TM.Row("Inspected", 40), "|cff9e9ea3• Inspected:|r 40", "a value need not be a string")
-    assertEqual(TM.Row("Ending soon", "then Seta keeps it", "warn"), "|cff9e9ea3• Ending soon:|r |cffffa626then Seta keeps it|r")
-    assertEqual(TM.Row("Rule", "x", "nope"), "|cff9e9ea3• Rule:|r x", "an unknown tone: plain")
+    assertEqual(TM.Bullet(), "|cffccad5c•|r", "the bullet in the label's muted gold")
+    assertEqual(TM.Row("Rule", "personal loot"), "|cffccad5c• Rule:|r personal loot")
+    assertEqual(TM.Row("Inspected", 40), "|cffccad5c• Inspected:|r 40", "a value need not be a string")
+    assertEqual(TM.Row("Ending soon", "then Seta keeps it", "warn"), "|cffccad5c• Ending soon:|r |cffffa626then Seta keeps it|r")
+    assertEqual(TM.Row("Rule", "x", "nope"), "|cffccad5c• Rule:|r x", "an unknown tone: plain")
     assertTrue(TM.Row("Rule", nil) == nil, "no value: the row drops out")
-    assertEqual(TM.Row(nil, "Pawn: on"), "|cff9e9ea3•|r Pawn: on", "no label: the bullet and the value")
+    assertEqual(TM.Row(nil, "Pawn: on"), "|cffccad5c•|r Pawn: on", "no label: the bullet and the value")
     assertEqual(TM.Hint("Click to cancel it."), "|cff9e9ea3Click to cancel it.|r", "the closing hint: gray, no bullet")
     assertEqual(T.tipPlain(TM.Row("Rule", "personal loot")), "• Rule: personal loot")
     assertEqual(TM.Chars(TM.Row("Rule", "x")), #"• Rule: x" - 2, "color codes draw nothing (the bullet is 3 bytes, 1 character)")

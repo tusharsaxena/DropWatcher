@@ -486,7 +486,7 @@ Total.
 - rows: every drop row and its detail card sit ROW_INDENT in from the header; the labels shift over their cells
 - headers: a group header's chevron is gold, as its text, collapsed or open
 
-### test_side_cells.lua (21)
+### test_side_cells.lua (22)
 
 - side cells: Me reads the worn level, then the glyph and the unsigned difference in the verdict's tone
 - side cells: Can't use and Not wanted stay words after the gear, dim red and gray
@@ -495,7 +495,8 @@ Total.
 - side cells: an unknown verdict's ? goes where the gear part says why, and stays where it does not
 - side cells: a dash gear part goes when the verdict says something, and stays alone when it does not
 - side cells: the tooltip is the verdict's title, the worn gear as a grid, then the read's age and the verdict's lines
-- side cells: two worn items are two rows, the arrow on the one the drop would replace; a slot worn empty reads empty
+- side cells: two worn items are two rows, each with its own arrow against the drop; a slot worn empty reads empty
+- side cells: a dual slot gives each worn item its own arrow and tone against the drop, the band as the kernel's
 - side cells: History's verdict alone keeps its own one-row grid from the judged item
 - side cells: your own drop's Them is Upgrade for N or No upgrades, in its tones, with every upgrade in the tooltip
 - side cells: History's Me and Them are the verdict alone, worded as the Drops table's
@@ -562,7 +563,7 @@ Total.
 - tip marks: up is arrow-up in green, side is transfer in yellow, down is arrow-down in red
 - tip marks: with the media library absent a mark falls back to a plain character
 - tip marks: a non-wrapping line and its text; names in class and quality colors
-- tip marks: a row is `• Label: value`, the bullet and label gray, the value plain or in its tone
+- tip marks: a row is `• Label: value`, the bullet and label muted gold, the value plain or in its tone
 - tip rows: the table's cells (WindowCells, SideCells) are rows, the Trade cell's reason one row per fact
 - tip rows: your own drop's cells and buttons (MineCells) and the off-spec cells are rows
 - tip rows: the detail card's chips, sides, trade box and actions (DetailCells) are rows
@@ -826,7 +827,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (36)
+### test_evaluate.lua (37)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -854,6 +855,7 @@ Total.
 - evaluate: a class-restricted item refuses other classes
 - evaluate: an undesired subclass is doesntWant, but only when the item is usable
 - evaluate: the sidegrade band splits upgrade, sidegrade and downgrade
+- evaluate: ItemVerdict judges one item level as step 4 does, and the band is kept only when it is not 0
 - evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign
 - evaluate: the scorer is optional, may be pending, and may fail without harm
 - evaluate: a two-hander's score baseline is the average of both hands' scores
@@ -1892,7 +1894,7 @@ Total.
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
-| test_side_cells.lua | 21 |
+| test_side_cells.lua | 22 |
 | test_detail_card.lua | 24 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
@@ -1906,7 +1908,7 @@ Total.
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 13 |
-| test_evaluate.lua | 36 |
+| test_evaluate.lua | 37 |
 | test_offspec.lua | 11 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
@@ -1957,4 +1959,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1611** |
+| **Total** | **1613** |

@@ -624,7 +624,19 @@ test("evaluate: the sidegrade band splits upgrade, sidegrade and downgrade", fun
         local res = E.Evaluate(armor(row[1], "INVTYPE_HEAD", A.PLATE), c, { sidegradeBand = row[2] })
         assertEqual(res.verdict, row[3], "case " .. i)
         assertEqual(res.ilvlDelta, row[1] - 640, "delta " .. i)
+        assertEqual(E.ItemVerdict(res.ilvlDelta, res.band), row[3], "ItemVerdict agrees " .. i)
     end
+end)
+
+test("evaluate: ItemVerdict judges one item level as step 4 does, and the band is kept only when it is not 0", function()
+    local E = load()
+    assertEqual(E.ItemVerdict(3), "upgrade"); assertEqual(E.ItemVerdict(0), "sidegrade"); assertEqual(E.ItemVerdict(-1), "downgrade")
+    assertEqual(E.ItemVerdict(-10, 10), "sidegrade", "within the band"); assertEqual(E.ItemVerdict(11, -10), "upgrade", "the band's size")
+    assertTrue(E.ItemVerdict(nil) == nil and E.ItemVerdict(0 / 0) == nil and E.ItemVerdict("3") == nil, "no number: nil")
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE)
+    assertTrue(E.Evaluate(armor(641, "INVTYPE_HEAD", A.PLATE), c).band == nil, "no band: not kept")
+    assertEqual(E.Evaluate(armor(641, "INVTYPE_HEAD", A.PLATE), c, { sidegradeBand = -5 }).band, 5)
 end)
 
 test("evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign", function()
