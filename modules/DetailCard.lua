@@ -510,9 +510,11 @@ local function inspectOf(drop)
 end
 
 -- Whether another player's looter has left your group: the broker has forgotten them, so the card
--- reads the drop's own copy of their read, or says why there is none (feedback-21 H2).
+-- reads the drop's own copy of their read, or says why there is none (feedback-21 H2). A test mode
+-- placeholder says so itself (`testLeft`).
 local function looterLeft(drop)
-    if drop.test or drop.isMine then return false end
+    if drop.isMine then return false end
+    if drop.test then return drop.testLeft == true end
     local guid = type(drop.looter) == "table" and drop.looter.guid
     return guid ~= nil and NS.Roster.Get(guid) == nil
 end

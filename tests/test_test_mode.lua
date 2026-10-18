@@ -709,7 +709,54 @@ test("window: the rows show every ask state, every Them gear state and every tra
     hasAll(ask, { "Ask", "Queued", "Asked", "Retry", "No action" }, "ask")
     hasAll(eq, { "…", "range", "combat", "!" }, "their gear: the reason word")
     assertTrue(levels >= 5, "the inspected looters' worn levels")
-    hasAll(trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
+    hasAll(trade, { "Yes", "Likely", "Unknown", "No", "Can't use" }, "trade")
+end)
+
+-- feedback-21: a drop you can use in no spec reads Can't use on Trade where the estimate is Yes or
+-- Likely (Mistveil's shoulders); a No stays No (Ashveil's), and an off-spec use keeps its Likely.
+test("window: test mode's Can't use samples read Can't use on Trade, a No stays No, an off-spec keeps Likely", function()
+    local NS, drawn = shownTest()
+    local want = { Mistveil = "Can't use", Ashveil = "No" }
+    local seen, offSpec = {}, 0
+    for _, r in ipairs(drawn.rows) do
+        local d = NS.LootFeed.Get(r.dropId)
+        local text = textOf(r.cells.trade.text)
+        if not d.isMine and want[d.looter.name] and d.me.verdict == "cantUse" and not NS.OffSpec.Of(d.me) then
+            assertEqual(text, want[d.looter.name], d.looter.name)
+            seen[d.looter.name] = true
+            if text == "Can't use" then
+                assertEqual(r.cells.trade.text:GetTextColor(), NS.Constants.TONE.redMuted.r, "in the dim red")
+            end
+        end
+        if not d.isMine and NS.OffSpec.Of(d.me) and d.trade.state == "likely" then
+            assertEqual(text, "Likely", d.looter.name .. ": an off-spec can use it")
+            offSpec = offSpec + 1
+        end
+    end
+    hasAll(seen, { "Mistveil", "Ashveil" }, "Can't use sample")
+    assertTrue(offSpec >= 4, "the off-spec samples keep Likely: " .. offSpec)
+end)
+
+-- feedback-21 H2: Kaelith's wrists were read before they left, so the card keeps their spec and
+-- says they are not in your group, never spec unknown.
+test("window: test mode's looter who left keeps their spec on the detail card, and says they are gone", function()
+    local NS, drawn = shownTest()
+    local id
+    for _, r in ipairs(drawn.rows) do
+        local d = NS.LootFeed.Get(r.dropId)
+        if d.looter.name == "Kaelith" and d.testLeft then id = r.dropId end
+    end
+    assertTrue(id ~= nil, "the sample is drawn")
+    assertTrue(NS.LootFeed.Get(id).testLeft == true)
+    NS.WindowGroup.ToggleExpand(id)
+    local found
+    for _, row in ipairs(NS.WindowGroup.Drawn().card.them.rows) do
+        local tip = row:IsShown() and T.tipPlainJoined(row.tipLines or {}) or ""
+        if tip:find("Looter: not in your group", 1, true) then found = row end
+    end
+    assertTrue(found ~= nil, "the Spec row says the looter left")
+    assertFalse((textOf(found.value) or ""):find("spec unknown", 1, true) ~= nil, textOf(found.value))
+    assertTrue((textOf(found.value) or ""):find("inspected", 1, true) ~= nil, textOf(found.value))
 end)
 
 -- Your real gear, every slot at 999, so a sample showing it is caught (feedback-18).

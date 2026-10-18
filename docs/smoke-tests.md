@@ -1336,7 +1336,8 @@ dungeon and loot something → a new header for where you are. Result:
 `test_side_cells`, `test_compact_cards`, `test_offspec_cells` and `test_toast` cover the tone. `/dw test`,
 expand every group. Ashveil's chest under the first raid boss: Me reads `Can't use` in a dim red, darker
 and softer than a downgrade's red `▼`, and with no spec name (a wrong armor type). Mistveil's shoulders
-(the third raid boss): Them reads `Can't use` in the same dim red. Littlewolf's weapon still reads `Not
+(the third raid boss): Them reads `Can't use` in the same dim red (and Me too, since the test data's
+feedback-21 refresh). Littlewolf's weapon still reads `Not
 wanted` in gray, so the two words read apart at a glance. Expand Ashveil's chest → the detail card's FOR
 YOU chip reads `CAN'T USE` in that dim red. Open History → its `Can't use` cells are dim red too; `/dw
 compact` → the cards' `You Can't use` and `Them Can't use` halves the same, on Drops and History. Result:
@@ -1348,7 +1349,9 @@ reads `Can't use` in the dim red of FEED-87, not `Likely` or `Yes`, in the table
 and History; hover → the title `Trade: Can't use`, the trade rows (Rule, This item, what they wear), then
 `• For you: can't use, nothing to ask for`. Expand it → the detail card's trade chip reads `CAN'T USE` in
 the same dim red, its tooltip the same; its History card the same. A `No` stays red and an `Unknown` stays muted; your own drops
-keep their green. `/dw test`, the last raid boss → Brightmane's one-hander, Solenne's gloves, Kragmar's
+keep their green. `/dw test`, the third raid boss → Mistveil's shoulders (a wrong armor type for you, an
+estimate of Likely) read Trade `Can't use`; the first raid boss's Ashveil chest keeps its red `No` (an
+upgrade for Ashveil). The last raid boss → Brightmane's one-hander, Solenne's gloves, Kragmar's
 bracers and Thornbrew's boots, all Can't use for your spec but usable by Holy, keep Trade `Likely` in its
 own green (an off-spec use is a use). Result:
 
@@ -1580,7 +1583,9 @@ against, never `Slot: nothing read yet` beside an `Inspected: … ago`. A drop w
 before any read: the Spec row reads `not in your group`, never `spec unknown`. The read stays when the
 drop is judged again after the looter left: let another member's loot report of the same item
 arrive, or wait out a score retry (`[SCORE]` line), then open the card → the same spec and worn
-item. Result:
+item. `/dw test`, the second raid boss → expand Kaelith's bracers: the Spec row reads `Retribution ·
+inspected <age> ago`, its tooltip ending `• Looter: not in your group`; expand Dawnfeather's boots → the
+Spec row reads `not in your group`. Result:
 
 ## Trade
 
@@ -2037,7 +2042,8 @@ off-spec's the right.
 **GLOW-1. The main-spec glow on each surface, and nowhere else (feedback-21).** Defaults (Defaults on
 the Window page). `/dw test`, expand every group → the icons of the drops that are an upgrade for your
 current spec glow with the yellow pixel border (lines running around the icon): Kaelith's neck (the key run), Uniquerogue's trinket (the
-second raid boss), Seta's head, Littlewolf's ring and Mistveil's shoulders (the third). The glow sits
+second raid boss), Seta's head and Littlewolf's ring (the third; Mistveil's shoulders are Can't use since
+the test data's feedback-21 refresh). The glow sits
 over the icon art, follows the icon at every Row height, and scrolls and clips with its row. Expand
 Seta's head → the detail card's header icon glows; its Replaces rows do not. Settings › Window › Toast
 › Show a toast on, `/dw test` off and on → the toast's icon shows no glow (a toast only ever shows an
