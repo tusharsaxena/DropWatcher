@@ -300,4 +300,6 @@ deviation not in this table is not ratified.
 The layout-§1 census of authored `.lua` files over the 1500-line cap. Vendored code (`libs/`,
 `tests/_kit/`) is out of scope, and the repository has no generated data.
 
-Nothing is over the cap today.
+Nothing is over the cap today. `locales/enUS.lua` came back under it when the settings panel's
+strings moved to the topic file `locales/enUS_Settings.lua` (feedback-21), split on
+localization-§6's shape, which owes no row here.

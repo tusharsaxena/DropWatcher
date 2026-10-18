@@ -1,8 +1,11 @@
 local _, NS = ...
--- locales/enUS_Settings.lua — the settings panel's strings (settings/), peeled out of locales/enUS.lua
--- when the tooltip rows (feedback-21) took it past layout-§1's 1500-line cap. NS.L and its
--- metatable fallback are locales/enUS.lua's, which loads first (DropWatcher.toc); the key IS the
--- English source string, one heading per first user in TOC load order, as there.
+-- locales/enUS_Settings.lua — the settings panel's strings (settings/), a topic file split out of
+-- locales/enUS.lua when the tooltip rows (feedback-21) took it past layout-§1's 1500-line cap, on
+-- localization-§6's shape. locales/enUS.lua loads first (DropWatcher.toc) and alone creates NS.L and
+-- its metatable fallback; this file only fills that table. Each key lives in one enUS file, so a key
+-- a module also reads stays in enUS.lua, the file of its first reader in TOC load order, and this
+-- file holds only what settings/ alone reads. The key IS the English source string, one heading per
+-- first user in TOC load order, as there.
 
 local L = NS.L
 
@@ -20,8 +23,6 @@ L["A fresh tab hides the drops you can't use and the item types you marked as un
 L["View: Upgrade for me"] = "View: Upgrade for me"
 L["A fresh tab lists only the drops that are an upgrade for you."] =
     "A fresh tab lists only the drops that are an upgrade for you."
-L["This instance"] = "This instance"
-L["This session"] = "This session"
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
@@ -31,7 +32,6 @@ L["Relative to my gear"] = "Relative to my gear"
 L["Automatic"] = "Automatic"
 L["My weights"] = "My weights"
 L["None"] = "None"
-L["Instance"] = "Instance"
 L["Party"] = "Party"
 L["Full"] = "Full"
 L["Compact"] = "Compact"
@@ -262,7 +262,6 @@ L["Ask for transmog (whisper to the looter)"] = "Ask for transmog (whisper to th
 L["Ask for off-spec (whisper to the looter)"] = "Ask for off-spec (whisper to the looter)"
 L["Offer (whisper to a candidate)"] = "Offer (whisper to a candidate)"
 L["Announce (group, raid or instance)"] = "Announce (group, raid or instance)"
-L["the group"] = "the group"
 L["too long to send"] = "too long to send"
 L["unknown tokens, sent as typed: %s"] = "unknown tokens, sent as typed: %s"
 L["Preview: %s, to %s"] = "Preview: %s, to %s"

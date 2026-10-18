@@ -38,7 +38,8 @@ libs\LibKa0s\LibKa0s.xml
 # Locales
 # LOAD-BEARING: publishes NS.L, which every file below reads at load.
 locales\enUS.lua
-# The settings panel's strings, peeled out of enUS.lua at the layout-§1 cap; fills NS.L (above).
+# LOAD-BEARING: reads NS.L (locales\enUS.lua, the line above) at load and fills it with the settings
+# panel's strings: a topic file split out of enUS.lua at the layout-§1 cap (localization-§6).
 locales\enUS_Settings.lua
 
 # Core -- dependency-correct order (layout-§1)

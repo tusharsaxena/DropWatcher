@@ -7,8 +7,8 @@ LibDataBroker, LibDBIcon, LibCustomGlow, LibKa0s v1.72.0 whole) and `tests/_kit/
 
 | # | File | Kind | Responsibility |
 |---|---|---|---|
-| 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string; it carries every string the code routes through `NS.L` (`test_locale`) |
-| 2 | `locales/enUS_Settings.lua` | data | the settings panel's strings (`settings/` their first users), peeled out of `locales/enUS.lua` at layout-§1's 1500-line cap when the tooltip rows (feedback-21) grew it; fills `NS.L` |
+| 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string; the base file (localization-§6), the only one that creates `NS.L`; with row 2 it carries every string the code routes through `NS.L` (`test_locale`) |
+| 2 | `locales/enUS_Settings.lua` | data | the strings only the settings panel reads (`settings/`; a key a module also reads stays in row 1), a topic file split out of `locales/enUS.lua` at layout-§1's 1500-line cap when the tooltip rows (feedback-21) grew it (localization-§6); fills row 1's `NS.L`, so its TOC line is load-bearing |
 | 3 | `core/Namespace.lua` | data | name, version, brand, the cyan `[DW]` tag, the slash and its alias |
 | 4 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip, the class-color resolver `NS.ResolveColor` (the stored swatch without the library) |
 | 5 | `core/TextParse.lua` | kernel (pure) | `NS.TextParse`: the pure text parsers behind the Compat seam's tooltip and duration readers (DW-61): `EscapePattern`, `FormatToPattern`, `ExpandPlural` (the `\|4a:b;` plural grammar), the duration decoder (`DecodeDuration`, `TradeTimeRemaining`, design spec §7.4) and the tooltip line scan (`ScanLines`, handed Compat's secret guards), the item level, upgrade track, class list and primary stat lines (`ItemLevel`, `UpgradeLine`, `ClassSet`, `StatLine`). No client call and no global read: core/Compat.lua reads the localized GlobalStrings and passes them in |

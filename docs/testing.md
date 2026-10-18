@@ -475,8 +475,12 @@ stop or automatic stop repainting it, Run all, Pause and Resume, Restart and Sto
 the picker starting the chosen scenario with a raid's count, and the dragged position remembered,
 forgotten by Reset position and the panel hidden at stand-down),
 `test_diagnostics`, `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
-entry in `locales/enUS.lua` or `locales/enUS_Settings.lua`, the key-on-miss fallback bypassed; one direction only, since some keys
-are reached dynamically; review F07, decision D8). Kit suites,
+entry in `locales/enUS.lua` or `locales/enUS_Settings.lua`, the key-on-miss fallback bypassed, and
+every enUS key's text appears in an addon file, a loose reverse since some keys are reached
+dynamically; review F07, decision D8. Both read the union of the enUS files, listed from the TOC
+and loaded in its order (localization-§6), and it fails on a key written in two of them, on a topic
+file's key read outside its folder, and on a topic file misnamed, out of the block after
+`enUS.lua`, or keeping its own table). Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
 
