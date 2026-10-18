@@ -347,9 +347,9 @@ modules\WindowOwn.lua
 # (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
 modules\RowTooltip.lua
 # Conventional: publishes NS.Glow, the upgrade glow on a drop's icon (feedback-21: LibCustomGlow-1.0,
-# libs\, above); reads nothing at load. NS.OffSpec, NS.Setting, NS.C, NS.Window and NS.Toast are read
-# at call time; modules\WindowGroup.lua, modules\DetailCard.lua, modules\CompactGroup.lua and
-# modules\Toast.lua (below) call it when they paint an icon.
+# libs\, above); reads nothing at load. NS.OffSpec, NS.Setting, NS.C and NS.Window are read at call
+# time; modules\WindowGroup.lua, modules\DetailCard.lua and modules\CompactGroup.lua (below) call it
+# when they paint an icon (the toast never glows, G9).
 modules\Glow.lua
 # Conventional: publishes NS.IconStyle, every item icon's look (Window › Icons, feedback-21 G11: the
 # zoom and the composed border); reads nothing at load. NS.Setting, NS.C, NS.ResolveColor,
