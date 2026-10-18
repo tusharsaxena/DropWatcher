@@ -36,6 +36,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | G10 toast scale | DW | done | 4488c30 |
 | G11 item icon style (zoom, border block, quality border) | DW | done | ea750d8 |
 | R3 review G9, G10, G11 | DW | done | f3cafdb (stale Glow.lua TOC note fixed; borderSize floor 1 refuted: composer rows are retuned by hosts, CM floors at 1 too) |
+| PF1 perf: G6's refresh allocation recovered | DW | done | 43bde2a |
 | P3 push | DW | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
 
