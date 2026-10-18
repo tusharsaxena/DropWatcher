@@ -43,7 +43,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | H3 tooltips: gear line first, muted-gold labels, both dual-slot arrows | DW | done | 3e56b53 (C.TONE.mutedGold added; other worn items judged by Evaluate.ItemVerdict, ilvl and band only) |
 | H4 Offer button toggles the Offer panel | DW | done | bd78aa6 (OfferPanel.Toggle via WindowOwn.PressAction; `/dw offer` keeps Open; tooltip row `Again: closes the panel`) |
 | H5 detail card: ▲▼ glyphs, For you / For Looter (name), stat colors, Replaces row | DW | done | 76c8678 (glyphs in a monospace string per chip and line; C.TONE.greenMuted + stat tones, C.STAT_TONE; History chips take the glyph too) |
-| R4 review H1-H5 | DW | todo | |
+| R4 review H1-H5 | DW | done | 95e4ce0 (fixed: your visible Pawn scale before the starter, the kept read survives a re-judge, SCORE-4 looter step; the two kept-read findings were one) |
 | P4 push | DW | todo | |
 | H6 glow + icon defaults, glow color rows main-left/off-right (§17 deviation) | DW | todo | |
 | H7 dual-slot arrows everywhere (cells, compact, toast, detail card, tooltips) | DW | todo | |
