@@ -49,7 +49,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | H7 dual-slot arrows everywhere (cells, compact, toast, detail card, tooltips) | DW | done | bbf8609 (SideCells.Parts, shared with H3's grid via TipMarks.ItemArrow; no column or window width changed: the dual cell is 125 of 127, compact fits at 440; the toast widens only for a dual row 3, Toast.WidthFor; History keeps one mark, no worn items kept; detail card's Replaces unchanged) |
 | R5 review H6, H7 | DW | done | d1b56c5 (fixed: dual marks only under the kernel's new `either` (non dual wield 1H, non-hunter ranged, 2H vs both hands averaged, a bag baseline keep one mark; the grid agrees), one mark when two do not fit at a larger font (table and compact line 3), zoom comment drift; open for the owner: Replaces still names the one item taken off, no mark, though the H7 ask listed it) |
 | P5 push | DW | done | c0bc54d |
-| M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
+| M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | done | merged to master 2026-10-18 (owner: Replaces row stays single-item) |
 
 ## What the owner asked (decided in conversation, 2026-10-18)
 
