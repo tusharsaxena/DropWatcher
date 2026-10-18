@@ -26,7 +26,13 @@ first task not `done`. Never merge without the owner's go-ahead.
 | K1 KickCD per-style glow knobs | KickCD | done | `7307777` (KickCD) |
 | R1 review + fixes (both repos) | both | done | `d8a74d8` (KickCD), `86fac39`, `8ffbac6` (DW) |
 | P1 push both branches | both | done | DW `feature/upgrade-glow`, KickCD `feature/glow-options` |
-| M1 merge (owner's go-ahead), delete branches/worktrees/stashes | both | blocked on owner | |
+| S1 standard: how a locale file is split (WowAddonStandards, branch `feature/locale-split-rule`) | WAS | todo | |
+| G7 glow colors get the "Use class color" companion | DW | todo | |
+| K2 KickCD lists LibCustomGlow-1.0 in OptionalDeps | KickCD | todo | |
+| G8 DW cites the new locale-split rule | DW | todo | |
+| R2 review S1, G7, K2, G8 | all | todo | |
+| P2 push all three branches | all | todo | |
+| M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
 
 ## What the owner asked (decided in conversation, 2026-10-18)
 
@@ -206,6 +212,17 @@ Trade: Likely
   `disabledIf` for other styles and for trigger `never`, wire them into `Icon:UpdateGlow`
   (`modules/IconGrid_Render.lua`) so a change restarts the glow, locales, tests, and docs (its
   schema / settings docs, smoke checks with Pending rows, README). Commit(s) on its own gate.
+
+### Owner decisions after R1 (2026-10-18)
+
+1. **Locale split → the standard.** Keep `locales/enUS_Settings.lua` (enUS.lua passed the 1500-line
+   cap) and add the rule for splitting a locale file to the standard upstream (WowAddonStandards,
+   S1), following that repo's own process for a rule change; DropWatcher then cites it (G8).
+2. **Glow colors get the class-color companion** (options-ui-§17), as KickCD's glow colors have
+   (G7): `glow.<g>.useClassColor` (player-scoped), beside each swatch, the reviewer's exemption
+   comment and schema note replaced.
+3. **KickCD aligns**: `LibCustomGlow-1.0` joins `## OptionalDeps`, its DEPENDENCIES.md note
+   updated (K2).
 
 ### R1 — review
 
