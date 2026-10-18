@@ -1774,8 +1774,11 @@ Total.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
-### test_locale.lua (3)
+### test_locale.lua (6)
 
+- locale: the enUS files are the TOC's, the base file first and its topic files after it
+- locale: every enUS key lives in exactly one enUS file
+- locale: a topic file holds only what its folder alone reads
 - locale: the scan finds routed literals in the addon's files
 - locale: enUS carries every string routed through NS.L
 - locale: every enUS key is still read by the addon's files
@@ -1922,11 +1925,11 @@ Total.
 | test_disabled.lua | 12 |
 | test_diagnostics.lua | 15 |
 | test_vendor_sync.lua | 3 |
-| test_locale.lua | 3 |
+| test_locale.lua | 6 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1587** |
+| **Total** | **1590** |
