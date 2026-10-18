@@ -38,6 +38,13 @@ first task not `done`. Never merge without the owner's go-ahead.
 | R3 review G9, G10, G11 | DW | done | f3cafdb (stale Glow.lua TOC note fixed; borderSize floor 1 refuted: composer rows are retuned by hosts, CM floors at 1 too) |
 | PF1 perf: G6's refresh allocation recovered | DW | done | 43bde2a |
 | P3 push | DW | done | through PF1 |
+| H1 Pawn works out of the box (PawnIsReady) | DW | todo | |
+| H2 "spec unknown" on an inspected looter | DW | todo | |
+| H3 tooltips: gear line first, muted-gold labels, both dual-slot arrows | DW | todo | |
+| H4 Offer button toggles the Offer panel | DW | todo | |
+| H5 detail card: ▲▼ glyphs, For you / For Looter (name), stat colors, Replaces row | DW | todo | |
+| R4 review H1-H5 | DW | todo | |
+| P4 push | DW | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
 
 ## What the owner asked (decided in conversation, 2026-10-18)
@@ -251,6 +258,44 @@ Trade: Likely
     swatch. Default off.
   - Applied live to every pooled and unpooled item button; the glow stays above the border; a
     repaint with no change costs nothing (signature, as the glow does); perf scenarios stay green.
+
+### Owner asks after P3 (2026-10-18, with screenshots)
+
+- **H1 — Pawn out of the box.** With Pawn installed the Score row read "no scorer in use". Cause,
+  confirmed against the owner's Pawn 2.13.6 (`Interface/AddOns/Pawn/Pawn.lua`): `PawnIsInitialized`
+  is a `local` (line 28), so `NS.Compat.PawnIsReady`'s read of the global is always nil; Pawn's
+  public API is `function PawnIsReady()` (line 4915). Call `PawnIsReady()` (fall back to the old
+  global only if the function is absent), and check every other Pawn call (`PawnGetItemData`,
+  `PawnIsItemAnUpgrade`, `PawnFindScaleForSpec`, `PawnGetSingleValueFromItem`) against that source.
+  With `comparison.scorer` = auto (default) Pawn's own current scale must be used with no setup:
+  for you the scale Pawn itself shows (its upgrade list, else your spec's scale), for a looter
+  their spec's. The weights import stays as the alternative.
+- **H2 — "spec unknown".** A looter inspected minutes ago still shows Spec "spec unknown" and its
+  tooltip "Slot: nothing read yet". Find the real cause (code, plus the owner's saved debug log in
+  `/mnt/g/Games/Blizzard/World of Warcraft/_retail_/WTF/Account/ADD1KTED2KA0S/SavedVariables/DropWatcher.lua`
+  if it carries inspect lines) and fix it; if the cause is a game limit (e.g. the looter left the
+  group or out of range), the row says that instead of "unknown".
+- **H3 — tooltips.**
+  - A verdict tooltip's gear line (`Senathein  321  Nek'zali's Spiritwalkers  ▼10`, the TM.Grid
+    rows) goes directly under the title, ABOVE the bullet rows; the same for every tooltip with a
+    gear grid.
+  - Every bullet row's label (`Slot`, `Inspected`, `Means`, ...) is a muted gold (a new `C.TONE`
+    token, e.g. `mutedGold`, between C.GOLD and C.IDLE), not gray.
+  - A dual slot (rings, trinkets, one-hand weapons): each worn item's row shows its own arrow and
+    difference against the drop, not only the one the drop would replace.
+- **H4 — the Offer button toggles.** Clicking Offer while that drop's Offer panel is open closes
+  it (another drop's Offer switches the panel to that drop, as today).
+- **H5 — the detail card.**
+  - Every up/down mark is the table's glyph (`▼ 10`, `▲ 14` in the verdict tone, monospace face),
+    the owner's choice: the Track row's arrow, the UPGRADE/DOWNGRADE chips, Item level; no
+    `arrow-down` icons on the card.
+  - Section titles: "FOR YOU" with YOU in the muted gold; "FOR LOOTER (SENATHEIN)" (was
+    "FOR SENATHEIN (LOOTER)") with LOOTER in the muted gold and the name in its class color.
+  - Stats row: each value colored by sign, muted green (+) / muted red (-) (new tokens if needed);
+    each stat name in its own fixed color (Crit, Haste, Mastery, Vers, and any other secondary or
+    tertiary stat the row can show), one palette in Constants, readable on the dark card.
+  - Replaces row: `334 [icon] Scaleguard's Stalwart Greatboots`, item level first, the name in
+    its quality color.
 
 ### R1 — review
 
