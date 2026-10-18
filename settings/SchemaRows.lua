@@ -5,7 +5,10 @@ local _, NS = ...
 -- (design spec §12.2; `group` is the tab, options-ui-§13), its widget hints and the check the write
 -- seam runs before storing it. Every `default` references defaults/Profile.lua (savedvariables-§2),
 -- never a literal here. The composed Master controls rows are settings/Panel.lua's; these are
--- appended after them, so the General page's `Master controls` tab stays first.
+-- appended after them, so the General page's `Master controls` tab stays first. Window › Icons'
+-- composed border block is settings/ComposedRows.lua's, appended after these (it needs the Options
+-- instance, made after this file), so it follows this file's Zoom row on that tab; it takes this
+-- file's checks from Settings.Checks.
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
 -- specID (architecture-§5's value route): written whole through the seam, drawn by their own
@@ -56,6 +59,9 @@ end
 
 local function isSpecID(k) return type(k) == "number" and k > 0 and k == math.floor(k) end
 
+-- The checks a composed block's rows take too (settings/ComposedRows.lua): the composer emits none.
+Settings.Checks = { isBool = isBool, inRange = inRange, nonEmptyString = nonEmptyString, isColor = isColor }
+
 -- weights: { [specID] = { [STAT_KEY] = number } }.
 local function validWeights(v)
     if type(v) ~= "table" then return false end
@@ -93,6 +99,13 @@ local function refreshGlow()
     local G = NS.Glow
     if G and G.Refresh then G.Refresh() end
 end
+
+-- A Window › Icons row gives every item icon its new look (modules/IconStyle.lua).
+local function refreshIcons()
+    local IS = NS.IconStyle
+    if IS and IS.Refresh then IS.Refresh() end
+end
+Settings.RefreshIcons = refreshIcons
 
 -- ── the value lists ─────────────────────────────────────────────────────────────────────────
 
@@ -484,6 +497,16 @@ local function glow()
     end
 end
 
+-- ── Window › Icons (feedback-21 G11): every item icon's look ────────────────────────────────
+
+-- The zoom, KickCD's shape (0 to 0.25 cropped off each side); 0, the default, is the icons as they
+-- always were. The tab's Border block is composed (settings/ComposedRows.lua) and follows it.
+local function icons()
+    slider("icons.zoom", P.icons.zoom, 0, 0.25, 0.01, L["Icon zoom"],
+        L["Crop each item icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most item icons."],
+        { page = "window", group = L["Icons"], subgroup = L["Zoom"], onChange = refreshIcons })
+end
+
 -- ── History (feedback-2 spec §5): kept by days, account-wide ────────────────────────────────
 
 local function history()
@@ -516,5 +539,6 @@ messages()
 window()
 history()
 glow()
+icons()
 
 NS.SchemaRuntime.AddRows(Rows)

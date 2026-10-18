@@ -168,6 +168,31 @@ an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (Li
 | `glow.<g>.procStartAnim` | `true` | proc | the opening burst when it starts |
 | `glow.<g>.xOffset`, `glow.<g>.yOffset` | `0`, `0` | pixel, autocast, proc | how far the glow reaches past the icon's sides and top and bottom, -10 to 10 |
 
+### Window › Icons (feedback-21 G11)
+
+One look for every item icon the addon draws (`modules/IconStyle.lua`, applied from
+`NS.WindowGroup.ItemButton` and `SetItem`): the Drops rows and their Me and Them gear icons, the
+compact cards, the detail card's header and Replaces rows, the toast, History and the Offer panel.
+The defaults draw them as they always were: the whole texture and no border. The Zoom row is
+hand-written (`settings/SchemaRows.lua`); the Border block is LibKa0s-Options' composed
+`BorderGroup` with its Show border toggle (options-ui-§16, `settings/ComposedRows.lua`, appended
+after the hand-written rows because it needs the Options instance), its one extra after the
+mandated four. Style, thickness and Color by item quality are dimmed while Show border is off; the
+color pair never is (anti-pattern #74). Every row's reaction is `NS.IconStyle.Refresh()`: the
+settings generation moves on and every item button made so far, pooled or not, takes the new look
+at once; a profile reload calls it too. Without LibKa0s the composer is hollow and the border rows
+do not exist: `NS.IconStyle` reads these defaults, so no border is drawn.
+
+| Key | Default | What it is |
+|---|---|---|
+| `icons.zoom` | `0` | the crop off each side of the icon's texture, 0 to 0.25 by 0.01 (KickCD's shape); 0 is the whole icon |
+| `icons.borderShow` | `false` | Show border: a BackdropTemplate child frame over the button, made the first time it is shown |
+| `icons.borderStyle` | `"Blizzard Tooltip"` | Border style: a LibSharedMedia border name (`LSM30_Border`); a name nothing registers draws the tooltip's edge |
+| `icons.borderSize` | `2` | Border thickness (px): the backdrop's edge size, 1 to 16 (the composer's 0 floor raised to 1) |
+| `icons.borderColor` | `{ r = 0, g = 0, b = 0, a = 1 }` | Border color, typed `color`; its alpha applies under either companion |
+| `icons.useClassColorBorder` | `false` | Use class color: the border in the **player's** class color (`classColorSource = "player"`: the icons are the player's own view of the loot), through `NS.ResolveColor`, the swatch's alpha kept, the swatch for a class with no color |
+| `icons.borderQuality` | `false` | Color by item quality: the border in the item's quality color in place of the swatch (and of the class color), the swatch's alpha kept; the quality is TipMarks.ItemName's source (`NS.ItemRead.QualityOf`, the client's answer else the link's color, in `ITEM_QUALITY_COLORS`, else the link's own `|cAARRGGBB` code); an item with no quality known keeps the swatch's mode |
+
 ### Named state (no row)
 
 | Key | Default | Set by | What it is |

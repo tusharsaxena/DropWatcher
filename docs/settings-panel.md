@@ -17,11 +17,12 @@ predicate, `settings/SchemaRows.lua`), never hidden, and keeps its value.
 | Comparison | `Scoring`, `Weights`, `Preferences` |
 | Trade | `Rules`, `Timers` |
 | Messages | `Templates`, `Sending`, `Auto-ask` |
-| Window | `Columns`, `Layout`, `Toast`, `Upgrade glow` |
+| Window | `Columns`, `Layout`, `Toast`, `Upgrade glow`, `Icons` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 `settings/Panel.lua` registers General, `settings/Pages.lua` the five after it,
-`settings/Profiles.lua` the last. Three tabs, one closing line and one table have no row the flow
+`settings/Profiles.lua` the last. Window › Icons' Border block is composed by the library
+(`settings/ComposedRows.lua`, options-ui-§16), like General's Master controls. Three tabs, one closing line and one table have no row the flow
 engine can draw; they are host tabs and `afterGroup` hooks handed to the library's tabbed renderer
 (`settings/PageEditors.lua`, over the pure `settings/Editors.lua`), and Window › Layout's Clear history
 button is Keep history for's `pairWith` partner, the right half of its line.
@@ -160,3 +161,16 @@ sparkles** (particles, frequency, scale), **Button (rotating rays)** (frequency)
 Auto cast). A glow's Style is dimmed while it is off; a knob also while its glow is in a style the
 knob does not apply to. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
 (`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#window--upgrade-glow-feedback-21).
+
+**Icons** (feedback-21 G11): one look for every item icon the addon draws (the Drops rows and their
+Me and Them gear icons, the compact cards, the detail card's header and Replaces rows, the toast,
+History and the Offer panel). **Zoom:** Icon zoom (0 to 0.25, cropped off each side; 0 by default,
+the whole icon). **Border:** the canonical border block (options-ui-§16), composed by LibKa0s-Options'
+`BorderGroup`: Show border (off), then Border style (a LibSharedMedia border; Blizzard Tooltip) |
+Border thickness (px) (1 to 16; 2), then Border color (black, opaque) | **Use class color** (off;
+the player's class color, the swatch's alpha kept, options-ui-§17), then the block's one extra,
+**Color by item quality** (off: on, each border takes its item's quality color in place of the
+swatch, its alpha kept; an item with no quality known keeps the swatch). Style, thickness and
+Color by item quality are dimmed while Show border is off; the color pair never is. Every change
+restyles every icon at once (`NS.IconStyle.Refresh`); the upgrade glow draws over the border.
+Ranges and defaults: [`schema.md`](schema.md#window--icons-feedback-21-g11).

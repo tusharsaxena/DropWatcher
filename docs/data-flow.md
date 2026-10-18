@@ -693,7 +693,8 @@ a repaint of a surface ─> Glow.Apply(button, drop)
        color with the swatch's alpha while it is on, else (or for a class with no color) the swatch
   ─> the same kind, settings generation and button width as last time ─> nothing (no library call)
   ─> else stop the old effect (key DropWatcherUpgrade), record button.glowKind, start
-       LibCustomGlow-1.0's glow.<kind>.type at frame level 1 over the button:
+       LibCustomGlow-1.0's glow.<kind>.type at frame level 2 over the button (over the icon's
+       border, IconStyle's child frame at 1; G11):
        pixel    PixelGlow_Start(button, color, lines, frequency, length or nil, thickness, x, y, border)
        autocast AutoCastGlow_Start(button, color, particles, frequency, scale, x, y)
        button   ButtonGlow_Start(button, color, frequency)
@@ -702,6 +703,27 @@ a repaint of a surface ─> Glow.Apply(button, drop)
 WindowGroup / CompactGroup repaint ─> Glow.StopFree(pool): the rows or cards left unused lose it
 a glow.* row's write, a profile switch / copy / reset ─> Glow.Refresh(): the generation + 1,
     Window.Refresh ─> every glowing icon restarts once
+```
+
+## Every item icon's look (feedback-21 G11)
+
+```
+WindowGroup.ItemButton (any surface: the Drops rows and their Me and Them icons, the compact
+    cards, the detail card's header and Replaces rows, the toast, History, the Offer panel)
+  ─> IconStyle.Apply(button, nil): the button is remembered (a weak set), and styled
+WindowGroup.SetItem(button, link) ─> IconStyle.Apply(button, link)
+  ─> the settings generation and (Color by item quality on) the link as last time ─> nothing
+  ─> else art:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)         icons.zoom, 0 to 0.25
+       icons.borderShow off ─> the border frame (if any) hidden
+       on ─> the BackdropTemplate child frame (made on first use, one level over the button)
+             SetBackdrop{ edgeFile = LSM:Fetch("border", icons.borderStyle) or the tooltip's edge,
+                          edgeSize = icons.borderSize }
+             SetBackdropBorderColor: NS.ResolveColor(icons.borderColor, icons.useClassColorBorder)
+               (the player's class), else with icons.borderQuality the item's quality color
+               (ItemRead.QualityOf ─> ITEM_QUALITY_COLORS, else the link's |cAARRGGBB), the
+               swatch's alpha kept; no quality known ─> the swatch's mode
+an icons.* row's write, a profile switch / copy / reset ─> IconStyle.Refresh(): the generation + 1,
+    every button remembered, pooled or not, re-applied for its b.link
 ```
 
 Can't use reads `C.TONE.redMuted` (dim red) wherever a verdict is drawn, and Not wanted stays gray

@@ -63,9 +63,12 @@ one-line responsibility and why its position is load-bearing or conventional is 
   footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
   off-spec verdict's look, `OffSpecCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
-  tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), compact
+  tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), every item
+  icon's look (`IconStyle.lua`: Window › Icons' zoom and border), compact
   mode's switch and bodies, test mode and the diagnostics.
-- `settings/`: the schema seam and its rows, the options pages and their editors, the slash table,
+- `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the
+  Options instance emits: Master controls in `Panel.lua`, Window › Icons' border in
+  `ComposedRows.lua`), the options pages and their editors, the slash table,
   the slash-only and `/dw sim` verbs, and Profiles, last.
 
 The window only listens: it reads the engine through read-only accessors and the bus, and every
@@ -76,7 +79,9 @@ button goes through the host handler its slash verb shares.
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher
 and the host verbs alike, and one read, `NS.Setting(path)`. The rows are `settings/Schema.lua`'s
 `Settings.Schema` array: the composed Master controls rows (`settings/Panel.lua`), then every
-hand-written row of design spec §12.1 (`settings/SchemaRows.lua`). Each row's `group` is its tab on
+hand-written row of design spec §12.1 (`settings/SchemaRows.lua`), then the composed blocks of the
+later pages (`settings/ComposedRows.lua`: Window › Icons' border, options-ui-§16; feedback-21 G11),
+which take SchemaRows' checks. Each row's `group` is its tab on
 its page, a `disabledIf` predicate dims a row with nothing to do, its `default` references
 `defaults/Profile.lua`, and its `validate` refuses a value before the seam stores it. The two
 specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
@@ -244,7 +249,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Covers |
 |---|---|
 | `scope.md` | What the addon is for, what exists at this version, and what it deliberately does not do |
-| `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included, and the upgrade glow `modules/Glow.lua`) |
+| `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included, the upgrade glow `modules/Glow.lua` and every item icon's look `modules/IconStyle.lua`) |
 | `schema.md` | The SavedVariables shape, every default, and the migration path |
 | `settings-panel.md` | The `Page \| Covers` table and the page → tab → row tree |
 | `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence, Can't use and Trade's Can't use in dim red, and the upgrade glow |

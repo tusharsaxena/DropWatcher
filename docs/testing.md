@@ -65,7 +65,11 @@ Use class color beside it (off, player-scoped), the refused values and colors, a
 for another style and the style while its glow is off, the color pair never, the
 `NS.Glow.Refresh` reaction, `/dw set` on a color and `0 (Automatic)`; Window › Toast's Scale, feedback-21
 G10: its 0.5-2 by 0.05 range, `isPercent`, default 1, dimmed with the toast off, the refused values and its
-place after Play a sound), `test_settings_pages` (the settings
+place after Play a sound; Window › Icons, feedback-21 G11: the Zoom row then the composed Border block in
+order (the composer's labels, the quality extra after the mandated four), every default today's look, the
+color pair player-scoped, starting its line and never dimmed, the refused values, style, thickness and
+quality dimmed with Show border off, `/dw set` on the color, and the degraded load keeping Zoom with the
+border's profile defaults), `test_settings_pages` (the settings
 pages built headless: the page list and each page's strip, a page's rows by its key, When to show's
 table (one line per situation, its gold headers and stripe, each cell's value, a toggle writing its
 path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, parked
@@ -188,7 +192,14 @@ fake LibCustomGlow, no library call on an unchanged repaint and a restart on a s
 drawn color with and without Use class color (the player's class, the swatch's alpha, the swatch for
 a class with no color), each
 of the three surfaces' icons, the toast's never, a reused or unused pooled row losing it, a glow row's write and a profile
-copy re-applying), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
+copy re-applying), `test_icon_style` (every item icon's look, feedback-21 G11: the defaults drawing the
+whole texture with no border and no frame made, the zoom's crop and its clamp, an unchanged repaint making
+no call, a row's write restyling every button made so far (one showing nothing too), the border's child
+frame made on first use with LibSharedMedia's texture or the tooltip's edge, its size and swatch, Use class
+color (the player's class, the swatch's alpha), Color by item quality (the cached item's quality color,
+an uncached link's own color, the swatch's mode for no quality), the Drops row, its Me icons, the detail
+card's header, the compact card and the toast styled live, the glow's frame level over the border, and a
+profile copy re-reading it), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, its next expiry moving each second and keeping
 the ticker running, Post my tradeables through its handler, and the compact strip's summary

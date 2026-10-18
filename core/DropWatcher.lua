@@ -500,6 +500,7 @@ local function reloadProfile(self)
     if NS.AutoAsk then NS.AutoAsk.OnProfileReloaded() end
     if NS.Toast then NS.Toast.OnProfileReloaded() end
     if NS.Glow then NS.Glow.Refresh() end   -- the incoming profile's glow settings
+    if NS.IconStyle then NS.IconStyle.Refresh() end   -- and its Window › Icons look
     if NS.Window then NS.Window.ApplySettings() end
 end
 

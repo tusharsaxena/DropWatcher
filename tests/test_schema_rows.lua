@@ -367,3 +367,71 @@ test("toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a soun
     assertEqual(order[#order], "toast.scale", "the tab's last row")
     assertEqual(order[#order - 1], "toast.sound")
 end)
+
+-- ── Window › Icons (feedback-21 G11) ────────────────────────────────────────────────────────
+
+-- The tab's rows in order: the Zoom row, then the composed Border block (options-ui-§16: Show
+-- border leads, the mandated four in order, the quality extra after them).
+local ICON_ROWS = {
+    "icons.zoom", "icons.borderShow", "icons.borderStyle", "icons.borderSize", "icons.borderColor",
+    "icons.useClassColorBorder", "icons.borderQuality",
+}
+
+test("icons: Window › Icons is the Zoom row then the composed Border block, its defaults today's look", function()
+    local NS = T.newAddon()
+    local S, I = NS.SchemaRuntime, NS.C.PROFILE.icons
+    local order = {}
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("window")) do
+        if r.group == "Icons" then order[#order + 1] = r.path end
+    end
+    assertEqual(table.concat(order, ","), table.concat(ICON_ROWS, ","))
+    local zoom = S.FindRow("icons.zoom")
+    assertEqual(zoom.subgroup, "Zoom"); assertEqual(zoom.label, "Icon zoom")
+    assertEqual(zoom.min, 0); assertEqual(zoom.max, 0.25); assertEqual(zoom.step, 0.01)
+    assertEqual(zoom.default, 0, "the whole icon, as it was drawn before")
+    -- The composer's labels, word for word (options-ui-§16), under the Border subsection.
+    local LABELS = { borderShow = "Show border", borderStyle = "Border style", borderSize = "Border thickness (px)",
+        borderColor = "Border color", useClassColorBorder = "Use class color", borderQuality = "Color by item quality" }
+    for leaf, label in pairs(LABELS) do
+        local row = S.FindRow("icons." .. leaf)
+        assertEqual(row.label, label, leaf); assertEqual(row.subgroup, "Border", leaf)
+        assertEqual(row.page, "window", leaf)
+        assertTrue(type(row.onChange) == "function", leaf .. " restyles the icons")
+        assertTrue(type(row.validate) == "function", leaf .. " has a check")
+        if leaf ~= "borderColor" then assertEqual(row.default, I[leaf], leaf .. " default from defaults/Profile.lua") end
+    end
+    assertTrue(type(zoom.onChange) == "function")
+    assertEqual(S.FindRow("icons.borderStyle").dialogControl, "LSM30_Border")
+    assertEqual(I.borderShow, false, "no border by default"); assertEqual(I.borderQuality, false)
+    assertEqual(I.useClassColorBorder, false, "options-ui-§17: the companion is off by default")
+    -- The color pair: player-scoped, the swatch starting its line, neither half ever dimmed.
+    local swatch, cc = S.FindRow("icons.borderColor"), S.FindRow("icons.useClassColorBorder")
+    assertEqual(swatch.classColorSource, "player"); assertEqual(cc.classColorSource, "player")
+    assertTrue(swatch.startsLine == true, "the pair cannot split across two lines")
+    assertNil(swatch.disabledIf, "anti-pattern #74"); assertNil(cc.disabledIf)
+end)
+
+test("icons: the border rows refuse what they cannot draw, and dim with Show border off", function()
+    local NS = T.enableAddon()
+    local S = NS.SchemaRuntime
+    assertFalse(S.Set("icons.zoom", 0.3)); assertFalse(S.Set("icons.zoom", -0.01))
+    assertTrue(S.Set("icons.zoom", 0.08)); assertEqual(NS.addon.db.profile.icons.zoom, 0.08)
+    assertFalse(S.Set("icons.borderSize", 0)); assertFalse(S.Set("icons.borderSize", 17))
+    assertFalse(S.Set("icons.borderShow", "yes")); assertFalse(S.Set("icons.borderStyle", ""))
+    assertFalse(S.Set("icons.borderColor", { r = 2, g = 0, b = 0 }))
+    for _, leaf in ipairs({ "borderStyle", "borderSize", "borderQuality" }) do
+        assertTrue(S.FindRow("icons." .. leaf).disabledIf(), leaf .. " dimmed while Show border is off")
+    end
+    assertTrue(S.Set("icons.borderShow", true))
+    assertFalse(S.FindRow("icons.borderStyle").disabledIf())
+    assertTrue(S.Set("icons.borderSize", 4)); assertTrue(S.Set("icons.borderQuality", true))
+    NS.addon:OnSlashCommand("set icons.borderColor 1 0 0 1")
+    assertEqual(NS.addon.db.profile.icons.borderColor.r, 1)
+end)
+
+test("icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults", function()
+    local D = T.bootAddon{ skip = NO_LIBKA0S }
+    assertTrue(D.SchemaRuntime.Set("icons.zoom", 0.1))
+    assertNil(D.SchemaRuntime.FindRow("icons.borderShow"), "the composer is hollow")
+    assertEqual(D.Setting("icons.borderShow"), false, "the profile default: no border")
+end)

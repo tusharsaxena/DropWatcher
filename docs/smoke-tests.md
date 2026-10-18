@@ -35,6 +35,7 @@ passed.
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
 | TOAST-1..6 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10) |
 | GLOW-1..9 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9) |
+| ICON-1..4 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the defaults drawing the icons as before and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
 | COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
@@ -2000,6 +2001,43 @@ read while Use class color is on, except for its opacity. Tick Off-spec color's 
 off-spec icons glow in your class color too, the main ones as their own pair says. Untick Off-spec glow
 → its color and Use class color stay live. `/reload` → the ticks are kept. Defaults → both off. Result:
 
+## Item icons
+
+The look's decision, its rows and the surfaces' icons are headless-tested (`test_icon_style`,
+`test_schema_rows`, `test_settings_pages`); the suites draw no texture and no backdrop, so what the
+crop and the border look like is checked here. The settings are Settings › Window › Icons.
+
+**ICON-1. Today's look, and the tab (feedback-21 G11).** On a profile that never touched the tab, `/dw
+test` → every item icon looks as it did before: the whole icon, no border, on the Drops rows and their Me
+and Them gear icons, the compact cards, the detail card's header and Replaces rows, the Offer panel,
+History and the toast. Settings › Window: the strip ends `Upgrade glow`, `Icons`. Icons shows **Zoom**
+(Icon zoom, `0.00`), then **Border**: Show border (unticked) on a line of its own, Border style (Blizzard
+Tooltip) | Border thickness (px) (2), Border color (black) | Use class color (unticked), then Color by
+item quality (unticked). With Show border unticked, Border style, Border thickness and Color by item
+quality are dimmed; Border color and Use class color are not. Hover each → its tooltip. Result:
+
+**ICON-2. Icon zoom on every surface.** `/dw test`, expand a row, open your own drop's Offer panel,
+show a toast (Window › Toast › Show a toast, then `/dw test`), and open History beside it in turn. Drag
+Icon zoom to `0.10` → every item icon listed in ICON-1 crops its edges at once, the dark rim most item
+icons carry gone, without a repaint or a reopen; `0.25` → a quarter off each side; `0.00` → the whole icon
+again. Switch to compact (`/dw compact`) → the cards' icons wear the same crop. Result:
+
+**ICON-3. The border, its class color, and the glow over it.** Tick Show border → every item icon gets
+a thin black tooltip-edge border at once; the three rows dim no more. Border style → another border (any
+LibSharedMedia border another addon registers is listed) → the icons take it; Border thickness → 8 →
+the edge thickens; Border color → a red at half alpha → the borders turn a faint red. Tick Use class
+color → your character's class color, as faint. The upgrade glow on a main-spec or off-spec upgrade's
+icon (Window › Upgrade glow) still draws over the border, never under it, in every glow style. Untick
+Show border → the borders go; `/reload` → the settings are kept. Defaults on the Window page → the
+icons back to ICON-1's look. Result:
+
+**ICON-4. Color by item quality.** Show border ticked, tick Color by item quality → each icon's border
+takes its item's quality color (green, blue, purple, orange) over the swatch and over Use class color,
+the swatch's alpha still applied; a Me or Them gear icon takes its worn item's. An item the client has
+not cached yet still shows its link's color; the toast's icon does too. Untick it → back to the swatch
+(or the class color). `/dw get icons.borderQuality` → `true` while ticked; `/dw set icons.borderSize 0`
+is refused. Result:
+
 ## Transmog
 
 **TMOG-1. The look chip and the For transmog ask.** `/dw test`, open the Drops tab and expand
@@ -2458,6 +2496,8 @@ stray `%s` or `%d`, and no Lua error. Result:
 | GLOW-7..8 | feedback-21, each glow turned off; a style's knobs dimmed for another style | No client pass recorded yet |
 | GLOW-9 | feedback-21, Use class color beside each glow color: the player's class, the swatch's alpha, never dimmed | No client pass recorded yet |
 | TOAST-6 | feedback-21 G10, the toast's Scale: 50 to 200 %, live on a toast on screen, about its saved anchor | No client pass recorded yet |
+| ICON-1..2 | feedback-21 G11, the item icons drawn as before by default, Window › Icons' rows, Icon zoom live on every surface | No client pass recorded yet |
+| ICON-3..4 | feedback-21 G11, the border block, its Use class color and the glow over it; Color by item quality | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 

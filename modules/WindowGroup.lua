@@ -453,6 +453,7 @@ local function itemButton(parent, size)
     b:SetScript("OnEnter", function(self) itemEnter(self) end)
     b:SetScript("OnLeave", hideTooltip)
     b:SetScript("OnClick", WG.OnItemClick)
+    NS.IconStyle.Apply(b, nil)   -- Window › Icons' look (modules/IconStyle.lua), from the start
     return b
 end
 
@@ -464,12 +465,14 @@ local function setItem(b, link, where)
     b.worn = where and where.unit and where or nil
     local icon = link and NS.Compat.ItemIcon(link)
     b.art:SetTexture(icon or NS.Icon("help"))
+    NS.IconStyle.Apply(b, link)  -- the border's quality color follows the item
     b:SetShown(link ~= nil)
 end
 
 --- A real item button (the game's tooltip on hover, shift-click links, ctrl-click tries on), for
 --- the detail card too. `WG.SetItem(b, link, where)` shows an item on it, or hides it for nil;
 --- `where` is WG.Where(drop) for a drop, { unit, slot } for an item worn, nil for a link only.
+--- Every one wears Window › Icons' zoom and border (NS.IconStyle, feedback-21 G11).
 --- @param parent table
 --- @param size number
 --- @return table

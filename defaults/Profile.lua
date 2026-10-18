@@ -167,6 +167,20 @@ NS.C = {
             offSpec = glow(true, "pixel", TONE.offspec),
         },
 
+        -- Every item icon's look (feedback-21 G11, Window › Icons; modules/IconStyle.lua). The
+        -- defaults draw the icons as they always were: the whole texture (zoom 0) and no border.
+        -- The border rows are LibKa0s-Options' composed block (options-ui-§16), so their values
+        -- live here too, as the Master controls' do; `borderStyle` is a LibSharedMedia border name.
+        icons = {
+            zoom                = 0,                        -- 0 to 0.25, cropped off each side
+            borderShow          = false,
+            borderStyle         = "Blizzard Tooltip",
+            borderSize          = 2,                        -- the edge's width, in pixels
+            borderColor         = { r = 0, g = 0, b = 0, a = 1 },
+            useClassColorBorder = false,                    -- the player's class color instead
+            borderQuality       = false,                    -- the item's quality color instead
+        },
+
         -- The simulator (feedback-2 spec §8): the seconds an automatic run waits between steps.
         sim = {
             stepDelay = 2,

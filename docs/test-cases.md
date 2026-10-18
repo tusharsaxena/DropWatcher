@@ -100,7 +100,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (18)
+### test_schema_rows.lua (21)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -120,6 +120,9 @@ Total.
 - glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never
 - glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
 - toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a sound, live only with the toast on
+- icons: Window › Icons is the Zoom row then the composed Border block, its defaults today's look
+- icons: the border rows refuse what they cannot draw, and dim with Show border off
+- icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 
 ### test_settings_pages.lua (39)
 
@@ -1550,6 +1553,17 @@ Total.
 - glow: a glow row's write re-applies every drawn icon at once
 - glow: a profile switch re-reads the glow settings
 
+### test_icon_style.lua (8)
+
+- icon style: by default an item icon is the whole texture with no border, as it was before
+- icon style: a repaint that changes nothing costs nothing; a row's write restyles every button made so far
+- icon style: Show border draws the swatch over the icon; Use class color the player's class with its alpha
+- icon style: a border style LibSharedMedia knows draws its texture
+- icon style: Color by item quality draws each item's quality color, the swatch's alpha kept
+- icon style: the Drops row's icon, its Me icons and the detail card's header take a row's write live
+- icon style: the compact card's icon and the toast's icon wear it too
+- icon style: the glow starts over the border, and a profile switch re-reads the look
+
 ### test_auto_ask.lua (24)
 
 - auto-ask: DueAt is the delay after the later of the drop and the encounter's end
@@ -1857,7 +1871,7 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 18 |
+| test_schema_rows.lua | 21 |
 | test_settings_pages.lua | 39 |
 | test_slash.lua | 26 |
 | test_window.lua | 15 |
@@ -1917,6 +1931,7 @@ Total.
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 34 |
 | test_glow.lua | 13 |
+| test_icon_style.lua | 8 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
 | test_sim_pool.lua | 20 |
@@ -1935,4 +1950,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1593** |
+| **Total** | **1604** |

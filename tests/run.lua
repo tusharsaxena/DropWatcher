@@ -206,6 +206,7 @@ Kit.run{
         "test_content_tabs",
         "test_toast",
         "test_glow",
+        "test_icon_style",
         "test_auto_ask",
         "test_sim_core",
         "test_sim_pool",

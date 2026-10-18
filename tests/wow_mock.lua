@@ -127,6 +127,12 @@ local function decorateText(f)
     end
     f.SetTexture = function(self, tex) self.__texture = tex; return self end
     f.GetTexture = function(self) return self.__texture end
+    -- A texture's crop (Window › Icons' zoom, feedback-21 G11); unset answers the whole texture.
+    f.SetTexCoord = function(self, ...) self.__texCoord = { ... }; return self end
+    f.GetTexCoord = function(self)
+        local c = self.__texCoord or { 0, 1, 0, 1 }
+        return c[1], c[2], c[3], c[4]
+    end
     -- A texture's vertex color (a chevron's tint, feedback-5 spec §0); unset answers white.
     f.SetVertexColor = function(self, r, g, b, a) self.__vertex = { r, g, b, a or 1 }; return self end
     f.GetVertexColor = function(self)

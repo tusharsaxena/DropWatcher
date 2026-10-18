@@ -227,6 +227,23 @@ L["The glow's color. Its alpha makes the glow fainter. Not read while Use class 
 L["Use class color"] = "Use class color"
 L["Glow in your class color instead of the swatch beside it. The swatch's alpha still applies."] =
     "Glow in your class color instead of the swatch beside it. The swatch's alpha still applies."
+L["Icons"] = "Icons"
+L["Zoom"] = "Zoom"
+L["Icon zoom"] = "Icon zoom"
+L["Crop each item icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most item icons."] =
+    "Crop each item icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most item icons."
+
+-- settings/ComposedRows.lua
+L["Border"] = "Border"
+L["Color by item quality"] = "Color by item quality"
+L["Draw each icon's border in its item's quality color (green, blue, purple ...) instead of the swatch. The swatch's alpha still applies; an item whose quality is not known keeps the swatch."] =
+    "Draw each icon's border in its item's quality color (green, blue, purple ...) instead of the swatch. The swatch's alpha still applies; an item whose quality is not known keeps the swatch."
+L["Draw a border around every item icon: the drop tables, the cards, the toast, the Offer panel and History."] =
+    "Draw a border around every item icon: the drop tables, the cards, the toast, the Offer panel and History."
+L["The border's texture, from LibSharedMedia. Any border another addon registers shows up here too."] =
+    "The border's texture, from LibSharedMedia. Any border another addon registers shows up here too."
+L["The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."] =
+    "The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."
 
 -- settings/Editors.lua
 L["Strength"] = "Strength"
@@ -305,5 +322,5 @@ L["Messages"] = "Messages"
 L["Reset the Messages page's settings (templates, sending and auto-ask) to their defaults."] =
     "Reset the Messages page's settings (templates, sending and auto-ask) to their defaults."
 L["Window"] = "Window"
-L["Reset the Window page's settings (columns, layout, toast and upgrade glow) to their defaults."] =
-    "Reset the Window page's settings (columns, layout, toast and upgrade glow) to their defaults."
+L["Reset the Window page's settings (columns, layout, toast, upgrade glow and icons) to their defaults."] =
+    "Reset the Window page's settings (columns, layout, toast, upgrade glow and icons) to their defaults."

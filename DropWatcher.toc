@@ -351,6 +351,11 @@ modules\RowTooltip.lua
 # at call time; modules\WindowGroup.lua, modules\DetailCard.lua, modules\CompactGroup.lua and
 # modules\Toast.lua (below) call it when they paint an icon.
 modules\Glow.lua
+# Conventional: publishes NS.IconStyle, every item icon's look (Window › Icons, feedback-21 G11: the
+# zoom and the composed border); reads nothing at load. NS.Setting, NS.C, NS.ResolveColor,
+# NS.ItemRead and LibSharedMedia-3.0 are read at call time; modules\WindowGroup.lua's ItemButton and
+# SetItem (below) call it on every item button they make and paint.
+modules\IconStyle.lua
 # LOAD-BEARING: publishes NS.WindowGroup and registers the Drops body through
 # Window.RegisterTab (modules\Window.lua, above) at load; takes NS.WindowCells, NS.SideCells and
 # NS.TipMarks (above, its column tooltips call TipMarks.Mark), NS.Constants, NS.L and NS.State at load. The feed, the inspect broker, the asks, the pool, the detail card
@@ -496,6 +501,10 @@ settings\SchemaRows.lua
 settings\OptionsSetup.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
 settings\Panel.lua
+# LOAD-BEARING: calls Helpers.BorderGroup (settings\OptionsSetup.lua, above) and
+# NS.SchemaRuntime.AddRows at file scope, appending Window › Icons' composed border block after
+# settings\SchemaRows.lua's rows; reads NS.C, NS.L and Settings.Checks at load.
+settings\ComposedRows.lua
 # LOAD-BEARING: publishes Settings.Editors (the pure halves of the pages' own editors), which
 # settings\PageEditors.lua takes at load; reads NS.L, NS.Constants and NS.ClassData at load, and
 # NS.Evaluate and NS.Messaging (modules\, above) at call time.
