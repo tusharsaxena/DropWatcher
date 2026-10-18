@@ -45,7 +45,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | H5 detail card: ▲▼ glyphs, For you / For Looter (name), stat colors, Replaces row | DW | done | 76c8678 (glyphs in a monospace string per chip and line; C.TONE.greenMuted + stat tones, C.STAT_TONE; History chips take the glyph too) |
 | R4 review H1-H5 | DW | done | 95e4ce0 (fixed: your visible Pawn scale before the starter, the kept read survives a re-judge, SCORE-4 looter step; the two kept-read findings were one) |
 | P4 push | DW | done | through R4 (aa71012) |
-| H6 glow + icon defaults, glow color rows main-left/off-right (§17 deviation) | DW | todo | |
+| H6 glow + icon defaults, glow color rows main-left/off-right (§17 deviation) | DW | done | 4cb09b1 (C.TONE.glowMain / glowOffSpec; Solid registered with LSM by IconStyle, drawn without it too; labels Use class color (main spec) / (off-spec); deviation row in ARCHITECTURE.md) |
 | H7 dual-slot arrows everywhere (cells, compact, toast, detail card, tooltips) | DW | todo | |
 | R5 review H6, H7 | DW | todo | |
 | P5 push | DW | todo | |
