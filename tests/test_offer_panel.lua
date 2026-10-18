@@ -255,6 +255,52 @@ test("offer panel: the close mark closes it, and it closes itself when its drop 
     assertTrue(NS.OfferPanel.Open(99) == nil, "no such drop")
 end)
 
+-- The Offer button toggles (feedback-21 H4): Offer on the drop the panel shows closes it, another
+-- drop's Offer switches the panel to that drop. Every Offer (row, compact card, detail card) goes
+-- through NS.WindowOwn.PressAction.
+local function groupRow(NS, id) return rowFor(NS.WindowGroup.Drawn(), id) end
+
+test("offer panel: a row's Offer closes the panel it opened, and opens it again", function()
+    local NS = openPanel()
+    assertTrue(NS.OfferPanel.IsShown())
+    offerOf(groupRow(NS, 1)):__fire("OnClick")
+    assertFalse(NS.OfferPanel.IsShown(), "the same drop's Offer closes it")
+    assertTrue(NS.State.offerPanel == nil)
+    offerOf(groupRow(NS, 1)):__fire("OnClick")
+    assertTrue(NS.OfferPanel.IsShown()); assertEqual(NS.OfferPanel.DropId(), 1)
+end)
+
+test("offer panel: another drop's Offer switches the open panel to that drop", function()
+    local NS = openPanel()
+    offerOf(groupRow(NS, 2)):__fire("OnClick")
+    assertTrue(NS.OfferPanel.IsShown(), "still open"); assertEqual(NS.OfferPanel.DropId(), 2)
+    assertEqual(textOf(NS.OfferPanel.Drawn().panel.name.text), "Band of Embers")
+    offerOf(groupRow(NS, 2)):__fire("OnClick")
+    assertFalse(NS.OfferPanel.IsShown(), "then its own Offer closes it")
+end)
+
+test("offer panel: a compact card's Offer and the detail card's Offer toggle it too", function()
+    local NS = shownMine(true)
+    offerOf(groupRow(NS, 1)):__fire("OnClick")
+    assertTrue(NS.OfferPanel.IsShown())
+    offerOf(groupRow(NS, 1)):__fire("OnClick")
+    assertFalse(NS.OfferPanel.IsShown(), "the compact card's Offer closes it")
+    local NS2 = shownMine()
+    NS2.WindowGroup.ToggleExpand(1)
+    local b = NS2.WindowGroup.Drawn().card.actions.ask
+    assertTrue(b.offer, "the detail card's Offer")
+    b:__fire("OnClick")
+    assertTrue(NS2.OfferPanel.IsShown()); assertEqual(NS2.OfferPanel.DropId(), 1)
+    NS2.WindowGroup.Drawn().card.actions.ask:__fire("OnClick")
+    assertFalse(NS2.OfferPanel.IsShown(), "the detail card's Offer closes it")
+end)
+
+test("offer panel: /dw offer always opens it, never closes it", function()
+    local NS = openPanel()
+    assertTrue(NS.OfferPanel.Open(1) ~= nil)
+    assertTrue(NS.OfferPanel.IsShown(), "Open is not the toggle")
+end)
+
 test("offer panel: minimizing the window closes the panel and the Edit message box", function()
     local NS = openPanel()
     assertTrue(NS.OfferPanel.IsShown())

@@ -163,7 +163,8 @@ Expand all / Collapse all ─> WindowGroup.FoldAll(pane.entries, collapse) ─> 
                  every one is open, off with none; feedback-15 §2)
 Ask ───────────> WindowOwn.PressAction ─> NS.PressAsk(id) ─> NS.Asks.Press("ask", looter, id)
                  ─> AskStateChanged ─> repaint
-Offer ─────────> WindowOwn.PressAction ─> OfferPanel.Open(id) ─> WindowOwn.Reveal(id) (your own drop)
+Offer ─────────> WindowOwn.PressAction ─> OfferPanel.Toggle(id): the panel showing this drop closes,
+                 else OfferPanel.Open(id) ─> WindowOwn.Reveal(id) (your own drop; feedback-21 H4)
 Post my tradeables ─> NS.PostTradeables() ─> MineCells.PostLines(your tradeable links)
                  ─> NS.Asks.Request("announce", nil, "post:<n>:<i>", { text }) per line
 item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
@@ -357,7 +358,9 @@ while your move, §2). What is theirs alone is the reveal
 state and the Offer panel:
 
 ```
-Offer (row, card, detail card) ─> WindowOwn.PressAction ─> OfferPanel.Open(id)
+Offer (row, card, detail card) ─> WindowOwn.PressAction ─> OfferPanel.Toggle(id)
+      ─> open on this drop: OfferPanel.Close() (feedback-21 H4); else OfferPanel.Open(id)
+      (another drop's Offer switches the panel; `/dw offer` calls Open, never closes)
       ─> State.offerPanel.dropId, WindowOwn.Reveal(id) (State.windowOwn.revealed) ─> repaint
          (the count and Upgrade for N drawn from now on: the keep? rule, MineCells.OwnTrade / Details)
 Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)

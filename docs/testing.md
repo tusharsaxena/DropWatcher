@@ -218,7 +218,8 @@ candidates ranked with Their eq in the Them look (both worn items from the read)
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's
 explanation), Offer and Announce to group through their host handlers and toned by whose move it
 is (Offer cyan, Offered yellow, Retry and Announce red), a member it is no upgrade or equal for showing
-the gray `No action` with its reason (feedback-11 spec §1), the Edit message box, closing; then the
+the gray `No action` with its reason (feedback-11 spec §1), the Edit message box, closing, the Offer
+button's toggle from a row, a compact card and the detail card (feedback-21 H4); then the
 host handlers Post my tradeables, Offer and Announce),
 `test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's
 top just outside the window, else its bottom right outside the left edge, at the UI scale, the row

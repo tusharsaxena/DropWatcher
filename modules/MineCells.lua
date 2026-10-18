@@ -413,7 +413,8 @@ function MC.OwnOffer(drop, toneState)
     end
     local s = OWN_OFFER_LOOK[toneState] and toneState or "ready"
     local l = OWN_OFFER_LOOK[s]
-    local tip = { L["Offer"], row(L["Opens"], L["who could use it, by gain"]), row(L["Each"], L["with its own Offer"]) }
+    local tip = { L["Offer"], row(L["Opens"], L["who could use it, by gain"]), row(L["Each"], L["with its own Offer"]),
+        row(L["Again"], L["closes the panel"]) }
     tip[#tip + 1] = row(L["Status"], l.line)
     return { offered = true, offer = true, text = l.text, icon = l.icon, enabled = true, tip = tip, state = s, kind = "offer" }
 end

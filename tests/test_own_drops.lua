@@ -148,6 +148,7 @@ test("own drops: Offer is labeled and toned by the furthest offer sent, No actio
     assertEqual(ready.text, "Offer"); assertEqual(ready.state, "ready"); assertEqual(ready.kind, "offer")
     assertEqual(ready.icon, "external-link", "handing the item out (feedback-7 spec §1)")
     assertEqual(P(ready.tip[2]), "• Opens: who could use it, by gain")
+    assertEqual(P(ready.tip[4]), "• Again: closes the panel", "the button toggles (feedback-21 H4)")
     local expect = { queued = { "Queued", "clock" }, sent = { "Offered", "confirm" }, tradedAway = { "Traded", "confirm" },
         failed = { "Offer", "external-link" } }
     for state, e in pairs(expect) do

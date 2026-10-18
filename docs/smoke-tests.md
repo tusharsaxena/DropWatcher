@@ -28,7 +28,7 @@ passed.
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
 | INSPECT-1..5 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26); a looter who left keeps their read (feedback-21 H2) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
-| ASK-1..11 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2) |
+| ASK-1..12 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2); the Offer button toggles the Offer panel (ASK-12, feedback-21 H4) |
 | SIT-1..5 | Situations | Where the addon is active (DW-13) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..4 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1 |
@@ -1721,6 +1721,15 @@ real group, with a drop your current spec can't use but another spec of your cla
 whispers the looter that text with the off-spec difference as the gain; a second Ask on the same
 drop is refused (one ask per item per looter). Result:
 
+**ASK-12. The Offer button toggles the Offer panel (feedback-21 H4).** The headless
+`test_offer_panel` covers it. `/dw test`, Drops tab: click one of your own drops' **Offer** → the
+Offer panel opens for it. Click the same **Offer** again → the panel closes. Open it again, then
+click another of your drops' **Offer** → the panel stays open and now shows that drop; its Offer
+closes it. Hover an Offer → its tooltip has `• Again: closes the panel`. Repeat on a row's detail
+card (click the row, then the card's Offer) and in the compact layout (`/dw compact`, a card's
+Offer): each opens and then closes it. `/dw offer <item link>` with the panel already open on that
+drop leaves it open. Result:
+
 ## Situations
 
 The classifier's truth table is headless-tested (`test_situations`); these checks confirm that the
@@ -2534,6 +2543,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | SCORE-4, COMPAT-3 | feedback-21 H1, Pawn out of the box: `PawnIsReady()`, its scale asked by spec index | No client pass recorded yet |
 | INSPECT-5 | feedback-21 H2, a looter who left the group keeps the read the drop was judged with: Spec named, `Looter: not in your group`; never `spec unknown` | No client pass recorded yet |
 | FEED-90 | feedback-21 H3, a gear grid right under the title, the rows' labels muted gold, each worn item of a dual slot its own arrow | No client pass recorded yet |
+| ASK-12 | feedback-21 H4, the Offer button toggles the Offer panel: the same drop's Offer closes it, another's switches it | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 

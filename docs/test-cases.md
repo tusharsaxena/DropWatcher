@@ -616,7 +616,7 @@ Total.
 - footer row: the toggle is off when the tab shows no header
 - footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
 
-### test_offer_panel.lua (17)
+### test_offer_panel.lua (21)
 
 - offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look
 - offer panel: no class bar; every second row striped as the main window's; the name in its class color
@@ -626,6 +626,10 @@ Total.
 - offer panel: Their eq shows both worn items from the member's inspect read
 - offer panel: opening an upgrade for you reveals who it would help on its row
 - offer panel: the close mark closes it, and it closes itself when its drop is gone
+- offer panel: a row's Offer closes the panel it opened, and opens it again
+- offer panel: another drop's Offer switches the open panel to that drop
+- offer panel: a compact card's Offer and the detail card's Offer toggle it too
+- offer panel: /dw offer always opens it, never closes it
 - offer panel: minimizing the window closes the panel and the Edit message box
 - offer panel: with Edit before sending on, Offer and Announce open the box for their kind
 - offer panel: Announce to group announces the drop
@@ -1900,7 +1904,7 @@ Total.
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
-| test_offer_panel.lua | 17 |
+| test_offer_panel.lua | 21 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 37 |
@@ -1959,4 +1963,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1613** |
+| **Total** | **1617** |

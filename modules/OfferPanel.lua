@@ -370,8 +370,9 @@ function OP.Refresh()
     paintFoot(panel, drop, #list)
 end
 
---- Open the panel for one of your drops (its row's Offer). It reveals who the drop would help when
---- it is an upgrade for you: the player chose to offer it (NS.WindowOwn.Reveal).
+--- Open the panel for one of your drops (its Offer, through OP.Toggle, or `/dw offer`). It reveals
+--- who the drop would help when it is an upgrade for you: the player chose to offer it
+--- (NS.WindowOwn.Reveal).
 --- @param dropID number
 --- @return table|nil the panel, or nil before the window is built or for a drop that is not yours
 function OP.Open(dropID)
@@ -390,6 +391,15 @@ end
 function OP.Close()
     State.offerPanel = nil
     if panel then panel:Hide() end
+end
+
+--- A drop's Offer button (feedback-21 H4): it closes the panel when the panel already shows that
+--- drop, else opens it for the drop (switching from another drop's). `/dw offer` keeps OP.Open.
+--- @param dropID number
+--- @return table|nil the panel when it opened, else nil
+function OP.Toggle(dropID)
+    if dropID ~= nil and OP.IsShown() and OP.DropId() == dropID then return OP.Close() end
+    return OP.Open(dropID)
 end
 
 --- @return boolean
