@@ -122,6 +122,11 @@ function GR.Copy(list)
     return out
 end
 
+-- A 0..1 channel as 0..255. At file scope, not inside GR.Colored: a closure built per call cost
+-- every tooltip row (NS.TipMarks.Row) a table's worth of bytes on each repaint (feedback-21, PF1).
+local floor, max, min = math.floor, math.max, math.min
+local function byte(v) return floor(max(0, min(1, v)) * 255 + 0.5) end
+
 --- `text` in a color, as an inline escape; plain when the color is unknown.
 --- @param text string
 --- @param r number|nil
@@ -130,7 +135,6 @@ end
 --- @return string
 function GR.Colored(text, r, g, b)
     if type(r) ~= "number" or type(g) ~= "number" or type(b) ~= "number" then return text end
-    local function byte(v) return math.floor(math.max(0, math.min(1, v)) * 255 + 0.5) end
     return ("|cff%02x%02x%02x%s|r"):format(byte(r), byte(g), byte(b), text)
 end
 
