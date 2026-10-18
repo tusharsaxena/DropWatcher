@@ -28,7 +28,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | P1 push both branches | both | done | DW `feature/upgrade-glow`, KickCD `feature/glow-options` |
 | S1 standard: how a locale file is split (WowAddonStandards, branch `feature/locale-split-rule`) | WAS | todo | |
 | G7 glow colors get the "Use class color" companion | DW | todo | |
-| K2 KickCD lists LibCustomGlow-1.0 in OptionalDeps | KickCD | todo | |
+| K2 KickCD lists LibCustomGlow-1.0 in OptionalDeps | KickCD | done | 313d2b1 |
 | G8 DW cites the new locale-split rule | DW | todo | |
 | R2 review S1, G7, K2, G8 | all | todo | |
 | P2 push all three branches | all | todo | |
