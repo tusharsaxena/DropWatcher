@@ -4,9 +4,9 @@ Resumable, checkpointed plan. Each task ends in a commit on its branch; the **St
 is the checkpoint. To resume: read the ledger, `git log --oneline` on each branch, and start at the
 first task not `done`. Never merge without the owner's go-ahead.
 
-- DropWatcher branch: `feature/upgrade-glow` (from master `64307d3`; first commit `28dd3dc` is the
+- DropWatcher branch: `feat/2026-10-18-feedback-21` (from master `64307d3`; first commit `28dd3dc` is the
   owner's feedback-20 work, committed as found by the owner's choice).
-- KickCD branch: `feature/glow-options` (from master `970a728`).
+- KickCD branch: `feat/2026-10-18-feedback-21` (from master `970a728`).
 - Green gate before every commit, in each repo, through the bounded runner:
   `/home/tushar/.claude/dev-copilot/bin/ka0s-bounded lua tests/run.lua` and
   `/home/tushar/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0).
@@ -25,13 +25,18 @@ first task not `done`. Never merge without the owner's go-ahead.
 | G5 docs, smoke checks, test-cases, README badge | DW | done | 5a5283a |
 | K1 KickCD per-style glow knobs | KickCD | done | `7307777` (KickCD) |
 | R1 review + fixes (both repos) | both | done | `d8a74d8` (KickCD), `86fac39`, `8ffbac6` (DW) |
-| P1 push both branches | both | done | DW `feature/upgrade-glow`, KickCD `feature/glow-options` |
-| S1 standard: how a locale file is split (WowAddonStandards, branch `feature/locale-split-rule`) | WAS | done | `87bc0ef` (WAS) |
+| P1 push both branches | both | done | DW `feat/2026-10-18-feedback-21`, KickCD `feat/2026-10-18-feedback-21` |
+| S1 standard: how a locale file is split (WowAddonStandards, branch `feat/2026-10-18-feedback-21`) | WAS | done | `87bc0ef` (WAS) |
 | G7 glow colors get the "Use class color" companion | DW | done | 927c410 |
 | K2 KickCD lists LibCustomGlow-1.0 in OptionalDeps | KickCD | done | 313d2b1 |
 | G8 DW cites the new locale-split rule | DW | done | ef05ed0 |
 | R2 review S1, G7, K2, G8 | all | done | 5d120f0 (DW), `dd1fd71` (WAS); open: the three branch names are not versioning-git's `feat/<YYYY-MM-DD>-<topic>` (owner, at M1) |
-| P2 push all three branches | all | todo | |
+| P2 push all three branches | all | done | all three on `feat/2026-10-18-feedback-21` (versioning-git; the old `feature/*` remote branches await the owner's OK to delete) |
+| G9 the toast never glows | DW | todo | |
+| G10 toast scale | DW | todo | |
+| G11 item icon style (zoom, border block, quality border) | DW | todo | |
+| R3 review G9, G10, G11 | DW | todo | |
+| P3 push | DW | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
 
 ## What the owner asked (decided in conversation, 2026-10-18)
@@ -207,7 +212,7 @@ Trade: Likely
 
 ### K1 — KickCD per-style glow knobs (KickCD)
 
-- Branch `feature/glow-options`. For each glow slot, add the knob table's per-style rows (keeping
+- Branch `feat/2026-10-18-feedback-21`. For each glow slot, add the knob table's per-style rows (keeping
   KickCD's interleaved primary | secondary two-column layout and its options-ui conventions), defaults,
   `disabledIf` for other styles and for trigger `never`, wire them into `Icon:UpdateGlow`
   (`modules/IconGrid_Render.lua`) so a change restarts the glow, locales, tests, and docs (its
@@ -224,6 +229,28 @@ Trade: Likely
 3. **KickCD aligns**: `LibCustomGlow-1.0` joins `## OptionalDeps`, its DEPENDENCIES.md note
    updated (K2).
 
+### Owner asks after R2 (2026-10-18)
+
+- **G9 — the toast never glows.** A toast only ever shows an upgrade, so the glow there says
+  nothing. Remove the toast from the glow's surfaces (code, tests, the Upgrade glow tab's and docs'
+  wording, GLOW-1 now says the toast shows none); the three other surfaces keep it.
+- **G10 — toast scale.** `toast.scale`, Window › Toast, a slider 50–200 % by 5 (stored 0.5–2.0 by
+  0.05, default 1.0 = today's size), applied live to a toast on screen and to the toast's position
+  anchor (its saved point unchanged). Row, default, schema doc, settings-panel doc, smoke check,
+  tests.
+- **G11 — item icon style.** One shared style for EVERY item icon the addon draws (all come from
+  `NS.WindowGroup.ItemButton`: table rows, compact cards, detail card header and Replaces rows,
+  toast, History, Offer panel, side-cell gear icons), on a new Window › Icons tab:
+  - Zoom (texcoord crop, KickCD's shape: 0–0.25, default = today's crop so nothing changes).
+  - The canonical border block, options-ui-§16 (LibKa0s `BorderGroup` shape, as ConsumableMaster
+    builds it): Show border, Border style (LSM border), Border thickness, Border color, Use class
+    color (player-scoped). Defaults reproduce today's look.
+  - Color the border by item quality (the owner's "bells and whistles"; AuraMaster's dispel-color
+    border is the precedent): when on, the border takes the item's quality color, overriding the
+    swatch. Default off.
+  - Applied live to every pooled and unpooled item button; the glow stays above the border; a
+    repaint with no change costs nothing (signature, as the glow does); perf scenarios stay green.
+
 ### R1 — review
 
 - Review both branches' diffs against master for correctness, standard conformance (flag, never
@@ -232,7 +259,7 @@ Trade: Likely
 
 ### P1 — push
 
-- `git push -u origin feature/upgrade-glow` and `git push -u origin feature/glow-options`.
+- `git push -u origin feat/2026-10-18-feedback-21` and `git push -u origin feat/2026-10-18-feedback-21`.
 
 ### M1 — merge (owner's go-ahead only)
 
