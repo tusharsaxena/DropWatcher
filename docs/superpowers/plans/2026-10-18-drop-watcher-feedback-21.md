@@ -29,7 +29,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | S1 standard: how a locale file is split (WowAddonStandards, branch `feature/locale-split-rule`) | WAS | done | `87bc0ef` (WAS) |
 | G7 glow colors get the "Use class color" companion | DW | done | 927c410 |
 | K2 KickCD lists LibCustomGlow-1.0 in OptionalDeps | KickCD | done | 313d2b1 |
-| G8 DW cites the new locale-split rule | DW | todo | |
+| G8 DW cites the new locale-split rule | DW | done | ef05ed0 |
 | R2 review S1, G7, K2, G8 | all | todo | |
 | P2 push all three branches | all | todo | |
 | M1 merge (owner's go-ahead), delete branches/worktrees/stashes | all | blocked on owner | |
