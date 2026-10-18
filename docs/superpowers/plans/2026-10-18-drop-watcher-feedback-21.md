@@ -38,7 +38,7 @@ first task not `done`. Never merge without the owner's go-ahead.
 | R3 review G9, G10, G11 | DW | done | f3cafdb (stale Glow.lua TOC note fixed; borderSize floor 1 refuted: composer rows are retuned by hosts, CM floors at 1 too) |
 | PF1 perf: G6's refresh allocation recovered | DW | done | 43bde2a |
 | P3 push | DW | done | through PF1 |
-| H1 Pawn works out of the box (PawnIsReady) | DW | todo | |
+| H1 Pawn works out of the box (PawnIsReady) | DW | done | e1f4ea7 (also: scale asked by spec index, unenchanted value) |
 | H2 "spec unknown" on an inspected looter | DW | todo | |
 | H3 tooltips: gear line first, muted-gold labels, both dual-slot arrows | DW | todo | |
 | H4 Offer button toggles the Offer panel | DW | todo | |
