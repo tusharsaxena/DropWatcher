@@ -17,7 +17,7 @@ passed.
 | SLASH-1..7 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14) |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2: General → When to show and Feed (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); When to show's table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
-| STATE-1..5 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16) |
+| STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
 | COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |

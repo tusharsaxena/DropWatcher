@@ -34,8 +34,8 @@ fails unless the fire reaches your handler.
 ## Add a bus message
 
 Add `KEY = "Ka0s_DropWatcher_Event"` to the catalog in `core/Bus.lua`, with its one sender in the
-comment. Receivers take their own target, `NS.Bus:NewTarget()`, and use `NS.MSG.KEY`, never the
-literal.
+comment. Receivers take their own target, `NS.Bus:NewTarget()`, and use `NS.MSG.KEY`, never the literal. Each new receiver adds its message to `PINNED_MESSAGES` in
+`tests/test_disabled.lua` (one entry per receiver), or `test_disabled` 1 fails.
 
 ## Add a Compat shim
 
@@ -45,7 +45,7 @@ A version-variant, deprecated or optional client API is called from `core/Compat
    `Compat.IsSecret` before comparing or matching anything the client hands back; answer a
    documented absent value (nil, false or `{}`) when the API is missing.
 2. Declare the client global in `.luacheckrc` under `files["core/Compat.lua"]` (a stable world read
-   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`), never globally, and
+   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`, an exact item read or tooltip setter in `core/CompatItem.lua` under `files["core/CompatItem.lua"]`), never globally, and
    add its name to `SEAM_ONLY` in `tests/test_compat.lua`.
 3. Add a controllable fake to `tests/wow_mock.lua` and cases to `tests/test_compat.lua`, the API
    absent among them.

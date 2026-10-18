@@ -110,4 +110,4 @@ Please raise them on GitHub:
 
 ## Credits
 
-The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL Open Font License 1.1, and the window's icons are drawn from [Open Iconic](https://github.com/iconic/open-iconic) (MIT). Both ship inside the bundled LibKa0s payload, with their license text beside them. The upgrade glow on item icons is drawn by [LibCustomGlow](https://github.com/Stanzilla/LibCustomGlow) (MIT), bundled under `libs/` with its license.
+The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL Open Font License 1.1, and the window's icons are drawn from [Open Iconic](https://github.com/iconic/open-iconic) (MIT).

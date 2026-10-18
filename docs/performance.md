@@ -77,6 +77,9 @@ places itself only when what decides it changes (the layout, and on Drops whethe
 `test_drops_strip`. After it: `refreshCaptureOff`/`On` 14096.8 and `refreshCompactCaptureOff`/`On`
 10864.9, every pair matching and under its ceiling; the parse pair and `showDecisionStoodDown` unmoved.
 
+Re-run 2026-10-18 after feedback-21: `refreshCaptureOff`/`On` 13713.0 and `refreshCompactCaptureOff`/`On`
+10481.1, every pair matching and under its ceiling; the parse pair and `showDecisionStoodDown` unmoved.
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the

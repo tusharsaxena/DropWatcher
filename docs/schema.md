@@ -11,8 +11,10 @@ the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or the
 before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
 composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
 §12.1 (`settings/SchemaRows.lua`), page by page as the tables below list them: General's When to
-show and Simulation, Feed, Comparison, Trade, Messages, Window, and the account-wide Keep history
-for (`global.history.retentionDays`, feedback-2 spec §5, DW-A5; it replaced the group cap).
+show and Simulation, Feed, Comparison, Trade, Messages, Window's Columns, Layout and Toast, the
+account-wide Keep history for (`global.history.retentionDays`, feedback-2 spec §5, DW-A5; it
+replaced the group cap), then Window's Upgrade glow and Icons' Zoom; Icons' composed Border block
+(`settings/ComposedRows.lua`) is appended last.
 
 - Each row's `group` is its tab on its page (design spec §12.2); a page draws the rows whose `page`
   is its key (`Settings.RowsForPage`). The tree is [`settings-panel.md`](settings-panel.md).
@@ -287,6 +289,7 @@ and no setting row: the session (feedback-15 spec §0, DW-Q0, `modules/Session.l
 |---|---|---|
 | `session.start` | absent until the first read or login | the session start, `time()`: an initial login's `PLAYER_ENTERING_WORLD` sets it to now, a reload keeps it, a zone change moves nothing; absent or not a number, it is now (stored). History's group keys (`@<start>`) and every tab's This session read it (`NS.History.SessionStart`) |
 | `session.instance` | absent until the first `SituationChanged` | `{ at, situation, instance }`: where This instance started, `at` the epoch, `situation` the situation key, `instance` the instance map id (nil outside one); a reload's first situation announcement that names the same situation and instance restores the window's This instance from it |
+| `session.cleared` | absent until the first clear | `time()` of the last live `LootFeed.Clear` (`/dw clear`, Clear on boss kill): a reload restores no entry dated before it; an initial login drops it (`NS.Session.Cleared`) |
 
 The kit's AceDB fake has no `char` section, so headless the record is session-only unless a suite
 seeds `db.char` (`test_feed_restore` does).

@@ -251,7 +251,7 @@ A placeholder is never judged, re-estimated or inspected: its verdicts, trade, i
 messaging edge holds none for it, so a click on Ask moves it like a live row's. Its off-spec part is
 the data's too (feedback-19 spec §4): an off-spec sample carries `eval.offSpec` as the off-spec pass
 shapes it, and its Me cell reads `testOffGear` (TestMode.GearOf), the item the off-spec verdict was
-judged against, in place of `testGear`.
+judged against, in place of `testGear`. A sample's `testLeft` stands for a looter who has left the group: the detail card's Spec row then says `not in your group` (feedback-21 H2).
 
 ## The simulator (simulator spec §1, §2, §4, §5, §6)
 
@@ -336,7 +336,10 @@ the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, w
   ├─> DetailCells.Chips(drop)                                   (pure: the header's chips; Type is
   │                                                               WindowCells.ArmorType's, §3)
   ├─> DetailCells.ForYou(drop, Scoring.InUse(), classFile, your gear)   (pure)
-  ├─> DetailCells.ForLooter(drop, NS.Inspect.Get(guid), Compat.SpecName(specID), now)   (pure)
+  ├─> DetailCells.ForLooter(drop, TestMode.InspectOf(drop), Compat.SpecName(specID), now,
+  │     WindowOwn.IsRevealed(id), looterLeft(drop))                 (pure; left: the looter is no
+  │     longer in your group, the drop's own read kept and Spec reading `not in your group`, never
+  │     `spec unknown`; a sample's own `testLeft`; feedback-21 H2)
   │     (two worn items both read: Item level is the cells' dual mark, `321 ▼10 / 300 ▲11`, its
   │      second part the row's `more`, SideCells.Parts; Replaces still the one taken off; H7)
   ├─> DetailCells.TradeBox(drop, the situation's label)         (pure)

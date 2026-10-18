@@ -263,7 +263,18 @@ localized strings passed in, and that the module reads no global), `test_constan
 `test_class_data`
 (the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
 every slot plan and every equippability path, the `either` of a baseline picked from two worn items
-(feedback-21 R5), plus nil and garbage inputs), `test_scoring` (the
+(feedback-21 R5), plus nil and garbage inputs), `test_offspec` (feedback-19 spec §0: the off-spec
+verdict `modules/OffSpec.lua` attaches to a main-spec Can't use whose refusal depends on the spec,
+each other spec of the class judged against its own gear by item level, the best kept as
+`eval.offSpec`, the main verdict never changed), `test_offspec_cells` (DW-O1: how off-spec looks:
+the `offspec` cyan, the verdict cell through `WindowCells.Verdict`, the Me cell from the off-spec
+baseline, the compact line, the marks' tone override, the detail card and the History snapshot and
+card, the filter bar and the legends; a Can't use with no off-spec pinned unchanged),
+`test_offspec_ask` (DW-O2: the `askOffSpec` template's pick, text, row and editor, {mygain} from
+the off-spec result, the Ask button's tooltip, the toast and auto-ask, main spec first),
+`test_offspec_offer` (DW-O3: an off-spec Offer candidate ranked after every main-spec upgrade and
+equal, its Their eq cell `311 ▲14 Holy`, Upgrade for N and keep-hidden staying main-spec only, and
+the Offer whisper's {gain}), `test_scoring` (the
 scorers: the Pawn scale import, the weights score and its unknown keys, the adapter in use for each
 setting, the Pawn adapter's scales (for you, the scale you show in Pawn before a starter one you hid;
 feedback-21 R4) and `pending`, and the sidegrade item level and score reach

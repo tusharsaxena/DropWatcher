@@ -8,8 +8,8 @@ the code reads every case the design leaves open, module by module, is in
 
 ## For the player
 
-- **Unconfirmed in game.** Every in-game check in `smoke-tests.md` is owed: none
-  has a recorded client pass yet. The readings most at risk are whether `CHAT_MSG_LOOT` is readable
+- **Unconfirmed in game.** Nearly every in-game check in `smoke-tests.md` is owed: only
+  STATE-6 and FEED-79 have a recorded client pass (2026-10-16). The readings most at risk are whether `CHAT_MSG_LOOT` is readable
   mid-encounter (COMBAT-1), whether a whisper goes out during an encounter (ASK-4), the raid trade
   rule (TRADE-3, `personal` until confirmed) and whether the game counts the looter's bags as well
   as their worn gear (TRADE-4, worn gear only today).

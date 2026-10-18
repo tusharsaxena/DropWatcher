@@ -1,8 +1,10 @@
 # Midnight quirks — Ka0s Drop Watcher
 
-The client-version workarounds this addon carries of its own (documentation-§3, Tier 2). Each one
-lives in `core/Compat.lua` ([`compat-layer.md`](compat-layer.md)) and is pinned by `test_compat`,
-except the loot line's, which lives in `modules/LootParser.lua` and is pinned by `test_loot_parser`.
+The client-version workarounds this addon carries of its own (documentation-§3, Tier 2). Each one's
+client read lives in `core/Compat.lua` ([`compat-layer.md`](compat-layer.md)) and is pinned by
+`test_compat`; where a module carries the rest of the workaround the row names it, pinned by that
+module's suite (the loot line's in `modules/LootParser.lua`, `test_loot_parser`; the tooltip
+width's in `modules/TipGrid.lua`, `test_tip_marks`).
 What is still unconfirmed in game is owed as a `COMPAT-*` check in
 [`smoke-tests.md`](smoke-tests.md).
 

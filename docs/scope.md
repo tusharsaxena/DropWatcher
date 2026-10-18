@@ -22,20 +22,20 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   the filters and the minimum-quality gate decide what shows before anyone is inspected.
 - **The verdicts.** Each drop is judged for you (against your gear snapshot) and for its looter
   (against the inspect broker's read of their gear), by item level and, when one is in use, a score:
-  Pawn, your own per-spec weights (with the Pawn scale string import), or none. The verdict is an
+  Pawn (its own scale for your spec, with no setup), your own per-spec weights (with the Pawn scale string import), or none. The verdict is an
   upgrade, a sidegrade, a downgrade, can't use, doesn't want or unknown. A drop your current spec
   can't use but another spec of your class can is also judged for that spec, on item level alone
   against the best item you own for it, and shows as an off-spec upgrade, sidegrade or downgrade in
-  cyan with the spec's name (feedback-19); a looter's off-spec is judged on what they wear. The
+  cyan with the spec's name (feedback-19); a looter's off-spec is judged on what they wear, and a looter who leaves the group keeps the read their drop was judged with (feedback-21). The
   detail card also says whether you have collected the look (CanIMogIt when installed).
 - **The trade estimate.** Yes, likely, unknown or no, with its reason: the bind, the trade window,
-  the situation's rule and the looter's item level. Your own drops get the exact countdown read
+  the situation's rule and the looter's item level. On another player's drop that none of your specs can use, a Yes or Likely reads Can't use (feedback-21). Your own drops get the exact countdown read
   from the item's tooltip, with one chat warning at ten minutes.
 - **The sends.** Ask, offer and announce, each one click and one confirmation line, guarded by the
   one-ask registry, queued while chat is restricted and sent when the restriction lifts; an
   edit-first box when wanted; never SAY or YELL.
 - **The window.** Drops (every drop, your own included, in rows under collapsible boss headers, each
-  row's Me and Them showing the worn gear beside the verdict, with a detail card that expands inline and a trade countdown on every row; on your own drops the
+  row's Me and Them showing the worn gear beside the verdict (a mark per worn item on a two-item slot), with a detail card that expands inline and a trade countdown on every row; on your own drops the
   upgrade count, who it would help and Offer, which opens the "Who could use this?" panel with an
   Offer per member (its Trade button retired by feedback-7), and a strip with Post my tradeables, Expand all / Collapse all and,
   in the full layout, Scan group and the tab's Sort; a `/reload` brings this session's drops back) and History (every drop the feed showed, kept across sessions
@@ -56,7 +56,7 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   title-bar toggle, the Layout setting, `/dw compact` and `/dw full` switch it, each layout keeps its
   own size and place, and an auto-open inside a run opens it compact until the run ends (on by
   default).
-- **Opt-in extras.** The upgrade toast and auto-ask, both off by default.
+- **Opt-in extras.** The upgrade toast (with its own scale) and auto-ask, both off by default.
 - **The standard surfaces.** The settings pages (General, Feed, Comparison, Trade, Messages, Window
   and Profiles), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
   debug console and the diagnostics report, the performance harness and the stand-down latch.
