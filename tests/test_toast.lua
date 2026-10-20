@@ -283,6 +283,25 @@ test("toast edge: a dual mark is painted part by part, and the toast is only as 
     assertFalse(f.meLead.sep:IsShown() or f.meLevel:IsShown(), "and draws no lead pieces")
 end)
 
+test("toast edge: the widened toast holds the Them verdict too, not only up to `· Them` (H7)", function()
+    -- A dual mark on your side, one mark on theirs: `You 315 ▼10 / 295 ▲10 · Them ▼10` was cut at ▼.
+    local d = dualDrop({ them = { verdict = "downgrade", ilvlDelta = -10 } })
+    local NS, m = enabled({ d })
+    m.textCharWidth = 5
+    NS.Gear.Snapshot = function() return { equipped = MY_TRINKETS } end
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    local G, S = NS.Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
+    local function w(fs) return fs:GetUnboundedStringWidth() end
+    local l = f.meLead
+    local row3 = w(f.looted) + G + w(l.leadLevel) + G + w(l.leadGlyph) + S + w(l.leadText) + G + w(l.sep)
+        + G + w(f.meLevel) + G + w(f.meGlyph) + S + w(f.meText) + G + w(f.themLabel)
+        + G + w(f.themGlyph) + S + w(f.themText)
+    assertTrue(f.themGlyph:IsShown(), "their verdict has its glyph")
+    local room = f:GetWidth() - (NS.Toast.WIDTH - NS.Toast.RowWidth())
+    assertTrue(room >= row3, ("row 3 needs %d, the toast gives %d"):format(row3, room))
+end)
+
 test("toast edge: a verdict in a word takes no glyph's room", function()
     local NS = enabled({ drop({ them = { verdict = "cantUse" } }) })
     added(NS, 1)
