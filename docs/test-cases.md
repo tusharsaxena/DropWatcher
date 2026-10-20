@@ -1532,7 +1532,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (36)
+### test_toast.lua (37)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1543,6 +1543,7 @@ Total.
 - toast edge: the four rows beside a four-row icon, painted (feedback-9 spec §0)
 - toast: on a two-item slot read in full each verdict is the cells' dual mark, and the toast widens for it (H7)
 - toast edge: a dual mark is painted part by part, and the toast is only as wide as row 3 needs (H7)
+- toast edge: the widened toast holds the Them verdict too, not only up to `· Them` (H7)
 - toast edge: a verdict in a word takes no glyph's room
 - toast edge: a looter of unknown class is a plain name in row 3's muted tone
 - toast edge: a right-click anywhere closes it as the close mark does; the left button does not
@@ -1965,7 +1966,7 @@ Total.
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 36 |
+| test_toast.lua | 37 |
 | test_glow.lua | 13 |
 | test_icon_style.lua | 10 |
 | test_auto_ask.lua | 24 |
@@ -1986,4 +1987,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1640** |
+| **Total** | **1641** |
