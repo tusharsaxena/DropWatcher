@@ -23,9 +23,12 @@ local _, NS = ...
 --   line 2  looter (class color; another realm named in its tooltip) · slot · type      [ Ask ]
 --           (the full table's states; Offer on your own drop, which opens the Offer panel:
 --           NS.WindowOwn, feedback-5 spec §2; with neither the gray `No action` button, its reason
---           in its tooltip, feedback-11 spec §1). The button is two lines tall, lines 1 and 2,
---           its label centered in it (CG.AskHeight, feedback-22); line 1's name is cut before it)
+--           in its tooltip, feedback-11 spec §1). The button is two lines tall, lines 2 and 3,
+--           its label centered in it (CG.AskHeight, CG.AskY; feedback-22, feedback-23), so line 1's
+--           name runs the card's width)
 --   line 3  You 321 ▼26 / 308 ▼13   Them 298/296 ⊘ Can't use
+--           (beside the button: where You and Them do not fit there, Them moves to line 4 before
+--           Trade, both rings still read, CG.PaintHalves; feedback-23)
 --           (the full table's Me and Them cells without their icons, feedback-6 spec §1; the
 --           labels gold, Them a fixed gap after You, feedback-10 spec §2; your own drop:
 --           line 2's looter reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2), every
@@ -87,7 +90,7 @@ CG.QUALITY_W = 2       -- the quality bar at a card's left edge
 CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Drops card's chevron and the gap before its icon
 CG.ILVL_GAP = 4        -- line 1: between the item level and the name (feedback-10 spec §2)
 CG.HALVES_GAP = 12     -- line 3: between one half's last piece and the next label (feedback-10 spec §2)
-CG.ASK_GAP = 6         -- line 1: between the name (or its freshness) and the action button
+CG.ASK_GAP = 6         -- lines 2 and 3: between their text and the action button
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
 local SEP = "|cff9e9ea3·|r "
@@ -118,10 +121,11 @@ function CG.LineY(m, i) return -(CG.PAD + (i - 0.5) * m.line) end
 --- @return number
 function CG.AskHeight(m) return 2 * m.line end
 
---- The action button's middle: between lines 1 and 2, as an offset down from the card's top.
+--- The action button's middle: between lines 2 and 3 (feedback-23), as an offset down from the
+--- card's top.
 --- @param m table
 --- @return number
-function CG.AskY(m) return -(CG.PAD + m.line) end
+function CG.AskY(m) return -(CG.PAD + 2 * m.line) end
 
 --- Where the text starts: after the quality bar, the chevron's lead (`lead`, CG.LEAD on a Drops
 --- card, 0 where a card has no chevron) and the icon.
@@ -301,13 +305,21 @@ CG.HALF_GAP, CG.HALF_GLYPH_GAP = 3, 2
 
 --- Line 3's Them half placed CG.HALVES_GAP after You's last piece (feedback-10 spec §2: the halves
 --- read close together, not at a third of the card's width), and line 4's Trade under You's label
---- (feedback-22). A half's text is its last piece, shown or empty.
+--- (feedback-22). `wrapped` (feedback-23): Them under You's label on line 4 instead, Trade as far
+--- after Them's last piece. A half's text is its last piece, shown or empty.
 --- @param card table
---- @param m table CG.Metrics' answer
-function CG.PlaceThem(card, m)
+--- @param m table CG.Metrics' answer (its `line`)
+--- @param wrapped boolean|nil
+function CG.PlaceThem(card, m, wrapped)
     local c = card.cells
-    at(c.themLabel.text, "LEFT", c.you.text, "RIGHT", CG.HALVES_GAP, 0)
-    at(c.tradeLabel.text, "LEFT", c.youLabel.text, "LEFT", 0, -m.line)
+    if wrapped then
+        at(c.themLabel.text, "LEFT", c.youLabel.text, "LEFT", 0, -m.line)
+        at(c.tradeLabel.text, "LEFT", c.them.text, "RIGHT", CG.HALVES_GAP, 0)
+    else
+        at(c.themLabel.text, "LEFT", c.you.text, "RIGHT", CG.HALVES_GAP, 0)
+        at(c.tradeLabel.text, "LEFT", c.youLabel.text, "LEFT", 0, -m.line)
+    end
+    card.dwWrapped = wrapped == true
 end
 
 local function newCard(content)
@@ -365,8 +377,9 @@ local function paintAsk(card, a, id)
 end
 
 -- Line 1's freshness, `(2m)`, right after the name, or nothing (CompactCards.FreshMark); the name
--- takes what is left of the line after the item level, it and the action button (two lines tall,
--- feedback-22: NS.WindowRows.MarkedWidth), so the name is cut and the freshness is not.
+-- takes what is left of the line after the item level and it, to the card's right inset (the action
+-- button is lines 2 and 3's since feedback-23: NS.WindowRows.MarkedWidth), so the name is cut and
+-- the freshness is not.
 local function paintFresh(card, cc, width, m)
     local c = card.cells
     local mark = NS.CompactCards.FreshMark(cc.fresh)
@@ -376,7 +389,6 @@ local function paintFresh(card, cc, width, m)
     c.fresh.hit.tipLines = cc.fresh.tip
     local item = c.item.text
     local room = width - CG.TextLeft(m, CG.LEAD) - CG.PAD - (c.ilvl.text:GetStringWidth() or 0) - CG.ILVL_GAP
-        - K.ASK_W - CG.ASK_GAP
     local full = item.GetUnboundedStringWidth and item:GetUnboundedStringWidth() or nil
     item:SetWidth(NS.WindowRows.MarkedWidth(room, full, mark and (c.fresh.text:GetStringWidth() or 0) or nil))
 end
@@ -507,17 +519,39 @@ function CG.LineThreeFits(card, room)
     return w <= room
 end
 
---- Lines 3 and 4 painted: You and Them, then Trade (CompactCards' halves). With `room` (the line's
---- width), dual marks (feedback-21 H7) that would push Them off the card (a larger Font size at the
---- least width) give way to the one mark each (feedback-21 R5).
+-- Whether one painted half fits `room`; true while it cannot be measured.
+local function halfFits(card, key, room)
+    local w = halfWidth(card, key)
+    return not w or w <= room
+end
+
+-- Where Them goes: beside You on line 3, or (`wide`, a Drops card's line 4) on line 4 when line 3
+-- cannot hold both but You fits there and Them fits line 4. nil when neither fits.
+local function themPlace(card, room, wide)
+    if CG.LineThreeFits(card, room) then return false end
+    if wide and halfFits(card, "you", room) and halfFits(card, "them", wide) then return true end
+    return nil
+end
+
+--- Lines 3 and 4 painted: You and Them, then Trade (CompactCards' halves). With `room` (line 3's
+--- width: beside the action button on a Drops card), Them that does not fit beside You moves to line
+--- 4 (`wide`, its width) before Trade, both rings still read (feedback-23); dual marks (feedback-21
+--- H7) that fit neither way (a larger Font size) give way to the one mark each (feedback-21 R5).
 --- @param card table
 --- @param cc table a CompactCards card
 --- @param room number|nil
-function CG.PaintHalves(card, cc, room)
+--- @param wide number|nil
+function CG.PaintHalves(card, cc, room, wide)
     for _, key in ipairs(HALVES) do CG.PaintHalf(card, key, cc[key]) end
-    if not room or not (cc.you.parts or cc.them.parts) or CG.LineThreeFits(card, room) then return end
-    CG.PaintHalf(card, "you", cc.you, true)
-    CG.PaintHalf(card, "them", cc.them, true)
+    if not room then return end
+    local m = { line = card.dwLine }
+    local wrapped = themPlace(card, room, wide)
+    if wrapped == nil and (cc.you.parts or cc.them.parts) then
+        CG.PaintHalf(card, "you", cc.you, true)
+        CG.PaintHalf(card, "them", cc.them, true)
+        wrapped = themPlace(card, room, wide)
+    end
+    CG.PlaceThem(card, m, wrapped == true)
 end
 
 -- What every card of one repaint shares: your gear and class, the transmog ask setting and your realm.
@@ -552,7 +586,8 @@ local function paintCard(card, drop, width, m, shared)
     card.model = cc
     paintLineOne(card, drop, cc, width, m)
     CG.PaintLineTwo(card, cc)
-    CG.PaintHalves(card, cc, width - CG.TextLeft(m, CG.LEAD) - CG.PAD)
+    local wide = width - CG.TextLeft(m, CG.LEAD) - CG.PAD
+    CG.PaintHalves(card, cc, wide - K.ASK_W - CG.ASK_GAP, wide)
 end
 
 --- A one-line header painted with a short form (`hd`, CompactCards.Header's or HistoryHeader's).

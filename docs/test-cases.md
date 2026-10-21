@@ -285,7 +285,7 @@ Total.
 - compact: step 5 runs for every stored profile on load
 - compact: a fresh profile stores the full layout, and opens in a run compact by default
 - compact: the title-bar toggle sits left of minimize, with a catalog mark
-- compact: the toggle swaps the layout: compact is 440 x 560 at the full window's top right
+- compact: the toggle swaps the layout: compact is 400 x 560 at the full window's top right
 - compact: each layout remembers its own size and position
 - compact: switching keeps the tab, the minimized state, and builds no second window
 - compact: the Layout row lays the window out, and the stored layout is the next build's
@@ -354,7 +354,7 @@ Total.
 - compact group: no card shows a trade window; every card keeps its freshness on line 1
 - compact group: a second's tick leaves the cards as they are
 - compact group: at the least width line 2's pieces end before the action button
-- compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict
+- compact group: at the least width line 3's fullest halves fit, Them on line 4 when not beside You
 - compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)
 - compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)
 

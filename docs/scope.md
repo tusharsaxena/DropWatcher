@@ -51,7 +51,7 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   color and Use class color) with Color by item quality. The defaults (feedback-21 H6) trim the icon's
   baked-in edge and draw a Solid black border 2 pixels thick.
 - **Compact mode** (M12, [`superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md`](superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md)).
-  The same window in a second layout, about 440 pixels wide: each drop a four-line card on both
+  The same window in a second layout, about 400 pixels wide: each drop a four-line card on both
   tabs, a one-row filter bar with a Filters menu, a short title and a one-line footer. It reads
   the same feed, filters and engine, so it never changes what is recorded, judged or sent. The
   title-bar toggle, the Layout setting, `/dw compact` and `/dw full` switch it, each layout keeps its

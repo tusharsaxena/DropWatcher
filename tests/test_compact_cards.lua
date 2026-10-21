@@ -413,7 +413,7 @@ test("compact cards: the header's short form drops `ago` and `drops`", function(
     local NS = T.newAddon()
     local C = NS.CompactCards
     local h = C.Header(encounter(), 2, NOW, "Dungeon", false, nil, nil, 0)
-    assertEqual(stripColor(h.text), "Gate of the S… · Commander Ri'… · Timewalking · 3m · 2 · Tiamât")
+    assertEqual(stripColor(h.text), "Gate of the… · Commander R… · Timewalking · 3m · 2 · Tiamât")
     assertTrue(h.cut)
     local full = NS.WindowCells.Header(encounter(), 2, NOW, "Dungeon", false, nil, nil, 0)
     assertEqual(joined(h.tip), joined(full.tip), "the full view's tooltip (feedback-17)")
@@ -442,7 +442,7 @@ test("compact cards: a long instance name is cut, the full name in the tooltip",
     local g = encounter({ instance = "The Most Excessively Long Instance Name Ever" })
     local h = C.Header(g, 1, NOW, "Dungeon", true, nil, nil, 0)
     assertTrue(h.cut)
-    assertEqual(stripColor(h.text):match("^[^·]+"), "The Most Exce… ")
+    assertEqual(stripColor(h.text):match("^[^·]+"), "The Most Ex… ")
     assertTrue(has(h.tip, "The Most Excessively Long Instance Name Ever"))
     assertFalse(h.text:find("collapsed", 1, true) ~= nil, "the chevron says it")
     assertTrue(has(h.tip, "Click to expand this group."))
@@ -455,7 +455,7 @@ test("compact cards: an LFR header fits the default width, each piece cut to its
         seenBy = "Sacrilègeous-Realm", at = NOW - 2 * 86400 })
     -- red under: one cut for the instance alone, the line running past the pane and cutting the recorder
     local h = C.Header(g, 2, NOW, "Raid", false, nil, nil, 0)
-    assertEqual(stripColor(h.text), "The Venomous… · Vashnik the M… · LFR · 2d · 2 · Sacrilèg…")
+    assertEqual(stripColor(h.text), "The Venomou… · Vashnik the… · LFR · 2d · 2 · Sacrilèg…")
     assertTrue(h.cut)
     local tip = stripColor(joined(h.tip))
     assertEqual(h.tip[1], "Vashnik the Malignant", "the boss, whole, titles the tooltip")
@@ -479,7 +479,7 @@ test("compact cards: the History header reads days once a day old, its tooltip t
     local C = NS.CompactCards
     local g = encounter({ at = 1000000 - 2 * 86400 - 60 })
     local h = C.HistoryHeader(g, 4, 1000000, "Dungeon", false)
-    assertEqual(stripColor(h.text), "Gate of the S… · Commander Ri'… · Timewalking · 2d · 4 · Tiamât")
+    assertEqual(stripColor(h.text), "Gate of the… · Commander R… · Timewalking · 2d · 4 · Tiamât")
     assertTrue(has(h.tip, "2 days ago"))
     assertTrue(has(h.tip, "From  the history, kept across sessions"))
 end)
