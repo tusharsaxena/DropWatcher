@@ -272,7 +272,8 @@ function FB.Set(tab, key, value)
     local st = FB.State(tab)
     if same(key, st[key], value) then return false end
     st[key] = SETS[key] and copySet(value) or value
-    NS.Debug("UI", "filter %s.%s = %s", tab, key, shown(key, value))
+    -- The search box writes per keystroke: its line waits for the box to lose focus (buildSearch).
+    if key ~= "search" then NS.Debug("UI", "filter %s.%s = %s", tab, key, shown(key, value)) end
     NS.Window.OnFilterChanged(tab)
     return true
 end
@@ -700,7 +701,12 @@ local function buildSearch(host)
     eb:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     eb:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     eb:SetScript("OnEditFocusGained", function(self) lineColor(self, FLAT.hover) end)
-    eb:SetScript("OnEditFocusLost", function(self) lineColor(self, FLAT.line) end)
+    eb:SetScript("OnEditFocusLost", function(self)
+        lineColor(self, FLAT.line)
+        local tab = activeTab()
+        NS.DebugChanged("filter.search." .. tostring(tab), "UI", "filter %s.search = \"%s\"", tab,
+            shown("search", FB.State(tab).search))
+    end)
     NS.Window.AttachTooltip(eb, grayedTip("search", TIPS.search), "above")
     return eb
 end

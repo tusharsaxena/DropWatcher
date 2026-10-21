@@ -298,13 +298,23 @@ end
 --- ENCOUNTER_START: the waiting asks are held until the encounter ends.
 function AA.OnEncounterStart()
     inEncounter, movedWhileHeld = true, false
-    for _, p in pairs(pending) do stopTimer(p) end
+    local n = 0
+    for _, p in pairs(pending) do
+        stopTimer(p)
+        n = n + 1
+    end
+    if n > 0 then NS.Debug(TAG, "auto-ask: %d waiting held for the encounter", n) end
 end
 
 --- ENCOUNTER_END: every waiting ask is due its delay after now.
 function AA.OnEncounterEnd()
     inEncounter, movedWhileHeld, endedAt = false, false, now()
-    for id in pairs(pending) do arm(id) end
+    local n = 0
+    for id in pairs(pending) do
+        arm(id)
+        n = n + 1
+    end
+    if n > 0 then NS.Debug(TAG, "auto-ask: the encounter is over, %d waiting are due", n) end
 end
 
 local function encounterRestricted()
@@ -363,6 +373,19 @@ function AA.Stats()
     return { enabled = cfg.enabled, delay = cfg.delay, minGain = cfg.minGain, waiting = waiting,
         scheduled = counts.scheduled, sent = counts.sent, canceled = counts.canceled,
         inEncounter = inEncounter, nextDue = nextDue and math.max(nextDue - now(), 0) or nil }
+end
+
+--- The waiting asks, one { id, target, due, offSpec } each by drop id (`due` the seconds until it
+--- is due, nil while an encounter holds it), for the diagnostics report.
+--- @return table
+function AA.Waiting()
+    local out = {}
+    for id, p in pairs(pending) do
+        out[#out + 1] = { id = id, target = p.target, offSpec = p.offSpec,
+            due = p.dueAt and math.max(p.dueAt - now(), 0) or nil }
+    end
+    table.sort(out, function(a, b) return tostring(a.id) < tostring(b.id) end)
+    return out
 end
 
 -- ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and

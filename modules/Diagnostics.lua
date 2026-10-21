@@ -75,6 +75,7 @@ local function window(out)
     out:add(TAG, "toast: enabled=%s built=%s shown=%s drop=%s waiting=%s held=%s", NS.Setting("toast.enabled"),
         t.built, t.shown, t.dropId or "none", t.waiting, t.held)
     out:joined(TAG, "toast: point", type(t.point) == "table" and t.point or { "default" })
+    if t.waiting > 0 then out:joined(TAG, "toast: queue", t.queue) end
 end
 
 -- Where the addon thinks the player is, the inputs it read and that situation's settings
@@ -187,6 +188,12 @@ local function dropLines(out)
         st.mine, st.test, st.groups, st.merged, st.loading)
     out:joined(TAG, "feed: hidden", NS.FeedCounts.Parts(st.hidden))
     out:add(TAG, "feed: encounter=%s run=%s", st.encounter or "none", st.run or "none")
+    local ctx = NS.State.feed and NS.State.feed.ctx or {}
+    local enc = ctx.encounter
+    if enc then
+        out:add(TAG, "feed: last encounter id=%s ended=%s kill=%s", enc.id or "?", enc.endedAt ~= nil,
+            enc.success == true)
+    end
 end
 
 -- The quality mode in force here and its threshold; for the per-slot mode, each slot's (compact).
@@ -231,8 +238,26 @@ end
 -- One line per live drop, newest first, the newest DROP_LINES (ui spec §0, BUG-1): its sources, the
 -- stored link's item string and whether it is complete, the level and the quality with where each
 -- came from (ItemFacts' and the feed's ilvlSource / qualitySource), and whether a bag item matched
--- it. What the owner pastes when a drop reads wrongly. Stored state only.
+-- it, then its looter, both verdicts and the trade estimate with its reason. What the owner pastes
+-- when a drop reads wrongly. Stored state only.
 local DROP_LINES = 20
+
+-- A verdict as the drop line shows it: the verdict, its item-level difference, and an off-spec
+-- part's verdict and spec when your spec can't use it (`cantUse offSpec=upgrade+20 spec=65`).
+local function signed(v)
+    if type(v) ~= "number" or v ~= v then return "" end
+    return (v >= 0 and "+" or "") .. tostring(v)
+end
+
+local function verdict(e)
+    if type(e) ~= "table" then return "-" end
+    local s = tostring(e.verdict or "-") .. signed(e.ilvlDelta)
+    local off = NS.OffSpec.Of(e)
+    if off then
+        s = s .. " offSpec=" .. tostring(off.verdict) .. signed(off.ilvlDelta) .. " spec=" .. tostring(off.specID)
+    end
+    return s
+end
 
 local function dropLine(out, rec)
     local f = type(rec.facts) == "table" and rec.facts or {}
@@ -244,6 +269,10 @@ local function dropLine(out, rec)
     out:add(TAG, "drops: %s sources=%s item=%s complete=%s ilvl=%s (%s) quality=%s (%s) mine=%s bag=%s", rec.id,
         table.concat(sources, ","), d and d.itemString or "?", d ~= nil and d.complete, f.ilvl,
         f.ilvlSource or "?", f.quality, f.qualitySource or "?", rec.isMine == true, matched and "yes" or "no")
+    local tr = type(rec.trade) == "table" and rec.trade or {}
+    out:add(TAG, "drops: %s looter=%s me=%s them=%s trade=%s (%s)", rec.id,
+        type(rec.looter) == "table" and rec.looter.name or "?", verdict(rec.me), verdict(rec.them),
+        tr.state or "-", tr.reasonKey or "none")
 end
 
 -- First what the feed turned away by reason (feedback-2 spec §0: nothing dropped silently), then
@@ -303,6 +332,10 @@ local function messaging(out)
     out:add(TAG, "auto-ask: enabled=%s delay=%s minGain=%s waiting=%s nextDue=%s inEncounter=%s", aa.enabled,
         aa.delay, aa.minGain, aa.waiting, aa.nextDue and math.floor(aa.nextDue) or "none", aa.inEncounter)
     out:add(TAG, "auto-ask: scheduled=%s sent=%s canceled=%s", aa.scheduled, aa.sent, aa.canceled)
+    for _, w in ipairs(NS.AutoAsk.Waiting()) do
+        out:add(TAG, "auto-ask: waiting drop %s to %s due=%s offSpec=%s", w.id, w.target or "?",
+            w.due and (math.floor(w.due) .. "s") or "held", w.offSpec == true)
+    end
 end
 
 -- Your Pawn scale, read from the stored gear snapshot's class and spec (never a fresh read): the

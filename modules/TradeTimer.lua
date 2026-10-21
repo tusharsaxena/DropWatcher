@@ -322,7 +322,7 @@ local function readEntry(it, timers, t, rec)
     return e
 end
 
-local function scan(cause)
+local function scan()
     local s, t = store(), now()
     local own = ownDrops()
     local items = own.n > 0 and bagItems(own) or {}
@@ -333,18 +333,20 @@ local function scan(cause)
     end
     local had = next(s.timers) ~= nil
     s.timers, s.lastScanAt, s.scans = timers, t, s.scans + 1
+    -- On change only: BAG_UPDATE_DELAYED scans often, and unchanged counts are steady state
+    -- (debug-logging-§9), so the line carries no cause.
     if own.n > 0 then
-        NS.Debug(TAG, "scan (%s): %d own drops, %d live timers", tostring(cause), own.n, TT.LiveCount())
+        NS.DebugChanged("trade.scan", TAG, "scan: %d own drops, %d live timers", own.n, TT.LiveCount())
     end
     return had or own.n > 0
 end
 
 --- Read every own drop's bag item now, then warn, tick and retune.
 --- @param cause string|nil what asked (an event name, `drop`, `standUp`)
-function TT.Scan(cause)
+function TT.Scan(_cause)
     if stoodDown() then return end
     local t0 = Perf.on and debugprofilestop()
-    local relevant = scan(cause)
+    local relevant = scan()
     if t0 then Perf.Note("tradeTimer.scan", debugprofilestop() - t0) end
     if relevant then
         sweep()

@@ -640,7 +640,10 @@ function Toast.OnCombatStart()
 end
 
 --- PLAYER_REGEN_ENABLED: what combat held shows now.
-function Toast.OnCombatEnd() Toast.Pump() end
+function Toast.OnCombatEnd()
+    if #queue > 0 and shownId == nil then NS.Debug(TAG, "toast: combat over, %d waiting", #queue) end
+    Toast.Pump()
+end
 
 --- Drops gone from the feed leave the queue, and a toast whose drop is gone goes (the next one
 --- shows). The feed's removal sink: a Clear or the cap's trim. Answers how many it let go.
@@ -710,7 +713,7 @@ end
 --- @return table
 function Toast.Stats()
     return { built = frame ~= nil, shown = frame ~= nil and frame:IsShown() == true, dropId = shownId,
-        waiting = #queue, held = held(), point = store().point }
+        waiting = #queue, queue = { unpack(queue) }, held = held(), point = store().point }
 end
 
 --- The built frame, or nil before the first toast. For the suites.

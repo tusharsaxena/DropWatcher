@@ -448,6 +448,7 @@ function LF.SweepTrade(mineOnly)
             send(NS.MSG.DROP_UPDATED, rec.id, "trade")
         end
     end
+    if n > 0 then NS.Debug("TRADE", "trade re-estimated: %d drops moved%s", n, mineOnly and " (your own)" or "") end
     return n
 end
 
@@ -495,6 +496,19 @@ end
 
 local function verdictOf(eval) return eval and eval.verdict or "-" end
 
+-- A drop's level and where it came from (`311 (detailed)`), and its trade estimate with its reason
+-- (`likely/notUpgrade`), for the FEED and EVAL lines: what a misread drop is diagnosed from.
+local function ilvlOf(rec)
+    local f = type(rec.facts) == "table" and rec.facts or {}
+    return ("%s (%s)"):format(tostring(f.ilvl), tostring(f.ilvlSource or "?"))
+end
+
+local function tradeOf(rec)
+    local t = rec.trade
+    if not t then return "-" end
+    return t.reasonKey and (tostring(t.state) .. "/" .. tostring(t.reasonKey)) or tostring(t.state)
+end
+
 local function add(rec)
     local feed = feedOf(rec)
     local g = NS.FeedRecords.Materialize(feed, rec)
@@ -508,9 +522,8 @@ local function add(rec)
     if trimmed then notifyRemoved(rec.feed) end
     notePending(rec)
     if not rec.test then LF.ArmTradeSweep() end
-    NS.Debug(TAG, "drop %s: %s by %s (%s) in %s: me=%s them=%s trade=%s", rec.id, rec.link,
-        tostring(rec.looter.name), rec.source, g.label, verdictOf(rec.me), verdictOf(rec.them),
-        tostring(rec.trade and rec.trade.state))
+    NS.Debug(TAG, "drop %s: %s ilvl %s by %s (%s) in %s: me=%s them=%s trade=%s", rec.id, rec.link, ilvlOf(rec),
+        tostring(rec.looter.name), rec.source, g.label, verdictOf(rec.me), verdictOf(rec.them), tradeOf(rec))
     send(NS.MSG.DROP_ADDED, rec.id)
     return rec.id, "added"
 end
@@ -821,6 +834,8 @@ local function rejudge(rec, facts, cause)
     judgeMe(rec, cfg)
     judgeLooter(rec, cfg, false)
     notePending(rec)
+    NS.Debug("EVAL", "drop %s re-judged (%s): ilvl %s, me=%s them=%s trade=%s", rec.id, tostring(cause),
+        ilvlOf(rec), verdictOf(rec.me), verdictOf(rec.them), tradeOf(rec))
     send(NS.MSG.DROP_UPDATED, rec.id, cause)
 end
 
@@ -895,6 +910,7 @@ function LF.OnEncounterStart(encounterID, encounterName)
     if id and name then s.names[id] = name end
     s.ctx.encounter = { id = id, key = "enc:" .. tostring(id) .. ":" .. t, label = encounterLabel(s, id),
         startedAt = t }
+    NS.Debug(TAG, "encounter %s started: %s", tostring(id), tostring(s.ctx.encounter.label))
 end
 
 local function isKill(success)
@@ -913,6 +929,7 @@ end
 --- `feed.clearOnBossKill` on, first empties the live feed); a wipe closes it.
 function LF.OnEncounterEnd(encounterID, _, _, _, success)
     local kill = isKill(success)
+    NS.Debug(TAG, "encounter %s ended: %s", tostring(plainNumber(encounterID)), kill and "kill" or "wipe")
     if kill then clearOnKill() end
     local enc, id = store().ctx.encounter, plainNumber(encounterID)
     if not enc or (id and enc.id and id ~= enc.id) then return end
@@ -926,13 +943,17 @@ function LF.OnRunStart(mapID)
     local label = NS.Compat.ChallengeMapName(id) or areaName()
     store().ctx.run = { mapID = id, key = "run:" .. tostring(id) .. ":" .. t, label = label, startedAt = t,
         instance = instanceKey() }
+    NS.Debug(TAG, "keystone run started: %s (map %s)", tostring(label), tostring(id))
 end
 
 --- CHALLENGE_MODE_COMPLETED: the run's group stays open while you are in its instance, else
 --- LOOT_GRACE seconds, for the chest and a late bonus roll.
 function LF.OnRunEnd()
     local run = store().ctx.run
-    if run and not run.endedAt then run.endedAt = now() end
+    if run and not run.endedAt then
+        run.endedAt = now()
+        NS.Debug(TAG, "keystone run completed: %s", tostring(run.label))
+    end
 end
 
 -- ── the sources ─────────────────────────────────────────────────────────────────────────────

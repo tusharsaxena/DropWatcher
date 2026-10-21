@@ -515,7 +515,10 @@ every step in between, a completed step inert with its tooltip naming when it ra
 stop or automatic stop repainting it, Run all, Pause and Resume, Restart and Stop, typed or clicked,
 the picker starting the chosen scenario with a raid's count, and the dragged position remembered,
 forgotten by Reset position and the panel hidden at stand-down),
-`test_diagnostics`, `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
+`test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
+§14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each
+hold and its release over an encounter or combat, the trade scan logged on change only, the search
+box once on focus lost, and the report's drop, toast-queue and auto-ask lines), `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
 entry in `locales/enUS.lua` or `locales/enUS_Settings.lua`, the key-on-miss fallback bypassed, and
 every enUS key's text appears in an addon file, a loose reverse since some keys are reached
 dynamically; review F07, decision D8. Both read the union of the enUS files, listed from the TOC
