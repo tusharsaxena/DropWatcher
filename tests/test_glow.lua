@@ -77,6 +77,18 @@ test("glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, no
     assertNil(K(nil))
 end)
 
+-- feedback-22: an upgrade glows only when it can come to you, a trade estimate of Yes or Likely.
+test("glow: an upgrade its looter can't trade, or not yet estimated, never glows", function()
+    local K = T.newAddon().Glow.KindOf
+    assertEqual(K(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } })), "main", "Yes glows")
+    assertEqual(K(drop()), "main", "Likely glows")
+    assertNil(K(drop({ trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } })), "a bonus roll")
+    assertNil(K(drop({ trade = { state = "no", reasonKey = "upgradeForLooter", args = { 311, 298 } } })), "their upgrade")
+    assertNil(K(drop({ trade = { state = "unknown", reasonKey = "noInspect", args = { "pending" } } })), "not known yet")
+    assertNil(K(drop({ trade = NONE })), "not estimated")
+    assertNil(K(drop({ me = offSpec(), trade = { state = "no", reasonKey = "warbound" } })), "an off-spec upgrade too")
+end)
+
 -- ── Apply on a button ───────────────────────────────────────────────────────────────────────
 
 test("glow: without the library Apply still records its decision; a glow turned off clears it", function()

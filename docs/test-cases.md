@@ -217,7 +217,7 @@ Total.
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
-- shell: the default size is 1038 x 600, the least width every column fits (feedback-4 spec §4)
+- shell: the default size is 1080 x 600, the least width every column fits (feedback-4 spec §4)
 - shell: Escape and every close path close the dropdowns' shared menu too
 - shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
 - shell: minimized, the title bar wears the plus mark and the `n new` counter; expanded, neither
@@ -285,7 +285,7 @@ Total.
 - compact: step 5 runs for every stored profile on load
 - compact: a fresh profile stores the full layout, and opens in a run compact by default
 - compact: the title-bar toggle sits left of minimize, with a catalog mark
-- compact: the toggle swaps the layout: compact is 440 x 460 at the full window's top right
+- compact: the toggle swaps the layout: compact is 440 x 560 at the full window's top right
 - compact: each layout remembers its own size and position
 - compact: switching keeps the tab, the minimized state, and builds no second window
 - compact: the Layout row lays the window out, and the stored layout is the next build's
@@ -311,18 +311,18 @@ Total.
 - compact cards: the worn level comes before the verdict, plain; a word for the state muted
 - compact cards: a cross-realm looter takes no mark, the realm in the tooltip
 - compact cards: inspect freshness reads its age or state, dimmed, and the tooltip says why
-- compact cards: the Drops card reads the spec's three lines
+- compact cards: the Drops card reads the spec's four lines
 - compact cards: no trade window on the card; the freshness on line 1 with or without a countdown (feedback-10 §2)
 - compact cards: the freshness mark is bracketed, and left out where there is nothing to say (feedback-10 §2)
 - compact cards: the Drops card's pieces keep the full view's tones and tooltips
-- compact cards: every trade state keeps its short word and tone on line 2
+- compact cards: every trade state keeps its short word, reason and tone on line 4
 - compact cards: the Ask button keeps its states, and a drop you cannot ask for shows a dash
 - compact cards: your own drop on Drops reads Name [YOU], No upgrades for Them, and offers it
 - compact cards: your own drop's trade tooltip counts its upgrades and Them names them, unless kept
 - compact cards: an unread looter's Them says why in the gear's place, and the tooltip too
 - compact cards: a different upgrade track is in the verdict's tooltip, not on line 3
 - compact cards: a drop whose details have not loaded is never blank
-- compact cards: the History card reads the spec's three lines
+- compact cards: the History card reads the spec's four lines
 - compact cards: every History outcome keeps its word and tone
 - compact cards: an older kept drop reads its day, and one with no time `?`
 - compact cards: a kept drop whose looter was never read, and your own kept drop
@@ -335,7 +335,7 @@ Total.
 
 ### test_compact_group.lua (22)
 
-- compact group: a card is three lines at the text size, about 50 pixels at Default, the icon spanning them
+- compact group: a card is four lines at the text size, about 64 pixels at Default, the icon spanning them
 - compact group: switching layouts carries the scroll offset over as a fraction of the range
 - compact group: the stacked detail card flows its actions into lines and grows by them
 - compact group: one pooled card per drop under a one-line header, each line what CompactCards says
@@ -428,8 +428,8 @@ Total.
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
 - cells: the Them column takes the Me tones: their upgrade green, their downgrade red, can't use dim red
 - cells: Them is a dash on your own drop and `?` with the inspect's reason while unread
-- cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons
-- cells: Trade's Yes or Likely reads Can't use in dim red on another player's drop none of your specs can use
+- cells: Trade shows Yes, No or ? and a short reason, with board 03's reasons in its tooltip
+- cells: Trade's Yes on another player's drop none of your specs can use is dim red, its reason Can't use
 - cells: Their eq shows both rings' levels for a ring, one for a helm, and the read's age in the tooltip
 - cells: My eq shows what you wear in the drop's slot, both rings for a ring, and empty slot
 - cells: Their eq says pending, range, combat or failed beside the icons
@@ -685,7 +685,7 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (39)
+### test_test_mode.lua (40)
 
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -712,10 +712,10 @@ Total.
 - test mode: the Drops tab shows View: All while on, and the player's View comes back
 - history: test mode shows its sample groups, every outcome, and never writes the account's history
 - history: the account's kept groups come back when test mode ends
-- window: test mode draws every sample, under the key run and the four bosses, with real icons
+- window: test mode draws every sample, under the two key runs and the five bosses, with real icons
 - window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Them gear state and every trade chip
-- window: test mode's Can't use samples read Can't use on Trade, a No stays No, an off-spec keeps Likely
+- window: test mode's Can't use samples read Can't use on Trade, a No stays No, an off-spec keeps Yes
 - window: test mode's looter who left keeps their spec on the detail card, and says they are gone
 - window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)
 - window: a sample's Them shows its own worn item, and its detail card its own inspect
@@ -726,6 +726,7 @@ Total.
 - sends: Ask on a sample prints the text and sends nothing; its state is the edge's from then on
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
+- window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 
 ### test_compat.lua (72)
 
@@ -1572,9 +1573,10 @@ Total.
 - toast edge: the stand-down empties the queue and takes the toast down
 - toast: the diagnostics' window section reports the toast
 
-### test_glow.lua (13)
+### test_glow.lua (14)
 
 - glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
+- glow: an upgrade its looter can't trade, or not yet estimated, never glows
 - glow: without the library Apply still records its decision; a glow turned off clears it
 - glow: each style starts with the knob table's arguments, under the addon's key
 - glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it
@@ -1945,7 +1947,7 @@ Total.
 | test_offer_panel.lua | 21 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 39 |
+| test_test_mode.lua | 40 |
 | test_compat.lua | 72 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
@@ -1981,7 +1983,7 @@ Total.
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 37 |
-| test_glow.lua | 13 |
+| test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 25 |
@@ -2002,4 +2004,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1652** |
+| **Total** | **1654** |

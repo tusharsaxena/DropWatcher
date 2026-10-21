@@ -9,7 +9,7 @@ local _, NS = ...
 -- yellow or red, `292 ▲19`, and on two worn items both read a mark each, `321 ▼10 / 308 ▲3`
 -- (feedback-21 H7); your gear from its snapshot, theirs from their inspect read, the
 -- read's age in the tooltip; NS.SideCells, feedback-6 spec §1, which merged My eq and Their eq into
--- them), Trade (Yes, Likely, Unknown or No), Trade window (every drop's countdown over its bar, an estimate from
+-- them), Trade (Yes, No or ?, then its short reason: feedback-22), Trade window (every drop's countdown over its bar, an estimate from
 -- when it dropped for another player's, `No limit (BoE)`, or the short reason it cannot be traded;
 -- NS.MineCells.TradeWindow, feedback-5 spec §1) and Actions (the Ask button; no drop is ever
 -- dismissed, feedback-4 spec §2). YOUR OWN DROPS are listed too (feedback-5 spec §2;
@@ -141,9 +141,9 @@ WG.COLUMNS = {
           TM.Row(L["Then"], L["the drop judged for them, in the same colors"]),
           TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
           TM.Row(L["Your own drop"], L["Upgrade for N, who it would help"]), TM.Hint(L["Hover for how old their read is."]) } },
-    { key = "trade", label = L["Trade"], width = 70, shed = 6,
-      tip = { TM.Row(L["Shows"], L["whether the looter can trade it"]), TM.Row(L["Values"], L["Yes, Likely, Unknown or No"]) },
-      desc = L["Whether the looter can trade it: Yes, Likely, Unknown or No."] },
+    { key = "trade", label = L["Trade"], width = 112, shed = 6,
+      tip = { TM.Row(L["Shows"], L["whether the looter can trade it"]), TM.Row(L["Values"], L["Yes, No or ?, then why in a few words"]) },
+      desc = L["Whether the looter can trade it: Yes, No or ?, then why in a few words."] },
     { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3,
       desc = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."],
       tip = { TM.Row(L["Shows"], L["the time left to trade it, over its bar"]),
@@ -889,7 +889,7 @@ local function paintRow(row, drop, layout, now, metrics)
     paintText(cells.looter, lc)
     classTone(cells.looter.text, lc.classFile)
     NS.WindowRows.PaintMark(cells.looter, lc.you, layout.looter)   -- ` [YOU]` (feedback-7 spec §2)
-    paintText(cells.trade, NS.WindowOwn.Trade(drop))
+    paintText(cells.trade, NS.WindowCells.TradeDrawn(NS.WindowOwn.Trade(drop)))   -- `No Bonus roll` (feedback-22)
     local equipped, classFile = myGear()
     -- A sample's Me shows its own worn items, their tooltips the links (feedback-18).
     paintSide(cells.me, SC.Me(drop, NS.TestMode.GearOf(drop, equipped), classFile), not drop.test and "player" or nil)

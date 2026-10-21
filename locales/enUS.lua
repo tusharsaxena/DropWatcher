@@ -648,6 +648,14 @@ L["Verdicts"] = "Verdicts"
 L["Where you are"] = "Where you are"
 
 -- modules/WindowCells.lua
+-- the Trade cell's short reasons (feedback-22)
+L["Group loot"] = "Group loot"
+L["Window open"] = "Window open"
+L["Not their upgrade"] = "Not their upgrade"
+L["Not your upgrade"] = "Not your upgrade"
+L["Not inspected"] = "Not inspected"
+L["Failed"] = "Failed"
+L["Pending"] = "Pending"
 L["Upgrade"] = "Upgrade"
 L["Sidegrade"] = "Sidegrade"
 L["Downgrade"] = "Downgrade"
@@ -1027,7 +1035,7 @@ L["what you wear there (two for rings, trinkets, one-hand weapons), its item lev
 L["where the drop is worn"] = "where the drop is worn"
 L["whether the looter can trade it"] = "whether the looter can trade it"
 L["who looted it, in their class color"] = "who looted it, in their class color"
-L["Yes, Likely, Unknown or No"] = "Yes, Likely, Unknown or No"
+L["Yes, No or ?, then why in a few words"] = "Yes, No or ?, then why in a few words"
 L["Your own drop"] = "Your own drop"
 L["your own item, once it is in your bags"] = "your own item, once it is in your bags"
 -- the Columns checkboxes' prose (settings/SchemaRows.lua reads a column's desc)
@@ -1042,8 +1050,8 @@ L["Cyan: an upgrade for another of your specs (off-spec); your current spec can'
     "Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."
 L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."] =
     "What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."
-L["Whether the looter can trade it: Yes, Likely, Unknown or No."] =
-    "Whether the looter can trade it: Yes, Likely, Unknown or No."
+L["Whether the looter can trade it: Yes, No or ?, then why in a few words."] =
+    "Whether the looter can trade it: Yes, No or ?, then why in a few words."
 L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."] =
     "The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."
 L["Ask the looter for it, once. On your own drop, Offer shows who it would help."] =

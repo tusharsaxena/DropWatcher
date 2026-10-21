@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/CompactHistory.lua — the History tab in the compact layout (compact spec §3, DW-C3): the
--- same kept entries as the full table, each a three-line card under a one-line header.
+-- same kept entries as the full table, each a four-line card under a one-line header.
 --
 -- ONE PANE, TWO LAYOUTS. modules/WindowHistory.lua computes the tab's entries (WH.Entries over the
 -- kept groups and its filters) once per repaint and hands them here in the compact layout; this
@@ -19,9 +19,11 @@ local _, NS = ...
 --   line 1  ⌄ ilvl item (the chevron, then the item level before the name, feedback-10 spec §2)
 --           outcome (in its tone)
 --   line 2  looter (class color; another realm in its tooltip) · slot · type       17:02 (dimmed)
---   line 3  You ▼4   Them ≈0   Trade Likely
---           (the full table's Me, Them and Trade: a kept entry holds no worn items, so the verdict
---           alone; the labels gold, each half a fixed gap after the last, as on Drops' cards)
+--   line 3  You ▼4   Them ≈0
+--           (the full table's Me and Them: a kept entry holds no worn items, so the verdict
+--           alone; the labels gold, Them a fixed gap after You, as on Drops' cards)
+--   line 4  Trade Yes Not their upgrade (the full table's Trade, its word and its short reason:
+--           feedback-22, as on Drops' cards)
 --
 -- THE HEADERS are the full table's header button, painted with the short form
 -- (NS.CompactCards.HistoryHeader: `2d` once a day old); a click collapses the group as before.
@@ -87,7 +89,7 @@ local function layout(card, m)
     at(c.looter.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
     at(c.time.text, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
     at(c.youLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
-    CG.PlaceThem(card)
+    CG.PlaceThem(card, m)
 end
 
 -- ── painting a card ─────────────────────────────────────────────────────────────────────────

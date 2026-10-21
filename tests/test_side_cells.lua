@@ -135,10 +135,11 @@ test("side cells: a drop judged against one of two worn items, or a bag item, ke
     local mh = S.Me(drop({ facts = oneH, me = { verdict = "downgrade", ilvlDelta = -5,
         baseline = { link = MACE, ilvl = 320 }, reasons = {} } }), hands)
     assertEqual(mh.parts, nil, "the main hand alone: no mark against the shield")
-    assertEqual(mh.level .. " " .. mh.glyph .. mh.text, "320/310 ▼5")
+    assertEqual(mh.level .. " " .. mh.glyph .. mh.text, "320 ▼5", "the main hand's level alone: the shield is not one it replaces")
+    assertEqual(#mh.items, 1, "one icon, the main hand's")
     -- A two-hander against both hands averaged: the difference is the pair's, not the main hand's.
     local twoH = { ilvl = 320, equipLoc = "INVTYPE_2HWEAPON", quality = 4 }
-    local avg = S.Me(drop({ facts = twoH, me = { verdict = "upgrade", ilvlDelta = 5,
+    local avg = S.Me(drop({ facts = twoH, me = { verdict = "upgrade", ilvlDelta = 5, averaged = true,
         baseline = { link = MACE, ilvl = 330 }, reasons = {} } }),
         { [16] = { link = MACE, ilvl = 330 }, [17] = { link = SHIELD, ilvl = 300 } })
     assertEqual(avg.parts, nil, "both hands averaged: one mark")
@@ -154,6 +155,18 @@ test("side cells: a drop judged against one of two worn items, or a bag item, ke
         baseline = { link = OLD1, ilvl = 300 }, reasons = {} } }),
         { [11] = { link = OLD1, ilvl = 300 }, [12] = { link = OLD2, ilvl = 310 } })
     assertEqual(partsText(worn), "300 ▲10 / 310 ≈0")
+    -- A unique-equipped ring already worn (feedback-22): the kernel judges it against that ring but
+    -- marks both (`either`), so a ring slot always reads both rings, `315 ▲3 / 295 ▲23`.
+    local BAND = "|cffa335ee|Hitem:304::|h[Pilfered Precious Band]|h|r"
+    local unique = S.Me(drop({ facts = { ilvl = 318, equipLoc = "INVTYPE_FINGER", quality = 4 },
+        me = { verdict = "upgrade", ilvlDelta = 3, either = true, baseline = { link = BAND, ilvl = 315 },
+            reasons = { { key = "uniqueEquipped" } } } }),
+        { [11] = { link = BAND, ilvl = 315 }, [12] = { link = OLD2, ilvl = 295 } })
+    assertEqual(partsText(unique), "315 ▲3 / 295 ▲23", "both rings, each its own mark")
+    assertEqual(#unique.items, 2, "both icons")
+    local grid = 0
+    for _, l in ipairs(unique.tip) do if type(l) == "table" then grid = grid + 1 end end
+    assertTrue(grid >= 1, "the tooltip still has the gear grid")
 end)
 
 test("side cells: nothing worn reads `empty`, muted, and the verdict follows", function()

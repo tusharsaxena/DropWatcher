@@ -86,13 +86,13 @@ chrome built headless: the title bar (no Scan group since feedback-16: the Drops
 layouts, feedback-7 spec §4), the restriction badge, the tabs and their lazy
 panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values,
 label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, the
-default size, 1038 x 600, as the least width, a tooltip on
+default size, 1080 x 600, as the least width, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
 `test_window_compact` (compact mode's switch, DW-C0: the pure layout, run, size, bounds and corner
 reads, schema step 5, the title-bar toggle, each layout's own size and point on the one frame, the
 Layout row, and the run override taken on an auto-open and let go when the run ends),
 `test_compact_cards` (compact mode's cards, DW-C1, pure: each Drops and History card's
-three lines in every verdict, trade, inspect, ask and outcome state (line 1's item level before the
+four lines (Trade on line 4, its word and short reason: feedback-22) in every verdict, trade, inspect, ask and outcome state (line 1's item level before the
 name and the freshness bracketed right after it or left out (`FreshMark`; a pending read left out too,
 Them's `…` saying it, feedback-11 spec §0), `No action` on line 2 with no action (feedback-11 spec
 §1, where feedback-10 left the slot empty), no trade window on the card with or without a countdown,
@@ -151,7 +151,7 @@ the shed order (Trade window among it), the Trade window column on every drop (a
 estimate, its bar, the row taller by the bar's room, the countdown moving each second, feedback-5
 spec §1), the hand-off to the compact cards, the filters, the empty
 state and its two buttons centered as a pair (feedback-7 spec §4), and the filters' empty line), `test_drops_layout` (the Drops table's
-geometry, split from `test_window_group`: every column shown at the least width, 1038, and neither
+geometry, split from `test_window_group`: every column shown at the least width, 1080, and neither
 tab shedding there, the search box spanning from Character to the bar's edge, the gold column
 labels, the 84px Actions, each drop row's muted-white chevron and indent under its header and the
 header's gold chevron, the Trade window column pinned to its widest `MineCells.TradeWindow` answer
@@ -194,7 +194,7 @@ detail card, the Offer panel or History in either layout, carries one; the toolt
 `TM.Row`'s `• Label: value` and its nil value, `TM.Hint`, `TM.BULLET`, one row-shape case per builder
 family, and an audit that every tooltip test mode attaches is its title, rows and grids, then only a
 closing hint), `test_glow` (the upgrade glow, feedback-21: `Glow.KindOf` on every verdict shape and
-your own drop, the headless `glowKind` and each glow's `enabled`, each style's arguments through a
+your own drop, and no glow on an upgrade whose trade is not Yes or Likely, feedback-22, the headless `glowKind` and each glow's `enabled`, each style's arguments through a
 fake LibCustomGlow, no library call on an unchanged repaint and a restart on a setting or a size, the
 drawn color with and without Use class color (the player's class, the swatch's alpha, the swatch for
 a class with no color), each
@@ -238,7 +238,8 @@ every cell, button and header of both tabs placed by it, the column labels and t
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
 and candidate status covered by the data, over pool items that keep their slot and level, the worn
 items the nearest of their slot, an empty pool giving none; feedback-17's realism: each group the
-size its content brings (five, twenty, twenty-five), the session's five groups and twenty-two drops,
+size its content brings (five, twenty, twenty-five), the session's seven groups and twenty-nine drops (feedback-22: the unique ring on both sides, every
+short trade reason, an upgrade that glows and ones that cannot),
 History's twenty-plus groups across every content within 30 days, each group one real place whose
 loot is that boss's or dungeon's at the group's difficulty, the keys' loot read at Mythic+ 10 with the
 journal's preview put back; feedback-18's Me: with your real gear all at 999, every sample's You in both

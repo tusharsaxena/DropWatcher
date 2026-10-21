@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/CompactCards.lua — what compact mode's cards say (compact spec §2 and §3, DW-C1): each
--- card's three lines of text, their tones and their tooltips, for both tabs, and the group
+-- card's four lines of text, their tones and their tooltips, for both tabs, and the group
 -- header's short form. The same data as the full tables: every piece is a full-view composer's
 -- cell (modules/WindowCells.lua, modules/SideCells.lua, modules/MineCells.lua,
 -- modules/WindowHistory.lua), reshaped, so
@@ -13,7 +13,7 @@ local _, NS = ...
 --
 --   cell = { text, glyph, tone = key of C.TONE, tip = { title, lines... } }   (WindowCells' shape)
 --
--- THE CARDS. A card is three lines; each line's pieces are named fields, left to right, and the
+-- THE CARDS. A card is four lines; each line's pieces are named fields, left to right, and the
 -- edge draws the ones marked right-aligned against the card's right edge:
 --
 --   Drops        line 1: ilvl, item (quality color), fresh in brackets right after it, dimmed, or
@@ -22,12 +22,15 @@ local _, NS = ...
 --                        feedback-7 spec §2), slot, type; ask (right: Offer on your own drop;
 --                        No action with neither, feedback-11 spec §1). No trade window countdown
 --                        (feedback-10 spec §2)
---                line 3: you, them and trade, each a half: the label, then the full table's Me,
---                        Them or Trade cell without its icons (`Upgrade for N` on your own drop,
---                        feedback-7 spec §2; `Trade Likely`, CC.TradeHalf)
+--                line 3: you and them, each a half: the label, then the full table's Me or
+--                        Them cell without its icons (`Upgrade for N` on your own drop,
+--                        feedback-7 spec §2)
+--                line 4: trade, the full table's Trade cell, its word and short reason
+--                        (`Trade No Bonus roll`, CC.TradeHalf; a line of its own since feedback-22)
 --   History      line 1: ilvl, item; outcome (right, in its tone)
 --                line 2: looter, slot, type; time (right, dimmed)
---                line 3: you, them, trade
+--                line 3: you, them
+--                line 4: trade
 --
 -- LINE 3 (feedback-6 spec §1) reads as the full table's merged Me and Them cells (NS.SideCells), the
 -- icons left out: the label, the worn item level (plain; `empty`, `…`, `range` muted), then the glyph
@@ -149,8 +152,8 @@ function CC.Half(label, side)
     return h
 end
 
---- Line 3's last half: `Trade Likely`, the full table's Trade cell (its word, tone and reason
---- tooltip) under a gold `Trade` label as You and Them have theirs.
+--- Line 4: `Trade Yes Not their upgrade`, the full table's Trade cell (its word, tone, short
+--- reason and reason tooltip) under a gold `Trade` label as You and Them have theirs.
 --- @param c table WC.Trade's or MineCells.OwnTrade's cell
 --- @return table the cell's fields, with `label`
 function CC.TradeHalf(c)
@@ -161,7 +164,7 @@ function CC.TradeHalf(c)
 end
 
 --- A half's plain text: `You 321 ▼10 / 324 ▼23` (a dual mark, feedback-21 H7), `You 292 ▲19`,
---- `Them range`, `Them Upgrade for 2`, `Trade Likely`.
+--- `Them range`, `Them Upgrade for 2`, `Trade No Bonus roll`.
 --- @param h table CC.Half's answer
 --- @return string
 function CC.HalfText(h)
@@ -172,6 +175,10 @@ function CC.HalfText(h)
         return table.concat(parts, " ")
     end
     if h.level then parts[#parts + 1] = h.level end
+    if h.reason then
+        parts[#parts + 1] = WC.TradePlain(h)
+        return table.concat(parts, " ")
+    end
     local v = CC.VerdictText(h)
     if v ~= "" then parts[#parts + 1] = v end
     return table.concat(parts, " ")
@@ -356,24 +363,24 @@ local function lineTwo(card, right)
 end
 
 local function lineThree(card)
-    return CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them) .. "  " .. CC.HalfText(card.trade)
+    return CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them)
 end
 
 local PLAIN = {
     group = function(card)
         local fresh = CC.FreshMark(card.fresh)
         local one = ("%s %s"):format(card.ilvl.text, card.item.text) .. (fresh and (" " .. fresh) or "")
-        return { one, lineTwo(card, card.ask), lineThree(card) }
+        return { one, lineTwo(card, card.ask), lineThree(card), CC.HalfText(card.trade) }
     end,
     history = function(card)
         return { ("%s %s  %s"):format(card.ilvl.text, card.item.text, card.outcome.text), lineTwo(card, card.time),
-            lineThree(card) }
+            lineThree(card), CC.HalfText(card.trade) }
     end,
 }
 
---- A card's three lines as plain text, each piece in order (two spaces before a right-aligned one).
+--- A card's four lines as plain text, each piece in order (two spaces before a right-aligned one).
 --- @param card table CC.Group's or CC.History's answer
---- @return table { line1, line2, line3 }
+--- @return table { line1, line2, line3, line4 }
 function CC.Plain(card)
     return PLAIN[card.kind](card)
 end

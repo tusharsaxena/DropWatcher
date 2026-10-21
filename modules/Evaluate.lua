@@ -316,7 +316,10 @@ local function uniquePlan(facts, candidate, plan)
         end
     end
     if count == 0 or count < (num(u.max) or 1) then return nil end
-    if mine then return { slot = mineSlot, items = { mine }, unique = true } end
+    -- In one of a pair's own slots (a unique ring worn, the drop another copy): the drop is judged
+    -- against that item, but both worn items are marked, as for any ring (`either`, feedback-22: a
+    -- ring slot always reads both rings, `315 ▲3 / 295 ▲23`, on every surface).
+    if mine then return { slot = mineSlot, items = { mine }, unique = true, either = #plan.slots == 2 or nil } end
     return { slot = bestSlot, items = { best }, unique = true }
 end
 
@@ -434,6 +437,7 @@ local function compare(out, facts, candidate, opts)
     if base.vsTwoHand then addReason(out.reasons, "vsTwoHand") end
     out.baseline = base.items[1]
     out.either = base.either   -- the lower of two the drop could take: a reader judges the other too
+    out.averaged = #base.items > 1 or nil   -- a two-hander against both hands: the pair, not one item
     out.ilvlDelta = ilvl - average(base.items, function(f) return f.ilvl end)
     out.trackDelta = E.TrackDelta(facts.track, out.baseline.track)
     out.scoreDelta = scoreDelta(facts, base.items, candidate, opts, out.reasons)
@@ -492,12 +496,15 @@ function E.ItemVerdict(delta, band)
 end
 
 --- Evaluates `facts` for `candidate` (design spec §5.2). Answers
---- { verdict, equip, ilvlDelta, trackDelta, scoreDelta, baselineSlot, baseline, reasons, band?, either? }, where
+--- { verdict, equip, ilvlDelta, trackDelta, scoreDelta, baselineSlot, baseline, reasons, band?, either?, averaged? }, where
 --- verdict is "upgrade", "sidegrade", "downgrade", "cantUse", "doesntWant" or "unknown", and
 --- reasons is a list of { key = ... }; `band` is the sidegrade band, kept only when it is not 0;
---- `either` is true when the baseline is the lower of two worn items the drop could take either of
---- (rings, trinkets, a dual wielder's one-hander, Titan's Grip: feedback-21 R5), nil when the drop
---- was judged against one item (the main hand alone, both hands averaged, a unique redirection).
+--- `either` is true when the drop's slot holds two worn items a reader marks each of: the baseline the
+--- lower of two the drop could take either of (rings, trinkets, a dual wielder's one-hander, Titan's
+--- Grip: feedback-21 R5), or a unique-equipped item worn in one of the pair's own slots (feedback-22);
+--- nil when the drop was judged against one item (the main hand alone, both hands averaged, a unique
+--- redirection to another slot);
+--- `averaged` is true when it was judged against both hands averaged (the baseline is the main hand's).
 --- Never throws.
 function E.Evaluate(facts, candidate, opts)
     local ok, res = pcall(run, facts, candidate, opts)

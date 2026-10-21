@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/CompactGroup.lua — the Drops tab in the compact layout (compact spec §2, DW-C2):
--- the same entries as the full table, each drop a three-line card under a one-line header.
+-- the same entries as the full table, each drop a four-line card under a one-line header.
 --
 -- ONE PANE, TWO LAYOUTS. modules/WindowGroup.lua builds the tab and computes its entries (the
 -- feed's groups, the filters, the order) once per repaint, then hands them here in
@@ -8,7 +8,7 @@ local _, NS = ...
 -- frame to the same pane, built on the first compact repaint, and shows one or the other; the
 -- empty state and the filters' line stay WindowGroup's. Nothing here filters, judges or sends.
 --
--- THE CARD. Three lines, the item button spanning them (NS.WindowGroup.ItemButton: the game's own
+-- THE CARD. Four lines, the item button spanning them (NS.WindowGroup.ItemButton: the game's own
 -- tooltip, shift-click links, ctrl-click tries on), a thin bar in the item's quality color at the
 -- left edge, and between the two the full table's expand indicator (NS.WindowGroup.RowChevron:
 -- chevron-down, chevron-up while the card's detail card is open, muted white) centered on line 1.
@@ -23,13 +23,18 @@ local _, NS = ...
 --   line 2  looter (class color; another realm named in its tooltip) · slot · type      [ Ask ]
 --           (the full table's states; Offer on your own drop, which opens the Offer panel:
 --           NS.WindowOwn, feedback-5 spec §2; with neither the gray `No action` button, its reason
---           in its tooltip, feedback-11 spec §1)
---   line 3  You 321 ▼26 / 308 ▼13   Them 298/296 ⊘ Can't use   Trade No
---           (the full table's Me, Them and Trade cells without their icons, feedback-6 spec §1; the
---           labels gold, each half a fixed gap after the last, feedback-10 spec §2; your own drop:
+--           in its tooltip, feedback-11 spec §1). The button is two lines tall, lines 1 and 2,
+--           its label centered in it (CG.AskHeight, feedback-22); line 1's name is cut before it)
+--   line 3  You 321 ▼26 / 308 ▼13   Them 298/296 ⊘ Can't use
+--           (the full table's Me and Them cells without their icons, feedback-6 spec §1; the
+--           labels gold, Them a fixed gap after You, feedback-10 spec §2; your own drop:
 --           line 2's looter reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2), every
---           member it upgrades in the tooltip. Trade sat on line 2 as a bare word before: labeled,
---           it reads beside the verdicts it follows from)
+--           member it upgrades in the tooltip)
+--   line 4  Trade No Bonus roll
+--           (the full table's Trade cell: Yes, No or ? in its tone, then its short reason in the
+--           muted gray, WindowCells.TradeText; a line of its own since feedback-22, so the reason
+--           fits and You and Them keep line 3's room. Trade sat on line 2 as a bare word, then
+--           at the end of line 3, before)
 --
 -- NO TRADE WINDOW on the card (feedback-10 spec §2): the full table's Trade window column, the
 -- strip's next expiry and the detail card say it; the card has nothing to tick each second.
@@ -42,7 +47,7 @@ local _, NS = ...
 --
 -- THE SIZE. Text follows `window.fontSize` through NS.WindowRows (Default is the template's own
 -- size, as in the full table); a card's line height, height and icon follow from it (Metrics,
--- pure): about 50 pixels at the default size. `window.rowHeight` is the full table's and does not
+-- pure): about 64 pixels at the default size. `window.rowHeight` is the full table's and does not
 -- apply.
 --
 -- THE HEADERS are the full table's header button (NS.WindowGroup.NewHeader, so a click collapses
@@ -76,11 +81,13 @@ local max, min, floor = math.max, math.min, math.floor
 CG.PAD = 4             -- a card's margin
 CG.GAP = 2             -- between two cards, and around the detail card
 CG.LINE_EXTRA = 4      -- a line's height over its text size
-CG.ICON_MIN, CG.ICON_MAX = 24, 48
+CG.ICON_MIN, CG.ICON_MAX = 24, 60
+CG.LINES = 4           -- a card's lines (feedback-22: Trade on a line of its own)
 CG.QUALITY_W = 2       -- the quality bar at a card's left edge
 CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Drops card's chevron and the gap before its icon
 CG.ILVL_GAP = 4        -- line 1: between the item level and the name (feedback-10 spec §2)
 CG.HALVES_GAP = 12     -- line 3: between one half's last piece and the next label (feedback-10 spec §2)
+CG.ASK_GAP = 6         -- line 1: between the name (or its freshness) and the action button
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
 local SEP = "|cff9e9ea3·|r "
@@ -88,22 +95,33 @@ local SEP = "|cff9e9ea3·|r "
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
 --- A card's metrics at a `window.fontSize` (nil = Default, the small template's own size):
---- { fontSize, size, line, height, icon }. Three lines of `size + LINE_EXTRA`, a PAD above and below;
---- the icon spans the three lines, within ICON_MIN..ICON_MAX.
+--- { fontSize, size, line, height, icon }. CG.LINES lines of `size + LINE_EXTRA`, a PAD above and
+--- below; the icon spans the lines, within ICON_MIN..ICON_MAX.
 --- @param fontSize number|nil NS.WindowRows.FontSize's answer
 --- @return table
 function CG.Metrics(fontSize)
     local size = fontSize or K.COUNTDOWN_FONT
     local line = size + CG.LINE_EXTRA
-    return { fontSize = fontSize, size = size, line = line, height = 3 * line + 2 * CG.PAD,
-        icon = min(CG.ICON_MAX, max(CG.ICON_MIN, 3 * line - 6)) }
+    local n = CG.LINES
+    return { fontSize = fontSize, size = size, line = line, height = n * line + 2 * CG.PAD,
+        icon = min(CG.ICON_MAX, max(CG.ICON_MIN, n * line - 6)) }
 end
 
---- The middle of line `i` (1..3), as an offset down from the card's top.
+--- The middle of line `i` (1..CG.LINES), as an offset down from the card's top.
 --- @param m table CG.Metrics' answer
 --- @param i number
 --- @return number
 function CG.LineY(m, i) return -(CG.PAD + (i - 0.5) * m.line) end
+
+--- The action button's height: two lines (feedback-22), its label centered in it.
+--- @param m table CG.Metrics' answer
+--- @return number
+function CG.AskHeight(m) return 2 * m.line end
+
+--- The action button's middle: between lines 1 and 2, as an offset down from the card's top.
+--- @param m table
+--- @return number
+function CG.AskY(m) return -(CG.PAD + m.line) end
 
 --- Where the text starts: after the quality bar, the chevron's lead (`lead`, CG.LEAD on a Drops
 --- card, 0 where a card has no chevron) and the icon.
@@ -272,7 +290,7 @@ function CG.BuildHalf(card, key)
     card.cells[key .. "Label"], card.cells[key] = label, half
 end
 
---- Line 3's three halves: You, Them and Trade.
+--- Line 3's two halves, You and Them, and line 4's Trade.
 --- @param card table
 function CG.BuildHalves(card)
     for _, key in ipairs({ "you", "them", "trade" }) do CG.BuildHalf(card, key) end
@@ -281,14 +299,15 @@ end
 -- The gaps on line 3: between the label, the level and the verdict, and after a glyph.
 CG.HALF_GAP, CG.HALF_GLYPH_GAP = 3, 2
 
---- Line 3's Them half placed CG.HALVES_GAP after You's last piece, and Trade as far after Them's
---- (feedback-10 spec §2: the halves read close together, not at a third of the card's width). A
---- half's text is its last piece, shown or empty.
+--- Line 3's Them half placed CG.HALVES_GAP after You's last piece (feedback-10 spec §2: the halves
+--- read close together, not at a third of the card's width), and line 4's Trade under You's label
+--- (feedback-22). A half's text is its last piece, shown or empty.
 --- @param card table
-function CG.PlaceThem(card)
+--- @param m table CG.Metrics' answer
+function CG.PlaceThem(card, m)
     local c = card.cells
     at(c.themLabel.text, "LEFT", c.you.text, "RIGHT", CG.HALVES_GAP, 0)
-    at(c.tradeLabel.text, "LEFT", c.them.text, "RIGHT", CG.HALVES_GAP, 0)
+    at(c.tradeLabel.text, "LEFT", c.youLabel.text, "LEFT", 0, -m.line)
 end
 
 local function newCard(content)
@@ -315,11 +334,12 @@ local function layout(card, m)
     at(c.ilvl.text, "LEFT", card, "TOPLEFT", x, y1)
     at(c.item.text, "LEFT", c.ilvl.text, "RIGHT", CG.ILVL_GAP, 0)
     at(c.fresh.text, "LEFT", c.item.text, "RIGHT", NS.WindowRows.MARK_GAP, 0)
-    at(card.ask, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
-    card.ask:SetHeight(m.line + 2)
+    at(card.ask, "RIGHT", card, "TOPRIGHT", -P, CG.AskY(m))
+    card.ask:SetHeight(CG.AskHeight(m))
+    card.ask.label:SetJustifyV("MIDDLE")
     at(c.looter.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
     at(c.youLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
-    CG.PlaceThem(card)
+    CG.PlaceThem(card, m)
 end
 
 -- ── painting a card ─────────────────────────────────────────────────────────────────────────
@@ -345,8 +365,8 @@ local function paintAsk(card, a, id)
 end
 
 -- Line 1's freshness, `(2m)`, right after the name, or nothing (CompactCards.FreshMark); the name
--- takes what is left of the line after the item level and it (NS.WindowRows.MarkedWidth), so the
--- name is cut and the freshness is not.
+-- takes what is left of the line after the item level, it and the action button (two lines tall,
+-- feedback-22: NS.WindowRows.MarkedWidth), so the name is cut and the freshness is not.
 local function paintFresh(card, cc, width, m)
     local c = card.cells
     local mark = NS.CompactCards.FreshMark(cc.fresh)
@@ -356,6 +376,7 @@ local function paintFresh(card, cc, width, m)
     c.fresh.hit.tipLines = cc.fresh.tip
     local item = c.item.text
     local room = width - CG.TextLeft(m, CG.LEAD) - CG.PAD - (c.ilvl.text:GetStringWidth() or 0) - CG.ILVL_GAP
+        - K.ASK_W - CG.ASK_GAP
     local full = item.GetUnboundedStringWidth and item:GetUnboundedStringWidth() or nil
     item:SetWidth(NS.WindowRows.MarkedWidth(room, full, mark and (c.fresh.text:GetStringWidth() or 0) or nil))
 end
@@ -403,12 +424,13 @@ local function placeLead(h, label)
     return h.sep
 end
 
---- One half of line 3 painted (CompactCards.Half's): its label (gold, feedback-10 spec §2), the worn
+--- One half of line 3 (or line 4's Trade) painted (CompactCards.Half's): its label (gold, feedback-10 spec §2), the worn
 --- item level (plain, or
 --- a muted word), the glyph and the difference or word in the verdict's tone, each placed after the
 --- last piece shown. A dual mark (`parts`, feedback-21 H7) draws each worn item's level, glyph and
 --- difference, `You 321 ▼10 / 324 ▼23`, the second part in the single pieces; with `single`, the one
---- mark instead (CG.PaintHalves, when the dual marks do not fit: feedback-21 R5).
+--- mark instead (CG.PaintHalves, when the dual marks do not fit: feedback-21 R5). Trade's word is
+--- followed by its short reason in the muted gray (WindowCells.TradeText, feedback-22).
 --- @param card table
 --- @param key string `you` or `them`
 --- @param half table
@@ -424,7 +446,7 @@ function CG.PaintHalf(card, key, half, single)
     setTone(h.level, second and "plain" or half.levelTone)
     h.glyph:SetText(p.glyph or "")
     setTone(h.glyph, p.tone)
-    h.text:SetText(p.text)
+    h.text:SetText(key == "trade" and NS.WindowCells.TradeText(p) or p.text)
     setTone(h.text, p.tone)
     h.hit.tipLines = half.tip
     local first = second and placeLead(h, label) or label
@@ -436,11 +458,12 @@ function CG.PaintHalf(card, key, half, single)
     else
         at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
     end
-    -- Trade, the line's last half, runs to the card's right inset and is cut there (feedback-11 spec §0).
+    -- Trade, alone on line 4, runs to the card's right inset and is cut there (feedback-11 spec §0).
     if key == "trade" then h.text:SetPoint("RIGHT", card, "RIGHT", -CG.PAD, 0) end
 end
 
 local HALVES = { "you", "them", "trade" }
+local LINE_THREE = { "you", "them" }   -- Trade is line 4's (feedback-22)
 
 -- A piece's width on one line (unbounded: Trade is cut at the card's inset), or nil while its
 -- font is not loaded.
@@ -469,14 +492,14 @@ local function halfWidth(card, key)
     return w
 end
 
---- Whether painted line 3 fits `room`: You, Them and Trade, CG.HALVES_GAP apart. True while a piece
+--- Whether painted line 3 fits `room`: You and Them, CG.HALVES_GAP apart. True while a piece
 --- cannot be measured.
 --- @param card table
 --- @param room number the line's width, from its left edge to the card's right inset
 --- @return boolean
 function CG.LineThreeFits(card, room)
-    local w = 2 * CG.HALVES_GAP
-    for _, key in ipairs(HALVES) do
+    local w = CG.HALVES_GAP
+    for _, key in ipairs(LINE_THREE) do
         local hw = halfWidth(card, key)
         if not hw then return true end
         w = w + hw
@@ -484,9 +507,9 @@ function CG.LineThreeFits(card, room)
     return w <= room
 end
 
---- Line 3 painted: You, Them and Trade (CompactCards' halves). With `room` (the line's width), dual
---- marks (feedback-21 H7) that would push Trade off the card (a larger Font size at the least width)
---- give way to the one mark each (feedback-21 R5).
+--- Lines 3 and 4 painted: You and Them, then Trade (CompactCards' halves). With `room` (the line's
+--- width), dual marks (feedback-21 H7) that would push Them off the card (a larger Font size at the
+--- least width) give way to the one mark each (feedback-21 R5).
 --- @param card table
 --- @param cc table a CompactCards card
 --- @param room number|nil

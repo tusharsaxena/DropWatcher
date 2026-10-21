@@ -380,6 +380,7 @@ test("evaluate: a unique-equipped drop compares against the item holding its cat
     assertEqual(res.baselineSlot, S.FINGER2)
     assertEqual(res.verdict, "downgrade")
     assertTrue(hasReason(res, "uniqueEquipped"))
+    assertTrue(res.either == true, "a ring slot: both worn rings are marked (feedback-22)")
     -- The maximum not reached: the normal pair rule.
     ring.unique = { cat = 7, max = 2 }
     res = E.Evaluate(ring, c)
@@ -398,6 +399,7 @@ test("evaluate: a unique-equipped drop compares against the item holding its cat
     res = E.Evaluate(trinketish, c)
     assertEqual(res.baselineSlot, S.TRINKET1)
     assertEqual(res.ilvlDelta, -50)
+    assertTrue(res.either == nil, "redirected to another slot: one item, one mark")
     -- A different category leaves the plan alone.
     trinketish.unique = { cat = 10 }
     res = E.Evaluate(trinketish, c)
@@ -414,6 +416,7 @@ test("evaluate: a unique drop whose own slot holds the category replaces that it
     assertEqual(res.baselineSlot, S.FEET)
     assertEqual(res.ilvlDelta, -5)
     assertEqual(res.verdict, "downgrade")
+    assertTrue(res.either == nil, "a single slot")
     -- A ring: of its own two slots, only the one holding the category can take it.
     c.gear[S.FINGER1] = armor(580, "INVTYPE_FINGER", A.GENERIC)
     c.gear[S.FINGER2] = armor(620, "INVTYPE_FINGER", A.GENERIC, { unique = { cat = 3, max = 2 } })

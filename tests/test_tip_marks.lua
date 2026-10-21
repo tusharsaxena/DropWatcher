@@ -604,9 +604,20 @@ test("audit: no text in the default face carries a glyph: Drops, the detail card
     local ownId
     for _, d in ipairs(drops) do
         NS.WindowGroup.ToggleExpand(d.id)
-        if d.isMine then NS.WindowOwn.Reveal(d.id); ownId = ownId or d.id end
+        -- one with candidates, so the Offer panel draws its rows' arrows
+        if d.isMine then NS.WindowOwn.Reveal(d.id); ownId = ownId or (next(d.candidates or {}) and d.id) or nil end
     end
-    assertTrue(ownId ~= nil, "test mode has a drop of your own")
+    assertTrue(ownId ~= nil, "test mode has a drop of your own with candidates")
+    -- the card left open is a single slot's upgrade, whose Item level row draws `from → to` (a ring's
+    -- reads its dual mark instead), from the newest group, the one open
+    for i = #drops, 1, -1 do
+        local d = drops[i]
+        local slots = NS.WindowCells.EqSlots(d.facts.equipLoc)
+        if not d.isMine and slots and #slots == 1 and d.me and d.me.baseline then
+            if NS.WindowGroup.Expanded() ~= d.id then NS.WindowGroup.ToggleExpand(d.id) end
+            break
+        end
+    end
     NS.OfferPanel.Open(ownId)
     assertTrue(NS.OfferPanel.IsShown())
     NS.Window.Refresh()

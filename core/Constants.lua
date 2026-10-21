@@ -20,22 +20,23 @@ C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEX
 C.WINDOW = {
     NAME        = "DropWatcherWindow",
     -- The default width is the least (feedback-4 spec §4, recomputed by feedback-5 spec §4 and
-    -- feedback-6 spec §1): the Drops table's every column at its width with a CELL_GAP after each, the
+    -- feedback-6 spec §1, and feedback-22's wider Trade): the Drops table's every column at its width with a CELL_GAP after each, the
     -- Item column at ITEM_MIN, a drop row's indent and chevron lead, the scroll gutter and both insets:
-    --   columns  Ilvl 40 + Slot 72 + Type 64 + Looter 104 + Me 127 + Them 127 + Trade 70
-    --            + Trade window 76 + Actions 84 (ASK_W) = 764, + 10 gaps x 6 = 824,
-    --            + Item 150 (ITEM_MIN) = 974 (Trade window is its widest answer plus its bar's
+    --   columns  Ilvl 40 + Slot 72 + Type 64 + Looter 104 + Me 127 + Them 127 + Trade 112
+    --            + Trade window 76 + Actions 84 (ASK_W) = 806, + 10 gaps x 6 = 866,
+    --            + Item 150 (ITEM_MIN) = 1016 (Trade is its widest word and reason, `Yes Not their
+    --            upgrade`, feedback-22; Trade window is its widest answer plus its bar's
     --            padding, feedback-6 spec §0; Me and Them their widest cell, two worn icons, `321/308`
     --            and `Not wanted`, feedback-6 spec §1: tests/test_side_cells.lua measures both;
     --            a dual mark, `321 ▼10 / 324 ▼23`, is 125 inside them, feedback-21 H7)
     --   lead     ROW_INDENT 12 + CHEVRON_X 4 + ROW_CHEVRON 10 + CHEVRON_GAP 4 = 30 (WindowGroup.LEAD)
     --   chrome   SCROLL_W 22 + 2 x INSET 6 = 34
-    --   974 + 30 + 34 = 1038. History's columns (the same lead since feedback-15 spec §4) fit with room
+    --   1016 + 30 + 34 = 1080. History's columns (the same lead since feedback-15 spec §4) fit with room
     --   to spare.
     -- tests/test_drops_layout.lua pins that no tab sheds a column there and the filter bar fits.
-    WIDTH       = 1038,
+    WIDTH       = 1080,
     HEIGHT      = 600,
-    MIN_WIDTH   = 1038,   -- = WIDTH: sized wider and back, never narrower than a new profile's
+    MIN_WIDTH   = 1080,   -- = WIDTH: sized wider and back, never narrower than a new profile's
     MIN_HEIGHT  = 260,
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
@@ -48,7 +49,7 @@ C.WINDOW = {
     -- short of the card's edge there (measured too), so line 2 still sets it. Two dual marks
     -- (feedback-21 H7, `You 321 ▼10 / 324 ▼13`) are shorter than those halves and fit too (measured).
     COMPACT_WIDTH  = 440,
-    COMPACT_HEIGHT = 460,
+    COMPACT_HEIGHT = 560,  -- 460 until feedback-22 made a card four lines (Trade on its own), its icon taller
     COMPACT_MIN_W  = 440,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
     COMPACT_MAX_W  = 520,
     COMPACT_MIN_H  = 220,

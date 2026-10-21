@@ -77,8 +77,8 @@ WH.COLUMNS = {
       tip = { TM.Row(L["Shows"], L["the drop judged for its looter"]), TM.Row(L["As of"], L["its last judgment in the feed"]),
           TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
               TM.Mark("downgrade"))) } },
-    { key = "trade", label = L["Trade"], width = 70, shed = 5,
-      tip = { TM.Row(L["Shows"], L["the last trade estimate"]), TM.Row(L["Values"], L["Yes, Likely, Unknown or No"]) } },
+    { key = "trade", label = L["Trade"], width = 112, shed = 5,
+      tip = { TM.Row(L["Shows"], L["the last trade estimate"]), TM.Row(L["Values"], L["Yes, No or ?, then why in a few words"]) } },
     { key = "outcome", label = L["Outcome"], width = 92,
       tip = { TM.Row(L["Shows"], L["what became of it"]),
           TM.Row(L["Values"], L["seen, asked, offered, received, traded away, expired, declined"]),
@@ -458,7 +458,9 @@ end
 --- @return table cell
 function WH.ThemCell(drop) return SC.Merge(WH.ThemVerdict(drop)) end
 
-local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WH.MeCell, trade = WC.Trade,
+local function tradeCell(drop) return WC.TradeDrawn(WC.Trade(drop)) end   -- `No Bonus roll` (feedback-22)
+
+local SIMPLE = { ilvl = WC.Ilvl, slot = WC.Slot, armorType = WC.ArmorType, me = WH.MeCell, trade = tradeCell,
     them = WH.ThemCell, outcome = WH.Outcome }
 
 local function paintRow(row, drop, layout, metrics)
