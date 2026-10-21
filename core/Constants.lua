@@ -41,16 +41,16 @@ C.WINDOW = {
     -- Compact mode (compact spec §1, modules/WindowCompact.lua): its default size and the bounds
     -- its corner grip sizes it within. The full window keeps WIDTH/HEIGHT and MIN_WIDTH/MIN_HEIGHT.
     -- The compact least width (feedback-5 spec §4) fits a Drops card's fullest line 2: a twelve-letter
-    -- looter, its realm mark, slot, type and a counted trade (about 220px at the small template's 5px a
-    -- character) before the action button (ASK_W, line 2's right since feedback-10 spec §2; the
-    -- countdown and its bar were there before), past the indent, chevron, icon, insets and scroll
-    -- gutter (tests/test_compact_group.lua measures it). 380 cut it by about 57px.
-    -- Line 3's fullest halves since feedback-6 spec §1 (`Them 321/308 ⊘ Not wanted`) end about 46px
-    -- short of the card's edge there (measured too), so line 2 still sets it. Two dual marks
-    -- (feedback-21 H7, `You 321 ▼10 / 324 ▼13`) are shorter than those halves and fit too (measured).
-    COMPACT_WIDTH  = 440,
+    -- looter, its realm mark, slot and type (about 180px at the small template's 5px a character)
+    -- before the action button (ASK_W, lines 2 and 3's right since feedback-23), past the indent,
+    -- chevron, icon, insets and scroll gutter (tests/test_compact_group.lua measures it). 440 until
+    -- feedback-23: line 2 lost its trade to line 4 in feedback-22, and 360 cuts it by about 13px.
+    -- Line 3 holds You beside the button; Them follows it there when it fits, or starts line 4
+    -- before Trade (feedback-23), so a dual mark (feedback-21 H7, `You 321 ▼10 / 324 ▼13`) on both
+    -- halves still reads both rings at 400 (measured too).
+    COMPACT_WIDTH  = 400,
     COMPACT_HEIGHT = 560,  -- 460 until feedback-22 made a card four lines (Trade on its own), its icon taller
-    COMPACT_MIN_W  = 440,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
+    COMPACT_MIN_W  = 400,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)
     COMPACT_MAX_W  = 520,
     COMPACT_MIN_H  = 220,
     COMPACT_MAX_H  = 900,

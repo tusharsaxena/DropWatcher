@@ -62,10 +62,10 @@ local DASH = "–"
 CC.NO_GLYPH = "⊘"
 
 -- The header's pieces, each cut to its own number of characters (feedback-15), so a line with
--- every piece at its limit fits HEADER_CHARS, about what a default-width pane (COMPACT_WIDTH 440)
+-- every piece at its limit fits HEADER_CHARS, about what a default-width pane (COMPACT_WIDTH 400; 440 until feedback-23)
 -- holds in the header's font. The situation word stands in for a difficulty, never beside one.
-CC.HEADER_CHARS = 76
-CC.HEADER_MAX = { instance = 14, label = 14, difficulty = 11, situation = 16, age = 7, count = 6, who = 9 }
+CC.HEADER_CHARS = 72   -- 76 at 440 wide, until feedback-23
+CC.HEADER_MAX = { instance = 12, label = 12, difficulty = 11, situation = 16, age = 7, count = 6, who = 9 }
 
 local DAY = 86400
 

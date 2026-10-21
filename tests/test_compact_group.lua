@@ -117,7 +117,7 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertTrue(drawn.compact == true)
     assertEqual(#drawn.headers, 1); assertEqual(#drawn.rows, 2)
     local h = drawn.headers[1]
-    assertEqual(textOf(h.text), "Commander Ri'… · Dungeon · 10s · 2")
+    assertEqual(textOf(h.text), "Commander R… · Dungeon · 10s · 2")
     -- red under: a header text left at the game's default CENTER, centered across the sized line
     assertEqual(h.text:GetJustifyH(), "LEFT", "the header reads from the left")
     assertTrue(h.tipRow == true)
@@ -158,7 +158,7 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(p[1], "LEFT"); assertEqual(p[2], c.item.text); assertEqual(p[3], "RIGHT", "the freshness right after the name")
     p = card.ask.__points[1]
     assertEqual(p[1], "RIGHT"); assertEqual(p[2], card)
-    assertEqual(p[5], -(CG.PAD + m3.line), "the button spans lines 1 and 2, centered between them (feedback-22)")
+    assertEqual(p[5], -(CG.PAD + 2 * m3.line), "the button spans lines 2 and 3, centered between them (feedback-23)")
     assertEqual(card.ask:GetHeight(), 2 * m3.line, "two lines tall")
     assertEqual(card.ask.label.__points[1][1], "CENTER", "its label centered")
     p = c.themLabel.text.__points[1]
@@ -476,10 +476,10 @@ test("compact group: at the least width line 2's pieces end before the action bu
 end)
 
 -- Line 3 at its fullest (feedback-6 spec §1): both halves on a trinket, two worn levels each
--- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: Them starts
--- CG.HALVES_GAP after You ends (feedback-10 spec §2) and ends before the card's right edge. Line 4
--- (feedback-22) is Trade alone, under You's label, its word and reason inside the card too.
-test("compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict", function()
+-- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: You ends before
+-- the action button (lines 2 and 3's since feedback-23); Them does not fit after it there, so it
+-- starts line 4 under You's label and ends inside the card, Trade CG.HALVES_GAP after it.
+test("compact group: at the least width line 3's fullest halves fit, Them on line 4 when not beside You", function()
     local NS, _, m = T.enableAddon()
     local K, CG = NS.Constants.WINDOW, NS.CompactGroup
     m.__now = 100
@@ -508,28 +508,31 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     assertEqual(NS.CompactCards.HalfText(card.model.you), "You 321/308 ⊘ Not wanted")
     assertEqual(NS.CompactCards.HalfText(card.model.them), "Them 321/308 ⊘ Not wanted")
     local m3 = CG.Metrics(nil)
-    local youEnd = halfEnd("you", CG.TextLeft(m3, CG.LEAD))
-    local themX = youEnd + CG.HALVES_GAP
+    local x = CG.TextLeft(m3, CG.LEAD)
+    local youEnd = halfEnd("you", x)
+    local buttonAt = card:GetWidth() - CG.PAD - K.ASK_W
+    assertTrue(youEnd + CG.ASK_GAP <= buttonAt, ("You ends at %d, the button at %d"):format(youEnd, buttonAt))
     -- Trade's last piece is bounded at the card's right inset, cut there rather than past it (feedback-11 spec §0).
     local rp = c.trade.text.__points[2]
     assertEqual(rp[1], "RIGHT"); assertEqual(rp[2], card); assertEqual(rp[4], -CG.PAD)
-    assertTrue(c.you.text.__points[2] == nil, "You is not bounded: Them follows it")
-    local themEnd = halfEnd("them", themX)
-    assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
-        card:GetWidth() - CG.PAD))
-    -- Line 4: Trade under You's label, a line down (feedback-22).
-    local tp = c.tradeLabel.text.__points[1]
+    assertTrue(c.you.text.__points[2] == nil, "You is not bounded")
+    -- Line 4: Them under You's label, a line down, then Trade after Them's last piece (feedback-23).
+    local tp = c.themLabel.text.__points[1]
     assertEqual(tp[2], c.youLabel.text); assertEqual(tp[4], 0); assertEqual(tp[5], -m3.line)
+    tp = c.tradeLabel.text.__points[1]
+    assertEqual(tp[2], c.them.text); assertEqual(tp[3], "RIGHT"); assertEqual(tp[4], CG.HALVES_GAP)
+    local themEnd = halfEnd("them", x)
     assertEqual(NS.CompactCards.HalfText(card.model.trade), "Trade ? Not inspected")
-    local tradeEnd = CG.TextLeft(m3, CG.LEAD) + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
+    local tradeEnd = themEnd + CG.HALVES_GAP + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
     assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
         card:GetWidth() - CG.PAD))
 end)
 
 -- Line 3 with two dual marks (feedback-21 H7): both halves on trinkets read in full, each worn item's
 -- level, glyph and two-digit difference, `You 321 ▼10 / 324 ▼13`. The first part and its `/` sit
--- between the label and the single pieces, Them still follows You's last piece, and the line ends
--- inside the card at the least width (no compact width change).
+-- between the label and the single pieces. At the least width You ends before the action button
+-- (lines 2 and 3's, feedback-23) and Them, not fitting after it, starts line 4 under You's label and
+-- ends inside the card: both rings read on both halves, never the one mark.
 test("compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)", function()
     local NS, _, m = T.enableAddon()
     local K, CG, C = NS.Constants.WINDOW, NS.CompactGroup, NS.Constants
@@ -555,7 +558,9 @@ test("compact group: at the least width line 3's two dual marks fit, each worn i
     assertEqual(you.leadLevel.__points[1][2], c.youLabel.text, "the first part after the label")
     assertEqual(you.level.__points[1][2], you.sep, "the second part after the separator")
     assertEqual(select(2, you.leadText:GetTextColor()), C.TONE.red.g, "each part in its tone")
-    assertEqual(c.themLabel.text.__points[1][2], you.text, "Them follows You's last piece")
+    local tp = c.themLabel.text.__points[1]
+    assertEqual(tp[2], c.youLabel.text, "Them under You's label (feedback-23)"); assertEqual(tp[5], -CG.Metrics(nil).line)
+    assertEqual(c.them.sep:GetText(), "/", "Them keeps both rings")
     local function w(fs) return #((fs:GetText() or ""):gsub("[\128-\191]", "")) * m.textCharWidth end
     local function halfEnd(key, x)
         local h = c[key]
@@ -563,18 +568,21 @@ test("compact group: at the least width line 3's two dual marks fit, each worn i
             + CG.HALF_GLYPH_GAP + w(h.leadText) + CG.HALF_GAP + w(h.sep) + CG.HALF_GAP + w(h.level) + CG.HALF_GAP
             + w(h.glyph) + CG.HALF_GLYPH_GAP + w(h.text)
     end
-    local themX = halfEnd("you", CG.TextLeft(CG.Metrics(nil), CG.LEAD)) + CG.HALVES_GAP
-    local themEnd = halfEnd("them", themX)
+    local x = CG.TextLeft(CG.Metrics(nil), CG.LEAD)
+    local youEnd, buttonAt = halfEnd("you", x), card:GetWidth() - CG.PAD - K.ASK_W
+    assertTrue(youEnd + CG.ASK_GAP <= buttonAt, ("You ends at %d, the button at %d"):format(youEnd, buttonAt))
+    local themEnd = halfEnd("them", x)
     assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
         card:GetWidth() - CG.PAD))
 end)
 
--- feedback-21 R5: at a larger Font size line 3's dual marks would push Them off the card at the
--- least width; they give way to the one mark each, and the line reads as before H7.
+-- feedback-21 R5: at a larger Font size line 3's dual marks would push You into the action button
+-- at the least width, Them moved to line 4 or not (feedback-23); they give way to the one mark each,
+-- and the line reads as before H7.
 test("compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)", function()
     local NS, _, m = T.enableAddon()
     m.__now = 100
-    m.textCharWidth = 9
+    m.textCharWidth = 14
     local down = { verdict = "downgrade", ilvlDelta = -10, either = true, reasons = {} }
     local trinkets = { [13] = { link = OLD1, ilvl = 321 }, [14] = { link = OLD1, ilvl = 324 } }
     seed(NS, { GROUP }, { drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_TRINKET", quality = 4 }, me = down,

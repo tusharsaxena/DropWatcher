@@ -106,8 +106,9 @@ state's tone and no card dismissable, the ask states and the gray `No action` wi
 collapsing headers; each card indented under its header with the muted-white chevron, no card
 showing a trade window and a second's tick leaving the cards as they are (feedback-10 spec §2), Them's last piece cut at the
 card's right inset (feedback-11 spec §0), and
-the least compact width, 440, at which line 2's fullest pieces end before the action button,
-feedback-5 spec §0, §4, and line 3's two dual marks still fit, feedback-21 H7, and at a wider
+the least compact width, 400 (440 until feedback-23), at which line 2's fullest pieces end before the
+action button, feedback-5 spec §0, §4, and line 3's two dual marks still read both rings, Them on line 4
+when it does not fit beside You and the button (lines 2 and 3's), feedback-21 H7, feedback-23, and at a wider
 character measure give way to the one mark each, feedback-21 R5),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined

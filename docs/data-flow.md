@@ -82,8 +82,8 @@ Scan group ────────────────> NS.ScanGroup ─> N
                              bar's removed by feedback-16); feedback-7 §4)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
 resize (grip released) ────> the whole repaint (the table's columns take the new width); never
-                             under the layout's least width, its default (full 1080, compact 440;
-                             feedback-4 §4, recomputed by feedback-5 §4 and feedback-6 §0-§1); the search box, anchored 8px after Character and to
+                             under the layout's least width, its default (full 1080, compact 400;
+                             feedback-4 §4, recomputed by feedback-5 §4, feedback-6 §0-§1 and feedback-23); the search box, anchored 8px after Character and to
                              the bar's right edge, tracks it live (WindowFilterBar.SearchWidth)
 minimize ──────────────────> the Offer panel and the Edit message box close; the anchor moves to
                              the top-left corner first, so the title bar stays where it is
@@ -208,7 +208,7 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     messages.transmogAsk, Compat.NormalizedRealm; your own drop: its WindowOwn.IsRevealed and
   │     offer tone }) ─> four lines of pieces (line 1: ilvl then item, then CompactCards.FreshMark's
   │     `(2m)` right after it or nothing, never `(…)` while Them reads `…` (feedback-11 §0), the name cut by WindowRows.MarkedWidth; line 2: looter · slot ·
-  │     type, ` [YOU]` in gold after your own name, the Ask or Offer on the right (the gray
+  │     type, ` [YOU]` in gold after your own name, the Ask or Offer on the right of lines 2 and 3 (the gray
   │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
   │     row's; no trade window countdown, feedback-10 §2; line 3 SideCells' Me and Them without
   │     icons, `You 321 ▼10 / 308 ▲3  Them Upgrade for 2` (a mark per worn item on a
@@ -218,7 +218,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     hand alone for a one-hander it alone can take, SideCells.JudgedItem); line 4 the
   │     Trade cell, `Trade No Bonus roll`, its Yes, No or ? then its short reason in the muted
   │     gray (WindowCells.TradeText, feedback-22), cut at the card's right inset (feedback-11 §0);
-  │     the labels gold, Them CompactGroup.PlaceThem's fixed gap after You; feedback-6 §1, feedback-7 §2)
+  │     the labels gold, Them CompactGroup.PlaceThem's fixed gap after You, or at the start of line 4
+  │     before Trade when it does not fit beside You and the button, feedback-23; feedback-6 §1, feedback-7 §2)
   └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
         `[Post] [Scan group] [Expand all]` as icons alone, FOOTER_ICON_W wide (feedback-16)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
