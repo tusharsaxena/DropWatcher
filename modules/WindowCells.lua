@@ -101,6 +101,9 @@ local TRADE_LABEL = { yes = L["Yes"], likely = L["Likely"], unknown = L["Unknown
 -- not the gray `bad` tone). The detail card's trade chip reads this table too.
 local TRADE_TONE = { yes = "good", likely = "good", unknown = "muted", no = "red" }
 WC.TRADE_TONE = TRADE_TONE
+-- The word the Trade cell shows (feedback-22): Yes or No, with its short reason after it
+-- (WC.TradeText); Likely reads Yes there, the tooltip's title keeps the estimate's own word.
+local TRADE_WORD = { yes = L["Yes"], likely = L["Yes"], unknown = "?", no = L["No"] }
 
 -- An inspect failure's reason, in words (the Inspect row's value).
 local FAILED_WORD = {
@@ -270,7 +273,8 @@ function WC.Verdict(eval, side, title, ilvl, who)
     local tip = verdictTip(("%s: %s"):format(title, VERDICT_WORD[v] or v), eval, ilvl, who)
     return { text = text, glyph = glyph, tone = VERDICT_TONE[v] or "muted", tip = tip, verdict = v,
         who = who, delta = num(eval.ilvlDelta), base = type(eval.baseline) == "table" and eval.baseline or nil,
-        ilvl = ilvl, band = num(eval.band), either = eval.either == true }
+        ilvl = ilvl, band = num(eval.band), either = eval.either == true,
+        averaged = eval.averaged == true }
 end
 
 --- The Me verdict: the drop judged for you (NS.SideCells puts it after your worn gear). The grid
@@ -451,21 +455,46 @@ function WC.TradeRows(trade, who)
     return fn(type(trade.args) == "table" and trade.args or {}, who)
 end
 
---- The Trade column: Yes, Likely, Unknown or No, with the reason (board 03); a Yes or Likely on
---- another player's drop none of your specs can use reads Can't use in the verdict's dim red, the
---- reason kept (feedback-21).
+-- Each estimate's reason in one to three words (feedback-22): the Trade cell's `reason`, after its
+-- Yes or No. The tooltip has the rule and every fact it rests on (WC.TradeRows).
+local TRADE_SHORT = {
+    boe = L["BoE"], warbound = L["Warbound"], bonusRoll = L["Bonus roll"], legacy = L["Legacy loot"],
+    groupLoot = L["Group loot"], badFacts = L["Not loaded"], expired = L["Window passed"],
+    timer = L["Window open"], notUpgrade = L["Not their upgrade"], upgradeForYou = L["Your upgrade"],
+    noInspect = L["Not inspected"], error = L["Failed"],
+}
+WC.TRADE_SHORT = TRADE_SHORT   -- read-only, for the test that sizes the Trade column
+
+--- An estimate's short reason: `Bonus roll`, `Their upgrade` (`Your upgrade` on your own drop, and
+--- `Not your upgrade` for `Not their upgrade`).
+--- @param t table NS.TradeRules' answer
+--- @param mine boolean|nil your own drop
+--- @return string
+function WC.TradeShort(t, mine)
+    if t.reasonKey == "upgradeForLooter" then return mine and L["Your upgrade"] or L["Their upgrade"] end
+    if t.reasonKey == "notUpgrade" and mine then return L["Not your upgrade"] end
+    return TRADE_SHORT[t.reasonKey] or tostring(t.reasonKey or "?")
+end
+
+--- The Trade column: Yes, No or ? (an estimate not made, or resting on gear not read), its
+--- one-to-three-word reason in `reason` (feedback-22; WC.TradeText draws the two); a Yes on another
+--- player's drop none of your specs can use is dimmed to the verdict's dim red, its reason Can't use
+--- (feedback-21). The tooltip's title keeps the estimate's own word (Yes, Likely, Unknown, No).
 --- @param drop table
---- @return table cell
+--- @return table cell, with `reason` and `state`
 function WC.Trade(drop)
     local t = drop.trade
     if type(t) ~= "table" or not TRADE_LABEL[t.state] then
-        return cell(TRADE_LABEL.unknown, "muted", L["Trade: Unknown"], row(L["Estimate"], L["not made yet"]))
+        local c = cell(TRADE_WORD.unknown, "muted", L["Trade: Unknown"], row(L["Estimate"], L["not made yet"]))
+        c.reason = L["Pending"]
+        return c
     end
     local label = TRADE_LABEL[t.state]
-    local c = cell(label, TRADE_TONE[t.state], L["Trade: %s"]:format(label))
+    local c = cell(TRADE_WORD[t.state], TRADE_TONE[t.state], L["Trade: %s"]:format(label))
+    c.reason = WC.TradeShort(t, drop.isMine)
     append(c.tip, WC.TradeRows(t, looterName(drop)))
     if c.tone == "good" and youCantUse(drop) then
-        c.text, c.tone, c.tip[1] = L["Can't use"], "redMuted", L["Trade: %s"]:format(L["Can't use"])
+        c.tone, c.reason, c.tip[1] = "redMuted", L["Can't use"], L["Trade: %s"]:format(L["Can't use"])
         c.tip[#c.tip + 1] = row(L["For you"], L["can't use, nothing to ask for"])
     end
     if num(t.age) then c.tip[#c.tip + 1] = row(L["Inspected"], L["%s ago"]:format(WC.Duration(t.age))) end
@@ -474,6 +503,40 @@ function WC.Trade(drop)
     end
     c.state = t.state
     return c
+end
+
+-- The reason's color after the word: the muted gray, so the word's tone reads first.
+local function hexOf(tone)
+    local c = C.TONE[tone]
+    return ("%02x%02x%02x"):format(floor(c.r * 255 + 0.5), floor(c.g * 255 + 0.5), floor(c.b * 255 + 0.5))
+end
+WC.TRADE_REASON_TONE = "muted"
+
+--- A Trade cell as drawn: its word, then its reason in the muted gray (an escape, so the word keeps
+--- the font string's own tone): `No |cff..Bonus roll|r`. The word alone with no reason.
+--- @param c table WC.Trade's (or MineCells.OwnTrade's) cell
+--- @return string
+function WC.TradeText(c)
+    if type(c.reason) ~= "string" or c.reason == "" then return c.text end
+    return ("%s |cff%s%s|r"):format(c.text, hexOf(WC.TRADE_REASON_TONE), c.reason)
+end
+
+--- A Trade cell with its text as drawn (WC.TradeText), for a painter that sets a cell's text.
+--- @param c table
+--- @return table a copy of `c`
+function WC.TradeDrawn(c)
+    local out = {}
+    for k, v in pairs(c) do out[k] = v end
+    out.text = WC.TradeText(c)
+    return out
+end
+
+--- The same as plain text, `No Bonus roll` (the suites, the simulator's report).
+--- @param c table
+--- @return string
+function WC.TradePlain(c)
+    if type(c.reason) ~= "string" or c.reason == "" then return c.text end
+    return c.text .. " " .. c.reason
 end
 
 -- ── the gear halves of the Me and Them cells ────────────────────────────────────────────────

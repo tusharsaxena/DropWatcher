@@ -1,5 +1,5 @@
 -- tests/test_compact_cards.lua — compact mode's cards (compact spec §2 and §3, DW-C1): each card's
--- three lines of text, tones and tooltips for Drops and History, in every state a
+-- four lines of text, tones and tooltips for Drops and History, in every state a
 -- drop can be in, and the group header's short form (modules/CompactCards.lua, pure). The words,
 -- tones and reason tooltips are the full view's composers' (modules/WindowCells.lua,
 -- modules/SideCells.lua, modules/MineCells.lua), so each case also checks that the compact piece
@@ -163,7 +163,7 @@ end)
 
 -- ── the Drops card ──────────────────────────────────────────────────────────────────────────
 
-test("compact cards: the Drops card reads the spec's three lines", function()
+test("compact cards: the Drops card reads the spec's four lines", function()
     local C = CC()
     local card = C.Group(groupDrop(), groupCtx())
     local lines = C.Plain(card)
@@ -173,7 +173,8 @@ test("compact cards: the Drops card reads the spec's three lines", function()
     -- downgrade, so No action (feedback-11 spec §1).
     assertEqual(lines[2], "Lysandra · Trinket · Trinkets  No action")
     -- red under: the trade word bare on line 2, read as one more fact about the item
-    assertEqual(lines[3], "You 321 ▼26 / 308 ▼13  Them 298/296 ⊘ Can't use  Trade Likely")
+    assertEqual(lines[3], "You 321 ▼26 / 308 ▼13  Them 298/296 ⊘ Can't use")
+    assertEqual(lines[4], "Trade Yes Not their upgrade", "Trade on a line of its own, its word and reason (feedback-22)")
     assertEqual(card.trade.label, "Trade")
     assertEqual(card.kind, "group"); assertEqual(card.id, 7); assertEqual(card.link, LINK)
 end)
@@ -220,18 +221,20 @@ test("compact cards: the Drops card's pieces keep the full view's tones and tool
     assertEqual(#card.you.items, 2, "both worn trinkets, for the edge's tooltip")
 end)
 
-test("compact cards: every trade state keeps its short word and tone on line 2", function()
+test("compact cards: every trade state keeps its short word, reason and tone on line 4", function()
     local C = CC()
     local cases = {
-        { { state = "yes", reasonKey = "boe", basis = "bind" }, "Yes", "good" },
-        { { state = "likely", reasonKey = "notUpgrade", args = {} }, "Likely", "good" },
-        { { state = "unknown", reasonKey = "noInspect", args = { "pending" } }, "Unknown", "muted" },
-        { { state = "no", reasonKey = "warbound" }, "No", "red" },
-        { NONE, "Unknown", "muted" },
+        { { state = "yes", reasonKey = "boe", basis = "bind" }, "Yes", "good", "BoE" },
+        { { state = "likely", reasonKey = "notUpgrade", args = {} }, "Yes", "good", "Not their upgrade" },
+        { { state = "unknown", reasonKey = "noInspect", args = { "pending" } }, "?", "muted", "Not inspected" },
+        { { state = "no", reasonKey = "warbound" }, "No", "red", "Warbound" },
+        { NONE, "?", "muted", "Pending" },
     }
     for _, c in ipairs(cases) do
         local card = C.Group(groupDrop({ trade = c[1] }), groupCtx())
         assertEqual(card.trade.text, c[2]); assertEqual(card.trade.tone, c[3], c[2])
+        assertEqual(card.trade.reason, c[4], c[2] .. ": its short reason (feedback-22)")
+        assertEqual(C.HalfText(card.trade), ("Trade %s %s"):format(c[2], c[4]))
         assertTrue(#card.trade.tip >= 2, "never a bare title")
     end
 end)
@@ -258,7 +261,8 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
     local lines = C.Plain(card)
     assertEqual(lines[1], "295 Vile Vial of Volatile Venom", "your own drop needs no inspect: nothing after the name")
     assertTrue(card.ask.offer and card.ask.offered)
-    assertEqual(lines[3], "You 321 ▼26 / 308 ▼13  Them No upgrades  Trade Likely")
+    assertEqual(lines[3], "You 321 ▼26 / 308 ▼13  Them No upgrades")
+    assertEqual(lines[4], "Trade Yes Not your upgrade", "your own drop: whose upgrade it is not")
     assertEqual(card.them.tone, "muted", "nobody's upgrade")
     assertTrue(has(card.them.tip, "• Group: nobody else in it"))
     assertEqual(lines[2], "Me [YOU] · Trinket · Trinkets  Offer",
@@ -267,7 +271,7 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
     local dead = C.Group(groupDrop({ isMine = true, them = NONE, looter = me,
         trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), groupCtx())
     assertEqual(C.Plain(dead)[2], "Me [YOU] · Trinket · Trinkets  No action", "where it cannot be traded")
-    assertTrue(C.Plain(dead)[3]:find("Trade No$") ~= nil, C.Plain(dead)[3])
+    assertEqual(C.Plain(dead)[4], "Trade No Bonus roll")
     assertTrue(has(dead.ask.tip, "• Rule: bonus roll loot"))
 end)
 
@@ -276,7 +280,7 @@ test("compact cards: your own drop's trade tooltip counts its upgrades and Them 
     local me = { name = "Me-Realm", classFile = "PALADIN" }
     local card = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, candidates = candidates(2) }),
         groupCtx({ offerTone = "sent" }))
-    assertEqual(card.trade.text, "Likely", "the count is in the tooltip, not the cell (feedback-7 spec §2)")
+    assertEqual(card.trade.text, "Yes", "the count is in the tooltip, not the cell (feedback-7 spec §2)")
     assertTrue(has(card.trade.tip, "• Upgrades: 2 members | Offer shows who."))
     assertEqual(card.them.text, "Upgrade for 2"); assertEqual(card.them.tone, "good")
     assertTrue(joined(card.them.tip):find("|cffffffffSeta|r  169  ", 1, true) ~= nil, "a priest's name in white, a grid row (feedback-7 spec §3)")
@@ -285,11 +289,11 @@ test("compact cards: your own drop's trade tooltip counts its upgrades and Them 
     local up = { verdict = "upgrade", ilvlDelta = 9, reasons = {} }
     local kept = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, me = up, candidates = candidates(2) }),
         groupCtx())
-    assertEqual(kept.trade.text, "Likely"); assertEqual(kept.them.text, "Hidden")
+    assertEqual(kept.trade.text, "Yes"); assertEqual(kept.them.text, "Hidden")
     assertTrue(has(kept.them.tip, "• Offered to: nobody, unless you choose"))
     local shown = C.Group(groupDrop({ isMine = true, them = NONE, looter = me, me = up, candidates = candidates(2) }),
         groupCtx({ revealed = true }))
-    assertEqual(shown.trade.text, "Likely"); assertEqual(shown.them.text, "Upgrade for 2")
+    assertEqual(shown.trade.text, "Yes"); assertEqual(shown.them.text, "Upgrade for 2")
 end)
 
 test("compact cards: an unread looter's Them says why in the gear's place, and the tooltip too", function()
@@ -319,7 +323,8 @@ test("compact cards: a drop whose details have not loaded is never blank", funct
     local lines = C.Plain(card)
     assertEqual(lines[1], "? ?", "pending: nothing after the name, Them says it")
     assertEqual(lines[2], "Lysandra · – · –  No action")
-    assertEqual(lines[3], "You –  Them –  Trade Unknown", "not worn, or not loaded: the dash says why")
+    assertEqual(lines[3], "You –  Them –", "not worn, or not loaded: the dash says why")
+    assertEqual(lines[4], "Trade ? Pending", "no estimate yet")
 end)
 
 -- ── the History card ────────────────────────────────────────────────────────────────────────
@@ -343,7 +348,7 @@ local function historyDrop(NS, over)
     return NS.WindowHistory.AsDrop(e, 1)
 end
 
-test("compact cards: the History card reads the spec's three lines", function()
+test("compact cards: the History card reads the spec's four lines", function()
     local NS = T.newAddon()
     local C = NS.CompactCards
     local at = 1000000 - 120
@@ -353,7 +358,8 @@ test("compact cards: the History card reads the spec's three lines", function()
     local clock = fakeDate("%H:%M", at)
     assertEqual(lines[1], "311 Yoke of the Charging Bear  Seen", "the item level before the name (feedback-10 spec §2)")
     assertEqual(lines[2], "Bùnian · Neck · Jewelry  " .. clock)
-    assertEqual(lines[3], "You ▼4  Them ≈0  Trade Likely", "a kept entry holds no worn items: the verdict alone")
+    assertEqual(lines[3], "You ▼4  Them ≈0", "a kept entry holds no worn items: the verdict alone")
+    assertEqual(lines[4], "Trade Yes Not their upgrade")
     assertEqual(card.outcome.tone, "bad", "Seen in gray (feedback-12 spec §0)"); assertEqual(card.time.tone, "muted")
     assertTrue(has(card.time.tip, "2m ago"))
 end)

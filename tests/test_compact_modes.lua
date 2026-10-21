@@ -250,7 +250,7 @@ end
 test("modes: test mode's Drops cards show every state, each saying what its full row says", function()
     local NS = testWindow()
     local full = fullPieces(NS, "group", function(c)
-        return { me = textOf(c.me.text), them = textOf(c.them.text), trade = textOf(c.trade.text),
+        return { me = textOf(c.me.text), them = textOf(c.them.text), trade = plain(textOf(c.trade.text)),
             meLevel = textOf(c.me.level), themLevel = textOf(c.them.level),
             ask = askWord(c.actions.ask), tradeTip = c.trade.tipLines }
     end)
@@ -269,14 +269,14 @@ test("modes: test mode's Drops cards show every state, each saying what its full
         assertEqual(askWord(card.ask), f.ask, what .. ": ask")
         assertEqual(c.trade.hit.tipLines[1], f.tradeTip[1], what .. ": the trade reason")
         seen.ask[f.ask] = true
-        seen.trade[f.trade] = true
+        seen.trade[f.trade:match("^(%S+)")] = true   -- the word, its reason after it (feedback-22)
         seen.fresh[textOf(c.fresh.text)] = true
         seen.you[textOf(c.you.glyph)] = true
         seen.them[textOf(c.them.glyph)] = true
         seen.eq[textOf(c.them.level)] = true
     end
     hasAll(seen.ask, { "Ask", "Queued", "Asked", "Retry", "No action" }, "ask")
-    hasAll(seen.trade, { "Yes", "Likely", "Unknown", "No" }, "trade")
+    hasAll(seen.trade, { "Yes", "?", "No" }, "trade")
     hasAll(seen.fresh, { "(cached)", "(range)", "(combat)", "(!)", "" }, "inspect freshness, bracketed or left out (pending: Them says it)")
     hasAll(seen.you, { "▲", "≈", "▼", "⊘" }, "your verdict")
     hasAll(seen.them, { "▲", "≈", "▼", "⊘" }, "their verdict")
@@ -308,7 +308,7 @@ test("modes: test mode's own drops on Drops show Offer as the full rows, no coun
             seen.offer[f.offer] = true
         end
     end
-    assertEqual(n, 6, "every sample of yours")
+    assertEqual(n, 8, "every sample of yours")
     hasAll(seen.window, { "9:99:99", "~9:99:99", "No limit (BoE)" }, "Trade window")
     hasAll(seen.offer, { "Offer", "No action" }, "Offer, or No action on a dead drop")
 end)
@@ -321,7 +321,7 @@ test("modes: test mode's History cards show every outcome, each saying what its 
     end
     local full = fullPieces(NS, "history", function(c)
         return { me = textOf(c.me.text), them = textOf(c.them.text), outcome = textOf(c.outcome.text),
-            trade = textOf(c.trade.text) }
+            trade = plain(textOf(c.trade.text)) }
     end)
     local seen = {}
     local cards = compactCards(NS, "history")

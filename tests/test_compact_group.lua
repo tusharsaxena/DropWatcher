@@ -69,15 +69,15 @@ local function yOf(frame) return select(5, frame:GetPoint(1)) end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
-test("compact group: a card is three lines at the text size, about 50 pixels at Default, the icon spanning them", function()
+test("compact group: a card is four lines at the text size, about 64 pixels at Default, the icon spanning them", function()
     local CG = T.newAddon().CompactGroup
     local m = CG.Metrics(nil)
-    assertEqual(m.size, 10); assertEqual(m.line, 14); assertEqual(m.height, 50); assertEqual(m.icon, 36)
+    assertEqual(m.size, 10); assertEqual(m.line, 14); assertEqual(m.height, 64); assertEqual(m.icon, 50)
     local big = CG.Metrics(14)
-    assertEqual(big.line, 18); assertEqual(big.height, 62); assertEqual(big.icon, 48, "capped")
-    assertEqual(CG.Metrics(8).icon, 30)
-    assertEqual(CG.LineY(m, 1), -11); assertEqual(CG.LineY(m, 3), -39)
-    assertEqual(CG.TextLeft(m), 4 + 2 + 36 + 6)
+    assertEqual(big.line, 18); assertEqual(big.height, 80); assertEqual(big.icon, 60, "capped")
+    assertEqual(CG.Metrics(8).icon, 42)
+    assertEqual(CG.LineY(m, 1), -11); assertEqual(CG.LineY(m, 3), -39); assertEqual(CG.LineY(m, 4), -53)
+    assertEqual(CG.TextLeft(m), 4 + 2 + 50 + 6)
     assertTrue(CG.HalfX == nil, "Them follows You, not half the card's width (feedback-10 spec §2)")
 end)
 
@@ -126,13 +126,13 @@ test("compact group: one pooled card per drop under a one-line header, each line
     local card = cardFor(drawn, 1)
     assertTrue(card.tipRow == true)
     local c = card.cells
-    assertEqual(card:GetHeight(), 50)
+    assertEqual(card:GetHeight(), 64)
     assertEqual(textOf(c.item.text), "Crown of Roaring Storms")
     assertEqual(textOf(c.ilvl.text), "311")
     assertEqual(textOf(card.ask.label), "Ask"); assertTrue(card.ask:IsShown())
     assertEqual(textOf(c.looter.text), "Seta"); assertTrue(c.looter.glyph == nil, "no ⊕ after another realm's looter")
     assertEqual(plain(textOf(c.slot.text)), "· Head")
-    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Likely", "line 3, labeled")
+    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Yes |cffb3b3b8Not their upgrade|r", "line 4, labeled: the word, then its reason in the muted gray")
     assertEqual(textOf(c.fresh.text), "(40s)", "in brackets (feedback-10 spec §2)")
     assertEqual(textOf(c.youLabel.text), "You")
     assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▲19")
@@ -157,7 +157,10 @@ test("compact group: one pooled card per drop under a one-line header, each line
     p = c.fresh.text.__points[1]
     assertEqual(p[1], "LEFT"); assertEqual(p[2], c.item.text); assertEqual(p[3], "RIGHT", "the freshness right after the name")
     p = card.ask.__points[1]
-    assertEqual(p[1], "RIGHT"); assertEqual(p[2], card); assertEqual(p[5], CG.LineY(m3, 2), "the button on line 2")
+    assertEqual(p[1], "RIGHT"); assertEqual(p[2], card)
+    assertEqual(p[5], -(CG.PAD + m3.line), "the button spans lines 1 and 2, centered between them (feedback-22)")
+    assertEqual(card.ask:GetHeight(), 2 * m3.line, "two lines tall")
+    assertEqual(card.ask.label.__points[1][1], "CENTER", "its label centered")
     p = c.themLabel.text.__points[1]
     assertEqual(p[2], c.you.text); assertEqual(p[3], "RIGHT"); assertEqual(p[4], CG.HALVES_GAP)
     assertTrue(card.cells.countdown == nil and card.bar == nil, "no trade window on the card")
@@ -255,11 +258,15 @@ test("compact group: a card click opens the stacked detail card under it; the ca
     local width = drawn.card:GetWidth()
     local h = DCard.StackedHeight(width)
     assertEqual(drawn.card:GetHeight(), h)
-    assertEqual(yOf(drawn.card), yOf(cardFor(drawn, top)) - 50 - 2, "right under its card")
+    assertEqual(yOf(drawn.card), yOf(cardFor(drawn, top)) - 64 - 2, "right under its card")
     assertEqual(yOf(cardFor(drawn, below)), before - h - 2, "the next card moves down")
-    -- stacked: For the looter under For you, the trade box under both, all the card's width
+    -- stacked: the trade box first (feedback-22), For you under it, For the looter under For you, all the card's width
     local _, rel = drawn.card.them:GetPoint(1)
     assertTrue(rel == drawn.card.me, "the comparisons stack")
+    local _, meRel = drawn.card.me:GetPoint(1)
+    assertTrue(meRel == drawn.card.trade, "For you under the trade box")
+    local _, tradeRel = drawn.card.trade:GetPoint(1)
+    assertTrue(tradeRel == drawn.card, "the trade box right under the header")
     assertEqual(drawn.card.me:GetWidth(), width - 2 * NS.Constants.WINDOW.CARD_PAD)
     cardFor(drawn, below).cells.slot.hit:__fire("OnMouseUp", "LeftButton")
     assertEqual(NS.WindowGroup.Drawn().cardDropId, below, "a piece click is a card click; one at a time")
@@ -298,10 +305,10 @@ test("compact group: the text follows the Font size row and the card's height fo
     NS.addon.db.profile.window.fontSize = 14
     NS.Window.Refresh()
     local card = NS.WindowGroup.Drawn().rows[1]
-    assertEqual(card:GetHeight(), 62)
+    assertEqual(card:GetHeight(), 80)
     assertEqual(select(2, card.cells.trade.text:GetFont()), 14)
     assertEqual(select(2, card.cells.you.glyph:GetFont()), 14, "the glyph face too")
-    assertEqual(card.icon:GetWidth(), 48)
+    assertEqual(card.icon:GetWidth(), 60)
 end)
 
 test("compact group: cards are pooled: a repaint reuses them and builds none", function()
@@ -469,9 +476,9 @@ test("compact group: at the least width line 2's pieces end before the action bu
 end)
 
 -- Line 3 at its fullest (feedback-6 spec §1): both halves on a trinket, two worn levels each
--- (`321/308`), then ⊘ and the longest word (`Not wanted`), then the longest trade word (`Unknown`).
--- Measured as line 2 is: Them starts CG.HALVES_GAP after You ends (feedback-10 spec §2), Trade as
--- far after Them, and it ends before the card's right edge.
+-- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: Them starts
+-- CG.HALVES_GAP after You ends (feedback-10 spec §2) and ends before the card's right edge. Line 4
+-- (feedback-22) is Trade alone, under You's label, its word and reason inside the card too.
 test("compact group: at the least width line 3's fullest halves fit, the worn levels before the verdict", function()
     local NS, _, m = T.enableAddon()
     local K, CG = NS.Constants.WINDOW, NS.CompactGroup
@@ -489,8 +496,9 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     assertEqual(NS.Window.Frame():GetWidth(), K.COMPACT_MIN_W)
     local card = cardFor(NS.WindowGroup.Drawn(), 1)
     local c = card.cells
-    local function w(fs)   -- the visible characters' width (a UTF-8 glyph is one)
-        return #((fs:GetText() or ""):gsub("[\128-\191]", "")) * m.textCharWidth
+    local function w(fs)   -- the visible characters' width (a UTF-8 glyph is one, a color escape none)
+        local t = (fs:GetText() or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+        return #(t:gsub("[\128-\191]", "")) * m.textCharWidth
     end
     local function halfEnd(key, x)
         local h = c[key]
@@ -502,22 +510,26 @@ test("compact group: at the least width line 3's fullest halves fit, the worn le
     local m3 = CG.Metrics(nil)
     local youEnd = halfEnd("you", CG.TextLeft(m3, CG.LEAD))
     local themX = youEnd + CG.HALVES_GAP
-    -- Them's last piece is bounded at the card's right inset, cut there rather than past it (feedback-11 spec §0).
+    -- Trade's last piece is bounded at the card's right inset, cut there rather than past it (feedback-11 spec §0).
     local rp = c.trade.text.__points[2]
     assertEqual(rp[1], "RIGHT"); assertEqual(rp[2], card); assertEqual(rp[4], -CG.PAD)
     assertTrue(c.you.text.__points[2] == nil, "You is not bounded: Them follows it")
-    assertTrue(c.them.text.__points[2] == nil, "Them is not bounded: Trade follows it")
-    assertEqual(NS.CompactCards.HalfText(card.model.trade), "Trade Unknown")
-    local tradeX = halfEnd("them", themX) + CG.HALVES_GAP
-    local tradeEnd = tradeX + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
+    local themEnd = halfEnd("them", themX)
+    assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
+        card:GetWidth() - CG.PAD))
+    -- Line 4: Trade under You's label, a line down (feedback-22).
+    local tp = c.tradeLabel.text.__points[1]
+    assertEqual(tp[2], c.youLabel.text); assertEqual(tp[4], 0); assertEqual(tp[5], -m3.line)
+    assertEqual(NS.CompactCards.HalfText(card.model.trade), "Trade ? Not inspected")
+    local tradeEnd = CG.TextLeft(m3, CG.LEAD) + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
     assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
         card:GetWidth() - CG.PAD))
 end)
 
 -- Line 3 with two dual marks (feedback-21 H7): both halves on trinkets read in full, each worn item's
--- level, glyph and two-digit difference, `You 321 ▼10 / 324 ▼13`, then the longest trade word. The
--- first part and its `/` sit between the label and the single pieces, Them still follows You's last
--- piece, and the line ends inside the card at the least width (no compact width change).
+-- level, glyph and two-digit difference, `You 321 ▼10 / 324 ▼13`. The first part and its `/` sit
+-- between the label and the single pieces, Them still follows You's last piece, and the line ends
+-- inside the card at the least width (no compact width change).
 test("compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)", function()
     local NS, _, m = T.enableAddon()
     local K, CG, C = NS.Constants.WINDOW, NS.CompactGroup, NS.Constants
@@ -552,13 +564,12 @@ test("compact group: at the least width line 3's two dual marks fit, each worn i
             + w(h.glyph) + CG.HALF_GLYPH_GAP + w(h.text)
     end
     local themX = halfEnd("you", CG.TextLeft(CG.Metrics(nil), CG.LEAD)) + CG.HALVES_GAP
-    local tradeX = halfEnd("them", themX) + CG.HALVES_GAP
-    local tradeEnd = tradeX + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
-    assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
+    local themEnd = halfEnd("them", themX)
+    assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
         card:GetWidth() - CG.PAD))
 end)
 
--- feedback-21 R5: at a larger Font size line 3's dual marks would push Trade off the card at the
+-- feedback-21 R5: at a larger Font size line 3's dual marks would push Them off the card at the
 -- least width; they give way to the one mark each, and the line reads as before H7.
 test("compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)", function()
     local NS, _, m = T.enableAddon()

@@ -4,10 +4,11 @@ local _, NS = ...
 --
 -- WHAT IT HOLDS, top to bottom: the item header (a real item button, the name in its quality color
 -- and the chips: slot, armor type, bind, track and rank, the look, primary stat, socket, tertiary
--- stats); the For you and For the looter boxes side by side (what it replaces, the item-level
+-- stats); the trade estimate box (the state, the reason in plain words, the rule in force and how
+-- fresh the data is; above the comparisons since feedback-22, so whether it can be had at all reads
+-- first); the For you and For the looter boxes side by side (what it replaces, the item-level
 -- change, the track change, the stat change, and Pawn's score for you or the looter's spec and the
--- inspect's age, each under a verdict chip); the trade estimate box (the state, the reason in plain words, the rule in
--- force and how fresh the data is); and the actions: Ask, Edit message, Link in chat, Retry inspect,
+-- inspect's age, each under a verdict chip); and the actions: Ask, Edit message, Link in chat, Retry inspect,
 -- and Trade (disabled with its reason). Every line and chip has a reason tooltip. On your own drop
 -- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Looter row `Name [YOU]` and its Them
 -- row `Upgrade for N` (feedback-7 spec §2) with every member it upgrades in the tooltip, and Offer takes the Ask's place: it opens the Offer panel
@@ -18,7 +19,7 @@ local _, NS = ...
 -- goes) and calls Build once per pane and Paint on every repaint while a row is open.
 --
 -- STACKED (compact spec §2, DW-C2). The compact layout's card (modules/CompactGroup.lua builds it
--- with `stacked`) is the same card at the compact width: For you, For the looter and the trade box
+-- with `stacked`) is the same card at the compact width: the trade box, For you and For the looter
 -- one under another at the card's full width, the header's chips that do not fit left out (they
 -- are all in the full view), and the actions flowed into as many lines as the width needs
 -- (FlowActions, pure). Its height follows (StackedHeight); the full card keeps CARD_H.
@@ -282,25 +283,31 @@ local function buildActions(card)
     end
 end
 
--- Side by side (the full card): For you on the left, For the looter on the right, the trade box
--- under both.
-local function placeSideBySide(card)
+-- The trade box first, under the header at the card's width (feedback-22: whether it can be
+-- traded reads before what it would do).
+local function placeTrade(card)
     local P = K.CARD_PAD
-    card.me:SetPoint("TOPLEFT", card, "TOPLEFT", P, -(2 * P + K.CARD_ICON))
-    card.them:SetPoint("TOPRIGHT", card, "TOPRIGHT", -P, -(2 * P + K.CARD_ICON))
-    card.trade:SetPoint("TOPLEFT", card.me, "BOTTOMLEFT", 0, -P)
-    card.trade:SetPoint("TOPRIGHT", card.them, "BOTTOMRIGHT", 0, -P)
+    card.trade:SetPoint("TOPLEFT", card, "TOPLEFT", P, -(2 * P + K.CARD_ICON))
+    card.trade:SetPoint("TOPRIGHT", card, "TOPRIGHT", -P, -(2 * P + K.CARD_ICON))
 end
 
--- Stacked (compact): For you, then For the looter, then the trade box, each the card's width.
+-- Side by side (the full card): the trade box, then For you on the left and For the looter on the
+-- right under it.
+local function placeSideBySide(card)
+    local P = K.CARD_PAD
+    placeTrade(card)
+    card.me:SetPoint("TOPLEFT", card.trade, "BOTTOMLEFT", 0, -P)
+    card.them:SetPoint("TOPRIGHT", card.trade, "BOTTOMRIGHT", 0, -P)
+end
+
+-- Stacked (compact): the trade box, then For you, then For the looter, each the card's width.
 local function placeStacked(card)
     local P = K.CARD_PAD
-    card.me:SetPoint("TOPLEFT", card, "TOPLEFT", P, -(2 * P + K.CARD_ICON))
-    card.me:SetPoint("TOPRIGHT", card, "TOPRIGHT", -P, -(2 * P + K.CARD_ICON))
+    placeTrade(card)
+    card.me:SetPoint("TOPLEFT", card.trade, "BOTTOMLEFT", 0, -P)
+    card.me:SetPoint("TOPRIGHT", card.trade, "BOTTOMRIGHT", 0, -P)
     card.them:SetPoint("TOPLEFT", card.me, "BOTTOMLEFT", 0, -P)
     card.them:SetPoint("TOPRIGHT", card.me, "BOTTOMRIGHT", 0, -P)
-    card.trade:SetPoint("TOPLEFT", card.them, "BOTTOMLEFT", 0, -P)
-    card.trade:SetPoint("TOPRIGHT", card.them, "BOTTOMRIGHT", 0, -P)
 end
 
 --- The card's frame, built once per pane inside `content` (the table's scroll child), hidden.
@@ -345,7 +352,7 @@ function DCard.FlowActions(avail, keys, widths)
     return out, line + 1
 end
 
---- The stacked card's height at `width`: the header, the two comparison boxes and the trade box one
+--- The stacked card's height at `width`: the header, the trade box and the two comparison boxes one
 --- under another, then the actions' lines.
 --- @param width number
 --- @return number

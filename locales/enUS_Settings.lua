@@ -36,7 +36,6 @@ L["Party"] = "Party"
 L["Full"] = "Full"
 L["Compact"] = "Compact"
 L["Personal loot"] = "Personal loot"
-L["Group loot"] = "Group loot"
 L["When to show"] = "When to show"
 L["Auto-open the window"] = "Auto-open the window"
 L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."] =

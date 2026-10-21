@@ -21,7 +21,11 @@ local _, NS = ...
 -- when the kernel picked the baseline as the lower of two the drop could take either of (its
 -- `either`, feedback-21 R5): a one-hander for a non dual wielder, a non-hunter's ranged and a
 -- two-hander against both hands averaged were judged against one item, or the pair, and keep the one
--- mark, as does a baseline neither worn item is (a bag item). A single slot, a slot worn empty, a
+-- mark, as does a baseline neither worn item is (a bag item). A RING OR TRINKET SLOT ALWAYS READS
+-- BOTH (feedback-22): a unique-equipped copy already worn is judged against that copy, but the kernel
+-- marks it `either` too, so it reads `315 ▲3 / 295 ▲23` on every surface, never `315/295 ▲3`.
+-- Judged against one weapon of two (a one-hander against the main hand), the cell shows that item
+-- alone, `320 ▼5` (SC.JudgedItem): the off hand is not one it can replace. A single slot, a slot worn empty, a
 -- level not read, a verdict with no glyph or no difference, and History (it keeps no worn items) keep
 -- the one mark too. Every painter draws `parts` when it is there, the
 -- single pieces (`level`, `glyph`, `text`) otherwise.
@@ -169,12 +173,38 @@ function SC.Parts(v, items, empty)
     return { other, arrow }
 end
 
+--- The one worn item of two a drop judged against one of them can replace (a one-hander against
+--- the main hand alone; a unique ring in a pair is `either`, feedback-22): the baseline's, by link. Nil when the
+--- drop could take either (SC.Parts marks both), when the baseline is neither worn item (a bag
+--- item), when it was judged against both hands averaged (`averaged`) or when the slot holds fewer than two.
+--- @param v table a verdict cell
+--- @param eq table|nil an equipment cell
+--- @return table|nil item
+function SC.JudgedItem(v, eq)
+    if v.either or v.averaged or type(eq) ~= "table" or type(eq.items) ~= "table" or #eq.items ~= 2 then return nil end
+    local link = type(v.base) == "table" and v.base.link or nil
+    if type(link) ~= "string" then return nil end
+    for _, it in ipairs(eq.items) do
+        if it.link == link then return it end
+    end
+    return nil
+end
+
 --- One merged cell: a verdict cell (WindowCells.Me, Them or Verdict; MineCells.Details) after an
---- equipment cell (WindowCells.MyEq or TheirEq; nil for the verdict alone).
+--- equipment cell (WindowCells.MyEq or TheirEq; nil for the verdict alone). A drop judged against
+--- one of two worn items (SC.JudgedItem) shows that item alone, `315 ▲3`, never `315/295 ▲3`: the
+--- other is not one it can replace (the tooltip's grid still lists both).
 --- @param v table the verdict cell
 --- @param eq table|nil the equipment cell
 --- @return table cell
 function SC.Merge(v, eq)
+    local judged = SC.JudgedItem(v, eq)
+    if judged then
+        local one = {}
+        for k, val in pairs(eq) do one[k] = val end
+        one.items, one.text, one.gridItems = { judged }, WC.Levels({ judged }), eq.gridItems or eq.items
+        eq = one
+    end
     local level, levelTone = gearPart(eq)
     local glyph, text = verdictPart(v, level)
     if level == DASH and (glyph or text ~= "") then level, levelTone = nil, nil end

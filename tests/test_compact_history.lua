@@ -66,11 +66,11 @@ test("compact history: kept groups as one-line headers, the newest open, each en
     local card = cardWith(drawn, "Asked")
     local c = card.cells
     assertTrue(card.tipRow == true)
-    assertEqual(card:GetHeight(), 50)
+    assertEqual(card:GetHeight(), 64)
     assertEqual(textOf(c.item.text), "Item 501"); assertEqual(textOf(c.ilvl.text), "610")
     assertEqual(textOf(c.looter.text), "Brakk"); assertTrue(c.looter.glyph == nil, "no ⊕ after another realm's looter")
     assertEqual(plain(textOf(c.slot.text)), "· Neck")
-    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Likely", "line 3, labeled")
+    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Yes |cffb3b3b8Not their upgrade|r", "line 4, labeled")
     assertTrue(textOf(c.time.text):match("^%d%d:%d%d$") ~= nil, "the time within a day: " .. textOf(c.time.text))
     assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▼4", "the verdict alone (feedback-6 spec §1)")
     assertEqual(textOf(c.you.level), "", "a kept entry holds no worn items")
@@ -167,7 +167,7 @@ test("compact history: cards are pooled and follow the Font size row", function(
     assertEqual(free + active, 2)
     NS.SchemaRuntime.Set("window.fontSize", 14)
     local card = NS.WindowHistory.Drawn().rows[1]
-    assertEqual(card:GetHeight(), 62)
+    assertEqual(card:GetHeight(), 80)
     assertEqual(select(2, card.cells.outcome.text:GetFont()), 14)
 end)
 

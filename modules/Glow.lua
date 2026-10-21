@@ -7,7 +7,8 @@ local _, NS = ...
 --
 -- TWO GLOWS. `main` for an upgrade for your current spec (`me.verdict == "upgrade"`), `offSpec`
 -- for a drop your spec can't use whose off-spec part (NS.OffSpec.Of) is an upgrade. Sidegrades,
--- downgrades and your own drops never glow. Each glow is its own Window › Upgrade glow rows
+-- downgrades and your own drops never glow, nor does an upgrade its looter cannot trade you
+-- (feedback-22): only a trade estimate of Yes or Likely glows, never No or one not made yet. Each glow is its own Window › Upgrade glow rows
 -- (`glow.main.*`, `glow.offSpec.*`, settings/SchemaRows.lua): on or off, the style (button, proc,
 -- pixel, autocast), the color and its Use class color companion, and that style's knobs, the
 -- feedback-21 plan's knob table.
@@ -46,11 +47,16 @@ local function lib() return LibStub and LibStub("LibCustomGlow-1.0", true) or ni
 local gen = 1      -- the settings generation: Refresh moves it on
 local configs = {} -- kind -> its settings read at `gen` (false while that glow is off)
 
---- Which glow a drop's icon wears: "main", "offSpec" or nil. Never your own drop.
+-- The trade estimates under which an upgrade can come to you.
+local TRADEABLE = { yes = true, likely = true }
+
+--- Which glow a drop's icon wears: "main", "offSpec" or nil. Never your own drop, and never a drop
+--- whose trade estimate is not Yes or Likely (feedback-22).
 --- @param drop table|nil a feed record
 --- @return string|nil
 function Glow.KindOf(drop)
     if type(drop) ~= "table" or drop.isMine then return nil end
+    if not (type(drop.trade) == "table" and TRADEABLE[drop.trade.state]) then return nil end
     local me = drop.me
     if type(me) ~= "table" then return nil end
     if me.verdict == "upgrade" then return "main" end

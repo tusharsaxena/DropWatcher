@@ -87,7 +87,7 @@ test("window: resizable from the corner grip, with the design's minimum size", f
     local f = NS.Window.Frame()
     assertTrue(f:IsResizable())
     local minW, minH = f:GetResizeBounds()
-    assertEqual(minW, 1038, "the least width is the default width (feedback-4 spec §4)")
+    assertEqual(minW, 1080, "the least width is the default width (feedback-4 spec §4)")
     assertEqual(minH, 260)
 end)
 
@@ -179,13 +179,13 @@ test("window: the least width is the sum of Drops' columns, their gaps, the row 
     local K, WG = NS.Constants.WINDOW, NS.WindowGroup
     local cols, fixed = WG.COLUMNS, 0
     for _, col in ipairs(cols) do fixed = fixed + (col.width or 0) + K.CELL_GAP end
-    assertEqual(fixed, 824, "nine fixed columns (Me and Them 127, Trade window 76, Actions 84) and ten gaps")
+    assertEqual(fixed, 866, "nine fixed columns (Me and Them 127, Trade 112, Trade window 76, Actions 84) and ten gaps")
     assertEqual(WG.LEAD, K.ROW_INDENT + K.CHEVRON_X + K.ROW_CHEVRON + K.CHEVRON_GAP)
     assertEqual(K.MIN_WIDTH, fixed + K.ITEM_MIN + WG.LEAD + K.SCROLL_W + 2 * K.INSET)
-    assertEqual(K.MIN_WIDTH, 1038); assertEqual(K.WIDTH, 1038)
+    assertEqual(K.MIN_WIDTH, 1080); assertEqual(K.WIDTH, 1080)
     local byKey = {}
     for _, col in ipairs(cols) do byKey[col.key] = col end
     assertEqual(byKey.tradeWindow.width, 76); assertEqual(byKey.actions.width, 84)
     assertEqual(byKey.me.width, 127); assertEqual(byKey.them.width, 127)
-    assertEqual(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH), 332, "the search box keeps its room")
+    assertEqual(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH), 374, "the search box keeps its room")
 end)

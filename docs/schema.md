@@ -140,7 +140,8 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 ### Window › Upgrade glow (feedback-21)
 
 Two glows on a drop's icon (`modules/Glow.lua`, LibCustomGlow-1.0): `glow.main` for an upgrade for
-your current spec, `glow.offSpec` for a drop your spec can't use whose off-spec part is an upgrade.
+your current spec, `glow.offSpec` for a drop your spec can't use whose off-spec part is an upgrade;
+either only on a drop whose trade estimate is Yes or Likely (feedback-22).
 Each has the same keys, below as `glow.<g>.<key>`; the knob set, its ranges and defaults are shared
 with KickCD's glow slots, but `pixelFrequency`'s default, 0.1, which is this addon's own
 (feedback-21 H6; KickCD keeps the library's 0.25). On the tab every row is a main | off-spec pair,
@@ -206,7 +207,7 @@ can change it.
 
 | Key | Default | Set by | What it is |
 |---|---|---|---|
-| `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, full is 1038 x 600 and compact is 440 x 460 at the full window's top right. A stored width under the layout's least (its default: full 1038, compact 440; feedback-4 spec §4, DW-D4, recomputed by feedback-5 spec §4, DW-E4, and feedback-6 spec §0-§1) is raised to it on load |
+| `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, full is 1080 x 600 and compact is 440 x 560 at the full window's top right. A stored width under the layout's least (its default: full 1080, compact 440; feedback-4 spec §4, DW-D4, recomputed by feedback-5 spec §4, DW-E4, and feedback-6 spec §0-§1) is raised to it on load |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
 | `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }`, the offsets in UIParent's units (feedback-21 G10): a drag stores them times `toast.scale` and they are applied divided by it, so a scale change never moves the anchor; a point saved before G10 was saved at scale 1, so it reads the same |
 | `simPanel.point` | absent | a drag of the simulation panel; Reset position clears it | `{ point, relativePoint, x, y }`; until set, the panel opens beside the window |

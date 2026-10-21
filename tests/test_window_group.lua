@@ -100,10 +100,30 @@ end)
 
 -- ── the Trade column ────────────────────────────────────────────────────────────────────────
 
-test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", function()
+test("cells: Trade shows Yes, No or ? and a short reason, with board 03's reasons in its tooltip", function()
     local W = WC()
     local likely = W.Trade(drop())
-    assertEqual(likely.text, "Likely"); assertEqual(likely.tone, "good")
+    -- feedback-22: Likely reads Yes on the cell, its reason after it in the muted gray; the title keeps Likely
+    assertEqual(likely.text, "Yes"); assertEqual(likely.tone, "good"); assertEqual(likely.reason, "Not their upgrade")
+    assertEqual(W.TradeText(likely), "Yes |cffb3b3b8Not their upgrade|r")
+    assertEqual(W.TradePlain(likely), "Yes Not their upgrade")
+    local function short(t, mine) return W.Trade(drop({ trade = t, isMine = mine })).reason end
+    assertEqual(short({ state = "yes", reasonKey = "boe", basis = "bind" }), "BoE")
+    assertEqual(short({ state = "no", reasonKey = "bonusRoll", basis = "bind" }), "Bonus roll")
+    assertEqual(short({ state = "no", reasonKey = "warbound", basis = "bind" }), "Warbound")
+    assertEqual(short({ state = "no", reasonKey = "legacy", basis = "rule" }), "Legacy loot")
+    assertEqual(short({ state = "likely", reasonKey = "groupLoot", basis = "rule" }), "Group loot")
+    assertEqual(short({ state = "no", reasonKey = "expired", args = { 8000, 7200 } }), "Window passed")
+    assertEqual(short({ state = "yes", reasonKey = "timer", args = { 7140 } }, true), "Window open")
+    assertEqual(short({ state = "no", reasonKey = "upgradeForLooter", args = { 311, 298 } }), "Their upgrade")
+    assertEqual(short({ state = "no", reasonKey = "upgradeForLooter", args = { 311, 298 } }, true), "Your upgrade")
+    assertEqual(short({ state = "no", reasonKey = "upgradeForYou", args = { 311, 298 } }, true), "Your upgrade")
+    assertEqual(short({ state = "likely", reasonKey = "notUpgrade", args = {} }, true), "Not your upgrade")
+    assertEqual(short({ state = "unknown", reasonKey = "noInspect", args = { "pending" } }), "Not inspected")
+    assertEqual(short({ state = "no", reasonKey = "badFacts" }), "Not loaded")
+    for _, text in pairs(W.TRADE_SHORT) do
+        assertTrue(#text:gsub("[^ ]", "") <= 2, text .. ": one to three words")
+    end
     -- red under: the four sentences the owner could not read (feedback-21); a row per fact instead
     assertEqual(T.tipPlainJoined(likely.tip, "\n"), table.concat({ "Trade: Likely", "• Rule: personal loot", "• This item: 311",
         "• Seta wears: 324, so it is not an upgrade for them", "• Inspected: 40s ago",
@@ -126,38 +146,39 @@ test("cells: Trade shows Yes, Likely, Unknown or No with board 03's reasons", fu
         "• Seta's gear: not read yet (out of range)", 1, true) ~= nil)
     for _, l in ipairs(likely.tip) do assertTrue(not P(l):find("%. "), "no sentences: " .. P(l)) end
     local none = W.Trade(drop({ trade = NONE }))
-    assertEqual(none.text, "Unknown"); assertEqual(P(none.tip[2]), "• Estimate: not made yet")
+    assertEqual(none.text, "?"); assertEqual(none.reason, "Pending"); assertEqual(P(none.tip[2]), "• Estimate: not made yet")
     assertEqual(W.Trade(drop({ trade = { state = "no", reasonKey = "legacy" } })).tone, "red",
         "No in the palette's red, not the gray `bad` (feedback-7 spec §2)")
     assertEqual(W.Trade(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } })).tone, "good")
     assertEqual(none.tone, "muted")
 end)
 
-test("cells: Trade's Yes or Likely reads Can't use in dim red on another player's drop none of your specs can use", function()
+test("cells: Trade's Yes on another player's drop none of your specs can use is dim red, its reason Can't use", function()
     local W = WC()
     local cant = { verdict = "cantUse", reasons = { { key = "armorType" } } }
     local c = W.Trade(drop({ me = cant }))
     -- red under: Likely in green beside Can't use, as if there were something to ask for (feedback-21)
-    assertEqual(c.text, "Can't use"); assertEqual(c.tone, "redMuted"); assertEqual(c.state, "likely", "the estimate kept")
+    assertEqual(c.text, "Yes"); assertEqual(c.reason, "Can't use"); assertEqual(c.tone, "redMuted")
+    assertEqual(c.state, "likely", "the estimate kept")
     assertEqual(c.tip[1], "Trade: Can't use")
     assertEqual(P(c.tip[2]), "• Rule: personal loot", "the trade reason kept, as its rows")
     assertEqual(P(c.tip[4]), "• Seta wears: 324, so it is not an upgrade for them")
     assertEqual(P(c.tip[5]), "• For you: can't use, nothing to ask for", "after the reason")
     local yes = W.Trade(drop({ me = cant, trade = { state = "yes", reasonKey = "boe", basis = "bind" } }))
-    assertEqual(yes.text, "Can't use"); assertEqual(yes.tone, "redMuted"); assertEqual(yes.state, "yes")
+    assertEqual(yes.text, "Yes"); assertEqual(yes.reason, "Can't use"); assertEqual(yes.tone, "redMuted"); assertEqual(yes.state, "yes")
     local no = W.Trade(drop({ me = cant, trade = { state = "no", reasonKey = "legacy" } }))
     assertEqual(no.text, "No"); assertEqual(no.tone, "red", "No stays red")
     local unk = W.Trade(drop({ me = cant, trade = { state = "unknown", reasonKey = "noInspect", args = { "outOfRange" } } }))
-    assertEqual(unk.text, "Unknown"); assertEqual(unk.tone, "muted", "Unknown stays muted")
+    assertEqual(unk.text, "?"); assertEqual(unk.tone, "muted", "Unknown stays muted")
     local own = W.Trade(drop({ me = cant, isMine = true }))
-    assertEqual(own.text, "Likely"); assertEqual(own.tone, "good", "your own drop: you give it away")
+    assertEqual(own.text, "Yes"); assertEqual(own.tone, "good", "your own drop: you give it away")
     local off = { verdict = "cantUse", reasons = { { key = "primaryStat" } },
         offSpec = { specID = 65, verdict = "upgrade", change = { ilvlDelta = 9 } } }
     local o = W.Trade(drop({ me = off }))
-    assertEqual(o.text, "Likely"); assertEqual(o.tone, "good", "another spec of yours can use it: Likely in green")
+    assertEqual(o.text, "Yes"); assertEqual(o.tone, "good", "another spec of yours can use it: Yes in green")
     assertEqual(o.tip[1], "Trade: Likely")
     local wanted = W.Trade(drop())
-    assertEqual(wanted.text, "Likely"); assertEqual(wanted.tone, "good", "an upgrade for you is unchanged")
+    assertEqual(wanted.text, "Yes"); assertEqual(wanted.tone, "good", "an upgrade for you is unchanged")
 end)
 
 -- ── the gear halves (WC.TheirEq, WC.MyEq; NS.SideCells puts them before the verdict) ────────
@@ -536,12 +557,13 @@ test("table: built headless, one header and one row per drop, each column painte
     assertEqual(textOf(c.ilvl.text), "311"); assertEqual(textOf(c.slot.text), "Head")
     assertEqual(textOf(c.looter.text), "Seta")
     assertEqual(textOf(c.me.text), "19"); assertEqual(textOf(c.me.glyph), "▲")
-    assertEqual(textOf(c.them.text), "13"); assertEqual(textOf(c.trade.text), "Likely")
+    assertEqual(textOf(c.them.text), "13"); assertEqual(textOf(c.trade.text), "Yes |cffb3b3b8Not their upgrade|r",
+        "its word, then its reason in the muted gray (feedback-22)")
     assertEqual(textOf(c.actions.ask.label), "Ask"); assertTrue(c.actions.ask:IsShown())
     local r2 = rowFor(drawn, 2)
     assertEqual(textOf(r2.cells.them.level), "range"); assertEqual(textOf(r2.cells.them.text), "",
         "the ? goes: range already says why (feedback-6 spec §1)")
-    assertEqual(textOf(r2.cells.trade.text), "Unknown")
+    assertEqual(textOf(r2.cells.trade.text), "? |cffb3b3b8Not inspected|r")
     assertFalse(drawn.pane.placeholder:IsShown(), "drops on screen: no empty line")
     assertEqual(textOf(drawn.pane.colHead.labels.them.text), "Them")
     assertTrue(NS.Window.Frame().panes.group:IsShown())

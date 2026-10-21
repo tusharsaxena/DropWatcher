@@ -107,7 +107,7 @@ test("test mode data: the session drops what such groups see; History holds far 
         if s.content == "key" then assertEqual(n, 2, "a key run's chest: two items")
         else assertTrue(n >= 4 and n <= 5, "a raid boss of twenty: four or five, not " .. n) end
     end
-    assertEqual(#TD.SESSION, 5); assertEqual(sessionDrops, 22)
+    assertEqual(#TD.SESSION, 7); assertEqual(sessionDrops, 29)
     local total = 0
     for _, g in ipairs(TD.HISTORY) do
         per[g.content] = true
@@ -345,7 +345,7 @@ test("test mode data: a key run and four bosses, every item a pool item that kee
     end
     hasAll(groups, { "encounter", "run" }, "group")
     hasAll(slots, { "INVTYPE_HEAD", "INVTYPE_FINGER", "INVTYPE_TRINKET", "INVTYPE_CLOAK", "INVTYPE_WEAPON" }, "slot")
-    assertEqual(#specs, 22)
+    assertEqual(#specs, 29)
     assertTrue(NS.TestData.MEMBERS.seta.name == "Seta", "the names are invented")
 end)
 
@@ -396,7 +396,7 @@ test("test mode data: an empty pool gives no sample, and a pool short of a slot 
     assertEqual(#TD.History(1000, YOU, TD.Source({}, {}, nil)).groups, 0)
     local src, ids = source(NS, { "INVTYPE_FINGER" })
     local specs = TD.Placeholders(1000, YOU, src)
-    assertEqual(#specs, 22, "every state still shows")
+    assertEqual(#specs, 29, "every state still shows")
     for _, s in ipairs(specs) do assertTrue(ids[idOf(s.link)] == true) end
 end)
 
@@ -484,7 +484,7 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
     local LF = NS.LootFeed
     m.seedGearJournal()
     NS.SetTestMode(true)
-    assertEqual(#LF.Drops("test"), 22)
+    assertEqual(#LF.Drops("test"), 29)
     assertEqual(#LF.Drops("live"), 0)
     assertEqual(m.journal.previews[1], 10, "the keys' loot read at Mythic+ 10")
     assertEqual(m.journal.keystoneLevel, 0, "and the journal's own preview put back")
@@ -499,7 +499,7 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
     NS.SetTestMode(false)
     assertEqual(#LF.Drops("test"), 0)
     NS.SetTestMode(true)
-    assertEqual(#LF.Drops("test"), 22, "turned on again: filled again, not doubled")
+    assertEqual(#LF.Drops("test"), 29, "turned on again: filled again, not doubled")
 end)
 
 test("test mode: while the pool loads the tab says so and holds no drop; the drops fill in when it is ready", function()
@@ -516,7 +516,7 @@ test("test mode: while the pool loads the tab says so and holds no drop; the dro
     m.loadJournal()
     m.advance(1)
     assertFalse(NS.TestMode.IsLoading())
-    assertEqual(#NS.LootFeed.Drops("test"), 22)
+    assertEqual(#NS.LootFeed.Drops("test"), 29)
 end)
 
 test("test mode: turned off while the pool loads, nothing arrives later", function()
@@ -632,7 +632,7 @@ local function shownTest()
     return NS, NS.WindowGroup.Drawn(), m
 end
 
-test("window: test mode draws every sample, under the key run and the four bosses, with real icons", function()
+test("window: test mode draws every sample, under the two key runs and the five bosses, with real icons", function()
     local NS, drawn = shownTest()
     local f = NS.Window.Frame()
     assertTrue(f.banner:IsShown()); assertTrue(f.testText:IsShown())
@@ -640,7 +640,7 @@ test("window: test mode draws every sample, under the key run and the four bosse
     assertTrue(textOf(f.banner.text):find("Nothing is whispered") ~= nil)
     assertTrue(textOf(f.banner.text):find("real items", 1, true) ~= nil)
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
-    assertEqual(#drawn.headers, 5)
+    assertEqual(#drawn.headers, 7)
     local mine = 0
     for _, d in ipairs(NS.LootFeed.Drops("test")) do
         if d.isMine then mine = mine + 1 end
@@ -691,6 +691,11 @@ local function wornOf(NS, dropId)
     return #items > 0 and WC.Levels(items) or nil
 end
 
+-- A row's Trade cell as plain text: its word and reason, the reason's color escape left out.
+local function tradePlain(r)
+    return (textOf(r.cells.trade.text):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+end
+
 test("window: the rows show every ask state, every Them gear state and every trade chip", function()
     local NS, drawn = shownTest()
     local ask, eq, trade, levels = {}, {}, {}, 0
@@ -704,37 +709,39 @@ test("window: the rows show every ask state, every Them gear state and every tra
             assertEqual(text, worn, "the worn items' real levels")
             levels = levels + 1
         end
-        trade[textOf(r.cells.trade.text)] = true
+        local word, why = tradePlain(r):match("^(%S+) (.+)$")   -- the word, then its reason (feedback-22)
+        trade[word or "?"], trade[why or "?"] = true, true
     end
     hasAll(ask, { "Ask", "Queued", "Asked", "Retry", "No action" }, "ask")
     hasAll(eq, { "…", "range", "combat", "!" }, "their gear: the reason word")
     assertTrue(levels >= 5, "the inspected looters' worn levels")
-    hasAll(trade, { "Yes", "Likely", "Unknown", "No", "Can't use" }, "trade")
+    hasAll(trade, { "Yes", "?", "No", "Can't use" }, "trade")
 end)
 
 -- feedback-21: a drop you can use in no spec reads Can't use on Trade where the estimate is Yes or
 -- Likely (Mistveil's shoulders); a No stays No (Ashveil's), and an off-spec use keeps its Likely.
-test("window: test mode's Can't use samples read Can't use on Trade, a No stays No, an off-spec keeps Likely", function()
+test("window: test mode's Can't use samples read Can't use on Trade, a No stays No, an off-spec keeps Yes", function()
     local NS, drawn = shownTest()
-    local want = { Mistveil = "Can't use", Ashveil = "No" }
+    local want = { Mistveil = "Yes Can't use", Ashveil = "No" }
     local seen, offSpec = {}, 0
     for _, r in ipairs(drawn.rows) do
         local d = NS.LootFeed.Get(r.dropId)
-        local text = textOf(r.cells.trade.text)
+        local text = tradePlain(r)
+        if want[d.looter.name] == "No" then text = text:match("^(%S+)") end
         if not d.isMine and want[d.looter.name] and d.me.verdict == "cantUse" and not NS.OffSpec.Of(d.me) then
             assertEqual(text, want[d.looter.name], d.looter.name)
             seen[d.looter.name] = true
-            if text == "Can't use" then
+            if text == "Yes Can't use" then
                 assertEqual(r.cells.trade.text:GetTextColor(), NS.Constants.TONE.redMuted.r, "in the dim red")
             end
         end
         if not d.isMine and NS.OffSpec.Of(d.me) and d.trade.state == "likely" then
-            assertEqual(text, "Likely", d.looter.name .. ": an off-spec can use it")
+            assertEqual(text:match("^(%S+)"), "Yes", d.looter.name .. ": an off-spec can use it")
             offSpec = offSpec + 1
         end
     end
     hasAll(seen, { "Mistveil", "Ashveil" }, "Can't use sample")
-    assertTrue(offSpec >= 4, "the off-spec samples keep Likely: " .. offSpec)
+    assertTrue(offSpec >= 4, "the off-spec samples keep Yes: " .. offSpec)
 end)
 
 -- feedback-21 H2: Kaelith's wrists were read before they left, so the card keeps their spec and
@@ -800,8 +807,11 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
         if base then
             local first = d.testGear[NS.WindowCells.EqSlots(d.facts.equipLoc)[1]]
             assertEqual(first.link, base.link, "row " .. d.id .. ": the card's Replaces is the first slot's")
+            -- a unique-equipped ring replaces the copy worn, whatever the other ring's level (feedback-22)
+            local unique = false
+            for _, rr in ipairs(d.me.reasons or {}) do unique = unique or rr.key == "uniqueEquipped" end
             for _, worn in pairs(d.testGear) do
-                if worn then assertTrue(worn.ilvl >= base.ilvl, "the baseline is the lower one it replaces") end
+                if worn and not unique then assertTrue(worn.ilvl >= base.ilvl, "the baseline is the lower one it replaces") end
             end
         end
     end
@@ -838,8 +848,8 @@ test("window: Drops lists your samples with the others, and its strip counts the
     for _, e in ipairs(drawn.entries) do
         if e.kind == "drop" and e.drop.isMine then mine = mine + 1 end
     end
-    assertEqual(#drawn.pane.ownDrops, 6, "every sample of yours is listed")
-    assertTrue(mine <= 6)
+    assertEqual(#drawn.pane.ownDrops, 8, "every sample of yours is listed")
+    assertTrue(mine <= 8)
     assertEqual(drawn.summary.count, 5, "the tradeable ones")
     assertTrue(drawn.pane.summary:IsShown())
     assertEqual(textOf(NS.Window.Frame().tabs.group.label), "Drops")
@@ -930,4 +940,34 @@ test("hooks: AskState shows a sample's own state only while the edge holds none"
     assertEqual((TM.AskState(d, "sent")), "sent", "the edge's state wins")
     assertEqual((TM.AskState({ testAsk = { state = "queued" } }, "ready")), "ready", "a live drop's is ignored")
     assertTrue(TM.InspectOf({ isMine = true, test = true, testInspect = {} }) == nil, "your own drop has none")
+end)
+
+-- feedback-22: the samples carry the owner's situations: a unique-equipped ring reads both rings, each
+-- its own mark; an upgrade glows only where it can be traded to you; every short trade reason shows.
+test("window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)", function()
+    local NS = shownTest()
+    local SC, uniques = NS.SideCells, 0
+    local glows, dark, reasons = 0, 0, {}
+    for _, d in ipairs(NS.LootFeed.Drops("test")) do
+        local unique = false
+        for _, r in ipairs(d.me and d.me.reasons or {}) do unique = unique or r.key == "uniqueEquipped" end
+        if unique and not d.isMine then
+            local c = SC.Me(d, NS.TestMode.GearOf(d))
+            assertTrue(c.parts ~= nil, d.looter.name .. ": a mark per worn ring")
+            assertEqual(#c.items, 2, "both rings")
+            uniques = uniques + 1
+        end
+        if not d.isMine and d.me and d.me.verdict == "upgrade" then
+            local tradeable = d.trade.state == "yes" or d.trade.state == "likely"
+            assertEqual(NS.Glow.KindOf(d), tradeable and "main" or nil, d.looter.name .. ": glows only when tradeable")
+            if tradeable then glows = glows + 1 else dark = dark + 1 end
+        end
+        reasons[NS.WindowOwn.Trade(d).reason] = true
+    end
+    assertTrue(uniques >= 2, "a unique ring not read for them, and one read for both")
+    assertTrue(glows >= 2 and dark >= 3, ("upgrades that glow (%d) and ones that can't (%d)"):format(glows, dark))
+    for _, want in ipairs({ "BoE", "Warbound", "Bonus roll", "Legacy loot", "Group loot", "Window passed", "Window open",
+        "Not their upgrade", "Their upgrade", "Your upgrade", "Not inspected", "Can't use" }) do
+        assertTrue(reasons[want] == true, want .. " is one of the samples' trade reasons")
+    end
 end)

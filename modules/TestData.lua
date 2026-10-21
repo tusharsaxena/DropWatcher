@@ -17,11 +17,14 @@ local _, NS = ...
 -- (LFR_25); and they drop what such a group sees: a key run's chest two items, a dungeon boss one
 -- or two, a raid boss four or five.
 --
--- THE DROPS (the Drops tab: this session). A key run earlier on, then four Heroic raid bosses
--- tonight, twenty-two drops between them. The other members' sixteen cover board 03 (Me and Them:
--- upgrade, sidegrade, downgrade, can't use, doesn't want, unknown; Trade: yes, likely, unknown, no;
+-- THE DROPS (the Drops tab: this session). Two key runs earlier on, then five Heroic raid bosses
+-- tonight, twenty-nine drops between them. The other members' twenty-one cover board 03 (Me and Them:
+-- upgrade, sidegrade, downgrade, can't use, doesn't want, unknown; Trade: yes, likely, unknown, no,
+-- with every reason the Trade cell words in a few: BoE, warbound, bonus roll, legacy and group loot,
+-- their upgrade and not, gear not read, your upgrade, a window open or passed, feedback-22;
+-- a unique-equipped ring on both sides; an upgrade that glows and ones that can't, being untradeable;
 -- inspect: fresh, cached, pending, out of range, combat, failed, not in the group; Ask: ready,
--- queued, asked, retry, traded and the dash) and your six cover board 04 (an exact countdown, one
+-- queued, asked, retry, traded and the dash) and your eight cover board 04 (an exact countdown, one
 -- ending soon, an estimated one, a bind-on-equip drop and an expired one, with candidates in every
 -- status the Offer panel shows: upgrade, equal, off-spec upgrade, no upgrade, can't use, checking
 -- and unavailable).
@@ -369,15 +372,26 @@ local EITHER = { pair = true, weapon1H = true }
 -- An evaluation as NS.Evaluate answers it: the verdict, the change, the worn item (a pool item
 -- near the level the change implies), `either` when that is the lower of two the sample wears (the
 -- kernel's, feedback-21 R5), the kernel's reason key (`reason`) and the off-spec part (`off`, judged
--- for `spec.mainSpec`, else OFF_MAIN).
+-- for `spec.mainSpec`, else OFF_MAIN). `unique` is a unique-equipped ring already worn: the kernel's
+-- uniqueEquipped reason, judged against that ring, both rings marked (`either`, feedback-22), the
+-- other ring lower (TD.GearFor).
 local function ev(src, item, spec)
     if not spec then return nil end
     local verdict, delta = spec[1], spec[2]
     local reasons = spec.reason and { { key = spec.reason } } or {}
+    if spec.unique then reasons[#reasons + 1] = { key = "uniqueEquipped" } end
     local base, plan = baselineOf(src, item, delta), C.SLOT_PLAN[item.facts.equipLoc]
     return { verdict = verdict, ilvlDelta = delta, reasons = reasons, baseline = base,
         either = (base and plan and EITHER[plan.kind]) or nil,
         offSpec = offSpecOf(src, item, spec.off, spec.mainSpec) }
+end
+
+-- Whether a sample's evaluation is a unique-equipped redirection (`unique` in its spec).
+local function isUnique(eval)
+    for _, r in ipairs(type(eval) == "table" and eval.reasons or {}) do
+        if r.key == "uniqueEquipped" then return true end
+    end
+    return false
 end
 
 local function trade(state, reasonKey, args, basis, age)
@@ -402,7 +416,8 @@ end
 --- The worn items in a drop's slots, as the Me and Them cells read them ({ [inventory slot] =
 --- { link, ilvl } | false }; feedback-18): the one the verdict was judged against (`eval`'s baseline,
 --- else the pool item nearest the drop's level), and in a pair's or a one-hander's other slot
---- another of that slot at least as high, so the baseline is the one the drop replaces; a
+--- another of that slot at least as high, so the baseline is the one the drop replaces (lower, for a
+--- unique-equipped ring: the drop can replace only the copy worn, feedback-22); a
 --- two-hander's or a ranged weapon's off hand empty. Nothing for an `unknown` verdict (no gear to
 --- judge by) or an item that is not worn. Pure.
 --- @param src table TD.Source's
@@ -417,7 +432,10 @@ function TD.GearFor(src, item, eval)
     if not first then return {} end
     local gear = { [plan.slots[1]] = first }
     local other = plan.slots[2]
-    if other and (plan.kind == "pair" or plan.kind == "weapon1H") then
+    if other and plan.kind == "pair" and isUnique(eval) then
+        local low = src:Worn(loc, first.ilvl - 20, first.link)
+        gear[other] = (low and low.link ~= item.link and low.ilvl < first.ilvl) and low or first
+    elseif other and (plan.kind == "pair" or plan.kind == "weapon1H") then
         gear[other] = src:Above(loc, first.ilvl, { [first.link] = true, [item.link] = true }) or first
     elseif other then
         gear[other] = false
@@ -489,11 +507,17 @@ local MY_TRADE = {
     boe       = function() return trade("yes", "boe", {}, "bind") end,
     expired   = function() return trade("no", "expired", { 0, C.TRADE_WINDOW }, "timer") end,
     groupLoot = function() return trade("yes", "groupLoot", {}, "rule") end,
+    bonusRoll = function() return trade("no", "bonusRoll", {}, "bind") end,
+    -- no trade window showed: the game took it as your upgrade (the drop's level and the worn one's)
+    upgradeForYou = function(item, me)
+        local wornIlvl = me and me.baseline and me.baseline.ilvl
+        return trade("no", "upgradeForYou", { item.facts.ilvl, wornIlvl }, "timer")
+    end,
 }
 
-local function tradeMine(now, t)
+local function tradeMine(now, t, item, me)
     if t[1] == "timer" then return timer(now, t[2]) end
-    return MY_TRADE[t[1]]()
+    return MY_TRADE[t[1]](item, me)
 end
 
 local function mine(src, now, you, row, where)
@@ -506,17 +530,31 @@ local function mine(src, now, you, row, where)
     end
     local me = ev(src, item, row.me)
     return { looter = you, link = item.link, facts = item.facts, me = me, testGear = TD.GearFor(src, item, me),
-        testOffGear = TD.OffGearFor(item, me), trade = tradeMine(now, row.trade), candidates = candidates }
+        testOffGear = TD.OffGearFor(item, me), trade = tradeMine(now, row.trade, item, me), candidates = candidates }
 end
 
--- This session, oldest first: a key run four hours ago, then four Heroic raid bosses, the last the
--- off-spec showcase. Each group's `theirs` are the other members' drops, board 03 row by row: the
+-- This session, oldest first: two key runs four and a half hours ago and more, then five Heroic raid
+-- bosses, the fourth the off-spec showcase and the fifth the trade showcase (feedback-22). The
+-- second key run is the owner's own screenshot: your neck from a bonus roll (No Bonus roll, an
+-- upgrade you can't trade on), and another player's copy of a unique-equipped ring you wear, their
+-- gear never read (not in your group): You `315 ▲3 / 295 ▲23`, Them `–`, Trade `? Not inspected`.
+-- The fifth boss: a unique ring judged for both of you (a mark per ring on both sides, it glows: Yes),
+-- an upgrade on group loot (Yes Group loot, it glows), upgrades no one can trade you (legacy loot,
+-- their own upgrade: no glow), and your own ring the game took as your upgrade (No Your upgrade). Each group's `theirs` are the other members' drops, board 03 row by row: the
 -- looter, the slot (`strict`: it must be that slot, being armor), Me and Them as { verdict, change,
 -- reason = key, off = off-spec }, the trade { state, reasonKey, basis, age }, the inspect
 -- { status, age, reason }, the ask state, the look's state, and `left` for a looter who has since
 -- left the group (the card keeps their read: `testLeft`). `yours` are yours, board 04: the slot, Me, the trade and the candidates. Every drop
 -- is the group's age; a countdown's is four hours less what is left.
 local SESSION = {
+    { content = "key", n = 2, party = PARTIES[2], ago = 16200,
+      yours = {
+        { slot = "INVTYPE_NECK", me = { "upgrade", 23 }, trade = { "bonusRoll" }, cands = {} },
+      },
+      theirs = {
+        { who = "vexxa", slot = "INVTYPE_FINGER", me = { "upgrade", 3, unique = true },
+          trade = { "unknown", "noInspect" }, inspect = { "unavailable", nil, "notInGroup" }, left = true },
+      } },
     { content = "key", n = 1, party = PARTIES[1], ago = 15000,
       yours = {
         { slot = "INVTYPE_HEAD", me = { "downgrade", -26 }, trade = { "expired" }, cands = {} },
@@ -591,6 +629,20 @@ local SESSION = {
           me = { "cantUse", reason = "primaryStat", off = { 65, "downgrade", -11 } },
           them = { "downgrade", -4 }, trade = { "likely", "notUpgrade", "inspect", 55 }, inspect = { "fresh", 55 } },
       } },
+    { content = "raidHeroic", n = 5, party = RAID_20, ago = 30,
+      yours = {
+        { slot = "INVTYPE_FINGER", me = { "upgrade", 9 }, trade = { "upgradeForYou" }, cands = {} },
+      },
+      theirs = {
+        { who = "mistveil", slot = "INVTYPE_FINGER", me = { "upgrade", 5, unique = true }, them = { "sidegrade", 1 },
+          trade = { "likely", "notUpgrade", "inspect", 25 }, inspect = { "fresh", 25 } },
+        { who = "grimhollow", slot = "INVTYPE_TRINKET", me = { "upgrade", 8 }, them = { "sidegrade", 2 },
+          trade = { "likely", "groupLoot", "rule" }, inspect = { "fresh", 35 } },
+        { who = "vexxa", slot = "INVTYPE_WAIST", me = { "upgrade", 6 }, them = { "downgrade", -3 },
+          trade = { "no", "legacy", "rule" }, inspect = { "cached", 200 } },
+        { who = "quillshot", slot = "INVTYPE_CLOAK", me = { "upgrade", 11 }, them = { "upgrade", 4 },
+          trade = { "no", "upgradeForLooter", "inspect", 40 }, inspect = { "fresh", 40 } },
+      } },
 }
 TD.SESSION = SESSION
 
@@ -643,6 +695,13 @@ local THEIRS = {
       outcome = "asked" },
     { me = { "cantUse", off = { 65, "upgrade", 16 } }, them = { "sidegrade", 0 }, trade = { "likely", "notUpgrade" },
       outcome = "received" },
+    -- every other reason the Trade cell words (feedback-22)
+    { me = { "upgrade", 5 }, them = { "sidegrade", 1 }, trade = { "no", "bonusRoll" }, outcome = "seen" },
+    { me = { "upgrade", 8 }, them = { "downgrade", -6 }, trade = { "yes", "boe" }, outcome = "asked" },
+    { me = { "sidegrade", 2 }, them = { "upgrade", 5 }, trade = { "no", "warbound" }, outcome = "seen" },
+    { me = { "upgrade", 4 }, trade = { "unknown", "noInspect" }, outcome = "seen" },
+    { me = { "downgrade", -5 }, them = { "sidegrade", 0 }, trade = { "likely", "groupLoot" }, outcome = "seen" },
+    { me = { "upgrade", 6 }, them = { "downgrade", -2 }, trade = { "no", "legacy" }, outcome = "seen" },
 }
 
 -- Your own drops in turn.
@@ -651,6 +710,7 @@ local YOURS = {
     { me = { "upgrade", 9 }, trade = { "no", "upgradeForLooter" }, outcome = "seen" },
     { me = { "downgrade", -12 }, trade = { "yes", "groupLoot" }, outcome = "tradedAway" },
     { me = { "downgrade", -20 }, trade = { "no", "expired" }, outcome = "expired" },
+    { me = { "upgrade", 23 }, trade = { "no", "bonusRoll" }, outcome = "seen" },
 }
 
 -- The last four weeks, newest first: the content, how long ago, how many drops, which of them was
