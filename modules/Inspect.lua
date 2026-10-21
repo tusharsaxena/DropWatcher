@@ -589,6 +589,9 @@ function I.OnCombatEdge(fighting)
         timers.pump = nil
     end
     for _, job in ipairs(s.queue) do entryOf(job.guid).status = waitingStatus() end
+    if #s.queue > 0 then
+        NS.Debug(TAG, "queue %s: %d waiting", fighting and "parked for combat" or "resumed after combat", #s.queue)
+    end
     if not fighting then schedulePump(0) end
 end
 

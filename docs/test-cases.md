@@ -1822,6 +1822,20 @@ Total.
 - diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue
 - diagnostics: the scoring section names the scorer, the one in use, Pawn and the pending retries
 
+### test_debug_coverage.lua (11)
+
+- debug: a drop added names its item level and source, and its trade estimate with the reason
+- debug: the encounter and the keystone run edges each write one FEED line
+- debug: a drop re-judged on new facts says what it reads now
+- debug: the inspect queue logs its park and resume over combat, only with jobs waiting
+- debug: auto-ask's waiting asks are held for an encounter and released at its end, each one line
+- diagnostics: an auto-ask waiting is listed with its looter and when it is due
+- debug: the toast queue held over combat says so when combat ends
+- diagnostics: the toast queue is listed while toasts wait
+- diagnostics: each drop line names its looter, both verdicts and the trade estimate
+- debug: the trade timer's bag scan logs on change only, not on every scan
+- debug: the search box logs its text once, when it loses focus, never per keystroke
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1979,6 +1993,7 @@ Total.
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 12 |
 | test_diagnostics.lua | 15 |
+| test_debug_coverage.lua | 11 |
 | test_vendor_sync.lua | 3 |
 | test_locale.lua | 6 |
 | test_eol.lua | 2 |
@@ -1987,4 +2002,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1641** |
+| **Total** | **1652** |

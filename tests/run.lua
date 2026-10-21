@@ -230,6 +230,7 @@ Kit.run{
         "test_sim_panel",
         "test_disabled",
         "test_diagnostics",
+        "test_debug_coverage",
         "test_vendor_sync",
         "test_locale",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
