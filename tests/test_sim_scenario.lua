@@ -264,7 +264,7 @@ test("sim step delay: `/dw set sim.stepDelay` takes a half step, clamps to the r
     assertEqual(NS.addon.db.profile.sim.stepDelay, 1.5, "not a half step")
     local row = NS.SchemaRuntime.FindRow("sim.stepDelay")
     assertEqual(row.label, "Simulation step delay")
-    assertEqual(row.page, "general"); assertEqual(row.group, "Simulation")
+    assertEqual(row.page, "general"); assertEqual(row.group, "Simulator")
     assertEqual(row.min, 0.5); assertEqual(row.max, 10); assertEqual(row.step, 0.5)
 end)
 

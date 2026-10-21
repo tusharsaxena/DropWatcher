@@ -214,7 +214,7 @@ test("rows: degraded, the hand-written rows still read, write and refuse", funct
     assertEqual(D.addon.db.global.history.retentionDays, 14)
 end)
 
--- ── Window › Upgrade glow (feedback-21) ─────────────────────────────────────────────────────
+-- ── Alerts › Upgrade glow (feedback-21; Window's until feedback-24) ─────────────────────────
 
 -- The knob table of the feedback-21 plan, shared with KickCD's glow slots: key, min, max, default.
 -- pixelFrequency's 0.1 is DropWatcher's own default (feedback-21 H6); KickCD keeps the library's 0.25.
@@ -226,7 +226,7 @@ local GLOW_KNOBS = {
     { "xOffset", -10, 10, 0 }, { "yOffset", -10, 10, 0 },
 }
 
-test("glow: both glows have every knob's row on Window › Upgrade glow, with the plan's defaults", function()
+test("glow: both glows have every knob's row on Alerts › Upgrade glow, with the plan's defaults", function()
     local NS = T.newAddon()
     local S, TONE = NS.SchemaRuntime, NS.Constants.TONE
     for _, key in ipairs({ "main", "offSpec" }) do
@@ -234,7 +234,7 @@ test("glow: both glows have every knob's row on Window › Upgrade glow, with th
         for _, k in ipairs(GLOW_KNOBS) do
             local row = S.FindRow(base .. k[1])
             assertTrue(row ~= nil, base .. k[1])
-            assertEqual(row.page, "window"); assertEqual(row.group, "Upgrade glow")
+            assertEqual(row.page, "alerts"); assertEqual(row.group, "Upgrade glow")
             assertEqual(row.min, k[2], base .. k[1] .. " min"); assertEqual(row.max, k[3], base .. k[1] .. " max")
             assertEqual(row.default, k[4], base .. k[1] .. " default")
         end
@@ -266,7 +266,7 @@ end)
 test("glow: the main and off-spec rows alternate, so each line reads main left, off-spec right", function()
     local NS = T.newAddon()
     local rows = {}
-    for _, row in ipairs(NS.addon.Settings.RowsForPage("window")) do
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
         if row.group == "Upgrade glow" then rows[#rows + 1] = row end
     end
     assertEqual(#rows % 2, 0)
@@ -283,6 +283,23 @@ test("glow: the main and off-spec rows alternate, so each line reads main left, 
     assertEqual(rows[7].path, "glow.main.useClassColor"); assertEqual(rows[8].path, "glow.offSpec.useClassColor")
     assertTrue(rows[5].startsLine == true and rows[7].startsLine == true, "each left-column row starts its line")
     assertNil(rows[6].startsLine); assertNil(rows[8].startsLine)
+end)
+
+-- feedback-24: Offset (three of the four styles) right after Effect, then each style's subsection
+-- in the Style dropdown's own order, the default (Pixel border) first in both.
+test("glow: the style subsections read in the Style dropdown's order, Offset first", function()
+    local NS = T.newAddon()
+    local heads, seen = {}, {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
+        if row.group == "Upgrade glow" and row.subgroup and not seen[row.subgroup] then
+            seen[row.subgroup] = true
+            heads[#heads + 1] = row.subgroup
+        end
+    end
+    local styles = {}
+    for i, v in ipairs(NS.SchemaRuntime.FindRow("glow.main.type").values) do styles[i] = v.text end
+    assertEqual(table.concat(styles, "|"), "Pixel border|Auto cast sparkles|Button (rotating rays)|Proc (flipbook)")
+    assertEqual(table.concat(heads, "|"), "Effect|Offset|" .. table.concat(styles, "|"))
 end)
 
 test("glow: an out-of-range knob, an unknown style and a malformed color are refused", function()
@@ -346,14 +363,14 @@ test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color 
     assertEqual(NS.addon.db.profile.glow.offSpec.color.r, 1)
 end)
 
--- ── Window › Toast: Scale (feedback-21 G10) ─────────────────────────────────────────────────
+-- ── Alerts › Toast: Scale (feedback-21 G10; Window's until feedback-24) ─────────────────────
 
-test("toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a sound, live only with the toast on", function()
+test("toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a sound, live only with the toast on", function()
     local NS = T.enableAddon()
     local S = NS.SchemaRuntime
     local row = S.FindRow("toast.scale")
     assertTrue(row ~= nil, "toast.scale has a row")
-    assertEqual(row.page, "window"); assertEqual(row.group, "Toast"); assertEqual(row.label, "Scale")
+    assertEqual(row.page, "alerts"); assertEqual(row.group, "Toast"); assertEqual(row.label, "Scale")
     assertEqual(row.type, "number")
     assertEqual(row.min, 0.5); assertEqual(row.max, 2); assertEqual(row.step, 0.05)
     assertEqual(row.default, 1, "today's size"); assertEqual(NS.C.PROFILE.toast.scale, 1)
@@ -365,7 +382,7 @@ test("toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a soun
     assertFalse(S.Set("toast.scale", 0.25)); assertFalse(S.Set("toast.scale", 2.5))
     assertTrue(S.Set("toast.scale", 1.5)); assertEqual(NS.addon.db.profile.toast.scale, 1.5)
     local order = {}
-    for _, r in ipairs(NS.addon.Settings.RowsForPage("window")) do
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
         if r.group == "Toast" then order[#order + 1] = r.path end
     end
     assertEqual(order[#order], "toast.scale", "the tab's last row")

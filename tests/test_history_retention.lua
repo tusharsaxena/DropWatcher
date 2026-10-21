@@ -78,10 +78,10 @@ local function keys(NS)
     return table.concat(out, ",")
 end
 
-test("retention row: account-wide, on the Window page, the listed windows only", function()
+test("retention row: account-wide, on Drops › Retention, the listed windows only", function()
     local NS = T.enableAddon()
     local row = NS.SchemaRuntime.FindRow(PATH)
-    assertEqual(row.label, "Keep history for"); assertEqual(row.page, "window")
+    assertEqual(row.label, "Keep history for"); assertEqual(row.page, "feed"); assertEqual(row.group, "Retention")
     assertEqual(row.default, 30)
     assertEqual(NS.HistoryRetention.Days(), 30)
     assertFalse(NS.SchemaRuntime.Set(PATH, 45))

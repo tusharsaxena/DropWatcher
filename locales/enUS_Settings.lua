@@ -11,16 +11,12 @@ local L = NS.L
 
 -- settings/SchemaRows.lua
 L["Use global"] = "Use global"
-L["View: Interesting"] = "View: Interesting"
 L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."] =
     "A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."
-L["View: Likely tradeable"] = "View: Likely tradeable"
 L["A fresh tab lists only the drops whose trade estimate is yes or likely."] =
     "A fresh tab lists only the drops whose trade estimate is yes or likely."
-L["View: Usable by me"] = "View: Usable by me"
 L["A fresh tab hides the drops you can't use and the item types you marked as unwanted."] =
     "A fresh tab hides the drops you can't use and the item types you marked as unwanted."
-L["View: Upgrade for me"] = "View: Upgrade for me"
 L["A fresh tab lists only the drops that are an upgrade for you."] =
     "A fresh tab lists only the drops that are an upgrade for you."
 L["Newest"] = "Newest"
@@ -36,7 +32,6 @@ L["Party"] = "Party"
 L["Full"] = "Full"
 L["Compact"] = "Compact"
 L["Personal loot"] = "Personal loot"
-L["When to show"] = "When to show"
 L["Auto-open the window"] = "Auto-open the window"
 L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."] =
     "Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."
@@ -51,7 +46,6 @@ L["Minimum quality"] = "Minimum quality"
 L["Fixed: one quality for every drop. Match each slot: the quality of what the drop would replace. Match my gear: the quality most of your gear is."] =
     "Fixed: one quality for every drop. Match each slot: the quality of what the drop would replace. Match my gear: the quality most of your gear is."
 L["The least quality a drop needs in the fixed mode."] = "The least quality a drop needs in the fixed mode."
-L["Floor"] = "Floor"
 L["The least quality the two matching modes ever ask for, and what an empty slot asks for."] =
     "The least quality the two matching modes ever ask for, and what an empty slot asks for."
 L["Always show upgrades for me"] = "Always show upgrades for me"
@@ -91,14 +85,8 @@ L["Stat weights"] = "Stat weights"
 L["Your stat weights for each specialization."] = "Your stat weights for each specialization."
 L["Unwanted item types"] = "Unwanted item types"
 L["The item types each specialization never wants."] = "The item types each specialization never wants."
-L["Preferences"] = "Preferences"
 L["The loot rule that decides whether a drop here can be traded."] =
     "The loot rule that decides whether a drop here can be traded."
-L["Rules"] = "Rules"
-L["Timers"] = "Timers"
-L["Warn before a trade window closes (seconds)"] = "Warn before a trade window closes (seconds)"
-L["Warn this many seconds before your own item stops being tradeable. 0 turns the warning off."] =
-    "Warn this many seconds before your own item stops being tradeable. 0 turns the warning off."
 L["Templates"] = "Templates"
 L["What you whisper a looter to ask for their drop."] = "What you whisper a looter to ask for their drop."
 L["What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."] =
@@ -110,8 +98,6 @@ L["What you tell the group about a drop you can trade."] = "What you tell the gr
 L["Sending"] = "Sending"
 L["Edit before sending"] = "Edit before sending"
 L["Open the message in an edit box before it is sent."] = "Open the message in an edit box before it is sent."
-L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the For transmog template."] =
-    "Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the For transmog template."
 L["Ask once"] = "Ask once"
 L["Send each ask or offer for a drop to a player once."] = "Send each ask or offer for a drop to a player once."
 L["Announce channel"] = "Announce channel"
@@ -312,17 +298,44 @@ L["Reset templates"] = "Reset templates"
 L["Put the five messages back to the shipped wording."] = "Put the five messages back to the shipped wording."
 
 -- settings/Pages.lua
-L["Feed"] = "Feed"
-L["Reset the Feed page's settings (quality and filters) to their defaults."] =
-    "Reset the Feed page's settings (quality and filters) to their defaults."
 L["Comparison"] = "Comparison"
 L["Reset the Comparison page's settings (scoring, every spec's weights and unwanted types) to their defaults."] =
     "Reset the Comparison page's settings (scoring, every spec's weights and unwanted types) to their defaults."
-L["Reset the Trade page's settings (loot rules and timers) to their defaults."] =
-    "Reset the Trade page's settings (loot rules and timers) to their defaults."
 L["Messages"] = "Messages"
-L["Reset the Messages page's settings (templates, sending and auto-ask) to their defaults."] =
-    "Reset the Messages page's settings (templates, sending and auto-ask) to their defaults."
 L["Window"] = "Window"
-L["Reset the Window page's settings (columns, layout, toast, upgrade glow and icons) to their defaults."] =
-    "Reset the Window page's settings (columns, layout, toast, upgrade glow and icons) to their defaults."
+
+-- feedback-24: the pages regrouped (Situations, Drops, Comparison, Messages, Window, Alerts)
+L["Situations"] = "Situations"
+L["Reset the Situations page's settings (auto-open and every situation's tracking, quality and loot rule) to their defaults."] =
+    "Reset the Situations page's settings (auto-open and every situation's tracking, quality and loot rule) to their defaults."
+L["Loot rule"] = "Loot rule"
+L["Reset the Drops page's settings (quality, items and how long drops are kept) to their defaults."] =
+    "Reset the Drops page's settings (quality, items and how long drops are kept) to their defaults."
+L["Quality floor"] = "Quality floor"
+L["A situation can set a quality of its own: the Quality column on the Situations page."] =
+    "A situation can set a quality of its own: the Quality column on the Situations page."
+L["Items"] = "Items"
+L["Item kinds"] = "Item kinds"
+L["Retention"] = "Retention"
+L["Session"] = "Session"
+L["Unwanted types"] = "Unwanted types"
+L["Reset the Messages page's settings (sending, auto-ask and templates) to their defaults."] =
+    "Reset the Messages page's settings (sending, auto-ask and templates) to their defaults."
+L["Offer transmog asks"] = "Offer transmog asks"
+L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."] =
+    "Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."
+L["Reset the Window page's settings (layout, columns, starting view and icons) to their defaults."] =
+    "Reset the Window page's settings (layout, columns, starting view and icons) to their defaults."
+L["Window layout"] = "Window layout"
+L["Shown columns"] = "Shown columns"
+L["The full layout's Drops table. History shows every column; the compact cards show every fact."] =
+    "The full layout's Drops table. History shows every column; the compact cards show every fact."
+L["Mark a trade window ending within (seconds)"] = "Mark a trade window ending within (seconds)"
+L["Your own drop's Trade window countdown turns to its warning color this many seconds before the item stops being tradeable. 0 turns the mark off."] =
+    "Your own drop's Trade window countdown turns to its warning color this many seconds before the item stops being tradeable. 0 turns the mark off."
+L["Starting view"] = "Starting view"
+L["Content and sort"] = "Content and sort"
+L["Alerts"] = "Alerts"
+L["Reset the Alerts page's settings (toast and upgrade glow) to their defaults."] =
+    "Reset the Alerts page's settings (toast and upgrade glow) to their defaults."
+L["Simulator"] = "Simulator"

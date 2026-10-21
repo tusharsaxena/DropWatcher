@@ -12,13 +12,15 @@ local _, NS = ...
 --                                      their live counters, the live preview and Reset templates.
 --   Settings.PageEditors.WeightsTab    Comparison › Weights: a sub-strip of your class's specs,
 --                                      then one slider per stat and the Pawn scale import box.
---   Settings.PageEditors.PrefsTab      Comparison › Preferences: the same sub-strip, then one
+--   Settings.PageEditors.PrefsTab      Comparison › Unwanted types: the same sub-strip, then one
 --                                      checkbox per item type your class's loot comes in.
---   Settings.PageEditors.QualityReadout  Feed › Quality's afterGroup: the threshold in force now.
---   Settings.PageEditors.ClearHistoryButton  Window › Layout: Clear history, beside Keep history for
---                                      (pairWith; feedback-15 spec §3, DW-Q3).
---   Settings.PageEditors.SituationTable  General › When to show's afterGroup: one table line per
---                                      situation (Track, Auto-open, Quality), pooled for the session;
+--   Settings.PageEditors.QualityReadout  Drops › Quality's afterGroup: the threshold in force now,
+--                                      and where a situation's own setting overrides it.
+--   Settings.PageEditors.ClearHistoryButton  Drops › Retention: Clear history, beside Keep history
+--                                      for (pairWith; feedback-15 spec §3, DW-Q3).
+--   Settings.PageEditors.ColumnsNote   Window's chrome: on the Columns tab, the table they change.
+--   Settings.PageEditors.SituationTable  Situations' afterGroup: one table line per situation
+--                                      (Track, Auto-open, Quality, Loot rule), pooled for the session;
 --                                      ParkSituationTable takes it off its placeholder before a render.
 
 local DW       = NS.addon
@@ -41,7 +43,7 @@ local function addRefresher(ctx, fn)
     ctx.refreshers[#ctx.refreshers + 1] = fn
 end
 
--- ── Feed › Quality: the threshold in force now ──────────────────────────────────────────────
+-- ── Drops › Quality: the threshold in force now ─────────────────────────────────────────────
 
 local function readoutText()
     local _, _, label = NS.WindowFilterBar.QualityReadout()
@@ -51,15 +53,32 @@ local function readoutText()
     return E.ReadoutText(label, own)
 end
 
---- The Quality tab's closing line: what the feed applies where you stand, repainted with every
---- write (the mode, the fixed minimum, the floor, or a situation's own setting).
+--- The Quality tab's closing lines: what the feed applies where you stand, repainted with every
+--- write (the mode, the fixed minimum, the floor, or a situation's own setting), then where a
+--- situation overrides it (feedback-24).
 --- @param ctx table
 function P.QualityReadout(ctx)
-    local w = H().TextRow(ctx, readoutText(), { fontObject = "GameFontHighlight" })
+    local h = H()
+    local w = h.TextRow(ctx, readoutText(), { fontObject = "GameFontHighlight" })
     if w then addRefresher(ctx, function() w:SetText(readoutText()) end) end
+    h.TextRow(ctx, L["A situation can set a quality of its own: the Quality column on the Situations page."],
+        { fontObject = "GameFontHighlightSmall" })
 end
 
--- ── Window › Layout: Clear history (feedback-15 spec §3, DW-Q3) ─────────────────────────────
+-- ── Window › Columns: which table they apply to (feedback-24) ───────────────────────────────
+
+--- The Window page's chrome (drawn under the strip, before the tab's rows): on the Columns tab
+--- only, the one line that says which table the column checkboxes change.
+--- @param ctx table
+function P.ColumnsNote(ctx)
+    if ctx.activeTab ~= L["Columns"] then return end
+    local h = H()
+    h.TextRow(ctx, L["The full layout's Drops table. History shows every column; the compact cards show every fact."],
+        { fontObject = "GameFontHighlightSmall" })
+    h.AddSpacer(h.EnsureScroll(ctx), 6)
+end
+
+-- ── Drops › Retention: Clear history (feedback-15 spec §3, DW-Q3) ───────────────────────────
 
 --- Keep history for's right half (the flow engine's pairWith seam, options-ui-§6): Clear history,
 --- an action rather than a setting, so no schema row. A cell-filling button takes the library's
@@ -77,15 +96,16 @@ function P.ClearHistoryButton(_, line)
     return b
 end
 
--- ── General › When to show: the situations table ────────────────────────────────────────────
+-- ── Situations: the situations table ────────────────────────────────────────────────────────
 --
 -- Ka0s Loot History's Price sources table (its settings/Panel.lua buildAuctionTable), without the
 -- drag handle, the reorder list and the status column: gold column headers in a band above fixed-
 -- height rows, every second row striped as the window's tables are, the cells' text in
 -- GameFontHighlightSmall, the panel's own CheckBox and Dropdown widgets. No hover highlight, as there.
+-- Five columns since feedback-24 added the loot rule, so the cells sit closer than the four did.
 
-local SIT_COL = { situation = 8, track = 190, autoOpen = 270, quality = 360 }
-local SIT_QUALITY_W = 200
+local SIT_COL = { situation = 8, track = 140, autoOpen = 205, quality = 285, rule = 460 }
+local SIT_QUALITY_W, SIT_RULE_W = 160, 150
 local SIT_ROW_H, SIT_HEAD_H, SIT_HEAD_Y = 28, 30, -6
 local SIT_HEAD_RGB = { 0.91, 0.77, 0.42 }   -- Loot History's header gold
 local SIT_LABEL_ON, SIT_LABEL_OFF = 0.86, 0.5   -- its label gray, live and inactive
@@ -107,6 +127,8 @@ local function paintSituations(t)
         r.autoOpen:SetDisabled(not e.autoOpen.enabled)
         r.quality:SetValue(e.quality.value)
         r.quality:SetDisabled(not e.quality.enabled)
+        r.rule:SetValue(e.rule.value)
+        r.rule:SetDisabled(not e.rule.enabled)
     end
 end
 
@@ -136,7 +158,7 @@ local function situationCheck(t, rf, x, path)
     return cb
 end
 
-local function situationQuality(t, rf, path)
+local function situationPick(t, rf, path, x, width)
     local h = H()
     local dd = h.AceGUI:Create("Dropdown")
     dd:SetLabel("")
@@ -144,10 +166,10 @@ local function situationQuality(t, rf, path)
     local items, order = {}, {}
     for i, v in ipairs(row and row.values or {}) do items[v.value], order[i] = v.text, v.value end
     dd:SetList(items, order)
-    dd:SetWidth(SIT_QUALITY_W)
+    dd:SetWidth(width)
     dd.frame:SetParent(rf)
     dd.frame:ClearAllPoints()
-    dd.frame:SetPoint("LEFT", rf, "LEFT", SIT_COL.quality, 0)
+    dd.frame:SetPoint("LEFT", rf, "LEFT", x, 0)
     dd.frame:Show()
     dd:SetCallback("OnValueChanged", function(_, _, v) writeCell(t, path, v) end)
     h.AttachTooltip(dd, tipOf(path))
@@ -184,7 +206,8 @@ local function situationSlot(t, i, key)
         frame = rf, stripe = stripe, label = situationLabel(rf, key),
         track = situationCheck(t, rf, SIT_COL.track, base .. "track"),
         autoOpen = situationCheck(t, rf, SIT_COL.autoOpen, base .. "autoOpen"),
-        quality = situationQuality(t, rf, base .. "quality"),
+        quality = situationPick(t, rf, base .. "quality", SIT_COL.quality, SIT_QUALITY_W),
+        rule = situationPick(t, rf, "trade.rules." .. key, SIT_COL.rule, SIT_RULE_W),
     }
 end
 
@@ -207,6 +230,7 @@ local function buildSituationTable(ctx)
         situationHeader(t.host, SIT_COL.track, L["Track"]),
         situationHeader(t.host, SIT_COL.autoOpen, L["Auto-open"]),
         situationHeader(t.host, SIT_COL.quality, L["Quality"]),
+        situationHeader(t.host, SIT_COL.rule, L["Loot rule"]),
     }
     for i, s in ipairs(K.SITUATIONS) do t.rows[i] = situationSlot(t, i, s.key) end
     return t
@@ -215,7 +239,7 @@ end
 --- Take the table off the placeholder it was hosted on and park it, hidden, on the panel. The
 --- placeholder's OnRelease calls it (options-ui-§19, the canonical undo): a release hands the
 --- placeholder back to AceGUI's pool, and a table left on it would ride the frame into whatever it
---- is handed out for next, on whichever tab is drawn. The General page's renderer also calls it
+--- is handed out for next, on whichever tab is drawn. The Situations page's renderer also calls it
 --- before its ClearScroll, belt-and-braces; parking twice is harmless.
 --- @param ctx table
 function P.ParkSituationTable(ctx)
@@ -226,9 +250,9 @@ function P.ParkSituationTable(ctx)
     t.host:ClearAllPoints()
 end
 
---- General › When to show's afterGroup: the per-situation rows as one table, a line per situation
---- (Situation, Track, Auto-open, Quality). Built once and re-parented to a fresh placeholder on each
---- render of the tab; repainted on each render and after every write (a toggle, the global
+--- The Situations tab's afterGroup: the per-situation rows as one table, a line per situation
+--- (Situation, Track, Auto-open, Quality, Loot rule). Built once and re-parented to a fresh
+--- placeholder on each render of the tab; repainted on each render and after every write (a toggle, the global
 --- Auto-open, Defaults, a profile switch).
 --- @param ctx table
 function P.SituationTable(ctx)
@@ -256,7 +280,7 @@ function P.SituationTable(ctx)
     addRefresher(ctx, function() paintSituations(t) end)
 end
 
--- ── the spec sub-strip (Weights and Preferences) ────────────────────────────────────────────
+-- ── the spec sub-strip (Weights and Unwanted types) ───────────────────────────────────────
 
 local function classFile()
     local _, file = NS.Compat.UnitClass("player")
@@ -351,7 +375,7 @@ function P.WeightsTab(ctx)
     h.RenderGrid(ctx, items)
 end
 
--- ── Comparison › Preferences ────────────────────────────────────────────────────────────────
+-- ── Comparison › Unwanted types ─────────────────────────────────────────────────────────────
 
 local function undesiredRow(spec, choice)
     return {
@@ -364,11 +388,11 @@ local function undesiredRow(spec, choice)
     }
 end
 
---- Comparison › Preferences: the item types each spec never wants, written whole through the seam.
+--- Comparison › Unwanted types: the item types each spec never wants, written whole through the seam.
 --- @param ctx table
 function P.PrefsTab(ctx)
     local h = H()
-    local spec = specStrip(ctx, L["Preferences"])
+    local spec = specStrip(ctx, L["Unwanted types"])
     if not spec then return end
     h.TextRow(ctx, L["Ticked types are never called an upgrade for this specialization."],
         { fontObject = "GameFontHighlightSmall" })

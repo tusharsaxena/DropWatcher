@@ -10,11 +10,12 @@ One write, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CL
 the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or the row's default
 before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
 composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
-§12.1 (`settings/SchemaRows.lua`), page by page as the tables below list them: General's When to
-show and Simulation, Feed, Comparison, Trade, Messages, Window's Columns, Layout and Toast, the
-account-wide Keep history for (`global.history.retentionDays`, feedback-2 spec §5, DW-A5; it
-replaced the group cap), then Window's Upgrade glow and Icons' Zoom; Icons' composed Border block
-(`settings/ComposedRows.lua`) is appended last.
+§12.1 (`settings/SchemaRows.lua`), page by page as the tables below list them (regrouped by
+feedback-24; no stored path moved): General's Simulator, Situations (with each situation's loot
+rule), Drops (page key `feed`: Quality, Items, and Retention with the account-wide Keep history for,
+`global.history.retentionDays`, feedback-2 spec §5, DW-A5, which replaced the group cap),
+Comparison, Messages, Window's Layout, Columns, Starting view and Icons' Zoom, then Alerts' Toast and
+Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appended last.
 
 - Each row's `group` is its tab on its page (design spec §12.2); a page draws the rows whose `page`
   is its key (`Settings.RowsForPage`). The tree is [`settings-panel.md`](settings-panel.md).
@@ -24,8 +25,9 @@ replaced the group cap), then Window's Upgrade glow and Icons' Zoom; Icons' comp
 - `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by specID
   (architecture-§5's value route: a membership change is a whole write through the seam), drawn by
   their own editors (`skipRender`); the CLI shows them as their entry count. The
-  `situations.<key>.*` rows are `skipRender` too (since DW-H0): When to show's table draws them, a
-  line per situation, and writes through the seam.
+  `situations.<key>.*` and `trade.rules.<key>` rows are `skipRender` too (since DW-H0; the loot
+  rules since feedback-24): the Situations table draws them, a line per situation, and writes
+  through the seam.
 - The reactions every surface shares are `Settings.REACTIONS` (Master controls) and the window
   repaint on the Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared
   `writeThrough`, so the host verbs still land on a load where the composers are hollow
@@ -36,9 +38,9 @@ replaced the group cap), then Window's Upgrade glow and Icons' Zoom; Icons' comp
   onChange writes the agreed window back, so an unanswered confirmation never leaves an
   unconfirmed window stored).
 - Every other setting the window and the feed read is a row: the window's layout (`window.mode`,
-  through `NS.SetWindowMode` and `NS.ToggleWindowMode`: the Window page's Layout row, the title-bar
+  through `NS.SetWindowMode` and `NS.ToggleWindowMode`: the Window page's Window layout row, the title-bar
   toggle, `/dw compact` and `/dw full`) and the filter bar's Quality control (`NS.SetQualityMode`,
-  the Feed page's row) both write through the seam.
+  the Drops page's row) both write through the seam.
 
 ## SavedVariables
 
@@ -62,21 +64,29 @@ Every module reads a setting through `NS.Setting(path)`.
 | `visibility` | `"always"` | Master controls | `always`, `inCombat`, `outOfCombat` or `never` |
 | `scale`, `alpha` | `1.0`, `1.0` | Master controls | the window's scale and alpha |
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
-| `autoOpen` | `true` | When to show | master auto-open: `false` keeps every situation from opening the window |
-| `situations.<key>.track` | per design spec §6.1 | When to show | loot is watched in that situation |
-| `situations.<key>.autoOpen` | per design spec §6.1 | When to show | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
-| `situations.<key>.quality` | `"global"` | When to show | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
-| `sim.stepDelay` | `2` | Simulation | the seconds the simulator's automatic run (`/dw sim run`, the panel's Run all) waits between steps, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7); read as each next step is set, so a change takes effect from the next step |
+| `sim.stepDelay` | `2` | Simulator | the seconds the simulator's automatic run (`/dw sim run`, the panel's Run all) waits between steps, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7); read as each next step is set, so a change takes effect from the next step |
+
+### Situations
+
+General › When to show and Trade › Rules until feedback-24.
+
+| Key | Default | Column | What it is |
+|---|---|---|---|
+| `autoOpen` | `true` | (the row above the table) | master auto-open: `false` keeps every situation from opening the window |
+| `situations.<key>.track` | per design spec §6.1 | Track | loot is watched in that situation |
+| `situations.<key>.autoOpen` | per design spec §6.1 | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
+| `situations.<key>.quality` | `"global"` | Quality | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
+| `trade.rules.<key>` | per design spec §7.2 (`personal`; `legacy` for follower dungeons and PvP) | Loot rule | the rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded; dimmed while the situation is untracked |
 
 `<key>` is each of `mythicPlus`, `dungeon`, `followerDungeon`, `raidLFR`, `raid`, `delve`,
 `scenario`, `pvp`, `openWorldGroup` and `solo`; `track` and `autoOpen` default on for Mythic+,
-dungeons and raids, `track` alone for Raid Finder, and off elsewhere. The three
-`situations.<key>.*` rows are `skipRender` with no subsection (since DW-H0, feedback-8 spec §0):
-When to show's table draws them, one line per situation (`settings/PageEditors.lua`
+dungeons and raids, `track` alone for Raid Finder, and off elsewhere. The four per-situation rows
+are `skipRender` with no subsection (since DW-H0, feedback-8 spec §0; the loot rule since
+feedback-24): the Situations table draws them, one line per situation (`settings/PageEditors.lua`
 `SituationTable`, docs/settings-panel.md), and writes through the seam, so the CLI, the Defaults
 button and profiles reach them as any row.
 
-### Feed
+### Drops (page key `feed`)
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
@@ -84,11 +94,9 @@ button and profiles reach them as any row.
 | `feed.quality.fixed` | `3` (Rare) | Quality | the fixed mode's threshold, Uncommon to Legendary |
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
 | `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you shows below the threshold |
-| `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade` | `false` each | Filters | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me), the values combine as AND; a Can't use whose off-spec is an upgrade counts for Interesting and Upgrade for me, and one whose off-spec is an upgrade or a sidegrade for Usable by me (feedback-19 spec §1), and all off is All, the default |
-| `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Filters | the Drops tab's Content when it opens (`instance` or `session`; `all` is History's alone since DW-Q1, feedback-15 spec §1, and step 8 turns a stored one into `session`), and a fresh tab's Sort (History always opens on Content: All) |
-| `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Filters | armor, weapons, jewelry and trinkets only; tier tokens too |
-| `feed.minIlvlMode` | `"off"` | Filters | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
-| `feed.clearOnBossKill` | `false` | Filters | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
+| `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Items | armor, weapons, jewelry and trinkets only; tier tokens too |
+| `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
+| `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 
 ### Comparison
 
@@ -99,18 +107,11 @@ button and profiles reach them as any row.
 | `comparison.compareOwned` | `false` | Scoring | judge against the best of worn and carried |
 | `comparison.heirloomProtect` | `true` | Scoring | a slot holding an heirloom is not called an upgrade for you (LootFeed → Evaluate's `heirloomProtect`) |
 | `comparison.weights` | `{}` | Weights (`map`) | `{ [specID] = { STAT_KEY = weight } }`, the Weights adapter's scores; the Pawn scale import writes one spec's |
-| `comparison.undesired` | `{}` | Preferences (`map`) | `{ [specID] = { ["<classID>:<subClassID>"] = true } }`, the item types a spec never wants |
+| `comparison.undesired` | `{}` | Unwanted types (`map`) | `{ [specID] = { ["<classID>:<subClassID>"] = true } }`, the item types a spec never wants |
 
 The two `map` rows are whole values: a write replaces the whole table through the seam, and the
 row refuses a key that is not a specID, a weight that is not a number, or a type key not shaped
 `<classID>:<subClassID>`. The CLI lists them as their entry count and does not set them.
-
-### Trade
-
-| Key | Default | Tab | What it is |
-|---|---|---|---|
-| `trade.rules.<situation>` | per design spec §7.2 (`personal`; `legacy` for follower dungeons and PvP) | Rules | the rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded |
-| `trade.warnAt` | `600` | Timers | seconds left when your own item's trade timer warns, 0 to 1800; 0 is off |
 
 ### Messages
 
@@ -125,7 +126,10 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `messages.autoAsk.delay` | `10` | Auto-ask | seconds after the boss kill or the drop, 3 to 30 |
 | `messages.autoAsk.minGain` | `5` | Auto-ask | the least item-level gain for you, 1 to 50 |
 
-### Window and toast
+### Window, and Alerts › Toast
+
+Window's Starting view was Feed › Filters, its Columns' Trade window mark Trade › Timers, and the
+toast Window › Toast until feedback-24.
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
@@ -133,11 +137,14 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 | `window.mode` | `"full"` | Layout; `NS.SetWindowMode`, the title-bar toggle, `/dw compact`, `/dw full` (DW-C0) | the window's layout, `full` or `compact` (compact spec §1, `modules/WindowCompact.lua`); its reaction lets a run override go and lays the window out. Replaced the compact preset `window.compact` (DW-42), which step 5 maps here |
 | `window.compactInRuns` | `true` | Layout (DW-C0) | Open in compact view during a run: an auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever `window.mode`, until the situation leaves that run (the override itself is session-only, `NS.State.compactRun`) |
 | `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on both tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a Drops row is taller by its countdown bar's room while the Trade window column shows (feedback-5 spec §1). Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
-| `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |
-| `toast.minGain`, `toast.duration` | `10`, `8` | Toast | its least gain for you and its seconds on screen |
-| `toast.scale` | `1` | Toast (feedback-21 G10) | the toast frame's scale, 0.5 to 2 by 0.05, drawn as a percentage (`isPercent`, 50 % to 200 %; the CLI shows the stored number), dimmed while `toast.enabled` is off; its reaction `NS.Toast.ApplyScale()` scales a built toast live, on screen or not, about its saved anchor (`toast.point` is unchanged), and a profile reload re-applies it; before the first toast the build applies it |
+| `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade` | `false` each | Starting view | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me), the values combine as AND; a Can't use whose off-spec is an upgrade counts for Interesting and Upgrade for me, and one whose off-spec is an upgrade or a sidegrade for Usable by me (feedback-19 spec §1), and all off is All, the default |
+| `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Starting view | the Drops tab's Content when it opens (`instance` or `session`; `all` is History's alone since DW-Q1, feedback-15 spec §1, and step 8 turns a stored one into `session`), and a fresh tab's Sort (History always opens on Content: All) |
+| `trade.warnAt` | `600` | Columns (Trade window) | Mark a trade window ending within: seconds left when your own drop's Trade window countdown takes its warning color (`modules/MineCells.lua`, `modules/TradeTimer.lua`), 0 to 1800; 0 is off |
+| `toast.enabled`, `toast.inCombat`, `toast.sound` | `false` | Alerts › Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction) |
+| `toast.minGain`, `toast.duration` | `10`, `8` | Alerts › Toast | its least gain for you and its seconds on screen |
+| `toast.scale` | `1` | Alerts › Toast (feedback-21 G10) | the toast frame's scale, 0.5 to 2 by 0.05, drawn as a percentage (`isPercent`, 50 % to 200 %; the CLI shows the stored number), dimmed while `toast.enabled` is off; its reaction `NS.Toast.ApplyScale()` scales a built toast live, on screen or not, about its saved anchor (`toast.point` is unchanged), and a profile reload re-applies it; before the first toast the build applies it |
 
-### Window › Upgrade glow (feedback-21)
+### Alerts › Upgrade glow (feedback-21)
 
 Two glows on a drop's icon (`modules/Glow.lua`, LibCustomGlow-1.0): `glow.main` for an upgrade for
 your current spec, `glow.offSpec` for a drop your spec can't use whose off-spec part is an upgrade;
@@ -222,7 +229,7 @@ Each one's owner and every writer are named under
 | `schemaVersion` | `0` | the migration stamp; the runner owns it |
 | `minimap.hide` | `false` | LibDBIcon's own key; the Minimap button row inverts onto it, and no `shown` twin exists (launcher-§3) |
 | `minimap.minimapPos` | absent | LibDBIcon's own write |
-| `history.retentionDays` | `30` | Keep history for (feedback-2 spec §5): 7, 14, 30, 60, 90 or 180 days, or `0`, Never delete; the `global.history.retentionDays` row (Window › Layout) stores here through its own closures. A change to a window that would delete anything asks first (`NS.HistoryRetention.OnChanged`); the groups older than it go once per session, five seconds after the first `PLAYER_ENTERING_WORLD`. Account-wide: a profile switch, copy or reset never changes it. It replaced `history.maxGroups` (the 20-group cap), which step 4 removes |
+| `history.retentionDays` | `30` | Keep history for (feedback-2 spec §5): 7, 14, 30, 60, 90 or 180 days, or `0`, Never delete; the `global.history.retentionDays` row (Drops › Retention; Window › Layout until feedback-24) stores here through its own closures. A change to a window that would delete anything asks first (`NS.HistoryRetention.OnChanged`); the groups older than it go once per session, five seconds after the first `PLAYER_ENTERING_WORLD`. Account-wide: a profile switch, copy or reset never changes it. It replaced `history.maxGroups` (the 20-group cap), which step 4 removes |
 | `history.v` | absent until the first drop is recorded | the history's own shape stamp, `1` (`NS.History.VERSION`); `NS.History.Normalize` sets it and makes `groups` a list, in place |
 | `history.groups` | absent until the first drop is recorded | the kept drops, below; written by `modules/History.lua` alone, never through the seam |
 | `notices.autoAsk` | absent until auto-ask is first turned on | `true` once auto-ask's one-time chat notice was said (design spec §9.4); written by `modules/AutoAsk.lua` alone, never through the seam |
@@ -320,7 +327,7 @@ it is named.
   per account.
 - `global.history.v` and `global.history.groups` are the history's own record. Owner
   `modules/History.lua`, which writes them on a recorded drop, an outcome, a completed trade, the
-  safety ceiling and Clear history (Settings › Window › Layout); `modules/HistoryRetention.lua` deletes the groups older than
+  safety ceiling and Clear history (Settings › Drops › Retention); `modules/HistoryRetention.lua` deletes the groups older than
   Keep history for (once per session, five seconds after the first `PLAYER_ENTERING_WORLD`, or
   after the stand-up when the addon started disabled, and on a confirmed shorter window). Neither
   replaces `global.history` whole, since the retention row's value lives in it.

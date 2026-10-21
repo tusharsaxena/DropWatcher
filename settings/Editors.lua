@@ -3,9 +3,9 @@ local _, NS = ...
 --
 -- Every page draws its rows through the library's flow engine. Five things on them are not its to
 -- draw: the Comparison page's per-spec weights and unwanted item types (two whole-value `map` rows,
--- `skipRender`), General › When to show's table (the per-situation rows, `skipRender`, one table
--- row per situation), the Messages page's template editors (their live counters, the token chips
--- and the preview) and the Feed page's "in force now" readout. Their widgets are
+-- `skipRender`), the Situations page's table (the per-situation rows, `skipRender`, one table row
+-- per situation), the Messages page's template editors (their live counters, the token chips and
+-- the preview) and the Drops page's "in force now" readout. Their widgets are
 -- settings/PageEditors.lua's; what they show and what they write is decided here, with no widget
 -- and no client call, so the suites can pin it. A map write is always a fresh table: the seam
 -- stores what it is handed, and an edit made in place on the stored table would skip the seam's
@@ -147,7 +147,7 @@ function E.ImportText(result, specLabel)
     return text
 end
 
--- ── Comparison › Preferences ────────────────────────────────────────────────────────────────
+-- ── Comparison › Unwanted types ─────────────────────────────────────────────────────────────
 
 -- The weapon types in the order a player reads them, with their English names. Ids from
 -- NS.Constants (anti-pattern #37: never a localized type name).
@@ -356,10 +356,12 @@ function E.PreviewLines(kind, template, ctx, to)
     }
 end
 
--- ── General › When to show ──────────────────────────────────────────────────────────────────
+-- ── Situations ──────────────────────────────────────────────────────────────────────────────
 
---- The table's three setting columns, in order: each one a field of `situations.<key>`.
-E.SITUATION_FIELDS = { "track", "autoOpen", "quality" }
+--- The table's four setting columns, in order: three fields of `situations.<key>`, then the
+--- situation's loot rule, `trade.rules.<key>` (Trade › Rules until feedback-24).
+E.SITUATION_FIELDS = { "track", "autoOpen", "quality", "rule" }
+local SITUATION_PATH = { rule = "trade.rules.%s" }
 
 -- One cell: its schema row, the value stored at its path, and whether it is live. Live unless the
 -- row's own `disabledIf` says otherwise (settings/SchemaRows.lua), so the table dims exactly what
@@ -370,7 +372,7 @@ local function situationCell(findRow, read, path)
     return { path = path, row = row, value = read(path), enabled = not off }
 end
 
---- General › When to show's table: one entry per situation, in K.SITUATIONS order, carrying its
+--- The Situations table: one entry per situation, in K.SITUATIONS order, carrying its
 --- key, its label, whether it is tracked (`active`: an untracked row's label dims) and a cell per
 --- E.SITUATION_FIELDS field.
 --- @param findRow function path -> schema row (NS.SchemaRuntime.FindRow)
@@ -382,7 +384,9 @@ function E.SituationRows(findRow, read, labelOf)
     for _, s in ipairs(K.SITUATIONS) do
         local entry = { key = s.key, label = labelOf(s.key) }
         for _, field in ipairs(E.SITUATION_FIELDS) do
-            entry[field] = situationCell(findRow, read, ("situations.%s.%s"):format(s.key, field))
+            local path = SITUATION_PATH[field] and SITUATION_PATH[field]:format(s.key)
+                or ("situations.%s.%s"):format(s.key, field)
+            entry[field] = situationCell(findRow, read, path)
         end
         entry.active = entry.track.value == true
         out[#out + 1] = entry
@@ -390,7 +394,7 @@ function E.SituationRows(findRow, read, labelOf)
     return out
 end
 
--- ── Feed › Quality ──────────────────────────────────────────────────────────────────────────
+-- ── Drops › Quality ─────────────────────────────────────────────────────────────────────────
 
 --- The "in force now" line under the Quality tab: the threshold the feed applies where you are,
 --- naming the situation when its own setting overrides the feed's mode.

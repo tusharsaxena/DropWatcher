@@ -45,7 +45,7 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   is Yes or Likely (feedback-22), glows on its icon in the Drops table, the compact card and the
   detail card (never the toast): one glow for your current spec, one
   for an off-spec, each with its own switch, LibCustomGlow style, color and that style's knobs
-  (Window › Upgrade glow). Every tooltip is bulleted rows, one fact per row.
+  (Alerts › Upgrade glow). Every tooltip is bulleted rows, one fact per row.
 - **Item icon style** (feedback-21 G11). Every item icon the addon draws takes one look from
   Window › Icons: a zoom that crops its edges, and the standard border block (style, thickness,
   color and Use class color) with Color by item quality. The defaults (feedback-21 H6) trim the icon's
@@ -58,8 +58,8 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   own size and place, and an auto-open inside a run opens it compact until the run ends (on by
   default).
 - **Opt-in extras.** The upgrade toast (with its own scale) and auto-ask, both off by default.
-- **The standard surfaces.** The settings pages (General, Feed, Comparison, Trade, Messages, Window
-  and Profiles), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
+- **The standard surfaces.** The settings pages (General, Situations, Drops, Comparison, Messages,
+  Window, Alerts and Profiles; feedback-24), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
   debug console and the diagnostics report, the performance harness and the stand-down latch.
 
 ## What it deliberately does not do (v1)

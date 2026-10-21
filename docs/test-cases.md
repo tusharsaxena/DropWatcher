@@ -100,7 +100,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (21)
+### test_schema_rows.lua (22)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -114,47 +114,53 @@ Total.
 - rows: Keep history for is account-wide, and a profile reset leaves it
 - rows: `/dw set` reaches a hand-written row
 - rows: degraded, the hand-written rows still read, write and refuse
-- glow: both glows have every knob's row on Window › Upgrade glow, with the plan's defaults
+- glow: both glows have every knob's row on Alerts › Upgrade glow, with the plan's defaults
 - glow: the main and off-spec rows alternate, so each line reads main left, off-spec right
+- glow: the style subsections read in the Style dropdown's order, Offset first
 - glow: an out-of-range knob, an unknown style and a malformed color are refused
 - glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never
 - glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
-- toast scale: a 50-200 % slider by 5 on Window › Toast, after Play a sound, live only with the toast on
+- toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a sound, live only with the toast on
 - icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults
 - icons: the border rows refuse what they cannot draw, and dim with Show border off
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 
-### test_settings_pages.lua (39)
+### test_settings_pages.lua (44)
 
-- pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order
+- pages: General, Situations, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
 - pages: a page's rows are the rows whose page is its key
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
-- when to show: the global Auto-open row, then one table line per situation and no per-situation rows
-- when to show: four gold, left-aligned column headers, and a stripe on every second line
-- when to show: each cell paints its stored value, and a toggle writes its path
-- when to show: an untracked situation's Auto-open and Quality are dimmed, and so is every Auto-open with the master off
-- when to show: Defaults repaints the table
-- when to show: a profile switch repaints the table and re-hosts it
-- when to show: the table is built once, parked when the tab goes, and re-hosted when it comes back
-- when to show: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)
-- when to show: the per-situation rows are still schema rows, skipRender, with no subsection
-- when to show: the pure rows carry each situation's label, values and live cells
+- situations: the global Auto-open row, then one table line per situation and no per-situation rows
+- situations: five gold, left-aligned column headers, and a stripe on every second line
+- situations: each cell paints its stored value, and a toggle writes its path
+- situations: an untracked situation's Auto-open, Quality and Loot rule are dimmed, and so is every Auto-open with the master off
+- situations: Defaults repaints the table
+- situations: a profile switch repaints the table and re-hosts it
+- situations: the table is built once, parked before each render, and re-hosted on the new placeholder
+- situations: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)
+- situations: the per-situation rows are still schema rows, skipRender, with no subsection
+- situations: the pure rows carry each situation's label, values and live cells
 - feed: the Quality tab closes with the threshold in force now, repainted on a write
+- feed: the Quality tab pairs the mode with Always show upgrades, then Fixed minimum with Quality floor
+- feed: Items draws Minimum item level alone, then Absolute minimum beside Levels under my average
 - feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only
 - feed: the readout names the situation whose own quality setting is in force
 - comparison: Weights draws your class's specs as a sub-strip and one slider per stat
 - comparison: a weight slider writes the whole map through the seam, for the spec on screen
 - comparison: the Pawn import box replaces the spec on screen's weights and says what came in
-- comparison: Preferences lists the class's weapon types and marks one unwanted per spec
+- comparison: Unwanted types lists the class's weapon types and marks one unwanted per spec
 - messages: three editors whose labels count the template's bytes against 255
 - messages: typing repaints the counter and the preview live, and stores nothing until Enter
 - messages: the preview flags an unknown token and a text past the chat limit
 - messages: an empty template is refused by the seam and the box shows the stored one again
 - messages: a token chip goes into the template last edited and is stored at once
 - messages: Reset templates puts the three back and repaints the boxes
-- window: Layout draws Clear history beside Keep history for; it asks first and clears only on Yes
-- window: with test mode on, Clear history clears the samples and leaves the account's log
+- feed: Retention draws Clear history beside Keep history for; it asks first and clears only on Yes
+- feed: with test mode on, Clear history clears the samples and leaves the account's log
+- pages: a switch is alone on its line and its knobs pair under it (Toast, Auto-ask)
+- pages: Messages opens on Sending, which asks before it sends, the transmog switch named apart from its template
+- pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in
 - pages: a page's Defaults resets that page's rows and no other page's
 - editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
 - editors: a spec's stats are its primary stat, Stamina and the four secondaries
@@ -1493,7 +1499,7 @@ Total.
 - retention: the labels, the choices and the footer
 - retention: a group's age is its newest entry's, else its own
 - retention: Count says what a window deletes, and deletes nothing; Prune deletes it
-- retention row: account-wide, on the Window page, the listed windows only
+- retention row: account-wide, on Drops › Retention, the listed windows only
 - retention: a longer window, or one that deletes nothing, is taken at once
 - retention: a shorter window that deletes asks first; Yes prunes
 - retention: No writes the last agreed window back and deletes nothing
@@ -1924,8 +1930,8 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 21 |
-| test_settings_pages.lua | 39 |
+| test_schema_rows.lua | 22 |
+| test_settings_pages.lua | 44 |
 | test_slash.lua | 26 |
 | test_window.lua | 15 |
 | test_window_shell.lua | 59 |
@@ -2004,4 +2010,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1654** |
+| **Total** | **1660** |

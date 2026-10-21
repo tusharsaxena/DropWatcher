@@ -107,7 +107,7 @@ function SITUATION.tip(i)
     end
     if i.tracking == false then
         return { L["Situation"], row(L["Situation"], name), row(L["Loot tracked"], L["no"]),
-            row(L["Turned on in"], L["Settings > General > When to show"]) }
+            row(L["Turned on in"], L["Settings > Situations"]) }
     end
     return { L["Situation"], row(L["Where you are"], name), row(L["Its own"], L["tracking and auto-open settings"]) }
 end
