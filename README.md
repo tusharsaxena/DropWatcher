@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1654%2F1654_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1660%2F1660_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -54,7 +54,7 @@ Your own drops show who in the group would gain from them. **Offer** opens a pan
 
 **History** remembers what the feed showed for 30 days, across logouts and alts, and what became of each drop: asked, offered, expired, received, traded away or declined. Click a row for its detail card, or right-click it to mark it declined. How long it keeps things, and the button that clears it, are under Settings › Window › Layout. A `/reload` loses nothing: this session's drops come back on the Drops tab.
 
-Two extras are off until you turn them on: the **toast**, a popup when someone loots a big upgrade you could ask for (Settings › Window › Toast sets its size, 50 to 200 %, and it grows or shrinks where you put it), and **auto-ask**, which sends the whisper for you after the boss dies. Both handle off-spec upgrades with their own wording, and your main spec still comes first: auto-ask holds an off-spec whisper until any main-spec one has gone out. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Settings › Window › Icons gives every item icon the same look: by default the art is zoomed in a little inside a thin black border, and you can change the zoom and the border's texture, thickness and color, or use your class color or each item's quality color. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
+Two extras are off until you turn them on: the **toast**, a popup when someone loots a big upgrade you could ask for (Settings › Alerts › Toast sets its size, 50 to 200 %, and it grows or shrinks where you put it), and **auto-ask**, which sends the whisper for you after the boss dies. Both handle off-spec upgrades with their own wording, and your main spec still comes first: auto-ask holds an off-spec whisper until any main-spec one has gone out. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Settings › Window › Icons gives every item icon the same look: by default the art is zoomed in a little inside a thin black border, and you can change the zoom and the border's texture, thickness and color, or use your class color or each item's quality color. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
 
 ## How the loot watching works
 
@@ -72,8 +72,8 @@ Two extras are off until you turn them on: the **toast**, a popup when someone l
 | Does it whisper people on its own? | Only if you turn on auto-ask (Settings › Messages › Auto-ask). Otherwise every whisper is a click. |
 | Does it look at my other specs? | Yes, when your current spec can't use a drop. It compares the drop with the best item you own for each of your other specs, worn or in your bags, by item level only. For other players it can only see what they have on. |
 | Does it need Pawn? | No. With Pawn installed, its scale scores each drop next to the item level, with Pawn's own default settings and no setup. Without it you can enter your own stat weights, paste a Pawn scale string in Settings › Comparison, or go by item level alone. |
-| Does it work in raids? | Yes. Dungeons, keys and raids are watched out of the box. Delves, scenarios and the open world are off until you turn them on under General › When to show. |
-| Can I change or turn off the glow on upgrades? | Yes, under Settings › Window › Upgrade glow. The main-spec and off-spec glows each have their own switch, style (rotating rays, a proc flash, a pixel border or sparkles), color (or your class color) and animation settings. |
+| Does it work in raids? | Yes. Dungeons, keys and raids are watched out of the box. Delves, scenarios and the open world are off until you turn them on under Settings › Situations. |
+| Can I change or turn off the glow on upgrades? | Yes, under Settings › Alerts › Upgrade glow. The main-spec and off-spec glows each have their own switch, style (rotating rays, a proc flash, a pixel border or sparkles), color (or your class color) and animation settings. |
 | Can the item icons have a border? | Yes, they have a thin black one by default. Under Settings › Window › Icons you can turn Show border off, or pick its texture, thickness and color (or your class color), or tick Color by item quality to draw each border in its item's quality color. Icon zoom on the same tab crops the dark edge most item icons have. Both apply to every item icon, from the table to the toast. |
 | Can it tell me whether I have the look? | Yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. |
 

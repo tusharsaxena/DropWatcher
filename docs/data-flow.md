@@ -825,7 +825,7 @@ row (or compact card) click ─> WindowHistory.ToggleExpand(entry) ─> State.wi
 card Mark declined / Clear declined ─> History.SetEntryDeclined
 card Show in Drops (History.DropOf(entry) finds it live) ─> WindowGroup.Reveal(id): its header
                  opened, its card expanded ─> Window.SelectTab("group")
-Settings › Window › Layout › Clear history (beside Keep history for, pairWith; feedback-15 §3)
+Settings › Drops › Retention › Clear history (beside Keep history for, pairWith; feedback-15 §3)
                  ─> History.AskClear ─> StaticPopup ─> Yes: History.Clear (Log(): the account's,
                                                    or test mode's / the simulation's session log)
 Expand all / Collapse all ─> WindowHistory.FoldAll(pane.entries, collapse) ─> FooterRow.FoldAll

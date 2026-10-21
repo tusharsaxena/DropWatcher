@@ -1,8 +1,9 @@
--- tests/test_settings_pages.lua — the settings pages of design spec §12.2: the page list and each
--- page's strip, the rows each page draws, the dimmed rows, General › When to show's table, the Feed
--- page's "in force now" readout, the Comparison page's per-spec editors, the Messages page's
--- template editors (live counters, token chips, preview, Reset templates), Window › Layout's
--- Clear history beside Keep history for (feedback-15 spec §3), each page's Defaults button, and
+-- tests/test_settings_pages.lua — the settings pages of design spec §12.2 (regrouped by
+-- feedback-24): the page list and each page's strip, the rows each page draws, the dimmed rows, the
+-- Situations page's table, the Drops page's "in force now" readout, the Comparison page's per-spec
+-- editors, the Messages page's template editors (live counters, token chips, preview, Reset
+-- templates), Drops › Retention's Clear history beside Keep history for (feedback-15 spec §3), the
+-- Window › Columns note, each page's Defaults button, and
 -- the pure halves of the editors (settings/Editors.lua). Built headless under the kit's AceGUI
 -- recorder: a page's body is drawn on its first OnShow, and a tab is reached by clicking the
 -- strip's button.
@@ -13,12 +14,13 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 -- The pages after the landing page, and each page's strip, in order. Stated here rather than read
 -- from the rows, so a tab that moves is a named failure.
 local PAGES = {
-    { key = "general",    title = "General",    strip = { "Master controls", "When to show", "Simulation" } },
-    { key = "feed",       title = "Feed",       strip = { "Quality", "Filters" } },
-    { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Preferences" } },
-    { key = "trade",      title = "Trade",      strip = { "Rules", "Timers" } },
-    { key = "messages",   title = "Messages",   strip = { "Templates", "Sending", "Auto-ask" } },
-    { key = "window",     title = "Window",     strip = { "Columns", "Layout", "Toast", "Upgrade glow", "Icons" } },
+    { key = "general",    title = "General",    strip = { "Master controls", "Simulator" } },
+    { key = "situations", title = "Situations", strip = { "Situations" } },
+    { key = "feed",       title = "Drops",      strip = { "Quality", "Items", "Retention" } },
+    { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Unwanted types" } },
+    { key = "messages",   title = "Messages",   strip = { "Sending", "Auto-ask", "Templates" } },
+    { key = "window",     title = "Window",     strip = { "Layout", "Columns", "Starting view", "Icons" } },
+    { key = "alerts",     title = "Alerts",     strip = { "Toast", "Upgrade glow" } },
 }
 
 local function gui(m) return m.__libs["AceGUI-3.0"] end
@@ -77,9 +79,18 @@ local function stripOf(ctx)
     return out
 end
 
+-- The flow line holding a widget, among the widgets a render drew.
+local function lineOf(list, w)
+    for _, g in ipairs(list) do
+        for _, c in ipairs(g.children or {}) do
+            if c == w then return g end
+        end
+    end
+end
+
 -- ── the pages and their strips ──────────────────────────────────────────────────────────────
 
-test("pages: General, Feed, Comparison, Trade, Messages and Window are built, in that order", function()
+test("pages: General, Situations, Drops, Comparison, Messages, Window and Alerts are built, in that order", function()
     local NS = T.enableAddon()
     local built = {}
     for _, p in ipairs(NS.addon.Settings.Helpers.__pages()) do
@@ -118,19 +129,26 @@ test("pages: every schema row with a page but the Profiles page's is drawn by on
     end
 end)
 
--- ── General › When to show ──────────────────────────────────────────────────────────────────
+-- ── Situations (General › When to show and Trade › Rules until feedback-24) ─────────────────
 
--- The When to show tab drawn with its table's frames recorded: a panel marked as the window's tree
+-- The Situations page drawn with its table's frames recorded: a panel marked as the window's tree
 -- has its children decorated by the mock (tests/wow_mock.lua), so the table's text and stripes
--- can be read back. Answers the ctx, the tab's widgets and the table.
+-- can be read back. The page's one tab is its first render, so the mark goes on before the show.
+-- Answers the ctx, the tab's widgets and the table.
 local function whenToShow(NS, m)
-    local ctx = open(NS, m, "general")
-    ctx.panel.__dwTree = true
-    local drawn = tab(m, ctx, "When to show")
+    NS.addon.Settings.Helpers.__panelFor("situations").panel.__dwTree = true
+    local ctx, drawn = open(NS, m, "situations")
     return ctx, drawn, ctx.dwSituations
 end
 
-test("when to show: the global Auto-open row, then one table line per situation and no per-situation rows", function()
+-- The page rendered again, as a profile switch or a sub-strip click does; answers what it drew.
+local function rerender(NS, m, ctx)
+    local before = #gui(m).__created
+    NS.addon.Settings.Helpers.RefreshPanel(ctx, true)
+    return created(m, before)
+end
+
+test("situations: the global Auto-open row, then one table line per situation and no per-situation rows", function()
     local NS, _, m = T.enableAddon()
     local _, drawn, t = whenToShow(NS, m)
     assertTrue(find(drawn, "CheckBox", "Auto-open the window") ~= nil, "the master auto-open first")
@@ -138,6 +156,7 @@ test("when to show: the global Auto-open row, then one table line per situation 
         -- red under: the rows still drawn by the flow engine, a heading and three widgets apiece
         assertFalse(w.type == "Heading", "no per-situation heading: " .. tostring(w.labelText or w.text))
         assertFalse(w.labelText == "Track" or w.labelText == "Quality", "no per-situation row")
+        assertFalse(w.labelText == "Mythic+", "no loot rule row of its own")
     end
     assertTrue(t ~= nil, "the table is drawn")
     local S = NS.Constants.SITUATIONS
@@ -147,7 +166,7 @@ test("when to show: the global Auto-open row, then one table line per situation 
     end
 end)
 
-test("when to show: four gold, left-aligned column headers, and a stripe on every second line", function()
+test("situations: five gold, left-aligned column headers, and a stripe on every second line", function()
     local NS, _, m = T.enableAddon()
     local _, _, t = whenToShow(NS, m)
     local names = {}
@@ -157,14 +176,14 @@ test("when to show: four gold, left-aligned column headers, and a stripe on ever
         local r, g, b = fs:GetTextColor()
         assertTrue(r > 0.8 and g > 0.7 and b < 0.5, "gold")
     end
-    assertEqual(table.concat(names, "|"), "Situation|Track|Auto-open|Quality")
+    assertEqual(table.concat(names, "|"), "Situation|Track|Auto-open|Quality|Loot rule")
     for i, r in ipairs(t.rows) do
         assertEqual(r.stripe:IsShown() == true, i % 2 == 0, "stripe on line " .. i)
         assertEqual(r.label.__template, "GameFontHighlightSmall")
     end
 end)
 
-test("when to show: each cell paints its stored value, and a toggle writes its path", function()
+test("situations: each cell paints its stored value, and a toggle writes its path", function()
     local NS, _, m = T.enableAddon()
     local _, _, t = whenToShow(NS, m)
     local delve = t.rows[6]   -- K.SITUATIONS order: delve is sixth, untracked by default
@@ -178,11 +197,15 @@ test("when to show: each cell paints its stored value, and a toggle writes its p
     assertEqual(NS.addon.db.profile.situations.mythicPlus.quality, "dynamicSlot")
     t.rows[1].autoOpen:__fire("OnValueChanged", false)
     assertEqual(NS.addon.db.profile.situations.mythicPlus.autoOpen, false)
+    assertEqual(t.rows[1].rule.value, "personal", "the loot rule (feedback-24)")
+    assertEqual(t.rows[1].rule.list.legacy, "Legacy loot", "its own value list")
+    t.rows[1].rule:__fire("OnValueChanged", "group")
+    assertEqual(NS.addon.db.profile.trade.rules.mythicPlus, "group")
     NS.SchemaRuntime.Set("situations.raid.track", false)
     assertEqual(t.rows[5].track.value, false, "a write from elsewhere repaints it")
 end)
 
-test("when to show: an untracked situation's Auto-open and Quality are dimmed, and so is every Auto-open with the master off", function()
+test("situations: an untracked situation's Auto-open, Quality and Loot rule are dimmed, and so is every Auto-open with the master off", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
     local _, _, t = whenToShow(NS, m)
@@ -192,10 +215,13 @@ test("when to show: an untracked situation's Auto-open and Quality are dimmed, a
     assertFalse(delve.track.disabled == true, "Track is always live")
     assertTrue(delve.autoOpen.disabled == true, "delve (untracked) auto-open dimmed")
     assertTrue(delve.quality.disabled == true, "and its quality")
+    assertTrue(delve.rule.disabled == true, "and its loot rule")
+    assertFalse(mp.rule.disabled == true, "a tracked one's is live")
     assertEqual(select(1, delve.label:GetTextColor()), 0.5, "its label dims")
     Set("situations.delve.track", true)
     assertFalse(delve.autoOpen.disabled == true, "tracking it lights it")
     assertFalse(delve.quality.disabled == true)
+    assertFalse(delve.rule.disabled == true)
     assertEqual(select(1, delve.label:GetTextColor()), 0.86)
     Set("autoOpen", false)
     -- red under: a disabled rule that reads the situation's track alone
@@ -203,7 +229,7 @@ test("when to show: an untracked situation's Auto-open and Quality are dimmed, a
     assertFalse(mp.quality.disabled == true, "but not its quality")
 end)
 
-test("when to show: Defaults repaints the table", function()
+test("situations: Defaults repaints the table", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
     local _, _, t = whenToShow(NS, m)
@@ -216,7 +242,7 @@ test("when to show: Defaults repaints the table", function()
     assertTrue(t.rows[6].autoOpen.disabled == true)
 end)
 
-test("when to show: a profile switch repaints the table and re-hosts it", function()
+test("situations: a profile switch repaints the table and re-hosts it", function()
     local NS, _, m = T.enableAddon()
     local ctx, _, t = whenToShow(NS, m)
     NS.SchemaRuntime.Set("situations.delve.track", true)
@@ -230,16 +256,19 @@ test("when to show: a profile switch repaints the table and re-hosts it", functi
     assertTrue(t.host:GetParent() ~= ctx.panel, "re-hosted off the park")
 end)
 
-test("when to show: the table is built once, parked when the tab goes, and re-hosted when it comes back", function()
+test("situations: the table is built once, parked before each render, and re-hosted on the new placeholder", function()
     local NS, _, m = T.enableAddon()
     local ctx, _, t = whenToShow(NS, m)
     local slot = t.rows[1]
+    local first = t.host:GetParent()
     assertTrue(t.host:IsShown() == true)
-    tab(m, ctx, "Simulation")
-    -- red under: a host left on the placeholder the tab switch handed back to AceGUI's pool
-    assertFalse(t.host:IsShown() == true, "parked off the released placeholder")
-    assertEqual(t.host:GetParent(), ctx.panel)
-    local drawn = tab(m, ctx, "When to show")
+    local parks, park = 0, NS.addon.Settings.PageEditors.ParkSituationTable
+    NS.addon.Settings.PageEditors.ParkSituationTable = function(c) parks = parks + 1; return park(c) end
+    local drawn = rerender(NS, m, ctx)
+    NS.addon.Settings.PageEditors.ParkSituationTable = park
+    -- red under: a render that does not park first, leaving the host on the released placeholder
+    assertTrue(parks >= 1, "the render parks first")
+    assertTrue(t.host:GetParent() ~= first, "off the placeholder the render handed back")
     assertTrue(ctx.dwSituations == t and t.rows[1] == slot, "the same slots")
     -- the render drew no second set of cells
     local checks = 0
@@ -250,7 +279,7 @@ test("when to show: the table is built once, parked when the tab goes, and re-ho
     assertEqual(t.rows[10].track.value, true, "repainted after the re-host")
 end)
 
-test("when to show: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)", function()
+test("situations: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)", function()
     local NS, _, m = T.enableAddon()
     local ctx, drawn, t = whenToShow(NS, m)
     local holder
@@ -259,11 +288,11 @@ test("when to show: releasing the placeholder outside the renderer parks the tab
     end
     assertTrue(holder ~= nil, "the table sits on a SimpleGroup placeholder")
     gui(m):Release(holder)
-    -- red under: an undo only the General page's renderer runs, so a release from any other path
+    -- red under: an undo only the Situations page's renderer runs, so a release from any other path
     -- leaves the table riding the pooled frame
     assertEqual(t.host:GetParent(), ctx.panel, "parked on the panel")
     assertFalse(t.host:IsShown() == true, "and hidden")
-    local again = tab(m, ctx, "When to show")
+    local again = rerender(NS, m, ctx)
     local fresh
     for _, w in ipairs(again) do
         if w.type == "SimpleGroup" and w.frame == t.host:GetParent() then fresh = w end
@@ -272,21 +301,24 @@ test("when to show: releasing the placeholder outside the renderer parks the tab
     assertTrue(t.host:IsShown() == true, "and shown")
 end)
 
-test("when to show: the per-situation rows are still schema rows, skipRender, with no subsection", function()
+test("situations: the per-situation rows are still schema rows, skipRender, with no subsection", function()
     local NS = T.enableAddon()
     for _, s in ipairs(NS.Constants.SITUATIONS) do
-        for _, f in ipairs({ "track", "autoOpen", "quality" }) do
-            local row = NS.SchemaRuntime.FindRow("situations." .. s.key .. "." .. f)
-            assertTrue(row ~= nil, s.key .. "." .. f)
-            assertTrue(row.skipRender == true, s.key .. "." .. f .. " is the table's")
+        local paths = { "trade.rules." .. s.key }
+        for _, f in ipairs({ "track", "autoOpen", "quality" }) do paths[#paths + 1] = "situations." .. s.key .. "." .. f end
+        for _, path in ipairs(paths) do
+            local row = NS.SchemaRuntime.FindRow(path)
+            assertTrue(row ~= nil, path)
+            assertTrue(row.skipRender == true, path .. " is the table's")
             assertTrue(row.subgroup == nil, "no heading of its own")
-            assertEqual(row.group, "When to show")
+            assertEqual(row.page, "situations", path)
+            assertEqual(row.group, "Situations", path)
         end
     end
     assertFalse(NS.SchemaRuntime.FindRow("autoOpen").skipRender == true, "the global row is drawn")
 end)
 
-test("when to show: the pure rows carry each situation's label, values and live cells", function()
+test("situations: the pure rows carry each situation's label, values and live cells", function()
     local NS = T.enableAddon()
     local E = NS.addon.Settings.Editors
     local Set = NS.SchemaRuntime.Set
@@ -297,7 +329,9 @@ test("when to show: the pure rows carry each situation's label, values and live 
     assertEqual(list[1].label, "Mythic+")
     assertEqual(list[1].track.path, "situations.mythicPlus.track")
     assertEqual(list[1].quality.value, "global")
-    assertTrue(list[1].active and list[1].autoOpen.enabled and list[1].quality.enabled)
+    assertEqual(list[1].rule.path, "trade.rules.mythicPlus")
+    assertEqual(list[1].rule.value, "personal")
+    assertTrue(list[1].active and list[1].autoOpen.enabled and list[1].quality.enabled and list[1].rule.enabled)
     -- track x global auto-open: Auto-open is live only with both on; Quality with the track on.
     local cases = { { true, true, true, true }, { true, false, false, true },
                     { false, true, false, false }, { false, false, false, false } }
@@ -310,10 +344,11 @@ test("when to show: the pure rows carry each situation's label, values and live 
         assertTrue(d.track.enabled, tag .. " track always live")
         assertEqual(d.autoOpen.enabled, c[3], tag .. " auto-open")
         assertEqual(d.quality.enabled, c[4], tag .. " quality")
+        assertEqual(d.rule.enabled, c[4], tag .. " loot rule")
     end
 end)
 
--- ── Feed › Quality ──────────────────────────────────────────────────────────────────────────
+-- ── Drops › Quality ─────────────────────────────────────────────────────────────────────────
 
 test("feed: the Quality tab closes with the threshold in force now, repainted on a write", function()
     local NS, _, m = T.enableAddon()
@@ -325,12 +360,37 @@ test("feed: the Quality tab closes with the threshold in force now, repainted on
     assertEqual(readout.text, "In force now: Quality: Epic+")
     NS.SchemaRuntime.Set("feed.quality.mode", "dynamicSlot")
     assertEqual(readout.text, "In force now: Quality: Match slot")
+    assertTrue(findPrefix(drawn, "Label", "A situation can set a quality of its own") ~= nil,
+        "the pointer to the Situations page's Quality column (feedback-24)")
+end)
+
+-- feedback-24: the mode and Always show upgrades share line one, the mode's two dependents (never
+-- live together) line two.
+test("feed: the Quality tab pairs the mode with Always show upgrades, then Fixed minimum with Quality floor", function()
+    local NS, _, m = T.enableAddon()
+    local _, drawn = open(NS, m, "feed")
+    local mode, always = find(drawn, "Dropdown", "Minimum quality"), find(drawn, "CheckBox", "Always show upgrades for me")
+    local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Quality floor")
+    assertTrue(lineOf(drawn, mode) ~= nil and lineOf(drawn, mode) == lineOf(drawn, always), "line one")
+    assertTrue(lineOf(drawn, fixed) ~= nil and lineOf(drawn, fixed) == lineOf(drawn, floor), "line two")
+end)
+
+-- feedback-24: Items' Minimum item level alone on its line, its two values paired under it.
+test("feed: Items draws Minimum item level alone, then Absolute minimum beside Levels under my average", function()
+    local NS, _, m = T.enableAddon()
+    local ctx = open(NS, m, "feed")
+    local drawn = tab(m, ctx, "Items")
+    local mode = find(drawn, "Dropdown", "Minimum item level")
+    local abs, rel = find(drawn, "Slider", "Absolute minimum"), find(drawn, "Slider", "Levels under my average")
+    assertTrue(mode ~= nil and abs ~= nil and rel ~= nil, "all three drawn")
+    assertEqual(#lineOf(drawn, mode).children, 1, "the mode alone")
+    assertTrue(lineOf(drawn, abs) == lineOf(drawn, rel), "its values paired")
 end)
 
 test("feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only", function()
     local NS, _, m = T.enableAddon()
     local _, drawn = open(NS, m, "feed")
-    local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Floor")
+    local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Quality floor")
     assertFalse(fixed.disabled == true)
     assertTrue(floor.disabled == true)
     NS.SchemaRuntime.Set("feed.quality.mode", "dynamicCharacter")
@@ -399,10 +459,10 @@ test("comparison: the Pawn import box replaces the spec on screen's weights and 
     assertTrue(m.prints[#m.prints]:find("not a Pawn scale string", 1, true) ~= nil, m.prints[#m.prints])
 end)
 
-test("comparison: Preferences lists the class's weapon types and marks one unwanted per spec", function()
+test("comparison: Unwanted types lists the class's weapon types and marks one unwanted per spec", function()
     local NS, _, m = T.enableAddon()
     local ctx = open(NS, m, "comparison")
-    local drawn = tab(m, ctx, "Preferences")
+    local drawn = tab(m, ctx, "Unwanted types")
     local daggers = find(drawn, "CheckBox", "Daggers")
     assertTrue(daggers ~= nil, "a mage's daggers")
     assertTrue(find(drawn, "CheckBox", "Shields") == nil, "a mage carries no shield")
@@ -417,7 +477,8 @@ end)
 -- ── Messages › Templates ────────────────────────────────────────────────────────────────────
 
 local function templates(NS, m)
-    local ctx, drawn = open(NS, m, "messages")
+    local ctx = open(NS, m, "messages")
+    local drawn = tab(m, ctx, "Templates")   -- the last tab since feedback-24
     local boxes = {}
     for _, kind in ipairs({ "ask", "offer", "announce" }) do
         local label = NS.addon.Settings.Editors.TEMPLATE_LABEL[kind]
@@ -516,26 +577,19 @@ test("messages: Reset templates puts the three back and repaints the boxes", fun
     assertEqual(boxes.ask.text, D.ask)
 end)
 
--- ── Window › Layout: Clear history (feedback-15 spec §3, DW-Q3) ─────────────────────────────
+-- ── Drops › Retention: Clear history (feedback-15 spec §3, DW-Q3; Window › Layout's until feedback-24)
 
--- The flow line holding a widget, among the widgets a render drew.
-local function lineOf(list, w)
-    for _, g in ipairs(list) do
-        for _, c in ipairs(g.children or {}) do
-            if c == w then return g end
-        end
-    end
-end
-
-test("window: Layout draws Clear history beside Keep history for; it asks first and clears only on Yes", function()
+test("feed: Retention draws Clear history beside Keep history for; it asks first and clears only on Yes", function()
     local NS, _, m = T.enableAddon()
-    local ctx = open(NS, m, "window")
-    local drawn = tab(m, ctx, "Layout")
+    local ctx = open(NS, m, "feed")
+    local drawn = tab(m, ctx, "Retention")
     local keep = find(drawn, "Dropdown", "Keep history for")
     local clear = find(drawn, "Button", "Clear history")
-    -- red under: no Clear history button on the Window page (it sat on the History tab's strip)
+    -- red under: Keep history for after Clear on boss kill, which pairs with it and leaves no half
+    -- for the button
     assertTrue(keep ~= nil and clear ~= nil, "both are drawn")
     assertTrue(lineOf(drawn, keep) ~= nil and lineOf(drawn, keep) == lineOf(drawn, clear), "on one line")
+    assertTrue(find(drawn, "CheckBox", "Clear on boss kill") ~= nil, "and the session's clear under them")
     local H = NS.History
     local hist = H.Store()
     hist.groups = { { key = "enc:1@1", label = "Boss A", kind = "encounter", at = 1, drops = {} } }
@@ -546,19 +600,66 @@ test("window: Layout draws Clear history beside Keep history for; it asks first 
     assertEqual(#H.Store().groups, 0)
 end)
 
-test("window: with test mode on, Clear history clears the samples and leaves the account's log", function()
+test("feed: with test mode on, Clear history clears the samples and leaves the account's log", function()
     local NS, _, m = T.enableAddon()
     m.seedGearJournal()   -- the samples are drawn from the journal's gear (tests/test_test_mode.lua)
     local H = NS.History
     H.Store().groups = { { key = "enc:1@1", label = "Boss A", kind = "encounter", at = 1, drops = {} } }
     NS.SetTestMode(true)
     assertTrue(#H.Groups() > 0, "the samples are shown")
-    local ctx = open(NS, m, "window")
-    find(tab(m, ctx, "Layout"), "Button", "Clear history"):__fire("OnClick")
+    local ctx = open(NS, m, "feed")
+    find(tab(m, ctx, "Retention"), "Button", "Clear history"):__fire("OnClick")
     m.StaticPopupDialogs[H.CLEAR_POPUP].OnAccept()
     assertEqual(#H.Groups(), 0, "the samples cleared")
     NS.SetTestMode(false)
     assertEqual(#H.Store().groups, 1, "the account's log untouched")
+end)
+
+-- ── feedback-24: the switches alone, their knobs paired; the moved rows and their labels ────
+
+test("pages: a switch is alone on its line and its knobs pair under it (Toast, Auto-ask)", function()
+    local NS, _, m = T.enableAddon()
+    local actx, drawn = open(NS, m, "alerts")
+    assertEqual(actx.activeTab, "Toast")
+    local show = find(drawn, "CheckBox", "Show a toast")
+    assertEqual(#lineOf(drawn, show).children, 1, "Show a toast alone")
+    local gain, dur = find(drawn, "Slider", "Least gain (item levels)"), find(drawn, "Slider", "Duration (seconds)")
+    assertTrue(lineOf(drawn, gain) == lineOf(drawn, dur), "Least gain beside Duration")
+    assertTrue(lineOf(drawn, find(drawn, "CheckBox", "Show in combat")) == lineOf(drawn, find(drawn, "CheckBox", "Play a sound")),
+        "Show in combat beside Play a sound")
+    local mctx = open(NS, m, "messages")
+    drawn = tab(m, mctx, "Auto-ask")
+    assertEqual(#lineOf(drawn, find(drawn, "CheckBox", "Ask automatically")).children, 1, "Ask automatically alone")
+    assertTrue(lineOf(drawn, find(drawn, "Slider", "Delay (seconds)")) == lineOf(drawn, find(drawn, "Slider", "Least gain (item levels)")))
+end)
+
+test("pages: Messages opens on Sending, which asks before it sends, the transmog switch named apart from its template", function()
+    local NS, _, m = T.enableAddon()
+    local ctx, drawn = open(NS, m, "messages")
+    assertEqual(ctx.activeTab, "Sending")
+    local transmog, once = find(drawn, "CheckBox", "Offer transmog asks"), find(drawn, "CheckBox", "Ask once")
+    assertTrue(transmog ~= nil and lineOf(drawn, transmog) == lineOf(drawn, once), "which asks you get, one line")
+    assertTrue(lineOf(drawn, find(drawn, "CheckBox", "Edit before sending")) == lineOf(drawn, find(drawn, "Dropdown", "Announce channel")),
+        "how they go, the next")
+    assertTrue(find(drawn, "CheckBox", "Ask for transmog") == nil, "no checkbox shares the template's label")
+end)
+
+test("pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in", function()
+    local NS, _, m = T.enableAddon()
+    local ctx, drawn = open(NS, m, "window")
+    assertEqual(ctx.activeTab, "Layout")
+    assertTrue(find(drawn, "Dropdown", "Window layout") ~= nil, "the layout row, named apart from its tab")
+    assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") == nil, "no note on Layout")
+    drawn = tab(m, ctx, "Columns")
+    assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") ~= nil, "the note on Columns")
+    assertTrue(find(drawn, "Slider", "Mark a trade window ending within (seconds)") ~= nil, "Trade › Timers' slider")
+    drawn = tab(m, ctx, "Starting view")
+    for _, label in ipairs({ "Interesting", "Likely tradeable", "Usable by me", "Upgrade for me" }) do
+        assertTrue(find(drawn, "CheckBox", label) ~= nil, label)
+    end
+    assertTrue(find(drawn, "Dropdown", "Content") ~= nil and find(drawn, "Dropdown", "Sort") ~= nil)
+    assertEqual(NS.SchemaRuntime.FindRow("trade.warnAt").page, "window", "the path kept, the page moved")
+    assertEqual(NS.SchemaRuntime.FindRow("feed.view.likely").page, "window")
 end)
 
 -- ── Defaults, page by page ──────────────────────────────────────────────────────────────────
@@ -572,7 +673,7 @@ test("pages: a page's Defaults resets that page's rows and no other page's", fun
     local ctx = open(NS, m, "feed")
     ctx.panel.defaultsOnClick()
     assertEqual(NS.Setting("feed.gearOnly"), NS.C.PROFILE.feed.gearOnly)
-    assertEqual(NS.Setting("trade.warnAt"), 120, "Trade's row untouched")
+    assertEqual(NS.Setting("trade.warnAt"), 120, "Window's row untouched")
     local cctx = open(NS, m, "comparison")
     cctx.panel.defaultsOnClick()
     assertTrue(next(NS.Setting("comparison.weights")) == nil, "the weights map reset whole")

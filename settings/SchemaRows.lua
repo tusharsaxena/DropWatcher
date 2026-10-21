@@ -5,17 +5,19 @@ local _, NS = ...
 -- (design spec §12.2; `group` is the tab, options-ui-§13), its widget hints and the check the write
 -- seam runs before storing it. Every `default` references defaults/Profile.lua (savedvariables-§2),
 -- never a literal here. The composed Master controls rows are settings/Panel.lua's; these are
--- appended after them, so the General page's `Master controls` tab stays first. Window › Icons'
--- composed border block is settings/ComposedRows.lua's, appended after these (it needs the Options
--- instance, made after this file), so it follows this file's Zoom row on that tab; it takes this
--- file's checks from Settings.Checks.
+-- appended after them, so the General page's `Master controls` tab stays first. Within a page, a
+-- tab's place in the strip is its first row's place here, so the makers below run in page order
+-- (feedback-24 regrouped the pages: Situations, Drops, Comparison, Messages, Window, Alerts).
+-- Window › Icons' composed border block is settings/ComposedRows.lua's, appended after these (it
+-- needs the Options instance, made after this file), so it follows this file's Zoom row on that
+-- tab; it takes this file's checks from Settings.Checks.
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
 -- specID (architecture-§5's value route): written whole through the seam, drawn by their own
--- editors (`skipRender`). General › When to show's per-situation rows (`situations.<key>.track`,
--- `.autoOpen`, `.quality`) are `skipRender` too: its table draws them, one line per situation. The
--- window's geometry, its minimized flag and the toast's position have no row: they are named
--- non-setting state (docs/schema.md -> State written outside the seam). Window › Upgrade glow's
+-- editors (`skipRender`). The Situations page's per-situation rows (`situations.<key>.track`,
+-- `.autoOpen`, `.quality` and `trade.rules.<key>`) are `skipRender` too: its table draws them, one
+-- line per situation. The window's geometry, its minimized flag and the toast's position have no
+-- row: they are named non-setting state (docs/schema.md -> State written outside the seam). Alerts › Upgrade glow's
 -- `glow.<main|offSpec>.color` rows are typed `color`, stored {r=,g=,b=,a=} (the library's codec).
 
 local DW       = NS.addon
@@ -123,15 +125,16 @@ local function qualityChoices(from, to)
 end
 local FIXED_QUALITIES = qualityChoices(K.QUALITY.UNCOMMON, K.QUALITY.LEGENDARY)
 local FLOOR_QUALITIES = qualityChoices(K.QUALITY.COMMON, K.QUALITY.EPIC)
--- The View's values as rows: `feed.view.<key>` (modules/WindowFilterBar.lua FB.VIEWS).
+-- The View's values as rows: `feed.view.<key>` (modules/WindowFilterBar.lua FB.VIEWS), each labeled
+-- by its value alone under Window › Starting view's View subsection (feedback-24).
 local VIEW_ROWS = {
-    { key = "interesting", label = L["View: Interesting"],
+    { key = "interesting", label = L["Interesting"],
       tip = L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."] },
-    { key = "likely", label = L["View: Likely tradeable"],
+    { key = "likely", label = L["Likely tradeable"],
       tip = L["A fresh tab lists only the drops whose trade estimate is yes or likely."] },
-    { key = "usable", label = L["View: Usable by me"],
+    { key = "usable", label = L["Usable by me"],
       tip = L["A fresh tab hides the drops you can't use and the item types you marked as unwanted."] },
-    { key = "upgrade", label = L["View: Upgrade for me"],
+    { key = "upgrade", label = L["Upgrade for me"],
       tip = L["A fresh tab lists only the drops that are an upgrade for you."] },
 }
 -- Drops' Content values (feedback-15 spec §1): History's All is no Drops value, so no seed.
@@ -144,10 +147,11 @@ local CHANNELS = choices{
 }
 local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
--- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them.
+-- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them, in the order
+-- the Upgrade glow tab's style subsections read (the default, Pixel border, first; feedback-24).
 local GLOW_STYLES = choices{
-    "button", L["Button (rotating rays)"], "proc", L["Proc (flipbook)"], "pixel", L["Pixel border"],
-    "autocast", L["Auto cast sparkles"],
+    "pixel", L["Pixel border"], "autocast", L["Auto cast sparkles"], "button", L["Button (rotating rays)"],
+    "proc", L["Proc (flipbook)"],
 }
 
 -- ── the dimming predicates ──────────────────────────────────────────────────────────────────
@@ -207,18 +211,22 @@ local function map(path, default, validate, label, tip, extra)
     return add(row)
 end
 
--- ── General › When to show (design spec §6.1) ───────────────────────────────────────────────
+-- ── Situations (design spec §6.1, §7; feedback-24) ──────────────────────────────────────────
 
-local function whenToShow()
-    local at = { page = "general", group = L["When to show"] }
+-- Everything set per situation, on one page: the global Auto-open, then a table line per situation
+-- (Track, Auto-open, Quality and its loot rule). General › When to show and Trade › Rules until
+-- feedback-24.
+local function situations()
+    local at = { page = "situations", group = L["Situations"] }
     bool("autoOpen", P.autoOpen, L["Auto-open the window"],
         L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."], at)
+    local T = P.trade
     for _, s in ipairs(K.SITUATIONS) do
         local key, d = s.key, P.situations[s.key]
         local base = "situations." .. key .. "."
-        -- Drawn by When to show's table (settings/PageEditors.lua SituationTable), one table row per
+        -- Drawn by the Situations table (settings/PageEditors.lua SituationTable), one table row per
         -- situation: still schema rows, so the CLI, the resets and profiles reach them as before.
-        local sit = { page = "general", group = L["When to show"], skipRender = true }
+        local sit = { page = "situations", group = L["Situations"], skipRender = true }
         local untracked = unless(base .. "track", true)
         bool(base .. "track", d.track, L["Track"],
             L["Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."], sit)
@@ -228,51 +236,71 @@ local function whenToShow()
         pick(base .. "quality", d.quality, SITUATION_QUALITY, L["Quality"],
             L["The minimum quality here: the feed's own mode, or one of its own."],
             with(sit, { disabledIf = untracked }))
+        -- Its label stays the situation's name: `/dw list` reads it under the Situations page.
+        pick("trade.rules." .. key, T.rules[key], RULES, NS.WindowFooter.SituationLabel(key),
+            L["The loot rule that decides whether a drop here can be traded."],
+            with(sit, { disabledIf = untracked }))
     end
 end
 
--- ── Feed › Quality and Filters (design spec §6.2, §6.3) ─────────────────────────────────────
+-- ── History (feedback-2 spec §5): kept by days, account-wide ────────────────────────────────
+
+local function history(at)
+    local row = pick(Settings.HISTORY_RETENTION_PATH, NS.C.GLOBAL_DEFAULTS.history.retentionDays,
+        NS.HistoryRetention.Choices(), L["Keep history for"],
+        L["How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."],
+        with(at, { onChange = function(v)
+            -- A shorter window that would delete something asks first (modules/HistoryRetention.lua).
+            NS.HistoryRetention.OnChanged(v)
+        end }))
+    Settings.StampClosureRows({ row })
+end
+
+-- ── Drops › Quality, Items and Retention (design spec §6.2, §6.3; feedback-24) ──────────────
+--
+-- What the addon lists at all, and how long it keeps it. Each mode's dependents share the line
+-- under it: Fixed minimum and Floor (never live together), Absolute minimum and Levels under my
+-- average (feedback-24). The View, Content and Sort a fresh tab opens on are Window › Starting view's.
 
 local function feed()
     local F, Q = P.feed, P.feed.quality
     local quality = { page = "feed", group = L["Quality"], onChange = repaintWindow }
     pick("feed.quality.mode", Q.mode, QUALITY_MODES, L["Minimum quality"],
         L["Fixed: one quality for every drop. Match each slot: the quality of what the drop would replace. Match my gear: the quality most of your gear is."], quality)
+    bool("feed.quality.upgradeOverride", Q.upgradeOverride, L["Always show upgrades for me"],
+        L["A drop below the minimum still shows when it is an upgrade for you."], quality)
     pick("feed.quality.fixed", Q.fixed, FIXED_QUALITIES, L["Fixed minimum"],
         L["The least quality a drop needs in the fixed mode."],
         with(quality, { disabledIf = unless("feed.quality.mode", "fixed") }))
-    pick("feed.quality.floor", Q.floor, FLOOR_QUALITIES, L["Floor"],
+    pick("feed.quality.floor", Q.floor, FLOOR_QUALITIES, L["Quality floor"],
         L["The least quality the two matching modes ever ask for, and what an empty slot asks for."],
         with(quality, { disabledIf = function() return NS.Setting("feed.quality.mode") == "fixed" end }))
-    bool("feed.quality.upgradeOverride", Q.upgradeOverride, L["Always show upgrades for me"],
-        L["A drop below the minimum still shows when it is an upgrade for you."], quality)
 
-    local filters = { page = "feed", group = L["Filters"] }
-    -- The View a fresh tab opens on is a set (feedback-2 spec §1): one row per value, all off is
-    -- All. They combine as AND, as the filter bar's multi-select View does.
-    for _, v in ipairs(VIEW_ROWS) do
-        bool("feed.view." .. v.key, F.view[v.key], v.label, v.tip, filters)
-    end
-    pick("feed.content", F.content, CONTENTS, L["Content"],
-        L["Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."], filters)
-    pick("feed.sort", F.sort, SORTS, L["Sort"], L["How a fresh tab sorts its rows."], filters)
+    local kinds = { page = "feed", group = L["Items"], subgroup = L["Item kinds"] }
     bool("feed.gearOnly", F.gearOnly, L["Gear only"],
-        L["List armor, weapons, jewelry and trinkets only."], filters)
+        L["List armor, weapons, jewelry and trinkets only."], kinds)
     bool("feed.includeTokens", F.includeTokens, L["Tier tokens"],
-        L["List tier tokens too."], filters)
+        L["List tier tokens too."], kinds)
+    local ilvl = with(kinds, { subgroup = L["Item level"] })
     pick("feed.minIlvlMode", F.minIlvlMode, ILVL_MODES, L["Minimum item level"],
-        L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."], filters)
+        L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."],
+        with(ilvl, { solo = true }))
     slider("feed.minIlvl", F.minIlvl, 0, 1000, 1, L["Absolute minimum"],
         L["The least item level a drop needs in the absolute mode."],
-        with(filters, { disabledIf = unless("feed.minIlvlMode", "absolute") }))
+        with(ilvl, { disabledIf = unless("feed.minIlvlMode", "absolute") }))
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
         L["How far under your average equipped item level a drop may be in the relative mode."],
-        with(filters, { disabledIf = unless("feed.minIlvlMode", "relative") }))
+        with(ilvl, { disabledIf = unless("feed.minIlvlMode", "relative") }))
+
+    -- Keep history for first, so it is alone on its line and Clear history takes the right half
+    -- (settings/Pages.lua pairWith); Window › Layout's until feedback-24.
+    local retention = { page = "feed", group = L["Retention"], subgroup = L["History"] }
+    history(retention)
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear on boss kill"],
-        L["Clear the session's drops when a boss dies."], filters)
+        L["Clear the session's drops when a boss dies."], with(retention, { subgroup = L["Session"] }))
 end
 
--- ── Comparison › Scoring, Weights and Preferences (design spec §5) ──────────────────────────
+-- ── Comparison › Scoring, Weights and Unwanted types (design spec §5) ───────────────────────
 
 local function comparison()
     local Cm = P.comparison
@@ -288,27 +316,39 @@ local function comparison()
     map("comparison.weights", Cm.weights, validWeights, L["Stat weights"],
         L["Your stat weights for each specialization."], { page = "comparison", group = L["Weights"] })
     map("comparison.undesired", Cm.undesired, validUndesired, L["Unwanted item types"],
-        L["The item types each specialization never wants."], { page = "comparison", group = L["Preferences"] })
+        L["The item types each specialization never wants."], { page = "comparison", group = L["Unwanted types"] })
 end
 
--- ── Trade › Rules and Timers (design spec §7) ───────────────────────────────────────────────
-
-local function trade()
-    local T = P.trade
-    for _, s in ipairs(K.SITUATIONS) do
-        pick("trade.rules." .. s.key, T.rules[s.key], RULES, NS.WindowFooter.SituationLabel(s.key),
-            L["The loot rule that decides whether a drop here can be traded."],
-            { page = "trade", group = L["Rules"] })
-    end
-    local timers = { page = "trade", group = L["Timers"] }
-    slider("trade.warnAt", T.warnAt, 0, 1800, 60, L["Warn before a trade window closes (seconds)"],
-        L["Warn this many seconds before your own item stops being tradeable. 0 turns the warning off."], timers)
-end
-
--- ── Messages › Templates, Sending and Auto-ask (design spec §9) ─────────────────────────────
+-- ── Messages › Sending, Auto-ask and Templates (design spec §9) ─────────────────────────────
+--
+-- The switches first, the template editors last (feedback-24): which asks you get, then how they go.
 
 local function messages()
     local M = P.messages
+    local sending = { page = "messages", group = L["Sending"] }
+    bool("messages.transmogAsk", M.transmogAsk, L["Offer transmog asks"],
+        L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."],
+        sending)
+    bool("messages.oneAsk", M.oneAsk, L["Ask once"],
+        L["Send each ask or offer for a drop to a player once."], sending)
+    bool("messages.editFirst", M.editFirst, L["Edit before sending"],
+        L["Open the message in an edit box before it is sent."], sending)
+    pick("messages.announceChannel", M.announceChannel, CHANNELS, L["Announce channel"],
+        L["Automatic picks the instance channel, then raid, then party. Never say or yell."], sending)
+
+    local A = M.autoAsk
+    local auto = { page = "messages", group = L["Auto-ask"] }
+    local autoOff = with(auto, { disabledIf = unless("messages.autoAsk.enabled", true) })
+    -- Turned on, the one-time notice and a fresh start; turned off, the waiting asks go (DW-54).
+    -- Alone on its line, its two knobs paired under it (feedback-24).
+    bool("messages.autoAsk.enabled", A.enabled, L["Ask automatically"],
+        L["Ask for a likely tradeable upgrade for you on your behalf, after a delay."],
+        with(auto, { solo = true, onChange = function(v) NS.AutoAsk.OnEnabledChanged(v) end }))
+    slider("messages.autoAsk.delay", A.delay, 3, 30, 1, L["Delay (seconds)"],
+        L["How long after the boss kill, or the drop, the ask waits."], autoOff)
+    slider("messages.autoAsk.minGain", A.minGain, 1, 50, 1, L["Least gain (item levels)"],
+        L["The least item-level gain for you an automatic ask needs."], autoOff)
+
     local templates = { page = "messages", group = L["Templates"], maxLetters = K.MESSAGE_MAX_LEN }
     text("messages.templates.ask", M.templates.ask, L["Ask"],
         L["What you whisper a looter to ask for their drop."], templates)
@@ -320,44 +360,15 @@ local function messages()
         L["What you whisper someone your own drop would help."], templates)
     text("messages.templates.announce", M.templates.announce, L["Announce"],
         L["What you tell the group about a drop you can trade."], templates)
-
-    local sending = { page = "messages", group = L["Sending"] }
-    bool("messages.editFirst", M.editFirst, L["Edit before sending"],
-        L["Open the message in an edit box before it is sent."], sending)
-    bool("messages.transmogAsk", M.transmogAsk, L["Ask for transmog"],
-        L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the For transmog template."],
-        sending)
-    bool("messages.oneAsk", M.oneAsk, L["Ask once"],
-        L["Send each ask or offer for a drop to a player once."], sending)
-    pick("messages.announceChannel", M.announceChannel, CHANNELS, L["Announce channel"],
-        L["Automatic picks the instance channel, then raid, then party. Never say or yell."], sending)
-
-    local A = M.autoAsk
-    local auto = { page = "messages", group = L["Auto-ask"] }
-    local autoOff = with(auto, { disabledIf = unless("messages.autoAsk.enabled", true) })
-    -- Turned on, the one-time notice and a fresh start; turned off, the waiting asks go (DW-54).
-    bool("messages.autoAsk.enabled", A.enabled, L["Ask automatically"],
-        L["Ask for a likely tradeable upgrade for you on your behalf, after a delay."],
-        with(auto, { onChange = function(v) NS.AutoAsk.OnEnabledChanged(v) end }))
-    slider("messages.autoAsk.delay", A.delay, 3, 30, 1, L["Delay (seconds)"],
-        L["How long after the boss kill, or the drop, the ask waits."], autoOff)
-    slider("messages.autoAsk.minGain", A.minGain, 1, 50, 1, L["Least gain (item levels)"],
-        L["The least item-level gain for you an automatic ask needs."], autoOff)
 end
 
--- ── Window › Columns, Layout and Toast (design spec §11) ────────────────────────────────────
+-- ── Window › Layout, Columns and Starting view (design spec §11; feedback-24) ───────────────
 
 local function window()
-    local W = P.window
-    local columns = { page = "window", group = L["Columns"], onChange = repaintWindow }
-    for _, col in ipairs(NS.WindowGroup.COLUMNS) do
-        if col.key ~= "item" then
-            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.desc, columns)
-        end
-    end
+    local W, F = P.window, P.feed
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }
     -- Compact mode (compact spec §1): the stored layout, and the run override's switch.
-    pick("window.mode", W.mode, LAYOUTS, L["Layout"],
+    pick("window.mode", W.mode, LAYOUTS, L["Window layout"],
         L["Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."],
         with(layout, { onChange = function() NS.WindowCompact.OnModeChanged() end }))
     bool("window.compactInRuns", W.compactInRuns, L["Open in compact view during a run"],
@@ -371,35 +382,74 @@ local function window()
         L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
         with(layout, { zeroText = L["Default"] }))
 
+    -- The full layout's Drops table columns, then the Trade window column's ending-soon mark (Trade ›
+    -- Timers until feedback-24: it tints that column's countdown on your own drops, nothing else).
+    local columns = { page = "window", group = L["Columns"], subgroup = L["Shown columns"], onChange = repaintWindow }
+    for _, col in ipairs(NS.WindowGroup.COLUMNS) do
+        if col.key ~= "item" then
+            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.desc, columns)
+        end
+    end
+    slider("trade.warnAt", P.trade.warnAt, 0, 1800, 60, L["Mark a trade window ending within (seconds)"],
+        L["Your own drop's Trade window countdown turns to its warning color this many seconds before the item stops being tradeable. 0 turns the mark off."],
+        { page = "window", group = L["Columns"], subgroup = L["Trade window"] })
+
+    -- What a fresh Drops tab opens on (Feed › Filters until feedback-24): the View, a set
+    -- (feedback-2 spec §1: one row per value, all off is All, combined as AND, as the filter bar's
+    -- multi-select View does), then Content and Sort.
+    local start = { page = "window", group = L["Starting view"], subgroup = L["View"] }
+    for _, v in ipairs(VIEW_ROWS) do
+        bool("feed.view." .. v.key, F.view[v.key], v.label, v.tip, start)
+    end
+    start = with(start, { subgroup = L["Content and sort"] })
+    pick("feed.content", F.content, CONTENTS, L["Content"],
+        L["Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."], start)
+    pick("feed.sort", F.sort, SORTS, L["Sort"], L["How a fresh tab sorts its rows."], start)
+end
+
+-- ── Alerts › Toast (design spec §11; Window › Toast until feedback-24) ──────────────────────
+
+local function toast()
     local T = P.toast
-    local toast = { page = "window", group = L["Toast"] }
-    -- Turned off, the toast on screen goes and the queue empties (DW-62 review F-004).
+    local at = { page = "alerts", group = L["Toast"] }
+    -- Turned off, the toast on screen goes and the queue empties (DW-62 review F-004). Alone on its
+    -- line, its knobs paired under it (feedback-24).
     bool("toast.enabled", T.enabled, L["Show a toast"],
         L["Pop up a toast for a likely tradeable upgrade for you."],
-        with(toast, { onChange = function(v) NS.Toast.OnEnabledChanged(v) end }))
-    toast = with(toast, { disabledIf = unless("toast.enabled", true) })
+        with(at, { solo = true, onChange = function(v) NS.Toast.OnEnabledChanged(v) end }))
+    at = with(at, { disabledIf = unless("toast.enabled", true) })
     slider("toast.minGain", T.minGain, 1, 50, 1, L["Least gain (item levels)"],
-        L["The least item-level gain for you a toast needs."], toast)
+        L["The least item-level gain for you a toast needs."], at)
     slider("toast.duration", T.duration, 2, 30, 1, L["Duration (seconds)"],
-        L["How long a toast stays on screen."], toast)
-    bool("toast.inCombat", T.inCombat, L["Show in combat"], L["Show toasts in combat too."], toast)
-    bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], toast)
+        L["How long a toast stays on screen."], at)
+    bool("toast.inCombat", T.inCombat, L["Show in combat"], L["Show toasts in combat too."], at)
+    bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], at)
     -- 50 to 200 %, about the toast's saved anchor; live on a toast on screen (feedback-21 G10).
     slider("toast.scale", T.scale, 0.5, 2, 0.05, L["Scale"],
         L["The toast's size, from half to double. It grows or shrinks about the place you put it."],
-        with(toast, { isPercent = true, onChange = function() NS.Toast.ApplyScale() end }))
+        with(at, { isPercent = true, onChange = function() NS.Toast.ApplyScale() end }))
 end
 
--- ── Window › Upgrade glow (feedback-21): the glow on an upgrade's icon ──────────────────────
+-- ── Alerts › Upgrade glow (feedback-21; Window's until feedback-24): the glow on an upgrade's icon
 
 -- The two glows, side by side: each knob is a main | off-spec pair, so the left column is the main
 -- spec's glow and the right the off-spec's. The tab mixes kinds of control, so each block carries a
 -- subsection heading (options-ui-§7), a style's heading its name in the Style dropdown.
 local GLOWS = { "main", "offSpec" }
 
--- Each style's knobs, in the feedback-21 plan's knob table order, with its ranges and the styles
--- it applies to; the defaults are defaults/Profile.lua's. `labels` is { main, off-spec }.
+-- Each style's knobs, with its ranges and the styles it applies to; the defaults are
+-- defaults/Profile.lua's. `labels` is { main, off-spec }. Offset first, as it applies to three of the
+-- four styles, then each style's own in the Style dropdown's order (feedback-24; the feedback-21
+-- plan's knob table had Offset last).
 local GLOW_KNOBS = {
+    { key = "xOffset", kind = "slider", min = -10, max = 10, step = 1,
+      styles = { pixel = true, autocast = true, proc = true },
+      heading = L["Offset"], labels = { L["Main spec X offset"], L["Off-spec X offset"] },
+      tip = L["How far the glow reaches past the icon's sides, in pixels. Pixel, Proc and Auto cast styles."] },
+    { key = "yOffset", kind = "slider", min = -10, max = 10, step = 1,
+      styles = { pixel = true, autocast = true, proc = true },
+      heading = L["Offset"], labels = { L["Main spec Y offset"], L["Off-spec Y offset"] },
+      tip = L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel, Proc and Auto cast styles."] },
     { key = "pixelLines", kind = "slider", min = 1, max = 20, step = 1, styles = { pixel = true },
       heading = L["Pixel border"], labels = { L["Main spec lines"], L["Off-spec lines"] },
       tip = L["How many lines run around the icon. Pixel style only."] },
@@ -434,20 +484,12 @@ local GLOW_KNOBS = {
     { key = "procStartAnim", kind = "bool", styles = { proc = true },
       heading = L["Proc (flipbook)"], labels = { L["Main spec start animation"], L["Off-spec start animation"] },
       tip = L["Play the burst that opens the proc glow when it starts. Proc style only."] },
-    { key = "xOffset", kind = "slider", min = -10, max = 10, step = 1,
-      styles = { pixel = true, autocast = true, proc = true },
-      heading = L["Offset"], labels = { L["Main spec X offset"], L["Off-spec X offset"] },
-      tip = L["How far the glow reaches past the icon's sides, in pixels. Pixel, Proc and Auto cast styles."] },
-    { key = "yOffset", kind = "slider", min = -10, max = 10, step = 1,
-      styles = { pixel = true, autocast = true, proc = true },
-      heading = L["Offset"], labels = { L["Main spec Y offset"], L["Off-spec Y offset"] },
-      tip = L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel, Proc and Auto cast styles."] },
 }
 Settings.GLOW_KNOBS = GLOW_KNOBS
 
 local function glow()
     local G = P.glow
-    local at = { page = "window", group = L["Upgrade glow"], subgroup = L["Effect"], onChange = refreshGlow }
+    local at = { page = "alerts", group = L["Upgrade glow"], subgroup = L["Effect"], onChange = refreshGlow }
     -- A glow's style is dimmed while it is off; a knob also while its glow is in a style the knob
     -- does not apply to. Its color pair never is (below).
     local function off(key) return unless("glow." .. key .. ".enabled", true) end
@@ -516,38 +558,24 @@ local function icons()
         { page = "window", group = L["Icons"], subgroup = L["Zoom"], onChange = refreshIcons })
 end
 
--- ── History (feedback-2 spec §5): kept by days, account-wide ────────────────────────────────
-
-local function history()
-    local row = pick(Settings.HISTORY_RETENTION_PATH, NS.C.GLOBAL_DEFAULTS.history.retentionDays,
-        NS.HistoryRetention.Choices(), L["Keep history for"],
-        L["How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."],
-        { page = "window", group = L["Layout"], onChange = function(v)
-            -- A shorter window that would delete something asks first (modules/HistoryRetention.lua).
-            NS.HistoryRetention.OnChanged(v)
-        end })
-    Settings.StampClosureRows({ row })
-end
-
--- ── General › Simulation (feedback-2 spec §8): the simulator's automatic run ─────────────────
+-- ── General › Simulator (feedback-2 spec §8): the simulator's automatic run ─────────────────
 
 local function simulation()
     local SC = NS.SimScenario
     slider("sim.stepDelay", P.sim.stepDelay, SC.STEP_DELAY_MIN, SC.STEP_DELAY_MAX, SC.STEP_DELAY_STEP,
         L["Simulation step delay"],
         L["How many seconds the simulator's automatic run (Run all, `/dw sim run`) waits between steps. A change takes effect from the next step."],
-        { page = "general", group = L["Simulation"], validate = SC.ValidStepDelay })
+        { page = "general", group = L["Simulator"], validate = SC.ValidStepDelay })
 end
 
-whenToShow()
 simulation()
+situations()
 feed()
 comparison()
-trade()
 messages()
 window()
-history()
-glow()
 icons()
+toast()
+glow()
 
 NS.SchemaRuntime.AddRows(Rows)
