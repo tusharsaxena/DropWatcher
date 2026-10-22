@@ -120,26 +120,30 @@ is out of combat.
 
 ## The simulator's seam
 
-`core/SimSeam.lua` loads right after this file (simulator spec §2, §5, DW-70). It names no client
-API and adds no shim, so the count above stands. At load it wraps every member here that answers
-for the client, which is every one but the secret guards and the pure text helpers (`IsSecret`,
+`core/SimSetup.lua` loads straight after this file, `core/CompatWorld.lua` and `core/CompatItem.lua`
+(simulator spec §2, §5, DW-70; LibKa0s-Sim-1.0's `Sim:NewSeam` since DW-02). It names no client API
+and adds no shim, so the count above stands. At load it wraps every member here that answers for
+the client, which is every one but the secret guards and the pure text helpers (`IsSecret`,
 `CanAccess`, `IsSafeKey`, `FormatToPattern`, `DecodeDuration`, `ParseTradeTimeRemaining`,
-`ReadTooltipLine`, `IsRestrictionStateActive`). While `NS.Sim.active` is true, a wrapped call goes
-to `NS.Sim.Answer(name, live, ...)`. That answer comes from the simulator's provider for the member
-(`NS.Sim.SetProvider`), which may hand anything it does not invent back to the live member. Without
-a provider, the live member answers. With no simulation running, the wrap costs one boolean test.
+`ReadTooltipLine`, `IsRestrictionStateActive`). While a session runs (`NS.Sim:IsActive()`), a
+wrapped call goes to the simulator's provider for the member (`NS.SimSeam:SetProvider`, one owner
+per member), which may hand anything it does not invent back to the live member. Without a
+provider, the live member answers. With no simulation running, the wrap costs one field test. A
+member added to `NS.Compat` after `core/SimSetup.lua` loads would escape the wrap:
+`NS.SimSeam:Unwrapped()` lists such a member, and `test_sim_e2e`'s `nothing escapes the seam` case
+asserts the list is empty, the load-order guard.
 
 The **guarded** members never reach the client while a simulation runs, whatever a provider does:
 `ChatSender` hands out a sender that prints `[sim] <channel> to <target>: <text>` (nothing is
 whispered or posted), `NotifyInspect` and `ClearInspectPlayer` answer `true` with no call (a real
 player is never inspected), and `InitiateTrade`
 answers `true` with no call (no trade opens; the trade is printed).
-`NS.Sim.Live(fn)` runs `fn` with the ordinary members answering for the client again, which is how
+`NS.SimSeam:Live(fn)` runs `fn` with the ordinary members answering for the client again, which is how
 the simulator's own safety checks read the real world. `test_sim_core` holds all of this.
 
 ## The world reads
 
-`core/CompatWorld.lua` loads between this file and `core/SimSeam.lua` (simulator spec §2, DW-72). It
+`core/CompatWorld.lua` loads between this file and `core/SimSetup.lua` (simulator spec §2, DW-72). It
 adds the stable reads of the group, a unit and the instance to `NS.Compat`: `GroupSize`
 (`GetNumGroupMembers`), `InRaid`, `InGroup(category)`, `InstanceGroupCategory`
 (`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`,
@@ -176,7 +180,7 @@ the bag members for your simulated drops (`BagSlotCount`, `BagItemLink`, `GetBag
 
 ## The item reads at a location and the tooltip setters
 
-`core/CompatItem.lua` loads after `core/CompatWorld.lua` and before `core/SimSeam.lua` (ui spec §0,
+`core/CompatItem.lua` loads after `core/CompatWorld.lua` and before `core/SimSetup.lua` (ui spec §0,
 DW-80), on the same terms: none of its calls is version-variant, so they are not counted above, and
 they are `NS.Compat` members so the seam answers them.
 

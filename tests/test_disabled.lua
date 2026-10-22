@@ -208,7 +208,7 @@ test("disabled 7: a disabled profile loads stood down, with nothing registered",
     assertTrue(m.ldbObjects.DropWatcher ~= nil, "setup stays up: the launcher is registered")
 end)
 
-test("disabled 8: the launcher's left-click opens settings and writes nothing; its menu grays every entry but Enabled", function()
+test("disabled 8: the launcher and the key binding: left-click opens settings and writes nothing; the menu grays every entry but Enabled; a key press refuses", function()
     local NS, _, m = T.enableAddon()
     NS.addon:OnSlashCommand("disable")
     local boxes = {}
@@ -237,6 +237,21 @@ test("disabled 8: the launcher's left-click opens settings and writes nothing; i
     for i = 2, #boxes do assertEqual(boxes[i].enabled, false, boxes[i].label) end
     boxes[3].click()
     assertFalse(NS.State.testMode, "a grayed entry writes nothing")
+    -- The Show window key binding (launcher-§6): the press refuses as `/dw toggle` does, one line.
+    local toggles = 0
+    local real = NS.Window.Toggle
+    NS.Window.Toggle = function(...) toggles = toggles + 1; return real(...) end
+    m.prints = {}
+    m.__resetSvWrites()
+    local shown = #m.__shownFrames()
+    -- red under: an OnClick in core/LauncherSetup.lua that calls NS.ToggleWindow without NS.StoodDownRefusal
+    m.DropWatcherToggleWindow:__fire("OnClick", "LeftButton", true)
+    assertEqual(#m.prints, 1, "a press prints exactly one line")
+    assertTrue(m.prints[1]:find(NS.SlashCommands:DisabledLine(), 1, true) ~= nil, tostring(m.prints[1]))
+    assertEqual(toggles, 0, "a press toggles nothing")
+    assertEqual(#m.__svWrites(), 0, "a press writes nothing")
+    assertEqual(#m.__shownFrames(), shown, "a press shows no frame")
+    assertFalse(NS.IsWindowShown())
 end)
 
 -- Every feature refusal a player can reach while stood down: the slash verbs that get past the
@@ -270,6 +285,18 @@ test("disabled 9: under the perf hold alone, each feature refusal names the capt
         assertTrue(m.prints[1]:find("is disabled", 1, true) == nil, r[1])
     end
     assertEqual(select(2, NS.PressAsk(1)), "perf", "the press names the hold it refused on")
+    -- The Show window key binding (launcher-§6) under the perf hold alone: the capture's line.
+    local toggles = 0
+    local real = NS.Window.Toggle
+    NS.Window.Toggle = function(...) toggles = toggles + 1; return real(...) end
+    m.prints = {}
+    -- red under: an OnClick in core/LauncherSetup.lua that calls NS.ToggleWindow without NS.StoodDownRefusal
+    m.DropWatcherToggleWindow:__fire("OnClick", "LeftButton", true)
+    assertEqual(#m.prints, 1, "the key press prints exactly one line")
+    assertTrue(m.prints[1]:find(PERF_LINE, 1, true) ~= nil, "key press: " .. tostring(m.prints[1]))
+    assertTrue(m.prints[1]:find("is disabled", 1, true) == nil, "key press: never the disabled line")
+    assertEqual(toggles, 0, "the key press toggles nothing")
+    NS.Window.Toggle = real
     NS.Lifecycle:Release(NS.HOLD_PERF)
     assertFalse(NS.IsStoodDown())
     assertTrue(NS.StoodDownRefusal() == nil, "no refusal while standing up")
@@ -307,4 +334,27 @@ test("disabled 11: the latch holds in both orders, perf first and disabled first
     assertFalse(NS.IsStoodDown(), "the helper leaves the addon enabled")
     assertEqual(registered(m, "event"), table.concat(PINNED, ","))
     assertEqual(registered(m, "message"), table.concat(PINNED_MESSAGES, ","))
+end)
+
+-- DW-04: the simulation panel is LibKa0s-Sim-1.0's. Its stand-down stop hides it while a session
+-- runs; DropWatcher's own NS.STAND_DOWN step (modules/SimPanel.lua) hides an idle one, which has no
+-- session to stop; and the library refuses to show it while stood down.
+test("disabled 12: disabling hides the simulation panel, idle or running, and it stays shut", function()
+    for _, d in ipairs(DISABLES) do
+        local NS = T.enableAddon()
+        -- red under: drop modules/SimPanel.lua's NS.STAND_DOWN step (an idle panel has no stop)
+        assertTrue(NS.Sim:ShowPanel(), d[1])
+        d[2](NS)
+        assertFalse(NS.Sim:IsPanelShown(), d[1] .. ": an idle panel closes")
+        NS.addon:OnSlashCommand("sim panel")
+        assertFalse(NS.Sim:IsPanelShown(), d[1] .. ": `/dw sim panel` is refused")
+        assertFalse(NS.Sim:ShowPanel(), d[1] .. ": the library refuses it while stood down")
+    end
+    local NS = T.enableAddon()
+    NS.Sim:Start({ scenario = "key" })
+    assertTrue(NS.Sim:IsActive())
+    assertTrue(NS.Sim:ShowPanel())
+    NS.addon:OnSlashCommand("disable")
+    assertFalse(NS.Sim:IsActive(), "the simulation stopped")
+    assertFalse(NS.Sim:IsPanelShown(), "and its panel closed")
 end)

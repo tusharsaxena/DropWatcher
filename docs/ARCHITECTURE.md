@@ -10,8 +10,8 @@ this page describes what exists.
 A Retail addon that watches the loot a party or raid receives, judges each drop for you and for the
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
-LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the whole
-LibKa0s v1.72.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
+LibKa0s v1.75.0 payload (seventeen majors; media/icons pruned to the declared subset), of which seventeen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -30,10 +30,14 @@ lists the toolchain):
 | Schema | `settings/SchemaSetup.lua` | the write seam's runtime |
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
-| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`) and the shared `NS.CloseMenu` |
+| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared `NS.CloseMenu`, TestStrip (the test-mode banner, `NS.MakeTestStrip`; DW-06, LibKa0s#48) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
+| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and five verbs (DW-02..DW-04) |
+| Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
 
-Without LibKa0s-Widgets-1.0 the window draws no dropdown at all (`NS.MakeDropdown` answers nil and
-the search box still filters), and `NS.CloseMenu` is a no-op. Each setup file holds a
+Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
+(`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.CloseMenu` is a no-op, and test mode draws no banner
+(`NS.MakeTestStrip` answers nil, the panes reserve no room and the `TEST MODE` title word still marks
+the mode). Each setup file holds a
 descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live
 surface.
 
@@ -49,17 +53,21 @@ one-line responsibility and why its position is load-bearing or conventional is 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
   family (`Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`, the only files that name the client
   globals they wrap, with the pure parsers in `TextParse.lua`) and the simulator's answer seam over
-  it (`SimSeam.lua`), the library-shaped item reads, the game-data tables, the session state, the
+  it (`SimSetup.lua`, LibKa0s-Sim-1.0's `NewSeam`), the library-shaped item reads, the game-data tables, the session state, the
   addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
-- `modules/`: the simulator's session; the login session (`Session.lua`, the session start and This
+- `modules/`: the simulator's session (`Sim.lua`: LibKa0s-Sim-1.0 hosting DropWatcher's scenarios,
+  world providers, event drivers, restriction model and five verbs); the login session (`Session.lua`, the session start and This
   instance kept per character across a reload); the pure engine kernels (the verdict kernel and its
   off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
   of your class) and the scorers; the edges
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
   after a reload, `FeedRestore.lua`; the toast, auto-ask); the simulator's
-  inputs, scenarios and step panel; then the window: its shell, chrome, two tabs, their strips' one
+  host half: its world providers (`SimWorld.lua`), item pool and group (`SimPool.lua`, `SimRoster.lua`), event
+  drivers (`SimEvents.lua`), scenarios and timeline steps (`SimScenario.lua`), loot report
+  (`SimReport.lua`) and the step panel's fields (`SimPanel.lua`; the panel, the session, the step
+  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, two tabs, their strips' one
   footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
   off-spec verdict's look, `OffSpecCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
@@ -87,9 +95,9 @@ its page, a `disabledIf` predicate dims a row with nothing to do, its `default` 
 specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
 
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
-every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's and
-the simulation panel's positions, auto-ask's one-time notice, the history's own record, the per-character session
-(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, eight steps), and
+every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's
+position (the simulation panel's is session-only, held by LibKa0s-Sim-1.0), auto-ask's one-time notice, the history's own record, the per-character session
+(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, nine steps), and
 no structural registry exists yet. The shape, every default, the named state with its writers, the
 session-only state and each migration step are in [`schema.md`](schema.md).
 
@@ -143,9 +151,24 @@ reset resetall profile debug diagnostics perf`) plus `lock`, `unlock`, `show`, `
 add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
 controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the
-window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. A verb or
+window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is
+one feature-verb row that hands its argument to LibKa0s-Sim-1.0's `NS.Sim:RunVerb` (the library's
+grammar plus DropWatcher's five verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
+disabled like any other and has no launcher entry or key binding. A verb or
 button refused while stood down prints `NS.StoodDownRefusal()`, so a perf capture never tells the
 player to `/dw enable` an addon that is already enabled.
+
+The launcher's Show window entry has a key binding (launcher-§6, LibKa0s#58). The root
+`Bindings.xml`, which the client reads without a TOC line, declares one
+`CLICK DropWatcherToggleWindow:LeftButton` binding under the `DROPWATCHER` header in the `ADDONS`
+category, with no default key. `core/LauncherSetup.lua` builds that button at load, above its
+library check: a plain, named, hidden, non-secure Button registered `AnyDown`. Its OnClick asks
+`NS.StoodDownRefusal()` first, because `NS.ToggleWindow` relies on the dispatcher's gate for
+`/dw toggle`, and prints that one line when it answers (the disabled line under the disabled hold,
+`Not available during a performance capture.` under the perf hold alone). Otherwise it calls
+`NS.ToggleWindow`, so the menu entry, the toggle verb and the key are one handler. The header label
+is `NS.BRAND` and the row label `Toggle Drop Watcher window` goes through `NS.L`. The button's name
+is permanent: a rename unbinds every player's key.
 
 ## Event Subscriptions
 
@@ -156,6 +179,12 @@ registered once, on `DW:OnSharedFeatureEvent`, which calls each declared handler
 TOC order of the modules). Each handler runs under `pcall`, so one that raises never skips the
 rest: its error is an `Init` debug line, and the first error is raised once every handler has run,
 the way the client's own registrant dispatch and AceAddon's errorCollector behave. `NS.FeatureEventNames()` is the declared list with each event once.
+`NS.DeliverEvent(event, ...)`, beside the dispatcher in `core/DropWatcher.lua`, is the simulator's
+replay of the same `NS.FEATURE_EVENTS` rows (`NS.Sim:Fire` and `NS.Sim:DeliverForCleanup` call it):
+it skips an event listed in `NS.rejectedEvents`, as the client never delivers one it rejected at
+registration, calls each declared handler in row order under `pcall`, writes a raise as a `SIM`
+debug line and never rethrows it (the deliberate difference from the live dispatcher), and answers
+how many handlers it called.
 
 | Event | Handler | Why |
 |---|---|---|
@@ -191,6 +220,28 @@ AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
 `[Init]` summary and the diagnostics report.
 
+### The simulator on LibKa0s-Sim-1.0
+
+The simulator is LibKa0s-Sim-1.0 hosting DropWatcher's scenarios, world providers, event drivers,
+restriction model and five verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
+session and its two-phase stop, the timeline's step machine, the `/dw sim` grammar and the step
+panel; it reaches this addon's handlers only through `NS.DeliverEvent` above. The host contract
+(LibKa0s `docs/api/Sim/version-2.2.2-docs.md`, *The host contract (H1–H10)*; the standard's
+preview-mode, *The in-game simulator*) binds this addon, and each obligation is met here:
+
+| | Obligation | Where DropWatcher meets it |
+|---|---|---|
+| H1 | Every simulated client read and outward action is a Compat member read at call time; senders and actions are guarded | `NS.Compat` routing (`core/Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`); the chat sender, the inspect calls and the trade action in `core/SimSetup.lua`'s `GUARDED`; `test_sim_e2e`'s scan fails a module that names a world global the simulator answers |
+| H2 | `Sim:NewSeam` straight after the Compat files, and `Unwrapped()` empty | `core/SimSetup.lua`'s TOC slot right after `core/CompatItem.lua`, under a LOAD-BEARING comment; `test_sim_e2e` asserts `NS.SimSeam:Unwrapped()` empty |
+| H3 | One `deliver` with the client's handler set and order | `NS.DeliverEvent` (`core/DropWatcher.lua`, this section above): the `NS.FEATURE_EVENTS` rows in order, `NS.rejectedEvents` skipped |
+| H4 | Session-only storage for every saved write the capture path reaches, and a before/after test | `History.LogFor` (`modules/History.lua`) gives a simulated drop or trade the session's log, never `global.history`; `test_sim_core`'s `sim history` cases hold the saved history untouched |
+| H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
+| H6 | `Stop("standDown")` is the first stand-down step | `modules/Sim.lua` puts `NS.Sim:Stop("standDown")` first in `NS.STAND_DOWN` (it loads before every other module that adds one); the automatic stops say `group` and `instance` with their own lines |
+| H7 | One Slash-1.0 feature-verb row, slash-only | the `sim` row in `settings/Slash.lua` calling `NS.Sim:RunVerb`; no launcher entry and no key binding |
+| H8 | A marker while a session runs, a diagnostics section and a debug tag | the `SIMULATION` title text (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
+| H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
+| H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
+
 ## Taint Notes
 
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are
@@ -210,14 +261,14 @@ trade range, because `CheckInteractDistance` is not to be called in combat. The 
 `hooksecurefunc` (in `core/Compat.lua`), never by replacing it; it never inspects in combat or while
 Blizzard's inspect window is open, and calls `ClearInspectPlayer` only for an inspect it started
 and nobody took over, so another addon's or the player's inspect is never cleared under them.
-While a simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`core/SimSeam.lua`)
-keeps the chat sender, the inspect calls and the trade action from the client
+While a simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`core/SimSetup.lua`,
+LibKa0s-Sim-1.0's `NewSeam`) keeps the chat sender, the inspect calls and the trade action from the client
 altogether: a send is printed with `[sim]`, a trade is printed, and nothing is inspected
 or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
-simulated restrictions, so nothing it queued can reach the real sender. `Sim.Fire` calls each
-handler under `pcall`, as the client's event dispatch and the live shared dispatcher
-(`DW:OnSharedFeatureEvent`) isolate it, and the stop runs each cleanup
-step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
+simulated restrictions (its `OnStopGuarded` step), so nothing it queued can reach the real sender.
+`NS.Sim:Fire` calls each handler under `pcall` (through `NS.DeliverEvent`), as the client's event
+dispatch and the live shared dispatcher (`DW:OnSharedFeatureEvent`) isolate it, and the library's
+stop runs each `OnStop` step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
 failure is a `SIM` debug line. While its combat edge is up, the simulator answers
 `InCombatLockdown` and the player's combat flag `true` through the seam and never `false`, so a
 caller that must not act in combat is never told it may (DW-90).
@@ -293,12 +344,11 @@ deviation not in this table is not ratified.
 
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
-| library-stack-§7, anti-pattern #47 | The chat sender (`Compat.ChatSender`) and the tooltip line reader with its duration decoder (`Compat.ReadTooltipLine`, `DecodeDuration`, its parsing in `core/TextParse.lua`) are written in this addon, not taken from LibKa0s | No LibKa0s major carries them, and MultiMeters' `ChatSender` is the only other copy; the promotion bars (two consumers with the same semantics) are not met yet. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major (v1.72.0 moves Perf.lua to minor 15 and the kit to revision 39 only) and LibKa0s#49 is still open, so the trigger has not fired | LibKa0s ships a major carrying either shape, or a second Ka0s addon needs the reader or the decoder |
-| (no rule yet) chat sent by an addon | The addon whispers and posts to group chat on the player's behalf: an ask or offer whispered to one member, an announce to INSTANCE_CHAT, RAID or PARTY, each from a click or, when queued under a restriction, from the 1.5-second flush timer (`modules/Asks.lua`) | The standard has no rule for addon-sent chat. The addon holds itself to design spec §9: one send per click, the one-ask guard, the 255-byte limit, the restriction queue, `pcall` around the sender, never SAY or YELL, a confirmation line per send, and test mode printing instead. A WowAddonStandards proposal issue is filed as [WowAddonStandards#11](https://github.com/tusharsaxena/WowAddonStandards/issues/11) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): WowAddonStandards#11 is still open and the standard (v2.81.0 branch) has no addon-sent-chat rule, so the trigger has not fired | The standard adopts a rule for addon-sent chat |
-| library-stack-§7, anti-pattern #47 | The loot parser (`modules/LootParser.lua`: the `LOOT_ITEM*` GlobalStrings compiled into patterns for every looter, rebuilt when the globals change, the upgrade and crafting echoes rejected) is written in this addon, not taken from LibKa0s | No LibKa0s major parses loot lines. LootHistory carries the only other parser (`core/Util.lua`), and it reads the player's own loot only, so the semantics differ. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major and LibKa0s#49 is still open, so the trigger has not fired | LibKa0s ships a loot-line major, or LootHistory needs third-person loot |
-| library-stack-§7, anti-pattern #47 | The item read (`core/ItemRead.lua`: how complete a link is, the better of two links, an item's identity, the gear level read detailed-then-base, the exact level and quality at a bag location, the quality of a link) is written in this addon, shaped as the API LibKa0s-Item-1.0 would take, not taken from LibKa0s | LibKa0s-Item-1.0 carries identity primitives only (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`). Loot History reads the same levels with its own `GetItemExtras` / `GearItemLevel`, and Bank Ledger resolves items too, so the read has three would-be adopters; the run builds in-addon first and promotes later (ui spec §0). A LibKa0s promotion issue is filed as [LibKa0s#51](https://github.com/tusharsaxena/LibKa0s/issues/51), with the loot-line parser as its second candidate | 2026-10-11 (ui spec §0). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): Item.lua stays at minor 2 and LibKa0s#51 is still open, so the trigger has not fired | LibKa0s-Item-1.0 ships these reads, or Loot History or Bank Ledger adopts them |
-| library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster and ConsumableMaster each react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. A LibKa0s promotion issue is filed as [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major and LibKa0s#49 is still open, so the trigger has not fired | LibKa0s ships a restriction major, or a second Ka0s addon needs the same four answers |
-| library-stack-§7, anti-pattern #47 | The simulation step panel (`modules/SimPanel.lua`) copies LibKa0s-Perf-1.0's step panel (`PerfPanel.lua`): its geometry, its three columns and its per-state colors. The frame is built from Core's skin and close mark (`NS.ApplySkin`, `NS.MakeCloseButton`) and the Widgets dropdown, but the row and state logic is this addon's | PerfPanel is attached to the Perf probe and drives only its fixed perf steps; it takes no host step list, so a simulator timeline cannot use it. The owner asked for its look exactly (sim feedback spec §1) | DW-91, 2026-10-11. Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): PerfPanel.lua stays at minor 6 and LibKa0s#53 is still open, so the trigger has not fired | The LibKa0s step-panel issue ([LibKa0s#53](https://github.com/tusharsaxena/LibKa0s/issues/53)) lands a shared step panel: adopt it and delete the copy |
+| library-stack-§7, anti-pattern #47 | The chat sender (`Compat.ChatSender`) and the tooltip line reader with its duration decoder (`Compat.ReadTooltipLine`, `DecodeDuration`, its parsing in `core/TextParse.lua`) are written in this addon, not taken from LibKa0s | No LibKa0s major carries them, and MultiMeters' `ChatSender` is the only other copy; the promotion bars (two consumers with the same semantics) are not met. The LibKa0s promotion issue, [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14), was rejected | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major (v1.72.0 moves Perf.lua to minor 15 and the kit to revision 39 only). Re-checked 2026-10-22 against LibKa0s v1.75.0: LibKa0s#49 was ruled will-not-do, the chat sender for having no content (its fallback rung is unreachable on every admitted client) and the reader and decoder for having one consumer; the recorded rejection is the library repo's `docs/api/Compat/version-1-docs.md`, *Censused for #49 and rejected* and the standard's `open-evolutions`, *Further `LibKa0s` modules*, *Recorded rejections, LibKa0s#46–#58* | The chat sender: Blizzard moves or reshapes the send API again so the resolver's second rung becomes reachable, or a third roster addon sends chat through the API with the same resolution. The reader and decoder: a second roster addon reads tooltip lines with first-answer semantics keyed by `Enum.TooltipDataLineType`, or decodes a whole localized duration sentence from the client's GlobalStrings |
+| (no rule yet) chat sent by an addon | The addon whispers and posts to group chat on the player's behalf: an ask or offer whispered to one member, an announce to INSTANCE_CHAT, RAID or PARTY, each from a click or, when queued under a restriction, from the 1.5-second flush timer (`modules/Asks.lua`) | The standard has no rule for addon-sent chat. The addon holds itself to design spec §9: one send per click, the one-ask guard, the 255-byte limit, the restriction queue, `pcall` around the sender, never SAY or YELL, a confirmation line per send, and test mode printing instead. A WowAddonStandards proposal issue is filed as [WowAddonStandards#11](https://github.com/tusharsaxena/WowAddonStandards/issues/11) (design spec §14) | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): WowAddonStandards#11 is still open and the standard (v2.81.0 branch) has no addon-sent-chat rule, so the trigger has not fired. Re-checked 2026-10-22 against the standard v2.86.0: the rule is still absent (the chat-sender row of LibKa0s v1.75.0's `docs/api/Compat/version-1-docs.md`, *Censused for #49 and rejected*, says addon chat-send policy belongs in the standard, which has not adopted one) | The standard adopts a rule for addon-sent chat |
+| library-stack-§7, anti-pattern #47 | The loot parser (`modules/LootParser.lua`: the `LOOT_ITEM*` GlobalStrings compiled into patterns for every looter, rebuilt when the globals change, the upgrade and crafting echoes rejected) is written in this addon, not taken from LibKa0s | No LibKa0s major parses loot lines. LootHistory carries the only other parser (`core/Util.lua`), and it reads the player's own loot only, so the semantics differ. The LibKa0s promotion issues, [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14) and [LibKa0s#51](https://github.com/tusharsaxena/LibKa0s/issues/51) (its second candidate), were rejected for it | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major. Re-checked 2026-10-22 against LibKa0s v1.75.0: the parser was ruled will-not-do under #49 and #51 for a correctness disagreement, not only scope (LootHistory treats crafting and refund lines as receipts, this addon rejects crafting lines and has no refund shape); the recorded rejection is the library repo's `docs/api/Item/version-3-docs.md`, *What this major is not* and the standard's `open-evolutions`, *Further `LibKa0s` modules*, *Recorded rejections, LibKa0s#46–#58* | A second addon needs every looter's loot **and** the consumers agree in writing on which line kinds are receipts (crafted, refund, bonus roll, pushed), or a third loot addon appears whose receipt set matches one of the two exactly. LootHistory needing third-person loot alone does not fire it, because it leaves the crafted-line disagreement in place |
+| library-stack-§7, anti-pattern #47 | The item read (`core/ItemRead.lua`: how complete a link is, the better of two links, an item's identity, the gear level read detailed-then-base, the exact level and quality at a bag location, the quality of a link) is written in this addon, shaped as the API LibKa0s-Item-1.0 would take, not taken from LibKa0s | Rejected for promotion ([LibKa0s#51](https://github.com/tusharsaxena/LibKa0s/issues/51)); stays in-addon by ruling. LibKa0s-Item-1.0 carries identity primitives (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`) and, from minor 3, `BonusIDsFromLink`, the one piece #51 promoted (its adopters are Bank Ledger and Loot History). This addon keeps its own link walk because it also reads the modifiers. The other reads have one consumer or disagreeing semantics: Loot History reads gear levels with its own `GetItemExtras` / `GearItemLevel` under a different non-gear rule and gate, Bank Ledger reads base `GetItemInfo` only, and the bag reads route through this addon's simulator seam. The run built in-addon first (ui spec §0) | 2026-10-11 (ui spec §0). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): Item.lua stays at minor 2. Re-checked 2026-10-22 against LibKa0s v1.75.0: Item.lua moves to minor 3 with `BonusIDsFromLink` only, and LibKa0s#51 was ruled will-not-do for `LinkDetail` / `BetterLink`, `IdentityKey` / `SameItem`, `EffectiveItemLevel`, `ItemLevelAt` / `QualityAt` and `QualityOf`; the recorded rejection is the library repo's `docs/api/Item/version-3-docs.md`, *What this major is not* and the standard's `open-evolutions`, *Further `LibKa0s` modules*, *Recorded rejections, LibKa0s#46–#58* | Per read, the trigger the library repo's `docs/api/Item/version-3-docs.md`, *What this major is not* records: a second addon must merge two reports of one item from sources whose links differ in completeness; a second addon tells variants of one item id apart; this addon and Loot History settle on one non-gear rule and one gear gate (or a third addon needs a gear level read); a second addon reads an exact level or quality at an `ItemLocation`; or Bank Ledger adopts the color fallback for uncached quality |
+| library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster, ConsumableMaster and MultiMeters react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. QuickComms carries a copy of this tracker whose announce edge differs (it also has no `CanInspect` / `CanTrade`). The LibKa0s promotion issue, [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14), was rejected | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major. Re-checked 2026-10-22 against LibKa0s v1.75.0: LibKa0s#49 was ruled will-not-do for the tracker (a same-author copy under ten days old whose edges already diverged) and deferred the four restriction readers as guards; the recorded rejection is the library repo's `docs/api/Compat/version-1-docs.md`, *Censused for #49 and rejected* and the standard's `open-evolutions`, *Further `LibKa0s` modules*, *Recorded rejections, LibKa0s#46–#58* | At least two of: a third roster addon, not a copy, needs a restriction answer set; this tracker and QuickComms' copy converge on one announce edge and one answer set; 12.2 ships with no change to `Enum.AddOnRestrictionType`, the event payload or the chat-blocking classification |
 | options-ui-§17 | the class-color companion sits below its swatch in the tab's mirrored two-column layout | owner's choice: main spec left, off-spec right on every row | 2026-10-18 | the next options-ui-§17 edit, or LibKa0s gaining a mirrored color-pair layout |
 
 ### Files over the 1500-line cap

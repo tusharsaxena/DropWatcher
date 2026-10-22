@@ -191,6 +191,18 @@ function NS.MigrateContentAll(profile)
     if type(feed) == "table" and feed.content == "all" then feed.content = "session" end
 end
 
+-- ── step 9: the simulation panel's position is session-only (DW-04, LibKa0s#54) ─────────────
+
+--- Step 9's work on one stored profile: `simPanel` (the dragged simulation panel's point) is
+--- retired. It was window state absent from defaults, written only by DropWatcher's own panel,
+--- which LibKa0s-Sim-1.0's replaced; that panel holds a dragged point for the session alone
+--- (OWNER_SCOPE C.11), so a simulation writes nothing to SavedVariables. Idempotent: only the key
+--- goes.
+--- @param profile table a raw stored profile
+function NS.RetireSimPanelPoint(profile)
+    if type(profile) == "table" and profile.simPanel ~= nil then profile.simPanel = nil end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -208,6 +220,8 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.RetireEqColumns(profile) end },
     { to = 8, perProfile = true,         -- 7 -> 8: Content: All is History's alone; a stored one is session
       run = function(_, profile) NS.MigrateContentAll(profile) end },
+    { to = 9, perProfile = true,         -- 8 -> 9: the simulation panel's position is session-only
+      run = function(_, profile) NS.RetireSimPanelPoint(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

@@ -12,7 +12,7 @@
 -- Both directions: every literal `L["..."]` / `NS.L["..."]` in an addon file has an enUS entry,
 -- and every enUS key is a string literal somewhere in the addon's files (localization-§3: enUS
 -- accumulates no key nothing reads). The reverse is looser than an `L[...]` call site, because some
--- keys are reached dynamically (core/SimSeam.lua's `L[line]`, the refusal and situation-label
+-- keys are reached dynamically (core/SimSetup.lua's `L[line]`, the refusal and situation-label
 -- tables), but a key whose text appears nowhere is read by nothing.
 --
 -- red under: delete any one entry from locales/enUS.lua or locales/enUS_Settings.lua; or leave an

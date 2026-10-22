@@ -17,7 +17,7 @@ local Kit = {}
 --- cannot answer on its own: *which* kit is a given consumer holding? Before this, "AbsorbTracker's
 --- kit is stale" was only reachable by diffing against this repo at the right commit. Now the
 --- consumer can say so itself, and its API document has a name.
-Kit.VERSION = 39
+Kit.VERSION = 41
 
 -- ── the resource guard (kit revision 23) ───────────────────────────────────────────────────────
 --
@@ -905,15 +905,15 @@ Kit.__limits           = limits
 Kit.__leakFailure      = leakFailure
 Kit.__heapFailure      = heapFailure
 
---- The suite-inventory internals (kit revision 25), for the kit's own self-tests. The decline
---- reader above all: it is the one path in the inventory that can turn a failure into a skip, so
---- what it does and does not accept is pinned directly rather than inferred from a green run.
-Kit.__loadSuites    = loadSuites
-Kit.__normDir       = normDir
-Kit.__resolveDir    = resolveDir
-Kit.__adviceDir     = adviceDir
-Kit.__deviationRows = inventory.deviationRows
-Kit.__declineFor    = inventory.declineFor
-Kit.__kitGateRule   = inventory.kitGateRule
+--- The suite-inventory internals (kit revision 25), for the kit's own self-tests: the path helpers
+--- and the gate-rule table, and nothing else. The decline reader, the one path in the inventory that
+--- can turn a failure into a skip, is pinned by `tests/test_kit_inventory.lua` through its fixtures
+--- (a real register read by `Kit.assertSuiteInventory`), not through an export; revision 41 dropped
+--- the two exports no suite read.
+Kit.__loadSuites  = loadSuites
+Kit.__normDir     = normDir
+Kit.__resolveDir  = resolveDir
+Kit.__adviceDir   = adviceDir
+Kit.__kitGateRule = inventory.kitGateRule
 
 return Kit

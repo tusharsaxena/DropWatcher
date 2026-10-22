@@ -55,13 +55,19 @@ the CLI, the launcher and the host verbs trigger (`Settings.REACTIONS` in `setti
 The header's Defaults button and Reset all settings both open the confirmation popup; the global
 reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
 
+The launcher's right-click menu mirrors four of these: Enabled, Locked, Test mode and Show window
+(launcher-§2). Show window also has a key binding (launcher-§6): Key Bindings → AddOns → Ka0s Drop
+Watcher → Toggle Drop Watcher window, with no default key, on the same handler as the menu entry and
+`/dw toggle` (`NS.ToggleWindow`, through the `DropWatcherToggleWindow` button in
+`core/LauncherSetup.lua`).
+
 ## General → Simulator
 
 One slider (the tab was `Simulation` until feedback-24), `Simulation step delay` (`sim.stepDelay`, feedback-2 spec §8, DW-A7): the seconds the
 simulator's automatic run (`/dw sim run`, the simulation panel's Run all) waits between steps, 0.5
 to 10 in steps of 0.5, 2 by default. `/dw set sim.stepDelay <n>` reaches it too (the slash parser
 clamps a number outside the range to it). A change takes effect from the next step of a running
-timeline, and the panel's Run all tooltip names the current delay.
+timeline.
 
 ## Situations
 
@@ -93,8 +99,8 @@ on each render. The placeholder's `OnRelease` parks it (`ParkSituationTable`), h
 whenever AceGUI takes the placeholder back (options-ui-§19); the Situations page's renderer
 (`beforeClear` in `settings/Pages.lua`, and its `rerender`) also parks it before `ClearScroll` as
 belt-and-braces. Until DW-H0 the tab drew one block per situation,
-since LibKa0s has no grid composer for mixed controls ([LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50));
-the table is drawn by the page's own editor instead.
+since LibKa0s has no grid composer for mixed controls;
+[LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one consumer; the table stays the page's own editor.
 
 ## Drops
 

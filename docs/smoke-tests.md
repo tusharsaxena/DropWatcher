@@ -13,8 +13,8 @@ passed.
 
 | ID range | Theme | What it covers |
 |---|---|---|
-| INSTALL-1..4 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22) |
-| SLASH-1..7 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14) |
+| INSTALL-1..5 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV) |
+| SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
@@ -22,7 +22,7 @@ passed.
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21) |
-| FEED-1..99 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); Situations as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86); Can't use in dim red on every surface, Not wanted still gray (FEED-87, feedback-21), Trade's `Can't use` on a drop none of your specs can use and Yes or Likely kept beside an off-spec use (FEED-88, feedback-21), every tooltip as bulleted rows, one per fact (FEED-89, feedback-21), a gear grid under the title, muted gold labels and an arrow on every worn item (FEED-90, feedback-21 H3), the detail card's glyphs, titles, stat colors and Replaces row (FEED-91, feedback-21 H5), a mark per worn item on a two-item slot wherever a verdict mark is drawn (FEED-92, feedback-21 H7), one mark where the drop was judged against one item or a bag item, or a larger Font size leaves no room (FEED-93, feedback-21 R5); both rings on a unique-equipped ring drop (FEED-94), Trade as Yes, No or ? and a short reason, on its own compact line 4, the taller compact card and the wider Trade column (FEED-95), the glow only on a tradeable upgrade (FEED-96), the trade box above the comparisons on the detail card (FEED-97; feedback-22); the compact action button on lines 2 and 3, Them on line 4 when it does not fit beside You, and the 400 compact width (FEED-98, feedback-23); the settings pages regrouped (FEED-99, feedback-24) |
+| FEED-1..101 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); Situations as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86); Can't use in dim red on every surface, Not wanted still gray (FEED-87, feedback-21), Trade's `Can't use` on a drop none of your specs can use and Yes or Likely kept beside an off-spec use (FEED-88, feedback-21), every tooltip as bulleted rows, one per fact (FEED-89, feedback-21), a gear grid under the title, muted gold labels and an arrow on every worn item (FEED-90, feedback-21 H3), the detail card's glyphs, titles, stat colors and Replaces row (FEED-91, feedback-21 H5), a mark per worn item on a two-item slot wherever a verdict mark is drawn (FEED-92, feedback-21 H7), one mark where the drop was judged against one item or a bag item, or a larger Font size leaves no room (FEED-93, feedback-21 R5); both rings on a unique-equipped ring drop (FEED-94), Trade as Yes, No or ? and a short reason, on its own compact line 4, the taller compact card and the wider Trade column (FEED-95), the glow only on a tradeable upgrade (FEED-96), the trade box above the comparisons on the detail card (FEED-97; feedback-22); the compact action button on lines 2 and 3, Them on line 4 when it does not fit beside You, and the 400 compact width (FEED-98, feedback-23); the settings pages regrouped (FEED-99, feedback-24); the test-mode banner as LibKa0s-Widgets' strip (FEED-100, DW-06); the filter bar's search box as LibKa0s-Widgets' SearchBox (FEED-101, DW-07) |
 | ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
 | ITEM-1..5 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
@@ -34,10 +34,10 @@ passed.
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
 | TOAST-1..6 | [Toast](#toast) | The opt-in upgrade toast: shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10) |
-| GLOW-1..10 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10) |
+| GLOW-1..11 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid black border) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..13 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2) |
+| SIM-1..16 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05) |
 | COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 
@@ -63,6 +63,25 @@ both are kept; the debug flag and test mode are not (session-only). Result:
 → no Lua error and no new chat line; `/dump LibStub.minors["LibKa0s-Perf-1.0"]` → `15`. `/dw diagnostics`
 and `/dw perf` open as DIAG-1 and DIAG-2 describe. A lower minor means an older copy of the library
 loaded first from another addon; record which addons were enabled. Result:
+
+**INSTALL-5. The re-vendored LibKa0s v1.75.0 and its icon subset.** (DW-RV) The copy now ships only
+the 28 icons the `LibKa0s icons:` line in `CLAUDE.md` declares, and a pruned icon draws blank rather
+than falling back to text, so this pass is the backstop the headless gate cannot be.
+
+- SM-DW-1: `/reload` with Drop Watcher alone → no Lua error and no new chat line;
+  `/dump LibStub.minors["LibKa0s-Widgets-1.0"]` → `13`, and
+  `/dump LibStub.minors["LibKa0s-Options-1.0"]` → `29` (the v1.75.0 Options key is
+  29.2.34.2.5.9.1.7.4.2.1). A lower minor means an older copy loaded first from another addon; record
+  which addons were enabled.
+- SM-DW-2: every declared icon draws, none blank: the title bar's minimize and add marks, fullscreen-enter
+  and fullscreen-exit; the lock badge; the group-header and footer chevrons (down, right, up); the
+  dropdown's chevron and tick; the action buttons (chat, confirm, clock, reset, ban, external-link,
+  speech-bubble, people, link-intact, edit, transfer, cancel); the tooltip marks (arrow-up, arrow-down,
+  arrow-right, transfer); the item cell's help fallback; and the `/dw test` banner's info mark.
+- SM-DW-3: the library-drawn set draws: the debug console's close, copy and clear (`/dw debug`), the
+  perf panel's close (`/dw perf`), and the main window's close mark.
+
+Result:
 
 ## Slash
 
@@ -102,6 +121,13 @@ root with `help`: `/dw`, `/dropwatcher`, then each other addon's own roots (`/qc
 → each prints its own addon's help, under its own brand, and none is answered by another addon or by
 the client's `Type /help for a listing`. Then Settings → AddOns → each addon is listed once, and each
 multi-page addon's pages appear once each under it. Result:
+
+**SLASH-8. The Show window key binding (launcher-§6, LibKa0s#58, DW-09).** Key Bindings → AddOns →
+Ka0s Drop Watcher lists `Toggle Drop Watcher window` with no default key. Bind one; a press opens the
+window and a second press closes it (one toggle per press), in and out of combat. Then `/dw disable`
+and press the key → exactly one disabled refusal line and no window. `/dw enable`, start a
+`/dw perf` capture and press → exactly `Not available during a performance capture.` and no toggle.
+Result:
 
 ## Settings panel
 
@@ -211,6 +237,7 @@ bold amber, ending soon, one estimated with `~`, one `No limit (BoE)`, one not t
 trinket opens the panel with `+14 UPGRADE`, `+6 UPGRADE`, `EQUAL`, `NO UPGRADE`, `CAN'T USE`, `CHECKING` and
 `UNAVAILABLE`; Offer and the strip's Post my tradeables print and send nothing. Drag the window and minimize it: the `TEST MODE` text stays on the title bar.
 `/dw test` → the text, the banner and the rows go, View is back to Interesting and the empty state returns.
+(Since DW-06 the banner is LibKa0s-Widgets' test-mode strip, anchored and tipped by Drop Watcher: FEED-100.)
 Result:
 
 **STATE-4. Test mode shows real items, History test data and no trailing ellipsis (DW-84).** Solo, outside
@@ -554,7 +581,8 @@ line and height as Loot History's `Search items…` box, with its gray hint 6px 
 its line turns gold, and click away → gray again. (The `Likely tradeable only` checkbox this check
 covered is a View value since DW-A1: FEED-20.) The View, Quality and Content dropdowns match Loot
 History's (same flat box, chevron, font and height), 8px apart. Switch to History → the control it
-does not use (Quality) grays out the same way. Result:
+does not use (Quality) grays out the same way. (Since DW-07 the search box is LibKa0s-Widgets'
+SearchBox, its hint and filter Drop Watcher's: FEED-101.) Result:
 
 **FEED-18. My eq, Their eq, the two new filters and auto-open on every drop (DW-83).** (Since DW-F1 My eq
 is the gear part of Me and Their eq of Them, and the My eq and Their eq toggles are gone: read the column
@@ -1494,6 +1522,36 @@ Alerts: Toast (Show a toast alone, `Least gain | Duration`, `Show in combat | Pl
 Upgrade glow (Effect, Offset, then Pixel border, Auto cast sparkles, Button, Proc, the Style dropdown
 listing them in that order). Each page's Defaults resets only its own tabs. Result:
 
+**FEED-100. The test-mode banner is LibKa0s-Widgets' strip (DW-06, LibKa0s#48).** The headless
+`test_window` (the strip built once through `NS.MakeTestStrip` with Drop Watcher's line and the info
+mark, its anchors under the filter bar, `BANNER_H - 4` equal to the strip's height, the full text's
+right edge and no wrap, compact wrapping, and a window with no Widgets library drawing no banner and
+reserving nothing) covers the wiring. Owed in the client, never marked passed by an agent:
+
+- SM-DW-11. `/dw test`, full layout → the amber strip under the filter bar looks as before (the info
+  mark, gold text, the same tooltip as the `TEST MODE` title word); narrow the window until the line
+  no longer fits → it truncates with an ellipsis instead of running past the strip's right edge.
+- SM-DW-12. `/dw compact`, the window 380 px wide → the short line (`TEST: sample drops in every
+  state. …`) wraps to two lines and the panes move down to clear it; at 520 px it is one line and the
+  panes move back up.
+- SM-DW-13. With test mode on, enter combat → test mode ends, and the strip and the room it reserved
+  go. While test mode is on, the `TEST MODE` title word shows, minimized too.
+
+Result:
+
+**FEED-101. The filter bar's search box is LibKa0s-Widgets' SearchBox (DW-07, LibKa0s#52).** The
+headless `test_window_shell` (the box built once through `NS.MakeSearchBox` with Drop Watcher's hint
+and no icon, the flat skin, height, face, insets and hint place unchanged, the gold focus line and back,
+a focus loss still writing the filter's debug line, and a window with no Widgets library drawing no
+search box) covers the wiring. Owed in the client, never marked passed by an agent:
+
+- SM-DW-14. The filter bar's search box looks as before (flat dark box, gray line, `Filter looter or
+  item…` hint); focus lights the line gold and blur restores it; typing filters live; Enter and Escape
+  drop focus; in compact layout the box moves into the Filters panel with its hint (FB.Anchor) and still
+  filters.
+
+Result:
+
 ## Roster
 
 The resolver's rules are headless-tested (`test_roster`); these checks confirm the client's spelling
@@ -2188,6 +2246,21 @@ out of place. `/dw test` → the main-spec upgrades wear a yellow pixel border a
 blue one, their lines running slowly round the icon. On a profile that stored a glow's color or style
 before this build → it keeps the stored value; only what it never set takes the new default. Result:
 
+**GLOW-11. Every style on the LibKa0s-Glow-1.0 driver (SM-DW-15, DW-08, LibKa0s#56).** The effect is now
+drawn through `NS.GlowLib` (`core/GlowSetup.lua`), the library's stateless LibCustomGlow-1.0 driver, in
+place of this addon's own mapping; `tests/test_glow.lua` (unchanged) and the Glow parity case cover the
+wiring headless. Owed in the client, never marked passed by an agent:
+
+- SM-DW-15. `/dw test`, then for each of the four glow styles in turn (Button: rotating rays, Proc:
+  the flash, Pixel border, Auto cast: sparkles), set as Main spec style and as Off-spec style → the
+  style shows on the Drops row's icon, the compact card's icon (`/dw compact`) and the detail card's
+  header icon, for a main-spec upgrade and for an off-spec one, as it did before this build. Move each
+  of that style's knob sliders → every glowing icon restarts with the new value. With Proc, the opening
+  burst plays once per drop: scrolling, re-sorting or a new drop repainting the window shows only the
+  loop on an icon that already glowed.
+
+Result:
+
 ## Item icons
 
 The look's decision, its rows and the surfaces' icons are headless-tested (`test_icon_style`,
@@ -2325,7 +2398,7 @@ Result:
 `test_sim_scenario` and `test_sim_core` cover the same ground. With no simulation running, `/dw sim
 run`, `step`, `pull`, `kill`, `loot`, `lockdown on`, `trade 1` and `stop` each print `No simulation is
 running: start one with /dw sim start <scenario>.`; `/dw sim start nowhere` prints `Unknown
-scenario.`; `/dw disable`, then `/dw sim start dungeon` → the disabled line, and no simulation starts.
+scenario 'nowhere'. Scenarios: …` with the scenario names (the library's line since DW-03, SIM-15); `/dw disable`, then `/dw sim start dungeon` → the disabled line, and no simulation starts.
 With one running: `/dw sim pull` twice → `A simulated boss is already engaged: /dw sim kill first.`;
 `/dw sim run` twice → `The timeline is already playing.` Start one and `/dw sim run`, then accept a
 real group invite mid-run → `Simulation stopped: you joined a group.`, the `SIMULATION` text goes, no further
@@ -2351,34 +2424,42 @@ start world` (both untracked by default) → each fills the window the same way.
 → an ask's announce goes to instance chat (`[sim] INSTANCE_CHAT: …`). In `/dw sim start raid 12`
 → you show online in the roster (`/dw diagnostics`, `unit=raid1`). Result:
 
-**SIM-10. The simulation step panel (DW-91, sim feedback §1).** The headless `test_sim_panel` covers
-the same ground. Solo, out of an instance: `/dw sim` → the panel `Ka0s Drop Watcher - Simulation`
-opens beside the window (not over it), in the perf-run panel's look: a dot, the step and its
-command on each row, the close mark at the top right, a scenario choice and Start at the foot. Pick
-Raid and a member count → the rows preview the raid's steps and `Start: Raid` reads `/dw sim start
-raid <n>`; Start → the simulation starts and the foot shows Run all, Pause, Restart and Stop. Click
-the third step ahead → chat prints one step line for each step in between, in order, and the rows
-turn green with a check up to it, the last one gold, the next one bright and the rest gray. Hover a
-completed row → its tooltip says when it ran; clicking it does nothing. Type `/dw sim step` → the
-panel moves on too. Run all → the gold highlight follows each step, and after the second step Pause is
-still live and Run all still spent; Pause → it stops, and Resume plays on. Restart → the same scenario starts again at its first step; Stop → the simulation ends and
-the picker returns. Drag the panel, `/reload`, `/dw sim panel` → it opens where you left it; Reset
-position (General › Master controls) → it docks beside the window again. Close the window, then
-`/dw sim start raid 30` on a fresh login (the journal still loading) → once the window opens the
-panel moves beside it, not over it. Result:
+**SIM-10. The simulation step panel (DW-91, sim feedback §1; LibKa0s-Sim-1.0's since DW-04).** The
+headless `test_sim_panel` covers DropWatcher's part; the panel's own behavior is LibKa0s-Sim-1.0's.
+
+- SM-DW-7: solo, out of an instance, `/dw sim panel` → the panel `Ka0s Drop Watcher - Simulation`
+  docks beside the window (right of it, else left, else floating right of center by 420 when
+  neither side fits or the window is closed), with Start, the steps and Stop, each with its typed
+  command; a played step turns green with the done tick, the current one gold, the next bright,
+  those ahead gray and Stop muted red; an actionable row lights on hover. The buttons are now the
+  library's default buttons and the tooltips plain GameTooltip lines (accepted change, OWNER_SCOPE
+  C.7), and the panel gains a width grip. Each step's name and tooltip are DropWatcher's
+  (`Pull: <boss>`, `Loot: 2 drops`, what it injects), and since DW-04 the chat's step line names the
+  step the same way (`Simulation step 2 of 15: Pull: Warden Ashvane.`).
+- SM-DW-8: pick Raid in the picker → the size dropdown appears (Random, 9, 12, 15, 19); Start; click
+  a step two ahead → every step up to it plays in order, one chat line each; Pause, Resume, Restart
+  and Stop do what the typed verbs do; the panel grows with the rows without empty space.
+- SM-DW-9: drag the panel, `/reload`, `/dw sim panel` → it docks beside the window again (the
+  position is session-only now; nothing is written to SavedVariables); Reset position (General ›
+  Master controls) redocks a dragged panel; `/dw disable` while it is open hides it, and
+  `/dw sim panel` while disabled is refused. Close the window, then `/dw sim start raid 12` on a fresh
+  login (the journal still loading) with the panel open → once the window opens the panel moves
+  beside it, not over it.
+
+Result:
 
 **SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** The headless `test_sim_scenario`
-and `test_sim_panel` (`sim step delay`) cover the same ground. Settings › General › Simulator →
+(`sim step delay`) covers the same ground. Settings › General › Simulator →
 `Simulation step delay` reads 2 and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`,
-hover Run all → `one every 2 seconds`; Run all → the steps come about two seconds apart. Set the
-slider to 6 while it plays → the step already waiting keeps its time, and the next ones come about
-six seconds apart; hover Run all → `one every 6 seconds`. `/dw set sim.stepDelay 1.5` → the steps
-speed up from the next one, and `/dw get sim.stepDelay` reads 1.5. Result:
+Run all → the steps come about two seconds apart. Set the slider to 6 while it plays → the step
+already waiting keeps its time, and the next ones come about six seconds apart. `/dw set
+sim.stepDelay 1.5` → the steps speed up from the next one, and `/dw get sim.stepDelay` reads 1.5.
+(Since DW-04 Run all's tooltip is the library's and names only its typed command.) Result:
 
 **SIM-12. The loot step says where its drops went, and the window reconciles (DW-B0, feedback-3 spec
 §0; one tab since DW-E3).** The headless `test_sim_report` covers the same ground in every scenario. Solo,
 with the window's filters at their defaults: `/dw sim start key`, then play it to its loot step → the
-panel row and the chat line read `Loot: 2 drops` (`Simulation step 10 of 11: loot: 2 drops.`; the
+panel row and the chat line read `Loot: 2 drops` (`Simulation step 10 of 11: Loot: 2 drops.` since DW-04; the
 `(1 yours)` is gone since DW-E2); hover the row → it names each drop, its looter and where it is
 (`… (you): Drops`, `… (<member>): Drops`). Drops shows both under a header reading `2 drops`, yours
 with Offer, even when your drop is an upgrade you keep. `/dw set feed.minIlvlMode absolute` and
@@ -2392,6 +2473,44 @@ reads `Loot: 2 drops (2 not shown in test mode)` and its tooltip `… not shown 
 test mode off → the places come back. (`feed.showOwn`, and with it the `Group drops and My drops` and
 `not on My drops` places this check also read, are gone since DW-E2/DW-E3: `/dw get feed.showOwn` finds no
 setting.) Result:
+
+SIM-1..13 are owed again since DW-02..DW-04 moved the simulator onto LibKa0s-Sim-1.0 (LibKa0s#54):
+the session, its stop, the timeline's step machine, the `/dw sim` grammar and the step panel are the
+library's now, and DropWatcher keeps its scenarios, world, event drivers, restrictions and five
+verbs. Re-run each on the library (SM-DW-10); SIM-14..16 name what visibly changed.
+
+**SIM-14. The session on LibKa0s-Sim-1.0 (DW-02; SM-DW-4, SM-DW-5).** The headless `test_sim_core`
+and `test_sim_scenario` cover DropWatcher's part; the session and the timeline are the library's
+(its `test_sim_session` and `test_sim_timeline`). Solo, outside an instance, out of combat:
+
+- SM-DW-4: re-run SIM-1 → `/dw sim start dungeon` prints DropWatcher's own start line
+  (`Simulation started (…): nothing is sent, and your saved history is not touched.`); each refusal
+  (in a group, inside an instance, in combat, with test mode on, a second start) prints its line as
+  before; join a group → `Simulation stopped: you joined a group.`; `/dw disable` → `Simulation
+  stopped: the addon was disabled.`; after a `/reload` no simulation runs.
+- SM-DW-5: `/dw sim start key`, then `/dw sim run` → the steps play about 2 seconds apart (the
+  `sim.stepDelay` setting still applies); `/dw sim pause` and `/dw sim resume` hold and continue it.
+  `/dw sim restart` → chat prints `Simulation stopped to restart.`, the library's stop line for a
+  restart (accepted change, OWNER_SCOPE C.7), and the same scenario starts again.
+
+Result:
+
+**SIM-15. `/dw sim` through the library's grammar (DW-03; SM-DW-6).** The headless
+`test_sim_scenario` covers DropWatcher's five verbs; the grammar is the library's (its
+`test_sim_verbs`). SM-DW-6: `/dw sim` alone prints the status and the usage and opens the panel;
+`/dw sim start key`, `step`, `pull`, `kill`, `loot 3`, `lockdown on`, `trade <id>`, `status` and `stop`
+each print the same lines as before; `/dw sim bogus` prints the usage; `/dw sim start nosuch` prints
+`Unknown scenario 'nosuch'. Scenarios: …` with the scenario names, the library's line (accepted
+change, OWNER_SCOPE C.7; it was `Unknown scenario.`); `/dw disable`, then `/dw sim run` → the one
+disabled refusal line. Result:
+
+**SIM-16. The library's step panel, its position session-only (DW-04; SM-DW-7..9).** The headless
+`test_sim_panel` covers DropWatcher's part; the panel is the library's (its `test_sim_panel` and
+`test_sim_panel_render`). Run SIM-10's SM-DW-7, SM-DW-8 and SM-DW-9 and confirm each accepted
+visible change (OWNER_SCOPE C.7, C.11): the panel's buttons are the library's default buttons, its
+tips plain GameTooltip lines, and it has a width grip; and the panel forgets its point at `/reload`:
+drag it, `/reload`, `/dw sim panel` → it docks beside the window again, and `SavedVariables` holds no
+`simPanel` key (migration 9 removed an old one). Result:
 
 ## Compact
 
@@ -2645,19 +2764,22 @@ stray `%s` or `%d`, and no Lua error. Result:
 | TMOG-1 | DW-53, the transmog-known flag and the For transmog ask | No client pass recorded yet |
 | ASK-8 | DW-54, auto-ask | No client pass recorded yet |
 | ASK-9 | DW-62, auto-ask after leaving an encounter | No client pass recorded yet |
-| SIM-1 | DW-70, the simulator's core: the seam, its safety and the session log | No client pass recorded yet |
-| SIM-2 | DW-73, a full `key` run | No client pass recorded yet |
-| SIM-3 | DW-73, a `raid` run with a large roster | No client pass recorded yet |
-| SIM-4 | DW-72, inspect replies, the lockdown queue and its flush | No client pass recorded yet |
-| SIM-5 | DW-72, your own drops' trade windows and a simulated trade | No client pass recorded yet |
-| SIM-6 | DW-71, the simulator's item pool and its fallback | No client pass recorded yet |
-| SIM-7 | DW-73, the verbs' refusals and the automatic stop end to end | No client pass recorded yet |
-| SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet |
-| SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet |
-| SIM-10 | DW-91, the simulation step panel | No client pass recorded yet |
-| SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet |
-| SIM-12 | DW-B0, the loot step says where its drops went; the window reconciles | No client pass recorded yet |
-| SIM-13 | DW-B5, the loot step honors test mode's feed (`feed.showOwn` and My drops' filters retired since DW-E2/DW-E3) | No client pass recorded yet |
+| SIM-1 | DW-70, the simulator's core: the seam, its safety and the session log | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-2 | DW-73, a full `key` run | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-3 | DW-73, a `raid` run with a large roster | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-4 | DW-72, inspect replies, the lockdown queue and its flush | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-5 | DW-72, your own drops' trade windows and a simulated trade | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-6 | DW-71, the simulator's item pool and its fallback | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-7 | DW-73, the verbs' refusals and the automatic stop end to end | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-10 | DW-91, the simulation step panel | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-12 | DW-B0, the loot step says where its drops went; the window reconciles | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-13 | DW-B5, the loot step honors test mode's feed (`feed.showOwn` and My drops' filters retired since DW-E2/DW-E3) | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-14 | DW-02, the session on LibKa0s-Sim-1.0 and its Restart stop line (SM-DW-4, SM-DW-5) | No client pass recorded yet |
+| SIM-15 | DW-03, `/dw sim` through the library's grammar and its unknown-scenario line (SM-DW-6) | No client pass recorded yet |
+| SIM-16 | DW-04, the library's step panel, its default buttons, GameTooltip tips and width grip, its position session-only (SM-DW-7..9) | No client pass recorded yet |
 | COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
 | COMPACT-2, COMPACT-7 | DW-C2, compact Drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
 | COMPACT-8 | feedback-15, compact headers left aligned, LFR, per-piece limits | No client pass recorded yet |
@@ -2671,6 +2793,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | COMPAT-4 | DW-P20, the optional-addon probe through Compat | No client pass recorded yet |
 | PANEL-8, DEGRADED-2, TOAST-4 | DW-P21, the situation table's OnRelease park; the toast's close degrading to nothing | No client pass recorded yet |
 | INSTALL-4 | DW-P22, the LibKa0s v1.72.0 re-vendor | DW-P22 has landed (`ff567d3`); no client pass recorded yet |
+| INSTALL-5 | DW-RV, the LibKa0s v1.75.0 re-vendor and icon prune | No client pass recorded yet |
 | DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | DW-P22 (`ff567d3`) and DW-P24 (`917449f`) have landed; owed the owner's capture recorded under `docs/perf-analysis/`; none is invented |
 | SLASH-7 | Review 2026-10-14, the cross-addon census's in-client half | No client pass recorded yet |
 | ITEM-5 | The Fireproof Drape fix: every primary stat read off the tooltip, the spec list held to its own class | No client pass recorded yet |
@@ -2691,6 +2814,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | GLOW-7..8 | feedback-21, each glow turned off; a style's knobs dimmed for another style | No client pass recorded yet |
 | GLOW-9 | feedback-21, Use class color below each glow color (H6): the player's class, the swatch's alpha, never dimmed | No client pass recorded yet |
 | GLOW-10 | feedback-21 H6, the glow defaults (both pixel, `#FFF468` and `#3FC7EB`, frequency 0.1) and every row main left, off-spec right | No client pass recorded yet |
+| GLOW-11 (SM-DW-15) | DW-08, LibKa0s#56, the four glow styles on the LibKa0s-Glow-1.0 driver: each surface, main and off-spec, each knob restarting the glow, the proc burst once per drop | No client pass recorded yet |
 | TOAST-6 | feedback-21 G10, the toast's Scale: 50 to 200 %, live on a toast on screen, about its saved anchor | No client pass recorded yet |
 | ICON-1..2 | feedback-21 G11, the default look (H6: zoom 0.1, a Solid black border 2 pixels thick), Window › Icons' rows, Icon zoom live on every surface | No client pass recorded yet |
 | ICON-3..4 | feedback-21 G11, the border block, its Use class color and the glow over it; Color by item quality | No client pass recorded yet |
@@ -2709,6 +2833,9 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-97 | feedback-22, the trade box above FOR YOU and FOR LOOTER on the detail card, full and stacked | No client pass recorded yet |
 | FEED-98 | feedback-23, the compact button on lines 2 and 3, Them on line 4 when it does not fit beside You, 400 x 560 | No client pass recorded yet |
 | FEED-99 | feedback-24, the settings pages regrouped: Situations, Drops, Window's Starting view, Alerts; the pairings and labels | No client pass recorded yet |
+| FEED-100 | DW-06 (LibKa0s#48), the test-mode banner as the library's strip: full layout unchanged and a long line truncated; compact two lines at 380, one at 520; combat ends it with its reserve | No client pass recorded yet |
+| FEED-101 | DW-07 (LibKa0s#52), the filter bar's search box as the library's SearchBox: the same look and hint, the gold focus line, live filtering, Enter and Escape, compact | No client pass recorded yet |
+| SLASH-8 | DW-09 (LibKa0s#58, launcher-§6), the Show window key binding: listed with no default key, one toggle per press in and out of combat (SM-DW-16); one refusal line by hold, disabled or perf capture, and no toggle (SM-DW-17) | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 

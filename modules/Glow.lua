@@ -30,8 +30,13 @@ local _, NS = ...
 -- list. A repaint's hide and show of a pooled frame would replay the proc style's opening burst;
 -- spendBurst keeps it to the effect's first appearance.
 --
--- HEADLESS. Without the library (the suites load no libs/ beyond LibKa0s, or a LibStub miss) Apply
--- still records its decision on the button (`glowKind`) and draws nothing.
+-- THE DRIVER IS THE LIBRARY'S. The four styles' knobs reach LibCustomGlow-1.0 through NS.GlowLib
+-- (core/GlowSetup.lua, the LibKa0s-Glow-1.0 seam), which resolves LibCustomGlow-1.0 at every call;
+-- this file keeps only the policy: which drops glow, the unchanged-repaint gate and the burst spend.
+--
+-- HEADLESS. Without LibCustomGlow-1.0 (the suites load no libs/ beyond LibKa0s, or a LibStub miss)
+-- or without LibKa0s-Glow-1.0 (the seam's stub), Apply still records its decision on the button
+-- (`glowKind`, `glowStyle`) and draws nothing.
 
 NS.Glow = NS.Glow or {}
 local Glow = NS.Glow
@@ -41,8 +46,6 @@ local Glow = NS.Glow
 Glow.KEY = "DropWatcherUpgrade"
 Glow.FRAME_LEVEL = 2   -- the icon's border (modules/IconStyle.lua) is at 1
 Glow.KINDS = { "main", "offSpec" }
-
-local function lib() return LibStub and LibStub("LibCustomGlow-1.0", true) or nil end
 
 local gen = 1      -- the settings generation: Refresh moves it on
 local configs = {} -- kind -> its settings read at `gen` (false while that glow is off)
@@ -65,7 +68,7 @@ function Glow.KindOf(drop)
     return nil
 end
 
--- A glow's settings as the library takes them: `color` as { r, g, b, a }; false while it is off.
+-- A glow's settings as the driver takes them: `color` as { r, g, b, a }; false while it is off.
 -- The color is resolved here, through its Use class color companion (NS.ResolveColor,
 -- options-ui-§17): THE PLAYER'S CLASS, hence the nil unit, since the glow says the drop is an
 -- upgrade for you, whoever looted it. The swatch's alpha survives the mode. A write to either row
@@ -88,38 +91,6 @@ local function config(kind)
     return cfg or nil
 end
 
-local function num(v, fallback) return type(v) == "number" and v or fallback end
-
-local START = {
-    button = function(L, b, c)
-        L.ButtonGlow_Start(b, c.color, num(c.buttonFrequency), Glow.FRAME_LEVEL)
-    end,
-    proc = function(L, b, c)
-        L.ProcGlow_Start(b, { color = c.color, startAnim = c.procStartAnim ~= false,
-            duration = num(c.procDuration, 1), xOffset = num(c.xOffset, 0), yOffset = num(c.yOffset, 0),
-            key = Glow.KEY, frameLevel = Glow.FRAME_LEVEL })
-    end,
-    pixel = function(L, b, c)
-        -- A length of 0 is automatic (the library sizes the lines from the icon); `border` must be
-        -- a boolean, since the library draws its dark border for nil.
-        local length = num(c.pixelLength, 0)
-        L.PixelGlow_Start(b, c.color, num(c.pixelLines), num(c.pixelFrequency), length > 0 and length or nil,
-            num(c.pixelThickness), num(c.xOffset, 0), num(c.yOffset, 0), c.pixelBorder == true, Glow.KEY,
-            Glow.FRAME_LEVEL)
-    end,
-    autocast = function(L, b, c)
-        L.AutoCastGlow_Start(b, c.color, num(c.autocastParticles), num(c.autocastFrequency),
-            num(c.autocastScale), num(c.xOffset, 0), num(c.yOffset, 0), Glow.KEY, Glow.FRAME_LEVEL)
-    end,
-}
-
-local STOP = {
-    button   = function(L, b) L.ButtonGlow_Stop(b) end,
-    proc     = function(L, b) L.ProcGlow_Stop(b, Glow.KEY) end,
-    pixel    = function(L, b) L.PixelGlow_Stop(b, Glow.KEY) end,
-    autocast = function(L, b) L.AutoCastGlow_Stop(b, Glow.KEY) end,
-}
-
 -- The proc style's frame replays its opening burst from its own OnShow (the library's
 -- SetupProcGlow), and a repaint hides and shows every pooled row and card (NS.Pool.ReleaseAll, then
 -- Acquire) and the detail card. Once the button has been on screen with the effect started, the
@@ -136,8 +107,7 @@ end
 --- @param b table|nil the item button
 function Glow.Stop(b)
     if not (b and b.glowKind) then return end
-    local L, stop = lib(), STOP[b.glowStyle]
-    if L and stop then stop(L, b) end
+    if b.glowStyle then NS.GlowLib.Stop(b, b.glowStyle, Glow.KEY) end
     b.glowKind, b.glowStyle, b.glowGen, b.glowW = nil, nil, nil, nil
 end
 
@@ -161,8 +131,8 @@ function Glow.Apply(b, drop)
         return kind
     end
     Glow.Stop(b)
-    local L, start = lib(), START[cfg.type]
-    if L and start then start(L, b, cfg) end
+    -- cfg goes whole: the driver ignores the fields it does not name (enabled, type, useClassColor).
+    NS.GlowLib.Start(b, cfg.type, cfg, Glow.KEY, Glow.FRAME_LEVEL)
     b.glowKind, b.glowStyle, b.glowGen, b.glowW = kind, cfg.type, gen, w
     spendBurst(b)
     return kind

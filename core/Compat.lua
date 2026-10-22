@@ -57,7 +57,7 @@ end
 
 --- The client's GlobalString `name` (a LOOT_ITEM* line, an INVTYPE_* slot name, a chat type's
 --- label), raw, read at call time; nil for a non-string name. On NS.Compat so the simulator's seam
---- answers it too (core/SimSeam.lua, DW-90): no module reads _G itself.
+--- answers it too (core/SimSetup.lua, DW-90): no module reads _G itself.
 --- @param name any
 --- @return any
 function Compat.GlobalString(name)

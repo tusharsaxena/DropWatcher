@@ -32,7 +32,7 @@ local _, NS = ...
 -- SavedVariables bounded even when nothing is deleted by age, the oldest dropped first.
 --
 -- THE SIMULATOR (simulator spec §5). While a simulation runs, the log is the simulation's own
--- session-only log (NS.Sim.HistoryLog, modules/Sim.lua), never `global.history`: Log() answers it,
+-- session-only log (NS.SimHost.HistoryLog, modules/Sim.lua), never `global.history`: Log() answers it,
 -- the History tab shows it, and a simulated drop (`rec.sim`) is never recorded anywhere else. A
 -- real drop or trade that arrives while one runs is the account's (LogFor reads the record's or the
 -- trade's own origin). The stop lets the simulation's log go (ReleaseLog) and the tab shows the
@@ -410,7 +410,7 @@ end
 --- @return table|nil
 function H.Log()
     if NS.State.testMode == true then return H.Normalize(NS.TestMode.HistoryLog()) end
-    local log = NS.Sim.active and NS.Sim.HistoryLog()
+    local log = NS.Sim:IsActive() and NS.SimHost.HistoryLog()
     if log then return H.Normalize(log) end
     return H.Store()
 end
@@ -421,7 +421,7 @@ end
 --- @return table|nil
 function H.LogFor(sim)
     if not sim then return H.Store() end
-    local log = NS.Sim.active and NS.Sim.HistoryLog()
+    local log = NS.Sim:IsActive() and NS.SimHost.HistoryLog()
     return log and H.Normalize(log) or nil
 end
 
@@ -532,7 +532,7 @@ end
 --- @param feedGroup table
 --- @return boolean grown
 function H.GrowRoster(feedGroup)
-    local hist = H.LogFor(NS.Sim.active)
+    local hist = H.LogFor(NS.Sim:IsActive())
     local g = hist and findGroup(hist, historyKey(feedGroup.key))
     if not g then return false end
     g.roster = g.roster or {}
@@ -633,7 +633,7 @@ end
 --- TRADE_SHOW: a trade opened, with whom.
 function H.OnTradeShow()
     trade = { partner = NS.Compat.TradePartnerName(), accepted = false, given = {}, received = {},
-        sim = NS.Sim.IsDelivering and NS.Sim.IsDelivering() or nil }
+        sim = NS.Sim:IsDelivering() or nil }
     readItems()
 end
 

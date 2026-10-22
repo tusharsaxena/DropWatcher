@@ -1,134 +1,150 @@
 local _, NS = ...
--- modules/Sim.lua — the simulator's session (simulator spec §1, §2, §5): start and stop, the
--- refusals, the automatic stop, the session-only history log, the simulated restrictions and the
--- event delivery every simulated input goes through.
+-- modules/Sim.lua — the simulator's session (simulator spec §1, §2, §5), on LibKa0s-Sim-1.0: the
+-- Sim:New descriptor that binds NS.SimSeam (core/SimSetup.lua) to one session, published as NS.Sim,
+-- and the host half every simulated session needs: the refusals, the automatic stop, the
+-- session-only history log, the simulated restrictions and the stop's cleanup steps.
 --
 -- THE PRINCIPLE (spec §1). The simulator invents the world's inputs at the edges and the real
--- engine computes everything else. It answers client calls through the seam (NS.Sim.Answer,
--- core/SimSeam.lua, consulted by every NS.Compat member) and delivers game events through Fire,
+-- engine computes everything else. It answers client calls through the seam (the providers on
+-- NS.SimSeam, consulted by every NS.Compat member) and delivers game events through NS.Sim:Fire,
 -- which calls the very handlers the event registration calls, in the same order, with the same
--- payload shapes. It never sets a verdict, a trade estimate or an inspect state itself. Test mode's
+-- payload shapes (NS.DeliverEvent, core/DropWatcher.lua, which skips an event the client
+-- rejected). It never sets a verdict, a trade estimate or an inspect state itself. Test mode's
 -- placeholders (modules/TestMode.lua) are the opposite: the two are exclusive.
 --
---   State.sim = { sim = true, scenario, situation, startedAt, seed, guids = { [guid] = true },
---                 timers = { [handle] = true }, restrictions = { [type value] = true },
---                 lockdown, log = { v, groups }, events,
---                 pool, poolBuild,   -- modules/SimPool.lua's (the item pool and its build)
---                 members,           -- modules/SimRoster.lua's (the invented group and its gear)
---                 world, drive }     -- modules/SimWorld.lua's and modules/SimEvents.lua's
+-- THE SESSION is the library's table (NS.Sim:Session(): sim = true, scenario, size, seed,
+-- startedAt, events); the host fields go on it (the host bag, OWNER_SCOPE C.4):
+--   { situation, guids = { [guid] = true }, restrictions = { [type value] = true }, lockdown,
+--     log = { v, groups },               -- NS.SimHost.Begin's, set as the session starts
+--     pool, poolBuild,                   -- modules/SimPool.lua's (the item pool and its build)
+--     members,                           -- modules/SimRoster.lua's (the invented group and its gear)
+--     world, drive }                     -- modules/SimWorld.lua's and modules/SimEvents.lua's
 --   Only the simulator's own modules write their fields; everything else reads them.
 --
 -- SAFETY (spec §5).
---   * Start refuses while stood down, while a simulation already runs, while test mode is on, in
---     combat, inside an instance and in a real group, and says which (Refusal). The real world is
---     read through NS.Sim.Live, so a simulated answer never hides it.
+--   * Start refuses an unknown scenario and a second session (the library), then while stood
+--     down, while test mode is on, in combat, inside an instance and in a real group, and says
+--     which (NS.SimHost.Refusal, which the library runs inside NS.SimSeam:Live, so a simulated
+--     answer never hides the real world).
 --   * It stops by itself when the player joins a real group or enters an instance (the shared
 --     GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows, which come first,
---     so it stops before any other handler reads the client), and when the addon stands down.
---     Nothing about it is saved, so a /reload or a logout ends it too.
---   * Nothing is sent: the seam's guarded ChatSender prints `[sim]` lines (core/SimSeam.lua).
+--     so it stops before any other handler reads the client), and when the addon stands down
+--     (NS.Sim:Stop("standDown"), the first NS.STAND_DOWN step). Nothing about it is saved, so a
+--     /reload or a logout ends it too.
+--   * Nothing is sent: the seam's guarded ChatSender prints `[sim]` lines (core/SimSetup.lua).
 --   * Saved history is never written: while it runs, modules/History.lua writes this session's
---     own log (HistoryLog), which the stop lets go.
+--     own log (NS.SimHost.HistoryLog), which the stop lets go.
 --   * No real inspect and no real trade: the seam's guarded members never reach the client.
---   * Stop cleans everything, in this order: its timers; every queued ask, canceled while the
---     seam still guards the sender, so nothing queued can go out once it has ended; then, with the
---     seam off, the later items' cleanup steps (AddCleanup), the simulated restrictions lifted
---     through the restriction event, the waiting automatic asks of its drops and the drops
---     themselves with their groups and the encounter context (NS.LootFeed.RemoveWhere), the inspect
---     entries of its members, the roster, the log, the trade timer's entries (a fresh scan) and the
---     situation (the classifier re-reads the real one).
---     Every step runs under pcall, so one that raises never skips the rest (nor the stand-down).
+--   * Stop cleans everything, in this order (the library's two-phase stop): its timers; every
+--     queued ask, canceled while the seam still guards the sender (OnStopGuarded), so nothing
+--     queued can go out once it has ended; then, with the seam off (OnStop, in registration
+--     order), the later modules' own steps (modules/SimEvents.lua's, registered at its load), the
+--     simulated restrictions lifted through the restriction event, the waiting automatic asks of
+--     its drops and the drops themselves with their groups and the encounter context
+--     (NS.LootFeed.RemoveWhere), the inspect entries of its members, the roster, the log, the trade
+--     timer's entries (a fresh scan) and the situation (the classifier re-reads the real one); then
+--     the library tells its listeners (the step panel repaints). It runs every step under pcall, so
+--     one that raises never skips the rest (nor the stand-down).
 --   * Everything it invents carries `sim = true` (the session, the feed's drops, the history
 --     entries), so a stray one is identifiable. Only what Fire delivers is invented (IsDelivering):
 --     a real loot line or trade that arrives while a simulation runs stays real and is saved.
+--
+-- THE HOST CONTRACT (OWNER_SCOPE C.4). The members only DropWatcher's simulation has live on
+-- NS.SimHost, never on NS.Sim: NS.Sim is the library instance, and nothing is written onto it.
+-- Library absent: NS.Sim is the reference stub (LibKa0s tests/test_sim_stub.lua), which starts
+-- nothing and says so.
 
-local Sim = NS.Sim
-local State = NS.State
+NS.SimHost = NS.SimHost or {}
+local Host = NS.SimHost
 local L = NS.L
 
 local TAG = "SIM"
 
-local cleanups = {}
+--- The scenarios the descriptor names, filled in place by modules/SimScenario.lua at its load
+--- (the library reads them when Start is called): { names = { ordered }, defs = { [name] = def } }.
+NS.SimScenarioDefs = NS.SimScenarioDefs or { names = {}, defs = {} }
 
-local STOP_TEXT = {
-    stop      = "Simulation stopped.",
-    group     = "Simulation stopped: you joined a group.",
-    instance  = "Simulation stopped: you entered an instance.",
-    standDown = "Simulation stopped: the addon was disabled.",
-}
+--- `/dw sim`'s host half, filled in place by settings/SimVerbs.lua at its load (the library reads
+--- them when a verb runs): VERBS (the descriptor's `verbs`: pull, kill, loot, lockdown, trade), WHY
+--- (`why`: their failure lines by code) and USAGE (`usage`: their usage lines).
+NS.SimVerbs = NS.SimVerbs or {}
+NS.SimVerbs.VERBS = NS.SimVerbs.VERBS or {}
+NS.SimVerbs.WHY = NS.SimVerbs.WHY or {}
+NS.SimVerbs.USAGE = NS.SimVerbs.USAGE or {}
+
+--- The step panel's presentation fields (the descriptor's `panel`), filled in place by
+--- modules/SimPanel.lua at its load (the library reads them when it draws): title, stepLabel,
+--- stepTip, startTip, stopTip, anchorTo, check. The panel itself is the library's (DW-04).
+NS.SimPanel = NS.SimPanel or {}
+NS.SimPanel.FIELDS = NS.SimPanel.FIELDS or {}
+
+-- What the guarded answers did this session: { sends, handOvers }; core/SimSetup.lua's printSend
+-- and handOver count into it, and Begin resets it.
+Host.counts = Host.counts or { sends = 0, handOvers = 0 }
+
+local function session()
+    return NS.Sim:Session()
+end
 
 -- ── reading ─────────────────────────────────────────────────────────────────────────────────
 
---- True while a simulation runs.
---- @return boolean
-function Sim.IsActive()
-    return Sim.active == true
-end
-
---- The running simulation's session table, or nil. Read it; only the simulator's own modules
---- (SimPool, SimRoster) write their fields.
---- @return table|nil
-function Sim.Session()
-    return State.sim
-end
-
 --- The session-only history log modules/History.lua writes while a simulation runs, else nil.
 --- @return table|nil
-function Sim.HistoryLog()
-    local s = State.sim
+function Host.HistoryLog()
+    local s = session()
     return s and s.log or nil
 end
 
 --- Record a GUID the simulation invented (a member), so the stop forgets it everywhere.
 --- @param guid string
-function Sim.MarkGUID(guid)
-    local s = State.sim
-    if s and type(guid) == "string" then s.guids[guid] = true end
+function Host.MarkGUID(guid)
+    local s = session()
+    if s and s.guids and type(guid) == "string" then s.guids[guid] = true end
 end
 
 --- True when the running simulation invented this GUID.
 --- @param guid any
 --- @return boolean
-function Sim.IsSimGUID(guid)
-    local s = State.sim
-    return s ~= nil and guid ~= nil and s.guids[guid] == true
+function Host.IsSimGUID(guid)
+    local s = session()
+    return s ~= nil and s.guids ~= nil and guid ~= nil and s.guids[guid] == true
 end
 
 local function count(t)
     local n = 0
-    for _ in pairs(t) do n = n + 1 end
+    for _ in pairs(t or {}) do n = n + 1 end
     return n
 end
 
---- The session at a glance: { active, scenario, situation, startedAt, members, sends, handOvers,
---- events, restrictions, lockdown, groups }; only `active`, `sends` and `handOvers` when none runs.
+--- NS.Sim:Status() merged with the host half: { situation, members, sends, handOvers,
+--- restrictions, lockdown, groups }; only `sends` and `handOvers` of it when none runs.
 --- @return table
-function Sim.Status()
-    local s, c = State.sim, Sim.counts
-    if not s then return { active = false, sends = c.sends, handOvers = c.handOvers } end
-    return {
-        active = true, scenario = s.scenario, situation = s.situation, startedAt = s.startedAt,
-        members = count(s.guids), sends = c.sends, handOvers = c.handOvers, events = s.events,
-        restrictions = count(s.restrictions), lockdown = s.lockdown, groups = #s.log.groups,
-    }
+function Host.Status()
+    local out, s, c = NS.Sim:Status(), session(), Host.counts
+    out.sends, out.handOvers = c.sends, c.handOvers
+    if not s then return out end
+    out.situation, out.members = s.situation, count(s.guids)
+    out.restrictions, out.lockdown = count(s.restrictions), s.lockdown
+    out.groups = s.log and #s.log.groups or 0
+    return out
 end
 
 -- The real world, read with the seam off: { inGroup, inInstance, inCombat }.
 local function realWorld()
-    return Sim.Live(function()
+    return NS.SimSeam:Live(function()
         local i = NS.Situations.ReadInputs()
         return { inGroup = i.inGroup or i.inRaid, inInstance = i.inInstance,
             inCombat = NS.Restrictions.InCombat() }
     end)
 end
 
---- Why a simulation may not start now, as the line to print, or nil when it may (spec §5).
+--- Why a simulation may not start now, as the line to print, or nil when it may (spec §5). The
+--- library has already refused an unknown scenario and a second session.
 --- @return string|nil
-function Sim.Refusal()
+function Host.Refusal()
     local stoodDown = NS.StoodDownRefusal()
     if stoodDown then return stoodDown end
-    if Sim.active then return L["A simulation is already running."] end
-    if State.testMode then return L["Turn test mode off before starting a simulation."] end
+    if NS.State.testMode then return L["Turn test mode off before starting a simulation."] end
     local w = realWorld()
     if w.inCombat then return L["A simulation cannot start in combat."] end
     if w.inInstance then return L["A simulation cannot start inside an instance."] end
@@ -136,85 +152,17 @@ function Sim.Refusal()
     return nil
 end
 
--- ── events and timers ───────────────────────────────────────────────────────────────────────
-
--- Every handler the registration of `event` calls, in row order, as the client would call them:
--- each one isolated, as the client's event dispatch isolates it, so a handler that raises never
--- unwinds into the driver that fired the event (its sequence and the timeline go on). The failure
--- is a SIM debug line.
-local function deliver(event, ...)
-    local DW, n = NS.addon, 0
-    for _, row in ipairs(NS.FEATURE_EVENTS) do
-        if row[1] == event then
-            local ok, err = pcall(DW[row[2]], DW, event, ...)
-            if not ok then
-                NS.Debug(TAG, "handler %s for %s failed: %s", tostring(row[2]), tostring(event), NS.SafeToString(err))
-            end
-            n = n + 1
-        end
-    end
-    return n
-end
-
---- True only while Fire is delivering a simulated event: what its handlers make (a drop, a trade)
---- is the simulation's. A real event that arrives while a simulation runs is never delivered
---- through Fire, so what it makes stays real (spec §5: only what the simulator invented carries
---- `sim = true`).
---- @return boolean
-function Sim.IsDelivering()
-    return Sim.delivering == true
-end
-
---- Deliver game event `event` with payload `...` to the handlers its registration calls (spec §2).
---- Answers how many ran: 0 while no simulation runs or while stood down (no event reaches a
---- stood-down addon).
---- @param event string
---- @return number
-function Sim.Fire(event, ...)
-    local s = State.sim
-    if not (Sim.active and s) or NS.IsStoodDown() then return 0 end
-    s.events = s.events + 1
-    NS.Debug(TAG, "event %s", tostring(event))
-    local outer = Sim.delivering
-    Sim.delivering = true
-    local n = deliver(event, ...)
-    Sim.delivering = outer
-    return n
-end
-
---- Run `fn` after `delay` seconds while this simulation still runs; the stop cancels it. Nil when
---- none runs.
---- @param delay number
---- @param fn function
---- @return table|nil the timer
-function Sim.After(delay, fn)
-    local s = State.sim
-    if not s then return nil end
-    local t
-    t = C_Timer.NewTimer(delay, function()
-        s.timers[t] = nil
-        if State.sim == s then fn() end
-    end)
-    s.timers[t] = true
-    return t
-end
-
---- Deliver `event` to its handlers with the simulation already ended: only for a stop's cleanup
---- step (AddCleanup), which undoes an edge the simulation raised (its combat, its bag items) once
---- the seam is off, so the handlers read the real client. Answers how many ran.
---- @param event string
---- @return number
-function Sim.DeliverForCleanup(event, ...)
-    if Sim.active or NS.IsStoodDown() then return 0 end
-    NS.Debug(TAG, "cleanup event %s", tostring(event))
-    return deliver(event, ...)
-end
-
---- Add a step the stop runs, `fn(session)`, after the queued asks are canceled and the seam is off
---- (the later items' own state: the roster they invented, their pool). Called under pcall.
---- @param fn function
-function Sim.AddCleanup(fn)
-    cleanups[#cleanups + 1] = fn
+--- The host fields of a session that just started (the descriptor's prepare runs it first): the
+--- situation it simulates (the start's `situation`, else the scenario's), its invented GUIDs, its
+--- restrictions and lockdown and its session-only history log; the guarded answers' counts reset.
+--- @param s table the library's session
+--- @param def table the scenario's def
+--- @param opts table the start's resolved options
+function Host.Begin(s, def, opts)
+    s.situation = opts.situation or def.situation
+    s.guids, s.restrictions, s.lockdown, s.log = {}, {}, false, { v = 1, groups = {} }
+    Host.counts = { sends = 0, handOvers = 0 }
+    NS.Debug(TAG, "simulation started: %s (%s)", tostring(s.scenario), tostring(s.situation))
 end
 
 -- ── restrictions ────────────────────────────────────────────────────────────────────────────
@@ -226,14 +174,14 @@ end
 --- @param name string
 --- @param on boolean
 --- @return boolean
-function Sim.SetRestriction(name, on)
-    local s = State.sim
-    local rtype = s and NS.Compat.RestrictionTypes()[name]
+function Host.SetRestriction(name, on)
+    local s = session()
+    local rtype = s and s.restrictions and NS.Compat.RestrictionTypes()[name]
     if rtype == nil then return false end
     on = on and true or nil
     if s.restrictions[rtype] == on then return false end
     s.restrictions[rtype] = on
-    Sim.Fire("ADDON_RESTRICTION_STATE_CHANGED", rtype, on == true)
+    NS.Sim:Fire("ADDON_RESTRICTION_STATE_CHANGED", rtype, on == true)
     return true
 end
 
@@ -241,8 +189,8 @@ end
 --- restriction tracker reads it on its next refresh, which this asks for. Answers whether it moved.
 --- @param on boolean
 --- @return boolean
-function Sim.SetLockdown(on)
-    local s = State.sim
+function Host.SetLockdown(on)
+    local s = session()
     if not s or s.lockdown == (on == true) then return false end
     s.lockdown = on == true
     NS.Debug(TAG, "chat lockdown %s", s.lockdown and "on" or "off")
@@ -251,66 +199,116 @@ function Sim.SetLockdown(on)
 end
 
 -- The seam's providers for the two restriction readers, keyed by their NS.Compat member names
--- (written as fields, so test_compat's seam-only scan never mistakes a key for a client call).
+-- (written as fields, so test_compat's seam-only scan never mistakes a key for a client call). The
+-- restriction and chat-lockdown model is host code (OWNER_SCOPE C.9).
 local PROVIDERS = {}
 
 function PROVIDERS.IsRestrictionActive(live, rtype)
-    local s = State.sim
-    if s and rtype ~= nil and s.restrictions[rtype] then return true end
+    local s = session()
+    if s and s.restrictions and rtype ~= nil and s.restrictions[rtype] then return true end
     return live(rtype)
 end
 
 function PROVIDERS.InChatMessagingLockdown(live)
-    local s = State.sim
+    local s = session()
     if s and s.lockdown then return true end
     return live()
 end
 
-for key, fn in pairs(PROVIDERS) do Sim.SetProvider(key, fn) end
+for key, fn in pairs(PROVIDERS) do NS.SimSeam:SetProvider(key, fn) end
 
--- ── start and stop ──────────────────────────────────────────────────────────────────────────
+-- ── the session (LibKa0s-Sim-1.0) ───────────────────────────────────────────────────────────
 
---- Start a simulation (spec §4, §5): refused, with the line printed, per Refusal. `opts` names the
---- scenario and the situation it simulates; the later items build the roster and the pool.
---- @param opts table|nil { scenario, situation, seed }
---- @return boolean started
---- @return string|nil refusal
-function Sim.Start(opts)
-    local refusal = Sim.Refusal()
-    if refusal then
-        NS.Print(refusal)
-        return false, refusal
-    end
-    opts = type(opts) == "table" and opts or {}
-    State.sim = {
-        sim = true, scenario = opts.scenario or "custom", situation = opts.situation, startedAt = GetTime(),
-        seed = tonumber(opts.seed),
-        guids = {}, timers = {}, restrictions = {}, lockdown = false, log = { v = 1, groups = {} }, events = 0,
-    }
-    Sim.counts = { sends = 0, handOvers = 0 }
-    Sim.active = true
-    NS.Debug(TAG, "simulation started: %s (%s)", State.sim.scenario, tostring(opts.situation))
-    NS.Print(L["Simulation started (%s): nothing is sent, and your saved history is not touched."]
-        :format(State.sim.scenario))
-    return true
+-- The stop lines for the host's own reasons (the library's `stop` line is these words too).
+local STOP_TEXT = {
+    group     = L["Simulation stopped: you joined a group."],
+    instance  = L["Simulation stopped: you entered an instance."],
+    standDown = L["Simulation stopped: the addon was disabled."],
+}
+
+-- The library's lines in this addon's words, keyed by its STRINGS keys: its own failure codes'
+-- lines among them (NOT_RUNNING ... DONE), so `/dw sim` says what it said before DW-03.
+local FINISHED = L["The simulation's timeline has finished. %s stop ends it."]
+local LINES = {
+    STARTED         = L["Simulation started (%s): nothing is sent, and your saved history is not touched."],
+    STOPPED         = L["Simulation stopped."],
+    ALREADY_RUNNING = L["A simulation is already running."],
+    FINISHED        = FINISHED,
+    STEP_LINE       = L["Simulation step %d of %d: %s."],
+    NOT_RUNNING     = L["No simulation is running: start one with /dw sim start <scenario>."],
+    BUILDING        = L["The simulation is still setting up its items: try again in a moment."],
+    PLAYING         = L["The timeline is already playing."],
+    NOT_PLAYING     = L["The timeline is not playing: /dw sim run plays it."],
+    NOT_PAUSED      = L["The timeline is not paused."],
+    DONE            = FINISHED:format(NS.SLASH .. " sim"),
+}
+
+-- The reference stub (LibKa0s tests/test_sim_stub.lua) for a load without the library.
+local NEEDS_LINE = "The simulator needs LibKa0s-Sim-1.0."
+
+local function newSimStub(say)
+    local sim = {}
+    local function no() return false end
+    local function noop() end
+    local function absent() return false, "absent" end
+    sim.IsActive, sim.IsDelivering, sim.IsPanelShown = no, no, no
+    function sim.Fire() return 0 end
+    function sim.DeliverForCleanup() return 0 end
+    function sim.After() return nil end
+    function sim.Start() say(NEEDS_LINE); return false, NEEDS_LINE end
+    sim.Stop = no
+    sim.OnStop, sim.OnStopGuarded, sim.AddListener = noop, noop, noop
+    function sim.Status() return { active = false } end
+    function sim.Session() return nil end
+    function sim.Steps() return {} end
+    function sim.Step() return nil, "absent" end
+    sim.Run, sim.Pause, sim.Resume, sim.Restart = absent, absent, absent, absent
+    function sim.RunVerb() say(NEEDS_LINE); return false, "absent" end
+    sim.ShowPanel, sim.TogglePanel = no, no
+    sim.HidePanel, sim.RefreshPanel, sim.ResetPanelPosition = noop, noop, noop
+    function sim.PanelRows() return {} end
+    return sim
 end
 
-local function cancelTimers(s)
-    for t in pairs(s.timers) do t:Cancel() end
-    s.timers = {}
+local Lib = LibStub and LibStub("LibKa0s-Sim-1.0", true)
+if Lib then
+    NS.Sim = Lib:New({
+        name = "DropWatcher",
+        seam = NS.SimSeam,
+        slash = NS.SLASH .. " sim",
+        deliver = function(...) return NS.DeliverEvent(...) end,
+        isStoodDown = function() return NS.IsStoodDown() end,
+        refusal = function() return Host.Refusal() end,
+        scenarios = NS.SimScenarioDefs,
+        prepare = function(s, def, opts, ready)
+            Host.Begin(s, def, opts)
+            return NS.SimScenario.Prepare(s, def, opts, ready)
+        end,
+        play = function(...) return NS.SimScenario.Play(...) end,
+        stepDelay = function() return NS.SimScenario.StepDelay() end,
+        verbs = NS.SimVerbs.VERBS,
+        why = NS.SimVerbs.WHY,
+        usage = NS.SimVerbs.USAGE,
+        statusLine = function(...) return NS.SimVerbs.StatusLine(...) end,
+        panel = NS.SimPanel.FIELDS,
+        stopText = STOP_TEXT,
+        L = LINES,
+        print = function(line) NS.Print(line) end,
+        debug = function(tag, fmt, ...) NS.Debug(tag, fmt, ...) end,
+    })
+else
+    NS.Sim = newSimStub(function(line) NS.Print(line) end)
 end
 
-local function runCleanups(s)
-    for _, fn in ipairs(cleanups) do
-        local ok, err = pcall(fn, s)
-        if not ok then NS.Debug(TAG, "cleanup failed: %s", NS.SafeToString(err)) end
-    end
-end
+-- ── the stop ────────────────────────────────────────────────────────────────────────────────
+
+-- While the seam still guards the sender: a queued ask must never go out after the stop.
+NS.Sim:OnStopGuarded(function() NS.Asks.CancelQueued("simStop") end)
 
 -- Every simulated restriction lifted through its event, then the lockdown read again.
 local function liftRestrictions(s)
-    for rtype in pairs(s.restrictions) do
-        deliver("ADDON_RESTRICTION_STATE_CHANGED", rtype, false)
+    for rtype in pairs(s.restrictions or {}) do
+        NS.DeliverEvent("ADDON_RESTRICTION_STATE_CHANGED", rtype, false)
     end
     NS.Restrictions.Refresh("simStop")
     if NS.AutoAsk then NS.AutoAsk.OnWorldChanged() end
@@ -328,63 +326,44 @@ local function cleanFeed()
 end
 
 local function forgetMembers(s)
-    for guid in pairs(s.guids) do NS.Inspect.Forget(guid) end
+    for guid in pairs(s.guids or {}) do NS.Inspect.Forget(guid) end
 end
 
-local function refreshWindow()
+local function refreshWindow(_, reason)
     if NS.Window and NS.Window.IsShown() then NS.Window.Refresh() end
+    NS.Debug(TAG, "simulation stopped (%s): %d sends printed", tostring(reason), Host.counts.sends)
 end
 
--- The stop's engine steps, in order. Each runs under pcall (step), so one that raises never skips
--- the rest, nor the stand-down steps after the stop.
+-- The stop's engine steps, in order, after the later modules' own (OnStop, registered at their
+-- load). The library runs each under pcall, so one that raises never skips the rest.
 local ENGINE_STEPS = {
-    { "cleanups",     runCleanups },
-    { "restrictions", liftRestrictions },
-    { "feed",         function() cleanFeed() end },
-    { "inspect",      forgetMembers },
-    { "roster",       function() NS.Roster.Refresh("simStop") end },
-    { "log",          function(s) NS.History.ReleaseLog(s.log) end },
-    { "tradeTimer",   function() NS.TradeTimer.Scan("simStop") end },
-    { "situation",    function() NS.Situations.Refresh("simStop") end },
-    { "window",       refreshWindow },
+    liftRestrictions,
+    function() cleanFeed() end,
+    forgetMembers,
+    function() NS.Roster.Refresh("simStop") end,
+    function(s) if s.log then NS.History.ReleaseLog(s.log) end end,
+    function() NS.TradeTimer.Scan("simStop") end,
+    function() NS.Situations.Refresh("simStop") end,
+    refreshWindow,
 }
 
-local function cleanEngine(s)
-    for _, step in ipairs(ENGINE_STEPS) do
-        local ok, err = pcall(step[2], s)
-        if not ok then NS.Debug(TAG, "stop step %s failed: %s", step[1], NS.SafeToString(err)) end
-    end
-end
-
---- End the running simulation and clean up everything it made (spec §5). `reason` is `stop` (the
---- player's), `group`, `instance` or `standDown`. Answers whether one was running.
---- @param reason string|nil
---- @return boolean
-function Sim.Stop(reason)
-    local s = State.sim
-    if not (Sim.active and s) then return false end
-    reason = STOP_TEXT[reason] and reason or "stop"
-    cancelTimers(s)
-    -- While the seam still guards the sender: a queued ask must never go out after the stop.
-    local ok, err = pcall(NS.Asks.CancelQueued, "simStop")
-    if not ok then NS.Debug(TAG, "stop step asks failed: %s", NS.SafeToString(err)) end
-    Sim.active, State.sim, Sim.delivering = false, nil, nil
-    cleanEngine(s)
-    NS.Debug(TAG, "simulation stopped (%s): %d events, %d sends printed", reason, s.events, Sim.counts.sends)
-    NS.Print(L[STOP_TEXT[reason]])
-    return true
+--- Register the stop's engine steps on NS.Sim:OnStop. Called once, by the last simulator module
+--- to load (modules/SimScenario.lua), so the step modules/SimEvents.lua registers at its load runs
+--- before them, in TOC order.
+function Host.RegisterStopSteps()
+    for _, fn in ipairs(ENGINE_STEPS) do NS.Sim:OnStop(fn) end
 end
 
 -- ── the automatic stop and the lifecycle ────────────────────────────────────────────────────
 
 --- A world event: joining a real group or entering an instance ends the simulation (spec §5).
-function Sim.OnWorldEvent()
-    if not Sim.active then return end
+function Host.OnWorldEvent()
+    if not NS.Sim:IsActive() then return end
     local w = realWorld()
     if w.inInstance then
-        Sim.Stop("instance")
+        NS.Sim:Stop("instance")
     elseif w.inGroup then
-        Sim.Stop("group")
+        NS.Sim:Stop("group")
     end
 end
 
@@ -395,9 +374,10 @@ for _, event in ipairs({ "GROUP_ROSTER_UPDATE", "PLAYER_ENTERING_WORLD", "ZONE_C
 end
 
 function NS.addon.OnSimWorldEvent()
-    Sim.OnWorldEvent()
+    Host.OnWorldEvent()
 end
 
+-- The first stand-down step (H6): the stop cleans up while every module still holds its state.
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    Sim.Stop("standDown")
+    NS.Sim:Stop("standDown")
 end

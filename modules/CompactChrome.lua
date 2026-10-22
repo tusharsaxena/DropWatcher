@@ -362,18 +362,14 @@ local function layoutTabs(f, compact)
     end
 end
 
+-- The strip's words and wrap. The library anchors its text (LEFT to the mark, RIGHT to the strip,
+-- justified LEFT), so full truncates a long line and compact wraps the short one to two lines.
 local function layoutStrip(f, compact)
     local b = f.banner
-    b.text:ClearAllPoints()
-    b.text:SetPoint("LEFT", b.art, "RIGHT", 6, 0)
-    if compact then
-        b.text:SetPoint("RIGHT", b, "RIGHT", -6, 0)
-        b.text:SetText(L["TEST: sample drops in every state. Nothing is whispered; combat ends it."])
-    else
-        b.text:SetText(L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
-    end
-    if b.text.SetWordWrap then b.text:SetWordWrap(compact) end
-    if b.text.SetJustifyH then b.text:SetJustifyH("LEFT") end
+    if not b then return end
+    b.text:SetText(compact and L["TEST: sample drops in every state. Nothing is whispered; combat ends it."]
+        or L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
+    b.text:SetWordWrap(compact)
 end
 
 -- The full bar back: the dropdowns on the bar and Sort on the tab's strip (feedback-10 spec §3).
@@ -392,6 +388,7 @@ local function compactBar(f)
     parts.filters:SetShown(held > 0)
     if c.view then c.view:SetWidth(CC.VIEW_W) end
     local eb = c.search
+    if not eb then return end
     eb:ClearAllPoints()
     if c.view then eb:SetPoint("LEFT", c.view, "RIGHT", GAP, 0) else eb:SetPoint("LEFT", f.filterHost, "LEFT", 0, 0) end
     if held > 0 then eb:SetPoint("RIGHT", parts.filters, "LEFT", -GAP, 0)
@@ -449,10 +446,11 @@ function CC.Paint(f)
         layout(f, compact)
     end
     placeTitle(f, compact)
+    local b = f.banner
     local h = CC.BannerH() - 4
-    if f.banner.slotH ~= h then
-        f.banner.slotH = h
-        f.banner:SetHeight(h)
+    if b and b.slotH ~= h then
+        b.slotH = h
+        b:SetHeight(h)
     end
     if NS.Window.IsMinimized() then CC.CloseFilters() end
     if compact then paintFilters() end
@@ -468,10 +466,12 @@ local function unwrappedWidth(fs)
 end
 
 --- The test-mode strip's height in the layout in force: one line full; compact two when its words
---- do not fit on one line (their unwrapped width against the room their anchors give them).
+--- do not fit on one line (their unwrapped width against the room their anchors give them); 0 when
+--- the window has no strip (the Widgets library absent).
 --- @return number
 function CC.BannerH()
     local f = NS.Window.Frame()
+    if f and not f.banner then return 0 end
     if not (f and f.chromeCompact) then return K.BANNER_H end
     local fs = f.banner.text
     local w = unwrappedWidth(fs)

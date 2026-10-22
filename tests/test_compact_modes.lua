@@ -170,7 +170,7 @@ local function simRun(name)
         end
     end
     assertTrue(NS.SimScenario.Start(name, nil, { seed = 2 }), name)
-    assertTrue(NS.SimScenario.Run(), name)
+    assertTrue(NS.Sim:Run(), name)
     local st = NS.SimScenario.Status()
     m.advance(NS.SimScenario.STEP_DELAY * st.steps + 30)
     assertTrue(#NS.LootFeed.Drops("live") > 0, name .. ": the run dropped loot")

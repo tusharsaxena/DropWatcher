@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/Window.lua — the main window's shell (design spec §11.1, boards 01 and 06): frame, skin,
 -- title bar (centered gold title, restriction badge, compact's Scan group icon, minimize, close), the tab strip and
--- its lazily built panes, the filter bar's host, the footer's host, test mode's title text and banner,
--- minimize, resize, position, lock, scale, alpha and the show decision.
+-- its lazily built panes, the filter bar's host, the footer's host, test mode's title text and banner
+-- (the library's strip, anchored and tipped here), minimize, resize, position, lock, scale, alpha
+-- and the show decision.
 --
 -- A non-secure standalone window (standalone-windows): built lazily on the first show, skinned
 -- through LibKa0s-Core's ApplySkin, closed by Escape (UISpecialFrames) and by the shared close mark
@@ -430,24 +431,15 @@ local function buildPanes(f, body)
     end
 end
 
--- The test-mode banner (board 06 E), between the filter bar and the tab's body.
+-- The test-mode banner (board 06 E), between the filter bar and the tab's body: the library's strip
+-- (LibKa0s-Widgets' TestStrip, LibKa0s#48), anchored and tipped here. It is born hidden; Refresh
+-- shows it with test mode. No library, no strip: f.banner stays nil and the panes reserve nothing.
 local function buildBanner(f, body)
-    local b = CreateFrame("Frame", nil, body)
+    local b = NS.MakeTestStrip(body, L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
+    if not b then return end
     b:SetPoint("TOPLEFT", f.filterHost, "BOTTOMLEFT", 0, -2)
     b:SetPoint("TOPRIGHT", f.filterHost, "BOTTOMRIGHT", 0, -2)
-    b:SetHeight(K.BANNER_H - 4)
-    b.fill = b:CreateTexture(nil, "BACKGROUND")
-    b.fill:SetAllPoints(b)
-    b.fill:SetColorTexture(C.TONE.warn.r, C.TONE.warn.g, C.TONE.warn.b, 0.12)
-    b.art = b:CreateTexture(nil, "ARTWORK")
-    b.art:SetSize(12, 12)
-    b.art:SetPoint("LEFT", b, "LEFT", 6, 0)
-    b.art:SetTexture(NS.Icon("info"))
-    b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    b.text:SetPoint("LEFT", b.art, "RIGHT", 6, 0)
-    b.text:SetText(L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
     Window.AttachTooltip(b, NS.WindowTitleBar.TestTip)
-    b:Hide()
     f.banner = b
 end
 
@@ -623,7 +615,7 @@ function Window.Refresh()
     NS.CompactChrome.Paint(frame)   -- the compact layout's chrome (compact spec §4)
     paintMinimized()
     if not isMinimized() then
-        frame.banner:SetShown(NS.State.testMode == true)
+        if frame.banner then frame.banner:SetShown(NS.State.testMode == true) end
         layoutPanes()
         paintTabs()
         NS.WindowFilterBar.Sync(activeTab)
@@ -857,8 +849,8 @@ function Window.ApplySettings()
 end
 
 --- Reset position: forget both layouts' stored point and size, and put the window back where it
---- started; the toast's and the simulation panel's saved positions go too (modules/Toast.lua,
---- modules/SimPanel.lua).
+--- started; the toast's saved position goes too (modules/Toast.lua), and the simulation panel
+--- forgets this session's dragged point and docks beside the window again (LibKa0s-Sim-1.0).
 function Window.ResetPosition()
     NS.WindowCompact.ResetGeometry()
     if frame then
@@ -866,7 +858,7 @@ function Window.ResetPosition()
         applyPoint()
     end
     if NS.Toast then NS.Toast.ResetPosition() end
-    if NS.SimPanel then NS.SimPanel.ResetPosition() end
+    if NS.Sim then NS.Sim:ResetPanelPosition() end
     NS.Print(L["window position reset"])
 end
 

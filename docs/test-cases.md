@@ -23,7 +23,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_surface_parity.lua (18)
+### test_surface_parity.lua (21)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -35,9 +35,12 @@ Total.
 - parity: the Schema host stub carries the library's own members
 - parity: the Launcher stub carries the whole live surface
 - parity: the Lifecycle stand-in carries every member of the live latch
+- parity: the Sim stub carries the whole live instance surface
+- parity: the Sim seam stub carries the live seam surface
 - parity: the Bus stand-in carries every member of the live bus
 - parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
-- parity: the Item stub carries the whole LibKa0s-Item-1.0 surface
+- parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon calls
+- parity: the Glow stub carries the whole LibKa0s-Glow-1.0 surface
 - parity: the Perf stub carries every Perf member the addon reaches
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
@@ -71,7 +74,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (12)
+### test_database.lua (13)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -85,6 +88,7 @@ Total.
 - database: step 4 retires the History's group cap and prunes nothing
 - database: step 6 retires feed.showOwn in every stored profile and keeps the rest
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
+- migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 
 ### test_schema.lua (11)
 
@@ -201,7 +205,7 @@ Total.
 - slash: `offer` refuses an item not in your bags, and prints its usage without a link
 - slash: every feature verb is refused while disabled
 
-### test_window.lua (15)
+### test_window.lua (19)
 
 - window: built lazily, on the first show, and not before
 - window: a tooltip shows on a disabled button too, so the gray No action says why
@@ -212,6 +216,10 @@ Total.
 - window: locked, a drag does not start
 - window: resizable from the corner grip, with the design's minimum size
 - window: test mode shows the banner and the TEST MODE text, and its rows replace the empty state
+- window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and the info mark
+- window: K.BANNER_H - 4 == W.TEST_STRIP.HEIGHT
+- compact chrome: the full layout's text has a RIGHT point and no wrap; compact wraps
+- window: with no Widgets the window builds, test mode on raises nothing, f.banner is nil, the panes reserve 0 and the title word shows
 - window: combat ends test mode, and test mode cannot start in combat
 - window: with test mode on, Close and Toggle still change what is shown
 - window: turning test mode off closes the window only when test mode opened it
@@ -219,7 +227,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (59)
+### test_window_shell.lua (61)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -245,7 +253,9 @@ Total.
 - filter bar tooltip: with no room on the right it opens above the control, top left
 - filter bar tooltip: the room is measured in screen pixels, at each frame's scale
 - filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)
-- shell: the search box is Loot History's flat, square box
+- shell: the search box is Loot History's flat, square box (LibKa0s-Widgets' SearchBox)
+- shell: the search box is LibKa0s-Widgets' SearchBox with DW's hint, and a focus loss still writes the filter's debug line
+- shell: with no Widgets the filter bar builds without a search box and filters nothing by text
 - shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
 - shell: each tab keeps its own filter state, and grays what it does not use
 - shell: a filter change redraws the active tab with the new state
@@ -588,7 +598,7 @@ Total.
 - tip rows: the compact cards and chrome (CompactCards, CompactChrome) are rows
 - tip rows: History's cells and card (WindowHistory, HistoryCard) are rows
 - tip rows: the column headers and the Offer panel's columns are rows, the settings keep their prose
-- tip rows: the chrome's own tooltips (title bar, footer, simulator panel) are rows
+- tip rows: the chrome's own tooltips (title bar, footer) are rows
 - tooltip: a non-wrapping line is added with wrap off; every other line still wraps
 - grid: the arrow cell is the table's glyph and the unsigned difference, both in the verdict's tone
 - grid: a member's rows, the name on the first, the arrow on the item it replaces, empty for a slot worn empty
@@ -1636,7 +1646,7 @@ Total.
 - auto-ask edge: in test mode a placeholder's ask is printed, never sent
 - auto-ask: the diagnostics' messaging section reports auto-ask
 
-### test_sim_core.lua (25)
+### test_sim_core.lua (27)
 
 - sim seam: every Compat member that answers for the client is wrapped; the pure ones are not
 - sim seam: a provider answers only while a simulation runs; Live reads the client again
@@ -1657,6 +1667,8 @@ Total.
 - sim history: a real trade while a simulation runs settles against the saved history
 - sim fire: a handler that raises never unwinds into the driver; the later handlers run
 - sim stop: a step that raises never skips the rest of the cleanup
+- sim fire: an event the client rejected at registration is never delivered
+- sim deliver: NS.DeliverEvent answers the handler count and isolates a raising handler
 - sim stop: its drops, groups, inspect entries, restrictions and lockdown go; real drops stay
 - sim stop: a queued ask is canceled before the lift, so it never goes out
 - sim stop: the situation is classified from the real client again
@@ -1711,19 +1723,25 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
-### test_sim_scenario.lua (20)
+### test_sim_scenario.lua (26)
 
-- sim verbs: Parse reads every verb and its arguments
+- sim verbs: DropWatcher's five host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
-- sim verbs: `/dw sim` prints the status and the usage; the verbs need a running simulation
+- sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
+- sim verbs: every verb but the free ones needs a running simulation; an unknown word prints the usage
+- sim verbs: each host verb runs through RunVerb with its line, and says why it did nothing
+- sim verbs: a refused start prints its one line and nothing more
+- sim verbs: `/dw sim run` while disabled prints the one refusal line
 - sim verbs: refused while the addon is disabled, like every feature verb
 - sim start: refused in combat and with test mode on, each with its line
 - sim start: the scenario's pool, group and situation, and the window open
 - sim start: a raid takes its size; a party is always four
 - sim step: the timeline waits for the pool, then plays one step at a time
+- sim restart: a stale pool callback from the first session never readies the restarted one (C.1)
+- sim run: Run while the panel's click-ahead plays answers playing (C.2)
 - sim run: plays every step a few seconds apart, each with its line, then says it has finished
 - sim step delay: two seconds by default, read from `sim.stepDelay`; a bad value falls back
-- sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5; DelayText drops a whole number's point
+- sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5
 - sim step delay: `/dw set sim.stepDelay` takes a half step, clamps to the range, refuses a quarter step
 - sim step delay: a run waits the set delay, and a change takes effect from the next step
 - sim stop: ends a playing timeline and its timers
@@ -1734,10 +1752,11 @@ Total.
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
 - sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
 
-### test_sim_e2e.lua (19)
+### test_sim_e2e.lua (20)
 
 - sim e2e: no module reads the world the simulator answers except through NS.Compat
 - sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
+- sim e2e: nothing escapes the seam
 - sim e2e key, full: a run fills Drops, yours too, under the default filters
 - sim e2e dungeon, full: a run fills Drops, yours too, under the default filters
 - sim e2e raid, full: a run fills Drops, yours too, under the default filters
@@ -1775,29 +1794,30 @@ Total.
 - sim report: View reads the feed the window shows; feed.showOwn is retired
 - sim report: the owner's step lists yours on Drops, and the tabs agree
 
-### test_sim_panel.lua (19)
+### test_sim_panel.lua (12)
 
-- sim panel: a key's preview names every step, with its command, before a run
-- sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states
-- sim panel: before the pool is ready the start is current and nothing else is clickable
-- sim panel: the controls follow the timeline: Run all, Pause or Resume, Restart, Stop
-- sim panel: StartCommand carries a raid's size and leaves a random one out
-- sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds PerfPanel's three columns
-- sim panel: `/dw sim start` opens it beside the window, its rows tracking the timeline
+- sim panel: the descriptor carries DropWatcher's presentation fields and nothing else
+- sim panel: a key's preview names every step with its boss, and every command, before a run
+- sim panel: a step names the boss it played, and a loot step its count or its detail
+- sim panel: every step kind's tooltip says what it injects; Start and Stop say what they do
+- sim panel: the scenarios carry their names, and the raids the sizes the picker offers
+- sim panel: `/dw sim` opens it with DropWatcher's title, `/dw sim panel` toggles it
+- sim panel: picking Raid offers its sizes, and Start starts it at the chosen size
+- sim panel: a played step shows the catalog's confirm tick and names its boss
+- sim panel: opened after `/dw sim start`, it docks beside the Drop Watcher window
 - sim panel: opened before the window, it docks beside the window once a slow pool opens it
-- sim panel: a dragged panel stays where it was put when the window opens later
-- sim panel: clicking the next step runs it; clicking a later one runs every step in between
-- sim panel: clicking a completed step does nothing, and its tooltip says when it ran
-- sim panel: a typed `/dw sim step` moves the panel too
-- sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on
-- sim panel: Run all's tooltip names the current step delay (feedback-2 spec §8, FB2-8)
-- sim panel: the typed pause, resume and restart answer as the buttons do
-- sim panel: Restart stops the scenario and starts the same one again; Stop ends it
-- sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel
-- sim panel: the picker starts the chosen scenario, with a raid's member count
-- sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it
+- sim panel: dragging writes nothing to the profile; Reset position redocks
+- sim panel: standing down hides it, idle or running, and it does not open while stood down
 
-### test_disabled.lua (12)
+### test_bindings.lua (5)
+
+- bindings: Bindings.xml carries one CLICK binding on DropWatcherToggleWindow under DROPWATCHER, category ADDONS, with no default key, and the TOC does not list it
+- bindings: the button is a plain hidden Button named DropWatcherToggleWindow, registered for AnyDown only
+- bindings: one press is one NS.Window.Toggle
+- bindings: the header label is the brand and the binding label is localized
+- bindings: the button exists on a library-less install too
+
+### test_disabled.lua (13)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /dw disable, nothing is registered, scheduled or shown
@@ -1807,10 +1827,11 @@ Total.
 - disabled 5: every feature verb answers with the one refusal line and writes nothing
 - disabled 6: the stand-up re-registers from current state and the window comes back
 - disabled 7: a disabled profile loads stood down, with nothing registered
-- disabled 8: the launcher's left-click opens settings and writes nothing; its menu grays every entry but Enabled
+- disabled 8: the launcher and the key binding: left-click opens settings and writes nothing; the menu grays every entry but Enabled; a key press refuses
 - disabled 9: under the perf hold alone, each feature refusal names the capture, never 'is disabled'
 - disabled 10: while disabled, each feature refusal is the one refusal line, unwrapped
 - disabled 11: the latch holds in both orders, perf first and disabled first
+- disabled 12: disabling hides the simulation panel, idle or running, and it stays shut
 
 ### test_diagnostics.lua (15)
 
@@ -1926,15 +1947,15 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 12 |
-| test_surface_parity.lua | 18 |
+| test_surface_parity.lua | 21 |
 | test_setup.lua | 24 |
-| test_database.lua | 12 |
+| test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 22 |
 | test_settings_pages.lua | 44 |
 | test_slash.lua | 26 |
-| test_window.lua | 15 |
-| test_window_shell.lua | 59 |
+| test_window.lua | 19 |
+| test_window_shell.lua | 61 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 22 |
@@ -1992,14 +2013,15 @@ Total.
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
 | test_auto_ask.lua | 24 |
-| test_sim_core.lua | 25 |
+| test_sim_core.lua | 27 |
 | test_sim_pool.lua | 20 |
 | test_sim_events.lua | 21 |
-| test_sim_scenario.lua | 20 |
-| test_sim_e2e.lua | 19 |
+| test_sim_scenario.lua | 26 |
+| test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
-| test_sim_panel.lua | 19 |
-| test_disabled.lua | 12 |
+| test_sim_panel.lua | 12 |
+| test_bindings.lua | 5 |
+| test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -2010,4 +2032,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1660** |
+| **Total** | **1678** |

@@ -7,7 +7,7 @@ local _, NS = ...
 -- PURE. Random, Members and Gear take every input as an argument (the random source included)
 -- and touch no client and no state, so a seed replays the same group. Create is the edge: it reads
 -- your realm and your average item level, draws the group for the running session, marks each GUID
--- as the simulation's (NS.Sim.MarkGUID, so the stop forgets it everywhere) and stores the list on
+-- as the simulation's (NS.SimHost.MarkGUID, so the stop forgets it everywhere) and stores the list on
 -- the session. It answers nothing to the client: the members reach the roster, the inspect replies
 -- and the loot lines through the event drivers (DW-72), which read Members.
 --
@@ -252,7 +252,7 @@ end
 --- @param opts table|nil
 --- @return table|nil members
 function R.Create(opts)
-    local s = NS.Sim.Session()
+    local s = NS.Sim:Session()
     if not s then return nil end
     opts = type(opts) == "table" and opts or {}
     local rnd = R.Random(opts.seed or math.floor(GetTime() * 1000))
@@ -265,7 +265,7 @@ function R.Create(opts)
     local band = R.BandAround(anchor, opts.band)
     for _, m in ipairs(members) do
         m.gear, m.levels = R.Gear(m, entries, band, rnd)
-        NS.Sim.MarkGUID(m.guid)
+        NS.SimHost.MarkGUID(m.guid)
     end
     s.members = members
     NS.Debug(TAG, "roster: %d members, band %d-%d, %d pool entries", #members, band.low, band.high, #entries)
@@ -275,6 +275,6 @@ end
 --- The running simulation's members, or an empty list. Read them, never write them.
 --- @return table
 function R.Get()
-    local s = NS.Sim.Session()
+    local s = NS.Sim:Session()
     return s and s.members or {}
 end

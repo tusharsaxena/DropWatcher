@@ -260,21 +260,27 @@ judged against, in place of `testGear`. A sample's `testLeft` stands for a loote
 ## The simulator (simulator spec §1, §2, §4, §5, §6)
 
 ```
-NS.Sim.Start(opts) ─> refused (printed): stood down, already running, test mode, combat,
-                      an instance, a real group (the real world read through NS.Sim.Live)
-                  └─> State.sim = { sim = true, … }; NS.Sim.active = true
-every NS.Compat call ─> core/SimSeam.lua's wrap ─> NS.Sim.Answer(name, live, …) while active
+NS.Sim:Start(opts) (LibKa0s-Sim-1.0) ─> refused (printed): an unknown scenario, already running,
+                      then NS.SimHost.Refusal inside NS.SimSeam:Live (stood down, test mode,
+                      combat, an instance, a real group)
+                  └─> the session { sim = true, scenario, size, seed, … }; NS.Sim:IsActive() true
+                  └─> prepare: NS.SimHost.Begin (the host fields) ─> NS.SimScenario.Prepare
+every NS.Compat call ─> core/SimSetup.lua's seam (Sim:NewSeam) while active
                           ├─> a provider (the simulator's invented answer, else the live member)
                           └─> guarded: ChatSender prints "[sim] …"; inspect and trade calls do nothing
-NS.Sim.Fire(event, …) ─> every handler NS.FEATURE_EVENTS declares for it, in row order
-NS.Sim.SetRestriction(name, on) ─> answered active ─> Fire(ADDON_RESTRICTION_STATE_CHANGED, type, on)
-NS.Sim.SetLockdown(on) ─> InChatMessagingLockdown answered ─> NS.Restrictions.Refresh
+NS.Sim:Fire(event, …) ─> NS.DeliverEvent (core/DropWatcher.lua): every handler NS.FEATURE_EVENTS
+                         declares for it, in row order, each under pcall (a raise is a SIM debug
+                         line, never rethrown); an event in NS.rejectedEvents is skipped (answers 0)
+NS.SimHost.SetRestriction(name, on) ─> answered active ─> Fire(ADDON_RESTRICTION_STATE_CHANGED, type, on)
+NS.SimHost.SetLockdown(on) ─> InChatMessagingLockdown answered ─> NS.Restrictions.Refresh
 DropAdded of a drop made while active (rec.sim) ─> History.Log() = the session log, never global.history
-NS.Sim.Stop(reason) ─> its timers canceled ─> NS.Asks.CancelQueued (seam still on)
-                   ─> NS.Sim.active = false ─> the cleanup steps ─> its restrictions lifted (event)
+NS.Sim:Stop(reason) ─> its timers canceled ─> OnStopGuarded: NS.Asks.CancelQueued (seam still on)
+                   ─> the seam off, NS.Sim:IsActive() false ─> OnStop, in order: SimEvents' step
+                      ─> its restrictions lifted (event)
                    ─> its drops' automatic asks ─> LootFeed.RemoveWhere(sim, context reset)
                    ─> Inspect.Forget(its GUIDs) ─> Roster.Refresh ─> History.ReleaseLog
                    ─> TradeTimer.Scan ─> Situations.Refresh ─> the open window repainted
+                   ─> the library's listeners told (the step panel) ─> its stop line
 GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA ─> OnSimWorldEvent (first)
                    ─> a real group or an instance ─> Stop("group" | "instance")
 NS.StandDown ─> Sim's stand-down row (first) ─> Stop("standDown")
@@ -282,11 +288,11 @@ NS.SimPool.Build(opts, done) ─> the journal's frame shown? ─> look again eve
                             ─> ReadJournal: save the selection ─> the newest tier's dungeons or raids,
                                every difficulty of the side, under the class filter ─> restore it
                             ─> entries still loading ─> EJ_LOOT_DATA_RECIEVED (settled) ─> read again
-                            ─> all loaded or TIMEOUT ─> State.sim.pool (journal), else own gear (fallback)
+                            ─> all loaded or TIMEOUT ─> the session's pool (journal), else own gear (fallback)
 NS.SimRoster.Create(opts) ─> Members (pure, seeded) ─> Gear per member from the pool's gear entries,
                           each worn at a level inside the band above the content's (ContentLevel: the
-                          pool's drops' median; the inspect answers it) ─> NS.Sim.MarkGUID
-                          ─> State.sim.members
+                          pool's drops' median; the inspect answers it) ─> NS.SimHost.MarkGUID
+                          ─> the session's members
 NS.SimEvents.Join() ─> Fire(GROUP_ROSTER_UPDATE), Fire(PLAYER_ENTERING_WORLD) ─> the roster, the situation
                    and the inspect warm-up read the group and the place NS.SimWorld answers through
                    NS.Compat (core/CompatWorld.lua: the group, a unit, the instance, combat); the
@@ -303,31 +309,51 @@ NS.SimEvents.Kill() ─> Fire(ENCOUNTER_END, …, 1) ─> Combat(false) ─> Set
 NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with the ChallengeMode restriction
 NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
                    TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
-/dw sim <verb> ─> NS.SimVerbs.Parse (pure) ─> no simulation running: "No simulation is running" (but start)
-/dw sim start <scenario> [size] ─> NS.SimScenario.Start ─> NS.Sim.Start (refusals) ─> Timeline (pure)
-                   ─> NS.SimPool.Build ─> ready: SimRoster.Create ─> SimEvents.Join ─> the window opens
-/dw sim step ─> NS.SimScenario.Step ─> the next step's driver: RunStart, Pull, SetLockdown(on), Kill,
-                   Loot(burst), SetLockdown(off), RunEnd (waits while the pool builds) ─> its chat
-                   line (StepLine), typed or played
+/dw sim <verb> ─> NS.Sim:RunVerb (LibKa0s-Sim-1.0's grammar, then NS.SimVerbs.VERBS: pull, kill,
+                   loot, lockdown, trade; else the usage) ─> no simulation running: "No simulation
+                   is running: …" (but the bare form, status, start and panel)
+/dw sim start <scenario> [size] ─> NS.Sim:Start (refusals, an unknown
+                   scenario among them) ─> prepare: NS.SimScenario.Prepare ─> NS.SimPool.Build
+                   ─> SimRoster.Create ─> SimEvents.Join ─> the window opens ─> ready()
+                   (a ready from an earlier session is ignored, OWNER_SCOPE C.1)
+/dw sim step ─> NS.Sim:Step (LibKa0s-Sim-1.0's step machine; the steps are the scenario's pure
+                   Timeline) ─> play: NS.SimScenario.Play ─> the next step's driver: RunStart, Pull,
+                   SetLockdown(on), Kill, Loot(burst), SetLockdown(off), RunEnd (refused `building`
+                   while the pool builds) ─> the library's chat line, the step named as the panel names it
+                   (the descriptor's panel.stepLabel, SimPanel.StepLabel: `Kill: Warden Ashvane`), typed or played
 the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receipt sequence and merge
                    count) ─> SimEvents.Loot ─> Collect (the records made since: added, loading or
-                   hidden by a gate) ─> kept on the step; Summarize (pure) ─> `loot: 3 drops (1 hidden)`
-                   in chat and `Loot: 3 drops (1 hidden)` on the panel row, TipLines (pure) ─> the
+                   hidden by a gate) ─> kept on the step; Summarize (pure) ─> `Loot: 3 drops (1 hidden)`
+                   in chat and on the panel row, TipLines (pure, { left, right } lines) ─> the
                    row's tooltip: each drop, its looter, Drops or the gate that hid it (feedback-3 §0);
                    each place honors the feed the window shows (SimReport.View = Window.FeedView:
                    not shown in test mode; §5); yours are on Drops like any other (feedback-5 §2)
-/dw sim run ─> a step now, then one every SimScenario.StepDelay() seconds (`sim.stepDelay`, 2 by
-                   default, read as each next step is set) on NS.Sim.After (the stop ends it)
-/dw sim pause | resume | restart ─> NS.SimScenario.Pause (the timer canceled) | Resume (Run) | Restart
-                   (NS.Sim.Stop, then Start with the same scenario and size)
-every move of the timeline (start, ready, step, run, pause, the end, the stop) ─> NS.SimScenario.Notify
-                   ─> NS.SimPanel.Refresh: Compose (pure) ─> the rows' states, Controls (pure) ─> the buttons
-the step panel's row click ─> SimPanel.ClickRow (re-composed) ─> Start: SimVerbs.Run("start …") |
-                   a later step: RunTo ─> SimVerbs.Run("step") until it is reached | Stop: SimVerbs.Run("stop")
-the panel's Run all, Pause / Resume, Restart, Stop, picker Start ─> SimVerbs.Run(the typed verb)
-the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.Sim.Status,
+/dw sim run ─> NS.Sim:Run: a step now, then one every stepDelay seconds (the descriptor's
+                   SimScenario.StepDelay(): `sim.stepDelay`, 2 by default, read as each next step is
+                   set) on the session's own timers (the stop ends it) ─> at the last step the
+                   library's finished line (`… /dw sim stop ends it.`)
+/dw sim pause | resume | restart ─> NS.Sim:Pause (the pending tick canceled) | Resume (Run) | Restart
+                   (Stop("restart"), `Simulation stopped to restart.`, then Start with the same
+                   scenario, size and start options and a fresh seed)
+the step panel (DW-04: LibKa0s-Sim-1.0's; `/dw sim` and `/dw sim panel` open it, NS.Sim:ShowPanel /
+                   TogglePanel) ─> its rows, states, run controls, picker and click-ahead are the
+                   library's, every action the typed verb (NS.Sim:RunVerb) ─> it repaints on every move
+                   of the timeline; what DropWatcher gives it is the descriptor's `panel`
+                   (NS.SimPanel.FIELDS, modules/SimPanel.lua): the title, each step's name
+                   (SimPanel.StepLabel: the boss, the loot count or where the drops went), each
+                   step's tooltip (SimPanel.StepTip: what it injects, the loot report's lines), the
+                   Start and Stop tooltips, the window to dock beside (anchorTo) and the done tick;
+                   the scenarios' names are their defs' `label` ─> its position is session-only
+                   (dragged: held for the session; Reset position: NS.Sim:ResetPanelPosition), and
+                   nothing reaches SavedVariables; a pool that opens the window later re-places a
+                   shown panel beside it (SimScenario's ready: NS.Sim:ShowPanel); standing down hides it
+the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.SimHost.Status,
                    NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```
+
+The host-only members (the session log, the invented GUIDs, the simulated restrictions and
+lockdown, the refusals, the automatic stop, the guarded answers' counts and the host half of the
+status) live on `NS.SimHost`, never on `NS.Sim` (`modules/Sim.lua`).
 
 The simulator never writes a verdict, a trade estimate or an inspect state: what it invents enters
 at the client seam and through the event handlers, and the engine computes the rest. Test mode and

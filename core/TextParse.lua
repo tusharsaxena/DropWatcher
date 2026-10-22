@@ -5,8 +5,8 @@ local _, NS = ...
 -- class list lines.
 --
 -- PURE. Nothing here calls a client API or reads a global: every localized GlobalString arrives as
--- an argument, already read and secret-guarded by core/Compat.lua, which stays the only file that
--- touches the client (compat-§1). Every text argument is a plain string, except the raw tooltip
+-- an argument, already read and secret-guarded by core/Compat.lua, whose compat family stays the only code
+-- that touches the client (compat). Every text argument is a plain string, except the raw tooltip
 -- lines ScanLines walks, whose fields it reads only through the secret guards it is handed.
 
 NS.TextParse = NS.TextParse or {}

@@ -59,7 +59,7 @@ C.WINDOW = {
     TAB_W       = 118,    -- one tab button; the strip's pitch adds TAB_GAP
     TAB_GAP     = 4,
     FILTER_H    = 30,
-    BANNER_H    = 22,     -- the test-mode banner, above the tab's body while test mode is on
+    BANNER_H    = 22,     -- = Widgets.TEST_STRIP.HEIGHT + 4: a 2 px gap above and below the strip
     FOOTER_H    = 22,
     INSET       = 6,      -- the body's side margin
     CONTROL_H   = 20,     -- a title-bar button, a dropdown, the search box

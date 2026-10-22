@@ -16,7 +16,7 @@ without it).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 39, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 41, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
@@ -46,7 +46,8 @@ one refusal line, unwrapped, while disabled; review F01/F10, DW-P16. Case 3 is s
 every event in `NS.FeatureEventNames()` through the kit's `__fireUnconditional` and asserts each
 returned count is at least 1, so a fire that reaches no handler fails rather than passing on silence.
 Cases 4 and 5 are step 7 over every verb in `NS.COMMANDS` and the bare command, case 8 is step 8 over
-both launcher buttons, and case 11 is step 10 through `Kit.assertLatchHoldOrder`; review F04 F05 F18,
+both launcher buttons and the Show window key binding's press (one refusal line, no toggle, no write;
+case 9 holds the press to the capture line under the perf hold alone), and case 11 is step 10 through `Kit.assertLatchHoldOrder`; review F04 F05 F18,
 DW-P25). The addon's own:
 `test_harness` (the load, the repository's shape, and the TOC's position labels: no `Conventional:`
 comment on a load-bearing position, nor one stating handler order, toc-file-§5), `test_setup` (each
@@ -510,14 +511,16 @@ root cause reproduced, your own drop on Drops and nothing lost; the pure `Place`
 yours apart; `/dw sim loot`'s line; and the regression over every scenario: each loot step's drops on
 Drops and hidden add up to its count, the minimum item level gate hiding them all included; and the
 report honoring test mode's feed, `feed.showOwn` retired, feedback-5 spec §2-§3),
-`test_sim_panel` (the simulation step panel, DW-91: the rows, their PerfPanel states and commands
-before and during a run, the controls following the timeline, `/dw sim`, `start` and `panel`
-opening or toggling it beside the window, a click on the next step running it and one ahead running
-every step in between, a completed step inert with its tooltip naming when it ran, a typed step,
-stop or automatic stop repainting it, Run all, Pause and Resume, Restart and Stop, typed or clicked,
-the picker starting the chosen scenario with a raid's count, and the dragged position remembered,
-forgotten by Reset position and the panel hidden at stand-down),
-`test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
+`test_sim_panel` (the simulation step panel's DropWatcher content, DW-04: the panel is
+LibKa0s-Sim-1.0's, whose own suites pin its rows, states, controls, click-ahead, stale-click guard and
+placement order; here the descriptor's presentation fields and nothing else, the step names with
+their bosses and loot counts, each kind's tooltip and Start's and Stop's, the scenarios' names and a
+raid's sizes in the picker, the done tick's texture, `/dw sim` and `panel` opening or toggling it,
+the dock beside the window, also once a slow pool opens it, a drag writing nothing to the profile
+and Reset position redocking, and the stand-down hiding it, idle or running),
+`test_bindings` (the Show window key binding, launcher-§6: `Bindings.xml`'s one CLICK binding, no
+default key and no TOC line, the plain hidden `AnyDown` button, one press per toggle, the two labels,
+and the button on a library-less install), `test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
 §14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each
 hold and its release over an encounter or combat, the trade scan logged on change only, the search
 box once on focus lost, and the report's drop, toast-queue and auto-ask lines), `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
@@ -529,6 +532,20 @@ file's key read outside its folder, and on a topic file misnamed, out of the blo
 `enUS.lua`, or keeping its own table). Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
+
+**Simulator suites on LibKa0s-Sim-1.0.** Since DW-02..DW-04 the simulator's seam, session, two-phase
+stop, step machine, verb grammar and step panel are LibKa0s-Sim-1.0's, and their generic behavior
+is pinned in the library's own `test_sim_*` suites (LK-12..LK-17: the seam, the session and its stop,
+the timeline, the verbs, the panel, isolation, the reference stub and a DropWatcher-shaped mini
+host, `test_sim_host`). The seven DropWatcher suites
+stay as integration over this addon's host half: `test_sim_core` (the seam's members and guards,
+the refusals, the session log, the stop's host steps), `test_sim_e2e` (the H1 scan and `Unwrapped`,
+every scenario through the real engine), `test_sim_events` (the event drivers and the world
+providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the loot step's report),
+`test_sim_scenario` (the scenarios, the timeline's steps, the five verbs through `/dw sim`) and
+`test_sim_panel` (the panel's presentation fields). Where a DropWatcher case was deleted because a
+library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
+DropWatcher case to library case.
 
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API, never
 `tests/_kit/`.
@@ -544,7 +561,7 @@ the change that moves the count (testing-§5).
 | `lint` | `luacheck .` | **gates** | gates |
 | `tests` | `lua tests/run.lua` | **gates** | gates |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
-| `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0 |
+| `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0, and no crashed run (a crashed or bounded lizard run is a fail, its files listed as crashedFiles) |
 
 The release gate is evaluated by `/dev-copilot:bump-version` from the run's `manifest.json`
 (automated-tests-§3). The record itself: [`automated-tests/README.md`](automated-tests/README.md).

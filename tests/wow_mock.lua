@@ -143,6 +143,9 @@ local function decorateText(f)
     -- Horizontal justification; unset answers the game's default, CENTER.
     f.SetJustifyH = function(self, j) self.__justifyH = j; return self end
     f.GetJustifyH = function(self) return self.__justifyH or "CENTER" end
+    -- Word wrap (the test-mode strip's text, DW-06); unset answers the game's default, wrapping.
+    f.SetWordWrap = function(self, v) self.__wordWrap = not not v; return self end
+    f.GetWordWrap = function(self) return self.__wordWrap ~= false end
     f.SetFont = function(self, file, size, flags) self.__font = { file, size, flags }; return self end
     f.GetFont = function(self)
         local font = self.__font or { "Fonts\\FRIZQT__.TTF", 10, "" }
@@ -854,6 +857,11 @@ local function build()
         M.prints[#M.prints + 1] = table.concat(parts, " ")
     end
 
+    -- The client defines BackdropTemplateMixin; LibKa0s-Widgets' SearchBox (LibKa0s#52) asks for the
+    -- BackdropTemplate only when it is there, so the filter bar's box wears the template here as it
+    -- does in game.
+    M.BackdropTemplateMixin = M.BackdropTemplateMixin or {}
+
     M.StaticPopup_Show = function(which, ...) M.popupsShown[#M.popupsShown + 1] = { which, ... } end
     M.StaticPopup_Hide = function(which) M.popupsHidden[#M.popupsHidden + 1] = which end
 
@@ -903,12 +911,22 @@ local function build()
     installJournal(M)
     M.seedGearJournal = function() seedGearJournal(M) end
 
+    -- A NAMED Button is filed in the environment under its name, as the client files it in _G: the
+    -- Show window key binding (launcher-§6, Bindings.xml) reaches its button by global name and
+    -- nothing else, so "the button exists under that name" is a question a suite has to ask. A
+    -- Button also records RegisterForClicks, which the stub frame's metatable would swallow: a
+    -- CLICK binding fires the button only for a registered click, so the registration is behavior.
+    -- Its OnClick fires through the kit's `__fire`.
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreateFrame(frameType, name, parent, template)
         if name == WINDOW_NAME or name == TOAST_NAME or name == SIM_PANEL_NAME
             or (type(parent) == "table" and parent.__dwTree) then
             decorateGeometry(M, f)
+        end
+        if frameType == "Button" then
+            function f:RegisterForClicks(...) self.__clicks = { ... }; return self end
+            if type(name) == "string" then rawset(M, name, f) end
         end
         return f
     end

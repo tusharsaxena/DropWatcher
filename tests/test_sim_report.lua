@@ -63,21 +63,23 @@ end
 -- Play the started scenario's steps up to and including the next loot step; answers it.
 local function toLoot(NS)
     while true do
-        local step = NS.SimScenario.Step()
+        local step = NS.Sim:Step()
         if not step or step.kind == "loot" then return step end
     end
 end
 
--- The panel's row for a timeline step, composed from the running timeline.
+-- The panel's row for a timeline step, composed by LibKa0s-Sim-1.0 from the running timeline with
+-- modules/SimPanel.lua's fields (DW-04).
 local function panelRow(NS, step)
-    local SC, steps = NS.SimScenario, NS.SimScenario.Steps()
-    local rows = NS.SimPanel.Compose({ running = true, ready = true, scenario = NS.Sim.Session().scenario,
-        steps = steps, pos = SC.Status().pos, now = 0 })
-    for i, s in ipairs(steps) do
+    local rows = NS.Sim:PanelRows()
+    for i, s in ipairs(NS.SimScenario.Steps()) do
         if s == step then return rows[i + 1] end
     end
     return nil
 end
+
+-- A { left, right } tooltip line as one string.
+local function pair(line) return type(line) == "table" and (line[1] .. ": " .. tostring(line[2])) or tostring(line) end
 
 -- ---------------------------------------------------------------------------------------------
 -- The owner's case, reproduced before the fix
@@ -101,8 +103,8 @@ test("sim report: the owner's key run: the second drop is yours, on Drops, nothi
     assertEqual(step.detail, "2 drops")
     local row = panelRow(NS, step)
     assertEqual(row.label, "Loot: 2 drops")
-    assertEqual(T.tipPlain(row.tip[3]), "• Item 101081 (you): Drops")
-    assertEqual(T.tipPlain(row.tip[4]), "• Item 101081 (Kaelis): Drops")
+    assertEqual(pair(row.tip[3]), "Item 101081 (you): Drops")
+    assertEqual(pair(row.tip[4]), "Item 101081 (Kaelis): Drops")
     assertTrue(header ~= nil)
     NS.Window.SelectTab("group"); NS.Window.Refresh()
     local text = NS.WindowGroup.Drawn().headers[1].text:GetText()
@@ -116,7 +118,7 @@ test("sim report: the step's chat line says where its drops went", function()
     NS.SimScenario.Start("key", nil, { seed = 1 })
     toLoot(NS)
     local st = NS.SimScenario.Status()
-    assertEqual(printed(m, ("Simulation step %d of %d: loot: 2 drops."):format(st.pos, st.steps)), 1)
+    assertEqual(printed(m, ("Simulation step %d of %d: Loot: 2 drops."):format(st.pos, st.steps)), 1)
 end)
 
 test("sim report: /dw sim loot says where its drops went", function()
@@ -180,11 +182,11 @@ test("sim report: the tooltip names each drop, its looter and its tab or gate", 
     feed[1], feed[2] = mine, group
     local lines = R.TipLines({ sent = 5, merged = 1, drops = { mine, group,
         rec(3, { state = "hidden", hidden = "minIlvl", looter = { name = "Vaela" } }) } }, get)
-    assertEqual(T.tipPlain(lines[1]), "• Item 1 (you): Drops")
-    assertEqual(T.tipPlain(lines[2]), "• Item 2 (Seta): Drops")
-    assertEqual(T.tipPlain(lines[3]), "• Item 3 (Vaela): hidden: below the minimum item level")
-    assertEqual(T.tipPlain(lines[4]), "• Merged into an earlier drop: 1")
-    assertEqual(T.tipPlain(lines[5]), "• Refused by the feed: 1")
+    assertEqual(pair(lines[1]), "Item 1 (you): Drops")
+    assertEqual(pair(lines[2]), "Item 2 (Seta): Drops")
+    assertEqual(pair(lines[3]), "Item 3 (Vaela): hidden: below the minimum item level")
+    assertEqual(pair(lines[4]), "Merged into an earlier drop: 1")
+    assertEqual(pair(lines[5]), "Refused by the feed: 1")
     assertEqual(#lines, 5)
 end)
 
@@ -274,7 +276,7 @@ local function runAll(name, size, seed, ilvl, hideAll)
         end
     end
     assertTrue(steps > 0, label .. ": the scenario has a loot step")
-    NS.Sim.Stop("stop")
+    NS.Sim:Stop("stop")
 end
 
 for _, sc in ipairs(SCENARIOS) do
@@ -304,10 +306,10 @@ test("sim report: a place lists yours on Drops and honors the feed the window sh
     assertEqual(R.Summarize(report, get, { feed = "live" }).text, "2 drops")
     assertEqual(R.Summarize(report, get, { feed = "test" }).text, "2 drops (2 not shown in test mode)")
     local lines = R.TipLines(report, get, { feed = "live" })
-    assertEqual(T.tipPlain(lines[1]), "• Item 1 (you): Drops")
-    assertEqual(T.tipPlain(lines[2]), "• Item 2 (Seta): Drops")
+    assertEqual(pair(lines[1]), "Item 1 (you): Drops")
+    assertEqual(pair(lines[2]), "Item 2 (Seta): Drops")
     lines = R.TipLines(report, get, { feed = "test" })
-    assertEqual(T.tipPlain(lines[2]), "• Item 2 (Seta): not shown while test mode is on")
+    assertEqual(pair(lines[2]), "Item 2 (Seta): not shown while test mode is on")
 end)
 
 test("sim report: View reads the feed the window shows; feed.showOwn is retired", function()
@@ -329,7 +331,7 @@ test("sim report: the owner's step lists yours on Drops, and the tabs agree", fu
     assertEqual(step.detail, "2 drops")
     local row = panelRow(NS, step)
     assertEqual(row.label, "Loot: 2 drops")
-    assertEqual(T.tipPlain(row.tip[3]), "• Item 101081 (you): Drops")
+    assertEqual(pair(row.tip[3]), "Item 101081 (you): Drops")
     local c = NS.SimReport.Summarize(step.report, NS.LootFeed.Get, NS.SimReport.View())
     local shown = groupShown(NS, step.report)
     assertEqual(shown, c.group); assertEqual(c.group + c.hidden, c.total)

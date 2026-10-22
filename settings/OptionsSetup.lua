@@ -46,7 +46,6 @@ if not lib then
     H.__tabPlacement       = function() end
     H.__layoutTabs         = function() end
     H.__scrollTopInset     = function() end
-    H.__releaseChrome      = function() end
     H.__releaseSubTabs     = function() end
     H.__tabArtHeight       = function() return 0 end
     H.__resetTabArtHeight  = function() end
@@ -63,6 +62,7 @@ if not lib then
     H.ID_NAME_HINT         = {}
     H.SelectTab            = function() end
     H.NavRail              = function() end
+    H.Drawer               = function() end
     H.SetRenderer          = function() end
     H.RegisterOptionsPage  = function() end
     H.RefreshAllPanels     = function() end

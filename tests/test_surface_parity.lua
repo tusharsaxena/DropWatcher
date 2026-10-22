@@ -81,6 +81,17 @@ test("parity: the Lifecycle stand-in carries every member of the live latch", fu
     T.assertSurfaceParity(live.Lifecycle, degraded.Lifecycle, "Lifecycle latch vs host stand-in")
 end)
 
+test("parity: the Sim stub carries the whole live instance surface", function()
+    -- The live half is tests/run.lua's registered instance (no manifest lists instance members:
+    -- Sim:New builds them per host); the stub is LibKa0s tests/test_sim_stub.lua's reference copy.
+    T.assertSurfaceParity(degraded.Sim, "LibKa0s-Sim-1.0")
+    T.assertSurfaceParity(live.Sim, degraded.Sim, "Sim instance vs host stub")
+end)
+
+test("parity: the Sim seam stub carries the live seam surface", function()
+    T.assertSurfaceParity(live.SimSeam, degraded.SimSeam, "NS.SimSeam vs host stub")
+end)
+
 test("parity: the Bus stand-in carries every member of the live bus", function()
     T.assertSurfaceParity(live.Bus, degraded.Bus, "Bus instance vs host stand-in")
 end)
@@ -93,8 +104,18 @@ test("parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon call
     })
 end)
 
-test("parity: the Item stub carries the whole LibKa0s-Item-1.0 surface", function()
-    T.assertSurfaceParity(degraded.Item, "LibKa0s-Item-1.0")
+test("parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon calls", function()
+    T.assertSurfaceParity(degraded.Item, "LibKa0s-Item-1.0", {
+        -- Item minor 3's bonus-id walk, live-only on purpose: this addon keeps its own modifier
+        -- walk and does not adopt it (OWNER_SCOPE A.#51 names BankLedger and LootHistory only).
+        -- `grep -rn "BonusIDsFromLink" core modules settings` finds no call site.
+        "BonusIDsFromLink",
+    })
+end)
+
+test("parity: the Glow stub carries the whole LibKa0s-Glow-1.0 surface", function()
+    -- red under: drop `Stop` from core/GlowSetup.lua's stub
+    T.assertSurfaceParity(degraded.GlowLib, "LibKa0s-Glow-1.0")
 end)
 
 -- The Perf members the addon can reach: the gate fields, the bracket sinks, the hold pair and the

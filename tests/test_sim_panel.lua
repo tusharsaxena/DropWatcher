@@ -1,9 +1,12 @@
--- tests/test_sim_panel.lua — the simulation step panel (sim feedback spec §1, §2; DW-91): the pure
--- composer (each row's name, command, state and tooltip; the run controls' state); the panel built
--- headless and its rows tracking the timeline; a click on a later row running every step in
--- between, in order; a typed `/dw sim step` moving the panel; Run all, Pause and Resume, Restart and
--- Stop; the scenario picker starting the chosen scenario; the opening verbs, the dock beside the
--- window, the remembered position and the stand-down (modules/SimPanel.lua).
+-- tests/test_sim_panel.lua — the simulation step panel's DropWatcher content (DW-04, LibKa0s#53
+-- #54): since contract proof 3/3 the panel is LibKa0s-Sim-1.0's (its rows, states, controls,
+-- click-ahead, stale-click guard and placement order are pinned by the library's own suites), and
+-- DropWatcher passes only the presentation fields (modules/SimPanel.lua's NS.SimPanel.FIELDS).
+-- These cases read the panel through NS.Sim:PanelRows / ShowPanel / HidePanel / TogglePanel /
+-- IsPanelShown and assert what is DropWatcher's: the step names (bosses, loot counts), the per-kind
+-- tooltips, the Start and Stop tooltips, the scenarios' names and a raid's sizes, the done tick's
+-- texture, the title, docking beside the Drop Watcher window, a position that is session-only and
+-- the stand-down.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -39,7 +42,8 @@ local function seedJournal(m)
     for _, d in ipairs({ 17, 14, 15, 16 }) do j.loot[201][d] = { add(201, d, 1), add(201, d, 2) } end
 end
 
--- An enabled addon, solo and out of an instance; the player wears two 590 rings.
+-- An enabled addon, solo and out of an instance; the player wears two 590 rings. The library's
+-- panel frame (`DropWatcherSimPanel`) is caught as it is built: the kit's CreateFrame sets no global.
 local function addon()
     local NS, _, m = T.enableAddon()
     m.addItem(link(100, 590), ring(590))
@@ -47,152 +51,159 @@ local function addon()
     m.inventory.player[11], m.inventory.player[12] = link(100, 590), link(101, 590)
     m.INVTYPE_FINGER = "Finger"
     seedJournal(m)
+    local create = m.CreateFrame
+    m.CreateFrame = function(kind, name, ...)
+        local f = create(kind, name, ...)
+        if name == "DropWatcherSimPanel" then m.simPanel = f end
+        return f
+    end
     return NS, m
 end
 
 local function slash(NS, line) NS.addon:OnSlashCommand(line) end
 
-local function printed(m, needle)
-    local n = 0
-    for _, line in ipairs(m.prints) do
-        if line:find(needle, 1, true) then n = n + 1 end
-    end
-    return n
-end
-
-local function rows(NS) return NS.SimPanel.Frame().rows end
-
-local function states(NS)
+local function labels(rows)
     local out = {}
-    for i, row in ipairs(NS.SimPanel.Stats().rows) do out[i] = row.state end
-    return table.concat(out, ",")
+    for i, row in ipairs(rows) do out[i] = row.label end
+    return table.concat(out, "|")
 end
 
-local function pos(NS) return NS.SimScenario.Status().pos end
+-- Tooltip lines ({ left, right } pairs) as one string.
+local function lines(list)
+    local out = {}
+    for i, line in ipairs(list) do out[i] = line[1] .. ": " .. tostring(line[2]) end
+    return table.concat(out, " | ")
+end
 
 -- ---------------------------------------------------------------------------------------------
--- Pure: the composer and the controls
+-- The fields: names and tooltips
 -- ---------------------------------------------------------------------------------------------
 
-test("sim panel: a key's preview names every step, with its command, before a run", function()
+test("sim panel: the descriptor carries DropWatcher's presentation fields and nothing else", function()
     local NS = T.newAddon()
-    local SP, SC = NS.SimPanel, NS.SimScenario
-    local r = SP.Compose({ running = false, scenario = "key", steps = SC.Timeline(SC.SCENARIOS.key), pos = 0, now = 0 })
-    local labels = {}
-    for i, row in ipairs(r) do labels[i] = row.label end
+    local F = NS.SimPanel.FIELDS
+    local keys = {}
+    for k in pairs(F) do keys[#keys + 1] = k end
+    table.sort(keys)
+    -- No button, no tooltip (OWNER_SCOPE C.7) and no store (C.11).
+    assertEqual(table.concat(keys, ","), "anchorTo,check,startTip,stepLabel,stepTip,stopTip,title")
+    assertEqual(F.title(), "Ka0s Drop Watcher - Simulation")
+    assertEqual(F.check, NS.Icon("confirm"), "the done tick is the catalog's confirm icon")
+    assertNil(F.anchorTo(), "no window shown: the panel floats")
+end)
+
+test("sim panel: a key's preview names every step with its boss, and every command, before a run", function()
+    local NS = addon()
+    local r = NS.Sim:PanelRows()
     local B = NS.SimEvents.BOSSES
-    assertEqual(table.concat(labels, "|"), table.concat({ "Start: Mythic+ key", "Key starts",
+    assertEqual(labels(r), table.concat({ "Start: Mythic+ key", "Key starts",
         "Pull: " .. B[1], "Kill: " .. B[1], "Pull: " .. B[2], "Kill: " .. B[2], "Pull: " .. B[3], "Kill: " .. B[3],
         "Combat and chat lockdown", "Key complete", "Loot: 2 drops", "Lockdown lifts", "Stop simulation" }, "|"))
     assertEqual(r[1].command, "/dw sim start key")
     assertEqual(r[2].command, "/dw sim step")
     assertEqual(r[#r].command, "/dw sim stop")
-    assertEqual(r[1].state, "ready"); assertTrue(r[1].actionable)
-    for i = 2, #r do
-        assertEqual(r[i].state, "locked", "row " .. i)
-        assertFalse(r[i].actionable, "row " .. i .. " is not clickable without a run")
-    end
-    assertEqual(T.tipPlainJoined({ r[11].tip[2], r[11].tip[3] }), "• Injects: 2 loot lines | • Through: the real loot handler (CHAT_MSG_LOOT)")
+    assertEqual(lines(r[11].tip), "Injects: 2 loot lines | Through: the real loot handler (CHAT_MSG_LOOT)")
 end)
 
-test("sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states", function()
+test("sim panel: a step names the boss it played, and a loot step its count or its detail", function()
     local NS = T.newAddon()
     local SP = NS.SimPanel
     local steps = {
-        { kind = "pull", ranAt = 10, detail = "Matron Seyla" }, { kind = "lockdownOn", ranAt = 13 },
-        { kind = "kill", ranAt = 16, detail = "Matron Seyla" }, { kind = "loot", n = 3 }, { kind = "lockdownOff" },
+        { kind = "pull", detail = "Matron Seyla" }, { kind = "lockdownOn" }, { kind = "kill" },
+        { kind = "loot", n = 3 }, { kind = "lockdownOff" }, { kind = "pull" }, { kind = "loot" }, { kind = "loot", n = 1 },
     }
-    local r = SP.Compose({ running = true, ready = true, scenario = "raid", size = 12, steps = steps, pos = 2,
-        startedAt = 5, now = 25 })
-    assertEqual(r[1].label, "Start: Raid"); assertEqual(r[1].command, "/dw sim start raid 12")
-    local want = { "done", "done", "busy", "ready", "locked", "locked", "cancel" }
-    for i, s in ipairs(want) do assertEqual(r[i].state, s, "row " .. i) end
-    assertEqual(r[2].label, "Pull: Matron Seyla", "a played pull names its boss")
-    assertEqual(r[4].label, "Kill: Matron Seyla")
-    assertEqual(r[5].label, "Loot: 3 drops")
-    assertFalse(r[2].actionable, "a completed step does nothing")
-    assertEqual(T.tipPlain(r[2].tip[2]), "• Ran: 15s ago")
-    assertEqual(T.tipPlain(r[1].tip[2]), "• Ran: 20s ago", "the start ran when the session started")
-    assertTrue(r[4].actionable); assertFalse(r[4].ahead)
-    assertTrue(r[6].actionable); assertTrue(r[6].ahead)
-    assertEqual(T.tipPlain(r[6].tip[#r[6].tip]), "Click to run every step up to this one, in order.", "the closing hint")
-    assertTrue(r[7].actionable, "Stop is clickable while a run lasts")
-    -- A played loot step says what it dropped.
-    steps[4].detail, steps[4].ranAt = "2 drops", 20
-    assertEqual(SP.Compose({ running = true, ready = true, scenario = "raid", steps = steps, pos = 4, now = 25 })[5].label,
-        "Loot: 2 drops")
+    local out = {}
+    for i, step in ipairs(steps) do out[i] = SP.StepLabel(step, i, steps) end
+    assertEqual(table.concat(out, "|"), table.concat({ "Pull: Matron Seyla", "Combat and chat lockdown",
+        "Kill: Matron Seyla", "Loot: 3 drops", "Lockdown lifts", "Pull: " .. NS.SimEvents.BOSSES[2],
+        "Loot: 1 to 3 drops", "Loot: 1 drop" }, "|"))
+    steps[4].detail = "2 drops"
+    assertEqual(SP.StepLabel(steps[4], 4, steps), "Loot: 2 drops", "a played loot step says what it dropped")
+    assertEqual(SP.StepLabel({ kind = "kill", detail = "Warden Ashvane" }), "Kill: Warden Ashvane", "no timeline: its detail")
 end)
 
-test("sim panel: before the pool is ready the start is current and nothing else is clickable", function()
-    local NS = T.newAddon()
-    local r = NS.SimPanel.Compose({ running = true, ready = false, scenario = "dungeon",
-        steps = { { kind = "pull" }, { kind = "kill" } }, pos = 0, now = 0 })
-    assertEqual(r[1].state, "busy")
-    assertFalse(r[2].actionable); assertEqual(r[2].state, "locked")
-    assertTrue(r[4].actionable)
-end)
-
-test("sim panel: the controls follow the timeline: Run all, Pause or Resume, Restart, Stop", function()
-    local C = T.newAddon().SimPanel.Controls
-    assertFalse(C(nil, false).running)
-    local c = C({ ready = true, pos = 0, steps = 5, playing = false }, true)
-    assertTrue(c.run); assertFalse(c.pause.enabled); assertEqual(c.pause.verb, "pause")
-    assertTrue(c.restart); assertTrue(c.stop)
-    c = C({ ready = true, pos = 2, steps = 5, playing = true }, true)
-    assertFalse(c.run, "already playing"); assertTrue(c.pause.enabled)
-    c = C({ ready = true, pos = 2, steps = 5, playing = false, paused = true }, true)
-    assertEqual(c.pause.verb, "resume"); assertEqual(c.pause.label, "Resume"); assertTrue(c.pause.enabled)
-    c = C({ ready = true, pos = 5, steps = 5 }, true)
-    assertFalse(c.run, "nothing left to play")
-    c = C({ ready = false, pos = 0, steps = 5 }, true)
-    assertFalse(c.run, "the pool is not ready")
-end)
-
-test("sim panel: StartCommand carries a raid's size and leaves a random one out", function()
-    local SP = T.newAddon().SimPanel
-    assertEqual(SP.StartCommand("key"), "/dw sim start key")
-    assertEqual(SP.StartCommand("raid", 0), "/dw sim start raid")
-    assertEqual(SP.StartCommand("raid", 15), "/dw sim start raid 15")
-end)
-
--- ---------------------------------------------------------------------------------------------
--- The panel: opening, building, docking
--- ---------------------------------------------------------------------------------------------
-
-test("sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds PerfPanel's three columns", function()
-    local NS, m = addon()
-    assertNil(NS.SimPanel.Frame(), "built on the first show")
-    slash(NS, "sim")
-    assertTrue(NS.SimPanel.IsShown())
-    assertEqual(printed(m, "No simulation is running."), 1, "the bare verb still prints the status")
-    local f = NS.SimPanel.Frame()
-    assertEqual(f.title:GetText(), "Ka0s Drop Watcher - Simulation")
-    assertTrue(f.closeButton ~= nil, "Core's close mark")
-    local b = rows(NS)[1]
-    assertEqual(b.__label, "Start: Mythic+ key"); assertEqual(b.__state, "ready")
-    assertEqual(b.cmd:GetText(), "/dw sim start key")
-    assertTrue(f.picker:IsShown(), "the picker shows while nothing runs")
-    assertFalse(f.controls:IsShown())
-    slash(NS, "sim panel")
-    assertFalse(NS.SimPanel.IsShown())
-    slash(NS, "sim panel")
-    assertTrue(NS.SimPanel.IsShown())
-    f.closeButton:__fire("OnClick")
-    assertFalse(NS.SimPanel.IsShown(), "the close mark hides it")
-end)
-
-test("sim panel: `/dw sim start` opens it beside the window, its rows tracking the timeline", function()
+test("sim panel: every step kind's tooltip says what it injects; Start and Stop say what they do", function()
     local NS = addon()
+    local SP = NS.SimPanel
+    local want = {
+        runStart = "Injects: CHALLENGE_MODE_START, the ChallengeMode restriction | Through: the real handlers",
+        runEnd = "Injects: CHALLENGE_MODE_COMPLETED | Lifts: the ChallengeMode restriction | Through: the real handlers",
+        pull = "Injects: ENCOUNTER_START, the combat edge, the Encounter restriction | Through: the real handlers",
+        kill = "Injects: ENCOUNTER_END | Lifts: combat and the Encounter restriction | Through: the real handlers",
+        lockdownOn = "Injects: the simulated chat lockdown | Asks: wait until it lifts",
+        lockdownOff = "Lifts: the chat lockdown | Waiting asks: go out (printed, never sent)",
+    }
+    for kind, text in pairs(want) do assertEqual(lines(SP.StepTip({ kind = kind })), text, kind) end
+    assertEqual(lines(SP.StepTip({ kind = "loot", n = 1 })), "Injects: 1 loot line | Through: the real loot handler (CHAT_MSG_LOOT)")
+    local r = NS.Sim:PanelRows()
+    assertEqual(lines(r[1].tip), "Builds: the item pool, from the Encounter Journal | Invents: the group | Opens: the window")
+    assertEqual(lines(r[#r].tip), "Ends: the simulation | Cleans up: everything it made")
+end)
+
+test("sim panel: the scenarios carry their names, and the raids the sizes the picker offers", function()
+    local NS = T.newAddon()
+    local defs = NS.SimScenarioDefs.defs
+    local names = {}
+    for i, name in ipairs(NS.SimScenarioDefs.names) do names[i] = defs[name].label end
+    assertEqual(table.concat(names, "|"), "Mythic+ key|Dungeon|Raid|Raid Finder|Delve|Open world")
+    assertEqual(table.concat(defs.raid.sizes, ","), "9,12,15,19")
+    assertEqual(table.concat(defs.lfr.sizes, ","), "9,12,15,19")
+    assertNil(defs.key.sizes, "a party has no size")
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- The panel: opening, the picker, the tick, docking
+-- ---------------------------------------------------------------------------------------------
+
+test("sim panel: `/dw sim` opens it with DropWatcher's title, `/dw sim panel` toggles it", function()
+    local NS, m = addon()
+    slash(NS, "sim")
+    assertTrue(NS.Sim:IsPanelShown())
+    assertEqual(m.simPanel.title:GetText(), "Ka0s Drop Watcher - Simulation")
+    slash(NS, "sim panel")
+    assertFalse(NS.Sim:IsPanelShown())
+    slash(NS, "sim panel")
+    assertTrue(NS.Sim:IsPanelShown())
+    NS.Sim:HidePanel()
+    assertFalse(NS.Sim:IsPanelShown())
+end)
+
+test("sim panel: picking Raid offers its sizes, and Start starts it at the chosen size", function()
+    local NS, m = addon()
+    assertTrue(NS.Sim:ShowPanel())
+    local pk = m.simPanel.picker
+    assertFalse(pk.size:IsShown(), "no member count for a key")
+    pk.scenario.onSelect("raid")
+    assertTrue(pk.size:IsShown(), "a raid takes a member count")
+    pk.size.onSelect(15)
+    local r = NS.Sim:PanelRows()
+    assertEqual(r[1].label, "Start: Raid"); assertEqual(r[1].command, "/dw sim start raid 15")
+    pk.start:__fire("OnClick")
+    assertTrue(NS.Sim:IsActive())
+    assertEqual(NS.SimScenario.Status().scenario, "raid")
+    assertEqual(#NS.SimRoster.Get(), 15)
+    slash(NS, "sim stop")
+end)
+
+test("sim panel: a played step shows the catalog's confirm tick and names its boss", function()
+    local NS, m = addon()
     slash(NS, "sim start dungeon")
-    assertTrue(NS.SimPanel.IsShown())
-    local st = NS.SimPanel.Stats()
-    assertEqual(st.dock, "right", "docked to the window's right edge, not over it")
-    local pt = { NS.SimPanel.Frame():GetPoint(1) }
+    assertTrue(NS.Sim:ShowPanel())
+    slash(NS, "sim step"); slash(NS, "sim step")
+    local b = m.simPanel.__rowButtons[2]
+    assertEqual(b.__state, "done")
+    assertEqual(b.check:GetTexture(), NS.Icon("confirm"))
+    assertEqual(b.__label, "Pull: Warden Ashvane")
+end)
+
+test("sim panel: opened after `/dw sim start`, it docks beside the Drop Watcher window", function()
+    local NS, m = addon()
+    slash(NS, "sim start dungeon")
+    assertTrue(NS.Window.IsShown())
+    assertTrue(NS.Sim:ShowPanel())
+    local pt = { m.simPanel:GetPoint(1) }
     assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == NS.Window.Frame()); assertEqual(pt[3], "TOPRIGHT")
-    assertEqual(#st.rows, NS.SimScenario.Status().steps + 2)
-    assertEqual(states(NS):sub(1, 18), "busy,ready,locked,")
-    assertTrue(NS.SimPanel.Frame().controls:IsShown())
-    assertFalse(NS.SimPanel.Frame().picker:IsShown())
+    assertEqual(m.simPanel.__dock, "right")
 end)
 
 test("sim panel: opened before the window, it docks beside the window once a slow pool opens it", function()
@@ -203,203 +214,49 @@ test("sim panel: opened before the window, it docks beside the window once a slo
         end
     end
     slash(NS, "sim start dungeon")
-    assertTrue(NS.SimPanel.IsShown())
+    assertTrue(NS.Sim:ShowPanel())
     assertFalse(NS.Window.IsShown(), "the pool is still loading: no window yet")
-    assertEqual(NS.SimPanel.Stats().dock, "center")
+    assertEqual(m.simPanel.__dock, "float")
     m.loadJournal()
     m.advance(NS.SimPool.SETTLE)
     assertTrue(NS.Window.IsShown(), "the ready pool opened the window")
-    assertEqual(NS.SimPanel.Stats().dock, "right", "re-docked beside the window, not over it")
-    local pt = { NS.SimPanel.Frame():GetPoint(1) }
+    assertEqual(m.simPanel.__dock, "right", "re-docked beside the window, not over it")
+    local pt = { m.simPanel:GetPoint(1) }
     assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == NS.Window.Frame())
 end)
 
-test("sim panel: a dragged panel stays where it was put when the window opens later", function()
-    local NS, m = addon()
-    for _, byDifficulty in pairs(m.journal.loot) do
-        for _, list in pairs(byDifficulty) do
-            for _, e in ipairs(list) do e.loadsNeeded = 1 end
-        end
-    end
-    NS.addon.db.profile.simPanel = { point = { "TOPLEFT", "TOPLEFT", 40, -60 } }
-    slash(NS, "sim start dungeon")
-    m.loadJournal()
-    m.advance(NS.SimPool.SETTLE)
-    assertTrue(NS.Window.IsShown())
-    assertEqual(NS.SimPanel.Stats().dock, "saved")
-end)
-
 -- ---------------------------------------------------------------------------------------------
--- Clicking the rows
+-- The session-only position and the stand-down
 -- ---------------------------------------------------------------------------------------------
 
-test("sim panel: clicking the next step runs it; clicking a later one runs every step in between", function()
+test("sim panel: dragging writes nothing to the profile; Reset position redocks", function()
     local NS, m = addon()
-    slash(NS, "sim start dungeon")
-    rows(NS)[2]:__fire("OnClick")
-    assertEqual(pos(NS), 1)
-    assertEqual(printed(m, "Simulation step 1 of 15: pull"), 1)
-    rows(NS)[5]:__fire("OnClick")   -- timeline step 4, the loot
-    assertEqual(pos(NS), 4, "steps 2, 3 and 4 ran, in order")
-    for i, kind in ipairs({ "lockdownOn", "kill", "loot" }) do
-        assertEqual(printed(m, ("Simulation step %d of 15: %s"):format(i + 1, kind)), 1, kind .. " ran once")
-    end
-    assertTrue(#NS.LootFeed.Drops("live") > 0, "the loot step reached the feed")
-    local r = NS.SimPanel.Stats().rows
-    assertEqual(r[2].state, "done"); assertEqual(r[5].state, "busy"); assertEqual(r[6].state, "ready")
-    assertEqual(rows(NS)[2].__state, "done")
-end)
-
-test("sim panel: clicking a completed step does nothing, and its tooltip says when it ran", function()
-    local NS, m = addon()
-    slash(NS, "sim start dungeon")
-    rows(NS)[2]:__fire("OnClick")
-    m.advance(7)
-    local before = #m.prints
-    rows(NS)[2]:__fire("OnClick")
-    rows(NS)[1]:__fire("OnClick")
-    assertEqual(pos(NS), 1); assertEqual(#m.prints, before, "nothing ran, nothing printed")
-    NS.SimPanel.Refresh()
-    local tip = NS.Window.TooltipOf(rows(NS)[2])
-    assertEqual(T.tipPlain(tip[2]), "• Ran: 7s ago")
-end)
-
-test("sim panel: a typed `/dw sim step` moves the panel too", function()
-    local NS = addon()
-    slash(NS, "sim start key")
-    slash(NS, "sim step")
-    slash(NS, "sim step")
-    local r = NS.SimPanel.Stats().rows
-    assertEqual(r[2].state, "done"); assertEqual(r[3].state, "busy"); assertEqual(r[4].state, "ready")
-    assertEqual(rows(NS)[3].__state, "busy")
-end)
-
--- ---------------------------------------------------------------------------------------------
--- The run controls
--- ---------------------------------------------------------------------------------------------
-
-test("sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on", function()
-    local NS, m = addon()
-    slash(NS, "sim start dungeon")
-    local ctl = NS.SimPanel.Frame().controls
-    ctl.run:__fire("OnClick")
-    assertEqual(pos(NS), 1, "one step at once")
-    assertTrue(NS.SimScenario.Status().playing)
-    assertFalse(ctl.run:IsEnabled(), "Run all is spent while playing")
-    m.advance(NS.SimScenario.STEP_DELAY)
-    assertEqual(pos(NS), 2)
-    assertEqual(rows(NS)[3].__state, "busy", "the highlight follows the run")
-    assertTrue(ctl.pause:IsEnabled(), "Pause stays live after an automatic step")
-    assertFalse(ctl.run:IsEnabled(), "Run all stays spent after an automatic step")
-    ctl.pause:__fire("OnClick")
-    assertTrue(NS.SimScenario.Status().paused)
-    assertEqual(ctl.pause.__label, "Resume")
-    m.advance(NS.SimScenario.STEP_DELAY * 3)
-    assertEqual(pos(NS), 2, "paused: nothing played")
-    ctl.pause:__fire("OnClick")
-    assertEqual(pos(NS), 3, "resumed: the next step at once")
-    assertTrue(NS.SimScenario.Status().playing)
-    assertEqual(ctl.pause.__label, "Pause")
-    for _ = 1, 20 do m.advance(NS.SimScenario.STEP_DELAY) end
-    assertEqual(pos(NS), 15, "played to the end")
-    assertEqual(rows(NS)[17].__state, "cancel", "Stop is what is left")
-end)
-
-test("sim panel: Run all's tooltip names the current step delay (feedback-2 spec §8, FB2-8)", function()
-    local NS = addon()
-    slash(NS, "sim start dungeon")
-    local run = NS.SimPanel.Frame().controls.run
-    assertEqual(T.tipPlainJoined(NS.Window.TooltipOf(run)), "Run all | • Plays: every step left | • Every: 2 seconds | • Typed: /dw sim run")
-    slash(NS, "set sim.stepDelay 3.5")
-    assertEqual(T.tipPlain(NS.Window.TooltipOf(run)[3]), "• Every: 3.5 seconds")
-end)
-
-test("sim panel: the typed pause, resume and restart answer as the buttons do", function()
-    local NS, m = addon()
-    slash(NS, "sim pause")
-    assertEqual(printed(m, "No simulation is running: start one"), 1)
-    slash(NS, "sim start key")
-    slash(NS, "sim pause")
-    assertEqual(printed(m, "The timeline is not playing"), 1)
-    slash(NS, "sim resume")
-    assertEqual(printed(m, "The timeline is not paused."), 1)
-    slash(NS, "sim run")
-    slash(NS, "sim pause")
-    assertTrue(NS.SimScenario.Status().paused)
-    slash(NS, "sim resume")
-    assertTrue(NS.SimScenario.Status().playing)
-end)
-
-test("sim panel: Restart stops the scenario and starts the same one again; Stop ends it", function()
-    local NS = addon()
-    slash(NS, "sim start raid 12")
-    slash(NS, "sim step"); slash(NS, "sim step")
-    local ctl = NS.SimPanel.Frame().controls
-    ctl.restart:__fire("OnClick")
-    assertTrue(NS.Sim.IsActive())
-    local st = NS.SimScenario.Status()
-    assertEqual(st.scenario, "raid"); assertEqual(st.pos, 0); assertEqual(st.size, 12)
-    assertEqual(#NS.SimRoster.Get(), 12, "the same size again")
-    assertEqual(NS.SimPanel.Stats().rows[1].state, "busy")
-    ctl.stop:__fire("OnClick")
-    assertFalse(NS.Sim.IsActive())
-    assertTrue(NS.SimPanel.IsShown(), "the panel stays, with the picker")
-    assertTrue(NS.SimPanel.Frame().picker:IsShown())
-    assertEqual(NS.SimPanel.Stats().rows[1].state, "ready")
-    assertEqual(NS.SimPanel.Choice().scenario, "raid", "the picker keeps the scenario that ran")
-end)
-
-test("sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel", function()
-    local NS, m = addon()
-    slash(NS, "sim start key")
-    slash(NS, "sim stop")
-    assertEqual(NS.SimPanel.Stats().rows[1].state, "ready")
-    slash(NS, "sim start key")
-    m.setGroup({ { guid = "Player-1-0000BBBB", name = "Brakk", classFile = "WARRIOR", connected = true } })
-    m.__fire("GROUP_ROSTER_UPDATE")
-    assertFalse(NS.Sim.IsActive())
-    assertEqual(NS.SimPanel.Stats().rows[1].state, "ready")
-end)
-
--- ---------------------------------------------------------------------------------------------
--- The scenario picker
--- ---------------------------------------------------------------------------------------------
-
-test("sim panel: the picker starts the chosen scenario, with a raid's member count", function()
-    local NS = addon()
-    slash(NS, "sim panel")
-    local f = NS.SimPanel.Frame()
-    assertTrue(f.picker.scenario ~= nil, "the scenario dropdown")
-    assertFalse(f.picker.size:IsShown(), "no member count for a key")
-    f.picker.scenario.onSelect("raid")
-    assertTrue(f.picker.size:IsShown(), "a raid takes a member count")
-    f.picker.size.onSelect(15)
-    assertEqual(rows(NS)[1].__command, "/dw sim start raid 15")
-    f.picker.start:__fire("OnClick")
-    assertTrue(NS.Sim.IsActive())
-    assertEqual(NS.SimScenario.Status().scenario, "raid")
-    assertEqual(#NS.SimRoster.Get(), 15)
-    NS.SimPanel.Frame().controls.stop:__fire("OnClick")
-    f.picker.scenario.onSelect("lfr")
-    rows(NS)[1]:__fire("OnClick")   -- the Start row starts it too
-    assertEqual(NS.SimScenario.Status().scenario, "lfr")
-end)
-
-test("sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it", function()
-    local NS = addon()
-    slash(NS, "sim panel")
-    local f = NS.SimPanel.Frame()
+    NS.ShowWindow()
+    assertTrue(NS.Sim:ShowPanel())
+    local f = m.simPanel
     f:ClearAllPoints()
     f:SetPoint("TOPLEFT", nil, "TOPLEFT", 40, -60)
     f:__fire("OnDragStop")
-    assertEqual(NS.addon.db.profile.simPanel.point[3], 40)
-    NS.SimPanel.Hide(); NS.SimPanel.Show()
-    assertEqual(NS.SimPanel.Stats().dock, "saved")
+    assertEqual(f.__dock, "dragged")
+    NS.Sim:HidePanel(); NS.Sim:ShowPanel()
+    assertEqual(f.__dock, "dragged", "the dragged point holds for the session")
+    assertNil(NS.addon.db.profile.simPanel, "nothing written to SavedVariables (OWNER_SCOPE C.11)")
     NS.Window.ResetPosition()
-    assertNil(NS.addon.db.profile.simPanel.point)
-    assertTrue(NS.SimPanel.Stats().dock ~= "saved")
+    assertEqual(f.__dock, "right", "Reset position forgets the point and docks it beside the window")
+    assertNil(NS.addon.db.profile.simPanel)
+end)
+
+test("sim panel: standing down hides it, idle or running, and it does not open while stood down", function()
+    local NS = addon()
+    assertTrue(NS.Sim:ShowPanel())
     NS.SchemaRuntime.Set("enabled", false)
-    assertFalse(NS.SimPanel.IsShown(), "standing down closes it")
-    NS.SimPanel.Show()
-    assertFalse(NS.SimPanel.IsShown(), "and it does not open while stood down")
+    assertFalse(NS.Sim:IsPanelShown(), "an idle panel closes too")
+    assertFalse(NS.Sim:ShowPanel(), "refused while stood down")
+    slash(NS, "sim panel")
+    assertFalse(NS.Sim:IsPanelShown(), "the typed verb is refused as well")
+    NS.SchemaRuntime.Set("enabled", true)
+    slash(NS, "sim start key")
+    assertTrue(NS.Sim:ShowPanel())
+    NS.SchemaRuntime.Set("enabled", false)
+    assertFalse(NS.Sim:IsActive()); assertFalse(NS.Sim:IsPanelShown())
 end)

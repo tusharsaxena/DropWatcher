@@ -128,8 +128,8 @@ test("database: step 8 turns a stored feed.content all into session in every pro
     assertEqual(p.Default.feed.sort, "ilvl", "the other feed settings stay")
     assertEqual(p.Alt.feed.content, "instance", "This instance stays")
     assertNil(p.Bare.feed, "a profile that stored nothing gets nothing")
-    assertEqual(NS.addon.db.global.schemaVersion, 8)
-    assertEqual(NS.SCHEMA_VERSION, 8)
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertTrue(NS.SCHEMA_VERSION >= 8, "step 8 is in the chain (step 9 follows it, DW-04)")
     local again = { feed = { content = "all" } }
     NS.MigrateContentAll(again); NS.MigrateContentAll(again)
     assertEqual(again.feed.content, "session", "idempotent")

@@ -13,10 +13,8 @@ State.debug = false
 -- NS.SetTestMode (core/DropWatcher.lua).
 State.testMode = false
 
--- The simulator's session (modules/Sim.lua, simulator spec §1, §5): nil while no simulation runs.
--- Never saved: a /reload or a logout ends a simulation. NS.Sim.active (core/SimSeam.lua) says the
--- same in one boolean, read on every Compat call.
-State.sim = nil
+-- The simulator's session is LibKa0s-Sim-1.0's (NS.Sim:Session(), modules/Sim.lua), never here:
+-- nothing about a simulation is saved, so a /reload or a logout ends it.
 
 -- The run override of compact mode (modules/WindowCompact.lua, compact spec §1): { key, ended }
 -- while an auto-open inside a run (`key`, its situation) holds the window compact, else nil. `ended`

@@ -255,7 +255,7 @@ test("sim: a dungeon boss and a key run name the pool's instance and the client'
     assertTrue(g ~= nil, "the simulated drop made a group")
     assertEqual(g.instance, "Ashen Vault"); assertEqual(g.difficulty, "Mythic")
     assertEqual(joined(NS.GroupPlace.Parts(g, "Dungeon")), "Ashen Vault · " .. g.label .. " · Mythic")
-    NS.Sim.Stop("stop")
+    NS.Sim:Stop("stop")
     NS.SimScenario.Start("key", nil, { seed = 1 })
     NS.SimEvents.RunStart(); NS.SimEvents.RunEnd()
     NS.SimEvents.Loot(1, "me")

@@ -9,7 +9,7 @@ local _, NS = ...
 -- host handlers; `clear`, `history`, `mine`, `situation`, `offer` and `add` are slash-only and answered
 -- by settings/SlashVerbs.lua. `mine` is kept for habit and macros: it opens Drops, where your own
 -- drops are listed since the My drops tab was retired (feedback-5 spec §3). The simulator's `sim` (simulator spec §4) is answered by
--- settings/SimVerbs.lua.
+-- LibKa0s-Sim-1.0's NS.Sim:RunVerb, with DropWatcher's own five verbs from settings/SimVerbs.lua.
 
 local DW = NS.addon
 local L  = NS.L
@@ -84,7 +84,7 @@ local COMMANDS = {
     {"add",      L["Inject a drop for testing — `/dw add <item link> [player]`"],
         function(rest) NS.SlashVerbs.Add(rest) end},
     {"sim",      L["Simulate a group session through the real engine — `/dw sim` for its verbs"],
-        function(rest) NS.SimVerbs.Run(rest) end},
+        function(rest) NS.Sim:RunVerb(rest) end},
 }
 NS.COMMANDS = COMMANDS
 
