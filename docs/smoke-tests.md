@@ -13,7 +13,7 @@ passed.
 
 | ID range | Theme | What it covers |
 |---|---|---|
-| INSTALL-1..4 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22) |
+| INSTALL-1..5 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV) |
 | SLASH-1..7 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14) |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
@@ -63,6 +63,25 @@ both are kept; the debug flag and test mode are not (session-only). Result:
 → no Lua error and no new chat line; `/dump LibStub.minors["LibKa0s-Perf-1.0"]` → `15`. `/dw diagnostics`
 and `/dw perf` open as DIAG-1 and DIAG-2 describe. A lower minor means an older copy of the library
 loaded first from another addon; record which addons were enabled. Result:
+
+**INSTALL-5. The re-vendored LibKa0s v1.75.0 and its icon subset.** (DW-RV) The copy now ships only
+the 28 icons the `LibKa0s icons:` line in `CLAUDE.md` declares, and a pruned icon draws blank rather
+than falling back to text, so this pass is the backstop the headless gate cannot be.
+
+- SM-DW-1: `/reload` with Drop Watcher alone → no Lua error and no new chat line;
+  `/dump LibStub.minors["LibKa0s-Widgets-1.0"]` → `13`, and
+  `/dump LibStub.minors["LibKa0s-Options-1.0"]` → `29` (the v1.75.0 Options key is
+  29.2.34.2.5.9.1.7.4.2.1). A lower minor means an older copy loaded first from another addon; record
+  which addons were enabled.
+- SM-DW-2: every declared icon draws, none blank: the title bar's minimize and add marks, fullscreen-enter
+  and fullscreen-exit; the lock badge; the group-header and footer chevrons (down, right, up); the
+  dropdown's chevron and tick; the action buttons (chat, confirm, clock, reset, ban, external-link,
+  speech-bubble, people, link-intact, edit, transfer, cancel); the tooltip marks (arrow-up, arrow-down,
+  arrow-right, transfer); the item cell's help fallback; and the `/dw test` banner's info mark.
+- SM-DW-3: the library-drawn set draws: the debug console's close, copy and clear (`/dw debug`), the
+  perf panel's close (`/dw perf`), and the main window's close mark.
+
+Result:
 
 ## Slash
 
@@ -2671,6 +2690,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | COMPAT-4 | DW-P20, the optional-addon probe through Compat | No client pass recorded yet |
 | PANEL-8, DEGRADED-2, TOAST-4 | DW-P21, the situation table's OnRelease park; the toast's close degrading to nothing | No client pass recorded yet |
 | INSTALL-4 | DW-P22, the LibKa0s v1.72.0 re-vendor | DW-P22 has landed (`ff567d3`); no client pass recorded yet |
+| INSTALL-5 | DW-RV, the LibKa0s v1.75.0 re-vendor and icon prune | No client pass recorded yet |
 | DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | DW-P22 (`ff567d3`) and DW-P24 (`917449f`) have landed; owed the owner's capture recorded under `docs/perf-analysis/`; none is invented |
 | SLASH-7 | Review 2026-10-14, the cross-addon census's in-client half | No client pass recorded yet |
 | ITEM-5 | The Fireproof Drape fix: every primary stat read off the tooltip, the spec list held to its own class | No client pass recorded yet |

@@ -110,6 +110,25 @@ about it are load-bearing:
   `complexity` is `fail`, the verdict `amber`, the files are named on the console and in
   `RESULTS.md`, and `manifest.json` counts them as `suites.complexity.blindFiles`. That blocks the
   tag and never the run or the commit. No Lua to build the shadow is a skip.
+- **A lizard crash or bound is a fail, never a measurement** (kit revision 41, LibKa0s#46).
+  lizard's stderr goes to its own file, not into the parse, and the footer is read two lines below
+  `Total nloc`. A run counts only when lizard exits 0 or 1 (1 is any run that warned), the footer
+  is eight numbers and stderr holds no `Traceback`. Otherwise `complexity` is `fail` (amber) with
+  the crashed note below or `lizard exited <rc> with no valid footer (bound: ...)`,
+  every figure is 0 in `manifest.json` and `n/a` on the console and in the trend row, parity is
+  skipped, and the watch list carries the last measured one. `complexity.txt` keeps lizard's
+  stderr under a `--- lizard stderr ---` separator.
+- **A lizard raise is its own bucket, `crashed`, named by a per-file retry** (kit revision 41,
+  LibKa0s#47). On a `Traceback` (not on a 124 or 137 bound, which keeps the bound note) the runner
+  retries lizard once per file inside the shadow, with the same fixed flags, each run bounded, and
+  names every file whose solo run raises: `lizard raised on N file(s): <path> (<exception>), so
+  nothing was measured.`, plus a static hint to hoist the function literal out of the `for` header.
+  It never re-measures the rest: figures stay 0 / `n/a` and a crashed file is never called blind.
+  If no single file raises, the note says the whole tree raised. `manifest.json` counts the files
+  as `suites.complexity.crashedFiles`, the exceptions stay in `complexity.txt` and the note, and
+  `RESULTS.md`'s watch list leads with `**Not measured — lizard raised**`. No detector names the
+  shape and the shadow does not rewrite it; both were rejected, with triggers, in the version 41
+  document.
 - **The bundle is written to whatever `.gitattributes` declares for it**, read per path with
   `git check-attr text eol` at the end of the run — not assumed. Everything the runner writes goes
   down a plain shell redirect, which bypasses git's filters entirely, so before kit revision 10 every
@@ -159,6 +178,20 @@ DrvFs with `core.fileMode=false` everything looks executable. The case needs no 
 missing LibKa0s checkout does not skip it. It skips, with the reason, only where the index cannot be
 read at all: no `io.popen`, no git, or not a work tree. `opts.runner` and `opts.runnerCase` override
 the path and the case name.
+
+**From revision 40 it holds `media/icons/` to the consumer's icon declaration** (`library-stack-§7`,
+standard v2.85.0). The icon folder is the one carve-out from whole-folder vendoring: a consumer
+declares, in one line directly under its `CLAUDE.md` provenance line, `LibKa0s icons: all (icon
+picker).`, `LibKa0s icons: none.` or a comma-separated list of `lib.ICONS` names
+(`LibKa0s icons: settings, close, ph:sword, gi:skull.`), and the library pair then requires exactly
+those icons under `libs/LibKa0s/media/icons/`, each set's attribution files beside them when one of
+its icons ships, every one byte-identical to the tag, and nothing else there. Undeclared files fail
+with a count and ten names, missing ones fail the same way, and a name the **tag's** catalog does
+not carry fails. Everything outside `media/icons/` is still compared whole, and a repo with no line
+is gated exactly as before. `tools/prune-icons.lua` in the LibKa0s repo cuts a fresh copy down to
+the declaration using this file's own parser (`VendorSync.parseIconLine`, `iconDeclaration`,
+`iconCatalog`, `requiredIcons`). `opts.iconsPattern` overrides how the line is spelled, and a pair's
+`icons` field names the folder held to it. See `docs/api/testkit/version-40-docs.md`.
 
 ## `test_eol.lua`
 

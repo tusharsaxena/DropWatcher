@@ -110,4 +110,4 @@ Please raise them on GitHub:
 
 ## Credits
 
-The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL Open Font License 1.1, and the window's icons are drawn from [Open Iconic](https://github.com/iconic/open-iconic) (MIT).
+The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL Open Font License 1.1, and the window's icons are drawn from [Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT).

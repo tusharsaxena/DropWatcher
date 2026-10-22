@@ -37,7 +37,7 @@ Total.
 - parity: the Lifecycle stand-in carries every member of the live latch
 - parity: the Bus stand-in carries every member of the live bus
 - parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
-- parity: the Item stub carries the whole LibKa0s-Item-1.0 surface
+- parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon calls
 - parity: the Perf stub carries every Perf member the addon reaches
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths

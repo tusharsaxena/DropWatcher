@@ -10,8 +10,8 @@ this page describes what exists.
 A Retail addon that watches the loot a party or raid receives, judges each drop for you and for the
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
-LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the whole
-LibKa0s v1.72.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
+LibKa0s v1.75.0 payload (seventeen majors; media/icons pruned to the declared subset), of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |

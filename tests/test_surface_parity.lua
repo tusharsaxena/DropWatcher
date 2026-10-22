@@ -93,8 +93,13 @@ test("parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon call
     })
 end)
 
-test("parity: the Item stub carries the whole LibKa0s-Item-1.0 surface", function()
-    T.assertSurfaceParity(degraded.Item, "LibKa0s-Item-1.0")
+test("parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon calls", function()
+    T.assertSurfaceParity(degraded.Item, "LibKa0s-Item-1.0", {
+        -- Item minor 3's bonus-id walk, live-only on purpose: this addon keeps its own modifier
+        -- walk and does not adopt it (OWNER_SCOPE A.#51 names BankLedger and LootHistory only).
+        -- `grep -rn "BonusIDsFromLink" core modules settings` finds no call site.
+        "BonusIDsFromLink",
+    })
 end)
 
 -- The Perf members the addon can reach: the gate fields, the bracket sinks, the hold pair and the
