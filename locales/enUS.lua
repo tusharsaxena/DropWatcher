@@ -25,6 +25,9 @@ L["The LibKa0s library is missing from this installation of %s (expected in libs
 -- A feature's refusal under the perf hold alone (core/LifecycleSetup.lua NS.StoodDownRefusal)
 L["Not available during a performance capture."] = "Not available during a performance capture."
 
+-- The Show window key binding's row on the Key Bindings page (core/LauncherSetup.lua, launcher-§6)
+L["Toggle Drop Watcher window"] = "Toggle Drop Watcher window"
+
 -- Slash command descriptions (settings/Slash.lua NS.COMMANDS)
 L["Clear this session's drops from the feed"] = "Clear this session's drops from the feed"
 L["Disable the addon"] = "Disable the addon"

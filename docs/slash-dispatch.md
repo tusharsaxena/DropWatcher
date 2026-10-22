@@ -40,6 +40,11 @@ is `Not available during a performance capture.`, since `/dw enable` would chang
 printed alone, never inside `Not asked: …`; `NS.PressAsk`, `PressOffer` and `PressAnnounce` return
 the reason `disabled` or `perf` (`NS.StoodDownReason()`).
 
+The Show window key binding (launcher-§6, `Bindings.xml`) refuses as `/dw toggle` does. A key press
+never passes through the dispatcher, so its button (`DropWatcherToggleWindow`,
+`core/LauncherSetup.lua`) asks `NS.StoodDownRefusal()` itself and prints that one line, chosen by
+hold, before it would call `NS.ToggleWindow`; standing up, it calls the toggle verb's handler.
+
 The feature verbs are spec §12.3's (and compact spec §1's `full`). `scan`, `compact` and `full` call the host handlers their window
 controls call; the slash-only ones live in `settings/SlashVerbs.lua` (`NS.SlashVerbs`), loaded just before
 `settings/Slash.lua`. A verb that takes an item link reads it with the pure `SlashVerbs.SplitLink`:
@@ -54,7 +59,7 @@ Every verb but the bare form, `status`, `start` and `panel` says `No simulation 
 with /dw sim start <scenario>.` when none runs (DropWatcher's words for the library's line, through
 the descriptor's `L`), each refusal the simulator answers (a boss already engaged, no such drop, the
 timeline finished, the pool still loading) prints its own line, and a refused start prints only its
-refusal. The launcher menu has no simulator entry and there is no key binding (OWNER_SCOPE C.11):
+refusal. The launcher menu has no simulator entry and there is no simulator key binding (OWNER_SCOPE C.11):
 the slash verbs and the step panel are its interface, and every click on the panel runs one of these
 verbs through `NS.Sim:RunVerb`, so a click prints what the typed verb prints.
 

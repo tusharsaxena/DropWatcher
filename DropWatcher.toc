@@ -106,7 +106,8 @@ core\DebugLogSetup.lua
 core\DropWatcher.lua
 # Conventional: NS:RunMigrations is called from OnInitialize.
 core\Database.lua
-# Conventional: the launcher is built here and registered from OnEnable.
+# LOAD-BEARING relative to core\Namespace.lua only: the Show window key binding's header label reads
+# NS.BRAND at load (launcher-§6). The launcher is built here and registered from OnEnable.
 core\LauncherSetup.lua
 
 # Defaults

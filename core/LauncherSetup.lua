@@ -18,6 +18,32 @@ local function minimapStore()
     return db and db.global and db.global.minimap
 end
 
+-- ── the Show window key binding (launcher-§6) ───────────────────────────────────────────────
+--
+-- Bindings.xml (repo root, read by the client, never TOC-listed) declares one CLICK binding on the
+-- button below, with no default key. A plain, hidden, non-secure Button, registered AnyDown so one
+-- key press is one click. Its OnClick asks NS.StoodDownRefusal first, because NS.ToggleWindow
+-- relies on the dispatcher's gate for `/dw toggle`: stood down, the press prints the one line the
+-- toggle verb would, chosen by hold (the disabled line, or the perf capture's). Otherwise it calls
+-- NS.ToggleWindow, the handler the launcher's Show window entry and `/dw toggle` call. Built above
+-- the library check, so a bound key works on a library-less install too.
+--
+-- THE NAME IS PERMANENT. The client stores a player's key against `CLICK <name>:LeftButton`, so
+-- renaming DropWatcherToggleWindow silently unbinds every player's key.
+local toggleButton = CreateFrame("Button", "DropWatcherToggleWindow", UIParent)
+toggleButton:Hide()
+toggleButton:RegisterForClicks("AnyDown")
+toggleButton:SetScript("OnClick", function()
+    local line = NS.StoodDownRefusal()
+    if line then return NS.Print(line) end
+    NS.ToggleWindow()
+end)
+
+-- The Key Bindings page's labels: the header is the brand, the row is localized. The row's global
+-- name carries a space and a colon, so it is written with rawset rather than declared to luacheck.
+BINDING_HEADER_DROPWATCHER = NS.BRAND
+rawset(_G, "BINDING_NAME_CLICK DropWatcherToggleWindow:LeftButton", NS.L["Toggle Drop Watcher window"])
+
 if not lib then
     local missing = NS.L["%s, so there is no minimap button and no broker plugin."]:format(NS.LIBKA0S_MISSING)
     local said = false

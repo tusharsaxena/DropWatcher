@@ -55,6 +55,12 @@ the CLI, the launcher and the host verbs trigger (`Settings.REACTIONS` in `setti
 The header's Defaults button and Reset all settings both open the confirmation popup; the global
 reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
 
+The launcher's right-click menu mirrors four of these: Enabled, Locked, Test mode and Show window
+(launcher-§2). Show window also has a key binding (launcher-§6): Key Bindings → AddOns → Ka0s Drop
+Watcher → Toggle Drop Watcher window, with no default key, on the same handler as the menu entry and
+`/dw toggle` (`NS.ToggleWindow`, through the `DropWatcherToggleWindow` button in
+`core/LauncherSetup.lua`).
+
 ## General → Simulator
 
 One slider (the tab was `Simulation` until feedback-24), `Simulation step delay` (`sim.stepDelay`, feedback-2 spec §8, DW-A7): the seconds the

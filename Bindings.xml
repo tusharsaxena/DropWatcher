@@ -1,0 +1,3 @@
+<Bindings>
+  <Binding name="CLICK DropWatcherToggleWindow:LeftButton" header="DROPWATCHER" category="ADDONS"/>
+</Bindings>

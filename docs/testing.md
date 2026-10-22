@@ -46,7 +46,8 @@ one refusal line, unwrapped, while disabled; review F01/F10, DW-P16. Case 3 is s
 every event in `NS.FeatureEventNames()` through the kit's `__fireUnconditional` and asserts each
 returned count is at least 1, so a fire that reaches no handler fails rather than passing on silence.
 Cases 4 and 5 are step 7 over every verb in `NS.COMMANDS` and the bare command, case 8 is step 8 over
-both launcher buttons, and case 11 is step 10 through `Kit.assertLatchHoldOrder`; review F04 F05 F18,
+both launcher buttons and the Show window key binding's press (one refusal line, no toggle, no write;
+case 9 holds the press to the capture line under the perf hold alone), and case 11 is step 10 through `Kit.assertLatchHoldOrder`; review F04 F05 F18,
 DW-P25). The addon's own:
 `test_harness` (the load, the repository's shape, and the TOC's position labels: no `Conventional:`
 comment on a load-bearing position, nor one stating handler order, toc-file-§5), `test_setup` (each
@@ -517,7 +518,9 @@ their bosses and loot counts, each kind's tooltip and Start's and Stop's, the sc
 raid's sizes in the picker, the done tick's texture, `/dw sim` and `panel` opening or toggling it,
 the dock beside the window, also once a slow pool opens it, a drag writing nothing to the profile
 and Reset position redocking, and the stand-down hiding it, idle or running),
-`test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
+`test_bindings` (the Show window key binding, launcher-§6: `Bindings.xml`'s one CLICK binding, no
+default key and no TOC line, the plain hidden `AnyDown` button, one press per toggle, the two labels,
+and the button on a library-less install), `test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
 §14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each
 hold and its release over an encounter or combat, the trade scan logged on change only, the search
 box once on focus lost, and the report's drop, toast-queue and auto-ask lines), `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw

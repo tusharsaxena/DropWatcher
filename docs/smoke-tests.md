@@ -14,7 +14,7 @@ passed.
 | ID range | Theme | What it covers |
 |---|---|---|
 | INSTALL-1..5 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV) |
-| SLASH-1..7 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14) |
+| SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
@@ -121,6 +121,13 @@ root with `help`: `/dw`, `/dropwatcher`, then each other addon's own roots (`/qc
 → each prints its own addon's help, under its own brand, and none is answered by another addon or by
 the client's `Type /help for a listing`. Then Settings → AddOns → each addon is listed once, and each
 multi-page addon's pages appear once each under it. Result:
+
+**SLASH-8. The Show window key binding (launcher-§6, LibKa0s#58, DW-09).** Key Bindings → AddOns →
+Ka0s Drop Watcher lists `Toggle Drop Watcher window` with no default key. Bind one; a press opens the
+window and a second press closes it (one toggle per press), in and out of combat. Then `/dw disable`
+and press the key → exactly one disabled refusal line and no window. `/dw enable`, start a
+`/dw perf` capture and press → exactly `Not available during a performance capture.` and no toggle.
+Result:
 
 ## Settings panel
 
@@ -2828,6 +2835,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-99 | feedback-24, the settings pages regrouped: Situations, Drops, Window's Starting view, Alerts; the pairings and labels | No client pass recorded yet |
 | FEED-100 | DW-06 (LibKa0s#48), the test-mode banner as the library's strip: full layout unchanged and a long line truncated; compact two lines at 380, one at 520; combat ends it with its reserve | No client pass recorded yet |
 | FEED-101 | DW-07 (LibKa0s#52), the filter bar's search box as the library's SearchBox: the same look and hint, the gold focus line, live filtering, Enter and Escape, compact | No client pass recorded yet |
+| SLASH-8 | DW-09 (LibKa0s#58, launcher-§6), the Show window key binding: listed with no default key, one toggle per press in and out of combat (SM-DW-16); one refusal line by hold, disabled or perf capture, and no toggle (SM-DW-17) | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 

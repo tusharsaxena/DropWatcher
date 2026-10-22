@@ -1809,6 +1809,14 @@ Total.
 - sim panel: dragging writes nothing to the profile; Reset position redocks
 - sim panel: standing down hides it, idle or running, and it does not open while stood down
 
+### test_bindings.lua (5)
+
+- bindings: Bindings.xml carries one CLICK binding on DropWatcherToggleWindow under DROPWATCHER, category ADDONS, with no default key, and the TOC does not list it
+- bindings: the button is a plain hidden Button named DropWatcherToggleWindow, registered for AnyDown only
+- bindings: one press is one NS.Window.Toggle
+- bindings: the header label is the brand and the binding label is localized
+- bindings: the button exists on a library-less install too
+
 ### test_disabled.lua (13)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
@@ -1819,7 +1827,7 @@ Total.
 - disabled 5: every feature verb answers with the one refusal line and writes nothing
 - disabled 6: the stand-up re-registers from current state and the window comes back
 - disabled 7: a disabled profile loads stood down, with nothing registered
-- disabled 8: the launcher's left-click opens settings and writes nothing; its menu grays every entry but Enabled
+- disabled 8: the launcher and the key binding: left-click opens settings and writes nothing; the menu grays every entry but Enabled; a key press refuses
 - disabled 9: under the perf hold alone, each feature refusal names the capture, never 'is disabled'
 - disabled 10: while disabled, each feature refusal is the one refusal line, unwrapped
 - disabled 11: the latch holds in both orders, perf first and disabled first
@@ -2012,6 +2020,7 @@ Total.
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 12 |
+| test_bindings.lua | 5 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
@@ -2023,4 +2032,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1673** |
+| **Total** | **1678** |
