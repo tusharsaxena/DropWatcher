@@ -217,7 +217,6 @@ can change it.
 | `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, full is 1080 x 600 and compact is 400 x 560 at the full window's top right. A stored width under the layout's least (its default: full 1080, compact 400; feedback-4 spec §4, DW-D4, recomputed by feedback-5 spec §4, DW-E4, feedback-6 spec §0-§1 and feedback-23) is raised to it on load |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
 | `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }`, the offsets in UIParent's units (feedback-21 G10): a drag stores them times `toast.scale` and they are applied divided by it, so a scale change never moves the anchor; a point saved before G10 was saved at scale 1, so it reads the same |
-| `simPanel.point` | absent | a drag of the simulation panel; Reset position clears it | `{ point, relativePoint, x, y }`; until set, the panel opens beside the window |
 
 Each one's owner and every writer are named under
 [State written outside the seam](#state-written-outside-the-seam-architecture-5) below.
@@ -319,9 +318,6 @@ it is named.
   writer `Window.SetMinimized` alone.
 - `profile.toast.point` is the toast's position (design spec §11.5). Owner `modules/Toast.lua`;
   writers its drag stop (a drag only test mode allows) and `Toast.ResetPosition`.
-- `profile.simPanel.point` is the simulation panel's position (sim feedback spec §1, DW-91), absent
-  until the player drags it, so the panel opens beside the window. Owner `modules/SimPanel.lua`;
-  writers its drag stop and `SimPanel.ResetPosition`.
 - `global.notices.autoAsk` is auto-ask's one-time notice. Owner `modules/AutoAsk.lua`; written the
   first time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once
   per account.
@@ -384,7 +380,7 @@ on any tab (feedback-4 spec §2, DW-D2).
 ## Migrations
 
 `core/Database.lua`: the load pass is `NS:RunMigrations`, `NS.MIGRATIONS` is a list of steps
-`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 8). The runner
+`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 9). The runner
 runs in `OnInitialize` straight after `AceDB:New`, before anything reads the profile, and again on
 every profile event. It owns the stamp: a step's `to` is stored only after the step returned, so a
 step that raises is retried on the next load. A `perProfile` step runs for every stored profile in
@@ -400,5 +396,6 @@ the raw SavedVariables, not only the active one. The default stays `0`.
 | 6 | 5 → 6, per profile: own drops are always listed on Drops (DW-E2, feedback-5 spec §2). The retired switch `feed.showOwn` (Show my own loot in Group drops) is removed; nothing else changes (`NS.RetireShowOwn`) |
 | 7 | 6 → 7, per profile: My eq merged into Me and Their eq into Them (DW-F1, feedback-6 spec §1). The retired `window.columns.myEq` and `window.columns.theirEq` toggles are removed, since `me` and `them` now toggle the cells that show the worn gear; only the two keys go (`NS.RetireEqColumns`) |
 | 8 | 7 → 8, per profile: Content: All is History's alone (DW-Q1, feedback-15 spec §1). The Drops tab offers This instance and This session (its feed holds this session's drops alone), so a stored `feed.content = "all"` becomes `"session"`, the row's default; anything else passes through (`NS.MigrateContentAll`) |
+| 9 | 8 → 9, per profile: the simulation panel's position is session-only (DW-04, LibKa0s#54, OWNER_SCOPE C.11). The panel is LibKa0s-Sim-1.0's, which holds a dragged point for the session alone, so the retired `simPanel` key (the old panel's `point`, window state absent from defaults) is removed and a simulation writes nothing to SavedVariables; nothing else changes (`NS.RetireSimPanelPoint`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

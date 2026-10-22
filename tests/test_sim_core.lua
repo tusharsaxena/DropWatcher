@@ -169,7 +169,7 @@ end
 test("sim start: a second start is refused; test mode is refused while one runs", function()
     local NS, m, Sim = solo()
     assertTrue(Sim:Start({ scenario = "key", situation = "mythicPlus" }))
-    assertEqual(printed(m, "Simulation started (key)"), 1)
+    assertEqual(printed(m, "Simulation started (Mythic+ key)"), 1)
     assertTrue(Sim:IsActive()); assertTrue(Sim:Session().sim, "the session carries sim = true")
     assertFalse((Sim:Start({ scenario = "raid" })), "one at a time")
     -- red under: drop the NS.Sim:IsActive() line from testModeRefusal (core/DropWatcher.lua)

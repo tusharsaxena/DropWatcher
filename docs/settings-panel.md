@@ -61,7 +61,7 @@ One slider (the tab was `Simulation` until feedback-24), `Simulation step delay`
 simulator's automatic run (`/dw sim run`, the simulation panel's Run all) waits between steps, 0.5
 to 10 in steps of 0.5, 2 by default. `/dw set sim.stepDelay <n>` reaches it too (the slash parser
 clamps a number outside the range to it). A change takes effect from the next step of a running
-timeline, and the panel's Run all tooltip names the current delay.
+timeline.
 
 ## Situations
 

@@ -22,7 +22,8 @@ local _, NS = ...
 -- them all, one every StepDelay() seconds (the descriptor's `stepDelay`: the `sim.stepDelay`
 -- setting, read as each next step is set, so a change takes effect from the next step), on the
 -- session's timers, so the stop ends it; Pause, Resume and Restart are the library's too. Each
--- step's line names its detail (Play sets the step's `label`: `kill (Warden Ashvane)`). Nothing here
+-- step's line names it as the panel does (modules/SimPanel.lua's stepLabel, which the library uses
+-- for both since DW-04: `Kill: Warden Ashvane`, `Loot: 3 drops (1 hidden)`). Nothing here
 -- sets a verdict, a trade estimate or an inspect state: each step is an event driver, and the
 -- engine computes the rest.
 --
@@ -60,25 +61,21 @@ function SC.StepDelay()
     return SC.STEP_DELAY
 end
 
---- A delay as the tooltip says it (pure): a whole number without its point, else one decimal.
---- @param v number
---- @return string
-function SC.DelayText(v)
-    if v == math.floor(v) then return ("%d"):format(v) end
-    return ("%.1f"):format(v)
-end
-
 --- name -> { situation, kind, bosses, keystone, burst (loot lines per burst; nil: 1 to 3 at
 --- random), band (the members' item-level offsets around the content's level; nil: the roster's
 --- default), sizes (a raid's group sizes besides you, which the picker offers; the library adds 0,
---- random), timeline (SC.Timeline, set below) }.
+--- random), label (the scenario's name in the panel's picker and Start row, and in the library's
+--- started line), timeline (SC.Timeline, set below) }.
 SC.SCENARIOS = {
-    key     = { situation = "mythicPlus",     kind = "party", bosses = 3, keystone = true, burst = 2 },
-    dungeon = { situation = "dungeon",        kind = "party", bosses = 3, burst = 3 },
-    raid    = { situation = "raid",           kind = "raid",  bosses = 2, burst = 5, sizes = { 9, 12, 15, 19 } },
-    lfr     = { situation = "raidLFR",        kind = "raid",  bosses = 2, burst = 4, sizes = { 9, 12, 15, 19 } },
-    delve   = { situation = "delve",          kind = "party", bosses = 1, burst = 3 },
-    world   = { situation = "openWorldGroup", kind = "party", bosses = 1, burst = 3 },
+    key     = { situation = "mythicPlus",     kind = "party", bosses = 3, keystone = true, burst = 2,
+                label = L["Mythic+ key"] },
+    dungeon = { situation = "dungeon",        kind = "party", bosses = 3, burst = 3, label = L["Dungeon"] },
+    raid    = { situation = "raid",           kind = "raid",  bosses = 2, burst = 5, sizes = { 9, 12, 15, 19 },
+                label = L["Raid"] },
+    lfr     = { situation = "raidLFR",        kind = "raid",  bosses = 2, burst = 4, sizes = { 9, 12, 15, 19 },
+                label = L["Raid Finder"] },
+    delve   = { situation = "delve",          kind = "party", bosses = 1, burst = 3, label = L["Delve"] },
+    world   = { situation = "openWorldGroup", kind = "party", bosses = 1, burst = 3, label = L["Open world"] },
 }
 
 --- The scenario names, in the order the usage line lists them.
@@ -145,33 +142,22 @@ local PLAY = {
     end,
 }
 
---- A played step's name in its chat line (sim feedback §0: every step gets one, typed or played):
---- `kill (Warden Ashvane)`; a loot step says where its drops went (feedback-3 spec §0):
---- `loot: 3 drops (1 hidden)`. The library prints it as `Simulation step 3 of 11: <label>.`
---- @param kind string
---- @param detail string|nil
---- @return string
-function SC.StepLabel(kind, detail)
-    if not detail then return kind end
-    return (kind == "loot" and L["%s: %s"] or L["%s (%s)"]):format(kind, detail)
-end
-
 --- Play one timeline step through its event driver (the descriptor's `play`, which the library
---- runs for NS.Sim:Step, every Run tick and the panel's click-ahead): answers its detail, and sets
---- the step's `label` for the line the library prints.
+--- runs for NS.Sim:Step, every Run tick and the panel's click-ahead): answers its detail (the boss
+--- a pull or a kill named, where a loot step's drops went), which the library keeps on the step as
+--- `detail` and the step's name reads (sim feedback §0: every step gets a line, typed or played).
 --- @param step table
 --- @return string|nil detail
 function SC.Play(step)
     local did, detail = PLAY[step.kind](step)
     local st = Sim:Status()
     NS.Debug(TAG, "timeline step %d/%d: %s%s", st.pos, st.total, step.kind, did and "" or " (nothing to do)")
-    step.label = SC.StepLabel(step.kind, detail)
     return detail
 end
 
 -- ── the library's step machine, read ────────────────────────────────────────────────────────
 
---- The running timeline's steps, each { kind, n, label, ranAt, detail, index } (the last four once
+--- The running timeline's steps, each { kind, n, report, ranAt, detail, index } (the last four once
 --- played), for the panel to read; nil when none runs. Read it; only the library and Play write it.
 --- @return table|nil
 function SC.Steps()
@@ -206,6 +192,9 @@ local function poolReady(s, def, opts, ready)
         :format(#members, pool.size))
     NS.ShowWindow()
     if NS.Window and NS.Window.IsShown() then NS.Window.Refresh() end
+    -- A panel opened while the window was closed floats; placed again now (ShowPanel), it docks
+    -- beside the window this opened, unless the player dragged it this session.
+    if Sim:IsPanelShown() then Sim:ShowPanel() end
     ready()
 end
 
@@ -244,8 +233,7 @@ end
 
 -- ── the scenarios on LibKa0s-Sim-1.0 ────────────────────────────────────────────────────────
 
--- Each SCENARIOS row is its def: the library reads `timeline` and `sizes` (and `label`, absent
--- here, so its lines name the scenario).
+-- Each SCENARIOS row is its def: the library reads `timeline`, `sizes` and `label`.
 do
     local defs = NS.SimScenarioDefs
     for i, name in ipairs(SC.NAMES) do

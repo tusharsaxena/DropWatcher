@@ -2370,34 +2370,42 @@ start world` (both untracked by default) → each fills the window the same way.
 → an ask's announce goes to instance chat (`[sim] INSTANCE_CHAT: …`). In `/dw sim start raid 12`
 → you show online in the roster (`/dw diagnostics`, `unit=raid1`). Result:
 
-**SIM-10. The simulation step panel (DW-91, sim feedback §1).** The headless `test_sim_panel` covers
-the same ground. Solo, out of an instance: `/dw sim` → the panel `Ka0s Drop Watcher - Simulation`
-opens beside the window (not over it), in the perf-run panel's look: a dot, the step and its
-command on each row, the close mark at the top right, a scenario choice and Start at the foot. Pick
-Raid and a member count → the rows preview the raid's steps and `Start: Raid` reads `/dw sim start
-raid <n>`; Start → the simulation starts and the foot shows Run all, Pause, Restart and Stop. Click
-the third step ahead → chat prints one step line for each step in between, in order, and the rows
-turn green with a check up to it, the last one gold, the next one bright and the rest gray. Hover a
-completed row → its tooltip says when it ran; clicking it does nothing. Type `/dw sim step` → the
-panel moves on too. Run all → the gold highlight follows each step, and after the second step Pause is
-still live and Run all still spent; Pause → it stops, and Resume plays on. Restart → the same scenario starts again at its first step; Stop → the simulation ends and
-the picker returns. Drag the panel, `/reload`, `/dw sim panel` → it opens where you left it; Reset
-position (General › Master controls) → it docks beside the window again. Close the window, then
-`/dw sim start raid 30` on a fresh login (the journal still loading) → once the window opens the
-panel moves beside it, not over it. Result:
+**SIM-10. The simulation step panel (DW-91, sim feedback §1; LibKa0s-Sim-1.0's since DW-04).** The
+headless `test_sim_panel` covers DropWatcher's part; the panel's own behavior is LibKa0s-Sim-1.0's.
+
+- SM-DW-7: solo, out of an instance, `/dw sim panel` → the panel `Ka0s Drop Watcher - Simulation`
+  docks beside the window (right of it, else left, else floating right of center by 420 when
+  neither side fits or the window is closed), with Start, the steps and Stop, each with its typed
+  command; a played step turns green with the done tick, the current one gold, the next bright,
+  those ahead gray and Stop muted red; an actionable row lights on hover. The buttons are now the
+  library's default buttons and the tooltips plain GameTooltip lines (accepted change, OWNER_SCOPE
+  C.7), and the panel gains a width grip. Each step's name and tooltip are DropWatcher's
+  (`Pull: <boss>`, `Loot: 2 drops`, what it injects), and since DW-04 the chat's step line names the
+  step the same way (`Simulation step 2 of 15: Pull: Warden Ashvane.`).
+- SM-DW-8: pick Raid in the picker → the size dropdown appears (Random, 9, 12, 15, 19); Start; click
+  a step two ahead → every step up to it plays in order, one chat line each; Pause, Resume, Restart
+  and Stop do what the typed verbs do; the panel grows with the rows without empty space.
+- SM-DW-9: drag the panel, `/reload`, `/dw sim panel` → it docks beside the window again (the
+  position is session-only now; nothing is written to SavedVariables); Reset position (General ›
+  Master controls) redocks a dragged panel; `/dw disable` while it is open hides it, and
+  `/dw sim panel` while disabled is refused. Close the window, then `/dw sim start raid 12` on a fresh
+  login (the journal still loading) with the panel open → once the window opens the panel moves
+  beside it, not over it.
+
+Result:
 
 **SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** The headless `test_sim_scenario`
-and `test_sim_panel` (`sim step delay`) cover the same ground. Settings › General › Simulator →
+(`sim step delay`) covers the same ground. Settings › General › Simulator →
 `Simulation step delay` reads 2 and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`,
-hover Run all → `one every 2 seconds`; Run all → the steps come about two seconds apart. Set the
-slider to 6 while it plays → the step already waiting keeps its time, and the next ones come about
-six seconds apart; hover Run all → `one every 6 seconds`. `/dw set sim.stepDelay 1.5` → the steps
-speed up from the next one, and `/dw get sim.stepDelay` reads 1.5. Result:
+Run all → the steps come about two seconds apart. Set the slider to 6 while it plays → the step
+already waiting keeps its time, and the next ones come about six seconds apart. `/dw set
+sim.stepDelay 1.5` → the steps speed up from the next one, and `/dw get sim.stepDelay` reads 1.5.
+(Since DW-04 Run all's tooltip is the library's and names only its typed command.) Result:
 
 **SIM-12. The loot step says where its drops went, and the window reconciles (DW-B0, feedback-3 spec
 §0; one tab since DW-E3).** The headless `test_sim_report` covers the same ground in every scenario. Solo,
 with the window's filters at their defaults: `/dw sim start key`, then play it to its loot step → the
-panel row and the chat line read `Loot: 2 drops` (`Simulation step 10 of 11: loot: 2 drops.`; the
+panel row and the chat line read `Loot: 2 drops` (`Simulation step 10 of 11: Loot: 2 drops.` since DW-04; the
 `(1 yours)` is gone since DW-E2); hover the row → it names each drop, its looter and where it is
 (`… (you): Drops`, `… (<member>): Drops`). Drops shows both under a header reading `2 drops`, yours
 with Offer, even when your drop is an upgrade you keep. `/dw set feed.minIlvlMode absolute` and

@@ -319,12 +319,12 @@ NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item c
 /dw sim step ─> NS.Sim:Step (LibKa0s-Sim-1.0's step machine; the steps are the scenario's pure
                    Timeline) ─> play: NS.SimScenario.Play ─> the next step's driver: RunStart, Pull,
                    SetLockdown(on), Kill, Loot(burst), SetLockdown(off), RunEnd (refused `building`
-                   while the pool builds) ─> the library's chat line, named by the step's label
-                   (SimScenario.StepLabel), typed or played
+                   while the pool builds) ─> the library's chat line, the step named as the panel names it
+                   (the descriptor's panel.stepLabel, SimPanel.StepLabel: `Kill: Warden Ashvane`), typed or played
 the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receipt sequence and merge
                    count) ─> SimEvents.Loot ─> Collect (the records made since: added, loading or
-                   hidden by a gate) ─> kept on the step; Summarize (pure) ─> `loot: 3 drops (1 hidden)`
-                   in chat and `Loot: 3 drops (1 hidden)` on the panel row, TipLines (pure) ─> the
+                   hidden by a gate) ─> kept on the step; Summarize (pure) ─> `Loot: 3 drops (1 hidden)`
+                   in chat and on the panel row, TipLines (pure, { left, right } lines) ─> the
                    row's tooltip: each drop, its looter, Drops or the gate that hid it (feedback-3 §0);
                    each place honors the feed the window shows (SimReport.View = Window.FeedView:
                    not shown in test mode; §5); yours are on Drops like any other (feedback-5 §2)
@@ -335,11 +335,18 @@ the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receip
 /dw sim pause | resume | restart ─> NS.Sim:Pause (the pending tick canceled) | Resume (Run) | Restart
                    (Stop("restart"), `Simulation stopped to restart.`, then Start with the same
                    scenario, size and start options and a fresh seed)
-every move of the timeline (start, ready, step, run, pause, the end, the stop) ─> NS.Sim's listeners
-                   ─> NS.SimPanel.Refresh: Compose (pure) ─> the rows' states, Controls (pure) ─> the buttons
-the step panel's row click ─> SimPanel.ClickRow (re-composed) ─> Start: NS.Sim:RunVerb("start …") |
-                   a later step: RunTo ─> NS.Sim:RunVerb("step") until it is reached | Stop: NS.Sim:RunVerb("stop")
-the panel's Run all, Pause / Resume, Restart, Stop, picker Start ─> NS.Sim:RunVerb(the typed verb)
+the step panel (DW-04: LibKa0s-Sim-1.0's; `/dw sim` and `/dw sim panel` open it, NS.Sim:ShowPanel /
+                   TogglePanel) ─> its rows, states, run controls, picker and click-ahead are the
+                   library's, every action the typed verb (NS.Sim:RunVerb) ─> it repaints on every move
+                   of the timeline; what DropWatcher gives it is the descriptor's `panel`
+                   (NS.SimPanel.FIELDS, modules/SimPanel.lua): the title, each step's name
+                   (SimPanel.StepLabel: the boss, the loot count or where the drops went), each
+                   step's tooltip (SimPanel.StepTip: what it injects, the loot report's lines), the
+                   Start and Stop tooltips, the window to dock beside (anchorTo) and the done tick;
+                   the scenarios' names are their defs' `label` ─> its position is session-only
+                   (dragged: held for the session; Reset position: NS.Sim:ResetPanelPosition), and
+                   nothing reaches SavedVariables; a pool that opens the window later re-places a
+                   shown panel beside it (SimScenario's ready: NS.Sim:ShowPanel); standing down hides it
 the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.SimHost.Status,
                    NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```

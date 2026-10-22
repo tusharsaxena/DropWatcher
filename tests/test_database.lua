@@ -226,3 +226,31 @@ test("database: step 7 retires window.columns.myEq and theirEq in every stored p
         assertNil(NS.SchemaRuntime.FindRow("window.columns." .. key), key .. ": no settings row toggles it")
     end
 end)
+
+-- DW-04 (LibKa0s#54, OWNER_SCOPE C.11): the simulation panel's position is session-only, so the
+-- window-state key the retired DropWatcher panel wrote (`profile.simPanel`) goes.
+test("migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 8 },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { simPanel = { point = { "TOPLEFT", "TOPLEFT", 40, -60 } }, feed = { content = "session" } },
+            Alt = { window = { mode = "compact" } },
+        },
+    }
+    -- red under: no step 9 (the stored point stays)
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    assertNil(p.Default.simPanel, "the stored point goes")
+    assertEqual(p.Default.feed.content, "session", "the rest of the profile stays")
+    assertEqual(p.Alt.window.mode, "compact")
+    assertNil(p.Alt.simPanel)
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertTrue(NS.SCHEMA_VERSION >= 9)
+    local again = { simPanel = { point = {} }, sim = { stepDelay = 3 } }
+    NS.RetireSimPanelPoint(again); NS.RetireSimPanelPoint(again)
+    assertNil(again.simPanel); assertEqual(again.sim.stepDelay, 3)
+    NS.RetireSimPanelPoint(nil); NS.RetireSimPanelPoint({}); NS.RetireSimPanelPoint(3)
+    assertNil(NS.addon.db.profile.simPanel, "no default brings it back")
+end)

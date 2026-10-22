@@ -510,13 +510,13 @@ root cause reproduced, your own drop on Drops and nothing lost; the pure `Place`
 yours apart; `/dw sim loot`'s line; and the regression over every scenario: each loot step's drops on
 Drops and hidden add up to its count, the minimum item level gate hiding them all included; and the
 report honoring test mode's feed, `feed.showOwn` retired, feedback-5 spec §2-§3),
-`test_sim_panel` (the simulation step panel, DW-91: the rows, their PerfPanel states and commands
-before and during a run, the controls following the timeline, `/dw sim`, `start` and `panel`
-opening or toggling it beside the window, a click on the next step running it and one ahead running
-every step in between, a completed step inert with its tooltip naming when it ran, a typed step,
-stop or automatic stop repainting it, Run all, Pause and Resume, Restart and Stop, typed or clicked,
-the picker starting the chosen scenario with a raid's count, and the dragged position remembered,
-forgotten by Reset position and the panel hidden at stand-down),
+`test_sim_panel` (the simulation step panel's DropWatcher content, DW-04: the panel is
+LibKa0s-Sim-1.0's, whose own suites pin its rows, states, controls, click-ahead, stale-click guard and
+placement order; here the descriptor's presentation fields and nothing else, the step names with
+their bosses and loot counts, each kind's tooltip and Start's and Stop's, the scenarios' names and a
+raid's sizes in the picker, the done tick's texture, `/dw sim` and `panel` opening or toggling it,
+the dock beside the window, also once a slow pool opens it, a drag writing nothing to the profile
+and Reset position redocking, and the stand-down hiding it, idle or running),
 `test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
 §14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each
 hold and its release over an encounter or combat, the trade scan logged on change only, the search

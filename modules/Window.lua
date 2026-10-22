@@ -857,8 +857,8 @@ function Window.ApplySettings()
 end
 
 --- Reset position: forget both layouts' stored point and size, and put the window back where it
---- started; the toast's and the simulation panel's saved positions go too (modules/Toast.lua,
---- modules/SimPanel.lua).
+--- started; the toast's saved position goes too (modules/Toast.lua), and the simulation panel
+--- forgets this session's dragged point and docks beside the window again (LibKa0s-Sim-1.0).
 function Window.ResetPosition()
     NS.WindowCompact.ResetGeometry()
     if frame then
@@ -866,7 +866,7 @@ function Window.ResetPosition()
         applyPoint()
     end
     if NS.Toast then NS.Toast.ResetPosition() end
-    if NS.SimPanel then NS.SimPanel.ResetPosition() end
+    if NS.Sim then NS.Sim:ResetPanelPosition() end
     NS.Print(L["window position reset"])
 end
 

@@ -308,3 +308,26 @@ test("disabled 11: the latch holds in both orders, perf first and disabled first
     assertEqual(registered(m, "event"), table.concat(PINNED, ","))
     assertEqual(registered(m, "message"), table.concat(PINNED_MESSAGES, ","))
 end)
+
+-- DW-04: the simulation panel is LibKa0s-Sim-1.0's. Its stand-down stop hides it while a session
+-- runs; DropWatcher's own NS.STAND_DOWN step (modules/SimPanel.lua) hides an idle one, which has no
+-- session to stop; and the library refuses to show it while stood down.
+test("disabled 12: disabling hides the simulation panel, idle or running, and it stays shut", function()
+    for _, d in ipairs(DISABLES) do
+        local NS = T.enableAddon()
+        -- red under: drop modules/SimPanel.lua's NS.STAND_DOWN step (an idle panel has no stop)
+        assertTrue(NS.Sim:ShowPanel(), d[1])
+        d[2](NS)
+        assertFalse(NS.Sim:IsPanelShown(), d[1] .. ": an idle panel closes")
+        NS.addon:OnSlashCommand("sim panel")
+        assertFalse(NS.Sim:IsPanelShown(), d[1] .. ": `/dw sim panel` is refused")
+        assertFalse(NS.Sim:ShowPanel(), d[1] .. ": the library refuses it while stood down")
+    end
+    local NS = T.enableAddon()
+    NS.Sim:Start({ scenario = "key" })
+    assertTrue(NS.Sim:IsActive())
+    assertTrue(NS.Sim:ShowPanel())
+    NS.addon:OnSlashCommand("disable")
+    assertFalse(NS.Sim:IsActive(), "the simulation stopped")
+    assertFalse(NS.Sim:IsPanelShown(), "and its panel closed")
+end)

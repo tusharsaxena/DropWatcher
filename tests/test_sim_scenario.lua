@@ -273,7 +273,7 @@ test("sim step: the timeline waits for the pool, then plays one step at a time",
     m.advance(1)
     assertTrue(NS.SimScenario.Status().ready)
     slash(NS, "sim step")
-    assertEqual(printed(m, "Simulation step 1 of 15: pull (Warden Ashvane)."), 1)
+    assertEqual(printed(m, "Simulation step 1 of 15: Pull: Warden Ashvane."), 1)
     assertTrue(NS.SimEvents.Status().encounter ~= nil)
     slash(NS, "sim step")
     assertTrue(NS.Restrictions.ActiveSet().chatLockdown, "the lockdown step")
@@ -338,7 +338,7 @@ test("sim run: plays every step a few seconds apart, each with its line, then sa
     slash(NS, "sim start world")
     slash(NS, "sim run")
     assertEqual(NS.SimScenario.Status().pos, 1, "the first step at once")
-    assertEqual(printed(m, "Simulation step 1 of 5: pull (Warden Ashvane)."), 1)
+    assertEqual(printed(m, "Simulation step 1 of 5: Pull: Warden Ashvane."), 1)
     slash(NS, "sim run")
     assertEqual(printed(m, "The timeline is already playing."), 1)
     m.advance(NS.SimScenario.STEP_DELAY * 5)
@@ -346,8 +346,9 @@ test("sim run: plays every step a few seconds apart, each with its line, then sa
     assertEqual(st.pos, st.steps); assertFalse(st.playing)
     assertEqual(printed(m, "The simulation's timeline has finished."), 1)
     -- red under: the M7 run, which printed no step it played itself (sim feedback §0)
-    for _, line in ipairs({ "2 of 5: lockdownOn.", "3 of 5: kill (Warden Ashvane).", "4 of 5: loot: 3 drops",
-        "5 of 5: lockdownOff." }) do
+    -- Since DW-04 each line names the step as the panel does (its stepLabel).
+    for _, line in ipairs({ "2 of 5: Combat and chat lockdown.", "3 of 5: Kill: Warden Ashvane.", "4 of 5: Loot: 3 drops",
+        "5 of 5: Lockdown lifts." }) do
         assertEqual(printed(m, "Simulation step " .. line), 1, line)
     end
     assertEqual(NS.SimEvents.Status().kills, 1)
@@ -371,11 +372,10 @@ test("sim step delay: two seconds by default, read from `sim.stepDelay`; a bad v
     assertEqual(SC.StepDelay(), 2, "not a number: the default")
 end)
 
-test("sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5; DelayText drops a whole number's point", function()
+test("sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5", function()
     local SC = T.newAddon().SimScenario
     for _, v in ipairs({ 0.5, 1, 2, 7.5, 10 }) do assertTrue(SC.ValidStepDelay(v), tostring(v)) end
     for _, v in ipairs({ 0, 0.4, 1.3, 10.5, 0 / 0, "2" }) do assertFalse(SC.ValidStepDelay(v), tostring(v)) end
-    assertEqual(SC.DelayText(2), "2"); assertEqual(SC.DelayText(1.5), "1.5"); assertEqual(SC.DelayText(10), "10")
 end)
 
 test("sim step delay: `/dw set sim.stepDelay` takes a half step, clamps to the range, refuses a quarter step", function()

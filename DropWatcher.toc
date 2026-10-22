@@ -486,11 +486,11 @@ modules\SimReport.lua
 # its steps' play (the step machine is the library's); reads NS.L at load. NS.Sim, NS.SimPool,
 # NS.SimRoster, NS.SimEvents, NS.SimReport and NS.Window are read at call time.
 modules\SimScenario.lua
-# LOAD-BEARING: adds its repaint to NS.Sim's listeners (NS.Sim:AddListener, modules\Sim.lua, above)
-# at load; its NS.STAND_DOWN step runs in TOC order, after those of the modules above. Publishes
-# NS.SimPanel, the simulation step panel; reads NS.L and NS.Constants at load. NS.Sim,
-# NS.SimScenario, NS.SimEvents, NS.Window, NS.MineCells and
-# NS.WindowFooter are read at call time: the frame is built on the first Show.
+# LOAD-BEARING: fills NS.SimPanel.FIELDS, the Sim:New descriptor's `panel` that modules\Sim.lua
+# (above) created and passed, in place at load (LibKa0s-Sim-1.0 reads each field when it draws);
+# reads NS.L and NS.Icon at load; its NS.STAND_DOWN step (hide an idle panel) runs in TOC order,
+# after modules\Sim.lua's stop. The panel itself is the library's. NS.Sim, NS.SimEvents,
+# NS.SimReport, NS.LootFeed and NS.Window are read at call time.
 modules\SimPanel.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua

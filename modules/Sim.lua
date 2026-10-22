@@ -72,6 +72,12 @@ NS.SimVerbs.VERBS = NS.SimVerbs.VERBS or {}
 NS.SimVerbs.WHY = NS.SimVerbs.WHY or {}
 NS.SimVerbs.USAGE = NS.SimVerbs.USAGE or {}
 
+--- The step panel's presentation fields (the descriptor's `panel`), filled in place by
+--- modules/SimPanel.lua at its load (the library reads them when it draws): title, stepLabel,
+--- stepTip, startTip, stopTip, anchorTo, check. The panel itself is the library's (DW-04).
+NS.SimPanel = NS.SimPanel or {}
+NS.SimPanel.FIELDS = NS.SimPanel.FIELDS or {}
+
 -- What the guarded answers did this session: { sends, handOvers }; core/SimSetup.lua's printSend
 -- and handOver count into it, and Begin resets it.
 Host.counts = Host.counts or { sends = 0, handOvers = 0 }
@@ -284,6 +290,7 @@ if Lib then
         why = NS.SimVerbs.WHY,
         usage = NS.SimVerbs.USAGE,
         statusLine = function(...) return NS.SimVerbs.StatusLine(...) end,
+        panel = NS.SimPanel.FIELDS,
         stopText = STOP_TEXT,
         L = LINES,
         print = function(line) NS.Print(line) end,

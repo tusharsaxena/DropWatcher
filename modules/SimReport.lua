@@ -137,8 +137,9 @@ local function where(rec, get, view)
 end
 
 --- The tooltip's lines for a report (pure, given `get`): each drop, its looter and where it is
---- as rows (`• Item (Seta): Drops`, `• Item (Seta): hidden: below the quality gate`), then
---- the merged and refused lines' counts. `view` as R.Place's.
+--- as { left, right } lines (`Item (Seta)` / `Drops`, `Item (Seta)` / `hidden: below the quality
+--- gate`), then the merged and refused lines' counts; the step panel (LibKa0s-Sim-1.0) draws them.
+--- `view` as R.Place's.
 --- @param report table
 --- @param get function|nil
 --- @param view table|nil
@@ -148,10 +149,10 @@ function R.TipLines(report, get, view)
     report = type(report) == "table" and report or {}
     for _, rec in ipairs(report.drops or {}) do
         local who = rec.isMine and L["you"] or WC.ShortName(type(rec.looter) == "table" and rec.looter.name or nil)
-        out[#out + 1] = NS.TipMarks.Row(L["%s (%s)"]:format(WC.ItemName(rec.link) or "?", who), where(rec, get, view))
+        out[#out + 1] = { L["%s (%s)"]:format(WC.ItemName(rec.link) or "?", who), where(rec, get, view) }
     end
     local c = R.Summarize(report, get, view)
-    if c.merged > 0 then out[#out + 1] = NS.TipMarks.Row(L["Merged into an earlier drop"], c.merged) end
-    if c.refused > 0 then out[#out + 1] = NS.TipMarks.Row(L["Refused by the feed"], c.refused) end
+    if c.merged > 0 then out[#out + 1] = { L["Merged into an earlier drop"], tostring(c.merged) } end
+    if c.refused > 0 then out[#out + 1] = { L["Refused by the feed"], tostring(c.refused) } end
     return out
 end

@@ -227,7 +227,9 @@ test("tip rows: the column headers and the Offer panel's columns are rows, the s
     end
 end)
 
-test("tip rows: the chrome's own tooltips (title bar, footer, simulator panel) are rows", function()
+-- The simulator panel's tooltips are LibKa0s-Sim-1.0's GameTooltip lines since DW-04 (OWNER_SCOPE
+-- C.7): their { left, right } shape is tests/test_sim_panel.lua's.
+test("tip rows: the chrome's own tooltips (title bar, footer) are rows", function()
     local NS = T.newAddon()
     local TB, WF = NS.WindowTitleBar, NS.WindowFooter
     local tips = { { TB.ScanTip() }, { TB.TestTip() } }
@@ -235,9 +237,6 @@ test("tip rows: the chrome's own tooltips (title bar, footer, simulator panel) a
     for _, s in pairs(seg) do tips[#tips + 1] = s.tip end
     local sim = WF.Compose({ members = 4, good = 4, sim = { members = 4 }, situation = "raid", lastLootAgo = 5 })
     for _, s in pairs(sim) do tips[#tips + 1] = s.tip end
-    local steps = { { kind = "pull" }, { kind = "loot", n = 2 }, { kind = "kill" }, { kind = "lockdownOn" } }
-    for _, r in ipairs(NS.SimPanel.Compose({ running = true, ready = true, scenario = "dungeon", steps = steps, pos = 1,
-        now = 30, startedAt = 10 })) do tips[#tips + 1] = r.tip end
     shapes(tips, "chrome")
 end)
 

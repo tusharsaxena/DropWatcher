@@ -73,7 +73,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (12)
+### test_database.lua (13)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -87,6 +87,7 @@ Total.
 - database: step 4 retires the History's group cap and prunes nothing
 - database: step 6 retires feed.showOwn in every stored profile and keeps the rest
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
+- migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 
 ### test_schema.lua (11)
 
@@ -590,7 +591,7 @@ Total.
 - tip rows: the compact cards and chrome (CompactCards, CompactChrome) are rows
 - tip rows: History's cells and card (WindowHistory, HistoryCard) are rows
 - tip rows: the column headers and the Offer panel's columns are rows, the settings keep their prose
-- tip rows: the chrome's own tooltips (title bar, footer, simulator panel) are rows
+- tip rows: the chrome's own tooltips (title bar, footer) are rows
 - tooltip: a non-wrapping line is added with wrap off; every other line still wraps
 - grid: the arrow cell is the table's glyph and the unsigned difference, both in the verdict's tone
 - grid: a member's rows, the name on the first, the arrow on the item it replaces, empty for a slot worn empty
@@ -1733,7 +1734,7 @@ Total.
 - sim run: Run while the panel's click-ahead plays answers playing (C.2)
 - sim run: plays every step a few seconds apart, each with its line, then says it has finished
 - sim step delay: two seconds by default, read from `sim.stepDelay`; a bad value falls back
-- sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5; DelayText drops a whole number's point
+- sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5
 - sim step delay: `/dw set sim.stepDelay` takes a half step, clamps to the range, refuses a quarter step
 - sim step delay: a run waits the set delay, and a change takes effect from the next step
 - sim stop: ends a playing timeline and its timers
@@ -1786,29 +1787,22 @@ Total.
 - sim report: View reads the feed the window shows; feed.showOwn is retired
 - sim report: the owner's step lists yours on Drops, and the tabs agree
 
-### test_sim_panel.lua (19)
+### test_sim_panel.lua (12)
 
-- sim panel: a key's preview names every step, with its command, before a run
-- sim panel: a running timeline's rows are done, current, next and ahead, with PerfPanel's states
-- sim panel: before the pool is ready the start is current and nothing else is clickable
-- sim panel: the controls follow the timeline: Run all, Pause or Resume, Restart, Stop
-- sim panel: StartCommand carries a raid's size and leaves a random one out
-- sim panel: Show opens it, Toggle toggles it, and it builds PerfPanel's three columns
-- sim panel: opened after `/dw sim start`, it docks beside the window, its rows tracking the timeline
+- sim panel: the descriptor carries DropWatcher's presentation fields and nothing else
+- sim panel: a key's preview names every step with its boss, and every command, before a run
+- sim panel: a step names the boss it played, and a loot step its count or its detail
+- sim panel: every step kind's tooltip says what it injects; Start and Stop say what they do
+- sim panel: the scenarios carry their names, and the raids the sizes the picker offers
+- sim panel: `/dw sim` opens it with DropWatcher's title, `/dw sim panel` toggles it
+- sim panel: picking Raid offers its sizes, and Start starts it at the chosen size
+- sim panel: a played step shows the catalog's confirm tick and names its boss
+- sim panel: opened after `/dw sim start`, it docks beside the Drop Watcher window
 - sim panel: opened before the window, it docks beside the window once a slow pool opens it
-- sim panel: a dragged panel stays where it was put when the window opens later
-- sim panel: clicking the next step runs it; clicking a later one runs every step in between
-- sim panel: clicking a completed step does nothing, and its tooltip says when it ran
-- sim panel: a typed `/dw sim step` moves the panel too
-- sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on
-- sim panel: Run all's tooltip names the current step delay (feedback-2 spec §8, FB2-8)
-- sim panel: the typed pause, resume and restart answer as the buttons do
-- sim panel: Restart stops the scenario and starts the same one again; Stop ends it
-- sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel
-- sim panel: the picker starts the chosen scenario, with a raid's member count
-- sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it
+- sim panel: dragging writes nothing to the profile; Reset position redocks
+- sim panel: standing down hides it, idle or running, and it does not open while stood down
 
-### test_disabled.lua (12)
+### test_disabled.lua (13)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /dw disable, nothing is registered, scheduled or shown
@@ -1822,6 +1816,7 @@ Total.
 - disabled 9: under the perf hold alone, each feature refusal names the capture, never 'is disabled'
 - disabled 10: while disabled, each feature refusal is the one refusal line, unwrapped
 - disabled 11: the latch holds in both orders, perf first and disabled first
+- disabled 12: disabling hides the simulation panel, idle or running, and it stays shut
 
 ### test_diagnostics.lua (15)
 
@@ -1939,7 +1934,7 @@ Total.
 | test_harness.lua | 12 |
 | test_surface_parity.lua | 20 |
 | test_setup.lua | 24 |
-| test_database.lua | 12 |
+| test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 22 |
 | test_settings_pages.lua | 44 |
@@ -2009,8 +2004,8 @@ Total.
 | test_sim_scenario.lua | 26 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
-| test_sim_panel.lua | 19 |
-| test_disabled.lua | 12 |
+| test_sim_panel.lua | 12 |
+| test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -2021,4 +2016,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1671** |
+| **Total** | **1666** |
