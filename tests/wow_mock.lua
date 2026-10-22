@@ -143,6 +143,9 @@ local function decorateText(f)
     -- Horizontal justification; unset answers the game's default, CENTER.
     f.SetJustifyH = function(self, j) self.__justifyH = j; return self end
     f.GetJustifyH = function(self) return self.__justifyH or "CENTER" end
+    -- Word wrap (the test-mode strip's text, DW-06); unset answers the game's default, wrapping.
+    f.SetWordWrap = function(self, v) self.__wordWrap = not not v; return self end
+    f.GetWordWrap = function(self) return self.__wordWrap ~= false end
     f.SetFont = function(self, file, size, flags) self.__font = { file, size, flags }; return self end
     f.GetFont = function(self)
         local font = self.__font or { "Fonts\\FRIZQT__.TTF", 10, "" }

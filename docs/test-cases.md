@@ -204,7 +204,7 @@ Total.
 - slash: `offer` refuses an item not in your bags, and prints its usage without a link
 - slash: every feature verb is refused while disabled
 
-### test_window.lua (15)
+### test_window.lua (19)
 
 - window: built lazily, on the first show, and not before
 - window: a tooltip shows on a disabled button too, so the gray No action says why
@@ -215,6 +215,10 @@ Total.
 - window: locked, a drag does not start
 - window: resizable from the corner grip, with the design's minimum size
 - window: test mode shows the banner and the TEST MODE text, and its rows replace the empty state
+- window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and the info mark
+- window: K.BANNER_H - 4 == W.TEST_STRIP.HEIGHT
+- compact chrome: the full layout's text has a RIGHT point and no wrap; compact wraps
+- window: with no Widgets the window builds, test mode on raises nothing, f.banner is nil, the panes reserve 0 and the title word shows
 - window: combat ends test mode, and test mode cannot start in combat
 - window: with test mode on, Close and Toggle still change what is shown
 - window: turning test mode off closes the window only when test mode opened it
@@ -1939,7 +1943,7 @@ Total.
 | test_schema_rows.lua | 22 |
 | test_settings_pages.lua | 44 |
 | test_slash.lua | 26 |
-| test_window.lua | 15 |
+| test_window.lua | 19 |
 | test_window_shell.lua | 59 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
@@ -2016,4 +2020,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1666** |
+| **Total** | **1670** |

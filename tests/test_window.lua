@@ -106,6 +106,88 @@ test("window: test mode shows the banner and the TEST MODE text, and its rows re
     assertTrue(empty:IsShown())
 end)
 
+-- DW-06 (LibKa0s#48): the strip is the library's; DW passes its words and its info mark, anchors it
+-- and tips it.
+test("window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and the info mark", function()
+    local NS, _, m = T.enableAddon()
+    local W = m.LibStub("LibKa0s-Widgets-1.0")
+    local real, calls = W.TestStrip, {}
+    W.TestStrip = function(parent, opts)
+        calls[#calls + 1] = { parent = parent, opts = opts }
+        return real(parent, opts)
+    end
+    NS.ShowWindow()
+    W.TestStrip = real
+    -- red under: buildBanner drawing its own band
+    assertEqual(#calls, 1, "one strip, built once with the window")
+    local opts = calls[1].opts
+    assertEqual(opts.text, "TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it.")
+    assertTrue(type(opts.icon) == "string" and opts.icon:find("info", 1, true) ~= nil, "the catalog's info mark")
+    assertEqual(opts.icon, NS.Icon("info"))
+    local f = NS.Window.Frame()
+    assertTrue(calls[1].parent == f.body)
+    local p1, p2 = f.banner.__points[1], f.banner.__points[2]
+    assertEqual(table.concat({ p1[1], p1[3], p1[4], p1[5] }, ","), "TOPLEFT,BOTTOMLEFT,0,-2")
+    assertEqual(table.concat({ p2[1], p2[3], p2[4], p2[5] }, ","), "TOPRIGHT,BOTTOMRIGHT,0,-2")
+    assertTrue(p1[2] == f.filterHost and p2[2] == f.filterHost)
+    assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode", "DW still tips it")
+end)
+
+test("window: K.BANNER_H - 4 == W.TEST_STRIP.HEIGHT", function()
+    local NS, _, m = T.newAddon()
+    local W = m.LibStub("LibKa0s-Widgets-1.0")
+    -- red under: a BANNER_H that no longer leaves a 2 px gap above and below the library's strip
+    assertEqual(NS.Constants.WINDOW.BANNER_H - 4, W.TEST_STRIP.HEIGHT)
+end)
+
+test("compact chrome: the full layout's text has a RIGHT point and no wrap; compact wraps", function()
+    local NS = T.enableAddon()
+    NS.ShowWindow()
+    local f = NS.Window.Frame()
+    NS.SetTestMode(true)
+    local text = f.banner.text
+    local function hasRight()
+        for _, pt in ipairs(text.__points) do if pt[1] == "RIGHT" then return true end end
+        return false
+    end
+    -- red under: layoutStrip clearing the text's points and re-anchoring LEFT only in full
+    assertTrue(hasRight(), "full: a long line truncates against the strip's right edge")
+    assertFalse(text:GetWordWrap(), "full: one line")
+    NS.SetWindowMode("compact")
+    assertTrue(hasRight())
+    assertTrue(text:GetWordWrap(), "compact: the short words may take two lines")
+    assertEqual(text:GetText(), "TEST: sample drops in every state. Nothing is whispered; combat ends it.")
+    NS.SetWindowMode("full")
+    assertFalse(text:GetWordWrap())
+    assertTrue(hasRight())
+end)
+
+test("window: with no Widgets the window builds, test mode on raises nothing, f.banner is nil, the panes reserve 0 and the title word shows", function()
+    local skip = {}
+    for _, rel in ipairs(T.loadAddon.libFiles) do
+        if rel:find("/Widgets") then skip[#skip + 1] = rel end
+    end
+    assertTrue(#skip >= 1)
+    local NS, _, m = T.enableAddon({ skip = skip })
+    assertFalse(NS.HasWidgets())
+    assertTrue(NS.MakeTestStrip(m.UIParent, "x") == nil, "the seam answers nil")
+    NS.ShowWindow()
+    local f = NS.Window.Frame()
+    -- red under: a buildBanner that draws its own band when the library is absent
+    assertTrue(f.banner == nil, "no strip")
+    NS.SetTestMode(true)
+    assertTrue(NS.State.testMode == true)
+    assertTrue(f.testText:IsShown(), "the TEST MODE title word still marks the mode")
+    local K = NS.Constants.WINDOW
+    assertEqual(NS.CompactChrome.BannerH(), 0)
+    assertEqual(f.panes.group.__points[1][5], -(K.TAB_H + 4 + K.FILTER_H), "no reserve")
+    NS.SetWindowMode("compact")
+    NS.Window.Refresh()
+    assertEqual(NS.CompactChrome.BannerH(), 0)
+    assertTrue(f.testText:IsShown())
+    NS.SetTestMode(false)
+end)
+
 test("window: combat ends test mode, and test mode cannot start in combat", function()
     local NS, _, m = T.enableAddon()
     NS.SetTestMode(true)
