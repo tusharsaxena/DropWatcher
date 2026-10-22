@@ -31,7 +31,7 @@ lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
 | Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`) and the shared `NS.CloseMenu` |
-| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator's seam, session and timeline |
+| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and five verbs (DW-02..DW-04) |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown at all (`NS.MakeDropdown` answers nil and
 the search box still filters), and `NS.CloseMenu` is a no-op. Each setup file holds a
@@ -50,17 +50,21 @@ one-line responsibility and why its position is load-bearing or conventional is 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
   family (`Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`, the only files that name the client
   globals they wrap, with the pure parsers in `TextParse.lua`) and the simulator's answer seam over
-  it (`SimSetup.lua`, LibKa0s-Sim-1.0's), the library-shaped item reads, the game-data tables, the session state, the
+  it (`SimSetup.lua`, LibKa0s-Sim-1.0's `NewSeam`), the library-shaped item reads, the game-data tables, the session state, the
   addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
-- `modules/`: the simulator's session; the login session (`Session.lua`, the session start and This
+- `modules/`: the simulator's session (`Sim.lua`: LibKa0s-Sim-1.0 hosting DropWatcher's scenarios,
+  world providers, event drivers, restriction model and five verbs); the login session (`Session.lua`, the session start and This
   instance kept per character across a reload); the pure engine kernels (the verdict kernel and its
   off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
   of your class) and the scorers; the edges
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
   after a reload, `FeedRestore.lua`; the toast, auto-ask); the simulator's
-  inputs, scenarios and the step panel's fields (the panel is LibKa0s-Sim-1.0's); then the window: its shell, chrome, two tabs, their strips' one
+  host half: its world providers (`SimWorld.lua`), item pool and group (`SimPool.lua`, `SimRoster.lua`), event
+  drivers (`SimEvents.lua`), scenarios and timeline steps (`SimScenario.lua`), loot report
+  (`SimReport.lua`) and the step panel's fields (`SimPanel.lua`; the panel, the session, the step
+  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, two tabs, their strips' one
   footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
   off-spec verdict's look, `OffSpecCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
@@ -200,6 +204,28 @@ how many handlers it called.
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
 `[Init]` summary and the diagnostics report.
+
+### The simulator on LibKa0s-Sim-1.0
+
+The simulator is LibKa0s-Sim-1.0 hosting DropWatcher's scenarios, world providers, event drivers,
+restriction model and five verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
+session and its two-phase stop, the timeline's step machine, the `/dw sim` grammar and the step
+panel; it reaches this addon's handlers only through `NS.DeliverEvent` above. The host contract
+(LibKa0s `docs/api/Sim/version-2.2.2-docs.md`, *The host contract (H1–H10)*; the standard's
+preview-mode, *The in-game simulator*) binds this addon, and each obligation is met here:
+
+| | Obligation | Where DropWatcher meets it |
+|---|---|---|
+| H1 | Every simulated client read and outward action is a Compat member read at call time; senders and actions are guarded | `NS.Compat` routing (`core/Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`); the chat sender, the inspect calls and the trade action in `core/SimSetup.lua`'s `GUARDED`; `test_sim_e2e`'s scan fails a module that names a world global the simulator answers |
+| H2 | `Sim:NewSeam` straight after the Compat files, and `Unwrapped()` empty | `core/SimSetup.lua`'s TOC slot right after `core/CompatItem.lua`, under a LOAD-BEARING comment; `test_sim_e2e` asserts `NS.SimSeam:Unwrapped()` empty |
+| H3 | One `deliver` with the client's handler set and order | `NS.DeliverEvent` (`core/DropWatcher.lua`, this section above): the `NS.FEATURE_EVENTS` rows in order, `NS.rejectedEvents` skipped |
+| H4 | Session-only storage for every saved write the capture path reaches, and a before/after test | `History.LogFor` (`modules/History.lua`) gives a simulated drop or trade the session's log, never `global.history`; `test_sim_core`'s `sim history` cases hold the saved history untouched |
+| H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
+| H6 | `Stop("standDown")` is the first stand-down step | `modules/Sim.lua` puts `NS.Sim:Stop("standDown")` first in `NS.STAND_DOWN` (it loads before every other module that adds one); the automatic stops say `group` and `instance` with their own lines |
+| H7 | One Slash-1.0 feature-verb row, slash-only | the `sim` row in `settings/Slash.lua` calling `NS.Sim:RunVerb`; no launcher entry and no key binding |
+| H8 | A marker while a session runs, a diagnostics section and a debug tag | the `SIMULATION` title text (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
+| H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
+| H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
 
 ## Taint Notes
 

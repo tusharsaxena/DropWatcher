@@ -312,8 +312,10 @@ it is named.
   through `NS.WindowCompact.Geometry` for the layout in force. Owner `modules/Window.lua`; writers
   `savePoint` (the title-bar drag stop and the resize grip's release), `saveSize` (the resize
   grip's release, saved together with the point) and `Window.ResetPosition` (the Reset position
-  button, which forgets both layouts' geometry, `WindowCompact.ResetGeometry`, and the toast's and
-  the simulation panel's points too).
+  button, which forgets both layouts' geometry, `WindowCompact.ResetGeometry`, and the toast's point
+  too, and redocks the simulation panel through `NS.Sim:ResetPanelPosition`). The simulation panel's
+  own position is not here: LibKa0s-Sim-1.0 holds a dragged point in memory for the session, it is
+  never a schema row or a SavedVariables key, and nothing a simulation does is saved (H10, DW-04).
 - `profile.window.minimized` is the minimize button's remembered view. Owner `modules/Window.lua`;
   writer `Window.SetMinimized` alone.
 - `profile.toast.point` is the toast's position (design spec §11.5). Owner `modules/Toast.lua`;

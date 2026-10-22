@@ -64,7 +64,10 @@ the code reads every case the design leaves open, module by module, is in
 
 - **The simulator** (milestone M7) runs end to end: `/dw sim start <scenario> [size]` builds the
   pool and the group, `run` and `step` play the scenario's timeline, and the `SIMULATION` title text, the footer's
-  `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). The
+  `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). Since
+  DW-02..DW-04 the session, the timeline's step machine, the `/dw sim` grammar and the step panel
+  are LibKa0s-Sim-1.0's (LibKa0s#54); this addon supplies the scenarios, the world, the event
+  drivers, the restrictions and five verbs, and the panel's position lasts the session only. The
   timeline's steps are event drivers only; the engine computes every verdict, estimate and inspect.
   A key's bosses drop nothing: its loot comes with the completion, as the end-of-run chest's does.
   Since the owner's first run (DW-90, sim feedback §0) a run fills the window under the default

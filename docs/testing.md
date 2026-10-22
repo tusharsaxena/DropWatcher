@@ -530,6 +530,20 @@ file's key read outside its folder, and on a topic file misnamed, out of the blo
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
 
+**Simulator suites on LibKa0s-Sim-1.0.** Since DW-02..DW-04 the simulator's seam, session, two-phase
+stop, step machine, verb grammar and step panel are LibKa0s-Sim-1.0's, and their generic behavior
+is pinned in the library's own `test_sim_*` suites (LK-12..LK-17: the seam, the session and its stop,
+the timeline, the verbs, the panel, isolation, the reference stub and a DropWatcher-shaped mini
+host, `test_sim_host`). The seven DropWatcher suites
+stay as integration over this addon's host half: `test_sim_core` (the seam's members and guards,
+the refusals, the session log, the stop's host steps), `test_sim_e2e` (the H1 scan and `Unwrapped`,
+every scenario through the real engine), `test_sim_events` (the event drivers and the world
+providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the loot step's report),
+`test_sim_scenario` (the scenarios, the timeline's steps, the five verbs through `/dw sim`) and
+`test_sim_panel` (the panel's presentation fields). Where a DropWatcher case was deleted because a
+library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
+DropWatcher case to library case.
+
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API, never
 `tests/_kit/`.
 
