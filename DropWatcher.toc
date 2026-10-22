@@ -88,6 +88,8 @@ core\ItemRead.lua
 # Conventional: NS.MakeDropdown / NS.CloseMenu are read inside functions only (the window's
 # filter bar and footer, built on the first show).
 core\WidgetsSetup.lua
+# Conventional: publishes NS.GlowLib, the LibKa0s-Glow-1.0 seam, read by modules\Glow.lua at call time.
+core\GlowSetup.lua
 # LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
 # takes NS.MSG at load.
 core\Bus.lua
@@ -352,7 +354,8 @@ modules\WindowOwn.lua
 # (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
 modules\RowTooltip.lua
 # Conventional: publishes NS.Glow, the upgrade glow on a drop's icon (feedback-21: LibCustomGlow-1.0,
-# libs\, above); reads nothing at load. NS.OffSpec, NS.Setting, NS.C and NS.Window are read at call
+# libs\, above, which LibKa0s-Glow-1.0 resolves at call time through NS.GlowLib, core\GlowSetup.lua);
+# reads nothing at load. NS.OffSpec, NS.Setting, NS.C, NS.GlowLib and NS.Window are read at call
 # time; modules\WindowGroup.lua, modules\DetailCard.lua and modules\CompactGroup.lua (below) call it
 # when they paint an icon (the toast never glows, G9).
 modules\Glow.lua

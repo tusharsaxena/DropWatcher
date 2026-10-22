@@ -113,6 +113,11 @@ test("parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon call
     })
 end)
 
+test("parity: the Glow stub carries the whole LibKa0s-Glow-1.0 surface", function()
+    -- red under: drop `Stop` from core/GlowSetup.lua's stub
+    T.assertSurfaceParity(degraded.GlowLib, "LibKa0s-Glow-1.0")
+end)
+
 -- The Perf members the addon can reach: the gate fields, the bracket sinks, the hold pair and the
 -- slash entry point. The live instance publishes far more (the panel, the record, the run state),
 -- which the stub is not obliged to carry.
