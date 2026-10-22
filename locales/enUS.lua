@@ -335,7 +335,6 @@ L["%d refused"] = "%d refused"
 L["still loading"] = "still loading"
 L["cleared from the feed"] = "cleared from the feed"
 L["hidden: %s"] = "hidden: %s"
-L["%s: %s"] = "%s: %s"
 L["Simulated loot: %s."] = "Simulated loot: %s."
 -- The panel agrees with the window beyond the defaults (feedback-3 spec §5, DW-B5)
 L["%d not shown in test mode"] = "%d not shown in test mode"
