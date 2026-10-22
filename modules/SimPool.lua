@@ -7,7 +7,7 @@ local _, NS = ...
 -- for a key, Mythic for a dungeon and Heroic for a delve or an open-world group; its raids at
 -- Heroic for a raid and Raid Finder for LFR. Drops come from that difficulty. The pool reads every
 -- difficulty of the side (FAMILY), so the members' gear (modules/SimRoster.lua) has a spread of
--- item levels to draw a band from. Every read goes through NS.Compat's journal shims (compat-§1).
+-- item levels to draw a band from. Every read goes through NS.Compat's journal shims (compat).
 -- `everything` (test mode's) reads both sides, and a build's `keystoneLevel` sets the journal's
 -- Mythic+ loot preview while it reads the Mythic Keystone difficulty, so those links carry that
 -- key level's item level where the client supports the preview.

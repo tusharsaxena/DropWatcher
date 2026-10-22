@@ -7,8 +7,8 @@ local _, NS = ...
 -- and before anything reads a member, Sim:NewSeam wraps every NS.Compat function but the pure ones
 -- (PURE) in place, once. While a session runs (modules/Sim.lua's NS.Sim) the call goes to the
 -- member's provider; otherwise straight to the member, so a session with no simulation costs one
--- field test per call. This file names no client API: core/Compat.lua stays the only caller
--- (compat-§1). A member added to NS.Compat after this file loads escapes the wrap; the seam's
+-- field test per call. This file names no client API: the compat family (core/Compat*.lua) stays the
+-- only caller (compat). A member added to NS.Compat after this file loads escapes the wrap; the seam's
 -- Unwrapped() lists it, and tests/test_sim_e2e.lua asserts that list is empty (the load-order guard).
 --
 -- PROVIDERS. The simulator registers `fn(fallback, ...)` per member name (NS.SimSeam:SetProvider)

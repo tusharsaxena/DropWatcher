@@ -6,7 +6,7 @@ local _, NS = ...
 -- LIBRARY-SHAPED. This file holds no Drop Watcher state and no policy of the feed's: it is the API
 -- LibKa0s-Item-1.0 would take (the promotion is drafted in docs/superpowers/plans/
 -- 2026-10-10-drop-watcher-v1/issues-to-file.md, adopters Loot History, Bank Ledger and Drop
--- Watcher). Until then its client reads stay behind NS.Compat seams (compat-§1): GetItemInfo and
+-- Watcher). Until then its client reads stay behind NS.Compat seams (compat): GetItemInfo and
 -- GetDetailedItemLevel (core/Compat.lua), BagItemLevelQuality (core/CompatItem.lua). The link
 -- parsing is pure.
 --
