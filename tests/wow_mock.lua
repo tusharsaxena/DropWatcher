@@ -857,6 +857,11 @@ local function build()
         M.prints[#M.prints + 1] = table.concat(parts, " ")
     end
 
+    -- The client defines BackdropTemplateMixin; LibKa0s-Widgets' SearchBox (LibKa0s#52) asks for the
+    -- BackdropTemplate only when it is there, so the filter bar's box wears the template here as it
+    -- does in game.
+    M.BackdropTemplateMixin = M.BackdropTemplateMixin or {}
+
     M.StaticPopup_Show = function(which, ...) M.popupsShown[#M.popupsShown + 1] = { which, ... } end
     M.StaticPopup_Hide = function(which) M.popupsHidden[#M.popupsHidden + 1] = which end
 

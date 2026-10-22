@@ -406,7 +406,7 @@ local function assertFlatSkin(w, what)
     end
 end
 
-test("shell: the search box is Loot History's flat, square box", function()
+test("shell: the search box is Loot History's flat, square box (LibKa0s-Widgets' SearchBox)", function()
     local NS = shown()
     local eb = NS.WindowFilterBar.Controls().search
     assertEqual(eb.__frameType, "EditBox")
@@ -415,11 +415,62 @@ test("shell: the search box is Loot History's flat, square box", function()
     assertEqual(eb.__fontObject, "GameFontHighlightSmall")
     assertEqual(eb.__textInsets[1], 6)
     assertEqual(eb.hint.__template, "GameFontDisableSmall")
-    assertEqual(eb.hint.__points[1][4], 6, "the hint sits where the typed text starts")
+    -- The library anchors the hint in SetPoint's short form, ("LEFT", x, y) against the box.
+    local hp = eb.hint.__points[1]
+    assertEqual(hp[1], "LEFT")
+    assertEqual(type(hp[2]) == "number" and hp[2] or hp[4], 6, "the hint sits where the typed text starts")
     eb:__fire("OnEditFocusGained")
     assertEqual(eb.__backdropBorder[1], 1, "focus lights the line gold")
     eb:__fire("OnEditFocusLost")
     assertEqual(eb.__backdropBorder[1], LH_LINE[1], "and the line goes back")
+end)
+
+-- LibKa0s#52 (DW-07): the box is the library's; DW passes its hint and its filter write, and hooks
+-- (never sets) the focus loss for its debug line.
+test("shell: the search box is LibKa0s-Widgets' SearchBox with DW's hint, and a focus loss still writes the filter's debug line", function()
+    local NS, _, m = T.enableAddon()
+    local W = m.LibStub("LibKa0s-Widgets-1.0")
+    local real, calls = W.SearchBox, {}
+    W.SearchBox = function(parent, width, opts)
+        local box = real(parent, width, opts)
+        calls[#calls + 1] = { parent = parent, width = width, opts = opts, box = box }
+        return box
+    end
+    NS.ShowWindow()
+    W.SearchBox = real
+    assertEqual(#calls, 1, "one search box, built by the library")
+    local eb = NS.WindowFilterBar.Controls().search
+    assertTrue(calls[1].box == eb)
+    assertEqual(calls[1].width, 180)
+    assertEqual(calls[1].opts.hint, "Filter looter or item…")
+    assertEqual(calls[1].opts.icon, nil, "no icon: DW declares no search mark")
+    local lines = {}
+    NS.DebugChanged = function(key, tag, fmt, ...) lines[#lines + 1] = { key = key, tag = tag, text = fmt:format(...) } end
+    eb:SetText("crown")
+    eb:__fire("OnTextChanged", true)
+    assertEqual(NS.WindowFilterBar.State("group").search, "crown", "onChange writes the tab's filter")
+    eb:__fire("OnEditFocusGained")
+    eb:__fire("OnEditFocusLost")
+    assertEqual(#lines, 1)
+    assertEqual(lines[1].key, "filter.search.group")
+    assertEqual(lines[1].tag, "UI")
+    assertEqual(eb.__backdropBorder[1], LH_LINE[1], "the library's own focus-lost script still runs")
+end)
+
+test("shell: with no Widgets the filter bar builds without a search box and filters nothing by text", function()
+    local skip = {}
+    for _, rel in ipairs(T.loadAddon.libFiles) do
+        if rel:find("/Widgets") then skip[#skip + 1] = rel end
+    end
+    local NS = shown({ skip = skip })
+    local FB = NS.WindowFilterBar
+    assertEqual(FB.Controls().search, nil, "no hand-built fallback box")
+    FB.Anchor()
+    FB.Layout(900)
+    FB.Sync("group")
+    NS.Window.SelectTab("history")
+    assertEqual(FB.State("group").search, "")
+    assertEqual(FB.HiddenBy(drop(), FB.State("group"), nil, { search = true }), nil, "no text filter applies")
 end)
 
 test("shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them", function()
@@ -912,7 +963,7 @@ test("shell: without the Widgets library the window builds with no dead dropdown
     assertFalse(NS.HasWidgets())
     local c = NS.WindowFilterBar.Controls()
     assertTrue(c.view == nil and c.quality == nil and c.content == nil)
-    assertTrue(c.search ~= nil, "the search still filters")
+    assertTrue(c.search == nil, "no search box either: the bar degrades as the dropdowns do (LibKa0s#52)")
     local _, sort = NS.WindowFooter.Parts()
     assertTrue(sort == nil)
     NS.CloseMenu()

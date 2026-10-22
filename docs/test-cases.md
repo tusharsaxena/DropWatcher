@@ -226,7 +226,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (59)
+### test_window_shell.lua (61)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
@@ -252,7 +252,9 @@ Total.
 - filter bar tooltip: with no room on the right it opens above the control, top left
 - filter bar tooltip: the room is measured in screen pixels, at each frame's scale
 - filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)
-- shell: the search box is Loot History's flat, square box
+- shell: the search box is Loot History's flat, square box (LibKa0s-Widgets' SearchBox)
+- shell: the search box is LibKa0s-Widgets' SearchBox with DW's hint, and a focus loss still writes the filter's debug line
+- shell: with no Widgets the filter bar builds without a search box and filters nothing by text
 - shell: the dropdowns are LibKa0s's, the widget Loot History's bar uses, spaced as it spaces them
 - shell: each tab keeps its own filter state, and grays what it does not use
 - shell: a filter change redraws the active tab with the new state
@@ -1944,7 +1946,7 @@ Total.
 | test_settings_pages.lua | 44 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 59 |
+| test_window_shell.lua | 61 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 22 |
@@ -2020,4 +2022,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1670** |
+| **Total** | **1672** |

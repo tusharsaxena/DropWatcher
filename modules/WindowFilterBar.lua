@@ -659,10 +659,10 @@ local function qualityDropdown(host, width)
 end
 
 -- ── the flat skin: Ka0s Loot History's filter bar, side by side (ui spec §2, FB-5) ──────────
--- The search box is built the way ../LootHistory/modules/BrowserFilterBar.lua builds its own: a
--- BackdropTemplate frame with a square 1px WHITE8X8 border, the same fill and line as
--- LibKa0s-Widgets-1.0's dropdown beside it, so every control on the bar is one skin. LibKa0s has no
--- flat search box yet; the shared need is LibKa0s#52.
+-- The search box is LibKa0s-Widgets-1.0's W.SearchBox (LibKa0s#52), through NS.MakeSearchBox
+-- (core/WidgetsSetup.lua): a BackdropTemplate frame with a square 1px WHITE8X8 border, the same fill
+-- and line as the dropdown beside it, so every control on the bar is one skin. FLAT stays for
+-- modules/CompactChrome.lua's Filters button and panel, which draw the same skin.
 local FLAT = {
     edge  = "Interface\\Buttons\\WHITE8X8",
     fill  = { 0.1, 0.1, 0.12, 0.9 },
@@ -671,38 +671,14 @@ local FLAT = {
 }
 FB.FLAT = FLAT
 
-local function flatSkin(f)
-    if not f.SetBackdrop then return end
-    f:SetBackdrop({ bgFile = FLAT.edge, edgeFile = FLAT.edge, edgeSize = 1,
-                    insets = { left = 1, right = 1, top = 1, bottom = 1 } })
-    f:SetBackdropColor(unpack(FLAT.fill))
-    f:SetBackdropBorderColor(unpack(FLAT.line))
-end
-
-local function lineColor(f, c)
-    if f.SetBackdropBorderColor then f:SetBackdropBorderColor(unpack(c)) end
-end
-
+-- The library's scripts own the hint and the gold line; DW hooks the focus loss for its debug line.
 local function buildSearch(host)
-    local eb = CreateFrame("EditBox", nil, host, "BackdropTemplate")
-    eb:SetSize(180, K.CONTROL_H)
-    eb:SetAutoFocus(false)
-    eb:SetFontObject("GameFontHighlightSmall")
-    eb:SetTextInsets(6, 6, 0, 0)
-    flatSkin(eb)
-    eb.hint = eb:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    eb.hint:SetPoint("LEFT", eb, "LEFT", 6, 0)
-    eb.hint:SetText(L["Filter looter or item…"])
-    eb:SetScript("OnTextChanged", function(self)
-        local text = self:GetText() or ""
-        self.hint:SetShown(text == "")
-        if not syncing then FB.Set(activeTab(), "search", text) end
-    end)
-    eb:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    eb:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    eb:SetScript("OnEditFocusGained", function(self) lineColor(self, FLAT.hover) end)
-    eb:SetScript("OnEditFocusLost", function(self)
-        lineColor(self, FLAT.line)
+    local eb = NS.MakeSearchBox(host, 180, {
+        hint = L["Filter looter or item…"],
+        onChange = function(text) if not syncing then FB.Set(activeTab(), "search", text) end end,
+    })
+    if not eb then return nil end
+    eb:HookScript("OnEditFocusLost", function()
         local tab = activeTab()
         NS.DebugChanged("filter.search." .. tostring(tab), "UI", "filter %s.search = \"%s\"", tab,
             shown("search", FB.State(tab).search))
@@ -749,6 +725,7 @@ function FB.Anchor()
         end
     end
     local eb = controls.search
+    if not eb then return end
     eb:ClearAllPoints()
     if prev then eb:SetPoint("LEFT", prev, "RIGHT", GAP, 0) else eb:SetPoint("LEFT", host, "LEFT", 0, 0) end
     eb:SetPoint("RIGHT", host, "RIGHT", 0, 0)
@@ -839,8 +816,11 @@ local function putState(tab, st)
         local mode, _, label = FB.QualityReadout()
         controls.quality:SetValue(mode, label)
     end
-    if (controls.search:GetText() or "") ~= st.search then controls.search:SetText(st.search) end
-    controls.search.hint:SetShown(st.search == "")
+    local eb = controls.search
+    if eb then
+        if (eb:GetText() or "") ~= st.search then eb:SetText(st.search) end
+        eb.hint:SetShown(st.search == "")
+    end
     syncing = false
 end
 

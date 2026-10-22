@@ -1,7 +1,7 @@
 local _, NS = ...
--- core/WidgetsSetup.lua — NS.MakeDropdown / NS.CloseMenu / NS.MakeTestStrip from
+-- core/WidgetsSetup.lua — NS.MakeDropdown / NS.CloseMenu / NS.MakeTestStrip / NS.MakeSearchBox from
 -- LibKa0s-Widgets-1.0: the window's flat dropdowns (the filter bar's View, Quality and Content, the
--- tab's Sort) and its test-mode strip (LibKa0s#48).
+-- tab's Sort), its test-mode strip (LibKa0s#48) and the filter bar's search box (LibKa0s#52).
 --
 -- A seam, nothing else (library-stack-§7): one file leases the major, so the art the dropdown
 -- draws is resolved once, here. The library is vendored and cannot know which folder it was copied
@@ -15,10 +15,11 @@ local _, NS = ...
 -- path through UISpecialFrames), and the minimize, which hides the bar the menu dropped from.
 --
 -- DEGRADED (the library absent): NS.MakeDropdown answers nil and the window draws no dropdown at
--- all rather than a dead control that opens no menu; the search box still filters. NS.CloseMenu is
--- a no-op, because there is no menu that could be open. NS.MakeTestStrip answers nil and the window
--- draws no strip and reserves no room for one; the TEST MODE word in the title bar still marks the
--- mode.
+-- all rather than a dead control that opens no menu. NS.MakeSearchBox answers nil the same way: the
+-- bar draws no search box and filters nothing by text (no hand-built fallback, which would be a
+-- private copy of the library's box). NS.CloseMenu is a no-op, because there is no menu that could
+-- be open. NS.MakeTestStrip answers nil and the window draws no strip and reserves no room for one;
+-- the TEST MODE word in the title bar still marks the mode.
 
 local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 
@@ -33,6 +34,19 @@ function NS.MakeDropdown(parent, width)
         chevron = NS.Icon("chevron-down"),
         check   = NS.Icon("confirm"),
     })
+end
+
+--- The flat filter-bar search box (the library's W.SearchBox: the dropdown's fill and line, the hint
+--- while empty, the gold line while focused, Escape and Enter let go of the keys), or nil when the
+--- library is absent. The caller extends it with HookScript, never SetScript. No icon is passed:
+--- this addon declares no search mark.
+--- @param parent table the frame to parent it to
+--- @param width number|nil the box's width
+--- @param opts table|nil { hint, onChange } (W.SearchBox's opts)
+--- @return table|nil
+function NS.MakeSearchBox(parent, width, opts)
+    if not W then return nil end
+    return W.SearchBox(parent, width, opts)
 end
 
 --- Whether the dropdown seam can build anything at all.

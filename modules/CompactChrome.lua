@@ -388,6 +388,7 @@ local function compactBar(f)
     parts.filters:SetShown(held > 0)
     if c.view then c.view:SetWidth(CC.VIEW_W) end
     local eb = c.search
+    if not eb then return end
     eb:ClearAllPoints()
     if c.view then eb:SetPoint("LEFT", c.view, "RIGHT", GAP, 0) else eb:SetPoint("LEFT", f.filterHost, "LEFT", 0, 0) end
     if held > 0 then eb:SetPoint("RIGHT", parts.filters, "LEFT", -GAP, 0)
