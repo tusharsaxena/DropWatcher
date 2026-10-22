@@ -331,11 +331,13 @@ test("sim panel: the typed pause, resume and restart answer as the buttons do", 
 end)
 
 test("sim panel: Restart stops the scenario and starts the same one again; Stop ends it", function()
-    local NS = addon()
+    local NS, m = addon()
     slash(NS, "sim start raid 12")
     slash(NS, "sim step"); slash(NS, "sim step")
     local ctl = NS.SimPanel.Frame().controls
     ctl.restart:__fire("OnClick")
+    -- The library's restart stop line since DW-02 (OWNER_SCOPE C.7; smoke SM-DW-5).
+    assertEqual(printed(m, "Simulation stopped to restart."), 1)
     assertTrue(NS.Sim:IsActive())
     local st = NS.SimScenario.Status()
     assertEqual(st.scenario, "raid"); assertEqual(st.pos, 0); assertEqual(st.size, 12)

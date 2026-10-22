@@ -275,11 +275,12 @@ NS.SimHost.SetRestriction(name, on) ─> answered active ─> Fire(ADDON_RESTRIC
 NS.SimHost.SetLockdown(on) ─> InChatMessagingLockdown answered ─> NS.Restrictions.Refresh
 DropAdded of a drop made while active (rec.sim) ─> History.Log() = the session log, never global.history
 NS.Sim:Stop(reason) ─> its timers canceled ─> OnStopGuarded: NS.Asks.CancelQueued (seam still on)
-                   ─> the seam off, NS.Sim:IsActive() false ─> OnStop, in order: SimEvents' and
-                      SimScenario's steps ─> its restrictions lifted (event)
+                   ─> the seam off, NS.Sim:IsActive() false ─> OnStop, in order: SimEvents' step
+                      ─> its restrictions lifted (event)
                    ─> its drops' automatic asks ─> LootFeed.RemoveWhere(sim, context reset)
                    ─> Inspect.Forget(its GUIDs) ─> Roster.Refresh ─> History.ReleaseLog
                    ─> TradeTimer.Scan ─> Situations.Refresh ─> the open window repainted
+                   ─> the library's listeners told (the step panel) ─> its stop line
 GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA ─> OnSimWorldEvent (first)
                    ─> a real group or an instance ─> Stop("group" | "instance")
 NS.StandDown ─> Sim's stand-down row (first) ─> Stop("standDown")
@@ -309,11 +310,15 @@ NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with th
 NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
                    TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
 /dw sim <verb> ─> NS.SimVerbs.Parse (pure) ─> no simulation running: "No simulation is running" (but start)
-/dw sim start <scenario> [size] ─> NS.SimScenario.Start ─> NS.Sim.Start (refusals) ─> Timeline (pure)
-                   ─> NS.SimPool.Build ─> ready: SimRoster.Create ─> SimEvents.Join ─> the window opens
-/dw sim step ─> NS.SimScenario.Step ─> the next step's driver: RunStart, Pull, SetLockdown(on), Kill,
-                   Loot(burst), SetLockdown(off), RunEnd (waits while the pool builds) ─> its chat
-                   line (StepLine), typed or played
+/dw sim start <scenario> [size] ─> NS.SimScenario.Start ─> NS.Sim:Start (refusals, an unknown
+                   scenario among them) ─> prepare: NS.SimScenario.Prepare ─> NS.SimPool.Build
+                   ─> SimRoster.Create ─> SimEvents.Join ─> the window opens ─> ready()
+                   (a ready from an earlier session is ignored, OWNER_SCOPE C.1)
+/dw sim step ─> NS.Sim:Step (LibKa0s-Sim-1.0's step machine; the steps are the scenario's pure
+                   Timeline) ─> play: NS.SimScenario.Play ─> the next step's driver: RunStart, Pull,
+                   SetLockdown(on), Kill, Loot(burst), SetLockdown(off), RunEnd (refused `building`
+                   while the pool builds) ─> the library's chat line, named by the step's label
+                   (SimScenario.StepLabel), typed or played
 the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receipt sequence and merge
                    count) ─> SimEvents.Loot ─> Collect (the records made since: added, loading or
                    hidden by a gate) ─> kept on the step; Summarize (pure) ─> `loot: 3 drops (1 hidden)`
@@ -321,11 +326,14 @@ the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receip
                    row's tooltip: each drop, its looter, Drops or the gate that hid it (feedback-3 §0);
                    each place honors the feed the window shows (SimReport.View = Window.FeedView:
                    not shown in test mode; §5); yours are on Drops like any other (feedback-5 §2)
-/dw sim run ─> a step now, then one every SimScenario.StepDelay() seconds (`sim.stepDelay`, 2 by
-                   default, read as each next step is set) on NS.Sim.After (the stop ends it)
-/dw sim pause | resume | restart ─> NS.SimScenario.Pause (the timer canceled) | Resume (Run) | Restart
-                   (NS.Sim.Stop, then Start with the same scenario and size)
-every move of the timeline (start, ready, step, run, pause, the end, the stop) ─> NS.SimScenario.Notify
+/dw sim run ─> NS.Sim:Run: a step now, then one every stepDelay seconds (the descriptor's
+                   SimScenario.StepDelay(): `sim.stepDelay`, 2 by default, read as each next step is
+                   set) on the session's own timers (the stop ends it) ─> at the last step the
+                   library's finished line (`… /dw sim stop ends it.`)
+/dw sim pause | resume | restart ─> NS.Sim:Pause (the pending tick canceled) | Resume (Run) | Restart
+                   (Stop("restart"), `Simulation stopped to restart.`, then Start with the same
+                   scenario, size and start options and a fresh seed)
+every move of the timeline (start, ready, step, run, pause, the end, the stop) ─> NS.Sim's listeners
                    ─> NS.SimPanel.Refresh: Compose (pure) ─> the rows' states, Controls (pure) ─> the buttons
 the step panel's row click ─> SimPanel.ClickRow (re-composed) ─> Start: SimVerbs.Run("start …") |
                    a later step: RunTo ─> SimVerbs.Run("step") until it is reached | Stop: SimVerbs.Run("stop")

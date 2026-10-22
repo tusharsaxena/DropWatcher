@@ -138,7 +138,8 @@ test("sim verbs: `/dw sim` prints the status and the usage; the verbs need a run
     end
     assertEqual(printed(m, "No simulation is running: start one"), 8, "each verb says none runs")
     slash(NS, "sim start nowhere")
-    assertEqual(printed(m, "Unknown scenario."), 1)
+    -- The library's line since DW-02 (OWNER_SCOPE C.7; smoke SM-DW-5): it names the scenarios.
+    assertEqual(printed(m, "Unknown scenario 'nowhere'. Scenarios: key, dungeon, raid, lfr, delve, world."), 1)
     assertFalse(NS.Sim:IsActive())
 end)
 
@@ -207,6 +208,58 @@ test("sim step: the timeline waits for the pool, then plays one step at a time",
     assertTrue(NS.Restrictions.ActiveSet().chatLockdown, "the lockdown step")
     slash(NS, "sim pull")
     assertEqual(printed(m, "A simulated boss is already engaged"), 1)
+end)
+
+test("sim restart: a stale pool callback from the first session never readies the restarted one (C.1)", function()
+    local NS, m = addon()
+    local shown = true   -- the journal's frame is open: the restarted session's pool waits
+    m.EncounterJournal = { IsShown = function() return shown end }
+    local build, first = NS.SimPool.Build, nil
+    NS.SimPool.Build = function(opts, done)
+        if not first then first = done; return true end   -- the first session's pool: held back
+        return build(opts, done)
+    end
+    assertTrue(NS.SimScenario.Start("dungeon", nil, { seed = 1 }))
+    assertTrue(NS.SimScenario.Restart())
+    NS.SimPool.Build = build
+    first()   -- the first session's pool, arriving after the restart
+    -- red under: poolReady without its session check (modules/SimScenario.lua)
+    assertFalse(NS.Sim:Status().ready, "the restarted timeline is not ready early")
+    assertEqual(#NS.SimRoster.Get(), 0, "no group drawn from the stale callback")
+    assertEqual(printed(m, "Simulation ready:"), 0)
+    shown = false
+    m.advance(1)
+    assertTrue(NS.Sim:Status().ready, "its own pool readies it")
+    assertEqual(printed(m, "Simulation ready:"), 1)
+end)
+
+test("sim run: Run while the panel's click-ahead plays answers playing (C.2)", function()
+    local NS, m = addon()
+    assertTrue(NS.SimScenario.Start("world", nil, { seed = 1 }))
+    m.advance(1)
+    assertTrue(NS.Sim:Status().ready)
+    local answers, play = {}, NS.SimScenario.Play
+    NS.SimScenario.Play = function(step, s)
+        local _, code = NS.Sim:Run()
+        answers[#answers + 1] = tostring(code)
+        return play(step, s)
+    end
+    -- The library's panel: its click on a row ahead is the click-ahead, which holds Run's slot.
+    -- The kit's CreateFrame sets no global, so the panel's frame is caught as it is built.
+    local create, panel = m.CreateFrame, nil
+    m.CreateFrame = function(kind, name, ...)
+        local f = create(kind, name, ...)
+        if name == "DropWatcherSimPanel" then panel = f end
+        return f
+    end
+    assertTrue(NS.Sim:ShowPanel())
+    m.CreateFrame = create
+    panel.__rowButtons[4]:__fire("OnClick")   -- timeline step 3
+    NS.SimScenario.Play = play
+    assertEqual(NS.Sim:Status().pos, 3, "the click-ahead played up to the row")
+    assertEqual(table.concat(answers, ","), "playing,playing,playing")
+    assertFalse(NS.Sim:Status().playing, "the slot is free again")
+    NS.Sim:HidePanel()
 end)
 
 test("sim run: plays every step a few seconds apart, each with its line, then says it has finished", function()

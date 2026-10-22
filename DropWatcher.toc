@@ -470,22 +470,23 @@ modules\SimPool.lua
 # providers on NS.SimSeam (core\SimSetup.lua) at load; reads NS.Constants and NS.L at load. NS.SimRoster,
 # NS.SimPool, NS.SimEvents (below) and NS.Compat are read at call time.
 modules\SimWorld.lua
-# LOAD-BEARING: adds its stop step through NS.Sim:OnStop (modules\Sim.lua, above) at load; the steps
-# run in that order, so modules\SimScenario.lua's (below) runs after it. Publishes
+# LOAD-BEARING: adds its stop step through NS.Sim:OnStop (modules\Sim.lua, above) at load, before
+# modules\SimScenario.lua (below) has modules\Sim.lua register the engine steps after it. Publishes
 # NS.SimEvents, the simulator's event drivers. NS.SimWorld, NS.SimPool, NS.Roster, NS.LootFeed and
 # NS.Compat are read at call time.
 modules\SimEvents.lua
 # Conventional: publishes NS.SimReport, where a simulated loot burst's drops went; reads NS.L at
 # load. NS.State, NS.SimEvents (above), NS.LootFeed and NS.WindowCells are read at call time.
 modules\SimReport.lua
-# LOAD-BEARING: adds its stop step through NS.Sim:OnStop (modules\Sim.lua, above) at load, after
-# modules\SimEvents.lua's, then has modules\Sim.lua register the stop's engine steps after both
-# (NS.SimHost.RegisterStopSteps); fills NS.SimScenarioDefs in place at load. Publishes
-# NS.SimScenario, the simulator's scenarios and timeline; reads NS.L at load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents, NS.SimReport and
-# NS.Window are read at call time.
+# LOAD-BEARING: the last simulator module to add a stop step: has modules\Sim.lua (above) register the
+# stop's engine steps through NS.Sim:OnStop at load (NS.SimHost.RegisterStopSteps), after
+# modules\SimEvents.lua's; fills NS.SimScenarioDefs in place at load (LibKa0s-Sim-1.0 reads them when
+# a simulation starts). Publishes NS.SimScenario, the simulator's scenarios, its world's prepare and
+# its steps' play (the step machine is the library's); reads NS.L at load. NS.Sim, NS.SimPool,
+# NS.SimRoster, NS.SimEvents, NS.SimReport and NS.Window are read at call time.
 modules\SimScenario.lua
-# LOAD-BEARING: adds its repaint to NS.SimScenario's listeners (modules\SimScenario.lua, above) at
-# load; its NS.STAND_DOWN step runs in TOC order, after those of the modules above. Publishes
+# LOAD-BEARING: adds its repaint to NS.Sim's listeners (through NS.SimScenario.AddListener,
+# modules\SimScenario.lua, above) at load; its NS.STAND_DOWN step runs in TOC order, after those of the modules above. Publishes
 # NS.SimPanel, the simulation step panel; reads NS.L and NS.Constants at load. NS.Sim,
 # NS.SimScenario, NS.SimVerbs (settings\, below), NS.SimEvents, NS.Window, NS.MineCells and
 # NS.WindowFooter are read at call time: the frame is built on the first Show.

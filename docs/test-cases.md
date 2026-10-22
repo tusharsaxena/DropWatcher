@@ -1715,7 +1715,7 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
-### test_sim_scenario.lua (20)
+### test_sim_scenario.lua (22)
 
 - sim verbs: Parse reads every verb and its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
@@ -1725,6 +1725,8 @@ Total.
 - sim start: the scenario's pool, group and situation, and the window open
 - sim start: a raid takes its size; a party is always four
 - sim step: the timeline waits for the pool, then plays one step at a time
+- sim restart: a stale pool callback from the first session never readies the restarted one (C.1)
+- sim run: Run while the panel's click-ahead plays answers playing (C.2)
 - sim run: plays every step a few seconds apart, each with its line, then says it has finished
 - sim step delay: two seconds by default, read from `sim.stepDelay`; a bad value falls back
 - sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5; DelayText drops a whole number's point
@@ -2000,7 +2002,7 @@ Total.
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 20 |
 | test_sim_events.lua | 21 |
-| test_sim_scenario.lua | 20 |
+| test_sim_scenario.lua | 22 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 19 |
@@ -2015,4 +2017,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1665** |
+| **Total** | **1667** |

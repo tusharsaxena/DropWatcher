@@ -378,9 +378,10 @@ local function sim(out)
     local p = NS.SimPool.Status()
     out:add(TAG, "sim: pool size=%s source=%s building=%s pending=%s", p.size, p.source or "none",
         p.building, p.pending)
-    local t = NS.SimScenario.Status() or { pos = 0, steps = 0, ready = false, playing = false }
-    out:add(TAG, "sim: timeline step=%s/%s next=%s ready=%s playing=%s", t.pos, t.steps, t.next or "none",
-        t.ready, t.playing)
+    -- The library's timeline fields (NS.Sim:Status(), merged into st by NS.SimHost.Status).
+    local nxt = NS.Sim:Steps()[st.pos + 1]
+    out:add(TAG, "sim: timeline step=%s/%s next=%s ready=%s playing=%s", st.pos, st.total,
+        nxt and nxt.kind or "none", st.ready, st.playing)
     out:add(TAG, "sim: sendsPrinted=%s handOvers=%s lockdown=%s restrictions=%s", st.sends, st.handOvers,
         st.lockdown, st.restrictions)
 end

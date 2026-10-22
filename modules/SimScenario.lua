@@ -17,17 +17,18 @@ local _, NS = ...
 -- the client's may, so an ask made during the loot burst waits and goes out when it lifts). A key
 -- starts the run first, plays its bosses without loot, and ends with the completion:
 --   runStart, (pull, kill) x bosses, lockdownOn, runEnd, loot, lockdownOff
--- Step plays the next step and prints its line (StepLine); Run plays them all, one every
--- StepDelay() seconds (the `sim.stepDelay` setting, read as each next step is set, so a change takes
--- effect from the next step), on the session's timers (NS.Sim:After), so the stop ends it. Nothing here
+-- The step machine is LibKa0s-Sim-1.0's (SimTimeline.lua): NS.Sim:Step plays the next step through
+-- Play (the descriptor's `play`, each step one event driver) and prints its line; NS.Sim:Run plays
+-- them all, one every StepDelay() seconds (the descriptor's `stepDelay`: the `sim.stepDelay`
+-- setting, read as each next step is set, so a change takes effect from the next step), on the
+-- session's timers, so the stop ends it; Pause, Resume and Restart are the library's too. Each
+-- step's line names its detail (Play sets the step's `label`: `kill (Warden Ashvane)`). Nothing here
 -- sets a verdict, a trade estimate or an inspect state: each step is an event driver, and the
 -- engine computes the rest.
 --
---   NS.Sim:Session().timeline = { steps = { { kind, n, ranAt, detail, report } }, pos, playing (timer) | nil, paused,
---                          ready, size, band }
---
--- Pause, Resume and Restart are the panel's run controls (and `/dw sim pause|resume|restart`);
--- every move is told to the listeners (AddListener), which the panel repaints on.
+-- SC.Step, Run, Pause, Resume, Restart, Steps, Status and AddListener are one-line delegations to
+-- NS.Sim (Status reshaped for the panel and the verbs) until the slash verbs and the step panel move
+-- onto the library (DW-03, DW-04).
 
 NS.SimScenario = NS.SimScenario or {}
 local SC = NS.SimScenario
@@ -117,12 +118,7 @@ function SC.Timeline(def)
     return steps
 end
 
--- ── the session's timeline ──────────────────────────────────────────────────────────────────
-
-local function timeline()
-    local s = Sim:Session()
-    return s and s.timeline
-end
+-- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 -- Each step kind's event driver. Answers whether it did something, and what, for the step's line.
 -- Play (the descriptor's `play`) runs one.
@@ -149,160 +145,67 @@ local PLAY = {
     end,
 }
 
---- Play one timeline step through its event driver (the descriptor's `play`): answers its detail.
+--- A played step's name in its chat line (sim feedback §0: every step gets one, typed or played):
+--- `kill (Warden Ashvane)`; a loot step says where its drops went (feedback-3 spec §0):
+--- `loot: 3 drops (1 hidden)`. The library prints it as `Simulation step 3 of 11: <label>.`
+--- @param kind string
+--- @param detail string|nil
+--- @return string
+function SC.StepLabel(kind, detail)
+    if not detail then return kind end
+    return (kind == "loot" and L["%s: %s"] or L["%s (%s)"]):format(kind, detail)
+end
+
+--- Play one timeline step through its event driver (the descriptor's `play`, which the library
+--- runs for NS.Sim:Step, every Run tick and the panel's click-ahead): answers its detail, and sets
+--- the step's `label` for the line the library prints.
 --- @param step table
 --- @return string|nil detail
 function SC.Play(step)
     local did, detail = PLAY[step.kind](step)
-    local t = timeline() or { pos = 0, steps = {} }
-    NS.Debug(TAG, "timeline step %d/%d: %s%s", t.pos, #t.steps, step.kind, did and "" or " (nothing to do)")
+    local st = Sim:Status()
+    NS.Debug(TAG, "timeline step %d/%d: %s%s", st.pos, st.total, step.kind, did and "" or " (nothing to do)")
+    step.label = SC.StepLabel(step.kind, detail)
     return detail
 end
 
---- The chat line of a played step (sim feedback §0: every step gets one, typed or played):
---- `Simulation step 3 of 11: kill (Warden Ashvane).`; a loot step says where its drops went
---- (feedback-3 spec §0): `Simulation step 10 of 11: loot: 3 drops (1 hidden).`
---- @param pos number
---- @param total number
---- @param kind string
---- @param detail string|nil
---- @return string
-function SC.StepLine(pos, total, kind, detail)
-    local what = kind
-    if detail then what = (kind == "loot" and L["%s: %s"] or L["%s (%s)"]):format(kind, detail) end
-    return L["Simulation step %d of %d: %s."]:format(pos, total, what)
-end
+-- ── the library's step machine ──────────────────────────────────────────────────────────────
 
---- Play the timeline's next step and print its line. Answers the step, or nil and why:
---- `notRunning`, `building` (the pool is not ready yet), `done` (no step left).
---- @return table|nil step, string|nil why
-function SC.Step()
-    local t = timeline()
-    if not t then return nil, "notRunning" end
-    if not t.ready then return nil, "building" end
-    local step = t.steps[t.pos + 1]
-    if not step then return nil, "done" end
-    t.pos = t.pos + 1
-    local detail = SC.Play(step)
-    -- Kept on the step for the panel (modules/SimPanel.lua): when it ran (time(), the session's
-    -- clock), and what it did.
-    step.ranAt, step.detail = time(), detail
-    NS.Print(SC.StepLine(t.pos, #t.steps, step.kind, detail))
-    SC.Notify()
-    return step
-end
+SC.Step = function() return Sim:Step() end
+SC.Run = function() return Sim:Run() end
+SC.Pause = function() return Sim:Pause() end
+SC.Resume = function() return Sim:Resume() end
+SC.Restart = function() return Sim:Restart() end
+SC.AddListener = function(fn) Sim:AddListener(fn) end
 
-local tick
-
--- One step of a playing timeline, and the next one set for later while any is left. The next timer
--- is set BEFORE the step runs, so the listeners the step notifies already see the timeline playing
--- (the panel keeps Pause live and Run all spent through an automatic run).
-tick = function(t)
-    t.playing = nil
-    if timeline() ~= t then return end
-    if t.steps[t.pos + 2] then
-        t.playing = Sim:After(SC.StepDelay(), function() tick(t) end)
-    end
-    SC.Step()
-    if not t.playing then
-        NS.Debug(TAG, "timeline finished")
-        NS.Print(L["The simulation's timeline has finished. /dw sim stop ends it."])
-        SC.Notify()
-    end
-end
-
---- Play the rest of the timeline, one step now and one every StepDelay() seconds. Answers true, or
---- false and why: `notRunning`, `building`, `done`, `playing`.
---- @return boolean, string|nil
-function SC.Run()
-    local t = timeline()
-    if not t then return false, "notRunning" end
-    if not t.ready then return false, "building" end
-    if t.playing then return false, "playing" end
-    if not t.steps[t.pos + 1] then return false, "done" end
-    NS.Debug(TAG, "timeline plays from step %d", t.pos + 1)
-    t.paused = nil
-    tick(t)
-    SC.Notify()
-    return true
-end
-
---- Pause a playing timeline: its next step is not played until Resume (or Run, or a Step). Answers
---- true, or false and why: `notRunning`, `notPlaying`.
---- @return boolean, string|nil
-function SC.Pause()
-    local t = timeline()
-    if not t then return false, "notRunning" end
-    if not t.playing then return false, "notPlaying" end
-    t.playing:Cancel()   -- the session's handle: canceled and forgotten
-    t.playing, t.paused = nil, true
-    NS.Debug(TAG, "timeline paused before step %d", t.pos + 1)
-    SC.Notify()
-    return true
-end
-
---- Resume a paused timeline: it plays on from its next step, as Run does. Answers true, or false
---- and why: `notRunning`, `notPaused`, or Run's.
---- @return boolean, string|nil
-function SC.Resume()
-    local t = timeline()
-    if not t then return false, "notRunning" end
-    if not t.paused then return false, "notPaused" end
-    return SC.Run()
-end
-
---- The timeline at a glance: { scenario, ready, pos, steps, playing, next }; nil when none runs.
---- @return table|nil
-function SC.Status()
-    local s = Sim:Session()
-    local t = s and s.timeline
-    if not t then return nil end
-    local nxt = t.steps[t.pos + 1]
-    return { scenario = s.scenario, ready = t.ready == true, pos = t.pos, steps = #t.steps,
-        playing = t.playing ~= nil, paused = t.paused == true, next = nxt and nxt.kind, size = t.size }
-end
-
---- The running timeline's steps, each { kind, n, ranAt, detail } (ranAt and detail once played),
---- for the panel to read; nil when none runs. Read it; only this file writes it.
+--- The running timeline's steps, each { kind, n, label, ranAt, detail, index } (the last four once
+--- played), for the panel to read; nil when none runs. Read it; only the library and Play write it.
 --- @return table|nil
 function SC.Steps()
-    local t = timeline()
-    return t and t.steps
+    if not Sim:IsActive() then return nil end
+    return Sim:Steps()
 end
 
--- ── listeners ───────────────────────────────────────────────────────────────────────────────
-
-local listeners = {}
-
---- Be told `fn()` whenever the timeline moves: a start, its pool ready, a step (typed, clicked or
---- played), a pause, a run, the end, and the stop (modules/SimPanel.lua repaints on it, so typing
---- and clicking stay in step). Listeners are never removed.
---- @param fn function
-function SC.AddListener(fn)
-    listeners[#listeners + 1] = fn
+--- The timeline at a glance, from NS.Sim:Status(): { scenario, ready, pos, steps, playing, paused,
+--- next, size (nil: random, or a party) }; nil when none runs.
+--- @return table|nil
+function SC.Status()
+    local st = Sim:Status()
+    if not st.active then return nil end
+    local nxt = Sim:Steps()[st.pos + 1]
+    return { scenario = st.scenario, ready = st.ready == true, pos = st.pos, steps = st.total,
+        playing = st.playing == true, paused = st.paused == true, next = nxt and nxt.kind,
+        size = st.size ~= 0 and st.size or nil }
 end
-
---- Tell every listener the timeline moved. Each runs under pcall, so one that raises never stops
---- the timeline.
-function SC.Notify()
-    for _, fn in ipairs(listeners) do
-        local ok, err = pcall(fn)
-        if not ok then NS.Debug(TAG, "timeline listener failed: %s", NS.SafeToString(err)) end
-    end
-end
-
--- The stop moves the timeline too (to nothing): every listener hears it, after the session is gone.
-Sim:OnStop(function() SC.Notify() end)
 
 -- ── start ───────────────────────────────────────────────────────────────────────────────────
 
 -- The pool is ready: the group is drawn and forms, the window opens, and the session is ready. A
--- callback from an earlier session (a restart while its pool was building) does nothing.
-local function poolReady(s, def, t, ready)
+-- callback from an earlier session (a restart while its pool was building) does nothing (C.1).
+local function poolReady(s, def, opts, ready)
     if Sim:Session() ~= s then return end
-    local members = NS.SimRoster.Create({ kind = def.kind, size = t.size, seed = s.seed, band = t.band })
+    local members = NS.SimRoster.Create({ kind = def.kind, size = opts.size, seed = s.seed, band = opts.band })
     NS.SimEvents.Join()
-    t.ready = true
     local pool = NS.SimPool.Status()
     NS.Debug(TAG, "scenario %s ready: %d members, %d pool items (%s)", s.scenario, #members, pool.size,
         tostring(pool.source))
@@ -311,56 +214,39 @@ local function poolReady(s, def, t, ready)
     NS.ShowWindow()
     if NS.Window and NS.Window.IsShown() then NS.Window.Refresh() end
     ready()
-    SC.Notify()
 end
 
---- Build a session's world (the descriptor's `prepare`, after NS.SimHost.Begin): its timeline, its
---- pool, then its group and the window, and `ready()` once they stand. `opts` is the start's:
---- { scenario, size (0: random), seed, band, classFilter }.
+--- Build a session's world (the descriptor's `prepare`, after NS.SimHost.Begin): its pool, then its
+--- group and the window, and `ready()` once they stand. `opts` is the start's: { scenario, size (0:
+--- random), seed, band, classFilter }.
 --- @param s table the library's session
 --- @param def table the scenario's SCENARIOS row
 --- @param opts table
 --- @param ready function
 function SC.Prepare(s, def, opts, ready)
     local size = tonumber(opts.size)
-    if size == 0 then size = nil end
-    local t = { steps = SC.Timeline(def), pos = 0, size = size, band = opts.band or def.band }
-    s.timeline = t
+    local plan = { size = size ~= 0 and size or nil, band = opts.band or def.band }
+    -- The build's timers are the session's (NS.Sim:After, inside SimPool.Build), so the stop ends it.
     NS.SimPool.Build({ situation = s.situation, classFilter = opts.classFilter },
-        function() poolReady(s, def, t, ready) end)
-    SC.Notify()
+        function() poolReady(s, def, plan, ready) end)
 end
 
---- Start scenario `name` (spec §4): the session (refused, with the line printed, by NS.Sim:Start),
---- its pool, then its group and the window (Prepare). `size` sizes a raid's group; `opts` = { seed,
---- classFilter = `mine`|`any`, band = { low, high } (the members' item-level offsets around the
---- content's level; the scenario's, else modules/SimRoster.lua's default) }. Answers true, or false
---- and why: `unknown` (no such scenario), `refused`.
+--- Start scenario `name` (spec §4): the session (refused, with the line printed, by NS.Sim:Start:
+--- an unknown scenario among them), its pool, then its group and the window (Prepare). `size`
+--- sizes a raid's group; `opts` = { seed, classFilter = `mine`|`any`, band = { low, high } (the
+--- members' item-level offsets around the content's level; the scenario's, else
+--- modules/SimRoster.lua's default) }. Answers true, or false and `refused`.
 --- @param name string
 --- @param size number|nil
 --- @param opts table|nil
 --- @return boolean, string|nil
 function SC.Start(name, size, opts)
-    if not SC.SCENARIOS[name] then return false, "unknown" end
     opts = type(opts) == "table" and opts or {}
     -- DropWatcher's own seed when the start names none: the client clock in milliseconds.
     local ok = Sim:Start({ scenario = name, size = size, seed = opts.seed or math.floor(GetTime() * 1000),
         band = opts.band, classFilter = opts.classFilter })
     if not ok then return false, "refused" end
     return true
-end
-
---- Stop the running scenario and start the same one again, at the same size, with a fresh seed.
---- Answers Start's answer, or false and `notRunning`.
---- @return boolean, string|nil
-function SC.Restart()
-    local s = Sim:Session()
-    local t = s and s.timeline
-    if not t then return false, "notRunning" end
-    local name, size = s.scenario, t.size
-    NS.Debug(TAG, "restarting %s", tostring(name))
-    Sim:Stop("stop")
-    return SC.Start(name, size)
 end
 
 -- ── the scenarios on LibKa0s-Sim-1.0 ────────────────────────────────────────────────────────

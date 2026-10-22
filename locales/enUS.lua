@@ -232,6 +232,7 @@ L["That drop's trade window has closed."] = "That drop's trade window has closed
 L["The simulation has no items to drop."] = "The simulation has no items to drop."
 L["The simulation is still setting up its items: try again in a moment."] = "The simulation is still setting up its items: try again in a moment."
 L["The simulation's timeline has finished. /dw sim stop ends it."] = "The simulation's timeline has finished. /dw sim stop ends it."
+L["The simulation's timeline has finished. %s stop ends it."] = "The simulation's timeline has finished. %s stop ends it."
 L["The timeline is already playing."] = "The timeline is already playing."
 L["Unknown scenario."] = "Unknown scenario."
 

@@ -20,7 +20,7 @@ local _, NS = ...
 -- THE PANEL NEVER CHANGES THE TIMELINE. Every click and every control goes through the very verbs
 -- `/dw sim` types (NS.SimVerbs.Run: `start`, `step`, `run`, `pause`, `resume`, `restart`, `stop`),
 -- so a click prints what the typed verb prints, and the panel repaints from the timeline on every
--- move it is told of (NS.SimScenario.AddListener): a typed `/dw sim step` moves it too.
+-- move it is told of (NS.SimScenario.AddListener, NS.Sim's listeners): a typed `/dw sim step` moves it too.
 --
 -- WHAT IT COMPOSES (Compose, Controls) is PURE: the timeline and the clock in, the rows and the
 -- controls' state out. The rest is the frame edge, built on the first Show. Its position is window

@@ -16,7 +16,6 @@ local _, NS = ...
 -- startedAt, events); the host fields go on it (the host bag, OWNER_SCOPE C.4):
 --   { situation, guids = { [guid] = true }, restrictions = { [type value] = true }, lockdown,
 --     log = { v, groups },               -- NS.SimHost.Begin's, set as the session starts
---     timeline,                          -- modules/SimScenario.lua's
 --     pool, poolBuild,                   -- modules/SimPool.lua's (the item pool and its build)
 --     members,                           -- modules/SimRoster.lua's (the invented group and its gear)
 --     world, drive }                     -- modules/SimWorld.lua's and modules/SimEvents.lua's
@@ -39,13 +38,13 @@ local _, NS = ...
 --   * Stop cleans everything, in this order (the library's two-phase stop): its timers; every
 --     queued ask, canceled while the seam still guards the sender (OnStopGuarded), so nothing
 --     queued can go out once it has ended; then, with the seam off (OnStop, in registration
---     order), the later modules' own steps (modules/SimEvents.lua's and modules/SimScenario.lua's,
---     registered at their load), the simulated restrictions lifted through the restriction
---     event, the waiting automatic asks of its drops and the drops themselves with their groups and
---     the encounter context (NS.LootFeed.RemoveWhere), the inspect entries of its members, the
---     roster, the log, the trade timer's entries (a fresh scan) and the situation (the classifier
---     re-reads the real one). The library runs every step under pcall, so one that raises never
---     skips the rest (nor the stand-down).
+--     order), the later modules' own steps (modules/SimEvents.lua's, registered at its load), the
+--     simulated restrictions lifted through the restriction event, the waiting automatic asks of
+--     its drops and the drops themselves with their groups and the encounter context
+--     (NS.LootFeed.RemoveWhere), the inspect entries of its members, the roster, the log, the trade
+--     timer's entries (a fresh scan) and the situation (the classifier re-reads the real one); then
+--     the library tells its listeners (the step panel repaints). It runs every step under pcall, so
+--     one that raises never skips the rest (nor the stand-down).
 --   * Everything it invents carries `sim = true` (the session, the feed's drops, the history
 --     entries), so a stray one is identifiable. Only what Fire delivers is invented (IsDelivering):
 --     a real loot line or trade that arrives while a simulation runs stays real and is saved.
@@ -218,6 +217,8 @@ local LINES = {
     STARTED         = L["Simulation started (%s): nothing is sent, and your saved history is not touched."],
     STOPPED         = L["Simulation stopped."],
     ALREADY_RUNNING = L["A simulation is already running."],
+    FINISHED        = L["The simulation's timeline has finished. %s stop ends it."],
+    STEP_LINE       = L["Simulation step %d of %d: %s."],
 }
 
 -- The reference stub (LibKa0s tests/test_sim_stub.lua) for a load without the library.
@@ -320,8 +321,8 @@ local ENGINE_STEPS = {
 }
 
 --- Register the stop's engine steps on NS.Sim:OnStop. Called once, by the last simulator module
---- to load (modules/SimScenario.lua), so the steps modules/SimEvents.lua and
---- modules/SimScenario.lua register at their load run before them, in TOC order.
+--- to load (modules/SimScenario.lua), so the step modules/SimEvents.lua registers at its load runs
+--- before them, in TOC order.
 function Host.RegisterStopSteps()
     for _, fn in ipairs(ENGINE_STEPS) do NS.Sim:OnStop(fn) end
 end
