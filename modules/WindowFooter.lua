@@ -172,7 +172,7 @@ function WF.Read()
     if type(lastAt) == "number" then i.lastLootAgo = GetTime() - lastAt end
     i.situation = NS.Situations.Current()
     i.tracking = NS.Situations.IsTracking(i.situation)
-    if NS.Sim.IsActive() then i.sim = { members = #NS.SimRoster.Get() } end
+    if NS.Sim:IsActive() then i.sim = { members = #NS.SimRoster.Get() } end
     i.pawn = NS.Compat.PawnIsReady() and "on" or "off"
     return i
 end

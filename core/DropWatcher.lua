@@ -158,7 +158,7 @@ local function testModeRefusal()
     if stoodDown then return stoodDown end
     if NS.Compat.InCombatLockdown() then return NS.L["Test mode is not available in combat."] end
     -- The simulator and test mode are exclusive (simulator spec §1): placeholders are not the engine.
-    if NS.Sim.IsActive() then return NS.L["Test mode is not available while a simulation runs."] end
+    if NS.Sim:IsActive() then return NS.L["Test mode is not available while a simulation runs."] end
     return nil
 end
 

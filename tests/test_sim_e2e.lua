@@ -123,12 +123,20 @@ end)
 test("sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings", function()
     local NS = T.newAddon()
     local wrapped = {}
-    for _, key in ipairs(NS.Sim.SeamKeys()) do wrapped[key] = true end
+    for _, key in ipairs(NS.SimSeam:Keys()) do wrapped[key] = true end
     for _, key in ipairs({ "GroupSize", "InRaid", "InGroup", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
         "InstanceState", "InstanceInfo", "DifficultyKnown", "ChallengeModeActive", "InCombatLockdown", "PlayerInCombat",
         "GlobalString", "IsAddOnLoaded" }) do
         assertTrue(wrapped[key], key .. " is answered through the seam")
     end
+end)
+
+test("sim e2e: nothing escapes the seam", function()
+    -- H2 (LibKa0s-Sim-1.0): every NS.Compat function is wrapped or pure after the whole addon
+    -- loads. red under: a Compat member added by a file that loads after core/SimSetup.lua
+    local NS = T.newAddon()
+    assertEqual(#NS.SimSeam:Unwrapped(), 0, "every Compat member is wrapped or pure: "
+        .. table.concat(NS.SimSeam:Unwrapped(), ", "))
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -300,7 +308,7 @@ local function runScenario(sc, ilvl, seed, mode)
     assertRosters(NS, label)
     assertRecorder(NS, label)
     assertRetention(NS, m, label)
-    NS.Sim.Stop("stop")
+    NS.Sim:Stop("stop")
     assertEqual(NS.Situations.Current(), "solo", label .. ": the real world again")
 end
 
@@ -338,7 +346,7 @@ test("sim e2e: a simulated key's auto-open is compact by default, full with the 
         assertTrue(NS.Window.IsShown(), case[1] .. ": a drop opened it again")
         assertEqual(NS.WindowCompact.Mode(), case[2], case[1] .. ": the auto-open's layout")
         assertEqual(NS.WindowGroup.Drawn().compact == true, case[2] == "compact", case[1] .. ": cards or the table")
-        NS.Sim.Stop("stop")
+        NS.Sim:Stop("stop")
         closeWindow(NS)
         assertTrue(not NS.WindowCompact.InRun(), case[1] .. ": the override let go")
         NS.ShowWindow()
@@ -359,14 +367,14 @@ test("sim e2e: the combat flags answer the simulated fight, and the client's aga
     NS.SimEvents.Pull()
     assertTrue(Compat.InCombatLockdown(), "the simulated pull is a fight")
     assertTrue(Compat.PlayerInCombat())
-    assertFalse(NS.Sim.Live(Compat.InCombatLockdown), "the real world is not fighting")
+    assertFalse(NS.SimSeam:Live(Compat.InCombatLockdown), "the real world is not fighting")
     NS.SimEvents.Kill()
     assertFalse(Compat.InCombatLockdown())
     m.inCombat = true
     assertTrue(Compat.InCombatLockdown(), "real combat is never hidden")
     m.inCombat = false
     NS.SimEvents.Pull()
-    NS.Sim.Stop("stop")
+    NS.Sim:Stop("stop")
     assertFalse(Compat.InCombatLockdown(), "the stop ends the simulated fight")
 end)
 
@@ -387,9 +395,9 @@ test("sim e2e: in a raid, raid1 is you, online, for every unit read", function()
     local NS = addon(600)
     NS.SimScenario.Start("raid", 10, { seed = 1 })
     local Compat = NS.Compat
-    local guid = NS.Sim.Live(Compat.UnitGUID, "player")
+    local guid = NS.SimSeam:Live(Compat.UnitGUID, "player")
     assertEqual(Compat.UnitGUID("raid1"), guid)
-    assertEqual(Compat.UnitName("raid1"), NS.Sim.Live(Compat.UnitName, "player"))
+    assertEqual(Compat.UnitName("raid1"), NS.SimSeam:Live(Compat.UnitName, "player"))
     -- red under: the M7 provider, which asked the client about raid1 and read you offline
     assertTrue(Compat.UnitIsConnected("raid1") == true, "you are online")
     local me = NS.Roster.Player()
@@ -405,11 +413,11 @@ test("sim e2e: Raid Finder is an instance group, so asks announce in instance ch
     assertFalse(Compat.InGroup(1), "not a home group")
     -- red under: the M7 provider, which answered every matchmade group as a home group
     assertEqual(NS.Asks.AnnounceChannel(), "INSTANCE_CHAT")
-    NS.Sim.Stop("stop")
+    NS.Sim:Stop("stop")
     NS.SimScenario.Start("raid", 10, { seed = 1 })
     assertFalse(Compat.InGroup(Compat.InstanceGroupCategory()))
     assertEqual(NS.Asks.AnnounceChannel(), "RAID")
-    NS.Sim.Stop("stop")
+    NS.Sim:Stop("stop")
     NS.SimScenario.Start("key", nil, { seed = 1 })
     assertEqual(NS.Asks.AnnounceChannel(), "PARTY")
 end)

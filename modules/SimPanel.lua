@@ -258,21 +258,21 @@ local choice = { scenario = "key", size = 0 }
 -- The running simulation's model. A session started without a scenario (no timeline) has no steps.
 local function runningModel()
     local SC = NS.SimScenario
-    local s = NS.Sim.Session() or {}
+    local s = NS.Sim:Session() or {}
     local st = SC.Status() or { ready = false, pos = 0 }
     return { running = true, ready = st.ready, scenario = s.scenario or "custom", size = st.size,
-        steps = SC.Steps() or {}, pos = st.pos, startedAt = s.startedAt, now = GetTime() }, SC.Status()
+        steps = SC.Steps() or {}, pos = st.pos, startedAt = s.startedAt, now = time() }, SC.Status()
 end
 
 -- With no simulation running: the picker's scenario, previewed.
 local function previewModel()
     local SC = NS.SimScenario
     return { running = false, scenario = choice.scenario, size = choice.size,
-        steps = SC.Timeline(SC.SCENARIOS[choice.scenario]), pos = 0, now = GetTime() }, nil
+        steps = SC.Timeline(SC.SCENARIOS[choice.scenario]), pos = 0, now = time() }, nil
 end
 
 local function model()
-    if NS.Sim.IsActive() then return runningModel() end
+    if NS.Sim:IsActive() then return runningModel() end
     return previewModel()
 end
 

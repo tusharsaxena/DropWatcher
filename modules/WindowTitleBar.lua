@@ -340,7 +340,7 @@ end
 --- @param f table the window frame
 function TB.PaintModeText(f)
     local test = NS.State.testMode == true
-    local sim = not test and NS.Sim.IsActive()
+    local sim = not test and NS.Sim:IsActive()
     f.testText:SetShown(test)
     f.simText:SetShown(sim)
     f.newChip:ClearAllPoints()

@@ -71,7 +71,7 @@ end
 -- The panel's row for a timeline step, composed from the running timeline.
 local function panelRow(NS, step)
     local SC, steps = NS.SimScenario, NS.SimScenario.Steps()
-    local rows = NS.SimPanel.Compose({ running = true, ready = true, scenario = NS.Sim.Session().scenario,
+    local rows = NS.SimPanel.Compose({ running = true, ready = true, scenario = NS.Sim:Session().scenario,
         steps = steps, pos = SC.Status().pos, now = 0 })
     for i, s in ipairs(steps) do
         if s == step then return rows[i + 1] end
@@ -274,7 +274,7 @@ local function runAll(name, size, seed, ilvl, hideAll)
         end
     end
     assertTrue(steps > 0, label .. ": the scenario has a loot step")
-    NS.Sim.Stop("stop")
+    NS.Sim:Stop("stop")
 end
 
 for _, sc in ipairs(SCENARIOS) do

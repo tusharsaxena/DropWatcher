@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.75.0 payload (seventeen majors; media/icons pruned to the declared subset), of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.75.0 payload (seventeen majors; media/icons pruned to the declared subset), of which sixteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -31,6 +31,7 @@ lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
 | Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`) and the shared `NS.CloseMenu` |
+| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator's seam, session and timeline |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown at all (`NS.MakeDropdown` answers nil and
 the search box still filters), and `NS.CloseMenu` is a no-op. Each setup file holds a
@@ -49,7 +50,7 @@ one-line responsibility and why its position is load-bearing or conventional is 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
   family (`Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`, the only files that name the client
   globals they wrap, with the pure parsers in `TextParse.lua`) and the simulator's answer seam over
-  it (`SimSeam.lua`), the library-shaped item reads, the game-data tables, the session state, the
+  it (`SimSetup.lua`, LibKa0s-Sim-1.0's), the library-shaped item reads, the game-data tables, the session state, the
   addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
 - `modules/`: the simulator's session; the login session (`Session.lua`, the session start and This
@@ -157,7 +158,7 @@ TOC order of the modules). Each handler runs under `pcall`, so one that raises n
 rest: its error is an `Init` debug line, and the first error is raised once every handler has run,
 the way the client's own registrant dispatch and AceAddon's errorCollector behave. `NS.FeatureEventNames()` is the declared list with each event once.
 `NS.DeliverEvent(event, ...)`, beside the dispatcher in `core/DropWatcher.lua`, is the simulator's
-replay of the same `NS.FEATURE_EVENTS` rows (`NS.Sim.Fire` and `NS.Sim.DeliverForCleanup` call it):
+replay of the same `NS.FEATURE_EVENTS` rows (`NS.Sim:Fire` and `NS.Sim:DeliverForCleanup` call it):
 it skips an event listed in `NS.rejectedEvents`, as the client never delivers one it rejected at
 registration, calls each declared handler in row order under `pcall`, writes a raise as a `SIM`
 debug line and never rethrows it (the deliberate difference from the live dispatcher), and answers
@@ -216,14 +217,14 @@ trade range, because `CheckInteractDistance` is not to be called in combat. The 
 `hooksecurefunc` (in `core/Compat.lua`), never by replacing it; it never inspects in combat or while
 Blizzard's inspect window is open, and calls `ClearInspectPlayer` only for an inspect it started
 and nobody took over, so another addon's or the player's inspect is never cleared under them.
-While a simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`core/SimSeam.lua`)
-keeps the chat sender, the inspect calls and the trade action from the client
+While a simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`core/SimSetup.lua`,
+LibKa0s-Sim-1.0's `NewSeam`) keeps the chat sender, the inspect calls and the trade action from the client
 altogether: a send is printed with `[sim]`, a trade is printed, and nothing is inspected
 or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
-simulated restrictions, so nothing it queued can reach the real sender. `Sim.Fire` calls each
-handler under `pcall` (through `NS.DeliverEvent`), as the client's event dispatch and the live shared dispatcher
-(`DW:OnSharedFeatureEvent`) isolate it, and the stop runs each cleanup
-step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
+simulated restrictions (its `OnStopGuarded` step), so nothing it queued can reach the real sender.
+`NS.Sim:Fire` calls each handler under `pcall` (through `NS.DeliverEvent`), as the client's event
+dispatch and the live shared dispatcher (`DW:OnSharedFeatureEvent`) isolate it, and the library's
+stop runs each `OnStop` step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
 failure is a `SIM` debug line. While its combat edge is up, the simulator answers
 `InCombatLockdown` and the player's combat flag `true` through the seam and never `false`, so a
 caller that must not act in combat is never told it may (DW-90).

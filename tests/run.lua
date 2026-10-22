@@ -54,7 +54,26 @@ Kit.setSurfaceSource{
     ["LibKa0s-Pool-1.0"]      = surfaceMock.LibStub("LibKa0s-Pool-1.0", true),
     ["LibKa0s-Item-1.0"]      = surfaceMock.LibStub("LibKa0s-Item-1.0", true),
     ["LibKa0s-Compat-1.0"]    = surfaceMock.LibStub("LibKa0s-Compat-1.0", true),
+    ["LibKa0s-Sim-1.0"]       = surfaceNS.Sim,
 }
+
+-- A bare simulation session on LibKa0s-Sim-1.0: the scenario `test`, with no timeline and no
+-- world, so a case drives the session's own members (the seam, Fire, After, the stop) alone. Its
+-- prepare readies at once (after NS.SimHost.Begin, which every start runs); every other scenario
+-- still builds its world. Answers NS.Sim.
+local function simBare(NS)
+    local defs = NS.SimScenarioDefs
+    if not defs.defs.test then
+        defs.names[#defs.names + 1] = "test"
+        defs.defs.test = { timeline = function() return {} end }
+        local prepare = NS.SimScenario.Prepare
+        NS.SimScenario.Prepare = function(s, def, opts, ready)
+            if s.scenario == "test" then return ready() end
+            return prepare(s, def, opts, ready)
+        end
+    end
+    return NS.Sim
+end
 
 -- A text's inline texture escapes (NS.TipMarks) as `[icon]`: `291 [arrow-right] 305`, `[arrow-up]
 -- UPGRADE`. A case reads the text the player sees; test_tip_marks pins each escape's exact string.
@@ -119,6 +138,7 @@ _G.DW_TEST = Kit.expose{
     bootAddon   = bootAddon,
     enableAddon = enableAddon,
     loadAddon   = loadAddon,
+    simBare     = simBare,
     marks       = marks,
     tipText     = tipText,
     tipJoined   = tipJoined,

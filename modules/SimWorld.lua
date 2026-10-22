@@ -2,7 +2,7 @@ local _, NS = ...
 -- modules/SimWorld.lua — what the client answers about the simulated world (simulator spec §2):
 -- the invented group, where it is, the members' inspect replies, your own drops in your bags with
 -- their trade windows, and the simulated trade window. Every answer is a provider on the seam
--- (NS.Sim.SetProvider, core/SimSeam.lua), consulted by the NS.Compat member the engine already
+-- (NS.SimSeam:SetProvider, core/SimSetup.lua), consulted by the NS.Compat member the engine already
 -- reads; anything the simulation did not invent falls through to the client.
 --
 -- THE GROUP. Once modules/SimRoster.lua has drawn the members, the group's size, kind and unit
@@ -15,7 +15,7 @@ local _, NS = ...
 -- WHERE. The session's situation answers IsInInstance, GetInstanceInfo (the journal instance the
 -- pool came from, its type and the situation's difficulty) and the keystone state (a run in
 -- progress, modules/SimEvents.lua's, and its level). The difficulty's name is the client's
--- (GetDifficultyInfo of the situation's real difficulty id), so a header reads as a real one. The real world is read with NS.Sim.Live, never through here.
+-- (GetDifficultyInfo of the situation's real difficulty id), so a header reads as a real one. The real world is read with NS.SimSeam:Live, never through here.
 --
 -- INSPECT REPLIES. A member's worn gear is unknown to the client until an inspect of it answers,
 -- so the broker's fast path never fires for it and every read goes through the broker's real queue:
@@ -35,7 +35,7 @@ local _, NS = ...
 -- answer TradePartnerName and TradeItemLinks, and a UI_INFO_MESSAGE of type TRADE_COMPLETE is
 -- the client's "Trade complete." modules/SimEvents.lua drives the events.
 --
---   State.sim.world = { members (the list the token map was built from), units = { [token] =
+--   NS.Sim:Session().world = { members (the list the token map was built from), units = { [token] =
 --     member }, kind = "party"|"raid", marks = { [guid] = { far, failing, offline } }, held (guid),
 --     bag = { item }, nextItem, trade = { partner, given, received } | nil, inspects }
 --   item = { sim = true, link, guid, expiresAt }
@@ -74,7 +74,7 @@ W.PLACES = {
 
 -- The world of the running session, made on first use; nil when none runs.
 local function world()
-    local s = NS.Sim.Session()
+    local s = NS.Sim:Session()
     if not s then return nil end
     local w = s.world
     if not w then
@@ -97,7 +97,7 @@ end
 
 -- The running session's world and members, when it has a group; nil otherwise.
 local function group()
-    local s = NS.Sim.Session()
+    local s = NS.Sim:Session()
     local members = s and s.members
     if not (members and #members > 0) then return nil end
     local w = world()
@@ -156,7 +156,7 @@ end
 --- The session's seeded random source (modules/SimRoster.lua's), made on first use.
 --- @return function
 function W.Random()
-    local s = NS.Sim.Session()
+    local s = NS.Sim:Session()
     if not s then return math.random end
     s.rnd = s.rnd or NS.SimRoster.Random(s.seed or math.floor(GetTime() * 1000))
     return s.rnd
@@ -168,7 +168,7 @@ end
 --- instance's name, or nil when the session names no known situation.
 --- @return table|nil { inInstance, instanceType, difficulty, name, instanceGroup }
 function W.Place()
-    local s = NS.Sim.Session()
+    local s = NS.Sim:Session()
     local row = s and W.PLACES[s.situation]
     if not row then return nil end
     local name = L["Open world"]
@@ -233,7 +233,7 @@ end
 local function bagItem(bag, slot)
     local w = world()
     if bag ~= W.BAG or not w or #w.bag == 0 or type(slot) ~= "number" then return nil end
-    local base = Sim.Live(NS.Compat.BagSlotCount, bag)
+    local base = NS.SimSeam:Live(NS.Compat.BagSlotCount, bag)
     return w.bag[slot - base]
 end
 
@@ -263,10 +263,10 @@ local function reply(m)
     end
     local delay = inspectDelay()
     NS.Debug(TAG, "inspect of %s: reply in %.1fs", m.fullName, delay)
-    Sim.After(delay, function()
+    Sim:After(delay, function()
         if not W.Member(m.guid) then return end
         world().held = m.guid
-        Sim.Fire("INSPECT_READY", m.guid)
+        Sim:Fire("INSPECT_READY", m.guid)
     end)
 end
 
@@ -326,7 +326,7 @@ end
 function P.UnitName(live, unit)
     local m = W.MemberOfUnit(unit)
     if not m then return live(liveUnit(unit)) end
-    local own = Sim.Live(NS.Compat.NormalizedRealm)
+    local own = NS.SimSeam:Live(NS.Compat.NormalizedRealm)
     if m.realm == own then return m.name, nil end
     return m.name, m.realm
 end
@@ -502,4 +502,4 @@ function P.IsTradeCompleteMessage(live, messageType, message)
 end
 
 W.PROVIDERS = P
-for key, fn in pairs(P) do Sim.SetProvider(key, fn) end
+for key, fn in pairs(P) do NS.SimSeam:SetProvider(key, fn) end

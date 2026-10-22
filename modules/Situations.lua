@@ -177,7 +177,7 @@ end
 --- the real world keeps its own row.
 function Sit.IsTracking(key)
     key = key or Sit.Current()
-    local s = NS.Sim.IsActive() and NS.Sim.Session()
+    local s = NS.Sim:IsActive() and NS.Sim:Session()
     if s and s.situation == key then return true end
     return Sit.Settings(key).track
 end

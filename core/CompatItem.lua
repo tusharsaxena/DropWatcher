@@ -2,7 +2,7 @@ local _, NS = ...
 -- core/CompatItem.lua — the exact item reads at a bag location, the game tooltip's item
 -- setters (ui spec §0, DW-80) and a tooltip's line by number (feedback-7 spec §3: a grid's cells
 -- anchor to the lines it reserved, modules/TipGrid.lua), published on NS.Compat so the simulator's answer seam
--- (core/SimSeam.lua) answers them too: a simulated drop sits in a bag slot the client does not
+-- (core/SimSetup.lua) answers them too: a simulated drop sits in a bag slot the client does not
 -- have.
 --
 -- WHY HERE. None of these APIs is version-variant (C_Item.GetCurrentItemLevel and GetItemQuality

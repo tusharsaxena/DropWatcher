@@ -260,21 +260,23 @@ judged against, in place of `testGear`. A sample's `testLeft` stands for a loote
 ## The simulator (simulator spec §1, §2, §4, §5, §6)
 
 ```
-NS.Sim.Start(opts) ─> refused (printed): stood down, already running, test mode, combat,
-                      an instance, a real group (NS.SimHost.Refusal; the real world read through
-                      NS.Sim.Live)
-                  └─> State.sim = { sim = true, … }; NS.Sim.IsActive() true
-every NS.Compat call ─> core/SimSeam.lua's wrap ─> NS.Sim.Answer(name, live, …) while active
+NS.Sim:Start(opts) (LibKa0s-Sim-1.0) ─> refused (printed): an unknown scenario, already running,
+                      then NS.SimHost.Refusal inside NS.SimSeam:Live (stood down, test mode,
+                      combat, an instance, a real group)
+                  └─> the session { sim = true, scenario, size, seed, … }; NS.Sim:IsActive() true
+                  └─> prepare: NS.SimHost.Begin (the host fields) ─> NS.SimScenario.Prepare
+every NS.Compat call ─> core/SimSetup.lua's seam (Sim:NewSeam) while active
                           ├─> a provider (the simulator's invented answer, else the live member)
                           └─> guarded: ChatSender prints "[sim] …"; inspect and trade calls do nothing
-NS.Sim.Fire(event, …) ─> NS.DeliverEvent (core/DropWatcher.lua): every handler NS.FEATURE_EVENTS
+NS.Sim:Fire(event, …) ─> NS.DeliverEvent (core/DropWatcher.lua): every handler NS.FEATURE_EVENTS
                          declares for it, in row order, each under pcall (a raise is a SIM debug
                          line, never rethrown); an event in NS.rejectedEvents is skipped (answers 0)
 NS.SimHost.SetRestriction(name, on) ─> answered active ─> Fire(ADDON_RESTRICTION_STATE_CHANGED, type, on)
 NS.SimHost.SetLockdown(on) ─> InChatMessagingLockdown answered ─> NS.Restrictions.Refresh
 DropAdded of a drop made while active (rec.sim) ─> History.Log() = the session log, never global.history
-NS.Sim.Stop(reason) ─> its timers canceled ─> NS.Asks.CancelQueued (seam still on)
-                   ─> NS.Sim.IsActive() false ─> the cleanup steps ─> its restrictions lifted (event)
+NS.Sim:Stop(reason) ─> its timers canceled ─> OnStopGuarded: NS.Asks.CancelQueued (seam still on)
+                   ─> the seam off, NS.Sim:IsActive() false ─> OnStop, in order: SimEvents' and
+                      SimScenario's steps ─> its restrictions lifted (event)
                    ─> its drops' automatic asks ─> LootFeed.RemoveWhere(sim, context reset)
                    ─> Inspect.Forget(its GUIDs) ─> Roster.Refresh ─> History.ReleaseLog
                    ─> TradeTimer.Scan ─> Situations.Refresh ─> the open window repainted
@@ -285,11 +287,11 @@ NS.SimPool.Build(opts, done) ─> the journal's frame shown? ─> look again eve
                             ─> ReadJournal: save the selection ─> the newest tier's dungeons or raids,
                                every difficulty of the side, under the class filter ─> restore it
                             ─> entries still loading ─> EJ_LOOT_DATA_RECIEVED (settled) ─> read again
-                            ─> all loaded or TIMEOUT ─> State.sim.pool (journal), else own gear (fallback)
+                            ─> all loaded or TIMEOUT ─> the session's pool (journal), else own gear (fallback)
 NS.SimRoster.Create(opts) ─> Members (pure, seeded) ─> Gear per member from the pool's gear entries,
                           each worn at a level inside the band above the content's (ContentLevel: the
                           pool's drops' median; the inspect answers it) ─> NS.SimHost.MarkGUID
-                          ─> State.sim.members
+                          ─> the session's members
 NS.SimEvents.Join() ─> Fire(GROUP_ROSTER_UPDATE), Fire(PLAYER_ENTERING_WORLD) ─> the roster, the situation
                    and the inspect warm-up read the group and the place NS.SimWorld answers through
                    NS.Compat (core/CompatWorld.lua: the group, a unit, the instance, combat); the

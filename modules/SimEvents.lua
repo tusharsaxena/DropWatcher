@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/SimEvents.lua — the simulator's event drivers (simulator spec §2): loot lines, boss
 -- pulls and kills, a keystone run, combat and the restrictions they raise, your own drops' trade
--- windows and a completed trade. Each is delivered through NS.Sim.Fire, which calls the very
+-- windows and a completed trade. Each is delivered through NS.Sim:Fire, which calls the very
 -- handlers the event registration calls, with the client's payload shapes; the engine computes
 -- everything that follows. Nothing here sets a verdict, a trade estimate or an inspect state.
 --
@@ -43,7 +43,7 @@ local _, NS = ...
 -- THE STOP. A cleanup step ends the combat edge it raised (unless you really are fighting) and
 -- re-reads your real bags (BAG_UPDATE_DELAYED), both delivered once the seam is off.
 --
---   State.sim.drive = { lines, pulls, kills, encounter = { id, name } | nil, run = { mapID, name,
+--   NS.Sim:Session().drive = { lines, pulls, kills, encounter = { id, name } | nil, run = { mapID, name,
 --     level, ended } | nil, combat, trade = { window, soon, soonLeft }, trades }
 
 NS.SimEvents = NS.SimEvents or {}
@@ -235,7 +235,7 @@ end
 -- ── the session's state ─────────────────────────────────────────────────────────────────────
 
 local function drive()
-    local s = Sim.Session()
+    local s = Sim:Session()
     if not s then return nil end
     local d = s.drive
     if not d then
@@ -264,7 +264,7 @@ end
 --- no simulation runs.
 --- @return table|nil
 function E.Status()
-    local d = Sim.Session() and drive()
+    local d = Sim:Session() and drive()
     if not d then return nil end
     return { lines = d.lines, pulls = d.pulls, kills = d.kills, trades = d.trades, combat = d.combat,
         encounter = d.encounter, run = d.run }
@@ -273,7 +273,7 @@ end
 --- The keystone run in progress (or ended, until the next starts), or nil.
 --- @return table|nil { mapID, name, level, ended }
 function E.Run()
-    local d = Sim.Session() and drive()
+    local d = Sim:Session() and drive()
     return d and d.run
 end
 
@@ -285,7 +285,7 @@ end
 --- @return number
 function E.Join()
     if not drive() then return 0 end
-    return Sim.Fire("GROUP_ROSTER_UPDATE") + Sim.Fire("PLAYER_ENTERING_WORLD", false, false)
+    return Sim:Fire("GROUP_ROSTER_UPDATE") + Sim:Fire("PLAYER_ENTERING_WORLD", false, false)
 end
 
 -- ── combat and the encounters ───────────────────────────────────────────────────────────────
@@ -299,7 +299,7 @@ function E.Combat(on)
     on = on == true
     if not d or d.combat == on then return false end
     d.combat = on
-    Sim.Fire(on and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
+    Sim:Fire(on and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
     NS.SimHost.SetRestriction("Combat", on)
     return true
 end
@@ -322,7 +322,7 @@ function E.Pull(opts)
     local enc = { id = tonumber(opts.id) or (E.ENCOUNTER_BASE + d.pulls),
         name = opts.name or BOSSES[(d.pulls - 1) % #BOSSES + 1] }
     d.encounter = enc
-    Sim.Fire("ENCOUNTER_START", encounterArgs(enc))
+    Sim:Fire("ENCOUNTER_START", encounterArgs(enc))
     E.Combat(true)
     NS.SimHost.SetRestriction("Encounter", true)
     return enc
@@ -340,7 +340,7 @@ function E.Kill(success)
     d.encounter = nil
     if kill then d.kills = d.kills + 1 end
     local id, name, difficulty, size = encounterArgs(enc)
-    Sim.Fire("ENCOUNTER_END", id, name, difficulty, size, kill and 1 or 0)
+    Sim:Fire("ENCOUNTER_END", id, name, difficulty, size, kill and 1 or 0)
     E.Combat(false)
     NS.SimHost.SetRestriction("Encounter", false)
     return enc
@@ -357,7 +357,7 @@ function E.RunStart()
     local run = { mapID = E.MAP_BASE + d.pulls, name = place and place.name or L["Simulated instance"],
         level = E.KEY_LEVEL }
     d.run = run
-    Sim.Fire("CHALLENGE_MODE_START", run.mapID)
+    Sim:Fire("CHALLENGE_MODE_START", run.mapID)
     NS.SimHost.SetRestriction("ChallengeMode", true)
     return run
 end
@@ -370,7 +370,7 @@ function E.RunEnd()
     local run = d and d.run
     if not run or run.ended then return nil, "noRun" end
     run.ended = true
-    Sim.Fire("CHALLENGE_MODE_COMPLETED")
+    Sim:Fire("CHALLENGE_MODE_COMPLETED")
     NS.SimHost.SetRestriction("ChallengeMode", false)
     return run
 end
@@ -397,7 +397,7 @@ local function deliverLine(d, line, me, ownRealm)
     if not m then NS.SimWorld.AddBagItem(link, nextWindow(d)) end
     d.lines = d.lines + 1
     local full = m and m.fullName or me.name
-    Sim.Fire("CHAT_MSG_LOOT", text, full, "", "", name, "", 0, 0, "", 0, d.lines, guid)
+    Sim:Fire("CHAT_MSG_LOOT", text, full, "", "", name, "", 0, 0, "", 0, d.lines, guid)
     return true
 end
 
@@ -421,7 +421,7 @@ end
 --- @param who string|nil
 --- @return number, string|nil
 function E.Loot(n, who)
-    local d, s = drive(), Sim.Session()
+    local d, s = drive(), Sim:Session()
     if not d then return 0, "notRunning" end
     local drops = NS.SimPool.Drops(s.pool)
     if #drops == 0 then return 0, "noPool" end
@@ -434,7 +434,7 @@ function E.Loot(n, who)
         if deliverLine(d, line, me, ownRealm) then sent = sent + 1 end
         mine = mine or line.looter == nil
     end
-    if mine then Sim.Fire("BAG_UPDATE_DELAYED") end
+    if mine then Sim:Fire("BAG_UPDATE_DELAYED") end
     NS.Debug(TAG, "loot: %d lines", sent)
     return sent
 end
@@ -447,7 +447,7 @@ local function tradeOf(rec)
         local item = NS.SimWorld.BagItemFor(rec.link)
         if not item then return nil, "notInBags" end
         if not (item.expiresAt and item.expiresAt > GetTime()) then return nil, "expired" end
-        local m = (Sim.Session().members or {})[1]
+        local m = (Sim:Session().members or {})[1]
         if not m then return nil, "noPartner" end
         return { partner = m.fullName, given = { rec.link }, received = {}, item = item }
     end
@@ -472,14 +472,14 @@ function E.Trade(dropID)
     if not t then return false, why end
     local W = NS.SimWorld
     W.SetTrade(t)
-    Sim.Fire("TRADE_SHOW")
-    Sim.Fire(rec.isMine and "TRADE_PLAYER_ITEM_CHANGED" or "TRADE_TARGET_ITEM_CHANGED", 1)
-    Sim.Fire("TRADE_ACCEPT_UPDATE", 1, 1)
-    Sim.Fire("TRADE_CLOSED")
-    Sim.Fire("UI_INFO_MESSAGE", W.TRADE_COMPLETE, L["Trade complete."])
+    Sim:Fire("TRADE_SHOW")
+    Sim:Fire(rec.isMine and "TRADE_PLAYER_ITEM_CHANGED" or "TRADE_TARGET_ITEM_CHANGED", 1)
+    Sim:Fire("TRADE_ACCEPT_UPDATE", 1, 1)
+    Sim:Fire("TRADE_CLOSED")
+    Sim:Fire("UI_INFO_MESSAGE", W.TRADE_COMPLETE, L["Trade complete."])
     W.SetTrade(nil)
     d.trades = d.trades + 1
-    if t.item and W.RemoveBagItem(t.item.guid) then Sim.Fire("BAG_UPDATE_DELAYED") end
+    if t.item and W.RemoveBagItem(t.item.guid) then Sim:Fire("BAG_UPDATE_DELAYED") end
     return true
 end
 
@@ -492,7 +492,7 @@ end
 local PROVIDERS = {}
 
 local function simCombat()
-    local s = Sim.Session()
+    local s = Sim:Session()
     return s ~= nil and s.drive ~= nil and s.drive.combat == true
 end
 
@@ -504,12 +504,12 @@ function PROVIDERS.PlayerInCombat(live)
     return simCombat() or live()
 end
 
-for key, fn in pairs(PROVIDERS) do Sim.SetProvider(key, fn) end
+for key, fn in pairs(PROVIDERS) do NS.SimSeam:SetProvider(key, fn) end
 
 -- ── the stop ────────────────────────────────────────────────────────────────────────────────
 
-Sim.AddCleanup(function(s)
+Sim:OnStop(function(s)
     local d, w = s.drive, s.world
-    if d and d.combat and not NS.Compat.InCombatLockdown() then Sim.DeliverForCleanup("PLAYER_REGEN_ENABLED") end
-    if w and #w.bag > 0 then Sim.DeliverForCleanup("BAG_UPDATE_DELAYED") end
+    if d and d.combat and not NS.Compat.InCombatLockdown() then Sim:DeliverForCleanup("PLAYER_REGEN_ENABLED") end
+    if w and #w.bag > 0 then Sim:DeliverForCleanup("BAG_UPDATE_DELAYED") end
 end)

@@ -410,7 +410,7 @@ end
 --- @return table|nil
 function H.Log()
     if NS.State.testMode == true then return H.Normalize(NS.TestMode.HistoryLog()) end
-    local log = NS.Sim.IsActive() and NS.SimHost.HistoryLog()
+    local log = NS.Sim:IsActive() and NS.SimHost.HistoryLog()
     if log then return H.Normalize(log) end
     return H.Store()
 end
@@ -421,7 +421,7 @@ end
 --- @return table|nil
 function H.LogFor(sim)
     if not sim then return H.Store() end
-    local log = NS.Sim.IsActive() and NS.SimHost.HistoryLog()
+    local log = NS.Sim:IsActive() and NS.SimHost.HistoryLog()
     return log and H.Normalize(log) or nil
 end
 
@@ -532,7 +532,7 @@ end
 --- @param feedGroup table
 --- @return boolean grown
 function H.GrowRoster(feedGroup)
-    local hist = H.LogFor(NS.Sim.IsActive())
+    local hist = H.LogFor(NS.Sim:IsActive())
     local g = hist and findGroup(hist, historyKey(feedGroup.key))
     if not g then return false end
     g.roster = g.roster or {}
@@ -633,7 +633,7 @@ end
 --- TRADE_SHOW: a trade opened, with whom.
 function H.OnTradeShow()
     trade = { partner = NS.Compat.TradePartnerName(), accepted = false, given = {}, received = {},
-        sim = NS.Sim.IsDelivering() or nil }
+        sim = NS.Sim:IsDelivering() or nil }
     readItems()
 end
 

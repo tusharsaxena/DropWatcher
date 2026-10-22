@@ -191,7 +191,7 @@ function DO.kill()
     return true
 end
 
-function DO.stop() return NS.Sim.Stop("stop") end
+function DO.stop() return NS.Sim:Stop("stop") end
 
 -- The burst says where its drops went, as the timeline's loot step does (feedback-3 spec §0).
 function DO.loot(c)
@@ -219,6 +219,6 @@ end
 --- @return boolean
 function V.Run(rest)
     local c = V.Parse(rest)
-    if not (FREE[c.verb] or NS.Sim.IsActive()) then return answered(false, "notRunning") end
+    if not (FREE[c.verb] or NS.Sim:IsActive()) then return answered(false, "notRunning") end
     return DO[c.verb](c)
 end

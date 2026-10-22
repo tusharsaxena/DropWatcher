@@ -1,6 +1,6 @@
 local _, NS = ...
 -- core/CompatWorld.lua — the stable world reads, published on NS.Compat so the simulator's answer
--- seam (core/SimSeam.lua, simulator spec §2) answers them too: the group's size and kind, a unit's
+-- seam (core/SimSetup.lua, simulator spec §2) answers them too: the group's size and kind, a unit's
 -- GUID, name, class and connection, where the player is (the instance, its difficulty and that
 -- difficulty's name, a keystone run in progress and its level), whether the player is fighting, and
 -- whether an optional addon (Pawn, CanIMogIt) is loaded. (The GlobalString reads are the root's,

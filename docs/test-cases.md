@@ -23,7 +23,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_surface_parity.lua (18)
+### test_surface_parity.lua (20)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -35,6 +35,8 @@ Total.
 - parity: the Schema host stub carries the library's own members
 - parity: the Launcher stub carries the whole live surface
 - parity: the Lifecycle stand-in carries every member of the live latch
+- parity: the Sim stub carries the whole live instance surface
+- parity: the Sim seam stub carries the live seam surface
 - parity: the Bus stand-in carries every member of the live bus
 - parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
 - parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon calls
@@ -1736,10 +1738,11 @@ Total.
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
 - sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
 
-### test_sim_e2e.lua (19)
+### test_sim_e2e.lua (20)
 
 - sim e2e: no module reads the world the simulator answers except through NS.Compat
 - sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
+- sim e2e: nothing escapes the seam
 - sim e2e key, full: a run fills Drops, yours too, under the default filters
 - sim e2e dungeon, full: a run fills Drops, yours too, under the default filters
 - sim e2e raid, full: a run fills Drops, yours too, under the default filters
@@ -1928,7 +1931,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 12 |
-| test_surface_parity.lua | 18 |
+| test_surface_parity.lua | 20 |
 | test_setup.lua | 24 |
 | test_database.lua | 12 |
 | test_schema.lua | 11 |
@@ -1998,7 +2001,7 @@ Total.
 | test_sim_pool.lua | 20 |
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
-| test_sim_e2e.lua | 19 |
+| test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 19 |
 | test_disabled.lua | 12 |
@@ -2012,4 +2015,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1662** |
+| **Total** | **1665** |

@@ -34,15 +34,14 @@ local _, NS = ...
 --             ilvl, classID, subClassID }   (encounter: the boss's name; worldBoss: the tier's
 --             world bosses, Compat.JournalInstances)
 --
--- The build lives on the running session (State.sim.pool, State.sim.poolBuild) and its timers are
--- the session's (NS.Sim.After), so the stop ends both. Test mode (modules/TestMode.lua) builds the
+-- The build lives on the running session (its pool and poolBuild) and its timers are
+-- the session's (NS.Sim:After), so the stop ends both. Test mode (modules/TestMode.lua) builds the
 -- same pool into its own holder (BuildInto), for real items in its sample drops (ui spec §4, FB-9).
 
 NS.SimPool = NS.SimPool or {}
 local P = NS.SimPool
 local C = NS.Constants
 local CD = NS.ClassData
-local State = NS.State
 local L = NS.L
 local D = C.DIFFICULTY
 
@@ -246,7 +245,7 @@ P.FALLBACK_LINE = L["The Encounter Journal gave no items, so this simulation dro
 --- @return table pool
 function P.Fallback(line)
     line = line or P.FALLBACK_LINE
-    local entries = NS.Sim.Live(ownItems)
+    local entries = NS.SimSeam:Live(ownItems)
     if not reported[line] then
         reported[line] = true
         NS.Print(line)
@@ -346,9 +345,10 @@ end
 --- @param done function|nil
 --- @return boolean
 function P.Build(opts, done)
-    local s = State.sim
+    local s = NS.Sim:Session()
     if not s then return false end
-    local host = { alive = function() return State.sim == s end, after = NS.Sim.After }
+    local host = { alive = function() return NS.Sim:Session() == s end,
+        after = function(d, fn) return NS.Sim:After(d, fn) end }
     P.BuildInto(s, host, opts, done)
     return true
 end
@@ -356,14 +356,14 @@ end
 --- The running simulation's pool, or nil (none runs, or it is still building).
 --- @return table|nil
 function P.Get()
-    local s = State.sim
+    local s = NS.Sim:Session()
     return s and s.pool or nil
 end
 
 --- The pool at a glance, for the diagnostics: { building, waiting, source, size, drops, pending }.
 --- @return table
 function P.Status()
-    local s = State.sim or {}
+    local s = NS.Sim:Session() or {}
     local b, pool = s.poolBuild, s.pool
     local out = { building = b ~= nil, waiting = b and b.waiting, size = 0, drops = 0, pending = 0 }
     if pool then

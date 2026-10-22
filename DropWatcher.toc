@@ -54,17 +54,17 @@ core\TextParse.lua
 # NS.Compat (every version-variant client call and the secret guards) is read inside functions only.
 core\Compat.lua
 # LOAD-BEARING: adds the stable world reads (the group, a unit, the instance) to NS.Compat; it
-# loads before core\SimSeam.lua (below), which wraps every member at load. Read inside functions only.
+# loads before core\SimSetup.lua (below), which wraps every member at load. Read inside functions only.
 core\CompatWorld.lua
 # LOAD-BEARING: adds the exact item reads at a bag location and the game tooltip's item setters to
-# NS.Compat; it loads before core\SimSeam.lua (below), which wraps every member at load. Read
+# NS.Compat; it loads before core\SimSetup.lua (below), which wraps every member at load. Read
 # inside functions only.
 core\CompatItem.lua
-# LOAD-BEARING: publishes NS.Sim (the simulator's answer seam) and wraps every NS.Compat member that
-# answers for the client, at load, right after core\Compat.lua and core\CompatWorld.lua and before any
-# file below reads one.
-# It needs NS.Compat (above), NS.Print and NS.L (above) at load.
-core\SimSeam.lua
+# LOAD-BEARING: Sim:NewSeam wraps every NS.Compat member at load, straight after core\Compat.lua,
+# CompatWorld.lua and CompatItem.lua; never cache a Compat member in a local before it. Publishes
+# NS.SimSeam (LibKa0s-Sim-1.0's answer seam, or an inert stub without the library); needs NS.Compat
+# and NS.L (above) at load. NS.Print and NS.SimHost are read at call time.
+core\SimSetup.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
 # LOAD-BEARING: publishes the NS.Constants id tables, which core\ClassData.lua reads at load; FONT_MONO
@@ -115,9 +115,11 @@ core\LauncherSetup.lua
 defaults\Profile.lua
 
 # Modules
-# LOAD-BEARING: publishes the simulator's session on NS.Sim (core\SimSeam.lua, above) and the host-only
-# members on NS.SimHost (the session log, the invented GUIDs, the simulated restrictions and lockdown,
-# the refusals, the automatic stop and the guarded answers' counts). It is the first
+# LOAD-BEARING: publishes the simulator's session on NS.Sim (Sim:New, LibKa0s-Sim-1.0, bound to
+# NS.SimSeam, core\SimSetup.lua, above), NS.SimScenarioDefs (filled in place by
+# modules\SimScenario.lua, below, at its load) and the host-only members on NS.SimHost (the session
+# log, the invented GUIDs, the simulated restrictions and lockdown, the refusals, the automatic stop
+# and the guarded answers' counts); registers its OnStopGuarded step at load. It is the first
 # module so its GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows run before
 # every other module's (the automatic stop, before anything reads the client) and its STAND_DOWN
 # step runs first (the stop cleans up while every module still holds its state). Appends to
@@ -461,24 +463,25 @@ modules\SimRoster.lua
 # Conventional: publishes NS.SimPool, the item pool from the Encounter Journal (the simulator's and,
 # through BuildInto, test mode's: modules\TestMode.lua reads it at call time); appends
 # its EJ_LOOT_DATA_RECIEVED row to NS.FEATURE_EVENTS and its handler to NS.addon (core\DropWatcher.lua)
-# at load, and reads NS.Constants, NS.ClassData, NS.State and NS.L at load. NS.Sim, NS.Gear and
+# at load, and reads NS.Constants, NS.ClassData and NS.L at load. NS.Sim, NS.Gear and
 # NS.Compat are read at call time.
 modules\SimPool.lua
 # Conventional: publishes NS.SimWorld, the simulated world's client answers, and registers them as
-# providers on NS.Sim (core\SimSeam.lua) at load; reads NS.Constants and NS.L at load. NS.SimRoster,
+# providers on NS.SimSeam (core\SimSetup.lua) at load; reads NS.Constants and NS.L at load. NS.SimRoster,
 # NS.SimPool, NS.SimEvents (below) and NS.Compat are read at call time.
 modules\SimWorld.lua
-# LOAD-BEARING: adds its cleanup step through Sim.AddCleanup, which modules\Sim.lua (above) defines,
-# at load; the steps run in that order, so modules\SimScenario.lua's (below) runs after it. Publishes
+# LOAD-BEARING: adds its stop step through NS.Sim:OnStop (modules\Sim.lua, above) at load; the steps
+# run in that order, so modules\SimScenario.lua's (below) runs after it. Publishes
 # NS.SimEvents, the simulator's event drivers. NS.SimWorld, NS.SimPool, NS.Roster, NS.LootFeed and
 # NS.Compat are read at call time.
 modules\SimEvents.lua
 # Conventional: publishes NS.SimReport, where a simulated loot burst's drops went; reads NS.L at
 # load. NS.State, NS.SimEvents (above), NS.LootFeed and NS.WindowCells are read at call time.
 modules\SimReport.lua
-# LOAD-BEARING: adds its cleanup step through Sim.AddCleanup, which modules\Sim.lua (above) defines,
-# at load, after modules\SimEvents.lua's. Publishes NS.SimScenario, the simulator's scenarios and
-# timeline; reads NS.L at load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents, NS.SimReport and
+# LOAD-BEARING: adds its stop step through NS.Sim:OnStop (modules\Sim.lua, above) at load, after
+# modules\SimEvents.lua's, then has modules\Sim.lua register the stop's engine steps after both
+# (NS.SimHost.RegisterStopSteps); fills NS.SimScenarioDefs in place at load. Publishes
+# NS.SimScenario, the simulator's scenarios and timeline; reads NS.L at load. NS.Sim, NS.SimPool, NS.SimRoster, NS.SimEvents, NS.SimReport and
 # NS.Window are read at call time.
 modules\SimScenario.lua
 # LOAD-BEARING: adds its repaint to NS.SimScenario's listeners (modules\SimScenario.lua, above) at

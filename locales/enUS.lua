@@ -174,7 +174,7 @@ L["Auto-ask is on: when someone else loots a likely tradeable upgrade of %d or m
 L["It holds off when you ask yourself, they leave or you get the item. Turn it off in Settings > Messages > Auto-ask."] =
     "It holds off when you ask yourself, they leave or you get the item. Turn it off in Settings > Messages > Auto-ask."
 
--- The simulator (core/SimSeam.lua, modules/Sim.lua, simulator spec §5): the printed sends and
+-- The simulator (core/SimSetup.lua, modules/Sim.lua, simulator spec §5): the printed sends and
 -- hand-overs, the refusals, start and stop
 L["A simulation cannot start in a group: leave it first."] = "A simulation cannot start in a group: leave it first."
 L["A simulation cannot start in combat."] = "A simulation cannot start in combat."

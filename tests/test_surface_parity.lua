@@ -81,6 +81,17 @@ test("parity: the Lifecycle stand-in carries every member of the live latch", fu
     T.assertSurfaceParity(live.Lifecycle, degraded.Lifecycle, "Lifecycle latch vs host stand-in")
 end)
 
+test("parity: the Sim stub carries the whole live instance surface", function()
+    -- The live half is tests/run.lua's registered instance (no manifest lists instance members:
+    -- Sim:New builds them per host); the stub is LibKa0s tests/test_sim_stub.lua's reference copy.
+    T.assertSurfaceParity(degraded.Sim, "LibKa0s-Sim-1.0")
+    T.assertSurfaceParity(live.Sim, degraded.Sim, "Sim instance vs host stub")
+end)
+
+test("parity: the Sim seam stub carries the live seam surface", function()
+    T.assertSurfaceParity(live.SimSeam, degraded.SimSeam, "NS.SimSeam vs host stub")
+end)
+
 test("parity: the Bus stand-in carries every member of the live bus", function()
     T.assertSurfaceParity(live.Bus, degraded.Bus, "Bus instance vs host stand-in")
 end)

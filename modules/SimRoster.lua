@@ -252,7 +252,7 @@ end
 --- @param opts table|nil
 --- @return table|nil members
 function R.Create(opts)
-    local s = NS.Sim.Session()
+    local s = NS.Sim:Session()
     if not s then return nil end
     opts = type(opts) == "table" and opts or {}
     local rnd = R.Random(opts.seed or math.floor(GetTime() * 1000))
@@ -275,6 +275,6 @@ end
 --- The running simulation's members, or an empty list. Read them, never write them.
 --- @return table
 function R.Get()
-    local s = NS.Sim.Session()
+    local s = NS.Sim:Session()
     return s and s.members or {}
 end

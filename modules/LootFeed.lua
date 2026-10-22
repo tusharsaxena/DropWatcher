@@ -573,11 +573,11 @@ start = function(rec)
     return judge(rec, facts)
 end
 
--- Simulated only while Sim.Fire delivers (spec §5); a real drop during a sim keeps the real situation.
+-- Simulated only while NS.Sim:Fire delivers (spec §5); a real drop during a sim keeps the real situation.
 local function origin()
     local Sim, Sit = NS.Sim, NS.Situations
-    if Sim.IsDelivering() or not Sim.IsActive() then return Sim.IsDelivering() or nil, Sit.Current() end
-    return nil, Sim.Live(function() return Sit.Classify(Sit.ReadInputs()) end)
+    if Sim:IsDelivering() or not Sim:IsActive() then return Sim:IsDelivering() or nil, Sit.Current() end
+    return nil, NS.SimSeam:Live(function() return Sit.Classify(Sit.ReadInputs()) end)
 end
 
 local function newRecord(s, r)

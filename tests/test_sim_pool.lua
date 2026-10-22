@@ -220,7 +220,7 @@ test("sim pool: the journal is not read while its frame is shown", function()
     seedJournal(m)
     local shown = true
     m.EncounterJournal = { IsShown = function() return shown end }
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     local got
     NS.SimPool.Build({ situation = "dungeon" }, function(pool) got = pool end)
     -- red under: a build that reads with the frame open
@@ -232,26 +232,26 @@ test("sim pool: the journal is not read while its frame is shown", function()
     assertTrue(got ~= nil, "read once the frame is closed")
     assertEqual(got.source, "journal")
     assertEqual(#NS.SimPool.Drops(got), 4, "Mythic: two dungeons, two items each")
-    NS.Sim.Stop()
+    NS.Sim:Stop()
 end)
 
 test("sim pool: a frame shown the whole time ends in the fallback at the timeout", function()
     local NS, m = solo()
     seedJournal(m)
     m.EncounterJournal = { IsShown = function() return true end }
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     local got
     NS.SimPool.Build({ situation = "dungeon" }, function(pool) got = pool end)
     m.advance(NS.SimPool.TIMEOUT)
     assertEqual(m.journal.selects, 0)
     assertEqual(got.source, "fallback")
-    NS.Sim.Stop()
+    NS.Sim:Stop()
 end)
 
 test("sim pool: entries still loading are awaited through EJ_LOOT_DATA_RECIEVED", function()
     local NS, m = solo()
     seedJournal(m, { loadsNeeded = 1 })
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     local calls, got = 0, nil
     NS.SimPool.Build({ situation = "mythicPlus" }, function(pool) calls, got = calls + 1, pool end)
     assertEqual(calls, 0, "nothing loaded yet: it waits")
@@ -264,14 +264,14 @@ test("sim pool: entries still loading are awaited through EJ_LOOT_DATA_RECIEVED"
     assertEqual(NS.SimPool.Get(), got)
     m.advance(NS.SimPool.TIMEOUT)
     assertEqual(calls, 1, "the timeout does not finish it twice")
-    NS.Sim.Stop()
+    NS.Sim:Stop()
 end)
 
 test("sim pool: at the timeout the build keeps what has loaded", function()
     local NS, m = solo()
     seedJournal(m)
     m.journal.loot[101][8][1].loadsNeeded = 1
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     local got
     NS.SimPool.Build({ situation = "mythicPlus", timeout = 3 }, function(pool) got = pool end)
     assertNil(got)
@@ -280,7 +280,7 @@ test("sim pool: at the timeout the build keeps what has loaded", function()
     assertEqual(got.pending, 1)
     assertEqual(#got.entries, 15)
     assertEqual(#NS.SimPool.Drops(got), 3)
-    NS.Sim.Stop()
+    NS.Sim:Stop()
 end)
 
 test("sim pool: loot for me sets the journal's class filter to yours; any lists every class", function()
@@ -290,13 +290,13 @@ test("sim pool: loot for me sets the journal's class filter to yours; any lists 
     for _, inst in ipairs({ 101, 102 }) do
         for _, list in pairs(m.journal.loot[inst]) do list[2].classes = { [1] = true } end
     end
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     NS.SimPool.Build({ situation = "dungeon", classFilter = "mine" })
     assertEqual(#NS.SimPool.Get().entries, 8, "a mage sees the rings only")
     NS.SimPool.Build({ situation = "dungeon", classFilter = "any" })
     assertEqual(#NS.SimPool.Get().entries, 16)
     assertEqual(m.journal.classID, 0, "the player's own filter is put back")
-    NS.Sim.Stop()
+    NS.Sim:Stop()
 end)
 
 test("sim pool: an empty journal falls back to your own gear, reported once", function()
@@ -305,7 +305,7 @@ test("sim pool: an empty journal falls back to your own gear, reported once", fu
     m.addItem(link(102, 590), armor(590, "INVTYPE_HEAD", 1))
     m.bags[0][2] = "|cffffffff|Hitem:6948::::::::|h[Hearthstone]|h|r"
     m.addItem(m.bags[0][2], { name = "Hearthstone", quality = 1, ilvl = 1, equipLoc = "", classID = 15 })
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     NS.SimPool.Build({ situation = "raid" })
     local pool = NS.SimPool.Get()
     assertEqual(pool.source, "fallback")
@@ -313,32 +313,32 @@ test("sim pool: an empty journal falls back to your own gear, reported once", fu
     assertEqual(#NS.SimPool.Drops(pool), 3)
     local line = "The Encounter Journal gave no items"
     assertEqual(printed(m, line), 1)
-    NS.Sim.Stop()
-    NS.Sim.Start({ scenario = "test" })
+    NS.Sim:Stop()
+    T.simBare(NS):Start({ scenario = "test" })
     NS.SimPool.Build({ situation = "raid" })
     -- red under: a fallback that prints on every build
     assertEqual(printed(m, line), 1, "reported once")
     assertEqual(NS.SimPool.Status().source, "fallback")
-    NS.Sim.Stop()
+    NS.Sim:Stop()
 end)
 
 test("sim pool: without the journal API the fallback answers at once", function()
     local NS, m = solo()
     m.EJ_GetNumTiers = nil
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     local got
     NS.SimPool.Build({ situation = "dungeon" }, function(pool) got = pool end)
     assertEqual(got.source, "fallback")
-    NS.Sim.Stop()
+    NS.Sim:Stop()
 end)
 
 test("sim pool: the stop ends a waiting build, and a late event does nothing", function()
     local NS, m = solo()
     seedJournal(m, { loadsNeeded = 1 })
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     local calls = 0
     NS.SimPool.Build({ situation = "dungeon" }, function() calls = calls + 1 end)
-    NS.Sim.Stop()
+    NS.Sim:Stop()
     m.loadJournal()
     m.advance(NS.SimPool.TIMEOUT)
     assertEqual(calls, 0)
@@ -451,7 +451,7 @@ test("sim roster: Create draws the group from the session's pool and the stop fo
     local NS, m = solo()
     seedJournal(m)
     assertNil(NS.SimRoster.Create({}), "no simulation: nothing")
-    NS.Sim.Start({ scenario = "test" })
+    T.simBare(NS):Start({ scenario = "test" })
     NS.SimPool.Build({ situation = "dungeon" })
     local members = NS.SimRoster.Create({ kind = "raid", size = 12, seed = 9 })
     assertEqual(#members, 12)
@@ -470,7 +470,7 @@ test("sim roster: Create draws the group from the session's pool and the stop fo
     assertTrue(rings > 0, "rings are drawn")
     assertEqual(NS.SimHost.Status().members, 12)
     local guid = members[1].guid
-    NS.Sim.Stop()
+    NS.Sim:Stop()
     assertEqual(#NS.SimRoster.Get(), 0)
     assertFalse(NS.SimHost.IsSimGUID(guid))
 end)

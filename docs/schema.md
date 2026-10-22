@@ -343,7 +343,7 @@ it is named.
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to
 the simulation's session-only log instead (`NS.SimHost.HistoryLog`, `modules/Sim.lua`), never
 `global.history`, and the stop lets that log go (simulator spec §5). A drop or trade is simulated
-only when `Sim.Fire` delivered the event that made it (`NS.Sim.IsDelivering`): a real loot line or
+only when `NS.Sim:Fire` delivered the event that made it (`NS.Sim:IsDelivering()`): a real loot line or
 trade that arrives while a simulation runs is real, keeps the real situation and is saved
 (`History.LogFor`).
 
