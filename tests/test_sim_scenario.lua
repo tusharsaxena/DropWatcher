@@ -85,25 +85,30 @@ end
 -- Pure: the verb parser and the timeline
 -- ---------------------------------------------------------------------------------------------
 
-test("sim verbs: Parse reads every verb and its arguments", function()
-    local P = T.newAddon().SimVerbs.Parse
-    assertEqual(P("").verb, "status")
-    local c = P("start Raid 15")
-    assertEqual(c.verb, "start"); assertEqual(c.scenario, "raid"); assertEqual(c.size, 15)
-    assertNil(P("start key").size)
-    assertEqual(P("start").verb, "usage")
-    for _, v in ipairs({ "run", "step", "pull", "kill", "stop" }) do assertEqual(P(v).verb, v) end
-    c = P("loot")
-    assertEqual(c.verb, "loot"); assertNil(c.n); assertNil(c.who)
+test("sim verbs: DropWatcher's five host verbs on the descriptor, each parsing its arguments", function()
+    local V = T.newAddon().SimVerbs
+    local names = {}
+    for verb in pairs(V.VERBS) do names[#names + 1] = verb end
+    table.sort(names)
+    -- red under: a generic verb (start, run, step, ...) kept in SimVerbs (the library owns them, C.7)
+    assertEqual(table.concat(names, ","), "kill,lockdown,loot,pull,trade")
+    local function P(line)
+        local w = {}
+        for x in line:gmatch("%S+") do w[#w + 1] = x end
+        return V.VERBS[w[1]].parse(w)
+    end
+    assertTrue(P("pull") ~= nil); assertTrue(P("kill") ~= nil)
+    local c = P("loot")
+    assertNil(c.n); assertNil(c.who)
     c = P("loot 3 me")
     assertEqual(c.n, 3); assertEqual(c.who, "me")
     c = P("loot Brakk-Stormhold")
     assertNil(c.n); assertEqual(c.who, "Brakk-Stormhold")
-    assertEqual(P("loot 0").verb, "usage")
+    assertNil(P("loot 0")); assertNil(P("loot 1.5"))
     assertEqual(P("lockdown on").on, true); assertEqual(P("lockdown OFF").on, false)
-    assertEqual(P("lockdown maybe").verb, "usage")
-    assertEqual(P("trade 12").id, 12); assertEqual(P("trade x").verb, "usage")
-    assertEqual(P("dance").verb, "usage")
+    assertNil(P("lockdown maybe"))
+    assertEqual(P("trade 12").id, 12); assertNil(P("trade x"))
+    for _, spec in pairs(V.VERBS) do assertNil(spec.free, "every host verb needs the session") end
 end)
 
 test("sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion", function()
@@ -128,19 +133,83 @@ end)
 -- `/dw sim` through the dispatcher
 -- ---------------------------------------------------------------------------------------------
 
-test("sim verbs: `/dw sim` prints the status and the usage; the verbs need a running simulation", function()
+test("sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel", function()
     local NS, m = addon()
     slash(NS, "sim")
-    assertEqual(printed(m, "No simulation is running."), 1)
-    assertTrue(printed(m, "sim start <key|dungeon|raid|lfr|delve|world> [size]") >= 1)
-    for _, v in ipairs({ "run", "step", "pull", "kill", "loot", "lockdown on", "trade 1", "stop" }) do
+    -- The library's status and usage (LibKa0s-Sim-1.0 RunVerb), then DropWatcher's five verbs.
+    assertEqual(printed(m, "Simulation: idle. Scenarios: key, dungeon, raid, lfr, delve, world."), 1)
+    assertEqual(printed(m, "/dw sim start <scenario> [size]: start a simulation."), 1)
+    for _, line in ipairs({ "/dw sim pull: ", "/dw sim kill: ", "/dw sim loot [n] [player|me]: ",
+        "/dw sim lockdown on|off: ", "/dw sim trade <drop id>: " }) do
+        assertEqual(printed(m, line), 1, line)
+    end
+    assertTrue(NS.Sim:IsPanelShown(), "the bare form opens the step panel")
+    NS.Sim:HidePanel()
+end)
+
+test("sim verbs: every verb but the free ones needs a running simulation; an unknown word prints the usage", function()
+    local NS, m = addon()
+    for _, v in ipairs({ "run", "step", "pull", "kill", "loot", "lockdown on", "trade 1", "stop", "pause",
+        "resume", "restart" }) do
         slash(NS, "sim " .. v)
     end
-    assertEqual(printed(m, "No simulation is running: start one"), 8, "each verb says none runs")
+    -- DropWatcher's words for the library's notRunning (d.L NOT_RUNNING), host verbs included.
+    assertEqual(printed(m, "No simulation is running: start one with /dw sim start <scenario>."), 11)
+    local before = #m.prints
+    slash(NS, "sim bogus")
+    assertEqual(printed(m, "/dw sim start <scenario> [size]: start a simulation."), 1, "the usage")
+    assertEqual(printed(m, "/dw sim trade <drop id>: "), 1, "with the host verbs")
+    assertTrue(#m.prints - before >= 15)
     slash(NS, "sim start nowhere")
     -- The library's line since DW-02 (OWNER_SCOPE C.7; smoke SM-DW-5): it names the scenarios.
     assertEqual(printed(m, "Unknown scenario 'nowhere'. Scenarios: key, dungeon, raid, lfr, delve, world."), 1)
     assertFalse(NS.Sim:IsActive())
+end)
+
+test("sim verbs: each host verb runs through RunVerb with its line, and says why it did nothing", function()
+    local NS, m = addon()
+    slash(NS, "sim start dungeon")
+    assertTrue(NS.Sim:Status().ready)
+    slash(NS, "sim kill")
+    assertEqual(printed(m, "No simulated boss is engaged: /dw sim pull first."), 1)
+    slash(NS, "sim pull")
+    assertEqual(printed(m, "Simulated pull: Warden Ashvane."), 1)
+    slash(NS, "sim pull")
+    assertEqual(printed(m, "A simulated boss is already engaged: /dw sim kill first."), 1)
+    slash(NS, "sim kill")
+    assertEqual(printed(m, "Simulated kill: Warden Ashvane."), 1)
+    slash(NS, "sim loot 1 Nobody-Elsewhere")
+    assertEqual(printed(m, "No one by that name is in the simulated group."), 1)
+    slash(NS, "sim loot 2")
+    assertEqual(printed(m, "Simulated loot: 2 drops"), 1)
+    slash(NS, "sim loot 0")
+    assertEqual(printed(m, "/dw sim loot [n] [player|me]: "), 1, "a bad count prints the usage")
+    slash(NS, "sim lockdown on")
+    assertEqual(printed(m, "Simulated chat lockdown on."), 1)
+    assertTrue(NS.Restrictions.ActiveSet().chatLockdown)
+    slash(NS, "sim lockdown off")
+    assertEqual(printed(m, "Simulated chat lockdown off."), 1)
+    slash(NS, "sim trade 99999")
+    assertEqual(printed(m, "No drop has that id."), 1)
+end)
+
+test("sim verbs: a refused start prints its one line and nothing more", function()
+    local NS, m = addon()
+    m.inCombat = true
+    local before = #m.prints
+    slash(NS, "sim start dungeon")
+    -- red under: a WHY line for `refused` (the library keeps it silent)
+    assertEqual(#m.prints - before, 1)
+    assertEqual(printed(m, "A simulation cannot start in combat."), 1)
+end)
+
+test("sim verbs: `/dw sim run` while disabled prints the one refusal line", function()
+    local NS, m = addon()
+    NS.addon:OnSlashCommand("disable")
+    local before = #m.prints
+    slash(NS, "sim run")
+    assertEqual(#m.prints - before, 1)
+    assertTrue(m.prints[#m.prints]:find(NS.SlashCommands:DisabledLine(), 1, true) ~= nil)
 end)
 
 test("sim verbs: refused while the addon is disabled, like every feature verb", function()
@@ -176,8 +245,10 @@ test("sim start: the scenario's pool, group and situation, and the window open",
     assertEqual(printed(m, "Simulation ready: 4 members"), 1)
     slash(NS, "sim start raid")
     assertEqual(printed(m, "A simulation is already running."), 1)
-    slash(NS, "sim")
-    assertEqual(printed(m, "Simulating dungeon (Dungeon): 4 members, step 0 of 15"), 1)
+    slash(NS, "sim status")
+    assertTrue(printed(m, "Simulation: dungeon, seed ") == 1 and printed(m, ", step 0 of 15, waiting for a step.") == 1,
+        "the library's status line")
+    assertEqual(printed(m, "Simulated Dungeon: 4 members, 0 sends printed."), 1, "then DropWatcher's")
 end)
 
 test("sim start: a raid takes its size; a party is always four", function()
@@ -220,7 +291,7 @@ test("sim restart: a stale pool callback from the first session never readies th
         return build(opts, done)
     end
     assertTrue(NS.SimScenario.Start("dungeon", nil, { seed = 1 }))
-    assertTrue(NS.SimScenario.Restart())
+    assertTrue(NS.Sim:Restart())
     NS.SimPool.Build = build
     first()   -- the first session's pool, arriving after the restart
     -- red under: poolReady without its session check (modules/SimScenario.lua)
@@ -454,7 +525,9 @@ test("sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and
     slash(NS, "sim loot 1 me")
     m.advance(0.5)
     local theirs = firstWhere(drops(NS), function(r) return not r.isMine end)
-    local mine = firstWhere(drops(NS), function(r) return r.isMine end)
+    -- The newest of your drops: a trade settles the newest open drop of its item, and the burst may
+    -- hold two of one item, depending on the session's seed (the client clock at the start).
+    local mine = lastWhere(drops(NS), function(r) return r.isMine end)
     assertTrue(theirs ~= nil and mine ~= nil)
     for _, rec in ipairs(drops(NS)) do assertTrue(rec.sim, "every drop is the simulation's") end
     assertEqual(NS.Asks.Request("ask", theirs.looter.fullName or member.fullName, theirs.id), "queued",
@@ -492,7 +565,7 @@ test("sim e2e raid: a large roster, auto-ask after its delay, a trade received, 
     NS.SimScenario.Start("raid", 18, { band = { low = 25, high = 35 } })
     assertEqual(NS.Roster.Count(), 19, "you and eighteen members")
     assertEqual(NS.Asks.AnnounceChannel(), "RAID")
-    NS.SimScenario.Run()
+    NS.Sim:Run()
     playUntil(NS, m, "lockdownOff")
     assertTrue(#drops(NS) >= 5, "the first boss's burst")
     assertEqual(printed(m, "[sim] WHISPER"), 0, "nothing goes out in the lockdown")

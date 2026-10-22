@@ -52,6 +52,13 @@ end
 
 local function slash(NS, line) NS.addon:OnSlashCommand(line) end
 
+-- A typed start, then this panel opened. Since DW-03 the verbs are LibKa0s-Sim-1.0's RunVerb, whose
+-- bare form and `panel` open the library's panel; this one opens through Show until DW-04 retires it.
+local function start(NS, line)
+    slash(NS, line)
+    NS.SimPanel.Show()
+end
+
 local function printed(m, needle)
     local n = 0
     for _, line in ipairs(m.prints) do
@@ -159,12 +166,16 @@ end)
 -- The panel: opening, building, docking
 -- ---------------------------------------------------------------------------------------------
 
-test("sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds PerfPanel's three columns", function()
-    local NS, m = addon()
+test("sim panel: Show opens it, Toggle toggles it, and it builds PerfPanel's three columns", function()
+    local NS = addon()
     assertNil(NS.SimPanel.Frame(), "built on the first show")
     slash(NS, "sim")
+    -- DW-03: the bare verb is the library's (RunVerb), and opens the library's panel.
+    assertTrue(NS.Sim:IsPanelShown())
+    assertNil(NS.SimPanel.Frame(), "not this one")
+    NS.Sim:HidePanel()
+    NS.SimPanel.Show()
     assertTrue(NS.SimPanel.IsShown())
-    assertEqual(printed(m, "No simulation is running."), 1, "the bare verb still prints the status")
     local f = NS.SimPanel.Frame()
     assertEqual(f.title:GetText(), "Ka0s Drop Watcher - Simulation")
     assertTrue(f.closeButton ~= nil, "Core's close mark")
@@ -173,17 +184,17 @@ test("sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds P
     assertEqual(b.cmd:GetText(), "/dw sim start key")
     assertTrue(f.picker:IsShown(), "the picker shows while nothing runs")
     assertFalse(f.controls:IsShown())
-    slash(NS, "sim panel")
+    NS.SimPanel.Toggle()
     assertFalse(NS.SimPanel.IsShown())
-    slash(NS, "sim panel")
+    NS.SimPanel.Toggle()
     assertTrue(NS.SimPanel.IsShown())
     f.closeButton:__fire("OnClick")
     assertFalse(NS.SimPanel.IsShown(), "the close mark hides it")
 end)
 
-test("sim panel: `/dw sim start` opens it beside the window, its rows tracking the timeline", function()
+test("sim panel: opened after `/dw sim start`, it docks beside the window, its rows tracking the timeline", function()
     local NS = addon()
-    slash(NS, "sim start dungeon")
+    start(NS, "sim start dungeon")
     assertTrue(NS.SimPanel.IsShown())
     local st = NS.SimPanel.Stats()
     assertEqual(st.dock, "right", "docked to the window's right edge, not over it")
@@ -202,7 +213,7 @@ test("sim panel: opened before the window, it docks beside the window once a slo
             for _, e in ipairs(list) do e.loadsNeeded = 1 end
         end
     end
-    slash(NS, "sim start dungeon")
+    start(NS, "sim start dungeon")
     assertTrue(NS.SimPanel.IsShown())
     assertFalse(NS.Window.IsShown(), "the pool is still loading: no window yet")
     assertEqual(NS.SimPanel.Stats().dock, "center")
@@ -222,7 +233,7 @@ test("sim panel: a dragged panel stays where it was put when the window opens la
         end
     end
     NS.addon.db.profile.simPanel = { point = { "TOPLEFT", "TOPLEFT", 40, -60 } }
-    slash(NS, "sim start dungeon")
+    start(NS, "sim start dungeon")
     m.loadJournal()
     m.advance(NS.SimPool.SETTLE)
     assertTrue(NS.Window.IsShown())
@@ -235,7 +246,7 @@ end)
 
 test("sim panel: clicking the next step runs it; clicking a later one runs every step in between", function()
     local NS, m = addon()
-    slash(NS, "sim start dungeon")
+    start(NS, "sim start dungeon")
     rows(NS)[2]:__fire("OnClick")
     assertEqual(pos(NS), 1)
     assertEqual(printed(m, "Simulation step 1 of 15: pull"), 1)
@@ -252,7 +263,7 @@ end)
 
 test("sim panel: clicking a completed step does nothing, and its tooltip says when it ran", function()
     local NS, m = addon()
-    slash(NS, "sim start dungeon")
+    start(NS, "sim start dungeon")
     rows(NS)[2]:__fire("OnClick")
     m.advance(7)
     local before = #m.prints
@@ -266,7 +277,7 @@ end)
 
 test("sim panel: a typed `/dw sim step` moves the panel too", function()
     local NS = addon()
-    slash(NS, "sim start key")
+    start(NS, "sim start key")
     slash(NS, "sim step")
     slash(NS, "sim step")
     local r = NS.SimPanel.Stats().rows
@@ -280,7 +291,7 @@ end)
 
 test("sim panel: Run all plays the timeline, highlighting each step; Pause holds it and Resume plays on", function()
     local NS, m = addon()
-    slash(NS, "sim start dungeon")
+    start(NS, "sim start dungeon")
     local ctl = NS.SimPanel.Frame().controls
     ctl.run:__fire("OnClick")
     assertEqual(pos(NS), 1, "one step at once")
@@ -307,7 +318,7 @@ end)
 
 test("sim panel: Run all's tooltip names the current step delay (feedback-2 spec §8, FB2-8)", function()
     local NS = addon()
-    slash(NS, "sim start dungeon")
+    start(NS, "sim start dungeon")
     local run = NS.SimPanel.Frame().controls.run
     assertEqual(T.tipPlainJoined(NS.Window.TooltipOf(run)), "Run all | • Plays: every step left | • Every: 2 seconds | • Typed: /dw sim run")
     slash(NS, "set sim.stepDelay 3.5")
@@ -318,7 +329,7 @@ test("sim panel: the typed pause, resume and restart answer as the buttons do", 
     local NS, m = addon()
     slash(NS, "sim pause")
     assertEqual(printed(m, "No simulation is running: start one"), 1)
-    slash(NS, "sim start key")
+    start(NS, "sim start key")
     slash(NS, "sim pause")
     assertEqual(printed(m, "The timeline is not playing"), 1)
     slash(NS, "sim resume")
@@ -332,7 +343,7 @@ end)
 
 test("sim panel: Restart stops the scenario and starts the same one again; Stop ends it", function()
     local NS, m = addon()
-    slash(NS, "sim start raid 12")
+    start(NS, "sim start raid 12")
     slash(NS, "sim step"); slash(NS, "sim step")
     local ctl = NS.SimPanel.Frame().controls
     ctl.restart:__fire("OnClick")
@@ -353,10 +364,10 @@ end)
 
 test("sim panel: a typed `/dw sim stop` and an automatic stop repaint the panel", function()
     local NS, m = addon()
-    slash(NS, "sim start key")
+    start(NS, "sim start key")
     slash(NS, "sim stop")
     assertEqual(NS.SimPanel.Stats().rows[1].state, "ready")
-    slash(NS, "sim start key")
+    start(NS, "sim start key")
     m.setGroup({ { guid = "Player-1-0000BBBB", name = "Brakk", classFile = "WARRIOR", connected = true } })
     m.__fire("GROUP_ROSTER_UPDATE")
     assertFalse(NS.Sim:IsActive())
@@ -369,7 +380,7 @@ end)
 
 test("sim panel: the picker starts the chosen scenario, with a raid's member count", function()
     local NS = addon()
-    slash(NS, "sim panel")
+    NS.SimPanel.Show()
     local f = NS.SimPanel.Frame()
     assertTrue(f.picker.scenario ~= nil, "the scenario dropdown")
     assertFalse(f.picker.size:IsShown(), "no member count for a key")
@@ -389,7 +400,7 @@ end)
 
 test("sim panel: a dragged position is remembered, Reset position forgets it, stand-down hides it", function()
     local NS = addon()
-    slash(NS, "sim panel")
+    NS.SimPanel.Show()
     local f = NS.SimPanel.Frame()
     f:ClearAllPoints()
     f:SetPoint("TOPLEFT", nil, "TOPLEFT", 40, -60)

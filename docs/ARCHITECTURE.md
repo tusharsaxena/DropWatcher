@@ -144,7 +144,10 @@ reset resetall profile debug diagnostics perf`) plus `lock`, `unlock`, `show`, `
 add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
 controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the
-window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. A verb or
+window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is
+one feature-verb row that hands its argument to LibKa0s-Sim-1.0's `NS.Sim:RunVerb` (the library's
+grammar plus DropWatcher's five verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
+disabled like any other and has no launcher entry or key binding. A verb or
 button refused while stood down prints `NS.StoodDownRefusal()`, so a perf capture never tells the
 player to `/dw enable` an addon that is already enabled.
 

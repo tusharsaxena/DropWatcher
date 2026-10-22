@@ -64,6 +64,14 @@ local TAG = "SIM"
 --- (the library reads them when Start is called): { names = { ordered }, defs = { [name] = def } }.
 NS.SimScenarioDefs = NS.SimScenarioDefs or { names = {}, defs = {} }
 
+--- `/dw sim`'s host half, filled in place by settings/SimVerbs.lua at its load (the library reads
+--- them when a verb runs): VERBS (the descriptor's `verbs`: pull, kill, loot, lockdown, trade), WHY
+--- (`why`: their failure lines by code) and USAGE (`usage`: their usage lines).
+NS.SimVerbs = NS.SimVerbs or {}
+NS.SimVerbs.VERBS = NS.SimVerbs.VERBS or {}
+NS.SimVerbs.WHY = NS.SimVerbs.WHY or {}
+NS.SimVerbs.USAGE = NS.SimVerbs.USAGE or {}
+
 -- What the guarded answers did this session: { sends, handOvers }; core/SimSetup.lua's printSend
 -- and handOver count into it, and Begin resets it.
 Host.counts = Host.counts or { sends = 0, handOvers = 0 }
@@ -212,13 +220,21 @@ local STOP_TEXT = {
     standDown = L["Simulation stopped: the addon was disabled."],
 }
 
--- The library's lines in this addon's words, keyed by its STRINGS keys.
+-- The library's lines in this addon's words, keyed by its STRINGS keys: its own failure codes'
+-- lines among them (NOT_RUNNING ... DONE), so `/dw sim` says what it said before DW-03.
+local FINISHED = L["The simulation's timeline has finished. %s stop ends it."]
 local LINES = {
     STARTED         = L["Simulation started (%s): nothing is sent, and your saved history is not touched."],
     STOPPED         = L["Simulation stopped."],
     ALREADY_RUNNING = L["A simulation is already running."],
-    FINISHED        = L["The simulation's timeline has finished. %s stop ends it."],
+    FINISHED        = FINISHED,
     STEP_LINE       = L["Simulation step %d of %d: %s."],
+    NOT_RUNNING     = L["No simulation is running: start one with /dw sim start <scenario>."],
+    BUILDING        = L["The simulation is still setting up its items: try again in a moment."],
+    PLAYING         = L["The timeline is already playing."],
+    NOT_PLAYING     = L["The timeline is not playing: /dw sim run plays it."],
+    NOT_PAUSED      = L["The timeline is not paused."],
+    DONE            = FINISHED:format(NS.SLASH .. " sim"),
 }
 
 -- The reference stub (LibKa0s tests/test_sim_stub.lua) for a load without the library.
@@ -264,6 +280,10 @@ if Lib then
         end,
         play = function(...) return NS.SimScenario.Play(...) end,
         stepDelay = function() return NS.SimScenario.StepDelay() end,
+        verbs = NS.SimVerbs.VERBS,
+        why = NS.SimVerbs.WHY,
+        usage = NS.SimVerbs.USAGE,
+        statusLine = function(...) return NS.SimVerbs.StatusLine(...) end,
         stopText = STOP_TEXT,
         L = LINES,
         print = function(line) NS.Print(line) end,

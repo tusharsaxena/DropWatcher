@@ -309,8 +309,10 @@ NS.SimEvents.Kill() ─> Fire(ENCOUNTER_END, …, 1) ─> Combat(false) ─> Set
 NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with the ChallengeMode restriction
 NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
                    TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
-/dw sim <verb> ─> NS.SimVerbs.Parse (pure) ─> no simulation running: "No simulation is running" (but start)
-/dw sim start <scenario> [size] ─> NS.SimScenario.Start ─> NS.Sim:Start (refusals, an unknown
+/dw sim <verb> ─> NS.Sim:RunVerb (LibKa0s-Sim-1.0's grammar, then NS.SimVerbs.VERBS: pull, kill,
+                   loot, lockdown, trade; else the usage) ─> no simulation running: "No simulation
+                   is running: …" (but the bare form, status, start and panel)
+/dw sim start <scenario> [size] ─> NS.Sim:Start (refusals, an unknown
                    scenario among them) ─> prepare: NS.SimScenario.Prepare ─> NS.SimPool.Build
                    ─> SimRoster.Create ─> SimEvents.Join ─> the window opens ─> ready()
                    (a ready from an earlier session is ignored, OWNER_SCOPE C.1)
@@ -335,9 +337,9 @@ the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receip
                    scenario, size and start options and a fresh seed)
 every move of the timeline (start, ready, step, run, pause, the end, the stop) ─> NS.Sim's listeners
                    ─> NS.SimPanel.Refresh: Compose (pure) ─> the rows' states, Controls (pure) ─> the buttons
-the step panel's row click ─> SimPanel.ClickRow (re-composed) ─> Start: SimVerbs.Run("start …") |
-                   a later step: RunTo ─> SimVerbs.Run("step") until it is reached | Stop: SimVerbs.Run("stop")
-the panel's Run all, Pause / Resume, Restart, Stop, picker Start ─> SimVerbs.Run(the typed verb)
+the step panel's row click ─> SimPanel.ClickRow (re-composed) ─> Start: NS.Sim:RunVerb("start …") |
+                   a later step: RunTo ─> NS.Sim:RunVerb("step") until it is reached | Stop: NS.Sim:RunVerb("stop")
+the panel's Run all, Pause / Resume, Restart, Stop, picker Start ─> NS.Sim:RunVerb(the typed verb)
 the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.SimHost.Status,
                    NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```

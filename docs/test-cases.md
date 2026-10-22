@@ -1715,11 +1715,15 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
-### test_sim_scenario.lua (22)
+### test_sim_scenario.lua (26)
 
-- sim verbs: Parse reads every verb and its arguments
+- sim verbs: DropWatcher's five host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
-- sim verbs: `/dw sim` prints the status and the usage; the verbs need a running simulation
+- sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
+- sim verbs: every verb but the free ones needs a running simulation; an unknown word prints the usage
+- sim verbs: each host verb runs through RunVerb with its line, and says why it did nothing
+- sim verbs: a refused start prints its one line and nothing more
+- sim verbs: `/dw sim run` while disabled prints the one refusal line
 - sim verbs: refused while the addon is disabled, like every feature verb
 - sim start: refused in combat and with test mode on, each with its line
 - sim start: the scenario's pool, group and situation, and the window open
@@ -1789,8 +1793,8 @@ Total.
 - sim panel: before the pool is ready the start is current and nothing else is clickable
 - sim panel: the controls follow the timeline: Run all, Pause or Resume, Restart, Stop
 - sim panel: StartCommand carries a raid's size and leaves a random one out
-- sim panel: `/dw sim` opens it, `/dw sim panel` toggles it, and it builds PerfPanel's three columns
-- sim panel: `/dw sim start` opens it beside the window, its rows tracking the timeline
+- sim panel: Show opens it, Toggle toggles it, and it builds PerfPanel's three columns
+- sim panel: opened after `/dw sim start`, it docks beside the window, its rows tracking the timeline
 - sim panel: opened before the window, it docks beside the window once a slow pool opens it
 - sim panel: a dragged panel stays where it was put when the window opens later
 - sim panel: clicking the next step runs it; clicking a later one runs every step in between
@@ -2002,7 +2006,7 @@ Total.
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 20 |
 | test_sim_events.lua | 21 |
-| test_sim_scenario.lua | 22 |
+| test_sim_scenario.lua | 26 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 19 |
@@ -2017,4 +2021,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1667** |
+| **Total** | **1671** |

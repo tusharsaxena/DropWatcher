@@ -1,224 +1,134 @@
 local _, NS = ...
--- settings/SimVerbs.lua — `/dw sim`, the simulator's slash verbs (simulator spec §4): status and
--- usage, `start <scenario> [size]`, `run`, `step`, `pull`, `kill`, `loot [n] [player|me]`,
--- `lockdown on|off`, `trade <dropID>`, `pause`, `resume`, `restart`, `stop` and `panel` (the step
--- panel, modules/SimPanel.lua, which a bare `/dw sim` and a start also open). settings/Slash.lua lists `sim` in NS.COMMANDS
--- (a feature verb, so the dispatcher refuses it while the addon is disabled); this file answers it.
+-- settings/SimVerbs.lua — `/dw sim`'s host half (simulator spec §4; OWNER_SCOPE C.7, C.10): the
+-- five verbs only DropWatcher's simulation has, `pull`, `kill`, `loot [n] [player|me]`,
+-- `lockdown on|off` and `trade <dropID>`, the lines that say why one did nothing, their usage
+-- lines and the status line's host part. settings/Slash.lua's `sim` row hands the whole argument
+-- to NS.Sim:RunVerb (a feature verb, so the dispatcher refuses it while the addon is disabled), and
+-- LibKa0s-Sim-1.0 owns the generic grammar: the bare form (the status, the usage and the step
+-- panel), `start <scenario> [size]`, `run`, `step`, `pause`, `resume`, `restart`, `stop`, `status`
+-- and `panel`; that every other verb needs a running simulation; the lines for its own failure
+-- codes (in this addon's words through the descriptor's `L`, modules/Sim.lua); and that a
+-- `refused` start prints nothing more than its refusal. There is no `help` verb.
 --
--- Parse is PURE (test_sim_scenario drives it): the argument in, { verb, ... } out. Run calls the
--- simulator's own entry points (modules/SimScenario.lua, modules/SimEvents.lua, modules/Sim.lua)
--- and prints what they answered; it never reaches the engine around them.
+-- THE DESCRIPTOR'S TABLES. modules/Sim.lua (loaded before this file) publishes VERBS, WHY and
+-- USAGE empty and passes them to Sim:New, which reads them when a verb runs; this file fills them
+-- in place at load, as modules/SimScenario.lua fills NS.SimScenarioDefs. Each VERBS row is
+-- { parse = fn(words) -> cmd|nil (nil: the usage), run = fn(cmd, sim) -> ok, code }, words[1] the
+-- verb; run calls the simulator's own entry points (modules/SimEvents.lua, modules/SimReport.lua,
+-- NS.SimHost) and prints what they answered, never reaching the engine around them. None is
+-- `free`: each needs the session.
 
 NS.SimVerbs = NS.SimVerbs or {}
 local V = NS.SimVerbs
 local L = NS.L
 
-local function trim(s) return (s or ""):gsub("^%s+", ""):gsub("%s+$", "") end
+V.VERBS = V.VERBS or {}
+V.WHY = V.WHY or {}
+V.USAGE = V.USAGE or {}
 
-local function words(s)
-    local out = {}
-    for w in trim(s):gmatch("%S+") do out[#out + 1] = w end
-    return out
-end
+-- ── the verbs ───────────────────────────────────────────────────────────────────────────────
 
--- ── parse (pure) ────────────────────────────────────────────────────────────────────────────
+local function bare() return {} end
 
-local BARE = { run = true, step = true, pull = true, kill = true, stop = true, status = true, pause = true,
-    resume = true, restart = true, panel = true }
-
+-- `loot [n] [player|me]`: n a whole number from 1, the rest a looter's name.
 local function parseLoot(w)
     local n = tonumber(w[2])
-    local first = n and 3 or 2
-    local who = table.concat(w, " ", first)
-    if n and (n < 1 or n ~= math.floor(n)) then return { verb = "usage", form = "loot" } end
-    return { verb = "loot", n = n, who = who ~= "" and who or nil }
+    if n and (n < 1 or n ~= math.floor(n)) then return nil end
+    local who = table.concat(w, " ", n and 3 or 2)
+    return { n = n, who = who ~= "" and who or nil }
 end
 
 local function parseLockdown(w)
     local v = (w[2] or ""):lower()
-    if v == "on" or v == "off" then return { verb = "lockdown", on = v == "on" } end
-    return { verb = "usage", form = "lockdown" }
-end
-
-local function parseStart(w)
-    local name = (w[2] or ""):lower()
-    if name == "" then return { verb = "usage", form = "start" } end
-    return { verb = "start", scenario = name, size = tonumber(w[3]) }
+    if v == "on" or v == "off" then return { on = v == "on" } end
+    return nil
 end
 
 local function parseTrade(w)
     local id = tonumber(w[2])
-    if not id then return { verb = "usage", form = "trade" } end
-    return { verb = "trade", id = id }
+    if not id then return nil end
+    return { id = id }
 end
 
-local PARSERS = { loot = parseLoot, lockdown = parseLockdown, start = parseStart, trade = parseTrade }
-
---- `/dw sim`'s argument as a command (pure): { verb, ... }. `status` for an empty argument, with
---- `open` (a bare `/dw sim` opens the panel too); `usage` (with the `form` it was missing) for an
---- argument that does not read.
---- @param rest string|nil
---- @return table
-function V.Parse(rest)
-    local w = words(rest)
-    if #w == 0 then return { verb = "status", open = true } end
-    local verb = (w[1] or "status"):lower()
-    if PARSERS[verb] then return PARSERS[verb](w) end
-    if BARE[verb] then return { verb = verb } end
-    return { verb = "usage", form = verb }
-end
-
--- ── the lines ───────────────────────────────────────────────────────────────────────────────
-
--- Why a verb did nothing, as the line to print.
-local WHY = {
-    notRunning = "No simulation is running: start one with /dw sim start <scenario>.",
-    building   = "The simulation is still setting up its items: try again in a moment.",
-    done       = "The simulation's timeline has finished. /dw sim stop ends it.",
-    playing    = "The timeline is already playing.",
-    noPool     = "The simulation has no items to drop.",
-    noLooter   = "No one by that name is in the simulated group.",
-    engaged    = "A simulated boss is already engaged: /dw sim kill first.",
-    notEngaged = "No simulated boss is engaged: /dw sim pull first.",
-    noDrop     = "No drop has that id.",
-    notSim     = "That drop is not one the simulation made.",
-    notInBags  = "That drop is no longer in your simulated bags.",
-    expired    = "That drop's trade window has closed.",
-    noPartner  = "No simulated member can take part in that trade.",
-    notPlaying = "The timeline is not playing: /dw sim run plays it.",
-    notPaused  = "The timeline is not paused.",
-    unknown    = "Unknown scenario.",
-}
-
-local function why(code)
-    if code == "refused" then return end   -- the refusal line is already printed
-    NS.Print(L[WHY[code] or "Nothing happened."])
-end
-
---- The usage lines.
---- @return table
-function V.UsageLines()
-    local s = NS.SLASH .. " sim"
-    return {
-        L["Usage: |cffFFFF00%s|r"]:format(s .. " start <" .. table.concat(NS.SimScenario.NAMES, "|") .. "> [size]"),
-        L["  |cffFFFF00%s|r plays the timeline, |cffFFFF00%s|r one event at a time"]:format(s .. " run", s .. " step"),
-        L["  |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r"]:format(s .. " pull", s .. " kill",
-            s .. " loot [n] [player|me]", s .. " lockdown on|off"),
-        L["  |cffFFFF00%s|r, |cffFFFF00%s|r"]:format(s .. " trade <drop id>", s .. " stop"),
-        L["  |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r, |cffFFFF00%s|r (the step panel)"]:format(s .. " pause",
-            s .. " resume", s .. " restart", s .. " panel"),
-    }
-end
-
---- The status line: the running simulation at a glance, or that none runs.
---- @return string
-function V.StatusLine()
-    local st = NS.SimHost.Status()
-    if not st.active then return L["No simulation is running."] end
-    local t = NS.SimScenario.Status() or { pos = 0, steps = 0 }
-    return L["Simulating %s (%s): %d members, step %d of %d, %d sends printed."]:format(tostring(st.scenario),
-        NS.WindowFooter.SituationLabel(st.situation), #NS.SimRoster.Get(), t.pos, t.steps, st.sends)
-end
-
--- ── run ─────────────────────────────────────────────────────────────────────────────────────
-
-local function status()
-    NS.Print(V.StatusLine())
-    for _, line in ipairs(V.UsageLines()) do NS.Print(line) end
-end
-
-local function answered(ok, code)
-    if not ok then why(code) end
-    return ok and true or false
-end
-
-local DO = {}
-
--- The verbs that answer with no simulation running.
-local FREE = { status = true, usage = true, start = true, panel = true }
-
-local function showPanel()
-    if NS.SimPanel then NS.SimPanel.Show() end
-end
-
-function DO.status(c)
-    status()
-    if c.open then showPanel() end
-    return true
-end
-
-function DO.usage() for _, line in ipairs(V.UsageLines()) do NS.Print(line) end return false end
-
-function DO.start(c)
-    local ok = answered(NS.SimScenario.Start(c.scenario, c.size))
-    if ok then showPanel() end
-    return ok
-end
-
-function DO.run() return answered(NS.SimScenario.Run()) end
-function DO.pause() return answered(NS.SimScenario.Pause()) end
-function DO.resume() return answered(NS.SimScenario.Resume()) end
-
-function DO.restart()
-    local ok = answered(NS.SimScenario.Restart())
-    if ok then showPanel() end
-    return ok
-end
-
-function DO.panel()
-    if NS.SimPanel then NS.SimPanel.Toggle() end
-    return true
-end
-
--- The step prints its own line (modules/SimScenario.lua), as a played one does.
-function DO.step()
-    local step, code = NS.SimScenario.Step()
-    if not step then return answered(false, code) end
-    return true
-end
-
-function DO.pull()
+local function runPull()
     local enc, code = NS.SimEvents.Pull()
-    if not enc then return answered(false, code) end
+    if not enc then return false, code end
     NS.Print(L["Simulated pull: %s."]:format(enc.name))
     return true
 end
 
-function DO.kill()
+local function runKill()
     local enc, code = NS.SimEvents.Kill()
-    if not enc then return answered(false, code) end
+    if not enc then return false, code end
     NS.Print(L["Simulated kill: %s."]:format(enc.name))
     return true
 end
 
-function DO.stop() return NS.Sim:Stop("stop") end
-
 -- The burst says where its drops went, as the timeline's loot step does (feedback-3 spec §0).
-function DO.loot(c)
+local function runLoot(c)
     local R = NS.SimReport
     local n, code, report = R.Loot(c.n, c.who)
-    if n > 0 then NS.Print(L["Simulated loot: %s."]:format(R.Summarize(report, NS.LootFeed.Get, R.View()).text)) end
-    return answered(n > 0, code)
+    if n == 0 then return false, code end
+    NS.Print(L["Simulated loot: %s."]:format(R.Summarize(report, NS.LootFeed.Get, R.View()).text))
+    return true
 end
 
-function DO.lockdown(c)
+local function runLockdown(c)
     NS.SimHost.SetLockdown(c.on)
     NS.Print(c.on and L["Simulated chat lockdown on."] or L["Simulated chat lockdown off."])
     return true
 end
 
-function DO.trade(c)
+local function runTrade(c)
     local ok, code = NS.SimEvents.Trade(c.id)
-    if not ok then return answered(false, code) end
+    if not ok then return false, code end
     NS.Print(L["Simulated trade completed for drop %d."]:format(c.id))
     return true
 end
 
---- `/dw sim <argument>`: parse it and do it. Answers whether it did something.
---- @param rest string|nil
---- @return boolean
-function V.Run(rest)
-    local c = V.Parse(rest)
-    if not (FREE[c.verb] or NS.Sim:IsActive()) then return answered(false, "notRunning") end
-    return DO[c.verb](c)
+for verb, spec in pairs({
+    pull     = { parse = bare,          run = runPull },
+    kill     = { parse = bare,          run = runKill },
+    loot     = { parse = parseLoot,     run = runLoot },
+    lockdown = { parse = parseLockdown, run = runLockdown },
+    trade    = { parse = parseTrade,    run = runTrade },
+}) do V.VERBS[verb] = spec end
+
+-- ── the lines ───────────────────────────────────────────────────────────────────────────────
+
+-- Why a host verb did nothing, by the code its entry point answered.
+for code, line in pairs({
+    noPool     = L["The simulation has no items to drop."],
+    noLooter   = L["No one by that name is in the simulated group."],
+    engaged    = L["A simulated boss is already engaged: /dw sim kill first."],
+    notEngaged = L["No simulated boss is engaged: /dw sim pull first."],
+    noDrop     = L["No drop has that id."],
+    notSim     = L["That drop is not one the simulation made."],
+    notInBags  = L["That drop is no longer in your simulated bags."],
+    expired    = L["That drop's trade window has closed."],
+    noPartner  = L["No simulated member can take part in that trade."],
+}) do V.WHY[code] = line end
+
+-- The host verbs' usage lines, printed after the library's own.
+do
+    local s = NS.SLASH .. " sim"
+    local lines = {
+        L["%s pull: engage the next simulated boss."]:format(s),
+        L["%s kill: kill the engaged simulated boss."]:format(s),
+        L["%s loot [n] [player|me]: a burst of n simulated drops."]:format(s),
+        L["%s lockdown on|off: turn the simulated chat lockdown on or off."]:format(s),
+        L["%s trade <drop id>: complete a simulated trade of that drop."]:format(s),
+    }
+    for i, line in ipairs(lines) do V.USAGE[i] = line end
+end
+
+--- The status line's host part (the descriptor's `statusLine`, printed after the library's): the
+--- simulated situation, the group's size and the sends printed; nil while none runs.
+--- @param status table NS.Sim:Status()
+--- @param session table|nil the library's session
+--- @return string|nil
+function V.StatusLine(status, session)
+    if not (status and status.active and session) then return nil end
+    return L["Simulated %s: %d members, %d sends printed."]:format(
+        NS.WindowFooter.SituationLabel(session.situation), #NS.SimRoster.Get(), NS.SimHost.counts.sends)
 end

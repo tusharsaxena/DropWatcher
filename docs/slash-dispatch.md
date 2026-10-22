@@ -26,7 +26,7 @@ The bare command opens the settings panel.
 | `situation` | feature | no | `SlashVerbs.Situation`: three lines, the situation with its Track, Auto-open and Quality, then the classifier's inputs, read live |
 | `offer <link>` | feature | no | `SlashVerbs.Offer`: your newest live drop of that item, or the bag item added as your drop (`NS.LootFeed.Add`); then the Drops tab and `NS.OfferPanel.Open` |
 | `add <link> [player]` | feature | no | `SlashVerbs.Add`: `NS.LootFeed.Add(link, player)`, you when no player is named; prints the drop's id, that it is loading, or why the feed refused it |
-| `sim [verb]` | feature | no | `SimVerbs.Run` (simulator spec §4): `sim` alone prints the status and the usage and opens the step panel (`NS.SimPanel`, sim feedback spec §1); `status` prints the status line; `start <key\|dungeon\|raid\|lfr\|delve\|world> [size]` (`NS.SimScenario.Start`, refused per the simulator's safety rules), `run` / `step` (`NS.SimScenario.Run` / `Step`), `pull` / `kill` (`NS.SimEvents.Pull` / `Kill`), `loot [n] [player\|me]` (`NS.SimEvents.Loot`), `lockdown on\|off` (`NS.SimHost.SetLockdown`), `trade <dropID>` (`NS.SimEvents.Trade`), `pause` / `resume` / `restart` (`NS.SimScenario.Pause` / `Resume` / `Restart`), `stop` (`NS.Sim:Stop`), `panel` (`NS.SimPanel.Toggle`); a start or a restart opens the panel |
+| `sim [verb]` | feature | no | `NS.Sim:RunVerb` (simulator spec §4; DW-03): LibKa0s-Sim-1.0's grammar, `sim` alone (the status, the usage and the library's step panel), `status` (the library's status line, then `SimVerbs.StatusLine`), `start <key\|dungeon\|raid\|lfr\|delve\|world> [size]` (`NS.Sim:Start`, refused per the simulator's safety rules), `run` / `step` / `pause` / `resume` / `restart` / `stop`, `panel` (the library's panel); plus DropWatcher's five verbs from `NS.SimVerbs.VERBS`: `pull` / `kill` (`NS.SimEvents.Pull` / `Kill`), `loot [n] [player\|me]` (`NS.SimReport.Loot`), `lockdown on\|off` (`NS.SimHost.SetLockdown`), `trade <dropID>` (`NS.SimEvents.Trade`); anything else prints the usage (no `help` verb) |
 
 While disabled, a verb that is not live prints the one refusal line, `Ka0s Drop Watcher is disabled —
 enable it with /dw enable`, and does nothing else. The gate reads the stored `enabled`, not the
@@ -47,13 +47,16 @@ the link runs to its closing `|h` (and `|r` when colored), so an item name's spa
 what follows is the player. A verb with no link prints its usage line. `offer` refuses an item that
 is in neither the feed nor your bags, and an item still loading asks to run it again in a moment.
 
-`sim` is the simulator's (simulator spec §4), answered by `settings/SimVerbs.lua` (`NS.SimVerbs`),
-loaded just before `settings/Slash.lua`. Its pure `Parse` reads the sub-verb; every sub-verb but the
-status, the usage, `start` and `panel` says `No simulation is running` when none runs, and each refusal the
-simulator answers (a boss already engaged, no such drop, the timeline finished, the pool still
-loading) prints its own line. The launcher menu has no simulator entry: the slash verbs and the step
-panel (`modules/SimPanel.lua`) are its interface, and every click on the panel runs one of these
-verbs through `SimVerbs.Run`, so a click prints what the typed verb prints.
+`sim` is the simulator's (simulator spec §4). Its row hands the argument to `NS.Sim:RunVerb`, so
+LibKa0s-Sim-1.0 reads it: the generic grammar first, then the host verbs `settings/SimVerbs.lua`
+fills into the descriptor (`NS.SimVerbs.VERBS`, `WHY`, `USAGE`, `StatusLine`; DW-03), else the usage.
+Every verb but the bare form, `status`, `start` and `panel` says `No simulation is running: start one
+with /dw sim start <scenario>.` when none runs (DropWatcher's words for the library's line, through
+the descriptor's `L`), each refusal the simulator answers (a boss already engaged, no such drop, the
+timeline finished, the pool still loading) prints its own line, and a refused start prints only its
+refusal. The launcher menu has no simulator entry and there is no key binding (OWNER_SCOPE C.11):
+the slash verbs and the step panel are its interface, and every click on the panel runs one of these
+verbs through `NS.Sim:RunVerb`, so a click prints what the typed verb prints.
 
 With the library absent, the stub in `settings/Slash.lua` dispatches the same table, keeps the
 same live list, and the schema CLI verbs say the library is missing.

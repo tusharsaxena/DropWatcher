@@ -63,7 +63,7 @@ end
 -- Play the started scenario's steps up to and including the next loot step; answers it.
 local function toLoot(NS)
     while true do
-        local step = NS.SimScenario.Step()
+        local step = NS.Sim:Step()
         if not step or step.kind == "loot" then return step end
     end
 end

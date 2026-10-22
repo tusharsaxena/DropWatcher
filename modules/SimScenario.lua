@@ -26,9 +26,9 @@ local _, NS = ...
 -- sets a verdict, a trade estimate or an inspect state: each step is an event driver, and the
 -- engine computes the rest.
 --
--- SC.Step, Run, Pause, Resume, Restart, Steps, Status and AddListener are one-line delegations to
--- NS.Sim (Status reshaped for the panel and the verbs) until the slash verbs and the step panel move
--- onto the library (DW-03, DW-04).
+-- `/dw sim` drives the step machine through NS.Sim:RunVerb (settings/SimVerbs.lua holds only
+-- DropWatcher's own verbs, DW-03). SC.Steps and SC.Status read NS.Sim for the suites (Status
+-- reshaped: `steps`, `next`).
 
 NS.SimScenario = NS.SimScenario or {}
 local SC = NS.SimScenario
@@ -169,14 +169,7 @@ function SC.Play(step)
     return detail
 end
 
--- ── the library's step machine ──────────────────────────────────────────────────────────────
-
-SC.Step = function() return Sim:Step() end
-SC.Run = function() return Sim:Run() end
-SC.Pause = function() return Sim:Pause() end
-SC.Resume = function() return Sim:Resume() end
-SC.Restart = function() return Sim:Restart() end
-SC.AddListener = function(fn) Sim:AddListener(fn) end
+-- ── the library's step machine, read ────────────────────────────────────────────────────────
 
 --- The running timeline's steps, each { kind, n, label, ranAt, detail, index } (the last four once
 --- played), for the panel to read; nil when none runs. Read it; only the library and Play write it.

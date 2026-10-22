@@ -18,9 +18,11 @@ local _, NS = ...
 -- and its tab or the gate that hid it (modules/SimReport.lua; feedback-3 spec §0).
 --
 -- THE PANEL NEVER CHANGES THE TIMELINE. Every click and every control goes through the very verbs
--- `/dw sim` types (NS.SimVerbs.Run: `start`, `step`, `run`, `pause`, `resume`, `restart`, `stop`),
+-- `/dw sim` types (NS.Sim:RunVerb: `start`, `step`, `run`, `pause`, `resume`, `restart`, `stop`),
 -- so a click prints what the typed verb prints, and the panel repaints from the timeline on every
--- move it is told of (NS.SimScenario.AddListener, NS.Sim's listeners): a typed `/dw sim step` moves it too.
+-- move it is told of (NS.Sim:AddListener): a typed `/dw sim step` moves it too. Until DW-04 hands
+-- the panel to LibKa0s-Sim-1.0, a bare `/dw sim` and `/dw sim panel` open the library's panel
+-- (RunVerb's generic grammar), and this one opens through Show.
 --
 -- WHAT IT COMPOSES (Compose, Controls) is PURE: the timeline and the clock in, the rows and the
 -- controls' state out. The rest is the frame edge, built on the first Show. Its position is window
@@ -236,7 +238,7 @@ function SP.Compose(m)
     return rows
 end
 
---- The run controls' state (pure), from NS.SimScenario.Status() (nil: no timeline) and whether a
+--- The run controls' state (pure), from the timeline's status (timeline(); nil: none) and whether a
 --- simulation runs: { running, run, pause = { verb, label, enabled }, restart, stop }.
 --- @param st table|nil
 --- @param running boolean
@@ -255,13 +257,22 @@ end
 -- The picker's choice, session-only: the scenario and the raid size (0: random).
 local choice = { scenario = "key", size = 0 }
 
+-- The timeline at a glance, from NS.Sim:Status(): { scenario, ready, pos, steps, playing, paused,
+-- size (nil: random, or a party) }; nil when none runs.
+local function timeline()
+    local st = NS.Sim:Status()
+    if not st.active then return nil end
+    return { scenario = st.scenario, ready = st.ready == true, pos = st.pos, steps = st.total,
+        playing = st.playing == true, paused = st.paused == true, size = st.size ~= 0 and st.size or nil }
+end
+
 -- The running simulation's model. A session started without a scenario (no timeline) has no steps.
 local function runningModel()
-    local SC = NS.SimScenario
     local s = NS.Sim:Session() or {}
-    local st = SC.Status() or { ready = false, pos = 0 }
-    return { running = true, ready = st.ready, scenario = s.scenario or "custom", size = st.size,
-        steps = SC.Steps() or {}, pos = st.pos, startedAt = s.startedAt, now = time() }, SC.Status()
+    local st = timeline()
+    local shown = st or { ready = false, pos = 0 }
+    return { running = true, ready = shown.ready, scenario = s.scenario or "custom", size = shown.size,
+        steps = NS.Sim:Steps(), pos = shown.pos, startedAt = s.startedAt, now = time() }, st
 end
 
 -- With no simulation running: the picker's scenario, previewed.
@@ -279,7 +290,7 @@ end
 -- ── actions: the typed verbs ────────────────────────────────────────────────────────────────
 
 local function verb(line)
-    return NS.SimVerbs.Run(line)
+    return (NS.Sim:RunVerb(line))
 end
 
 local function isRaid(name)
@@ -301,12 +312,12 @@ end
 --- @param index number
 --- @return number
 function SP.RunTo(index)
-    local SC, n = NS.SimScenario, 0
-    local st = SC.Status()
+    local n = 0
+    local st = timeline()
     while st and st.pos < index and n < st.steps do
         if not verb("step") then break end
         n = n + 1
-        st = SC.Status()
+        st = timeline()
     end
     return n
 end
@@ -676,7 +687,7 @@ function SP.Stats()
 end
 
 -- Every move of the timeline repaints the panel (typed, clicked or played).
-NS.SimScenario.AddListener(function() SP.Refresh() end)
+NS.Sim:AddListener(function() SP.Refresh() end)
 
 -- Standing down closes it; the simulation it drove has already stopped (modules/Sim.lua's step
 -- runs first).
