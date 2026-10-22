@@ -438,7 +438,7 @@ test("sim trade: your drop traded away and another's received land in the sessio
     assertEqual(outcomeOf(NS, theirs), "received")
     assertEqual(E.Status().trades, 2)
     assertEqual(#(NS.addon.db.global.history.groups or {}), 0, "saved history untouched")
-    assertTrue(#NS.Sim.HistoryLog().groups > 0, "the session's log holds them")
+    assertTrue(#NS.SimHost.HistoryLog().groups > 0, "the session's log holds them")
     assertEqual(#m.tradeCalls, 0, "no real trade")
 end)
 

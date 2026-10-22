@@ -130,7 +130,7 @@ TB.MODE_GAP = 10
 
 --- The SIMULATION text's tooltip (simulator spec §6): the scenario and what the simulation never does.
 function TB.SimTip()
-    local st = NS.Sim.Status()
+    local st = NS.SimHost.Status()
     local scenario = st.active and tostring(st.scenario) or L["none"]
     local TM = NS.TipMarks
     return L["Simulation"],

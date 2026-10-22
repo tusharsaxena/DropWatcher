@@ -458,7 +458,7 @@ test("sim roster: Create draws the group from the session's pool and the stop fo
     assertEqual(NS.SimRoster.Get(), members)
     local rings = 0
     for _, mem in ipairs(members) do
-        assertTrue(NS.Sim.IsSimGUID(mem.guid), "marked as the simulation's")
+        assertTrue(NS.SimHost.IsSimGUID(mem.guid), "marked as the simulation's")
         for slot, l in pairs(mem.gear) do
             assertTrue(m.items[l] ~= nil, "a pool item")
             local worn = mem.levels[slot]
@@ -468,9 +468,9 @@ test("sim roster: Create draws the group from the session's pool and the stop fo
         end
     end
     assertTrue(rings > 0, "rings are drawn")
-    assertEqual(NS.Sim.Status().members, 12)
+    assertEqual(NS.SimHost.Status().members, 12)
     local guid = members[1].guid
     NS.Sim.Stop()
     assertEqual(#NS.SimRoster.Get(), 0)
-    assertFalse(NS.Sim.IsSimGUID(guid))
+    assertFalse(NS.SimHost.IsSimGUID(guid))
 end)

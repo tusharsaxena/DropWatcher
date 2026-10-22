@@ -369,7 +369,7 @@ end
 -- its pool's size and source, the timeline's position and the sends it printed instead of sending.
 -- Stored state only.
 local function sim(out)
-    local st = NS.Sim.Status()
+    local st = NS.SimHost.Status()
     if not st.active then
         return out:add(TAG, "sim: active=false sendsPrinted=%s handOvers=%s", st.sends, st.handOvers)
     end

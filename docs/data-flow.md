@@ -261,17 +261,20 @@ judged against, in place of `testGear`. A sample's `testLeft` stands for a loote
 
 ```
 NS.Sim.Start(opts) ─> refused (printed): stood down, already running, test mode, combat,
-                      an instance, a real group (the real world read through NS.Sim.Live)
-                  └─> State.sim = { sim = true, … }; NS.Sim.active = true
+                      an instance, a real group (NS.SimHost.Refusal; the real world read through
+                      NS.Sim.Live)
+                  └─> State.sim = { sim = true, … }; NS.Sim.IsActive() true
 every NS.Compat call ─> core/SimSeam.lua's wrap ─> NS.Sim.Answer(name, live, …) while active
                           ├─> a provider (the simulator's invented answer, else the live member)
                           └─> guarded: ChatSender prints "[sim] …"; inspect and trade calls do nothing
-NS.Sim.Fire(event, …) ─> every handler NS.FEATURE_EVENTS declares for it, in row order
-NS.Sim.SetRestriction(name, on) ─> answered active ─> Fire(ADDON_RESTRICTION_STATE_CHANGED, type, on)
-NS.Sim.SetLockdown(on) ─> InChatMessagingLockdown answered ─> NS.Restrictions.Refresh
+NS.Sim.Fire(event, …) ─> NS.DeliverEvent (core/DropWatcher.lua): every handler NS.FEATURE_EVENTS
+                         declares for it, in row order, each under pcall (a raise is a SIM debug
+                         line, never rethrown); an event in NS.rejectedEvents is skipped (answers 0)
+NS.SimHost.SetRestriction(name, on) ─> answered active ─> Fire(ADDON_RESTRICTION_STATE_CHANGED, type, on)
+NS.SimHost.SetLockdown(on) ─> InChatMessagingLockdown answered ─> NS.Restrictions.Refresh
 DropAdded of a drop made while active (rec.sim) ─> History.Log() = the session log, never global.history
 NS.Sim.Stop(reason) ─> its timers canceled ─> NS.Asks.CancelQueued (seam still on)
-                   ─> NS.Sim.active = false ─> the cleanup steps ─> its restrictions lifted (event)
+                   ─> NS.Sim.IsActive() false ─> the cleanup steps ─> its restrictions lifted (event)
                    ─> its drops' automatic asks ─> LootFeed.RemoveWhere(sim, context reset)
                    ─> Inspect.Forget(its GUIDs) ─> Roster.Refresh ─> History.ReleaseLog
                    ─> TradeTimer.Scan ─> Situations.Refresh ─> the open window repainted
@@ -285,7 +288,7 @@ NS.SimPool.Build(opts, done) ─> the journal's frame shown? ─> look again eve
                             ─> all loaded or TIMEOUT ─> State.sim.pool (journal), else own gear (fallback)
 NS.SimRoster.Create(opts) ─> Members (pure, seeded) ─> Gear per member from the pool's gear entries,
                           each worn at a level inside the band above the content's (ContentLevel: the
-                          pool's drops' median; the inspect answers it) ─> NS.Sim.MarkGUID
+                          pool's drops' median; the inspect answers it) ─> NS.SimHost.MarkGUID
                           ─> State.sim.members
 NS.SimEvents.Join() ─> Fire(GROUP_ROSTER_UPDATE), Fire(PLAYER_ENTERING_WORLD) ─> the roster, the situation
                    and the inspect warm-up read the group and the place NS.SimWorld answers through
@@ -325,9 +328,13 @@ every move of the timeline (start, ready, step, run, pause, the end, the stop) �
 the step panel's row click ─> SimPanel.ClickRow (re-composed) ─> Start: SimVerbs.Run("start …") |
                    a later step: RunTo ─> SimVerbs.Run("step") until it is reached | Stop: SimVerbs.Run("stop")
 the panel's Run all, Pause / Resume, Restart, Stop, picker Start ─> SimVerbs.Run(the typed verb)
-the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.Sim.Status,
+the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.SimHost.Status,
                    NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```
+
+The host-only members (the session log, the invented GUIDs, the simulated restrictions and
+lockdown, the refusals, the automatic stop, the guarded answers' counts and the host half of the
+status) live on `NS.SimHost`, never on `NS.Sim` (`modules/Sim.lua`).
 
 The simulator never writes a verdict, a trade estimate or an inspect state: what it invents enters
 at the client seam and through the event handlers, and the engine computes the rest. Test mode and

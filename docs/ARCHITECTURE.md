@@ -156,6 +156,12 @@ registered once, on `DW:OnSharedFeatureEvent`, which calls each declared handler
 TOC order of the modules). Each handler runs under `pcall`, so one that raises never skips the
 rest: its error is an `Init` debug line, and the first error is raised once every handler has run,
 the way the client's own registrant dispatch and AceAddon's errorCollector behave. `NS.FeatureEventNames()` is the declared list with each event once.
+`NS.DeliverEvent(event, ...)`, beside the dispatcher in `core/DropWatcher.lua`, is the simulator's
+replay of the same `NS.FEATURE_EVENTS` rows (`NS.Sim.Fire` and `NS.Sim.DeliverForCleanup` call it):
+it skips an event listed in `NS.rejectedEvents`, as the client never delivers one it rejected at
+registration, calls each declared handler in row order under `pcall`, writes a raise as a `SIM`
+debug line and never rethrows it (the deliberate difference from the live dispatcher), and answers
+how many handlers it called.
 
 | Event | Handler | Why |
 |---|---|---|
@@ -215,7 +221,7 @@ keeps the chat sender, the inspect calls and the trade action from the client
 altogether: a send is printed with `[sim]`, a trade is printed, and nothing is inspected
 or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
 simulated restrictions, so nothing it queued can reach the real sender. `Sim.Fire` calls each
-handler under `pcall`, as the client's event dispatch and the live shared dispatcher
+handler under `pcall` (through `NS.DeliverEvent`), as the client's event dispatch and the live shared dispatcher
 (`DW:OnSharedFeatureEvent`) isolate it, and the stop runs each cleanup
 step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
 failure is a `SIM` debug line. While its combat edge is up, the simulator answers

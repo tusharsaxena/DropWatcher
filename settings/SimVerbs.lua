@@ -113,7 +113,7 @@ end
 --- The status line: the running simulation at a glance, or that none runs.
 --- @return string
 function V.StatusLine()
-    local st = NS.Sim.Status()
+    local st = NS.SimHost.Status()
     if not st.active then return L["No simulation is running."] end
     local t = NS.SimScenario.Status() or { pos = 0, steps = 0 }
     return L["Simulating %s (%s): %d members, step %d of %d, %d sends printed."]:format(tostring(st.scenario),
@@ -202,7 +202,7 @@ function DO.loot(c)
 end
 
 function DO.lockdown(c)
-    NS.Sim.SetLockdown(c.on)
+    NS.SimHost.SetLockdown(c.on)
     NS.Print(c.on and L["Simulated chat lockdown on."] or L["Simulated chat lockdown off."])
     return true
 end

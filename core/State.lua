@@ -14,8 +14,8 @@ State.debug = false
 State.testMode = false
 
 -- The simulator's session (modules/Sim.lua, simulator spec §1, §5): nil while no simulation runs.
--- Never saved: a /reload or a logout ends a simulation. NS.Sim.active (core/SimSeam.lua) says the
--- same in one boolean, read on every Compat call.
+-- Never saved: a /reload or a logout ends a simulation. NS.Sim.IsActive() (modules/Sim.lua) says
+-- the same in one boolean; the seam (core/SimSeam.lua) reads its flag on every Compat call.
 State.sim = nil
 
 -- The run override of compact mode (modules/WindowCompact.lua, compact spec §1): { key, ended }

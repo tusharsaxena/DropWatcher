@@ -100,7 +100,7 @@ test("sim seam: the sender prints [sim] with the channel and the target, and sen
     assertEqual(#m.chatSent, 0, "nothing reached the client")
     assertEqual(printed(m, "[sim] WHISPER to Brakk-Testrealm: Need it?"), 1)
     assertEqual(printed(m, "[sim] RAID: Free ring!"), 1)
-    assertEqual(Sim.Status().sends, 2)
+    assertEqual(NS.SimHost.Status().sends, 2)
     -- A provider never gets the client's sender: its fallback is the guarded one.
     Sim.SetProvider("ChatSender", function(fallback) return fallback() end)
     NS.Compat.ChatSender()("Again", "PARTY")
@@ -167,10 +167,10 @@ test("sim start: a second start is refused; test mode is refused while one runs"
     assertEqual(printed(m, "Simulation started (key)"), 1)
     assertTrue(Sim.IsActive()); assertTrue(NS.State.sim.sim, "the session carries sim = true")
     assertFalse((Sim.Start({ scenario = "raid" })), "one at a time")
-    -- red under: drop the NS.Sim.active line from testModeRefusal (core/DropWatcher.lua)
+    -- red under: drop the NS.Sim.IsActive() line from testModeRefusal (core/DropWatcher.lua)
     assertFalse(NS.SetTestMode(true)); assertFalse(NS.State.testMode)
     assertEqual(printed(m, "Test mode is not available while a simulation runs."), 1)
-    assertEqual(Sim.Status().scenario, "key"); assertEqual(Sim.Status().situation, "mythicPlus")
+    assertEqual(Sim.Status().scenario, "key"); assertEqual(NS.SimHost.Status().situation, "mythicPlus")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -193,15 +193,15 @@ end)
 test("sim restrictions: Encounter and the lockdown are answered by the client seam and stop the sends", function()
     local NS, m, Sim = solo()
     Sim.Start({ scenario = "test" })
-    assertTrue(Sim.SetRestriction("Encounter", true))
-    assertFalse(Sim.SetRestriction("Encounter", true), "already on")
-    assertFalse(Sim.SetRestriction("NoSuchType", true))
+    assertTrue(NS.SimHost.SetRestriction("Encounter", true))
+    assertFalse(NS.SimHost.SetRestriction("Encounter", true), "already on")
+    assertFalse(NS.SimHost.SetRestriction("NoSuchType", true))
     assertTrue(NS.Compat.IsRestrictionActive(m.Enum.AddOnRestrictionType.Encounter))
     assertEqual(NS.Restrictions.ActiveReason(), "encounter")
     assertFalse(NS.Restrictions.CanSendChat())
-    assertTrue(Sim.SetRestriction("Encounter", false))
+    assertTrue(NS.SimHost.SetRestriction("Encounter", false))
     assertNil(NS.Restrictions.ActiveReason())
-    assertTrue(Sim.SetLockdown(true))
+    assertTrue(NS.SimHost.SetLockdown(true))
     assertTrue(NS.Compat.InChatMessagingLockdown()); assertEqual(NS.Restrictions.ActiveReason(), "chatLockdown")
     assertFalse(m.chatLockdown, "the client's own lockdown was never touched")
 end)
@@ -305,10 +305,10 @@ end)
 test("sim stop: a step that raises never skips the rest of the cleanup", function()
     local NS, m, Sim = solo()
     Sim.Start({ scenario = "test" })
-    Sim.MarkGUID(BRAKK)
+    NS.SimHost.MarkGUID(BRAKK)
     withBrakk(NS, m)
     local id = simDrop(NS, m, 301, "Brakk")
-    local log = Sim.HistoryLog()
+    local log = NS.SimHost.HistoryLog()
     m.setGroup({})
     NS.State.situation = "mythicPlus"
     local remove = NS.LootFeed.RemoveWhere
@@ -322,6 +322,45 @@ test("sim stop: a step that raises never skips the rest of the cleanup", functio
     assertEqual(NS.State.situation, "solo", "the situation was read again")
 end)
 
+test("sim fire: an event the client rejected at registration is never delivered", function()
+    local NS, _, Sim = solo()
+    Sim.Start({ scenario = "test" })
+    table.insert(NS.FEATURE_EVENTS, { "DW_TEST_REJECTED", "OnSimTestRejected" })
+    local ran = 0
+    NS.addon.OnSimTestRejected = function() ran = ran + 1 end
+    NS.rejectedEvents[#NS.rejectedEvents + 1] = "DW_TEST_REJECTED"
+    -- red under: a delivery that walks NS.FEATURE_EVENTS without consulting NS.rejectedEvents
+    local n = Sim.Fire("DW_TEST_REJECTED", 1)
+    table.remove(NS.FEATURE_EVENTS)
+    table.remove(NS.rejectedEvents)
+    NS.addon.OnSimTestRejected = nil
+    assertEqual(n, 0, "no handler was called")
+    assertEqual(ran, 0, "the handler never ran")
+end)
+
+test("sim deliver: NS.DeliverEvent answers the handler count and isolates a raising handler", function()
+    local NS = solo()
+    local rows = 0
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        if row[1] == "ENCOUNTER_START" then rows = rows + 1 end
+    end
+    table.insert(NS.FEATURE_EVENTS, 1, { "ENCOUNTER_START", "OnSimTestBoom" })
+    NS.addon.OnSimTestBoom = function() error("boom") end
+    local lines, debug = {}, NS.Debug
+    NS.Debug = function(tag, fmt, ...) lines[#lines + 1] = tag .. " " .. fmt:format(...) end
+    local ok, n = pcall(NS.DeliverEvent, "ENCOUNTER_START", 2900, "Sim Boss", 16, 20)
+    NS.Debug = debug
+    table.remove(NS.FEATURE_EVENTS, 1)
+    NS.addon.OnSimTestBoom = nil
+    assertTrue(ok, "a raising handler is never rethrown"); assertEqual(n, rows + 1, "every declared handler")
+    assertEqual(NS.LootFeed.Stats().encounter, "Sim Boss", "the later handlers ran")
+    local found = false
+    for _, line in ipairs(lines) do
+        if line:find("SIM handler OnSimTestBoom for ENCOUNTER_START failed:", 1, true) then found = true end
+    end
+    assertTrue(found, "the failure is a SIM debug line")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Stop cleans everything
 -- ---------------------------------------------------------------------------------------------
@@ -330,13 +369,13 @@ test("sim stop: its drops, groups, inspect entries, restrictions and lockdown go
     local NS, m, Sim = solo()
     local real = drop(NS, m, 200, nil)
     Sim.Start({ scenario = "test" })
-    Sim.MarkGUID(BRAKK)
+    NS.SimHost.MarkGUID(BRAKK)
     withBrakk(NS, m)
     Sim.Fire("ENCOUNTER_START", 2900, "Sim Boss", 16, 20)
     local mine, theirs = simDrop(NS, m, 300, nil), simDrop(NS, m, 301, "Brakk")
     assertTrue(NS.Inspect.Get(BRAKK) ~= nil, "the looter's inspect was asked for")
-    Sim.SetRestriction("Encounter", true)
-    Sim.SetLockdown(true)
+    NS.SimHost.SetRestriction("Encounter", true)
+    NS.SimHost.SetLockdown(true)
     m.setGroup({})
     assertTrue(Sim.Stop())
     assertFalse(Sim.IsActive()); assertNil(NS.State.sim)
@@ -347,7 +386,7 @@ test("sim stop: its drops, groups, inspect entries, restrictions and lockdown go
     -- red under: drop the NS.Inspect.Forget loop from cleanEngine (modules/Sim.lua)
     assertNil(NS.Inspect.Get(BRAKK), "its member's inspect entry went")
     assertNil(NS.Restrictions.ActiveReason(), "its restriction and lockdown were lifted")
-    assertFalse(NS.Sim.IsSimGUID(BRAKK))
+    assertFalse(NS.SimHost.IsSimGUID(BRAKK))
     assertEqual(printed(m, "Simulation stopped."), 1)
     assertFalse(Sim.Stop(), "nothing left to stop")
 end)
@@ -361,7 +400,7 @@ test("sim stop: a queued ask is canceled before the lift, so it never goes out",
     Sim.Start({ scenario = "test" })
     withBrakk(NS, m)
     local id = simDrop(NS, m, 300, "Brakk")
-    Sim.SetRestriction("Encounter", true)
+    NS.SimHost.SetRestriction("Encounter", true)
     assertEqual((NS.Asks.Request("ask", "Brakk", id)), "queued")
     -- red under: cancel the queued asks after cleanEngine (modules/Sim.lua Stop): the lifted
     -- restriction flushes the queue through the client's sender

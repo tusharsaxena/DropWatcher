@@ -25,7 +25,8 @@ local _, NS = ...
 -- (the guarded ones stay guarded): the simulator's own safety checks read the real world through it.
 --
 -- The session itself (start, stop, the refusals, the session-only history log) is
--- modules/Sim.lua's; this file holds only what Compat needs at call time.
+-- modules/Sim.lua's; this file holds only what Compat needs at call time. The guarded answers count
+-- into NS.SimHost.counts (modules/Sim.lua publishes it), read at call time.
 
 NS.Sim = NS.Sim or {}
 local Sim = NS.Sim
@@ -37,9 +38,6 @@ Sim.active = false
 
 -- True while Sim.Live runs: the ordinary members answer for the client.
 Sim.bypass = false
-
--- What the guarded answers did this session: { sends, handOvers }. Reset by modules/Sim.lua.
-Sim.counts = { sends = 0, handOvers = 0 }
 
 -- The members that answer for nobody: the secret guards and the pure text helpers. Never wrapped.
 local PURE = {
@@ -53,7 +51,8 @@ local providers = {}
 
 -- One printed line for a send that a simulation kept local.
 local function printSend(text, chatType, _, target)
-    Sim.counts.sends = Sim.counts.sends + 1
+    local c = NS.SimHost.counts
+    c.sends = c.sends + 1
     local channel = tostring(chatType or "?")
     if target ~= nil then
         NS.Print(L["[sim] %s to %s: %s"]:format(channel, tostring(target), tostring(text)))
@@ -63,7 +62,8 @@ local function printSend(text, chatType, _, target)
 end
 
 local function handOver(line, unit)
-    Sim.counts.handOvers = Sim.counts.handOvers + 1
+    local c = NS.SimHost.counts
+    c.handOvers = c.handOvers + 1
     NS.Print(L[line]:format(tostring(unit)))
     return true
 end

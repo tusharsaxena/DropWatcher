@@ -300,7 +300,7 @@ function E.Combat(on)
     if not d or d.combat == on then return false end
     d.combat = on
     Sim.Fire(on and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
-    Sim.SetRestriction("Combat", on)
+    NS.SimHost.SetRestriction("Combat", on)
     return true
 end
 
@@ -324,7 +324,7 @@ function E.Pull(opts)
     d.encounter = enc
     Sim.Fire("ENCOUNTER_START", encounterArgs(enc))
     E.Combat(true)
-    Sim.SetRestriction("Encounter", true)
+    NS.SimHost.SetRestriction("Encounter", true)
     return enc
 end
 
@@ -342,7 +342,7 @@ function E.Kill(success)
     local id, name, difficulty, size = encounterArgs(enc)
     Sim.Fire("ENCOUNTER_END", id, name, difficulty, size, kill and 1 or 0)
     E.Combat(false)
-    Sim.SetRestriction("Encounter", false)
+    NS.SimHost.SetRestriction("Encounter", false)
     return enc
 end
 
@@ -358,7 +358,7 @@ function E.RunStart()
         level = E.KEY_LEVEL }
     d.run = run
     Sim.Fire("CHALLENGE_MODE_START", run.mapID)
-    Sim.SetRestriction("ChallengeMode", true)
+    NS.SimHost.SetRestriction("ChallengeMode", true)
     return run
 end
 
@@ -371,7 +371,7 @@ function E.RunEnd()
     if not run or run.ended then return nil, "noRun" end
     run.ended = true
     Sim.Fire("CHALLENGE_MODE_COMPLETED")
-    Sim.SetRestriction("ChallengeMode", false)
+    NS.SimHost.SetRestriction("ChallengeMode", false)
     return run
 end
 

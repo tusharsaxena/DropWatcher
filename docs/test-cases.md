@@ -1636,7 +1636,7 @@ Total.
 - auto-ask edge: in test mode a placeholder's ask is printed, never sent
 - auto-ask: the diagnostics' messaging section reports auto-ask
 
-### test_sim_core.lua (25)
+### test_sim_core.lua (27)
 
 - sim seam: every Compat member that answers for the client is wrapped; the pure ones are not
 - sim seam: a provider answers only while a simulation runs; Live reads the client again
@@ -1657,6 +1657,8 @@ Total.
 - sim history: a real trade while a simulation runs settles against the saved history
 - sim fire: a handler that raises never unwinds into the driver; the later handlers run
 - sim stop: a step that raises never skips the rest of the cleanup
+- sim fire: an event the client rejected at registration is never delivered
+- sim deliver: NS.DeliverEvent answers the handler count and isolates a raising handler
 - sim stop: its drops, groups, inspect entries, restrictions and lockdown go; real drops stay
 - sim stop: a queued ask is canceled before the lift, so it never goes out
 - sim stop: the situation is classified from the real client again
@@ -1992,7 +1994,7 @@ Total.
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
 | test_auto_ask.lua | 24 |
-| test_sim_core.lua | 25 |
+| test_sim_core.lua | 27 |
 | test_sim_pool.lua | 20 |
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 20 |
@@ -2010,4 +2012,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1660** |
+| **Total** | **1662** |

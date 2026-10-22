@@ -7,7 +7,7 @@ local _, NS = ...
 -- PURE. Random, Members and Gear take every input as an argument (the random source included)
 -- and touch no client and no state, so a seed replays the same group. Create is the edge: it reads
 -- your realm and your average item level, draws the group for the running session, marks each GUID
--- as the simulation's (NS.Sim.MarkGUID, so the stop forgets it everywhere) and stores the list on
+-- as the simulation's (NS.SimHost.MarkGUID, so the stop forgets it everywhere) and stores the list on
 -- the session. It answers nothing to the client: the members reach the roster, the inspect replies
 -- and the loot lines through the event drivers (DW-72), which read Members.
 --
@@ -265,7 +265,7 @@ function R.Create(opts)
     local band = R.BandAround(anchor, opts.band)
     for _, m in ipairs(members) do
         m.gear, m.levels = R.Gear(m, entries, band, rnd)
-        NS.Sim.MarkGUID(m.guid)
+        NS.SimHost.MarkGUID(m.guid)
     end
     s.members = members
     NS.Debug(TAG, "roster: %d members, band %d-%d, %d pool entries", #members, band.low, band.high, #entries)

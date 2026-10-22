@@ -576,7 +576,7 @@ end
 -- Simulated only while Sim.Fire delivers (spec §5); a real drop during a sim keeps the real situation.
 local function origin()
     local Sim, Sit = NS.Sim, NS.Situations
-    if Sim.delivering or not Sim.active then return Sim.delivering or nil, Sit.Current() end
+    if Sim.IsDelivering() or not Sim.IsActive() then return Sim.IsDelivering() or nil, Sit.Current() end
     return nil, Sim.Live(function() return Sit.Classify(Sit.ReadInputs()) end)
 end
 

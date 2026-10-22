@@ -421,7 +421,7 @@ test("sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and
     -- A simulated trade lands in the session's log, never in saved history.
     slash(NS, "sim trade " .. mine.id)
     assertEqual(NS.History.OutcomeOf(mine.id), "tradedAway")
-    assertTrue(#NS.Sim.HistoryLog().groups > 0)
+    assertTrue(#NS.SimHost.HistoryLog().groups > 0)
     assertEqual(savedHistory(NS), 0, "DB.global.history untouched")
     assertEqual(#m.chatSent, 0, "the real chat sender was never called")
     assertEqual(#m.inspect.notified, 0, "no real inspect")

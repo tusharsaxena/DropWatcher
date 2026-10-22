@@ -115,7 +115,9 @@ core\LauncherSetup.lua
 defaults\Profile.lua
 
 # Modules
-# LOAD-BEARING: publishes the simulator's session on NS.Sim (core\SimSeam.lua, above). It is the first
+# LOAD-BEARING: publishes the simulator's session on NS.Sim (core\SimSeam.lua, above) and the host-only
+# members on NS.SimHost (the session log, the invented GUIDs, the simulated restrictions and lockdown,
+# the refusals, the automatic stop and the guarded answers' counts). It is the first
 # module so its GROUP_ROSTER_UPDATE, PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows run before
 # every other module's (the automatic stop, before anything reads the client) and its STAND_DOWN
 # step runs first (the stop cleans up while every module still holds its state). Appends to

@@ -69,6 +69,37 @@ function DW:OnSharedFeatureEvent(event, ...)
     if first ~= nil then error(first, 0) end
 end
 
+local function isRejected(event)
+    for _, name in ipairs(NS.rejectedEvents) do
+        if name == event then return true end
+    end
+    return false
+end
+
+--- The simulator's replay of the registration (modules/Sim.lua's Fire and DeliverForCleanup):
+--- every handler NS.FEATURE_EVENTS declares for `event`, in row order, with payload `...`, as the
+--- client would call them. An event the client rejected at registration (NS.rejectedEvents) is
+--- never delivered, as the client never delivers it. Each handler is isolated under pcall, and
+--- here a raise is a SIM debug line and is NEVER rethrown (the deliberate difference from
+--- DW:OnSharedFeatureEvent above, which rethrows the first error): a simulated event's driver, its
+--- sequence and the timeline go on. Answers how many handlers were called.
+--- @param event string
+--- @return number
+function NS.DeliverEvent(event, ...)
+    if isRejected(event) then return 0 end
+    local n = 0
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        if row[1] == event then
+            local ok, err = pcall(DW[row[2]], DW, event, ...)
+            if not ok then
+                NS.Debug("SIM", "handler %s for %s failed: %s", tostring(row[2]), tostring(event), NS.SafeToString(err))
+            end
+            n = n + 1
+        end
+    end
+    return n
+end
+
 local function registerFeatureEvents(self)
     local by = handlersByEvent()
     sharedHandlers = {}
@@ -127,7 +158,7 @@ local function testModeRefusal()
     if stoodDown then return stoodDown end
     if NS.Compat.InCombatLockdown() then return NS.L["Test mode is not available in combat."] end
     -- The simulator and test mode are exclusive (simulator spec §1): placeholders are not the engine.
-    if NS.Sim.active then return NS.L["Test mode is not available while a simulation runs."] end
+    if NS.Sim.IsActive() then return NS.L["Test mode is not available while a simulation runs."] end
     return nil
 end
 

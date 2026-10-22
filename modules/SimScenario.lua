@@ -133,8 +133,8 @@ local PLAY = {
         local enc = NS.SimEvents.Kill()
         return enc ~= nil, enc and enc.name
     end,
-    lockdownOn  = function() return Sim.SetLockdown(true) end,
-    lockdownOff = function() return Sim.SetLockdown(false) end,
+    lockdownOn  = function() return NS.SimHost.SetLockdown(true) end,
+    lockdownOff = function() return NS.SimHost.SetLockdown(false) end,
     -- Kept on the step: where its drops went (modules/SimReport.lua; feedback-3 spec §0), which the
     -- panel's row and tooltip read again on every repaint.
     loot        = function(step)
@@ -301,7 +301,7 @@ local function ready(s, def, t)
 end
 
 --- Start scenario `name` (spec §4): the session (refused, with the line printed, per
---- NS.Sim.Refusal), its pool, then its group and the window. `size` sizes a raid's group;
+--- NS.SimHost.Refusal), its pool, then its group and the window. `size` sizes a raid's group;
 --- `opts` = { seed, classFilter = `mine`|`any`, band = { low, high } (the members' item-level
 --- offsets around the content's level; the scenario's, else modules/SimRoster.lua's default) }.
 --- Answers true, or false and why: `unknown` (no such scenario), `refused`.
