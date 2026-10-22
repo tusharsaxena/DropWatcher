@@ -93,8 +93,8 @@ on each render. The placeholder's `OnRelease` parks it (`ParkSituationTable`), h
 whenever AceGUI takes the placeholder back (options-ui-§19); the Situations page's renderer
 (`beforeClear` in `settings/Pages.lua`, and its `rerender`) also parks it before `ClearScroll` as
 belt-and-braces. Until DW-H0 the tab drew one block per situation,
-since LibKa0s has no grid composer for mixed controls ([LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50));
-the table is drawn by the page's own editor instead.
+since LibKa0s has no grid composer for mixed controls;
+[LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one consumer; the table stays the page's own editor.
 
 ## Drops
 

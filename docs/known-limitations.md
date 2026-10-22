@@ -95,8 +95,8 @@ the code reads every case the design leaves open, module by module, is in
   their bag item whatever the source. ITEM-3 and the `drops` diagnostics line record it in game.
 - **The Situations table** (General › When to show's until feedback-24; since DW-H0, feedback-8 spec §0) is the page's own editor
   (`settings/PageEditors.lua`), not a library composer: LibKa0s-Options has no grid composer for
-  mixed controls. A LibKa0s issue asking for one is filed as
-  [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50).
+  mixed controls. [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one
+  consumer; the table stays the page's own editor.
 - **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
   headless mock does not model; PROFILE-1 is its in-game check.
 - **The logo** is a placeholder generated for the scaffold; the owner may replace the art
