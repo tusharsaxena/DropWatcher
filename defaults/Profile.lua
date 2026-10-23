@@ -188,7 +188,7 @@ NS.C = {
 
         -- The simulator (feedback-2 spec §8): the seconds an automatic run waits between steps.
         sim = {
-            stepDelay = 2,
+            stepDelay = 1,
         },
     },
 

@@ -329,7 +329,7 @@ the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receip
                    each place honors the feed the window shows (SimReport.View = Window.FeedView:
                    not shown in test mode; §5); yours are on Drops like any other (feedback-5 §2)
 /dw sim run ─> NS.Sim:Run: a step now, then one every stepDelay seconds (the descriptor's
-                   SimScenario.StepDelay(): `sim.stepDelay`, 2 by default, read as each next step is
+                   SimScenario.StepDelay(): `sim.stepDelay`, 1 by default, read as each next step is
                    set) on the session's own timers (the stop ends it) ─> at the last step the
                    library's finished line (`… /dw sim stop ends it.`)
 /dw sim pause | resume | restart ─> NS.Sim:Pause (the pending tick canceled) | Resume (Run) | Restart

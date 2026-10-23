@@ -64,7 +64,7 @@ Every module reads a setting through `NS.Setting(path)`.
 | `visibility` | `"always"` | Master controls | `always`, `inCombat`, `outOfCombat` or `never` |
 | `scale`, `alpha` | `1.0`, `1.0` | Master controls | the window's scale and alpha |
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
-| `sim.stepDelay` | `2` | Simulator | the seconds the simulator's automatic run (`/dw sim run`, the panel's Run all) waits between steps, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7); read as each next step is set, so a change takes effect from the next step |
+| `sim.stepDelay` | `1` | Simulator | the seconds the simulator's automatic run (`/dw sim run`, the panel's Run all) waits between steps, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7; the default was `2` until the owner's 2026-10-23 simulator feedback, and needs no migration because AceDB never stores a value equal to its default); read as each next step is set, so a change takes effect from the next step |
 
 ### Situations
 
