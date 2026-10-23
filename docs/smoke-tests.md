@@ -1578,6 +1578,8 @@ agent:
   sim line (`SIM: a made-up session. …`) wraps to two lines and the panes move down to clear it; the
   title `Drop Watcher` is centered alone.
 
+Result: passed in the client, 2026-10-23 (the owner).
+
 ## Roster
 
 The resolver's rules are headless-tested (`test_roster`); these checks confirm the client's spelling
@@ -2561,6 +2563,8 @@ machine and the controls are LibKa0s-Sim-1.0's. Solo, outside an instance, out o
   when the pool is ready nothing plays. `/dw sim resume` plays it, and `/dw sim run`, typed while it
   plays, prints `The timeline is already playing.`
 
+Result: passed in the client, 2026-10-23 (the owner).
+
 ## Compact
 
 **COMPACT-1. The layout switch (DW-C0).** With the window open in its full layout, hover the title bar's new
@@ -2708,8 +2712,7 @@ stray `%s` or `%d`, and no Lua error. Result: passed in the client, 2026-10-23 (
 
 ## Pending sign-off
 
-On 2026-10-23 the owner reported every check then in this file passed in the client, and each one's `Result:` line records it.
-Owed since: SIM-17 (DW-01) and FEED-102 (DW-10), each with no `Result:` line yet.
+None. On 2026-10-23 the owner reported every check in this file passed in the client, SIM-17 (DW-01) and FEED-102 (DW-10) included, and each one's `Result:` line records it.
 
 ### Review 2026-10-14 (M24) sign-off
 
