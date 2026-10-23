@@ -81,7 +81,7 @@ than falling back to text, so this pass is the backstop the headless gate cannot
 - SM-DW-3: the library-drawn set draws: the debug console's close, copy and clear (`/dw debug`), the
   perf panel's close (`/dw perf`), and the main window's close mark.
 
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 ## Slash
 
@@ -127,7 +127,7 @@ Ka0s Drop Watcher lists `Toggle Drop Watcher window` with no default key. Bind o
 window and a second press closes it (one toggle per press), in and out of combat. Then `/dw disable`
 and press the key → exactly one disabled refusal line and no window. `/dw enable`, start a
 `/dw perf` capture and press → exactly `Not available during a performance capture.` and no toggle.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 ## Settings panel
 
@@ -1537,7 +1537,7 @@ reserving nothing) covers the wiring. Owed in the client, never marked passed by
 - SM-DW-13. With test mode on, enter combat → test mode ends, and the strip and the room it reserved
   go. While test mode is on, the `TEST MODE` title word shows, minimized too.
 
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-101. The filter bar's search box is LibKa0s-Widgets' SearchBox (DW-07, LibKa0s#52).** The
 headless `test_window_shell` (the box built once through `NS.MakeSearchBox` with Drop Watcher's hint
@@ -1550,7 +1550,7 @@ search box) covers the wiring. Owed in the client, never marked passed by an age
   drop focus; in compact layout the box moves into the Filters panel with its hint (FB.Anchor) and still
   filters.
 
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 ## Roster
 
@@ -2259,7 +2259,7 @@ wiring headless. Owed in the client, never marked passed by an agent:
   burst plays once per drop: scrolling, re-sorting or a new drop repainting the window shows only the
   loop on an icon that already glowed.
 
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 ## Item icons
 
@@ -2335,7 +2335,7 @@ mode on (`Turn test mode off before starting a simulation.`), and a second start
 While one runs, `/dw test` → `Test mode is not available while a simulation runs.` Start one, then
 join a group → `Simulation stopped: you joined a group.`; start one, then `/dw disable` →
 `Simulation stopped: the addon was disabled.` After a `/reload`, no simulation is running and
-`/dw history` shows no simulated drop. Result:
+`/dw history` shows no simulated drop. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-2. A full `key` run (DW-73).** The headless `test_sim_scenario` (`sim e2e key`) covers the same
 ground. Solo, outside an instance, out of combat, with `/dw debug on`: `/dw sim start key` → chat says
@@ -2348,7 +2348,7 @@ n/11: …` per step, and chat ends with `The simulation's timeline has finished.
 drop while the lockdown holds → it waits in the badge's queue; when it lifts, chat prints `[sim]
 WHISPER to <member>: <text>` and the whisper tab shows nothing sent. Each drop shows your verdict and,
 within a few seconds, the looter's. `/dw diagnostics` → the `sim:` lines show `scenario=key`, the
-pool's size and `source=journal`, `timeline step=11/11` and the sends printed. Result:
+pool's size and `source=journal`, `timeline step=11/11` and the sends printed. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-3. A `raid` run with a large roster (DW-73).** The headless `test_sim_scenario` (`sim e2e raid`)
 covers the same ground. `/dw sim start raid 19` → the Drops tab's roster shows 19 invented
@@ -2359,7 +2359,7 @@ Record how long the inspect warm-up takes to read all 19 (the footer's `Inspect 
 any automatic ask goes out (`[sim] WHISPER`, never a real whisper) once the second boss is down, and
 the frame rate while the burst lands. `/dw sim trade <id>` on a member's drop → the History tab shows
 it `Received`. `/dw sim stop` → the roster is you alone, and the History tab shows only your real
-history. Result:
+history. Result: passed in the client, 2026-10-23 (the owner).
 **SIM-4. Inspect replies, the lockdown queue and its flush (DW-72).** The headless `test_sim_events`
 covers the same ground. Solo, outside an instance, with `/dw
 debug on`: `/dw sim start dungeon` → the Drops tab's roster shows four invented members, and
@@ -2369,7 +2369,7 @@ shows `[SIM] inspect of <member>: reply in <n>s` and no real inspect window open
 member's spec shows on the drop's detail card (the broker reads it after its own clear; the
 simulator answers as the client does). `/dw sim pull` → the badge shows the encounter; press Ask on
 a member's drop → it is queued, nothing is printed. `/dw sim kill` → within a few seconds chat prints
-`[sim] WHISPER to <member>: <text>`, and the whisper tab shows nothing sent. Result:
+`[sim] WHISPER to <member>: <text>`, and the whisper tab shows nothing sent. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-5. Your own drops' trade windows and a simulated trade (DW-72).** The headless `test_sim_events`
 covers the same ground. `/dw sim start dungeon`, then `/dw
@@ -2378,7 +2378,7 @@ the warning is at 10 minutes) and the second with about 4 hours; your real bags 
 Open a member's drop's detail card and press Trade → chat prints `[sim] Would open a trade with <unit>.`
 and no trade window opens. `/dw sim trade <its id>` → the History tab shows it `Traded away`; loot a
 member's drop and `/dw sim trade <its id>` → `Received`. After `/dw sim stop` the History tab shows
-only your real history. Result:
+only your real history. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-6. The item pool: the Encounter Journal and its fallback (DW-71).** The headless `test_sim_pool`
 covers the same ground. Solo, outside an instance, with `/dw
@@ -2392,7 +2392,7 @@ the pool line again, with raid items. The fallback: leave the Encounter Journal 
 so this simulation drops your own gear instead.` and the drops are your own items. Stop and start
 again with it still open → the line is not printed a second time this session. Close it before the
 5 seconds instead → the journal pool is read once it closes. Record the item count of each pool.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-7. The verbs' refusals and the automatic stop end to end (DW-73).** The headless
 `test_sim_scenario` and `test_sim_core` cover the same ground. With no simulation running, `/dw sim
@@ -2403,14 +2403,14 @@ With one running: `/dw sim pull` twice → `A simulated boss is already engaged:
 `/dw sim run` twice → `The timeline is already playing.` Start one and `/dw sim run`, then accept a
 real group invite mid-run → `Simulation stopped: you joined a group.`, the `SIMULATION` text goes, no further
 step plays, and the footer shows the real situation. Start one, then zone into an instance (a
-follower dungeon will do) → `Simulation stopped: you entered an instance.` Result:
+follower dungeon will do) → `Simulation stopped: you entered an instance.` Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-8. Real loot during a simulation stays real (DW-70 review).** The headless `test_sim_core`
 (`sim history: a real drop while a simulation runs …`) covers the same ground. Solo in the open
 world: `/dw sim start world`, then loot a real item from a mob or chest → it appears in the feed
 with your real situation (solo), not the simulated group's, and it is not marked as simulated. `/dw sim stop` → the simulated
 drops go, the real one stays in the feed, and the History tab (the account's log again) shows it.
-`/reload` → it is still in History. Result:
+`/reload` → it is still in History. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-9. A sim run fills the window under the default filters (DW-90, sim feedback §0).** The
 headless `test_sim_e2e` covers the same ground in every scenario, at the content's level and
@@ -2422,7 +2422,7 @@ Mythic+ · 4 members` and `Inspect 4/4 fresh` once the inspects land, and Drops 
 member's drop and at least one of yours. Repeat with `/dw sim start delve` and `/dw sim
 start world` (both untracked by default) → each fills the window the same way. `/dw sim start lfr`
 → an ask's announce goes to instance chat (`[sim] INSTANCE_CHAT: …`). In `/dw sim start raid 12`
-→ you show online in the roster (`/dw diagnostics`, `unit=raid1`). Result:
+→ you show online in the roster (`/dw diagnostics`, `unit=raid1`). Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-10. The simulation step panel (DW-91, sim feedback §1; LibKa0s-Sim-1.0's since DW-04).** The
 headless `test_sim_panel` covers DropWatcher's part; the panel's own behavior is LibKa0s-Sim-1.0's.
@@ -2446,7 +2446,7 @@ headless `test_sim_panel` covers DropWatcher's part; the panel's own behavior is
   login (the journal still loading) with the panel open → once the window opens the panel moves
   beside it, not over it.
 
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** The headless `test_sim_scenario`
 (`sim step delay`) covers the same ground. Settings › General › Simulator →
@@ -2455,7 +2455,7 @@ Result:
 Run all → the steps come about one second apart. Set the slider to 6 while it plays → the step
 already waiting keeps its time, and the next ones come about six seconds apart. `/dw set
 sim.stepDelay 1.5` → the steps speed up from the next one, and `/dw get sim.stepDelay` reads 1.5.
-(Since DW-04 Run all's tooltip is the library's and names only its typed command.) Result:
+(Since DW-04 Run all's tooltip is the library's and names only its typed command.) Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-12. The loot step says where its drops went, and the window reconciles (DW-B0, feedback-3 spec
 §0; one tab since DW-E3).** The headless `test_sim_report` covers the same ground in every scenario. Solo,
@@ -2465,7 +2465,7 @@ panel row and the chat line read `Loot: 2 drops` (`Simulation step 10 of 11: Loo
 (`… (you): Drops`, `… (<member>): Drops`). Drops shows both under a header reading `2 drops`, yours
 with Offer, even when your drop is an upgrade you keep. `/dw set feed.minIlvlMode absolute` and
 `/dw set feed.minIlvl 900`, then `/dw sim loot 2` → chat reads `Simulated loot: 2 drops (2
-hidden).` and the tables gain nothing (set both back afterwards). Result:
+hidden).` and the tables gain nothing (set both back afterwards). Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-13. The loot step honors the feed the window shows (DW-B5, feedback-3 spec §5).** The headless
 `test_sim_report` (its `View` cases) covers it. `/dw sim start key` and play to its loot step → the panel
@@ -2473,7 +2473,7 @@ row and the chat line read `Loot: 2 drops`. Turn test mode on (`/dw test`) with 
 reads `Loot: 2 drops (2 not shown in test mode)` and its tooltip `… not shown while test mode is on`; turn
 test mode off → the places come back. (`feed.showOwn`, and with it the `Group drops and My drops` and
 `not on My drops` places this check also read, are gone since DW-E2/DW-E3: `/dw get feed.showOwn` finds no
-setting.) Result:
+setting.) Result: passed in the client, 2026-10-23 (the owner).
 
 SIM-1..13 are owed again since DW-02..DW-04 moved the simulator onto LibKa0s-Sim-1.0 (LibKa0s#54):
 the session, its stop, the timeline's step machine, the `/dw sim` grammar and the step panel are the
@@ -2494,7 +2494,7 @@ and `test_sim_scenario` cover DropWatcher's part; the session and the timeline a
   `/dw sim restart` → chat prints `Simulation stopped to restart.`, the library's stop line for a
   restart (accepted change, OWNER_SCOPE C.7), and the same scenario starts again.
 
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-15. `/dw sim` through the library's grammar (DW-03; SM-DW-6).** The headless
 `test_sim_scenario` covers DropWatcher's five verbs; the grammar is the library's (its
@@ -2503,7 +2503,7 @@ Result:
 each print the same lines as before; `/dw sim bogus` prints the usage; `/dw sim start nosuch` prints
 `Unknown scenario 'nosuch'. Scenarios: …` with the scenario names, the library's line (accepted
 change, OWNER_SCOPE C.7; it was `Unknown scenario.`); `/dw disable`, then `/dw sim run` → the one
-disabled refusal line. Result:
+disabled refusal line. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-16. The library's step panel, its position session-only (DW-04; SM-DW-7..9).** The headless
 `test_sim_panel` covers DropWatcher's part; the panel is the library's (its `test_sim_panel` and
@@ -2511,7 +2511,7 @@ disabled refusal line. Result:
 visible change (OWNER_SCOPE C.7, C.11): the panel's buttons are the library's default buttons, its
 tips plain GameTooltip lines, and it has a width grip; and the panel forgets its point at `/reload`:
 drag it, `/reload`, `/dw sim panel` → it docks beside the window again, and `SavedVariables` holds no
-`simPanel` key (migration 9 removed an old one). Result:
+`simPanel` key (migration 9 removed an old one). Result: passed in the client, 2026-10-23 (the owner).
 
 ## Compact
 
@@ -2765,22 +2765,6 @@ stray `%s` or `%d`, and no Lua error. Result:
 | TMOG-1 | DW-53, the transmog-known flag and the For transmog ask | No client pass recorded yet |
 | ASK-8 | DW-54, auto-ask | No client pass recorded yet |
 | ASK-9 | DW-62, auto-ask after leaving an encounter | No client pass recorded yet |
-| SIM-1 | DW-70, the simulator's core: the seam, its safety and the session log | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-2 | DW-73, a full `key` run | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-3 | DW-73, a `raid` run with a large roster | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-4 | DW-72, inspect replies, the lockdown queue and its flush | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-5 | DW-72, your own drops' trade windows and a simulated trade | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-6 | DW-71, the simulator's item pool and its fallback | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-7 | DW-73, the verbs' refusals and the automatic stop end to end | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-10 | DW-91, the simulation step panel | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-11 | DW-A7, the simulation step delay setting; its one-second default (owner feedback 2026-10-23) | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) and the one-second default |
-| SIM-12 | DW-B0, the loot step says where its drops went; the window reconciles | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-13 | DW-B5, the loot step honors test mode's feed (`feed.showOwn` and My drops' filters retired since DW-E2/DW-E3) | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-14 | DW-02, the session on LibKa0s-Sim-1.0 and its Restart stop line (SM-DW-4, SM-DW-5) | No client pass recorded yet |
-| SIM-15 | DW-03, `/dw sim` through the library's grammar and its unknown-scenario line (SM-DW-6) | No client pass recorded yet |
-| SIM-16 | DW-04, the library's step panel, its default buttons, GameTooltip tips and width grip, its position session-only (SM-DW-7..9) | No client pass recorded yet |
 | COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
 | COMPACT-2, COMPACT-7 | DW-C2, compact Drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
 | COMPACT-8 | feedback-15, compact headers left aligned, LFR, per-piece limits | No client pass recorded yet |
@@ -2794,7 +2778,6 @@ stray `%s` or `%d`, and no Lua error. Result:
 | COMPAT-4 | DW-P20, the optional-addon probe through Compat | No client pass recorded yet |
 | PANEL-8, DEGRADED-2, TOAST-4 | DW-P21, the situation table's OnRelease park; the toast's close degrading to nothing | No client pass recorded yet |
 | INSTALL-4 | DW-P22, the LibKa0s v1.72.0 re-vendor | DW-P22 has landed (`ff567d3`); no client pass recorded yet |
-| INSTALL-5 | DW-RV, the LibKa0s v1.75.0 re-vendor and icon prune | No client pass recorded yet |
 | DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | DW-P22 (`ff567d3`) and DW-P24 (`917449f`) have landed; owed the owner's capture recorded under `docs/perf-analysis/`; none is invented |
 | SLASH-7 | Review 2026-10-14, the cross-addon census's in-client half | No client pass recorded yet |
 | ITEM-5 | The Fireproof Drape fix: every primary stat read off the tooltip, the spec list held to its own class | No client pass recorded yet |
@@ -2815,7 +2798,6 @@ stray `%s` or `%d`, and no Lua error. Result:
 | GLOW-7..8 | feedback-21, each glow turned off; a style's knobs dimmed for another style | No client pass recorded yet |
 | GLOW-9 | feedback-21, Use class color below each glow color (H6): the player's class, the swatch's alpha, never dimmed | No client pass recorded yet |
 | GLOW-10 | feedback-21 H6, the glow defaults (both pixel, `#FFF468` and `#3FC7EB`, frequency 0.1) and every row main left, off-spec right | No client pass recorded yet |
-| GLOW-11 (SM-DW-15) | DW-08, LibKa0s#56, the four glow styles on the LibKa0s-Glow-1.0 driver: each surface, main and off-spec, each knob restarting the glow, the proc burst once per drop | No client pass recorded yet |
 | TOAST-6 | feedback-21 G10, the toast's Scale: 50 to 200 %, live on a toast on screen, about its saved anchor | No client pass recorded yet |
 | ICON-1..2 | feedback-21 G11, the default look (H6: zoom 0.1, a Solid black border 2 pixels thick), Window › Icons' rows, Icon zoom live on every surface | No client pass recorded yet |
 | ICON-3..4 | feedback-21 G11, the border block, its Use class color and the glow over it; Color by item quality | No client pass recorded yet |
@@ -2834,9 +2816,6 @@ stray `%s` or `%d`, and no Lua error. Result:
 | FEED-97 | feedback-22, the trade box above FOR YOU and FOR LOOTER on the detail card, full and stacked | No client pass recorded yet |
 | FEED-98 | feedback-23, the compact button on lines 2 and 3, Them on line 4 when it does not fit beside You, 400 x 560 | No client pass recorded yet |
 | FEED-99 | feedback-24, the settings pages regrouped: Situations, Drops, Window's Starting view, Alerts; the pairings and labels | No client pass recorded yet |
-| FEED-100 | DW-06 (LibKa0s#48), the test-mode banner as the library's strip: full layout unchanged and a long line truncated; compact two lines at 380, one at 520; combat ends it with its reserve | No client pass recorded yet |
-| FEED-101 | DW-07 (LibKa0s#52), the filter bar's search box as the library's SearchBox: the same look and hint, the gold focus line, live filtering, Enter and Escape, compact | No client pass recorded yet |
-| SLASH-8 | DW-09 (LibKa0s#58, launcher-§6), the Show window key binding: listed with no default key, one toggle per press in and out of combat (SM-DW-16); one refusal line by hold, disabled or perf capture, and no toggle (SM-DW-17) | No client pass recorded yet |
 
 ### Review 2026-10-14 (M24) sign-off
 
