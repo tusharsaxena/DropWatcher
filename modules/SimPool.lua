@@ -108,6 +108,22 @@ function P.Drops(pool)
     return out
 end
 
+--- What a loot burst draws from (modules/SimEvents.lua): the pool's drops that are gear (an equip
+--- location the comparisons know, facts filled), or every drop when none is. The journal also
+--- lists recipes and consumables, which the feed hides as not gear, so a burst drawn from those
+--- alone shows nothing (the owner's /dw sim on 2026-10-23).
+--- @param pool table|nil
+--- @return table
+function P.LootDrops(pool)
+    local drops, gear = P.Drops(pool), {}
+    for _, e in ipairs(drops) do
+        P.Facts(e)
+        if C.SLOT_PLAN[e.equipLoc] then gear[#gear + 1] = e end
+    end
+    if #gear == 0 then return drops end
+    return gear
+end
+
 -- ── item facts ─────────────────────────────────────────────────────────────────────────────
 
 --- Fill an entry's facts from the client (equip location, item level, class and subclass), once

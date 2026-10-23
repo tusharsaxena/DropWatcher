@@ -1210,7 +1210,7 @@ Total.
 - gear: an item still loading leaves its slot unknown, and its arrival rebuilds
 - gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
 
-### test_loot_parser.lua (27)
+### test_loot_parser.lua (28)
 
 - loot parser: loot (self) x1
 - loot parser: loot (self) x3
@@ -1234,6 +1234,7 @@ Total.
 - loot parser: a secret event GUID is not used
 - loot parser: a secret, empty or absent GlobalString is left out of the set
 - loot parser: a GlobalString rewritten at runtime (PrettyChat) is rebuilt on the next line
+- loot parser: a pushed or created string identical to a loot string reads as loot (PrettyChat)
 - loot parser: a deDE client reads its own lines
 - loot parser: positional arguments are read in the locale's order
 - loot parser: CHAT_MSG_LOOT hands each receipt to every sink and counts the lines
@@ -1676,13 +1677,14 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (20)
+### test_sim_pool.lua (21)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
 - compat journal: Instances lists the tier's dungeons or raids; Loot answers the loaded and the pending
 - compat journal: world bosses are flagged, bosses named, the keys' preview level set and put back (fb17)
 - sim pool: each situation reads its side and difficulty; the class filter is yours or none
+- sim pool: a loot burst draws the pool's gear, and every drop only when it has none
 - sim pool: a read takes every instance of the newest tier at every difficulty and restores the selection
 - sim pool: the selection is restored even when a read raises
 - sim pool: the journal is not read while its frame is shown
@@ -1994,7 +1996,7 @@ Total.
 | test_item_facts.lua | 21 |
 | test_item_read.lua | 24 |
 | test_gear.lua | 27 |
-| test_loot_parser.lua | 27 |
+| test_loot_parser.lua | 28 |
 | test_inspect.lua | 33 |
 | test_feed.lua | 50 |
 | test_feed_counts.lua | 10 |
@@ -2014,7 +2016,7 @@ Total.
 | test_icon_style.lua | 10 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
-| test_sim_pool.lua | 20 |
+| test_sim_pool.lua | 21 |
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 26 |
 | test_sim_e2e.lua | 20 |
@@ -2032,4 +2034,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1678** |
+| **Total** | **1680** |

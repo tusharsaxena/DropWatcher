@@ -185,6 +185,21 @@ test("sim pool: each situation reads its side and difficulty; the class filter i
     assertEqual(#P.Drops(nil), 0)
 end)
 
+test("sim pool: a loot burst draws the pool's gear, and every drop only when it has none", function()
+    -- red under: the loot driver that drew from every journal entry, so a key's burst could be a
+    -- salve and a recipe, both hidden as not gear (the owner's /dw sim on 2026-10-23)
+    local NS = T.newAddon()
+    local P = NS.SimPool
+    local ring, salve, plans = { difficulty = 8, equipLoc = "INVTYPE_FINGER" },
+        { difficulty = 8, equipLoc = "" }, { difficulty = 8, equipLoc = "" }
+    local pool = { difficulty = 8, entries = { salve, ring, plans, { difficulty = 23, equipLoc = "INVTYPE_HEAD" } } }
+    local got = P.LootDrops(pool)
+    assertEqual(#got, 1, "the gear at the pool's difficulty only")
+    assertTrue(got[1] == ring)
+    assertEqual(#P.LootDrops({ difficulty = 8, entries = { salve, plans } }), 2, "no gear: every drop")
+    assertEqual(#P.LootDrops(nil), 0)
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Reading the journal
 -- ---------------------------------------------------------------------------------------------

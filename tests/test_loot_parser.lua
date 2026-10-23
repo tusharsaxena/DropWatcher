@@ -195,6 +195,28 @@ test("loot parser: a GlobalString rewritten at runtime (PrettyChat) is rebuilt o
     assertEqual(LP.Parse("Brakk receives loot: " .. BAND .. ".").looterGUID, BRAKK, "and back again")
 end)
 
+test("loot parser: a pushed or created string identical to a loot string reads as loot (PrettyChat)", function()
+    -- red under: the parser that tried the pushed shapes first, so with PrettyChat's defaults
+    -- (LOOT_ITEM_PUSHED* spelled exactly as LOOT_ITEM*) every loot line read as pushed and your own
+    -- drops were refused (the owner's /dw sim on 2026-10-23: `refused [Saptor Salve]: pushed`)
+    local _, m, LP = party()
+    local SELF, OTHER_FMT = "|cffff0000Loot|r | You | + %s", "|cffff0000Loot|r | %s | + %s"
+    m.LOOT_ITEM_SELF, m.LOOT_ITEM_PUSHED_SELF = SELF, SELF
+    m.LOOT_ITEM, m.LOOT_ITEM_PUSHED = OTHER_FMT, OTHER_FMT
+    m.LOOT_ITEM_SELF_MULTIPLE, m.LOOT_ITEM_PUSHED_SELF_MULTIPLE = SELF .. " x%d", SELF .. " x%d"
+    m.CREATED_ITEM = OTHER_FMT
+    local mine = LP.Parse("|cffff0000Loot|r | You | + " .. BAND)
+    assertEqual(mine.kind, "loot", "your own line is loot, not pushed")
+    assertEqual(mine.looterGUID, ME)
+    assertEqual(LP.Parse("|cffff0000Loot|r | You | + " .. BAND .. " x2").kind, "loot")
+    local theirs = LP.Parse("|cffff0000Loot|r | Brakk | + " .. OTHER)
+    assertEqual(theirs.kind, "loot", "a member's line is loot, not pushed or a created echo")
+    assertEqual(theirs.looterGUID, BRAKK)
+    m.LOOT_ITEM_PUSHED_SELF = "|cffff0000Loot|r | You | item + %s"
+    assertEqual(LP.Parse("|cffff0000Loot|r | You | item + " .. BAND).kind, "pushed",
+        "a pushed string spelled apart still reads as pushed")
+end)
+
 test("loot parser: a deDE client reads its own lines", function()
     local _, m, LP = party()
     m.LOOT_ITEM = "%s erhält Beute: %s."

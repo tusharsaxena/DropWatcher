@@ -423,7 +423,7 @@ end
 function E.Loot(n, who)
     local d, s = drive(), Sim:Session()
     if not d then return 0, "notRunning" end
-    local drops = NS.SimPool.Drops(s.pool)
+    local drops = NS.SimPool.LootDrops(s.pool)
     if #drops == 0 then return 0, "noPool" end
     local looter = looterOf(who)
     if looter == false then return 0, "noLooter" end
