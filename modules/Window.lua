@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/Window.lua — the main window's shell (design spec §11.1, boards 01 and 06): frame, skin,
 -- title bar (centered gold title, restriction badge, compact's Scan group icon, minimize, close), the tab strip and
--- its lazily built panes, the filter bar's host, the footer's host, test mode's title text and banner
--- (the library's strip, anchored and tipped here), minimize, resize, position, lock, scale, alpha
+-- its lazily built panes, the filter bar's host, the footer's host, the mode strips (the library's
+-- strip in its test and simulation flavors, anchored and tipped here; the title bar's TEST MODE /
+-- SIMULATION word stands in only while minimized or with no strip), minimize, resize, position, lock, scale, alpha
 -- and the show decision.
 --
 -- A non-secure standalone window (standalone-windows): built lazily on the first show, skinned
@@ -431,16 +432,27 @@ local function buildPanes(f, body)
     end
 end
 
--- The test-mode banner (board 06 E), between the filter bar and the tab's body: the library's strip
--- (LibKa0s-Widgets' TestStrip, LibKa0s#48), anchored and tipped here. It is born hidden; Refresh
--- shows it with test mode. No library, no strip: f.banner stays nil and the panes reserve nothing.
+-- The mode strips (board 06 E), between the filter bar and the tab's body: the library's strip
+-- (LibKa0s-Widgets' TestStrip, LibKa0s#48), one per mode at the same anchor, anchored and tipped
+-- here: f.banner (amber, test mode, TestTip) and f.simBanner (cyan, kind "sim" from Widgets minor 14,
+-- a running simulation, SimTip). Both are born hidden; Refresh shows the one in force. No library,
+-- no strips: both stay nil, the panes reserve nothing and the title bar's word marks the mode.
+local function anchorStrip(f, s, tip)
+    s:SetPoint("TOPLEFT", f.filterHost, "BOTTOMLEFT", 0, -2)
+    s:SetPoint("TOPRIGHT", f.filterHost, "BOTTOMRIGHT", 0, -2)
+    Window.AttachTooltip(s, tip)
+end
+
 local function buildBanner(f, body)
     local b = NS.MakeTestStrip(body, L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
     if not b then return end
-    b:SetPoint("TOPLEFT", f.filterHost, "BOTTOMLEFT", 0, -2)
-    b:SetPoint("TOPRIGHT", f.filterHost, "BOTTOMRIGHT", 0, -2)
-    Window.AttachTooltip(b, NS.WindowTitleBar.TestTip)
+    anchorStrip(f, b, NS.WindowTitleBar.TestTip)
     f.banner = b
+    local s = NS.MakeTestStrip(body,
+        L["SIMULATION: a made-up group session through the real engine. Nothing is sent; /dw sim stop ends it."], "sim")
+    if not s then return end
+    anchorStrip(f, s, NS.WindowTitleBar.SimTip)
+    f.simBanner = s
 end
 
 local function buildBody(f)
@@ -467,9 +479,11 @@ local function buildBody(f)
     NS.WindowFooter.Build(f.footerHost)
 end
 
--- The panes fill between the filter bar (and the banner, in test mode) and the footer.
+-- The panes fill between the filter bar (and the strip in force, in test mode or a simulation) and
+-- the footer.
 local function layoutPanes()
-    local top = K.TAB_H + 4 + K.FILTER_H + (NS.State.testMode == true and NS.CompactChrome.BannerH() or 0)
+    local marked = NS.State.testMode == true or NS.Sim:IsActive()
+    local top = K.TAB_H + 4 + K.FILTER_H + (marked and NS.CompactChrome.BannerH() or 0)
     for _, pane in pairs(frame.panes) do
         pane:ClearAllPoints()
         pane:SetPoint("TOPLEFT", frame.body, "TOPLEFT", K.INSET, -top)
@@ -604,7 +618,7 @@ local function paintMinimized()
     NS.WindowTitleBar.PaintMinimized(frame, m, newCount)
 end
 
---- One repaint pass: the title bar's badge and counter, the tabs, and (expanded) the banner, the
+--- One repaint pass: the title bar's badge and counter, the tabs, and (expanded) the mode strips, the
 --- filter bar, the footer and the active tab's body.
 function Window.Refresh()
     if not frame then return end
@@ -615,7 +629,9 @@ function Window.Refresh()
     NS.CompactChrome.Paint(frame)   -- the compact layout's chrome (compact spec §4)
     paintMinimized()
     if not isMinimized() then
+        local sim = NS.State.testMode ~= true and NS.Sim:IsActive()
         if frame.banner then frame.banner:SetShown(NS.State.testMode == true) end
+        if frame.simBanner then frame.simBanner:SetShown(sim) end
         layoutPanes()
         paintTabs()
         NS.WindowFilterBar.Sync(activeTab)

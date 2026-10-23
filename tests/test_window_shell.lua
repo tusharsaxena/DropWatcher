@@ -69,7 +69,9 @@ local function assertModeText(m, word, r, g, b, title)
     assertTrue(m:GetWidth() > 0, "sized to the words, so the tooltip has an area")
 end
 
-test("shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode", function()
+-- DW-10 (OWNER_SCOPE A): the strip marks the mode while expanded, so the word is drawn only while
+-- minimized (the strip goes with the body) or with no strip (the degraded case, tests/test_window.lua).
+test("shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode and only where its strip is not", function()
     local NS, f = shown()
     local TB = NS.WindowTitleBar
     assertModeText(f.testText, "TEST MODE", 1, 0.15, 0.15, f.title)
@@ -77,13 +79,26 @@ test("shell: TEST MODE is bright-red text beside the title, SIMULATION the same 
     assertFalse(f.testText:IsShown()); assertFalse(f.simText:IsShown())
     NS.SetTestMode(true)
     NS.Window.Refresh()
-    assertTrue(f.testText:IsShown()); assertFalse(f.simText:IsShown())
-    assertEqual(NS.Window.TooltipOf(f.testText)[1], "Test mode")
+    -- red under: PaintModeText showing the word whenever the mode is on
+    assertFalse(f.testText:IsShown(), "expanded: the strip is the marker"); assertFalse(f.simText:IsShown())
     assertTrue(f.banner:IsShown(), "the yellow strip under the filter bar is kept")
+    assertEqual(f.newChip.__points[1][2], f.title, "no word: the `n new` counter follows the title")
+    NS.Window.SetMinimized(true)
+    assertTrue(f.testText:IsShown(), "minimized: the word comes back")
+    assertEqual(NS.Window.TooltipOf(f.testText)[1], "Test mode")
+    assertEqual(f.newChip.__points[1][2], f.testText, "the `n new` counter follows the mode's words")
+    NS.Window.SetMinimized(false)
     NS.SetTestMode(false)
     NS.Sim.IsActive = function() return true end
+    NS.Window.Refresh()
+    assertFalse(f.simText:IsShown(), "expanded: the sim strip is the marker"); assertFalse(f.testText:IsShown())
+    assertTrue(f.simBanner:IsShown())
+    assertFalse(f.banner:IsShown())
+    assertEqual(f.simBanner.kind, "sim", "the library's simulation flavor")
+    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "Simulation", "the strip carries SimTip")
+    NS.Window.SetMinimized(true)
     TB.PaintModeText(f)
-    assertTrue(f.simText:IsShown()); assertFalse(f.testText:IsShown())
+    assertTrue(f.simText:IsShown(), "minimized in a sim: the word comes back")
     assertEqual(f.newChip.__points[1][2], f.simText, "the `n new` counter follows the mode's words")
 end)
 

@@ -1,7 +1,8 @@
 local _, NS = ...
 -- core/WidgetsSetup.lua — NS.MakeDropdown / NS.CloseMenu / NS.MakeTestStrip / NS.MakeSearchBox from
 -- LibKa0s-Widgets-1.0: the window's flat dropdowns (the filter bar's View, Quality and Content, the
--- tab's Sort), its test-mode strip (LibKa0s#48) and the filter bar's search box (LibKa0s#52).
+-- tab's Sort), its mode strips (LibKa0s#48: the amber test-mode strip and, from Widgets minor 14,
+-- the cyan simulation flavor) and the filter bar's search box (LibKa0s#52).
 --
 -- A seam, nothing else (library-stack-§7): one file leases the major, so the art the dropdown
 -- draws is resolved once, here. The library is vendored and cannot know which folder it was copied
@@ -19,7 +20,8 @@ local _, NS = ...
 -- bar draws no search box and filters nothing by text (no hand-built fallback, which would be a
 -- private copy of the library's box). NS.CloseMenu is a no-op, because there is no menu that could
 -- be open. NS.MakeTestStrip answers nil and the window draws no strip and reserves no room for one;
--- the TEST MODE word in the title bar still marks the mode.
+-- the TEST MODE / SIMULATION word in the title bar then marks the mode. The title words mark a mode
+-- only where there is no strip, or while the window is minimized (the strip goes with the body).
 
 local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 
@@ -55,15 +57,17 @@ function NS.HasWidgets()
     return W ~= nil
 end
 
---- The test-mode strip (the library's W.TestStrip, born hidden and unanchored), or nil when the
---- library is absent. The caller anchors it, tips it and shows it. Its art is host-passed: the
---- catalog's info mark, resolved here.
+--- A mode strip (the library's W.TestStrip, born hidden and unanchored): the amber test-mode
+--- flavor, or the cyan simulation flavor for kind "sim". Nil when the library is absent. The caller
+--- anchors it, tips it and shows it. Its art is host-passed: the catalog's info mark, resolved here.
+--- The title bar's mode word stands in for it only where it is nil, or while minimized.
 --- @param parent table the frame to parent it to
 --- @param text string the localized line it says
+--- @param kind string|nil "sim" for the simulation flavor; anything else is the test flavor
 --- @return table|nil
-function NS.MakeTestStrip(parent, text)
+function NS.MakeTestStrip(parent, text, kind)
     if not W then return nil end
-    return W.TestStrip(parent, { text = text, icon = NS.Icon("info") })
+    return W.TestStrip(parent, { text = text, icon = NS.Icon("info"), kind = kind })
 end
 
 --- Close the shared popup menu behind every dropdown in the process, if one is open. Safe when none

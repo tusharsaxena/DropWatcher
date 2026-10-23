@@ -215,7 +215,7 @@ Total.
 - window: a drag stores the point, and Reset position forgets it
 - window: locked, a drag does not start
 - window: resizable from the corner grip, with the design's minimum size
-- window: test mode shows the banner and the TEST MODE text, and its rows replace the empty state
+- window: test mode shows the banner (not the TEST MODE text), and its rows replace the empty state
 - window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and the info mark
 - window: K.BANNER_H - 4 == W.TEST_STRIP.HEIGHT
 - compact chrome: the full layout's text has a RIGHT point and no wrap; compact wraps
@@ -230,7 +230,7 @@ Total.
 ### test_window_shell.lua (61)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
-- shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode
+- shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode and only where its strip is not
 - shell: the default size is 1080 x 600, the least width every column fits (feedback-4 spec §4)
 - shell: Escape and every close path close the dropdowns' shared menu too
 - shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
@@ -405,7 +405,7 @@ Total.
 - history card: compact cards expand the stacked card under the clicked card
 - history card: the stacked card's actions fit one line at the compact width
 
-### test_compact_chrome.lua (20)
+### test_compact_chrome.lua (23)
 
 - chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIMULATION shorten to TEST and SIM
@@ -414,8 +414,10 @@ Total.
 - chrome: the footer's tooltip carries every full segment
 - chrome: the Filters count is Quality, Content and Character off their default, on a tab that honors them
 - chrome: the Filters label counts, and its tooltip lists each value, the active ones in yellow
-- chrome: compact shows the short title, TEST beside it, the title and the word centered together
-- chrome: a simulation reads SIM in compact, in its cyan
+- chrome: compact shows the short title; in test mode the strip marks it, so the title stays centered alone
+- chrome: compact and minimized in test mode, TEST shows beside the title and the two center together
+- chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim strip marks it with the short wrapped line
+- chrome: the panes reserve the sim strip's height while a simulation runs
 - chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
 - chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
 - chrome: the two tabs keep a reduced width, their names in their tooltips
@@ -425,6 +427,7 @@ Total.
 - chrome: the full layout takes every control back to its place on the bar and the tab's strip
 - chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
 - chrome: the compact strip takes a second line exactly when its words wrap at the window's width
+- chrome: the compact sim strip takes a second line when its words wrap at 380 px
 - chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
 - chrome: switching the chrome keeps every tab's filter state and builds no second window
 
@@ -1725,7 +1728,7 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
-### test_sim_scenario.lua (27)
+### test_sim_scenario.lua (31)
 
 - sim verbs: DropWatcher's five host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
@@ -1741,6 +1744,10 @@ Total.
 - sim step: the timeline waits for the pool, then plays one step at a time
 - sim restart: a stale pool callback from the first session never readies the restarted one (C.1)
 - sim run: Run while the panel's click-ahead plays answers playing (C.2)
+- sim run: a typed start plays on its own
+- sim run: a typed start waits for the pool, then plays
+- sim step: a typed step while it plays pauses it and plays one step
+- sim pause before the pool is ready: the ready pool plays nothing
 - sim run: plays every step a few seconds apart, each with its line, then says it has finished
 - sim step delay: one second by default, read from `sim.stepDelay`; a bad value falls back
 - sim step delay: an untouched setting runs the steps one second apart
@@ -1749,7 +1756,7 @@ Total.
 - sim step delay: a run waits the set delay, and a change takes effect from the next step
 - sim stop: ends a playing timeline and its timers
 - sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
-- sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating
+- sim window: the sim strip (not the SIMULATION text) with the scenario tooltip, and the footer says Simulating
 - sim diagnostics: the section reads the session, the pool, the timeline and the sends
 - sim debug: the SIM tag logs every injected event and every step
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
@@ -1797,7 +1804,7 @@ Total.
 - sim report: View reads the feed the window shows; feed.showOwn is retired
 - sim report: the owner's step lists yours on Drops, and the tabs agree
 
-### test_sim_panel.lua (12)
+### test_sim_panel.lua (13)
 
 - sim panel: the descriptor carries DropWatcher's presentation fields and nothing else
 - sim panel: a key's preview names every step with its boss, and every command, before a run
@@ -1806,6 +1813,7 @@ Total.
 - sim panel: the scenarios carry their names, and the raids the sizes the picker offers
 - sim panel: `/dw sim` opens it with DropWatcher's title, `/dw sim panel` toggles it
 - sim panel: picking Raid offers its sizes, and Start starts it at the chosen size
+- sim panel: the controls are Pause, Restart and Stop
 - sim panel: a played step shows the catalog's confirm tick and names its boss
 - sim panel: opened after `/dw sim start`, it docks beside the Drop Watcher window
 - sim panel: opened before the window, it docks beside the window once a slow pool opens it
@@ -1964,7 +1972,7 @@ Total.
 | test_compact_group.lua | 22 |
 | test_compact_history.lua | 10 |
 | test_history_card.lua | 15 |
-| test_compact_chrome.lua | 20 |
+| test_compact_chrome.lua | 23 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 50 |
 | test_drops_layout.lua | 10 |
@@ -2019,10 +2027,10 @@ Total.
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 21 |
 | test_sim_events.lua | 21 |
-| test_sim_scenario.lua | 27 |
+| test_sim_scenario.lua | 31 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
-| test_sim_panel.lua | 12 |
+| test_sim_panel.lua | 13 |
 | test_bindings.lua | 5 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
@@ -2035,4 +2043,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1681** |
+| **Total** | **1689** |

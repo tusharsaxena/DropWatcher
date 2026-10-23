@@ -558,13 +558,13 @@ local function icons()
         { page = "window", group = L["Icons"], subgroup = L["Zoom"], onChange = refreshIcons })
 end
 
--- ── General › Simulator (feedback-2 spec §8): the simulator's automatic run ─────────────────
+-- ── General › Simulator (feedback-2 spec §8): the simulator's pace ─────────────────────────────
 
 local function simulation()
     local SC = NS.SimScenario
     slider("sim.stepDelay", P.sim.stepDelay, SC.STEP_DELAY_MIN, SC.STEP_DELAY_MAX, SC.STEP_DELAY_STEP,
         L["Simulation step delay"],
-        L["How many seconds the simulator's automatic run (Run all, `/dw sim run`) waits between steps. A change takes effect from the next step."],
+        L["How many seconds the simulator waits between steps as it plays. A change takes effect from the next step."],
         { page = "general", group = L["Simulator"], validate = SC.ValidStepDelay })
 end
 

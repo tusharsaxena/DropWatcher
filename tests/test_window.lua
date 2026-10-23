@@ -91,13 +91,13 @@ test("window: resizable from the corner grip, with the design's minimum size", f
     assertEqual(minH, 260)
 end)
 
-test("window: test mode shows the banner and the TEST MODE text, and its rows replace the empty state", function()
+test("window: test mode shows the banner (not the TEST MODE text), and its rows replace the empty state", function()
     local NS = T.enableAddon()
     NS.SetTestMode(true)
     local f = NS.Window.Frame()
     local empty = NS.WindowGroup.Drawn().empty
     assertTrue(f.banner:IsShown())
-    assertTrue(f.testText:IsShown())
+    assertFalse(f.testText:IsShown(), "the strip is the marker (DW-10)")
     assertFalse(empty:IsShown())
     NS.SetTestMode(false)
     NS.ShowWindow()
@@ -119,9 +119,14 @@ test("window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and t
     NS.ShowWindow()
     W.TestStrip = real
     -- red under: buildBanner drawing its own band
-    assertEqual(#calls, 1, "one strip, built once with the window")
+    assertEqual(#calls, 2, "one strip per mode, built once with the window")
     local opts = calls[1].opts
     assertEqual(opts.text, "TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it.")
+    assertTrue(opts.kind ~= "sim", "the test flavor")
+    local sopts = calls[2].opts
+    assertEqual(sopts.kind, "sim")
+    assertEqual(sopts.text, "SIMULATION: a made-up group session through the real engine. Nothing is sent; /dw sim stop ends it.")
+    assertEqual(sopts.icon, NS.Icon("info"))
     assertTrue(type(opts.icon) == "string" and opts.icon:find("info", 1, true) ~= nil, "the catalog's info mark")
     assertEqual(opts.icon, NS.Icon("info"))
     local f = NS.Window.Frame()
@@ -131,6 +136,13 @@ test("window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and t
     assertEqual(table.concat({ p2[1], p2[3], p2[4], p2[5] }, ","), "TOPRIGHT,BOTTOMRIGHT,0,-2")
     assertTrue(p1[2] == f.filterHost and p2[2] == f.filterHost)
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode", "DW still tips it")
+    assertTrue(calls[2].parent == f.body)
+    local s1, s2 = f.simBanner.__points[1], f.simBanner.__points[2]
+    assertEqual(table.concat({ s1[1], s1[3], s1[4], s1[5] }, ","), "TOPLEFT,BOTTOMLEFT,0,-2", "the sim strip at the same anchor")
+    assertEqual(table.concat({ s2[1], s2[3], s2[4], s2[5] }, ","), "TOPRIGHT,BOTTOMRIGHT,0,-2")
+    assertTrue(s1[2] == f.filterHost and s2[2] == f.filterHost)
+    assertEqual(f.simBanner.kind, "sim")
+    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "Simulation")
 end)
 
 test("window: K.BANNER_H - 4 == W.TEST_STRIP.HEIGHT", function()
@@ -175,6 +187,7 @@ test("window: with no Widgets the window builds, test mode on raises nothing, f.
     local f = NS.Window.Frame()
     -- red under: a buildBanner that draws its own band when the library is absent
     assertTrue(f.banner == nil, "no strip")
+    assertTrue(f.simBanner == nil, "no sim strip")
     NS.SetTestMode(true)
     assertTrue(NS.State.testMode == true)
     assertTrue(f.testText:IsShown(), "the TEST MODE title word still marks the mode")
@@ -186,6 +199,12 @@ test("window: with no Widgets the window builds, test mode on raises nothing, f.
     assertEqual(NS.CompactChrome.BannerH(), 0)
     assertTrue(f.testText:IsShown())
     NS.SetTestMode(false)
+    NS.SetWindowMode("full")
+    NS.Sim.IsActive = function() return true end
+    NS.Window.Refresh()
+    assertTrue(f.simText:IsShown(), "the SIMULATION title word marks a sim with no strip")
+    assertEqual(NS.CompactChrome.BannerH(), 0)
+    assertEqual(f.panes.group.__points[1][5], -(K.TAB_H + 4 + K.FILTER_H), "no reserve in a sim either")
 end)
 
 test("window: combat ends test mode, and test mode cannot start in combat", function()

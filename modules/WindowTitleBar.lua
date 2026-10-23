@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/WindowTitleBar.lua — the main window's title bar (design spec §11.1, boards 01, 06 A and
 -- 06 E, as the owner's feedback spec §1 reshaped it to match Ka0s Loot History): the centered gold
 -- title (no logo: the launcher and the TOC keep it), test mode's bright-red `TEST MODE` text, the
--- simulator's `SIMULATION` text in its own color (simulator spec §6), the `n new` counter, the
+-- simulator's `SIMULATION` text in its own color (simulator spec §6), each drawn only while minimized
+-- or with no strip (the window's mode strips mark the mode otherwise), the `n new` counter, the
 -- restriction badge, the layout toggle (compact spec §1), minimize and the close mark, plus the
 -- window's flat and icon buttons, which other frames borrow through NS.Window.TextButton (and paint
 -- through NS.Window.SetButtonMark). Scan group is the Drops strip's in both layouts
@@ -128,7 +129,8 @@ TB.SIM_TONE = { r = 0.35, g = 0.80, b = 1.00 }
 --- The gap between the title and a mode's text, as Ka0s Loot History sets it.
 TB.MODE_GAP = 10
 
---- The SIMULATION text's tooltip (simulator spec §6): the scenario and what the simulation never does.
+--- The SIMULATION text's and the simulation strip's tooltip (simulator spec §6): the scenario and
+--- what the simulation never does.
 function TB.SimTip()
     local st = NS.SimHost.Status()
     local scenario = st.active and tostring(st.scenario) or L["none"]
@@ -336,15 +338,19 @@ function TB.PaintBadge(f)
 end
 
 --- The TEST MODE or the SIMULATION text beside the title (the two modes are exclusive), the
---- `n new` counter after it.
+--- `n new` counter after it. The word shows only while its mode is on and its strip is not on
+--- screen: minimized (the strip goes with the body) or with no strip (no Widgets library).
 --- @param f table the window frame
 function TB.PaintModeText(f)
     local test = NS.State.testMode == true
     local sim = not test and NS.Sim:IsActive()
-    f.testText:SetShown(test)
-    f.simText:SetShown(sim)
+    local min = NS.Window.IsMinimized()
+    local showTest = test and (min or not f.banner)
+    local showSim = sim and (min or not f.simBanner)
+    f.testText:SetShown(showTest)
+    f.simText:SetShown(showSim)
     f.newChip:ClearAllPoints()
-    f.newChip:SetPoint("LEFT", (test and f.testText) or (sim and f.simText) or f.title, "RIGHT", 8, 0)
+    f.newChip:SetPoint("LEFT", (showTest and f.testText) or (showSim and f.simText) or f.title, "RIGHT", 8, 0)
 end
 
 --- The minimize mark (minus, or plus while minimized), the layout toggle's mark (shrink in the full
