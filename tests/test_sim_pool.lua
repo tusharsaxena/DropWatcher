@@ -190,12 +190,12 @@ test("sim pool: a loot burst draws the pool's gear, and every drop only when it 
     -- salve and a recipe, both hidden as not gear (the owner's /dw sim on 2026-10-23)
     local NS = T.newAddon()
     local P = NS.SimPool
-    local ring, salve, plans = { difficulty = 8, equipLoc = "INVTYPE_FINGER" },
+    local band, salve, plans = { difficulty = 8, equipLoc = "INVTYPE_FINGER" },
         { difficulty = 8, equipLoc = "" }, { difficulty = 8, equipLoc = "" }
-    local pool = { difficulty = 8, entries = { salve, ring, plans, { difficulty = 23, equipLoc = "INVTYPE_HEAD" } } }
+    local pool = { difficulty = 8, entries = { salve, band, plans, { difficulty = 23, equipLoc = "INVTYPE_HEAD" } } }
     local got = P.LootDrops(pool)
     assertEqual(#got, 1, "the gear at the pool's difficulty only")
-    assertTrue(got[1] == ring)
+    assertTrue(got[1] == band)
     assertEqual(#P.LootDrops({ difficulty = 8, entries = { salve, plans } }), 2, "no gear: every drop")
     assertEqual(#P.LootDrops(nil), 0)
 end)
