@@ -56,3 +56,21 @@ removed. Nothing needed changing:
   (`docs/smoke-tests.md`, bare LF on disk while the index was right, which the kit's `eol` case
   flagged); it was repaired in the working tree only (`rm docs/smoke-tests.md && git checkout --
   docs/smoke-tests.md`, no diff), and the count is now 0. No renormalization was performed.
+
+## Refresh: the tag moved for LK-91 (DW-RV2)
+
+The local annotated tag v1.76.0 was moved before any push, from commit `9949368` to commit
+`7e81ff7` (tag object `2949c78`), to carry LK-91: a step label in the sim and perf panels is one
+line and stops 8 short of the command column instead of running under it (the owner's BankLedger
+report, `Deposit 1 x Flask ...` over `/bl sim step`). Both payloads were replaced whole again from
+the moved tag and `media/icons` pruned to the same 28-name declaration (5,811 files removed, none
+reached git).
+
+- **Files that changed:** `libs/LibKa0s/SimPanel.lua` (keeps minor 5, the minor v1.76.0 already
+  gave it) and `libs/LibKa0s/PerfPanel.lua` (minor 7 -> 8, `LibKa0s-Perf-1.0` key 15.1.1.8). Nothing
+  else in `libs/LibKa0s/`; `tests/_kit/` is byte-identical (kit revision 41).
+- **Adoption:** none needed; the fix is delivered free (class A). No member added, no issue filed.
+- **Gate after the copy, both through `ka0s-bounded`:** `lua tests/run.lua` 1689 passed, 0 failed,
+  1 skipped (1690 total), `test_vendor_sync` included against the moved tag; `luacheck .`
+  0 warnings / 0 errors in 193 files; no authored `.lua` file above 1500 lines (largest
+  `locales/enUS.lua`, 1316).
