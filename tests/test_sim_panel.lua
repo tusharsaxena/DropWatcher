@@ -185,6 +185,23 @@ test("sim panel: picking Raid offers its sizes, and Start starts it at the chose
     slash(NS, "sim stop")
 end)
 
+test("sim panel: the controls are Pause, Restart and Stop", function()
+    local NS, m = addon()
+    assertTrue(NS.Sim:ShowPanel())
+    m.simPanel.picker.scenario.onSelect("world")
+    m.simPanel.picker.start:__fire("OnClick")
+    assertTrue(NS.Sim:IsActive())
+    local c = m.simPanel.controls
+    -- red under: LibKa0s v1.75.2, whose footer carried Run all
+    assertNil(c.run, "no Run all")
+    assertEqual(c.pause.__label, "Pause"); assertTrue(c.pause:IsEnabled(), "the picker's Start plays at once")
+    assertTrue(NS.SimScenario.Status().playing)
+    assertTrue(c.restart ~= nil and c.stop ~= nil)
+    m.advance(0)
+    assertEqual(NS.SimScenario.Status().pos, 1, "it plays with nothing pressed")
+    slash(NS, "sim stop")
+end)
+
 test("sim panel: a played step shows the catalog's confirm tick and names its boss", function()
     local NS, m = addon()
     slash(NS, "sim start dungeon")
@@ -214,6 +231,7 @@ test("sim panel: opened before the window, it docks beside the window once a slo
         end
     end
     slash(NS, "sim start dungeon")
+    slash(NS, "sim pause")   -- the typed start plays on its own (LibKa0s v1.76.0); this case is about docking
     assertTrue(NS.Sim:ShowPanel())
     assertFalse(NS.Window.IsShown(), "the pool is still loading: no window yet")
     assertEqual(m.simPanel.__dock, "float")

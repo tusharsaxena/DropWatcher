@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/SimScenario.lua — the simulator's scenarios and their timeline (simulator spec §4): what
--- `/dw sim start <scenario> [size]` builds, and what `/dw sim run` and `/dw sim step` play.
+-- `/dw sim start <scenario> [size]` builds, and what a started simulation plays (or `/dw sim step`).
 --
 -- A SCENARIO (SCENARIOS) names the situation it simulates, the kind of group (a party of four, or
 -- a raid of 9 to 19 members besides you, sized by the verb's argument or at random), how many
@@ -188,7 +188,7 @@ local function poolReady(s, def, opts, ready)
     local pool = NS.SimPool.Status()
     NS.Debug(TAG, "scenario %s ready: %d members, %d pool items (%s)", s.scenario, #members, pool.size,
         tostring(pool.source))
-    NS.Print(L["Simulation ready: %d members, %d items. /dw sim run plays it, /dw sim step one event at a time."]
+    NS.Print(L["Simulation ready: %d members, %d items. It plays now: /dw sim pause holds it, /dw sim step plays one event at a time."]
         :format(#members, pool.size))
     NS.ShowWindow()
     if NS.Window and NS.Window.IsShown() then NS.Window.Refresh() end

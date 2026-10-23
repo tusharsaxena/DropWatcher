@@ -1725,7 +1725,7 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
-### test_sim_scenario.lua (27)
+### test_sim_scenario.lua (31)
 
 - sim verbs: DropWatcher's five host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
@@ -1741,6 +1741,10 @@ Total.
 - sim step: the timeline waits for the pool, then plays one step at a time
 - sim restart: a stale pool callback from the first session never readies the restarted one (C.1)
 - sim run: Run while the panel's click-ahead plays answers playing (C.2)
+- sim run: a typed start plays on its own
+- sim run: a typed start waits for the pool, then plays
+- sim step: a typed step while it plays pauses it and plays one step
+- sim pause before the pool is ready: the ready pool plays nothing
 - sim run: plays every step a few seconds apart, each with its line, then says it has finished
 - sim step delay: one second by default, read from `sim.stepDelay`; a bad value falls back
 - sim step delay: an untouched setting runs the steps one second apart
@@ -1797,7 +1801,7 @@ Total.
 - sim report: View reads the feed the window shows; feed.showOwn is retired
 - sim report: the owner's step lists yours on Drops, and the tabs agree
 
-### test_sim_panel.lua (12)
+### test_sim_panel.lua (13)
 
 - sim panel: the descriptor carries DropWatcher's presentation fields and nothing else
 - sim panel: a key's preview names every step with its boss, and every command, before a run
@@ -1806,6 +1810,7 @@ Total.
 - sim panel: the scenarios carry their names, and the raids the sizes the picker offers
 - sim panel: `/dw sim` opens it with DropWatcher's title, `/dw sim panel` toggles it
 - sim panel: picking Raid offers its sizes, and Start starts it at the chosen size
+- sim panel: the controls are Pause, Restart and Stop
 - sim panel: a played step shows the catalog's confirm tick and names its boss
 - sim panel: opened after `/dw sim start`, it docks beside the Drop Watcher window
 - sim panel: opened before the window, it docks beside the window once a slow pool opens it
@@ -2019,10 +2024,10 @@ Total.
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 21 |
 | test_sim_events.lua | 21 |
-| test_sim_scenario.lua | 27 |
+| test_sim_scenario.lua | 31 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
-| test_sim_panel.lua | 12 |
+| test_sim_panel.lua | 13 |
 | test_bindings.lua | 5 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
@@ -2035,4 +2040,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1681** |
+| **Total** | **1686** |

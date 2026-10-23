@@ -37,7 +37,7 @@ passed.
 | GLOW-1..11 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid black border) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..16 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05) |
+| SIM-1..17 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01) |
 | COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 
@@ -655,8 +655,8 @@ is added to that line, the leaver stays named. Open History → the same group's
 same party; `/reload` → it still does. A History group kept before DW-A3 has no `Group:` line and
 still reads correctly. In a raid (or `/dw test`, whose Placeholder boss is a raid of eight) → the
 line names all eight (ten at most, then `+n`) (superseded by feedback-17, 2026-10-16: `Group (n)` rows naming
-everyone five a row, and `/dw test`'s raid bosses are twenty; FEED-79). `/dw sim start key` then `/dw sim run` → the run's
-tooltip names you and the simulated group, and the simulation's History does too. Result: passed in the client, 2026-10-23 (the owner).
+everyone five a row, and `/dw test`'s raid bosses are twenty; FEED-79). `/dw sim start key` (it plays on its own) → the run's
+tooltip names you and the simulated group, and the simulation's History does too (procedure amended for auto-play, DW-01, 2026-10-23). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-23. The Character dropdown (DW-A4, feedback-2 spec §4).** Open the window: after Content the
 bar holds `Character: Current`. Open it on Drops → `Character: All`,
@@ -671,7 +671,7 @@ is left out, no `0 shown` header, since feedback-12 spec §1). Hover a group hea
 some of its drops → the tooltip names them with `Character: Current`. Turn on `/dw test` → History
 lists you and `Emberwick`, and Current hides the alt's `Placeholder boss (alt)` until All (since
 feedback-17 the alt's group is named for its real boss, ten days old). `/dw sim
-start key` then `/dw sim run` → the simulated run shows under Current on every tab. Result: passed in the client, 2026-10-23 (the owner).
+start key` (it plays on its own) → the simulated run shows under Current on every tab (procedure amended for auto-play, DW-01, 2026-10-23). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-24. The tables' font and row height beside Loot History's (DW-A8, feedback-2 spec §8, FB2-9).**
 The headless `test_window_group` (`rows:`, `table: the Window page's row height`, and the Trade window
@@ -691,7 +691,7 @@ stored another row height or font size before this version, it is unchanged. Res
 **FEED-25. Your own drops' headers and the tooltip beside the Offer panel (DW-A9, feedback-2 spec §8,
 FB2-10; on Drops since DW-E3).** The headless `test_own_drops`, `test_drops_strip` and `test_window_group`
 (`beside the docked Offer panel`, `a docked panel's row never opens over the window`) cover the same
-ground. `/dw sim start key` then `/dw sim run` until your own drops fall, or `/dw test` → your own drops
+ground. `/dw sim start key` and let it play until your own drops fall (procedure amended for auto-play, DW-01, 2026-10-23), or `/dw test` → your own drops
 are Drops rows under the same headers as everyone's: `Den of Nalorakk · Mythic+ · 6m ago · 2 drops`, the
 party in class color in the tooltip. Click a header → its rows fold away and it reads `(collapsed)`,
 while the strip still counts their tradeables (FEED-45); click again → they return. Search for one
@@ -740,7 +740,7 @@ History with `Character: All` → a group the first character saw ends with that
 the alt's. A History group kept before this version still reads `Label · Situation · ...`. In the open
 world → `Open world · Open world group` (or `Solo`). `/dw test` → the key run is a real dungeon at
 `Mythic+ 10` and the boss sits in a real instance at Heroic, on Drops and History.
-`/dw sim start dungeon` then `/dw sim run` → the boss headers name the pool's dungeon and `Mythic`;
+`/dw sim start dungeon` (it plays on its own; procedure amended for auto-play, DW-01, 2026-10-23) → the boss headers name the pool's dungeon and `Mythic`;
 `/dw sim start key` → the run's header names the dungeon and `Mythic+ 12`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-29. A tooltip near the top of the screen opens below (DW-B5, feedback-3 spec §5).** The headless
@@ -2341,7 +2341,7 @@ join a group → `Simulation stopped: you joined a group.`; start one, then `/dw
 ground. Solo, outside an instance, out of combat, with `/dw debug on`: `/dw sim start key` → chat says
 `Simulation ready: 4 members, <n> items. …`, the window opens with cyan `SIMULATION` text beside the title
 (its tooltip names `Scenario: key (Mythic+)`), and the footer reads `Simulating: Mythic+ · 4 members`.
-`/dw sim run` → over about half a minute the badge shows `Mythic+ key`, then each boss's `Encounter`
+With nothing pressed it plays on its own (procedure amended for auto-play, DW-01, 2026-10-23) → over about half a minute the badge shows `Mythic+ key`, then each boss's `Encounter`
 in turn, then `Chat lockdown` after the completion; the completion's loot lands in Drops, yours among
 it, the debug log shows one `[SIM] event …` line per injected event and one `[SIM] timeline step
 n/11: …` per step, and chat ends with `The simulation's timeline has finished.` Press Ask on a member's
@@ -2351,9 +2351,9 @@ within a few seconds, the looter's. `/dw diagnostics` → the `sim:` lines show 
 pool's size and `source=journal`, `timeline step=11/11` and the sends printed. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-3. A `raid` run with a large roster (DW-73).** The headless `test_sim_scenario` (`sim e2e raid`)
-covers the same ground. `/dw sim start raid 19` → the Drops tab's roster shows 19 invented
+covers the same ground. Turn on Settings > Messages > Auto-ask first, then `/dw sim start raid 19` → the Drops tab's roster shows 19 invented
 members besides you (raid2 onward), the footer reads `Simulating: Raid · 19 members`, and `/dw
-situation` says Raid. Turn on Settings > Messages > Auto-ask, then `/dw sim run` → two bosses, each
+situation` says Raid. The run plays on its own (procedure amended for auto-play, DW-01, 2026-10-23) → two bosses, each
 with a loot burst of five lines from random looters (a member from another realm named Name-Realm).
 Record how long the inspect warm-up takes to read all 19 (the footer's `Inspect n/19 fresh`), whether
 any automatic ask goes out (`[sim] WHISPER`, never a real whisper) once the second boss is down, and
@@ -2362,7 +2362,7 @@ it `Received`. `/dw sim stop` → the roster is you alone, and the History tab s
 history. Result: passed in the client, 2026-10-23 (the owner).
 **SIM-4. Inspect replies, the lockdown queue and its flush (DW-72).** The headless `test_sim_events`
 covers the same ground. Solo, outside an instance, with `/dw
-debug on`: `/dw sim start dungeon` → the Drops tab's roster shows four invented members, and
+debug on`: `/dw sim start dungeon`, then `/dw sim pause` (procedure amended for auto-play, DW-01, 2026-10-23) → the Drops tab's roster shows four invented members, and
 the footer's situation is the dungeon. `/dw sim loot 1 <member>` → the drop shows the looter's name
 (a member from another realm as Name-Realm) and, within a few seconds, a Them verdict; the debug log
 shows `[SIM] inspect of <member>: reply in <n>s` and no real inspect window opens. Record whether the
@@ -2372,7 +2372,7 @@ a member's drop → it is queued, nothing is printed. `/dw sim kill` → within 
 `[sim] WHISPER to <member>: <text>`, and the whisper tab shows nothing sent. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-5. Your own drops' trade windows and a simulated trade (DW-72).** The headless `test_sim_events`
-covers the same ground. `/dw sim start dungeon`, then `/dw
+covers the same ground. `/dw sim start dungeon`, `/dw sim pause` (procedure amended for auto-play, DW-01, 2026-10-23), then `/dw
 sim loot 2 me` → Drops shows both with Offer, the first with about 9 minutes left in its Trade window (it warns at once, since
 the warning is at 10 minutes) and the second with about 4 hours; your real bags are unchanged.
 Open a member's drop's detail card and press Trade → chat prints `[sim] Would open a trade with <unit>.`
@@ -2400,8 +2400,8 @@ run`, `step`, `pull`, `kill`, `loot`, `lockdown on`, `trade 1` and `stop` each p
 running: start one with /dw sim start <scenario>.`; `/dw sim start nowhere` prints `Unknown
 scenario 'nowhere'. Scenarios: …` with the scenario names (the library's line since DW-03, SIM-15); `/dw disable`, then `/dw sim start dungeon` → the disabled line, and no simulation starts.
 With one running: `/dw sim pull` twice → `A simulated boss is already engaged: /dw sim kill first.`;
-`/dw sim run` twice → `The timeline is already playing.` Start one and `/dw sim run`, then accept a
-real group invite mid-run → `Simulation stopped: you joined a group.`, the `SIMULATION` text goes, no further
+`/dw sim run` while it plays → `The timeline is already playing.` Start one (it plays on its own), then accept a
+real group invite mid-run (procedure amended for auto-play, DW-01, 2026-10-23) → `Simulation stopped: you joined a group.`, the `SIMULATION` text goes, no further
 step plays, and the footer shows the real situation. Start one, then zone into an instance (a
 follower dungeon will do) → `Simulation stopped: you entered an instance.` Result: passed in the client, 2026-10-23 (the owner).
 
@@ -2415,8 +2415,8 @@ drops go, the real one stays in the feed, and the History tab (the account's log
 **SIM-9. A sim run fills the window under the default filters (DW-90, sim feedback §0).** The
 headless `test_sim_e2e` covers the same ground in every scenario, at the content's level and
 outgearing it. Solo, out of an instance, with the window's filters at their defaults (View:
-All, Quality: Rare+, Content: This session, as `test_sim_e2e` asserts) and your usual gear: `/dw sim start key`, then
-`/dw sim run` → chat prints one line per step (`Simulation step 1 of 11: runStart.` … `Simulation
+All, Quality: Rare+, Content: This session, as `test_sim_e2e` asserts) and your usual gear: `/dw sim start key`
+(it plays on its own; procedure amended for auto-play, DW-01, 2026-10-23) → chat prints one line per step (`Simulation step 1 of 11: runStart.` … `Simulation
 step 10 of 11: loot: 2 drops.` … `step 11 of 11: lockdownOff.`), the footer reads `Simulating:
 Mythic+ · 4 members` and `Inspect 4/4 fresh` once the inspects land, and Drops shows at least one
 member's drop and at least one of yours. Repeat with `/dw sim start delve` and `/dw sim
@@ -2451,11 +2451,11 @@ Result: passed in the client, 2026-10-23 (the owner).
 **SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** The headless `test_sim_scenario`
 (`sim step delay`) covers the same ground. Settings › General › Simulator →
 `Simulation step delay` reads 1 on a profile that never set it (the default since the owner's
-2026-10-23 simulator feedback; 2 before) and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`,
-Run all → the steps come about one second apart. Set the slider to 6 while it plays → the step
+2026-10-23 simulator feedback; 2 before) and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`
+(it plays on its own; procedure amended for auto-play, DW-01, 2026-10-23) → the steps come about one second apart. Set the slider to 6 while it plays → the step
 already waiting keeps its time, and the next ones come about six seconds apart. `/dw set
 sim.stepDelay 1.5` → the steps speed up from the next one, and `/dw get sim.stepDelay` reads 1.5.
-(Since DW-04 Run all's tooltip is the library's and names only its typed command.) Result: passed in the client, 2026-10-23 (the owner).
+(Since DW-04 the run controls' tooltips are the library's and name only their typed commands; DW-01 removed the Run all button.) Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-12. The loot step says where its drops went, and the window reconciles (DW-B0, feedback-3 spec
 §0; one tab since DW-E3).** The headless `test_sim_report` covers the same ground in every scenario. Solo,
@@ -2489,7 +2489,7 @@ and `test_sim_scenario` cover DropWatcher's part; the session and the timeline a
   (in a group, inside an instance, in combat, with test mode on, a second start) prints its line as
   before; join a group → `Simulation stopped: you joined a group.`; `/dw disable` → `Simulation
   stopped: the addon was disabled.`; after a `/reload` no simulation runs.
-- SM-DW-5: `/dw sim start key`, then `/dw sim run` → the steps play about 1 second apart (the
+- SM-DW-5: `/dw sim start key` → the steps play on their own about 1 second apart (procedure amended for auto-play, DW-01, 2026-10-23) (the
   `sim.stepDelay` setting still applies; its default is 1 since 2026-10-23); `/dw sim pause` and `/dw sim resume` hold and continue it.
   `/dw sim restart` → chat prints `Simulation stopped to restart.`, the library's stop line for a
   restart (accepted change, OWNER_SCOPE C.7), and the same scenario starts again.
@@ -2512,6 +2512,28 @@ visible change (OWNER_SCOPE C.7, C.11): the panel's buttons are the library's de
 tips plain GameTooltip lines, and it has a width grip; and the panel forgets its point at `/reload`:
 drag it, `/reload`, `/dw sim panel` → it docks beside the window again, and `SavedVariables` holds no
 `simPanel` key (migration 9 removed an old one). Result: passed in the client, 2026-10-23 (the owner).
+
+**SIM-17. A started simulation plays on its own; Run all is gone (DW-01, LibKa0s v1.76.0; SM-DW-01..04).**
+The headless `test_sim_scenario` (`sim run: a typed start plays on its own`, `… waits for the pool,
+then plays`, `sim step: a typed step while it plays …`, `sim pause before the pool is ready …`) and
+`test_sim_panel` (`the controls are Pause, Restart and Stop`) cover DropWatcher's part; the step
+machine and the controls are LibKa0s-Sim-1.0's. Solo, outside an instance, out of combat:
+
+- SM-DW-01: `/dw sim start key` → chat says `Simulation ready: 4 members, <n> items. It plays now:
+  /dw sim pause holds it, /dw sim step plays one event at a time.`; the panel's footer shows Pause,
+  Restart and Stop (no Run all), and with nothing pressed the steps play about 1 s apart, each
+  printing `Simulation step n of 11: …`, ending with the finished line. Settings › General ›
+  Simulator › `Simulation step delay`'s tooltip reads `How many seconds the simulator waits between
+  steps as it plays.` and no longer names Run all.
+- SM-DW-02: while a run plays, click the next (ready) row → the run pauses (the button reads Resume)
+  and exactly that one step plays. Click a row three ahead → the steps up to it play back to back
+  and the run stays paused. Press Resume → it continues at the step delay.
+- SM-DW-03: press Restart mid-run → the scenario starts again with a fresh seed and plays on its own
+  from step 1.
+- SM-DW-04: with the Encounter Journal open (the pool waits while it is shown), `/dw sim start raid 10`,
+  then `/dw sim pause` at once while the pool is still loading, then close the journal →
+  when the pool is ready nothing plays. `/dw sim resume` plays it, and `/dw sim run`, typed while it
+  plays, prints `The timeline is already playing.`
 
 ## Compact
 
@@ -2548,7 +2570,7 @@ the actions on two or three lines, nothing cut off on the right; click it again 
 with it open → the same row is open there. Settings → Window → Font size 14 → the cards grow with the text.
 Run `/dw sim start` and step it → the cards fill the same way. On each tab, switch to full and back → the
 same drops under the same headers, in the same order, and the same counts on the tabs (DW-C5). With the
-defaults, `/dw sim start key`, close the window and `/dw sim run` → the next drop opens it compact; stop the
+defaults, `/dw sim start key` and close the window while it plays (procedure amended for auto-play, DW-01, 2026-10-23) → the next drop opens it compact; stop the
 simulation, close the window and open it → the full layout. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-3. Your own cards, the countdown, Offer and the strip (DW-C3; on Drops since DW-E3).** Turn test
