@@ -50,19 +50,19 @@ passed.
 ## Install
 
 **INSTALL-1. Loads clean.** `/reload` with only Drop Watcher enabled → no Lua error, no chat line at
-login, the addon listed in the AddOns list with the gem logo. Result:
+login, the addon listed in the AddOns list with the gem logo. Result: passed in the client, 2026-10-23 (the owner).
 
 **INSTALL-2. Minimap button and broker.** Look at the minimap → the gem button is there; hover it →
 the tooltip reads `Ka0s Drop Watcher  v1.0.0`, `Enabled: Yes`, `Locked`, `Test mode`, then the two
-click hints. A missing icon (a blank or green square) is the failure. Result:
+click hints. A missing icon (a blank or green square) is the failure. Result: passed in the client, 2026-10-23 (the owner).
 
 **INSTALL-3. Reload keeps settings.** Set Master scale to 1.25 and lock the window, `/reload` →
-both are kept; the debug flag and test mode are not (session-only). Result:
+both are kept; the debug flag and test mode are not (session-only). Result: passed in the client, 2026-10-23 (the owner).
 
 **INSTALL-4. The re-vendored LibKa0s (DW-P22).** The DW-P22 re-vendor has landed (`ff567d3`). `/reload`
 → no Lua error and no new chat line; `/dump LibStub.minors["LibKa0s-Perf-1.0"]` → `15`. `/dw diagnostics`
 and `/dw perf` open as DIAG-1 and DIAG-2 describe. A lower minor means an older copy of the library
-loaded first from another addon; record which addons were enabled. Result:
+loaded first from another addon; record which addons were enabled. Result: passed in the client, 2026-10-23 (the owner).
 
 **INSTALL-5. The re-vendored LibKa0s v1.75.0 and its icon subset.** (DW-RV) The copy now ships only
 the 28 icons the `LibKa0s icons:` line in `CLAUDE.md` declares, and a pruned icon draws blank rather
@@ -86,20 +86,20 @@ Result: passed in the client, 2026-10-23 (the owner).
 ## Slash
 
 **SLASH-1. Help.** `/dw help` and `/dropwatcher help` → the same index, gold commands, white
-descriptions, every row present; `/dw` alone opens the settings panel. Result:
+descriptions, every row present; `/dw` alone opens the settings panel. Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-2. Window verbs.** `/dw show`, `/dw hide`, `/dw toggle` → the window opens, closes and
-toggles; Escape closes it too. Result:
+toggles; Escape closes it too. Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-3. Lock verbs.** `/dw lock` → the window cannot be dragged by its title bar or resized from
-its corner; `/dw unlock` → both work again; the Lock frame box follows. Result:
+its corner; `/dw unlock` → both work again; the Lock frame box follows. Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-4. Feed verbs.** In a group, `/dw scan` → `Inspecting n group members, one at a time.` and
 the footer's inspect freshness moves as they are read. `/dw add <shift-click an item>` → `Added
 [item] for you (drop n).` and the drop is on Drops with Offer in its Actions; `/dw add <item> <a
 member's name>` → the drop is on Drops under that member; `/dw add <item> Nobody` → it shows, with no inspect asked.
 `/dw clear` → `Cleared this session's drops.`, both tabs empty; with test mode on, its sample drops
-stay. Result:
+stay. Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-5. View verbs.** `/dw history` → the window opens on History, expanded even when it was
 minimized; `/dw mine` → it opens on Drops (where your own drops are, since DW-E3 retired My drops),
@@ -107,20 +107,20 @@ the same way. `/dw compact` → `Compact view.` and the window narrows to its co
 (COMPACT-1); again → `Full view.`; `/dw full` → `Full view.` and stays full; the Window page's
 Window layout choice follows. `/dw situation` in a Heroic dungeon →
 three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
-party, difficulty 2); outdoors alone → `Solo (solo)`. Result:
+party, difficulty 2); outdoors alone → `Solo (solo)`. Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-6. Offer verb.** `/dw offer <one of your drops>` → the window opens on Drops with the
 Offer panel docked for that drop. `/dw offer <a tradeable bag item the feed never saw>` → it is added
 as your drop and the panel opens for it. `/dw offer <an item not in your bags>` → `[item] is not in
 your bags.`; `/dw offer` alone → the usage line. While disabled, every one of these verbs answers
-the one disabled line. Result:
+the one disabled line. Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-7. Each root reaches its own addon (cross-addon census, review 2026-10-14).** Enable Drop
 Watcher with as many other Ka0s addons as you have (QuickComms, and any others), `/reload`. Type each
 root with `help`: `/dw`, `/dropwatcher`, then each other addon's own roots (`/qc`, `/quickcomms`, …)
 → each prints its own addon's help, under its own brand, and none is answered by another addon or by
 the client's `Type /help for a listing`. Then Settings → AddOns → each addon is listed once, and each
-multi-page addon's pages appear once each under it. Result:
+multi-page addon's pages appear once each under it. Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-8. The Show window key binding (launcher-§6, LibKa0s#58, DW-09).** Key Bindings → AddOns →
 Ka0s Drop Watcher lists `Toggle Drop Watcher window` with no default key. Bind one; a press opens the
@@ -132,14 +132,14 @@ Result: passed in the client, 2026-10-23 (the owner).
 ## Settings panel
 
 **PANEL-1. Landing page.** Settings → AddOns → Ka0s Drop Watcher → the logo once (not twice after
-switching pages back and forth), the notes line, and the slash command list. Result:
+switching pages back and forth), the notes line, and the slash command list. Result: passed in the client, 2026-10-23 (the owner).
 
 **PANEL-2. Master controls.** General → the `Master controls` tab: Enable, General visibility,
 Master scale, Master alpha, Lock frame, Debug console, Minimap button, Test mode, then Reset position
-and Reset all settings. Each control changes the window at once. Result:
+and Reset all settings. Each control changes the window at once. Result: passed in the client, 2026-10-23 (the owner).
 
 **PANEL-3. Defaults and Reset all.** Hide the minimap button, change the scale, press the header's
-Defaults button and accept → the scale is back to 1.0 and the minimap button stays hidden. Result:
+Defaults button and accept → the scale is back to 1.0 and the minimap button stays hidden. Result: passed in the client, 2026-10-23 (the owner).
 
 **PANEL-4. Situations and Drops.** The settings list shows General, Situations, Drops, Comparison,
 Messages, Window, Alerts and Profiles, in that order (feedback-24; FEED-99), and every page has a tab
@@ -151,7 +151,7 @@ Quality floor lights, and the closing line reads `In force now: Quality: Match s
 filter bar does, with a line under it pointing at the Situations page's Quality column. In a dungeon
 whose Quality is set on Situations, the line names it (`(Dungeon's own setting)`). Drops › Items: the
 absolute and relative item levels light only in their mode. Press the Drops page's Defaults → only its
-rows go back (a Window value you changed stays). Result:
+rows go back (a Window value you changed stays). Result: passed in the client, 2026-10-23 (the owner).
 
 **PANEL-5. Comparison.** Comparison › Weights opens on your current spec in a strip of your class's
 specs (no other class's), with a slider for your primary stat (no other primary), Stamina and the
@@ -160,7 +160,7 @@ kept, and `/dw get comparison.weights` reads `{2}`. Unwanted types: one checkbox
 class uses (Shields only for a class with a shield spec); tick Daggers → `/dw get comparison.undesired`
 reads `{1}`, and a dagger that drops afterwards reads `Doesn't want` for you, with the reason "You marked this item
 type as not wanted for your spec." Comparison's Defaults clears both. The tabs, the strip and the
-sliders cannot be used in combat (the page is covered). Result:
+sliders cannot be used in combat (the page is covered). Result: passed in the client, 2026-10-23 (the owner).
 
 **PANEL-6. Messages.** Messages opens on Sending (feedback-24). Messages › Templates (board 08): the seven token chips, each with its tooltip;
 the three editors with `n / 255` in their labels, counting as you type; the preview below names who
@@ -170,7 +170,7 @@ stored and shown again on `/reload`. Clear a box and press Enter → refused, an
 back. Click into Offer, then click `{item}` → it lands at the cursor and is stored. Reset templates →
 all three back to the shipped wording. With test mode on, Ask in the window sends the text you
 stored (printed). Sending and Auto-ask: Auto-ask's delay and least gain are dimmed until Ask
-automatically is ticked. Alerts › Toast: its rows dim until Show a toast is ticked. Result:
+automatically is ticked. Alerts › Toast: its rows dim until Show a toast is ticked. Result: passed in the client, 2026-10-23 (the owner).
 
 **PANEL-7. Rows that act.** Drops › Retention: tick Clear on boss kill, loot some trash in a dungeon,
 then kill a boss → the trash drops leave the table at the kill and the boss's loot fills its own
@@ -181,22 +181,22 @@ press a row's Ask → the Edit message box opens with the ask filled in and noth
 press Send; an Offer panel's Offer and Announce to group open the box with the offer's and the
 announcement's text; Post my tradeables still posts at once. Window › Layout: drag Row height to 32
 and Font size to 15 → the rows grow and their text with them, at once, on Drops and History.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **PANEL-8. The situation table never rides a released frame (DW-P21).** Open Situations
 → the table, a line per situation. Without changing anything: close the Settings window, reopen it on
 Drops → no situation table anywhere on Drops. Back to Situations → the table is there once.
 Switch to General's Master controls and back three times, then open Comparison, Messages and Alerts in
 turn → the table shows only on Situations, never on another tab or page, never twice, never empty;
-toggle one cell → it writes, and Defaults repaints it. No Lua error throughout. Result:
+toggle one cell → it writes, and Defaults repaints it. No Lua error throughout. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Profiles
 
 **PROFILE-1. The Profiles page.** Settings → Ka0s Drop Watcher → Profiles → AceDB's page draws;
-create a profile, change the scale, switch back → each profile keeps its own scale. Result:
+create a profile, change the scale, switch back → each profile keeps its own scale. Result: passed in the client, 2026-10-23 (the owner).
 
 **PROFILE-2. The profile verb.** `/dw profile` lists the profiles; `/dw profile <name>` switches,
-and works while the addon is disabled. Result:
+and works while the addon is disabled. Result: passed in the client, 2026-10-23 (the owner).
 
 **PROFILE-3. The settings rows.** `/dw list` → every setting of design spec §12.1 listed under its
 page (general, feed, comparison, trade, messages, window), the two Comparison maps as `{0}`.
@@ -204,17 +204,17 @@ page (general, feed, comparison, trade, messages, window), the two Comparison ma
 bogus` and `/dw set messages.announceChannel SAY` are refused and change nothing. `/reload` →
 `/dw get feed.quality.fixed` still reads 4. Switch to a new profile → it reads 3; switch back → 4.
 `/dw set global.history.retentionDays 60`, switch profile → still 60 (it is account-wide). On the
-first login on this build, `/dw debug on` → one held `[Migrate] v1 -> v2` line. Result:
+first login on this build, `/dw debug on` → one held `[Migrate] v1 -> v2` line. Result: passed in the client, 2026-10-23 (the owner).
 
 ## State
 
 **STATE-1. Disable stands everything down.** Open the window and turn test mode on, then
 `/dw disable` → the window closes, test mode ends, `/dw show` and `/dw test` answer `Ka0s Drop Watcher
 is disabled — enable it with /dw enable`; the minimap menu grays every entry but Enabled;
-`/dw enable` → the window comes back. Result:
+`/dw enable` → the window comes back. Result: passed in the client, 2026-10-23 (the owner).
 
 **STATE-2. Launcher menu.** Right-click the minimap button → Enabled, Locked, Test mode, Show window,
-each ticking the state it shows and toggling it. Result:
+each ticking the state it shows and toggling it. Result: passed in the client, 2026-10-23 (the owner).
 
 **STATE-3. Test mode populates every drop state.** Solo, outside an instance and out of combat, open the
 window with no drop yet → the Drops tab shows `No drops yet`,
@@ -238,7 +238,7 @@ trinket opens the panel with `+14 UPGRADE`, `+6 UPGRADE`, `EQUAL`, `NO UPGRADE`,
 `UNAVAILABLE`; Offer and the strip's Post my tradeables print and send nothing. Drag the window and minimize it: the `TEST MODE` text stays on the title bar.
 `/dw test` → the text, the banner and the rows go, View is back to Interesting and the empty state returns.
 (Since DW-06 the banner is LibKa0s-Widgets' test-mode strip, anchored and tipped by Drop Watcher: FEED-100.)
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **STATE-4. Test mode shows real items, History test data and no trailing ellipsis (DW-84).** Solo, outside
 an instance and out of combat, `/dw test` → for a moment the Drops tab may read
@@ -258,7 +258,7 @@ passed` in full (its tooltip still says `Not tradeable` and why); a `(Details)` 
 says `1 checking`, the Offer panel's pill `CHECKING`. Look over every button and cell at the default width (also the least,
 since DW-D4) → none ends in an ellipsis or is cut short. Then in a Heroic dungeon (an auto-open situation),
 out of combat, with the window closed: `/dw test` → the window opens with the test rows; `/dw test` again →
-the window closes (test mode opened it, even though its drops arrived first). Result:
+the window closes (test mode opened it, even though its drops arrived first). Result: passed in the client, 2026-10-23 (the owner).
 
 **STATE-5. One refusal line while disabled (DW-P16).** `/dw disable` (the refusal comes before any
 other check, so no drop is needed). Run
@@ -266,7 +266,7 @@ other check, so no drop is needed). Run
 exactly `Ka0s Drop Watcher is disabled — enable it with /dw enable`, byte for byte the same, never
 inside `Not asked: …` and never `The addon is disabled.`. Then enter and leave combat with a training
 dummy and travel to another zone without reloading → no `[DW]` chat line and no window, and nothing
-in the feed changes (review C-01's in-client half). `/dw enable` after. Result:
+in the feed changes (review C-01's in-client half). `/dw enable` after. Result: passed in the client, 2026-10-23 (the owner).
 
 **STATE-6. Test mode's data looks like real play (feedback-17).** The headless `test_test_mode`,
 `test_sim_pool` and `test_group_place` cover the shape. Solo, outside an instance and out of combat, close
@@ -296,7 +296,7 @@ addon's window. Record what the client printed on each `Result:` line.
 Enum.TooltipDataLineType.ItemLevel, Enum.TooltipDataLineType.ItemUpgradeLevel` → three numbers;
 `/dump Enum.AddOnRestrictionState` → a table with `Inactive`, `Activating` and `Active`;
 `/dump C_RestrictedActions.IsAddOnRestrictionActive ~= nil` → `true`. A nil anywhere is the
-failure: name the member that is missing. Result:
+failure: name the member that is missing. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPAT-2. The tooltip lines.** Loot a tradeable BoP item in a dungeon and note its bag and slot,
 then `/dump C_TooltipInfo.GetBagItem(<bag>, <slot>)` → one line whose `type` is the
@@ -304,19 +304,19 @@ then `/dump C_TooltipInfo.GetBagItem(<bag>, <slot>)` → one line whose `type` i
 duration such as `1 hour 59 min`. Then `/dump C_TooltipInfo.GetInventoryItem("player", 1)` → an
 `ItemLevel` line; record whether it carries a numeric `itemLevel` field. And
 `/dump C_Item.GetItemUpgradeInfo(GetInventoryItemLink("player", 1))` → a table with
-`trackString`, `currentLevel` and `maxLevel` for a tracked helm. Result:
+`trackString`, `currentLevel` and `maxLevel` for a tracked helm. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPAT-3. Pawn.** With Pawn installed and loaded, `/dump PawnIsReady()` → `true` once the UI has
 loaded, and `/dump PawnIsInitialized` → `nil` (Pawn keeps that flag local; the seam asks
 `PawnIsReady()`). `/dump PawnFindScaleForSpec(select(3, UnitClass("player")), GetSpecialization())`
 → your spec's scale name (Pawn numbers a spec by its place in the class, not by specID). Without
-Pawn, `/dump PawnIsReady` → `nil`. Result:
+Pawn, `/dump PawnIsReady` → `nil`. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPAT-4. The optional-addon probe (DW-P20).** Pawn installed and enabled, CanIMogIt not (or the
 other way round). `/reload`, then `/dw debug on` (the line is said once, as logging turns on) → the
 console's `[Init]` line reads `optional: Pawn loaded, CanIMogIt absent`; `/dw diagnostics` → its
 `integrations` section reads `optional: Pawn=true CanIMogIt=false`. Both agree with the AddOns list; swap which addon is enabled and they follow. A
-line that names neither, or one reading `unavailable` or `unreadable`, is the failure. Result:
+line that names neither, or one reading `unavailable` or `unreadable`, is the failure. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Combat
 
@@ -328,7 +328,7 @@ or `pushed`), the link, the quantity and the looter, the boss's loot included. T
 `/dw diagnostics` → the `feed: parser hits=… ignored=… rejected=… secret=…` line. Record whether
 `secret` is above 0, and if so whether the secret lines came during the pull (between the pull and
 the kill) or after it: a `[PARSE] loot line skipped: secret` line marks each. A Mythic+ key run
-(trash loot mid-key, the chest at the end) is the second place to record it. Result:
+(trash loot mid-key, the chest at the end) is the second place to record it. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMBAT-2. What the restrictions stop.** `/dw debug on`, then pull a boss in a normal dungeon →
 the console shows a `RES` line naming `encounter` and `canSendChat` false at the pull, and one back
@@ -340,29 +340,29 @@ there, and does `/dump C_ChatInfo.InChatMessagingLockdown()` say true?). With th
 (`/dw show`) through the same pull → the title bar shows the orange lock badge reading `Encounter`
 from the pull until the boss dies, `Combat` while fighting trash, and no badge out of combat; hovering it says which restriction is
 active, and once an ask is queued (ASK-2) it reads `Encounter · 1 queued` and its tooltip lists the
-ask. Result:
+ask. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMBAT-3. Combat ends test mode.** Turn test mode on, pull a training dummy → test mode ends with
 the chat line `Test mode ended: you entered combat.`; `/dw test` in combat is refused. With General
-visibility `Only in combat`, the open window shows on the pull and hides when combat ends. Result:
+visibility `Only in combat`, the open window shows on the pull and hides when combat ends. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Diagnostics
 
 **DIAG-1. The report.** `/dw diagnostics` → the console opens with both markers naming Ka0s Drop
 Watcher and the `identity`, `settings`, `window`, `registration` and `integrations` sections; logging
-is on afterwards. `/dw debug diagnostics` writes the same report again below the first. Result:
+is on afterwards. `/dw debug diagnostics` writes the same report again below the first. Result: passed in the client, 2026-10-23 (the owner).
 
 **DIAG-2. Perf.** `/dw perf` → the step panel opens with its own close mark; run A, B and finish →
 the report lists `window.refresh`, and `parse` when a loot line arrived during the run. During a
 suspended run (the addon stood down by the `perf` hold, `enabled` still on), `/dw scan`, `/dw test` and
 `/dw sim start dungeon` each answer `Not available during a performance capture.` and never `is
-disabled — enable it with /dw enable`. Result:
+disabled — enable it with /dw enable`. Result: passed in the client, 2026-10-23 (the owner).
 
 **DIAG-3. State and Scoring.** In a dungeon, `/dw diagnostics` → `state: enabled=true
 situation=dungeon testMode=false restriction=none queuedSends=0`; pull a boss and run it again →
 `restriction=encounter`. The `scoring:` lines name the scorer setting, `pawn ready=true scale=<your
 spec's Pawn scale>` with Pawn installed (`ready=false scale=none` without it), and `retries pending=0
-spent=0 timer=off` out of loot. Result:
+spent=0 timer=off` out of loot. Result: passed in the client, 2026-10-23 (the owner).
 
 **DIAG-4. Perf nesting confirmed by a capture (DW-P24, review C-04).** DW-P22 (LibKa0s Perf 15,
 `ff567d3`) and DW-P24 (`evaluate` and `quality.gate` declared within `feed.add`, `917449f`) have landed. In a
@@ -373,20 +373,20 @@ arm second, no `/reload` between the arms, with at least one boss kill and its l
 loads). The failure is any `declares itself within feed.add — not observed` or `… but was observed
 at top level` line. Read the bucket figures, not the frame-time delta. Hand the report and the JSON
 dump to `/dev-copilot:wow-perf-analysis`, which records the capture as
-`docs/perf-analysis/<YYYYMMDD-HHMMSS>/`; record that folder here. Result:
+`docs/perf-analysis/<YYYYMMDD-HHMMSS>/`; record that folder here. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Degraded
 
 **DEGRADED-1. LibKa0s missing.** Rename `libs\LibKa0s` and `/reload` → no Lua error; one chat line
 says the library is missing; `/dw show` opens the window without the skin; `/dw disable` and
 `/dw enable` still work; `/dw list` says the settings CLI is unavailable. Restore the folder after.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **DEGRADED-2. The toast's close degrades to nothing (DW-P21).** With the library present, turn
 Settings › Alerts › Toast › Show a toast on (it is saved). Rename `libs\LibKa0s` as in DEGRADED-1,
 `/reload`, then `/dw test` → the test toast shows with Ask in its top-right corner and no close control at all:
 no `×` text button. Right-click the toast → it closes. With the library restored and `/reload` → the
-skinned close mark is back at the corner and Ask sits to its left. Restore the folder after. Result:
+skinned close mark is back at the corner and Ask sits to its left. Restore the folder after. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Feed
 
@@ -409,7 +409,7 @@ won …`) show nothing. `/dw diagnostics` → `feed: parser hits=<n>` matches th
 `CHAT_MSG_LOOT`, and let a member loot something → the event's twelfth argument equals
 `/dump UnitGUID("party1")` for that member: the parser takes it as the GUID of a looter the roster
 cannot place. Record any line chat showed with no `[PARSE]` line, any
-looter shown without a realm, and any quantity wrong. Result:
+looter shown without a realm, and any quantity wrong. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-2. One drop per item, whatever reports it.** `/dw debug on`, in a Normal or Heroic dungeon
 with four others, and kill a boss. → Each item chat shows as looted produces one `[FEED] drop <n>:
@@ -419,14 +419,14 @@ encounter` line with the same `<n>`: no item gets two `drop` numbers. `/dw diagn
 `feed: drops group=<members' drops> mine=<yours>` match what chat showed, and `merged=` counts the
 second reports. In a group-loot (Need/Greed) run, each won item also shows `also reported by
 history` once the roll ends, never before. Record any item with two numbers, or a `merged=` of 0
-after a boss whose loot chat showed. Result:
+after a boss whose loot chat showed. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-3. Groups by encounter and area.** Same dungeon, `/dw debug on`. → Trash loot before the
 first boss reads `in <dungeon name>`; the boss's loot reads `in <boss name>`, including loot that
 arrives up to two minutes after the kill; trash after that reads `in <dungeon name>` again. Wipe on
 a boss once → loot that follows is not filed under the boss. While a boss is up (or within two
 minutes of its kill), `/dw diagnostics` shows `feed: encounter=<boss name>`; afterwards
-`encounter=none`. Record any drop filed under the wrong name. Result:
+`encounter=none`. Record any drop filed under the wrong name. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-4. The gates, in order, and your own drops.** Same dungeon, Feed quality at its default
 (Rare+). → An Uncommon or lower item a member loots that is not an upgrade for you shows a
@@ -437,14 +437,14 @@ line for that member right after it; an Epic shows `[FEED] drop`, then an `[INSP
 An item you loot yourself shows `them=-` and a trade state judged by your own verdict (`no` when it
 is an upgrade for you). Then leave the instance and, alone in the open world, loot a few items:
 no `[FEED] drop` line appears outside a tracked situation (`/dw diagnostics` →
-`feed: hidden ... notTracking=<n>` counts any loot seen there). Result:
+`feed: hidden ... notTracking=<n>` counts any loot seen there). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-5. The upgrade track on someone else's link.** After FEED-2, shift-click a member's drop
 (a piece with an upgrade track, from the loot window or chat) into `/dump
 C_Item.GetItemUpgradeInfo(<link>)`. → A table with `trackString`, `currentLevel`, `maxLevel` and a
 `trackStringID` answers for a link that is not yours; record the `trackStringID` per track name, so
 `C.TRACK_TIER_BY_STRING_ID` can be filled (ITEM-2). If it answers nil, record that: the feed then
-reads the track from the hyperlink tooltip's `ItemUpgradeLevel` line. Result:
+reads the track from the hyperlink tooltip's `ItemUpgradeLevel` line. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-6. The Mythic+ chest.** `/dw debug on` and `/etrace` filtered on `ENCOUNTER_LOOT_RECEIVED`,
 then time a keystone. → `/dw diagnostics` during the run shows `feed: run=<keystone dungeon
@@ -452,7 +452,7 @@ name>`. At the chest, each item shows `[FEED] drop <n>: ... in <keystone dungeon
 group, bosses included), and `/etrace` shows one `ENCOUNTER_LOOT_RECEIVED` per chest item: record
 the first argument (the encounter id) it carries, and whether the chat line and the event both
 arrive (`also reported by encounter`). Loot two minutes after completion falls back to the
-dungeon's name. Result:
+dungeon's name. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-7. A Devourer looter.** In a group with a Devourer Demon Hunter, once they are inspected
 (`/dw diagnostics`'s `inspect` lines show them with `spec=1480`), `/dw add` a warglaive or a
@@ -460,7 +460,7 @@ one-handed Intellect weapon with their name, then an Intellect held-in-off-hand 
 column reads the weapon as usable (an upgrade, sidegrade or downgrade, never `Can't use`) and the
 off-hand item as `Can't use`. Before the inspect, the same Intellect weapon reads `?` (the spec is
 not known and Intellect suits only one Demon Hunter spec). If the item's own spec list disagrees,
-the item wins: record the item and both verdicts. Result:
+the item wins: record the item and both verdicts. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-8. The window's shell.** `/dw show` on a clean `/reload` → a window about 1038 × 600 (since DW-F1; 1132 from DW-E4)
 with the Ka0s edge (a hard black line with a gray line inside it), the gold `Ka0s Drop Watcher` title
@@ -477,7 +477,7 @@ reads Newest again. Open each dropdown and press Escape → the window and the o
 close. Drag by the title bar and resize from the corner, `/reload` → the same place and size (the corner
 will not take it narrower than 1038: FEED-37, FEED-54). In a party, `Scan group` → the chat line
 `Inspecting <n> group members, one at a time.`, and within a minute the footer reads
-`Inspect <n>/<n> fresh`. Result:
+`Inspect <n>/<n> fresh`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-9. Minimize and auto-open.** With the window open, the minimize mark → the window shrinks
 to its title bar where it stood, the mark becomes a plus; `/reload` → it comes back minimized. In a
@@ -488,7 +488,7 @@ expand another row and click `Edit message`; then minimize → both close with t
 Heroic dungeon with the window minimized, let a member loot an item → a `1 new` chip
 appears beside the title and the window stays minimized; a double-click on the title bar expands it
 and the chip goes. Superseded in part by FEED-18 (DW-83): every drop now opens it, not only the
-first upgrade. In the open world solo nothing opens it. Result:
+first upgrade. In the open world solo nothing opens it. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-10. The Drops table.** In a Heroic dungeon with the window open, let the group loot a boss →
 under the filter bar a row of gold column labels (`Item`, `Ilvl`, `Slot`, `Type`, `Looter`, `Me`,
@@ -511,7 +511,7 @@ pins today's order, Type, Slot, Looter, Trade window, Ilvl, Them, Trade, Me, for
 least.) Hover every cell, every column label
 and the header → each one shows a tooltip with a reason (Trade's reads like
 `Personal loot: 311 is not an upgrade over the 324 <name> wears, so they may trade it.`); no cell is blank.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-11. Headers, item buttons, compact.** After FEED-10, kill a second boss → its group is on top and
 open, the first one collapsed with a right chevron and `(collapsed)`; click each header → it opens or
@@ -520,7 +520,7 @@ collapses. Hover an item icon → the game's item tooltip with a
 link is inserted; ctrl-click it → the dressing room shows it. No row has an `×` (DW-D2 removed the dismiss:
 FEED-33). Switch to the compact layout (`/dw compact`) → the table gives way to cards (COMPACT-2); set it
 back. Resize the window → the Item column takes the width. Scroll with the mouse wheel when the rows pass
-the bottom. Result:
+the bottom. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-12. The table's Ask button.** In a party, on a drop that is an upgrade for you and Likely tradeable,
 click `Ask` (red: your move, DW-D1) → the looter is whispered your ask template and the chat line
@@ -529,7 +529,7 @@ tooltip says it cannot be sent twice. In a boss fight, click `Ask` on another su
 with a clock mark and the title bar's badge counts it; click it again → it is canceled and reads `Ask`;
 click once more and let the fight end → it is sent and reads `Asked`. A drop with Trade `No`, or one
 that is not an upgrade for you, shows a dash whose tooltip says why (superseded by feedback-11, 2026-10-14: the gray `No action` button with its reason; FEED-72); a drop of your own shows `Offer`
-instead (since DW-E2: FEED-44). Result:
+instead (since DW-E2: FEED-44). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-13. The detail card opens inline.** After FEED-10, click a drop's row (anywhere but a button) → a
 card opens right under it, indented with its row, and the rows below move down; the row gets a faint gold
@@ -538,7 +538,7 @@ tint and its left chevron turns up (since DW-E0 there is no chevron at the right
 bind (BoP, BoE), the track with rank and item level (`Hero 2/6 · 311`), the primary stat, and Socket or a
 tertiary stat when the item has them. Click the row again → the card closes and the rows move back. Click
 another row → the card moves to it: one card at a time. Fold the row's header, or type a search that hides
-the row → the card goes with it; clear the search → it comes back still open. Result:
+the row → the card goes with it; clear the search → it comes back still open. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-14. Both comparisons and the trade box.** On a drop the looter's inspect has read, the card's left
 box `FOR YOU` and right box `FOR LOOTER (<NAME>)` (`FOR <NAME> (LOOTER)` until feedback-21 H5, FEED-91) each
@@ -549,7 +549,7 @@ lost (`+130 Haste -119 Mastery`), and for you Pawn's score (or `–`, whose tool
 loaded), for the looter their spec and `inspected 40s ago`. The values match the item tooltips the game
 shows (compare each by hovering the icons). Below, the trade box shows a chip (`LIKELY TRADEABLE`), the
 reason in a sentence, and `Rule: personal loot, Mythic+ · Basis: inspect 40s ago`. Hover every line and chip
-→ each tooltip names it and says why; nothing is blank. Result:
+→ each tooltip names it and says why; nothing is blank. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-15. The card's actions.** On another player's drop that is an upgrade for you: `Ask <name>` whispers
 them as the row's Ask does; `Edit message` opens a small box over the window with the ask filled in and
@@ -561,7 +561,7 @@ far from the looter, `Trade` reads `Trade · out of range` grayed, with the reas
 → it lights up, and a click opens a trade window with them; in combat it reads `Trade · in combat`. There is
 no `Hide this item` (DW-D2: FEED-33). On your own drop the first button is `Offer` (since DW-E2), which
 opens the Offer panel, and the For the looter box's Them row reads `(Details)` (`(Multiple)` until DW-F3) with the row's tooltip;
-Edit message, Retry inspect and Trade are grayed and each says why. Result:
+Edit message, Retry inspect and Trade are grayed and each says why. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-16. The header beside Loot History (DW-81).** Open Ka0s Loot History (`/lh`) and put the two windows
 side by side. → Drop Watcher's title bar has no logo (the minimap button and the AddOns list keep it), and
@@ -573,7 +573,7 @@ the restriction badge, `Scan group`, minimize and the close mark keep their plac
 `/dw sim start key` → `SIMULATION` in cyan, the same style and place. Minimize with a new drop pending → the
 `n new` counter sits after the mode's words. Resize to the least width (1038 since DW-F1; 1132 from DW-E4, 972 from DW-D4, 520 before) with
 test mode on → the title stays centered; record whether `TEST MODE` reaches `Scan group` or the restriction
-badge (at that width the centered title leaves them little room). Result:
+badge (at that width the centered title leaves them little room). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-17. The filter bar beside Loot History (DW-82).** With the two windows side by side as in
 FEED-16 → Drop Watcher's search box is a flat, square-cornered box, the same dark fill, thin gray
@@ -582,7 +582,7 @@ its line turns gold, and click away → gray again. (The `Likely tradeable only`
 covered is a View value since DW-A1: FEED-20.) The View, Quality and Content dropdowns match Loot
 History's (same flat box, chevron, font and height), 8px apart. Switch to History → the control it
 does not use (Quality) grays out the same way. (Since DW-07 the search box is LibKa0s-Widgets'
-SearchBox, its hint and filter Drop Watcher's: FEED-101.) Result:
+SearchBox, its hint and filter Drop Watcher's: FEED-101.) Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-18. My eq, Their eq, the two new filters and auto-open on every drop (DW-83).** (Since DW-F1 My eq
 is the gear part of Me and Their eq of Them, and the My eq and Their eq toggles are gone: read the column
@@ -603,7 +603,7 @@ next drop opens it again; loot an item yourself → it opens too. Minimize it, l
 stays minimized and its `n new` count rises. Untick Situations › Dungeon's Auto-open → drops no
 longer open it; tick it back. Enter combat with the window closed and let an item drop → it opens with no
 Lua error and no "Interface action blocked" message. `/dw sim start key` with the window closed → the
-simulator's first drop opens it. Result:
+simulator's first drop opens it. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-19. Every drop counted: the two-Yoke regression (DW-A0, feedback-2 spec §0).** In a Mythic+
 dungeon with a cross-realm group, `/dw debug on`, View: Interesting. Let two members loot the same
@@ -618,7 +618,7 @@ an item it does not hold → that group leaves the table. A reagent and a non-ge
 (a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notGear` line each, no
 row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
 `/dw diagnostics` → its `drops` section reads `drops: hidden notGear=2` (plus any others) and
-`drops: refused pushed=1`. Result:
+`drops: refused pushed=1`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** On a
 character whose profile never changed the View, `/dw show` → the bar reads `View: All` and no
@@ -635,7 +635,7 @@ tradeable`, `Usable by me`, `Upgrade for me`, all unticked; no Likely tradeable 
 feed.view.likely` → `false`; `/dw set feed.view.usable true`, `/reload`, `/dw show` → a fresh
 Drops tab reads `Usable by me`; `/dw set feed.view.usable false`. On a character that had
 ticked Usable by me or Likely tradeable only in the old settings (or `View: All` saved), the first
-load of this version → the same choices show as View values. Result:
+load of this version → the same choices show as View values. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-21. Item tooltips beside the window (DW-A2, feedback-2 spec §2).** `/dw test`, window in the
 middle of the screen. Hover an item in each place: a Drops row (icon and name), the Me and Them icons (My eq and Their eq until DW-F1), the detail card's icon, name and Replaces rows, a row of your own, the Offer panel's icon and name,
@@ -644,7 +644,7 @@ row, and covers none of the table (the Offer panel's opens to the right of the p
 window to the screen's right edge and hover again → each opens on the LEFT of the window instead.
 Set the UI scale low (or the window's Scale to 0.7) and repeat near the right edge → still beside
 the window, never over it, never off screen. Hover the toast's icon → beside the toast. (Where
-each tooltip sits against the row is FEED-26's since DW-B2: it rises from the row's top.) Result:
+each tooltip sits against the row is FEED-26's since DW-B2: it rises from the row's top.) Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-22. Group headers keep the party (DW-A3, feedback-2 spec §3; the header since DW-B4).** In a
 five-player party, run a dungeon or a key until something drops. Since DW-B4 the header itself names
@@ -656,7 +656,7 @@ same party; `/reload` → it still does. A History group kept before DW-A3 has n
 still reads correctly. In a raid (or `/dw test`, whose Placeholder boss is a raid of eight) → the
 line names all eight (ten at most, then `+n`) (superseded by feedback-17, 2026-10-16: `Group (n)` rows naming
 everyone five a row, and `/dw test`'s raid bosses are twenty; FEED-79). `/dw sim start key` then `/dw sim run` → the run's
-tooltip names you and the simulated group, and the simulation's History does too. Result:
+tooltip names you and the simulated group, and the simulation's History does too. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-23. The Character dropdown (DW-A4, feedback-2 spec §4).** Open the window: after Content the
 bar holds `Character: Current`. Open it on Drops → `Character: All`,
@@ -671,7 +671,7 @@ is left out, no `0 shown` header, since feedback-12 spec §1). Hover a group hea
 some of its drops → the tooltip names them with `Character: Current`. Turn on `/dw test` → History
 lists you and `Emberwick`, and Current hides the alt's `Placeholder boss (alt)` until All (since
 feedback-17 the alt's group is named for its real boss, ten days old). `/dw sim
-start key` then `/dw sim run` → the simulated run shows under Current on every tab. Result:
+start key` then `/dw sim run` → the simulated run shows under Current on every tab. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-24. The tables' font and row height beside Loot History's (DW-A8, feedback-2 spec §8, FB2-9).**
 The headless `test_window_group` (`rows:`, `table: the Window page's row height`, and the Trade window
@@ -686,7 +686,7 @@ reads 18 and Font size reads 0, all the way left (Default). Drag Font size to 15
 tabs, the countdown included (also while it is bold amber, ending soon), and the Drops rows grow with it so
 the countdown never runs into its bar (also at Font size 20 with Row height 18); drag it back
 to 0 → the original size returns. `/dw get window.fontSize` → `0 (Default)`. On a profile where you had
-stored another row height or font size before this version, it is unchanged. Result:
+stored another row height or font size before this version, it is unchanged. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-25. Your own drops' headers and the tooltip beside the Offer panel (DW-A9, feedback-2 spec §8,
 FB2-10; on Drops since DW-E3).** The headless `test_own_drops`, `test_drops_strip` and `test_window_group`
@@ -700,7 +700,7 @@ then hover a row's item → the tooltip opens to the RIGHT of the panel, never o
 the window toward the screen's right edge until the panel has no room beside it (or the tooltip
 does not fit) → the tooltip opens on the window's LEFT. Hover an item in the panel → the tooltip
 never covers the window (right of the panel, else left of the window). Close the panel and hover a
-row → the tooltip is beside the window again. Result:
+row → the tooltip is beside the window again. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-26. Every row tooltip at the row's top right, like Loot History (DW-B2, feedback-3 spec §2).** The
 headless `test_row_tooltip` covers the same ground. `/dw test`, window in the middle of the screen, Ka0s
@@ -714,7 +714,7 @@ row's Offer panel (docked right) and hover a window row → the tooltip rises ou
 hover a candidate's cells, pill, Offer and Trade → the same corner, never over the window. Drag the window
 to the screen's right edge and repeat a few → each rises from the row's top-LEFT corner instead, just
 outside the window's left edge. The column labels, the tabs, the title bar, the footer and the filter bar
-keep their own anchors. Result:
+keep their own anchors. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-27. The filter bar's tooltips open above their controls (DW-B1, feedback-3 spec §1).**
 The headless `test_window_shell` (its three `filter bar tooltip` cases) covers the placement math. `/dw test`, window in
@@ -724,7 +724,7 @@ FEED-70) in turn → each tooltip's bottom-left
 corner sits on the control's top-right corner, the tooltip rising above the control and never covering
 it; click a dropdown open while its tooltip shows → the menu is never under the tooltip. Drag the
 window to the screen's right edge and hover the right-most controls → the tooltip's bottom-right
-corner sits on the control's top-left corner instead, still above it. Result:
+corner sits on the control's top-left corner instead, still above it. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-28. Group headers name where it dropped and only your character (DW-B4, feedback-3 spec §4).**
 The headless `test_group_place` covers the names and the capture. Research `07-my-drops-real-timewalking-drop.png`
@@ -741,7 +741,7 @@ the alt's. A History group kept before this version still reads `Label · Situat
 world → `Open world · Open world group` (or `Solo`). `/dw test` → the key run is a real dungeon at
 `Mythic+ 10` and the boss sits in a real instance at Heroic, on Drops and History.
 `/dw sim start dungeon` then `/dw sim run` → the boss headers name the pool's dungeon and `Mythic`;
-`/dw sim start key` → the run's header names the dungeon and `Mythic+ 12`. Result:
+`/dw sim start key` → the run's header names the dungeon and `Mythic+ 12`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-29. A tooltip near the top of the screen opens below (DW-B5, feedback-3 spec §5).** The headless
 `test_window_shell` (its `near the top` cases) covers the placement. (The tab counts this check also
@@ -752,7 +752,7 @@ the screen and hover
 View, the search box and the footer's Sort (the strip's since feedback-10, 2026-10-14; FEED-70) → each
 tooltip opens below the control, its top-left corner on
 the control's bottom-right corner (its top-right on the bottom-left at the screen's right edge), never over
-the control or its menu; drag the window back down → above again. Result:
+the control or its menu; drag the window back down → above again. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-30. A delve's header, and whether the client names its tier (DW-B4, feedback-3 spec §4).**
 The spec names `a delve tier` among the header's difficulties; offline, neither GetInstanceInfo's
@@ -763,7 +763,7 @@ Tier 8) → `/dump GetInstanceInfo()` and record its fourth return (difficultyNa
 (the difficulty id), then `/dump GetDifficultyInfo(<id>)`'s first. Loot something from its chest →
 the Drops header reads `<Delve> · <label> · <the difficultyName recorded> · ... ·
 <you>`. If either dump names the tier, the header shows it; if neither does, record that here so
-the tier can be read from another source or the gap ratified. Result:
+the tier can be read from another source or the gap ratified. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-31. One tone per verdict, the arrow first (DW-D0, feedback-4 spec §0).** The headless
 `test_window_group` (its `cells: Me` and `Them column` cases), `test_compact_cards` and `test_detail_card`
@@ -775,7 +775,7 @@ item level, since DW-F1: FEED-49; `▲ +6` before), `Can't use` and
 color (since DW-F1 after the worn icons and item level, which stay plain). Them is not inverted: the looter's upgrade is green, not amber. Hover Me and Them → neither tooltip
 describes an inversion. History's Me and Them read the same way. Expand a row → the
 detail card's verdict chips read `▲ UPGRADE`, `▼ DOWNGRADE`, … in the same tones. `/dw compact` → each
-card's You and Them halves keep the arrow first and take the same tones. Result:
+card's You and Them halves keep the arrow first and take the same tones. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-32. Action buttons colored by whose move it is (DW-D1, feedback-4 spec §1).** The headless
 `test_window_group` (`ActionTone`, `the Ask button wears its state's tone`), `test_mine_cells`
@@ -788,7 +788,7 @@ yellow too (an offer for the drop is out, whoever it went to); the panel's `Anno
 `Announced` (or `Queued` in a boss fight) in yellow. (Since DW-E2 the table has no Announce button: FEED-44.)
 Once a drop of yours is traded away (HIST-1, or test mode's History sample) its Offer and the panel's
 Announce to group are green. No button is gold. `/dw compact` → each card's Ask, and Offer on your own
-card, show the same colors in each state (Offer cyan while it is your move). Result:
+card, show the same colors in each state (Offer cyan while it is your move). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-33. Nothing dismisses or hides a drop (DW-D2, feedback-4 spec §2).** The headless `test_window_group`
 (`no row can be dismissed`), `test_detail_card` (`no Hide this item`), `test_own_drops` and
@@ -799,7 +799,7 @@ no `Hide this item`. A drop of yours that cannot be traded shows a dash whose to
 `Hide`; it stays listed. `/dw compact` → no card has an `×` or a `Hide`. (The My drops tab's tooltip this
 check also read is gone since DW-E3.)
 Turn on auto-ask (ASK-8) → its one-time notice reads
-`It holds off when you ask yourself, they leave or you get the item.`, with no word of dismissing. Result:
+`It holds off when you ask yourself, they leave or you get the item.`, with no word of dismissing. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-34. The Type column (DW-D3, feedback-4 spec §3).** The headless `test_window_group`
 (`Type names the armor type`, `the Type column sits after Slot`) and `test_compact_cards` cover the values.
@@ -811,20 +811,20 @@ game's tooltip names its armor; a neck or ring reads `Jewelry`; a trinket `Trink
 reason line. History shows the same column after Slot. Settings › Window ›
 Columns has a `Type` box; untick it → the column goes from Drops; tick it back. Expand a row → the
 detail card's chips include the same word (no `Armor type` chip). `/dw compact` → each Drops and
-History card's second line reads looter · slot · type (the trade on line 3 since feedback-20: FEED-82). Result:
+History card's second line reads looter · slot · type (the trade on line 3 since feedback-20: FEED-82). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-35. Gold column labels (DW-D4, feedback-4 spec §4).** The headless `test_drops_layout`
 (`the column labels are gold`) covers it. Research `01-full-header-white.png` and
 `02-loothistory-header-gold.png` show the old labels and Loot History's. `/dw test`, full layout, Ka0s Loot
 History (`/lh`) open beside it → Drops' and History's column labels are the same gold as
-Loot History's headers; the group headers stay gold, and the tabs keep their own colors. Result:
+Loot History's headers; the group headers stay gold, and the tabs keep their own colors. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-36. The search box spans to the window's edge (DW-D4, feedback-4 spec §4).** The headless
 `test_drops_layout` (`the search box spans from the bar's gap after Character`) covers the width. Research
 `06-filter-textbox-gap.png` shows the old gap. Full layout → the `Filter looter or item…` box starts 8px
 after the Character dropdown (the same gap as between the dropdowns) and ends at the filter bar's right
 edge, with no empty space after it. Drag the corner wider and back → the box widens and narrows with the
-window while you drag, not only on release. Switch tabs → the same on each. Result:
+window while you drag, not only on release. Switch tabs → the same on each. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-37. The window never goes narrower than its default (DW-D4, feedback-4 spec §4; the widths since
 DW-E4).** The headless `test_window_shell` (`the default size is 1038 x 600`) and `test_drops_layout`
@@ -833,13 +833,13 @@ DW-E4).** The headless `test_window_shell` (`the default size is 1038 x 600`) an
 width; at it, every column of Drops and History shows, nothing is cut, and Ask stays inside the row. Widen
 it and bring it back → it stops at the same width. `/dw compact` → 440 wide (380 before DW-E4); drag the
 corner left → it stops at 440 (and at 520 on the right). With a profile whose stored full width is under
-1038 (an older build's 972, say), `/reload` → the full window opens at 1038. Result:
+1038 (an older build's 972, say), `/reload` → the full window opens at 1038. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-38. The group header's chevron is gold (DW-E0, feedback-5 spec §0).** The headless
 `test_drops_layout` (`a group header's chevron is gold`) covers the color. Research `04-header-chevron.png` shows
 the chevron the rows now reuse. `/dw test`, full layout → every Drops header's chevron (down while open,
 right while collapsed) is the same gold as its text; History's headers too; `/dw compact` → the compact
-headers' chevrons are gold as well. Result:
+headers' chevrons are gold as well. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-39. Each drop row's chevron, and the rows indented under their header (DW-E0, feedback-5 spec §0).**
 The headless `test_drops_layout` (the chevron and indent cases) and `test_compact_group` cover the
@@ -851,14 +851,14 @@ and every cell) starts about 12 pixels in from its header's left edge, so the ro
 header's text, not under its gold chevron; the column labels move with the rows and still sit over their
 cells. History's rows draw no chevron and are not indented (they do not expand). `/dw compact` → each card
 is indented the same and draws the same muted-white chevron before its item button, centered on line 1,
-pointing up while its detail card is open. Result:
+pointing up while its detail card is open. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-40. The Actions column is wide enough (DW-E0, feedback-5 spec §0).** The headless `test_drops_layout`
 (`Actions is 84 pixels`) covers the width. Research `01-actions-cramped.png` shows `Queued` filling the old
 64-pixel button. `/dw test`, full layout → Drops' Ask button, in every state (`Ask`, `Asked`, `Queued`,
 `Retry`, `Traded`), and Offer on your own drop (`Offer`, `Offered`), show their icon and word with room on
 both sides, nothing touching the button's edge; the column label `Actions` sits over it. `/dw compact` →
-each card's button is the same width. Result:
+each card's button is the same width. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-41. A Trade window column for every drop, ticking each second (DW-E1, feedback-5 spec §1).** The
 headless `test_window_group` (the Trade window cases), `test_mine_cells` (`TradeWindow`) and
@@ -874,7 +874,7 @@ amber, its bar amber, with no `ending soon` words in the cell; its tooltip adds 
 countdown text and its bar never overlap (the row is taller by the bar's room). Settings › Window › Columns
 → untick Trade window → the column goes and the rows return to the row height; tick it back. In a real
 dungeon, a member's drop shows the estimate too, and the column keeps moving while the window is open.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-42. Your own drop's Trade counts the upgrades (DW-E2, feedback-5 spec §2).** (Superseded by
 feedback-7, 2026-10-13: the cell reads `Yes`, the count in its tooltip; FEED-61.) The headless
@@ -883,7 +883,7 @@ step, or loot a tradeable item yourself in a group → your own drop is listed o
 hides it), and its Trade cell reads `Yes (2)` or `Likely (1)`, the count of members it would be an upgrade
 for, or the bare word when it is nobody's upgrade. Hover it → the tooltip adds `Upgrades 2 members: Offer
 shows who.` Settings › Window › Starting view has no `Show my own loot in Group drops` row, and a profile that had it
-on loads with no error. Result:
+on loads with no error. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-43. Them reads (Details) on your own drop; the keep? rule (DW-E2, feedback-5 spec §2; (Details) and
 one Them since DW-F1 and DW-F3).** (Superseded by feedback-7, 2026-10-13: `(Details)` reads
@@ -898,7 +898,7 @@ upgrade for you → Trade shows no count, Them reads `Hidden`, and the tooltip s
 you: nobody is offered it unless you choose to. Offer shows who it would help.` Click its Offer → the panel
 opens, and from then on (this session) the count and `(Details)` are drawn. Expand the row → the detail
 card's Them row reads the same, with the same tooltip. `/dw compact` → line 3's Them reads the same.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-44. Offer on your own drop, and its tones (DW-E2, feedback-5 spec §2).** The headless
 `test_own_drops` and `test_offer_panel` cover the states. Your own tradeable drop's Actions is `Offer` (cyan since
@@ -907,7 +907,7 @@ reveal), and Announce to group is in the panel's footer. Offer a member from the
 yellow (sent or queued); once the drop is traded away (HIST-1) → green. A drop of yours that cannot be traded
 shows a gray dash whose tooltip gives the reason (superseded by feedback-11, 2026-10-14: the gray `No action` button with its reason; FEED-72). The detail card's first button is the same Offer, the same
 tone. The detail card no longer says `offer it from My drops`: its reason reads `Your own drop: Offer shows
-who it would help.` Result:
+who it would help.` Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-45. The strip under Drops and Post my tradeables (DW-E3, feedback-5 spec §3).** (Superseded by
 feedback-7, 2026-10-13, in the full layout: the strip always shows, with Scan group beside Post, and Post
@@ -920,7 +920,7 @@ Filter your drops out (Search for another item) → the count follows what the t
 listed drops tradeable the strip goes and the table takes its room back. Click Post my tradeables → the
 one-line post (ASK-7). `/dw compact` → the strip under the cards reads `2 tradeable · next 0:08:41` with a
 `Post` button, the same tooltip; switch to full → the full strip again. (Superseded by feedback-15, 2026-10-16:
-the compact strip is always shown and its button reads `Post my tradeables` at the full width; FEED-78.) Result:
+the compact strip is always shown and its button reads `Post my tradeables` at the full width; FEED-78.) Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-46. Two tabs, Drops and History (DW-E3, feedback-5 spec §3).** The headless `test_drops_strip` (`the
 tabs are Drops and History`) and `test_slash` cover it. `/dw show` → the tab strip reads `Drops` and
@@ -929,7 +929,7 @@ left on the My drops tab, `/reload` → the window opens on Drops with no error.
 help` → `mine` reads `Open the Drops tab, where your own drops are listed`. `/dw compact` → the short tabs read
 `Drops` and `History`. Settings › Window › Layout › Row height's tooltip names Drops and History, and Font
 size's says both tabs.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-47. The least width, full and compact, and the compact card's line 2 (DW-E4, feedback-5 spec §4; line
 2 since DW-E1).** The headless `test_drops_layout` (`at the least width no tab sheds a column`) and
@@ -940,7 +940,7 @@ cross-realm name; its ⊕ retired by feedback-20: FEED-82), slot, type and a cou
 countdown and its bar, none of it cut; a drop with no countdown shows the inspect freshness there instead
 (`2m`, `cached`, `…`). The countdown moves each second and turns bold amber, its bar amber, under ten
 minutes. (Superseded by feedback-10, 2026-10-14: the card has no countdown or bar, the freshness is on line 1
-and line 2 ends in the action button, its left pieces never cut at 440; FEED-69.) Result:
+and line 2 ends in the action button, its left pieces never cut at 440; FEED-69.) Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-48. The Trade window column fits its widest answer (DW-F0, feedback-6 spec §0).** The headless
 `test_drops_layout` (`the Trade window column is its widest answer plus its bar's padding`) measures every
@@ -950,7 +950,7 @@ the Trade window column ends a few pixels after its longest text: `~1:57:43`, `1
 `Your upgrade`, `No limit (BoE)`, `Bonus roll`, `Window passed`, `Legacy loot`, `Warbound`, `Not loaded`,
 `Checking` and `Not tradeable` each show whole, none cut or touching Actions, with no wide empty margin after
 the countdowns. Each bar spans the narrower column, its right end a few pixels short of the column's edge.
-At a larger Font size (Settings › Window › Layout) record whether the longest answers still fit. Result:
+At a larger Font size (Settings › Window › Layout) record whether the longest answers still fit. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-49. My eq merged into Me, Their eq into Them (DW-F1, feedback-6 spec §1).** The headless
 `test_side_cells` covers the cells, the tooltip, the widths and the shed order; `test_compact_cards` and
@@ -966,14 +966,14 @@ Swap a piece of gear → Me follows within a second. Your own drop's Them reads 
 Me and Them read the verdict alone in the same unsigned form (`▼4`, `≈0`), since a kept drop holds no worn
 items. `/dw compact` → line 3 reads `You 321/308 ▼8` (`You 321 ▼10 / 308 ▼8` since FEED-92) and `Them 276 ▲12` (no icons), `Them (Details)` on
 your own card, `⊘ Can't use` for a worded verdict, each part in the table's tone, nothing cut at 440.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-50. The My eq and Their eq toggles are retired (DW-F1, feedback-6 spec §1).** The headless
 `test_database` (`step 7 retires window.columns.myEq and theirEq`) and `test_schema_rows` cover the
 migration and the rows. Settings › Window › Columns → no `My eq` or `Their eq` checkbox; `Me` and `Them` are
 there. Untick Me → the whole merged cell goes (gear and verdict); tick it back. On a profile that had My eq or
 Their eq unticked, `/reload` → it loads with no error, Me and Them show the gear, and `/dw diagnostics`
-reads `schema stored=7 code=7`. Result:
+reads `schema stored=7 code=7`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-51. Offer in cyan (DW-F2, feedback-6 spec §2).** The headless `test_own_drops`, `test_detail_card`,
 `test_compact_cards` and `test_offer_panel` (`each member's Offer is cyan, Offered yellow, Retry red`) cover
@@ -982,7 +982,7 @@ the tones. Research `03-offer-red.png` shows Offer in Ask's red. `/dw test` → 
 another player's `Ask` and any `Retry` stay red. Expand your own row → the detail card's Offer is the same
 cyan. Open the Offer panel → each member's `Offer` is cyan; offer one → it and the row's Offer read
 `Offered` in yellow; a failed offer's `Retry` is red; `Announce to group` stays red until sent. Once traded
-away → green. `/dw compact` → your own card's Offer is the same cyan. Result:
+away → green. `/dw compact` → your own card's Offer is the same cyan. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-52. The (Details) tooltip's lines, and the tooltip fits them (DW-F3, feedback-6 spec §3).**
 (Superseded by feedback-7, 2026-10-13: `(Details)` reads `Upgrade for N` and its tooltip is a grid with the
@@ -995,7 +995,7 @@ compact card's line 3 → one line per member it upgrades, biggest gain first, e
 color, the item in its quality color. A member wearing two rings, trinkets or one-hand weapons is named with
 the lower one, the one it would replace. No line wraps: a long item name widens the tooltip instead. The
 explanatory lines (the keep? rule's `Hidden`, `n checking`, `Not an upgrade for anyone whose gear was read.`,
-`Nobody else in your group.`) still wrap at the usual width. Result:
+`Nobody else in your group.`) still wrap at the usual width. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-53. No glyph boxes in any tooltip (DW-F3, feedback-6 spec §3).** The headless `test_tip_marks` (its
 three `audit:` cases) covers every column tip, every localized string and every test-mode tooltip on both
@@ -1004,7 +1004,7 @@ tabs and both layouts. `/dw test` → hover the `Me` and `Them` column labels on
 yellow, a down arrow red), never an empty box or a question mark. Hover a dozen Me, Them and Trade cells, the detail card's
 verdict chips and their reasons, and the compact cards' line 3 → no tooltip line shows a box where a
 glyph should be. The table cells and compact lines themselves still draw `▲ ≈ ▼ ⊘` in the monospace face.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-54. The least width, 1038 (DW-F1, feedback-6 spec §0-§1).** The headless `test_window_shell` (`the
 default size is 1038 x 600`) and `test_drops_layout` (`at the least width no tab sheds a column`) cover the
@@ -1012,7 +1012,7 @@ arithmetic (the comment beside `C.WINDOW.WIDTH`). On a new profile, `/dw show` �
 1038 wide; drag its corner left → it stops there. At that width every Drops column shows: the indent and
 chevron, Item, Ilvl, Slot, Type, Looter, Me and Them whole with two icons, `321/308` and `Not wanted`, Trade,
 the 76-pixel Trade window and the 84-pixel Actions, nothing shed, cut or overlapping; History's columns too.
-A profile stored at 1132 (M14's least) keeps its width, and one under 1038 opens at 1038. Result:
+A profile stored at 1132 (M14's least) keeps its width, and one under 1038 opens at 1038. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-55. No glyph boxes outside tooltips (DW-F5, feedback-6 spec §3).** The default face (`GameFont*`)
 has no `→` and none of `▲ ▼ ≈ ⊘ ⊕`; only text set to the monospace face draws them. The headless
@@ -1027,7 +1027,7 @@ title, and every member's eq text (`276 → 295`), show the gray arrow texture (
 2026-10-13: the column is Their eq, in the Them cell's monospace glyphs; FEED-56). With `toast.enabled` on,
 an upgrade for you that someone else loots → the toast's line reads `Looted by <name> · +n` and a green
 up-arrow texture (superseded by feedback-9, 2026-10-13: the toast's verdicts are the table's monospace
-glyphs, `You ▲n · Them ▼n`; FEED-66). The table cells and compact lines still draw `▲ ≈ ▼ ⊘` in the monospace face (no `⊕` since feedback-20: FEED-82). Result:
+glyphs, `You ▲n · Them ▼n`; FEED-66). The table cells and compact lines still draw `▲ ≈ ▼ ⊘` in the monospace face (no `⊕` since feedback-20: FEED-82). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-56. The Offer panel's Their eq column, and no Trade button (DW-G0, feedback-7 spec §0).** The headless
 `test_offer_panel` and `test_side_cells` (the `Offer panel's Their eq` cases) cover the cell and its widths.
@@ -1040,14 +1040,14 @@ glyphs drawn, never boxes. A member who can't use it reads `Can't use` (dim red)
 never read `Unavailable` (muted), one wearing nothing there `empty`. The widest cell (`321/308 ▼13`, a mark per worn item since FEED-92, with two
 icons) is not cut and does not run into Actions. Actions holds one Offer button per member (or a dash; superseded by feedback-11, 2026-10-14: the gray `No action` button with its reason; FEED-72); there
 is no second, grayed button. Hover Their eq → the gear grid (FEED-62) and the verdict's explanation, the
-words the old pill's tooltip held. Result:
+words the old pill's tooltip held. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-57. The Offer panel's rows: no class bar, alternating stripes (DW-G0, feedback-7 spec §0).** The
 headless `test_offer_panel` (`no class bar; every second row striped`) covers the regions. Research
 `08-offer-panel-rows.png` shows the class-colored bar. `/dw test` → open the Offer panel on a sample drop with
 four or more members → no colored bar at any row's start; the member's name is still in their class color;
 every second row has the same faint light stripe as the main window's Drops and History rows, across the
-whole row, and the two look alike side by side. Result:
+whole row, and the two look alike side by side. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-58. An icon on every action button (DW-G1, feedback-7 spec §1).** The headless `test_mine_cells`
 (`action icons:` cases) and `test_drops_layout` (`every action button's icon and word fit its width`) cover the
@@ -1058,13 +1058,13 @@ with the button's color; `Asked`, `Queued`, `Retry` and `Traded` keep theirs. Th
 (`/dw compact`), the detail card's Ask or Offer, each member's Offer in the Offer panel (`Offer`, `Offered`,
 `Queued`, `Retry` all fit their 72-pixel button, icon and word, nothing cut; 80 pixels since feedback-11,
 2026-10-14, so `No action` fits: FEED-72) and Announce to group. With
-`toast.enabled` on, the toast's Ask shows the chat icon too. Result:
+`toast.enabled` on, the toast's Ask shows the chat icon too. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-59. Trade `No` in red (DW-G2, feedback-7 spec §2).** The headless `test_window_group` and
 `test_own_drops` cover the tone. Research `07-trade-no-gray.png` shows the gray. `/dw test` → a sample drop its
 looter can't trade reads `No` in the addon's red (the red of the down arrow and Retry), not gray, in the Drops
 Trade column, the History Trade column, the compact card's trade piece (`/dw compact`) and the detail card's
-`NOT TRADEABLE` chip. `Yes` and `Likely` stay green and `Unknown` muted. Result:
+`NOT TRADEABLE` chip. `Yes` and `Likely` stay green and `Unknown` muted. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-60. Your own drop's looter `Name [YOU]` (DW-G2, feedback-7 spec §2).** The headless `test_own_drops`,
 `test_compact_cards` and `test_detail_card` cover the text. Research `09-looter-column.png` shows the plain
@@ -1072,14 +1072,14 @@ name. `/dw test` → each of your own sample drops reads your name in your class
 gold, in the Drops and History Looter columns and the compact card's line 2 (the detail card's Looter row
 retired by feedback-20: FEED-84).
 At the least width, and on a character with a long name if you have one → the name is cut first,
-`[YOU]` always drawn whole; on the compact card the slot follows the mark without overlap. Result:
+`[YOU]` always drawn whole; on the compact card the slot follows the mark without overlap. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-61. `Upgrade for N`, and Trade without its count (DW-G2, feedback-7 spec §2).** The headless
 `test_side_cells` and `test_own_drops` cover the words. Research `10-details-cell.png` shows `(Details)`.
 `/dw test` → your own sample drop that upgrades two members reads `Upgrade for 2` in green in Them (the row,
 the compact card's line 3 and the detail card's Them row); one that upgrades nobody `No upgrades` (muted); an
 upgrade for you `Hidden` until you open its Offer panel. Trade reads `Yes` or `Likely` with no `(2)`; hover
-it → the line `Upgrades 2 members: Offer shows who.` is still there. Result:
+it → the line `Upgrades 2 members: Offer shows who.` is still there. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-62. Columnar gear tooltips with the table's arrows (DW-G3, feedback-7 spec §3).** The headless
 `test_tip_marks` (`grid:` and `tooltip: a grid reserves a line per row` cases) and `test_side_cells` cover the
@@ -1094,7 +1094,7 @@ one-hand weapons, the arrow on the lower, the other's last column empty; `empty`
 empty), then the read's age and the verdict's reasons as before, with no `X wears` or `Item level A against
 B` lines. Hover Me → the same with `You`. The Offer panel's Their eq and the detail card's verdict chips too.
 Then hover an item icon, a column label and another addon's frame → no leftover grid text in those
-tooltips. Result:
+tooltips. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-63. Post my tradeables above Sort, Scan group beside it (DW-G4, feedback-7 spec §4).** (Superseded by
 feedback-10, 2026-10-14: Sort leaves the footer for the strip, which reads `[Post my tradeables] [Scan group]
@@ -1109,7 +1109,7 @@ tradeable (out of test mode and a group, `/dw sim start dungeon`, then `/dw sim 
 you) → the strip still shows, with no summary, Post gone and Scan group in Post's place above Sort. On History → no Scan group. `/dw compact` → the title bar's Scan group icon is back and
 the shortened strip is unchanged. (Superseded by feedback-15, 2026-10-16: Scan group is Post's width, the
 row reads `[Post my tradeables] [Scan group] [Expand all] [Sort]`; FEED-78. Superseded by feedback-16: the
-title bar has no Scan group in compact either, it is the compact strip's icon; COMPACT-9.) Result:
+title bar has no Scan group in compact either, it is the compact strip's icon; COMPACT-9.) Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-64. The empty state's buttons centered as a pair (DW-G4, feedback-7 spec §4).** The headless
 `test_window_group` (`the empty state's two buttons are centered as a pair`) covers the arithmetic. Research
@@ -1117,7 +1117,7 @@ title bar has no Scan group in compact either, it is the compact strip's icon; C
 (out of test mode, `/dw clear`) → `No drops yet`, its line, then `Preview with test data`
 and `Scan group` side by side with a small gap, the pair's middle under the text's middle, in the full and
 the compact layout. **Superseded by feedback-16 (2026-10-16):** the empty state has no button; COMPACT-9
-checks it. Result:
+checks it. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-65. When to show as one table (DW-H0, feedback-8 spec §0).** The headless `test_settings_pages`
 (the `when to show:` cases) covers the rows, the paint, the writes, the dimming, Defaults, a profile switch
@@ -1135,7 +1135,7 @@ line repaints. Switch to Master controls and back, close and reopen the panel, a
 back → the table draws once, in place, with no stray copy on another tab or page. Change a few cells, press
 the header's Defaults and accept → the table shows the defaults (Mythic+, dungeons and raids tracked and
 auto-opening, Raid Finder tracked only, the rest off, Quality `Use global`). Switch profile on the Profiles
-page and return → the table shows that profile's values. Result:
+page and return → the table shows that profile's values. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-66. The toast as four rows beside a four-row icon (DW-I0, feedback-9 spec §0).** The headless
 `test_toast` (`Compose answers the four rows' parts`, `the longest rows fit at Toast.WIDTH`, `the four rows
@@ -1154,7 +1154,7 @@ reason in gray (`not an upgrade for Seta`), cut with `…` only at the right ins
 tooltip is the Trade cell's, with the full reason. Rows 2 to 4 run to the right inset and nothing overlaps
 Ask or the close mark. Right-click anywhere on the toast, the icon included → it goes, as the close mark
 does, and the drop does not toast again; a left-click keeps it, and in test mode the left button still
-drags it. Result:
+drags it. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-67. The downgrade glyph is filled (DW-J0, feedback-10 spec §0).** The headless `test_window_group`
 (`cells: Me shows ▲ ≈ ▼`), `test_tip_marks` (the arrow cell), `test_toast`, `test_compact_history` and
@@ -1165,7 +1165,7 @@ weight as `▲` beside it; History's Me and Them (`▼4`) the same. `/dw compact
 on Drops and History cards. Hover a Me or Them cell → the tooltip grid's arrow column draws `▼` too. Open the
 Offer panel on one of your drops → Their eq's downgrades read `▼`. With `toast.enabled` on → the toast's row 3
 reads `Them ▼13` for a downgrade. The texture marks (the detail card's `DOWNGRADE` chip, the legends) are the
-solid arrow as before. Result:
+solid arrow as before. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-68. Offer wears `external-link` (DW-J1, feedback-10 spec §1).** The headless `test_mine_cells` (`action
 icons:` cases), `test_own_drops` and `test_offer_panel` (`each member's Offer is cyan`) cover the look tables.
@@ -1174,7 +1174,7 @@ chose from. `/dw test` → your own drop's `Offer` on its Drops row shows a box 
 tinted cyan with the button; the same on its compact card (`/dw compact`), on the detail card's Offer (its Trade
 beside it keeps the two opposing arrows, a different mark) and on each
 member's Offer in the Offer panel, the 72-pixel button (80 since feedback-11, 2026-10-14: FEED-72) still fitting icon and word. `Queued`, `Offered`,
-`Traded` and `Retry` keep their own icons; Ask keeps its chat bubble. Result:
+`Traded` and `Retry` keep their own icons; Ask keeps its chat bubble. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-69. The compact card, simplified (DW-J2, feedback-10 spec §2).** The headless `test_compact_cards` (`no
 trade window on the card`), `test_compact_group` (`no card shows a trade window`, `a second's tick leaves the
@@ -1192,7 +1192,7 @@ cross-realm looter.
 No card shows a trade window countdown or bar, your own drops included; the full table's Trade window column
 and the strip's `next 0:08:41` still tick. Line 3: `You` and `Them` in gold, Them a short gap (about 12
 pixels) after You's last piece rather than at mid-card (`You 321/308 ▼13   Them 298/296 ⊘ Can't use`; You a mark per trinket since FEED-92). On
-History → the same line 1 with the outcome at the right, the time on line 2, line 3 the same. Result:
+History → the same line 1 with the outcome at the right, the time on line 2, line 3 the same. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-70. Sort on the tab's strip (DW-J3, feedback-10 spec §3).** The headless `test_drops_strip` (`one row,
 right-aligned`, `Sort follows the active tab`, `the slots, pure`, `full layout, nothing tradeable`) and
@@ -1206,7 +1206,7 @@ Oldest there, back to Drops → Sort is on the Drops strip again and reads Drops
 Sort is in the Filters panel, Clear at the History strip's right edge; `/dw full` → Sort back on the active
 tab's strip. Hover Sort → its tooltip opens above it. **Superseded by feedback-15 (2026-10-16)** (DW-Q2,
 DW-Q3): Expand all / Collapse all sits between Scan group and Sort on Drops and beside Sort on History, and
-Clear history left both strips for Settings › Window › Layout (Drops › Retention since feedback-24); FEED-78 and HIST-6 check that. Result:
+Clear history left both strips for Settings › Window › Layout (Drops › Retention since feedback-24); FEED-78 and HIST-6 check that. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-71. Pending once, and the card's full width (DW-K0, feedback-11 spec §0).** The headless
 `test_compact_cards` (`the freshness mark is bracketed, and left out where there is nothing to say`),
@@ -1217,7 +1217,7 @@ read is still pending shows nothing after the name, while its line 3 reads `Them
 still follow the name in brackets, dimmed: `(2m)`, `(cached)`, `(range)`, `(combat)`, `(!)`. A card with a long
 Them half (two worn items and a worded verdict) has its last piece cut with `…` at the card's right inset,
 never running past the card's edge or under the scroll bar; line 1's long name likewise runs to the right
-inset before it is cut. Line 2 alone stops short of the action button. Result:
+inset before it is cut. Line 2 alone stops short of the action button. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-72. No action (DW-K1, feedback-11 spec §1).** The headless `test_window_group` (`a drop with no ask
 offered shows the gray No action button with its reason`), `test_compact_group` (`no ask offered shows No action
@@ -1230,34 +1230,34 @@ the 84-pixel button, nothing cut. Expand such a row → the detail card's first 
 `No action` (no disabled `Ask` or `Offer`). `/dw compact` → the same card's line 2 ends in the gray `No action`
 button, never an empty slot, with the same tooltip. Open the Offer panel on one of your drops → a member it is
 no upgrade or equal for shows the gray `No action` in Actions, its tooltip the reason, fitting the 80-pixel
-button; an untradeable drop of yours shows it on every member's row. Result:
+button; an untradeable drop of yours shows it on every member's row. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-73. History's outcomes in the action buttons' colors (DW-L0, feedback-12 spec §0).** The headless
 `test_history` (`each row's outcome painted`), `test_compact_cards` (`every History outcome keeps its word and
 tone`) and `test_compact_history` cover the tones. `/dw test`, History, full layout → the Outcome column reads
 `Asked` and `Offered` in yellow, `Received` and `Traded away` in green, `Expired` in red, `Seen` and `Declined`
 in gray (the No action gray), the same colors as the action buttons on Drops. `/dw compact` → each History card's
-outcome at line 1's right in the same colors. Result:
+outcome at line 1's right in the same colors. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-74. No `0 shown` header where Character or Content left a group empty (DW-L1, feedback-12 spec §1).**
 The headless `test_char_filter` (`a group Character and Content leave empty shows no header, full or compact`)
 and `test_window_group` (`KeepsHeader`) cover it. With History holding groups kept before the Character dropdown
 (no recorder) or seen by an alt: History, `Character: Current`, `Content: All` → no header reads `· 0 shown`,
 only groups with a drop shown are listed; the footer still counts every kept group. `/dw compact` → the same.
-`View: Interesting` hiding a group's every drop → its header still shows, `n drops · 0 shown`. Result:
+`View: Interesting` hiding a group's every drop → its header still shows, `n drops · 0 shown`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-75. Each tab's default filters (DW-M0, feedback-13 spec §0).** The headless `test_window_shell` (`each tab
 opens on its own defaults`), `test_sim_e2e` and `test_compact_chrome` cover it. On a profile that never changed
 Settings › Window › Starting view › Content: `/reload`, `/dw` → Drops reads `View: All`, `Quality: Rare+`, `Content: This session`,
 `Character: Current`. Select History → `View: All`, `Quality: Rare+` grayed, `Content: All`, `Character: All`, and
 every character's groups are listed. Back to Drops → its own values again. `/dw compact` → History's Filters
-button reads `Filters` with no count; pick `Character: Current` there → `Filters · 1`. Result:
+button reads `Filters` with no count; pick `Character: Current` there → `Filters · 1`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-76. No Lua error from a gear tooltip in combat (DW-N0, feedback-14 spec §0).** The headless
 `test_tip_marks` (`a secret width or line count in combat`) covers it. In a dungeon or raid, with BugSack on: let
 another player loot a drop during a pull, then hover its Me and Them cells (and a compact card's You and Them)
 while still in combat → the gear grid shows, its columns perhaps a little wider than out of combat, and BugSack
-records nothing from `TipGrid.lua`. Hover again out of combat → the columns fit as before. Result:
+records nothing from `TipGrid.lua`. Hover again out of combat → the columns fit as before. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-77. Content per tab (DW-Q1, feedback-15 spec §1).** The headless `test_content_tabs`, `test_compact_chrome`
 and `test_compact_modes` cover it. `/dw` → open Drops' Content → `This instance` and `This session` only; hover
@@ -1266,7 +1266,7 @@ you logged in; a /reload keeps them) and All (History only). Select History, ope
 `This session` and `All`, the tab still on `All`, the same tooltip. Drops on `This session`, `/reload` → every drop
 since the login is still listed. `/dw compact` → the Filters panel's Content offers the same values per tab. On a
 profile whose Settings › Window › Starting view › Content was `All` before this version → it reads `This session`, and so does
-Drops. Result:
+Drops. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-78. One footer button kind, and Expand all / Collapse all (DW-Q2, feedback-15 spec §2).** The headless
 `test_footer_row`, `test_drops_strip` and `test_compact_history` cover it. `/dw test` in the full layout → the
@@ -1282,7 +1282,7 @@ right and `Post my tradeables` (full label, same width) left of it while somethi
 Sort is in the Filters panel and Scan group the title bar's icon; History's strip reads `Expand all` with
 `Clear history` (no `Clear`) left of it; the toggle opens and closes the cards' headers on both tabs. (Since
 DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6. Since feedback-16 compact's
-strip buttons are icons alone and Drops' carries Scan group, the title bar none: COMPACT-9.) Result:
+strip buttons are icons alone and Drops' carries Scan group, the title bar none: COMPACT-9.) Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-79. A group's tooltip is rows (feedback-17).** The headless `test_window_group`,
 `test_group_roster`, `test_compact_cards` and `test_feed_counts` cover it. `/dw test`, then hover a raid
@@ -1310,7 +1310,7 @@ YOU chip reads `OFF-SPEC UPGRADE`, its first row `Spec  Holy (off-spec): Protect
 then Replaces, Item level and the score row saying off-spec is judged on item level alone. The same
 in compact mode: the card's line reads `You … ▲20 Holy`. Open History → the off-spec entries read the
 same, `▲11 Holy` and `▲16 Holy`, and their cards carry the chip and the Spec row. With a real
-off-spec drop in the client, the Me tooltip's spec names are the client's own. Result:
+off-spec drop in the client, the Me tooltip's spec names are the client's own. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-81. An off-spec groupmate ranks below main-spec upgrades in the Offer panel (feedback-19,
 DW-O3, DW-O4).** The headless `test_offspec_offer` and `test_test_mode` cover it. `/dw test`, then open
@@ -1319,7 +1319,7 @@ with Their eq `… ▲14 Holy` in cyan beside the item the off-spec was judged a
 (downgrade) last; Kaelith's Offer is pressable and its whisper's gain reads 14. Hover Kaelith's status
 → `An upgrade for one of their other specs (off-spec).`. The trinket's panel (the second boss) holds
 Kaelith's off-spec the same way, after Littlewolf's sidegrade and before Uniquerogue's downgrade. The
-row's `Upgrade for N` and the Trade count do not count Kaelith. Result:
+row's `Upgrade for N` and the Trade count do not count Kaelith. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-82. The compact card's trade on line 3, `Trade <word>` (feedback-20).** The headless
 `test_compact_cards`, `test_compact_group` and `test_compact_history` cover the pieces and the least
@@ -1328,12 +1328,12 @@ trade word; line 3 reads `You … Them … Trade Likely`, the three labels gold,
 (`Yes`/`Likely` green, a muted green beside your `Can't use` (superseded by feedback-21, 2026-10-18: `Can't use` in dim red instead of the word; FEED-88), `No` red, `Unknown` muted), hovering it gives the full table's Trade tooltip. At the
 least width (440) the fullest line (two worn levels and `⊘ Not wanted` on each side) still shows the
 trade word, cut with `…` at the card's right edge rather than past it. A looter from another realm has no
-`⊕` after the name on either tab; hovering the name still says `From another realm: <realm>.`. Result:
+`⊕` after the name on either tab; hovering the name still says `From another realm: <realm>.`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-83. The gray `No action` button says why on hover (feedback-20).** The headless `test_window`
 covers the widget flag. In a party, a drop with no action (a warbound trinket, a looter's upgrade, a
 downgrade for you) → hover the gray `⊘ No action` on the row, the compact card and the detail card's first
-action → the tooltip `No action` and its reason appears, though the button stays unclickable. Result:
+action → the tooltip `No action` and its reason appears, though the button stays unclickable. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-84. Your own upgrade reads as your upgrade, not a passed window; no Looter row (feedback-20).**
 The headless `test_feed` and `test_detail_card` cover it. Loot a bind-on-pickup item above the one you
@@ -1344,7 +1344,7 @@ counts down, and once its window runs out reads `Window passed`. Expand any of y
 GROUP has no `Looter Name [YOU]` row: the Them row `Upgrade for N`, then one row per groupmate it upgrades,
 best first, the name in class color, the icon of the item it would replace, `276 → 287 · +11` in green; with
 five or more, three names and `and N more: Offer shows all`. A downgrade-for-you drop nobody gains from
-shows only Them; an upgrade for you shows `Hidden` and no names until its Offer panel is opened. Result:
+shows only Them; an upgrade for you shows `Hidden` and no names until its Offer panel is opened. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-85. Trade muted beside Can't use; a drop opens the window on Drops (feedback-20).** The headless
 `test_window_group` and `test_window_shell` cover it. In a group, a groupmate loots an item your class
@@ -1354,12 +1354,12 @@ compact card's line 3 and History; hover → the reason, then `You can't use it,
 to ask for.` (since feedback-21 the bulleted row `For you: can't use, nothing to ask for`; FEED-88, FEED-89). One another spec of yours could use (off-spec, cyan) keeps the full green. Your own drops keep
 the full green. Close the window on the History tab, then let something drop in an auto-open situation →
 the window opens on Drops. With the window open on History, let something drop → it stays on History.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-86. A late bonus roll joins the key's group (feedback-20).** The headless `test_feed` covers it.
 Finish a Mythic+ key, stay in the dungeon past two minutes, then win a bonus roll (or let a groupmate's
 late loot come in) → it joins the key's header, with no second header for the same dungeon. Leave the
-dungeon and loot something → a new header for where you are. Result:
+dungeon and loot something → a new header for where you are. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-87. Can't use reads dim red everywhere (feedback-21).** The headless `test_window_group`,
 `test_side_cells`, `test_compact_cards`, `test_offspec_cells` and `test_toast` cover the tone. `/dw test`,
@@ -1369,7 +1369,7 @@ and softer than a downgrade's red `▼`, and with no spec name (a wrong armor ty
 feedback-21 refresh). Littlewolf's weapon still reads `Not
 wanted` in gray, so the two words read apart at a glance. Expand Ashveil's chest → the detail card's FOR
 YOU chip reads `CAN'T USE` in that dim red. Open History → its `Can't use` cells are dim red too; `/dw
-compact` → the cards' `You Can't use` and `Them Can't use` halves the same, on Drops and History. Result:
+compact` → the cards' `You Can't use` and `Them Can't use` halves the same, on Drops and History. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-88. Trade reads Can't use when none of your specs can use the drop (feedback-21).** The headless
 `test_window_group` covers it. In a group, a groupmate loots an item your class can't wear (a wrong armor
@@ -1382,7 +1382,7 @@ keep their green. `/dw test`, the third raid boss → Mistveil's shoulders (a wr
 estimate of Likely) read Trade `Can't use`; the first raid boss's Ashveil chest keeps its red `No` (an
 upgrade for Ashveil). The last raid boss → Brightmane's one-hander, Solenne's gloves, Kragmar's
 bracers and Thornbrew's boots, all Can't use for your spec but usable by Holy, keep Trade `Likely` in its
-own green (an off-spec use is a use). Result:
+own green (an off-spec use is a use). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-89. Every tooltip is bulleted rows, one per fact (feedback-21).** The headless `test_tip_marks`
 (its row-shape cases and the test-mode audit) covers the strings. `/dw test`, expand every group, then
@@ -1396,7 +1396,7 @@ Offer panel's statuses, History's Outcome cells and cards, the toast, and `/dw s
 `/dw compact` and the cards' halves and Filters ▾ → every one reads the same way: its title, rows, any
 gear grid as columns (the grids are unchanged), and at most one closing hint last, gray and with no
 bullet (the Offer panel's `Hover for why.`). The bullet draws as a dot, never a box or `?`. Settings
-panel tooltips are unchanged prose. Result:
+panel tooltips are unchanged prose. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-90. A gear grid right under the title, muted gold labels, an arrow on every worn item (feedback-21 H3).**
 The headless `test_tip_marks` (every tooltip's grid on line 2, the labels' color), `test_side_cells` (each
@@ -1409,7 +1409,7 @@ trinket or one-hand weapon drop's Me cell while you wear two → both worn items
 glyph and difference against the drop's item level, each in its own tone (a 311 drop against 321 and 308:
 `▼10` red on the 321, `▲3` green on the 308); with a ring slot empty, the worn ring's row has its own
 arrow and the `empty` row the verdict's `▲`. With Settings › Comparison › Sidegrade band above the gap,
-the other item's arrow reads `≈` yellow. Result:
+the other item's arrow reads `≈` yellow. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-91. The detail card's glyphs, titles, stat colors and Replaces row (feedback-21 H5).** The headless
 `test_detail_card` (the titles' color codes, the Stats row's colors, the Replaces row's lead and quality
@@ -1425,7 +1425,7 @@ when gained and muted red when lost, and each stat's name in its own color (Crit
 Mastery violet, Vers blue), every one readable on the card. The Replaces row reads `292`, then the worn
 item's icon, then its name in its quality color (purple for an epic). On an off-spec (cyan) drop the
 Item level glyph is cyan. On your own drop, FOR THE GROUP's member rows read `276 → 287 ▲ 11` in green.
-Compact layout: the stacked card shows the same. Result:
+Compact layout: the stacked card shows the same. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-92. A mark per worn item on a two-item slot, everywhere a verdict mark is drawn (feedback-21 H7).**
 The headless `test_side_cells` (the parts, their order and tones, every one-mark case, the painted cell
@@ -1445,7 +1445,7 @@ member read wearing two reads `308 ▼10 / 292 ▲6`-style. Expand the trinket r
 level reads `321 ▼ 10 / 308 ▲ 3`, the triangles the table's monospace ones; Replaces still names the one
 it takes off. With the toast on, a trinket toast whose looter wears two reads `You 321 ▼10 / 308 ▲3 · Them
 …` with both marks whole, the toast wider than usual only when it needs to be; the next helm toast is the
-usual width. Result:
+usual width. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-93. One mark where the drop was not judged against either worn item, or where two do not fit
 (feedback-21 R5).** The headless `test_evaluate` (the kernel's `either`), `test_side_cells` (one mark for
@@ -1459,7 +1459,7 @@ difference against the pair. A dual wielder's one-hander drop and a ring or trin
 mark each (FEED-92). With Settings › Comparison › Compare owned on and a bag ring better than both worn,
 a ring drop's Me reads one mark. Settings › Window › Font size 16 or larger: a ring drop with both rings
 read reads `321/324 ▼10`, one mark, nothing running into the Trade column; in `/dw compact` at 440 wide
-line 3 reads the same and Trade stays on the line. Result:
+line 3 reads the same and Trade stays on the line. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-94. A ring slot always reads both rings, a unique-equipped copy too (feedback-22).** The
 headless `test_evaluate` (the unique redirection's `either`), `test_side_cells` (`315 ▲3 / 295 ▲23`)
@@ -1470,7 +1470,7 @@ rings, `315 ▲3 / 295 ▲23`, the 315's mark the verdict's (it is the one it re
 the Why row says unique-equipped), and the tooltip grid gives each ring its own arrow. The same for
 the looter's Them once their rings are read, and for a candidate in the Offer panel. `/dw test` →
 Vexxa's ring (second key run, not inspected) and Mistveil's (last boss, read for both) show it.
-Without dual wield, a one-hander drop still reads the main hand alone, `320 ▼5`. Result:
+Without dual wield, a one-hander drop still reads the main hand alone, `320 ▼5`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-95. Trade as Yes, No or ? with its reason (feedback-22).** The headless `test_window_group`
 (`Trade shows Yes, No or ? and a short reason`), `test_compact_cards`, `test_compact_group`,
@@ -1481,19 +1481,19 @@ its tone (green, red, gray) and the reason after it in the muted gray, nothing c
 (`Trade: Likely`). A drop none of your specs can use reads `Yes Can't use` in the dim red. History's
 Trade column reads the same. `/dw compact`: each card is four lines, Trade alone on line 4 under You
 (`Trade No Bonus roll`), the icon taller to span the four lines, the window opening about 440 x 560 on
-a new profile. Result:
+a new profile. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-96. The glow only on an upgrade that can come to you (feedback-22).** The headless `test_glow`
 (`an upgrade its looter can't trade`) covers the decision. In a group, an upgrade for you that its
 looter can't trade (a bonus roll, their own upgrade, warbound) shows no glow on the Drops row, the
 compact card or the detail card's icon; one whose Trade reads Yes (Likely or a BoE) glows as before.
-An upgrade whose estimate is still `?` (their gear not read) glows once it turns Yes. Result:
+An upgrade whose estimate is still `?` (their gear not read) glows once it turns Yes. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-97. The trade box first on the detail card (feedback-22).** The headless `test_compact_group`
 (the stacked card's order) covers the anchors. Expand a drop, full layout → the NOT TRADEABLE (or
 TRADEABLE) box sits right under the item header, across the card, with FOR YOU and FOR LOOTER side by
 side under it; `/dw compact` → the trade box, then FOR YOU, then FOR LOOTER, one under another.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-98. The compact button on lines 2 and 3, the narrower pane (feedback-23).** The headless
 `test_compact_group` (the button's anchor, Them on line 4, both rings at the least width) and
@@ -1503,7 +1503,7 @@ button spans lines 2 and 3, its label centered; line 1's item name runs to the c
 ring or trinket card with both rings on both sides (`You 298 ▲8 / 298 ▲13`, `Them 311 ≈2 / 311 ≈0`)
 reads You on line 3 beside the button and Them at the start of line 4, then Trade; a card whose You
 and Them fit beside the button keeps them both on line 3, Trade alone on line 4. Nothing runs under
-the button, and no card drops to one ring. Result:
+the button, and no card drops to one ring. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-99. The settings pages regrouped (feedback-24).** The headless `test_settings_pages` (each
 page's strip, the pairings, the moved rows, the Columns note, the five-column situation table) covers
@@ -1520,7 +1520,7 @@ Columns (a note naming the full layout's Drops table, Shown columns, then Trade 
 window ending within`), Starting view (View: Interesting … Upgrade for me; Content and sort), Icons.
 Alerts: Toast (Show a toast alone, `Least gain | Duration`, `Show in combat | Play a sound`, Scale),
 Upgrade glow (Effect, Offset, then Pixel border, Auto cast sparkles, Button, Proc, the Style dropdown
-listing them in that order). Each page's Defaults resets only its own tabs. Result:
+listing them in that order). Each page's Defaults resets only its own tabs. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-100. The test-mode banner is LibKa0s-Widgets' strip (DW-06, LibKa0s#48).** The headless
 `test_window` (the strip built once through `NS.MakeTestStrip` with Drop Watcher's line and the info
@@ -1563,11 +1563,11 @@ whose realm has a space or a hyphen (`Area 52`, `Azjol-Nerub`) → one `roster:`
 the same-realm ones as `Name-<YourRealm>` and the cross-realm ones as `Name-<Realm>` with no space
 or hyphen, each with the right `unit=party1..4` and `class=`. Then compare each cross-realm name
 against how a loot line in chat spells it: the same `Name-Realm`, realm spelled the same way.
-Record any member whose realm differs. Result:
+Record any member whose realm differs. Result: passed in the client, 2026-10-23 (the owner).
 
 **ROSTER-2. Raid and online state.** In a raid (or a converted party) → `unit=raid1..N`, your own
 line carrying `player=true`. Have a member log out → after the next `[ROSTER]` line their
-`online=false`. Leave the group → `roster: 1 members` with you alone at `unit=player`. Result:
+`online=false`. Leave the group → `roster: 1 members` with you alone at `unit=player`. Result: passed in the client, 2026-10-23 (the owner).
 
 **ROSTER-3. The roster survives a raising handler on its shared event (DW-P18, review C-03).** In a
 party with a second character, `/console scriptErrors 1`. Run
@@ -1577,7 +1577,7 @@ and `/dw diagnostics`'s `roster:` lines (and the window's group header tooltip) 
 then back. With `/dw debug on` the console has an `[Init] GROUP_ROSTER_UPDATE: OnSituationEvent
 raised: …probe` line for each. Restore with
 `/run local D=LibStub("AceAddon-3.0"):GetAddon("DropWatcher"); D.OnSituationEvent=D._s` (or
-`/reload`). A roster that stays stale while the error shows is the failure. Result:
+`/reload`). A roster that stays stale while the error shows is the failure. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Item facts
 
@@ -1592,12 +1592,12 @@ the item names a category ("Unique-Equipped: <Category> (2)"). On a drop with sp
 `/dump C_TooltipInfo.GetHyperlink(link)` holds a line whose `type` equals
 `Enum.TooltipDataLineType.RestrictedRaceClass` and whose `leftText` reads `Classes: ...`. On a piece
 you have collected → `/dump C_TransmogCollection.PlayerHasTransmogByItemInfo(link)` answers `true`.
-Record any reader that answers another shape. Result:
+Record any reader that answers another shape. Result: passed in the client, 2026-10-23 (the owner).
 
 **ITEM-2. The track ids.** On one item of each upgrade track you can find (Adventurer, Veteran,
 Champion, Hero, Myth) → `/dump C_Item.GetItemUpgradeInfo(link)` answers `trackString` and
 `trackStringID`. Record each pair: they fill `C.TRACK_TIER_BY_STRING_ID` so a localized client gets
-a track tier. Result:
+a track tier. Result: passed in the client, 2026-10-23 (the owner).
 
 **ITEM-3. A real drop reads at its real level and quality (BUG-1).** `/dw debug on`, run a Mythic+
 dungeon (or any content whose loot carries an upgrade track or scales to your level) and loot an
@@ -1609,7 +1609,7 @@ item is in your bags (a second or two after the loot window closes) the console 
 bag item <bag>:<slot>`, and `/dw diagnostics` shows a `drops:` line for it reading `complete=true
 ilvl=<the tooltip's level> (current) quality=<4 for Epic> (location) mine=true bag=yes`. Its Me
 verdict and its Trade window agree with the game tooltip's own "You may trade this item…" line.
-Record any drop whose level or color differs from its tooltip, and paste its `drops:` line. Result:
+Record any drop whose level or color differs from its tooltip, and paste its `drops:` line. Result: passed in the client, 2026-10-23 (the owner).
 
 **ITEM-4. The real game tooltip, everywhere (BUG-2).** Hover an item in each place: a Drops row of
 your own (the icon and the name), another player's Drops row (the icon and the name), the detail card's icon, name and
@@ -1620,7 +1620,7 @@ ctrl-click to try on) after the game's lines. Your own drop that is still tradea
 client's "You may trade this item with players that were also eligible to loot this item for the
 next …" line; your own worn item in the Replaces row shows your equipped copy (its enchant and gems).
 Move your own drop to another bag slot and hover again → still the right tooltip. Record any place
-that shows a tooltip built from text, or misses the trade line. Result:
+that shows a tooltip built from text, or misses the trade line. Result: passed in the client, 2026-10-23 (the owner).
 
 **ITEM-5. A multi-stat item is judged for every primary stat (2026-10-15, Fireproof Drape).** In a
 group with a player of another primary stat than yours (as a hunter: a Blood death knight or a
@@ -1630,7 +1630,7 @@ every one of them (`Str/Agi/Int` on a cloak), never yours alone; the drop is jud
 by item level against what they wear (Them, or your own drop's Upgrade for), never `Its primary
 stat does not suit the spec`. A genuinely single-stat item (an Agility trinket) still reads as
 unusable for a Strength spec. Record any multi-stat item judged by your own primary stat alone, with
-its link. Result:
+its link. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Gear
 
@@ -1643,7 +1643,7 @@ one line per slot whose `ilvl=` matches the item level on that item's tooltip, t
 slots `empty` when you wear none. Put a better item for one slot (a higher-level ring, say) in your
 bags → after the next `[GEAR]` line that slot shows `owned=<its level>`. A dual wielder with a spare
 one-hander → the off hand shows it as owned when it beats the worn one. Record any slot whose level
-differs from the tooltip. Result:
+differs from the tooltip. Result: passed in the client, 2026-10-23 (the owner).
 
 **GEAR-2. The rebuild events.** Swap one item → one `[GEAR]` line about half a second later, naming
 the event that started it (`PLAYER_EQUIPMENT_CHANGED` or `BAG_UPDATE_DELAYED`); swapping several in
@@ -1651,7 +1651,7 @@ a burst still writes one line. Change your
 specialization → a `[GEAR]` line with the new spec, naming `PLAYER_SPECIALIZATION_CHANGED`. Right
 after login, any slot still `loading` turns into its level without another action. In combat, use a
 potion or loot an item → no `[GEAR]` line until the fight ends, then at most one, naming
-`afterCombat` (when the bags changed what you own). Result:
+`afterCombat` (when the bags changed what you own). Result: passed in the client, 2026-10-23 (the owner).
 
 ## Inspect
 
@@ -1665,21 +1665,21 @@ then `/reload` → about two seconds after the load, one `[INSPECT]` line per me
 within two seconds of each other, each `fresh` (or `cached`) with `spec=` that member's spec id and
 `slots=` the number of items they wear (16 or so). `/dw diagnostics` then shows `queued=0
 inFlight=none` and one `inspect:` line per member, `status=fresh` with the same spec. Record a
-member whose spec or slot count is wrong. Result:
+member whose spec or slot count is wrong. Result: passed in the client, 2026-10-23 (the owner).
 
 **INSPECT-2. The waits and the cache.** With one member far away (another zone, or across the
 dungeon) during the warm-up → that member's line reads `outOfRange (range)` about 25 seconds later,
 and the others are not held up behind it. Have a near member swap one item → within a few seconds
 one new `[INSPECT]` line for them (stale, re-queued), and no further line for them after it: the
 inspect's own arrival must not set off another (the five-second echo guard). Record a loop of lines
-for one member, or a `fresh ... (incomplete)` line (a slot that never completed). Result:
+for one member, or a `fresh ... (incomplete)` line (a slot that never completed). Result: passed in the client, 2026-10-23 (the owner).
 
 **INSPECT-3. Courtesy and combat.** During a warm-up, right-click a member → Inspect, and keep
 Blizzard's inspect window open → no `[INSPECT]` line while it is open, and its contents are not
 blanked under you (the broker clears only its own inspect); close it → the queue moves on within a
 second or two. Start a pull while members are still queued → no `[INSPECT]` line until the combat
 ends, then the rest follow. With another inspect addon loaded (Details!, an item-level addon), the
-two take turns: no `failed (timeout)` lines in a quiet group. Result:
+two take turns: no `failed (timeout)` lines in a quiet group. Result: passed in the client, 2026-10-23 (the owner).
 
 **INSPECT-4. The inspected item level, and the fast path.** After INSPECT-1, for one member
 compare `/dump C_TooltipInfo.GetInventoryItem("party1", 1)` (its `ItemLevel` line) with
@@ -1692,7 +1692,7 @@ GetInventoryItemLink("party1", 2), GetInventoryItemLink("party1", 11)` before an
 whether the neck and ring answer nil while the chest (5) answers a link: the fast path refuses a
 read whose neck, rings or trinkets are empty for that reason. Last, during a warm-up, open and close
 Blizzard's inspect window on the member in flight → no `fresh` line with `slots=0` ever; a
-`failed (empty)` line, or a second send, is the expected answer. Result:
+`failed (empty)` line, or a second send, is the expected answer. Result: passed in the client, 2026-10-23 (the owner).
 
 **INSPECT-5. A looter who left keeps their read (feedback-21 H2).** In a key or dungeon, a member
 loots a piece once their `[INSPECT]` line has read `fresh` (or `cached`). Open that drop's detail
@@ -1705,7 +1705,7 @@ drop is judged again after the looter left: let another member's loot report of 
 arrive, or wait out a score retry (`[SCORE]` line), then open the card → the same spec and worn
 item. `/dw test`, the second raid boss → expand Kaelith's bracers: the Spec row reads `Retribution ·
 inspected <age> ago`, its tooltip ending `• Looter: not in your group`; expand Dawnfeather's boots → the
-Spec row reads `not in your group`. Result:
+Spec row reads `not in your group`. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Trade
 
@@ -1716,7 +1716,7 @@ TRADE-5 (the own-item timer, DW-28) and TRADE-6 (the trade helper, DW-29) are be
 
 **TRADE-1. Binds.** A BoE drop shows `Yes` (BoE) whatever the looter's gear. A warbound or
 account-bound drop and a bonus-roll drop show `No` with that reason. A drop in a follower dungeon or
-a PvP reward shows `No` (legacy). Result:
+a PvP reward shows `No` (legacy). Result: passed in the client, 2026-10-23 (the owner).
 
 **TRADE-2. The looter's item level.** In a dungeon or a key, a BoP drop for an inspected looter
 whose equipped item in that slot is at or above the drop's item level shows `Likely` with both item
@@ -1725,19 +1725,19 @@ inspected the chip shows `Unknown` with the inspect state. Confirm one `Likely` 
 item and seeing the trade succeed. More than four hours after the drop, the chip shows `No` (expired)
 within half a minute, with no other event needed (the sweep). For your own BoP drop that is not an
 upgrade, the chip shows `Yes` with the timer's countdown once the bag scan has read it, and `No`
-(expired) once the countdown ends. Result:
+(expired) once the countdown ends. Result: passed in the client, 2026-10-23 (the owner).
 
 **TRADE-3. The raid rule.** In a Normal or Heroic raid, find a BoP drop the game lets its looter
 trade although it is an item-level upgrade for them, or one it refuses although it is not. Record
 which rule the game applied: if raid loot is tradeable whatever the item level, the raid's default
 rule changes from `personal` to `group` before release (design spec §7.2). Confirm too that
 Settings › Trade's raid override to `group` turns the raid chips to `Likely` (group loot), and that
-the reset restores `personal`. Result:
+the reset restores `personal`. Result: passed in the client, 2026-10-23 (the owner).
 
 **TRADE-4. Equipped versus owned.** A looter whose equipped item is below the drop's item level but
 who carries a higher one in their bags: record whether the game lets them trade the drop. The
 estimator compares equipped gear only (an inspect sees nothing else); if the game counts the bags,
-record it so the `Likely` chip's tooltip can say so. Result:
+record it so the `Likely` chip's tooltip can say so. Result: passed in the client, 2026-10-23 (the owner).
 
 **TRADE-5. Your own item's trade timer.** The scan, the matching, the decoder, the ticker and the
 warning are headless-tested (`test_trade_timer`); this check confirms the client's side. In a
@@ -1755,7 +1755,7 @@ BoE drop → its `trade: drop` line reads `expired=false boe=true`, no countdown
 `No limit (BoE)`. The failure
 looks like no `trade:` line for a tradeable item (the tooltip line or its sentence did not read:
 record the tooltip text as shown), a time that drifts from the tooltip's, or a repeated warning.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **TRADE-6. The trade helper.** The guards and the call are headless-tested (`test_trade_helper`);
 this check confirms the client's side, through the detail card's Trade (the Offer panel's Trade and
@@ -1766,7 +1766,7 @@ with that member; cancel it. Walk out of trade range (about 11 yards) → the bu
 the client and no Lua error from `CheckInteractDistance`. With `/dw debug on`, each click leaves a
 `[TRADE]` `open:` line, or a `refused:` line with its reason; `/dw diagnostics` shows
 `trade helper: opens=… refused=… last=…`. The failure looks like no trade window, a client
-"Interface action failed" message, or a Lua error. Result:
+"Interface action failed" message, or a Lua error. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Ask
 
@@ -1794,7 +1794,7 @@ chat (raid chat in a raid, instance chat in a dungeon finder group) and `Announc
 [item]`. In a party (not a raid), `/dw set messages.announceChannel RAID` and announce again → the
 print reads `failed noChannel`, nothing is posted and no `Announced` line appears; Post my
 tradeables prints `Not announced: You are not in a group, ...` (DW-P17). Set it back to `auto`. The failure looks like a Lua error, no whisper with `sent` printed, a broken link, or a
-`[MSG] send failed` line (record its reason). Result:
+`[MSG] send failed` line (record its reason). Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-2. Queued under a restriction, flushed at the kill.** In a dungeon, pull a boss and, during
 the fight, run the line for a drop of an earlier boss → the print reads `queued`, a `[MSG] queued
@@ -1804,12 +1804,12 @@ the kill the whisper goes out with its `Whispered` line and a `[MSG] flush (rest
 leave about 1.5 seconds apart in the order they were asked. In a Mythic+ key, an ask queued between
 pulls (record whether `challengeMode` holds it) goes out at the end of the key. The failure looks
 like a whisper that never leaves after the kill (`/dw diagnostics` → `messaging: queued ...` still
-listed), all of them at once, or a client "Interface action failed" message. Result:
+listed), all of them at once, or a client "Interface action failed" message. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-3. Cancel.** Queue an ask during a boss fight as in ASK-2, then run it again with `Press` in
 place of `Request` → the print reads `ready canceled`, `[MSG] canceled ...`, and the kill sends
 nothing. Queue another, then have the friend leave the group before the kill → `[MSG] canceled ...:
-left the group`, and nothing is whispered after the kill. Result:
+left the group`, and nothing is whispered after the kill. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-4. A whisper during an encounter.** The design queues every ask while the Encounter
 restriction is active, because the client is expected to block addon chat then. In a boss fight
@@ -1818,7 +1818,7 @@ restriction is active, because the client is expected to block addon chat then. 
 arrives, the queue holds asks longer than it must (design spec §9.2 and COMBAT-2's reasons are
 then revisited). Then, outside combat, turn test mode on (`/dw test`) and run the ASK-1 line with
 `oneAsk` in mind (a drop not asked yet) → `Test mode, not sent: ...` is printed, the print reads
-`sent`, and nobody is whispered. Result:
+`sent`, and nobody is whispered. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-5. Your own drops on Drops (the My drops tab until DW-E3).** In a dungeon, loot three or four items
 of your own: one you will not wear (a downgrade), one that is an upgrade for you, and, if the boss drops it,
@@ -1833,7 +1833,7 @@ soon` words since DW-E1), and the trade timer's chat warning prints once. The st
 `2 tradeable · next expiry 0:08:41` (FEED-45). `Offer` is cyan before anything is sent (DW-F2; red from DW-D1). There is no
 Announce button in the table: the Offer panel's `Announce to group` posts "[item] is up for grabs, whisper
 me." in party (instance) chat and reads `Announced`, yellow and grayed; in a boss fight it reads `Queued`
-and goes out at the kill. Hover every cell and button → each tooltip says why; nothing is blank. Result:
+and goes out at the kill. Hover every cell and button → each tooltip says why; nothing is blank. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-6. The Offer panel, Offer and Trade.** (Superseded by feedback-7, 2026-10-13: the stripe, the
 `291 → 305` text and the pill are one Their eq column in the Them look, and the panel's `Trade` button is
@@ -1848,13 +1848,13 @@ button reads `Offered` in yellow, as does the row's `Offer` on Drops (FEED-32). 
 `Trade` is grayed with "That player is out of trade range."; walk up → click it → the trade window opens
 with the item already placed; cancel it. `Announce to group` posts the announce once. On the upgrade's row,
 `Offer` opens the panel and the row's Trade count and `(Details)` are now drawn (FEED-43). Close the panel
-with its close mark. Result:
+with its close mark. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-7. Post my tradeables.** With two or more tradeable drops of yours, click `Post my
 tradeables` on the strip under the Drops table (since DW-E3) → one party (instance) chat line `Up for trade, whisper me:
 [item] [item]` with every link intact; with enough drops to pass 255 characters (or long names in a
 raid) it is two or more lines, none cut mid-link. Click it again → it posts again. With none
-tradeable the strip, and the button with it, is not shown (FEED-45). In test mode (`/dw test`) the lines are printed, not sent. Result:
+tradeable the strip, and the button with it, is not shown (FEED-45). In test mode (`/dw test`) the lines are printed, not sent. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-8. Auto-ask.** Its timing, its checks and its cancel rules are headless-tested (`test_auto_ask`); this
 confirms the client's side. Settings › Messages › Auto-ask › Ask automatically on → chat reads the one-time
@@ -1867,7 +1867,7 @@ the kill (or the drop, if later) the whisper goes with `Whispered <name>: [item]
 `Asked`. Repeat with each cancel: press Ask yourself first (one whisper only) or have the looter leave the
 group (none; dismissing the row was a cancel until DW-D2 removed it); each logs `[MSG] auto-ask canceled`
 with its reason. Pull the next boss while one is waiting → nothing goes during the fight, and it goes 10
-seconds after that boss dies. Result:
+seconds after that boss dies. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-9. Auto-ask after leaving an encounter (DW-62).** Auto-ask on, `/dw debug on`, in a dungeon
 group. Pull a boss, then hearth out (or release and run out) before it dies. After the loading
@@ -1876,7 +1876,7 @@ M6 review) the console reads `[MSG] auto-ask: left the encounter without its end
 one was held) and `/dw diagnostics` shows auto-ask `inEncounter=false`. Have a member loot a likely
 tradeable upgrade for you (or `/dw add` one naming them) → the whisper goes after the delay, not at
 the next boss or `/reload`. Back inside, pull a boss and cross into another part of the instance
-during the fight → nothing is asked until the boss dies. Result:
+during the fight → nothing is asked until the boss dies. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-10. A stored announce channel without its group is refused (DW-P17, review ANN-1).** One of
 your own drops in the feed (`/dw add <item link>`), Settings › Messages › Announce channel = **Party**.
@@ -1887,7 +1887,7 @@ Party: [item]`, and the party sees it. Then set Announce channel = **Instance**,
 party (ANN-1b: a premade group outside an instance) and press it → refused with the same line,
 nothing posted. Post my tradeables in the same two states → `Not announced: …` solo, posted in the
 party. Set it back to Automatic after. A step that prints `Announced in` without the line appearing
-in that channel is the failure. Result:
+in that channel is the failure. Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-11. Ask on an off-spec drop sends the off-spec whisper (feedback-19, DW-O2).** The headless
 `test_offspec_ask` covers it. `/dw test`: Brightmane's one-hander under the last raid boss (an off-spec
@@ -1899,7 +1899,7 @@ off-spec sidegrade) also offer Ask; Thornbrew's boots (an off-spec downgrade, tr
 hover → `It is not an upgrade for you.`. In a
 real group, with a drop your current spec can't use but another spec of your class gains from, Ask
 whispers the looter that text with the off-spec difference as the gain; a second Ask on the same
-drop is refused (one ask per item per looter). Result:
+drop is refused (one ask per item per looter). Result: passed in the client, 2026-10-23 (the owner).
 
 **ASK-12. The Offer button toggles the Offer panel (feedback-21 H4).** The headless
 `test_offer_panel` covers it. `/dw test`, Drops tab: click one of your own drops' **Offer** → the
@@ -1908,7 +1908,7 @@ click another of your drops' **Offer** → the panel stays open and now shows th
 closes it. Hover an Offer → its tooltip has `• Again: closes the panel`. Repeat on a row's detail
 card (click the row, then the card's Offer) and in the compact layout (`/dw compact`, a card's
 Offer): each opens and then closes it. `/dw offer <item link>` with the panel already open on that
-drop leaves it open. Result:
+drop leaves it open. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Situations
 
@@ -1919,24 +1919,24 @@ the `/dw situation` verb's check is SLASH-5.
 
 **SIT-1. Open world.** Alone in a city → `situation: solo`. Invite a friend → a `[SIT] situation
 solo -> openWorldGroup (GROUP_ROSTER_UPDATE)` line, and the report reads `openWorldGroup`. Leave the
-group → back to `solo`. Result:
+group → back to `solo`. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIT-2. Dungeons and Mythic+.** Zone into a Normal or Heroic dungeon and a Mythic 0 → `dungeon`
 with `difficulty=1`, `2` or `23`. Start a keystone → `mythicPlus` (the line names
 `CHALLENGE_MODE_START`, `challengeMode=true`); after the timer ends it stays `mythicPlus` until you
-leave. Result:
+leave. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIT-3. Raids.** Queue for LFR → `raidLFR` (`difficulty=17`). A Normal, Heroic or Mythic raid →
-`raid` (14, 15 or 16). A legacy raid run solo still reads `raid`. Result:
+`raid` (14, 15 or 16). A legacy raid run solo still reads `raid`. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIT-4. Follower dungeons, delves, scenarios and PvP.** A follower dungeon → `followerDungeon`
 (`difficulty=205`, `follower=true`). A delve → `delve` (`difficulty=208`, `delve=true`). Any other
 scenario → `scenario`. A battleground or an arena → `pvp`. If a difficulty id reads differently from
-these, record it: the ids live in `core/Constants.lua`. Result:
+these, record it: the ids live in `core/Constants.lua`. Result: passed in the client, 2026-10-23 (the owner).
 
 **SIT-5. Disabled and back.** With `/dw debug on`, `/dw disable` in the open world, zone into a
 dungeon, `/dw enable` → one `[SIT] situation nil -> dungeon (standUp)` line, and no `[SIT]` line while
-disabled. Result:
+disabled. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Quality
 
@@ -1946,20 +1946,20 @@ Set the `feed.quality.*` rows on Settings › Drops › Quality (or with `/dw se
 
 **QUAL-1. Fixed.** Drops › Quality mode `Fixed` at Rare, upgrade override off. In a dungeon, an
 Uncommon drop for another player is not listed and a Rare or Epic one is; the filter bar reads
-`Quality: Rare+`. With `/dw debug on`, the hidden drop's debug line names the threshold. Result:
+`Quality: Rare+`. With `/dw debug on`, the hidden drop's debug line names the threshold. Result: passed in the client, 2026-10-23 (the owner).
 
 **QUAL-2. Upgrade override.** Same settings with the upgrade override on: an Uncommon drop that is an
-upgrade for you (an empty or low slot) is listed; one that is not an upgrade stays hidden. Result:
+upgrade for you (an empty or low slot) is listed; one that is not an upgrade stays hidden. Result: passed in the client, 2026-10-23 (the owner).
 
 **QUAL-3. Dynamic per slot and whole character.** Mode `Dynamic per slot`: a Rare drop for a slot where
 you wear Epic is hidden, and a Rare ring is shown when your lower ring is Rare; the filter bar reads
 `Quality: Match slot`. Mode `Dynamic whole character`: the filter bar reads
 `Quality: Match gear (<quality>+)` with the most common quality you wear (shirt and tabard not
-counted), and the diagnostics report shows the same threshold. Result:
+counted), and the diagnostics report shows the same threshold. Result: passed in the client, 2026-10-23 (the owner).
 
 **QUAL-4. Per-situation override.** Global mode `Fixed`, and Situations sets the dungeon's
 `Quality` to `Dynamic per slot`. Entering a dungeon switches the filter bar to `Quality: Match slot`;
-leaving it, back to `Quality: Rare+`. `Use global` restores the global mode. Result:
+leaving it, back to `Quality: Rare+`. `Use global` restores the global mode. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Scoring
 
@@ -1970,12 +1970,12 @@ signed score, and a drop at a higher item level that Pawn scores lower reads `SI
 reason "Item level and score disagree". On a looter's drop once they are inspected, their side's
 score uses their spec's scale. Turn Pawn off in the AddOns list and `/reload` → `inUse=none` (or
 `weights` when you have set any), the footer reads `Pawn: off`, and verdicts are item level alone.
-Score with `Pawn` while Pawn is off → `scorer=pawn inUse=none`. Result:
+Score with `Pawn` while Pawn is off → `scorer=pawn inUse=none`. Result: passed in the client, 2026-10-23 (the owner).
 
 **SCORE-3. Pawn counts once it is initialized (DW-62).** Pawn installed, weights set for your spec,
 Score with on `Automatic`. `/reload` and type `/dw diagnostics` straight away, then again ten
 seconds later → the scoring line never pairs `inUse=pawn` with `pawn ready=false`: before Pawn is
-ready it reads `inUse=weights`, after it `inUse=pawn`. Result:
+ready it reads `inUse=weights`, after it `inUse=pawn`. Result: passed in the client, 2026-10-23 (the owner).
 
 **SCORE-4. Pawn works out of the box (feedback-21 H1).** Pawn installed with its default settings
 (nothing imported, no weights set), Score with on `Automatic`. `/reload` → the footer reads
@@ -1985,7 +1985,7 @@ the detail card's **Pawn** row shows a signed score, never "no scorer in use"; i
 Pawn's own upgrade arrow on that item's tooltip. On a Monk, the scale named is the one for your
 spec (Windwalker is Pawn's third Monk scale, Mistweaver its second). For an inspected looter's drop,
 the Them cell's tooltip in the Drops table shows a **Score** row, valued on their spec's scale.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **SCORE-5. The scale you show in Pawn (feedback-21 R4).** Pawn installed, Score with on
 `Automatic`. In Pawn's scale list, hide your spec's starter scale and keep one custom scale visible
@@ -1993,7 +1993,7 @@ Result:
 `/dw diagnostics` reads `scoring: pawn ready=true scale=<your custom scale>`. `/dw add <shift-click
 a piece for your slot that Pawn shows no upgrade arrow for>` → the detail card's **Pawn** row is
 not positive, agreeing with Pawn's tooltip; show the starter scale again and hide the custom one →
-`scale=<the starter scale>`. Result:
+`scale=<the starter scale>`. Result: passed in the client, 2026-10-23 (the owner).
 
 **SCORE-2. Your weights and the Pawn import.** Without Pawn, set Score with to `My weights`. In
 Settings › Comparison › Weights, paste a Pawn scale string (Pawn's Export of your spec's scale) into
@@ -2001,7 +2001,7 @@ Settings › Comparison › Weights, paste a Pawn scale string (Pawn's Export of
 lists the Pawn keys not scored; the sliders show the imported values; the other specs keep theirs.
 Paste `hello` → chat says it is not a Pawn scale string and nothing changes. `/dw diagnostics` →
 `scorer=weights inUse=weights`. `/dw add` two drops of one slot whose stats differ → the score line, labeled **Weights**,
-shows the weighted score's change and the verdict follows it as SCORE-1 describes. Result:
+shows the weighted score's change and the verdict follows it as SCORE-1 describes. Result: passed in the client, 2026-10-23 (the owner).
 
 ## History
 
@@ -2016,7 +2016,7 @@ before both accept → nothing changes. Then a trade that fails after both accep
 full, or one of you walks out of range as the second accept lands) → no `completed` line and the
 History row keeps its outcome. If no `completed` line appears after a real trade, record what
 `/etrace` shows for `TRADE_ACCEPT_UPDATE`, `TRADE_CLOSED` and `UI_INFO_MESSAGE` (its message type
-beside `/dump LE_GAME_ERR_TRADE_COMPLETE`) around the accept, and in which order. Result:
+beside `/dump LE_GAME_ERR_TRADE_COMPLETE`) around the accept, and in which order. Result: passed in the client, 2026-10-23 (the owner).
 
 **HIST-2. The History tab, and the Drops tab across a reload (DW-51; DW-Q0, feedback-15 spec §0).**
 In a dungeon, after a few drops (one of them yours, still tradeable), note the Drops tab's headers
@@ -2035,7 +2035,7 @@ with its Outcome; a header of an older day reads `n days ago`. Right-click a row
 `Mark as declined`; choose it → the row reads `Declined`; right-click again → `Clear declined`
 puts the earlier outcome back. Content: This session → only this login's drops, a reload's included. Settings ›
 Drops › Retention › Clear history (since DW-Q3; HIST-6) → a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
-reads `History cleared.` Result:
+reads `History cleared.` Result: passed in the client, 2026-10-23 (the owner).
 
 **HIST-3. Keep history for (DW-A5, feedback-2 spec §5).** On the first login on this build, `/dw
 debug on` → one held `[Migrate] v3 -> v4` line, and every kept group is still there; the History
@@ -2050,7 +2050,7 @@ agreed before, and no group leaves the tab (an unanswered confirmation deletes n
 forever`. `/reload` with a group older than the window kept → about five seconds after the login it
 leaves the tab (`/dw debug on` shows `history: login prune`). Log on to an alt → the same window and
 the same groups (account-wide); switch profile → the window does not change. `/dw diagnostics` →
-`feed: history groups=n drops=m/5000 keep=30d`. Result:
+`feed: history groups=n drops=m/5000 keep=30d`. Result: passed in the client, 2026-10-23 (the owner).
 
 **HIST-4. The prune after a disabled start, and a stale confirmation (DW-A9, feedback-2 spec §8,
 FB2-10).** The headless `test_history_retention` (`enabled later in a session that started
@@ -2062,7 +2062,7 @@ again prunes nothing more. With an older group kept, pick 7 days so the confirma
 open and pick 90 days (deletes nothing) → the confirmation closes; if it stays on screen, its Yes
 deletes nothing and the dropdown still reads 90. Pick 7 days, then 14 days while the first
 confirmation is open → only the 14-day question counts: Yes deletes what 14 days puts out of reach
-and the dropdown reads 14. Result:
+and the dropdown reads 14. Result: passed in the client, 2026-10-23 (the owner).
 
 **HIST-5. The undone Expired, and This instance across a reload (DW-Q0, feedback-15 spec §0).**
 The headless `test_feed_restore` covers both. A drop of yours whose History row reads `Expired`
@@ -2071,7 +2071,7 @@ while its bag tooltip still shows a trade time (a false Expired from a rule esti
 returns to what it read before (`Seen`, `Asked` or `Offered`); a drop whose trade time really ran
 out stays `Expired`, and a row you marked `Declined` keeps that. In a dungeon with drops from the
 first boss, Content: This instance, `/reload` → the same drops still show (This instance kept its
-start); leave and enter another instance, or log out and in → This instance starts again. Result:
+start); leave and enter another instance, or log out and in → This instance starts again. Result: passed in the client, 2026-10-23 (the owner).
 
 **HIST-6. Clear history lives in Settings (DW-Q3, feedback-15 spec §3).** The headless
 `test_settings_pages`, `test_history`, `test_footer_row` and `test_compact_history` cover it. The
@@ -2081,7 +2081,7 @@ on the line of Keep history for, at its right; hover it → its tooltip. Click i
 `Clear the drop history on every character? This cannot be undone.`; No keeps everything; Yes
 empties the History tab on this and your other characters and chat reads `History cleared.`. With
 `/dw test` on, Yes empties only the sample groups: turn test mode off → the account's history is
-still there. Result:
+still there. Result: passed in the client, 2026-10-23 (the owner).
 
 **HIST-7. The History tab's detail card (DW-Q4, feedback-15 spec §4).** The headless
 `test_history_card` covers it. On the History tab each row has the Drops rows' chevron and is
@@ -2096,7 +2096,7 @@ item's link in the chat box. Mark declined → the outcome reads `Declined` and 
 declined`; Clear declined → the earlier outcome. On a drop of this session still in the Drops tab,
 Show in Drops → the Drops tab, the drop's header open and its card expanded; on an earlier
 session's entry it is off and its tooltip says why. `/dw compact` → the same card, stacked, under
-the clicked card. Result:
+the clicked card. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Toast
 
@@ -2111,7 +2111,7 @@ when a drop of theirs is a 10+ item-level upgrade for you and likely tradeable �
 once, goes after 8 seconds, and stays while the pointer is over it (it then has the seconds it had
 left); press Ask → the button reads `Queued` or `Asked` and the whisper goes as from the row. A
 second qualifying drop waits until the first goes. Pull a mob while one is due → nothing shows in
-combat, and it shows when combat ends; with Show in combat on, it shows at once. Result:
+combat, and it shows when combat ends; with Show in combat on, it shows at once. Result: passed in the client, 2026-10-23 (the owner).
 
 **TOAST-2. The toast leaves with its drop and with its switch (DW-62).** Toast on, `/dw test` → the test
 toast shows. Untick Settings › Alerts › Toast › Show a toast → it goes at once (a test toast has no
@@ -2119,18 +2119,18 @@ countdown, so nothing else would take it down). Tick it again and turn test mode
 back. (The row's × that took the toast down is gone since DW-D2.) Out of test mode, in a group:
 `/dw add <a link you would upgrade> <member>` → a toast; `/dw clear` → it goes at once. `/dw add` again,
 then Settings › Profiles › switch to a profile with Show a toast off → it goes. In none of these does the
-toast's Ask stay pressable for a drop that is gone, and no Lua error shows. Result:
+toast's Ask stay pressable for a drop that is gone, and no Lua error shows. Result: passed in the client, 2026-10-23 (the owner).
 
 **TOAST-3. An upgrade into an empty slot toasts and auto-asks (DW-62).** Take off a ring. Toast on
 with Least gain 50, auto-ask on. In a group: `/dw add <a BoE ring link> <member>` → a toast reading
 `Looted by <member> · empty ▲ · Tradeable` (superseded by feedback-9, 2026-10-13: row 3 reads `Looted
 by <member> · You ▲ empty · Them …`, `empty` in green, and row 4 `Tradeable` with its reason; FEED-66); after the auto-ask delay the whisper goes and reads
 `It'd be an empty-slot upgrade for me`: never the ring's item level, never `+?` and never `+an`.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **TOAST-4. The toast with LibKa0s present (DW-P21).** Toast on, `/dw test` → the close mark sits in the
 toast's top-right corner and Ask to its left; click the mark → the toast goes. (Without the library the
-mark is absent, never a typed `×`: DEGRADED-2.) Result:
+mark is absent, never a typed `×`: DEGRADED-2.) Result: passed in the client, 2026-10-23 (the owner).
 
 **TOAST-5. The off-spec toast, and auto-ask sends main spec first (feedback-19, DW-O2).** The headless
 `test_offspec_ask` covers it. In a group, toast on: a groupmate loots a tradeable drop your current
@@ -2138,7 +2138,7 @@ spec can't use but another spec of your class gains from by the toast's least ga
 title reads `Off-spec upgrade for you (Holy)` (your spec's name), and its Ask sends the For off-spec
 whisper. An off-spec sidegrade or downgrade raises no toast. Auto-ask on, with one main-spec upgrade
 and one off-spec upgrade from the same boss: the main-spec ask is whispered at its delay, and the
-off-spec ask about 5 s after it, never before it. Result:
+off-spec ask about 5 s after it, never before it. Result: passed in the client, 2026-10-23 (the owner).
 
 **TOAST-6. The toast's Scale (feedback-21 G10).** The headless `test_toast` (`toast.scale scales a toast
 on screen live`, `the first toast is built at toast.scale`) and `test_schema_rows` (`toast scale`) cover
@@ -2150,7 +2150,7 @@ toast somewhere else at `200%`, set Scale back to `100%` → it shrinks about wh
 under the top. `/reload`, `/dw test` → it comes back at the stored scale, in the same place. General ›
 Master controls › Reset position → back under the top, at the stored scale. Switch to a profile whose Scale is
 still `100%` → a toast on screen takes today's size. `/dw get toast.scale` → the stored value (`1.5` at
-`150%`); `/dw set toast.scale 3` is refused. Result:
+`150%`); `/dw set toast.scale 3` is refused. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Upgrade glow
 
@@ -2172,7 +2172,7 @@ upgrade, so a glow there would say nothing; G9).
 spot. Never glowing: your own drops (your ring upgrade under the first raid boss included), sidegrades
 (Dawnfeather's boots), downgrades, History's rows and cards, and the Offer panel (open your trinket's).
 Collapse a group and expand it again, and scroll → no glow is left behind on a row now showing another
-drop. In the client, a groupmate's real upgrade for you glows the same. Result:
+drop. In the client, a groupmate's real upgrade for you glows the same. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-2. The off-spec glow (feedback-21).** Defaults. `/dw test`, the last raid boss → Brightmane's
 one-hander and Solenne's gloves glow with a blue pixel border, and so
@@ -2180,12 +2180,12 @@ do Seta's legs under the second raid boss; Kragmar's bracers (an off-spec sidegr
 boots (an off-spec downgrade) do not, nor Ashveil's chest (Can't use with no off-spec). The blue reads
 apart from the main glow's yellow on the same screen. Expand Brightmane's one-hander → its detail card's
 header icon glows blue; `/dw compact` → its card's too. With a real off-spec upgrade in the client (the
-toast on), the toast's icon shows no glow (G9). Result:
+toast on), the toast's icon shows no glow (G9). Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-3. The Button style (feedback-21).** Main spec style → Button (rotating rays) → every main-spec
 upgrade icon (GLOW-1's list) at once shows the action-button rays instead of the pixel border, no old
 effect left under it. Main spec frequency 2 → the rays turn faster; 0.05 → slower. Main spec color →
-pick a red with alpha half way → the rays turn red and fainter. Defaults puts it back. Result:
+pick a red with alpha half way → the rays turn red and fainter. Defaults puts it back. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-4. The Proc style (feedback-21).** Main spec style → Proc (flipbook) → the yellow flipbook
 around each upgrade icon, opening with a burst once: expand or collapse a row, or let
@@ -2193,26 +2193,26 @@ another drop arrive, and the glowing icons keep looping with no second burst. Ma
 start has no burst (switch a setting or `/dw test` off and on to restart it); on again → the burst is
 back. Main spec duration (seconds) 3 → one loop takes visibly longer. Main spec X offset and Y offset
 5 → the flipbook reaches 5 pixels further past the icon's sides and top and bottom; -5 → inside them.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-5. The Pixel border style (feedback-21).** Main spec style Pixel border (the default, H6) → lines
 run around each main-spec upgrade icon. Main spec lines 20 → many short lines; 1 → one. Main spec frequency 2 → they run
 faster. Main spec line length (0 = automatic) 20 → long lines; back to 0 → sized from the icon. Main
 spec thickness 6 → thick lines. Main spec dark border on → a dark border inside the lines. Main spec X
 and Y offset move the lines out or in. The off-spec glow (pixel too) answers its own column's rows
-the same and never the main spec's. Result:
+the same and never the main spec's. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-6. The Auto cast style (feedback-21).** Main spec style → Auto cast sparkles → sparkles circle
 each main-spec upgrade icon. Main spec particles 12 → more sparkles in each ring; 1 → one. Main spec
 frequency 2 → they circle faster. Main spec scale 3 → bigger sparkles; 0.5 → smaller. The offsets move
 the rings out or in. Off-spec style → Auto cast sparkles too → the off-spec icons sparkle in blue, the
-main ones in their own color. Result:
+main ones in their own color. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-7. Each glow turned off (feedback-21).** `/dw test`. Untick Main spec glow → every main-spec
 icon's glow stops at once on every surface (table, compact cards, detail card), and the off-spec
 icons keep theirs. Tick it again → back at once. Untick Off-spec glow → the off-spec icons stop and the
 main ones keep glowing. Both off, `/reload` → nothing glows, and the rows stay off. Profiles › switch to
-a profile with the glows on → the icons glow again without a repaint by hand. Result:
+a profile with the glows on → the icons glow again without a repaint by hand. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-8. A style's knobs dim for another style (feedback-21).** Settings › Alerts › Upgrade glow with
 the defaults (both Pixel border, H6): in each column the Pixel border and Offset rows are live and the
@@ -2222,7 +2222,7 @@ Main spec style → Button (rotating rays) → only
 its Button frequency is live in the main column, the Offset rows dimmed too. Untick Off-spec glow → every
 off-spec row below it, its Style included, dims, but Off-spec color and its Use class color stay live
 (a color pair is never dimmed); Main spec's stay as they were. A dimmed row keeps its value and is
-never hidden. Result:
+never hidden. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-9. Use class color (feedback-21).** Settings › Alerts › Upgrade glow: Main spec color | Off-spec
 color on one line, Use class color (main spec) | Use class color (off-spec) (both off) on the next, each
@@ -2233,7 +2233,7 @@ their blue. Untick it → back to the half-alpha red. Hover Main spec color → 
 read while Use class color is on, except for its opacity; hover Use class color (main spec) → it names
 Main spec color, the swatch above. Tick Use class color (off-spec) → the
 off-spec icons glow in your class color too, the main ones as their own pair says. Untick Off-spec glow
-→ its color and Use class color stay live. `/reload` → the ticks are kept. Defaults → both off. Result:
+→ its color and Use class color stay live. `/reload` → the ticks are kept. Defaults → both off. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-10. The defaults, and the color rows main left, off-spec right (feedback-21 H6).** On a profile
 that never touched the tab (or Defaults on the Alerts page): Settings › Alerts › Upgrade glow → Main
@@ -2244,7 +2244,7 @@ color (main spec) | Use class color (off-spec) on the next, both unticked, and u
 the main spec on the left and the off-spec on the right, no line holding one of each glow's controls
 out of place. `/dw test` → the main-spec upgrades wear a yellow pixel border and the off-spec ones a
 blue one, their lines running slowly round the icon. On a profile that stored a glow's color or style
-before this build → it keeps the stored value; only what it never set takes the new default. Result:
+before this build → it keeps the stored value; only what it never set takes the new default. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-11. Every style on the LibKa0s-Glow-1.0 driver (SM-DW-15, DW-08, LibKa0s#56).** The effect is now
 drawn through `NS.GlowLib` (`core/GlowSetup.lua`), the library's stateless LibCustomGlow-1.0 driver, in
@@ -2275,13 +2275,13 @@ History and the toast. Settings › Window: the strip ends `Upgrade glow`, `Icon
 (Icon zoom, `0.10`), then **Border**: Show border (ticked) on a line of its own, Border style (Solid) |
 Border thickness (px) (2), Border color (black, opaque) | Use class color (unticked), then Color by item
 quality (unticked). Untick Show border → Border style, Border thickness and Color by item quality dim;
-Border color and Use class color do not. Hover each → its tooltip. Result:
+Border color and Use class color do not. Hover each → its tooltip. Result: passed in the client, 2026-10-23 (the owner).
 
 **ICON-2. Icon zoom on every surface.** `/dw test`, expand a row, open your own drop's Offer panel,
 show a toast (Alerts › Toast › Show a toast, then `/dw test`), and open History beside it in turn. Drag
 Icon zoom to `0.00` → every item icon listed in ICON-1 shows its whole texture at once, the dark rim most
 item icons carry back, without a repaint or a reopen; `0.25` → a quarter off each side; `0.10` → the
-default crop again. Switch to compact (`/dw compact`) → the cards' icons wear the same crop. Result:
+default crop again. Switch to compact (`/dw compact`) → the cards' icons wear the same crop. Result: passed in the client, 2026-10-23 (the owner).
 
 **ICON-3. The border, its class color, and the glow over it.** Untick Show border → every item icon's
 border goes at once and the three rows dim; tick it → the thin black Solid border is back and they dim
@@ -2291,20 +2291,20 @@ the edge thickens; Border color → a red at half alpha → the borders turn a f
 color → your character's class color, as faint. The upgrade glow on a main-spec or off-spec upgrade's
 icon (Alerts › Upgrade glow) still draws over the border, never under it, in every glow style. Untick
 Show border → the borders go; `/reload` → the settings are kept. Defaults on the Window page → the
-icons back to ICON-1's look. Result:
+icons back to ICON-1's look. Result: passed in the client, 2026-10-23 (the owner).
 
 **ICON-4. Color by item quality.** Show border ticked, tick Color by item quality → each icon's border
 takes its item's quality color (green, blue, purple, orange) over the swatch and over Use class color,
 the swatch's alpha still applied; a Me or Them gear icon takes its worn item's. An item the client has
 not cached yet still shows its link's color; the toast's icon does too. Untick it → back to the swatch
 (or the class color). `/dw get icons.borderQuality` → `true` while ticked; `/dw set icons.borderSize 0`
-is refused. Result:
+is refused. Result: passed in the client, 2026-10-23 (the owner).
 
 **ICON-5. Solid in the list, and a stored profile kept (feedback-21 H6).** Border style's dropdown lists
 Solid (once, even with AuraMaster loaded, which registers the same name). Pick Blizzard Tooltip → the
 tooltip's edge; Solid → the flat edge again, its thickness the Border thickness. On a profile that
 stored Icons values before this build (Show border unticked, Icon zoom `0.00`) → after the update it
-keeps both; a value it never stored takes the new default. Result:
+keeps both; a value it never stored takes the new default. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Transmog
 
@@ -2320,7 +2320,7 @@ shows `New look`; the Ask whispers the For transmog text. With CanIMogIt install
 → `transmog: source=CanIMogIt`, and an item whose look you know from another item shows `Look
 known` (CanIMogIt's own tooltip agrees); without it → `source=C_TransmogCollection`. Record a cloth
 or mail drop on a plate character: whether the card says `New look` for a look your class cannot
-collect. Result:
+collect. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Simulator
 
@@ -2524,7 +2524,7 @@ back at its own size and place; click again → compact returns where you left i
 `/dw full` do the same and print `Compact view.` / `Full view.`; Settings → Window → Layout shows the choice
 and switching it there moves the window too. `/reload` → the window opens in the layout it was in, each at
 its own place; Reset position puts both back. An account that had the old compact preset on opens compact
-after the update. Result:
+after the update. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-2. Drops cards (DW-C2).** Turn test mode on (`/dw test`) and switch to the compact layout
 (`/dw compact`) → each drop is a three-line card about 50 pixels tall under a one-line header
@@ -2549,7 +2549,7 @@ with it open → the same row is open there. Settings → Window → Font size 1
 Run `/dw sim start` and step it → the cards fill the same way. On each tab, switch to full and back → the
 same drops under the same headers, in the same order, and the same counts on the tabs (DW-C5). With the
 defaults, `/dw sim start key`, close the window and `/dw sim run` → the next drop opens it compact; stop the
-simulation, close the window and open it → the full layout. Result:
+simulation, close the window and open it → the full layout. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-3. Your own cards, the countdown, Offer and the strip (DW-C3; on Drops since DW-E3).** Turn test
 mode on and switch to the compact layout → on Drops each drop of yours is a three-line card among the
@@ -2566,7 +2566,7 @@ your upgrade; `(Multiple)` until DW-F3) with the full table's tooltip (FEED-43).
 Expand all, since DW-Q2: FEED-78). Click Offer → the Offer panel opens beside the compact window
 at its usual width, on the right; drag the window to the screen's right edge → it moves to the left side;
 make the window short → the panel keeps a usable height. Switch to full → the strip and the table are back
-as before. Run `/dw sim start` and step it → your own drops fill the cards the same way. Result:
+as before. Run `/dw sim start` and step it → your own drops fill the cards the same way. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-4. History cards and their outcomes (DW-C3).** In the compact layout, open History → each
 kept group is a one-line header (`Boss · Dungeon · 2m · 2 · <you>`, `3d` once a day old) and each
@@ -2577,7 +2577,7 @@ verdicts. Right-click a card → Mark as declined; its outcome reads Declined; r
 Clear declined. The strip's button reads `Clear` with the Clear history tooltip, and it still asks
 first. Switch to full → `Clear history` again (left of Sort since DW-J3: FEED-70). (Superseded by feedback-15,
 2026-10-16: it reads `Clear history` at the one footer width in both layouts; FEED-78. Then by DW-Q3: Clear
-history left both strips for Settings; HIST-6.) Result:
+history left both strips for Settings; HIST-6.) Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-5. The compact chrome and the Filters ▾ menu (DW-C4).** Switch to the compact layout →
 the title reads `Drop Watcher`, centered; turn test mode on → `TEST` in red beside it, the two
@@ -2594,7 +2594,7 @@ Sort → the cards reorder, and the count does not change. Click Filters again, 
 switch to full → the panel closes. The footer is one line, `Inspect 4/4 · Mythic+`-style, and its
 tooltip lists the last loot, the situation and Pawn. Switch to full → every control is back on the
 bar and Sort back at the right edge of the tab's strip (in the footer until feedback-10, 2026-10-14; FEED-70),
-each at its place. Result:
+each at its place. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-6. Open in compact view during a run (DW-C0).** With the Layout on Full and Settings →
 Window → Open in compact view during a run on (the default), close the window and start a Mythic+
@@ -2603,18 +2603,18 @@ Layout setting still reads Full. Keep it open past two minutes after the complet
 compact; close it and reopen it (`/dw show`) → it opens full, and a later drop in the same instance
 opens it full too.
 Close it inside a dungeon run, let a drop open it → compact; click the toggle → full at once, and it
-stays the player's choice. Turn the option off → an auto-open in a run keeps the Layout. Result:
+stays the player's choice. Turn the option off → an auto-open in a run keeps the Layout. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-7. Card tooltips at the card's top right (DW-C2).** In the compact layout, hover each piece of a
 card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn levels and Ask)
 and a header → each tooltip rises from the card's top-right corner, just outside the window's right edge (or
-its left edge when the window sits against the right of the screen), never over the cards. Result:
+its left edge when the window sits against the right of the screen), never over the cards. Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-8. Compact headers read from the left and fit the pane (feedback-15).** At the default compact
 width (440), open History and Drops with an LFR encounter's group (or `/dw sim` a raid finder boss) → every
 gold header starts beside its chevron, the difficulty reads `LFR`, and a long instance, boss or recorder name
 ends in `…` on its own piece while the age, the count and the recorder stay on the line; hovering the header
-shows the whole names in the long form (since feedback-17, in the tooltip's rows: FEED-79). Result:
+shows the whole names in the long form (since feedback-17, in the tooltip's rows: FEED-79). Result: passed in the client, 2026-10-23 (the owner).
 
 **COMPACT-9. The compact strips are icons, the toggle chevrons, the empty state bare (feedback-16).** The
 headless `test_footer_row`, `test_drops_strip` and `test_window_group` cover the placement. `/dw compact` with
@@ -2625,7 +2625,7 @@ tradeable → the chevron and the people mark. History's strip → the chevron a
 its full button does. The title bar has no Scan group in either layout. `/dw full` → the labeled
 buttons again, the toggle's mark a chevron there too. With
 no drop at all (`/dw clear`, out of test mode) → `No drops yet` and its line, no button, in both layouts.
-Result:
+Result: passed in the client, 2026-10-23 (the owner).
 
 ## Non-English client
 
@@ -2650,172 +2650,17 @@ expired while the tooltip still shows the sentence is the failure (record the se
 INT_SPELL_DURATION_HOURS, INT_SPELL_DURATION_MIN, TIME_UNIT_DELIMITER`). Last, the track names:
 expand a drop that has an upgrade track → the detail card's track chip shows the client's own
 (localized) track name and rank, never an English name; the track change line may be missing on
-this client (Known Limitations), and its absence is not a failure. Result:
+this client (Known Limitations), and its absence is not a failure. Result: passed in the client, 2026-10-23 (the owner).
 
 **LOC-2. The enUS catalog reads the same (DW-P19).** On an enUS client: open the window on both tabs,
 expand a drop's detail card, open the Offer panel, every settings page and tab, `/dw help`,
 `/dw diagnostics` and the minimap tooltip → every string reads as it did before DW-P19 (the catalog
 now carries every routed string, so a typo in a key would show as different text). No raw key, no
-stray `%s` or `%d`, and no Lua error. Result:
+stray `%s` or `%d`, and no Lua error. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Pending sign-off
 
-| ID | Origin | Why it is owed |
-|---|---|---|
-| INSTALL-1..3, SLASH-1..3, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-3, DIAG-1..2, DEGRADED-1 | DW-02, the scaffold | No client pass recorded yet |
-| QUAL-1..4 | DW-12, the minimum-quality gate | No client pass recorded yet |
-| SIT-1..5 | DW-13, the situation classifier | No client pass recorded yet |
-| TRADE-1..4 | DW-14, the trade estimator (TRADE-3 is the raid rule, TRADE-4 equipped vs owned) | No client pass recorded yet |
-| FEED-7 | DW-10 / DW-11, the class data and the verdict kernel | No client pass recorded yet |
-| COMPAT-1..3 | DW-20, the compat seam | No client pass recorded yet |
-| DIAG-3 | DW-43, the State and Scoring diagnostics sections | No client pass recorded yet |
-| COMBAT-2 | DW-21, the restriction tracker | No client pass recorded yet |
-| ROSTER-1..2 | DW-22, the roster | No client pass recorded yet |
-| ITEM-1..2 | DW-23, the item facts | No client pass recorded yet |
-| GEAR-1..2 | DW-24, the gear snapshot | No client pass recorded yet |
-| FEED-1, COMBAT-1, LOC-1 | DW-25, the loot parser (LOC-1 re-armed: its sign-off without the client no longer holds) | No client pass recorded yet |
-| INSPECT-1..4 | DW-26, the inspect broker | No client pass recorded yet |
-| FEED-2..6 | DW-27, the feed | No client pass recorded yet |
-| TRADE-5 | DW-28, the trade timer | No client pass recorded yet |
-| TRADE-6 | DW-29, the trade helper | No client pass recorded yet |
-| ASK-1..4 | DW-2A, the messaging edge | No client pass recorded yet |
-| STATE-3, FEED-8..9 | DW-30 / DW-34, the window shell and test mode | No client pass recorded yet |
-| FEED-10..12 | DW-31, the Group drops table (Drops since DW-E3) | No client pass recorded yet |
-| FEED-13..15 | DW-32, the detail card | No client pass recorded yet |
-| FEED-16 | DW-81, the header matched to Loot History | No client pass recorded yet |
-| FEED-17 | DW-82, the filter bar matched to Loot History | No client pass recorded yet |
-| FEED-18 | DW-83, My eq, Their eq, the two new filters, auto-open on every drop | No client pass recorded yet |
-| FEED-19 | DW-A0, the two-Yoke regression, every hidden or refused drop counted by reason, `n drops · m shown` | No client pass recorded yet |
-| FEED-20 | DW-A1, View: All by default, the multi-select View, its tooltip and the migration | No client pass recorded yet |
-| FEED-21 | DW-A2, item tooltips beside the window, right or else left, on every tab | No client pass recorded yet |
-| FEED-22 | DW-A3, the party kept with every group, on the header tooltip's `Group:` line (DW-B4), and in History | No client pass recorded yet |
-| FEED-23 | DW-A4, the Character dropdown on every tab, History filtered by who saw each drop | No client pass recorded yet |
-| FEED-24 | DW-A8, the tables' font and row height like Loot History's, on both tabs (the Trade window's taller rows since DW-E1) | No client pass recorded yet |
-| FEED-25 | DW-A9, your own drops under the group headers (on Drops since DW-E3), the tooltip beside the docked Offer panel | No client pass recorded yet |
-| FEED-26 | DW-B2, every row tooltip at the row's top right (else top left), both tabs and the Offer panel | No client pass recorded yet |
-| FEED-27 | DW-B1, the filter bar's tooltips above their controls, top right (else top left) | No client pass recorded yet |
-| FEED-28 | DW-B4, group headers: the instance, the boss, the difficulty name and only your character, on Drops and History | No client pass recorded yet |
-| FEED-29 | DW-B5, filter-bar tooltips below their controls near the top of the screen (the tab counts retired by DW-E3) | No client pass recorded yet |
-| FEED-30 | DW-B4, a delve's header, and whether the client names its tier | No client pass recorded yet |
-| FEED-31 | DW-D0, one tone per verdict in Me and Them, the arrow before the number, full and compact and the detail card | No client pass recorded yet |
-| FEED-32 | DW-D1, action buttons red, yellow or green by whose move it is: Ask, your own drop's Offer, the Offer panel, both layouts | No client pass recorded yet |
-| FEED-33 | DW-D2, no ×, Hide or Hide this item anywhere; a dead drop of yours stays listed | No client pass recorded yet |
-| FEED-34 | DW-D3, the Type column's values on Drops, History, the compact cards and the detail card's chip | No client pass recorded yet |
-| FEED-35 | DW-D4, gold column labels on both full tables | No client pass recorded yet |
-| FEED-36 | DW-D4, the search box 8px after Character to the bar's right edge, tracking a resize live | No client pass recorded yet |
-| FEED-37 | DW-D4, the window never narrower than its default, full 1038 (since DW-F1) and compact 440; a stored narrower width raised | No client pass recorded yet |
-| FEED-38 | DW-E0, the group header's chevron gold, on both tabs and in both layouts | No client pass recorded yet |
-| FEED-39 | DW-E0, each drop row's muted-white chevron (down, up while open), the rows and cards indented under their header, History's not | No client pass recorded yet |
-| FEED-40 | DW-E0, the 84-pixel Actions column: every Ask and Offer state's icon and word fit | No client pass recorded yet |
-| FEED-41 | DW-E1, the Trade window column on every drop, another player's an estimate, ticking each second, ending soon in tone only | No client pass recorded yet |
-| FEED-42 | DW-E2, your own drop always listed, its Trade counting the members it upgrades | No client pass recorded yet |
-| FEED-43 | DW-E2, Them reads `(Details)` (since DW-F3) with each upgrade in the tooltip; the keep? rule's `Hidden` | No client pass recorded yet |
-| FEED-44 | DW-E2, Offer on your own drop opening the Offer panel, its tones, no Announce in the table | No client pass recorded yet |
-| FEED-45 | DW-E3, the strip under Drops (full and compact) and Post my tradeables | No client pass recorded yet |
-| FEED-46 | DW-E3, two tabs, Drops and History; a stored My drops tab and `/dw mine` open Drops | No client pass recorded yet |
-| FEED-47 | DW-E4, the least width (full 1132 then, 1038 since DW-F1; compact 440) and the compact card's line 2 with its countdown | No client pass recorded yet |
-| FEED-48 | DW-F0, the Trade window column 76 pixels: every answer fits, `Their upgrade` and `No limit (BoE)` included, no empty margin | No client pass recorded yet |
-| FEED-49 | DW-F1, My eq merged into Me and Their eq into Them (`321/308 ▼8`), History's verdict alone, compact line 3 without icons | No client pass recorded yet |
-| FEED-50 | DW-F1, the My eq and Their eq toggles retired (schema step 7); Me and Them toggle the merged cells | No client pass recorded yet |
-| FEED-51 | DW-F2, Offer cyan while it is your move on the row, the card, the detail card and the Offer panel; Ask and Retry red | No client pass recorded yet |
-| FEED-52 | DW-F3, the (Details) tooltip: one non-wrapping line per member, class-colored name, item in its quality color, arrow texture | No client pass recorded yet |
-| FEED-53 | DW-F3, no glyph boxes in any tooltip: column tips and verdict marks drawn as textures | No client pass recorded yet |
-| FEED-54 | DW-F1, the least width 1038: nothing shed or cut on Drops or History, Me and Them whole | No client pass recorded yet |
-| FEED-55 | DW-F5, no glyph boxes outside tooltips: the toast's mark, the detail card's chips, Item level and Track rows, the Offer panel's arrows as textures | No client pass recorded yet |
-| FEED-56 | DW-G0, the Offer panel's Their eq column in the Them look (Member, Their eq, Actions); no Trade button | No client pass recorded yet |
-| FEED-57 | DW-G0, the Offer panel's rows: no class bar, every second row the main window's faint stripe | No client pass recorded yet |
-| FEED-58 | DW-G1, an icon on every action button (Ask `chat`, Offer `export`, `external-link` since DW-J1: FEED-68), every view; icon and word fit | No client pass recorded yet |
-| FEED-59 | DW-G2, Trade `No` in the palette's red on Drops, History, the compact card and the detail card | No client pass recorded yet |
-| FEED-60 | DW-G2, your own drop's looter `Name [YOU]`, the mark gold and never cut, every looter text | No client pass recorded yet |
-| FEED-61 | DW-G2, `Upgrade for N` / `No upgrades` / `Hidden`; Trade's `Yes` without its count, the count in the tooltip | No client pass recorded yet |
-| FEED-62 | DW-G3, columnar gear tooltips: aligned columns, the table's glyph, glyph and number toned; no leftover grid | No client pass recorded yet |
-| FEED-63 | DW-G4, Post my tradeables at Sort's size directly above it, Scan group beside it or in its slot; compact's icon kept (superseded by DW-J3: FEED-70) | No client pass recorded yet |
-| FEED-64 | DW-G4, the empty state's Preview with test data and Scan group centered as a pair, both layouts (superseded by feedback-16: the empty state has no button, COMPACT-9) | No client pass recorded yet |
-| FEED-65 | DW-H0, Situations as one table: renders, toggles, disables, Defaults and a profile switch repaint it | No client pass recorded yet |
-| FEED-66 | DW-I0, the toast's four rows beside a four-row icon: quality and class colors, You/Them verdict marks, the trade reason, the 56-pixel icon, right-click closes | No client pass recorded yet |
-| FEED-67 | DW-J0, the filled downgrade glyph `▼` in the tables, compact cards, toast, tooltip grids and the Offer panel | No client pass recorded yet |
-| FEED-68 | DW-J1, Offer wears `external-link` on the row, the compact card, the detail card and the Offer panel | No client pass recorded yet |
-| FEED-69 | DW-J2, compact cards: ilvl before the name, `(freshness)` after it or nothing, the button right on line 2 or an empty slot (`No action` since DW-K1: FEED-72; no `(…)` since DW-K0: FEED-71), no countdown or bar, gold You/Them close together; History's cards too | No client pass recorded yet |
-| FEED-70 | DW-J3, Sort on the Drops strip right of Scan group and Post, on History's right of Clear history (Clear history moved to Settings by feedback-15, DW-Q3), following tab and layout switches; no Sort in the footer | No client pass recorded yet |
-| FEED-71 | DW-K0, compact cards: no `(…)` after the name while Them reads `…`, the other freshness marks still bracketed; Them cut at the card's right inset, line 1's name the full width | No client pass recorded yet |
-| FEED-72 | DW-K1, the gray `⊘ No action` button wherever a drop has no action: Drops rows, compact cards, the detail card's first action, Offer panel rows; not clickable, its tooltip `No action` and the reason; fits 84px and the Offer panel's 80px | No client pass recorded yet |
-| FEED-73 | DW-L0, History's outcomes in the action buttons' colors, the table and the compact cards | No client pass recorded yet |
-| FEED-74 | DW-L1, no `0 shown` header where Character or Content left a group empty, the table and the compact cards | No client pass recorded yet |
-| FEED-75 | DW-M0, each tab's default filters: Drops This session and Current, History All throughout | No client pass recorded yet |
-| FEED-76 | DW-N0, no Lua error from a gear tooltip in combat (a secret width) | No client pass recorded yet |
-| FEED-77 | DW-Q1, Content per tab: Drops This instance and This session, History adds All; the tooltip; step 8 | No client pass recorded yet |
-| FEED-78 | DW-Q2, one footer button kind; Expand all / Collapse all on both tabs and layouts; the compact Drops strip always shown | No client pass recorded yet |
-| STATE-4 | DW-84, test mode with real items, History test data, no trailing ellipsis | No client pass recorded yet |
-| ASK-5..7 | DW-33, your own drops (the My drops tab until DW-E3), the Offer panel and Post my tradeables | No client pass recorded yet |
-| SLASH-4..6 | DW-42, the feature slash verbs | No client pass recorded yet |
-| PROFILE-3 | DW-40, the settings rows, defaults and step 2 | No client pass recorded yet |
-| PANEL-4..6 | DW-41, the settings pages | No client pass recorded yet |
-| PANEL-7 | DW-40 / DW-41 review, the rows that act | No client pass recorded yet |
-| SCORE-1..2 | DW-50, the scorers | No client pass recorded yet |
-| SCORE-3 | DW-62, Pawn counts once it is initialized | No client pass recorded yet |
-| HIST-1..2 | DW-51, the history and the History tab | No client pass recorded yet |
-| HIST-3 | DW-A5, Keep history for, its confirmation, the login prune and step 4 | No client pass recorded yet |
-| HIST-4 | DW-A9, the prune after a disabled start, a stale confirmation | No client pass recorded yet |
-| HIST-2, HIST-5 | DW-Q0, the session is the login: the Drops tab across a reload, the undone Expired, This instance across a reload | No client pass recorded yet |
-| HIST-6 | DW-Q3, Clear history beside Keep history for (Settings › Drops › Retention since feedback-24); none on History's strips | No client pass recorded yet |
-| HIST-7 | DW-Q4, the History tab's detail card from the snapshot, both layouts; Link in chat, Mark / Clear declined, Show in Drops | No client pass recorded yet |
-| TOAST-1 | DW-52, the upgrade toast | No client pass recorded yet |
-| TOAST-2 | DW-62, the toast leaves with its drop and its switch | No client pass recorded yet |
-| TOAST-3 | DW-62, an empty-slot upgrade toasts and auto-asks | No client pass recorded yet |
-| TMOG-1 | DW-53, the transmog-known flag and the For transmog ask | No client pass recorded yet |
-| ASK-8 | DW-54, auto-ask | No client pass recorded yet |
-| ASK-9 | DW-62, auto-ask after leaving an encounter | No client pass recorded yet |
-| COMPACT-1, COMPACT-6 | DW-C0, compact mode's switch and the run override | No client pass recorded yet |
-| COMPACT-2, COMPACT-7 | DW-C2, compact Drops cards, the stacked detail card and the card tooltips; DW-C5, the same drops in both layouts and a simulated key's compact auto-open | No client pass recorded yet |
-| COMPACT-8 | feedback-15, compact headers left aligned, LFR, per-piece limits | No client pass recorded yet |
-| COMPACT-9 | feedback-16, compact strip buttons icon only with Scan group, chevron toggle, empty state without buttons | No client pass recorded yet |
-| COMPACT-3, COMPACT-4 | DW-C3, compact cards of your own drops (on Drops since DW-E3) and History cards, the countdown, Offer and the strip, the docked Offer panel | No client pass recorded yet |
-| COMPACT-5 | DW-C4, compact chrome: the title, badge, Scan group, short tabs, one-row filter bar and its Filters panel, strip and footer | No client pass recorded yet |
-| ASK-1 (its `noChannel` sentence), ASK-10 | DW-P17, a stored announce channel honors the not-in-a-group refusal, Post my tradeables included | No client pass recorded yet |
-| STATE-5, DIAG-2 (its perf-hold sentence) | DW-P16, `NS.StoodDownRefusal()` for every stood-down refusal | No client pass recorded yet |
-| ROSTER-3 | DW-P18, the shared event dispatcher isolates each handler | No client pass recorded yet |
-| LOC-2 | DW-P19, the completed enUS catalog | No client pass recorded yet |
-| COMPAT-4 | DW-P20, the optional-addon probe through Compat | No client pass recorded yet |
-| PANEL-8, DEGRADED-2, TOAST-4 | DW-P21, the situation table's OnRelease park; the toast's close degrading to nothing | No client pass recorded yet |
-| INSTALL-4 | DW-P22, the LibKa0s v1.72.0 re-vendor | DW-P22 has landed (`ff567d3`); no client pass recorded yet |
-| DIAG-4 | DW-P24, `evaluate` and `quality.gate` within `feed.add` (review C-04, X05) | DW-P22 (`ff567d3`) and DW-P24 (`917449f`) have landed; owed the owner's capture recorded under `docs/perf-analysis/`; none is invented |
-| SLASH-7 | Review 2026-10-14, the cross-addon census's in-client half | No client pass recorded yet |
-| ITEM-5 | The Fireproof Drape fix: every primary stat read off the tooltip, the spec list held to its own class | No client pass recorded yet |
-| FEED-80 | DW-O1 / DW-O4, an off-spec upgrade cyan with the spec's name, its detail card's chip and Spec row | No client pass recorded yet |
-| FEED-81 | DW-O3 / DW-O4, an off-spec groupmate below main-spec upgrades in the Offer panel | No client pass recorded yet |
-| ASK-11 | DW-O2, Ask on an off-spec drop sends the off-spec whisper | No client pass recorded yet |
-| FEED-82 | feedback-20, the compact card's `Trade <word>` on line 3, gold label, cut at the right edge at 440; no ⊕ after a cross-realm looter | No client pass recorded yet |
-| FEED-83 | feedback-20, the gray `No action`'s tooltip on hover while disabled: row, compact card, detail card | No client pass recorded yet |
-| FEED-86 | feedback-20, a bonus roll minutes after the key, still in the dungeon, joins its group; after leaving, a new group | No client pass recorded yet |
-| FEED-85 | feedback-20, a drop opens a closed window on Drops, an open one keeps its tab (its Trade's muted green beside Can't use superseded by feedback-21: FEED-88) | No client pass recorded yet |
-| FEED-84 | feedback-20, your own upgrade's trade reason `Your upgrade` (not `Window passed`); no Looter row on your own detail card, a row per groupmate it upgrades instead | No client pass recorded yet |
-| TOAST-5 | DW-O2, the off-spec toast's title; auto-ask sends main spec first | No client pass recorded yet |
-| FEED-87 | feedback-21, Can't use in dim red on every surface, Not wanted still gray | No client pass recorded yet |
-| FEED-88 | feedback-21, Trade's `Can't use` on a drop none of your specs can use; Yes or Likely kept beside an off-spec use | No client pass recorded yet |
-| FEED-89 | feedback-21, every tooltip as bulleted rows, one per fact | No client pass recorded yet |
-| GLOW-1..2 | feedback-21, the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (G9); the off-spec glow | No client pass recorded yet |
-| GLOW-3..6 | feedback-21, each glow style and its knobs: Button, Proc, Pixel border, Auto cast | No client pass recorded yet |
-| GLOW-7..8 | feedback-21, each glow turned off; a style's knobs dimmed for another style | No client pass recorded yet |
-| GLOW-9 | feedback-21, Use class color below each glow color (H6): the player's class, the swatch's alpha, never dimmed | No client pass recorded yet |
-| GLOW-10 | feedback-21 H6, the glow defaults (both pixel, `#FFF468` and `#3FC7EB`, frequency 0.1) and every row main left, off-spec right | No client pass recorded yet |
-| TOAST-6 | feedback-21 G10, the toast's Scale: 50 to 200 %, live on a toast on screen, about its saved anchor | No client pass recorded yet |
-| ICON-1..2 | feedback-21 G11, the default look (H6: zoom 0.1, a Solid black border 2 pixels thick), Window › Icons' rows, Icon zoom live on every surface | No client pass recorded yet |
-| ICON-3..4 | feedback-21 G11, the border block, its Use class color and the glow over it; Color by item quality | No client pass recorded yet |
-| ICON-5 | feedback-21 H6, Solid in the Border style list; a profile's stored Icons values kept | No client pass recorded yet |
-| SCORE-4, COMPAT-3 | feedback-21 H1, Pawn out of the box: `PawnIsReady()`, its scale asked by spec index | No client pass recorded yet |
-| INSPECT-5 | feedback-21 H2, a looter who left the group keeps the read the drop was judged with: Spec named, `Looter: not in your group`; never `spec unknown`; kept through a later re-judge (R4) | No client pass recorded yet |
-| FEED-90 | feedback-21 H3, a gear grid right under the title, the rows' labels muted gold, each worn item of a dual slot its own arrow | No client pass recorded yet |
-| FEED-91 | feedback-21 H5, the detail card: the table's glyphs on its chips and rows, `FOR YOU` / `FOR LOOTER (NAME)` in muted gold and class color, the Stats row's colors, Replaces `292 [icon] name` in quality color | No client pass recorded yet |
-| SCORE-5 | feedback-21 R4, the scale you show in Pawn (a custom one, the starter hidden) is the one scored and named | No client pass recorded yet |
-| ASK-12 | feedback-21 H4, the Offer button toggles the Offer panel: the same drop's Offer closes it, another's switches it | No client pass recorded yet |
-| FEED-92 | feedback-21 H7, a mark per worn item on a two-item slot: the Me and Them cells, compact line 3, the Offer panel, the toast (wider only when needed), the detail card's Item level | No client pass recorded yet |
-| FEED-93 | feedback-21 R5, one mark for a one-hander without dual wield, a two-hander against both hands, a bag baseline, and two marks too wide at a larger Font size | No client pass recorded yet |
-| FEED-94 | feedback-22, a ring slot always reads both rings, a unique-equipped copy too, `315 ▲3 / 295 ▲23`, on every surface | No client pass recorded yet |
-| FEED-95 | feedback-22, Trade as Yes, No or ? with a short reason in the muted gray; compact line 4, the taller card and icon; the wider Trade column | No client pass recorded yet |
-| FEED-96 | feedback-22, the glow only on an upgrade whose Trade reads Yes | No client pass recorded yet |
-| FEED-97 | feedback-22, the trade box above FOR YOU and FOR LOOTER on the detail card, full and stacked | No client pass recorded yet |
-| FEED-98 | feedback-23, the compact button on lines 2 and 3, Them on line 4 when it does not fit beside You, 400 x 560 | No client pass recorded yet |
-| FEED-99 | feedback-24, the settings pages regrouped: Situations, Drops, Window's Starting view, Alerts; the pairings and labels | No client pass recorded yet |
+None. On 2026-10-23 the owner reported every check in this file passed in the client, and each one's `Result:` line records it.
 
 ### Review 2026-10-14 (M24) sign-off
 
@@ -2826,15 +2671,15 @@ documentation spill) change no code the client runs, and have no in-client check
 
 | Review ID | Check here | Tested? | Pass/Fail | Notes |
 |---|---|---|---|---|
-| C-01 | STATE-5 (its combat and zone half) | | | |
-| C-02 (ANN-1, ANN-1b) | ASK-10, ASK-1 | | | |
-| C-03 | ROSTER-3 | | | |
-| C-04 | DIAG-4 | | | DW-P22 and DW-P24 landed; owed the owner's capture |
-| C-05 | LOC-2 | | | |
-| C-06 | COMPAT-4 | | | |
-| C-07 | none | n/a | | Comment only |
-| C-08 | STATE-5, DIAG-2 | | | |
-| U-1/U-2 re-vendor | INSTALL-4 | | | DW-P22 landed (`ff567d3`); owed the owner's client pass |
-| DW-P21 (F11, F12) | PANEL-8, DEGRADED-2, TOAST-4 | | | |
-| Regression | INSTALL-1..3, PROFILE-1, STATE-1, STATE-3, PANEL-3, SIM-1 | | | |
-| Cross-addon | SLASH-7 | | | |
+| C-01 | STATE-5 (its combat and zone half) | yes | pass (owner, 2026-10-23) | |
+| C-02 (ANN-1, ANN-1b) | ASK-10, ASK-1 | yes | pass (owner, 2026-10-23) | |
+| C-03 | ROSTER-3 | yes | pass (owner, 2026-10-23) | |
+| C-04 | DIAG-4 | yes | pass (owner, 2026-10-23) | DW-P22 and DW-P24 landed; owed the owner's capture |
+| C-05 | LOC-2 | yes | pass (owner, 2026-10-23) | |
+| C-06 | COMPAT-4 | yes | pass (owner, 2026-10-23) | |
+| C-07 | none | n/a | n/a | Comment only |
+| C-08 | STATE-5, DIAG-2 | yes | pass (owner, 2026-10-23) | |
+| U-1/U-2 re-vendor | INSTALL-4 | yes | pass (owner, 2026-10-23) | DW-P22 landed (`ff567d3`); owed the owner's client pass |
+| DW-P21 (F11, F12) | PANEL-8, DEGRADED-2, TOAST-4 | yes | pass (owner, 2026-10-23) | |
+| Regression | INSTALL-1..3, PROFILE-1, STATE-1, STATE-3, PANEL-3, SIM-1 | yes | pass (owner, 2026-10-23) | |
+| Cross-addon | SLASH-7 | yes | pass (owner, 2026-10-23) | |
