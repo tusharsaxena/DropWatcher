@@ -15,6 +15,12 @@ local _, NS = ...
 -- REJECTED, before any receipt is tried: the item-upgrade echo (CHANGED_OWN_ITEM, "Changed %s to
 -- %s.") and the crafting echoes (LOOT_ITEM_CREATED_SELF*, CREATED_ITEM*). Neither is a drop.
 --
+-- A SPELLING SHARED WITH LOOT IS LOOT. A rewrite can spell another shape exactly as a loot one
+-- (PrettyChat's defaults write LOOT_ITEM_PUSHED* as LOOT_ITEM*), and no line can then say which it
+-- is. Tried in the order above, every loot line would read as pushed and your own drops would be
+-- refused. So a pushed, bonus or rejected shape whose pattern is identical to a loot shape's is
+-- left out of the set, and the line reads as loot.
+--
 -- REBUILT WHEN THE GLOBALS CHANGE. Another addon may rewrite these globals at runtime (PrettyChat
 -- does, on every settings write and combat boundary). The compiled set keeps the exact strings it
 -- came from, and every parse compares the live globals against them with rawequal, building no
@@ -106,18 +112,31 @@ local compiled, sources
 --- exported for the tests and the diagnostics.
 --- @return table the compiled entries, in match order
 function LP.Rebuild()
-    local out, src = {}, {}
+    local all, src, lootPatterns = {}, {}, {}
     for i, s in ipairs(LP.SHAPES) do
         local raw = NS.Compat.GlobalString(s.global)
         src[i] = raw
         local fmt = usable(raw)
         if fmt then
-            out[#out + 1] = { pattern = "^" .. NS.Compat.FormatToPattern(fmt) .. "$", shape = s,
+            local e = { pattern = "^" .. NS.Compat.FormatToPattern(fmt) .. "$", shape = s,
                 slots = captureSlots(fmt, s.args) }
+            all[#all + 1] = e
+            if s.kind == "loot" then lootPatterns[e.pattern] = true end
+        end
+    end
+    local out, shadowed = {}, {}
+    for _, e in ipairs(all) do
+        if e.shape.kind ~= "loot" and lootPatterns[e.pattern] then
+            shadowed[#shadowed + 1] = e.shape.global
+        else
+            out[#out + 1] = e
         end
     end
     compiled, sources = out, src
     NS.Debug(TAG, "loot patterns built: %d of %d globals", #out, #LP.SHAPES)
+    if #shadowed > 0 then
+        NS.Debug(TAG, "spelled as loot, read as loot: %s", table.concat(shadowed, ", "))
+    end
     return out
 end
 
