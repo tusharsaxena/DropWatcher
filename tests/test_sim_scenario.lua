@@ -246,7 +246,7 @@ test("sim start: the scenario's pool, group and situation, and the window open",
     slash(NS, "sim start raid")
     assertEqual(printed(m, "A simulation is already running."), 1)
     slash(NS, "sim status")
-    assertTrue(printed(m, "Simulation: dungeon, seed ") == 1 and printed(m, ", step 0 of 15, waiting for a step.") == 1,
+    assertTrue(printed(m, "Simulation: dungeon, seed ") == 1 and printed(m, ", step 0 of 15, playing.") == 1,
         "the library's status line")
     assertEqual(printed(m, "Simulated Dungeon: 4 members, 0 sends printed."), 1, "then DropWatcher's")
 end)
@@ -267,6 +267,7 @@ test("sim step: the timeline waits for the pool, then plays one step at a time",
     local shown = true   -- the journal's frame is open: the pool waits
     m.EncounterJournal = { IsShown = function() return shown end }
     slash(NS, "sim start dungeon")
+    slash(NS, "sim pause")   -- DW-RV: LibKa0s v1.76.0 plays a typed start at once; paused here so the case keeps its subject (DW-01 re-trues it)
     slash(NS, "sim step")
     assertEqual(printed(m, "still setting up its items"), 1)
     shown = false
@@ -336,6 +337,7 @@ end)
 test("sim run: plays every step a few seconds apart, each with its line, then says it has finished", function()
     local NS, m = addon()
     slash(NS, "sim start world")
+    slash(NS, "sim pause")   -- DW-RV: LibKa0s v1.76.0 plays a typed start at once; paused here so the case keeps its subject (DW-01 re-trues it)
     slash(NS, "sim run")
     assertEqual(NS.SimScenario.Status().pos, 1, "the first step at once")
     assertEqual(printed(m, "Simulation step 1 of 5: Pull: Warden Ashvane."), 1)
@@ -377,6 +379,7 @@ end)
 test("sim step delay: an untouched setting runs the steps one second apart", function()
     local NS, m = addon()
     slash(NS, "sim start world")
+    slash(NS, "sim pause")   -- DW-RV: LibKa0s v1.76.0 plays a typed start at once; paused here so the case keeps its subject (DW-01 re-trues it)
     slash(NS, "sim run")
     assertEqual(NS.SimScenario.Status().pos, 1, "the first step at once")
     m.advance(0.5)
@@ -410,6 +413,7 @@ test("sim step delay: a run waits the set delay, and a change takes effect from 
     local NS, m = addon()
     slash(NS, "set sim.stepDelay 5")
     slash(NS, "sim start world")
+    slash(NS, "sim pause")   -- DW-RV: LibKa0s v1.76.0 plays a typed start at once; paused here so the case keeps its subject (DW-01 re-trues it)
     slash(NS, "sim run")
     assertEqual(NS.SimScenario.Status().pos, 1)
     m.advance(4.5)
@@ -533,6 +537,7 @@ test("sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and
     slash(NS, "set sim.stepDelay 2")
     slash(NS, "sim start key")
     assertEqual(NS.Situations.Current(), "mythicPlus")
+    slash(NS, "sim pause")   -- DW-RV: LibKa0s v1.76.0 plays a typed start at once; paused here so the case keeps its subject (DW-01 re-trues it)
     slash(NS, "sim run")
     assertTrue(NS.Compat.ChallengeModeActive(), "the run started")
     playUntil(NS, m, "lockdownOff")
