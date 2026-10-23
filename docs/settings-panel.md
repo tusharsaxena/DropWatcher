@@ -65,7 +65,7 @@ Watcher → Toggle Drop Watcher window, with no default key, on the same handler
 
 One slider (the tab was `Simulation` until feedback-24), `Simulation step delay` (`sim.stepDelay`, feedback-2 spec §8, DW-A7): the seconds the
 simulator's automatic run (`/dw sim run`, the simulation panel's Run all) waits between steps, 0.5
-to 10 in steps of 0.5, 2 by default. `/dw set sim.stepDelay <n>` reaches it too (the slash parser
+to 10 in steps of 0.5, 1 by default (2 until the owner's 2026-10-23 simulator feedback). `/dw set sim.stepDelay <n>` reaches it too (the slash parser
 clamps a number outside the range to it). A change takes effect from the next step of a running
 timeline.
 

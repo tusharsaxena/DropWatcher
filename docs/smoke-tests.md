@@ -2450,8 +2450,9 @@ Result:
 
 **SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** The headless `test_sim_scenario`
 (`sim step delay`) covers the same ground. Settings › General › Simulator →
-`Simulation step delay` reads 2 and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`,
-Run all → the steps come about two seconds apart. Set the slider to 6 while it plays → the step
+`Simulation step delay` reads 1 on a profile that never set it (the default since the owner's
+2026-10-23 simulator feedback; 2 before) and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`,
+Run all → the steps come about one second apart. Set the slider to 6 while it plays → the step
 already waiting keeps its time, and the next ones come about six seconds apart. `/dw set
 sim.stepDelay 1.5` → the steps speed up from the next one, and `/dw get sim.stepDelay` reads 1.5.
 (Since DW-04 Run all's tooltip is the library's and names only its typed command.) Result:
@@ -2488,8 +2489,8 @@ and `test_sim_scenario` cover DropWatcher's part; the session and the timeline a
   (in a group, inside an instance, in combat, with test mode on, a second start) prints its line as
   before; join a group → `Simulation stopped: you joined a group.`; `/dw disable` → `Simulation
   stopped: the addon was disabled.`; after a `/reload` no simulation runs.
-- SM-DW-5: `/dw sim start key`, then `/dw sim run` → the steps play about 2 seconds apart (the
-  `sim.stepDelay` setting still applies); `/dw sim pause` and `/dw sim resume` hold and continue it.
+- SM-DW-5: `/dw sim start key`, then `/dw sim run` → the steps play about 1 second apart (the
+  `sim.stepDelay` setting still applies; its default is 1 since 2026-10-23); `/dw sim pause` and `/dw sim resume` hold and continue it.
   `/dw sim restart` → chat prints `Simulation stopped to restart.`, the library's stop line for a
   restart (accepted change, OWNER_SCOPE C.7), and the same scenario starts again.
 
@@ -2774,7 +2775,7 @@ stray `%s` or `%d`, and no Lua error. Result:
 | SIM-8 | DW-70 review, real loot during a simulation kept and saved | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
 | SIM-9 | DW-90, a sim run fills the window under the default filters | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
 | SIM-10 | DW-91, the simulation step panel | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
-| SIM-11 | DW-A7, the simulation step delay setting | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
+| SIM-11 | DW-A7, the simulation step delay setting; its one-second default (owner feedback 2026-10-23) | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) and the one-second default |
 | SIM-12 | DW-B0, the loot step says where its drops went; the window reconciles | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
 | SIM-13 | DW-B5, the loot step honors test mode's feed (`feed.showOwn` and My drops' filters retired since DW-E2/DW-E3) | No client pass recorded yet; owed again after DW-02..DW-04 (Sim-1.0) |
 | SIM-14 | DW-02, the session on LibKa0s-Sim-1.0 and its Restart stop line (SM-DW-4, SM-DW-5) | No client pass recorded yet |

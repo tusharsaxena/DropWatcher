@@ -358,18 +358,32 @@ end)
 
 -- ── the step delay (feedback-2 spec §8, FB2-8) ──────────────────────────────────────────────
 
-test("sim step delay: two seconds by default, read from `sim.stepDelay`; a bad value falls back", function()
+-- The owner's simulator feedback (2026-10-23) moved the default from two seconds to one.
+test("sim step delay: one second by default, read from `sim.stepDelay`; a bad value falls back", function()
     local NS = addon()
     local SC = NS.SimScenario
-    assertEqual(SC.STEP_DELAY, 2)
+    -- red under: defaults/Profile.lua's `sim.stepDelay = 2`, the default before the 2026-10-23 feedback
+    assertEqual(SC.STEP_DELAY, 1)
     assertEqual(NS.C.PROFILE.sim.stepDelay, SC.STEP_DELAY, "the default is the profile's")
-    assertEqual(SC.StepDelay(), 2)
+    assertEqual(SC.StepDelay(), 1)
     NS.addon.db.profile.sim.stepDelay = 4.5
     assertEqual(SC.StepDelay(), 4.5)
     NS.addon.db.profile.sim.stepDelay = 0.2
-    assertEqual(SC.StepDelay(), 2, "out of range: the default")
+    assertEqual(SC.StepDelay(), 1, "out of range: the default")
     NS.addon.db.profile.sim.stepDelay = "fast"
-    assertEqual(SC.StepDelay(), 2, "not a number: the default")
+    assertEqual(SC.StepDelay(), 1, "not a number: the default")
+end)
+
+test("sim step delay: an untouched setting runs the steps one second apart", function()
+    local NS, m = addon()
+    slash(NS, "sim start world")
+    slash(NS, "sim run")
+    assertEqual(NS.SimScenario.Status().pos, 1, "the first step at once")
+    m.advance(0.5)
+    assertEqual(NS.SimScenario.Status().pos, 1, "half a second: not yet")
+    -- red under: the two-second default, which leaves the run on step 1 here
+    m.advance(0.5)
+    assertEqual(NS.SimScenario.Status().pos, 2, "one second: the next step")
 end)
 
 test("sim step delay: ValidStepDelay takes 0.5 to 10 in steps of 0.5", function()
@@ -399,7 +413,7 @@ test("sim step delay: a run waits the set delay, and a change takes effect from 
     slash(NS, "sim run")
     assertEqual(NS.SimScenario.Status().pos, 1)
     m.advance(4.5)
-    assertEqual(NS.SimScenario.Status().pos, 1, "five seconds, not the default two")
+    assertEqual(NS.SimScenario.Status().pos, 1, "five seconds, not the default one")
     slash(NS, "set sim.stepDelay 1")
     m.advance(0.5)
     assertEqual(NS.SimScenario.Status().pos, 2, "the step already set keeps its five seconds")
@@ -513,6 +527,10 @@ end
 test("sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade", function()
     local NS, m = addon()
     local hits = NS.LootParser.Stats().hits
+    -- The run's pace is pinned, not the default: the loot lines and the ask below take a second
+    -- between the loot step and the lockdown lifting, which a one-second default (2026-10-23) would
+    -- leave no room for.
+    slash(NS, "set sim.stepDelay 2")
     slash(NS, "sim start key")
     assertEqual(NS.Situations.Current(), "mythicPlus")
     slash(NS, "sim run")
