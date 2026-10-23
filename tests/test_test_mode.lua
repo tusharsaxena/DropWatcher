@@ -635,7 +635,7 @@ end
 test("window: test mode draws every sample, under the two key runs and the five bosses, with real icons", function()
     local NS, drawn = shownTest()
     local f = NS.Window.Frame()
-    assertTrue(f.banner:IsShown()); assertTrue(f.testText:IsShown())
+    assertTrue(f.banner:IsShown()); assertFalse(f.testText:IsShown(), "the strip is the marker (DW-10)")
     assertEqual(textOf(f.testText.text), "TEST MODE")
     assertTrue(textOf(f.banner.text):find("Nothing is whispered") ~= nil)
     assertTrue(textOf(f.banner.text):find("real items", 1, true) ~= nil)

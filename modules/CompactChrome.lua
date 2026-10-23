@@ -1,10 +1,11 @@
 local _, NS = ...
 -- modules/CompactChrome.lua — the window's chrome in the compact layout (compact spec §4, DW-C4):
--- the title bar, the tabs, the one-row filter bar with its Filters menu, the test-mode strip and the
--- one-line footer. The same frame and the same controls as the full layout, laid out again: nothing
+-- the title bar, the tabs, the one-row filter bar with its Filters menu, the mode strips (test mode's
+-- and the simulation's) and the one-line footer. The same frame and the same controls as the full layout, laid out again: nothing
 -- here changes what is recorded, gated, judged or sent.
 --
---   title bar   `Drop Watcher` centered, `TEST` / `SIM` beside it in their red and cyan; the
+--   title bar   `Drop Watcher` centered, alone while a mode's strip marks the mode; `TEST` / `SIM`
+--               beside it in their red and cyan only while minimized or with no strip; the
 --               restriction badge its lock and the queued count, at the left; the layout toggle,
 --               minimize and close at the right (Scan group is the Drops strip's icon, feedback-16)
 --   tabs        `Drops`, `History` at a reduced width (their tooltips say what each holds)
@@ -13,7 +14,8 @@ local _, NS = ...
 --               very same LibKa0s-Widgets dropdowns moved into it, so their choices, their
 --               multi-select and their per-tab state are identical. The button counts the ones not at
 --               their default (`Filters · 2`), and its tooltip lists every value in force.
---   strip       test mode's banner in shorter words, wrapping to two lines when the width needs it
+--   strip       the strip in force (test mode's or the simulation's) in shorter words, wrapping to
+--               two lines when the width needs it
 --   footer      one line, `Inspect 4/4 · Mythic+`; the rest of the full footer is its tooltip
 --
 -- WHY A PANEL, NOT SUBMENUS. LibKa0s-Widgets-1.0's popup has no submenu rows, and a second set of
@@ -22,7 +24,8 @@ local _, NS = ...
 --
 -- PURE: TabText, ModeWord, BadgeShort, FooterLine, FooterTip, IsActive, ActiveKeys, CountActive,
 -- FiltersLabel and FiltersTip. The edge: Paint (Window.Refresh's every pass; the layout itself only
--- when the layout in force changed), BannerH (the strip's height, which Window's pane layout reads),
+-- when the layout in force changed), ModeStrip (the strip of the mode in force), BannerH (its height,
+-- which Window's pane layout reads),
 -- PaintFooter (WindowFooter.Refresh in compact) and the Filters panel. WindowFilterBar.Layout
 -- stands aside in compact: the search box's anchors size it there.
 
@@ -362,14 +365,28 @@ local function layoutTabs(f, compact)
     end
 end
 
--- The strip's words and wrap. The library anchors its text (LEFT to the mark, RIGHT to the strip,
--- justified LEFT), so full truncates a long line and compact wraps the short one to two lines.
+-- The strips' words and wrap, both strips (each nil on a degraded install). The library anchors its
+-- text (LEFT to the mark, RIGHT to the strip, justified LEFT), so full truncates a long line and
+-- compact wraps the short one to two lines.
+local STRIP_TEXT = {
+    banner = {
+        full    = L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."],
+        compact = L["TEST: sample drops in every state. Nothing is whispered; combat ends it."],
+    },
+    simBanner = {
+        full    = L["SIMULATION: a made-up group session through the real engine. Nothing is sent; /dw sim stop ends it."],
+        compact = L["SIM: a made-up session. Nothing is sent; /dw sim stop ends it."],
+    },
+}
+
 local function layoutStrip(f, compact)
-    local b = f.banner
-    if not b then return end
-    b.text:SetText(compact and L["TEST: sample drops in every state. Nothing is whispered; combat ends it."]
-        or L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
-    b.text:SetWordWrap(compact)
+    for key, text in pairs(STRIP_TEXT) do
+        local b = f[key]
+        if b then
+            b.text:SetText(compact and text.compact or text.full)
+            b.text:SetWordWrap(compact)
+        end
+    end
 end
 
 -- The full bar back: the dropdowns on the bar and Sort on the tab's strip (feedback-10 spec §3).
@@ -446,7 +463,7 @@ function CC.Paint(f)
         layout(f, compact)
     end
     placeTitle(f, compact)
-    local b = f.banner
+    local b = CC.ModeStrip(f)
     local h = CC.BannerH() - 4
     if b and b.slotH ~= h then
         b.slotH = h
@@ -465,15 +482,26 @@ local function unwrappedWidth(fs)
     return type(w) == "number" and w > 0 and w or nil
 end
 
---- The test-mode strip's height in the layout in force: one line full; compact two when its words
---- do not fit on one line (their unwrapped width against the room their anchors give them); 0 when
---- the window has no strip (the Widgets library absent).
+--- The strip of the mode in force: f.banner in test mode, f.simBanner while a simulation runs (the
+--- two modes are exclusive), else f.banner. Nil on a degraded install (no Widgets library).
+--- @param f table the window frame
+--- @return table|nil
+function CC.ModeStrip(f)
+    if NS.State.testMode == true then return f.banner end
+    if NS.Sim:IsActive() then return f.simBanner end
+    return f.banner
+end
+
+--- The height of the strip in force (CC.ModeStrip) in the layout in force: one line full; compact two
+--- when its words do not fit on one line (their unwrapped width against the room their anchors give
+--- them); 0 when the window has no such strip (the Widgets library absent).
 --- @return number
 function CC.BannerH()
     local f = NS.Window.Frame()
-    if f and not f.banner then return 0 end
+    local strip = f and CC.ModeStrip(f)
+    if f and not strip then return 0 end
     if not (f and f.chromeCompact) then return K.BANNER_H end
-    local fs = f.banner.text
+    local fs = strip.text
     local w = unwrappedWidth(fs)
     local room = fs.GetWidth and fs:GetWidth()
     if type(room) ~= "number" or room <= 0 then room = (f:GetWidth() or 0) - 2 * K.INSET - 30 end

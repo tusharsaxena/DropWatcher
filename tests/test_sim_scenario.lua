@@ -530,14 +530,17 @@ end)
 -- The chip, the footer and the diagnostics section
 -- ---------------------------------------------------------------------------------------------
 
-test("sim window: the SIMULATION text with the scenario tooltip, and the footer says Simulating", function()
+test("sim window: the sim strip (not the SIMULATION text) with the scenario tooltip, and the footer says Simulating", function()
     local NS = addon()
     NS.ShowWindow()
     local f = NS.Window.Frame()
     assertFalse(f.simText:IsShown())
+    assertFalse(f.simBanner:IsShown())
     slash(NS, "sim start raid 10")
     NS.Window.Refresh()
-    assertTrue(f.simText:IsShown()); assertFalse(f.testText:IsShown())
+    assertTrue(f.simBanner:IsShown(), "the cyan strip under the filter bar (DW-10)")
+    assertFalse(f.simText:IsShown()); assertFalse(f.testText:IsShown())
+    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "Simulation")
     assertEqual(f.simText.text:GetText(), "SIMULATION")
     local title, scenario = NS.WindowTitleBar.SimTip()
     assertEqual(title, "Simulation"); assertEqual(T.tipPlain(scenario), "• Scenario: raid (Raid)")
@@ -545,6 +548,7 @@ test("sim window: the SIMULATION text with the scenario tooltip, and the footer 
     assertEqual(seg.text, "Simulating: Raid · 10 members")
     slash(NS, "sim stop")
     assertFalse(f.simText:IsShown(), "gone with the simulation")
+    assertFalse(f.simBanner:IsShown(), "the strip too")
     seg = NS.WindowFooter.Compose(NS.WindowFooter.Read()).situation
     assertTrue(seg.text:find("Simulating", 1, true) == nil, "the real situation again")
 end)

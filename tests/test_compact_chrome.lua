@@ -103,15 +103,17 @@ end)
 
 -- ── the title bar ───────────────────────────────────────────────────────────────────────────
 
-test("chrome: compact shows the short title, TEST beside it, the title and the word centered together", function()
+test("chrome: compact shows the short title; in test mode the strip marks it, so the title stays centered alone", function()
     local NS, f = shown("compact")
     assertEqual(textOf(f.title), "Drop Watcher")
     NS.SetTestMode(true)
-    assertTrue(f.testText:IsShown())
+    -- red under: PaintModeText showing TEST beside the title while the strip is on screen
+    assertFalse(f.testText:IsShown(), "the strip is the marker (DW-10)")
+    assertTrue(f.banner:IsShown())
     assertEqual(textOf(f.testText.text), "TEST")
     assertEqual(f.testText.text:GetTextColor(), NS.WindowTitleBar.TEST_TONE.r, "the same red")
     local pt = f.title.__points[1]
-    assertEqual(pt[1], "CENTER"); assertTrue(pt[4] < 0, "shifted left by half the word")
+    assertEqual(pt[1], "CENTER"); assertEqual(pt[4], 0, "no word: the title alone, centered")
     NS.SetTestMode(false)
     assertEqual(f.title.__points[1][4], 0, "alone, the title is centered")
     NS.SetWindowMode("full")
@@ -120,15 +122,57 @@ test("chrome: compact shows the short title, TEST beside it, the title and the w
     assertEqual(textOf(f.simText.text), "SIMULATION")
 end)
 
-test("chrome: a simulation reads SIM in compact, in its cyan", function()
+test("chrome: compact and minimized in test mode, TEST shows beside the title and the two center together", function()
+    local NS, f = shown("compact")
+    NS.SetTestMode(true)
+    NS.Window.SetMinimized(true)
+    assertTrue(f.testText:IsShown(), "minimized: the strip is gone with the body, the word comes back")
+    assertEqual(textOf(f.testText.text), "TEST")
+    local pt = f.title.__points[1]
+    assertEqual(pt[1], "CENTER"); assertTrue(pt[4] < 0, "shifted left by half the word")
+    NS.Window.SetMinimized(false)
+    assertFalse(f.testText:IsShown())
+    assertEqual(f.title.__points[1][4], 0)
+    NS.SetTestMode(false)
+end)
+
+test("chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim strip marks it with the short wrapped line", function()
     local NS, f = shown("compact")
     assertEqual(textOf(f.simText.text), "SIM")
+    assertEqual(f.simText.text:GetTextColor(), NS.WindowTitleBar.SIM_TONE.r)
     assertTrue(T.simBare(NS):Start({ scenario = "test" }))
     NS.Window.Refresh()
-    assertTrue(f.simText:IsShown())
-    assertEqual(f.simText.text:GetTextColor(), NS.WindowTitleBar.SIM_TONE.r)
-    assertTrue(f.title.__points[1][4] < 0)
+    -- red under: no sim strip, the SIM word beside the title as the marker
+    assertFalse(f.simText:IsShown(), "the sim strip is the marker (DW-10)")
+    assertTrue(f.simBanner:IsShown())
+    assertFalse(f.banner:IsShown())
+    assertEqual(textOf(f.simBanner.text), "SIM: a made-up session. Nothing is sent; /dw sim stop ends it.")
+    assertTrue(f.simBanner.text:GetWordWrap(), "compact: the short words may take two lines")
+    assertEqual(f.title.__points[1][4], 0, "the title alone, centered")
+    assertTrue(NS.CompactChrome.ModeStrip(f) == f.simBanner)
+    NS.SetWindowMode("full")
+    assertEqual(textOf(f.simBanner.text),
+        "SIMULATION: a made-up group session through the real engine. Nothing is sent; /dw sim stop ends it.")
+    assertFalse(f.simBanner.text:GetWordWrap())
     NS.Sim:Stop()
+    NS.Window.Refresh()
+    assertFalse(f.simBanner:IsShown(), "gone with the simulation")
+    assertTrue(NS.CompactChrome.ModeStrip(f) == f.banner, "no mode: the test strip (hidden)")
+end)
+
+test("chrome: the panes reserve the sim strip's height while a simulation runs", function()
+    local NS, f = shown()
+    local K = NS.Constants.WINDOW
+    local base = -(K.TAB_H + 4 + K.FILTER_H)
+    assertEqual(f.panes.group.__points[1][5], base, "no mode: no reserve")
+    assertTrue(T.simBare(NS):Start({ scenario = "test" }))
+    NS.Window.Refresh()
+    -- red under: layoutPanes reserving only in test mode
+    assertEqual(f.panes.group.__points[1][5], base - K.BANNER_H)
+    assertEqual(f.simBanner:GetHeight(), K.BANNER_H - 4, "CC.Paint sizes the strip in force")
+    NS.Sim:Stop()
+    NS.Window.Refresh()
+    assertEqual(f.panes.group.__points[1][5], base)
 end)
 
 test("chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged", function()
@@ -300,6 +344,25 @@ test("chrome: the compact strip takes a second line exactly when its words wrap 
     assertEqual(f.banner:GetHeight(), K.BANNER_H + CC.WRAP_H - 4)
     assertEqual(at(520), K.BANNER_H, "520 wide: one line")
     assertEqual(f.banner:GetHeight(), K.BANNER_H - 4)
+end)
+
+test("chrome: the compact sim strip takes a second line when its words wrap at 380 px", function()
+    local NS, f, m = shown("compact")
+    local K, CC = NS.Constants.WINDOW, NS.CompactChrome
+    assertTrue(T.simBare(NS):Start({ scenario = "test" }))
+    m.textCharWidth = 6   -- the compact sim words, 63 characters: 378 wide on one line
+    local function at(width)
+        f:SetWidth(width)
+        f.simBanner.text.__boundWidth = width - 2 * K.INSET - 30
+        NS.Window.Refresh()
+        return CC.BannerH()
+    end
+    -- red under: BannerH measuring f.banner, whose words are not the ones on screen
+    assertEqual(at(380), K.BANNER_H + CC.WRAP_H, "380 wide: the words wrap")
+    assertEqual(f.simBanner:GetHeight(), K.BANNER_H + CC.WRAP_H - 4)
+    assertEqual(f.panes.group.__points[1][5], -(K.TAB_H + 4 + K.FILTER_H + K.BANNER_H + CC.WRAP_H), "the panes move down")
+    assertEqual(at(520), K.BANNER_H, "520 wide: one line")
+    NS.Sim:Stop()
 end)
 
 test("chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included", function()

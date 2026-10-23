@@ -417,6 +417,13 @@ longer in the title bar. It sits on the Drops strip, 8px left of Post my tradeab
 slot while Post is hidden, so the full layout shows the strip on Drops always (its summary empty with nothing
 tradeable). History has no Scan group (`/dw scan` stays). The compact layout keeps its title-bar icon, and
 the restriction badge anchors to the layout toggle.
+**Superseded by DW-10 (2026-10-23)** (OWNER_SCOPE A; the 2026-10-23 sim/preview/strips bundle's
+design-strips §2.2-2.3): a running simulation has its own strip, the library's cyan flavor
+(`kind = "sim"`, LibKa0s v1.76.0 Widgets minor 14), at the test strip's anchor and carrying `SimTip`. The
+mode word in the title bar shows exactly when its mode is on and its strip is not on screen: minimized
+(the strip goes with the body), or with no Widgets library (no strip). Expanded, the strip alone marks the
+mode, so the compact title is centered alone. The two modes are exclusive, so one strip shows at a time and
+the panes reserve its height.
 
 ## The Group drops table
 
