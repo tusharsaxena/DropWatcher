@@ -306,14 +306,12 @@ L["Window"] = "Window"
 
 -- feedback-24: the pages regrouped (Situations, Drops, Comparison, Messages, Window, Alerts)
 L["Situations"] = "Situations"
-L["Reset the Situations page's settings (auto-open and every situation's tracking, quality and loot rule) to their defaults."] =
-    "Reset the Situations page's settings (auto-open and every situation's tracking, quality and loot rule) to their defaults."
 L["Loot rule"] = "Loot rule"
-L["Reset the Drops page's settings (quality, items and how long drops are kept) to their defaults."] =
-    "Reset the Drops page's settings (quality, items and how long drops are kept) to their defaults."
+L["Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."] =
+    "Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."
 L["Quality floor"] = "Quality floor"
-L["A situation can set a quality of its own: the Quality column on the Situations page."] =
-    "A situation can set a quality of its own: the Quality column on the Situations page."
+L["A situation can set a quality of its own: the Quality column on the Situations tab."] =
+    "A situation can set a quality of its own: the Quality column on the Situations tab."
 L["Items"] = "Items"
 L["Item kinds"] = "Item kinds"
 L["Retention"] = "Retention"

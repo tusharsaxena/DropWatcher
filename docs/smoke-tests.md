@@ -17,6 +17,7 @@ passed.
 | SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
 | KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
 | LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3); the Edit message box over the floating Offer panel (LAYER-4) |
+| LAYOUT-1 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations (LAYOUT-1, SM-DW-LY); every setting kept across a `/reload` |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
@@ -195,6 +196,30 @@ Result: not yet run.
 message box opens centered over the window and draws **over** the Offer panel, whole and clickable;
 its Send and close work. Click the window behind it → the box stays over the window. Escape or close
 → it goes, the Offer panel is unchanged.
+Result: not yet run.
+
+## Settings layout
+
+Item 020 (DW-LY, the 2026-10-24 keybindings, layout and strata run; options-ui-§7, §12-§16 and §21
+at standard v2.88.0). Rows moved between pages and tabs and were relabeled; no stored path, default,
+range or behavior changed (the headless `test_schema_rows` guard pins every path and default).
+PANEL-4 and PANEL-8 above were run on the pre-020 shape (a Situations page of its own). Every check
+here makes up SM-DW-LY; before starting, change a handful of settings on each page touched and note
+them, and after each check `/reload` and confirm they read the same.
+
+**LAYOUT-1. Drops opens on Situations (DRO-L01..L03).** The settings list reads General, Drops,
+Comparison, Messages, Window, Alerts, Profiles: no Situations page. Drops' strip reads Situations,
+Quality, Items, Retention, and the page opens on Situations: Auto-open the window, then the
+per-situation table (Situation, Track, Auto-open, Quality, Loot rule) with every value you had set
+before the update. Click Quality → the table is gone and the In force now line is drawn, with
+`A situation can set a quality of its own: the Quality column on the Situations tab.` under it.
+Click Items, Retention, then Situations again → the table is there once, never on another tab.
+Hover the page's Defaults → `Reset the Drops page's settings (situations, quality, items and how
+long drops are kept) to their defaults.` Tick Delve's Track, set Mythic+'s Loot rule to Group loot,
+press Defaults → both go back, with the Quality tab's rows; a Window value stays.
+`/dw list` → the situation rows are listed in the `feed` section, and there is no `situations`
+section. `/reload` → every value you set before the check (other than the ones Defaults reset) is
+unchanged.
 Result: not yet run.
 
 ## Settings panel

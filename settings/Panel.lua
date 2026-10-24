@@ -7,7 +7,8 @@ local addonName, NS = ...
 -- order (options-ui-§15): the window is positionable, so every frame row is present, plus the
 -- Minimap button and Test mode rows. The General page's second tab, `Simulator`, is the simulator's
 -- step delay (settings/SchemaRows.lua), and its last, `Keybindings`, is LibKa0s's key editor
--- (options-ui-§20); When to show moved to the Situations page in feedback-24 (settings/Pages.lua).
+-- (options-ui-§20); When to show moved to the Situations page in feedback-24, and that page into Drops ›
+-- Situations in item 020 (settings/Pages.lua).
 -- The design spec's other pages (§12.2) are DW-41's.
 
 local DW       = NS.addon

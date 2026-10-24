@@ -3,7 +3,7 @@ local _, NS = ...
 --
 -- Every page draws its rows through the library's flow engine. Five things on them are not its to
 -- draw: the Comparison page's per-spec weights and unwanted item types (two whole-value `map` rows,
--- `skipRender`), the Situations page's table (the per-situation rows, `skipRender`, one table row
+-- `skipRender`), Drops › Situations' table (the per-situation rows, `skipRender`, one table row
 -- per situation), the Messages page's template editors (their live counters, the token chips and
 -- the preview) and the Drops page's "in force now" readout. Their widgets are
 -- settings/PageEditors.lua's; what they show and what they write is decided here, with no widget

@@ -1,6 +1,6 @@
 -- tests/test_settings_pages.lua — the settings pages of design spec §12.2 (regrouped by
 -- feedback-24): the page list and each page's strip, the rows each page draws, the dimmed rows, the
--- Situations page's table, the Drops page's "in force now" readout, the Comparison page's per-spec
+-- Drops › Situations' table, Drops › Quality's "in force now" readout, the Comparison page's per-spec
 -- editors, the Messages page's template editors (live counters, token chips, preview, Reset
 -- templates), Drops › Retention's Clear history beside Keep history for (feedback-15 spec §3), the
 -- Window › Columns note, each page's Defaults button, and
@@ -15,8 +15,8 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 -- from the rows, so a tab that moves is a named failure.
 local PAGES = {
     { key = "general",    title = "General",    strip = { "Master controls", "Simulator", "Keybindings" } },
-    { key = "situations", title = "Situations", strip = { "Situations" } },
-    { key = "feed",       title = "Drops",      strip = { "Quality", "Items", "Retention" } },
+    -- item 020 folded the Situations page into Drops as its first tab (DRO-L01).
+    { key = "feed",       title = "Drops",      strip = { "Situations", "Quality", "Items", "Retention" } },
     { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Unwanted types" } },
     { key = "messages",   title = "Messages",   strip = { "Sending", "Auto-ask", "Templates" } },
     { key = "window",     title = "Window",     strip = { "Layout", "Columns", "Starting view", "Icons" } },
@@ -90,7 +90,7 @@ end
 
 -- ── the pages and their strips ──────────────────────────────────────────────────────────────
 
-test("pages: General, Situations, Drops, Comparison, Messages, Window and Alerts are built, in that order", function()
+test("pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order", function()
     local NS = T.enableAddon()
     local built = {}
     for _, p in ipairs(NS.addon.Settings.Helpers.__pages()) do
@@ -129,15 +129,17 @@ test("pages: every schema row with a page but the Profiles page's is drawn by on
     end
 end)
 
--- ── Situations (General › When to show and Trade › Rules until feedback-24) ─────────────────
+-- ── Drops › Situations (General › When to show and Trade › Rules until feedback-24; its own page
+-- until item 020) ────────────────────────────────────────────────────────────────────────────
 
--- The Situations page drawn with its table's frames recorded: a panel marked as the window's tree
+-- Drops › Situations drawn with its table's frames recorded: a panel marked as the window's tree
 -- has its children decorated by the mock (tests/wow_mock.lua), so the table's text and stripes
--- can be read back. The page's one tab is its first render, so the mark goes on before the show.
--- Answers the ctx, the tab's widgets and the table.
+-- can be read back. The tab is the page's first, so its first render, and the mark goes on before
+-- the show. Answers the ctx, the tab's widgets and the table.
 local function whenToShow(NS, m)
-    NS.addon.Settings.Helpers.__panelFor("situations").panel.__dwTree = true
-    local ctx, drawn = open(NS, m, "situations")
+    NS.addon.Settings.Helpers.__panelFor("feed").panel.__dwTree = true
+    local ctx, drawn = open(NS, m, "feed")
+    assertEqual(ctx.activeTab, "Situations", "the Drops page opens on its Situations tab")
     return ctx, drawn, ctx.dwSituations
 end
 
@@ -311,7 +313,8 @@ test("situations: the per-situation rows are still schema rows, skipRender, with
             assertTrue(row ~= nil, path)
             assertTrue(row.skipRender == true, path .. " is the table's")
             assertTrue(row.subgroup == nil, "no heading of its own")
-            assertEqual(row.page, "situations", path)
+            -- red under: the rows still stamped to the retired Situations page (DRO-L01)
+            assertEqual(row.page, "feed", path)
             assertEqual(row.group, "Situations", path)
         end
     end
@@ -352,7 +355,7 @@ end)
 
 test("feed: the Quality tab closes with the threshold in force now, repainted on a write", function()
     local NS, _, m = T.enableAddon()
-    local _, drawn = open(NS, m, "feed")
+    local drawn = tab(m, open(NS, m, "feed"), "Quality")
     local readout = findPrefix(drawn, "Label", "In force now")
     assertTrue(readout ~= nil, "the readout is drawn")
     assertEqual(readout.text, "In force now: Quality: Rare+")
@@ -360,15 +363,16 @@ test("feed: the Quality tab closes with the threshold in force now, repainted on
     assertEqual(readout.text, "In force now: Quality: Epic+")
     NS.SchemaRuntime.Set("feed.quality.mode", "dynamicSlot")
     assertEqual(readout.text, "In force now: Quality: Match slot")
-    assertTrue(findPrefix(drawn, "Label", "A situation can set a quality of its own") ~= nil,
-        "the pointer to the Situations page's Quality column (feedback-24)")
+    -- red under: the pointer still sending the player to a Situations page (DRO-L02)
+    assertTrue(find(drawn, "Label", "A situation can set a quality of its own: the Quality column on the Situations tab.") ~= nil,
+        "the pointer to the Situations tab's Quality column (feedback-24, item 020)")
 end)
 
 -- feedback-24: the mode and Always show upgrades share line one, the mode's two dependents (never
 -- live together) line two.
 test("feed: the Quality tab pairs the mode with Always show upgrades, then Fixed minimum with Quality floor", function()
     local NS, _, m = T.enableAddon()
-    local _, drawn = open(NS, m, "feed")
+    local drawn = tab(m, open(NS, m, "feed"), "Quality")
     local mode, always = find(drawn, "Dropdown", "Minimum quality"), find(drawn, "CheckBox", "Always show upgrades for me")
     local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Quality floor")
     assertTrue(lineOf(drawn, mode) ~= nil and lineOf(drawn, mode) == lineOf(drawn, always), "line one")
@@ -389,7 +393,7 @@ end)
 
 test("feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only", function()
     local NS, _, m = T.enableAddon()
-    local _, drawn = open(NS, m, "feed")
+    local drawn = tab(m, open(NS, m, "feed"), "Quality")
     local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Quality floor")
     assertFalse(fixed.disabled == true)
     assertTrue(floor.disabled == true)
@@ -669,14 +673,29 @@ test("pages: a page's Defaults resets that page's rows and no other page's", fun
     local Set = NS.SchemaRuntime.Set
     Set("feed.gearOnly", false)
     Set("trade.warnAt", 120)
+    Set("situations.delve.track", true)
+    Set("trade.rules.raid", "group")
+    Set("autoOpen", false)
     Set("comparison.weights", { [62] = { ITEM_MOD_HASTE_RATING_SHORT = 2 } })
     local ctx = open(NS, m, "feed")
     ctx.panel.defaultsOnClick()
     assertEqual(NS.Setting("feed.gearOnly"), NS.C.PROFILE.feed.gearOnly)
+    -- red under: the Situations rows left on a page of their own (item 020: Drops' Defaults owns them)
+    assertEqual(NS.Setting("situations.delve.track"), NS.C.PROFILE.situations.delve.track, "the situations table reset")
+    assertEqual(NS.Setting("trade.rules.raid"), NS.C.PROFILE.trade.rules.raid, "and its loot rules")
+    assertEqual(NS.Setting("autoOpen"), NS.C.PROFILE.autoOpen, "and the global auto-open")
     assertEqual(NS.Setting("trade.warnAt"), 120, "Window's row untouched")
     local cctx = open(NS, m, "comparison")
     cctx.panel.defaultsOnClick()
     assertTrue(next(NS.Setting("comparison.weights")) == nil, "the weights map reset whole")
+end)
+
+test("pages: the Drops page's Defaults tooltip names the situations it now resets (DRO-L03)", function()
+    local NS = T.enableAddon()
+    local tip = NS.addon.Settings.Helpers.__panelFor("feed").panel.defaultsTooltip
+    -- red under: the pre-020 tooltip, which left the situations out
+    assertEqual(tip, "Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults.")
+    assertTrue(NS.addon.Settings.Helpers.__panelFor("situations") == nil, "no Situations page")
 end)
 
 -- ── the editors' pure halves ────────────────────────────────────────────────────────────────

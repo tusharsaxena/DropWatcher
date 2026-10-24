@@ -11,8 +11,8 @@ the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or the
 before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
 composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
 §12.1 (`settings/SchemaRows.lua`), page by page as the tables below list them (regrouped by
-feedback-24; no stored path moved): General's Simulator, Situations (with each situation's loot
-rule), Drops (page key `feed`: Quality, Items, and Retention with the account-wide Keep history for,
+feedback-24, then by item 020; no stored path moved): General's Simulator, Drops (page key `feed`:
+Situations, with each situation's loot rule, then Quality, Items, and Retention with the account-wide Keep history for,
 `global.history.retentionDays`, feedback-2 spec §5, DW-A5, which replaced the group cap),
 Comparison, Messages, Window's Layout, Columns, Starting view and Icons' Zoom, then Alerts' Toast and
 Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appended last.
@@ -26,7 +26,7 @@ Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appe
   (architecture-§5's value route: a membership change is a whole write through the seam), drawn by
   their own editors (`skipRender`); the CLI shows them as their entry count. The
   `situations.<key>.*` and `trade.rules.<key>` rows are `skipRender` too (since DW-H0; the loot
-  rules since feedback-24): the Situations table draws them, a line per situation, and writes
+  rules since feedback-24): the Drops › Situations table draws them, a line per situation, and writes
   through the seam.
 - The reactions every surface shares are `Settings.REACTIONS` (Master controls) and the window
   repaint on the Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared
@@ -66,9 +66,11 @@ Every module reads a setting through `NS.Setting(path)`.
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
 | `sim.stepDelay` | `1` | Simulator | the seconds the simulator waits between steps as it plays, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7; the default was `2` until the owner's 2026-10-23 simulator feedback, and needs no migration because AceDB never stores a value equal to its default); read as each next step is set, so a change takes effect from the next step |
 
-### Situations
+### Drops › Situations (page key `feed`)
 
-General › When to show and Trade › Rules until feedback-24.
+General › When to show and Trade › Rules until feedback-24; a page of its own (key `situations`)
+from feedback-24 until item 020, which made it the Drops page's first tab. The rows' page is now
+`feed`, so Drops' Defaults resets them and `/dw list` lists them in its `feed` section.
 
 | Key | Default | Column | What it is |
 |---|---|---|---|

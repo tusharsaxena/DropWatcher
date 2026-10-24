@@ -104,7 +104,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (22)
+### test_schema_rows.lua (23)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -128,10 +128,11 @@ Total.
 - icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults
 - icons: the border rows refuse what they cannot draw, and dim with Show border off
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
+- rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 
-### test_settings_pages.lua (44)
+### test_settings_pages.lua (45)
 
-- pages: General, Situations, Drops, Comparison, Messages, Window and Alerts are built, in that order
+- pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
 - pages: a page's rows are the rows whose page is its key
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
@@ -166,6 +167,7 @@ Total.
 - pages: Messages opens on Sending, which asks before it sends, the transmog switch named apart from its template
 - pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in
 - pages: a page's Defaults resets that page's rows and no other page's
+- pages: the Drops page's Defaults tooltip names the situations it now resets (DRO-L03)
 - editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
 - editors: a spec's stats are its primary stat, Stamina and the four secondaries
 - editors: unwanted types are the class's weapons, then shields where a spec carries one
@@ -1981,8 +1983,8 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 22 |
-| test_settings_pages.lua | 44 |
+| test_schema_rows.lua | 23 |
+| test_settings_pages.lua | 45 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
 | test_window_shell.lua | 61 |
@@ -2063,4 +2065,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1705** |
+| **Total** | **1707** |

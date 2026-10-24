@@ -7,14 +7,15 @@ local _, NS = ...
 -- never a literal here. The composed Master controls rows are settings/Panel.lua's; these are
 -- appended after them, so the General page's `Master controls` tab stays first. Within a page, a
 -- tab's place in the strip is its first row's place here, so the makers below run in page order
--- (feedback-24 regrouped the pages: Situations, Drops, Comparison, Messages, Window, Alerts).
+-- (feedback-24 regrouped the pages; item 020 folded Situations into Drops: Drops, Comparison,
+-- Messages, Window, Alerts).
 -- Window › Icons' composed border block is settings/ComposedRows.lua's, appended after these (it
 -- needs the Options instance, made after this file), so it follows this file's Zoom row on that
 -- tab; it takes this file's checks from Settings.Checks.
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
 -- specID (architecture-§5's value route): written whole through the seam, drawn by their own
--- editors (`skipRender`). The Situations page's per-situation rows (`situations.<key>.track`,
+-- editors (`skipRender`). Drops › Situations' per-situation rows (`situations.<key>.track`,
 -- `.autoOpen`, `.quality` and `trade.rules.<key>`) are `skipRender` too: its table draws them, one
 -- line per situation. The window's geometry, its minimized flag and the toast's position have no
 -- row: they are named non-setting state (docs/schema.md -> State written outside the seam). Alerts › Upgrade glow's
@@ -211,13 +212,14 @@ local function map(path, default, validate, label, tip, extra)
     return add(row)
 end
 
--- ── Situations (design spec §6.1, §7; feedback-24) ──────────────────────────────────────────
+-- ── Drops › Situations (design spec §6.1, §7; feedback-24, item 020) ───────────────────────
 
--- Everything set per situation, on one page: the global Auto-open, then a table line per situation
+-- Everything set per situation, on one tab: the global Auto-open, then a table line per situation
 -- (Track, Auto-open, Quality and its loot rule). General › When to show and Trade › Rules until
--- feedback-24.
+-- feedback-24; its own Situations page until item 020, which made it the Drops page's first tab (it
+-- runs before feed(), so it lands first in the strip).
 local function situations()
-    local at = { page = "situations", group = L["Situations"] }
+    local at = { page = "feed", group = L["Situations"] }
     bool("autoOpen", P.autoOpen, L["Auto-open the window"],
         L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."], at)
     local T = P.trade
@@ -226,7 +228,7 @@ local function situations()
         local base = "situations." .. key .. "."
         -- Drawn by the Situations table (settings/PageEditors.lua SituationTable), one table row per
         -- situation: still schema rows, so the CLI, the resets and profiles reach them as before.
-        local sit = { page = "situations", group = L["Situations"], skipRender = true }
+        local sit = { page = "feed", group = L["Situations"], skipRender = true }
         local untracked = unless(base .. "track", true)
         bool(base .. "track", d.track, L["Track"],
             L["Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."], sit)
@@ -236,7 +238,7 @@ local function situations()
         pick(base .. "quality", d.quality, SITUATION_QUALITY, L["Quality"],
             L["The minimum quality here: the feed's own mode, or one of its own."],
             with(sit, { disabledIf = untracked }))
-        -- Its label stays the situation's name: `/dw list` reads it under the Situations page.
+        -- Its label stays the situation's name: `/dw list` reads it under the Drops page's `feed` section.
         pick("trade.rules." .. key, T.rules[key], RULES, NS.WindowFooter.SituationLabel(key),
             L["The loot rule that decides whether a drop here can be traded."],
             with(sit, { disabledIf = untracked }))

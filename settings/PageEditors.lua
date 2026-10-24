@@ -19,7 +19,7 @@ local _, NS = ...
 --   Settings.PageEditors.ClearHistoryButton  Drops › Retention: Clear history, beside Keep history
 --                                      for (pairWith; feedback-15 spec §3, DW-Q3).
 --   Settings.PageEditors.ColumnsNote   Window's chrome: on the Columns tab, the table they change.
---   Settings.PageEditors.SituationTable  Situations' afterGroup: one table line per situation
+--   Settings.PageEditors.SituationTable  Drops › Situations' afterGroup: one table line per situation
 --                                      (Track, Auto-open, Quality, Loot rule), pooled for the session;
 --                                      ParkSituationTable takes it off its placeholder before a render.
 
@@ -61,7 +61,7 @@ function P.QualityReadout(ctx)
     local h = H()
     local w = h.TextRow(ctx, readoutText(), { fontObject = "GameFontHighlight" })
     if w then addRefresher(ctx, function() w:SetText(readoutText()) end) end
-    h.TextRow(ctx, L["A situation can set a quality of its own: the Quality column on the Situations page."],
+    h.TextRow(ctx, L["A situation can set a quality of its own: the Quality column on the Situations tab."],
         { fontObject = "GameFontHighlightSmall" })
 end
 
@@ -239,7 +239,7 @@ end
 --- Take the table off the placeholder it was hosted on and park it, hidden, on the panel. The
 --- placeholder's OnRelease calls it (options-ui-§19, the canonical undo): a release hands the
 --- placeholder back to AceGUI's pool, and a table left on it would ride the frame into whatever it
---- is handed out for next, on whichever tab is drawn. The Situations page's renderer also calls it
+--- is handed out for next, on whichever tab is drawn. The Drops page's renderer also calls it
 --- before its ClearScroll, belt-and-braces; parking twice is harmless.
 --- @param ctx table
 function P.ParkSituationTable(ctx)

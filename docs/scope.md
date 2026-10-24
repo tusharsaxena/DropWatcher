@@ -58,8 +58,8 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   own size and place, and an auto-open inside a run opens it compact until the run ends (on by
   default).
 - **Opt-in extras.** The upgrade toast (with its own scale) and auto-ask, both off by default.
-- **The standard surfaces.** The settings pages (General, Situations, Drops, Comparison, Messages,
-  Window, Alerts and Profiles; feedback-24), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
+- **The standard surfaces.** The settings pages (General, Drops, Comparison, Messages, Window,
+  Alerts and Profiles; feedback-24, with Situations a Drops tab since item 020), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
   debug console and the diagnostics report, the performance harness and the stand-down latch.
 
 ## What it deliberately does not do (v1)

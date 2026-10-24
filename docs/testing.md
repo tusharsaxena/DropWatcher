@@ -60,7 +60,8 @@ reaching a stored profile that is not the active one, step 3 folding the View an
 into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
-through the seam, the account-wide Keep history for, the CLI and the degraded load; Alerts › Upgrade
+through the seam, the account-wide Keep history for, the CLI and the degraded load; the item-020 guard,
+every stored path with its type and default pinned so a layout change cannot move one; Alerts › Upgrade
 glow, feedback-21: every glow row and its default (H6: both pixel, `pixelFrequency` 0.1, the colors
 `C.TONE.glowMain` `#FFF468` and `C.TONE.glowOffSpec` `#3FC7EB`, apart from the verdicts' tones), the
 main | off-spec alternation on every line, the two swatches on one line and their Use class color
@@ -74,10 +75,10 @@ Solid black border 2 pixels thick), the
 color pair player-scoped, starting its line and never dimmed, the refused values, style, thickness and
 quality dimmed with Show border off, `/dw set` on the color, and the degraded load keeping Zoom with the
 border's profile defaults), `test_settings_pages` (the settings
-pages built headless, as feedback-24 regrouped them: the page list and each page's strip, a page's rows by its key, the Situations
+pages built headless, as feedback-24 and item 020 regrouped them: the page list and each page's strip, a page's rows by its key, the Drops › Situations
 table (one line per situation, its Loot rule column, its gold headers and stripe, each cell's value, a toggle writing its
 path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, parked
-by its placeholder's own `OnRelease` outside the renderer (options-ui-§19, DW-P21), the rows still schema rows and `skipRender`), the Drops page's "in force now" readout and its pairings, the switches alone on their line with their knobs paired under them, Messages opening on Sending, Window's Columns note and moved rows, the Comparison page's per-spec
+by its placeholder's own `OnRelease` outside the renderer (options-ui-§19, DW-P21), the rows still schema rows and `skipRender`, stamped to the Drops page), the Drops page's Defaults tooltip and reset reaching the situations, the Drops page's "in force now" readout and its pairings, the switches alone on their line with their knobs paired under them, Messages opening on Sending, Window's Columns note and moved rows, the Comparison page's per-spec
 weights and unwanted types written whole through the seam, the Messages page's live counters,
 preview, token chips and Reset templates, Drops › Retention's Clear history beside Keep history for
 (asking first, clearing on Yes, test mode's samples only while it is on; feedback-15 spec §3), each

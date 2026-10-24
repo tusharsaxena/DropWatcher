@@ -15,8 +15,7 @@ share a line (feedback-24).
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Simulator`, `Keybindings` |
-| Situations | `Situations` (one tab: Auto-open the window and the per-situation table) |
-| Drops (key `feed`) | `Quality`, `Items`, `Retention` |
+| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Retention` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
@@ -29,7 +28,14 @@ Toast, Upgrade glow, Icons). The regroup moved rows between pages and tabs and r
 no stored path changed, so it needed no migration. It did move what each page's Defaults resets,
 and `/dw list` groups rows by page, so its sections follow the new pages.
 
-`settings/Panel.lua` registers General, `settings/Pages.lua` the six after it,
+Item 020 (the 2026-10-24 settings-layout pass) folded the Situations page into Drops as its first
+tab, moved and relabeled rows, and reworded tooltips. It too changed no stored path, default, range
+or behavior (`tests/test_schema_rows.lua` pins every path and default). Two consequences of the
+fold, both the owner's call: Drops' Defaults now also resets the situations table (Auto-open the
+window, and every situation's tracking, auto-open, quality and loot rule), and `/dw list`'s
+`situations` section is gone, its rows listed under `feed`.
+
+`settings/Panel.lua` registers General, `settings/Pages.lua` the five after it,
 `settings/Profiles.lua` the last. Window › Icons' Border block is composed by the library
 (`settings/ComposedRows.lua`, options-ui-§16), like General's Master controls. Three tabs, two
 closing lines, one opening note and one table have no row the flow engine can draw; they are host
@@ -80,10 +86,10 @@ drop feed.`), with Key 1, Key 2 and Clear; then which binding set the key is sav
 outcome of the last change. Keys are saved by the game, never in the profile: Defaults, Reset all
 settings and `/dw set` never touch them. In combat the tab refuses every change.
 
-## Situations
+## Drops → Situations
 
-Everything set per situation, on one page with one tab (feedback-24: General › When to show and
-Trade › Rules until then). The master `autoOpen` row (Auto-open the window), then the per-situation
+Everything set per situation, on the Drops page's first tab (General › When to show and Trade ›
+Rules until feedback-24; a page of its own from feedback-24 until item 020). The master `autoOpen` row (Auto-open the window), then the per-situation
 settings as one table (feedback-8 spec §0, DW-H0), a line per situation in `K.SITUATIONS` order
 (design spec §6.1):
 
@@ -101,29 +107,30 @@ rule has one home. Hovering a cell shows its row's label and tooltip; hovering a
 situation.
 
 The four per-situation rows stay schema rows (paths, defaults, checks, tooltips), marked
-`skipRender` with no subsection, so `/dw get|set`, the page's Defaults, profiles and their announce
+`skipRender` with no subsection, so `/dw get|set`, the Drops page's Defaults, profiles and their announce
 reach them unchanged. The table is the Situations tab's `afterGroup` hook
 (`Settings.PageEditors.SituationTable`), writes through `NS.SchemaRuntime.Set` and repaints every
 value and state on each render and after every write (a toggle, the master row, Defaults, a profile
 switch). Its host frame and slots are built once per session and re-hosted on a fresh placeholder
 on each render. The placeholder's `OnRelease` parks it (`ParkSituationTable`), hidden on the panel,
-whenever AceGUI takes the placeholder back (options-ui-§19); the Situations page's renderer
+whenever AceGUI takes the placeholder back (options-ui-§19); the Drops page's renderer
 (`beforeClear` in `settings/Pages.lua`, and its `rerender`) also parks it before `ClearScroll` as
 belt-and-braces. Until DW-H0 the tab drew one block per situation,
 since LibKa0s has no grid composer for mixed controls;
-[LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one consumer; the table stays the page's own editor.
+[LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one consumer; the table stays the tab's own editor.
 
-## Drops
+## Drops → Quality, Items and Retention
 
 The page key stays `feed` (a page key is no stored path, but it names the page's section in
-`/dw list`). What the addon lists at all, and how long it keeps it.
+`/dw list`, which holds the situation rows too since item 020). What the addon lists at all, and how
+long it keeps it. Its Defaults resets every tab, Situations included.
 
 **Quality:** `Minimum quality` (`feed.quality.mode`) beside `Always show upgrades for me`, then the
 mode's two values on one line, never live together: `Fixed minimum` (live in the fixed mode only) |
 `Quality floor` (`Floor` until feedback-24; live in the two matching modes only). Then the closing
 line `In force now: Quality: Rare+`: the filter bar's label for where you stand, naming the situation
 when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
-at the Situations page's Quality column, where a situation sets its own.
+at the Situations tab's Quality column, where a situation sets its own.
 
 **Items:** two subsections. **Item kinds:** Gear only | Tier tokens. **Item level:** Minimum item
 level alone on its line, then its two values, each live in its mode only: Absolute minimum | Levels
