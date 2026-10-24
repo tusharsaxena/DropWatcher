@@ -227,3 +227,14 @@ test("keybindings: the General page's Defaults tooltip says the keys are not cha
     -- red under: the pre-015 tooltip, without O.KEYBINDS_UNCHANGED
     assertEqual(tip:sub(-#"Key bindings are not changed."), "Key bindings are not changed.")
 end)
+
+test("keybindings: the General page's Defaults tooltip is Reset all settings' own, then the keys line (DRO-L-new4)", function()
+    local NS = T.enableAddon()
+    local H = NS.addon.Settings.Helpers
+    local tip = H.__panelFor("general").panel.defaultsTooltip
+    -- red under: the host's own "Reset every Ka0s Drop Watcher setting..." lead (pre-020)
+    assertEqual(tip, H.ResetAllTooltip(H.KEYBINDS_UNCHANGED))
+    assertEqual(tip:sub(1, #"Reset the current profile to its defaults"), "Reset the current profile to its defaults",
+        "the profile-reset wording Reset all settings carries (resetProfile + profilesPage)")
+    assertTrue(tip:find("Reset every", 1, true) == nil, "no host lead")
+end)

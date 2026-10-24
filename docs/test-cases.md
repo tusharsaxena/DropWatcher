@@ -1834,7 +1834,7 @@ Total.
 - sim panel: dragging writes nothing to the profile; Reset position redocks
 - sim panel: standing down hides it, idle or running, and it does not open while stood down
 
-### test_bindings.lua (12)
+### test_bindings.lua (13)
 
 - bindings: Bindings.xml puts every binding in the addon's own category, no header, no default, in NS.BINDINGS order, and the TOC does not list it
 - bindings: NS.BINDINGS is the one table, Show window first, with a localized tooltip, on a library-less install too
@@ -1848,6 +1848,7 @@ Total.
 - keybindings: a key set on the client's page shows in the tab after UPDATE_BINDINGS
 - keybindings: in combat the tab refuses and calls no binding API
 - keybindings: the General page's Defaults tooltip says the keys are not changed
+- keybindings: the General page's Defaults tooltip is Reset all settings' own, then the keys line (DRO-L-new4)
 
 ### test_disabled.lua (13)
 
@@ -2053,7 +2054,7 @@ Total.
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 13 |
-| test_bindings.lua | 12 |
+| test_bindings.lua | 13 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
@@ -2065,4 +2066,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1707** |
+| **Total** | **1708** |

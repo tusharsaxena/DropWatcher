@@ -80,13 +80,12 @@ local function renderGeneral(c)
     })
 end
 
--- The General page's Defaults tooltip ends with the library's "Key bindings are not changed."
--- (options-ui-§20): keys are the game's, not a setting, so no reset reaches them.
+-- The General page's header Defaults is the global reset (showResetPopup), so its tooltip is the
+-- very text Reset all settings carries (options-ui-§12, U-04), read from the library, then its
+-- "Key bindings are not changed." (options-ui-§20): keys are the game's, not a setting, so no reset
+-- reaches them. No host wording around it (item 020, DRO-L-new4).
 local function generalDefaultsTooltip()
-    local tip = L["Reset every %s setting to its default. Asks for confirmation."]:format(NS.BRAND)
-    local unchanged = Helpers.KEYBINDS_UNCHANGED
-    if type(unchanged) == "string" and unchanged ~= "" then tip = tip .. " " .. unchanged end
-    return tip
+    return Helpers.ResetAllTooltip(Helpers.KEYBINDS_UNCHANGED)
 end
 
 local function buildGeneralPage(parentCategory)

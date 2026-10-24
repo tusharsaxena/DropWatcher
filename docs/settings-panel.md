@@ -65,12 +65,15 @@ The launcher's right-click menu mirrors four of these: Enabled, Locked, Test mod
 (launcher-§2). Show window also has a key binding (launcher-§6): Options → Keybindings → Ka0s Drop
 Watcher → Toggle drop feed, or General → Keybindings in this addon's settings, with no default key,
 on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, through the
-`DropWatcherToggleWindow` button in `core/LauncherSetup.lua`). The header's Defaults tooltip ends
-with `Key bindings are not changed.` (`O.KEYBINDS_UNCHANGED`): no reset reaches a key.
+`DropWatcherToggleWindow` button in `core/LauncherSetup.lua`). The header's Defaults is the global
+reset, so its tooltip is the very text Reset all settings carries, read from the library
+(`O.ResetAllTooltip`, options-ui-§12; item 020 retired the addon's own "Reset every … setting" lead),
+then `Key bindings are not changed.` (`O.KEYBINDS_UNCHANGED`): no reset reaches a key.
 
 ## General → Simulator
 
-One slider (the tab was `Simulation` until feedback-24), `Simulation step delay` (`sim.stepDelay`, feedback-2 spec §8, DW-A7): the
+One slider (the tab was `Simulation` until feedback-24), `Simulation step delay (seconds)` (`sim.stepDelay`, feedback-2 spec §8, DW-A7;
+the unit joined the label, and the tooltip opens `Paces /dw sim:`, in item 020): the
 seconds the simulator waits between steps as it plays, 0.5
 to 10 in steps of 0.5, 1 by default (2 until the owner's 2026-10-23 simulator feedback). `/dw set sim.stepDelay <n>` reaches it too (the slash parser
 clamps a number outside the range to it). A change takes effect from the next step of a running

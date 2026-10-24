@@ -565,8 +565,8 @@ end
 local function simulation()
     local SC = NS.SimScenario
     slider("sim.stepDelay", P.sim.stepDelay, SC.STEP_DELAY_MIN, SC.STEP_DELAY_MAX, SC.STEP_DELAY_STEP,
-        L["Simulation step delay"],
-        L["How many seconds the simulator waits between steps as it plays. A change takes effect from the next step."],
+        L["Simulation step delay (seconds)"],
+        L["Paces /dw sim: how many seconds the simulator waits between steps as it plays. A change takes effect from the next step."],
         { page = "general", group = L["Simulator"], validate = SC.ValidStepDelay })
 end
 
