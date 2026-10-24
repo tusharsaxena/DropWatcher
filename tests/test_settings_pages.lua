@@ -389,6 +389,9 @@ test("feed: Items draws Minimum item level alone, then Absolute minimum beside L
     assertTrue(mode ~= nil and abs ~= nil and rel ~= nil, "all three drawn")
     assertEqual(#lineOf(drawn, mode).children, 1, "the mode alone")
     assertTrue(lineOf(drawn, abs) == lineOf(drawn, rel), "its values paired")
+    -- red under: the pre-020 "Tier tokens", which did not read as a switch (DRO-L10)
+    local gear, tokens = find(drawn, "CheckBox", "Gear only"), find(drawn, "CheckBox", "Include tier tokens")
+    assertTrue(gear ~= nil and tokens ~= nil and lineOf(drawn, gear) == lineOf(drawn, tokens), "Gear only | Include tier tokens")
 end)
 
 test("feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only", function()
@@ -593,7 +596,8 @@ test("feed: Retention draws Clear history beside Keep history for; it asks first
     -- for the button
     assertTrue(keep ~= nil and clear ~= nil, "both are drawn")
     assertTrue(lineOf(drawn, keep) ~= nil and lineOf(drawn, keep) == lineOf(drawn, clear), "on one line")
-    assertTrue(find(drawn, "CheckBox", "Clear on boss kill") ~= nil, "and the session's clear under them")
+    -- red under: the pre-020 label, which did not say it clears the session's list (DRO-L11)
+    assertTrue(find(drawn, "CheckBox", "Clear this session's drops on boss kill") ~= nil, "and the session's clear under them")
     local H = NS.History
     local hist = H.Store()
     hist.groups = { { key = "enc:1@1", label = "Boss A", kind = "encounter", at = 1, drops = {} } }

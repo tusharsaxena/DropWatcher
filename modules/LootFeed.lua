@@ -917,7 +917,7 @@ local function isKill(success)
     return not NS.Compat.IsSecret(success) and (success == 1 or success == true)
 end
 
--- Clear on boss kill (`feed.clearOnBossKill`): a kill empties the live feed before its loot
+-- Clear this session's drops on boss kill (`feed.clearOnBossKill`): a kill empties the live feed before its loot
 -- arrives, so the table starts over with that boss's drops. The window repaints at once.
 local function clearOnKill()
     if get("feed.clearOnBossKill") ~= true or #store().live.drops == 0 then return end

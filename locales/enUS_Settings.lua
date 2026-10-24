@@ -56,7 +56,7 @@ L["Which drops the Drops tab lists when it opens: this instance's or this sessio
 L["How a fresh tab sorts its rows."] = "How a fresh tab sorts its rows."
 L["Gear only"] = "Gear only"
 L["List armor, weapons, jewelry and trinkets only."] = "List armor, weapons, jewelry and trinkets only."
-L["Tier tokens"] = "Tier tokens"
+L["Include tier tokens"] = "Include tier tokens"
 L["List tier tokens too."] = "List tier tokens too."
 L["Minimum item level"] = "Minimum item level"
 L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."] =
@@ -66,7 +66,7 @@ L["The least item level a drop needs in the absolute mode."] = "The least item l
 L["Levels under my average"] = "Levels under my average"
 L["How far under your average equipped item level a drop may be in the relative mode."] =
     "How far under your average equipped item level a drop may be in the relative mode."
-L["Clear on boss kill"] = "Clear on boss kill"
+L["Clear this session's drops on boss kill"] = "Clear this session's drops on boss kill"
 L["Clear the session's drops when a boss dies."] = "Clear the session's drops when a boss dies."
 L["Scoring"] = "Scoring"
 L["Score with"] = "Score with"

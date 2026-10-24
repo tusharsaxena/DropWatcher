@@ -298,7 +298,7 @@ and no setting row: the session (feedback-15 spec §0, DW-Q0, `modules/Session.l
 |---|---|---|
 | `session.start` | absent until the first read or login | the session start, `time()`: an initial login's `PLAYER_ENTERING_WORLD` sets it to now, a reload keeps it, a zone change moves nothing; absent or not a number, it is now (stored). History's group keys (`@<start>`) and every tab's This session read it (`NS.History.SessionStart`) |
 | `session.instance` | absent until the first `SituationChanged` | `{ at, situation, instance }`: where This instance started, `at` the epoch, `situation` the situation key, `instance` the instance map id (nil outside one); a reload's first situation announcement that names the same situation and instance restores the window's This instance from it |
-| `session.cleared` | absent until the first clear | `time()` of the last live `LootFeed.Clear` (`/dw clear`, Clear on boss kill): a reload restores no entry dated before it; an initial login drops it (`NS.Session.Cleared`) |
+| `session.cleared` | absent until the first clear | `time()` of the last live `LootFeed.Clear` (`/dw clear`, Clear this session's drops on boss kill): a reload restores no entry dated before it; an initial login drops it (`NS.Session.Cleared`) |
 
 The kit's AceDB fake has no `char` section, so headless the record is session-only unless a suite
 seeds `db.char` (`test_feed_restore` does).
@@ -337,7 +337,7 @@ it is named.
   valid is stored), `Session.OnEnteringWorld` (an initial login, which also drops `cleared`; the
   stand-up after a disabled start), `Session.MarkSituation` (each `SituationChanged` the window
   hears, but a reload's first one in the stored place) and `Session.MarkCleared` (`time()` at each
-  live `LootFeed.Clear`, `/dw clear` or Clear on boss kill: a reload restores no entry dated
+  live `LootFeed.Clear`, `/dw clear` or Clear this session's drops on boss kill: a reload restores no entry dated
   before it).
 
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to

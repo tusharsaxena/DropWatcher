@@ -250,7 +250,7 @@ end
 local function history(at)
     local row = pick(Settings.HISTORY_RETENTION_PATH, NS.C.GLOBAL_DEFAULTS.history.retentionDays,
         NS.HistoryRetention.Choices(), L["Keep history for"],
-        L["How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."],
+        L["Account-wide: shared by every profile. How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."],
         with(at, { onChange = function(v)
             -- A shorter window that would delete something asks first (modules/HistoryRetention.lua).
             NS.HistoryRetention.OnChanged(v)
@@ -281,7 +281,7 @@ local function feed()
     local kinds = { page = "feed", group = L["Items"], subgroup = L["Item kinds"] }
     bool("feed.gearOnly", F.gearOnly, L["Gear only"],
         L["List armor, weapons, jewelry and trinkets only."], kinds)
-    bool("feed.includeTokens", F.includeTokens, L["Tier tokens"],
+    bool("feed.includeTokens", F.includeTokens, L["Include tier tokens"],
         L["List tier tokens too."], kinds)
     local ilvl = with(kinds, { subgroup = L["Item level"] })
     pick("feed.minIlvlMode", F.minIlvlMode, ILVL_MODES, L["Minimum item level"],
@@ -298,7 +298,7 @@ local function feed()
     -- (settings/Pages.lua pairWith); Window › Layout's until feedback-24.
     local retention = { page = "feed", group = L["Retention"], subgroup = L["History"] }
     history(retention)
-    bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear on boss kill"],
+    bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear this session's drops on boss kill"],
         L["Clear the session's drops when a boss dies."], with(retention, { subgroup = L["Session"] }))
 end
 

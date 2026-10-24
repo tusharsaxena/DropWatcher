@@ -135,17 +135,18 @@ line `In force now: Quality: Rare+`: the filter bar's label for where you stand,
 when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
 at the Situations tab's Quality column, where a situation sets its own.
 
-**Items:** two subsections. **Item kinds:** Gear only | Tier tokens. **Item level:** Minimum item
+**Items:** two subsections. **Item kinds:** Gear only | Include tier tokens (`Tier tokens` until item 020). **Item level:** Minimum item
 level alone on its line, then its two values, each live in its mode only: Absolute minimum | Levels
 under my average.
 
 **Retention:** two subsections. **History:** Keep history for (7 to 180 days or Never delete,
-default 30; account-wide; a shorter time that would delete groups asks first, and No puts the
+default 30; account-wide, which its tooltip opens by saying, `Account-wide: shared by every profile.`,
+since item 020; a shorter time that would delete groups asks first, and No puts the
 previous time back), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a
 setting, so no schema row; Keep history for's `pairWith` partner in `settings/PageEditors.lua`; it
 asks first, `NS.History.AskClear`, and Yes empties the log on every character, or test mode's or a
 simulation's session-only log while one is on). Window › Layout's until feedback-24. **Session:**
-Clear on boss kill. (Show my own loot in Group drops is retired: Drops always lists your own drops,
+Clear this session's drops on boss kill (`Clear on boss kill` until item 020). (Show my own loot in Group drops is retired: Drops always lists your own drops,
 feedback-5 spec §2; schema step 6 removes the stored value.)
 
 ## Comparison

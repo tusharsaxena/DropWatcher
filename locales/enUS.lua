@@ -317,7 +317,7 @@ L["Character"] = "Character"
 
 -- Keep history for (modules/HistoryRetention.lua, feedback-2 spec §5)
 L["Keep history for"] = "Keep history for"
-L["How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."] = "How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."
+L["Account-wide: shared by every profile. How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."] = "Account-wide: shared by every profile. How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."
 L["%d days"] = "%d days"
 L["Never delete"] = "Never delete"
 L["%d groups (%d drops)"] = "%d groups (%d drops)"

@@ -38,7 +38,7 @@ the code reads every case the design leaves open, module by module, is in
   brings this session's drops back to the Drops tab from the History log (`modules/FeedRestore.lua`),
   linked to their entries, but a reload mid-key starts a new key header for the drops looted after
   it (the feed's open-run key is not kept across a reload), and a full relog starts an empty Drops
-  tab. Drops cleared from the Drops tab (`/dw clear`, Clear on boss kill) stay cleared, and a drop
+  tab. Drops cleared from the Drops tab (`/dw clear`, Clear this session's drops on boss kill) stay cleared, and a drop
   you asked for still reads `Asked`, but the Asks book is not kept: your own drop's Offer and
   Announce read untoned again after a reload, and its Offer panel offers each candidate anew (the
   History keeps that it was `offered`, not to whom). An entry of an earlier session takes no more

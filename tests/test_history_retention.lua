@@ -82,6 +82,9 @@ test("retention row: account-wide, on Drops › Retention, the listed windows on
     local NS = T.enableAddon()
     local row = NS.SchemaRuntime.FindRow(PATH)
     assertEqual(row.label, "Keep history for"); assertEqual(row.page, "feed"); assertEqual(row.group, "Retention")
+    -- red under: the pre-020 tooltip, which never said it is shared by every profile (DRO-L-new3)
+    assertEqual(row.tooltip:sub(1, #"Account-wide: shared by every profile. How long the History tab keeps"),
+        "Account-wide: shared by every profile. How long the History tab keeps")
     assertEqual(row.default, 30)
     assertEqual(NS.HistoryRetention.Days(), 30)
     assertFalse(NS.SchemaRuntime.Set(PATH, 45))
