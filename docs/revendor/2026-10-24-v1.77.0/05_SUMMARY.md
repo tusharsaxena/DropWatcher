@@ -79,3 +79,31 @@ section file was removed. Nothing needed changing:
   `*.sh` and `*.py` carve-outs, and the binary markings. The worktree straggler count, from the
   command's `git ls-files -z | xargs -0 -n1 sh -c '...' _ | wc -l`, is 0. No renormalization was
   performed.
+
+## Re-vendor after the tag moved (M3)
+
+LK-95 moved the local annotated tag v1.77.0 in `../LibKa0s` to carry the M3 settings-layout
+surfaces. DW-RV2 re-vendored it exactly as above, from the installed
+`/dev-copilot:wow-revendor-libka0s` 2.4.0 procedure.
+
+- **Tag:** old tag object `7380d36`, commit `78240f7`. New tag object
+  `b2b8ee25c5f9fa26db146254bf786b366dec986b`, commit
+  `afae2f75cb7ff61c57156d9a3d8a6b2b9f4c5e10` (`git -C ../LibKa0s rev-parse 'v1.77.0^{}'`).
+- **Minors that moved:** OptionsCompose 8 -> 11 (minor 9: `MasterControls` `notes`,
+  `resetPositionTooltip`, `lockIsPreview` and Master opacity; minor 10: `tooltips` on the group
+  composers; minor 11: `O.ResetAllTooltip(tail)`). No other file changed in either payload, and the
+  kit stays at revision 42, so `docs/testing.md:19` is unchanged. The copy deleted nothing.
+- **Provenance:** `CLAUDE.md:42` stays `v1.77.0` and records no sha or kit revision, so nothing
+  rolled. The 28-name `LibKa0s icons:` line is kept. The prune removed 5,811 files again, and none
+  reached git. README `## Credits` is unchanged.
+- **Blocker, fixed in this commit:** `parity: the Options helpers stub carries the whole live
+  surface` went red on `ResetAllTooltip`. The library-absent branch of `settings/OptionsSetup.lua`
+  now carries it as an inert member returning `""`.
+- **Adopted:** nothing (DW-LY adopts the layout surfaces).
+- **Standard:** no drift. Since the check above, WS-30..WS-38 and WS-95 changed `options-ui`
+  (twenty to twenty-one numbered sections, the new one appended), `library-stack`, `anti-patterns`,
+  `naming-cheatsheet`, `open-evolutions` and the index. No existing section was renumbered and the
+  three standards places carry no version, so nothing in this repo moves.
+- **Gate, both through `ka0s-bounded`:** `lua tests/run.lua` 1705 passed, 0 failed, 1 skipped
+  (1706 total). `luacheck .` gives 0 warnings / 0 errors in 194 files. No authored `.lua` file is
+  above 1500 lines (the largest is `locales/enUS.lua` at 1318).
