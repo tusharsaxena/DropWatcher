@@ -463,3 +463,188 @@ test("icons: without LibKa0s the tab keeps its Zoom row and the border reads its
     assertEqual(D.Setting("icons.borderShow"), true, "the profile default: a border (feedback-21 H6)")
     assertEqual(D.Setting("icons.borderStyle"), "Solid")
 end)
+
+-- ── the settings-layout guard (DW-LY, item 020) ─────────────────────────────────────────────
+--
+-- Item 020 moves, regroups and relabels rows only: every stored path, its type and its default
+-- stay exactly as they were. Pinned from the schema at b9d6651 (before the item's first edit), so
+-- a key or default that drifts in a layout change fails here, in both directions.
+
+local function serialize(v)
+    if type(v) == "string" then return string.format("%q", v) end
+    if type(v) ~= "table" then return tostring(v) end
+    local keys = {}
+    for k in pairs(v) do keys[#keys + 1] = k end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    local parts = {}
+    for _, k in ipairs(keys) do parts[#parts + 1] = "[" .. serialize(k) .. "]=" .. serialize(v[k]) end
+    return "{" .. table.concat(parts, ",") .. "}"
+end
+
+local PINNED_ROWS = {
+    { "alpha", "number", "1" },
+    { "autoOpen", "bool", "true" },
+    { "comparison.compareOwned", "bool", "false" },
+    { "comparison.heirloomProtect", "bool", "true" },
+    { "comparison.scorer", "string", "\"auto\"" },
+    { "comparison.sidegradeBand", "number", "0" },
+    { "comparison.undesired", "map", "{}" },
+    { "comparison.weights", "map", "{}" },
+    { "enabled", "bool", "true" },
+    { "feed.clearOnBossKill", "bool", "false" },
+    { "feed.content", "string", "\"session\"" },
+    { "feed.gearOnly", "bool", "true" },
+    { "feed.includeTokens", "bool", "true" },
+    { "feed.minIlvl", "number", "0" },
+    { "feed.minIlvlMode", "string", "\"off\"" },
+    { "feed.quality.fixed", "number", "3" },
+    { "feed.quality.floor", "number", "2" },
+    { "feed.quality.mode", "string", "\"fixed\"" },
+    { "feed.quality.upgradeOverride", "bool", "true" },
+    { "feed.relativeIlvl", "number", "10" },
+    { "feed.sort", "string", "\"newest\"" },
+    { "feed.view.interesting", "bool", "false" },
+    { "feed.view.likely", "bool", "false" },
+    { "feed.view.upgrade", "bool", "false" },
+    { "feed.view.usable", "bool", "false" },
+    { "global.history.retentionDays", "number", "30" },
+    { "global.minimap.shown", "bool", "true" },
+    { "glow.main.autocastFrequency", "number", "0.125" },
+    { "glow.main.autocastParticles", "number", "4" },
+    { "glow.main.autocastScale", "number", "1" },
+    { "glow.main.buttonFrequency", "number", "0.25" },
+    { "glow.main.color", "color", "{[\"a\"]=1,[\"b\"]=0.4078431372549,[\"g\"]=0.95686274509804,[\"r\"]=1}" },
+    { "glow.main.enabled", "bool", "true" },
+    { "glow.main.pixelBorder", "bool", "true" },
+    { "glow.main.pixelFrequency", "number", "0.1" },
+    { "glow.main.pixelLength", "number", "0" },
+    { "glow.main.pixelLines", "number", "8" },
+    { "glow.main.pixelThickness", "number", "1" },
+    { "glow.main.procDuration", "number", "1" },
+    { "glow.main.procStartAnim", "bool", "true" },
+    { "glow.main.type", "string", "\"pixel\"" },
+    { "glow.main.useClassColor", "bool", "false" },
+    { "glow.main.xOffset", "number", "0" },
+    { "glow.main.yOffset", "number", "0" },
+    { "glow.offSpec.autocastFrequency", "number", "0.125" },
+    { "glow.offSpec.autocastParticles", "number", "4" },
+    { "glow.offSpec.autocastScale", "number", "1" },
+    { "glow.offSpec.buttonFrequency", "number", "0.25" },
+    { "glow.offSpec.color", "color", "{[\"a\"]=1,[\"b\"]=0.92156862745098,[\"g\"]=0.78039215686275,[\"r\"]=0.24705882352941}" },
+    { "glow.offSpec.enabled", "bool", "true" },
+    { "glow.offSpec.pixelBorder", "bool", "true" },
+    { "glow.offSpec.pixelFrequency", "number", "0.1" },
+    { "glow.offSpec.pixelLength", "number", "0" },
+    { "glow.offSpec.pixelLines", "number", "8" },
+    { "glow.offSpec.pixelThickness", "number", "1" },
+    { "glow.offSpec.procDuration", "number", "1" },
+    { "glow.offSpec.procStartAnim", "bool", "true" },
+    { "glow.offSpec.type", "string", "\"pixel\"" },
+    { "glow.offSpec.useClassColor", "bool", "false" },
+    { "glow.offSpec.xOffset", "number", "0" },
+    { "glow.offSpec.yOffset", "number", "0" },
+    { "icons.borderColor", "color", "{[\"a\"]=1,[\"b\"]=0,[\"g\"]=0,[\"r\"]=0}" },
+    { "icons.borderQuality", "bool", "false" },
+    { "icons.borderShow", "bool", "true" },
+    { "icons.borderSize", "number", "2" },
+    { "icons.borderStyle", "string", "\"Solid\"" },
+    { "icons.useClassColorBorder", "bool", "false" },
+    { "icons.zoom", "number", "0.1" },
+    { "locked", "bool", "false" },
+    { "messages.announceChannel", "string", "\"auto\"" },
+    { "messages.autoAsk.delay", "number", "10" },
+    { "messages.autoAsk.enabled", "bool", "false" },
+    { "messages.autoAsk.minGain", "number", "5" },
+    { "messages.editFirst", "bool", "false" },
+    { "messages.oneAsk", "bool", "true" },
+    { "messages.templates.announce", "string", "\"{item} is up for grabs, whisper me.\"" },
+    { "messages.templates.ask", "string", "\"Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!\"" },
+    { "messages.templates.askOffSpec", "string", "\"Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!\"" },
+    { "messages.templates.offer", "string", "\"Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?\"" },
+    { "messages.templates.transmog", "string", "\"Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!\"" },
+    { "messages.transmogAsk", "bool", "false" },
+    { "scale", "number", "1" },
+    { "sim.stepDelay", "number", "1" },
+    { "situations.delve.autoOpen", "bool", "false" },
+    { "situations.delve.quality", "string", "\"global\"" },
+    { "situations.delve.track", "bool", "false" },
+    { "situations.dungeon.autoOpen", "bool", "true" },
+    { "situations.dungeon.quality", "string", "\"global\"" },
+    { "situations.dungeon.track", "bool", "true" },
+    { "situations.followerDungeon.autoOpen", "bool", "false" },
+    { "situations.followerDungeon.quality", "string", "\"global\"" },
+    { "situations.followerDungeon.track", "bool", "false" },
+    { "situations.mythicPlus.autoOpen", "bool", "true" },
+    { "situations.mythicPlus.quality", "string", "\"global\"" },
+    { "situations.mythicPlus.track", "bool", "true" },
+    { "situations.openWorldGroup.autoOpen", "bool", "false" },
+    { "situations.openWorldGroup.quality", "string", "\"global\"" },
+    { "situations.openWorldGroup.track", "bool", "false" },
+    { "situations.pvp.autoOpen", "bool", "false" },
+    { "situations.pvp.quality", "string", "\"global\"" },
+    { "situations.pvp.track", "bool", "false" },
+    { "situations.raid.autoOpen", "bool", "true" },
+    { "situations.raid.quality", "string", "\"global\"" },
+    { "situations.raid.track", "bool", "true" },
+    { "situations.raidLFR.autoOpen", "bool", "false" },
+    { "situations.raidLFR.quality", "string", "\"global\"" },
+    { "situations.raidLFR.track", "bool", "true" },
+    { "situations.scenario.autoOpen", "bool", "false" },
+    { "situations.scenario.quality", "string", "\"global\"" },
+    { "situations.scenario.track", "bool", "false" },
+    { "situations.solo.autoOpen", "bool", "false" },
+    { "situations.solo.quality", "string", "\"global\"" },
+    { "situations.solo.track", "bool", "false" },
+    { "state.debugConsole", "bool", "false" },
+    { "state.testMode", "bool", "nil" },
+    { "toast.duration", "number", "8" },
+    { "toast.enabled", "bool", "false" },
+    { "toast.inCombat", "bool", "false" },
+    { "toast.minGain", "number", "10" },
+    { "toast.scale", "number", "1" },
+    { "toast.sound", "bool", "false" },
+    { "trade.rules.delve", "string", "\"personal\"" },
+    { "trade.rules.dungeon", "string", "\"personal\"" },
+    { "trade.rules.followerDungeon", "string", "\"legacy\"" },
+    { "trade.rules.mythicPlus", "string", "\"personal\"" },
+    { "trade.rules.openWorldGroup", "string", "\"personal\"" },
+    { "trade.rules.pvp", "string", "\"legacy\"" },
+    { "trade.rules.raid", "string", "\"personal\"" },
+    { "trade.rules.raidLFR", "string", "\"personal\"" },
+    { "trade.rules.scenario", "string", "\"personal\"" },
+    { "trade.rules.solo", "string", "\"personal\"" },
+    { "trade.warnAt", "number", "600" },
+    { "visibility", "string", "\"always\"" },
+    { "window.columns.actions", "bool", "true" },
+    { "window.columns.armorType", "bool", "true" },
+    { "window.columns.ilvl", "bool", "true" },
+    { "window.columns.looter", "bool", "true" },
+    { "window.columns.me", "bool", "true" },
+    { "window.columns.slot", "bool", "true" },
+    { "window.columns.them", "bool", "true" },
+    { "window.columns.trade", "bool", "true" },
+    { "window.columns.tradeWindow", "bool", "true" },
+    { "window.compactInRuns", "bool", "true" },
+    { "window.fontSize", "number", "0" },
+    { "window.mode", "string", "\"full\"" },
+    { "window.rowHeight", "number", "18" },
+}
+
+test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()
+    local NS = T.newAddon()
+    local want = {}
+    for _, p in ipairs(PINNED_ROWS) do want[p[1]] = p end
+    local seen = 0
+    for _, row in ipairs(NS.addon.Settings.Schema) do
+        if row.path then
+            local p = want[row.path]
+            -- red under: a row renamed, added or retired by a layout change
+            assertTrue(p ~= nil, "a stored path the layout must not add: " .. row.path)
+            assertEqual(row.type, p[2], row.path .. ": type")
+            -- red under: a default changed by a move
+            assertEqual(serialize(row.default), p[3], row.path .. ": default")
+            seen = seen + 1
+        end
+    end
+    assertEqual(seen, #PINNED_ROWS, "every pinned path is still a row")
+end)
