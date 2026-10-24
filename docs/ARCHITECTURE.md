@@ -160,15 +160,19 @@ player to `/dw enable` an addon that is already enabled.
 
 The launcher's Show window entry has a key binding (launcher-§6, LibKa0s#58). The root
 `Bindings.xml`, which the client reads without a TOC line, declares one
-`CLICK DropWatcherToggleWindow:LeftButton` binding under the `DROPWATCHER` header in the `ADDONS`
-category, with no default key. `core/LauncherSetup.lua` builds that button at load, above its
+`CLICK DropWatcherToggleWindow:LeftButton` binding in the addon's own category,
+`BINDING_HEADER_DROPWATCHER`, with no `header` attribute and no default key, so Options →
+Keybindings shows it in a section of its own titled with the brand. `core/LauncherSetup.lua` builds that button at load, above its
 library check: a plain, named, hidden, non-secure Button registered `AnyDown`. Its OnClick asks
 `NS.StoodDownRefusal()` first, because `NS.ToggleWindow` relies on the dispatcher's gate for
 `/dw toggle`, and prints that one line when it answers (the disabled line under the disabled hold,
 `Not available during a performance capture.` under the perf hold alone). Otherwise it calls
 `NS.ToggleWindow`, so the menu entry, the toggle verb and the key are one handler. The header label
-is `NS.BRAND` and the row label `Toggle Drop Watcher window` goes through `NS.L`. The button's name
-is permanent: a rename unbinds every player's key.
+is `NS.BRAND` and the row label `Toggle drop feed` goes through `NS.L`. `NS.BINDINGS`, beside the
+button, lists the commands in `Bindings.xml` order (Show window first) with each one's tooltip; the
+General page's last tab, Keybindings, is LibKa0s's `O.KeybindingsTab` over it (options-ui-§20,
+`settings/Panel.lua`), and `tests/test_bindings.lua` holds `Bindings.xml` to it through
+`Kit.assertBindingsXml`. The button's name is permanent: a rename unbinds every player's key.
 
 ## Event Subscriptions
 

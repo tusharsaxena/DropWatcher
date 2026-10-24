@@ -1820,13 +1820,20 @@ Total.
 - sim panel: dragging writes nothing to the profile; Reset position redocks
 - sim panel: standing down hides it, idle or running, and it does not open while stood down
 
-### test_bindings.lua (5)
+### test_bindings.lua (12)
 
-- bindings: Bindings.xml carries one CLICK binding on DropWatcherToggleWindow under DROPWATCHER, category ADDONS, with no default key, and the TOC does not list it
+- bindings: Bindings.xml puts every binding in the addon's own category, no header, no default, in NS.BINDINGS order, and the TOC does not list it
+- bindings: NS.BINDINGS is the one table, Show window first, with a localized tooltip, on a library-less install too
 - bindings: the button is a plain hidden Button named DropWatcherToggleWindow, registered for AnyDown only
 - bindings: one press is one NS.Window.Toggle
-- bindings: the header label is the brand and the binding label is localized
+- bindings: the category label is the brand and the binding label is localized, with no brand in it
 - bindings: the button exists on a library-less install too
+- keybindings: the General page's strip ends with Keybindings
+- keybindings: the tab's rows are NS.BINDINGS, in order, labeled with the BINDING_NAME_ globals
+- keybindings: a key bound through the tab is the binding's key, saved to the set in force
+- keybindings: a key set on the client's page shows in the tab after UPDATE_BINDINGS
+- keybindings: in combat the tab refuses and calls no binding API
+- keybindings: the General page's Defaults tooltip says the keys are not changed
 
 ### test_disabled.lua (13)
 
@@ -2031,7 +2038,7 @@ Total.
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 13 |
-| test_bindings.lua | 5 |
+| test_bindings.lua | 12 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
@@ -2043,4 +2050,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1689** |
+| **Total** | **1696** |

@@ -518,9 +518,13 @@ their bosses and loot counts, each kind's tooltip and Start's and Stop's, the sc
 raid's sizes in the picker, the done tick's texture, `/dw sim` and `panel` opening or toggling it,
 the dock beside the window, also once a slow pool opens it, a drag writing nothing to the profile
 and Reset position redocking, and the stand-down hiding it, idle or running),
-`test_bindings` (the Show window key binding, launcher-§6: `Bindings.xml`'s one CLICK binding, no
-default key and no TOC line, the plain hidden `AnyDown` button, one press per toggle, the two labels,
-and the button on a library-less install), `test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
+`test_bindings` (the Show window key binding, launcher-§6: `Bindings.xml` held to `NS.BINDINGS` by
+the kit's `Kit.assertBindingsXml`, its own category and no header, no default key and no TOC line,
+the plain hidden `AnyDown` button, one press per toggle, the two labels, and the button on a
+library-less install; and General → Keybindings, options-ui-§20: the strip's last tab, its rows and
+labels, a key bound through it with `Kit.keybindThroughTab`, a key set elsewhere repainting it, its
+combat refusal and the Defaults tooltip; on the kit's `tests/_kit/mock_bindings.lua`, which
+`tests/wow_mock.lua` installs), `test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
 §14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each
 hold and its release over an encounter or combat, the trade scan logged on change only, the search
 box once on focus lost, and the report's drop, toast-queue and auto-ask lines), `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw

@@ -14,7 +14,7 @@ share a line (feedback-24).
 | Page | Covers |
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `Simulator` |
+| General | `Master controls`, `Simulator`, `Keybindings` |
 | Situations | `Situations` (one tab: Auto-open the window and the per-situation table) |
 | Drops (key `feed`) | `Quality`, `Items`, `Retention` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
@@ -56,10 +56,11 @@ The header's Defaults button and Reset all settings both open the confirmation p
 reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
 
 The launcher's right-click menu mirrors four of these: Enabled, Locked, Test mode and Show window
-(launcher-§2). Show window also has a key binding (launcher-§6): Key Bindings → AddOns → Ka0s Drop
-Watcher → Toggle Drop Watcher window, with no default key, on the same handler as the menu entry and
-`/dw toggle` (`NS.ToggleWindow`, through the `DropWatcherToggleWindow` button in
-`core/LauncherSetup.lua`).
+(launcher-§2). Show window also has a key binding (launcher-§6): Options → Keybindings → Ka0s Drop
+Watcher → Toggle drop feed, or General → Keybindings in this addon's settings, with no default key,
+on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, through the
+`DropWatcherToggleWindow` button in `core/LauncherSetup.lua`). The header's Defaults tooltip ends
+with `Key bindings are not changed.` (`O.KEYBINDS_UNCHANGED`): no reset reaches a key.
 
 ## General → Simulator
 
@@ -68,6 +69,16 @@ seconds the simulator waits between steps as it plays, 0.5
 to 10 in steps of 0.5, 1 by default (2 until the owner's 2026-10-23 simulator feedback). `/dw set sim.stepDelay <n>` reaches it too (the slash parser
 clamps a number outside the range to it). A change takes effect from the next step of a running
 timeline.
+
+## General → Keybindings
+
+The General page's last tab (options-ui-§20), drawn by LibKa0s's `O.KeybindingsTab` over
+`NS.BINDINGS` (`core/LauncherSetup.lua`) as a host tab with no `before` (`settings/Panel.lua`). It
+edits the same store as Options → Keybindings → Ka0s Drop Watcher, so a key set in either shows in
+the other. The library's intro line, then one row, `Toggle drop feed` (tooltip `Shows or hides the
+drop feed.`), with Key 1, Key 2 and Clear; then which binding set the key is saved to, and the
+outcome of the last change. Keys are saved by the game, never in the profile: Defaults, Reset all
+settings and `/dw set` never touch them. In combat the tab refuses every change.
 
 ## Situations
 

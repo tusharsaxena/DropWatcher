@@ -6,8 +6,9 @@ local addonName, NS = ...
 -- first tab `Master controls`, composed from one declaration with the canonical rows in canonical
 -- order (options-ui-§15): the window is positionable, so every frame row is present, plus the
 -- Minimap button and Test mode rows. The General page's second tab, `Simulator`, is the simulator's
--- step delay (settings/SchemaRows.lua); When to show moved to the Situations page in feedback-24
--- (settings/Pages.lua). The design spec's other pages (§12.2) are DW-41's.
+-- step delay (settings/SchemaRows.lua), and its last, `Keybindings`, is LibKa0s's key editor
+-- (options-ui-§20); When to show moved to the Situations page in feedback-24 (settings/Pages.lua).
+-- The design spec's other pages (§12.2) are DW-41's.
 
 local DW       = NS.addon
 local Settings = DW.Settings
@@ -67,17 +68,31 @@ NS.SchemaRuntime.AddRows(MASTER_ROWS, 1)
 local AFTER_GROUP = {}
 if Helpers.MASTER_GROUP then AFTER_GROUP[Helpers.MASTER_GROUP] = MASTER_TAIL end
 
--- The General page's render, a tab click's included (`rerender`).
+-- The General page's render, a tab click's included (`rerender`). Its last tab is Keybindings
+-- (options-ui-§20): the library's host tab over NS.BINDINGS (core/LauncherSetup.lua), with no
+-- `before`, so it follows every schema tab. The stub's KeybindingsTab answers nil: no tab.
 local function renderGeneral(c)
     Helpers.ClearScroll(c)
-    Helpers.RenderTabbedSchema(c, "general", AFTER_GROUP, nil, { rerender = renderGeneral })
+    Helpers.RenderTabbedSchema(c, "general", AFTER_GROUP, nil, {
+        rerender = renderGeneral,
+        tabs     = { Helpers.KeybindingsTab({ bindings = NS.BINDINGS }) },
+    })
+end
+
+-- The General page's Defaults tooltip ends with the library's "Key bindings are not changed."
+-- (options-ui-§20): keys are the game's, not a setting, so no reset reaches them.
+local function generalDefaultsTooltip()
+    local tip = L["Reset every %s setting to its default. Asks for confirmation."]:format(NS.BRAND)
+    local unchanged = Helpers.KEYBINDS_UNCHANGED
+    if type(unchanged) == "string" and unchanged ~= "" then tip = tip .. " " .. unchanged end
+    return tip
 end
 
 local function buildGeneralPage(parentCategory)
     local ctx = Helpers.CreatePanel(addonName .. "GeneralPanel", L["General"], {
         pageKey         = "general",
         defaultsButton  = true,
-        defaultsTooltip = L["Reset every %s setting to its default. Asks for confirmation."]:format(NS.BRAND),
+        defaultsTooltip = generalDefaultsTooltip(),
     })
     ctx.panel.defaultsOnClick = showResetPopup
     Helpers.SetRenderer(ctx, renderGeneral)

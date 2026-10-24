@@ -21,7 +21,8 @@ end
 -- ── the Show window key binding (launcher-§6) ───────────────────────────────────────────────
 --
 -- Bindings.xml (repo root, read by the client, never TOC-listed) declares one CLICK binding on the
--- button below, with no default key. A plain, hidden, non-secure Button, registered AnyDown so one
+-- button below, in the addon's own category (BINDING_HEADER_DROPWATCHER), with no header and no
+-- default key. A plain, hidden, non-secure Button, registered AnyDown so one
 -- key press is one click. Its OnClick asks NS.StoodDownRefusal first, because NS.ToggleWindow
 -- relies on the dispatcher's gate for `/dw toggle`: stood down, the press prints the one line the
 -- toggle verb would, chosen by hold (the disabled line, or the perf capture's). Otherwise it calls
@@ -39,10 +40,20 @@ toggleButton:SetScript("OnClick", function()
     NS.ToggleWindow()
 end)
 
--- The Key Bindings page's labels: the header is the brand, the row is localized. The row's global
--- name carries a space and a colon, so it is written with rawset rather than declared to luacheck.
+-- The Keybindings page's labels. BINDING_HEADER_DROPWATCHER is the category every <Binding> in
+-- Bindings.xml names, so it is this addon's own section title there: the brand, assigned at file
+-- scope because the client reads it on ADDON_LOADED. The row is localized and carries no brand,
+-- since the section already does (launcher-§6). Its global name holds a space and a colon, so it is
+-- written with rawset rather than declared to luacheck.
 BINDING_HEADER_DROPWATCHER = NS.BRAND
-rawset(_G, "BINDING_NAME_CLICK DropWatcherToggleWindow:LeftButton", NS.L["Toggle Drop Watcher window"])
+rawset(_G, "BINDING_NAME_CLICK DropWatcherToggleWindow:LeftButton", NS.L["Toggle drop feed"])
+
+-- The one bindings table (launcher-§6), in Bindings.xml order, Show window first. General >
+-- Keybindings (settings/Panel.lua, O.KeybindingsTab, options-ui-§20) draws a row per entry, and
+-- tests/test_bindings.lua holds Bindings.xml to it (Kit.assertBindingsXml).
+NS.BINDINGS = {
+    { command = "CLICK DropWatcherToggleWindow:LeftButton", tooltip = NS.L["Shows or hides the drop feed."] },
+}
 
 if not lib then
     local missing = NS.L["%s, so there is no minimap button and no broker plugin."]:format(NS.LIBKA0S_MISSING)

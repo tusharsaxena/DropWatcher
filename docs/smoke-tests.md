@@ -15,6 +15,7 @@ passed.
 |---|---|---|
 | INSTALL-1..5 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV) |
 | SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
+| KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
@@ -128,6 +129,35 @@ window and a second press closes it (one toggle per press), in and out of combat
 and press the key → exactly one disabled refusal line and no window. `/dw enable`, start a
 `/dw perf` capture and press → exactly `Not available during a performance capture.` and no toggle.
 Result: passed in the client, 2026-10-23 (the owner).
+
+## Keybindings
+
+Item 015 (DW-KB, the 2026-10-24 keybindings, layout and strata run; launcher-§6 and options-ui-§20
+at standard v2.88.0, LibKa0s v1.77.0's `O.KeybindingsTab`). SLASH-8 above was run on the earlier
+shape (Key Bindings → AddOns), and these three replace its path.
+
+**KEYBIND-1. Its own section in Options → Keybindings (SM-DW-KB1).** Options → Keybindings → scroll
+to the addon sections → a section titled `Ka0s Drop Watcher` holds one row, `Toggle drop feed`, with
+no default key, and there is no blank spacer row above or in it. Drop Watcher no longer appears
+under the shared *AddOns* section. A key bound before this change is still bound.
+Result: not yet run.
+
+**KEYBIND-2. The tab and the client's page in step (SM-DW-KB2).** Settings → Ka0s Drop Watcher →
+General → the strip ends with `Keybindings`. It shows the intro line, one row `Toggle drop feed`
+(hover: `Shows or hides the drop feed.`) with Key 1, Key 2 and Clear, and `Saved for: all
+characters (Options -> Keybindings -> Character Specific Keybindings)`. Bind a key in Key 1 → the
+outcome line reads `Key bound.`; open Options → Keybindings → the same key shows on Toggle drop feed.
+Bind a second key there → back on the General tab it shows in Key 2 without a `/reload`. Clear on
+the tab → both keys gone in Options → Keybindings. Repeat with Character Specific Keybindings
+ticked → the set line reads `Saved for: this character only`, and the same round trips hold.
+Result: not yet run.
+
+**KEYBIND-3. The key, Escape and combat (SM-DW-KB3).** With a key bound, press it → the window
+opens; press again → it closes. On the tab, click Key 1 (it reads `Press a key...`), press Escape →
+the capture cancels, the old key is shown again and the Settings window stays open. Pull a training
+dummy, then click Key 1 or Clear → nothing changes and the outcome line reads `Key bindings can be
+changed after combat.`; a capture already listening when combat starts is canceled.
+Result: not yet run.
 
 ## Settings panel
 
