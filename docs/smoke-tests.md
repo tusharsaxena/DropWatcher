@@ -142,7 +142,7 @@ shape (Key Bindings → AddOns), and these three replace its path.
 to the addon sections → a section titled `Ka0s Drop Watcher` holds one row, `Toggle drop feed`, with
 no default key, and there is no blank spacer row above or in it. Drop Watcher no longer appears
 under the shared *AddOns* section. A key bound before this change is still bound.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 **KEYBIND-2. The tab and the client's page in step (SM-DW-KB2, SM-DW-RV3).** Settings → Ka0s Drop
 Watcher → General → the strip ends with `Keybindings`. It shows the intro line, one row `Toggle drop
@@ -155,14 +155,14 @@ on Toggle drop feed. Bind a second key there → back on the General tab the but
 the game's Key Bindings page. Clear on the tab → both keys gone in Options → Keybindings. Repeat
 with Character Specific Keybindings ticked → the set line reads `Saved for: this character only`,
 and the same round trips hold.
-Result: not yet run (rewritten for the one key button, DW-RV3, 2026-10-24).
+Result: passed in the client, 2026-10-24 (the owner).
 
 **KEYBIND-3. The key, Escape and combat (SM-DW-KB3).** With a key bound, press it → the window
 opens; press again → it closes. On the tab, click the key button (it reads `Press a key...`), press Escape →
 the capture cancels, the old key is shown again and the Settings window stays open. Pull a training
 dummy, then click the key button or Clear → nothing changes and the outcome line reads `Key bindings
 can be changed after combat.`; a capture already listening when combat starts is canceled.
-Result: not yet run (rewritten for the one key button, DW-RV3, 2026-10-24).
+Result: passed in the client, 2026-10-24 (the owner).
 
 ## Frame layering
 
@@ -176,7 +176,7 @@ SM-DW-ZS.
 the other window → it covers Drop Watcher's. Click anywhere on Drop Watcher's window → it comes to
 the front, whole. Drag it, resize it by the grip and open a detail card → nothing has moved under
 or over anything else; the grip still works.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 **LAYER-2. The floating Offer panel over the window's rows, under the toast.** Make the Offer panel
 float: put the window where neither side has room for it (a full-width window, or the compact window
@@ -185,21 +185,21 @@ over the window's right side, over its rows, its rows' tooltips over the panel. 
 on, bring up a toast as TOAST-1 does and drag it over the floating panel → the toast draws **over**
 the panel (before this change the panel covered it). Dock the panel again (move the window back) →
 it sits beside the window as before.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 **LAYER-3. The compact Filters panel and its dropdowns.** `/dw compact`, press Filters ▾ → the panel
 opens over the window's cards. Open each of its four dropdowns → each menu opens over the panel, and
 a pick filters. With the window short, so the panel reaches past its bottom edge, the part outside
 the window still shows and its dropdowns still open over everything. With the Offer panel floating
 (LAYER-2), open Filters → the Filters panel draws over the Offer panel.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 **LAYER-4. The Edit message box over the floating Offer panel.** Tick Edit before sending
 (Messages › Sending), float the Offer panel (LAYER-2), then press a member's Offer → the Edit
 message box opens centered over the window and draws **over** the Offer panel, whole and clickable;
 its Send and close work. Click the window behind it → the box stays over the window. Escape or close
 → it goes, the Offer panel is unchanged.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 ## Settings layout
 
@@ -226,7 +226,7 @@ Turned on in row reads `Settings > Drops > Situations`. Items: `Gear only` | `In
 Retention; hover Keep history for → its tooltip opens `Account-wide: shared by every profile.`;
 under Session the checkbox reads `Clear this session's drops on boss kill`, ticked or not as before.
 `/reload` → every value you set before the check (other than the ones Defaults reset) is unchanged.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 **LAYOUT-2. General (DRO-L05, DRO-L-new1, DRO-L-new4).** General's strip still reads Master
 controls, Simulator, Keybindings. Hover the header's Defaults → `Reset the current profile to its
@@ -236,7 +236,7 @@ last sentence. Neither mentions `Reset every Ka0s Drop Watcher setting`. Simulat
 `Simulation step delay (seconds)`, still 0.5 to 10 at the value you had, and its tooltip reads
 `Paces /dw sim: how many seconds the simulator waits between steps as it plays. A change takes
 effect from the next step.` `/reload` → the step delay and every Master controls value unchanged.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 **LAYOUT-3. Window (DRO-L06, DRO-L07, DRO-L15).** Window's strip still reads Layout, Columns,
 Starting view, Icons. Layout: a `Mode` heading over `Window layout` | `Compact view when it
@@ -246,13 +246,13 @@ compact; hover the title bar's layout toggle → the hold line reads `until this
 view when it auto-opens in a run)`. Starting view: hover each of the four View checkboxes → each
 tooltip ends `With none ticked, a fresh tab lists every drop.` `/reload` → every Window value
 unchanged.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 **LAYOUT-4. Messages (DRO-L08).** Messages opens on Sending, which reads `Ask once` | `Edit before
 sending` on its first line, then `Announce channel` | `Offer transmog asks`; each is ticked or set
 as before. Tick Edit before sending, press a row's Ask → the Edit message box opens, as PANEL-7
 describes. Auto-ask and Templates are unchanged. `/reload` → every Messages value unchanged.
-Result: not yet run.
+Result: passed in the client, 2026-10-24 (the owner).
 
 ## Settings panel
 
@@ -2838,10 +2838,10 @@ stray `%s` or `%d`, and no Lua error. Result: passed in the client, 2026-10-23 (
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
-(DW-01) and FEED-102 (DW-10) included, and each one's `Result:` line records it. Pending since:
-
-- KEYBIND-2 (SM-DW-KB2, SM-DW-RV3) and KEYBIND-3 (SM-DW-KB3): rewritten by DW-RV3 for the one key
-  button and Clear per row (LibKa0s OptionsKeybinds minor 4); not yet run.
+(DW-01) and FEED-102 (DW-10) included, and each one's `Result:` line records it. On 2026-10-24 the
+owner reported every check of the keybindings, settings layout and frame layering run passed
+(KEYBIND-1..3, LAYER-1..4 and LAYOUT-1..4, the one key button rewrite DW-RV3 included), and each
+one's `Result:` line records it. None is owed.
 
 ### Review 2026-10-14 (M24) sign-off
 
