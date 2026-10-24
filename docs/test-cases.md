@@ -164,7 +164,7 @@ Total.
 - feed: Retention draws Clear history beside Keep history for; it asks first and clears only on Yes
 - feed: with test mode on, Clear history clears the samples and leaves the account's log
 - pages: a switch is alone on its line and its knobs pair under it (Toast, Auto-ask)
-- pages: Messages opens on Sending, which asks before it sends, the transmog switch named apart from its template
+- pages: Messages opens on Sending, its per-send switches on one line, the transmog switch named apart from its template
 - pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in
 - pages: a page's Defaults resets that page's rows and no other page's
 - pages: the Drops page's Defaults tooltip names the situations it now resets (DRO-L03)

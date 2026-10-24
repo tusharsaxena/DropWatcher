@@ -641,14 +641,22 @@ test("pages: a switch is alone on its line and its knobs pair under it (Toast, A
     assertTrue(lineOf(drawn, find(drawn, "Slider", "Delay (seconds)")) == lineOf(drawn, find(drawn, "Slider", "Least gain (item levels)")))
 end)
 
-test("pages: Messages opens on Sending, which asks before it sends, the transmog switch named apart from its template", function()
+test("pages: Messages opens on Sending, its per-send switches on one line, the transmog switch named apart from its template", function()
     local NS, _, m = T.enableAddon()
     local ctx, drawn = open(NS, m, "messages")
     assertEqual(ctx.activeTab, "Sending")
-    local transmog, once = find(drawn, "CheckBox", "Offer transmog asks"), find(drawn, "CheckBox", "Ask once")
-    assertTrue(transmog ~= nil and lineOf(drawn, transmog) == lineOf(drawn, once), "which asks you get, one line")
-    assertTrue(lineOf(drawn, find(drawn, "CheckBox", "Edit before sending")) == lineOf(drawn, find(drawn, "Dropdown", "Announce channel")),
-        "how they go, the next")
+    -- red under: the pre-020 order, Offer transmog asks | Ask once, then Edit before sending | Announce
+    -- channel (DRO-L08: the two per-send switches share a line)
+    local once, edit = find(drawn, "CheckBox", "Ask once"), find(drawn, "CheckBox", "Edit before sending")
+    local channel, transmog = find(drawn, "Dropdown", "Announce channel"), find(drawn, "CheckBox", "Offer transmog asks")
+    assertTrue(once ~= nil and edit ~= nil and lineOf(drawn, once) == lineOf(drawn, edit), "Ask once | Edit before sending")
+    assertTrue(channel ~= nil and transmog ~= nil and lineOf(drawn, channel) == lineOf(drawn, transmog),
+        "Announce channel | Offer transmog asks")
+    local order = {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("messages")) do
+        if row.group == "Sending" then order[#order + 1] = row.path end
+    end
+    assertEqual(table.concat(order, ","), "messages.oneAsk,messages.editFirst,messages.announceChannel,messages.transmogAsk")
     assertTrue(find(drawn, "CheckBox", "Ask for transmog") == nil, "no checkbox shares the template's label")
 end)
 

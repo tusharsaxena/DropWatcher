@@ -17,7 +17,7 @@ passed.
 | SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
 | KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
 | LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3); the Edit message box over the floating Offer panel (LAYER-4) |
-| LAYOUT-1..3 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); all SM-DW-LY, every setting kept across a `/reload` |
+| LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
@@ -242,6 +242,12 @@ compact; hover the title bar's layout toggle → the hold line reads `until this
 view when it auto-opens in a run)`. Starting view: hover each of the four View checkboxes → each
 tooltip ends `With none ticked, a fresh tab lists every drop.` `/reload` → every Window value
 unchanged.
+Result: not yet run.
+
+**LAYOUT-4. Messages (DRO-L08).** Messages opens on Sending, which reads `Ask once` | `Edit before
+sending` on its first line, then `Announce channel` | `Offer transmog asks`; each is ticked or set
+as before. Tick Edit before sending, press a row's Ask → the Edit message box opens, as PANEL-7
+describes. Auto-ask and Templates are unchanged. `/reload` → every Messages value unchanged.
 Result: not yet run.
 
 ## Settings panel

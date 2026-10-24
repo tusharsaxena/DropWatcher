@@ -169,10 +169,11 @@ each time.
 
 Messages opens on its switches, the template editors last (feedback-24).
 
-**Sending:** which asks you get, then how they go: Offer transmog asks (`messages.transmogAsk`; the
-`Ask for transmog` checkbox until feedback-24, the label its template's: on, also offer an ask, with
-the Ask for transmog template, on a drop that is no gain for you but whose look you have not
-collected) | Ask once, then Edit before sending | Announce channel. **Auto-ask:** Ask automatically
+**Sending:** the two per-send switches on one line, Ask once | Edit before sending, then Announce
+channel | Offer transmog asks (`messages.transmogAsk`; the `Ask for transmog` checkbox until
+feedback-24, the label its template's: on, also offer an ask, with the Ask for transmog template, on
+a drop that is no gain for you but whose look you have not collected). Item 020 (DRO-L08) set this
+order; until then it read Offer transmog asks | Ask once, then Edit before sending | Announce channel. **Auto-ask:** Ask automatically
 alone on its line, then its Delay | Least gain, live only while it is on. Turning Ask automatically
 on the first time prints auto-ask's one-time notice; turning it off cancels the asks waiting to go.
 

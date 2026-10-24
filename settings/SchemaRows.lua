@@ -323,20 +323,22 @@ end
 
 -- ── Messages › Sending, Auto-ask and Templates (design spec §9) ─────────────────────────────
 --
--- The switches first, the template editors last (feedback-24): which asks you get, then how they go.
+-- The switches first, the template editors last (feedback-24).
 
 local function messages()
     local M = P.messages
+    -- The two per-send switches share line one, then Announce channel | Offer transmog asks (item 020,
+    -- DRO-L08): each line one thought.
     local sending = { page = "messages", group = L["Sending"] }
-    bool("messages.transmogAsk", M.transmogAsk, L["Offer transmog asks"],
-        L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."],
-        sending)
     bool("messages.oneAsk", M.oneAsk, L["Ask once"],
         L["Send each ask or offer for a drop to a player once."], sending)
     bool("messages.editFirst", M.editFirst, L["Edit before sending"],
         L["Open the message in an edit box before it is sent."], sending)
     pick("messages.announceChannel", M.announceChannel, CHANNELS, L["Announce channel"],
         L["Automatic picks the instance channel, then raid, then party. Never say or yell."], sending)
+    bool("messages.transmogAsk", M.transmogAsk, L["Offer transmog asks"],
+        L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."],
+        sending)
 
     local A = M.autoAsk
     local auto = { page = "messages", group = L["Auto-ask"] }
