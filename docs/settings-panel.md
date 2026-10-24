@@ -85,9 +85,11 @@ The General page's last tab (options-ui-§20), drawn by LibKa0s's `O.Keybindings
 `NS.BINDINGS` (`core/LauncherSetup.lua`) as a host tab with no `before` (`settings/Panel.lua`). It
 edits the same store as Options → Keybindings → Ka0s Drop Watcher, so a key set in either shows in
 the other. The library's intro line, then one row, `Toggle drop feed` (tooltip `Shows or hides the
-drop feed.`), with Key 1, Key 2 and Clear; then which binding set the key is saved to, and the
-outcome of the last change. Keys are saved by the game, never in the profile: Defaults, Reset all
-settings and `/dw set` never touch them. In combat the tab refuses every change.
+drop feed.`), with one key button and Clear (OptionsKeybinds minor 4). The button binds the first key
+and shows it; when the game's page holds a second key for the action it reads `<key> +1`, and its
+tooltip names every key and says where the others were set. Clear removes every key. Then which
+binding set the key is saved to, and the outcome of the last change. Keys are saved by the game,
+never in the profile: Defaults, Reset all settings and `/dw set` never touch them. In combat the tab refuses every change.
 
 ## Drops → Situations
 

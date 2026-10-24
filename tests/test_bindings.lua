@@ -205,6 +205,20 @@ test("keybindings: a key set on the client's page shows in the tab after UPDATE_
     assertEqual(slot.text, "SHIFT-K", "the slot repainted from GetBindingKey")
 end)
 
+test("keybindings: a row is one key button and Clear, a second key counted on it as '<key> +1'", function()
+    local NS, _, m = T.enableAddon()
+    local rows = keybindRows(m, openGeneral(NS))
+    -- red under: OptionsKeybinds minor 3 (two key slots per row, Key 1 and Key 2)
+    assertEqual(#rows[1].slots, 1, "one key button")
+    assertTrue(rows[1].clear ~= nil, "and Clear")
+    assertEqual(bindThroughTab(m, rows[1], 1, "F7"), m.KEY_BOUND)
+    -- Slot 2 is the second key a player sets on Options -> Keybindings; the kit writes it there.
+    assertEqual(bindThroughTab(m, rows[1], 2, "F8"), m.KEY_BOUND)
+    assertEqual(rows[1].slots[1].text, "F7 +1", "the first key, the second counted")
+    rows[1].clear:__fire("OnClick", "LeftButton")
+    assertEqual(m.GetBindingKey(BINDING), nil, "Clear removes every key")
+end)
+
 test("keybindings: in combat the tab refuses and calls no binding API", function()
     local NS, _, m = T.enableAddon()
     local rows = keybindRows(m, openGeneral(NS))

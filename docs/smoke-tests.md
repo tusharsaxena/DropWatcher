@@ -144,22 +144,25 @@ no default key, and there is no blank spacer row above or in it. Drop Watcher no
 under the shared *AddOns* section. A key bound before this change is still bound.
 Result: not yet run.
 
-**KEYBIND-2. The tab and the client's page in step (SM-DW-KB2).** Settings → Ka0s Drop Watcher →
-General → the strip ends with `Keybindings`. It shows the intro line, one row `Toggle drop feed`
-(hover: `Shows or hides the drop feed.`) with Key 1, Key 2 and Clear, and `Saved for: all
-characters (Options -> Keybindings -> Character Specific Keybindings)`. Bind a key in Key 1 → the
-outcome line reads `Key bound.`; open Options → Keybindings → the same key shows on Toggle drop feed.
-Bind a second key there → back on the General tab it shows in Key 2 without a `/reload`. Clear on
-the tab → both keys gone in Options → Keybindings. Repeat with Character Specific Keybindings
-ticked → the set line reads `Saved for: this character only`, and the same round trips hold.
-Result: not yet run.
+**KEYBIND-2. The tab and the client's page in step (SM-DW-KB2, SM-DW-RV3).** Settings → Ka0s Drop
+Watcher → General → the strip ends with `Keybindings`. It shows the intro line, one row `Toggle drop
+feed` (hover: `Shows or hides the drop feed.`) with one key button and Clear (no second key box;
+LibKa0s OptionsKeybinds minor 4, DW-RV3), and `Saved for: all characters (Options -> Keybindings ->
+Character Specific Keybindings)`. Bind a key on the key button → the outcome line reads `Key
+bound.`, and pressing that key toggles the window; open Options → Keybindings → the same key shows
+on Toggle drop feed. Bind a second key there → back on the General tab the button reads
+`<first key> +1` without a `/reload`, and hovering it names both keys and says the other was set on
+the game's Key Bindings page. Clear on the tab → both keys gone in Options → Keybindings. Repeat
+with Character Specific Keybindings ticked → the set line reads `Saved for: this character only`,
+and the same round trips hold.
+Result: not yet run (rewritten for the one key button, DW-RV3, 2026-10-24).
 
 **KEYBIND-3. The key, Escape and combat (SM-DW-KB3).** With a key bound, press it → the window
-opens; press again → it closes. On the tab, click Key 1 (it reads `Press a key...`), press Escape →
+opens; press again → it closes. On the tab, click the key button (it reads `Press a key...`), press Escape →
 the capture cancels, the old key is shown again and the Settings window stays open. Pull a training
-dummy, then click Key 1 or Clear → nothing changes and the outcome line reads `Key bindings can be
-changed after combat.`; a capture already listening when combat starts is canceled.
-Result: not yet run.
+dummy, then click the key button or Clear → nothing changes and the outcome line reads `Key bindings
+can be changed after combat.`; a capture already listening when combat starts is canceled.
+Result: not yet run (rewritten for the one key button, DW-RV3, 2026-10-24).
 
 ## Frame layering
 
@@ -2834,7 +2837,11 @@ stray `%s` or `%d`, and no Lua error. Result: passed in the client, 2026-10-23 (
 
 ## Pending sign-off
 
-None. On 2026-10-23 the owner reported every check in this file passed in the client, SIM-17 (DW-01) and FEED-102 (DW-10) included, and each one's `Result:` line records it.
+On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
+(DW-01) and FEED-102 (DW-10) included, and each one's `Result:` line records it. Pending since:
+
+- KEYBIND-2 (SM-DW-KB2, SM-DW-RV3) and KEYBIND-3 (SM-DW-KB3): rewritten by DW-RV3 for the one key
+  button and Clear per row (LibKa0s OptionsKeybinds minor 4); not yet run.
 
 ### Review 2026-10-14 (M24) sign-off
 

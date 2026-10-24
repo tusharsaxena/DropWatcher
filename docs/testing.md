@@ -529,7 +529,8 @@ and Reset position redocking, and the stand-down hiding it, idle or running),
 the kit's `Kit.assertBindingsXml`, its own category and no header, no default key and no TOC line,
 the plain hidden `AnyDown` button, one press per toggle, the two labels, and the button on a
 library-less install; and General → Keybindings, options-ui-§20: the strip's last tab, its rows and
-labels, a key bound through it with `Kit.keybindThroughTab`, a key set elsewhere repainting it, its
+labels, a key bound through it with `Kit.keybindThroughTab`, a key set elsewhere repainting it, the
+one key button and Clear with a second key counted on it (`F7 +1`, OptionsKeybinds minor 4), its
 combat refusal and the Defaults tooltip; on the kit's `tests/_kit/mock_bindings.lua`, which
 `tests/wow_mock.lua` installs), `test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
 §14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each

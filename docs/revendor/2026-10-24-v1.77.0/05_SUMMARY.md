@@ -107,3 +107,34 @@ surfaces. DW-RV2 re-vendored it exactly as above, from the installed
 - **Gate, both through `ka0s-bounded`:** `lua tests/run.lua` 1705 passed, 0 failed, 1 skipped
   (1706 total). `luacheck .` gives 0 warnings / 0 errors in 194 files. No authored `.lua` file is
   above 1500 lines (the largest is `locales/enUS.lua` at 1318).
+
+## Re-vendor after the tag moved again (one key button)
+
+LK-96 moved the local annotated tag v1.77.0 in `../LibKa0s` again, for the owner's follow-up to
+item 015: one key button and Clear per row on the in-addon Keybindings tab. DW-RV3 re-vendored it
+exactly as above, from the installed `/dev-copilot:wow-revendor-libka0s` 2.4.0 procedure.
+
+- **Tag:** old tag object `b2b8ee25c5f9fa26db146254bf786b366dec986b`, commit
+  `afae2f75cb7ff61c57156d9a3d8a6b2b9f4c5e10`. New tag object
+  `e9b126d961c2970e5b14d0566480f7c1d8b5e5e8`, commit
+  `2f2b2e22b4c9219cd8a4101d7e894681c7aea16e` (`git -C ../LibKa0s rev-parse 'v1.77.0^{}'`).
+- **Minors that moved:** OptionsKeybinds 3 -> 4 (one key button per row that binds and
+  right-click-clears slot 1 and reads `<first key> +N` when the action holds more, a tooltip naming
+  every key; the KEY1 / KEY2 words replaced by KEY, KEY_MORE, KEYS_ALL and KEYS_OTHER, and CLEAR_TIP
+  says every key). The kit's `bindings_xml.lua` and `README.md` changed: `Kit.keybindThroughTab`
+  slot 2 now writes the second key through `lib.__keybindSet`, as the client's page would. The kit
+  stays at revision 42, so `docs/testing.md:19` is unchanged. No other file changed in either
+  payload, and the copy deleted nothing.
+- **Provenance:** `CLAUDE.md:42` stays `v1.77.0`, so nothing rolled. The 28-name `LibKa0s icons:`
+  line is kept; the prune kept 29 files and removed 5,811 again, none of which reached git. README
+  `## Credits` is unchanged.
+- **Blockers:** none. No new public Options member arrived, so the degradation stub in
+  `settings/OptionsSetup.lua` is unchanged and the kit's surface parity check stays green. No addon
+  test drove slot 2 through the tab.
+- **Docs and test:** a new `tests/test_bindings.lua` case pins one key button and Clear and the
+  `F7 +1` count (red under minor 3: two slots). `docs/settings-panel.md` and KEYBIND-2 / KEYBIND-3
+  in `docs/smoke-tests.md` describe the one key button; both checks are pending (SM-DW-RV3 is in
+  KEYBIND-2) and are listed under Pending sign-off.
+- **Gate, both through `ka0s-bounded`:** `lua tests/run.lua` 1710 passed, 0 failed, 1 skipped
+  (1711 total). `luacheck .` gives 0 warnings / 0 errors in 194 files. No authored `.lua` file is
+  above 1500 lines (the largest is `locales/enUS.lua` at 1317).
