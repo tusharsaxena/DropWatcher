@@ -657,6 +657,19 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     local ctx, drawn = open(NS, m, "window")
     assertEqual(ctx.activeTab, "Layout")
     assertTrue(find(drawn, "Dropdown", "Window layout") ~= nil, "the layout row, named apart from its tab")
+    -- red under: the pre-020 Layout tab, one block with no subsections and the old run label
+    -- (DRO-L06, DRO-L07): Mode holds the layout and its run override, Tables the two table knobs.
+    local mode, inRuns = find(drawn, "Dropdown", "Window layout"), find(drawn, "CheckBox", "Compact view when it auto-opens in a run")
+    local rowH, font = find(drawn, "Slider", "Row height"), find(drawn, "Slider", "Font size")
+    assertTrue(inRuns ~= nil and lineOf(drawn, mode) == lineOf(drawn, inRuns), "Window layout | Compact view when it auto-opens in a run")
+    assertTrue(rowH ~= nil and font ~= nil and lineOf(drawn, rowH) == lineOf(drawn, font), "Row height | Font size")
+    assertEqual(NS.SchemaRuntime.FindRow("window.mode").subgroup, "Mode")
+    assertEqual(NS.SchemaRuntime.FindRow("window.compactInRuns").subgroup, "Mode")
+    assertEqual(NS.SchemaRuntime.FindRow("window.rowHeight").subgroup, "Tables")
+    assertEqual(NS.SchemaRuntime.FindRow("window.fontSize").subgroup, "Tables")
+    local heads = {}
+    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
+    assertEqual(table.concat(heads, "|"), "Mode|Tables", "the two headings, in row order")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") == nil, "no note on Layout")
     drawn = tab(m, ctx, "Columns")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") ~= nil, "the note on Columns")
@@ -664,6 +677,12 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     drawn = tab(m, ctx, "Starting view")
     for _, label in ipairs({ "Interesting", "Likely tradeable", "Usable by me", "Upgrade for me" }) do
         assertTrue(find(drawn, "CheckBox", label) ~= nil, label)
+    end
+    -- red under: the pre-020 View tooltips, which never said what none ticked does (DRO-L15)
+    for _, key in ipairs({ "interesting", "likely", "usable", "upgrade" }) do
+        local tip = NS.SchemaRuntime.FindRow("feed.view." .. key).tooltip
+        local tail = " With none ticked, a fresh tab lists every drop."
+        assertEqual(tip:sub(-#tail), tail, key)
     end
     assertTrue(find(drawn, "Dropdown", "Content") ~= nil and find(drawn, "Dropdown", "Sort") ~= nil)
     assertEqual(NS.SchemaRuntime.FindRow("trade.warnAt").page, "window", "the path kept, the page moved")

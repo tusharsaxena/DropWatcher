@@ -507,8 +507,8 @@ L["the whole window again"] = "the whole window again"
 L["the window narrow, each drop a short card"] = "the window narrow, each drop a short card"
 L["the window to its title bar"] = "the window to its title bar"
 L["Typed"] = "Typed"
-L["until this run ends (Open in compact view during a run)"] =
-    "until this run ends (Open in compact view during a run)"
+L["until this run ends (Compact view when it auto-opens in a run)"] =
+    "until this run ends (Compact view when it auto-opens in a run)"
 L["wait in the queue"] = "wait in the queue"
 L["wait in the queue, sent once it lifts"] = "wait in the queue, sent once it lifts"
 L["wait in the queue, sent when it ends"] = "wait in the queue, sent when it ends"

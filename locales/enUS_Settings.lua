@@ -11,14 +11,14 @@ local L = NS.L
 
 -- settings/SchemaRows.lua
 L["Use global"] = "Use global"
-L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."] =
-    "A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."
-L["A fresh tab lists only the drops whose trade estimate is yes or likely."] =
-    "A fresh tab lists only the drops whose trade estimate is yes or likely."
-L["A fresh tab hides the drops you can't use and the item types you marked as unwanted."] =
-    "A fresh tab hides the drops you can't use and the item types you marked as unwanted."
-L["A fresh tab lists only the drops that are an upgrade for you."] =
-    "A fresh tab lists only the drops that are an upgrade for you."
+L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade. With none ticked, a fresh tab lists every drop."
+L["A fresh tab lists only the drops whose trade estimate is yes or likely. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab lists only the drops whose trade estimate is yes or likely. With none ticked, a fresh tab lists every drop."
+L["A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."
+L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
@@ -117,7 +117,8 @@ L["Columns"] = "Columns"
 L["Layout"] = "Layout"
 L["Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."] =
     "Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."
-L["Open in compact view during a run"] = "Open in compact view during a run"
+L["Compact view when it auto-opens in a run"] = "Compact view when it auto-opens in a run"
+L["Tables"] = "Tables"
 L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."] =
     "When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."
 L["Row height"] = "Row height"

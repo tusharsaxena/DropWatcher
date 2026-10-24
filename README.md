@@ -85,7 +85,7 @@ Two extras are off until you turn them on: the **toast**, a popup when someone l
 | The window will not move | It is locked. Untick **Lock frame** or type `/dw unlock`. |
 | Test mode turned itself off | Combat ends test mode. Turn it back on after the fight. |
 | A simulation will not start | It refuses in a group, inside an instance, in combat and while test mode is on, and says which. Leave the group or instance, or wait out the fight. |
-| The window opens small in a key or raid | That's the compact view for runs. Click the button next to minimize for the full window, or untick **Open in compact view during a run** under Settings › Window › Layout. |
+| The window opens small in a key or raid | That's the compact view for runs. Click the button next to minimize for the full window, or untick **Compact view when it auto-opens in a run** under Settings › Window › Layout. |
 | The Them column shows `?` | The looter's gear hasn't been read yet. Wait a moment, press **Scan group**, or use **Retry inspect** on the detail card. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
 

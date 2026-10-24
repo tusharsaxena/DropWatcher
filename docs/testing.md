@@ -509,7 +509,7 @@ footer's `Simulating` and `Inspect n/n`, and rows on Drops, yours among them, un
 filters, and the History footer's `kept for 30 days` with a shorter window that deletes nothing of
 the fresh run and so asks nothing; the combat flags during and after the simulated fight, the loot lines written from the
 GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat;
-every scenario runs once in each layout, DW-C5: the full table with Open in compact view during a
+every scenario runs once in each layout, DW-C5: the full table with Compact view when it auto-opens in a
 run off, and the compact cards with no piece of any card blank; and a simulated key's auto-open is
 compact by default and full with the option off, the stored layout back once the run is stopped),
 `test_sim_report` (the owner's `Loot: 2 drops` with one drop shown, DW-B0, feedback-3 spec §0: the

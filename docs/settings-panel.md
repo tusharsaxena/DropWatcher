@@ -188,10 +188,12 @@ the limit or an unknown token. Reset templates puts the five back.
 
 ## Window
 
-**Layout:** Window layout (`window.mode`, `Layout` until feedback-24, the tab's own name; Full or
-Compact, compact spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact`
-and `/dw full`) | Open in compact view during a run (on by default: an auto-open inside a dungeon,
-raid, key or delve opens compact until the run ends), then Row height (18 by default, both tabs of
+**Layout:** two subsections since item 020 (DRO-L07; the row order unchanged). **Mode:** Window
+layout (`window.mode`, `Layout` until feedback-24, the tab's own name; Full or Compact, compact
+spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`) |
+Compact view when it auto-opens in a run (`Open in compact view during a run` until item 020; on by
+default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends, and the
+title-bar toggle's tooltip names it while it holds). **Tables:** Row height (18 by default, both tabs of
 the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the
 compact layout's cards size from their text) | Font size (all the way left, 0, is Default: the
 template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact
@@ -210,7 +212,8 @@ does nothing else.
 
 **Starting view** (Feed › Filters until feedback-24): what a fresh Drops tab opens on. **View:**
 Interesting, Likely tradeable, Usable by me and Upgrade for me (`feed.view.<key>`, one checkbox per
-value; all unticked is View: All, the default, DW-A1). **Content and sort:** Content (the Drops
+value; all unticked is View: All, the default, DW-A1, and since item 020 each tooltip ends `With none
+ticked, a fresh tab lists every drop.`). **Content and sort:** Content (the Drops
 tab's, This instance or This session, This session by default; History always opens on All,
 feedback-13 spec §0; All left the row in DW-Q1, feedback-15 spec §1, schema step 8) | Sort (what a
 fresh tab starts with).

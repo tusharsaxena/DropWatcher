@@ -312,7 +312,7 @@ Total.
 - compact: the run ending lets go when the window is next hidden, so the next open is full
 - compact: a run ending while the window is hidden lets go at once
 - compact: a parent's hide (Alt-Z) is not the window closing, so the run's layout stays
-- compact: with Open in compact view during a run off, an auto-open keeps the stored layout
+- compact: with Compact view when it auto-opens in a run off, an auto-open keeps the stored layout
 - compact: the player's own toggle during a run lets the override go
 - compact: the chest after a key completes still belongs to the run, so its auto-open is compact
 - compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it

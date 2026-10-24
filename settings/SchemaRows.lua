@@ -130,13 +130,13 @@ local FLOOR_QUALITIES = qualityChoices(K.QUALITY.COMMON, K.QUALITY.EPIC)
 -- by its value alone under Window › Starting view's View subsection (feedback-24).
 local VIEW_ROWS = {
     { key = "interesting", label = L["Interesting"],
-      tip = L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."] },
+      tip = L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade. With none ticked, a fresh tab lists every drop."] },
     { key = "likely", label = L["Likely tradeable"],
-      tip = L["A fresh tab lists only the drops whose trade estimate is yes or likely."] },
+      tip = L["A fresh tab lists only the drops whose trade estimate is yes or likely. With none ticked, a fresh tab lists every drop."] },
     { key = "usable", label = L["Usable by me"],
-      tip = L["A fresh tab hides the drops you can't use and the item types you marked as unwanted."] },
+      tip = L["A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."] },
     { key = "upgrade", label = L["Upgrade for me"],
-      tip = L["A fresh tab lists only the drops that are an upgrade for you."] },
+      tip = L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] },
 }
 -- Drops' Content values (feedback-15 spec §1): History's All is no Drops value, so no seed.
 local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"] }
@@ -370,12 +370,16 @@ local function window()
     local W, F = P.window, P.feed
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }
     -- Compact mode (compact spec §1): the stored layout, and the run override's switch.
+    -- Two subjects on one tab (options-ui-§7, item 020 DRO-L07): Mode, the layout and its run
+    -- override; Tables, the drop tables' row height and font. The row order is unchanged.
+    layout = with(layout, { subgroup = L["Mode"] })
     pick("window.mode", W.mode, LAYOUTS, L["Window layout"],
         L["Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."],
         with(layout, { onChange = function() NS.WindowCompact.OnModeChanged() end }))
-    bool("window.compactInRuns", W.compactInRuns, L["Open in compact view during a run"],
+    bool("window.compactInRuns", W.compactInRuns, L["Compact view when it auto-opens in a run"],
         L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
+    layout = with(layout, { subgroup = L["Tables"] })
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
         L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."], layout)
     -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table

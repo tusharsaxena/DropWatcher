@@ -323,7 +323,7 @@ for _, mode in ipairs({ "full", "compact" }) do
     end
 end
 
--- With the defaults (the full layout stored, Open in compact view during a run on): the simulation
+-- With the defaults (the full layout stored, Compact view when it auto-opens in a run on): the simulation
 -- opens the window itself when its group forms, a player's open, so in the stored layout; closed,
 -- a simulated key's drop auto-opens it compact, or full with the option off; and stopping the
 -- simulation lets the override go once the window is hidden (compact spec §1 and §5).

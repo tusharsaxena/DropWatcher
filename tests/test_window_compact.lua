@@ -249,7 +249,9 @@ test("compact: an auto-open inside a run opens compact, and the stored layout is
     assertEqual(NS.WindowCompact.Mode(), "compact"); assertTrue(NS.WindowCompact.InRun())
     assertEqual(NS.Window.Frame():GetWidth(), 400)
     assertEqual(NS.Setting("window.mode"), "full", "the stored layout is unchanged")
-    assertTrue(table.concat(NS.Window.TooltipOf(NS.Window.Frame().modeButton), " "):find("until this run ends", 1, true) ~= nil)
+    -- red under: the hold line naming the pre-020 label (DRO-L06, options-ui-§21)
+    assertTrue(table.concat(NS.Window.TooltipOf(NS.Window.Frame().modeButton), " ")
+        :find("until this run ends (Compact view when it auto-opens in a run)", 1, true) ~= nil)
 end)
 
 test("compact: the run ending lets go when the window is next hidden, so the next open is full", function()
@@ -287,7 +289,7 @@ test("compact: a parent's hide (Alt-Z) is not the window closing, so the run's l
     assertTrue(NS.WindowCompact.InRun())
 end)
 
-test("compact: with Open in compact view during a run off, an auto-open keeps the stored layout", function()
+test("compact: with Compact view when it auto-opens in a run off, an auto-open keeps the stored layout", function()
     local NS = inDungeon()
     NS.SchemaRuntime.Set("window.compactInRuns", false)
     announce(NS, drop(1))
