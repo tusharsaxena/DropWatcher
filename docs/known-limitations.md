@@ -38,7 +38,7 @@ the code reads every case the design leaves open, module by module, is in
   brings this session's drops back to the Drops tab from the History log (`modules/FeedRestore.lua`),
   linked to their entries, but a reload mid-key starts a new key header for the drops looted after
   it (the feed's open-run key is not kept across a reload), and a full relog starts an empty Drops
-  tab. Drops cleared from the Drops tab (`/dw clear`, Clear on boss kill) stay cleared, and a drop
+  tab. Drops cleared from the Drops tab (`/dw clear`, Clear this session's drops on boss kill) stay cleared, and a drop
   you asked for still reads `Asked`, but the Asks book is not kept: your own drop's Offer and
   Announce read untoned again after a reload, and its Offer panel offers each candidate anew (the
   History keeps that it was `offered`, not to whom). An entry of an earlier session takes no more
@@ -96,10 +96,10 @@ the code reads every case the design leaves open, module by module, is in
   offline: the headless reproduction shows that a first report without bonus data read the drop at
   its base level and quality, and the fix keeps the most complete link and reads your own drops from
   their bag item whatever the source. ITEM-3 and the `drops` diagnostics line record it in game.
-- **The Situations table** (General › When to show's until feedback-24; since DW-H0, feedback-8 spec §0) is the page's own editor
+- **The Situations table** (General › When to show's until feedback-24, a Drops tab since item 020; since DW-H0, feedback-8 spec §0) is the tab's own editor
   (`settings/PageEditors.lua`), not a library composer: LibKa0s-Options has no grid composer for
   mixed controls. [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one
-  consumer; the table stays the page's own editor.
+  consumer; the table stays the tab's own editor.
 - **The Profiles page** builds only where AceDBOptions and AceConfigDialog resolve, which the
   headless mock does not model; PROFILE-1 is its in-game check.
 - **The logo** is a placeholder generated for the scaffold; the owner may replace the art

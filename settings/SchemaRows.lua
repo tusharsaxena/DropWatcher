@@ -7,14 +7,15 @@ local _, NS = ...
 -- never a literal here. The composed Master controls rows are settings/Panel.lua's; these are
 -- appended after them, so the General page's `Master controls` tab stays first. Within a page, a
 -- tab's place in the strip is its first row's place here, so the makers below run in page order
--- (feedback-24 regrouped the pages: Situations, Drops, Comparison, Messages, Window, Alerts).
+-- (feedback-24 regrouped the pages; item 020 folded Situations into Drops: Drops, Comparison,
+-- Messages, Window, Alerts).
 -- Window › Icons' composed border block is settings/ComposedRows.lua's, appended after these (it
 -- needs the Options instance, made after this file), so it follows this file's Zoom row on that
 -- tab; it takes this file's checks from Settings.Checks.
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
 -- specID (architecture-§5's value route): written whole through the seam, drawn by their own
--- editors (`skipRender`). The Situations page's per-situation rows (`situations.<key>.track`,
+-- editors (`skipRender`). Drops › Situations' per-situation rows (`situations.<key>.track`,
 -- `.autoOpen`, `.quality` and `trade.rules.<key>`) are `skipRender` too: its table draws them, one
 -- line per situation. The window's geometry, its minimized flag and the toast's position have no
 -- row: they are named non-setting state (docs/schema.md -> State written outside the seam). Alerts › Upgrade glow's
@@ -129,13 +130,13 @@ local FLOOR_QUALITIES = qualityChoices(K.QUALITY.COMMON, K.QUALITY.EPIC)
 -- by its value alone under Window › Starting view's View subsection (feedback-24).
 local VIEW_ROWS = {
     { key = "interesting", label = L["Interesting"],
-      tip = L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."] },
+      tip = L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade. With none ticked, a fresh tab lists every drop."] },
     { key = "likely", label = L["Likely tradeable"],
-      tip = L["A fresh tab lists only the drops whose trade estimate is yes or likely."] },
+      tip = L["A fresh tab lists only the drops whose trade estimate is yes or likely. With none ticked, a fresh tab lists every drop."] },
     { key = "usable", label = L["Usable by me"],
-      tip = L["A fresh tab hides the drops you can't use and the item types you marked as unwanted."] },
+      tip = L["A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."] },
     { key = "upgrade", label = L["Upgrade for me"],
-      tip = L["A fresh tab lists only the drops that are an upgrade for you."] },
+      tip = L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] },
 }
 -- Drops' Content values (feedback-15 spec §1): History's All is no Drops value, so no seed.
 local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"] }
@@ -211,13 +212,14 @@ local function map(path, default, validate, label, tip, extra)
     return add(row)
 end
 
--- ── Situations (design spec §6.1, §7; feedback-24) ──────────────────────────────────────────
+-- ── Drops › Situations (design spec §6.1, §7; feedback-24, item 020) ───────────────────────
 
--- Everything set per situation, on one page: the global Auto-open, then a table line per situation
+-- Everything set per situation, on one tab: the global Auto-open, then a table line per situation
 -- (Track, Auto-open, Quality and its loot rule). General › When to show and Trade › Rules until
--- feedback-24.
+-- feedback-24; its own Situations page until item 020, which made it the Drops page's first tab (it
+-- runs before feed(), so it lands first in the strip).
 local function situations()
-    local at = { page = "situations", group = L["Situations"] }
+    local at = { page = "feed", group = L["Situations"] }
     bool("autoOpen", P.autoOpen, L["Auto-open the window"],
         L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."], at)
     local T = P.trade
@@ -226,7 +228,7 @@ local function situations()
         local base = "situations." .. key .. "."
         -- Drawn by the Situations table (settings/PageEditors.lua SituationTable), one table row per
         -- situation: still schema rows, so the CLI, the resets and profiles reach them as before.
-        local sit = { page = "situations", group = L["Situations"], skipRender = true }
+        local sit = { page = "feed", group = L["Situations"], skipRender = true }
         local untracked = unless(base .. "track", true)
         bool(base .. "track", d.track, L["Track"],
             L["Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."], sit)
@@ -236,7 +238,7 @@ local function situations()
         pick(base .. "quality", d.quality, SITUATION_QUALITY, L["Quality"],
             L["The minimum quality here: the feed's own mode, or one of its own."],
             with(sit, { disabledIf = untracked }))
-        -- Its label stays the situation's name: `/dw list` reads it under the Situations page.
+        -- Its label stays the situation's name: `/dw list` reads it under the Drops page's `feed` section.
         pick("trade.rules." .. key, T.rules[key], RULES, NS.WindowFooter.SituationLabel(key),
             L["The loot rule that decides whether a drop here can be traded."],
             with(sit, { disabledIf = untracked }))
@@ -248,7 +250,7 @@ end
 local function history(at)
     local row = pick(Settings.HISTORY_RETENTION_PATH, NS.C.GLOBAL_DEFAULTS.history.retentionDays,
         NS.HistoryRetention.Choices(), L["Keep history for"],
-        L["How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."],
+        L["Account-wide: shared by every profile. How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."],
         with(at, { onChange = function(v)
             -- A shorter window that would delete something asks first (modules/HistoryRetention.lua).
             NS.HistoryRetention.OnChanged(v)
@@ -279,7 +281,7 @@ local function feed()
     local kinds = { page = "feed", group = L["Items"], subgroup = L["Item kinds"] }
     bool("feed.gearOnly", F.gearOnly, L["Gear only"],
         L["List armor, weapons, jewelry and trinkets only."], kinds)
-    bool("feed.includeTokens", F.includeTokens, L["Tier tokens"],
+    bool("feed.includeTokens", F.includeTokens, L["Include tier tokens"],
         L["List tier tokens too."], kinds)
     local ilvl = with(kinds, { subgroup = L["Item level"] })
     pick("feed.minIlvlMode", F.minIlvlMode, ILVL_MODES, L["Minimum item level"],
@@ -296,7 +298,7 @@ local function feed()
     -- (settings/Pages.lua pairWith); Window › Layout's until feedback-24.
     local retention = { page = "feed", group = L["Retention"], subgroup = L["History"] }
     history(retention)
-    bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear on boss kill"],
+    bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear this session's drops on boss kill"],
         L["Clear the session's drops when a boss dies."], with(retention, { subgroup = L["Session"] }))
 end
 
@@ -321,20 +323,22 @@ end
 
 -- ── Messages › Sending, Auto-ask and Templates (design spec §9) ─────────────────────────────
 --
--- The switches first, the template editors last (feedback-24): which asks you get, then how they go.
+-- The switches first, the template editors last (feedback-24).
 
 local function messages()
     local M = P.messages
+    -- The two per-send switches share line one, then Announce channel | Offer transmog asks (item 020,
+    -- DRO-L08): each line one thought.
     local sending = { page = "messages", group = L["Sending"] }
-    bool("messages.transmogAsk", M.transmogAsk, L["Offer transmog asks"],
-        L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."],
-        sending)
     bool("messages.oneAsk", M.oneAsk, L["Ask once"],
         L["Send each ask or offer for a drop to a player once."], sending)
     bool("messages.editFirst", M.editFirst, L["Edit before sending"],
         L["Open the message in an edit box before it is sent."], sending)
     pick("messages.announceChannel", M.announceChannel, CHANNELS, L["Announce channel"],
         L["Automatic picks the instance channel, then raid, then party. Never say or yell."], sending)
+    bool("messages.transmogAsk", M.transmogAsk, L["Offer transmog asks"],
+        L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."],
+        sending)
 
     local A = M.autoAsk
     local auto = { page = "messages", group = L["Auto-ask"] }
@@ -368,12 +372,16 @@ local function window()
     local W, F = P.window, P.feed
     local layout = { page = "window", group = L["Layout"], onChange = repaintWindow }
     -- Compact mode (compact spec §1): the stored layout, and the run override's switch.
+    -- Two subjects on one tab (options-ui-§7, item 020 DRO-L07): Mode, the layout and its run
+    -- override; Tables, the drop tables' row height and font. The row order is unchanged.
+    layout = with(layout, { subgroup = L["Mode"] })
     pick("window.mode", W.mode, LAYOUTS, L["Window layout"],
         L["Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."],
         with(layout, { onChange = function() NS.WindowCompact.OnModeChanged() end }))
-    bool("window.compactInRuns", W.compactInRuns, L["Open in compact view during a run"],
+    bool("window.compactInRuns", W.compactInRuns, L["Compact view when it auto-opens in a run"],
         L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
+    layout = with(layout, { subgroup = L["Tables"] })
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
         L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."], layout)
     -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table
@@ -563,8 +571,8 @@ end
 local function simulation()
     local SC = NS.SimScenario
     slider("sim.stepDelay", P.sim.stepDelay, SC.STEP_DELAY_MIN, SC.STEP_DELAY_MAX, SC.STEP_DELAY_STEP,
-        L["Simulation step delay"],
-        L["How many seconds the simulator waits between steps as it plays. A change takes effect from the next step."],
+        L["Simulation step delay (seconds)"],
+        L["Paces /dw sim: how many seconds the simulator waits between steps as it plays. A change takes effect from the next step."],
         { page = "general", group = L["Simulator"], validate = SC.ValidStepDelay })
 end
 

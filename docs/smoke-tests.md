@@ -15,6 +15,9 @@ passed.
 |---|---|---|
 | INSTALL-1..5 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV) |
 | SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
+| KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
+| LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3); the Edit message box over the floating Offer panel (LAYER-4) |
+| LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
@@ -128,6 +131,128 @@ window and a second press closes it (one toggle per press), in and out of combat
 and press the key → exactly one disabled refusal line and no window. `/dw enable`, start a
 `/dw perf` capture and press → exactly `Not available during a performance capture.` and no toggle.
 Result: passed in the client, 2026-10-23 (the owner).
+
+## Keybindings
+
+Item 015 (DW-KB, the 2026-10-24 keybindings, layout and strata run; launcher-§6 and options-ui-§20
+at standard v2.88.0, LibKa0s v1.77.0's `O.KeybindingsTab`). SLASH-8 above was run on the earlier
+shape (Key Bindings → AddOns), and these three replace its path.
+
+**KEYBIND-1. Its own section in Options → Keybindings (SM-DW-KB1).** Options → Keybindings → scroll
+to the addon sections → a section titled `Ka0s Drop Watcher` holds one row, `Toggle drop feed`, with
+no default key, and there is no blank spacer row above or in it. Drop Watcher no longer appears
+under the shared *AddOns* section. A key bound before this change is still bound.
+Result: not yet run.
+
+**KEYBIND-2. The tab and the client's page in step (SM-DW-KB2, SM-DW-RV3).** Settings → Ka0s Drop
+Watcher → General → the strip ends with `Keybindings`. It shows the intro line, one row `Toggle drop
+feed` (hover: `Shows or hides the drop feed.`) with one key button and Clear (no second key box;
+LibKa0s OptionsKeybinds minor 4, DW-RV3), and `Saved for: all characters (Options -> Keybindings ->
+Character Specific Keybindings)`. Bind a key on the key button → the outcome line reads `Key
+bound.`, and pressing that key toggles the window; open Options → Keybindings → the same key shows
+on Toggle drop feed. Bind a second key there → back on the General tab the button reads
+`<first key> +1` without a `/reload`, and hovering it names both keys and says the other was set on
+the game's Key Bindings page. Clear on the tab → both keys gone in Options → Keybindings. Repeat
+with Character Specific Keybindings ticked → the set line reads `Saved for: this character only`,
+and the same round trips hold.
+Result: not yet run (rewritten for the one key button, DW-RV3, 2026-10-24).
+
+**KEYBIND-3. The key, Escape and combat (SM-DW-KB3).** With a key bound, press it → the window
+opens; press again → it closes. On the tab, click the key button (it reads `Press a key...`), press Escape →
+the capture cancels, the old key is shown again and the Settings window stays open. Pull a training
+dummy, then click the key button or Clear → nothing changes and the outcome line reads `Key bindings
+can be changed after combat.`; a capture already listening when combat starts is canceled.
+Result: not yet run (rewritten for the one key button, DW-RV3, 2026-10-24).
+
+## Frame layering
+
+Item 030 (DW-ZS, the 2026-10-24 keybindings, layout and strata run; frame-layering at standard
+v2.88.0). Every strata and level now reads `NS.Constants.LAYERS`; these are the changes a player can
+see. The headless `test_layers` pins each frame's strata, level and toplevel. All four make up
+SM-DW-ZS.
+
+**LAYER-1. The window comes forward on click.** Open another addon's or Blizzard's `MEDIUM` window
+(the Group Finder, for one), then `/dw show` and drag Drop Watcher's window so it overlaps it. Click
+the other window → it covers Drop Watcher's. Click anywhere on Drop Watcher's window → it comes to
+the front, whole. Drag it, resize it by the grip and open a detail card → nothing has moved under
+or over anything else; the grip still works.
+Result: not yet run.
+
+**LAYER-2. The floating Offer panel over the window's rows, under the toast.** Make the Offer panel
+float: put the window where neither side has room for it (a full-width window, or the compact window
+with the screen's edges close on both sides), then press Offer on a drop of yours → the panel floats
+over the window's right side, over its rows, its rows' tooltips over the panel. With `toast.enabled`
+on, bring up a toast as TOAST-1 does and drag it over the floating panel → the toast draws **over**
+the panel (before this change the panel covered it). Dock the panel again (move the window back) →
+it sits beside the window as before.
+Result: not yet run.
+
+**LAYER-3. The compact Filters panel and its dropdowns.** `/dw compact`, press Filters ▾ → the panel
+opens over the window's cards. Open each of its four dropdowns → each menu opens over the panel, and
+a pick filters. With the window short, so the panel reaches past its bottom edge, the part outside
+the window still shows and its dropdowns still open over everything. With the Offer panel floating
+(LAYER-2), open Filters → the Filters panel draws over the Offer panel.
+Result: not yet run.
+
+**LAYER-4. The Edit message box over the floating Offer panel.** Tick Edit before sending
+(Messages › Sending), float the Offer panel (LAYER-2), then press a member's Offer → the Edit
+message box opens centered over the window and draws **over** the Offer panel, whole and clickable;
+its Send and close work. Click the window behind it → the box stays over the window. Escape or close
+→ it goes, the Offer panel is unchanged.
+Result: not yet run.
+
+## Settings layout
+
+Item 020 (DW-LY, the 2026-10-24 keybindings, layout and strata run; options-ui-§7, §12-§16 and §21
+at standard v2.88.0). Rows moved between pages and tabs and were relabeled; no stored path, default,
+range or behavior changed (the headless `test_schema_rows` guard pins every path and default).
+PANEL-4 and PANEL-8 above were run on the pre-020 shape (a Situations page of its own). Every check
+here makes up SM-DW-LY; before starting, change a handful of settings on each page touched and note
+them, and after each check `/reload` and confirm they read the same.
+
+**LAYOUT-1. Drops (DRO-L01..L03, DRO-L10, DRO-L11, DRO-L-new3).** The settings list reads General, Drops,
+Comparison, Messages, Window, Alerts, Profiles: no Situations page. Drops' strip reads Situations,
+Quality, Items, Retention, and the page opens on Situations: Auto-open the window, then the
+per-situation table (Situation, Track, Auto-open, Quality, Loot rule) with every value you had set
+before the update. Click Quality → the table is gone and the In force now line is drawn, with
+`A situation can set a quality of its own: the Quality column on the Situations tab.` under it.
+Click Items, Retention, then Situations again → the table is there once, never on another tab.
+Hover the page's Defaults → `Reset the Drops page's settings (situations, quality, items and how
+long drops are kept) to their defaults.` Tick Delve's Track, set Mythic+'s Loot rule to Group loot,
+press Defaults → both go back, with the Quality tab's rows; a Window value stays.
+`/dw list` → the situation rows are listed in the `feed` section, and there is no `situations`
+section. Untick Solo's Track, then, solo with the window open, hover the footer's situation segment → its
+Turned on in row reads `Settings > Drops > Situations`. Items: `Gear only` | `Include tier tokens` on one line. Retention: the tab is still
+Retention; hover Keep history for → its tooltip opens `Account-wide: shared by every profile.`;
+under Session the checkbox reads `Clear this session's drops on boss kill`, ticked or not as before.
+`/reload` → every value you set before the check (other than the ones Defaults reset) is unchanged.
+Result: not yet run.
+
+**LAYOUT-2. General (DRO-L05, DRO-L-new1, DRO-L-new4).** General's strip still reads Master
+controls, Simulator, Keybindings. Hover the header's Defaults → `Reset the current profile to its
+defaults — the same thing Profiles -> Reset Profile does. Your other profiles are not affected. Key
+bindings are not changed.`; hover Master controls' Reset all settings → the same text without the
+last sentence. Neither mentions `Reset every Ka0s Drop Watcher setting`. Simulator: the slider reads
+`Simulation step delay (seconds)`, still 0.5 to 10 at the value you had, and its tooltip reads
+`Paces /dw sim: how many seconds the simulator waits between steps as it plays. A change takes
+effect from the next step.` `/reload` → the step delay and every Master controls value unchanged.
+Result: not yet run.
+
+**LAYOUT-3. Window (DRO-L06, DRO-L07, DRO-L15).** Window's strip still reads Layout, Columns,
+Starting view, Icons. Layout: a `Mode` heading over `Window layout` | `Compact view when it
+auto-opens in a run`, then a `Tables` heading over `Row height` | `Font size`; every value is
+what it was. With the checkbox ticked, enter a dungeon and loot so the window auto-opens → it opens
+compact; hover the title bar's layout toggle → the hold line reads `until this run ends (Compact
+view when it auto-opens in a run)`. Starting view: hover each of the four View checkboxes → each
+tooltip ends `With none ticked, a fresh tab lists every drop.` `/reload` → every Window value
+unchanged.
+Result: not yet run.
+
+**LAYOUT-4. Messages (DRO-L08).** Messages opens on Sending, which reads `Ask once` | `Edit before
+sending` on its first line, then `Announce channel` | `Offer transmog asks`; each is ticked or set
+as before. Tick Edit before sending, press a row's Ask → the Edit message box opens, as PANEL-7
+describes. Auto-ask and Templates are unchanged. `/reload` → every Messages value unchanged.
+Result: not yet run.
 
 ## Settings panel
 
@@ -2712,7 +2837,11 @@ stray `%s` or `%d`, and no Lua error. Result: passed in the client, 2026-10-23 (
 
 ## Pending sign-off
 
-None. On 2026-10-23 the owner reported every check in this file passed in the client, SIM-17 (DW-01) and FEED-102 (DW-10) included, and each one's `Result:` line records it.
+On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
+(DW-01) and FEED-102 (DW-10) included, and each one's `Result:` line records it. Pending since:
+
+- KEYBIND-2 (SM-DW-KB2, SM-DW-RV3) and KEYBIND-3 (SM-DW-KB3): rewritten by DW-RV3 for the one key
+  button and Clear per row (LibKa0s OptionsKeybinds minor 4); not yet run.
 
 ### Review 2026-10-14 (M24) sign-off
 

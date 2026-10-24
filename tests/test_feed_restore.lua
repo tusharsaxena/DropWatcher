@@ -273,7 +273,7 @@ test("restore: drops cleared from the Drops tab before the reload stay cleared",
     login(m)
     brakkLoots(m, 300)
     m.__epoch = T0 + 10
-    NS.LootFeed.Clear("live")   -- `/dw clear`, and Clear on boss kill
+    NS.LootFeed.Clear("live")   -- `/dw clear`, and Clear this session's drops on boss kill
     brakkLoots(m, 301)
     assertEqual(links(NS.LootFeed), "301")
     local NS2, m2 = nextLoad(NS, 600)

@@ -25,8 +25,10 @@ L["The LibKa0s library is missing from this installation of %s (expected in libs
 -- A feature's refusal under the perf hold alone (core/LifecycleSetup.lua NS.StoodDownRefusal)
 L["Not available during a performance capture."] = "Not available during a performance capture."
 
--- The Show window key binding's row on the Key Bindings page (core/LauncherSetup.lua, launcher-§6)
-L["Toggle Drop Watcher window"] = "Toggle Drop Watcher window"
+-- The Show window key binding's row on the Keybindings page and its General > Keybindings tooltip
+-- (core/LauncherSetup.lua NS.BINDINGS, launcher-§6)
+L["Shows or hides the drop feed."] = "Shows or hides the drop feed."
+L["Toggle drop feed"] = "Toggle drop feed"
 
 -- Slash command descriptions (settings/Slash.lua NS.COMMANDS)
 L["Clear this session's drops from the feed"] = "Clear this session's drops from the feed"
@@ -150,7 +152,6 @@ L["Diagnostic report written to the debug console: %d lines. Use Copy to share i
 L["General"] = "General"
 L["No drops yet. Loot your group receives appears here."] = "No drops yet. Loot your group receives appears here."
 L["Profiles"] = "Profiles"
-L["Reset every %s setting to its default. Asks for confirmation."] = "Reset every %s setting to its default. Asks for confirmation."
 L["Reset this profile to the addon's defaults? Everything you have configured in it is discarded \226\128\148 your other profiles are not affected."] =
     "Reset this profile to the addon's defaults? Everything you have configured in it is discarded \226\128\148 your other profiles are not affected."
 L["Settings panel is not available."] = "Settings panel is not available."
@@ -228,8 +229,8 @@ L["Simulating: %s · %d members"] = "Simulating: %s · %d members"
 L["Simulation"] = "Simulation"
 L["Simulation ready: %d members, %d items. It plays now: /dw sim pause holds it, /dw sim step plays one event at a time."] = "Simulation ready: %d members, %d items. It plays now: /dw sim pause holds it, /dw sim step plays one event at a time."
 L["Simulation step %d of %d: %s."] = "Simulation step %d of %d: %s."
-L["Simulation step delay"] = "Simulation step delay"
-L["How many seconds the simulator waits between steps as it plays. A change takes effect from the next step."] = "How many seconds the simulator waits between steps as it plays. A change takes effect from the next step."
+L["Simulation step delay (seconds)"] = "Simulation step delay (seconds)"
+L["Paces /dw sim: how many seconds the simulator waits between steps as it plays. A change takes effect from the next step."] = "Paces /dw sim: how many seconds the simulator waits between steps as it plays. A change takes effect from the next step."
 L["%s (%s)"] = "%s (%s)"
 L["1 drop"] = "1 drop"
 L["%d drops"] = "%d drops"
@@ -316,7 +317,7 @@ L["Character"] = "Character"
 
 -- Keep history for (modules/HistoryRetention.lua, feedback-2 spec §5)
 L["Keep history for"] = "Keep history for"
-L["How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."] = "How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."
+L["Account-wide: shared by every profile. How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."] = "Account-wide: shared by every profile. How long the History tab keeps a group (an encounter or a run) after its last drop, on every character. A shorter time that would delete groups asks first."
 L["%d days"] = "%d days"
 L["Never delete"] = "Never delete"
 L["%d groups (%d drops)"] = "%d groups (%d drops)"
@@ -506,8 +507,8 @@ L["the whole window again"] = "the whole window again"
 L["the window narrow, each drop a short card"] = "the window narrow, each drop a short card"
 L["the window to its title bar"] = "the window to its title bar"
 L["Typed"] = "Typed"
-L["until this run ends (Open in compact view during a run)"] =
-    "until this run ends (Open in compact view during a run)"
+L["until this run ends (Compact view when it auto-opens in a run)"] =
+    "until this run ends (Compact view when it auto-opens in a run)"
 L["wait in the queue"] = "wait in the queue"
 L["wait in the queue, sent once it lifts"] = "wait in the queue, sent once it lifts"
 L["wait in the queue, sent when it ends"] = "wait in the queue, sent when it ends"
@@ -616,7 +617,7 @@ L["Read recently"] = "Read recently"
 L["ready"] = "ready"
 L["Scan group asks for the rest."] = "Scan group asks for the rest."
 L["Sets"] = "Sets"
-L["Settings > Situations"] = "Settings > Situations"
+L["Settings > Drops > Situations"] = "Settings > Drops > Situations"
 L["the order of the rows on this tab"] = "the order of the rows on this tab"
 L["tracking and auto-open settings"] = "tracking and auto-open settings"
 L["Turned on in"] = "Turned on in"

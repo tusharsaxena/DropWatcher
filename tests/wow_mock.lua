@@ -103,6 +103,11 @@
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
 
+-- Key bindings: the kit's opt-in binding mock (tests/_kit/mock_bindings.lua, revision 42) is installed
+-- on every build, for the Show window binding and General > Keybindings (launcher-§6, options-ui-§20):
+-- GetBindingKey / SetBinding / SaveBindings over two binding sets, refusing in combat, firing
+-- UPDATE_BINDINGS; M.bindKey seeds a key and __bindingWrites / __bindingRefusals record the calls.
+
 local base = dofile("tests/_kit/mock_base.lua")
 
 local WINDOW_NAME = "DropWatcherWindow"
@@ -959,6 +964,14 @@ local function build()
         end,
         GetMinimapButton = function(_, name) return M.minimapButtons[name] end,
     }
+
+    -- The client's key-binding API (launcher-§6, options-ui-§20), from the kit.
+    dofile("tests/_kit/mock_bindings.lua")(M)
+
+    -- The kit's frame-layer recorder (frame-layering; item 030), on every frame and UIParent: the
+    -- addon sets levels relative to a parent's GetFrameLevel, which the base answers with the frame
+    -- itself, and tests/test_layers.lua pins each frame class's strata, level and toplevel.
+    dofile("tests/_kit/mock_layers.lua")(M)
 
     return M
 end

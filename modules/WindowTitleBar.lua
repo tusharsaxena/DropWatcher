@@ -103,7 +103,7 @@ local function modeTip()
             TM.Row(L["Typed"], L["/dw compact"]) }
     lines[#lines + 1] = TM.Row(L["Stored as"], L["Window settings, Layout"])
     if WC.InRun() then
-        lines[#lines + 1] = TM.Row(L["Held compact"], L["until this run ends (Open in compact view during a run)"])
+        lines[#lines + 1] = TM.Row(L["Held compact"], L["until this run ends (Compact view when it auto-opens in a run)"])
     end
     return unpack(lines)
 end

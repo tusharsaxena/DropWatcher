@@ -17,7 +17,7 @@ globals = {
   "DropWatcherDB",       -- AceDB
   "DropWatcherPerfDB",   -- the diagnostics capture ring (performance-§5)
   "StaticPopupDialogs",
-  "BINDING_HEADER_DROPWATCHER",  -- the Key Bindings page's header label, read by the client (launcher-§6)
+  "BINDING_HEADER_DROPWATCHER",  -- the Keybindings section title: the category every binding names (launcher-§6)
 }
 
 -- C_AddOns stays shared for core/EnvSetup.lua's metadata read, C_Item for core/ItemSetup.lua and the

@@ -104,7 +104,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (22)
+### test_schema_rows.lua (23)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -128,10 +128,11 @@ Total.
 - icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults
 - icons: the border rows refuse what they cannot draw, and dim with Show border off
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
+- rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 
-### test_settings_pages.lua (44)
+### test_settings_pages.lua (45)
 
-- pages: General, Situations, Drops, Comparison, Messages, Window and Alerts are built, in that order
+- pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
 - pages: a page's rows are the rows whose page is its key
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
@@ -163,9 +164,10 @@ Total.
 - feed: Retention draws Clear history beside Keep history for; it asks first and clears only on Yes
 - feed: with test mode on, Clear history clears the samples and leaves the account's log
 - pages: a switch is alone on its line and its knobs pair under it (Toast, Auto-ask)
-- pages: Messages opens on Sending, which asks before it sends, the transmog switch named apart from its template
+- pages: Messages opens on Sending, its per-send switches on one line, the transmog switch named apart from its template
 - pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in
 - pages: a page's Defaults resets that page's rows and no other page's
+- pages: the Drops page's Defaults tooltip names the situations it now resets (DRO-L03)
 - editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
 - editors: a spec's stats are its primary stat, Stamina and the four secondaries
 - editors: unwanted types are the class's weapons, then shields where a spec carries one
@@ -227,7 +229,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (61)
+### test_window_shell.lua (62)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode and only where its strip is not
@@ -268,6 +270,7 @@ Total.
 - shell: Usable by me hides what you can't use or don't want; Upgrade for me keeps your upgrades
 - shell: Comparator orders newest, oldest, by item level and by your gain
 - shell: the footer composer says inspect freshness, last loot, the situation and Pawn
+- shell: the not-tracking situation tooltip points at Settings > Drops > Situations
 - shell: the live footer reads the client, and its Sort follows the active tab
 - shell: the footer's ticker runs only while the whole window is on screen
 - shell: minimize collapses to the title bar, keeps the size, and counts every drop added
@@ -310,7 +313,7 @@ Total.
 - compact: the run ending lets go when the window is next hidden, so the next open is full
 - compact: a run ending while the window is hidden lets go at once
 - compact: a parent's hide (Alt-Z) is not the window closing, so the run's layout stays
-- compact: with Open in compact view during a run off, an auto-open keeps the stored layout
+- compact: with Compact view when it auto-opens in a run off, an auto-open keeps the stored layout
 - compact: the player's own toggle during a run lets the override go
 - compact: the chest after a key completes still belongs to the run, so its auto-open is compact
 - compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it
@@ -1623,6 +1626,18 @@ Total.
 - icon style: the compact card's icon and the toast's icon wear it too
 - icon style: the glow starts over the border, and a profile switch re-reads the look
 
+### test_layers.lua (9)
+
+- layers: one table names the addon's strata by the standard's tier keys
+- layers: the level bands keep border < glow, content < grip < popovers < modal
+- layers: the main window is MEDIUM, toplevel and clamped
+- layers: the Offer panel stays in the window's strata; floating, it is W+30, docked W+1
+- layers: the compact Filters panel is W+35 in the window's strata, its dropdowns over it
+- layers: the Edit message box is DIALOG at W+40 and toplevel
+- layers: the toast is HIGH, above the window and under the modal
+- layers: an item button's border is button + 1, explicit, and the glow button + 2
+- layers: no strata literal and no absolute level in the addon's own source
+
 ### test_auto_ask.lua (24)
 
 - auto-ask: DueAt is the delay after the later of the drop and the encounter's end
@@ -1820,13 +1835,22 @@ Total.
 - sim panel: dragging writes nothing to the profile; Reset position redocks
 - sim panel: standing down hides it, idle or running, and it does not open while stood down
 
-### test_bindings.lua (5)
+### test_bindings.lua (14)
 
-- bindings: Bindings.xml carries one CLICK binding on DropWatcherToggleWindow under DROPWATCHER, category ADDONS, with no default key, and the TOC does not list it
+- bindings: Bindings.xml puts every binding in the addon's own category, no header, no default, in NS.BINDINGS order, and the TOC does not list it
+- bindings: NS.BINDINGS is the one table, Show window first, with a localized tooltip, on a library-less install too
 - bindings: the button is a plain hidden Button named DropWatcherToggleWindow, registered for AnyDown only
 - bindings: one press is one NS.Window.Toggle
-- bindings: the header label is the brand and the binding label is localized
+- bindings: the category label is the brand and the binding label is localized, with no brand in it
 - bindings: the button exists on a library-less install too
+- keybindings: the General page's strip ends with Keybindings
+- keybindings: the tab's rows are NS.BINDINGS, in order, labeled with the BINDING_NAME_ globals
+- keybindings: a key bound through the tab is the binding's key, saved to the set in force
+- keybindings: a key set on the client's page shows in the tab after UPDATE_BINDINGS
+- keybindings: a row is one key button and Clear, a second key counted on it as '<key> +1'
+- keybindings: in combat the tab refuses and calls no binding API
+- keybindings: the General page's Defaults tooltip says the keys are not changed
+- keybindings: the General page's Defaults tooltip is Reset all settings' own, then the keys line (DRO-L-new4)
 
 ### test_disabled.lua (13)
 
@@ -1962,11 +1986,11 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 22 |
-| test_settings_pages.lua | 44 |
+| test_schema_rows.lua | 23 |
+| test_settings_pages.lua | 45 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 61 |
+| test_window_shell.lua | 62 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 22 |
@@ -2023,6 +2047,7 @@ Total.
 | test_toast.lua | 37 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
+| test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 21 |
@@ -2031,7 +2056,7 @@ Total.
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 13 |
-| test_bindings.lua | 5 |
+| test_bindings.lua | 14 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
@@ -2043,4 +2068,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1689** |
+| **Total** | **1710** |

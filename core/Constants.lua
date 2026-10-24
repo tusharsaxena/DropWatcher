@@ -137,6 +137,42 @@ C.WINDOW = {
     POINT       = { "CENTER", "CENTER", 0, 0 },
 }
 
+-- The frame-layering map (frame-layering-§5; item 030). Every SetFrameStrata and SetFrameLevel in the
+-- addon reads this table, and every level is relative to the frame's parent. The whole stack, low
+-- to high (W is the main window's own level):
+--   MEDIUM     the main window, full and compact (WINDOW, toplevel, clamped) at W; its chrome W+1
+--              (title bar, tab strip, body, strips, and the Offer panel docked beside it, DOCKED);
+--              its content W+2 to W+8 (tables, cards, the detail card, item buttons: an icon's
+--              border at button + BORDER, its glow at button + EFFECT; the detail card's deepest glow
+--              reaches W+10, beside the grip in the footer corner, which the scroll keeps clear);
+--              the library's resize grip W+10 (LibKa0s-Core-1.0 sets it; GRIP names it); the
+--              floating Offer panel W+30 and the compact Filters panel W+35, popovers over the
+--              window's own content in the window's strata (a level, never a strata jump)
+--   HIGH       the toast (ALERT): over the window and its popovers, under any modal
+--   DIALOG     the Edit message box (MODAL, W+40, toplevel); the library's debug console, perf and
+--              sim panels; Blizzard's StaticPopups
+--   FULLSCREEN the library's Copy window, over the debug console that opens it
+--   FULLSCREEN_DIALOG  the library's dropdown menu, over every tier it opens from (the Filters
+--              panel's dropdowns included)
+--   TOOLTIP    GameTooltip and the TipGrid holder
+C.LAYERS = {
+    STRATA = {
+        WINDOW = "MEDIUM",
+        ALERT  = "HIGH",
+        MODAL  = "DIALOG",
+    },
+    LEVEL = {
+        BORDER          = 1,    -- an item button's border frame, over the icon's art
+        EFFECT          = 2,    -- the upgrade glow (modules/Glow.lua), over the border
+        DOCKED          = 1,    -- the Offer panel docked beside the window
+        CONTENT_MAX     = 8,    -- the window's content stays at or below W+8 (frame-layering-§3)
+        GRIP            = 10,   -- the library's resize grip: named here, set by LibKa0s-Core-1.0
+        POPOVER_OFFER   = 30,   -- the floating Offer panel
+        POPOVER_FILTERS = 35,   -- the compact Filters panel, the more transient of the two
+        MODAL           = 40,   -- the Edit message box, belt and braces over its DIALOG strata
+    },
+}
+
 -- The gold of the title, the active tab and the test-mode banner (design spec §2), and the gray of
 -- an idle tab and the footer's text.
 C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }

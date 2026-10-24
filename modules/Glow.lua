@@ -21,8 +21,9 @@ local _, NS = ...
 --
 -- ON THE BUTTON, JUST ABOVE THE ICON AND ITS BORDER. The effect's frame is a child of the item
 -- button at FRAME_LEVEL over it (the library's own default is 8): over the icon's art, which is the
--- button's own texture, over Window › Icons' border (modules/IconStyle.lua's child frame, one level
--- over the button; feedback-21 G11), and no higher than it needs. The item buttons carry no text
+-- button's own texture, over Window › Icons' border (modules/IconStyle.lua's child frame, set
+-- explicitly at NS.Constants.LAYERS.LEVEL.BORDER over the button; feedback-21 G11), and no higher
+-- than it needs. The item buttons carry no text
 -- over the icon; the text beside an icon belongs to the cell or card that holds the button.
 --
 -- POOLED FRAMES. A pooled row or card repainted for another drop re-applies, so it keeps, changes or
@@ -44,7 +45,7 @@ local Glow = NS.Glow
 -- The key every effect is started and stopped under, so another addon's glow on the same frame is
 -- never touched (the button style has no key: one per frame).
 Glow.KEY = "DropWatcherUpgrade"
-Glow.FRAME_LEVEL = 2   -- the icon's border (modules/IconStyle.lua) is at 1
+Glow.FRAME_LEVEL = NS.Constants.LAYERS.LEVEL.EFFECT   -- border + 1 (modules/IconStyle.lua)
 Glow.KINDS = { "main", "offSpec" }
 
 local gen = 1      -- the settings generation: Refresh moves it on

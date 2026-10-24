@@ -11,14 +11,14 @@ local L = NS.L
 
 -- settings/SchemaRows.lua
 L["Use global"] = "Use global"
-L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."] =
-    "A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade."
-L["A fresh tab lists only the drops whose trade estimate is yes or likely."] =
-    "A fresh tab lists only the drops whose trade estimate is yes or likely."
-L["A fresh tab hides the drops you can't use and the item types you marked as unwanted."] =
-    "A fresh tab hides the drops you can't use and the item types you marked as unwanted."
-L["A fresh tab lists only the drops that are an upgrade for you."] =
-    "A fresh tab lists only the drops that are an upgrade for you."
+L["A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab lists only the drops that are an upgrade for you, or that their looter is likely to give away and can trade. With none ticked, a fresh tab lists every drop."
+L["A fresh tab lists only the drops whose trade estimate is yes or likely. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab lists only the drops whose trade estimate is yes or likely. With none ticked, a fresh tab lists every drop."
+L["A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."
+L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
@@ -56,7 +56,7 @@ L["Which drops the Drops tab lists when it opens: this instance's or this sessio
 L["How a fresh tab sorts its rows."] = "How a fresh tab sorts its rows."
 L["Gear only"] = "Gear only"
 L["List armor, weapons, jewelry and trinkets only."] = "List armor, weapons, jewelry and trinkets only."
-L["Tier tokens"] = "Tier tokens"
+L["Include tier tokens"] = "Include tier tokens"
 L["List tier tokens too."] = "List tier tokens too."
 L["Minimum item level"] = "Minimum item level"
 L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."] =
@@ -66,7 +66,7 @@ L["The least item level a drop needs in the absolute mode."] = "The least item l
 L["Levels under my average"] = "Levels under my average"
 L["How far under your average equipped item level a drop may be in the relative mode."] =
     "How far under your average equipped item level a drop may be in the relative mode."
-L["Clear on boss kill"] = "Clear on boss kill"
+L["Clear this session's drops on boss kill"] = "Clear this session's drops on boss kill"
 L["Clear the session's drops when a boss dies."] = "Clear the session's drops when a boss dies."
 L["Scoring"] = "Scoring"
 L["Score with"] = "Score with"
@@ -117,7 +117,8 @@ L["Columns"] = "Columns"
 L["Layout"] = "Layout"
 L["Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."] =
     "Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."
-L["Open in compact view during a run"] = "Open in compact view during a run"
+L["Compact view when it auto-opens in a run"] = "Compact view when it auto-opens in a run"
+L["Tables"] = "Tables"
 L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."] =
     "When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."
 L["Row height"] = "Row height"
@@ -306,14 +307,12 @@ L["Window"] = "Window"
 
 -- feedback-24: the pages regrouped (Situations, Drops, Comparison, Messages, Window, Alerts)
 L["Situations"] = "Situations"
-L["Reset the Situations page's settings (auto-open and every situation's tracking, quality and loot rule) to their defaults."] =
-    "Reset the Situations page's settings (auto-open and every situation's tracking, quality and loot rule) to their defaults."
 L["Loot rule"] = "Loot rule"
-L["Reset the Drops page's settings (quality, items and how long drops are kept) to their defaults."] =
-    "Reset the Drops page's settings (quality, items and how long drops are kept) to their defaults."
+L["Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."] =
+    "Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."
 L["Quality floor"] = "Quality floor"
-L["A situation can set a quality of its own: the Quality column on the Situations page."] =
-    "A situation can set a quality of its own: the Quality column on the Situations page."
+L["A situation can set a quality of its own: the Quality column on the Situations tab."] =
+    "A situation can set a quality of its own: the Quality column on the Situations tab."
 L["Items"] = "Items"
 L["Item kinds"] = "Item kinds"
 L["Retention"] = "Retention"

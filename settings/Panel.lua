@@ -6,8 +6,10 @@ local addonName, NS = ...
 -- first tab `Master controls`, composed from one declaration with the canonical rows in canonical
 -- order (options-ui-§15): the window is positionable, so every frame row is present, plus the
 -- Minimap button and Test mode rows. The General page's second tab, `Simulator`, is the simulator's
--- step delay (settings/SchemaRows.lua); When to show moved to the Situations page in feedback-24
--- (settings/Pages.lua). The design spec's other pages (§12.2) are DW-41's.
+-- step delay (settings/SchemaRows.lua), and its last, `Keybindings`, is LibKa0s's key editor
+-- (options-ui-§20); When to show moved to the Situations page in feedback-24, and that page into Drops ›
+-- Situations in item 020 (settings/Pages.lua).
+-- The design spec's other pages (§12.2) are DW-41's.
 
 local DW       = NS.addon
 local Settings = DW.Settings
@@ -67,17 +69,30 @@ NS.SchemaRuntime.AddRows(MASTER_ROWS, 1)
 local AFTER_GROUP = {}
 if Helpers.MASTER_GROUP then AFTER_GROUP[Helpers.MASTER_GROUP] = MASTER_TAIL end
 
--- The General page's render, a tab click's included (`rerender`).
+-- The General page's render, a tab click's included (`rerender`). Its last tab is Keybindings
+-- (options-ui-§20): the library's host tab over NS.BINDINGS (core/LauncherSetup.lua), with no
+-- `before`, so it follows every schema tab. The stub's KeybindingsTab answers nil: no tab.
 local function renderGeneral(c)
     Helpers.ClearScroll(c)
-    Helpers.RenderTabbedSchema(c, "general", AFTER_GROUP, nil, { rerender = renderGeneral })
+    Helpers.RenderTabbedSchema(c, "general", AFTER_GROUP, nil, {
+        rerender = renderGeneral,
+        tabs     = { Helpers.KeybindingsTab({ bindings = NS.BINDINGS }) },
+    })
+end
+
+-- The General page's header Defaults is the global reset (showResetPopup), so its tooltip is the
+-- very text Reset all settings carries (options-ui-§12, U-04), read from the library, then its
+-- "Key bindings are not changed." (options-ui-§20): keys are the game's, not a setting, so no reset
+-- reaches them. No host wording around it (item 020, DRO-L-new4).
+local function generalDefaultsTooltip()
+    return Helpers.ResetAllTooltip(Helpers.KEYBINDS_UNCHANGED)
 end
 
 local function buildGeneralPage(parentCategory)
     local ctx = Helpers.CreatePanel(addonName .. "GeneralPanel", L["General"], {
         pageKey         = "general",
         defaultsButton  = true,
-        defaultsTooltip = L["Reset every %s setting to its default. Asks for confirmation."]:format(NS.BRAND),
+        defaultsTooltip = generalDefaultsTooltip(),
     })
     ctx.panel.defaultsOnClick = showResetPopup
     Helpers.SetRenderer(ctx, renderGeneral)

@@ -702,6 +702,21 @@ test("shell: the footer composer says inspect freshness, last loot, the situatio
     assertEqual(WF.Ago(7300), "2h")
 end)
 
+-- Item 020 (DW-LY): the Situations page folded into Drops as its first tab, so the not-tracking
+-- tooltip routes the player to Settings > Drops > Situations, never to the retired page.
+test("shell: the not-tracking situation tooltip points at Settings > Drops > Situations", function()
+    local WF = T.newAddon().WindowFooter
+    local idle = WF.Compose({ members = 0, situation = "solo", tracking = false, pawn = "off" })
+    local found, stale = false, false
+    for _, line in ipairs(idle.situation.tip) do
+        local text = tostring(line)
+        if text:find("Settings > Drops > Situations", 1, true) then found = true end
+        if text:find("Settings > Situations", 1, true) then stale = true end
+    end
+    assertTrue(found, "the tooltip names the Drops page's Situations tab")
+    assertFalse(stale, "no route to the retired Situations page")
+end)
+
 test("shell: the live footer reads the client, and its Sort follows the active tab", function()
     local NS = shown()
     local segs, sort = NS.WindowFooter.Parts()

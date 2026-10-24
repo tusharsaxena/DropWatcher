@@ -11,8 +11,8 @@ the host verbs alike, and one read, `NS.Setting(path)` (the stored value, or the
 before the database exists). The rows are `settings/Schema.lua`'s `Settings.Schema` array: the
 composed Master controls rows (`settings/Panel.lua`), then every hand-written row of design spec
 §12.1 (`settings/SchemaRows.lua`), page by page as the tables below list them (regrouped by
-feedback-24; no stored path moved): General's Simulator, Situations (with each situation's loot
-rule), Drops (page key `feed`: Quality, Items, and Retention with the account-wide Keep history for,
+feedback-24, then by item 020; no stored path moved): General's Simulator, Drops (page key `feed`:
+Situations, with each situation's loot rule, then Quality, Items, and Retention with the account-wide Keep history for,
 `global.history.retentionDays`, feedback-2 spec §5, DW-A5, which replaced the group cap),
 Comparison, Messages, Window's Layout, Columns, Starting view and Icons' Zoom, then Alerts' Toast and
 Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appended last.
@@ -26,7 +26,7 @@ Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appe
   (architecture-§5's value route: a membership change is a whole write through the seam), drawn by
   their own editors (`skipRender`); the CLI shows them as their entry count. The
   `situations.<key>.*` and `trade.rules.<key>` rows are `skipRender` too (since DW-H0; the loot
-  rules since feedback-24): the Situations table draws them, a line per situation, and writes
+  rules since feedback-24): the Drops › Situations table draws them, a line per situation, and writes
   through the seam.
 - The reactions every surface shares are `Settings.REACTIONS` (Master controls) and the window
   repaint on the Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared
@@ -66,9 +66,11 @@ Every module reads a setting through `NS.Setting(path)`.
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
 | `sim.stepDelay` | `1` | Simulator | the seconds the simulator waits between steps as it plays, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7; the default was `2` until the owner's 2026-10-23 simulator feedback, and needs no migration because AceDB never stores a value equal to its default); read as each next step is set, so a change takes effect from the next step |
 
-### Situations
+### Drops › Situations (page key `feed`)
 
-General › When to show and Trade › Rules until feedback-24.
+General › When to show and Trade › Rules until feedback-24; a page of its own (key `situations`)
+from feedback-24 until item 020, which made it the Drops page's first tab. The rows' page is now
+`feed`, so Drops' Defaults resets them and `/dw list` lists them in its `feed` section.
 
 | Key | Default | Column | What it is |
 |---|---|---|---|
@@ -135,7 +137,7 @@ toast Window › Toast until feedback-24.
 |---|---|---|---|
 | `window.columns.<col>` | `true` | Columns | `false` hides that Drops column (`ilvl`, `slot`, `armorType` (the Type column, since DW-D3, feedback-4 spec §3; AceDB's default fills it in for a stored profile, no migration step), `looter`, `me` and `them` (since DW-F1, feedback-6 spec §1, the merged cells: the worn gear and the verdict; the `myEq` and `theirEq` toggles DW-83 added are retired by step 7), `trade`, `tradeWindow` (Trade window, since DW-E1, feedback-5 spec §1; AceDB's default fills it in for a stored profile, no migration step), `actions`); Item never hides |
 | `window.mode` | `"full"` | Layout; `NS.SetWindowMode`, the title-bar toggle, `/dw compact`, `/dw full` (DW-C0) | the window's layout, `full` or `compact` (compact spec §1, `modules/WindowCompact.lua`); its reaction lets a run override go and lays the window out. Replaced the compact preset `window.compact` (DW-42), which step 5 maps here |
-| `window.compactInRuns` | `true` | Layout (DW-C0) | Open in compact view during a run: an auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever `window.mode`, until the situation leaves that run (the override itself is session-only, `NS.State.compactRun`) |
+| `window.compactInRuns` | `true` | Layout (DW-C0) | Compact view when it auto-opens in a run (Open in compact view during a run until item 020): an auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever `window.mode`, until the situation leaves that run (the override itself is session-only, `NS.State.compactRun`) |
 | `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on both tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a Drops row is taller by its countdown bar's room while the Trade window column shows (feedback-5 spec §1). Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
 | `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade` | `false` each | Starting view | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me), the values combine as AND; a Can't use whose off-spec is an upgrade counts for Interesting and Upgrade for me, and one whose off-spec is an upgrade or a sidegrade for Usable by me (feedback-19 spec §1), and all off is All, the default |
 | `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Starting view | the Drops tab's Content when it opens (`instance` or `session`; `all` is History's alone since DW-Q1, feedback-15 spec §1, and step 8 turns a stored one into `session`), and a fresh tab's Sort (History always opens on Content: All) |
@@ -296,7 +298,7 @@ and no setting row: the session (feedback-15 spec §0, DW-Q0, `modules/Session.l
 |---|---|---|
 | `session.start` | absent until the first read or login | the session start, `time()`: an initial login's `PLAYER_ENTERING_WORLD` sets it to now, a reload keeps it, a zone change moves nothing; absent or not a number, it is now (stored). History's group keys (`@<start>`) and every tab's This session read it (`NS.History.SessionStart`) |
 | `session.instance` | absent until the first `SituationChanged` | `{ at, situation, instance }`: where This instance started, `at` the epoch, `situation` the situation key, `instance` the instance map id (nil outside one); a reload's first situation announcement that names the same situation and instance restores the window's This instance from it |
-| `session.cleared` | absent until the first clear | `time()` of the last live `LootFeed.Clear` (`/dw clear`, Clear on boss kill): a reload restores no entry dated before it; an initial login drops it (`NS.Session.Cleared`) |
+| `session.cleared` | absent until the first clear | `time()` of the last live `LootFeed.Clear` (`/dw clear`, Clear this session's drops on boss kill): a reload restores no entry dated before it; an initial login drops it (`NS.Session.Cleared`) |
 
 The kit's AceDB fake has no `char` section, so headless the record is session-only unless a suite
 seeds `db.char` (`test_feed_restore` does).
@@ -335,7 +337,7 @@ it is named.
   valid is stored), `Session.OnEnteringWorld` (an initial login, which also drops `cleared`; the
   stand-up after a disabled start), `Session.MarkSituation` (each `SituationChanged` the window
   hears, but a reload's first one in the stored place) and `Session.MarkCleared` (`time()` at each
-  live `LootFeed.Clear`, `/dw clear` or Clear on boss kill: a reload restores no entry dated
+  live `LootFeed.Clear`, `/dw clear` or Clear this session's drops on boss kill: a reload restores no entry dated
   before it).
 
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to

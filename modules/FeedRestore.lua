@@ -11,7 +11,7 @@ local _, NS = ...
 -- WHAT. The account's log (NS.History.Store, never a test-mode or simulation log): the groups whose
 -- key ends in `@<session start>`, their entries the current character saw (`seenBy ==
 -- CharFilter.CurrentKey()`), entries marked `gone` skipped, and those dated before the live feed's
--- last clear (`/dw clear`, Clear on boss kill: NS.Session.Cleared), so a clear outlasts a reload,
+-- last clear (`/dw clear`, Clear this session's drops on boss kill: NS.Session.Cleared), so a clear outlasts a reload,
 -- oldest first by `at`, the newest LootFeed.MAX_DROPS of them.
 --
 -- HOW. Each entry is one receipt for LootFeed.Restore (`restore`): the link, the looter (Name-Realm,

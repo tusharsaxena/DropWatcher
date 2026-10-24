@@ -14,9 +14,8 @@ share a line (feedback-24).
 | Page | Covers |
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `Simulator` |
-| Situations | `Situations` (one tab: Auto-open the window and the per-situation table) |
-| Drops (key `feed`) | `Quality`, `Items`, `Retention` |
+| General | `Master controls`, `Simulator`, `Keybindings` |
+| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Retention` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
@@ -29,7 +28,14 @@ Toast, Upgrade glow, Icons). The regroup moved rows between pages and tabs and r
 no stored path changed, so it needed no migration. It did move what each page's Defaults resets,
 and `/dw list` groups rows by page, so its sections follow the new pages.
 
-`settings/Panel.lua` registers General, `settings/Pages.lua` the six after it,
+Item 020 (the 2026-10-24 settings-layout pass) folded the Situations page into Drops as its first
+tab, moved and relabeled rows, and reworded tooltips. It too changed no stored path, default, range
+or behavior (`tests/test_schema_rows.lua` pins every path and default). Two consequences of the
+fold, both the owner's call: Drops' Defaults now also resets the situations table (Auto-open the
+window, and every situation's tracking, auto-open, quality and loot rule), and `/dw list`'s
+`situations` section is gone, its rows listed under `feed`.
+
+`settings/Panel.lua` registers General, `settings/Pages.lua` the five after it,
 `settings/Profiles.lua` the last. Window › Icons' Border block is composed by the library
 (`settings/ComposedRows.lua`, options-ui-§16), like General's Master controls. Three tabs, two
 closing lines, one opening note and one table have no row the flow engine can draw; they are host
@@ -56,23 +62,39 @@ The header's Defaults button and Reset all settings both open the confirmation p
 reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
 
 The launcher's right-click menu mirrors four of these: Enabled, Locked, Test mode and Show window
-(launcher-§2). Show window also has a key binding (launcher-§6): Key Bindings → AddOns → Ka0s Drop
-Watcher → Toggle Drop Watcher window, with no default key, on the same handler as the menu entry and
-`/dw toggle` (`NS.ToggleWindow`, through the `DropWatcherToggleWindow` button in
-`core/LauncherSetup.lua`).
+(launcher-§2). Show window also has a key binding (launcher-§6): Options → Keybindings → Ka0s Drop
+Watcher → Toggle drop feed, or General → Keybindings in this addon's settings, with no default key,
+on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, through the
+`DropWatcherToggleWindow` button in `core/LauncherSetup.lua`). The header's Defaults is the global
+reset, so its tooltip is the very text Reset all settings carries, read from the library
+(`O.ResetAllTooltip`, options-ui-§12; item 020 retired the addon's own "Reset every … setting" lead),
+then `Key bindings are not changed.` (`O.KEYBINDS_UNCHANGED`): no reset reaches a key.
 
 ## General → Simulator
 
-One slider (the tab was `Simulation` until feedback-24), `Simulation step delay` (`sim.stepDelay`, feedback-2 spec §8, DW-A7): the
+One slider (the tab was `Simulation` until feedback-24), `Simulation step delay (seconds)` (`sim.stepDelay`, feedback-2 spec §8, DW-A7;
+the unit joined the label, and the tooltip opens `Paces /dw sim:`, in item 020): the
 seconds the simulator waits between steps as it plays, 0.5
 to 10 in steps of 0.5, 1 by default (2 until the owner's 2026-10-23 simulator feedback). `/dw set sim.stepDelay <n>` reaches it too (the slash parser
 clamps a number outside the range to it). A change takes effect from the next step of a running
 timeline.
 
-## Situations
+## General → Keybindings
 
-Everything set per situation, on one page with one tab (feedback-24: General › When to show and
-Trade › Rules until then). The master `autoOpen` row (Auto-open the window), then the per-situation
+The General page's last tab (options-ui-§20), drawn by LibKa0s's `O.KeybindingsTab` over
+`NS.BINDINGS` (`core/LauncherSetup.lua`) as a host tab with no `before` (`settings/Panel.lua`). It
+edits the same store as Options → Keybindings → Ka0s Drop Watcher, so a key set in either shows in
+the other. The library's intro line, then one row, `Toggle drop feed` (tooltip `Shows or hides the
+drop feed.`), with one key button and Clear (OptionsKeybinds minor 4). The button binds the first key
+and shows it; when the game's page holds a second key for the action it reads `<key> +1`, and its
+tooltip names every key and says where the others were set. Clear removes every key. Then which
+binding set the key is saved to, and the outcome of the last change. Keys are saved by the game,
+never in the profile: Defaults, Reset all settings and `/dw set` never touch them. In combat the tab refuses every change.
+
+## Drops → Situations
+
+Everything set per situation, on the Drops page's first tab (General › When to show and Trade ›
+Rules until feedback-24; a page of its own from feedback-24 until item 020). The master `autoOpen` row (Auto-open the window), then the per-situation
 settings as one table (feedback-8 spec §0, DW-H0), a line per situation in `K.SITUATIONS` order
 (design spec §6.1):
 
@@ -90,41 +112,43 @@ rule has one home. Hovering a cell shows its row's label and tooltip; hovering a
 situation.
 
 The four per-situation rows stay schema rows (paths, defaults, checks, tooltips), marked
-`skipRender` with no subsection, so `/dw get|set`, the page's Defaults, profiles and their announce
+`skipRender` with no subsection, so `/dw get|set`, the Drops page's Defaults, profiles and their announce
 reach them unchanged. The table is the Situations tab's `afterGroup` hook
 (`Settings.PageEditors.SituationTable`), writes through `NS.SchemaRuntime.Set` and repaints every
 value and state on each render and after every write (a toggle, the master row, Defaults, a profile
 switch). Its host frame and slots are built once per session and re-hosted on a fresh placeholder
 on each render. The placeholder's `OnRelease` parks it (`ParkSituationTable`), hidden on the panel,
-whenever AceGUI takes the placeholder back (options-ui-§19); the Situations page's renderer
+whenever AceGUI takes the placeholder back (options-ui-§19); the Drops page's renderer
 (`beforeClear` in `settings/Pages.lua`, and its `rerender`) also parks it before `ClearScroll` as
 belt-and-braces. Until DW-H0 the tab drew one block per situation,
 since LibKa0s has no grid composer for mixed controls;
-[LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one consumer; the table stays the page's own editor.
+[LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one consumer; the table stays the tab's own editor.
 
-## Drops
+## Drops → Quality, Items and Retention
 
 The page key stays `feed` (a page key is no stored path, but it names the page's section in
-`/dw list`). What the addon lists at all, and how long it keeps it.
+`/dw list`, which holds the situation rows too since item 020). What the addon lists at all, and how
+long it keeps it. Its Defaults resets every tab, Situations included.
 
 **Quality:** `Minimum quality` (`feed.quality.mode`) beside `Always show upgrades for me`, then the
 mode's two values on one line, never live together: `Fixed minimum` (live in the fixed mode only) |
 `Quality floor` (`Floor` until feedback-24; live in the two matching modes only). Then the closing
 line `In force now: Quality: Rare+`: the filter bar's label for where you stand, naming the situation
 when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
-at the Situations page's Quality column, where a situation sets its own.
+at the Situations tab's Quality column, where a situation sets its own.
 
-**Items:** two subsections. **Item kinds:** Gear only | Tier tokens. **Item level:** Minimum item
+**Items:** two subsections. **Item kinds:** Gear only | Include tier tokens (`Tier tokens` until item 020). **Item level:** Minimum item
 level alone on its line, then its two values, each live in its mode only: Absolute minimum | Levels
 under my average.
 
 **Retention:** two subsections. **History:** Keep history for (7 to 180 days or Never delete,
-default 30; account-wide; a shorter time that would delete groups asks first, and No puts the
+default 30; account-wide, which its tooltip opens by saying, `Account-wide: shared by every profile.`,
+since item 020; a shorter time that would delete groups asks first, and No puts the
 previous time back), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a
 setting, so no schema row; Keep history for's `pairWith` partner in `settings/PageEditors.lua`; it
 asks first, `NS.History.AskClear`, and Yes empties the log on every character, or test mode's or a
 simulation's session-only log while one is on). Window › Layout's until feedback-24. **Session:**
-Clear on boss kill. (Show my own loot in Group drops is retired: Drops always lists your own drops,
+Clear this session's drops on boss kill (`Clear on boss kill` until item 020). (Show my own loot in Group drops is retired: Drops always lists your own drops,
 feedback-5 spec §2; schema step 6 removes the stored value.)
 
 ## Comparison
@@ -147,10 +171,11 @@ each time.
 
 Messages opens on its switches, the template editors last (feedback-24).
 
-**Sending:** which asks you get, then how they go: Offer transmog asks (`messages.transmogAsk`; the
-`Ask for transmog` checkbox until feedback-24, the label its template's: on, also offer an ask, with
-the Ask for transmog template, on a drop that is no gain for you but whose look you have not
-collected) | Ask once, then Edit before sending | Announce channel. **Auto-ask:** Ask automatically
+**Sending:** the two per-send switches on one line, Ask once | Edit before sending, then Announce
+channel | Offer transmog asks (`messages.transmogAsk`; the `Ask for transmog` checkbox until
+feedback-24, the label its template's: on, also offer an ask, with the Ask for transmog template, on
+a drop that is no gain for you but whose look you have not collected). Item 020 (DRO-L08) set this
+order; until then it read Offer transmog asks | Ask once, then Edit before sending | Announce channel. **Auto-ask:** Ask automatically
 alone on its line, then its Delay | Least gain, live only while it is on. Turning Ask automatically
 on the first time prints auto-ask's one-time notice; turning it off cancels the asks waiting to go.
 
@@ -166,10 +191,12 @@ the limit or an unknown token. Reset templates puts the five back.
 
 ## Window
 
-**Layout:** Window layout (`window.mode`, `Layout` until feedback-24, the tab's own name; Full or
-Compact, compact spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact`
-and `/dw full`) | Open in compact view during a run (on by default: an auto-open inside a dungeon,
-raid, key or delve opens compact until the run ends), then Row height (18 by default, both tabs of
+**Layout:** two subsections since item 020 (DRO-L07; the row order unchanged). **Mode:** Window
+layout (`window.mode`, `Layout` until feedback-24, the tab's own name; Full or Compact, compact
+spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`) |
+Compact view when it auto-opens in a run (`Open in compact view during a run` until item 020; on by
+default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends, and the
+title-bar toggle's tooltip names it while it holds). **Tables:** Row height (18 by default, both tabs of
 the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the
 compact layout's cards size from their text) | Font size (all the way left, 0, is Default: the
 template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact
@@ -188,7 +215,8 @@ does nothing else.
 
 **Starting view** (Feed › Filters until feedback-24): what a fresh Drops tab opens on. **View:**
 Interesting, Likely tradeable, Usable by me and Upgrade for me (`feed.view.<key>`, one checkbox per
-value; all unticked is View: All, the default, DW-A1). **Content and sort:** Content (the Drops
+value; all unticked is View: All, the default, DW-A1, and since item 020 each tooltip ends `With none
+ticked, a fresh tab lists every drop.`). **Content and sort:** Content (the Drops
 tab's, This instance or This session, This session by default; History always opens on All,
 feedback-13 spec §0; All left the row in DW-Q1, feedback-15 spec §1, schema step 8) | Sort (what a
 fresh tab starts with).

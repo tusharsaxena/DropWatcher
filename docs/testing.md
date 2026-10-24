@@ -16,7 +16,7 @@ without it).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 41, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 42, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
@@ -60,7 +60,8 @@ reaching a stored profile that is not the active one, step 3 folding the View an
 into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
-through the seam, the account-wide Keep history for, the CLI and the degraded load; Alerts › Upgrade
+through the seam, the account-wide Keep history for, the CLI and the degraded load; the item-020 guard,
+every stored path with its type and default pinned so a layout change cannot move one; Alerts › Upgrade
 glow, feedback-21: every glow row and its default (H6: both pixel, `pixelFrequency` 0.1, the colors
 `C.TONE.glowMain` `#FFF468` and `C.TONE.glowOffSpec` `#3FC7EB`, apart from the verdicts' tones), the
 main | off-spec alternation on every line, the two swatches on one line and their Use class color
@@ -74,10 +75,10 @@ Solid black border 2 pixels thick), the
 color pair player-scoped, starting its line and never dimmed, the refused values, style, thickness and
 quality dimmed with Show border off, `/dw set` on the color, and the degraded load keeping Zoom with the
 border's profile defaults), `test_settings_pages` (the settings
-pages built headless, as feedback-24 regrouped them: the page list and each page's strip, a page's rows by its key, the Situations
+pages built headless, as feedback-24 and item 020 regrouped them: the page list and each page's strip, a page's rows by its key, the Drops › Situations
 table (one line per situation, its Loot rule column, its gold headers and stripe, each cell's value, a toggle writing its
 path, the dimmed cells, Defaults and a profile switch repainting it, built once and re-hosted, parked
-by its placeholder's own `OnRelease` outside the renderer (options-ui-§19, DW-P21), the rows still schema rows and `skipRender`), the Drops page's "in force now" readout and its pairings, the switches alone on their line with their knobs paired under them, Messages opening on Sending, Window's Columns note and moved rows, the Comparison page's per-spec
+by its placeholder's own `OnRelease` outside the renderer (options-ui-§19, DW-P21), the rows still schema rows and `skipRender`, stamped to the Drops page), the Drops page's Defaults tooltip and reset reaching the situations, the Drops page's "in force now" readout and its pairings, the switches alone on their line with their knobs paired under them, Messages opening on Sending, Window's Columns note and moved rows, the Comparison page's per-spec
 weights and unwanted types written whole through the seam, the Messages page's live counters,
 preview, token chips and Reset templates, Drops › Retention's Clear history beside Keep history for
 (asking first, clearing on Yes, test mode's samples only while it is on; feedback-15 spec §3), each
@@ -210,7 +211,13 @@ frame made on first use with LibSharedMedia's texture, Solid's flat edge or the 
 color (the player's class, the swatch's alpha), Color by item quality (the cached item's quality color,
 an uncached link's own color, the swatch's mode for no quality), the Drops row, its Me icons, the detail
 card's header, the compact card and the toast styled live, the glow's frame level over the border, and a
-profile copy re-reading it), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
+profile copy re-reading it), `test_layers` (frame-layering, item 030: the one `NS.Constants.LAYERS`
+table's strata keys and level order, then every frame class through the kit's frame-layer recorder,
+which `tests/wow_mock.lua` installs on every instance: the window MEDIUM, toplevel and clamped, the
+Offer panel in the window's strata at W+1 docked and W+30 floating, the compact Filters panel at W+35
+with its dropdowns over it, the Edit message box DIALOG at W+40 and toplevel, the toast HIGH, an item
+button's border explicit at +1 under the glow at +2, and a static scan for strata literals and absolute
+levels in `core/`, `modules/` and `settings/`), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, its next expiry moving each second and keeping
 the ticker running, Post my tradeables through its handler, and the compact strip's summary
@@ -502,7 +509,7 @@ footer's `Simulating` and `Inspect n/n`, and rows on Drops, yours among them, un
 filters, and the History footer's `kept for 30 days` with a shorter window that deletes nothing of
 the fresh run and so asks nothing; the combat flags during and after the simulated fight, the loot lines written from the
 GlobalStrings Compat reads, `raid1` as you and online in a raid, and Raid Finder's instance chat;
-every scenario runs once in each layout, DW-C5: the full table with Open in compact view during a
+every scenario runs once in each layout, DW-C5: the full table with Compact view when it auto-opens in a
 run off, and the compact cards with no piece of any card blank; and a simulated key's auto-open is
 compact by default and full with the option off, the stored layout back once the run is stopped),
 `test_sim_report` (the owner's `Loot: 2 drops` with one drop shown, DW-B0, feedback-3 spec §0: the
@@ -518,9 +525,14 @@ their bosses and loot counts, each kind's tooltip and Start's and Stop's, the sc
 raid's sizes in the picker, the done tick's texture, `/dw sim` and `panel` opening or toggling it,
 the dock beside the window, also once a slow pool opens it, a drag writing nothing to the profile
 and Reset position redocking, and the stand-down hiding it, idle or running),
-`test_bindings` (the Show window key binding, launcher-§6: `Bindings.xml`'s one CLICK binding, no
-default key and no TOC line, the plain hidden `AnyDown` button, one press per toggle, the two labels,
-and the button on a library-less install), `test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
+`test_bindings` (the Show window key binding, launcher-§6: `Bindings.xml` held to `NS.BINDINGS` by
+the kit's `Kit.assertBindingsXml`, its own category and no header, no default key and no TOC line,
+the plain hidden `AnyDown` button, one press per toggle, the two labels, and the button on a
+library-less install; and General → Keybindings, options-ui-§20: the strip's last tab, its rows and
+labels, a key bound through it with `Kit.keybindThroughTab`, a key set elsewhere repainting it, the
+one key button and Clear with a second key counted on it (`F7 +1`, OptionsKeybinds minor 4), its
+combat refusal and the Defaults tooltip; on the kit's `tests/_kit/mock_bindings.lua`, which
+`tests/wow_mock.lua` installs), `test_diagnostics`, `test_debug_coverage` (what the debug log and the report carry, debug-logging-§8, §9,
 §14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each
 hold and its release over an encounter or combat, the trade scan logged on change only, the search
 box once on focus lost, and the report's drop, toast-queue and auto-ask lines), `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw

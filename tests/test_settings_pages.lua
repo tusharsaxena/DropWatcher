@@ -1,6 +1,6 @@
 -- tests/test_settings_pages.lua — the settings pages of design spec §12.2 (regrouped by
 -- feedback-24): the page list and each page's strip, the rows each page draws, the dimmed rows, the
--- Situations page's table, the Drops page's "in force now" readout, the Comparison page's per-spec
+-- Drops › Situations' table, Drops › Quality's "in force now" readout, the Comparison page's per-spec
 -- editors, the Messages page's template editors (live counters, token chips, preview, Reset
 -- templates), Drops › Retention's Clear history beside Keep history for (feedback-15 spec §3), the
 -- Window › Columns note, each page's Defaults button, and
@@ -14,9 +14,9 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 -- The pages after the landing page, and each page's strip, in order. Stated here rather than read
 -- from the rows, so a tab that moves is a named failure.
 local PAGES = {
-    { key = "general",    title = "General",    strip = { "Master controls", "Simulator" } },
-    { key = "situations", title = "Situations", strip = { "Situations" } },
-    { key = "feed",       title = "Drops",      strip = { "Quality", "Items", "Retention" } },
+    { key = "general",    title = "General",    strip = { "Master controls", "Simulator", "Keybindings" } },
+    -- item 020 folded the Situations page into Drops as its first tab (DRO-L01).
+    { key = "feed",       title = "Drops",      strip = { "Situations", "Quality", "Items", "Retention" } },
     { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Unwanted types" } },
     { key = "messages",   title = "Messages",   strip = { "Sending", "Auto-ask", "Templates" } },
     { key = "window",     title = "Window",     strip = { "Layout", "Columns", "Starting view", "Icons" } },
@@ -90,7 +90,7 @@ end
 
 -- ── the pages and their strips ──────────────────────────────────────────────────────────────
 
-test("pages: General, Situations, Drops, Comparison, Messages, Window and Alerts are built, in that order", function()
+test("pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order", function()
     local NS = T.enableAddon()
     local built = {}
     for _, p in ipairs(NS.addon.Settings.Helpers.__pages()) do
@@ -129,15 +129,17 @@ test("pages: every schema row with a page but the Profiles page's is drawn by on
     end
 end)
 
--- ── Situations (General › When to show and Trade › Rules until feedback-24) ─────────────────
+-- ── Drops › Situations (General › When to show and Trade › Rules until feedback-24; its own page
+-- until item 020) ────────────────────────────────────────────────────────────────────────────
 
--- The Situations page drawn with its table's frames recorded: a panel marked as the window's tree
+-- Drops › Situations drawn with its table's frames recorded: a panel marked as the window's tree
 -- has its children decorated by the mock (tests/wow_mock.lua), so the table's text and stripes
--- can be read back. The page's one tab is its first render, so the mark goes on before the show.
--- Answers the ctx, the tab's widgets and the table.
+-- can be read back. The tab is the page's first, so its first render, and the mark goes on before
+-- the show. Answers the ctx, the tab's widgets and the table.
 local function whenToShow(NS, m)
-    NS.addon.Settings.Helpers.__panelFor("situations").panel.__dwTree = true
-    local ctx, drawn = open(NS, m, "situations")
+    NS.addon.Settings.Helpers.__panelFor("feed").panel.__dwTree = true
+    local ctx, drawn = open(NS, m, "feed")
+    assertEqual(ctx.activeTab, "Situations", "the Drops page opens on its Situations tab")
     return ctx, drawn, ctx.dwSituations
 end
 
@@ -311,7 +313,8 @@ test("situations: the per-situation rows are still schema rows, skipRender, with
             assertTrue(row ~= nil, path)
             assertTrue(row.skipRender == true, path .. " is the table's")
             assertTrue(row.subgroup == nil, "no heading of its own")
-            assertEqual(row.page, "situations", path)
+            -- red under: the rows still stamped to the retired Situations page (DRO-L01)
+            assertEqual(row.page, "feed", path)
             assertEqual(row.group, "Situations", path)
         end
     end
@@ -352,7 +355,7 @@ end)
 
 test("feed: the Quality tab closes with the threshold in force now, repainted on a write", function()
     local NS, _, m = T.enableAddon()
-    local _, drawn = open(NS, m, "feed")
+    local drawn = tab(m, open(NS, m, "feed"), "Quality")
     local readout = findPrefix(drawn, "Label", "In force now")
     assertTrue(readout ~= nil, "the readout is drawn")
     assertEqual(readout.text, "In force now: Quality: Rare+")
@@ -360,15 +363,16 @@ test("feed: the Quality tab closes with the threshold in force now, repainted on
     assertEqual(readout.text, "In force now: Quality: Epic+")
     NS.SchemaRuntime.Set("feed.quality.mode", "dynamicSlot")
     assertEqual(readout.text, "In force now: Quality: Match slot")
-    assertTrue(findPrefix(drawn, "Label", "A situation can set a quality of its own") ~= nil,
-        "the pointer to the Situations page's Quality column (feedback-24)")
+    -- red under: the pointer still sending the player to a Situations page (DRO-L02)
+    assertTrue(find(drawn, "Label", "A situation can set a quality of its own: the Quality column on the Situations tab.") ~= nil,
+        "the pointer to the Situations tab's Quality column (feedback-24, item 020)")
 end)
 
 -- feedback-24: the mode and Always show upgrades share line one, the mode's two dependents (never
 -- live together) line two.
 test("feed: the Quality tab pairs the mode with Always show upgrades, then Fixed minimum with Quality floor", function()
     local NS, _, m = T.enableAddon()
-    local _, drawn = open(NS, m, "feed")
+    local drawn = tab(m, open(NS, m, "feed"), "Quality")
     local mode, always = find(drawn, "Dropdown", "Minimum quality"), find(drawn, "CheckBox", "Always show upgrades for me")
     local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Quality floor")
     assertTrue(lineOf(drawn, mode) ~= nil and lineOf(drawn, mode) == lineOf(drawn, always), "line one")
@@ -385,11 +389,14 @@ test("feed: Items draws Minimum item level alone, then Absolute minimum beside L
     assertTrue(mode ~= nil and abs ~= nil and rel ~= nil, "all three drawn")
     assertEqual(#lineOf(drawn, mode).children, 1, "the mode alone")
     assertTrue(lineOf(drawn, abs) == lineOf(drawn, rel), "its values paired")
+    -- red under: the pre-020 "Tier tokens", which did not read as a switch (DRO-L10)
+    local gear, tokens = find(drawn, "CheckBox", "Gear only"), find(drawn, "CheckBox", "Include tier tokens")
+    assertTrue(gear ~= nil and tokens ~= nil and lineOf(drawn, gear) == lineOf(drawn, tokens), "Gear only | Include tier tokens")
 end)
 
 test("feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only", function()
     local NS, _, m = T.enableAddon()
-    local _, drawn = open(NS, m, "feed")
+    local drawn = tab(m, open(NS, m, "feed"), "Quality")
     local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Quality floor")
     assertFalse(fixed.disabled == true)
     assertTrue(floor.disabled == true)
@@ -589,7 +596,8 @@ test("feed: Retention draws Clear history beside Keep history for; it asks first
     -- for the button
     assertTrue(keep ~= nil and clear ~= nil, "both are drawn")
     assertTrue(lineOf(drawn, keep) ~= nil and lineOf(drawn, keep) == lineOf(drawn, clear), "on one line")
-    assertTrue(find(drawn, "CheckBox", "Clear on boss kill") ~= nil, "and the session's clear under them")
+    -- red under: the pre-020 label, which did not say it clears the session's list (DRO-L11)
+    assertTrue(find(drawn, "CheckBox", "Clear this session's drops on boss kill") ~= nil, "and the session's clear under them")
     local H = NS.History
     local hist = H.Store()
     hist.groups = { { key = "enc:1@1", label = "Boss A", kind = "encounter", at = 1, drops = {} } }
@@ -633,14 +641,22 @@ test("pages: a switch is alone on its line and its knobs pair under it (Toast, A
     assertTrue(lineOf(drawn, find(drawn, "Slider", "Delay (seconds)")) == lineOf(drawn, find(drawn, "Slider", "Least gain (item levels)")))
 end)
 
-test("pages: Messages opens on Sending, which asks before it sends, the transmog switch named apart from its template", function()
+test("pages: Messages opens on Sending, its per-send switches on one line, the transmog switch named apart from its template", function()
     local NS, _, m = T.enableAddon()
     local ctx, drawn = open(NS, m, "messages")
     assertEqual(ctx.activeTab, "Sending")
-    local transmog, once = find(drawn, "CheckBox", "Offer transmog asks"), find(drawn, "CheckBox", "Ask once")
-    assertTrue(transmog ~= nil and lineOf(drawn, transmog) == lineOf(drawn, once), "which asks you get, one line")
-    assertTrue(lineOf(drawn, find(drawn, "CheckBox", "Edit before sending")) == lineOf(drawn, find(drawn, "Dropdown", "Announce channel")),
-        "how they go, the next")
+    -- red under: the pre-020 order, Offer transmog asks | Ask once, then Edit before sending | Announce
+    -- channel (DRO-L08: the two per-send switches share a line)
+    local once, edit = find(drawn, "CheckBox", "Ask once"), find(drawn, "CheckBox", "Edit before sending")
+    local channel, transmog = find(drawn, "Dropdown", "Announce channel"), find(drawn, "CheckBox", "Offer transmog asks")
+    assertTrue(once ~= nil and edit ~= nil and lineOf(drawn, once) == lineOf(drawn, edit), "Ask once | Edit before sending")
+    assertTrue(channel ~= nil and transmog ~= nil and lineOf(drawn, channel) == lineOf(drawn, transmog),
+        "Announce channel | Offer transmog asks")
+    local order = {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("messages")) do
+        if row.group == "Sending" then order[#order + 1] = row.path end
+    end
+    assertEqual(table.concat(order, ","), "messages.oneAsk,messages.editFirst,messages.announceChannel,messages.transmogAsk")
     assertTrue(find(drawn, "CheckBox", "Ask for transmog") == nil, "no checkbox shares the template's label")
 end)
 
@@ -649,6 +665,19 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     local ctx, drawn = open(NS, m, "window")
     assertEqual(ctx.activeTab, "Layout")
     assertTrue(find(drawn, "Dropdown", "Window layout") ~= nil, "the layout row, named apart from its tab")
+    -- red under: the pre-020 Layout tab, one block with no subsections and the old run label
+    -- (DRO-L06, DRO-L07): Mode holds the layout and its run override, Tables the two table knobs.
+    local mode, inRuns = find(drawn, "Dropdown", "Window layout"), find(drawn, "CheckBox", "Compact view when it auto-opens in a run")
+    local rowH, font = find(drawn, "Slider", "Row height"), find(drawn, "Slider", "Font size")
+    assertTrue(inRuns ~= nil and lineOf(drawn, mode) == lineOf(drawn, inRuns), "Window layout | Compact view when it auto-opens in a run")
+    assertTrue(rowH ~= nil and font ~= nil and lineOf(drawn, rowH) == lineOf(drawn, font), "Row height | Font size")
+    assertEqual(NS.SchemaRuntime.FindRow("window.mode").subgroup, "Mode")
+    assertEqual(NS.SchemaRuntime.FindRow("window.compactInRuns").subgroup, "Mode")
+    assertEqual(NS.SchemaRuntime.FindRow("window.rowHeight").subgroup, "Tables")
+    assertEqual(NS.SchemaRuntime.FindRow("window.fontSize").subgroup, "Tables")
+    local heads = {}
+    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
+    assertEqual(table.concat(heads, "|"), "Mode|Tables", "the two headings, in row order")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") == nil, "no note on Layout")
     drawn = tab(m, ctx, "Columns")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") ~= nil, "the note on Columns")
@@ -656,6 +685,12 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     drawn = tab(m, ctx, "Starting view")
     for _, label in ipairs({ "Interesting", "Likely tradeable", "Usable by me", "Upgrade for me" }) do
         assertTrue(find(drawn, "CheckBox", label) ~= nil, label)
+    end
+    -- red under: the pre-020 View tooltips, which never said what none ticked does (DRO-L15)
+    for _, key in ipairs({ "interesting", "likely", "usable", "upgrade" }) do
+        local tip = NS.SchemaRuntime.FindRow("feed.view." .. key).tooltip
+        local tail = " With none ticked, a fresh tab lists every drop."
+        assertEqual(tip:sub(-#tail), tail, key)
     end
     assertTrue(find(drawn, "Dropdown", "Content") ~= nil and find(drawn, "Dropdown", "Sort") ~= nil)
     assertEqual(NS.SchemaRuntime.FindRow("trade.warnAt").page, "window", "the path kept, the page moved")
@@ -669,14 +704,29 @@ test("pages: a page's Defaults resets that page's rows and no other page's", fun
     local Set = NS.SchemaRuntime.Set
     Set("feed.gearOnly", false)
     Set("trade.warnAt", 120)
+    Set("situations.delve.track", true)
+    Set("trade.rules.raid", "group")
+    Set("autoOpen", false)
     Set("comparison.weights", { [62] = { ITEM_MOD_HASTE_RATING_SHORT = 2 } })
     local ctx = open(NS, m, "feed")
     ctx.panel.defaultsOnClick()
     assertEqual(NS.Setting("feed.gearOnly"), NS.C.PROFILE.feed.gearOnly)
+    -- red under: the Situations rows left on a page of their own (item 020: Drops' Defaults owns them)
+    assertEqual(NS.Setting("situations.delve.track"), NS.C.PROFILE.situations.delve.track, "the situations table reset")
+    assertEqual(NS.Setting("trade.rules.raid"), NS.C.PROFILE.trade.rules.raid, "and its loot rules")
+    assertEqual(NS.Setting("autoOpen"), NS.C.PROFILE.autoOpen, "and the global auto-open")
     assertEqual(NS.Setting("trade.warnAt"), 120, "Window's row untouched")
     local cctx = open(NS, m, "comparison")
     cctx.panel.defaultsOnClick()
     assertTrue(next(NS.Setting("comparison.weights")) == nil, "the weights map reset whole")
+end)
+
+test("pages: the Drops page's Defaults tooltip names the situations it now resets (DRO-L03)", function()
+    local NS = T.enableAddon()
+    local tip = NS.addon.Settings.Helpers.__panelFor("feed").panel.defaultsTooltip
+    -- red under: the pre-020 tooltip, which left the situations out
+    assertEqual(tip, "Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults.")
+    assertTrue(NS.addon.Settings.Helpers.__panelFor("situations") == nil, "no Situations page")
 end)
 
 -- ── the editors' pure halves ────────────────────────────────────────────────────────────────

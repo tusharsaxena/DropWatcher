@@ -70,6 +70,11 @@ if not lib then
     H.RefreshScalars       = function() end
     H.RestoreAllDefaults   = H.RestoreAllDefaults or function() end
     H.LSMValues            = function() return function() return {} end end
+    H.StrataTooltip        = function() return "" end
+    H.ResetAllTooltip      = function() return "" end
+    H.KeybindingsTab       = function() return nil end
+    H.KeybindRows          = function() return nil end
+    H.KEYBINDS_UNCHANGED   = ""
     H.PatchAlwaysShowScrollbar = function() end
     H.__pages              = function() return {} end
     H.__panels             = function() return {} end
