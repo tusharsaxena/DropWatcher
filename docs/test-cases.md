@@ -229,7 +229,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (61)
+### test_window_shell.lua (62)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode and only where its strip is not
@@ -270,6 +270,7 @@ Total.
 - shell: Usable by me hides what you can't use or don't want; Upgrade for me keeps your upgrades
 - shell: Comparator orders newest, oldest, by item level and by your gain
 - shell: the footer composer says inspect freshness, last loot, the situation and Pawn
+- shell: the not-tracking situation tooltip points at Settings > Drops > Situations
 - shell: the live footer reads the client, and its Sort follows the active tab
 - shell: the footer's ticker runs only while the whole window is on screen
 - shell: minimize collapses to the title bar, keeps the size, and counts every drop added
@@ -1988,7 +1989,7 @@ Total.
 | test_settings_pages.lua | 45 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 61 |
+| test_window_shell.lua | 62 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 22 |
@@ -2066,4 +2067,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1708** |
+| **Total** | **1709** |

@@ -218,7 +218,8 @@ Hover the page's Defaults → `Reset the Drops page's settings (situations, qual
 long drops are kept) to their defaults.` Tick Delve's Track, set Mythic+'s Loot rule to Group loot,
 press Defaults → both go back, with the Quality tab's rows; a Window value stays.
 `/dw list` → the situation rows are listed in the `feed` section, and there is no `situations`
-section. Items: `Gear only` | `Include tier tokens` on one line. Retention: the tab is still
+section. Untick Solo's Track, then, solo with the window open, hover the footer's situation segment → its
+Turned on in row reads `Settings > Drops > Situations`. Items: `Gear only` | `Include tier tokens` on one line. Retention: the tab is still
 Retention; hover Keep history for → its tooltip opens `Account-wide: shared by every profile.`;
 under Session the checkbox reads `Clear this session's drops on boss kill`, ticked or not as before.
 `/reload` → every value you set before the check (other than the ones Defaults reset) is unchanged.
