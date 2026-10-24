@@ -20,7 +20,8 @@ local QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 }, [4] = { r = 0.64, 
 local function fakeButton()
     local art = { crops = 0 }
     function art:SetTexCoord(...) self.crops = self.crops + 1; self.tc = { ... } end
-    return { art = art }
+    -- An item button's level, which the border frame is set relative to (frame-layering-§3).
+    return { art = art, GetFrameLevel = function() return 5 end }
 end
 
 local function near(a, b) return math.abs(a - b) < 1e-6 end

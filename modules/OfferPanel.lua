@@ -199,7 +199,7 @@ local function build()
     local win = NS.Window.Frame()
     local p = CreateFrame("Frame", nil, win, "BackdropTemplate")
     p:SetSize(K.OFFER_W, win:GetHeight() > 0 and win:GetHeight() or K.HEIGHT)
-    p:SetFrameStrata("MEDIUM")
+    p:SetFrameStrata(C.LAYERS.STRATA.WINDOW)   -- the window's, docked or floating: never switched
     p.tipHost = true   -- its item tooltip goes beside the panel, not the window under it (modules/RowTooltip.lua)
     win.tipDocked = p  -- and a window row's tooltip goes beside the docked panel, not over it
     p:EnableMouse(true)
@@ -261,8 +261,10 @@ local function dock(p)
         p:SetPoint("TOPRIGHT", win, "TOPRIGHT", -K.INSET, -K.TITLE_H)
         p:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -K.INSET, K.FOOTER_H)
     end
-    -- Floating over the window, it is drawn above the window's rows.
-    p:SetFrameStrata(side == "float" and "DIALOG" or "MEDIUM")
+    -- Floating over the window, it is drawn above the window's rows by its level, in the window's own
+    -- strata (a popover, frame-layering-§3); docked beside it, at the window's chrome level.
+    local LV = C.LAYERS.LEVEL
+    p:SetFrameLevel(win:GetFrameLevel() + (side == "float" and LV.POPOVER_OFFER or LV.DOCKED))
     p:SetWidth(K.OFFER_W)
     p.dock = side
 end

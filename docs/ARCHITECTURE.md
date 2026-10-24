@@ -246,6 +246,18 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
 | H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
 
+## Frame layering
+
+Every strata and frame level the addon sets reads one table, `NS.Constants.LAYERS`
+(`core/Constants.lua`, frame-layering-§5), whose header comment states the whole stack with its
+levels; every level is relative to the frame's parent. The tiers, low to high: the main window
+(`MEDIUM`, toplevel, clamped) with its chrome, content and the Offer panel docked beside it; the
+library's resize grip; the window's popovers in its own strata, by level (the floating Offer panel,
+then the compact Filters panel); the toast (`HIGH`); the Edit message box (`DIALOG`, toplevel), beside
+the library's debug console, perf and sim panels; the library's Copy window (`FULLSCREEN`); the
+library's dropdown menu (`FULLSCREEN_DIALOG`); tooltips. Inside an item button, the border frame sits
+under the upgrade glow. No frame changes strata at runtime. `tests/test_layers.lua` pins each class.
+
 ## Taint Notes
 
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are

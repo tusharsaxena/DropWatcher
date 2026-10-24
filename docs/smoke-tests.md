@@ -16,6 +16,7 @@ passed.
 | INSTALL-1..5 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV) |
 | SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
 | KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
+| LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3); the Edit message box over the floating Offer panel (LAYER-4) |
 | PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
@@ -157,6 +158,43 @@ opens; press again → it closes. On the tab, click Key 1 (it reads `Press a key
 the capture cancels, the old key is shown again and the Settings window stays open. Pull a training
 dummy, then click Key 1 or Clear → nothing changes and the outcome line reads `Key bindings can be
 changed after combat.`; a capture already listening when combat starts is canceled.
+Result: not yet run.
+
+## Frame layering
+
+Item 030 (DW-ZS, the 2026-10-24 keybindings, layout and strata run; frame-layering at standard
+v2.88.0). Every strata and level now reads `NS.Constants.LAYERS`; these are the changes a player can
+see. The headless `test_layers` pins each frame's strata, level and toplevel. All four make up
+SM-DW-ZS.
+
+**LAYER-1. The window comes forward on click.** Open another addon's or Blizzard's `MEDIUM` window
+(the Group Finder, for one), then `/dw show` and drag Drop Watcher's window so it overlaps it. Click
+the other window → it covers Drop Watcher's. Click anywhere on Drop Watcher's window → it comes to
+the front, whole. Drag it, resize it by the grip and open a detail card → nothing has moved under
+or over anything else; the grip still works.
+Result: not yet run.
+
+**LAYER-2. The floating Offer panel over the window's rows, under the toast.** Make the Offer panel
+float: put the window where neither side has room for it (a full-width window, or the compact window
+with the screen's edges close on both sides), then press Offer on a drop of yours → the panel floats
+over the window's right side, over its rows, its rows' tooltips over the panel. With `toast.enabled`
+on, bring up a toast as TOAST-1 does and drag it over the floating panel → the toast draws **over**
+the panel (before this change the panel covered it). Dock the panel again (move the window back) →
+it sits beside the window as before.
+Result: not yet run.
+
+**LAYER-3. The compact Filters panel and its dropdowns.** `/dw compact`, press Filters ▾ → the panel
+opens over the window's cards. Open each of its four dropdowns → each menu opens over the panel, and
+a pick filters. With the window short, so the panel reaches past its bottom edge, the part outside
+the window still shows and its dropdowns still open over everything. With the Offer panel floating
+(LAYER-2), open Filters → the Filters panel draws over the Offer panel.
+Result: not yet run.
+
+**LAYER-4. The Edit message box over the floating Offer panel.** Tick Edit before sending
+(Messages › Sending), float the Offer panel (LAYER-2), then press a member's Offer → the Edit
+message box opens centered over the window and draws **over** the Offer panel, whole and clickable;
+its Send and close work. Click the window behind it → the box stays over the window. Escape or close
+→ it goes, the Offer panel is unchanged.
 Result: not yet run.
 
 ## Settings panel

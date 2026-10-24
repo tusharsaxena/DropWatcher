@@ -381,7 +381,7 @@ end
 local function build()
     local f = CreateFrame("Frame", Toast.NAME, UIParent, "BackdropTemplate")
     frame = f
-    f:SetFrameStrata("HIGH")
+    f:SetFrameStrata(C.LAYERS.STRATA.ALERT)
     f:SetSize(Toast.WIDTH, Toast.HEIGHT)
     f:SetMovable(true)
     f:SetClampedToScreen(true)

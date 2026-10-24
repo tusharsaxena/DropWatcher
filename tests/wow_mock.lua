@@ -968,6 +968,11 @@ local function build()
     -- The client's key-binding API (launcher-§6, options-ui-§20), from the kit.
     dofile("tests/_kit/mock_bindings.lua")(M)
 
+    -- The kit's frame-layer recorder (frame-layering; item 030), on every frame and UIParent: the
+    -- addon sets levels relative to a parent's GetFrameLevel, which the base answers with the frame
+    -- itself, and tests/test_layers.lua pins each frame class's strata, level and toplevel.
+    dofile("tests/_kit/mock_layers.lua")(M)
+
     return M
 end
 

@@ -210,7 +210,13 @@ frame made on first use with LibSharedMedia's texture, Solid's flat edge or the 
 color (the player's class, the swatch's alpha), Color by item quality (the cached item's quality color,
 an uncached link's own color, the swatch's mode for no quality), the Drops row, its Me icons, the detail
 card's header, the compact card and the toast styled live, the glow's frame level over the border, and a
-profile copy re-reading it), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
+profile copy re-reading it), `test_layers` (frame-layering, item 030: the one `NS.Constants.LAYERS`
+table's strata keys and level order, then every frame class through the kit's frame-layer recorder,
+which `tests/wow_mock.lua` installs on every instance: the window MEDIUM, toplevel and clamped, the
+Offer panel in the window's strata at W+1 docked and W+30 floating, the compact Filters panel at W+35
+with its dropdowns over it, the Edit message box DIALOG at W+40 and toplevel, the toast HIGH, an item
+button's border explicit at +1 under the glow at +2, and a static scan for strata literals and absolute
+levels in `core/`, `modules/` and `settings/`), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
 collapsed or not, its next expiry moving each second and keeping
 the ticker running, Post my tradeables through its handler, and the compact strip's summary

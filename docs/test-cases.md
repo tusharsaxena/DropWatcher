@@ -1623,6 +1623,18 @@ Total.
 - icon style: the compact card's icon and the toast's icon wear it too
 - icon style: the glow starts over the border, and a profile switch re-reads the look
 
+### test_layers.lua (9)
+
+- layers: one table names the addon's strata by the standard's tier keys
+- layers: the level bands keep border < glow, content < grip < popovers < modal
+- layers: the main window is MEDIUM, toplevel and clamped
+- layers: the Offer panel stays in the window's strata; floating, it is W+30, docked W+1
+- layers: the compact Filters panel is W+35 in the window's strata, its dropdowns over it
+- layers: the Edit message box is DIALOG at W+40 and toplevel
+- layers: the toast is HIGH, above the window and under the modal
+- layers: an item button's border is button + 1, explicit, and the glow button + 2
+- layers: no strata literal and no absolute level in the addon's own source
+
 ### test_auto_ask.lua (24)
 
 - auto-ask: DueAt is the delay after the later of the drop and the encounter's end
@@ -2030,6 +2042,7 @@ Total.
 | test_toast.lua | 37 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
+| test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 21 |
@@ -2050,4 +2063,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1696** |
+| **Total** | **1705** |

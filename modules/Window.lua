@@ -528,7 +528,8 @@ end
 
 local function build()
     local f = CreateFrame("Frame", K.NAME, UIParent, "BackdropTemplate")
-    f:SetFrameStrata("MEDIUM")
+    f:SetFrameStrata(C.LAYERS.STRATA.WINDOW)
+    f:SetToplevel(true)   -- a click raises it over another MEDIUM window it overlaps (frame-layering-§4)
     f:SetMovable(true)
     f:SetClampedToScreen(true)
     f:EnableMouse(true)

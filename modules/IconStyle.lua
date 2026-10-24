@@ -117,6 +117,8 @@ local function paintBorder(b, c, link)
     if not f then
         f = CreateFrame("Frame", nil, b, "BackdropTemplate")
         f:SetAllPoints(b)
+        -- Explicit, never the CreateFrame default, so the glow at EFFECT stays over it.
+        f:SetFrameLevel(b:GetFrameLevel() + NS.Constants.LAYERS.LEVEL.BORDER)
         b.iconBorderFrame = f
     end
     local r, g, bl = c.r, c.g, c.b

@@ -298,7 +298,9 @@ end
 
 local function buildPanel(f, button)
     local p = CreateFrame("Frame", nil, f, "BackdropTemplate")
-    p:SetFrameStrata("DIALOG")
+    -- A popover over the window's own rows, in its strata (frame-layering-§3). Set here, before
+    -- fillPanel reparents the four dropdowns into it, so they land at the panel's level + 1.
+    p:SetFrameLevel(f:GetFrameLevel() + NS.Constants.LAYERS.LEVEL.POPOVER_FILTERS)
     flat(p)
     p:EnableMouse(true)
     p:SetPoint("TOPRIGHT", button, "BOTTOMRIGHT", 0, -2)
