@@ -434,6 +434,30 @@ local function placeLead(h, label)
     return h.sep
 end
 
+-- A half's level, glyph and text placed after its label (or a dual mark's lead, `second`), each
+-- after the last piece shown.
+local function placeHalf(h, label, p, second)
+    local first = second and placeLead(h, label) or label
+    at(h.level, "LEFT", first, "RIGHT", CG.HALF_GAP, 0)
+    local last = p.level and h.level or first
+    at(h.glyph, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
+    if p.glyph then
+        at(h.text, "LEFT", h.glyph, "RIGHT", CG.HALF_GLYPH_GAP, 0)
+    else
+        at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
+    end
+end
+
+-- Trade, alone on its line, runs to the button (a Drops card, feedback-25), to History's time, or
+-- to the card's right inset, and is cut there (feedback-11 spec §0).
+local function boundTrade(card, text)
+    if card.dwTradeBefore then
+        text:SetPoint("RIGHT", card.dwTradeBefore, "LEFT", -CG.ASK_GAP, 0)
+    else
+        text:SetPoint("RIGHT", card, "RIGHT", -(card.dwTradeInset or CG.PAD), 0)
+    end
+end
+
 --- One half (You, Them or Trade) painted (CompactCards.Half's): its label (gold, feedback-10 spec §2), the worn
 --- item level (plain, or
 --- a muted word), the glyph and the difference or word in the verdict's tone, each placed after the
@@ -461,23 +485,8 @@ function CG.PaintHalf(card, key, half, single)
     h.text:SetText(key == "trade" and NS.WindowCells.TradeText(p) or p.text)
     setTone(h.text, p.tone)
     h.hit.tipLines = half.tip
-    local first = second and placeLead(h, label) or label
-    at(h.level, "LEFT", first, "RIGHT", CG.HALF_GAP, 0)
-    local last = p.level and h.level or first
-    at(h.glyph, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
-    if p.glyph then
-        at(h.text, "LEFT", h.glyph, "RIGHT", CG.HALF_GLYPH_GAP, 0)
-    else
-        at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
-    end
-    -- Trade, alone on its line, runs to the button (a Drops card, feedback-25) or the card's right
-    -- inset and is cut there (feedback-11 spec §0).
-    if key ~= "trade" then return end
-    if card.dwTradeBefore then
-        h.text:SetPoint("RIGHT", card.dwTradeBefore, "LEFT", -CG.ASK_GAP, 0)
-    else
-        h.text:SetPoint("RIGHT", card, "RIGHT", -(card.dwTradeInset or CG.PAD), 0)
-    end
+    placeHalf(h, label, p, second)
+    if key == "trade" then boundTrade(card, h.text) end
 end
 
 local HALVES = { "you", "them", "trade" }

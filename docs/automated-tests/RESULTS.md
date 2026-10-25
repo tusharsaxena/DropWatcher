@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261025-152417`](20261025-152417/) | `21ba4a4` | clean | 1.0.0 → 1.1.0 | 0/0 | 194 | 1712/1/1713 | pass | 51159 | 6201 | 7.5 | 2.5 | 23 | 7 | **green** |
 | [`20261017-012204`](20261017-012204/) | `80df719` | clean | 0.1.0 → 1.0.0 | 0/0 | 178 | 1480/1/1481 | pass | 45215 | 5611 | 7.4 | 2.5 | 14 | 0 | **green** |
 | [`20261017-011710`](20261017-011710/) | `05b777c` | clean | 0.1.0 → 1.0.0 | 0/0 | 178 | 1480/1/1481 | pass | 45208 | 5609 | 7.4 | 2.5 | 19 | 1 | **green** |
 | [`20261015-001310`](20261015-001310/) | `0109f2a` | clean | 0.1.0 | 0/0 | 170 | 1422/1/1423 | pass | 42998 | 5377 | 7.3 | 2.4 | 14 | 0 | **green** |
@@ -55,18 +56,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**1481 cases** — 1480 passed, 0 failed, 1 skipped. The generated inventory
-[`20261017-012204/test-cases.md`](20261017-012204/test-cases.md) is the authority on which cases existed at this run;
+**1713 cases** — 1712 passed, 0 failed, 1 skipped. The generated inventory
+[`20261025-152417/test-cases.md`](20261025-152417/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Unchanged from the previous run at 1481 cases.
+Moved **1481 → 1713** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 178 files** (`luacheck .`).
+**0 warnings / 0 errors over 194 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `docs/audits/`, `docs/reviews/`, `docs/revendor/`, `_dev/`, `tests/_kit/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -76,25 +77,25 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **7 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261017-012204/perf.json`](20261017-012204/perf.json).
+[`20261025-152417/perf.json`](20261025-152417/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.08716 | 0.00 | 14096.8 |
-| `refreshCaptureOn` | 1000 | 0.08328 | 1.00 | 14096.8 |
-| `refreshCompactCaptureOff` | 1000 | 0.08477 | 0.00 | 10864.9 |
-| `refreshCompactCaptureOn` | 1000 | 0.07622 | 1.00 | 10864.9 |
-| `showDecisionStoodDown` | 1000 | 0.00013 | 0.00 | 0.0 |
-| `parseCaptureOff` | 1000 | 0.01530 | 0.00 | 664.2 |
-| `parseCaptureOn` | 1000 | 0.01296 | 1.00 | 664.2 |
+| `refreshCaptureOff` | 1000 | 0.09200 | 0.00 | 13713.0 |
+| `refreshCaptureOn` | 1000 | 0.09152 | 1.00 | 13713.0 |
+| `refreshCompactCaptureOff` | 1000 | 0.08416 | 0.00 | 10481.1 |
+| `refreshCompactCaptureOn` | 1000 | 0.08893 | 1.00 | 10481.1 |
+| `showDecisionStoodDown` | 1000 | 0.00012 | 0.00 | 0.0 |
+| `parseCaptureOff` | 1000 | 0.01311 | 0.00 | 664.2 |
+| `parseCaptureOn` | 1000 | 0.01239 | 1.00 | 664.2 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261017-012204`](20261017-012204/) — **this run's measurement, not its diff.** Max CCN **14** across 5611
-functions, **0** of them warned on; 2 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261025-152417`](20261025-152417/) — **this run's measurement, not its diff.** Max CCN **23** across 6201
+functions, **7** of them warned on; 8 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -106,15 +107,26 @@ cell is this file saying something crossed and nobody has ruled on it yet.
 
 | Function | CCN | Location | Disposition |
 |---|---|---|---|
-
-None.
+| `visibleScale` | 23 | `core/Compat.lua` |  |
+| `CG.PaintHalf` | 20 | `modules/CompactGroup.lua` |  |
+| `dropLine` | 19 | `modules/Diagnostics.lua` |  |
+| `TD.GearFor` | 19 | `modules/TestData.lua` |  |
+| `memberRow` | 17 | `modules/DetailCells.lua` |  |
+| `(anonymous)` | 17 | `tests/test_test_mode.lua` |  |
+| `(anonymous)` | 19 | `tests/test_tip_marks.lua` |  |
 
 ### Files by `layout-§1` band
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-| 1000–1500 (on notice) | `core/Compat.lua` | 1009 | **Newly crossed** — feedback-17's journal shims took it from 960 to 1009 lines. Split the Encounter Journal shims into a family file (`core/CompatJournal.lua`) before it grows further. |
-| 1000–1500 (on notice) | `locales/enUS.lua` | 1329 | **Accepted** — a flat `L["..."] = "..."` string table with no logic; it grew past 1000 when DW-P19 added every routed enUS key (F07, D8). Split it by surface before it nears the 1500 cap. |
+| 1000–1500 (on notice) | `core/Compat.lua` | 1050 | **Newly crossed** — feedback-17's journal shims took it from 960 to 1009 lines. Split the Encounter Journal shims into a family file (`core/CompatJournal.lua`) before it grows further. |
+| 1000–1500 (on notice) | `locales/enUS.lua` | 1317 | **Accepted** — a flat `L["..."] = "..."` string table with no logic; it grew past 1000 when DW-P19 added every routed enUS key (F07, D8). Split it by surface before it nears the 1500 cap. |
+| 1000–1500 (on notice) | `modules/LootFeed.lua` | 1041 |  |
+| 1000–1500 (on notice) | `modules/WindowCells.lua` | 1167 |  |
+| 1000–1500 (on notice) | `modules/WindowGroup.lua` | 1118 |  |
+| 1000–1500 (on notice) | `tests/test_compat.lua` | 1030 |  |
+| 1000–1500 (on notice) | `tests/test_window_group.lua` | 1040 |  |
+| 1000–1500 (on notice) | `tests/test_window_shell.lua` | 1031 |  |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN

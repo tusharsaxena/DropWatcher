@@ -424,6 +424,20 @@ end
 --- @param item table { link, facts }
 --- @param eval table|nil the evaluation the cell shows
 --- @return table gear
+-- What a plan's second slot wears beside `first`: a lower copy for a unique-equipped ring, another
+-- at least as high for a pair or a one-hander, nothing (false) for a two-hander's off hand.
+local function otherWorn(src, item, plan, eval, first)
+    local loc = item.facts.equipLoc
+    if plan.kind == "pair" and isUnique(eval) then
+        local low = src:Worn(loc, first.ilvl - 20, first.link)
+        return (low and low.link ~= item.link and low.ilvl < first.ilvl) and low or first
+    end
+    if plan.kind == "pair" or plan.kind == "weapon1H" then
+        return src:Above(loc, first.ilvl, { [first.link] = true, [item.link] = true }) or first
+    end
+    return false
+end
+
 function TD.GearFor(src, item, eval)
     local loc = item.facts.equipLoc
     local plan = C.SLOT_PLAN[loc]
@@ -432,14 +446,7 @@ function TD.GearFor(src, item, eval)
     if not first then return {} end
     local gear = { [plan.slots[1]] = first }
     local other = plan.slots[2]
-    if other and plan.kind == "pair" and isUnique(eval) then
-        local low = src:Worn(loc, first.ilvl - 20, first.link)
-        gear[other] = (low and low.link ~= item.link and low.ilvl < first.ilvl) and low or first
-    elseif other and (plan.kind == "pair" or plan.kind == "weapon1H") then
-        gear[other] = src:Above(loc, first.ilvl, { [first.link] = true, [item.link] = true }) or first
-    elseif other then
-        gear[other] = false
-    end
+    if other then gear[other] = otherWorn(src, item, plan, eval, first) end
     return gear
 end
 

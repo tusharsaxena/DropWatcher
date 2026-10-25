@@ -764,17 +764,29 @@ end
 -- 5467): a scale that names another class or spec is skipped, and so is an abandoned provider's
 -- (PawnGetAllScales, line 5168). A custom scale outranks a starter one, one that names your spec
 -- outranks one that names none, and the name breaks a tie, so the answer never depends on order.
+-- Whether a scale is one of yours for the class and spec index: it names neither another class nor
+-- another spec, its provider (if any) is active, and Pawn shows it.
+local function scaleFits(name, scale, classID, index)
+    if type(name) ~= "string" or type(scale) ~= "table" then return false end
+    if scale.ClassID ~= nil and scale.ClassID ~= classID then return false end
+    if scale.SpecID ~= nil and scale.SpecID ~= index then return false end
+    if scale.Provider ~= nil and not scale.ProviderActive then return false end
+    return PawnIsScaleVisible(name) == true
+end
+
+-- A fitting scale's rank: a custom one (no provider) 2, one naming the spec 1 more.
+local function scaleRank(scale, index)
+    local r = scale.Provider == nil and 2 or 0
+    if scale.SpecID == index then r = r + 1 end
+    return r
+end
+
 local function visibleScale(classID, index)
     local scales = type(PawnCommon) == "table" and PawnCommon.Scales
     if type(scales) ~= "table" or type(PawnIsScaleVisible) ~= "function" then return nil end
     local best, rank
     for name, scale in pairs(scales) do
-        local r = type(name) == "string" and type(scale) == "table"
-            and (scale.ClassID == nil or scale.ClassID == classID)
-            and (scale.SpecID == nil or scale.SpecID == index)
-            and (scale.Provider == nil or scale.ProviderActive)
-            and PawnIsScaleVisible(name) == true
-            and (scale.Provider == nil and 2 or 0) + (scale.SpecID == index and 1 or 0)
+        local r = scaleFits(name, scale, classID, index) and scaleRank(scale, index)
         if r and (rank == nil or r > rank or (r == rank and name < best)) then best, rank = name, r end
     end
     return best

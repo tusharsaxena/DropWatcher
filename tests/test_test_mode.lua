@@ -942,6 +942,24 @@ test("hooks: AskState shows a sample's own state only while the edge holds none"
     assertTrue(TM.InspectOf({ isMine = true, test = true, testInspect = {} }) == nil, "your own drop has none")
 end)
 
+-- Whether a sample is someone else's unique-equipped ring.
+local function othersUnique(d)
+    if d.isMine then return false end
+    for _, r in ipairs(d.me and d.me.reasons or {}) do
+        if r.key == "uniqueEquipped" then return true end
+    end
+    return false
+end
+
+-- Someone else's upgrade for you: whether it glows (`glow`) or not (`dark`), checked against its
+-- trade; nil for anything else.
+local function upgradeGlow(NS, d)
+    if d.isMine or not (d.me and d.me.verdict == "upgrade") then return nil end
+    local tradeable = d.trade.state == "yes" or d.trade.state == "likely"
+    assertEqual(NS.Glow.KindOf(d), tradeable and "main" or nil, d.looter.name .. ": glows only when tradeable")
+    return tradeable and "glow" or "dark"
+end
+
 -- feedback-22: the samples carry the owner's situations: a unique-equipped ring reads both rings, each
 -- its own mark; an upgrade glows only where it can be traded to you; every short trade reason shows.
 test("window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)", function()
@@ -949,19 +967,14 @@ test("window: test mode's unique ring reads both rings, and only a tradeable upg
     local SC, uniques = NS.SideCells, 0
     local glows, dark, reasons = 0, 0, {}
     for _, d in ipairs(NS.LootFeed.Drops("test")) do
-        local unique = false
-        for _, r in ipairs(d.me and d.me.reasons or {}) do unique = unique or r.key == "uniqueEquipped" end
-        if unique and not d.isMine then
+        if othersUnique(d) then
             local c = SC.Me(d, NS.TestMode.GearOf(d))
             assertTrue(c.parts ~= nil, d.looter.name .. ": a mark per worn ring")
             assertEqual(#c.items, 2, "both rings")
             uniques = uniques + 1
         end
-        if not d.isMine and d.me and d.me.verdict == "upgrade" then
-            local tradeable = d.trade.state == "yes" or d.trade.state == "likely"
-            assertEqual(NS.Glow.KindOf(d), tradeable and "main" or nil, d.looter.name .. ": glows only when tradeable")
-            if tradeable then glows = glows + 1 else dark = dark + 1 end
-        end
+        local g = upgradeGlow(NS, d)
+        if g == "glow" then glows = glows + 1 elseif g == "dark" then dark = dark + 1 end
         reasons[NS.WindowOwn.Trade(d).reason] = true
     end
     assertTrue(uniques >= 2, "a unique ring not read for them, and one read for both")

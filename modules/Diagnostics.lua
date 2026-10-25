@@ -259,16 +259,27 @@ local function verdict(e)
     return s
 end
 
-local function dropLine(out, rec)
-    local f = type(rec.facts) == "table" and rec.facts or {}
+-- A drop's sources, sorted and comma-joined.
+local function sourcesOf(rec)
     local sources = {}
     for k in pairs(rec.sources or {}) do sources[#sources + 1] = k end
     table.sort(sources)
+    return table.concat(sources, ",")
+end
+
+-- The drop's item line: its link, its facts and where each came from, whether it is yours and
+-- matched to a bag item.
+local function itemLine(out, rec)
+    local f = type(rec.facts) == "table" and rec.facts or {}
     local d = NS.ItemRead.LinkDetail(rec.link)
     local matched = rec.isMine and NS.TradeTimer.ForDrop(rec.id) ~= nil
     out:add(TAG, "drops: %s sources=%s item=%s complete=%s ilvl=%s (%s) quality=%s (%s) mine=%s bag=%s", rec.id,
-        table.concat(sources, ","), d and d.itemString or "?", d ~= nil and d.complete, f.ilvl,
+        sourcesOf(rec), d and d.itemString or "?", d ~= nil and d.complete, f.ilvl,
         f.ilvlSource or "?", f.quality, f.qualitySource or "?", rec.isMine == true, matched and "yes" or "no")
+end
+
+local function dropLine(out, rec)
+    itemLine(out, rec)
     local tr = type(rec.trade) == "table" and rec.trade or {}
     out:add(TAG, "drops: %s looter=%s me=%s them=%s trade=%s (%s)", rec.id,
         type(rec.looter) == "table" and rec.looter.name or "?", verdict(rec.me), verdict(rec.them),

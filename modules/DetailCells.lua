@@ -459,13 +459,17 @@ local OWN_MEMBER_ROWS = 4
 
 -- One member it upgrades: their name in their class color as the label, the worn item it would
 -- replace as the icon, and `300 → 311 ▲ 11` in green (the For you box's Item level, for them).
+-- A member row's tooltip line for what it replaces: the worn item and its level, or the empty slot.
+local function memberWorn(base, from)
+    if not from then return trow(L["Slot"], L["empty (anything is an upgrade)"]) end
+    return trow(L["Replaces"], ("%s · %d"):format(WC.ItemName(base.link) or "?", round(from)))
+end
+
 local function memberRow(e, ilvl)
     local base, gain = e.baseline, num(e.gain)
     local from = base and num(base.ilvl)
     local text = (from and ilvl) and ("%d %s %d"):format(round(from), TM.Arrow(), ilvl) or L["Empty slot"]
-    local worn = from and trow(L["Replaces"], ("%s · %d"):format(WC.ItemName(base.link) or "?", round(from)))
-        or trow(L["Slot"], L["empty (anything is an upgrade)"])
-    local r = row("member", e.short or "?", text, "good", e.short or "?", worn,
+    local r = row("member", e.short or "?", text, "good", e.short or "?", memberWorn(base, from),
         gain and trow(L["Upgrade"], WC.Signed(gain), "good") or nil)
     r.labelClassFile, r.link = e.classFile, base and base.link
     r.arrow = (from and ilvl) and TM.ArrowCell("upgrade", gain or ilvl - from) or nil
