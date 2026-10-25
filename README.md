@@ -14,47 +14,55 @@ It watches what your party or raid receives and compares each item with your gea
 
 **_Drops (compact view)_**
 
-![Drops (compact view)](https://media.forgecdn.net/attachments/2064/342/dropwatcher-screenshot-01-png.png)
+![Drops (compact view)](https://media.forgecdn.net/attachments/2103/61/dropwatcher-screenshot-01-png.png)
 
 **_Drop details (compact view)_**
 
-![Drop details (compact view)](https://media.forgecdn.net/attachments/2064/343/dropwatcher-screenshot-02-png.png)
+![Drop details (compact view)](https://media.forgecdn.net/attachments/2103/62/dropwatcher-screenshot-02-png.png)
 
 **_History (compact view)_**
 
-![History (compact view)](https://media.forgecdn.net/attachments/2064/344/dropwatcher-screenshot-03-png.png)
+![History (compact view)](https://media.forgecdn.net/attachments/2103/63/dropwatcher-screenshot-03-png.png)
 
 **_Drops (full view)_**
 
-![Drops (full view)](https://media.forgecdn.net/attachments/2064/345/dropwatcher-screenshot-04-png.png)
+![Drops (full view)](https://media.forgecdn.net/attachments/2103/64/dropwatcher-screenshot-04-png.png)
 
 **_Drop details (full view)_**
 
-![Drop details (full view)](https://media.forgecdn.net/attachments/2064/346/dropwatcher-screenshot-05-png.png)
+![Drop details (full view)](https://media.forgecdn.net/attachments/2103/65/dropwatcher-screenshot-05-png.png)
 
 **_History (full view)_**
 
-![History (full view)](https://media.forgecdn.net/attachments/2064/347/dropwatcher-screenshot-06-png.png)
+![History (full view)](https://media.forgecdn.net/attachments/2103/70/dropwatcher-screenshot-06-png.png)
 
 **_Offer window_**
 
-![Offer window](https://media.forgecdn.net/attachments/2064/348/dropwatcher-screenshot-07-png.png)
+![Offer window](https://media.forgecdn.net/attachments/2103/67/dropwatcher-screenshot-07-png.png)
 
 **_Toast_**
 
-![Toast](https://media.forgecdn.net/attachments/2064/349/dropwatcher-screenshot-08-png.png)
+![Toast](https://media.forgecdn.net/attachments/2103/68/dropwatcher-screenshot-08-png.png)
 
 ## Usage
 
-Type `/dw show`, or right-click the minimap button and pick **Show window**. You can also bind a key to show and hide it: Options → Keybindings → Ka0s Drop Watcher → Toggle drop feed, or General → Keybindings in this addon's settings (no key is set for you). Drag it by the title bar, resize it from the corner and lock it with `/dw lock`. You won't often open it yourself, though: in a dungeon, key or raid it pops up when someone loots an item it shows. During a run it opens as a narrow column of cards, the compact view, and goes back to the full table afterwards. The button next to minimize switches views, as do `/dw compact` and `/dw full`, and each view keeps its own size and place.
+Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon, key or raid the window opens by itself when someone loots something it shows. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and `/dw lock` pins the window in place.
 
-**Drops** lists every drop, yours included, under the boss or key run it came from. The two columns that matter are **Me** and **Them**: is this an upgrade for you, and is it one for the person who looted it? Each shows the gear worn in that slot and the item-level difference, green ▲ for an upgrade, yellow ≈ for a sidegrade and red ▼ for a downgrade. Rings, trinkets and one-hand weapons (when you can dual wield) get a mark for each item you wear, so `321 ▼10 / 324 ▼23` means the drop is 10 levels under one ring and 23 under the other; the same goes for the compact cards, the toast and the detail card's Item level. A ring slot always shows both rings, even a unique-equipped ring you already wear: the drop can only replace that copy, so its mark is the verdict, but you still see how it compares with the other one. A one-hander when you can't dual wield shows just your main hand, a two-hander weighed against both hands at once keeps a single mark, and so does a cell too narrow for two at a large font size. If your current spec can't use an item but another spec of your class can, Me tells you how it would do in that spec instead, in cyan with the spec's name: `▲20 Holy` means 20 item levels over the best Holy item you own. An upgrade you could actually get glows too, a yellow pixel border for your current spec and a blue one for an off-spec, in the table, the compact cards and the detail card. One the looter can't trade, or whose trade isn't worked out yet, doesn't glow, and the toast never does since it only shows upgrades. **Trade** says Yes, No or ? and why in a few gray words: `No Bonus roll`, `Yes Not their upgrade`, `? Not inspected`. If none of your specs can use the item it reads `Yes Can't use` in dim red, because there's nothing for you to ask for. **Trade window** counts down how long they have. If you want it, **Ask** whispers them once, and for an off-spec item the whisper says that's what it's for. During a boss fight the whisper waits until the fight ends. Click a row for the full reasoning, or hover any cell for the facts behind it, one per line.
+**Drops** lists every drop, yours included, under the boss or key it came from.
 
-Your own drops show who in the group would gain from them. **Offer** opens a panel that ranks everyone by how much they'd gain (anyone who could only use it in another spec comes after the people who'd use it now), with a whisper button per person and **Announce to group** to tell everyone at once. While any of your drops can still be traded, the strip at the bottom counts them, and **Post my tradeables** lists them in group chat in one line. That strip also has **Scan group**, which reads everyone's gear before the loot starts so you aren't waiting on inspects later, and **Expand all**.
+- Me and Them tell you whether it's an upgrade for you and for the looter: green ▲ up, yellow ≈ about the same, red ▼ down, with the item-level difference. Rings, trinkets and one-handers get a mark for each item you wear, so `321 ▼10 / 324 ▼23` means 10 levels under one ring and 23 under the other. If your spec can't use it but another of yours can, Me says so in cyan: `▲20 Holy`.
+- Trade is Yes, No or ?, plus a short reason like `No Bonus roll` or `Yes Not their upgrade`. Trade window is how long they have left.
+- **Ask** whispers the looter, once. In a boss fight it waits until the fight ends.
 
-**History** remembers what the feed showed for 30 days, across logouts and alts, and what became of each drop: asked, offered, expired, received, traded away or declined. Click a row for its detail card, or right-click it to mark it declined. How long it keeps things, and the button that clears it, are under Settings › Window › Layout. A `/reload` loses nothing: this session's drops come back on the Drops tab.
+Upgrades you could actually get glow, yellow for your spec and blue for an off-spec. Click a row for the full reasoning, or hover any cell to see what it's based on.
 
-That popup is the **toast**. A new profile has it on; Settings › Alerts › Toast turns it off or sets its size, 50 to 200 %, and it grows or shrinks where you put it. **Auto-ask** is off until you turn it on, and sends the whisper for you after the boss dies. Both handle off-spec upgrades with their own wording, and your main spec still comes first: auto-ask holds an off-spec whisper until any main-spec one has gone out. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Settings › Window › Icons gives every item icon the same look: by default the art is zoomed in a little inside a thin black border, and you can change the zoom and the border's texture, thickness and color, or use your class color or each item's quality color. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
+Your own drops get **Offer** instead. It ranks the group by how much each person would gain, and you can whisper one of them or **Announce to group**. While you have something tradeable the strip at the bottom counts it, and **Post my tradeables** lists it all in group chat. **Scan group** sits there too: use it before the loot starts and you won't be waiting on inspects later.
+
+**History** keeps 30 days of drops across logouts and alts, along with what became of each. Right-click a row to mark it declined. Retention and Clear history are in Settings › Window › Layout.
+
+When someone loots a big upgrade you could ask for, a toast pops up. It's on by default, and Settings › Alerts › Toast turns it off or resizes it. Auto-ask is the other way round: off until you turn it on. Then it sends the whisper for you after the boss dies, main-spec asks first.
+
+`/dw test` fills the window with sample drops if you want a look around first. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Everything else is in **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists the commands.
 
 ## How the loot watching works
 
