@@ -36,9 +36,10 @@ battery in [`automated-tests/`](../automated-tests/RESULTS.md).
 
 ## Captures
 
-One capture so far. Smoke check DIAG-4 (the `feed.add` nesting) is still waiting for one that
+Two captures so far. Smoke check DIAG-4 (the `feed.add` nesting) is still waiting for one that
 observes loot inside the clean arm.
 
 | Stamp | Addon version | Label | What it measured | Bundle |
 |---|---|---|---|---|
+| 20261025-153429 | 1.0.0 | `2026-10-25 15:30` | Two trash pulls in Murder Row, party of 5, 62.0 s and 69.3 s. One `tradeTimer.scan` (0.0154 ms, 0.00025 ms/s) was the only addon code measured; the -0.47 ms/frame delta is inside the floor and backwards | [ANALYSIS](20261025-153429/ANALYSIS.md) |
 | 20261017-010913 | 0.1.0 | `2026-10-17 01:04` | Two trash pulls in Murder Row, party of 5, 19.1 s and 15.0 s. No bucket fired, so it measured no addon code; the -2.35 ms/frame delta is backwards (the pulls differed) | [ANALYSIS](20261017-010913/ANALYSIS.md) |
