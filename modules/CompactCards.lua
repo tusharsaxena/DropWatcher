@@ -355,7 +355,7 @@ function CC.History(drop, ctx)
     }
 end
 
--- ── the plain text of a card (tests, and the simulator's report) ────────────────────────────
+-- ── the plain text of a card (the tests) ────────────────────────────────────────────────────
 
 local function looterText(c)
     return c.you and (c.text .. " " .. c.you) or c.text

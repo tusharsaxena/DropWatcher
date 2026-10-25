@@ -352,7 +352,7 @@ Total.
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the full view's
 
-### test_compact_group.lua (22)
+### test_compact_group.lua (23)
 
 - compact group: a card is four lines at the text size, about 64 pixels at Default, the icon spanning them
 - compact group: switching layouts carries the scroll offset over as a fraction of the range
@@ -374,12 +374,14 @@ Total.
 - compact group: a second's tick leaves the cards as they are
 - compact group: at the least width line 2's pieces end before the action button
 - compact group: at the least width Trade fits beside the button, You and Them on line 4
+- compact group: at the least width Trade's longest reason ends before the button
 - compact group: at the least width line 4's two dual marks fit, each worn item its own mark (H7)
 - compact group: dual marks that do not fit the card are the one mark instead (R5)
 
-### test_compact_history.lua (10)
+### test_compact_history.lua (11)
 
 - compact history: kept groups as one-line headers, the newest open, each entry a three-line card
+- compact history: at the least width Trade's longest reason ends before the date
 - compact history: the outcome is in its tone, and every piece keeps its full-view tooltip
 - compact history: a right-click on a card, or on any piece of it, opens the row menu
 - compact history: marking an entry declined repaints its card
@@ -1562,7 +1564,7 @@ Total.
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
 - toast: Compose keeps the table's words, the empty slot and each trade reason
 - toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec §0)
-- toast edge: off by default; nothing is built or shown
+- toast edge: on for a new profile; turned off, nothing is built or shown
 - toast edge: a qualifying drop shows at once, painted, and goes after its duration
 - toast edge: the four rows beside a four-row icon, painted (feedback-9 spec §0)
 - toast: on a two-item slot read in full each verdict is the cells' dual mark, and the toast widens for it (H7)
@@ -1993,8 +1995,8 @@ Total.
 | test_window_shell.lua | 62 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
-| test_compact_group.lua | 22 |
-| test_compact_history.lua | 10 |
+| test_compact_group.lua | 23 |
+| test_compact_history.lua | 11 |
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 23 |
 | test_compact_modes.lua | 7 |
@@ -2068,4 +2070,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1710** |
+| **Total** | **1712** |

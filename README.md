@@ -4,11 +4,11 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1710%2F1710_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1712%2F1712_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
-It watches what your party or raid receives and compares each item with your gear and with the looter's. Your own drops are listed with everyone else's, with the time left to trade each one and the people it would help. Out of the box it stays in its window. Alerts and sounds are opt-in, and nobody gets a whisper unless you click Ask or turn on auto-ask.
+It watches what your party or raid receives and compares each item with your gear and with the looter's. Your own drops are listed with everyone else's, with the time left to trade each one and the people it would help. Out of the box it stays in its window, apart from a small popup when someone loots a big upgrade you could ask for. Sounds are opt-in, and nobody gets a whisper unless you click Ask or turn on auto-ask.
 
 ## Screenshots
 
@@ -54,7 +54,7 @@ Your own drops show who in the group would gain from them. **Offer** opens a pan
 
 **History** remembers what the feed showed for 30 days, across logouts and alts, and what became of each drop: asked, offered, expired, received, traded away or declined. Click a row for its detail card, or right-click it to mark it declined. How long it keeps things, and the button that clears it, are under Settings › Window › Layout. A `/reload` loses nothing: this session's drops come back on the Drops tab.
 
-Two extras are off until you turn them on: the **toast**, a popup when someone loots a big upgrade you could ask for (Settings › Alerts › Toast sets its size, 50 to 200 %, and it grows or shrinks where you put it), and **auto-ask**, which sends the whisper for you after the boss dies. Both handle off-spec upgrades with their own wording, and your main spec still comes first: auto-ask holds an off-spec whisper until any main-spec one has gone out. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Settings › Window › Icons gives every item icon the same look: by default the art is zoomed in a little inside a thin black border, and you can change the zoom and the border's texture, thickness and color, or use your class color or each item's quality color. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
+That popup is the **toast**. A new profile has it on; Settings › Alerts › Toast turns it off or sets its size, 50 to 200 %, and it grows or shrinks where you put it. **Auto-ask** is off until you turn it on, and sends the whisper for you after the boss dies. Both handle off-spec upgrades with their own wording, and your main spec still comes first: auto-ask holds an off-spec whisper until any main-spec one has gone out. To see it all without waiting for loot, `/dw test` fills the window with sample drops in every state. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Settings › Window › Icons gives every item icon the same look: by default the art is zoomed in a little inside a thin black border, and you can change the zoom and the border's texture, thickness and color, or use your class color or each item's quality color. The rest is under **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists every command.
 
 ## How the loot watching works
 

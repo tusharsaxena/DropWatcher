@@ -98,6 +98,24 @@ test("compact history: kept groups as one-line headers, the newest open, each en
     assertTrue(cardWith(drawn, "Expired") ~= nil)
 end)
 
+-- Trade's longest reason (feedback-25): `Yes Not their upgrade` on line 3 ends before the time at
+-- its right, a day-old `Oct 9`-shaped date included, at the least width (Trade is cut before the time,
+-- CG.PaintHalf's `dwTradeBefore`, as a guard only).
+test("compact history: at the least width Trade's longest reason ends before the date", function()
+    local NS, drawn, m = shownCompact()
+    local CG, K = NS.CompactGroup, NS.Constants.WINDOW
+    m.textCharWidth = 5
+    assertEqual(NS.Window.Frame():GetWidth(), K.COMPACT_MIN_W)
+    local card = cardWith(drawn, "Asked")
+    local c = card.cells
+    assertEqual(plain(textOf(c.trade.text)), "Yes Not their upgrade")
+    local function w(s) return #(plain(s):gsub("[\128-\191]", "")) * m.textCharWidth end
+    local x = CG.TextLeft(CG.Metrics(nil), CG.LEAD)
+    local tradeEnd = x + w(textOf(c.tradeLabel.text)) + CG.HALF_GAP + w(textOf(c.trade.text))
+    local timeAt = card:GetWidth() - CG.PAD - w("Oct 24")
+    assertTrue(tradeEnd + CG.ASK_GAP <= timeAt, ("Trade ends at %d, the date at %d"):format(tradeEnd, timeAt))
+end)
+
 test("compact history: the outcome is in its tone, and every piece keeps its full-view tooltip", function()
     local NS, drawn = shownCompact()
     local C, W = NS.Constants, NS.Window

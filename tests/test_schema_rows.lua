@@ -376,6 +376,8 @@ test("toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a soun
     assertEqual(row.default, 1, "today's size"); assertEqual(NS.C.PROFILE.toast.scale, 1)
     assertTrue(row.isPercent == true, "drawn as a percentage, 50 % to 200 %")
     assertTrue(type(row.onChange) == "function", "applied live (NS.Toast.ApplyScale)")
+    assertFalse(row.disabledIf(), "live: the toast is on for a new profile")
+    assertTrue(S.Set("toast.enabled", false))
     assertTrue(row.disabledIf(), "dimmed while the toast is off")
     assertTrue(S.Set("toast.enabled", true))
     assertFalse(row.disabledIf())
@@ -598,7 +600,7 @@ local PINNED_ROWS = {
     { "state.debugConsole", "bool", "false" },
     { "state.testMode", "bool", "nil" },
     { "toast.duration", "number", "8" },
-    { "toast.enabled", "bool", "false" },
+    { "toast.enabled", "bool", "true" },   -- on for a new profile since 2026-10-25, no migration
     { "toast.inCombat", "bool", "false" },
     { "toast.minGain", "number", "10" },
     { "toast.scale", "number", "1" },

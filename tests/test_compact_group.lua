@@ -531,6 +531,40 @@ test("compact group: at the least width Trade fits beside the button, You and Th
         card:GetWidth() - CG.PAD))
 end)
 
+-- Trade's longest reason (feedback-25): `Not their upgrade` after `Yes` is the longest thing line 3
+-- carries, every other reason (WindowCells.TRADE_SHORT, and `Not your upgrade` / `Their upgrade` /
+-- `Your upgrade` from WC.TradeShort) no longer. At the least width it ends before the action button,
+-- so the cut CG.TradeInset sets is a guard, not something a real reason reaches.
+test("compact group: at the least width Trade's longest reason ends before the button", function()
+    local NS, _, m = T.enableAddon()
+    local K, CG, WC, L = NS.Constants.WINDOW, NS.CompactGroup, NS.WindowCells, NS.L
+    m.__now = 100
+    m.textCharWidth = 5
+    local longest = L["Not their upgrade"]
+    local function chars(s) return #(s:gsub("[\128-\191]", "")) end
+    local reasons = { L["Not your upgrade"], L["Their upgrade"], L["Your upgrade"] }
+    for _, r in pairs(WC.TRADE_SHORT) do reasons[#reasons + 1] = r end
+    for _, r in ipairs(reasons) do
+        assertTrue(chars(r) <= chars(longest), ("%q is longer than %q"):format(r, longest))
+    end
+    seed(NS, { GROUP }, { drop({ trade = { state = "likely", reasonKey = "notUpgrade", basis = "inspect", args = {} } }) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.SetWindowMode("compact")
+    NS.ShowWindow()
+    assertEqual(NS.Window.Frame():GetWidth(), K.COMPACT_MIN_W)
+    local card = cardFor(NS.WindowGroup.Drawn(), 1)
+    local c = card.cells
+    assertEqual(NS.CompactCards.HalfText(card.model.trade), "Trade Yes Not their upgrade")
+    local function w(fs)
+        local t = (fs:GetText() or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+        return chars(t) * m.textCharWidth
+    end
+    local x = CG.TextLeft(CG.Metrics(nil), CG.LEAD)
+    local tradeEnd = x + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
+    local buttonAt = card:GetWidth() - CG.PAD - K.ASK_W
+    assertTrue(tradeEnd + CG.ASK_GAP <= buttonAt, ("Trade ends at %d, the button at %d"):format(tradeEnd, buttonAt))
+end)
+
 -- You and Them with two dual marks (feedback-21 H7): both halves on trinkets read in full, each worn
 -- item's level, glyph and two-digit difference, `You 321 ▼10 / 324 ▼13`. The first part and its `/`
 -- sit between the label and the single pieces. At the least width both halves read on line 4, under

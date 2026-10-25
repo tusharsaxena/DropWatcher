@@ -150,9 +150,10 @@ local function added(NS, id) NS.addon:SendMessage(NS.MSG.DROP_ADDED, id) end
 
 local function shown(NS) return NS.Toast.Stats().shown end
 
-test("toast edge: off by default; nothing is built or shown", function()
+test("toast edge: on for a new profile; turned off, nothing is built or shown", function()
     local NS = enabled({ drop() }, true)
-    assertEqual(NS.Setting("toast.enabled"), false)
+    assertEqual(NS.Setting("toast.enabled"), true, "a new profile's default (2026-10-25)")
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", false))
     added(NS, 1)
     assertNil(NS.Toast.Frame()); assertEqual(NS.Toast.Stats().waiting, 0)
 end)
@@ -643,8 +644,13 @@ end)
 
 test("toast edge: a profile switch to one with the toast off takes it down", function()
     local NS = enabled({ drop(), drop({ id = 2 }) })
-    added(NS, 1); added(NS, 2)
     local db = NS.addon.db
+    local home = db:GetCurrentProfile()
+    db:SetProfile("Other")
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", false))
+    db:SetProfile(home)
+    added(NS, 1); added(NS, 2)
+    assertTrue(shown(NS))
     db:SetProfile("Other")
     assertEqual(NS.Setting("toast.enabled"), false)
     -- red under: reloadProfile without NS.Toast.OnProfileReloaded (core/DropWatcher.lua)

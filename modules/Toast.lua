@@ -24,7 +24,8 @@ local _, NS = ...
 -- cell's, with the full reason (WindowCells.TradeReason). Only row 1 shares its width with Ask and
 -- the close mark; rows 2 to 4 run to the right inset.
 --
--- OFF BY DEFAULT (`toast.enabled`). A drop toasts when it is not yours, its verdict for you is
+-- ON FOR A NEW PROFILE (`toast.enabled`; off until 2026-10-25, no migration, so an existing profile
+-- keeps what it had). A drop toasts when it is not yours, its verdict for you is
 -- `upgrade` with an item-level gain of at least `toast.minGain` (default 10), and its trade
 -- estimate is `likely` or `yes` (Qualifies, pure). An upgrade into an empty slot (the kernel's
 -- `emptySlot` reason, with no item-level change) clears any least gain and reads `empty`. Each drop

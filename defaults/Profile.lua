@@ -153,7 +153,7 @@ NS.C = {
 
         -- The upgrade toast (design spec §11.5). Its `point` is geometry, like the window's.
         toast = {
-            enabled  = false,
+            enabled  = true,    -- on for a new profile (owner, 2026-10-25); no migration
             minGain  = 10,      -- the least item-level gain for you
             duration = 8,       -- seconds on screen
             inCombat = false,
