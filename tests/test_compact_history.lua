@@ -70,15 +70,29 @@ test("compact history: kept groups as one-line headers, the newest open, each en
     assertEqual(textOf(c.item.text), "Item 501"); assertEqual(textOf(c.ilvl.text), "610")
     assertEqual(textOf(c.looter.text), "Brakk"); assertTrue(c.looter.glyph == nil, "no ⊕ after another realm's looter")
     assertEqual(plain(textOf(c.slot.text)), "· Neck")
-    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Yes |cffb3b3b8Not their upgrade|r", "line 4, labeled")
+    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Yes |cffb3b3b8Not their upgrade|r", "line 3, labeled")
     assertTrue(textOf(c.time.text):match("^%d%d:%d%d$") ~= nil, "the time within a day: " .. textOf(c.time.text))
     assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▼4", "the verdict alone (feedback-6 spec §1)")
     assertEqual(textOf(c.you.level), "", "a kept entry holds no worn items")
     assertEqual(textOf(c.themLabel.text), "Them")
-    -- feedback-10 spec §2: the level before the name, cut before the outcome; gold labels, Them close after You.
+    -- feedback-10 spec §2: the level before the name, cut at the card's inset; gold labels, Them close after You.
     local CG, gold = NS.CompactGroup, NS.Constants.GOLD
-    assertEqual(c.item.text.__points[1][2], c.ilvl.text); assertEqual(c.item.text.__points[2][2], c.outcome.text)
+    assertEqual(c.item.text.__points[1][2], c.ilvl.text); assertEqual(c.item.text.__points[2][2], card)
     assertEqual(c.themLabel.text.__points[1][2], c.you.text); assertEqual(c.themLabel.text.__points[1][4], CG.HALVES_GAP)
+    -- feedback-25: Trade on line 3, You and Them under it on line 4, as on Drops' cards.
+    local m = CG.Metrics(nil)
+    local tp = c.tradeLabel.text.__points[1]
+    assertEqual(tp[2], card); assertEqual(tp[5], CG.LineY(m, 3))
+    tp = c.youLabel.text.__points[1]
+    assertEqual(tp[2], c.tradeLabel.text); assertEqual(tp[4], 0); assertEqual(tp[5], -m.line)
+    -- feedback-25: the outcome on line 2 and the time on line 3, at the right, where Drops' button is;
+    -- Trade cut before the time.
+    tp = c.outcome.text.__points[1]
+    assertEqual(tp[1], "RIGHT"); assertEqual(tp[2], card); assertEqual(tp[5], CG.LineY(m, 2))
+    tp = c.time.text.__points[1]
+    assertEqual(tp[1], "RIGHT"); assertEqual(tp[2], card); assertEqual(tp[5], CG.LineY(m, 3))
+    tp = c.trade.text.__points[2]
+    assertEqual(tp[1], "RIGHT"); assertEqual(tp[2], c.time.text); assertEqual(tp[3], "LEFT")
     assertEqual(select(2, c.youLabel.text:GetTextColor()), gold.g)
     assertEqual(card.model.kind, "history")
     assertTrue(cardWith(drawn, "Expired") ~= nil)

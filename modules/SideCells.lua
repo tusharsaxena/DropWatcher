@@ -52,7 +52,7 @@ local _, NS = ...
 --
 -- PURE. Every composer takes the drop record and plain inputs and answers a plain table; nothing here
 -- reads a module's state, the client or a saved variable. The full tables paint it
--- (modules/WindowGroup.lua, modules/WindowHistory.lua) and the compact cards' line 3 reads it
+-- (modules/WindowGroup.lua, modules/WindowHistory.lua) and the compact cards' line 4 reads it
 -- (modules/CompactCards.lua).
 --
 --   cell = { items, level, levelTone, glyph, text, tone, tip, verdict, upgrades, hidden,

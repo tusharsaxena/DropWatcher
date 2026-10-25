@@ -334,7 +334,7 @@ Total.
 - compact cards: no trade window on the card; the freshness on line 1 with or without a countdown (feedback-10 §2)
 - compact cards: the freshness mark is bracketed, and left out where there is nothing to say (feedback-10 §2)
 - compact cards: the Drops card's pieces keep the full view's tones and tooltips
-- compact cards: every trade state keeps its short word, reason and tone on line 4
+- compact cards: every trade state keeps its short word, reason and tone on its own line
 - compact cards: the Ask button keeps its states, and a drop you cannot ask for shows a dash
 - compact cards: your own drop on Drops reads Name [YOU], No upgrades for Them, and offers it
 - compact cards: your own drop's trade tooltip counts its upgrades and Them names them, unless kept
@@ -373,9 +373,9 @@ Total.
 - compact group: no card shows a trade window; every card keeps its freshness on line 1
 - compact group: a second's tick leaves the cards as they are
 - compact group: at the least width line 2's pieces end before the action button
-- compact group: at the least width line 3's fullest halves fit, Them on line 4 when not beside You
-- compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)
-- compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)
+- compact group: at the least width Trade fits beside the button, You and Them on line 4
+- compact group: at the least width line 4's two dual marks fit, each worn item its own mark (H7)
+- compact group: dual marks that do not fit the card are the one mark instead (R5)
 
 ### test_compact_history.lua (10)
 

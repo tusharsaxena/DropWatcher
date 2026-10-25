@@ -22,17 +22,18 @@ local _, NS = ...
 --                        feedback-7 spec §2), slot, type; ask (right: Offer on your own drop;
 --                        No action with neither, feedback-11 spec §1). No trade window countdown
 --                        (feedback-10 spec §2)
---                line 3: you and them, each a half: the label, then the full table's Me or
+--                line 3: trade, the full table's Trade cell, its word and short reason
+--                        (`Trade No Bonus roll`, CC.TradeHalf; a line of its own since feedback-22,
+--                        beside the action button since feedback-25)
+--                line 4: you and them, each a half: the label, then the full table's Me or
 --                        Them cell without its icons (`Upgrade for N` on your own drop,
---                        feedback-7 spec §2)
---                line 4: trade, the full table's Trade cell, its word and short reason
---                        (`Trade No Bonus roll`, CC.TradeHalf; a line of its own since feedback-22)
+--                        feedback-7 spec §2); the card's full width (feedback-25)
 --   History      line 1: ilvl, item; outcome (right, in its tone)
 --                line 2: looter, slot, type; time (right, dimmed)
---                line 3: you, them
---                line 4: trade
+--                line 3: trade
+--                line 4: you, them (feedback-25: the Drops card's order)
 --
--- LINE 3 (feedback-6 spec §1) reads as the full table's merged Me and Them cells (NS.SideCells), the
+-- YOU AND THEM (feedback-6 spec §1; line 4 since feedback-25) read as the full table's merged Me and Them cells (NS.SideCells), the
 -- icons left out: the label, the worn item level (plain; `empty`, `…`, `range` muted), then the glyph
 -- and the unsigned difference in the verdict's tone: `You 292 ▲19`, `Them 276 ▲12`, `Them
 -- Upgrade for 2` on your own drop. Two worn items both read (rings, trinkets, one-hand weapons) take
@@ -142,7 +143,7 @@ function CC.Verdict(c)
         parts = c.parts }
 end
 
---- One half of line 3: `You 292 ▲19`, `You 321 ▼10 / 308 ▲3`; its label and CC.Verdict's pieces.
+--- One half of You and Them's line: `You 292 ▲19`, `You 321 ▼10 / 308 ▲3`; its label and CC.Verdict's pieces.
 --- @param label string `You` or `Them`
 --- @param side table a SideCells cell (SC.Me, SC.Them, SC.Merge)
 --- @return table { label, level, levelTone, glyph, text, tone, tip, verdict, items, upgrades, hidden }
@@ -152,7 +153,7 @@ function CC.Half(label, side)
     return h
 end
 
---- Line 4: `Trade Yes Not their upgrade`, the full table's Trade cell (its word, tone, short
+--- Trade's line: `Trade Yes Not their upgrade`, the full table's Trade cell (its word, tone, short
 --- reason and reason tooltip) under a gold `Trade` label as You and Them have theirs.
 --- @param c table WC.Trade's or MineCells.OwnTrade's cell
 --- @return table the cell's fields, with `label`
@@ -275,7 +276,7 @@ end
 
 -- ── the Drops card (spec §2) ────────────────────────────────────────────────────────────────
 
--- Line 2's action and trade, and line 3's Them: the looter's, or on your own drop its Offer,
+-- Line 2's action, the trade and Them: the looter's, or on your own drop its Offer,
 -- its trade word and `Upgrade for N` (feedback-5 spec §2: the full table's cells).
 local function sides(drop, ctx, now)
     local them = CC.Half(L["Them"], SC.Them(drop, ctx.gear, now, ctx.revealed))
@@ -303,8 +304,9 @@ function CC.Group(drop, ctx)
         looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
         ask = action,
         -- line 3
-        you = CC.Half(L["You"], SC.Me(drop, ctx.equipped, ctx.classFile)),
-        them = them, trade = CC.TradeHalf(trade),
+        trade = CC.TradeHalf(trade),
+        -- line 4
+        you = CC.Half(L["You"], SC.Me(drop, ctx.equipped, ctx.classFile)), them = them,
     }
 end
 
@@ -347,8 +349,9 @@ function CC.History(drop, ctx)
         looter = CC.Looter(drop, ctx.ownRealm), slot = WC.Slot(drop), armorType = WC.ArmorType(drop),
         time = CC.When(drop.at, ctx.nowEpoch, ctx.dateFn),
         -- line 3
-        you = CC.Half(L["You"], WH.MeCell(drop)), them = CC.Half(L["Them"], WH.ThemCell(drop)),
         trade = CC.TradeHalf(WC.Trade(drop)),
+        -- line 4
+        you = CC.Half(L["You"], WH.MeCell(drop)), them = CC.Half(L["Them"], WH.ThemCell(drop)),
     }
 end
 
@@ -362,7 +365,7 @@ local function lineTwo(card, right)
     return ("%s · %s · %s  %s"):format(looterText(card.looter), card.slot.text, card.armorType.text, right.text)
 end
 
-local function lineThree(card)
+local function youThem(card)
     return CC.HalfText(card.you) .. "  " .. CC.HalfText(card.them)
 end
 
@@ -370,11 +373,11 @@ local PLAIN = {
     group = function(card)
         local fresh = CC.FreshMark(card.fresh)
         local one = ("%s %s"):format(card.ilvl.text, card.item.text) .. (fresh and (" " .. fresh) or "")
-        return { one, lineTwo(card, card.ask), lineThree(card), CC.HalfText(card.trade) }
+        return { one, lineTwo(card, card.ask), CC.HalfText(card.trade), youThem(card) }
     end,
     history = function(card)
         return { ("%s %s  %s"):format(card.ilvl.text, card.item.text, card.outcome.text), lineTwo(card, card.time),
-            lineThree(card), CC.HalfText(card.trade) }
+            CC.HalfText(card.trade), youThem(card) }
     end,
 }
 

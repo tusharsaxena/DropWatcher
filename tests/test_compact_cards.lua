@@ -173,8 +173,8 @@ test("compact cards: the Drops card reads the spec's four lines", function()
     -- downgrade, so No action (feedback-11 spec §1).
     assertEqual(lines[2], "Lysandra · Trinket · Trinkets  No action")
     -- red under: the trade word bare on line 2, read as one more fact about the item
-    assertEqual(lines[3], "You 321 ▼26 / 308 ▼13  Them 298/296 ⊘ Can't use")
-    assertEqual(lines[4], "Trade Yes Not their upgrade", "Trade on a line of its own, its word and reason (feedback-22)")
+    assertEqual(lines[3], "Trade Yes Not their upgrade", "Trade on a line of its own, its word and reason (feedback-22), beside the button (feedback-25)")
+    assertEqual(lines[4], "You 321 ▼26 / 308 ▼13  Them 298/296 ⊘ Can't use", "You and Them under the button (feedback-25)")
     assertEqual(card.trade.label, "Trade")
     assertEqual(card.kind, "group"); assertEqual(card.id, 7); assertEqual(card.link, LINK)
 end)
@@ -221,7 +221,7 @@ test("compact cards: the Drops card's pieces keep the full view's tones and tool
     assertEqual(#card.you.items, 2, "both worn trinkets, for the edge's tooltip")
 end)
 
-test("compact cards: every trade state keeps its short word, reason and tone on line 4", function()
+test("compact cards: every trade state keeps its short word, reason and tone on its own line", function()
     local C = CC()
     local cases = {
         { { state = "yes", reasonKey = "boe", basis = "bind" }, "Yes", "good", "BoE" },
@@ -261,8 +261,8 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
     local lines = C.Plain(card)
     assertEqual(lines[1], "295 Vile Vial of Volatile Venom", "your own drop needs no inspect: nothing after the name")
     assertTrue(card.ask.offer and card.ask.offered)
-    assertEqual(lines[3], "You 321 ▼26 / 308 ▼13  Them No upgrades")
-    assertEqual(lines[4], "Trade Yes Not your upgrade", "your own drop: whose upgrade it is not")
+    assertEqual(lines[4], "You 321 ▼26 / 308 ▼13  Them No upgrades")
+    assertEqual(lines[3], "Trade Yes Not your upgrade", "your own drop: whose upgrade it is not")
     assertEqual(card.them.tone, "muted", "nobody's upgrade")
     assertTrue(has(card.them.tip, "• Group: nobody else in it"))
     assertEqual(lines[2], "Me [YOU] · Trinket · Trinkets  Offer",
@@ -271,7 +271,7 @@ test("compact cards: your own drop on Drops reads Name [YOU], No upgrades for Th
     local dead = C.Group(groupDrop({ isMine = true, them = NONE, looter = me,
         trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }), groupCtx())
     assertEqual(C.Plain(dead)[2], "Me [YOU] · Trinket · Trinkets  No action", "where it cannot be traded")
-    assertEqual(C.Plain(dead)[4], "Trade No Bonus roll")
+    assertEqual(C.Plain(dead)[3], "Trade No Bonus roll")
     assertTrue(has(dead.ask.tip, "• Rule: bonus roll loot"))
 end)
 
@@ -323,8 +323,8 @@ test("compact cards: a drop whose details have not loaded is never blank", funct
     local lines = C.Plain(card)
     assertEqual(lines[1], "? ?", "pending: nothing after the name, Them says it")
     assertEqual(lines[2], "Lysandra · – · –  No action")
-    assertEqual(lines[3], "You –  Them –", "not worn, or not loaded: the dash says why")
-    assertEqual(lines[4], "Trade ? Pending", "no estimate yet")
+    assertEqual(lines[4], "You –  Them –", "not worn, or not loaded: the dash says why")
+    assertEqual(lines[3], "Trade ? Pending", "no estimate yet")
 end)
 
 -- ── the History card ────────────────────────────────────────────────────────────────────────
@@ -358,8 +358,8 @@ test("compact cards: the History card reads the spec's four lines", function()
     local clock = fakeDate("%H:%M", at)
     assertEqual(lines[1], "311 Yoke of the Charging Bear  Seen", "the item level before the name (feedback-10 spec §2)")
     assertEqual(lines[2], "Bùnian · Neck · Jewelry  " .. clock)
-    assertEqual(lines[3], "You ▼4  Them ≈0", "a kept entry holds no worn items: the verdict alone")
-    assertEqual(lines[4], "Trade Yes Not their upgrade")
+    assertEqual(lines[3], "Trade Yes Not their upgrade", "Trade above You and Them, as on Drops (feedback-25)")
+    assertEqual(lines[4], "You ▼4  Them ≈0", "a kept entry holds no worn items: the verdict alone")
     assertEqual(card.outcome.tone, "bad", "Seen in gray (feedback-12 spec §0)"); assertEqual(card.time.tone, "muted")
     assertTrue(has(card.time.tip, "2m ago"))
 end)

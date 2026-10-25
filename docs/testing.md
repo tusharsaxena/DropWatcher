@@ -94,11 +94,11 @@ every control, the build without the Widgets library, and the pure row predicate
 reads, schema step 5, the title-bar toggle, each layout's own size and point on the one frame, the
 Layout row, and the run override taken on an auto-open and let go when the run ends),
 `test_compact_cards` (compact mode's cards, DW-C1, pure: each Drops and History card's
-four lines (Trade on line 4, its word and short reason: feedback-22) in every verdict, trade, inspect, ask and outcome state (line 1's item level before the
+four lines (Trade on line 3, its word and short reason, You and Them on line 4: feedback-22, feedback-25) in every verdict, trade, inspect, ask and outcome state (line 1's item level before the
 name and the freshness bracketed right after it or left out (`FreshMark`; a pending read left out too,
 Them's `…` saying it, feedback-11 spec §0), `No action` on line 2 with no action (feedback-11 spec
 §1, where feedback-10 left the slot empty), no trade window on the card with or without a countdown,
-feedback-10 spec §2; your own card's Offer, `Upgrade for N` and ` [YOU]`, feedback-5 spec §2, feedback-7 spec §2; line 3's `You 321/308 ▼8`, feedback-6 spec §1), each piece's tone and
+feedback-10 spec §2; your own card's Offer, `Upgrade for N` and ` [YOU]`, feedback-5 spec §2, feedback-7 spec §2; line 4's `You 321/308 ▼8`, feedback-6 spec §1), each piece's tone and
 tooltip checked against the full view's composer, the cross-realm mark, and the header's short form, an LFR header cut piece by piece to fit the default width, feedback-15),
 `test_compact_group` (the Drops tab in the compact layout, DW-C2: the card's metrics and the
 scroll carry-over, the stacked detail card's action flow and height, pure; then the cards built
@@ -109,9 +109,9 @@ collapsing headers; each card indented under its header with the muted-white che
 showing a trade window and a second's tick leaving the cards as they are (feedback-10 spec §2), Them's last piece cut at the
 card's right inset (feedback-11 spec §0), and
 the least compact width, 400 (440 until feedback-23), at which line 2's fullest pieces end before the
-action button, feedback-5 spec §0, §4, and line 3's two dual marks still read both rings, Them on line 4
-when it does not fit beside You and the button (lines 2 and 3's), feedback-21 H7, feedback-23, and at a wider
-character measure give way to the one mark each, feedback-21 R5),
+action button, feedback-5 spec §0, §4, Trade on line 3 ends before the button (lines 2 and 3's) and is
+cut there, and line 4's two dual marks, under the button, still read both rings, feedback-21 H7, feedback-25,
+and at a wider character measure give way to the one mark each, feedback-21 R5),
 `test_compact_history` (the History tab in the compact layout, DW-C3: the kept entries as cards
 under one-line headers, the outcome in its tone, the time, the row menu on a right-click, declined
 repainting, the collapsing headers, every tooltip at the card's top right, the strip without Clear

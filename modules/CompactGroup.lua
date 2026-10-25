@@ -26,18 +26,19 @@ local _, NS = ...
 --           in its tooltip, feedback-11 spec §1). The button is two lines tall, lines 2 and 3,
 --           its label centered in it (CG.AskHeight, CG.AskY; feedback-22, feedback-23), so line 1's
 --           name runs the card's width)
---   line 3  You 321 ▼26 / 308 ▼13   Them 298/296 ⊘ Can't use
---           (beside the button: where You and Them do not fit there, Them moves to line 4 before
---           Trade, both rings still read, CG.PaintHalves; feedback-23)
---           (the full table's Me and Them cells without their icons, feedback-6 spec §1; the
---           labels gold, Them a fixed gap after You, feedback-10 spec §2; your own drop:
---           line 2's looter reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2), every
---           member it upgrades in the tooltip)
---   line 4  Trade No Bonus roll
---           (the full table's Trade cell: Yes, No or ? in its tone, then its short reason in the
---           muted gray, WindowCells.TradeText; a line of its own since feedback-22, so the reason
---           fits and You and Them keep line 3's room. Trade sat on line 2 as a bare word, then
---           at the end of line 3, before)
+--   line 3  Trade No Bonus roll
+--           (beside the button, cut at its left edge (CG.TradeInset); the full table's Trade cell:
+--           Yes, No or ? in its tone, then its short reason in the muted gray,
+--           WindowCells.TradeText. Trade sat on line 2 as a bare word, at the end of line 3, then
+--           on line 4 (feedback-22) until feedback-25)
+--   line 4  You 321 ▼26 / 308 ▼13   Them 298/296 ⊘ Can't use
+--           (under the button, to the card's right inset, as line 1's name runs: two rings on both
+--           halves fit there on one line (feedback-25; Them wrapped to line 4 before Trade beside
+--           the button, feedback-23); dual marks that still do not fit give way to the one mark,
+--           CG.PaintHalves) (the full table's Me and Them cells without their icons, feedback-6
+--           spec §1; the labels gold, Them a fixed gap after You, feedback-10 spec §2; your own
+--           drop: line 2's looter reads `Name [YOU]` and Them `Upgrade for N` (feedback-7 spec §2),
+--           every member it upgrades in the tooltip)
 --
 -- NO TRADE WINDOW on the card (feedback-10 spec §2): the full table's Trade window column, the
 -- strip's next expiry and the detail card say it; the card has nothing to tick each second.
@@ -69,7 +70,7 @@ local _, NS = ...
 -- THE SHARED KIT. History draws its cards the same way (modules/CompactHistory.lua, DW-C3), so the
 -- frame pieces live here once and are exported: the
 -- pieces and their hit frames (Piece, FontString, MonoString, Background), line 1's item level
--- and name (PlaceLineOne), line 2 and line 3's halves (BuildLineTwo/PaintLineTwo, BuildHalves/PaintHalf,
+-- and name (PlaceLineOne), line 2 and the halves (BuildLineTwo/PaintLineTwo, BuildHalves/PaintHalf,
 -- PlaceThem), the pane's own scroll view (BuildView),
 -- the layout switch (Swap, Settle) and the draw loop over a tab's entries (Draw, driven by a
 -- per-tab `spec` table built once at load: no closure per repaint).
@@ -89,7 +90,7 @@ CG.LINES = 4           -- a card's lines (feedback-22: Trade on a line of its ow
 CG.QUALITY_W = 2       -- the quality bar at a card's left edge
 CG.LEAD = K.ROW_CHEVRON + K.CHEVRON_GAP   -- a Drops card's chevron and the gap before its icon
 CG.ILVL_GAP = 4        -- line 1: between the item level and the name (feedback-10 spec §2)
-CG.HALVES_GAP = 12     -- line 3: between one half's last piece and the next label (feedback-10 spec §2)
+CG.HALVES_GAP = 12     -- You and Them: between one half's last piece and the next label (feedback-10 spec §2)
 CG.ASK_GAP = 6         -- lines 2 and 3: between their text and the action button
 
 -- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
@@ -240,18 +241,17 @@ local function buildAsk(card)
 end
 
 --- Line 1's item level then the name (feedback-10 spec §2): the level at `x` on line 1, the name
---- CG.ILVL_GAP after it and cut at `rightOf` (a region on line 1's right: History's outcome), so the
---- name is cut first and the level always shows. A Drops card places its own (the freshness follows
---- the name there).
+--- CG.ILVL_GAP after it and cut at the card's right inset (History's outcome moved to line 2,
+--- feedback-25), so the name is cut first and the level always shows. A Drops card places its own
+--- (the freshness follows the name there).
 --- @param card table
 --- @param x number the text's left edge
 --- @param y number line 1's middle
---- @param rightOf table
-function CG.PlaceLineOne(card, x, y, rightOf)
+function CG.PlaceLineOne(card, x, y)
     local c = card.cells
     at(c.ilvl.text, "LEFT", card, "TOPLEFT", x, y)
     at(c.item.text, "LEFT", c.ilvl.text, "RIGHT", CG.ILVL_GAP, 0)
-    c.item.text:SetPoint("RIGHT", rightOf, "LEFT", -6, 0)
+    c.item.text:SetPoint("RIGHT", card, "RIGHT", -CG.PAD, 0)
 end
 
 local function buildLineOne(card)
@@ -268,8 +268,8 @@ local function buildLineOne(card)
 end
 
 --- Line 2's pieces: looter (and its gold ` [YOU]` mark on your own drop: feedback-7 spec
---- §2), slot, type (feedback-4 spec §3), then `right` (right-aligned: History's time; nil on
---- a Drops card, whose action button sits there).
+--- §2), slot, type (feedback-4 spec §3), then `right` (right-aligned: History's time, which its
+--- card places on line 3 since feedback-25; nil on a Drops card, whose action button sits there).
 --- @param card table
 --- @param right string|nil the right piece's key
 function CG.BuildLineTwo(card, right)
@@ -282,7 +282,7 @@ function CG.BuildLineTwo(card, right)
     if right then piece(card, right) end
 end
 
--- One half of line 3 (feedback-6 spec §1): the label (`cells[key .. "Label"]`), then the worn item
+-- One half of You and Them's line (feedback-6 spec §1), or Trade: the label (`cells[key .. "Label"]`), then the worn item
 -- level, the glyph and the difference or word (`cells[key]`: `level`, `glyph`, `text`), one tooltip
 -- over them all; a dual mark's first part and its `/` before them (`leadLevel`, `leadGlyph`,
 -- `leadText`, `sep`: feedback-21 H7). CG.PaintHalf places each piece after the last one shown.
@@ -294,33 +294,31 @@ function CG.BuildHalf(card, key)
     card.cells[key .. "Label"], card.cells[key] = label, half
 end
 
---- Line 3's two halves, You and Them, and line 4's Trade.
+--- The two halves, You and Them, and Trade.
 --- @param card table
 function CG.BuildHalves(card)
     for _, key in ipairs({ "you", "them", "trade" }) do CG.BuildHalf(card, key) end
 end
 
--- The gaps on line 3: between the label, the level and the verdict, and after a glyph.
+-- The gaps in a half: between the label, the level and the verdict, and after a glyph.
 CG.HALF_GAP, CG.HALF_GLYPH_GAP = 3, 2
 
---- Line 3's Them half placed CG.HALVES_GAP after You's last piece (feedback-10 spec §2: the halves
---- read close together, not at a third of the card's width), and line 4's Trade under You's label
---- (feedback-22). `wrapped` (feedback-23): Them under You's label on line 4 instead, Trade as far
---- after Them's last piece. A half's text is its last piece, shown or empty.
+--- You under Trade's label, a line down, and Them CG.HALVES_GAP after You's last piece
+--- (feedback-10 spec §2: the halves read close together, not at a third of the card's width;
+--- feedback-25: Trade on line 3, You and Them on line 4, on both tabs' cards). A half's text is its
+--- last piece, shown or empty.
 --- @param card table
 --- @param m table CG.Metrics' answer (its `line`)
---- @param wrapped boolean|nil
-function CG.PlaceThem(card, m, wrapped)
+function CG.PlaceThem(card, m)
     local c = card.cells
-    if wrapped then
-        at(c.themLabel.text, "LEFT", c.youLabel.text, "LEFT", 0, -m.line)
-        at(c.tradeLabel.text, "LEFT", c.them.text, "RIGHT", CG.HALVES_GAP, 0)
-    else
-        at(c.themLabel.text, "LEFT", c.you.text, "RIGHT", CG.HALVES_GAP, 0)
-        at(c.tradeLabel.text, "LEFT", c.youLabel.text, "LEFT", 0, -m.line)
-    end
-    card.dwWrapped = wrapped == true
+    at(c.youLabel.text, "LEFT", c.tradeLabel.text, "LEFT", 0, -m.line)
+    at(c.themLabel.text, "LEFT", c.you.text, "RIGHT", CG.HALVES_GAP, 0)
 end
+
+--- Where a Drops card's Trade is cut, in from the card's right edge: before the action button
+--- (feedback-25: Trade on line 3, beside it).
+--- @return number
+function CG.TradeInset() return CG.PAD + K.ASK_W + CG.ASK_GAP end
 
 local function newCard(content)
     local card = CreateFrame("Button", nil, content)
@@ -350,7 +348,7 @@ local function layout(card, m)
     card.ask:SetHeight(CG.AskHeight(m))
     card.ask.label:SetJustifyV("MIDDLE")
     at(c.looter.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
-    at(c.youLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
+    at(c.tradeLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
     CG.PlaceThem(card, m)
 end
 
@@ -436,13 +434,15 @@ local function placeLead(h, label)
     return h.sep
 end
 
---- One half of line 3 (or line 4's Trade) painted (CompactCards.Half's): its label (gold, feedback-10 spec §2), the worn
+--- One half (You, Them or Trade) painted (CompactCards.Half's): its label (gold, feedback-10 spec §2), the worn
 --- item level (plain, or
 --- a muted word), the glyph and the difference or word in the verdict's tone, each placed after the
 --- last piece shown. A dual mark (`parts`, feedback-21 H7) draws each worn item's level, glyph and
 --- difference, `You 321 ▼10 / 324 ▼23`, the second part in the single pieces; with `single`, the one
 --- mark instead (CG.PaintHalves, when the dual marks do not fit: feedback-21 R5). Trade's word is
---- followed by its short reason in the muted gray (WindowCells.TradeText, feedback-22).
+--- followed by its short reason in the muted gray (WindowCells.TradeText, feedback-22), cut
+--- `card.dwTradeInset` in from the card's right edge (CG.TradeInset on a Drops card), or CG.ASK_GAP
+--- before `card.dwTradeBefore` (History's time, line 3's right piece), else at its inset.
 --- @param card table
 --- @param key string `you` or `them`
 --- @param half table
@@ -470,12 +470,18 @@ function CG.PaintHalf(card, key, half, single)
     else
         at(h.text, "LEFT", last, "RIGHT", CG.HALF_GAP, 0)
     end
-    -- Trade, alone on line 4, runs to the card's right inset and is cut there (feedback-11 spec §0).
-    if key == "trade" then h.text:SetPoint("RIGHT", card, "RIGHT", -CG.PAD, 0) end
+    -- Trade, alone on its line, runs to the button (a Drops card, feedback-25) or the card's right
+    -- inset and is cut there (feedback-11 spec §0).
+    if key ~= "trade" then return end
+    if card.dwTradeBefore then
+        h.text:SetPoint("RIGHT", card.dwTradeBefore, "LEFT", -CG.ASK_GAP, 0)
+    else
+        h.text:SetPoint("RIGHT", card, "RIGHT", -(card.dwTradeInset or CG.PAD), 0)
+    end
 end
 
 local HALVES = { "you", "them", "trade" }
-local LINE_THREE = { "you", "them" }   -- Trade is line 4's (feedback-22)
+local YOU_THEM = { "you", "them" }   -- one line; Trade has its own (feedback-22)
 
 -- A piece's width on one line (unbounded: Trade is cut at the card's inset), or nil while its
 -- font is not loaded.
@@ -504,14 +510,14 @@ local function halfWidth(card, key)
     return w
 end
 
---- Whether painted line 3 fits `room`: You and Them, CG.HALVES_GAP apart. True while a piece
---- cannot be measured.
+--- Whether painted You and Them, CG.HALVES_GAP apart, fit `room`. True while a piece cannot be
+--- measured.
 --- @param card table
 --- @param room number the line's width, from its left edge to the card's right inset
 --- @return boolean
-function CG.LineThreeFits(card, room)
+function CG.HalvesFit(card, room)
     local w = CG.HALVES_GAP
-    for _, key in ipairs(LINE_THREE) do
+    for _, key in ipairs(YOU_THEM) do
         local hw = halfWidth(card, key)
         if not hw then return true end
         w = w + hw
@@ -519,39 +525,18 @@ function CG.LineThreeFits(card, room)
     return w <= room
 end
 
--- Whether one painted half fits `room`; true while it cannot be measured.
-local function halfFits(card, key, room)
-    local w = halfWidth(card, key)
-    return not w or w <= room
-end
-
--- Where Them goes: beside You on line 3, or (`wide`, a Drops card's line 4) on line 4 when line 3
--- cannot hold both but You fits there and Them fits line 4. nil when neither fits.
-local function themPlace(card, room, wide)
-    if CG.LineThreeFits(card, room) then return false end
-    if wide and halfFits(card, "you", room) and halfFits(card, "them", wide) then return true end
-    return nil
-end
-
---- Lines 3 and 4 painted: You and Them, then Trade (CompactCards' halves). With `room` (line 3's
---- width: beside the action button on a Drops card), Them that does not fit beside You moves to line
---- 4 (`wide`, its width) before Trade, both rings still read (feedback-23); dual marks (feedback-21
---- H7) that fit neither way (a larger Font size) give way to the one mark each (feedback-21 R5).
+--- You, Them and Trade painted (CompactCards' halves). With `room` (You and Them's line, to the
+--- card's right inset on a Drops card: feedback-25), dual marks (feedback-21 H7) that do not fit it
+--- (a larger Font size) give way to the one mark each (feedback-21 R5).
 --- @param card table
 --- @param cc table a CompactCards card
 --- @param room number|nil
---- @param wide number|nil
-function CG.PaintHalves(card, cc, room, wide)
+function CG.PaintHalves(card, cc, room)
     for _, key in ipairs(HALVES) do CG.PaintHalf(card, key, cc[key]) end
-    if not room then return end
-    local m = { line = card.dwLine }
-    local wrapped = themPlace(card, room, wide)
-    if wrapped == nil and (cc.you.parts or cc.them.parts) then
+    if room and (cc.you.parts or cc.them.parts) and not CG.HalvesFit(card, room) then
         CG.PaintHalf(card, "you", cc.you, true)
         CG.PaintHalf(card, "them", cc.them, true)
-        wrapped = themPlace(card, room, wide)
     end
-    CG.PlaceThem(card, m, wrapped == true)
 end
 
 -- What every card of one repaint shares: your gear and class, the transmog ask setting and your realm.
@@ -576,6 +561,7 @@ end
 
 local function paintCard(card, drop, width, m, shared)
     card.dropId, card.drop = drop.id, drop
+    card.dwTradeInset = CG.TradeInset()
     card:SetHeight(m.height)
     layout(card, m)
     NS.WindowRows.ApplyRowFont(card, m.fontSize)
@@ -586,8 +572,7 @@ local function paintCard(card, drop, width, m, shared)
     card.model = cc
     paintLineOne(card, drop, cc, width, m)
     CG.PaintLineTwo(card, cc)
-    local wide = width - CG.TextLeft(m, CG.LEAD) - CG.PAD
-    CG.PaintHalves(card, cc, wide - K.ASK_W - CG.ASK_GAP, wide)
+    CG.PaintHalves(card, cc, width - CG.TextLeft(m, CG.LEAD) - CG.PAD)
 end
 
 --- A one-line header painted with a short form (`hd`, CompactCards.Header's or HistoryHeader's).

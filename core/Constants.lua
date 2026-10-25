@@ -45,9 +45,9 @@ C.WINDOW = {
     -- before the action button (ASK_W, lines 2 and 3's right since feedback-23), past the indent,
     -- chevron, icon, insets and scroll gutter (tests/test_compact_group.lua measures it). 440 until
     -- feedback-23: line 2 lost its trade to line 4 in feedback-22, and 360 cuts it by about 13px.
-    -- Line 3 holds You beside the button; Them follows it there when it fits, or starts line 4
-    -- before Trade (feedback-23), so a dual mark (feedback-21 H7, `You 321 ▼10 / 324 ▼13`) on both
-    -- halves still reads both rings at 400 (measured too).
+    -- Line 3 holds Trade beside the button, line 4 You and Them under it to the card's right inset
+    -- (feedback-25), so a dual mark (feedback-21 H7, `You 321 ▼10 / 324 ▼13`) on both halves still
+    -- reads both rings at 400 (measured too).
     COMPACT_WIDTH  = 400,
     COMPACT_HEIGHT = 560,  -- 460 until feedback-22 made a card four lines (Trade on its own), its icon taller
     COMPACT_MIN_W  = 400,  -- = COMPACT_WIDTH: never narrower than a new profile's (feedback-4 spec §4)

@@ -16,14 +16,18 @@ local _, NS = ...
 --
 -- THE CARD. What each piece says, its tone and its tooltip are NS.CompactCards.History's:
 --
---   line 1  ⌄ ilvl item (the chevron, then the item level before the name, feedback-10 spec §2)
---           outcome (in its tone)
---   line 2  looter (class color; another realm in its tooltip) · slot · type       17:02 (dimmed)
---   line 3  You ▼4   Them ≈0
+--   line 1  ⌄ ilvl item (the chevron, then the item level before the name, feedback-10 spec §2;
+--           the name runs to the card's right inset, as on Drops' cards)
+--   line 2  looter (class color; another realm in its tooltip) · slot · type     Seen (outcome,
+--           in its tone)
+--   line 3  Trade Yes Not their upgrade (the full table's Trade, its word and its short reason:
+--           feedback-22; above You and Them as on Drops' cards, feedback-25)        17:02 (dimmed;
+--           Trade cut before it)
+--           (the outcome and the time sit where a Drops card's action button does, lines 2 and 3:
+--           feedback-25; they were lines 1 and 2's right pieces before)
+--   line 4  You ▼4   Them ≈0
 --           (the full table's Me and Them: a kept entry holds no worn items, so the verdict
 --           alone; the labels gold, Them a fixed gap after You, as on Drops' cards)
---   line 4  Trade Yes Not their upgrade (the full table's Trade, its word and its short reason:
---           feedback-22, as on Drops' cards)
 --
 -- THE HEADERS are the full table's header button, painted with the short form
 -- (NS.CompactCards.HistoryHeader: `2d` once a day old); a click collapses the group as before.
@@ -84,11 +88,12 @@ local function layout(card, m)
     local y1 = CG.LineY(m, 1)
     card.icon:SetSize(m.icon, m.icon)
     at(card.chevron, "LEFT", card, "TOPLEFT", P + CG.QUALITY_W, y1)
-    at(c.outcome.text, "RIGHT", card, "TOPRIGHT", -P, y1)
-    CG.PlaceLineOne(card, x, y1, c.outcome.text)
+    CG.PlaceLineOne(card, x, y1)
     at(c.looter.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
-    at(c.time.text, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
-    at(c.youLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
+    at(c.outcome.text, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 2))
+    at(c.time.text, "RIGHT", card, "TOPRIGHT", -P, CG.LineY(m, 3))
+    card.dwTradeBefore = c.time.text
+    at(c.tradeLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
     CG.PlaceThem(card, m)
 end
 

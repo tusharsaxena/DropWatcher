@@ -210,16 +210,17 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     `(2m)` right after it or nothing, never `(…)` while Them reads `…` (feedback-11 §0), the name cut by WindowRows.MarkedWidth; line 2: looter · slot ·
   │     type, ` [YOU]` in gold after your own name, the Ask or Offer on the right of lines 2 and 3 (the gray
   │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
-  │     row's; no trade window countdown, feedback-10 §2; line 3 SideCells' Me and Them without
-  │     icons, `You 321 ▼10 / 308 ▲3  Them Upgrade for 2` (a mark per worn item on a
+  │     row's; no trade window countdown, feedback-10 §2; line 3 the Trade cell, `Trade No Bonus
+  │     roll`, its Yes, No or ? then its short reason in the muted gray (WindowCells.TradeText,
+  │     feedback-22), beside the button and cut at its left edge (CompactGroup.TradeInset,
+  │     feedback-25; feedback-11 §0); line 4, under the button to the card's right inset
+  │     (feedback-25), SideCells' Me and Them without icons, `You 321 ▼10 / 308 ▲3  Them Upgrade for 2` (a mark per worn item on a
   │     two-item slot, feedback-21 H7; the one mark each when the two would push Them off the
-  │     card, CompactGroup.LineThreeFits, feedback-21 R5; a ring or trinket slot always both,
+  │     card, CompactGroup.HalvesFit, feedback-21 R5; a ring or trinket slot always both,
   │     a unique-equipped copy too, `315 ▲3 / 295 ▲23`, Evaluate's `either`, feedback-22; the main
-  │     hand alone for a one-hander it alone can take, SideCells.JudgedItem); line 4 the
-  │     Trade cell, `Trade No Bonus roll`, its Yes, No or ? then its short reason in the muted
-  │     gray (WindowCells.TradeText, feedback-22), cut at the card's right inset (feedback-11 §0);
-  │     the labels gold, Them CompactGroup.PlaceThem's fixed gap after You, or at the start of line 4
-  │     before Trade when it does not fit beside You and the button, feedback-23; feedback-6 §1, feedback-7 §2)
+  │     hand alone for a one-hander it alone can take, SideCells.JudgedItem); the labels gold, Them
+  │     CompactGroup.PlaceThem's fixed gap after You (Them wrapped to line 4 before Trade from
+  │     feedback-23 until feedback-25); feedback-6 §1, feedback-7 §2)
   └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
         `[Post] [Scan group] [Expand all]` as icons alone, FOOTER_ICON_W wide (feedback-16)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)

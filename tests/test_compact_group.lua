@@ -132,7 +132,7 @@ test("compact group: one pooled card per drop under a one-line header, each line
     assertEqual(textOf(card.ask.label), "Ask"); assertTrue(card.ask:IsShown())
     assertEqual(textOf(c.looter.text), "Seta"); assertTrue(c.looter.glyph == nil, "no ⊕ after another realm's looter")
     assertEqual(plain(textOf(c.slot.text)), "· Head")
-    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Yes |cffb3b3b8Not their upgrade|r", "line 4, labeled: the word, then its reason in the muted gray")
+    assertEqual(textOf(c.tradeLabel.text), "Trade"); assertEqual(textOf(c.trade.text), "Yes |cffb3b3b8Not their upgrade|r", "line 3, labeled: the word, then its reason in the muted gray")
     assertEqual(textOf(c.fresh.text), "(40s)", "in brackets (feedback-10 spec §2)")
     assertEqual(textOf(c.youLabel.text), "You")
     assertEqual(textOf(c.you.glyph) .. textOf(c.you.text), "▲19")
@@ -475,11 +475,11 @@ test("compact group: at the least width line 2's pieces end before the action bu
     end
 end)
 
--- Line 3 at its fullest (feedback-6 spec §1): both halves on a trinket, two worn levels each
--- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: You ends before
--- the action button (lines 2 and 3's since feedback-23); Them does not fit after it there, so it
--- starts line 4 under You's label and ends inside the card, Trade CG.HALVES_GAP after it.
-test("compact group: at the least width line 3's fullest halves fit, Them on line 4 when not beside You", function()
+-- You and Them at their fullest (feedback-6 spec §1): both halves on a trinket, two worn levels each
+-- (`321/308`), then ⊘ and the longest word (`Not wanted`). Measured as line 2 is: Trade sits on
+-- line 3 beside the action button (lines 2 and 3's since feedback-23) and is cut before it; You and
+-- Them read on line 4 under Trade's label, to the card's right inset (feedback-25).
+test("compact group: at the least width Trade fits beside the button, You and Them on line 4", function()
     local NS, _, m = T.enableAddon()
     local K, CG = NS.Constants.WINDOW, NS.CompactGroup
     m.__now = 100
@@ -509,31 +509,34 @@ test("compact group: at the least width line 3's fullest halves fit, Them on lin
     assertEqual(NS.CompactCards.HalfText(card.model.them), "Them 321/308 ⊘ Not wanted")
     local m3 = CG.Metrics(nil)
     local x = CG.TextLeft(m3, CG.LEAD)
-    local youEnd = halfEnd("you", x)
     local buttonAt = card:GetWidth() - CG.PAD - K.ASK_W
-    assertTrue(youEnd + CG.ASK_GAP <= buttonAt, ("You ends at %d, the button at %d"):format(youEnd, buttonAt))
-    -- Trade's last piece is bounded at the card's right inset, cut there rather than past it (feedback-11 spec §0).
+    -- Line 3: Trade under line 2's looter, its last piece bounded before the button and cut there
+    -- rather than under it (feedback-11 spec §0, feedback-25).
+    local tp = c.tradeLabel.text.__points[1]
+    assertEqual(tp[2], card); assertEqual(tp[4], x); assertEqual(tp[5], CG.LineY(m3, 3))
     local rp = c.trade.text.__points[2]
-    assertEqual(rp[1], "RIGHT"); assertEqual(rp[2], card); assertEqual(rp[4], -CG.PAD)
-    assertTrue(c.you.text.__points[2] == nil, "You is not bounded")
-    -- Line 4: Them under You's label, a line down, then Trade after Them's last piece (feedback-23).
-    local tp = c.themLabel.text.__points[1]
-    assertEqual(tp[2], c.youLabel.text); assertEqual(tp[4], 0); assertEqual(tp[5], -m3.line)
-    tp = c.tradeLabel.text.__points[1]
-    assertEqual(tp[2], c.them.text); assertEqual(tp[3], "RIGHT"); assertEqual(tp[4], CG.HALVES_GAP)
-    local themEnd = halfEnd("them", x)
+    assertEqual(rp[1], "RIGHT"); assertEqual(rp[2], card); assertEqual(rp[4], -CG.TradeInset())
     assertEqual(NS.CompactCards.HalfText(card.model.trade), "Trade ? Not inspected")
-    local tradeEnd = themEnd + CG.HALVES_GAP + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
-    assertTrue(tradeEnd <= card:GetWidth() - CG.PAD, ("Trade ends at %d, the card at %d"):format(tradeEnd,
+    local tradeEnd = x + w(c.tradeLabel.text) + CG.HALF_GAP + w(c.trade.text)
+    assertTrue(tradeEnd + CG.ASK_GAP <= buttonAt, ("Trade ends at %d, the button at %d"):format(tradeEnd, buttonAt))
+    -- Line 4: You under Trade's label, a line down, Them after You's last piece, both unbounded and
+    -- inside the card.
+    tp = c.youLabel.text.__points[1]
+    assertEqual(tp[2], c.tradeLabel.text); assertEqual(tp[4], 0); assertEqual(tp[5], -m3.line)
+    tp = c.themLabel.text.__points[1]
+    assertEqual(tp[2], c.you.text); assertEqual(tp[3], "RIGHT"); assertEqual(tp[4], CG.HALVES_GAP)
+    assertTrue(c.you.text.__points[2] == nil and c.them.text.__points[2] == nil, "You and Them are not bounded")
+    local themEnd = halfEnd("them", halfEnd("you", x) + CG.HALVES_GAP)
+    assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
         card:GetWidth() - CG.PAD))
 end)
 
--- Line 3 with two dual marks (feedback-21 H7): both halves on trinkets read in full, each worn item's
--- level, glyph and two-digit difference, `You 321 ▼10 / 324 ▼13`. The first part and its `/` sit
--- between the label and the single pieces. At the least width You ends before the action button
--- (lines 2 and 3's, feedback-23) and Them, not fitting after it, starts line 4 under You's label and
--- ends inside the card: both rings read on both halves, never the one mark.
-test("compact group: at the least width line 3's two dual marks fit, each worn item its own mark (H7)", function()
+-- You and Them with two dual marks (feedback-21 H7): both halves on trinkets read in full, each worn
+-- item's level, glyph and two-digit difference, `You 321 ▼10 / 324 ▼13`. The first part and its `/`
+-- sit between the label and the single pieces. At the least width both halves read on line 4, under
+-- the button, Them after You and ending inside the card (feedback-25): both rings on both halves,
+-- never the one mark.
+test("compact group: at the least width line 4's two dual marks fit, each worn item its own mark (H7)", function()
     local NS, _, m = T.enableAddon()
     local K, CG, C = NS.Constants.WINDOW, NS.CompactGroup, NS.Constants
     m.__now = 100
@@ -559,7 +562,7 @@ test("compact group: at the least width line 3's two dual marks fit, each worn i
     assertEqual(you.level.__points[1][2], you.sep, "the second part after the separator")
     assertEqual(select(2, you.leadText:GetTextColor()), C.TONE.red.g, "each part in its tone")
     local tp = c.themLabel.text.__points[1]
-    assertEqual(tp[2], c.youLabel.text, "Them under You's label (feedback-23)"); assertEqual(tp[5], -CG.Metrics(nil).line)
+    assertEqual(tp[2], c.you.text, "Them after You (feedback-25)"); assertEqual(tp[4], CG.HALVES_GAP)
     assertEqual(c.them.sep:GetText(), "/", "Them keeps both rings")
     local function w(fs) return #((fs:GetText() or ""):gsub("[\128-\191]", "")) * m.textCharWidth end
     local function halfEnd(key, x)
@@ -569,17 +572,15 @@ test("compact group: at the least width line 3's two dual marks fit, each worn i
             + w(h.glyph) + CG.HALF_GLYPH_GAP + w(h.text)
     end
     local x = CG.TextLeft(CG.Metrics(nil), CG.LEAD)
-    local youEnd, buttonAt = halfEnd("you", x), card:GetWidth() - CG.PAD - K.ASK_W
-    assertTrue(youEnd + CG.ASK_GAP <= buttonAt, ("You ends at %d, the button at %d"):format(youEnd, buttonAt))
-    local themEnd = halfEnd("them", x)
+    local themEnd = halfEnd("them", halfEnd("you", x) + CG.HALVES_GAP)
     assertTrue(themEnd <= card:GetWidth() - CG.PAD, ("Them ends at %d, the card at %d"):format(themEnd,
         card:GetWidth() - CG.PAD))
 end)
 
--- feedback-21 R5: at a larger Font size line 3's dual marks would push You into the action button
--- at the least width, Them moved to line 4 or not (feedback-23); they give way to the one mark each,
--- and the line reads as before H7.
-test("compact group: line 3's dual marks that do not fit the card are the one mark instead (R5)", function()
+-- feedback-21 R5: at a larger Font size You and Them's dual marks would run past the card's right
+-- inset at the least width, on line 4 under the button or not (feedback-25); they give way to the
+-- one mark each, and the line reads as before H7.
+test("compact group: dual marks that do not fit the card are the one mark instead (R5)", function()
     local NS, _, m = T.enableAddon()
     m.__now = 100
     m.textCharWidth = 14
