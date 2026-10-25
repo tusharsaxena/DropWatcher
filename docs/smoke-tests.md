@@ -1320,7 +1320,9 @@ cross-realm looter.
 No card shows a trade window countdown or bar, your own drops included; the full table's Trade window column
 and the strip's `next 0:08:41` still tick. Line 3: `You` and `Them` in gold, Them a short gap (about 12
 pixels) after You's last piece rather than at mid-card (`You 321/308 ▼13   Them 298/296 ⊘ Can't use`; You a mark per trinket since FEED-92). On
-History → the same line 1 with the outcome at the right, the time on line 2, line 3 the same. Result: passed in the client, 2026-10-23 (the owner).
+History → the same line 1 with the outcome at the right, the time on line 2, line 3 the same (since FEED-103,
+Trade on line 3 and You and Them on line 4 on both tabs, History's outcome and time at the right of lines 2
+and 3). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-70. Sort on the tab's strip (DW-J3, feedback-10 spec §3).** The headless `test_drops_strip` (`one row,
 right-aligned`, `Sort follows the active tab`, `the slots, pure`, `full layout, nothing tradeable`) and
@@ -1365,7 +1367,7 @@ button; an untradeable drop of yours shows it on every member's row. Result: pas
 tone`) and `test_compact_history` cover the tones. `/dw test`, History, full layout → the Outcome column reads
 `Asked` and `Offered` in yellow, `Received` and `Traded away` in green, `Expired` in red, `Seen` and `Declined`
 in gray (the No action gray), the same colors as the action buttons on Drops. `/dw compact` → each History card's
-outcome at line 1's right in the same colors. Result: passed in the client, 2026-10-23 (the owner).
+outcome at line 1's right in the same colors (line 2's right since FEED-103). Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-74. No `0 shown` header where Character or Content left a group empty (DW-L1, feedback-12 spec §1).**
 The headless `test_char_filter` (`a group Character and Content leave empty shows no header, full or compact`)
@@ -1608,7 +1610,7 @@ its tone (green, red, gray) and the reason after it in the muted gray, nothing c
 (about 1080 wide now, the Trade column wider); the tooltip's title keeps the estimate's own word
 (`Trade: Likely`). A drop none of your specs can use reads `Yes Can't use` in the dim red. History's
 Trade column reads the same. `/dw compact`: each card is four lines, Trade alone on line 4 under You
-(`Trade No Bonus roll`), the icon taller to span the four lines, the window opening about 440 x 560 on
+(`Trade No Bonus roll`; on line 3, above You and Them, since FEED-103), the icon taller to span the four lines, the window opening about 440 x 560 on
 a new profile. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-96. The glow only on an upgrade that can come to you (feedback-22).** The headless `test_glow`
@@ -1631,7 +1633,8 @@ button spans lines 2 and 3, its label centered; line 1's item name runs to the c
 ring or trinket card with both rings on both sides (`You 298 ▲8 / 298 ▲13`, `Them 311 ≈2 / 311 ≈0`)
 reads You on line 3 beside the button and Them at the start of line 4, then Trade; a card whose You
 and Them fit beside the button keeps them both on line 3, Trade alone on line 4. Nothing runs under
-the button, and no card drops to one ring. Result: passed in the client, 2026-10-23 (the owner).
+the button, and no card drops to one ring. (Since FEED-103 Trade is line 3, beside the button, and You
+and Them line 4, under it: nothing wraps.) Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-99. The settings pages regrouped (feedback-24).** The headless `test_settings_pages` (each
 page's strip, the pairings, the moved rows, the Columns note, the five-column situation table) covers
@@ -2760,7 +2763,7 @@ as before. Run `/dw sim start` and step it → your own drops fill the cards the
 
 **COMPACT-4. History cards and their outcomes (DW-C3).** In the compact layout, open History → each
 kept group is a one-line header (`Boss · Dungeon · 2m · 2 · <you>`, `3d` once a day old) and each
-entry a three-line card: the item and its level (the level first since DW-J2: FEED-69) with the outcome on the right in its tone (Seen,
+entry a three-line card (four since feedback-22; the outcome on line 2's right and the time on line 3's since FEED-103): the item and its level (the level first since DW-J2: FEED-69) with the outcome on the right in its tone (Seen,
 Asked, Offered, Received, Traded away, Expired, Declined); the looter in class color (another
 realm in its tooltip, no ⊕ since feedback-20), slot, trade (on line 3 since feedback-20) and the time on the right (`17:02`, or `Oct 9` past a day); `You` and `Them`
 verdicts. Right-click a card → Mark as declined; its outcome reads Declined; right-click again →
