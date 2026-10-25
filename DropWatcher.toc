@@ -2,7 +2,7 @@
 ## Title: Ka0s Drop Watcher
 ## Notes: Watches your group's loot, shows who each drop is an upgrade for and whether it can be traded, and asks for it politely in one click.
 ## Author: add1kted2ka0s
-## Version: 1.0.0
+## Version: 1.1.0
 ## IconTexture: Interface\AddOns\DropWatcher\media\logos\dropwatcher.logo.128.tga
 ## SavedVariables: DropWatcherDB, DropWatcherPerfDB
 ## OptionalDeps: Pawn, CanIMogIt, Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibCustomGlow-1.0

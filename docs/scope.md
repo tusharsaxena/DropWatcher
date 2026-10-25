@@ -12,7 +12,7 @@ It respects Midnight's addon restrictions: asks queue while chat sending is rest
 value the client may hand over as a secret is guarded. It is quiet by default; auto-ask, toasts and
 sound are opt-in.
 
-## What exists at v1.0.0
+## What exists at v1.1.0
 
 Everything design spec §1 puts in v1 is built; what is still owed is the in-game sign-off
 ([`smoke-tests.md`](smoke-tests.md)).

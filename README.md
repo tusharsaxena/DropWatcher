@@ -114,6 +114,7 @@ Please raise them on GitHub:
 
 | Version | Date | Highlights |
 |---|---|---|
+| 1.1.0 | 2026-10-25 | - An upgrade you could actually get now glows on its icon, and Settings › Window › Icons sets every item icon's zoom and border<br>- Rings, trinkets and one-handers get a mark for each item you wear, and Trade says Yes, No or ? with a short reason<br>- Pawn works with no setup, and the toast is on for a new profile, with a size you can set<br>- The compact view is narrower, with Trade above You and Them on every card<br>- The settings pages are regrouped, you can bind a key to show the window, and a started simulation plays through on its own |
 | 1.0.0 | 2026-10-17 | - First release: the window's Drops and History tabs, with Me and Them verdicts, the trade estimate and a trade countdown on each drop<br>- Ask, Offer and Announce each send with one click, and wait while encounter restrictions block chat<br>- History keeps 30 days of drops across logouts and alts, and the Drops tab comes back after a `/reload`<br>- Pawn scores or your own stat weights, plus the opt-in toast and auto-ask<br>- The compact view for runs, the settings pages, the minimap button, `/dw test` and `/dw sim` |
 
 ## Credits

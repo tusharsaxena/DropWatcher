@@ -5,7 +5,7 @@ NS.name = addonName
 
 -- The in-code version, the fallback NS.Version() (core/EnvSetup.lua) answers when the TOC cannot be
 -- read. Bumped with the TOC by /dev-copilot:bump-version.
-NS.version = "1.0.0"
+NS.version = "1.1.0"
 
 -- THE BRAND NAME, in plain text. One string, read by the LDB label (launcher-§1), the Slash
 -- descriptor's brandName (slash-commands-§7), the DebugLog title and the diagnostics markers
