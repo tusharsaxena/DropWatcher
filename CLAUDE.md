@@ -35,7 +35,9 @@ Start here, then read the docs:
 - **`DEPENDENCIES.md`** — the toolchain contract: what to install to build, run, test or release.
 - The v1 design spec and its checkpointed plan live in `docs/superpowers/`.
 
-Green gate before every commit: `lua tests/run.lua` and `luacheck .` (0/0). Never edit `libs/` or
+Green gate before every commit: `lua tests/run.lua` and
+`~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0; the kit bounds the suite on load, and
+`luacheck` loads no kit, so it runs through the bounded runner, testing-§15). Never edit `libs/` or
 `tests/_kit/` (vendored; re-vendor instead). Never auto-stage/commit/push and never bump the version
 without an explicit instruction.
 
