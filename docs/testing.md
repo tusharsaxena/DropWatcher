@@ -16,10 +16,9 @@ without it).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 42, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 44, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
-library files `libs/LibKa0s/LibKa0s.xml` names (then any `libs\LibKa0s\` file the TOC names after the
-.xml: `Toast.lua`, vendored alone for now, docs/ARCHITECTURE.md, Documented deviations); `tests/wow_mock.lua` extends the kit's base mock with
+library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
 libraries, the main window's whole frame tree (each region its own object, with its points, size,
 text, text color, texture and check state recorded, and its backdrop, edit-box font and insets, checked texture and hit insets), and the client APIs `core/Compat.lua` wraps: the tooltip
@@ -42,9 +41,7 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 
 Named suites the standard requires: `test_surface_parity` (testing-§8; since AT-A2 it also holds
 `core/ToastSetup.lua`'s `NS.ToastStub` to a live LibKa0s-Toast-1.0 instance), `test_vendor_sync`
-(testing-§11, delegating to the kit; its one temporary exception leaves `libs/LibKa0s/Toast.lua`,
-vendored alone, out of the tag's file set and holds it byte for byte to the LibKa0s branch it came
-from in a case of its own), `test_disabled` (slash-commands-§7; its own cases 9 and 10 hold
+(testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7; its own cases 9 and 10 hold
 every stood-down refusal to `NS.StoodDownRefusal()`: the capture line under the `perf` hold alone, the
 one refusal line, unwrapped, while disabled; review F01/F10, DW-P16. Case 3 is step 6: it fires
 every event in `NS.FeatureEventNames()` through the kit's `__fireUnconditional` and asserts each

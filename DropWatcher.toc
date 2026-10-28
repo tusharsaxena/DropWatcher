@@ -34,10 +34,6 @@ libs\LibDBIcon-1.0\lib.xml
 libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
 # ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
 libs\LibKa0s\LibKa0s.xml
-# TEMPORARY (docs/ARCHITECTURE.md, Documented deviations): LibKa0s-Toast-1.0 vendored alone, ahead
-# of the rest of LibKa0s, so it is named here rather than in the untouched LibKa0s.xml. After the
-# .xml (it floors on LibKa0s-Core-1.0); the next full re-vendor drops this line.
-libs\LibKa0s\Toast.lua
 
 # Locales
 # LOAD-BEARING: publishes NS.L, which every file below reads at load.
@@ -95,7 +91,7 @@ core\WidgetsSetup.lua
 # Conventional: publishes NS.GlowLib, the LibKa0s-Glow-1.0 seam, read by modules\Glow.lua at call time.
 core\GlowSetup.lua
 # LOAD-BEARING relative to modules\Toast.lua only, which calls NS.NewToast at load: publishes
-# NS.NewToast and NS.ToastStub, the LibKa0s-Toast-1.0 seam (libs\LibKa0s\Toast.lua, above).
+# NS.NewToast and NS.ToastStub, the LibKa0s-Toast-1.0 seam (in libs\LibKa0s\LibKa0s.xml, above).
 core\ToastSetup.lua
 # LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
 # takes NS.MSG at load.

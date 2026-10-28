@@ -6,9 +6,7 @@ local addonName, NS = ...
 -- hold and the settings it reads.
 --
 -- A seam, nothing else: one file leases the major, and every descriptor it builds carries this
--- addon's folder as its skin owner. The major is vendored ALONE for now, ahead of the rest of
--- LibKa0s (docs/ARCHITECTURE.md, Documented deviations): the TOC loads libs\LibKa0s\Toast.lua after
--- LibKa0s.xml, and on v1.77.0's Core it wears Core's SKIN and close mark, as the toast did before.
+-- addon's folder as its skin owner.
 --
 -- DEGRADED (the library absent): NS.NewToast answers NS.ToastStub, the instance's surface with every
 -- member a no-op answering what an empty toast answers, so no toast ever shows and nothing raises.

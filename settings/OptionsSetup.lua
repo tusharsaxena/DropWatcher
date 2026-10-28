@@ -75,6 +75,13 @@ if not lib then
     H.KeybindingsTab       = function() return nil end
     H.KeybindRows          = function() return nil end
     H.KEYBINDS_UNCHANGED   = ""
+    -- The Skin tab (OptionsAppearance, LibKa0s v1.78.0) and the first-run skin picker
+    -- (OptionsSkinPicker, v1.79.0): no tab, no rows and no picker without the library, as
+    -- KeybindingsTab answers; HideSkinPicker has nothing to take down.
+    H.AppearanceTab        = function() return nil end
+    H.AppearanceRows       = function() return nil end
+    H.SkinPicker           = function() return nil end
+    H.HideSkinPicker       = function() end
     H.PatchAlwaysShowScrollbar = function() end
     H.__pages              = function() return {} end
     H.__panels             = function() return {} end
