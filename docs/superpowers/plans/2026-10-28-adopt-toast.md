@@ -30,5 +30,7 @@ finishes it; a run that stops resumes at the first unticked box.
 
 ### Finalize (only on the owner's go-ahead)
 
-- [ ] Merge to master and push, after LibKa0s's Toast branch is merged; the owner re-vendors all of LibKa0s
+- [x] Merge to master and push, after LibKa0s's Toast branch is merged; the owner re-vendors all of LibKa0s
   later (drop the deviation row then). Delete this run's branch.
+
+Finalized 2026-10-28 on the owner's go-ahead: LibKa0s Toast branch merged to master (7deaeb0, v1.79.0 still unreleased, no tag); this branch merged and pushed. The deviation row stays until the owner re-vendors all of LibKa0s.
