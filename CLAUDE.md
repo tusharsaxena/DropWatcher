@@ -43,3 +43,7 @@ without an explicit instruction.
 
 Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.77.0 (MIT).
 LibKa0s icons: add, arrow-down, arrow-right, arrow-up, ban, cancel, chat, chevron-down, chevron-right, chevron-up, clear, clock, close, confirm, copy, edit, external-link, fullscreen-enter, fullscreen-exit, help, info, link-intact, lock, minimise, people, reset, speech-bubble, transfer.
+
+Plus LibKa0s-Toast-1.0 (`libs/LibKa0s/Toast.lua`, file minor 1) copied alone from LibKa0s branch
+`feat/2026-10-28-toast-1.0` (v1.79.0, unreleased) until the next full re-vendor (a documented
+deviation in `docs/ARCHITECTURE.md`; the TOC names it after `LibKa0s.xml`).

@@ -132,7 +132,7 @@ appends a `NS.STAND_DOWN` / `NS.STAND_UP` step (walked in TOC order); `test_harn
 | File | What it is |
 |---|---|
 | `tests/run.lua` | the load list, the three factories, the kit facts and the suite list |
-| `tests/loader.lua` | the instance factory: TOC files plus `LibKa0s.xml`'s files, isolated per case |
+| `tests/loader.lua` | the instance factory: TOC files plus `LibKa0s.xml`'s files (and the TOC's own `libs\LibKa0s\Toast.lua` line after them, vendored alone for now), isolated per case |
 | `tests/wow_mock.lua` | the thin extender over `tests/_kit/mock_base.lua`; it records the main window's and the toast's whole frame trees (regions, points, sizes, text, colors, check state) and the drop tables' client surface (item icons, class colors, modifier keys, chat links, the dressing room, item tooltips, spec names), and models the trade window's items and the Encounter Journal (its tiers, instances, loot per difficulty, selection and filters, and entries that load later) |
 | `tests/prose_waivers.lua` | what the kit's US-English gate must not correct: the icon catalog's British-spelled minimize key, named in `modules/WindowTitleBar.lua` |
 | `tests/test_*.lua` | one suite per subject (see [`testing.md`](testing.md)) |

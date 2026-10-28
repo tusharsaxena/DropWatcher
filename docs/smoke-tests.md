@@ -13,7 +13,7 @@ passed.
 
 | ID range | Theme | What it covers |
 |---|---|---|
-| INSTALL-1..5 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV) |
+| INSTALL-1..6 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV); LibKa0s-Toast-1.0 vendored alone (INSTALL-6, AT-A1) |
 | SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
 | KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
 | LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3); the Edit message box over the floating Offer panel (LAYER-4) |
@@ -85,6 +85,17 @@ than falling back to text, so this pass is the backstop the headless gate cannot
   perf panel's close (`/dw perf`), and the main window's close mark.
 
 Result: passed in the client, 2026-10-23 (the owner).
+
+**INSTALL-6. LibKa0s-Toast-1.0, vendored alone.** (AT-A1) `libs/LibKa0s/Toast.lua` is copied ahead of
+the rest of LibKa0s and named on its own TOC line after `LibKa0s.xml` (a documented deviation). This
+step only loads it; the upgrade toast is still the addon's own.
+
+- SM-DW-AT1: `/reload` with Drop Watcher alone → no Lua error and no new chat line;
+  `/dump LibStub.minors["LibKa0s-Toast-1.0"]` → `1`. A nil answer means the TOC line did not load;
+  a higher minor means a newer copy loaded first from another addon; record which addons were enabled.
+  `/dw test` → the upgrade toast still shows as TOAST-1 describes.
+
+Result: not run yet (owed the owner's client pass at the end of the run).
 
 ## Slash
 

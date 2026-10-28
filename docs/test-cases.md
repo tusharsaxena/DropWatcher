@@ -1902,11 +1902,12 @@ Total.
 - debug: the trade timer's bag scan logs on change only, not on every scan
 - debug: the search box logs its text once, when it loses focus, never per keystroke
 
-### test_vendor_sync.lua (3)
+### test_vendor_sync.lua (4)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
+- libs/LibKa0s/Toast.lua, vendored alone, is the LibKa0s branch's file byte for byte
 
 ### test_locale.lua (6)
 
@@ -2062,7 +2063,7 @@ Total.
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
-| test_vendor_sync.lua | 3 |
+| test_vendor_sync.lua | 4 |
 | test_locale.lua | 6 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -2070,4 +2071,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1712** |
+| **Total** | **1713** |
