@@ -2371,6 +2371,13 @@ covers each check below; this is the client's word on it. Run TOAST-1 first and 
 - SM-DW-AT7: diagnostics. In combat with a toast waiting, `/dw diagnostics` → `toast: ... held=true`
   and `toast: queue <drop id>`; `/dw debug on` shows `toast queued`, `toast shown` and `toast: combat
   over, 1 waiting` lines as before.
+- SM-DW-AT9: Show in combat turned off mid-combat (AT-A3). With Show in combat on, pull, and let two
+  drops qualify: the first shows. Still in combat, turn Show in combat off in Alerts › Toast → the
+  toast on screen stays up; close it → nothing more until combat ends, then the second shows. Again
+  with a switch to a profile whose Show in combat is off in place of the row → the same.
+- SM-DW-AT10: beside Ka0s DPS Race (AT-A3). With both addons enabled and both carrying the same
+  `libs\LibKa0s\Toast.lua`, in combat with two drops waiting, `/dw diagnostics` → `toast: queue`
+  names both; `/dw clear` → `toast: ... waiting=0`, and nothing toasts when combat ends.
 
 Result: not run yet (owed the owner's client pass at the end of the run).
 

@@ -11,7 +11,7 @@ table, and `/dw profile [name]` lists or switches profiles.
 - A profile switch, copy or reset runs the migrations, refreshes the panels, re-reads the latch from
   the incoming profile's `enabled`, re-reads auto-ask's `enabled` (`NS.AutoAsk.OnProfileReloaded`:
   an incoming profile that turns it on counts drops from that moment, one that turns it off cancels
-  the waiting asks), lets the toast re-read its settings (`NS.Toast.OnProfileReloaded`), restarts the
+  the waiting asks), lets the toast re-read its settings (`NS.Toast.OnProfileReloaded`, the combat hold included), restarts the
   upgrade glows (`NS.Glow.Refresh`) and restyles every item icon (`NS.IconStyle.Refresh`) from the
   incoming profile, and re-applies the window (`core/DropWatcher.lua` `reloadProfile`). It is logged once, by the profile handler.
 - Reset all settings is a profile reset (options-ui-§12): it resets the current profile only.

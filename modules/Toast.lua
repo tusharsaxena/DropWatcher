@@ -59,7 +59,9 @@ local _, NS = ...
 --
 -- COMBAT. Unless `toast.inCombat` is set, nothing shows in combat: the shell's Hold on
 -- PLAYER_REGEN_DISABLED (a toast on screen goes back to the head of the queue) and its Release on
--- PLAYER_REGEN_ENABLED, and the same hold is checked before each drop is queued (syncHold).
+-- PLAYER_REGEN_ENABLED, and the same hold is checked before each drop is queued and whenever
+-- `toast.inCombat` can change (its row's reaction, a profile switch): syncHold, which leaves a toast
+-- already on screen up and holds only what follows it, as the old live check did.
 --
 -- TEST MODE. Test mode's placeholders toast like live drops (with `toast.enabled` on), so the toast
 -- can be seen and placed: only in test mode can it be dragged (with the left button; the shell's
@@ -499,13 +501,14 @@ toast = NS.NewToast({
 })
 
 -- Combat holds the toast unless `toast.inCombat`: the shell's Hold and Release, set here before a
--- drop is queued as well as on the combat edges, so a drop met in combat with no hold in place (a
--- stand-down's or a switch's Clear released it) waits, and `toast.inCombat` turned on mid-combat lets
--- the next one show.
+-- drop is queued and when `toast.inCombat` can change, as well as on the combat edges, so a drop met
+-- in combat with no hold in place (a stand-down's or a switch's Clear released it) waits,
+-- `toast.inCombat` turned on mid-combat shows what waits, and turned off mid-combat leaves the toast
+-- on screen up (Hold(true)) while the next one waits for combat's end.
 local function syncHold()
     local want = held()
     if want == toast:Stats().held then return end
-    if want then toast:Hold() else toast:Release() end
+    if want then toast:Hold(true) else toast:Release() end
 end
 
 -- ── the queue ───────────────────────────────────────────────────────────────────────────────
@@ -574,12 +577,22 @@ function Toast.OnCombatEnd()
     toast:Release()
 end
 
+-- The drop ids waiting for a toast, oldest first: the shell's `keys`. A shell that names none (an
+-- earlier copy of the same minor another addon registered first) gets every drop toasted this
+-- session instead, in no order: Remove lets go only what waits or shows.
+local function waitingIds(s)
+    if type(s.keys) == "table" then return s.keys end
+    local ids = {}
+    for id in pairs(toasted) do ids[#ids + 1] = id end
+    return ids
+end
+
 --- Drops gone from the feed leave the queue, and a toast whose drop is gone goes (the next one
 --- shows). The feed's removal sink: a Clear or the cap's trim. Answers how many it let go.
 --- @return number
 function Toast.Prune()
     local s = toast:Stats()
-    local ids = s.keys or {}
+    local ids = waitingIds(s)
     ids[#ids + 1] = s.key or false   -- the one on screen last, so the next one shown is never gone
     local n = 0
     for _, id in ipairs(ids) do
@@ -604,10 +617,16 @@ function Toast.OnEnabledChanged(on)
     if on ~= true then stopAll("setting") end
 end
 
+--- The `toast.inCombat` row's reaction: in combat, turned on shows what waits, and turned off
+--- holds what follows the toast on screen (which stays up).
+function Toast.OnInCombatChanged() syncHold() end
+
 --- A profile switch, copy or reset (core/DropWatcher.lua's reloadProfile): no row reaction runs,
---- so the incoming `toast.enabled` is read here, and a built toast takes the incoming scale and point.
+--- so the incoming `toast.enabled` and `toast.inCombat` are read here, and a built toast takes the
+--- incoming scale and point.
 function Toast.OnProfileReloaded()
     if setting("enabled") ~= true then stopAll("profile") end
+    syncHold()
     toast:Refresh()   -- the incoming profile's scale and point
 end
 
@@ -638,6 +657,9 @@ end
 
 --- The built frame, or nil before the first toast. For the suites.
 function Toast.Frame() return toast:Frame() end
+
+--- The shell's instance. For the suites.
+function Toast.Shell() return toast end
 
 local EVENTS = {
     { "PLAYER_REGEN_DISABLED", "OnToastCombatStart", Toast.OnCombatStart },

@@ -34,9 +34,12 @@ the code reads every case the design leaves open, module by module, is in
   TOAST-5 are the in-game checks.
 - **The toast without LibKa0s** (AT-A2). The toast's shell is LibKa0s-Toast-1.0; an install
   missing LibKa0s shows no toast at all (the seam's stub), where before it drew one without its
-  close mark. A toast on screen in combat because `toast.inCombat` was on goes back to the queue,
-  rather than staying up, when the setting is turned off before combat ends and another drop
-  qualifies. TOAST-7 and DEGRADED-3 are the in-game checks.
+  close mark. The shell is shared: when another addon registered an earlier copy of the same minor
+  first (Ka0s DPS Race until it re-copies the branch's file), that copy runs both, and the
+  diagnostics' `toast: queue` reads empty; a drop gone from the feed still leaves the queue
+  (`Prune` tries every drop toasted this session), and on a copy without `Hold(true)` turning
+  `toast.inCombat` off mid-combat sends the toast on screen back to the queue. TOAST-7 and
+  DEGRADED-3 are the in-game checks.
 - **A drop you traded away** is `tradedAway` in the history and its Offer button on Drops reads
   `Traded`, but its Trade window cell reads as expired rather than `Traded to …`.
 - **A reload and a relog** (feedback-15 spec §0, DW-Q0). The session is the login: a `/reload`

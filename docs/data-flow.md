@@ -889,7 +889,9 @@ is its instance; `modules/Toast.lua` is the builder, the trigger, the combat hol
 DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet? not restored?
     ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain (or into an empty
        slot, whatever minGain), trade likely / yes
-    ─> syncHold (combat without toast.inCombat: shell:Hold; otherwise a hold left: shell:Release)
+    ─> syncHold (combat without toast.inCombat: shell:Hold(true), the toast on screen kept up;
+       otherwise a hold left: shell:Release); also the toast.inCombat row's reaction and the
+       profile reload
     ─> shell:Show(id, { key = id, sticky = a test drop }) (newest 5 wait): nothing on screen, not held
     ─> its turn: the builder, next still wanted (in the feed, qualifying, not asked; else false and
        the shell tries the next) ─> the rows made once on the shell's frame (icon and Ask

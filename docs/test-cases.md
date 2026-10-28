@@ -1559,7 +1559,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (42)
+### test_toast.lua (45)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1602,6 +1602,9 @@ Total.
 - toast edge: hovering the item button or Ask holds the countdown too
 - toast edge: a drop met in combat waits after a switch's Clear; toast.inCombat on mid-combat shows the next
 - toast edge: a toast held for combat comes back with its full duration
+- toast edge: Show in combat turned off mid-combat keeps the toast on screen and holds the next
+- toast edge: a profile switch mid-combat to one without Show in combat holds the next
+- toast edge: on a shell that names no waiting keys, the drops gone from the feed still leave the queue
 - toast: the diagnostics' window section reports the toast
 
 ### test_glow.lua (14)
@@ -2053,7 +2056,7 @@ Total.
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 42 |
+| test_toast.lua | 45 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
 | test_layers.lua | 9 |
@@ -2077,4 +2080,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1719** |
+| **Total** | **1722** |

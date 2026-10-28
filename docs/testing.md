@@ -454,8 +454,10 @@ without LibKa0s (the seam's stub), turning the toast off
 or switching to a profile with it off, the stand-down and the diagnostics line; and, on the
 LibKa0s-Toast-1.0 shell since AT-A2, what the player saw before kept: a point saved before the
 shell placed with no migration, the icon and Ask holding the countdown, a drop met in combat after a
-switch's Clear still held and `toast.inCombat` turned on mid-combat showing the next, and a toast
-held for combat coming back with its full duration),
+switch's Clear still held and `toast.inCombat` turned on mid-combat showing the next, a toast
+held for combat coming back with its full duration, `toast.inCombat` turned off mid-combat (by its
+row or a profile switch) keeping the toast on screen up and holding the next (AT-A3), and the
+drops gone from the feed leaving the queue on a shell whose `Stats` names no waiting keys),
 `test_auto_ask` (auto-ask: the pure `DueAt` and the delay's clamp; then the edge: off by default, a
 qualifying drop whispered after the delay once with the ask template, the delay and least gain
 read from the rows, an upgrade into an empty slot asked for whatever the least gain, a sidegrade,

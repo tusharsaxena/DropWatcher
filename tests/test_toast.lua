@@ -744,6 +744,66 @@ test("toast edge: a toast held for combat comes back with its full duration", fu
     assertFalse(shown(NS))
 end)
 
+test("toast edge: Show in combat turned off mid-combat keeps the toast on screen and holds the next", function()
+    local NS, m = enabled({ drop(), drop({ id = 2 }) })
+    assertTrue(NS.SchemaRuntime.Set("toast.inCombat", true))
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    added(NS, 1); added(NS, 2)
+    assertEqual(NS.Toast.Stats().dropId, 1)
+    -- red under: a toast.inCombat row with no reaction (the hold re-taken only by the next drop)
+    assertTrue(NS.SchemaRuntime.Set("toast.inCombat", false))
+    assertEqual(NS.Toast.Stats().dropId, 1, "the toast on screen stays up, as the old live check left it")
+    assertTrue(NS.Toast.Stats().held)
+    NS.Toast.Dismiss()
+    assertFalse(shown(NS), "the next waits for combat's end"); assertEqual(NS.Toast.Stats().queue[1], 2)
+    m.inCombat = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    assertEqual(NS.Toast.Stats().dropId, 2)
+end)
+
+test("toast edge: a profile switch mid-combat to one without Show in combat holds the next", function()
+    local NS, m = enabled({ drop(), drop({ id = 2 }) })
+    local db = NS.addon.db
+    local home = db:GetCurrentProfile()
+    db:SetProfile("Other")
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    assertTrue(NS.SchemaRuntime.Set("toast.inCombat", false))
+    db:SetProfile(home)
+    assertTrue(NS.SchemaRuntime.Set("toast.inCombat", true))
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    added(NS, 1); added(NS, 2)
+    -- red under: an OnProfileReloaded that does not re-sync the hold
+    db:SetProfile("Other")
+    assertEqual(NS.Toast.Stats().dropId, 1, "the toast on screen stays up")
+    NS.Toast.Dismiss()
+    assertFalse(shown(NS), "the next waits for combat's end"); assertTrue(NS.Toast.Stats().held)
+end)
+
+test("toast edge: on a shell that names no waiting keys, the drops gone from the feed still leave the queue", function()
+    local NS, m, byId = enabled({ drop(), drop({ id = 2 }), drop({ id = 3 }) })
+    -- An earlier copy of the same minor registered first by another addon: Stats has no `keys`.
+    local shell = NS.Toast.Shell()
+    local stats = shell.Stats
+    shell.Stats = function(self)
+        local s = stats(self)
+        s.keys = nil
+        return s
+    end
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    added(NS, 1); added(NS, 2); added(NS, 3)
+    assertEqual(NS.Toast.Stats().waiting, 3)
+    byId[1], byId[2] = nil, nil
+    -- red under: a Prune that reads `s.keys or {}` (only the toast on screen would be checked)
+    NS.LootFeed.Clear("live")
+    assertEqual(NS.Toast.Stats().waiting, 1, "only the drop still in the feed waits")
+    m.inCombat = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    assertEqual(NS.Toast.Stats().dropId, 3)
+end)
+
 test("toast: the diagnostics' window section reports the toast", function()
     local NS = enabled({ drop() })
     added(NS, 1)

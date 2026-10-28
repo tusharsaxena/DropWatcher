@@ -430,7 +430,9 @@ local function toast()
         L["The least item-level gain for you a toast needs."], at)
     slider("toast.duration", T.duration, 2, 30, 1, L["Duration (seconds)"],
         L["How long a toast stays on screen."], at)
-    bool("toast.inCombat", T.inCombat, L["Show in combat"], L["Show toasts in combat too."], at)
+    -- Live in combat: on shows what waits, off holds what follows the toast on screen (AT-A3).
+    bool("toast.inCombat", T.inCombat, L["Show in combat"], L["Show toasts in combat too."],
+        with(at, { onChange = function() NS.Toast.OnInCombatChanged() end }))
     bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], at)
     -- 50 to 200 %, about the toast's saved anchor; live on a toast on screen (feedback-21 G10).
     slider("toast.scale", T.scale, 0.5, 2, 0.05, L["Scale"],

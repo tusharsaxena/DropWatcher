@@ -26,7 +26,7 @@ finishes it; a run that stops resumes at the first unticked box.
   `CLAUDE.md`, the deviation row.
 - [x] **A2 Adopt:** rebuild `modules/Toast.lua` on the library; tests kept green and adjusted only where they
   pinned shell internals; docs and smoke rows.
-- [ ] **A3 Review and fixes.**
+- [x] **A3 Review and fixes.**
 
 ### Finalize (only on the owner's go-ahead)
 
