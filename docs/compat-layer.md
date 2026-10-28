@@ -106,7 +106,6 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `InsertChatLink(link)` | `ChatFrameUtil.InsertLink`, the newer spelling → the `ChatEdit_InsertLink` global (an item button's shift-click); `true` when called | `false` |
 | | `DressUpItem(link)` | `DressUpItemLink` → the older `DressUpLink` (an item button's ctrl-click); `true` when called | `false` |
 | Detail card | `SpecName(specID)` | `GetSpecializationInfoByID`'s second return (the looter's spec, in words); a secret, empty or non-string answer is nil | `nil` |
-| Toast | `PlayAlertSound()` | `PlaySound(SOUNDKIT.UI_EPICLOOT_TOAST → SOUNDKIT.RAID_WARNING, "Master")` (`toast.sound`); `true` when played | `false` (no `PlaySound`, no `SOUNDKIT` or neither entry) |
 | Encounter Journal | `JournalSelection()` | `EJ_GetNumTiers`, `EJ_GetCurrentTier`, `EJ_GetDifficulty`, `EJ_GetLootFilter`, `C_EncounterJournal.GetSlotFilter`, `C_EncounterJournal.GetPreviewMythicPlusLevel` (nil without it), and the `EncounterJournal` frame's `IsShown`, `instanceID` and `encounterID` (nil before the frame loads): `{ shown, tiers, tier, difficulty, classID, specID, slot, instanceID, encounterID, keystoneLevel }`; a secret `shown` is not shown | `nil` |
 | | `JournalSelect(sel)` | `EJ_SelectTier` → `EJ_SelectInstance` → `EJ_SetDifficulty` → `EJ_SetLootFilter(classID or 0, specID or 0)` → `EJ_SelectEncounter` → `C_EncounterJournal.SetSlotFilter` (`ResetSlotFilter` for a nil slot) → `C_EncounterJournal.SetPreviewMythicPlusLevel(keystoneLevel)` (only where `GetPreviewMythicPlusLevel` can read it back, so the restore undoes it; feedback-17), each field only when given; the save and the restore of a read both go through it | `false` |
 | | `JournalInstances(isRaid)` | `EJ_GetInstanceByIndex(i, isRaid)` until it answers no id: `{ { id, name, worldBoss } }` of the selected tier; `worldBoss` is true for a raid entry `EJ_GetInstanceInfo` shows without a difficulty (its ninth return, shouldDisplayDifficulty, false: the tier's world bosses, feedback-17) | `{}` |
@@ -256,7 +255,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/WindowHistory.lua` | `ContextMenu`, `ClassColor` |
 | `modules/WindowFooter.lua` | `PawnIsReady` |
 | `modules/TipGrid.lua` | `IsSecret` (a grid cell's width and the tooltip's line count, read in combat; feedback-14 spec §0); `TooltipLeftLine` (`core/CompatItem.lua`) |
-| `modules/Toast.lua` | `PlayAlertSound`; `InCombatLockdown` (`core/CompatWorld.lua`) |
+| `modules/Toast.lua` | `InCombatLockdown` (`core/CompatWorld.lua`; the alert sound is LibKa0s-Toast-1.0's since AT-A2, `Compat.PlayAlertSound` retired) |
 | `modules/Window.lua` | `PlayerInCombat` (`core/CompatWorld.lua`: the show decision off a combat edge) |
 | `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal); `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line at logging on) |
 | `modules/TestMode.lua` | `UnitName`, `UnitClass`, `UnitGUID` (`core/CompatWorld.lua`: you, as a placeholder's looter) |

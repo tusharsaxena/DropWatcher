@@ -24,7 +24,7 @@ passed.
 | COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
 | COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
-| DEGRADED-1..2 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21) |
+| DEGRADED-1..3 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21; superseded by AT-A2); no toast at all without LibKa0s, the toast's shell being LibKa0s-Toast-1.0 (DEGRADED-3, SM-DW-AT8, AT-A2) |
 | FEED-1..103 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); Situations as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86); Can't use in dim red on every surface, Not wanted still gray (FEED-87, feedback-21), Trade's `Can't use` on a drop none of your specs can use and Yes or Likely kept beside an off-spec use (FEED-88, feedback-21), every tooltip as bulleted rows, one per fact (FEED-89, feedback-21), a gear grid under the title, muted gold labels and an arrow on every worn item (FEED-90, feedback-21 H3), the detail card's glyphs, titles, stat colors and Replaces row (FEED-91, feedback-21 H5), a mark per worn item on a two-item slot wherever a verdict mark is drawn (FEED-92, feedback-21 H7), one mark where the drop was judged against one item or a bag item, or a larger Font size leaves no room (FEED-93, feedback-21 R5); both rings on a unique-equipped ring drop (FEED-94), Trade as Yes, No or ? and a short reason, on its own compact line 4, the taller compact card and the wider Trade column (FEED-95), the glow only on a tradeable upgrade (FEED-96), the trade box above the comparisons on the detail card (FEED-97; feedback-22); the compact action button on lines 2 and 3, Them on line 4 when it does not fit beside You, and the 400 compact width (FEED-98, feedback-23); the settings pages regrouped (FEED-99, feedback-24); the test-mode banner as LibKa0s-Widgets' strip (FEED-100, DW-06); the filter bar's search box as LibKa0s-Widgets' SearchBox (FEED-101, DW-07); the cyan simulation strip, and the title words only while minimized (FEED-102, DW-10); Trade on the compact card's line 3 beside the button, You and Them on line 4 to the card's edge (FEED-103, feedback-25) |
 | ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
 | ITEM-1..5 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix) |
@@ -36,7 +36,7 @@ passed.
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
-| TOAST-1..6 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10) |
+| TOAST-1..7 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2) |
 | GLOW-1..11 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid black border) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
@@ -88,7 +88,8 @@ Result: passed in the client, 2026-10-23 (the owner).
 
 **INSTALL-6. LibKa0s-Toast-1.0, vendored alone.** (AT-A1) `libs/LibKa0s/Toast.lua` is copied ahead of
 the rest of LibKa0s and named on its own TOC line after `LibKa0s.xml` (a documented deviation). This
-step only loads it; the upgrade toast is still the addon's own.
+step only loads it; the upgrade toast is still the addon's own (since AT-A2 the toast runs on it:
+TOAST-7).
 
 - SM-DW-AT1: `/reload` with Drop Watcher alone → no Lua error and no new chat line;
   `/dump LibStub.minors["LibKa0s-Toast-1.0"]` → `1`. A nil answer means the TOC line did not load;
@@ -524,6 +525,18 @@ Settings › Alerts › Toast › Show a toast on (it is saved). Rename `libs\Li
 `/reload`, then `/dw test` → the test toast shows with Ask in its top-right corner and no close control at all:
 no `×` text button. Right-click the toast → it closes. With the library restored and `/reload` → the
 skinned close mark is back at the corner and Ask sits to its left. Restore the folder after. Result: passed in the client, 2026-10-23 (the owner).
+**Superseded by AT-A2 (2026-10-28):** the toast's shell is LibKa0s-Toast-1.0, so without the library no
+toast shows at all (DEGRADED-3). The close mark's own degradation (a Core with no close mark: Ask in
+the corner, a right-click still closes) is held headless by `test_toast`.
+
+**DEGRADED-3. No toast without LibKa0s (AT-A2).** The headless `test_toast` (`without LibKa0s the
+seam's stub answers`) and `test_surface_parity` (`the Toast stub`) cover it.
+
+- SM-DW-AT8: with Show a toast on (saved), rename `libs\LibKa0s` as in DEGRADED-1, `/reload`, then
+  `/dw test` → no toast and no Lua error; the window still shows the test drops. Restore the folder and
+  `/reload`, `/dw test` → the toast is back.
+
+Result: not run yet (owed the owner's client pass at the end of the run).
 
 ## Feed
 
@@ -2332,6 +2345,35 @@ Master controls › Reset position → back under the top, at the stored scale. 
 still `100%` → a toast on screen takes today's size. `/dw get toast.scale` → the stored value (`1.5` at
 `150%`); `/dw set toast.scale 3` is refused. Result: passed in the client, 2026-10-23 (the owner).
 
+**TOAST-7. The toast on LibKa0s-Toast-1.0: what you saw before is kept (AT-A2).** The shell (the queue,
+the countdown and its pause, the close mark and right-click, the drag, the scale and the sound) moved
+to LibKa0s-Toast-1.0; the rows, the trigger and the combat hold stayed here. The headless `test_toast`
+covers each check below; this is the client's word on it. Run TOAST-1 first and keep its settings.
+
+- SM-DW-AT2: the place and the look. Before updating, note where the toast sits (`/dw test`); after
+  the update, `/reload`, `/dw test` → it sits in the same place at the same Scale with no reset, the
+  same four rows beside the icon, the skinned close mark top-right with Ask to its left, and the same
+  border and background. `/dw diagnostics` → `toast: point` reads the point it had before.
+- SM-DW-AT3: the lifetime. Out of test mode, a live toast goes after Duration seconds. Hover the toast,
+  then its icon, then Ask, then the close mark → it stays while the pointer is over any of them;
+  move off the toast from the close mark → it goes after the seconds it had left (at least one). A
+  right-click on the toast, its icon or Ask closes it, and that drop never toasts again; a left-click
+  on the toast does nothing. A second qualifying drop waits and shows when the first goes.
+- SM-DW-AT4: combat. A toast on screen when you pull → it goes, and comes back when combat ends with
+  its full Duration. A drop that qualifies in combat → nothing until combat ends. With Show in combat on
+  → it shows at once in combat and stays up.
+- SM-DW-AT5: test mode. `/dw test` → the test toast stays past its Duration until closed or test mode
+  ends; it drags with the left button only in test mode, and its new place survives `/reload`;
+  General › Master controls › Reset position → back under the top; Scale changes it live about its
+  place.
+- SM-DW-AT6: the sound. Play a sound on → each toast plays the epic loot sound once, as before; off →
+  silent.
+- SM-DW-AT7: diagnostics. In combat with a toast waiting, `/dw diagnostics` → `toast: ... held=true`
+  and `toast: queue <drop id>`; `/dw debug on` shows `toast queued`, `toast shown` and `toast: combat
+  over, 1 waiting` lines as before.
+
+Result: not run yet (owed the owner's client pass at the end of the run).
+
 ## Upgrade glow
 
 The glow's decision, its settings and each surface's icon are headless-tested (`test_glow`,
@@ -2871,7 +2913,8 @@ owner reported every check of the keybindings, settings layout and frame layerin
 one's `Result:` line records it.
 
 Owed in the client: FEED-103 (feedback-25, 2026-10-25), the compact cards' Trade on line 3 and You
-and Them on line 4 on both tabs, History's outcome and time at the right of lines 2 and 3.
+and Them on line 4 on both tabs, History's outcome and time at the right of lines 2 and 3. Owed for
+LibKa0s-Toast-1.0 (2026-10-28): INSTALL-6 (AT-A1), TOAST-7 and DEGRADED-3 (AT-A2).
 
 ### Review 2026-10-14 (M24) sign-off
 

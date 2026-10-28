@@ -322,7 +322,9 @@ it is named.
 - `profile.window.minimized` is the minimize button's remembered view. Owner `modules/Window.lua`;
   writer `Window.SetMinimized` alone.
 - `profile.toast.point` is the toast's position (design spec §11.5). Owner `modules/Toast.lua`;
-  writers its drag stop (a drag only test mode allows) and `Toast.ResetPosition`.
+  one writer, its `setPosition`, which LibKa0s-Toast-1.0's shell calls on a drag stop (a drag only
+  test mode allows) and on `Toast.ResetPosition` (with nil). The shape is unchanged by the move to
+  the shell (AT-A2), so no point was migrated.
 - `global.notices.autoAsk` is auto-ask's one-time notice. Owner `modules/AutoAsk.lua`; written the
   first time the `messages.autoAsk.enabled` row turns on (its reaction), so the notice is said once
   per account.

@@ -32,6 +32,11 @@ the code reads every case the design leaves open, module by module, is in
   their bags for that spec is not counted and an off-spec can read better for them than it is. Every
   other spec of the class counts, with no setting to leave one out. FEED-80, FEED-81, ASK-11 and
   TOAST-5 are the in-game checks.
+- **The toast without LibKa0s** (AT-A2). The toast's shell is LibKa0s-Toast-1.0; an install
+  missing LibKa0s shows no toast at all (the seam's stub), where before it drew one without its
+  close mark. A toast on screen in combat because `toast.inCombat` was on goes back to the queue,
+  rather than staying up, when the setting is turned off before combat ends and another drop
+  qualifies. TOAST-7 and DEGRADED-3 are the in-game checks.
 - **A drop you traded away** is `tradedAway` in the history and its Offer button on Drops reads
   `Traded`, but its Trade window cell reads as expired rather than `Traded to …`.
 - **A reload and a relog** (feedback-15 spec §0, DW-Q0). The session is the login: a `/reload`

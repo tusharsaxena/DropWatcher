@@ -882,32 +882,42 @@ table and stacked in the compact layout; both layouts read the one open entry.
 
 ## The toast
 
+The shell is LibKa0s-Toast-1.0 (`NS.NewToast`, `core/ToastSetup.lua`, since AT-A2): `shell:` below
+is its instance; `modules/Toast.lua` is the builder, the trigger, the combat hold and the settings.
+
 ```
 DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted yet? not restored?
     ─> Qualifies(rec, toast.minGain): not yours, me = upgrade by >= minGain (or into an empty
        slot, whatever minGain), trade likely / yes
-    ─> queue (newest 5) ─> Pump: nothing on screen, not held (combat without toast.inCombat)
-    ─> next still wanted (in the feed, qualifying, not asked) ─> show: Compose(rec, your gear,
+    ─> syncHold (combat without toast.inCombat: shell:Hold; otherwise a hold left: shell:Release)
+    ─> shell:Show(id, { key = id, sticky = a test drop }) (newest 5 wait): nothing on screen, not held
+    ─> its turn: the builder, next still wanted (in the feed, qualifying, not asked; else false and
+       the shell tries the next) ─> the rows made once on the shell's frame (icon and Ask
+       attached) ─> Compose(rec, your gear,
        their inspect gear) (the four rows' parts, feedback-9 spec §0) ─> paint: title; item
        (quality color) + item level; Looted by <looter> (class color) · You <glyph n> · Them
        <glyph n> (segments, mono glyphs, toned; on a two-item slot read in full the cells' dual
        mark, `321 ▼10 / 300 ▲11`, and the frame Toast.WidthFor(row 3) wide, never under WIDTH:
        feedback-21 H7);
        trade word (Trade tone) + short reason (muted, cut at the inset); tooltip = Trade cell's
-       ─> sound?
-    ─> C_Timer toast.duration (none for a test drop) ─> Dismiss ─> Pump
-close mark / right-click anywhere on it ─> Dismiss (not asked, never toasts again) ─> Pump
-hover ─> Pause (seconds left kept)      leave ─> Resume
-PLAYER_REGEN_DISABLED ─> the shown toast back to the queue's head   PLAYER_REGEN_ENABLED ─> Pump
+       ─> the shell: sound? (toast.sound), toast.duration countdown (none when sticky)
+    ─> expired ─> the shell's next
+close mark / right-click anywhere on it (frame, icon, Ask) ─> the shell's dismiss (not asked,
+    never toasts again) ─> its next
+hover (frame or an attached control) ─> pause (seconds left kept)   leave ─> resume (at least 1s)
+PLAYER_REGEN_DISABLED ─> shell:Hold: the shown toast back to the queue's head (full duration again)
+PLAYER_REGEN_ENABLED ─> shell:Release
 Ask ─> NS.PressAsk(id) (a drop already gone: the toast goes, nothing asked)
 AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
-LootFeed.Clear / the cap's trim ─> removal sink ─> Toast.Prune: gone drops leave the queue, a gone
-    shown drop's toast goes ─> Pump
-toast.enabled off (the row's reaction) / a profile with it off ─> the toast goes, the queue empties
-drag (test mode only) ─> profile.toast.point (offsets x toast.scale: UIParent's units)
-Reset position ─> Toast.ResetPosition
-toast.scale (the row's reaction, Toast.ApplyScale) / build / profile reload
-    ─> applyPoint: SetScale(toast.scale), then SetPoint(toast.point's offsets / toast.scale)
+LootFeed.Clear / the cap's trim ─> removal sink ─> Toast.Prune: shell:Remove(id) for each waiting
+    drop gone, then the shown one if gone ─> its next
+toast.enabled off (the row's reaction) / a profile with it off / the stand-down ─> shell:Clear: the
+    toast goes, the queue empties, the hold is let go
+drag (test mode only: the shell's draggable) ─> setPosition ─> profile.toast.point (offsets x
+    toast.scale: UIParent's units, the shape it always had)
+Reset position ─> Toast.ResetPosition ─> shell:ResetPosition ─> setPosition(nil)
+toast.scale (the row's reaction, Toast.ApplyScale) / each toast / profile reload
+    ─> shell:Refresh: SetScale(toast.scale), then SetPoint(getPosition's offsets / toast.scale)
        (the anchor stays where it was put; toast.point is never rewritten)
 ```
 

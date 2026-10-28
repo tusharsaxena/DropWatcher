@@ -24,7 +24,7 @@ finishes it; a run that stops resumes at the first unticked box.
 - [x] **A0 Plan** (this file).
 - [x] **A1 Vendor Toast-1.0 only:** the file, TOC line, test loader, vendor-sync exception, provenance note in
   `CLAUDE.md`, the deviation row.
-- [ ] **A2 Adopt:** rebuild `modules/Toast.lua` on the library; tests kept green and adjusted only where they
+- [x] **A2 Adopt:** rebuild `modules/Toast.lua` on the library; tests kept green and adjusted only where they
   pinned shell internals; docs and smoke rows.
 - [ ] **A3 Review and fixes.**
 

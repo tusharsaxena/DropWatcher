@@ -94,6 +94,9 @@ core\ItemRead.lua
 core\WidgetsSetup.lua
 # Conventional: publishes NS.GlowLib, the LibKa0s-Glow-1.0 seam, read by modules\Glow.lua at call time.
 core\GlowSetup.lua
+# LOAD-BEARING relative to modules\Toast.lua only, which calls NS.NewToast at load: publishes
+# NS.NewToast and NS.ToastStub, the LibKa0s-Toast-1.0 seam (libs\LibKa0s\Toast.lua, above).
+core\ToastSetup.lua
 # LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
 # takes NS.MSG at load.
 core\Bus.lua
@@ -451,8 +454,8 @@ modules\TestMode.lua
 # NS.LootFeed, NS.Asks, NS.Window, NS.WindowGroup, NS.WindowCells, NS.SideCells (the verdicts),
 # NS.WindowRows (the item level's mark), NS.TipMarks (the quality and class colors), NS.OffSpec and
 # NS.OffSpecCells (an off-spec upgrade and its title), NS.Gear and NS.TestMode (the worn gear of the
-# dual marks), NS.Setting and the host handlers are read at call time: the frame is built on the
-# first toast.
+# dual marks), NS.Setting and the host handlers are read at call time: the shell's frame
+# (NS.NewToast, core\ToastSetup.lua, above, called at load) is built on the first toast.
 modules\Toast.lua
 # LOAD-BEARING: appends its ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE,
 # PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows to NS.FEATURE_EVENTS after every other file's

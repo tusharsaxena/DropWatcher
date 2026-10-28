@@ -40,7 +40,8 @@ each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env
 `opts.skip = T.loadAddon.libFiles` loads the addon with the whole LibKa0s payload absent, which is how
 every degradation stub is tested: by a real load, never by a hand-written stub (testing-§8).
 
-Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
+Named suites the standard requires: `test_surface_parity` (testing-§8; since AT-A2 it also holds
+`core/ToastSetup.lua`'s `NS.ToastStub` to a live LibKa0s-Toast-1.0 instance), `test_vendor_sync`
 (testing-§11, delegating to the kit; its one temporary exception leaves `libs/LibKa0s/Toast.lua`,
 vendored alone, out of the tag's file set and holds it byte for byte to the LibKa0s branch it came
 from in a case of its own), `test_disabled` (slash-commands-§7; its own cases 9 and 10 hold
@@ -218,7 +219,8 @@ profile copy re-reading it), `test_layers` (frame-layering, item 030: the one `N
 table's strata keys and level order, then every frame class through the kit's frame-layer recorder,
 which `tests/wow_mock.lua` installs on every instance: the window MEDIUM, toplevel and clamped, the
 Offer panel in the window's strata at W+1 docked and W+30 floating, the compact Filters panel at W+35
-with its dropdowns over it, the Edit message box DIALOG at W+40 and toplevel, the toast HIGH, an item
+with its dropdowns over it, the Edit message box DIALOG at W+40 and toplevel, the toast HIGH and
+toplevel (LibKa0s-Toast-1.0's T5 tier, `LAYERS.STRATA.ALERT`), an item
 button's border explicit at +1 under the glow at +2, and a static scan for strata literals and absolute
 levels in `core/`, `modules/` and `settings/`), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
 the strip under the table or the cards counting your listed tradeable drops, its filters applied,
@@ -446,9 +448,14 @@ Ask button through the host handler, the sound, the drag only in test mode with 
 Reset position, `toast.scale` applied live and at the build about the saved anchor, the point saved in
 UIParent's units and unchanged by a scale change, a profile switch taking the incoming scale
 (feedback-21 G10), test mode's placeholder toast, a drop leaving the feed (a clear, the cap's trim)
-taking its toast and its place in the queue, an Ask on a gone drop, no typed `×` close mark when the
-close control degrades (DW-P21), turning the toast off
-or switching to a profile with it off, the stand-down and the diagnostics line),
+taking its toast and its place in the queue, an Ask on a gone drop, no typed `×` close mark when
+Core has no close mark (Ask in its corner, a right-click still closes; DW-P21), no toast at all
+without LibKa0s (the seam's stub), turning the toast off
+or switching to a profile with it off, the stand-down and the diagnostics line; and, on the
+LibKa0s-Toast-1.0 shell since AT-A2, what the player saw before kept: a point saved before the
+shell placed with no migration, the icon and Ask holding the countdown, a drop met in combat after a
+switch's Clear still held and `toast.inCombat` turned on mid-combat showing the next, and a toast
+held for combat coming back with its full duration),
 `test_auto_ask` (auto-ask: the pure `DueAt` and the delay's clamp; then the edge: off by default, a
 qualifying drop whispered after the delay once with the ask template, the delay and least gain
 read from the rows, an upgrade into an empty slot asked for whatever the least gain, a sidegrade,

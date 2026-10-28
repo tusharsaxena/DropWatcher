@@ -351,15 +351,25 @@ test("toast edge: in test mode the left button still drags it and a left click k
     assertFalse(shown(NS), "a test toast closes on a right-click too")
 end)
 
-test("toast edge: without LibKa0s the close mark degrades to nothing; Ask takes its corner, a right-click still closes", function()
+test("toast edge: without LibKa0s the seam's stub answers: nothing builds or shows, nothing raises", function()
     local NS = T.enableAddon{ skip = T.loadAddon.libFiles }
     NS.LootFeed.Get = function(id) if id == 1 then return drop() end end
     assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
-    NS.State.testMode = true
+    added(NS, 1)
+    -- red under: a modules/Toast.lua that builds a frame of its own when LibKa0s-Toast-1.0 is absent
+    assertNil(NS.Toast.Frame()); assertFalse(shown(NS))
+    local s = NS.Toast.Stats()
+    assertEqual(s.waiting, 0); assertEqual(#s.queue, 0); assertFalse(s.held)
+    NS.Toast.Dismiss(); NS.Toast.Ask(); NS.Toast.ApplyScale(); NS.Toast.ResetPosition(); NS.Toast.Prune()
+end)
+
+test("toast edge: a Core without a close mark draws none; Ask takes its corner, a right-click still closes", function()
+    local NS, m = enabled({ drop() })
+    m.LibStub("LibKa0s-Core-1.0").MakeCloseButton = nil
     added(NS, 1)
     local f = NS.Toast.Frame()
     assertTrue(f ~= nil and shown(NS), "the toast builds and shows")
-    -- red under: restore the typed × fallback in modules/Toast.lua buildClose
+    -- red under: restore the typed × fallback in modules/Toast.lua
     assertNil(f.close, "no one-off close mark (standalone-windows)")
     local point, rel = f.ask:GetPoint(1)
     assertEqual(point, "TOPRIGHT", "Ask is anchored in the close mark's corner")
@@ -495,12 +505,16 @@ test("toast edge: Ask goes through the shared host handler, and the button follo
 end)
 
 test("toast edge: toast.sound plays the client's alert from SOUNDKIT", function()
-    local NS, m = enabled({ drop() })
+    local NS, m = enabled({ drop(), drop({ id = 2 }) })
     assertTrue(NS.SchemaRuntime.Set("toast.sound", true))
     added(NS, 1)
     assertEqual(#m.sounds, 1); assertEqual(m.sounds[1][1], m.SOUNDKIT.UI_EPICLOOT_TOAST)
+    assertEqual(m.sounds[1][2], "Master")
+    NS.Toast.Dismiss()
     m.SOUNDKIT = nil
-    assertFalse(NS.Compat.PlayAlertSound(), "no SOUNDKIT: nothing played, nothing raised")
+    added(NS, 2)
+    assertTrue(shown(NS), "no SOUNDKIT: the toast still shows")
+    assertEqual(#m.sounds, 1, "and nothing is played")
 end)
 
 test("toast edge: only test mode drags it; the position is saved and Reset position forgets it", function()
@@ -539,6 +553,7 @@ test("toast edge: toast.scale scales a toast on screen live about its saved anch
     assertNil(NS.addon.db.profile.toast.point, "nothing saved by a scale change")
     -- A drag at scale 2 saves the offsets in UIParent's units, and a scale change keeps them.
     NS.State.testMode = true
+    f:GetScript("OnDragStart")(f)
     f:ClearAllPoints(); f:SetPoint("TOPLEFT", nil, "BOTTOMLEFT", 20, 250)
     f:GetScript("OnDragStop")(f)
     local p = NS.addon.db.profile.toast.point
@@ -662,6 +677,71 @@ test("toast edge: the stand-down empties the queue and takes the toast down", fu
     added(NS, 1); added(NS, 2)
     assertTrue(NS.SchemaRuntime.Set("enabled", false))
     assertFalse(shown(NS)); assertEqual(NS.Toast.Stats().waiting, 0)
+end)
+
+-- ── on the shell: what the player saw before LibKa0s-Toast-1.0 still holds (AT-A2) ───────────
+
+test("toast edge: a point saved before the shell moved to LibKa0s places it, with no migration", function()
+    local NS = enabled({ drop() })
+    NS.addon.db.profile.toast.point = { "TOPLEFT", "BOTTOMLEFT", 40, 500 }
+    assertTrue(NS.SchemaRuntime.Set("toast.scale", 2))
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    local point, _, rel, x, y = f:GetPoint(1)
+    -- red under: a getPosition that reads anything but profile.toast.point as stored
+    assertEqual(point, "TOPLEFT"); assertEqual(rel, "BOTTOMLEFT")
+    assertEqual(x, 20); assertEqual(y, 250, "UIParent's units, divided by the scale, as before")
+    assertEqual(NS.addon.db.profile.toast.point[4], 500, "and the saved point is left as it was")
+end)
+
+test("toast edge: hovering the item button or Ask holds the countdown too", function()
+    local NS, m = enabled({ drop() })
+    added(NS, 1)
+    local f = NS.Toast.Frame()
+    m.advance(5)
+    -- red under: a builder that does not Attach the icon and Ask to the shell
+    f.icon:GetScript("OnEnter")(f.icon)
+    m.advance(30)
+    assertTrue(shown(NS), "paused over the item button")
+    f.icon:GetScript("OnLeave")(f.icon)
+    f.ask:GetScript("OnEnter")(f.ask)
+    m.advance(30)
+    assertTrue(shown(NS), "paused over Ask")
+    f.ask:GetScript("OnLeave")(f.ask)
+    m.advance(3.1)
+    assertFalse(shown(NS), "the 3s it had left ran out")
+end)
+
+test("toast edge: a drop met in combat waits after a switch's Clear; toast.inCombat on mid-combat shows the next", function()
+    local NS, m = enabled({ drop(), drop({ id = 2 }), drop({ id = 3 }) })
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    added(NS, 1)
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", false))
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    -- red under: a Consider that does not re-take the hold (the switch's Clear released it)
+    added(NS, 2)
+    assertFalse(shown(NS), "still held in combat"); assertTrue(NS.Toast.Stats().held)
+    assertEqual(NS.Toast.Stats().queue[1], 2, "the diagnostics name it waiting")
+    assertTrue(NS.SchemaRuntime.Set("toast.inCombat", true))
+    added(NS, 3)
+    assertEqual(NS.Toast.Stats().dropId, 2, "allowed in combat now: the one waiting shows first")
+    assertEqual(NS.Toast.Stats().queue[1], 3)
+end)
+
+test("toast edge: a toast held for combat comes back with its full duration", function()
+    local NS, m = enabled({ drop() })
+    added(NS, 1)
+    m.advance(6)
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    assertFalse(shown(NS))
+    m.inCombat = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    m.advance(7.9)
+    assertTrue(shown(NS), "8 seconds again, not the 2 it had left")
+    m.advance(0.2)
+    assertFalse(shown(NS))
 end)
 
 test("toast: the diagnostics' window section reports the toast", function()

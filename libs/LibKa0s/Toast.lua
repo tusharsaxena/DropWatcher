@@ -427,13 +427,19 @@ function METHODS:Current()
   return S.current.payload, S.current.key
 end
 
---- The toast's state, for a host's diagnostics report and its suites.
+--- The toast's state, for a host's diagnostics report and its suites. `keys` lists the waiting
+--- payloads' keys, oldest first (`false` for one queued without a key), so a host can name what
+--- waits without keeping a copy of the queue.
 function METHODS:Stats()
   local S = state(self)
+  local keys = {}
+  for i, entry in ipairs(S.queue) do
+    if entry.key == nil then keys[i] = false else keys[i] = entry.key end
+  end
   return {
     built = S.frame ~= nil, shown = S.current ~= nil, waiting = #S.queue, held = S.held == true,
     paused = S.remaining ~= nil, sticky = S.current ~= nil and S.current.sticky == true,
-    key = S.current and S.current.key,
+    key = S.current and S.current.key, keys = keys,
   }
 end
 
