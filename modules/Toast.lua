@@ -37,40 +37,52 @@ local _, NS = ...
 -- difference; Qualifies says so with a third value, `offSpec`, and row 1 reads `Off-spec upgrade
 -- for you (Holy)`. Its Ask sends the off-spec template, which the shared ask path picks.
 --
--- ONE AT A TIME. Qualifying drops wait in a queue (MAX_QUEUE, the oldest dropped first); the next
--- shows when the current one goes. A toast goes after `toast.duration` seconds (default 8), when its
--- close mark is clicked, or on a right-click anywhere on it (the close mark's path: the drop is not
--- asked for and does not toast again); the countdown pauses while the pointer is over it and
--- resumes with the time it had left. A drop asked for meanwhile, or no longer qualifying, is skipped
--- when its turn comes.
+-- THE SHELL is LibKa0s-Toast-1.0 (built from this file's own shell, LibKa0s#60), through
+-- core/ToastSetup.lua's NS.NewToast: the queue, the countdown and its hover pause, the close mark
+-- and the right-click, the HIGH alert tier, the drag, the scale and the sound. This file keeps the
+-- content (the builder below), the qualifier and the triggers, the combat hold, the settings it
+-- reads and the saved point. Without the library the seam's stub answers and no toast shows.
+--
+-- ONE AT A TIME. Qualifying drops wait in the shell's queue, keyed by drop id (MAX_QUEUE, the oldest
+-- dropped first); the next shows when the current one goes. A toast goes after `toast.duration`
+-- seconds (default 8), when its close mark is clicked, or on a right-click anywhere on it, its icon
+-- and its Ask included (the close mark's path: the drop is not asked for and does not toast again);
+-- the countdown pauses while the pointer is over it and resumes with the time it had left. A drop
+-- asked for meanwhile, or no longer qualifying, is skipped when its turn comes (the builder answers
+-- false).
 --
 -- IT FOLLOWS ITS DROP AND ITS SWITCH. A drop that leaves the feed (a Clear or the cap's trim: the
--- feed's removal sink, Prune) takes its toast and its place in the queue with it, and an Ask on a
--- drop already gone only takes the toast down. Turning `toast.enabled` off (its row's reaction,
--- OnEnabledChanged) or switching to a profile with it off (OnProfileReloaded) takes the toast down
--- and empties the queue.
+-- feed's removal sink, Prune) takes its toast and its place in the queue with it (the shell's
+-- Remove), and an Ask on a drop already gone only takes the toast down. Turning `toast.enabled` off
+-- (its row's reaction, OnEnabledChanged) or switching to a profile with it off (OnProfileReloaded)
+-- takes the toast down and empties the queue (the shell's Clear).
 --
--- COMBAT. Unless `toast.inCombat` is set, nothing shows in combat: the queue waits for
--- PLAYER_REGEN_ENABLED, and a toast on screen when combat starts goes back to the head of the queue.
+-- COMBAT. Unless `toast.inCombat` is set, nothing shows in combat: the shell's Hold on
+-- PLAYER_REGEN_DISABLED (a toast on screen goes back to the head of the queue) and its Release on
+-- PLAYER_REGEN_ENABLED, and the same hold is checked before each drop is queued and whenever
+-- `toast.inCombat` can change (its row's reaction, a profile switch): syncHold, which leaves a toast
+-- already on screen up and holds only what follows it, as the old live check did.
 --
 -- TEST MODE. Test mode's placeholders toast like live drops (with `toast.enabled` on), so the toast
--- can be seen and placed: only in test mode can it be dragged (with the left button), and its
--- position is saved in the profile's `toast.point` (named state, like the window's point). A test
--- drop's toast stays until it is closed or test mode ends, since placing it takes longer than its
--- duration.
+-- can be seen and placed: only in test mode can it be dragged (with the left button; the shell's
+-- `draggable`), and its position is saved in the profile's `toast.point` (named state, like the
+-- window's point). A test drop's toast is sticky (the shell's Show with `sticky`): it stays until it
+-- is closed or test mode ends, since placing it takes longer than its duration.
 --
--- SCALE. `toast.scale` (0.5 to 2, Window › Toast's Scale, feedback-21 G10) is the frame's own scale,
--- applied when it is built, by the row's reaction (ApplyScale, live on a toast on screen) and on a
--- profile reload. The saved point is kept in UIParent's units, not the toast's: a drag stores its
--- offsets times the scale and they are applied divided by it, so a scale change grows or shrinks
--- the toast about the anchor the player placed and never rewrites `toast.point`.
+-- SCALE. `toast.scale` (0.5 to 2, Alerts › Toast's Scale, feedback-21 G10) is the frame's own scale,
+-- read by the shell at each toast, by the row's reaction (ApplyScale, live on a toast on screen) and
+-- on a profile reload (both the shell's Refresh). The saved point is kept in UIParent's units, not
+-- the toast's: the shell hands a drag's offsets over times the scale and applies them divided by
+-- it, so a scale change grows or shrinks the toast about the anchor the player placed and never
+-- rewrites `toast.point`. Its shape, { point, relativePoint, x, y }, is the one this file always
+-- stored, so no saved point needed a migration.
 --
--- SOUND. With `toast.sound` on, each toast plays the client's alert sound (core/Compat.lua's
--- PlayAlertSound, a SOUNDKIT entry).
+-- SOUND. With `toast.sound` on, each toast plays the client's alert sound (the shell's: SOUNDKIT's
+-- UI_EPICLOOT_TOAST, else RAID_WARNING, on the Master channel).
 --
 -- PURE: Qualifies and Compose take a drop record and read nothing else (Compose answers the rows'
 -- parts, not joined lines); test_toast drives them. The edge below reads the feed, the settings and
--- the asks, and builds its frame on the first toast.
+-- the asks; the shell builds its frame on the first toast, and the builder its rows.
 
 NS.Toast = NS.Toast or {}
 local Toast = NS.Toast
@@ -214,13 +226,8 @@ end
 
 -- ── the edge's state ────────────────────────────────────────────────────────────────────────
 
-local queue = {}       -- drop ids waiting, oldest first
 local toasted = {}     -- drop ids already queued or shown this session: each toasts once
-local frame            -- built on the first toast
-local shownId          -- the drop on screen
-local timer            -- the dismissal countdown
-local dueAt            -- GetTime() when the countdown ends
-local remaining        -- the seconds it had left when a hover paused it
+local toast            -- the shell's instance (NS.NewToast, core/ToastSetup.lua), made below
 
 local function setting(key) return NS.Setting("toast." .. key) end
 
@@ -238,65 +245,10 @@ local function held()
     return inCombat() and setting("inCombat") ~= true
 end
 
-local function cancelTimer()
-    if timer then timer:Cancel() end
-    timer, dueAt = nil, nil
-end
+-- The drop on screen (its id is the payload and the key it was queued under), or nil.
+local function shownId() return (toast:Current()) end
 
--- ── the frame ───────────────────────────────────────────────────────────────────────────────
-
--- `toast.scale`, or 1 for a stored value the write seam would refuse.
-local function scaleOf()
-    local s = setting("scale")
-    if type(s) ~= "number" or s ~= s or s <= 0 then return 1 end
-    return s
-end
-
--- GetPoint answers in the toast's own (scaled) units; the point is stored in UIParent's.
-local function savePoint()
-    local point, _, relativePoint, x, y = frame:GetPoint(1)
-    local s = frame:GetScale() or 1
-    if point then store().point = { point, relativePoint, (x or 0) * s, (y or 0) * s } end
-end
-
--- The scale first, then the saved point in the toast's units at that scale: the anchor stays put.
-local function applyPoint()
-    local pt = store().point
-    if type(pt) ~= "table" then pt = Toast.POINT end
-    local s = scaleOf()
-    frame:SetScale(s)
-    frame:ClearAllPoints()
-    frame:SetPoint(pt[1], UIParent, pt[2], (pt[3] or 0) / s, (pt[4] or 0) / s)
-end
-
-local function onDragStart()
-    if NS.State.testMode == true then frame:StartMoving() end
-end
-
-local function onDragStop()
-    frame:StopMovingOrSizing()
-    savePoint()
-end
-
-local function onEnter() Toast.Pause() end
-
-local function onLeave()
-    if not (frame and frame:IsMouseOver()) then Toast.Resume() end
-end
-
--- A right-click anywhere on the toast closes it, as its close mark does (feedback-9 spec §0): the
--- drop is not asked for and does not toast again. The left button keeps each control's own click
--- and test mode's drag.
-local function onMouseUp(_, button)
-    if button == "RightButton" then Toast.Dismiss() end
-end
-
--- A control on the toast: hovering it holds the countdown, and a right-click on it closes the toast.
-local function onToast(widget)
-    widget:HookScript("OnEnter", onEnter)
-    widget:HookScript("OnLeave", onLeave)
-    widget:HookScript("OnMouseUp", onMouseUp)
-end
+-- ── the rows ────────────────────────────────────────────────────────────────────────────────
 
 local function setTone(fs, tone)
     local c = C.TONE[tone] or C.TONE.plain
@@ -322,14 +274,6 @@ end
 -- A row's top-left, ROW_Y under the icon's top, TEXT_GAP right of it.
 local function atRow(fs, f, i)
     fs:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", Toast.TEXT_GAP, Toast.ROW_Y[i])
-end
-
--- The close mark, or nil: without LibKa0s it degrades to nothing, as every other close control does
--- (standalone-windows; no one-off mark). A right-click anywhere still closes the toast.
-local function buildClose(f)
-    local close = NS.MakeCloseButton(f, function() Toast.Dismiss() end)
-    if close then close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4) end
-    return close
 end
 
 -- Rows 1 and 2: the gold title beside Ask; the item name (cut first) and its item level after it.
@@ -379,25 +323,13 @@ local function buildTrade(f)
     f.reason:SetPoint("RIGHT", f, "RIGHT", -Toast.INSET, 0)
 end
 
-local function build()
-    local f = CreateFrame("Frame", Toast.NAME, UIParent, "BackdropTemplate")
-    frame = f
-    f:SetFrameStrata(C.LAYERS.STRATA.ALERT)
-    f:SetSize(Toast.WIDTH, Toast.HEIGHT)
-    f:SetMovable(true)
-    f:SetClampedToScreen(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", onDragStart)
-    f:SetScript("OnDragStop", onDragStop)
-    f:SetScript("OnEnter", onEnter)
-    f:SetScript("OnLeave", onLeave)
-    f:SetScript("OnMouseUp", onMouseUp)
-    f:Hide()
-    NS.ApplySkin(f)
+-- The rows, made once on the shell's frame (its first toast). The shell already made the close mark
+-- (`f.close`, top-right; none without LibKa0s-Core's MakeCloseButton, and Ask takes its corner) and
+-- wired the frame's own hover pause, right-click and drag; the icon and Ask are attached here so
+-- hovering them holds the countdown and a right-click on them closes the toast too.
+local function makeRows(f)
     f.icon = NS.WindowGroup.ItemButton(f, Toast.ICON)
     f.icon:SetPoint("TOPLEFT", f, "TOPLEFT", Toast.INSET, -Toast.INSET)
-    f.close = buildClose(f)
     f.ask = NS.Window.TextButton(f, 64, "chat", L["Ask"], function() Toast.Ask() end)
     if f.close then
         f.ask:SetPoint("RIGHT", f.close, "LEFT", -6, 0)
@@ -409,14 +341,9 @@ local function build()
     buildTrade(f)
     -- The toast's tooltip is the Trade cell's: the full reason row 4 may cut (feedback-9 spec §0).
     NS.Window.AttachTooltip(f, function() return unpack(f.tipLines or {}) end)
-    onToast(f.icon)
-    onToast(f.ask)
-    if f.close then onToast(f.close) end
-    applyPoint()
-    return f
+    toast:Attach(f.icon)
+    toast:Attach(f.ask)
 end
-
-local function ensureFrame() return frame or build() end
 
 local function askState(rec)
     local target = NS.AskTargetOf(rec)
@@ -425,9 +352,9 @@ local function askState(rec)
 end
 
 -- The Ask in the row's look: its state's word and mark (feedback-7 spec §1: `chat`, `clock`, ...).
-local function paintAsk(rec)
+local function paintAsk(f, rec)
     local a = NS.WindowCells.Ask(rec, askState(rec))
-    local b = frame.ask
+    local b = f.ask
     NS.Window.SetButtonMark(b, a.text, a.icon)
     b:SetEnabled(a.enabled == true)
 end
@@ -485,22 +412,21 @@ function Toast.WidthFor(row3)
     return math.max(Toast.WIDTH, math.ceil(row3) + Toast.WIDTH - Toast.RowWidth())
 end
 
-local function paintRows(t)
-    frame.title:SetText(t.title)
-    frame.item:SetText(t.itemText)
-    frame.looted:SetText(L["Looted by %s · You"]:format(t.looterText))
-    local last, w = paintVerdict(frame.looted, frame.meGlyph, frame.meText, t.me, frame.meLead, frame.meLevel,
-        measure(frame.looted))
-    frame.themLabel:SetText(L["· Them"])
-    last, w = place(frame.themLabel, last, w)
+local function paintRows(f, t)
+    f.title:SetText(t.title)
+    f.item:SetText(t.itemText)
+    f.looted:SetText(L["Looted by %s · You"]:format(t.looterText))
+    local last, w = paintVerdict(f.looted, f.meGlyph, f.meText, t.me, f.meLead, f.meLevel, measure(f.looted))
+    f.themLabel:SetText(L["· Them"])
+    last, w = place(f.themLabel, last, w)
     -- Row 3 ends with Them's verdict: its width counts too, or a widened toast cuts it.
-    w = select(2, paintVerdict(last, frame.themGlyph, frame.themText, t.them, frame.themLead, frame.themLevel, w))
-    frame:SetWidth(Toast.WidthFor(w))
-    frame.themText:SetPoint("RIGHT", frame, "RIGHT", -Toast.INSET, 0)
-    NS.WindowRows.PlaceMark(frame.item, frame.ilvl, t.ilvl and tostring(t.ilvl) or nil, frame:GetWidth() - Toast.WIDTH + Toast.RowWidth())
-    frame.trade:SetText(t.trade)
-    setTone(frame.trade, t.tradeTone)
-    frame.reason:SetText(t.reason ~= "" and ("· " .. t.reason) or "")
+    w = select(2, paintVerdict(last, f.themGlyph, f.themText, t.them, f.themLead, f.themLevel, w))
+    f:SetWidth(Toast.WidthFor(w))
+    f.themText:SetPoint("RIGHT", f, "RIGHT", -Toast.INSET, 0)
+    NS.WindowRows.PlaceMark(f.item, f.ilvl, t.ilvl and tostring(t.ilvl) or nil, f:GetWidth() - Toast.WIDTH + Toast.RowWidth())
+    f.trade:SetText(t.trade)
+    setTone(f.trade, t.tradeTone)
+    f.reason:SetText(t.reason ~= "" and ("· " .. t.reason) or "")
 end
 
 -- Your worn gear (the snapshot's; a sample's own) and the looter's (their inspect entry's), for the
@@ -511,24 +437,13 @@ local function gearOf(rec)
     return NS.TestMode.GearOf(rec, snap and snap.equipped), insp and insp.gear
 end
 
-local function paint(rec)
+local function paint(f, rec)
     local t = Toast.Compose(rec, gearOf(rec))
-    paintRows(t)
-    frame.tipLines = t.tip
-    NS.WindowGroup.SetItem(frame.icon, t.link, NS.WindowGroup.Where(rec))
-    frame.icon.dropId = nil
-    paintAsk(rec)
-end
-
--- ── the queue ───────────────────────────────────────────────────────────────────────────────
-
-local function startTimer(seconds)
-    cancelTimer()
-    dueAt = GetTime() + seconds
-    timer = C_Timer.NewTimer(seconds, function()
-        timer, dueAt = nil, nil
-        Toast.Dismiss()
-    end)
+    paintRows(f, t)
+    f.tipLines = t.tip
+    NS.WindowGroup.SetItem(f.icon, t.link, NS.WindowGroup.Where(rec))
+    f.icon.dropId = nil
+    paintAsk(f, rec)
 end
 
 -- Still worth showing when its turn comes: in the feed, qualifying, and not asked for yet.
@@ -540,32 +455,66 @@ local function wanted(id)
     return rec
 end
 
-local function show(rec)
-    ensureFrame()
-    shownId, remaining = rec.id, nil
-    paint(rec)
-    applyPoint()
-    frame:Show()
-    if setting("sound") == true then NS.Compat.PlayAlertSound() end
-    if not rec.test then startTimer(setting("duration")) end
+-- The shell's builder: each time a drop's turn comes, its rows painted on the shell's frame, the
+-- frame as wide as row 3 needs; `false` skips a drop no longer wanted, and the next one is tried.
+local function build(f, id)
+    local rec = wanted(id)
+    if not rec then return false end
+    if not f.ask then makeRows(f) end
+    paint(f, rec)
     NS.Debug(TAG, "toast shown: drop %s %s", tostring(rec.id), tostring(rec.link))
+    return f:GetWidth(), Toast.HEIGHT
 end
 
---- Show the next waiting toast, unless one is on screen, the toast is off, or combat holds it.
-function Toast.Pump()
-    if shownId or setting("enabled") ~= true or held() then return end
-    while #queue > 0 do
-        local rec = wanted(table.remove(queue, 1))
-        if rec then return show(rec) end
+-- ── the shell ───────────────────────────────────────────────────────────────────────────────
+
+-- The saved point, a copy, so the shell never holds the profile's own table. It is { point,
+-- relativePoint, x, y } in UIParent's units, as the shell hands it over and as it always was here.
+local function getPosition()
+    local pt = store().point
+    if type(pt) ~= "table" then return nil end
+    return { pt[1], pt[2], pt[3], pt[4] }
+end
+
+local function setPosition(pt)
+    if type(pt) ~= "table" then
+        store().point = nil
+        return
     end
+    store().point = { pt[1], pt[2], pt[3], pt[4] }
 end
 
-local function enqueue(id, front)
-    if front then table.insert(queue, 1, id) else queue[#queue + 1] = id end
-    while #queue > Toast.MAX_QUEUE do table.remove(queue, front and #queue or 1) end
+toast = NS.NewToast({
+    name            = Toast.NAME,
+    build           = build,
+    width           = Toast.WIDTH,
+    height          = Toast.HEIGHT,
+    maxQueue        = Toast.MAX_QUEUE,
+    defaultPosition = Toast.POINT,
+    duration        = function() return setting("duration") end,
+    scale           = function() return setting("scale") end,
+    sound           = function() return setting("sound") end,
+    -- Only in test mode can it be placed: its placeholders toast like live drops.
+    draggable       = function() return NS.State.testMode == true end,
+    getPosition     = getPosition,
+    setPosition     = setPosition,
+})
+
+-- Combat holds the toast unless `toast.inCombat`: the shell's Hold and Release, set here before a
+-- drop is queued and when `toast.inCombat` can change, as well as on the combat edges, so a drop met
+-- in combat with no hold in place (a stand-down's or a switch's Clear released it) waits,
+-- `toast.inCombat` turned on mid-combat shows what waits, and turned off mid-combat leaves the toast
+-- on screen up (Hold(true)) while the next one waits for combat's end.
+local function syncHold()
+    local want = held()
+    if want == toast:Stats().held then return end
+    if want then toast:Hold(true) else toast:Release() end
 end
 
---- Consider a drop for a toast (DropAdded, DropUpdated): queued once when it qualifies.
+-- ── the queue ───────────────────────────────────────────────────────────────────────────────
+
+--- Consider a drop for a toast (DropAdded, DropUpdated): queued once when it qualifies. A test
+--- drop's toast is sticky: it stays until it is closed or test mode ends.
 --- @param id number
 --- @return boolean queued
 function Toast.Consider(id)
@@ -574,92 +523,80 @@ function Toast.Consider(id)
     -- A drop restored after a reload (feedback-15 spec §0) was toasted, if ever, before it.
     if not rec or rec.source == "restore" or not Toast.Qualifies(rec, setting("minGain")) then return false end
     toasted[id] = true
-    enqueue(id)
-    NS.Debug(TAG, "toast queued: drop %s (%d waiting)%s", tostring(id), #queue, held() and ", held in combat" or "")
-    Toast.Pump()
+    syncHold()
+    NS.Debug(TAG, "toast queued: drop %s (%d waiting)%s", tostring(id),
+        math.min(toast:Stats().waiting + 1, Toast.MAX_QUEUE), held() and ", held in combat" or "")
+    toast:Show(id, { key = id, sticky = rec.test == true })
     return true
 end
 
 --- Take the toast off screen and show the next one.
-function Toast.Dismiss()
-    cancelTimer()
-    remaining = nil
-    if frame then
-        frame:Hide()
-    end
-    if shownId == nil then return end
-    shownId = nil
-    Toast.Pump()
-end
+function Toast.Dismiss() toast:Dismiss() end
 
 --- The pointer is over the toast: its countdown stops, keeping the time it had left.
-function Toast.Pause()
-    if not dueAt then return end
-    remaining = math.max(dueAt - GetTime(), 0)
-    cancelTimer()
-end
+function Toast.Pause() toast:Pause() end
 
 --- The pointer left the toast: its countdown resumes with the time it had left.
-function Toast.Resume()
-    if not (shownId and remaining) then return end
-    local left = remaining
-    remaining = nil
-    startTimer(math.max(left, 1))
-end
+function Toast.Resume() toast:Resume() end
 
 --- The toast's Ask: the shared host handler, so a second click cancels a queued ask.
 function Toast.Ask()
-    if not shownId then return end
-    if not NS.LootFeed.Get(shownId) then return Toast.Dismiss() end
-    NS.PressAsk(shownId)
-    local rec = NS.LootFeed.Get(shownId)
-    if rec and frame then paintAsk(rec) end
+    local id = shownId()
+    if not id then return end
+    if not NS.LootFeed.Get(id) then return Toast.Dismiss() end
+    NS.PressAsk(id)
+    local rec, f = NS.LootFeed.Get(id), toast:Frame()
+    if rec and f then paintAsk(f, rec) end
 end
 
 -- ── edges ───────────────────────────────────────────────────────────────────────────────────
 
 local function onUpdated(id)
-    if id == shownId then
+    local f = toast:Frame()
+    if id == shownId() and f then
         local rec = NS.LootFeed.Get(id)
-        if rec then paintAsk(rec) end
+        if rec then paintAsk(f, rec) end
     end
     Toast.Consider(id)
 end
 
---- PLAYER_REGEN_DISABLED: a toast on screen goes back to the head of the queue, unless toasts may
---- show in combat.
+--- PLAYER_REGEN_DISABLED: a toast on screen goes back to the head of the queue and nothing shows
+--- until combat ends, unless toasts may show in combat.
 function Toast.OnCombatStart()
-    if not shownId or setting("inCombat") == true then return end
-    local id = shownId
-    cancelTimer()
-    shownId, remaining = nil, nil
-    if frame then
-        frame:Hide()
-    end
-    enqueue(id, true)
-    NS.Debug(TAG, "toast held for combat: drop %s", tostring(id))
+    if setting("inCombat") == true then return end
+    local id = shownId()
+    toast:Hold()
+    if id then NS.Debug(TAG, "toast held for combat: drop %s", tostring(id)) end
 end
 
 --- PLAYER_REGEN_ENABLED: what combat held shows now.
 function Toast.OnCombatEnd()
-    if #queue > 0 and shownId == nil then NS.Debug(TAG, "toast: combat over, %d waiting", #queue) end
-    Toast.Pump()
+    if held() then return end
+    local s = toast:Stats()
+    if s.waiting > 0 and not s.shown then NS.Debug(TAG, "toast: combat over, %d waiting", s.waiting) end
+    toast:Release()
+end
+
+-- The drop ids waiting for a toast, oldest first: the shell's `keys`. A shell that names none (an
+-- earlier copy of the same minor another addon registered first) gets every drop toasted this
+-- session instead, in no order: Remove lets go only what waits or shows.
+local function waitingIds(s)
+    if type(s.keys) == "table" then return s.keys end
+    local ids = {}
+    for id in pairs(toasted) do ids[#ids + 1] = id end
+    return ids
 end
 
 --- Drops gone from the feed leave the queue, and a toast whose drop is gone goes (the next one
 --- shows). The feed's removal sink: a Clear or the cap's trim. Answers how many it let go.
 --- @return number
 function Toast.Prune()
+    local s = toast:Stats()
+    local ids = waitingIds(s)
+    ids[#ids + 1] = s.key or false   -- the one on screen last, so the next one shown is never gone
     local n = 0
-    for i = #queue, 1, -1 do
-        if not NS.LootFeed.Get(queue[i]) then
-            table.remove(queue, i)
-            n = n + 1
-        end
-    end
-    if shownId and not NS.LootFeed.Get(shownId) then
-        n = n + 1
-        Toast.Dismiss()
+    for _, id in ipairs(ids) do
+        if id and not NS.LootFeed.Get(id) then n = n + toast:Remove(id) end
     end
     if n > 0 then NS.Debug(TAG, "toast: %d gone with their drops", n) end
     return n
@@ -667,9 +604,9 @@ end
 
 -- Toasts turned off: the one on screen goes and nothing waits.
 local function stopAll(why)
-    if #queue == 0 and shownId == nil then return end
-    queue = {}
-    Toast.Dismiss()
+    local s = toast:Stats()
+    if s.waiting == 0 and not s.shown then return end
+    toast:Clear()
     NS.Debug(TAG, "toast off (%s): queue emptied", why)
 end
 
@@ -677,15 +614,20 @@ end
 --- nothing old (what was dropped stays dropped), and the next qualifying drop toasts.
 --- @param on boolean
 function Toast.OnEnabledChanged(on)
-    if on ~= true then return stopAll("setting") end
-    Toast.Pump()
+    if on ~= true then stopAll("setting") end
 end
 
+--- The `toast.inCombat` row's reaction: in combat, turned on shows what waits, and turned off
+--- holds what follows the toast on screen (which stays up).
+function Toast.OnInCombatChanged() syncHold() end
+
 --- A profile switch, copy or reset (core/DropWatcher.lua's reloadProfile): no row reaction runs,
---- so the incoming `toast.enabled` is read here, and a built toast takes the incoming scale and point.
+--- so the incoming `toast.enabled` and `toast.inCombat` are read here, and a built toast takes the
+--- incoming scale and point.
 function Toast.OnProfileReloaded()
     if setting("enabled") ~= true then stopAll("profile") end
-    if frame then applyPoint() end   -- the incoming profile's scale and point
+    syncHold()
+    toast:Refresh()   -- the incoming profile's scale and point
 end
 
 --- Test mode turned on or off (core/DropWatcher.lua NS.SetTestMode): turned off, a test drop's
@@ -699,26 +641,25 @@ end
 --- The `toast.scale` row's reaction: a built toast, on screen or not, takes the new scale about its
 --- saved anchor (the point itself is unchanged). Before the first toast there is nothing to scale;
 --- the build applies it.
-function Toast.ApplyScale()
-    if frame then applyPoint() end
-end
+function Toast.ApplyScale() toast:Refresh() end
 
 --- Forget the saved position: the toast goes back under the top of the screen.
-function Toast.ResetPosition()
-    store().point = nil
-    if frame then applyPoint() end
-end
+function Toast.ResetPosition() toast:ResetPosition() end
 
 --- The toast's state, for the diagnostics report and the suites: { built, shown, dropId, waiting,
---- held, point }.
+--- queue (the waiting drop ids, oldest first), held, point }.
 --- @return table
 function Toast.Stats()
-    return { built = frame ~= nil, shown = frame ~= nil and frame:IsShown() == true, dropId = shownId,
-        waiting = #queue, queue = { unpack(queue) }, held = held(), point = store().point }
+    local s = toast:Stats()
+    return { built = s.built, shown = s.shown, dropId = s.key, waiting = s.waiting, queue = s.keys or {},
+        held = s.held, point = store().point }
 end
 
 --- The built frame, or nil before the first toast. For the suites.
-function Toast.Frame() return frame end
+function Toast.Frame() return toast:Frame() end
+
+--- The shell's instance. For the suites.
+function Toast.Shell() return toast end
 
 local EVENTS = {
     { "PLAYER_REGEN_DISABLED", "OnToastCombatStart", Toast.OnCombatStart },
@@ -742,13 +683,15 @@ local function listen()
     local M = NS.MSG
     target:RegisterMessage(M.DROP_ADDED, function(_, id) Toast.Consider(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function(_, id) onUpdated(id) end)
-    target:RegisterMessage(M.ASK_STATE_CHANGED, function(_, id) if id == shownId then onUpdated(id) end end)
+    target:RegisterMessage(M.ASK_STATE_CHANGED, function(_, id) if id == shownId() then onUpdated(id) end end)
 end
 listen()
 
+-- The stand-down: the shell's Clear (nothing on screen, nothing waiting, no hold), and every drop
+-- may toast again after the stand-up.
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    queue, toasted = {}, {}
-    Toast.Dismiss()
+    toasted = {}
+    toast:Clear()
     if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()

@@ -23,7 +23,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_surface_parity.lua (21)
+### test_surface_parity.lua (22)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -41,6 +41,7 @@ Total.
 - parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
 - parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon calls
 - parity: the Glow stub carries the whole LibKa0s-Glow-1.0 surface
+- parity: the Toast stub carries the whole LibKa0s-Toast-1.0 instance surface
 - parity: the Perf stub carries every Perf member the addon reaches
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
@@ -1558,7 +1559,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (37)
+### test_toast.lua (45)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1574,7 +1575,8 @@ Total.
 - toast edge: a looter of unknown class is a plain name in row 3's muted tone
 - toast edge: a right-click anywhere closes it as the close mark does; the left button does not
 - toast edge: in test mode the left button still drags it and a left click keeps it
-- toast edge: without LibKa0s the close mark degrades to nothing; Ask takes its corner, a right-click still closes
+- toast edge: without LibKa0s the seam's stub answers: nothing builds or shows, nothing raises
+- toast edge: a Core without a close mark draws none; Ask takes its corner, a right-click still closes
 - toast edge: a right-click on the item button closes it too
 - toast edge: one at a time; the next waits its turn, and each drop toasts once
 - toast edge: the queue keeps the newest MAX_QUEUE drops
@@ -1596,6 +1598,13 @@ Total.
 - toast edge: a test toast goes when the toast is turned off, though it has no countdown
 - toast edge: a profile switch to one with the toast off takes it down
 - toast edge: the stand-down empties the queue and takes the toast down
+- toast edge: a point saved before the shell moved to LibKa0s places it, with no migration
+- toast edge: hovering the item button or Ask holds the countdown too
+- toast edge: a drop met in combat waits after a switch's Clear; toast.inCombat on mid-combat shows the next
+- toast edge: a toast held for combat comes back with its full duration
+- toast edge: Show in combat turned off mid-combat keeps the toast on screen and holds the next
+- toast edge: a profile switch mid-combat to one without Show in combat holds the next
+- toast edge: on a shell that names no waiting keys, the drops gone from the feed still leave the queue
 - toast: the diagnostics' window section reports the toast
 
 ### test_glow.lua (14)
@@ -1902,11 +1911,12 @@ Total.
 - debug: the trade timer's bag scan logs on change only, not on every scan
 - debug: the search box logs its text once, when it loses focus, never per keystroke
 
-### test_vendor_sync.lua (3)
+### test_vendor_sync.lua (4)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
+- libs/LibKa0s/Toast.lua, vendored alone, is the LibKa0s branch's file byte for byte
 
 ### test_locale.lua (6)
 
@@ -1984,7 +1994,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 12 |
-| test_surface_parity.lua | 21 |
+| test_surface_parity.lua | 22 |
 | test_setup.lua | 24 |
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
@@ -2046,7 +2056,7 @@ Total.
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 37 |
+| test_toast.lua | 45 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
 | test_layers.lua | 9 |
@@ -2062,7 +2072,7 @@ Total.
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
-| test_vendor_sync.lua | 3 |
+| test_vendor_sync.lua | 4 |
 | test_locale.lua | 6 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -2070,4 +2080,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1712** |
+| **Total** | **1722** |

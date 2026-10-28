@@ -702,7 +702,7 @@ local function installTrade(M)
     M.GetTradeTargetItemLink = function(i) return M.tradeItems.target[i] end
 end
 
--- The toast's alert (core/Compat.lua's PlayAlertSound): SOUNDKIT's two entries it reads, and every
+-- The toast's alert (LibKa0s-Toast-1.0's `sound`): SOUNDKIT's two entries it reads, and every
 -- PlaySound(id, channel) call recorded in `sounds`.
 local function installSound(M)
     M.SOUNDKIT = { UI_EPICLOOT_TOAST = 31578, RAID_WARNING = 8959 }

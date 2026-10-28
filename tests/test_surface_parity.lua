@@ -118,6 +118,12 @@ test("parity: the Glow stub carries the whole LibKa0s-Glow-1.0 surface", functio
     T.assertSurfaceParity(degraded.GlowLib, "LibKa0s-Glow-1.0")
 end)
 
+test("parity: the Toast stub carries the whole LibKa0s-Toast-1.0 instance surface", function()
+    -- red under: drop `Hold` from core/ToastSetup.lua's stub
+    T.assertSurfaceParity(live.NewToast({ build = function() end }), degraded.ToastStub, "Toast instance vs stub")
+    T.assertTrue(degraded.NewToast({ build = function() end }) == degraded.ToastStub, "absent: the stub answers")
+end)
+
 -- The Perf members the addon can reach: the gate fields, the bracket sinks, the hold pair and the
 -- slash entry point. The live instance publishes far more (the panel, the record, the run state),
 -- which the stub is not obliged to carry.

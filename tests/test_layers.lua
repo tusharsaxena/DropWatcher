@@ -4,11 +4,12 @@
 -- installs on every instance before any source loads). Levels are read relative to the window's own level W: the window at MEDIUM and
 -- toplevel, the docked Offer panel W+1, the floating Offer panel W+30 and the compact Filters panel
 -- W+35 in the window's strata, the Edit message box on DIALOG at W+40 and toplevel, the toast on
--- HIGH; inside an item button, its border +1 and the glow +2. Last, a static scan: no strata literal
--- and no absolute level anywhere in the addon's own source (frame-layering-§3, §5).
+-- HIGH and toplevel (LibKa0s-Toast-1.0's T5 tier); inside an item button, its border +1 and the
+-- glow +2. Last, a static scan: no strata literal and no absolute level anywhere in the addon's own
+-- source (frame-layering-§3, §5).
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
 
 local function enabled() return T.enableAddon() end
 
@@ -131,8 +132,9 @@ test("layers: the toast is HIGH, above the window and under the modal", function
     NS.addon:SendMessage(NS.MSG.DROP_ADDED, 1)
     local f = NS.Toast.Frame()
     assertTrue(f ~= nil, "the toast was built")
-    assertEqual(m.__layers(f).strata, "HIGH")
-    assertFalse(m.__layers(f).toplevel)
+    assertEqual(m.__layers(f).strata, "HIGH"); assertEqual(m.__layers(f).strata, NS.Constants.LAYERS.STRATA.ALERT)
+    -- LibKa0s-Toast-1.0 draws frame-layering's T5 tier: toplevel and clamped (the shell's own frame).
+    assertTrue(m.__layers(f).toplevel)
 end)
 
 test("layers: an item button's border is button + 1, explicit, and the glow button + 2", function()

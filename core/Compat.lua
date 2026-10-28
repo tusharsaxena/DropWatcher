@@ -965,17 +965,6 @@ function Compat.SpecName(specID)
     return name
 end
 
---- Plays the toast's alert (design spec §11.5) through PlaySound, from SOUNDKIT: the epic loot
---- toast's sound, else the raid warning's. False when the API or both entries are absent.
---- @return boolean
-function Compat.PlayAlertSound()
-    local kit = type(SOUNDKIT) == "table" and SOUNDKIT or nil
-    local id = kit and (kit.UI_EPICLOOT_TOAST or kit.RAID_WARNING)
-    if type(id) ~= "number" or not PlaySound then return false end
-    PlaySound(id, "Master")
-    return true
-end
-
 -- ── The Encounter Journal (the simulator's item pool, simulator spec §3) ────────────────────
 -- Reads and selections only; the save and restore, the async wait and the fallback are SimPool's.
 

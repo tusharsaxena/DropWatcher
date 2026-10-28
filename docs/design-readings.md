@@ -342,8 +342,8 @@ toast or its buttons, and resumes with them (at least one). **Test mode**'s plac
 like live drops (with `toast.enabled` on); a test drop's toast has no countdown, so it stays to be
 dragged into place until it is closed or test mode ends. Only in test mode can it be dragged, and
 the Window's Reset position forgets its point too. **The sound** is SOUNDKIT's
-`UI_EPICLOOT_TOAST`, else `RAID_WARNING`, on the Master channel (`Compat.PlayAlertSound`). That it
-shows, pauses, places and sounds right in game is TOAST-1. The toast read as three lines: the
+`UI_EPICLOOT_TOAST`, else `RAID_WARNING`, on the Master channel (`Compat.PlayAlertSound`; since
+AT-A2 LibKa0s-Toast-1.0 plays the same sound and the shim is retired). That it shows, pauses, places and sounds right in game is TOAST-1. The toast read as three lines: the
 title, the item, and `Looted by Seta · +19 ▲ · Likely tradeable` (the `▲` an `NS.TipMarks` texture
 since DW-F5). **Superseded by feedback-9 (2026-10-13)** (feedback-9 spec §0, DW-I0): the toast is
 four rows beside a four-row icon (56 pixels; the toast 350 wide): the title with Ask and the close
