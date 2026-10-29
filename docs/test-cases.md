@@ -232,6 +232,38 @@ Total.
 - migrate 10: it runs once; a player's later pick survives the next load
 - migrate 10: idempotent on a raw table, the companion seeded so no sentinel lands; without the library too
 
+### test_skin_picker.lua (17)
+
+- Skin picker: skin.pickerSeen defaults to false, a skip-render row of General's Skin tab
+- Skin picker: the spec names this owner, its seams, the Skin tab and the eye
+- Skin picker: an unseen profile shows it; a seen one does not
+- Skin picker: the login fuse shows it once a session, two seconds after OnEnable
+- Skin picker: the stand-down puts the fuse out; the stand-up lights it again
+- Skin picker: in combat a start waits for PLAYER_REGEN_ENABLED, once
+- Skin picker: a held start is dropped by HideSkinPicker
+- Skin picker: never while the addon is switched off or a perf capture holds it down
+- Skin picker: a new profile and a reset profile show it again
+- Skin picker: the player's close marks it seen; this addon's own hide does not
+- Skin picker: a pick previews, unsaved; Apply saves it and marks the picker seen
+- Skin picker: the close control puts the stored skin back, saves nothing, and marks it seen
+- Skin picker: the gear saves the pick and opens General on its Skin tab
+- Skin picker: the eye opens the window in test mode and leaves the picker up
+- Skin picker: the stand-down with a preview pending puts the stored skin back, unsaved, unseen
+- Skin picker: a profile switch with a preview pending wears the new profile's skin
+- Skin picker: degraded, nothing shows and nothing raises
+
+### test_skin_settings.lua (9)
+
+- skin settings: under a non-default skin the pages' own widgets paint, past the proxy
+- skin settings: under Ka0s Default the pages' own widgets paint like every skin's
+- skin settings: a release hands a painted widget back stock
+- skin settings: the Situations placeholder's undo rides the release chain and still parks the table
+- skin settings: the Situations cells follow a skin switch and the Ignore settings panel, live
+- skin settings: the Profiles page paints the tree AceConfigDialog drew
+- skin settings: degraded, PaintAce and PaintAceTree paint nothing and a release still runs
+- skin tools: the debug console, perf panel, sim panel, test strip and toast are this owner's
+- skin tools: the live debug console is painted for this owner
+
 ### test_slash.lua (26)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
@@ -2056,6 +2088,8 @@ Total.
 | test_skin_chrome.lua | 9 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 9 |
+| test_skin_picker.lua | 17 |
+| test_skin_settings.lua | 9 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
 | test_window_shell.lua | 62 |
@@ -2136,4 +2170,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1762** |
+| **Total** | **1788** |

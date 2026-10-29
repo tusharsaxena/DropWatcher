@@ -50,6 +50,11 @@ local addonName, NS = ...
 --                           carries neither). Release restores stock.
 --   NS.SkinOnRelease(w, fn) host release work chained onto the widget's own OnRelease
 --                           (`Skin:OnRelease`), so it and the skin's restore both run.
+--   NS.MaybeShowSkinPicker() the first-run skin picker (LibKa0s OptionsSkinPicker 1): `O.SkinPicker`
+--                           while the profile's `skin.pickerSeen` is false and the addon stands up,
+--                           held through combat. NS.HideSkinPicker() takes it down unmarked;
+--   NS.SkinPickerSpec()     the spec it hands O.SkinPicker; NS.ArmSkinPicker(on) the login fuse;
+--                           NS.SkinPickerCombatEnd() the held start's combat edge.
 --
 -- ── WHERE IT LOADS ───────────────────────────────────────────────────────────────────────────
 --
@@ -337,6 +342,134 @@ end
 local function storedIgnore()
     if not NS.db then return true, false end
     return stored(PANEL_PATH) == true, stored(FONTS_PATH) == true
+end
+
+-- ── the first-run skin picker (LibKa0s OptionsSkinPicker 1, LibKa0s#64; the rollout's O3) ───
+--
+-- WHEN. Once a session, LOGIN_DELAY seconds after OnEnable (off the login spike), on a fuse
+-- NS.ArmSkinPicker lights and the stand-down puts out; a session that started stood down lights it
+-- at the stand-up instead. And again after every profile event (core/DropWatcher.lua's
+-- reloadProfile), because a new, copied or reset profile carries its own `skin.pickerSeen`. Never
+-- while the addon stands down (either hold: `disabled` or the perf capture), and never in combat: a
+-- start in combat is held for core/DropWatcher.lua's PLAYER_REGEN_ENABLED edge (DW.OnCombatEnd, a
+-- feature event, so it too is down while stood down), one start at most. The window's own
+-- auto-open in an instance is not a trigger.
+--
+-- SEEN. The library calls `onClose` once per showing, by any route the player takes (Apply, its
+-- close control, the gear, Escape), and once for a picker still queued behind another Ka0s addon's
+-- when that addon's "Apply to all Ka0s addons" dismisses it unshown; that is the one write of
+-- `skin.pickerSeen`, through NS.SchemaRuntime.Set. A close this addon makes itself
+-- (NS.HideSkinPicker: the stand-down, a profile event) is not the player's and writes nothing.
+--
+-- PREVIEW. A pick only previews (the Skin major moves and the addon repaints); `set`
+-- (NS.WriteSkinChoice) runs only on Apply, the gear or Apply to all. The close control and Escape
+-- put back the stored choice as `get` reads it at the close, so the host re-applies nothing. A
+-- profile event takes the picker down FIRST, before the new profile's skin is applied, so the new
+-- profile's whole pair is what stays worn. The eye opens the window in test mode; the library
+-- raises its DIALOG window after onPreview returns, so the HIGH window cannot cover it.
+--
+-- QUEUED. One picker is up at a time across every Ka0s addon: while another addon's is up,
+-- O.SkinPicker queues this one and answers nil, "queued", which NS.MaybeShowSkinPicker passes
+-- through; it shows when the other closes.
+
+local PICKER_PATH = "skin.pickerSeen"
+local LOGIN_DELAY = 2
+local pickerHeld = false   -- a start made in combat waits for the PLAYER_REGEN_ENABLED edge
+local pickerFuse           -- the login fuse while it is lit
+local pickerLoginDone = false
+local quietClose = false   -- true while NS.HideSkinPicker takes the picker down
+
+-- The Options instance (settings/OptionsSetup.lua), read at call time: it is built after this file.
+local function options()
+    local S = NS.addon and NS.addon.Settings
+    return S and S.Helpers
+end
+
+--- The eye: the window in test mode, so the player sees the skin on this addon's own frames. Test
+--- mode's start opens the window itself; a mode already on only needs the window shown. A refused
+--- start (combat, a simulation) prints its own line.
+local function previewSkin()
+    if NS.State and NS.State.testMode then
+        if NS.ShowWindow then NS.ShowWindow() end
+    elseif NS.SetTestMode then
+        NS.SetTestMode(true)
+    end
+end
+
+--- The player's close: the picker seen, and nothing else (the library's put-back wears the stored
+--- choice already).
+local function pickerClosed()
+    if quietClose then return end
+    local S = NS.SchemaRuntime
+    if not (NS.db and S and S.Set) then return end
+    S.Set(PICKER_PATH, true)
+end
+
+--- The spec NS.MaybeShowSkinPicker hands O.SkinPicker: this owner, its read and write seams, the
+--- page key settings/Panel.lua registered and its Skin tab's key (the gear's default opens them),
+--- the eye and the close.
+function NS.SkinPickerSpec()
+    return {
+        owner = addonName, get = NS.SkinChoice, set = NS.WriteSkinChoice,
+        page = "general", tab = "Appearance",
+        onPreview = previewSkin, onClose = pickerClosed,
+    }
+end
+
+--- True while this profile has not closed the picker and the addon stands up.
+local function pickerDue()
+    if not NS.db then return false end
+    if NS.IsStoodDown and NS.IsStoodDown() then return false end
+    return stored(PICKER_PATH) == false
+end
+
+--- Take the picker down, unmarked, with any start held for combat: the stand-down and a profile
+--- event. A queued picker leaves the queue.
+function NS.HideSkinPicker()
+    pickerHeld = false
+    local O = options()
+    if not (O and type(O.HideSkinPicker) == "function") then return end
+    quietClose = true
+    local ok, err = pcall(O.HideSkinPicker)
+    quietClose = false
+    if not ok then error(err, 0) end
+end
+
+--- Show the picker when this profile has not seen it: answers O.SkinPicker's frame, or nil,
+--- "queued" while another Ka0s addon's picker is up (it shows when that one closes), or nil. A
+--- profile that has seen it takes a shown picker down; a start in combat is held for its end.
+function NS.MaybeShowSkinPicker()
+    local O = options()
+    if not (O and type(O.SkinPicker) == "function") then return nil end
+    if not pickerDue() then
+        NS.HideSkinPicker()
+        return nil
+    end
+    if NS.Compat and NS.Compat.InCombatLockdown() then
+        pickerHeld = true
+        return nil
+    end
+    pickerHeld = false
+    return O.SkinPicker(NS.SkinPickerSpec())
+end
+
+--- The PLAYER_REGEN_ENABLED edge (DW.OnCombatEnd): a start held through combat shows now.
+function NS.SkinPickerCombatEnd()
+    if not pickerHeld then return nil end
+    pickerHeld = false
+    return NS.MaybeShowSkinPicker()
+end
+
+--- Light (`on`) or put out the session's login fuse. Lit at OnEnable and at the stand-up, once
+--- a session: a fuse that already burned is not lit again. Put out at the stand-down.
+function NS.ArmSkinPicker(on)
+    if pickerFuse then pickerFuse:Cancel(); pickerFuse = nil end
+    if not on or pickerLoginDone or not (C_Timer and C_Timer.NewTimer) then return end
+    pickerFuse = C_Timer.NewTimer(LOGIN_DELAY, function()
+        pickerFuse = nil
+        pickerLoginDone = true
+        NS.MaybeShowSkinPicker()
+    end)
 end
 
 -- AceGUI keeps ONE callback per event name (options-ui-§19). Without the library's chain there is

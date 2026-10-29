@@ -30,6 +30,9 @@ end
 
 local function enabled(seed)
     local NS, _, m = T.enableAddon({ mock = seed })
+    -- These cases count their own timers: the first-run skin picker's login fuse (core/SkinSetup.lua,
+    -- tests/test_skin_picker.lua) is put out.
+    NS.ArmSkinPicker(false)
     return NS, m, NS.ItemFacts
 end
 
