@@ -297,7 +297,9 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
 - **The settings panel.** Every AceGUI widget the pages acquire themselves is painted for this owner
   (`NS.SkinPaintAce`, restored on release), the Situations table's session-held cells repaint on a
   switch, and the Profiles page paints the tree AceConfigDialog draws (`NS.SkinPaintAceTree`).
-  Nothing in the panel is painted while Ignore settings panel is on (a new profile's default).
+  Nothing in the panel is painted while Ignore settings panel is on (a new profile's default): the
+  cells go back stock, and the table's own headers, labels and stripes read `NS.SkinPanelColor`, which
+  answers the Ka0s Default value while the panel is ignored.
 - **What Ka0s Default changes.** Ka0s Default keeps every color, but three things look new under it:
   every string reads in Oxanium (the library's Ka0s Default face) instead of Friz Quadrata, the title
   bar wears the shell's darker band, and the four scroll bars are the library's corridor and flat
@@ -315,6 +317,8 @@ What stays out of the skin, each for its reason (the literal gate's allow-list c
 | The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | the player's stored swatches, and the two hues mean main spec against off-spec |
 | Item quality and class colors | game meaning; a quality reads the skin's `q.*` only where a skin overrides it, else the client's |
 | GameTooltip's frame, StaticPopups, the launcher's button and menu, the resize grip | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
+| The Edit message box's `ChatFontNormal` face (`modules/DetailCard.lua`) | it previews a whisper, so it wears chat's own face (the rollout's DropWatcher call D6) |
+| The icon border's `IS.SOLID_EDGE` (WHITE8X8) and `IS.BORDER_FALLBACK` (UI-Tooltip-Border) in `modules/IconStyle.lua` | LibSharedMedia key resolution for the border's edge file, not a color: what a style name draws when LSM has no path for it |
 
 ## Taint Notes
 

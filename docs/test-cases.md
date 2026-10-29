@@ -202,7 +202,7 @@ Total.
 - Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
 - Skin seam: without the library the facade answers Ka0s Default, owner tokens included
 
-### test_skin_chrome.lua (9)
+### test_skin_chrome.lua (10)
 
 - skin chrome: under Ka0s Default the window draws the pixels it drew before skins
 - skin chrome: a skin switch repaints every surface in the new skin's colors, with no reload
@@ -210,6 +210,7 @@ Total.
 - skin chrome: the rows' font size holds across a skin switch
 - skin chrome: the verdict glyphs are the skin's monospace face, Ka0s Default's JetBrains Mono
 - skin chrome: the shown toast repaints its rows' tones on a skin switch
+- skin chrome: a toast on screen repaints once on a skin switch, its tones in the new skin's
 - skin chrome: the refusal red and the trade reason's gray are escapes of the skin's tokens
 - skin chrome: an item quality keeps the client's color unless the skin overrides it
 - skin chrome: without the library the window's own colors are Ka0s Default's
@@ -252,13 +253,14 @@ Total.
 - Skin picker: a profile switch with a preview pending wears the new profile's skin
 - Skin picker: degraded, nothing shows and nothing raises
 
-### test_skin_settings.lua (9)
+### test_skin_settings.lua (10)
 
 - skin settings: under a non-default skin the pages' own widgets paint, past the proxy
 - skin settings: under Ka0s Default the pages' own widgets paint like every skin's
 - skin settings: a release hands a painted widget back stock
 - skin settings: the Situations placeholder's undo rides the release chain and still parks the table
 - skin settings: the Situations cells follow a skin switch and the Ignore settings panel, live
+- skin settings: the Situations headers, labels and stripes stay Ka0s Default with the settings panel ignored
 - skin settings: the Profiles page paints the tree AceConfigDialog drew
 - skin settings: degraded, PaintAce and PaintAceTree paint nothing and a release still runs
 - skin tools: the debug console, perf panel, sim panel, test strip and toast are this owner's
@@ -2085,11 +2087,11 @@ Total.
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 45 |
 | test_skin_setup.lua | 18 |
-| test_skin_chrome.lua | 9 |
+| test_skin_chrome.lua | 10 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 9 |
 | test_skin_picker.lua | 17 |
-| test_skin_settings.lua | 9 |
+| test_skin_settings.lua | 10 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
 | test_window_shell.lua | 62 |
@@ -2170,4 +2172,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1788** |
+| **Total** | **1790** |
