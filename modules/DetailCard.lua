@@ -95,15 +95,29 @@ local function textWidth(fs, text)
     return w
 end
 
+-- A box's fill and edge from the skin (DW-G13): the owner tokens `dw.cardBg` / `dw.cardBorder`
+-- (Ka0s Default: today's 0.08 fill and the shared window edge's inner line), on the box's own
+-- backdrop so its shape is today's, repainted on a skin switch.
+local function paintBox(f)
+    f:SetBackdropColor(NS.SkinColor("dw.cardBg"))
+    f:SetBackdropBorderColor(NS.SkinColor("dw.cardBorder"))
+end
+
 local function box(parent)
     local f = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     local S = NS.SKIN
     if f.SetBackdrop and S and S.bgFile then
         f:SetBackdrop({ bgFile = S.bgFile, edgeFile = S.edgeFile, edgeSize = S.edgeSize })
-        f:SetBackdropColor(0.08, 0.08, 0.10, 0.9)
-        f:SetBackdropBorderColor(unpack(S.innerBorder or S.border))
+        NS.SkinPaint(f, paintBox)
     end
     return f
+end
+
+-- A text in the skin's face; its color is the tone set at paint time.
+local function faced(parent, template)
+    local fs = parent:CreateFontString(nil, "OVERLAY", template)
+    NS.Skin.Font(fs)
+    return fs
 end
 
 -- A verdict glyph's string: the monospace face, at the table cells' size (feedback-21 H5).
@@ -111,7 +125,7 @@ local GLYPH_SIZE, GLYPH_GAP, CHIP_PAD = 12, 3, 6
 
 local function newGlyph(parent)
     local g = parent:CreateFontString(nil, "OVERLAY")
-    g:SetFont(C.FONT_MONO, GLYPH_SIZE, "")
+    NS.SkinMono(g, GLYPH_SIZE)
     g:Hide()
     return g
 end
@@ -127,7 +141,7 @@ end
 local function newChip(parent)
     local c = box(parent)
     c:SetHeight(K.CHIP_H)
-    c.text = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    c.text = faced(c, "GameFontHighlightSmall")
     c.text:SetPoint("CENTER", c, "CENTER", 0, 0)
     c.glyph = newGlyph(c)
     c.glyph:SetPoint("LEFT", c, "LEFT", CHIP_PAD, 0)
@@ -163,7 +177,7 @@ local function buildHeader(card)
     local P = K.CARD_PAD
     card.icon = NS.WindowGroup.ItemButton(card, K.CARD_ICON)
     card.icon:SetPoint("TOPLEFT", card, "TOPLEFT", P, -P)
-    card.name = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    card.name = faced(card, "GameFontNormal")
     card.name:SetPoint("TOPLEFT", card.icon, "TOPRIGHT", P, 0)
     card.name:SetJustifyH("LEFT")
     card.nameTip = CreateFrame("Frame", nil, card)
@@ -190,33 +204,33 @@ local function newSideRow(side, i)
     r:SetHeight(K.SIDE_ROW_H)
     r:SetPoint("TOPLEFT", side, "TOPLEFT", 10, -(24 + (i - 1) * K.SIDE_ROW_H))
     r:SetPoint("TOPRIGHT", side, "TOPRIGHT", -10, -(24 + (i - 1) * K.SIDE_ROW_H))
-    r.label = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    r.label = faced(r, "GameFontDisableSmall")
     r.label:SetPoint("LEFT", r, "LEFT", 0, 0)
     r.label:SetWidth(K.SIDE_LABEL - 4)   -- a member's name (your own drop's rows) is cut, not drawn over the icon
     r.label:SetJustifyH("LEFT")
     r.label:SetWordWrap(false)
-    r.labelRGB = { r.label:GetTextColor() }   -- the template's gray, put back after a class color
-    r.lead = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")   -- the Replaces row's item level
+    r.label:SetTextColor(NS.SkinColor("text.disabled"))   -- the template's gray, from the skin
+    r.lead = faced(r, "GameFontHighlightSmall")   -- the Replaces row's item level
     r.lead:SetPoint("LEFT", r, "LEFT", K.SIDE_LABEL, 0)
     r.lead:SetWordWrap(false)
     r.item = NS.WindowGroup.ItemButton(r, K.SIDE_ROW_H - 2)
-    r.value = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.value = faced(r, "GameFontHighlightSmall")
     r.value:SetJustifyH("LEFT")
     r.value:SetWordWrap(false)
     r.mark = NS.WindowRows.NewMark(r, r.value)   -- your own drop's ` [YOU]` (feedback-7 spec §2)
     r.glyph = newGlyph(r)                         -- the verdict glyph after the text (feedback-21 H5)
     r.glyph:SetPoint("LEFT", r.value, "RIGHT", NS.WindowRows.MARK_GAP, 0)
-    r.glyphText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.glyphText = faced(r, "GameFontHighlightSmall")
     r.glyphText:SetPoint("LEFT", r.glyph, "RIGHT", GLYPH_GAP, 0)
     r.glyphText:SetWordWrap(false)
     -- A dual mark's second part (feedback-21 H7): `/ 324`, then its own glyph and number.
-    r.moreText = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.moreText = faced(r, "GameFontHighlightSmall")
     r.moreText:SetPoint("LEFT", r.glyphText, "RIGHT", NS.WindowRows.MARK_GAP, 0)
     r.moreText:SetWordWrap(false)
     r.moreText:Hide()
     r.glyph2 = newGlyph(r)
     r.glyph2:SetPoint("LEFT", r.moreText, "RIGHT", NS.WindowRows.MARK_GAP, 0)
-    r.glyphText2 = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.glyphText2 = faced(r, "GameFontHighlightSmall")
     r.glyphText2:SetPoint("LEFT", r.glyph2, "RIGHT", GLYPH_GAP, 0)
     r.glyphText2:SetWordWrap(false)
     r.glyphText2:Hide()
@@ -229,7 +243,7 @@ local function newSide(card)
     side:SetHeight(K.SIDE_H)
     side.title = side:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     side.title:SetPoint("TOPLEFT", side, "TOPLEFT", 10, -8)
-    side.title:SetTextColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
+    NS.Skin.Text(side.title, "dw.idle")
     side.verdict = newChip(side)
     side.verdict:SetPoint("TOPRIGHT", side, "TOPRIGHT", -8, -5)
     side.rows = {}
@@ -245,11 +259,12 @@ local function buildTrade(card)
     t:SetHeight(K.TRADE_BOX_H)
     t.chip = newChip(t)
     t.chip:SetPoint("TOPLEFT", t, "TOPLEFT", 10, -8)
-    t.text = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    t.text = faced(t, "GameFontHighlightSmall")
     t.text:SetPoint("TOPLEFT", t.chip, "TOPRIGHT", 10, -2)
     t.text:SetPoint("RIGHT", t, "RIGHT", -10, 0)
     t.text:SetJustifyH("LEFT")
     t.meta = t:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    NS.Skin.Text(t.meta, "disabled")
     t.meta:SetPoint("TOPLEFT", t.text, "BOTTOMLEFT", 0, -3)
     t.meta:SetJustifyH("LEFT")
     attach(t)
@@ -379,9 +394,9 @@ end
 -- ── painting ────────────────────────────────────────────────────────────────────────────────
 
 local function qualityTone(fs, drop)
-    local q = type(drop.facts) == "table" and drop.facts.quality
-    local qc = type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[q]
-    if qc then fs:SetTextColor(qc.r, qc.g, qc.b) else setTone(fs, "plain") end
+    local q = type(drop.facts) == "table" and drop.facts.quality or nil
+    local r, g, b = NS.QualityColor(q)   -- the skin's q.* token, else the client's color (E4)
+    if r then fs:SetTextColor(r, g, b) else setTone(fs, "plain") end
 end
 
 -- A stacked card's chips: the ones past its width are left out (the name is cut short too).
@@ -462,7 +477,7 @@ local function paintSideRow(r, line, width)
     if line.labelClassFile then
         NS.WindowGroup.ClassTone(r.label, line.labelClassFile, "plain")   -- a member's name (feedback-20)
     else
-        r.label:SetTextColor(unpack(r.labelRGB))
+        r.label:SetTextColor(NS.SkinColor("text.disabled"))
     end
     r.value:SetText(line.text)
     setTone(r.value, line.tone)
@@ -668,11 +683,11 @@ local function buildEditor()
     NS.ApplySkin(e)
     e.title = e:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     e.title:SetPoint("TOPLEFT", e, "TOPLEFT", 10, -9)
-    e.title:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    NS.Skin.Text(e.title, "heading")   -- gold, in the skin's title face
     e.closeButton = NS.MakeCloseButton(e, function() e:Hide() end)
     if e.closeButton then e.closeButton:SetPoint("TOPRIGHT", e, "TOPRIGHT", -6, -6) end
     editorBox(e)
-    e.counter = e:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    e.counter = faced(e, "GameFontDisableSmall")
     e.counter:SetPoint("BOTTOMLEFT", e, "BOTTOMLEFT", 12, 16)
     editorButtons(e)
     e:Hide()

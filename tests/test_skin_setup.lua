@@ -97,24 +97,49 @@ test("Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere
 end)
 
 test("Skin seam: the palette's Ka0s Default values are the owner tokens' defaults", function()
-    -- The tokens were cut from core/Constants.lua's palette; a default that drifts from the value
-    -- the palette held is a Ka0s Default pixel moved (X1).
+    -- The tokens were cut from core/Constants.lua's palette as it stood before skins (C.TONE, C.IDLE,
+    -- C.CHEVRON_ROW and the chrome literals the DW-G gaps name), written out here because the palette
+    -- now reads them: a default that drifts from the value the palette held is a Ka0s Default pixel
+    -- moved (X1).
     local NS = T.newAddon()
-    local C = NS.Constants
-    local function rgb(c) return { c.r, c.g, c.b, c.a or 1 } end
     local want = {
-        ["dw.upgrade"] = rgb(C.TONE.good), ["dw.sidegrade"] = rgb(C.TONE.yellow),
-        ["dw.downgrade"] = rgb(C.TONE.red), ["dw.offer"] = rgb(C.TONE.cyan),
-        ["dw.offSpec"] = rgb(C.TONE.offspec), ["dw.cantUse"] = rgb(C.TONE.redMuted),
-        ["dw.notWanted"] = rgb(C.TONE.bad), ["dw.urgent"] = rgb(C.TONE.warn),
-        ["dw.statGain"] = rgb(C.TONE.greenMuted), ["dw.plain"] = rgb(C.TONE.plain),
-        ["dw.idle"] = rgb(C.IDLE), ["dw.tipHint"] = rgb(C.IDLE), ["dw.tipLabel"] = rgb(C.TONE.mutedGold),
-        ["dw.chevron"] = rgb(C.CHEVRON_ROW),
+        ["dw.upgrade"] = { 0.30, 0.85, 0.40 }, ["dw.sidegrade"] = { 1.00, 0.96, 0.42 },
+        ["dw.downgrade"] = { 1.00, 0.36, 0.32 }, ["dw.offer"] = { 0.35, 0.82, 0.95 },
+        ["dw.offSpec"] = { 0.30, 0.85, 0.85 }, ["dw.cantUse"] = { 0.72, 0.36, 0.34 },
+        ["dw.notWanted"] = { 0.55, 0.55, 0.58 }, ["dw.urgent"] = { 1.00, 0.65, 0.15 },
+        ["dw.statGain"] = { 0.42, 0.74, 0.46 }, ["dw.plain"] = { 0.92, 0.92, 0.92 },
+        ["dw.idle"] = { 0.62, 0.62, 0.64 }, ["dw.tipHint"] = { 0.62, 0.62, 0.64 },
+        ["dw.tipLabel"] = { 0.80, 0.68, 0.36 }, ["dw.chevron"] = { 1, 1, 1, 0.55 },
+        ["dw.restricted"] = { 1, 0.6, 0.2 }, ["dw.rowOpen"] = { 1, 0.82, 0, 0.08 },
+        ["dw.btnBg"] = { 0.12, 0.12, 0.14, 1 }, ["dw.btnBorder"] = { 0.24, 0.24, 0.27, 0.85 },
+        ["dw.rule"] = { 1, 1, 1, 0.1 }, ["dw.cardBg"] = { 0.08, 0.08, 0.10, 0.9 },
+        ["dw.cardBorder"] = { 0.24, 0.24, 0.27, 0.85 },
     }
     for name, c in pairs(want) do
         assertTrue(NS.SKIN_TOKENS[name] ~= nil, name .. " is declared")
         sameColor(name, NS.SKIN_TOKENS[name].default, c)
     end
+end)
+
+test("Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch", function()
+    -- red under: a tone left empty at load, a tone read from the wrong token, a switch that builds a
+    -- new table (a file that took C.TONE.good at load would keep the old color) or that leaves the
+    -- old skin's values in it.
+    local NS, _, m = T.bootAddon()
+    local C, Skin = NS.Constants, skinOf(m)
+    local good = C.TONE.good
+    for key, token in pairs(C.TONE_TOKEN) do
+        local t = C.TONE[key]
+        sameColor(key .. " (ka0s)", { t.r, t.g, t.b }, { NS.Skin.Color(token) })
+    end
+    Skin:SetChoice(OWNER, "ka0s", "obsidian")
+    assertTrue(rawequal(C.TONE.good, good), "the same table, refilled")
+    for key, token in pairs(C.TONE_TOKEN) do
+        local t, r, g, b = C.TONE[key], NS.Skin.Color(token)
+        sameColor(key .. " (obsidian)", { t.r, t.g, t.b }, { r, g, b })
+    end
+    assertTrue(C.TONE.statCrit.r == 1 and C.TONE.glowMain.g == 244 / 255,
+        "the stat names' and the glows' colors are not the skin's (E5, E6)")
 end)
 
 -- ── the keys and the rows ────────────────────────────────────────────────────────────────────

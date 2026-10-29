@@ -93,8 +93,9 @@ CG.ILVL_GAP = 4        -- line 1: between the item level and the name (feedback-
 CG.HALVES_GAP = 12     -- You and Them: between one half's last piece and the next label (feedback-10 spec §2)
 CG.ASK_GAP = 6         -- lines 2 and 3: between their text and the action button
 
--- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone).
-local SEP = "|cff9e9ea3·|r "
+-- The muted dot between line 2's pieces (an escape, so the piece keeps its own tone): the skin's idle
+-- gray `dw.idle` (Ka0s Default 9e9ea3), read at each paint so it follows a skin switch.
+local function sep() return (NS.SkinEscape("dw.idle") or "") .. "·|r " end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
@@ -163,9 +164,9 @@ end
 CG.At = at
 
 local function qualityColor(drop)
-    local q = type(drop.facts) == "table" and drop.facts.quality
-    local qc = type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[q]
-    if qc then return qc.r, qc.g, qc.b end
+    local q = type(drop.facts) == "table" and drop.facts.quality or nil
+    local r, g, b = NS.QualityColor(q)   -- the skin's q.* token, else the client's color (E4)
+    if r then return r, g, b end
     local p = C.TONE.plain
     return p.r, p.g, p.b
 end
@@ -198,13 +199,14 @@ local function fontString(card, template)
     local fs = card:CreateFontString(nil, "OVERLAY", template or "GameFontHighlightSmall")
     fs:SetJustifyH("LEFT")
     fs:SetWordWrap(false)
+    NS.Skin.Font(fs)   -- the skin's face; the color is the piece's tone, set at paint time
     return fs
 end
 CG.FontString = fontString
 
 local function monoString(card)
     local fs = card:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(C.FONT_MONO, 12, "")
+    NS.SkinMono(fs, 12)
     return fs
 end
 CG.MonoString = monoString
@@ -223,10 +225,9 @@ CG.Piece = piece
 local function buildBackground(card)
     card.stripe = card:CreateTexture(nil, "BACKGROUND")
     card.stripe:SetAllPoints(card)
-    card.stripe:SetColorTexture(1, 1, 1, 0.03)
     card.selected = card:CreateTexture(nil, "BACKGROUND")
     card.selected:SetAllPoints(card)
-    card.selected:SetColorTexture(C.GOLD.r, C.GOLD.g, C.GOLD.b, 0.08)
+    NS.WindowGroup.PaintRowWashes(card)   -- the Drops rows' stripe and expanded wash, from the skin
     card.quality = card:CreateTexture(nil, "ARTWORK")
     card.quality:SetWidth(CG.QUALITY_W)
     card.quality:SetPoint("TOPLEFT", card, "TOPLEFT", 0, 0)
@@ -420,8 +421,9 @@ function CG.PaintLineTwo(card, cc, right)
     local last = cc.looter.you and c.looter.mark or c.looter.text
     at(c.slot.text, "LEFT", last, "RIGHT", 4, 0)
     c.looter.hit:SetPoint("BOTTOMRIGHT", last, "BOTTOMRIGHT", 0, 0)
-    paintText(c.slot, cc.slot, SEP)
-    paintText(c.armorType, cc.armorType, SEP)
+    local dot = sep()
+    paintText(c.slot, cc.slot, dot)
+    paintText(c.armorType, cc.armorType, dot)
     if right then paintText(c[right], cc[right]) end
 end
 
@@ -475,7 +477,7 @@ function CG.PaintHalf(card, key, half, single)
     local c = card.cells
     local label, h = c[key .. "Label"].text, c[key]
     label:SetText(half.label)
-    label:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    label:SetTextColor(NS.SkinColor("text.heading"))   -- gold (feedback-10 spec §2)
     local second = h.leadLevel and NS.WindowGroup.PaintLead(h, not single and half.parts or nil) or nil
     local p = second or half
     h.level:SetText(p.level or "")
@@ -614,6 +616,8 @@ function CG.BuildView(pane, bottom)
     local content = CreateFrame("Frame", nil, scroll)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
+    local bar = rawget(scroll, "ScrollBar")
+    if bar then NS.Skin.ScrollBar(bar) end   -- the skin's corridor and knob (D2)
     scroll:Hide()
     cv.scroll, cv.content = scroll, content
     cv.cardPool, cv.headPool = NS.Pool.New(), NS.Pool.New()

@@ -192,6 +192,8 @@ Kit.run{
         "test_schema_rows",
         "test_settings_pages",
         "test_skin_setup",
+        "test_skin_chrome",
+        "test_skin_literals",
         "test_slash",
         "test_window",
         "test_window_shell",

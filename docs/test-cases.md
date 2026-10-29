@@ -181,13 +181,14 @@ Total.
 - editors: the preview's lines name who it goes to, the length and what is wrong
 - asks: TokenContext fills the tokens from a drop for who it goes to
 
-### test_skin_setup.lua (17)
+### test_skin_setup.lua (18)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
 - Skin seam: the read answers Ka0s Default before the profile store exists
 - Skin seam: every owner token is namespaced dw. and taken by the library
 - Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere its follow token's
 - Skin seam: the palette's Ka0s Default values are the owner tokens' defaults
+- Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch
 - Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Skin tab
 - Skin seam: the skin row's values are every registered skin, in the library's order
 - Skin seam: /dw set refuses a skin that is not registered and applies one that is, once
@@ -200,6 +201,24 @@ Total.
 - Skin seam: the window edge, dropdowns, search box and mode strips are built for the owner
 - Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
 - Skin seam: without the library the facade answers Ka0s Default, owner tokens included
+
+### test_skin_chrome.lua (9)
+
+- skin chrome: under Ka0s Default the window draws the pixels it drew before skins
+- skin chrome: a skin switch repaints every surface in the new skin's colors, with no reload
+- skin chrome: the tones a cell is painted in are the new skin's after a switch
+- skin chrome: the rows' font size holds across a skin switch
+- skin chrome: the verdict glyphs are the skin's monospace face, Ka0s Default's JetBrains Mono
+- skin chrome: the shown toast repaints its rows' tones on a skin switch
+- skin chrome: the refusal red and the trade reason's gray are escapes of the skin's tokens
+- skin chrome: an item quality keeps the client's color unless the skin overrides it
+- skin chrome: without the library the window's own colors are Ka0s Default's
+
+### test_skin_literals.lua (3)
+
+- no color literal outside core/SkinSetup.lua and the named allow-list
+- every allow-list entry carries its reason
+- the gate is falsifiable: a planted literal of each shape is reported
 
 ### test_slash.lua (26)
 
@@ -2021,7 +2040,9 @@ Total.
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 45 |
-| test_skin_setup.lua | 17 |
+| test_skin_setup.lua | 18 |
+| test_skin_chrome.lua | 9 |
+| test_skin_literals.lua | 3 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
 | test_window_shell.lua | 62 |
@@ -2102,4 +2123,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1740** |
+| **Total** | **1753** |

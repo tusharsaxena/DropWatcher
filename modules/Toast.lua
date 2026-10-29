@@ -255,18 +255,22 @@ local function setTone(fs, tone)
     fs:SetTextColor(c.r, c.g, c.b)
 end
 
+-- A row text in the skin's face. A fixed `tone` is painted now and again on a skin switch (the
+-- toast lives off the window, so the window's repaint never reaches it); the others are toned on
+-- each paint.
 local function text(f, template, tone)
     local fs = f:CreateFontString(nil, "OVERLAY", template)
     fs:SetJustifyH("LEFT")
     fs:SetWordWrap(false)
-    if tone then setTone(fs, tone) end
+    NS.Skin.Font(fs)
+    if tone then NS.SkinPaint(fs, function(s) setTone(s, tone) end) end
     return fs
 end
 
--- A verdict's glyph, in the monospace face (the default face has no ▲ ≈ ▼).
+-- A verdict's glyph, in the skin's monospace face (the default face has no ▲ ≈ ▼).
 local function glyph(f)
     local fs = f:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(C.FONT_MONO, 12, "")
+    NS.SkinMono(fs, 12)
     fs:SetWordWrap(false)
     return fs
 end
@@ -279,13 +283,13 @@ end
 -- Rows 1 and 2: the gold title beside Ask; the item name (cut first) and its item level after it.
 local function buildTop(f)
     f.title = text(f, "GameFontNormalSmall")
-    f.title:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    NS.Skin.Text(f.title, "heading")   -- gold, in the skin's title face
     atRow(f.title, f, 1)
     f.title:SetPoint("RIGHT", f.ask, "LEFT", -6, 0)
     f.item = text(f, "GameFontHighlight")
     atRow(f.item, f, 2)
     f.ilvl = NS.WindowRows.NewMark(f, f.item)
-    setTone(f.ilvl, "muted")
+    NS.Skin.Text(f.ilvl, "muted")   -- the mark's own role replaced: muted, not the accent
 end
 
 -- A dual mark's first part, its `/` and the second part's worn level (feedback-21 H7), hidden
@@ -559,6 +563,16 @@ local function onUpdated(id)
     end
     Toast.Consider(id)
 end
+
+-- A skin switch (OnLooksChanged, after the palette is refilled): the toast on screen repaints its
+-- rows' tones, which are set on each paint (the frame and its fixed tones the library and
+-- NS.SkinPaint repaint themselves). The toast lives off the window, so the window's repaint never
+-- reaches it (inventory R10).
+NS.Skin.OnLooksChanged(function()
+    local id, f = shownId(), toast and toast:Frame()
+    local rec = id and f and f.ask and NS.LootFeed.Get(id)
+    if rec then paint(f, rec) end
+end)
 
 --- PLAYER_REGEN_DISABLED: a toast on screen goes back to the head of the queue and nothing shows
 --- until combat ends, unless toasts may show in combat.

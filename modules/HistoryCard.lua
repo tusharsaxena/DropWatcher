@@ -295,8 +295,8 @@ function HC.Build(content, stacked)
 end
 
 local function qualityTone(fs, drop)
-    local qc = type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[drop.facts.quality]
-    if qc then fs:SetTextColor(qc.r, qc.g, qc.b) end
+    local r, g, b = NS.QualityColor(drop.facts.quality)   -- the skin's q.* token, else the client's (E4)
+    if r then fs:SetTextColor(r, g, b) end
 end
 
 -- The item and its chips; a kept entry's item tooltip is its link's (no bag item to point at).

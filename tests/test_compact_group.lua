@@ -183,8 +183,8 @@ test("compact group: the pieces are colored by quality, class and tone, the worn
     assertEqual(select(2, c.them.glyph:GetTextColor()), C.TONE.red.g, "their downgrade is red, as yours is")
     local muted = C.TONE.muted
     assertEqual(select(1, c.fresh.text:GetTextColor()), muted.r)
-    assertEqual(select(2, c.youLabel.text:GetTextColor()), C.GOLD.g, "You in gold (feedback-10 spec §2)")
-    assertEqual(select(2, c.themLabel.text:GetTextColor()), C.GOLD.g, "Them in gold")
+    assertEqual(select(2, c.youLabel.text:GetTextColor()), 0.82, "You in gold (Ka0s Default's gold) (feedback-10 spec §2)")
+    assertEqual(select(2, c.themLabel.text:GetTextColor()), 0.82, "Them in gold")
 end)
 
 test("compact group: every piece keeps its full-view reason tooltip", function()
@@ -369,7 +369,7 @@ local function xOf(frame) return select(4, frame:GetPoint(1)) end
 
 test("compact group: each card is indented under its header and draws the row chevron on line 1, before the icon", function()
     local NS, drawn = shownCards()
-    local K, C, CG = NS.Constants.WINDOW, NS.Constants, NS.CompactGroup
+    local K, CG = NS.Constants.WINDOW, NS.CompactGroup
     local card, h = cardFor(drawn, 1), drawn.headers[1]
     assertEqual(xOf(h), 0); assertEqual(xOf(card), K.ROW_INDENT)
     assertEqual(card:GetWidth(), h:GetWidth() - K.ROW_INDENT)
@@ -380,14 +380,14 @@ test("compact group: each card is indented under its header and draws the row ch
     assertEqual(p[1] .. "," .. p[3], "LEFT,TOPLEFT"); assertEqual(p[2], card)
     assertEqual(p[4], CG.PAD + CG.QUALITY_W, "after the quality bar"); assertEqual(p[5], CG.LineY(m, 1), "centered on line 1")
     assertEqual(select(4, card.icon:GetPoint(1)), p[4] + K.ROW_CHEVRON + K.CHEVRON_GAP, "the icon after it and a gap")
-    assertEqual(select(4, ch:GetVertexColor()), C.CHEVRON_ROW.a, "muted white")
+    assertEqual(select(4, ch:GetVertexColor()), 0.55, "muted white (Ka0s Default's dw.chevron)")
     assertEqual(CG.TextLeft(m, CG.LEAD), CG.TextLeft(m) + K.ROW_CHEVRON + K.CHEVRON_GAP)
     assertEqual(card.ask:GetWidth(), K.ASK_W, "the full table's Ask width")
 end)
 
 test("compact group: the open card's chevron points up and its detail card indents with it; the header chevron is gold", function()
     local NS, drawn = shownCards()
-    local K, G = NS.Constants.WINDOW, NS.Constants.GOLD
+    local K, G = NS.Constants.WINDOW, { r = 1, g = 0.82, b = 0 }   -- Ka0s Default's gold, the pixel drawn before skins
     assertEqual(select(2, drawn.headers[1].chevron:GetVertexColor()), G.g, "gold header chevron")
     cardFor(drawn, 2):__fire("OnClick", "LeftButton")
     drawn = NS.WindowGroup.Drawn()

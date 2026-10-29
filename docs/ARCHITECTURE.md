@@ -261,6 +261,31 @@ the library's debug console, perf and sim panels; the library's Copy window (`FU
 library's dropdown menu (`FULLSCREEN_DIALOG`); tooltips. Inside an item button, the border frame sits
 under the upgrade glow. No frame changes strata at runtime. `tests/test_layers.lua` pins each class.
 
+## Skins
+
+The window and every surface around it are painted from the skin the player picks (LibKa0s-Skin-1.0,
+skinning-§4): `core/SkinSetup.lua` registers the owner `DropWatcher` with its owner tokens (`dw.*`) and
+publishes the facade `NS.Skin`. No look value is typed at a call site (anti-pattern #107): a color is
+read from a library or owner token, a face from the skin, the monospace glyphs from `font.mono`. Under
+Ka0s Default each is the pixel the addon drew before skins. The drop tables' tones keep their shape,
+`NS.Constants.TONE[key]`, refilled from the tokens `C.TONE_TOKEN` names at load and first on every skin
+switch; what the addon paints itself at build goes through `NS.SkinPaint`, which repaints it on a switch,
+and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksChanged`.
+`tests/test_skin_chrome.lua` pins the chrome, `tests/test_skin_literals.lua` gates literals.
+
+### Intentional exceptions
+
+What stays out of the skin, each for its reason (the literal gate's allow-list carries the chat ones):
+
+| What | Why |
+|---|---|
+| Chat output: the `[DW]` prefix, the command highlights, debug ON / OFF, the schema validator's errors | printed into the client's chat frame, not a frame this addon draws |
+| `NS.GroupRoster.Colored`'s escape format | it writes the color its caller hands it (a token's, a class's) |
+| The four secondary stats' name colors (`C.TONE.stat*`) | identity by hue: each stat is told from the others by its color |
+| The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | the player's stored swatches, and the two hues mean main spec against off-spec |
+| Item quality and class colors | game meaning; a quality reads the skin's `q.*` only where a skin overrides it, else the client's |
+| GameTooltip's frame, StaticPopups, the launcher's button and menu, the resize grip | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
+
 ## Taint Notes
 
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are

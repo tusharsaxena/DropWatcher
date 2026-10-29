@@ -209,13 +209,18 @@ local PLACERS = {
 -- One line under the title: a string wraps at the tooltip's width; `{ text, wrap = false }`
 -- (NS.TipMarks.NoWrap, feedback-6 spec §3) does not, so the tooltip grows to fit it; `{ grid = rows }`
 -- (NS.TipMarks.Grid, feedback-7 spec §3) reserves a line per row, painted as columns by NS.TipGrid.
+-- The lines are the skin's tooltip value color (Ka0s Default white) and the title its tooltip title
+-- (gold); GameTooltip's frame stays the client's (skinning-§7).
 local function addTipLine(line)
     if type(line) == "table" and type(line.grid) == "table" then
         NS.TipGrid.Add(GameTooltip, line)
-    elseif type(line) == "table" then
-        GameTooltip:AddLine(line.text, 1, 1, 1, line.wrap ~= false)
+        return
+    end
+    local r, g, b = NS.Skin.Color("gtip.value")
+    if type(line) == "table" then
+        GameTooltip:AddLine(line.text, r, g, b, line.wrap ~= false)
     else
-        GameTooltip:AddLine(line, 1, 1, 1, true)
+        GameTooltip:AddLine(line, r, g, b, true)
     end
 end
 
@@ -225,7 +230,8 @@ local function showTooltip(self)
     local placer = PLACERS[self.tipPlace]
     NS.TipGrid.Begin()
     GameTooltip:SetOwner(self, placer and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
-    GameTooltip:SetText(lines[1], C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    local r, g, b = NS.Skin.Color("gtip.title")
+    GameTooltip:SetText(lines[1], r, g, b)
     for i = 2, #lines do addTipLine(lines[i]) end
     GameTooltip:Show()
     NS.TipGrid.Paint(GameTooltip)   -- after Show: it measures, widens and shows again
@@ -402,7 +408,9 @@ local function buildTab(strip, key, i)
     tab.label:SetPoint("CENTER", tab, "CENTER", 0, 0)
     tab.label:SetText(TAB_LABEL[key])
     tab.underline = tab:CreateTexture(nil, "ARTWORK")
-    tab.underline:SetColorTexture(C.GOLD.r, C.GOLD.g, C.GOLD.b, 1)
+    -- Composed, not the skin's Tab (D11): that adds a `tab.bg` backing these tabs never drew. The
+    -- underline is the skin's selected-tab line; the label's color is paintTabs'.
+    NS.SkinPaint(tab.underline, function(t) t:SetColorTexture(NS.SkinColor("tab.onLine")) end)
     tab.underline:SetHeight(2)
     tab.underline:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 8, 0)
     tab.underline:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -8, 0)
@@ -426,6 +434,7 @@ local function buildPanes(f, body)
         local pane = CreateFrame("Frame", nil, body)
         pane.placeholder = pane:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         pane.placeholder:SetPoint("CENTER", pane, "CENTER", 0, 0)
+        NS.Skin.Text(pane.placeholder, "text.highlight")
         pane.placeholder:SetText(TAB_PLACEHOLDER[key])
         pane:Hide()
         f.panes[key] = pane
@@ -602,12 +611,15 @@ local function refreshActive()
     if spec and spec.refresh then spec.refresh(frame.panes[activeTab], Window.TabContext(activeTab)) end
 end
 
+-- The labels in text roles, not `tab.onText` / `tab.text`, which are colored for a tab's own backing
+-- (these have none): the active one in the skin's accent, an idle one in the idle gray `dw.idle`
+-- (Ka0s Default: today's gold and 0.62 gray), each in the skin's face (S.Text records it, so a skin
+-- switch repaints it).
 local function paintTabs()
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
-        local c = active and C.GOLD or C.IDLE
         tab.label:SetText(NS.CompactChrome.TabText(key))
-        tab.label:SetTextColor(c.r, c.g, c.b)
+        NS.Skin.Text(tab.label, active and "accent" or "dw.idle")
         tab.underline:SetShown(active)
     end
 end
@@ -962,6 +974,15 @@ local function listen()
     target:RegisterMessage(M.TRADE_TIMER_EXPIRING, function() scheduleRepaint() end)
 end
 listen()
+
+-- A skin switch (OnLooksChanged: the library has repainted what it recorded, and core/SkinSetup.lua
+-- has refilled the tones and repainted the host's own paints): one whole pass of the shown window, so
+-- every tone set at paint time (a cell, a tab, a button) and the rows' font size take the new skin.
+-- Tracked by no bus: the skin is not this addon's, and it fires only on a player's pick.
+NS.Skin.OnLooksChanged(function()
+    NS.WindowRows.OnLooksChanged()
+    repaint()
+end)
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     stopTicker()

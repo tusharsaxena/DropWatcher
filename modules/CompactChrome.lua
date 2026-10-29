@@ -267,13 +267,12 @@ function CC.ToggleFilters()
     NS.Debug(TAG, "filters panel open")
 end
 
+-- The filter bar's flat skin, the dropdowns' and the search box's: the skin's Inset, a recessed
+-- control's fill and edge (`input.bg`, `input.border`, its style and size; Ka0s Default the 1px
+-- WHITE8X8 box these always drew), recorded by the library and repainted on a skin switch.
 local function flat(f)
-    local FLAT = NS.WindowFilterBar.FLAT
     if not f.SetBackdrop then return end
-    f:SetBackdrop({ bgFile = FLAT.edge, edgeFile = FLAT.edge, edgeSize = 1,
-                    insets = { left = 1, right = 1, top = 1, bottom = 1 } })
-    f:SetBackdropColor(unpack(FLAT.fill))
-    f:SetBackdropBorderColor(unpack(FLAT.line))
+    NS.Skin.Inset(f)
 end
 
 local function buildButton(host)
@@ -282,13 +281,15 @@ local function buildButton(host)
     flat(b)
     b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     b.label:SetPoint("LEFT", b, "LEFT", 6, 0)
+    NS.Skin.Text(b.label, "text.highlight")
     b.label:SetText(CC.FiltersLabel(0))
     b.count = 0
     b.arrow = b:CreateTexture(nil, "OVERLAY")
     b.arrow:SetSize(12, 12)
     b.arrow:SetPoint("RIGHT", b, "RIGHT", -4, 0)
     b.arrow:SetTexture(NS.Icon("chevron-down"))
-    b.arrow:SetVertexColor(0.7, 0.7, 0.72)
+    -- The skin's icon tint (Ka0s Default 0.7 gray), not the dropdown's gold `icon.arrow`.
+    NS.SkinPaint(b.arrow, function(t) t:SetVertexColor(NS.SkinColor("icon.tint")) end)
     b:SetPoint("RIGHT", host, "RIGHT", 0, 0)
     b:SetScript("OnClick", function() CC.ToggleFilters() end)
     NS.Window.AttachTooltip(b, filtersTip, "above")

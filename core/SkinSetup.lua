@@ -37,6 +37,12 @@ local addonName, NS = ...
 --                           so a literal that became a token keeps its arity on Ka0s Default.
 --   NS.SkinEscape(name)     a color token as a "|cffrrggbb" escape, rounded to the byte, so markup
 --                           written as a literal keeps its bytes on Ka0s Default.
+--   NS.RefillPalette()      core/Constants.lua's C.TONE filled from the tokens C.TONE_TOKEN names, in
+--                           place, at load and first on every OnLooksChanged.
+--   NS.SkinPaint(t, fn)     a surface the addon paints itself from a token: painted now and again on
+--   NS.SkinRepaint()        every skin switch (after the palette), weak-keyed. SkinRepaint re-runs all.
+--   NS.SkinMonoFont()       the skin's `font.mono` as a path; NS.SkinMono(fs, size) sets it on a glyph
+--   NS.SkinMono(fs, size)   string and keeps it there on a skin switch.
 --   NS.QualityColor(q)      an item quality's r, g, b: the skin's q.* token where it sets one (a
 --                           legibility override), else the client's ITEM_QUALITY_COLORS; nil for none.
 --   NS.SkinPaintAce(w)      an AceGUI widget this addon acquired itself, painted for this owner:
@@ -128,6 +134,30 @@ NS.SKIN_FALLBACK = {
     ["win.inner"]  = { 0.24, 0.24, 0.27, 0.85 },
     ["title.text"] = { 1, 0.82, 0, 1 },
     ["divider"]    = { 0.24, 0.24, 0.27, 0.85 },
+    -- The window's own surfaces (DW-02): its text roles, lists, tabs, controls and tooltip lines.
+    ["text.body"]        = { 0.9, 0.9, 0.9, 1 },
+    ["text.muted"]       = { 0.7, 0.7, 0.72, 1 },
+    ["text.heading"]     = { 1, 0.82, 0, 1 },
+    ["text.headingAlt"]  = { 0.91, 0.77, 0.42, 1 },
+    ["text.accent"]      = { 1, 0.82, 0, 1 },
+    ["text.disabled"]    = { 0.5, 0.5, 0.5, 1 },
+    ["text.bodyAlt"]     = { 0.86, 0.86, 0.86, 1 },
+    ["text.highlight"]   = { 1, 1, 1, 1 },
+    ["gtip.title"]       = { 1, 0.82, 0, 1 },
+    ["gtip.value"]       = { 1, 1, 1, 1 },
+    ["list.header.text"] = { 1, 0.82, 0, 1 },
+    ["list.stripe"]      = { 1, 1, 1, 0.03 },
+    ["list.box"]         = { 1, 1, 1, 0.06 },
+    ["list.boxEdge"]     = { 1, 1, 1, 0.12 },
+    ["tab.onLine"]       = { 1, 0.82, 0, 1 },
+    ["icon.hot"]         = { 1, 1, 1, 1 },
+    ["icon.tint"]        = { 0.7, 0.7, 0.72, 1 },
+    ["btn.text"]         = { 1, 1, 1, 1 },
+    ["input.bg"]         = { 0.1, 0.1, 0.12, 0.9 },
+    ["input.border"]     = { 0.24, 0.24, 0.27, 0.9 },
+    ["sem.modeTest"]     = { 1, 0.15, 0.15, 1 },
+    ["sem.badAlt"]       = { 1, 0.25, 0.25, 1 },
+    ["strip.sim"]        = { 0.35, 0.8, 1, 0.12 },
 }
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,
@@ -155,18 +185,92 @@ end
 -- heirloom, token) is the client's color under every skin.
 local QUALITY_TOKEN = { [0] = "q.poor", "q.common", "q.uncommon", "q.rare", "q.epic", "q.legendary" }
 
+-- The library's Ka0s Default q.* values, read once from the skin library (nil without it).
+local qualityDefault
+local function defaultQuality(name)
+    if qualityDefault == nil then
+        local lib = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+        qualityDefault = lib and type(lib.ResolveSkin) == "function" and lib:ResolveSkin(lib.DEFAULT) or false
+    end
+    return qualityDefault and qualityDefault[name]
+end
+
+local function sameColor(c, r, g, b)
+    return type(c) == "table" and c[1] == r and c[2] == g and c[3] == b
+end
+
 --- An item quality's r, g, b. The q.* tokens: Ka0s Default writes the client's own colors out, a
---- skin may override them for legibility (skinning-§4: the hue keeps its meaning). nil for a quality
---- the client has no color for, so a caller keeps its own fallback.
+--- skin may override them for legibility (skinning-§4: the hue keeps its meaning). A token that is
+--- the library's Ka0s Default value (no override) draws the CLIENT's own color: the schema writes the
+--- client's colors to two places (q.epic 0.64, 0.21, 0.93 against the client's a335ee), and the
+--- client's is the pixel the addon drew before skins (X1). nil for a quality the client has no color
+--- for and no skin overrides, so a caller keeps its own fallback (an item link's own color code).
 function NS.QualityColor(q)
     local name = QUALITY_TOKEN[q]
     if name then
         local r, g, b = NS.Skin.Color(name)
-        if r ~= nil then return r, g, b end
+        if r ~= nil and not sameColor(defaultQuality(name), r, g, b) then return r, g, b end
     end
     local c = ITEM_QUALITY_COLORS and q ~= nil and ITEM_QUALITY_COLORS[q]
     if c then return c.r, c.g, c.b end
     return nil
+end
+
+--- Fill the drop tables' tones (core/Constants.lua's C.TONE) from the tokens C.TONE_TOKEN names, IN
+--- PLACE: the r, g, b of each entry is its token's in the live skin, so a surface that indexes
+--- C.TONE[key] at paint time draws the skin's color, and a table a file took at load stays the one
+--- refilled. Run at load (both arms) and first on every OnLooksChanged, so the listeners after it,
+--- every surface's repaint, read the new skin's tones. A token the skin leaves alone keeps the last.
+function NS.RefillPalette()
+    local C = NS.Constants
+    if not (C and C.TONE_TOKEN and C.TONE) then return end
+    for key, token in pairs(C.TONE_TOKEN) do
+        local t = C.TONE[key]
+        local r, g, b = NS.Skin.Color(token)
+        if t and r ~= nil then t.r, t.g, t.b = r, g, b end
+    end
+end
+
+-- Surfaces this addon paints itself (a texture, a backdrop or a string colored from a token at build),
+-- each with the function that paints it: weak-keyed, so a frame the client collects drops out.
+local painted = setmetatable({}, { __mode = "k" })
+
+--- Paint `target` with `paint(target)` now, and again after every skin switch (OnLooksChanged, after
+--- the palette is refilled), so a color an addon surface took at build follows the skin with no walk
+--- of its own. The library's primitives record and replay themselves; this is the same for the host's
+--- own calls (`tex:SetColorTexture(NS.SkinColor("list.stripe"))`). A second call on one target
+--- replaces its paint. Answers `target`.
+function NS.SkinPaint(target, paint)
+    if type(target) ~= "table" or type(paint) ~= "function" then return target end
+    painted[target] = paint
+    paint(target)
+    return target
+end
+
+--- Re-run every recorded host paint: the OnLooksChanged listener (live arm), and a suite's handle.
+function NS.SkinRepaint()
+    for target, paint in pairs(painted) do paint(target) end
+end
+
+--- The skin's monospace face as a font path: its `font.mono` key through LibSharedMedia (or the
+--- shipped face of that name), else core/Constants.lua's FONT_MONO, which is that same face (Ka0s
+--- Default's "JetBrains Mono") or the client's own when the library is absent. Every Ka0s skin's
+--- `font.mono` carries the verdict glyphs ▲ ≈ ▼.
+function NS.SkinMonoFont()
+    local key = NS.Skin.Token("font.mono")
+    local path
+    if type(key) == "string" and key ~= "" then
+        local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
+        path = (LSM and LSM:Fetch("font", key, true)) or (NS.MediaFont and NS.MediaFont(key))
+    end
+    return path or NS.Constants.FONT_MONO
+end
+
+--- A glyph string in the skin's monospace face at `size` points, kept on a skin switch (NS.SkinPaint).
+--- @param fs table a FontString
+--- @param size number
+function NS.SkinMono(fs, size)
+    return NS.SkinPaint(fs, function(f) f:SetFont(NS.SkinMonoFont(), size, "") end)
 end
 
 NS.SKIN_SOURCE_OPTIONS = {
@@ -272,6 +376,23 @@ if not Skin then
         return NS.SKIN_FALLBACK[name] or (NS.SKIN_TOKENS[name] and NS.SKIN_TOKENS[name].default)
     end
     S.Color = color
+    -- A text role (or a color token's name) as its Ka0s Default color, the face left the template's:
+    -- the strings the window colors once at build keep today's colors without the library.
+    local ROLE = { body = "text.body", muted = "text.muted", heading = "text.heading",
+        headingAlt = "text.headingAlt", accent = "text.accent", disabled = "text.disabled", title = "title.text" }
+    S.Text = function(fs, role)
+        local r, g, b = color(ROLE[role] or role)
+        if r ~= nil and type(fs) == "table" and fs.SetTextColor then fs:SetTextColor(r, g, b) end
+    end
+    -- The filter bar's flat box (modules/CompactChrome.lua): 1px WHITE8X8 in the input colors.
+    S.Inset = function(f)
+        if type(f) ~= "table" or not f.SetBackdrop then return end
+        local white = "Interface\\Buttons\\WHITE8X8"
+        f:SetBackdrop({ bgFile = white, edgeFile = white, edgeSize = 1,
+                        insets = { left = 1, right = 1, top = 1, bottom = 1 } })
+        f:SetBackdropColor(color("input.bg"))
+        f:SetBackdropBorderColor(color("input.border"))
+    end
     S.Resolve = function(kind, value, fromSkin)
         if fromSkin or value == S.FROM_SKIN then return S.Token(kind) end
         return value
@@ -295,6 +416,7 @@ if not Skin then
     function NS.SkinPaintAce() return false end
     function NS.SkinPaintAceTree() return 0 end
     NS.SkinOnRelease = releaseByCallback
+    NS.RefillPalette()
     return
 end
 
@@ -307,6 +429,13 @@ Skin:RegisterOwner(addonName, {
     set    = NS.WriteSkinChoice,
     tokens = NS.SKIN_TOKENS,
 })
+-- The palette first: every surface's OnLooksChanged listener registers after this file loads, so
+-- each reads the refilled tones (the library fires listeners in registration order).
+NS.RefillPalette()
+NS.Skin.OnLooksChanged(function()
+    NS.RefillPalette()
+    NS.SkinRepaint()
+end)
 
 -- The one line a reload request earns on the path that has no popup of its own (a profile event
 -- or a bare `/dw set` leaving an EllesmereUI that painted this session). The Skin tab raises the

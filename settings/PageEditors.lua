@@ -107,8 +107,13 @@ end
 local SIT_COL = { situation = 8, track = 140, autoOpen = 205, quality = 285, rule = 460 }
 local SIT_QUALITY_W, SIT_RULE_W = 160, 150
 local SIT_ROW_H, SIT_HEAD_H, SIT_HEAD_Y = 28, 30, -6
-local SIT_HEAD_RGB = { 0.91, 0.77, 0.42 }   -- Loot History's header gold
-local SIT_LABEL_ON, SIT_LABEL_OFF = 0.86, 0.5   -- its label gray, live and inactive
+-- The colors are the skin's (the table is a raw frame the page owns, built once a session, so each
+-- paint is recorded with NS.SkinPaint and follows a skin switch without a re-render): the headers in
+-- `text.headingAlt` (Loot History's header gold), a label in `text.bodyAlt` live and `text.disabled`
+-- inactive (its label grays), a stripe `list.stripe`. Ka0s Default: exactly the values typed before.
+local function paintHeader(fs) fs:SetTextColor(NS.SkinColor("text.headingAlt")) end
+local function paintLabel(fs) fs:SetTextColor(NS.SkinColor(fs.dwActive and "text.bodyAlt" or "text.disabled")) end
+local function paintStripe(t) t:SetColorTexture(NS.SkinColor("list.stripe")) end
 
 local function situationEntries()
     return E.SituationRows(NS.SchemaRuntime.FindRow, NS.Setting, NS.WindowFooter.SituationLabel)
@@ -118,9 +123,9 @@ end
 local function paintSituations(t)
     for i, e in ipairs(situationEntries()) do
         local r = t.rows[i]
-        local gray = e.active and SIT_LABEL_ON or SIT_LABEL_OFF
         r.label:SetText(e.label)
-        r.label:SetTextColor(gray, gray, gray)
+        r.label.dwActive = e.active and true or false
+        NS.SkinPaint(r.label, paintLabel)
         r.track:SetValue(e.track.value == true)
         r.track:SetDisabled(not e.track.enabled)
         r.autoOpen:SetValue(e.autoOpen.value == true)
@@ -199,7 +204,7 @@ local function situationSlot(t, i, key)
     rf:SetHeight(SIT_ROW_H)
     local stripe = rf:CreateTexture(nil, "BACKGROUND")
     stripe:SetAllPoints(rf)
-    stripe:SetColorTexture(1, 1, 1, 0.03)
+    NS.SkinPaint(stripe, paintStripe)
     stripe:SetShown(i % 2 == 0)
     local base = "situations." .. key .. "."
     return {
@@ -216,7 +221,7 @@ local function situationHeader(host, x, text)
     fs:SetPoint("TOPLEFT", host, "TOPLEFT", x, SIT_HEAD_Y)
     fs:SetJustifyH("LEFT")
     fs:SetText(text)
-    fs:SetTextColor(SIT_HEAD_RGB[1], SIT_HEAD_RGB[2], SIT_HEAD_RGB[3])
+    NS.SkinPaint(fs, paintHeader)
     return fs
 end
 

@@ -111,7 +111,7 @@ test("chrome: compact shows the short title; in test mode the strip marks it, so
     assertFalse(f.testText:IsShown(), "the strip is the marker (DW-10)")
     assertTrue(f.banner:IsShown())
     assertEqual(textOf(f.testText.text), "TEST")
-    assertEqual(f.testText.text:GetTextColor(), NS.WindowTitleBar.TEST_TONE.r, "the same red")
+    assertEqual(f.testText.text:GetTextColor(), 1, "the same red (sem.modeTest)")
     local pt = f.title.__points[1]
     assertEqual(pt[1], "CENTER"); assertEqual(pt[4], 0, "no word: the title alone, centered")
     NS.SetTestMode(false)
@@ -139,7 +139,7 @@ end)
 test("chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim strip marks it with the short wrapped line", function()
     local NS, f = shown("compact")
     assertEqual(textOf(f.simText.text), "SIM")
-    assertEqual(f.simText.text:GetTextColor(), NS.WindowTitleBar.SIM_TONE.r)
+    assertEqual(f.simText.text:GetTextColor(), 0.35, "the strip's cyan, opaque (strip.sim's rgb)")
     assertTrue(T.simBare(NS):Start({ scenario = "test" }))
     NS.Window.Refresh()
     -- red under: no sim strip, the SIM word beside the title as the marker

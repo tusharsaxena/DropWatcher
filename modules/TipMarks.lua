@@ -162,15 +162,16 @@ function TM.ClassName(name, classFile)
     return NS.GroupRoster.Colored(name, NS.Compat.ClassColor(classFile))
 end
 
---- An item's name in its quality's color: ITEM_QUALITY_COLORS[quality], else the color code its link
+--- An item's name in its quality's color: NS.QualityColor(quality), else the color code its link
 --- opens with (`|cffa335ee`, or a named one such as `|cnIQ4:`), else plain.
 --- @param name string
 --- @param quality number|nil
 --- @param link string|nil
 --- @return string
 function TM.ItemName(name, quality, link)
-    local qc = type(ITEM_QUALITY_COLORS) == "table" and quality and ITEM_QUALITY_COLORS[quality]
-    if type(qc) == "table" and type(qc.r) == "number" then return NS.GroupRoster.Colored(name, qc.r, qc.g, qc.b) end
+    local r, g, b
+    if quality ~= nil then r, g, b = NS.QualityColor(quality) end   -- the skin's q.*, else the client's (E4)
+    if type(r) == "number" then return NS.GroupRoster.Colored(name, r, g, b) end
     if type(link) ~= "string" then return name end
     local code = link:match("^(|c%x%x%x%x%x%x%x%x)") or link:match("^(|cn[^|:]+:)")   -- `|cffa335ee`, `|cnIQ4:`
     if code then return code .. name .. "|r" end
@@ -182,7 +183,9 @@ end
 --- The bullet every row opens with.
 TM.BULLET = "•"
 
-local function idle(text) return NS.GroupRoster.Colored(text, C.IDLE.r, C.IDLE.g, C.IDLE.b) end
+-- The hint gray is the skin's tooltip hint (`dw.tipHint`, Ka0s Default 0.62), its own token so a light
+-- skin can part it from the window's idle gray (D7).
+local function idle(text) return NS.GroupRoster.Colored(text, NS.Skin.Color("dw.tipHint")) end
 local function label(text)
     local t = C.TONE.mutedGold
     return NS.GroupRoster.Colored(text, t.r, t.g, t.b)

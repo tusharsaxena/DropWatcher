@@ -93,15 +93,17 @@ local function config()
     return cfg
 end
 
---- An item link's quality color, TipMarks.ItemName's source: the quality's ITEM_QUALITY_COLORS
---- entry, else the link's own `|cAARRGGBB` code. Nil when neither answers.
+--- An item link's quality color, TipMarks.ItemName's source: the quality's NS.QualityColor (the
+--- skin's q.* token, else ITEM_QUALITY_COLORS), else the link's own `|cAARRGGBB` code. Nil when
+--- neither answers.
 --- @param link string|nil
 --- @return number|nil, number|nil, number|nil
 function IS.QualityColor(link)
     if type(link) ~= "string" then return nil end
     local q = NS.ItemRead.QualityOf(link)
-    local qc = q and type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[q]
-    if type(qc) == "table" and type(qc.r) == "number" then return qc.r, qc.g, qc.b end
+    local qr, qg, qb
+    if q ~= nil then qr, qg, qb = NS.QualityColor(q) end   -- the skin's q.*, else the client's (E4)
+    if type(qr) == "number" then return qr, qg, qb end
     local r, g, b = link:match("^|c%x%x(%x%x)(%x%x)(%x%x)")
     if not r then return nil end
     return tonumber(r, 16) / 255, tonumber(g, 16) / 255, tonumber(b, 16) / 255
