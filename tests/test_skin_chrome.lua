@@ -169,6 +169,33 @@ test("skin chrome: the shown toast repaints its rows' tones on a skin switch", f
     assertEqual(painted, 0, "no toast on screen: nothing repainted")
 end)
 
+test("skin chrome: a toast on screen repaints once on a skin switch, its tones in the new skin's", function()
+    -- red under: the toast's OnLooksChanged listener (modules/Toast.lua) returning at once.
+    local NS, _, m = T.enableAddon()
+    local d = {
+        id = 1, link = "|cffa335ee|Hitem:500::|h[Item 500]|h|r", itemID = 500, isMine = false,
+        looter = { name = "Seta-Testrealm", guid = "Player-1-0000000A", classFile = "PRIEST" },
+        facts = { ilvl = 311, equipLoc = "INVTYPE_HEAD", quality = 4 },
+        me = { verdict = "upgrade", ilvlDelta = 19 },
+        trade = { state = "likely", reasonKey = "notUpgrade", args = {} },
+    }
+    NS.LootFeed.Get = function(id) return id == 1 and d or nil end
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    NS.addon:SendMessage(NS.MSG.DROP_ADDED, 1)
+    local f = NS.Toast.Frame()
+    assertTrue(f ~= nil and NS.Toast.Stats().shown, "the drop toasted")
+    near("Me (ka0s)", f.meText.__textColor, token(NS, "dw.upgrade"))
+    local painted = 0
+    local compose = NS.Toast.Compose
+    NS.Toast.Compose = function(...) painted = painted + 1; return compose(...) end
+    toSwitch(m)
+    NS.Toast.Compose = compose
+    assertEqual(painted, 1, "the shown toast repainted once")
+    local switched = token(NS, "dw.upgrade")
+    assertTrue(math.abs(switched[1] - 0.30) > 1e-6, "the switch moved dw.upgrade")
+    near("Me (switched)", f.meText.__textColor, switched)
+end)
+
 test("skin chrome: the refusal red and the trade reason's gray are escapes of the skin's tokens", function()
     -- red under: an escape built once at file load (it would keep the old skin's bytes) or a literal.
     local NS, _, m = T.bootAddon()
