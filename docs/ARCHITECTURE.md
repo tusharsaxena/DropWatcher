@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.75.0 payload (seventeen majors; media/icons pruned to the declared subset), of which seventeen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.80.0 payload (nineteen majors; media/icons pruned to the declared subset), all nineteen wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -34,6 +34,7 @@ lists the toolchain):
 | Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and five verbs (DW-02..DW-04) |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
 | Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
+| Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-one `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
 (`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
@@ -99,7 +100,7 @@ specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
 every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's
 position (the simulation panel's is session-only, held by LibKa0s-Sim-1.0), auto-ask's one-time notice, the history's own record, the per-character session
-(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, nine steps), and
+(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, ten steps), and
 no structural registry exists yet. The shape, every default, the named state with its writers, the
 session-only state and each migration step are in [`schema.md`](schema.md).
 
@@ -272,6 +273,35 @@ Ka0s Default each is the pixel the addon drew before skins. The drop tables' ton
 switch; what the addon paints itself at build goes through `NS.SkinPaint`, which repaints it on a switch,
 and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksChanged`.
 `tests/test_skin_chrome.lua` pins the chrome, `tests/test_skin_literals.lua` gates literals.
+
+- **The choice.** The player picks on Settings → General → **Skin**, the library's own tab
+  (`O.AppearanceTab` over `NS.SkinChoice` / `NS.WriteSkinChoice`, `settings/Panel.lua`): the skin
+  source (the Ka0s skins, or EllesmereUI's when it can skin this addon), the skin, the Font and
+  texture overrides and the Scope (Ignore settings panel, Ignore fonts). The seven `skin.*` rows are
+  `skipRender` rows of the one seam, so `/dw get|set` reaches the same values, and a pick calls
+  `Skin:SetChoice` first: the repaint is live, with no reload. A profile switch, copy or reset applies
+  the incoming profile's skin, scope and overrides (`reloadProfile`). `tests/test_skin_setup.lua` and
+  `tests/test_skin_settings.lua` pin the seam and the rows.
+- **The HUD.** Drop Watcher's HUD is the item icon's border (Window › Icons). While **Use the skin's
+  border** (`icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`, on by default) is on,
+  the border's style and thickness are the skin's icon border family (`icon.borderStyle`,
+  `icon.borderSize`); Ka0s Default's is today's Solid 2px. The border color, its class and quality
+  companions, Show border, the zoom and the glows' colors stay the player's. Migration step 10
+  (`NS.ResetIconBorderToSkin`) turns the companion on once per stored profile (the rollout's O2) and
+  keeps the stored style, so turning it off brings the player's own back. `tests/test_skin_hud.lua`.
+- **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)
+  while the profile's `skin.pickerSeen` is false: two seconds after login, at a stand-up, and after a
+  profile event; never while stood down, and a start in combat waits for combat's end. Its eye opens
+  the window in test mode; its gear opens General → Skin. Only the player's close writes
+  `pickerSeen`. `tests/test_skin_picker.lua`.
+- **The settings panel.** Every AceGUI widget the pages acquire themselves is painted for this owner
+  (`NS.SkinPaintAce`, restored on release), the Situations table's session-held cells repaint on a
+  switch, and the Profiles page paints the tree AceConfigDialog draws (`NS.SkinPaintAceTree`).
+  Nothing in the panel is painted while Ignore settings panel is on (a new profile's default).
+- **What Ka0s Default changes.** Ka0s Default keeps every color, but three things look new under it:
+  every string reads in Oxanium (the library's Ka0s Default face) instead of Friz Quadrata, the title
+  bar wears the shell's darker band, and the four scroll bars are the library's corridor and flat
+  knob instead of the stock art (the rollout's DropWatcher calls D3 and D2). The smoke checks in `smoke-tests.md` → Skins say so.
 
 ### Intentional exceptions
 

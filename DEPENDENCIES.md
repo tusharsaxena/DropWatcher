@@ -27,6 +27,10 @@ marked as such rather than listed as a requirement.
   without CanIMogIt, the transmog flag comes from the client API. Whether each is loaded is
   reported by `core/DropWatcher.lua` `logDependencies` and the diagnostics' `integrations` and
   Scoring sections (`modules/Diagnostics.lua`), the latter naming the scorer actually in use.
+- **Optional: EllesmereUI.** Named in `## OptionalDeps:` so it loads first when installed (skinning-§5).
+  When it can skin this addon, Settings → General → Skin offers it as the skin source, through
+  LibKa0s-Skin-1.0's own EllesmereUI provider; this addon calls no EllesmereUI API. Without it the
+  Ka0s skins are the only source.
 
 ## Development — the contributor toolchain
 

@@ -14,7 +14,7 @@ share a line (feedback-24).
 | Page | Covers |
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `Simulator`, `Keybindings` |
+| General | `Master controls`, `Simulator`, `Skin`, `Keybindings` |
 | Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Retention` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
 | Messages | `Sending`, `Auto-ask`, `Templates` |
@@ -78,6 +78,41 @@ seconds the simulator waits between steps as it plays, 0.5
 to 10 in steps of 0.5, 1 by default (2 until the owner's 2026-10-23 simulator feedback). `/dw set sim.stepDelay <n>` reaches it too (the slash parser
 clamps a number outside the range to it). A change takes effect from the next step of a running
 timeline.
+
+## General → Skin
+
+The library's own tab (skinning-§3), drawn by `O.AppearanceTab({ owner, get = NS.SkinChoice, set =
+NS.WriteSkinChoice })` (`settings/Panel.lua`) as a host tab after Simulator and before Keybindings.
+Its key is `Appearance`, the group of the seven `skipRender` rows `skin.source`, `skin.skin`,
+`skin.ignorePanel`, `skin.ignoreFonts`, `skin.font`, `skin.texture` and `skin.pickerSeen` (the
+first-run picker's memory, which the tab does not draw); its label is **Skin**. Its body is the
+library's: **Skin source** (*Ka0s skins*, or *EllesmereUI*, disabled with the failing conditions
+listed while EllesmereUI cannot skin this addon), **Look** (the nine skins three to a line with their
+swatches), **Font and texture** (a **Font** and a **Texture** dropdown, each listing the skin's own
+first), the Scope (**Ignore settings panel**, on for a new profile, and **Ignore fonts**), **Copy to
+every Ka0s addon…** and the note that skins change every visual element. A pick calls `Skin:SetChoice`
+first (the live repaint, no reload), then writes through the seam, so `/dw get|set skin.*` reaches the
+same values and every reset puts them back on Ka0s Default. Leaving EllesmereUI after it painted this
+session asks for a reload (the library's popup). In combat the tab refuses every change. Without the
+library there is no tab.
+
+**The first-run skin picker** (LibKa0s OptionsSkinPicker, the rollout's O3): a small window, **Choose a
+skin for Ka0s Drop Watcher**, with a dropdown of the skins, an eye, a gear, and **Apply** (with **Apply
+to all Ka0s addons** while another Ka0s addon that uses skins is loaded). `NS.MaybeShowSkinPicker`
+(`core/SkinSetup.lua`) shows it while the profile's `skin.pickerSeen` is false: two seconds after
+login, at a stand-up when the session started stood down, and after every profile switch, copy or
+reset. Never while the addon stands down (disabled, or a perf capture), and a start in combat waits
+for combat's end. A pick previews; **Apply** saves; the close control and Escape put the stored skin
+back and save nothing. The eye opens the window in test mode, so the skin shows on this addon's own
+frames; the gear saves the pending pick and opens this tab. Any close the player makes sets
+`skin.pickerSeen`; a stand-down or a profile event takes it down without setting it. One picker is up
+at a time across Ka0s addons; the others wait in the library's queue.
+
+**The pages' own widgets wear the skin too** (DW-04): every AceGUI widget `settings/PageEditors.lua`
+acquires goes through `acquire()`, which paints it for this owner (`NS.SkinPaintAce`, restored stock
+on release); the Situations table's session-held check boxes and dropdowns repaint on a skin switch,
+and the Profiles page paints the tree AceConfigDialog draws (`NS.SkinPaintAceTree`). Nothing in the
+panel is painted while **Ignore settings panel** is on.
 
 ## General → Keybindings
 
@@ -230,8 +265,11 @@ feedback-21 H6; 0 is the whole icon). **Border:** the canonical border block (op
 Border thickness (px) (1 to 16; 2), then Border color (black, opaque) | **Use class color** (off;
 the player's class color, the swatch's alpha kept, options-ui-§17), then the block's one extra,
 **Color by item quality** (off: on, each border takes its item's quality color in place of the
-swatch, its alpha kept; an item with no quality known keeps the swatch). Style, thickness and
-Color by item quality are dimmed while Show border is off; the color pair never is. Every change
+swatch, its alpha kept; an item with no quality known keeps the swatch). The block's skin companion,
+**Use the skin's border** (on; `icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`,
+DW-03), draws the border in the skin's icon border style and thickness and dims Border style and
+Border thickness while it is on; the color rows are always the player's. Style, thickness, Color by
+item quality and Use the skin's border are dimmed while Show border is off; the color pair never is. Every change
 restyles every icon at once (`NS.IconStyle.Refresh`); the upgrade glow draws over the border.
 Ranges and defaults: [`schema.md`](schema.md#window--icons-feedback-21-g11).
 

@@ -201,7 +201,8 @@ no migration). The Zoom row is
 hand-written (`settings/SchemaRows.lua`); the Border block is LibKa0s-Options' composed
 `BorderGroup` with its Show border toggle (options-ui-§16, `settings/ComposedRows.lua`, appended
 after the hand-written rows because it needs the Options instance), its one extra after the
-mandated four. Style, thickness and Color by item quality are dimmed while Show border is off; the
+mandated four, and the skin companion Use the skin's border (DW-03), which dims style and thickness
+while it is on. Style, thickness and Color by item quality are dimmed while Show border is off; the
 color pair never is (anti-pattern #74). Every row's reaction is `NS.IconStyle.Refresh()`: the
 settings generation moves on and every item button made so far, pooled or not, takes the new look
 at once; a profile reload calls it too. Without LibKa0s the composer is hollow and the border rows
@@ -214,6 +215,7 @@ can change it.
 | `icons.borderShow` | `true` | Show border: a BackdropTemplate child frame over the button, made the first time it is shown |
 | `icons.borderStyle` | `"Solid"` | Border style: a LibSharedMedia border name (`LSM30_Border`); a name nothing registers draws the tooltip's edge. `Solid` is the flat edge `modules/IconStyle.lua` registers at load (`Interface\Buttons\WHITE8X8`, AuraMaster's name for it), drawn even where the media library does not know it |
 | `icons.borderSize` | `2` | Border thickness (px): the backdrop's edge size, 1 to 16 (the composer's 0 floor raised to 1) |
+| `icons.borderStyleFromSkin` | `true` | Use the skin's border: the composer's skin companion (`fromSkin = "icon"`, skinning-§6, DW-03). While on, the border's style and thickness are the skin's `icon.borderStyle` and `icon.borderSize` (Ka0s Default's are the flat edge at 2 pixels, today's Solid 2px, so the look is the one above), the two rows are not read and are dimmed, and the stored picks stay where they were; off, the player's own style and thickness. Dimmed while Show border is off. The color and its two companions are never the skin's. Step 10 turns it on once per stored profile |
 | `icons.borderColor` | `{ r = 0, g = 0, b = 0, a = 1 }` | Border color, typed `color`; its alpha applies under either companion |
 | `icons.useClassColorBorder` | `false` | Use class color: the border in the **player's** class color (`classColorSource = "player"`: the icons are the player's own view of the loot), through `NS.ResolveColor`, the swatch's alpha kept, the swatch for a class with no color |
 | `icons.borderQuality` | `false` | Color by item quality: the border in the item's quality color in place of the swatch (and of the class color), the swatch's alpha kept; the quality is TipMarks.ItemName's source (`NS.ItemRead.QualityOf`, the client's answer else the link's color, in `ITEM_QUALITY_COLORS`, else the link's own `|cAARRGGBB` code); an item with no quality known keeps the swatch's mode |
@@ -392,7 +394,7 @@ on any tab (feedback-4 spec §2, DW-D2).
 ## Migrations
 
 `core/Database.lua`: the load pass is `NS:RunMigrations`, `NS.MIGRATIONS` is a list of steps
-`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 9). The runner
+`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 10). The runner
 runs in `OnInitialize` straight after `AceDB:New`, before anything reads the profile, and again on
 every profile event. It owns the stamp: a step's `to` is stored only after the step returned, so a
 step that raises is retried on the next load. A `perProfile` step runs for every stored profile in
@@ -409,5 +411,6 @@ the raw SavedVariables, not only the active one. The default stays `0`.
 | 7 | 6 → 7, per profile: My eq merged into Me and Their eq into Them (DW-F1, feedback-6 spec §1). The retired `window.columns.myEq` and `window.columns.theirEq` toggles are removed, since `me` and `them` now toggle the cells that show the worn gear; only the two keys go (`NS.RetireEqColumns`) |
 | 8 | 7 → 8, per profile: Content: All is History's alone (DW-Q1, feedback-15 spec §1). The Drops tab offers This instance and This session (its feed holds this session's drops alone), so a stored `feed.content = "all"` becomes `"session"`, the row's default; anything else passes through (`NS.MigrateContentAll`) |
 | 9 | 8 → 9, per profile: the simulation panel's position is session-only (DW-04, LibKa0s#54, OWNER_SCOPE C.11). The panel is LibKa0s-Sim-1.0's, which holds a dragged point for the session alone, so the retired `simPanel` key (the old panel's `point`, window state absent from defaults) is removed and a simulation writes nothing to SavedVariables; nothing else changes (`NS.RetireSimPanelPoint`) |
+| 10 | 9 → 10, per profile: the item icon's border meets the skin once (DW-03; the skinning rollout's O2, skinning-§6). For a profile that stored an `icons` table, LibKa0s-Skin-1.0's `ResetToSkin` turns `icons.borderStyleFromSkin` on (a missing companion is seeded `false` first, so the reset lands on the companion and never writes the library's sentinel into `icons.borderStyle`); the stored style, thickness and color stay, so turning the companion off later brings the player's own style back, and the stamp keeps that later choice from being reset again. A profile with no stored `icons` keeps the defaults, whose companion is already on. Without the library the companion is set directly (`NS.ResetIconBorderToSkin`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.
