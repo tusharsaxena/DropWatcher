@@ -184,11 +184,39 @@ NS.C = {
             borderColor         = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,                    -- the player's class color instead
             borderQuality       = false,                    -- the item's quality color instead
+            -- The border's skin companion (skinning-§6; the composer's `fromSkin = "icon"`, DW-03):
+            -- while on, the style and thickness are the skin's icon border family (`icon.borderStyle`,
+            -- `icon.borderSize`; Ka0s Default's are Solid 2px, the look above) and their two rows show
+            -- the skin's values. TRUE by default (the rollout's X3), so a new or reset profile follows
+            -- the skin exactly as a stored one does after core/Database.lua's one-time step 10 (O2).
+            -- Only style and thickness follow (X4): the color, its class and quality companions, Show
+            -- border and the zoom stay the player's.
+            borderStyleFromSkin = true,
         },
 
         -- The simulator (feedback-2 spec §8): the seconds an automatic run waits between steps.
         sim = {
             stepDelay = 1,
+        },
+
+        -- The skin this addon wears (skinning-§2: per addon, per profile), applied through
+        -- core/SkinSetup.lua and written only through the schema seam (settings/SchemaRows.lua's
+        -- skipRender rows; General › Skin draws them). `source` is "ka0s" (the Ka0s skins) or "eui"
+        -- (EllesmereUI's); "ka0s"/"ka0s" is Ka0s Default, the look the addon drew before skins. The
+        -- Scope's two exceptions: a new profile leaves the settings panel the client's and skins
+        -- the fonts (LootHistory's defaults). `font` and `texture` are the Skin tab's overrides, an
+        -- LSM key each, "" for the skin's own. `pickerSeen`: the first-run skin picker was closed
+        -- on this profile; false on every profile, old and new, so every player sees it once (the
+        -- rollout's O3). New keys with defaults, so AceDB merges them into every existing profile
+        -- and no migration is owed.
+        skin = {
+            source      = "ka0s",
+            skin        = "ka0s",
+            ignorePanel = true,
+            ignoreFonts = false,
+            font        = "",
+            texture     = "",
+            pickerSeen  = false,
         },
     },
 

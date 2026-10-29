@@ -16,18 +16,6 @@ local ADDON = "DropWatcher"
 -- anti-pattern #48).
 local LIBKA0S = Loader.xmlFiles("libs/LibKa0s/LibKa0s.xml")
 
--- A LibKa0s file the TOC names after the .xml (LibKa0s-Toast-1.0, vendored alone until the next full
--- re-vendor: docs/ARCHITECTURE.md, Documented deviations) loads after it, read out of the TOC so the
--- harness loads what the client loads. It joins LIBKA0S, so a library-absent load skips it too.
-do
-    local toc = assert(io.open(ADDON .. ".toc", "r"))
-    for line in toc:lines() do
-        local rel = line:gsub("\r", ""):match("^libs\\LibKa0s\\([^\\]+%.lua)%s*$")
-        if rel then LIBKA0S[#LIBKA0S + 1] = "libs/LibKa0s/" .. rel end
-    end
-    toc:close()
-end
-
 -- Mock fields a factory's `opts` may seed before any source loads (see tests/wow_mock.lua).
 local MOCK_OPTS = { "inCombat" }
 

@@ -31,6 +31,9 @@ local function enabled(seed)
         m.specID = 260
         if seed then seed(m) end
     end })
+    -- These cases count their own timers: the first-run skin picker's login fuse (core/SkinSetup.lua,
+    -- tests/test_skin_picker.lua) is put out.
+    NS.ArmSkinPicker(false)
     return NS, m, NS.Gear
 end
 

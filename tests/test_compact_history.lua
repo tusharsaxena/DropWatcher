@@ -76,7 +76,7 @@ test("compact history: kept groups as one-line headers, the newest open, each en
     assertEqual(textOf(c.you.level), "", "a kept entry holds no worn items")
     assertEqual(textOf(c.themLabel.text), "Them")
     -- feedback-10 spec §2: the level before the name, cut at the card's inset; gold labels, Them close after You.
-    local CG, gold = NS.CompactGroup, NS.Constants.GOLD
+    local CG, gold = NS.CompactGroup, { r = 1, g = 0.82, b = 0 }
     assertEqual(c.item.text.__points[1][2], c.ilvl.text); assertEqual(c.item.text.__points[2][2], card)
     assertEqual(c.themLabel.text.__points[1][2], c.you.text); assertEqual(c.themLabel.text.__points[1][4], CG.HALVES_GAP)
     -- feedback-25: Trade on line 3, You and Them under it on line 4, as on Drops' cards.
@@ -227,7 +227,7 @@ end)
 
 test("history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)", function()
     local NS, drawn = shownCompact()
-    local G = NS.Constants.GOLD
+    local G = { r = 1, g = 0.82, b = 0 }
     local mine, theirs = cardWith(drawn, "Expired"), cardWith(drawn, "Asked")
     assertEqual(textOf(mine.cells.looter.text), "Testchar")
     assertTrue(mine.cells.looter.mark:IsShown()); assertEqual(textOf(mine.cells.looter.mark), "[YOU]")

@@ -173,46 +173,37 @@ C.LAYERS = {
     },
 }
 
--- The gold of the title, the active tab and the test-mode banner (design spec §2), and the gray of
--- an idle tab and the footer's text.
-C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
-C.IDLE = { r = 0.62, g = 0.62, b = 0.64 }
+-- THE PALETTE IS THE SKIN'S (skinning-§4, anti-pattern #107). The window's gold, its idle gray and a
+-- drop row's chevron are painted at each call site from the token that names their role
+-- (`text.heading`, `dw.idle`, `dw.chevron`, ...; core/SkinSetup.lua), so no value is kept here. The
+-- drop tables' tones keep their table shape, because ~15 files index C.TONE[key] at paint time:
+-- each key names the owner or library token it is drawn in (C.TONE_TOKEN), and core/SkinSetup.lua
+-- FILLS the `r, g, b` of each C.TONE entry from that token at load and refills it, in place, on
+-- every skin switch, before any surface repaints (its OnLooksChanged listener is the first one). Under
+-- Ka0s Default each is the exact value it was before skins (X1).
+--
+-- `good` an upgrade, a tradeable estimate or an action done; `bad` gray (not wanted, not tradeable);
+-- `warn` amber (a trade window ending soon); `plain` plain text; `muted` what is not known yet.
+-- `yellow` the verdicts' sidegrade and an action waiting on someone else (feedback-4 spec §0, §1), a
+-- yellow kept apart from the headers' gold; `red` the downgrade and an action that is your move;
+-- `cyan` Offer while it is your move (feedback-6 spec §2); `offspec` an off-spec verdict
+-- (feedback-19 spec §1), close to Offer's cyan by the owner's choice, so the two can part later;
+-- `redMuted` the Can't use verdict and Trade's Can't use, and a stat lost on the Stats row
+-- (feedback-21, H5); `greenMuted` a stat gained (feedback-21 H5), dimmer than `good`; `mutedGold` a
+-- tooltip row's label and bullet (feedback-21 H3).
+C.TONE_TOKEN = {
+    good = "dw.upgrade", bad = "dw.notWanted", warn = "dw.urgent", yellow = "dw.sidegrade",
+    red = "dw.downgrade", cyan = "dw.offer", offspec = "dw.offSpec", redMuted = "dw.cantUse",
+    greenMuted = "dw.statGain", mutedGold = "dw.tipLabel", plain = "dw.plain", muted = "text.muted",
+}
 
--- A drop row's chevron (feedback-5 spec §0): muted white, as its vertex color, and the same on hover.
--- A group header's chevron is C.GOLD, as its text.
-C.CHEVRON_ROW = { r = 1.0, g = 1.0, b = 1.0, a = 0.55 }
+C.TONE = {}
+for key in pairs(C.TONE_TOKEN) do C.TONE[key] = {} end
 
--- The drop tables' tones (design spec §11.2; feedback-4 spec §0 and §1): `good` an upgrade, a
--- tradeable estimate or an action done, `bad` gray (not wanted, not tradeable), `warn` amber (a trade
--- window ending soon), `plain` plain text, `muted` what is not known yet; `yellow`, `red`, `cyan`
--- `redMuted`, `offspec`, `mutedGold`, `greenMuted` and the stats' colors below.
-C.TONE = {
-    good  = { r = 0.30, g = 0.85, b = 0.40 },
-    bad   = { r = 0.55, g = 0.55, b = 0.58 },
-    warn  = { r = 1.00, g = 0.65, b = 0.15 },
-    -- The verdicts' sidegrade and an action waiting on someone else (feedback-4 spec §0, §1): a
-    -- yellow kept apart from the headers' gold.
-    yellow = { r = 1.00, g = 0.96, b = 0.42 },
-    -- The verdicts' downgrade and an action that is your move.
-    red   = { r = 1.00, g = 0.36, b = 0.32 },
-    -- Offer while it is your move (feedback-6 spec §2): a cyan at the palette's saturation and
-    -- brightness, so giving an item away reads apart from Ask's red.
-    cyan  = { r = 0.35, g = 0.82, b = 0.95 },
-    -- An off-spec verdict (feedback-19 spec §1): your current spec can't use it, another of your
-    -- specs can. Its own token, close to Offer's cyan by the owner's choice, so the two can part later.
-    offspec = { r = 0.30, g = 0.85, b = 0.85 },
-    -- The Can't use verdict and Trade's Can't use (feedback-21): a dim red, read beside the
-    -- downgrade's `red` and the gray `bad`, so a drop you cannot use reads apart from one not wanted.
-    -- The detail card's Stats row draws a stat lost in it too (feedback-21 H5).
-    redMuted = { r = 0.72, g = 0.36, b = 0.34 },
-    -- A stat gained on the detail card's Stats row (feedback-21 H5): redMuted's green, dimmer than
-    -- the verdicts' `good`, so a value reads as a value and not as a verdict.
-    greenMuted = { r = 0.42, g = 0.74, b = 0.46 },
-    -- A tooltip row's label and bullet (feedback-21 H3): a muted gold, between the title's C.GOLD and
-    -- the idle gray C.IDLE, so a label reads apart from its value without competing with the title.
-    mutedGold = { r = 0.80, g = 0.68, b = 0.36 },
-    plain = { r = 0.92, g = 0.92, b = 0.92 },
-    muted = { r = 0.70, g = 0.70, b = 0.72 },
+-- NOT SKIN COLORS (docs/ARCHITECTURE.md, Skins > Intentional exceptions): the four secondary stats'
+-- names tell one stat from another by hue (E5), and the upgrade glows' two defaults tell the main
+-- spec from an off-spec (E6, and they are the player's stored swatches). Kept as values.
+local FIXED_TONE = {
     -- Each secondary stat's name on the detail card's Stats row (feedback-21 H5; C.STAT_TONE): four
     -- hues apart from one another and from the values' green and red, readable on the dark card.
     statCrit    = { r = 1.00, g = 0.62, b = 0.30 },
@@ -225,6 +216,7 @@ C.TONE = {
     glowMain    = { r = 255 / 255, g = 244 / 255, b = 104 / 255 },
     glowOffSpec = { r = 63 / 255,  g = 199 / 255, b = 235 / 255 },
 }
+for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
 
 -- The C.TONE key of each stat the detail card's Stats row names, by its C_Item.GetItemStats key
 -- (modules/DetailCells.lua's SECONDARY): one fixed color per stat (feedback-21 H5).

@@ -133,6 +133,11 @@ function NS.StandDown()
     NS.Bus:StandDown()
     NS.State.testMode = false
     runAll(NS.STAND_DOWN)
+    -- The first-run skin picker is a frame this addon shows (core/SkinSetup.lua): it goes down
+    -- unmarked, a start held for combat with it, and the login fuse is put out, so it comes back
+    -- on the stand-up or the next login.
+    if NS.HideSkinPicker then NS.HideSkinPicker() end
+    if NS.ArmSkinPicker then NS.ArmSkinPicker(false) end
     if NS.Window then NS.Window.UpdateVisibility() end
 end
 
@@ -142,6 +147,9 @@ function NS.StandUp()
     NS.Bus:StandUp()
     runAll(NS.STAND_UP)
     if NS.Window then NS.Window.ApplySettings() end
+    -- A session whose login fuse never burned (it started stood down, or stood down before the
+    -- fuse) lights it now.
+    if NS.ArmSkinPicker then NS.ArmSkinPicker(true) end
 end
 
 -- ── the shared host handlers ────────────────────────────────────────────────────────────────
@@ -511,15 +519,26 @@ function DW.OnCombatEnd()
     NS.Debug("State", "combat ended")
     if NS.Restrictions then NS.Restrictions.OnCombatEdge(false) end
     if NS.Window then NS.Window.UpdateVisibility(false) end
+    -- A first-run skin picker started in combat shows now (core/SkinSetup.lua).
+    if NS.SkinPickerCombatEnd then NS.SkinPickerCombatEnd() end
 end
 
 -- ── profiles ────────────────────────────────────────────────────────────────────────────────
 
--- The three profile events share one reaction: migrations, panel refresh, the latch re-read
--- (an incoming profile carries its own answer to `enabled`), auto-ask's and the toast's `enabled`
--- re-read (no row reaction runs on a switch) and the window's settings.
+-- The three profile events share one reaction: migrations, the incoming profile's skin, panel
+-- refresh, the latch re-read (an incoming profile carries its own answer to `enabled`), auto-ask's
+-- and the toast's `enabled` re-read (no row reaction runs on a switch) and the window's settings.
 local function reloadProfile(self)
+    -- The first-run skin picker down first (core/SkinSetup.lua), unmarked: its put-back of a
+    -- pending preview must land BEFORE the new profile's skin is applied, never over it.
+    if NS.HideSkinPicker then NS.HideSkinPicker() end
     self:RunMigrations()
+    -- The new profile's skin, scope and overrides (core/SkinSetup.lua; skinning-§2: a switch, copy
+    -- or reset re-applies the choice), after its migrations and before anything rebuilds against
+    -- it. Skin:SetChoice repaints every recorded frame and fires OnLooksChanged whether or not the
+    -- window was ever built, and it is idempotent, so a profile that names the skin already worn
+    -- repaints nothing.
+    if NS.ApplySkinChoice then NS.ApplySkinChoice() end
     local S = self.Settings
     local H = S and S.Helpers
     if H and H.RefreshAll then H.RefreshAll() end
@@ -528,6 +547,10 @@ local function reloadProfile(self)
         NS.Lifecycle:Set(NS.HOLD_DISABLED, not storedEnabled(self))
         NS.Lifecycle:Reevaluate()
     end
+    -- The first-run skin picker: a new or reset profile starts from the defaults, `skin.pickerSeen`
+    -- false, so it shows over the new profile's skin; one that has seen it stays down. After the
+    -- latch, so a profile with the addon switched off shows nothing.
+    if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
     if NS.AutoAsk then NS.AutoAsk.OnProfileReloaded() end
     if NS.Toast then NS.Toast.OnProfileReloaded() end
     if NS.Glow then NS.Glow.Refresh() end   -- the incoming profile's glow settings
@@ -568,6 +591,11 @@ function DW:OnInitialize()
 
     -- Before anything reads the profile (savedvariables-§1).
     self:RunMigrations()
+    -- The skin the active profile names (core/SkinSetup.lua), right after the store exists and its
+    -- migrations ran: the owner registered at file load, before AceDB, and has worn Ka0s Default
+    -- since. Before the launcher, the window or any settings page is built, so the first paint is
+    -- already the profile's skin (skinning-§2).
+    if NS.ApplySkinChoice then NS.ApplySkinChoice() end
     -- The "Keep history for" confirmation's baseline: the stored window is the confirmed one.
     if NS.HistoryRetention then NS.HistoryRetention.Sync() end
 
@@ -597,6 +625,10 @@ function DW:OnEnable()
     if NS.Launcher then NS.Launcher:Register() end
 
     logDependencies()
+
+    -- The first-run skin picker's login fuse (core/SkinSetup.lua), before the latch: a profile
+    -- stored disabled stands down below, which puts it out again.
+    if NS.ArmSkinPicker then NS.ArmSkinPicker(true) end
 
     -- THE LATCH, taken from the stored path. Last, so everything above is up before it can be
     -- taken back down.

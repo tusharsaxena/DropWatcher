@@ -355,6 +355,7 @@ local function textCell(row, key)
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
+    NS.Skin.Font(f.text)   -- the skin's face; the color is the cell's tone, set at paint time
     NS.Window.AttachTooltip(f, function() return tipOf(f) end, "row")
     return f
 end
@@ -362,7 +363,7 @@ end
 local function glyphCell(row, key)
     local f = textCell(row, key)
     f.glyph = f:CreateFontString(nil, "OVERLAY")
-    f.glyph:SetFont(C.FONT_MONO, 12, "")
+    NS.SkinMono(f.glyph, 12)
     f.glyph:SetPoint("LEFT", f, "LEFT", 0, 0)   -- the arrow before the number (feedback-4 spec §0)
     return f
 end
@@ -385,10 +386,9 @@ local function newRow(content)
     row.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
-    row.stripe:SetColorTexture(1, 1, 1, 0.03)
     row.selected = row:CreateTexture(nil, "BACKGROUND")
     row.selected:SetAllPoints(row)
-    row.selected:SetColorTexture(C.GOLD.r, C.GOLD.g, C.GOLD.b, 0.08)
+    NS.WindowGroup.PaintRowWashes(row)   -- the Drops rows' stripe and expanded wash, from the skin
     row.chevron = NS.WindowGroup.RowChevron(row)   -- the Drops rows' expand indicator (feedback-15 spec §4)
     row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
@@ -440,8 +440,7 @@ local function tone(fs, r, g, b)
 end
 
 local function qualityColor(q)
-    local qc = type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[q]
-    if qc then return qc.r, qc.g, qc.b end
+    return NS.QualityColor(q)   -- the skin's q.* token, else the client's color (E4)
 end
 
 --- The Me cell: the verdict alone, as the Drops table words it (NS.SideCells.Merge with no gear);
@@ -507,7 +506,7 @@ local function buildHeads(pane)
         local f = CreateFrame("Frame", nil, head)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
-        f.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as Loot History's (feedback-4 spec §4)
+        NS.Skin.Text(f.text, "list.header.text")   -- gold, as Loot History's (feedback-4 spec §4)
         f.text:SetText(col.label)
         NS.Window.AttachTooltip(f, function() return col.label, unpack(col.tip) end)
         head.labels[col.key] = f
@@ -521,11 +520,12 @@ local function buildStrip(pane)
     strip:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
     strip:SetHeight(K.STRIP_H)
     strip.line = strip:CreateTexture(nil, "ARTWORK")
-    strip.line:SetColorTexture(1, 1, 1, 0.1)
+    NS.SkinPaint(strip.line, function(t) t:SetColorTexture(NS.SkinColor("dw.rule")) end)
     strip.line:SetHeight(1)
     strip.line:SetPoint("TOPLEFT", strip, "TOPLEFT", 0, 0)
     strip.line:SetPoint("TOPRIGHT", strip, "TOPRIGHT", 0, 0)
     strip.info = strip:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    NS.Skin.Text(strip.info, "disabled")
     strip.info:SetJustifyH("LEFT")
     strip.info:SetWordWrap(false)   -- one line: the game cuts it with an ellipsis when narrow
     local FR = NS.FooterRow
@@ -544,6 +544,8 @@ local function build(pane)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
     pane.scroll, pane.content = scroll, content
+    local bar = rawget(scroll, "ScrollBar")
+    if bar then NS.Skin.ScrollBar(bar) end   -- the skin's corridor and knob (D2)
     pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
     pane.card = NS.HistoryCard.Build(content)
     pane.entries = {}

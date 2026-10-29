@@ -41,7 +41,6 @@ local pending = {}   -- { line = n, rows = rows } reserved since TG.Begin
 local painted = {}   -- { { text, x, line, mono }, ... } of the last paint
 local widened = nil  -- the tooltip whose minimum width a grid set
 
-local WHITE = { r = 1, g = 1, b = 1 }
 
 --- The columns' left edges and the grid's width, from each cell's width: a column is as wide as its
 --- widest cell, `gap` between two columns; a column with nothing drawn in any row takes no room.
@@ -97,9 +96,11 @@ local function acquire(kind)
     if not fs then
         fs = holder:CreateFontString(nil, "OVERLAY")
         fs:SetWordWrap(false)
-        if kind == "mono" then fs:SetFont(C.FONT_MONO, TG.GLYPH_SIZE, "") end
         pools[kind][used[kind]] = fs
     end
+    -- The skin's monospace face, read per acquire (a pooled string outlives a skin switch); a plain
+    -- cell keeps the tooltip lines' own font, since GameTooltip stays the client's (skinning-§7).
+    if kind == "mono" then fs:SetFont(NS.SkinMonoFont(), TG.GLYPH_SIZE, "") end
     if kind == "plain" and lineFont then fs:SetFontObject(lineFont) end
     fs:Show()
     return fs
@@ -114,8 +115,8 @@ end
 local function textFs(kind, text, tone)
     local fs = acquire(kind)
     fs:SetText(text)
-    local c = tone and C.TONE[tone] or WHITE
-    fs:SetTextColor(c.r, c.g, c.b)
+    local c = tone and C.TONE[tone]
+    if c then fs:SetTextColor(c.r, c.g, c.b) else fs:SetTextColor(NS.Skin.Color("gtip.value")) end
     return fs, widthOf(fs, text)
 end
 
@@ -158,7 +159,7 @@ function TG.Begin() release() end
 --- @param line table { grid = rows }
 function TG.Add(tip, line)
     for _, row in ipairs(line.grid) do
-        tip:AddLine(" ", 1, 1, 1, false)
+        tip:AddLine(" ", nil, nil, nil, false)   -- a blank line reserved for the row: no color to draw
         local n = tip.NumLines and tip:NumLines()
         if NS.Compat.IsSecret(n) or type(n) ~= "number" then n = #pending + 2 end
         pending[#pending + 1] = { line = n, row = row }

@@ -400,6 +400,12 @@ L["Refused by the feed"] = "Refused by the feed"
 -- Every other string the code routes through NS.L, one heading per first user in TOC load order
 -- (tests/test_locale.lua keeps the set closed; review F07, decision D8)
 
+-- core/SkinSetup.lua: the Skin tab's source values and the reload line
+L["Ka0s skins"] = "Ka0s skins"
+L["EllesmereUI"] = "EllesmereUI"
+L["Reload your interface (/reload) to finish changing the skin."] =
+    "Reload your interface (/reload) to finish changing the skin."
+
 -- core/DropWatcher.lua
 L["Inspecting %d group members, one at a time."] = "Inspecting %d group members, one at a time."
 L["Nothing to inspect: every member's gear is already read, or you are not in a group."] =

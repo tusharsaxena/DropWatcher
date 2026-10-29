@@ -25,10 +25,19 @@ local function newAddon(opts)
     return loadAddon(opts)
 end
 
--- ... plus OnInitialize (ADDON_LOADED): the db exists, migrations have run.
+-- ... plus OnInitialize (ADDON_LOADED): the db exists, migrations have run. Then the one login
+-- event the client delivers before OnEnable, to the one frame that hears it on its own: since
+-- LibKa0s v1.78.0 the first RegisterOwner (core/SkinSetup.lua) makes LibKa0s-Skin-1.0's EllesmereUI
+-- retry frame, registered for ADDON_LOADED and PLAYER_LOGIN, and at PLAYER_LOGIN it unregisters
+-- both. The headless run fires no client event, so without this the frame would stand in every
+-- registration survey as two game events that are the library's, not this addon's (LootHistory's
+-- tests/test_disabled.lua settles it the same way).
 local function bootAddon(opts)
     local NS, env, m = newAddon(opts)
     NS.addon:OnInitialize()
+    local skin = m.LibStub("LibKa0s-Skin-1.0", true)
+    local retry = skin and skin.__euiEventFrame
+    if retry then retry:__fire("OnEvent", "PLAYER_LOGIN") end
     return NS, env, m
 end
 
@@ -182,6 +191,12 @@ Kit.run{
         "test_schema",
         "test_schema_rows",
         "test_settings_pages",
+        "test_skin_setup",
+        "test_skin_chrome",
+        "test_skin_literals",
+        "test_skin_hud",
+        "test_skin_picker",
+        "test_skin_settings",
         "test_slash",
         "test_window",
         "test_window_shell",

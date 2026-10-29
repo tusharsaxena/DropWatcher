@@ -394,10 +394,11 @@ end)
 -- ── Window › Icons (feedback-21 G11) ────────────────────────────────────────────────────────
 
 -- The tab's rows in order: the Zoom row, then the composed Border block (options-ui-§16: Show
--- border leads, the mandated four in order, the quality extra after them).
+-- border leads, the mandated four in order, the skin companion after them (DW-03, the composer's
+-- `fromSkin = "icon"`), then the quality extra).
 local ICON_ROWS = {
     "icons.zoom", "icons.borderShow", "icons.borderStyle", "icons.borderSize", "icons.borderColor",
-    "icons.useClassColorBorder", "icons.borderQuality",
+    "icons.useClassColorBorder", "icons.borderStyleFromSkin", "icons.borderQuality",
 }
 
 test("icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults", function()
@@ -414,7 +415,8 @@ test("icons: Window › Icons is the Zoom row then the composed Border block, wi
     assertEqual(zoom.default, 0.1, "the baked-in edge trimmed (feedback-21 H6)")
     -- The composer's labels, word for word (options-ui-§16), under the Border subsection.
     local LABELS = { borderShow = "Show border", borderStyle = "Border style", borderSize = "Border thickness (px)",
-        borderColor = "Border color", useClassColorBorder = "Use class color", borderQuality = "Color by item quality" }
+        borderColor = "Border color", useClassColorBorder = "Use class color", borderQuality = "Color by item quality",
+        borderStyleFromSkin = "Use the skin's border" }
     for leaf, label in pairs(LABELS) do
         local row = S.FindRow("icons." .. leaf)
         assertEqual(row.label, label, leaf); assertEqual(row.subgroup, "Border", leaf)
@@ -446,6 +448,9 @@ test("icons: the border rows refuse what they cannot draw, and dim with Show bor
     assertFalse(S.Set("icons.borderSize", 0)); assertFalse(S.Set("icons.borderSize", 17))
     assertFalse(S.Set("icons.borderShow", "yes")); assertFalse(S.Set("icons.borderStyle", ""))
     assertFalse(S.Set("icons.borderColor", { r = 2, g = 0, b = 0 }))
+    -- The style and thickness rows are the skin's while the companion is on (DW-03): off here, so
+    -- the dimming below is Show border's alone (tests/test_skin_hud.lua holds the companion's).
+    assertTrue(S.Set("icons.borderStyleFromSkin", false))
     assertFalse(S.FindRow("icons.borderStyle").disabledIf(), "on by default (feedback-21 H6)")
     assertTrue(S.Set("icons.borderShow", false))
     for _, leaf in ipairs({ "borderStyle", "borderSize", "borderQuality" }) do
@@ -550,6 +555,9 @@ local PINNED_ROWS = {
     { "icons.borderShow", "bool", "true" },
     { "icons.borderSize", "number", "2" },
     { "icons.borderStyle", "string", "\"Solid\"" },
+    -- DW-03 adds the border's skin companion (the composer's `fromSkin = "icon"`): a new row, not a
+    -- layout move, defaulting TRUE (the rollout's X3).
+    { "icons.borderStyleFromSkin", "bool", "true" },
     { "icons.useClassColorBorder", "bool", "false" },
     { "icons.zoom", "number", "0.1" },
     { "locked", "bool", "false" },
@@ -567,6 +575,15 @@ local PINNED_ROWS = {
     { "messages.transmogAsk", "bool", "false" },
     { "scale", "number", "1" },
     { "sim.stepDelay", "number", "1" },
+    -- The skinning rollout (DW-01) adds the seven skin.* keys, General's Skin tab: new rows, not a
+    -- layout move, so they join the pin with their defaults (defaults/Profile.lua's skin table).
+    { "skin.font", "string", "\"\"" },
+    { "skin.ignoreFonts", "bool", "false" },
+    { "skin.ignorePanel", "bool", "true" },
+    { "skin.pickerSeen", "bool", "false" },
+    { "skin.skin", "string", "\"ka0s\"" },
+    { "skin.source", "string", "\"ka0s\"" },
+    { "skin.texture", "string", "\"\"" },
     { "situations.delve.autoOpen", "bool", "false" },
     { "situations.delve.quality", "string", "\"global\"" },
     { "situations.delve.track", "bool", "false" },

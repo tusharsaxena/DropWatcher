@@ -43,6 +43,18 @@ local function addRefresher(ctx, fn)
     ctx.refreshers[#ctx.refreshers + 1] = fn
 end
 
+-- Every AceGUI widget this file acquires itself, painted for this addon's skin (skinning-§3).
+-- H().AceGUI is normally the Options instance's owner proxy, which paints on Create already; the
+-- explicit NS.SkinPaintAce repaints in place for the same owner, so a widget is painted whichever
+-- handle made it. Nothing is painted while the Scope's Ignore settings panel is on, and the release
+-- hands the widget back to AceGUI's shared pool stock (the library chains its restore onto the
+-- widget's own OnRelease).
+local function acquire(wtype)
+    local w = H().AceGUI:Create(wtype)
+    NS.SkinPaintAce(w)
+    return w
+end
+
 -- ── Drops › Quality: the threshold in force now ─────────────────────────────────────────────
 
 local function readoutText()
@@ -87,7 +99,7 @@ end
 --- @param line table the flow line Keep history for sits alone on
 function P.ClearHistoryButton(_, line)
     local h = H()
-    local b = h.AceGUI:Create("Button")
+    local b = acquire("Button")
     b:SetText(L["Clear history"])
     b:SetRelativeWidth(h.BUTTON_PAIR_REL)
     b:SetCallback("OnClick", function() NS.History.AskClear() end)
@@ -107,8 +119,16 @@ end
 local SIT_COL = { situation = 8, track = 140, autoOpen = 205, quality = 285, rule = 460 }
 local SIT_QUALITY_W, SIT_RULE_W = 160, 150
 local SIT_ROW_H, SIT_HEAD_H, SIT_HEAD_Y = 28, 30, -6
-local SIT_HEAD_RGB = { 0.91, 0.77, 0.42 }   -- Loot History's header gold
-local SIT_LABEL_ON, SIT_LABEL_OFF = 0.86, 0.5   -- its label gray, live and inactive
+-- The colors are the skin's (the table is a raw frame the page owns, built once a session, so each
+-- paint is recorded with NS.SkinPaint and follows a skin switch without a re-render): the headers in
+-- `text.headingAlt` (Loot History's header gold), a label in `text.bodyAlt` live and `text.disabled`
+-- inactive (its label grays), a stripe `list.stripe`. Ka0s Default: exactly the values typed before.
+-- Read through NS.SkinPanelColor, so with the Scope's Ignore settings panel on they draw Ka0s
+-- Default's, as the table's own CheckBox and Dropdown cells go back stock (SetIgnore fires
+-- OnLooksChanged, so NS.SkinRepaint moves them live).
+local function paintHeader(fs) fs:SetTextColor(NS.SkinPanelColor("text.headingAlt")) end
+local function paintLabel(fs) fs:SetTextColor(NS.SkinPanelColor(fs.dwActive and "text.bodyAlt" or "text.disabled")) end
+local function paintStripe(t) t:SetColorTexture(NS.SkinPanelColor("list.stripe")) end
 
 local function situationEntries()
     return E.SituationRows(NS.SchemaRuntime.FindRow, NS.Setting, NS.WindowFooter.SituationLabel)
@@ -118,9 +138,9 @@ end
 local function paintSituations(t)
     for i, e in ipairs(situationEntries()) do
         local r = t.rows[i]
-        local gray = e.active and SIT_LABEL_ON or SIT_LABEL_OFF
         r.label:SetText(e.label)
-        r.label:SetTextColor(gray, gray, gray)
+        r.label.dwActive = e.active and true or false
+        NS.SkinPaint(r.label, paintLabel)
         r.track:SetValue(e.track.value == true)
         r.track:SetDisabled(not e.track.enabled)
         r.autoOpen:SetValue(e.autoOpen.value == true)
@@ -146,7 +166,7 @@ end
 
 local function situationCheck(t, rf, x, path)
     local h = H()
-    local cb = h.AceGUI:Create("CheckBox")
+    local cb = acquire("CheckBox")
     cb:SetLabel("")
     cb.frame:SetParent(rf)
     cb.frame:ClearAllPoints()
@@ -160,7 +180,7 @@ end
 
 local function situationPick(t, rf, path, x, width)
     local h = H()
-    local dd = h.AceGUI:Create("Dropdown")
+    local dd = acquire("Dropdown")
     dd:SetLabel("")
     local row = NS.SchemaRuntime.FindRow(path)
     local items, order = {}, {}
@@ -199,7 +219,7 @@ local function situationSlot(t, i, key)
     rf:SetHeight(SIT_ROW_H)
     local stripe = rf:CreateTexture(nil, "BACKGROUND")
     stripe:SetAllPoints(rf)
-    stripe:SetColorTexture(1, 1, 1, 0.03)
+    NS.SkinPaint(stripe, paintStripe)
     stripe:SetShown(i % 2 == 0)
     local base = "situations." .. key .. "."
     return {
@@ -216,15 +236,33 @@ local function situationHeader(host, x, text)
     fs:SetPoint("TOPLEFT", host, "TOPLEFT", x, SIT_HEAD_Y)
     fs:SetJustifyH("LEFT")
     fs:SetText(text)
-    fs:SetTextColor(SIT_HEAD_RGB[1], SIT_HEAD_RGB[2], SIT_HEAD_RGB[3])
+    NS.SkinPaint(fs, paintHeader)
     return fs
 end
+
+-- Every situations table built this session (one per Drops page; weak, so a collected one drops
+-- out). Its CheckBox and Dropdown cells are acquired ONCE and parented to raw row frames, never
+-- released, so the library's re-render on a skin switch never reaches them: the listener below
+-- repaints each in the new skin, or hands it back stock when the Scope's Ignore settings panel is
+-- turned on (a refused PaintAce restores what this owner painted).
+local situationTables = setmetatable({}, { __mode = "k" })
+local CELLS = { "track", "autoOpen", "quality", "rule" }
+
+local function repaintSituationCells()
+    for t in pairs(situationTables) do
+        for _, r in ipairs(t.rows) do
+            for _, key in ipairs(CELLS) do NS.SkinPaintAce(r[key]) end
+        end
+    end
+end
+if NS.Skin and NS.Skin.OnLooksChanged then NS.Skin.OnLooksChanged(repaintSituationCells) end
 
 -- The host, its headers and its slots, once per session. A raw frame the page owns rather than an
 -- AceGUI child: ClearScroll hands every scroll child back to AceGUI's pool on each render of the
 -- tab, and the slots' widgets are parented to their rows, never to the scroll, so it reclaims none.
 local function buildSituationTable(ctx)
     local t = { host = CreateFrame("Frame", nil, ctx.panel), rows = {} }
+    situationTables[t] = true
     t.headers = {
         situationHeader(t.host, SIT_COL.situation, L["Situation"]),
         situationHeader(t.host, SIT_COL.track, L["Track"]),
@@ -260,7 +298,7 @@ function P.SituationTable(ctx)
     local scroll = h.EnsureScroll(ctx)
     if not scroll then return end
     h.AddSpacer(scroll, 4)
-    local holder = h.AceGUI:Create("SimpleGroup")
+    local holder = acquire("SimpleGroup")
     holder:SetLayout(nil)
     holder:SetFullWidth(true)
     holder:SetHeight(SIT_HEAD_H + SIT_ROW_H * #K.SITUATIONS + 8)
@@ -269,7 +307,9 @@ function P.SituationTable(ctx)
     ctx.dwSituations = t
     -- The undo of the reparent below, on the widget's own release (options-ui-§19). Guarded on the
     -- host still sitting on THIS placeholder, so an old one released late never pulls it off a new one.
-    holder:SetCallback("OnRelease", function(w)
+    -- CHAINED onto the widget's OnRelease (NS.SkinOnRelease, the library's Skin:OnRelease) rather
+    -- than taking AceGUI's one OnRelease callback, so this undo and the skin's restore both run.
+    NS.SkinOnRelease(holder, function(w)
         if t.host:GetParent() == w.frame then P.ParkSituationTable(ctx) end
     end)
     t.host:SetParent(holder.frame)
@@ -298,7 +338,7 @@ local function specStrip(ctx, tabKey)
     ctx.activeSubTab = ctx.activeSubTab or {}
     local spec = E.PickSpec(list, ctx.activeSubTab[tabKey], NS.Compat.PlayerSpecID())
     ctx.activeSubTab[tabKey] = spec
-    local host = h.AceGUI:Create("SimpleGroup")
+    local host = acquire("SimpleGroup")
     host:SetLayout(nil)
     host:SetFullWidth(true)
     scroll:AddChild(host)
@@ -348,7 +388,7 @@ local function importLine(spec)
         wide = true,
         make = function(ctx, into)
             local h = H()
-            local box = h.AceGUI:Create("EditBox")
+            local box = acquire("EditBox")
             box:SetLabel(L["Import a Pawn scale"])
             box:SetFullWidth(true)
             box:SetCallback("OnEnterPressed", function(_, _, text) importScale(ctx, spec, text, box) end)
@@ -451,7 +491,7 @@ local function insertToken(st, token)
 end
 
 local function chip(h, st, name)
-    local b = h.AceGUI:Create("Button")
+    local b = acquire("Button")
     local token = "{" .. name .. "}"
     b:SetText(token)
     b:SetRelativeWidth(0.13)

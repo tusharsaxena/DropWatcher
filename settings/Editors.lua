@@ -227,13 +227,16 @@ E.TEMPLATE_LABEL = {
     announce = L["Announce (group, raid or instance)"],
 }
 
+-- A refusal in the skin's alternate bad red (`sem.badAlt`, Ka0s Default ff4040), read at each use so
+-- it follows a skin switch.
+local function red(text) return (NS.SkinEscape("sem.badAlt") or "") .. text .. "|r" end
+
 -- A template's short name, for the preview's header.
 E.KIND_NAME = {
     ask = L["Ask"], transmog = L["Ask for transmog"], askOffSpec = L["Ask for off-spec"], offer = L["Offer"],
     announce = L["Announce"],
 }
 
-local RED = "|cffff4040%s|r"
 
 --- An editor's label with its live counter: `Ask (whisper to the looter)   104 / 255`, the
 --- count red past the chat limit. Counted in bytes, which is what the limit counts.
@@ -244,7 +247,7 @@ function E.CounterLabel(kind, text)
     local n = type(text) == "string" and #text or 0
     local count = ("%d / %d"):format(n, K.MESSAGE_MAX_LEN)
     local over = n > K.MESSAGE_MAX_LEN
-    if over then count = RED:format(count) end
+    if over then count = red(count) end
     return ("%s   %s"):format(E.TEMPLATE_LABEL[kind] or kind, count), over
 end
 
@@ -342,11 +345,11 @@ function E.PreviewLines(kind, template, ctx, to)
     local p = NS.Messaging.Preview(template, ctx)
     local who = to or L["the group"]
     local parts = { ("%d / %d"):format(p.length, K.MESSAGE_MAX_LEN) }
-    if p.tooLong then parts[#parts + 1] = RED:format(L["too long to send"]) end
+    if p.tooLong then parts[#parts + 1] = red(L["too long to send"]) end
     if #p.unknown > 0 then
         local names = {}
         for i, n in ipairs(p.unknown) do names[i] = "{" .. n .. "}" end
-        parts[#parts + 1] = RED:format(L["unknown tokens, sent as typed: %s"]:format(table.concat(names, " ")))
+        parts[#parts + 1] = red(L["unknown tokens, sent as typed: %s"]:format(table.concat(names, " ")))
     end
     return {
         header  = L["Preview: %s, to %s"]:format(E.KIND_NAME[kind] or kind, who),

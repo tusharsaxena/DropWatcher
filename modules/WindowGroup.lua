@@ -153,7 +153,6 @@ WG.COLUMNS = {
       desc = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."],
       tip = { TM.Row(L["Shows"], L["Ask the looter for it, once"]), TM.Row(L["Your own drop"], L["Offer, who it would help"]) } },
 }
-local WHITE = { r = 1, g = 1, b = 1 }   -- an untoned button's label (GameFontHighlightSmall)
 
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
 local TEST_LOADING = L["Gathering real items for test mode."]
@@ -324,6 +323,7 @@ local function textCell(row, key)
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
+    NS.Skin.Font(f.text)   -- the skin's face; the color is the cell's tone, set at paint time
     NS.Window.AttachTooltip(f, function() return tipOf(f) end, "row")
     return f
 end
@@ -387,9 +387,11 @@ end
 --- @param kind string|nil `offer` for a button that reads Offer
 function WG.ToneButton(b, state, kind)
     local tone = NS.WindowCells.ActionTone(state, kind)
-    local c = tone and C.TONE[tone] or WHITE
-    b.label:SetTextColor(c.r, c.g, c.b)
-    if b.art then b.art:SetVertexColor(c.r, c.g, c.b) end
+    local c = tone and C.TONE[tone]
+    local r, g, bl
+    if c then r, g, bl = c.r, c.g, c.b else r, g, bl = NS.Skin.Color("btn.text") end   -- untoned: white
+    b.label:SetTextColor(r, g, bl)
+    if b.art then b.art:SetVertexColor(r, g, bl) end
     b.tone = tone
 end
 
@@ -444,7 +446,8 @@ local function itemEnter(self, owner)
     owner = owner or self
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     WG.SetItemTooltip(GameTooltip, self)
-    GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], C.IDLE.r, C.IDLE.g, C.IDLE.b)
+    local r, g, b = NS.Skin.Color("dw.tipHint")
+    GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], r, g, b)
     GameTooltip:Show()
     NS.RowTooltip.PlaceOrFallback(GameTooltip, owner)
 end
@@ -539,9 +542,10 @@ end
 function WG.BuildLead(f)
     f.leadLevel = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.leadGlyph = f:CreateFontString(nil, "OVERLAY")
-    f.leadGlyph:SetFont(C.FONT_MONO, 12, "")
+    NS.SkinMono(f.leadGlyph, 12)
     f.leadText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.sep = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    for _, fs in ipairs({ f.leadLevel, f.leadText, f.sep }) do NS.Skin.Font(fs) end
     for _, fs in ipairs({ f.leadLevel, f.leadGlyph, f.leadText, f.sep }) do
         fs:SetWordWrap(false)
         fs:Hide()
@@ -581,8 +585,9 @@ local function sideCell(row, key)
     f.icons[2]:SetPoint("LEFT", f.icons[1], "RIGHT", WG.SIDE.ICON_GAP, 0)
     f.level = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.level:SetWordWrap(false)
+    NS.Skin.Font(f.level)
     f.glyph = f:CreateFontString(nil, "OVERLAY")
-    f.glyph:SetFont(C.FONT_MONO, 12, "")
+    NS.SkinMono(f.glyph, 12)
     WG.BuildLead(f)
     return f
 end
@@ -604,7 +609,8 @@ local function tradeWindowCell(row)
     f.text:ClearAllPoints()
     f.text:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -5)
     f.barBg = f:CreateTexture(nil, "BACKGROUND")
-    f.barBg:SetColorTexture(1, 1, 1, 0.12)
+    -- The countdown bar's track (flat, D5): Ka0s Default's faint white box edge, 1, 1, 1, 0.12.
+    NS.SkinPaint(f.barBg, function(t) t:SetColorTexture(NS.SkinColor("list.boxEdge")) end)
     f.barBg:SetHeight(K.BAR_H)
     f.barBg:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 0, 5)
     f.barBg:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -WG.TRADE_WINDOW_PAD, 5)
@@ -618,14 +624,14 @@ local BUILDERS = { item = itemCell, me = sideCell, them = sideCell, actions = ac
     looter = function(row, key) return NS.WindowRows.MarkedCell(textCell(row, key)) end }
 
 --- A drop row's (or compact card's) expand indicator: the header's chevron texture, ROW_CHEVRON
---- square, muted white (C.CHEVRON_ROW); the caller anchors it. WG.PaintChevron sets its state.
+--- square, muted white (the owner token `dw.chevron`); the caller anchors it. WG.PaintChevron sets
+--- its state.
 --- @param parent table the row or card
 --- @return table the texture
 function WG.RowChevron(parent)
     local t = parent:CreateTexture(nil, "ARTWORK")
     t:SetSize(K.ROW_CHEVRON, K.ROW_CHEVRON)
-    local c = C.CHEVRON_ROW
-    t:SetVertexColor(c.r, c.g, c.b, c.a)
+    NS.SkinPaint(t, function(tex) tex:SetVertexColor(NS.SkinColor("dw.chevron")) end)
     t:SetTexture(NS.Icon("chevron-down"))
     return t
 end
@@ -637,16 +643,25 @@ function WG.PaintChevron(t, open)
     t:SetTexture(NS.Icon(open and "chevron-up" or "chevron-down"))
 end
 
+--- A row's or a card's two washes from the skin: the stripe (`list.stripe`, Ka0s Default
+--- 1, 1, 1, 0.03) and the expanded wash (`dw.rowOpen`, gold at 0.08), each repainted on a skin
+--- switch. The rows keep their own two textures (not the skin's ListRow, whose selected wash is
+--- `list.sel`'s 0.18).
+--- @param row table `row.stripe`, `row.selected`
+function WG.PaintRowWashes(row)
+    NS.SkinPaint(row.stripe, function(t) t:SetColorTexture(NS.SkinColor("list.stripe")) end)
+    NS.SkinPaint(row.selected, function(t) t:SetColorTexture(NS.SkinColor("dw.rowOpen")) end)
+end
+
 local function newRow(content)
     local row = CreateFrame("Button", nil, content)
     row:SetHeight(NS.WindowRows.ROW_H)
     row.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
-    row.stripe:SetColorTexture(1, 1, 1, 0.03)
     row.selected = row:CreateTexture(nil, "BACKGROUND")
     row.selected:SetAllPoints(row)
-    row.selected:SetColorTexture(C.GOLD.r, C.GOLD.g, C.GOLD.b, 0.08)
+    WG.PaintRowWashes(row)
     row.chevron = WG.RowChevron(row)
     row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
@@ -662,17 +677,19 @@ local function newHeader(content)
     local h = CreateFrame("Button", nil, content)
     h:SetHeight(K.GROUP_H)
     h.tipRow = true
+    -- The fill is the skin's faint list box (Ka0s Default 1, 1, 1, 0.06); the chevron and the text
+    -- its heading color (gold), the chevron as its text (feedback-5 spec §0).
     h.fill = h:CreateTexture(nil, "BACKGROUND")
     h.fill:SetAllPoints(h)
-    h.fill:SetColorTexture(1, 1, 1, 0.06)
+    NS.SkinPaint(h.fill, function(t) t:SetColorTexture(NS.SkinColor("list.box")) end)
     h.chevron = h:CreateTexture(nil, "ARTWORK")
     h.chevron:SetSize(10, 10)
     h.chevron:SetPoint("LEFT", h, "LEFT", K.CHEVRON_X, 0)
-    h.chevron:SetVertexColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as its text (feedback-5 spec §0)
+    NS.SkinPaint(h.chevron, function(t) t:SetVertexColor(NS.SkinColor("text.heading")) end)
     h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
     h.text:SetJustifyH("LEFT")   -- the compact headers size the text to the line; it reads from the left
-    h.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    NS.Skin.Text(h.text, "text.heading")
     h:SetScript("OnClick", function(self) WG.ToggleGroup(self.groupKey, self.collapsed) end)
     NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")
     return h
@@ -688,9 +705,9 @@ local function paintText(f, c)
 end
 
 local function qualityTone(fs, drop)
-    local q = type(drop.facts) == "table" and drop.facts.quality
-    local qc = type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[q]
-    if qc then fs:SetTextColor(qc.r, qc.g, qc.b) end
+    local q = type(drop.facts) == "table" and drop.facts.quality or nil
+    local r, g, b = NS.QualityColor(q)   -- the skin's q.* token, else the client's color (E4)
+    if r then fs:SetTextColor(r, g, b) end
 end
 
 local function classTone(fs, classFile, fallback)
@@ -840,15 +857,14 @@ local function placeCells(row, layout, height)
     end
 end
 
--- The countdown's face follows its urgency (bold while ending soon); SetFontObject puts the
--- template's size back, so the Font size row's size goes on again after it. The bar fills by the
--- window left, amber while ending soon.
-local function paintTradeWindow(f, drop, now, warnAt, size)
+-- The countdown is the skin's face in its urgency's tone (amber while ending soon); the bar fills by
+-- the window left, a flat color in the same tone (D5: no bar texture on a 3px bar). The face is the
+-- skin's (textCell's S.Font), so the countdown no longer swaps font objects: the two it swapped were
+-- one face at one size, and a swap would put the client's face back over the skin's. The Font size
+-- row's size is the row's (WindowRows.ApplyRowFont).
+local function paintTradeWindow(f, drop, now, warnAt)
     local c = NS.MineCells.TradeWindow(drop, now, warnAt)
     paintText(f, c)
-    f.text:SetFontObject(c.bold and "GameFontNormalSmall" or "GameFontHighlightSmall")
-    if size then NS.WindowRows.SetFontSize(f.text, size) end
-    setTone(f.text, c.tone)
     local w = max((f:GetWidth() or 0) - WG.TRADE_WINDOW_PAD, 0)
     f.fraction = c.fraction or 0
     f.bar:SetWidth(max(w * f.fraction, 0.01))
@@ -894,7 +910,7 @@ local function paintRow(row, drop, layout, now, metrics)
     -- A sample's Me shows its own worn items, their tooltips the links (feedback-18).
     paintSide(cells.me, SC.Me(drop, NS.TestMode.GearOf(drop, equipped), classFile), not drop.test and "player" or nil)
     paintSide(cells.them, WG.ThemCell(drop, inspectGear(drop), now))
-    if layout.tradeWindow then paintTradeWindow(cells.tradeWindow, drop, now, metrics.warnAt, metrics.fontSize) end
+    if layout.tradeWindow then paintTradeWindow(cells.tradeWindow, drop, now, metrics.warnAt) end
     paintActions(cells.actions, drop)
 end
 
@@ -920,7 +936,9 @@ local function buildHeads(pane)
         local f = CreateFrame("Frame", nil, head)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
-        f.text:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)   -- gold, as Loot History's (feedback-4 spec §4)
+        -- The skin's list header text (gold, as Loot History's: feedback-4 spec §4). Not the skin's
+        -- SortHeaderBar, which adds a `list.header.bg` band these heads never drew.
+        NS.Skin.Text(f.text, "list.header.text")
         NS.Window.AttachTooltip(f, function() return f.label, unpack(col.tip) end)
         head.labels[col.key] = f
     end
@@ -936,6 +954,10 @@ local function build(pane)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
     pane.scroll, pane.content = scroll, content
+    -- The template's bar through the skin's ScrollBar (D2, as Loot History's): its corridor and flat
+    -- knob under every skin, Ka0s Default included.
+    local bar = rawget(scroll, "ScrollBar")
+    if bar then NS.Skin.ScrollBar(bar) end
     pane.rowPool, pane.headPool = NS.Pool.New(), NS.Pool.New()
     pane.card = NS.DetailCard.Build(content)
     pane.emptyState = NS.DropsStrip.BuildEmpty(pane)   -- the empty state (board 06 D)
@@ -1095,9 +1117,9 @@ function WG.TickCountdowns()
     NS.DropsStrip.Tick(pane, compact)
     if compact then return end
     if not (pane.layout and pane.layout.tradeWindow) then return end
-    local now, warnAt, size = GetTime(), NS.TradeTimer.WarnAt(), NS.WindowRows.FontSize(NS.Setting("window.fontSize"))
+    local now, warnAt = GetTime(), NS.TradeTimer.WarnAt()
     for _, row in ipairs(pane.rowPool.active) do
-        if row.drop then paintTradeWindow(row.cells.tradeWindow, row.drop, now, warnAt, size) end
+        if row.drop then paintTradeWindow(row.cells.tradeWindow, row.drop, now, warnAt) end
     end
 end
 

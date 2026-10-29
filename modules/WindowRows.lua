@@ -74,18 +74,32 @@ end
 
 -- ── the frame edge ──────────────────────────────────────────────────────────────────────────
 
+-- The skin's generation: bumped on every skin switch (WR.OnLooksChanged, from modules/Window.lua's
+-- listener). A switch repaints each text's face at its template's size (the skin's S.Font, the
+-- glyphs' NS.SkinPaint), so a face cached before it is stale: SetFontSize reads it anew, and
+-- ApplyRowFont applies the size again, once per row.
+local gen = 0
+
+--- A skin switch happened: every cached face and row size is read again on its next use.
+function WR.OnLooksChanged() gen = gen + 1 end
+
 --- A font string at `size` points, keeping its face and flags; nil puts back the size it had
---- before the first change (its template's, or the monospace face's).
+--- before the first change (its template's, or the monospace face's). The face is the skin's: read
+--- from the string after the skin painted it, and again after a skin switch.
 --- @param fs table a FontString
 --- @param size number|nil
 function WR.SetFontSize(fs, size)
     local base = fs.dwBaseFont
+    if base and fs.dwFontGen ~= gen then
+        -- The skin moved and repainted the face at the template's size: start from that.
+        base, fs.dwBaseFont = nil, nil
+    end
     if not base then
         if size == nil then return end
         local file, own, flags = fs:GetFont()
         if type(file) ~= "string" then return end
         base = { file, own, flags or "" }
-        fs.dwBaseFont = base
+        fs.dwBaseFont, fs.dwFontGen = base, gen
     end
     fs:SetFont(base[1], size or base[2], base[3])
 end
@@ -98,8 +112,8 @@ local PARTS = { "text", "glyph", "sub", "level", "mark", "leadLevel", "leadGlyph
 --- @param size number|nil
 function WR.ApplyRowFont(row, size)
     local key = size or 0
-    if row.dwFontSize == key then return end
-    row.dwFontSize = key
+    if row.dwFontSize == key and row.dwFontGen == gen then return end
+    row.dwFontSize, row.dwFontGen = key, gen
     for _, f in pairs(row.cells) do
         for _, part in ipairs(PARTS) do
             if f[part] then WR.SetFontSize(f[part], size) end
@@ -127,11 +141,10 @@ WR.MARK_GAP = 3
 --- @param text table the FontString the mark follows
 --- @return table the mark's FontString
 function WR.NewMark(parent, text)
-    local C = NS.Constants
     local m = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     m:SetPoint("LEFT", text, "RIGHT", WR.MARK_GAP, 0)
     m:SetWordWrap(false)
-    m:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    NS.Skin.Text(m, "accent")   -- the skin's accent (Ka0s Default gold) in its face
     m:Hide()
     return m
 end

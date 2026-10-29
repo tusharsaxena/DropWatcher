@@ -203,6 +203,39 @@ function NS.RetireSimPanelPoint(profile)
     if type(profile) == "table" and profile.simPanel ~= nil then profile.simPanel = nil end
 end
 
+-- ── step 10: the item icon's border follows the skin, once (DW-03, the rollout's O2) ─────────
+
+-- The one key the reset puts back on the skin: the border's style, whose companion
+-- (`icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`) governs the thickness too. Only
+-- that (the rollout's X4): the color stays the player's, `borderSize` would take the FROM_SKIN
+-- sentinel into a number row, and `borderShow` (a bool) would be switched ON.
+NS.HUD_SKIN_KEYS = { "borderStyle" }
+
+--- Step 10's work on one stored profile (Ka0sAddonsCommonTasks docs/2026-10-29-SKINNING_ROLLOUT,
+--- the owner's O2, skinning-§6): every player meets the icon border's skin once per profile.
+--- LibKa0s-Skin-1.0's `ResetToSkin` turns the companion on and leaves the stored pick where it was,
+--- so turning the companion off later brings the player's own style straight back; the stamp the
+--- runner writes after it is what keeps that later "off" from being stomped at the next login.
+--- ResetToSkin decides by the companion's PRESENCE, and AceDB strips a value equal to its default
+--- from the stored table, so a missing companion is seeded false first: the reset then always lands
+--- on the companion, never the FROM_SKIN sentinel in the LSM key. A profile that never stored `icons`
+--- keeps the defaults, whose companion is already TRUE (X3). Without the library the companion is
+--- set directly, which is what ResetToSkin would do. Idempotent.
+--- @param profile table a raw stored profile
+function NS.ResetIconBorderToSkin(profile)
+    local icons = type(profile) == "table" and profile.icons
+    if type(icons) ~= "table" then return end
+    for _, key in ipairs(NS.HUD_SKIN_KEYS) do
+        if icons[key .. "FromSkin"] == nil then icons[key .. "FromSkin"] = false end
+    end
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    if Skin and type(Skin.ResetToSkin) == "function" then
+        Skin.ResetToSkin(icons, NS.HUD_SKIN_KEYS)
+    else
+        for _, key in ipairs(NS.HUD_SKIN_KEYS) do icons[key .. "FromSkin"] = true end
+    end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -222,6 +255,8 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.MigrateContentAll(profile) end },
     { to = 9, perProfile = true,         -- 8 -> 9: the simulation panel's position is session-only
       run = function(_, profile) NS.RetireSimPanelPoint(profile) end },
+    { to = 10, perProfile = true,        -- 9 -> 10: the icon border follows the skin, once (O2)
+      run = function(_, profile) NS.ResetIconBorderToSkin(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

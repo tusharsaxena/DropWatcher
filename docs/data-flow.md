@@ -87,6 +87,13 @@ resize (grip released) ────> the whole repaint (the table's columns take
                              the bar's right edge, tracks it live (WindowFilterBar.SearchWidth)
 minimize ──────────────────> the Offer panel and the Edit message box close; the anchor moves to
                              the top-left corner first, so the title bar stays where it is
+a skin switch ─────────────> NS.Skin.OnLooksChanged, after the library repainted the frames it
+                             recorded: core/SkinSetup.lua first refills C.TONE and re-runs
+                             every NS.SkinPaint; then, each its own listener, the shown window's
+                             whole repaint
+                             (the rows' font size re-read, WindowRows.OnLooksChanged), the shown
+                             toast's rows, every item icon (IconStyle.Refresh) and the Situations
+                             table's held cells; no bus message
 ```
 
 Every bus repaint above but InspectDone's and the countdowns' is batched: a message marks the window
@@ -111,10 +118,10 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │     a group the View hid whole keeps its header, `n drops · 0 shown`; one Search, Content or
   │     Character hid whole is left out, a group with no recorder too (WindowCells.KeepsHeader,
   │     feedback-12 spec §1); the header's chevron
-  │     gold (C.GOLD, feedback-5 §0)
+  │     gold (the skin's text.heading, feedback-5 §0)
   ├─> NS.Pool.ReleaseAll(rows), ReleaseAll(headers) ─> Acquire in order (each row built once)
   ├─> each row, indented K.ROW_INDENT, its chevron first (WindowGroup.PaintChevron: down, up while
-  │     its card is open, C.CHEVRON_ROW; feedback-5 §0), then the cells after WindowGroup.CHEVRON_LEAD:
+  │     its card is open, the dw.chevron token; feedback-5 §0), then the cells after WindowGroup.CHEVRON_LEAD:
   │     NS.WindowCells.Item / Ilvl / Slot / ArmorType / Looter (your own: the name in class color
   │       and ` [YOU]` in gold beside it, never cut; feedback-7 §2);
   │     Me: SideCells.Me(drop, your gear) ─> WindowCells.MyEq + WindowCells.Me merged (SideCells.Merge:
@@ -770,14 +777,18 @@ WindowGroup.SetItem(button, link) ─> IconStyle.Apply(button, link)
   ─> else art:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)         icons.zoom, 0 to 0.25
        icons.borderShow off ─> the border frame (if any) hidden
        on ─> the BackdropTemplate child frame (made on first use, one level over the button)
-             SetBackdrop{ edgeFile = LSM:Fetch("border", icons.borderStyle), else WHITE8X8 for
+             the style and size: icons.borderStyleFromSkin on (the default, DW-03) ─> the skin's
+                 icon.borderStyle / icon.borderSize (NS.Skin.Resolve; Ka0s Default Solid 2px; a
+                 skin's "None" ─> no edge); off, or no string token (degraded) ─> the stored picks
+             SetBackdrop{ edgeFile = LSM:Fetch("border", style), else WHITE8X8 for
                                      Solid (the default), else the tooltip's edge,
-                          edgeSize = icons.borderSize }
+                          edgeSize = size }
              SetBackdropBorderColor: NS.ResolveColor(icons.borderColor, icons.useClassColorBorder)
                (the player's class), else with icons.borderQuality the item's quality color
                (ItemRead.QualityOf ─> ITEM_QUALITY_COLORS, else the link's |cAARRGGBB), the
                swatch's alpha kept; no quality known ─> the swatch's mode
-an icons.* row's write, a profile switch / copy / reset ─> IconStyle.Refresh(): the generation + 1,
+an icons.* row's write, a profile switch / copy / reset, a skin switch (NS.Skin.OnLooksChanged)
+    ─> IconStyle.Refresh(): the generation + 1,
     every button remembered, pooled or not, re-applied for its b.link
 ```
 

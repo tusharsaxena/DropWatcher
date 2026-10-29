@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.75.0 payload (seventeen majors; media/icons pruned to the declared subset), of which seventeen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.80.0 payload (nineteen majors; media/icons pruned to the declared subset), all nineteen wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -33,7 +33,8 @@ lists the toolchain):
 | Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
 | Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and five verbs (DW-02..DW-04) |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
-| Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. Vendored alone for now (Documented deviations) |
+| Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
+| Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-one `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
 (`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
@@ -99,7 +100,7 @@ specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
 every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's
 position (the simulation panel's is session-only, held by LibKa0s-Sim-1.0), auto-ask's one-time notice, the history's own record, the per-character session
-(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, nine steps), and
+(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, ten steps), and
 no structural registry exists yet. The shape, every default, the named state with its writers, the
 session-only state and each migration step are in [`schema.md`](schema.md).
 
@@ -261,6 +262,64 @@ the library's debug console, perf and sim panels; the library's Copy window (`FU
 library's dropdown menu (`FULLSCREEN_DIALOG`); tooltips. Inside an item button, the border frame sits
 under the upgrade glow. No frame changes strata at runtime. `tests/test_layers.lua` pins each class.
 
+## Skins
+
+The window and every surface around it are painted from the skin the player picks (LibKa0s-Skin-1.0,
+skinning-§4): `core/SkinSetup.lua` registers the owner `DropWatcher` with its owner tokens (`dw.*`) and
+publishes the facade `NS.Skin`. No look value is typed at a call site (anti-pattern #107): a color is
+read from a library or owner token, a face from the skin, the monospace glyphs from `font.mono`. Under
+Ka0s Default each is the pixel the addon drew before skins. The drop tables' tones keep their shape,
+`NS.Constants.TONE[key]`, refilled from the tokens `C.TONE_TOKEN` names at load and first on every skin
+switch; what the addon paints itself at build goes through `NS.SkinPaint`, which repaints it on a switch,
+and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksChanged`.
+`tests/test_skin_chrome.lua` pins the chrome, `tests/test_skin_literals.lua` gates literals.
+
+- **The choice.** The player picks on Settings → General → **Skin**, the library's own tab
+  (`O.AppearanceTab` over `NS.SkinChoice` / `NS.WriteSkinChoice`, `settings/Panel.lua`): the skin
+  source (the Ka0s skins, or EllesmereUI's when it can skin this addon), the skin, the Font and
+  texture overrides and the Scope (Ignore settings panel, Ignore fonts). The seven `skin.*` rows are
+  `skipRender` rows of the one seam, so `/dw get|set` reaches the same values, and a pick calls
+  `Skin:SetChoice` first: the repaint is live, with no reload. A profile switch, copy or reset applies
+  the incoming profile's skin, scope and overrides (`reloadProfile`). `tests/test_skin_setup.lua` and
+  `tests/test_skin_settings.lua` pin the seam and the rows.
+- **The HUD.** Drop Watcher's HUD is the item icon's border (Window › Icons). While **Use the skin's
+  border** (`icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`, on by default) is on,
+  the border's style and thickness are the skin's icon border family (`icon.borderStyle`,
+  `icon.borderSize`); Ka0s Default's is today's Solid 2px. The border color, its class and quality
+  companions, Show border, the zoom and the glows' colors stay the player's. Migration step 10
+  (`NS.ResetIconBorderToSkin`) turns the companion on once per stored profile (the rollout's O2) and
+  keeps the stored style, so turning it off brings the player's own back. `tests/test_skin_hud.lua`.
+- **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)
+  while the profile's `skin.pickerSeen` is false: two seconds after login, at a stand-up, and after a
+  profile event; never while stood down, and a start in combat waits for combat's end. Its eye opens
+  the window in test mode; its gear opens General → Skin. Only the player's close writes
+  `pickerSeen`. `tests/test_skin_picker.lua`.
+- **The settings panel.** Every AceGUI widget the pages acquire themselves is painted for this owner
+  (`NS.SkinPaintAce`, restored on release), the Situations table's session-held cells repaint on a
+  switch, and the Profiles page paints the tree AceConfigDialog draws (`NS.SkinPaintAceTree`).
+  Nothing in the panel is painted while Ignore settings panel is on (a new profile's default): the
+  cells go back stock, and the table's own headers, labels and stripes read `NS.SkinPanelColor`, which
+  answers the Ka0s Default value while the panel is ignored.
+- **What Ka0s Default changes.** Ka0s Default keeps every color, but three things look new under it:
+  every string reads in Oxanium (the library's Ka0s Default face) instead of Friz Quadrata, the title
+  bar wears the shell's darker band, and the four scroll bars are the library's corridor and flat
+  knob instead of the stock art (the rollout's DropWatcher calls D3 and D2). The smoke checks in `smoke-tests.md` → Skins say so.
+
+### Intentional exceptions
+
+What stays out of the skin, each for its reason (the literal gate's allow-list carries the chat ones):
+
+| What | Why |
+|---|---|
+| Chat output: the `[DW]` prefix, the command highlights, debug ON / OFF, the schema validator's errors | printed into the client's chat frame, not a frame this addon draws |
+| `NS.GroupRoster.Colored`'s escape format | it writes the color its caller hands it (a token's, a class's) |
+| The four secondary stats' name colors (`C.TONE.stat*`) | identity by hue: each stat is told from the others by its color |
+| The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | the player's stored swatches, and the two hues mean main spec against off-spec |
+| Item quality and class colors | game meaning; a quality reads the skin's `q.*` only where a skin overrides it, else the client's |
+| GameTooltip's frame, StaticPopups, the launcher's button and menu, the resize grip | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
+| The Edit message box's `ChatFontNormal` face (`modules/DetailCard.lua`) | it previews a whisper, so it wears chat's own face (the rollout's DropWatcher call D6) |
+| The icon border's `IS.SOLID_EDGE` (WHITE8X8) and `IS.BORDER_FALLBACK` (UI-Tooltip-Border) in `modules/IconStyle.lua` | LibSharedMedia key resolution for the border's edge file, not a color: what a style name draws when LSM has no path for it |
+
 ## Taint Notes
 
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are
@@ -335,7 +394,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 87 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 65, `core/CompatWorld.lua` 17, `core/CompatItem.lua` 5 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 86 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 64, `core/CompatWorld.lua` 17, `core/CompatItem.lua` 5 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |
@@ -370,7 +429,6 @@ deviation not in this table is not ratified.
 | library-stack-§7, anti-pattern #47 | The item read (`core/ItemRead.lua`: how complete a link is, the better of two links, an item's identity, the gear level read detailed-then-base, the exact level and quality at a bag location, the quality of a link) is written in this addon, shaped as the API LibKa0s-Item-1.0 would take, not taken from LibKa0s | Rejected for promotion ([LibKa0s#51](https://github.com/tusharsaxena/LibKa0s/issues/51)); stays in-addon by ruling. LibKa0s-Item-1.0 carries identity primitives (`ItemIDFromLink`, `QualityFromLink`, `QualityLabel`, `LoadItem`) and, from minor 3, `BonusIDsFromLink`, the one piece #51 promoted (its adopters are Bank Ledger and Loot History). This addon keeps its own link walk because it also reads the modifiers. The other reads have one consumer or disagreeing semantics: Loot History reads gear levels with its own `GetItemExtras` / `GearItemLevel` under a different non-gear rule and gate, Bank Ledger reads base `GetItemInfo` only, and the bag reads route through this addon's simulator seam. The run built in-addon first (ui spec §0) | 2026-10-11 (ui spec §0). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): Item.lua stays at minor 2. Re-checked 2026-10-22 against LibKa0s v1.75.0: Item.lua moves to minor 3 with `BonusIDsFromLink` only, and LibKa0s#51 was ruled will-not-do for `LinkDetail` / `BetterLink`, `IdentityKey` / `SameItem`, `EffectiveItemLevel`, `ItemLevelAt` / `QualityAt` and `QualityOf`; the recorded rejection is the library repo's `docs/api/Item/version-3-docs.md`, *What this major is not* and the standard's `open-evolutions`, *Further `LibKa0s` modules*, *Recorded rejections, LibKa0s#46–#58* | Per read, the trigger the library repo's `docs/api/Item/version-3-docs.md`, *What this major is not* records: a second addon must merge two reports of one item from sources whose links differ in completeness; a second addon tells variants of one item id apart; this addon and Loot History settle on one non-gear rule and one gear gate (or a third addon needs a gear level read); a second addon reads an exact level or quality at an `ItemLocation`; or Bank Ledger adopts the color fallback for uncached quality |
 | library-stack-§7, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the restriction event's hints, the chat lockdown and the combat edges folded into `CanSendChat`, `CanInspect`, `CanTrade` and `ActiveReason`) is written in this addon, not taken from LibKa0s | No LibKa0s major tracks the 12.0 restrictions. AuraMaster, ConsumableMaster and MultiMeters react to `ADDON_RESTRICTION_STATE_CHANGED`, but to re-run their own work, not to answer what is allowed, so the semantics differ. QuickComms carries a copy of this tracker whose announce edge differs (it also has no `CanInspect` / `CanTrade`). The LibKa0s promotion issue, [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) (design spec §14), was rejected | 2026-10-10 (design spec §2, §14). Re-checked 2026-10-14 against LibKa0s v1.72.0 (DW-P22): no new major. Re-checked 2026-10-22 against LibKa0s v1.75.0: LibKa0s#49 was ruled will-not-do for the tracker (a same-author copy under ten days old whose edges already diverged) and deferred the four restriction readers as guards; the recorded rejection is the library repo's `docs/api/Compat/version-1-docs.md`, *Censused for #49 and rejected* and the standard's `open-evolutions`, *Further `LibKa0s` modules*, *Recorded rejections, LibKa0s#46–#58* | At least two of: a third roster addon, not a copy, needs a restriction answer set; this tracker and QuickComms' copy converge on one announce edge and one answer set; 12.2 ships with no change to `Enum.AddOnRestrictionType`, the event payload or the chat-blocking classification |
 | options-ui-§17 | the class-color companion sits below its swatch in the tab's mirrored two-column layout | owner's choice: main spec left, off-spec right on every row | 2026-10-18 | the next options-ui-§17 edit, or LibKa0s gaining a mirrored color-pair layout |
-| library-stack-§7, testing-§11 | The LibKa0s payload is to be the whole folder, byte-identical to a tag, with the TOC naming only `LibKa0s.xml`, and the vendor-sync gate compares it to that tag's file set. Instead one LibKa0s file is vendored alone, ahead of the rest: `libs/LibKa0s/Toast.lua` (LibKa0s-Toast-1.0, file minor 1) is copied byte for byte from the LibKa0s branch `feat/2026-10-28-toast-1.0` (v1.79.0, unreleased) over the v1.77.0 payload (re-copied at AT-A2 after the branch's TO-03, which added the waiting keys to `Stats()` for this addon's diagnostics and feed sink, and at AT-A3 after TO-04, `Hold(true)` for the combat hold re-taken mid-combat). The branch is unreleased, so these changes stay at minor 1 and Ka0s DPS Race, which vendored the file before TO-03, must re-copy it to ship the same bytes; until then whichever copy registers first runs both, and this addon degrades as `docs/known-limitations.md` says, and the TOC names it on its own line after `libs\LibKa0s\LibKa0s.xml`, which stays untouched. `tests/loader.lua` loads it from that TOC line, after the .xml's files and as one of `T.loadAddon.libFiles`, so a library-absent load leaves it out too; `test_vendor_sync` leaves it out of the tag comparison and holds it to the branch's blob in a case of its own, and fails once the tag carries it. The v1.77.0 `DebugLogDiagnostics.lua` does not list Toast in its diagnostics header until the full re-vendor | The owner's call 2026-10-28 (plan `docs/superpowers/plans/2026-10-28-adopt-toast.md`): the library was built from this addon's `modules/Toast.lua` and is adopted in the same run so the adoption is not lost, while another session is releasing LibKa0s; the full re-vendor comes with that release | 2026-10-28, accepted by the owner as a temporary deviation | The next full LibKa0s re-vendor (drop this row, the TOC line, the provenance note under `CLAUDE.md`'s `Bundles` line and `test_vendor_sync`'s exception) |
 
 ### Files over the 1500-line cap
 

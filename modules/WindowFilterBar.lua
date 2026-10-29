@@ -149,7 +149,12 @@ local function tipLines(t)
 end
 
 local function grayedRow() return NS.TipMarks.Row(GRAYED[1], GRAYED[2]) end
-local GRAY = { 0.5, 0.5, 0.5 }
+-- A View row the tab does not use, in the skin's disabled gray (Ka0s Default 0.5), read when the menu
+-- is built, so it follows a skin switch.
+local function grayColor()
+    local r, g, b = NS.Skin.Color("text.disabled")
+    return { r, g, b }
+end
 
 local controls = {}     -- the built controls: view, quality, content, char (each a dropdown or nil), search
 local syncing = false   -- Sync is writing the controls: their change handlers stand aside
@@ -528,9 +533,10 @@ end
 --- @return table rows { value, label, color? }
 function FB.ViewOptions(tab)
     local uses = usesOf(tab)
-    local out = { { value = "all", label = VIEW_ALL } }
+    local out, gray = { { value = "all", label = VIEW_ALL } }, nil
     for _, v in ipairs(FB.VIEWS) do
-        out[#out + 1] = { value = v, label = FB.VIEW_NAMES[v], color = not uses[v] and GRAY or nil }
+        if not uses[v] then gray = gray or grayColor() end
+        out[#out + 1] = { value = v, label = FB.VIEW_NAMES[v], color = not uses[v] and gray or nil }
     end
     return out
 end
@@ -661,15 +667,8 @@ end
 -- ── the flat skin: Ka0s Loot History's filter bar, side by side (ui spec §2, FB-5) ──────────
 -- The search box is LibKa0s-Widgets-1.0's W.SearchBox (LibKa0s#52), through NS.MakeSearchBox
 -- (core/WidgetsSetup.lua): a BackdropTemplate frame with a square 1px WHITE8X8 border, the same fill
--- and line as the dropdown beside it, so every control on the bar is one skin. FLAT stays for
--- modules/CompactChrome.lua's Filters button and panel, which draw the same skin.
-local FLAT = {
-    edge  = "Interface\\Buttons\\WHITE8X8",
-    fill  = { 0.1, 0.1, 0.12, 0.9 },
-    line  = { 0.24, 0.24, 0.27, 0.9 },
-    hover = { 1, 0.82, 0, 0.9 },       -- the gold Loot History lights a bar control with
-}
-FB.FLAT = FLAT
+-- and line as the dropdown beside it, so every control on the bar is one skin, the owner's
+-- (`input.*`). modules/CompactChrome.lua's Filters button and panel draw it through the skin's Inset.
 
 -- The library's scripts own the hint and the gold line; DW hooks the focus loss for its debug line.
 local function buildSearch(host)

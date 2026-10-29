@@ -85,12 +85,15 @@ local function sink()
     return s
 end
 
-local function tipFrame(parent, place)
+-- `template` is the text's size (GameFontHighlightSmall when nil); its face is the skin's and its
+-- color the tone set at paint time.
+local function tipFrame(parent, place, template)
     local f = CreateFrame("Frame", nil, parent)
-    f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.text = f:CreateFontString(nil, "OVERLAY", template or "GameFontHighlightSmall")
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
+    NS.Skin.Font(f.text)
     attach(f, place)
     return f
 end
@@ -111,7 +114,7 @@ local function newRow(content)
     -- Every second row's faint stripe, as the main window's rows (WindowGroup, WindowHistory).
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
-    row.stripe:SetColorTexture(1, 1, 1, 0.03)
+    NS.SkinPaint(row.stripe, function(t) t:SetColorTexture(NS.SkinColor("list.stripe")) end)
     row.member = tipFrame(row, "row")
     row.member:SetPoint("LEFT", row, "LEFT", COLS[1].x, 0)
     row.member:SetSize(COLS[2].x - COLS[1].x - 6, K.OFFER_ROW_H)
@@ -129,9 +132,10 @@ local function buildTitle(p)
     p.title = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -9)
     p.title:SetText(L["Who could use this?"])
-    p.title:SetTextColor(C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    NS.Skin.Text(p.title, "heading")   -- gold, in the skin's title face
     p.kind = p:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     p.kind:SetPoint("LEFT", p.title, "RIGHT", 8, 0)
+    NS.Skin.Text(p.kind, "disabled")
     p.kind:SetText(L["YOUR DROP"])
     p.closeButton = NS.MakeCloseButton(p, function() OP.Close() end)
     if p.closeButton then p.closeButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6) end
@@ -140,11 +144,10 @@ end
 local function buildHeader(p)
     p.item = NS.WindowGroup.ItemButton(p, K.CARD_ICON)
     p.item:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -32)
-    p.name = tipFrame(p)
+    p.name = tipFrame(p, nil, "GameFontNormal")
     NS.WindowGroup.ItemHover(p.name, p.item)
     p.name:SetPoint("TOPLEFT", p.item, "TOPRIGHT", 8, 0)
     p.name:SetSize(K.OFFER_W - K.CARD_ICON - 40, 16)
-    p.name.text:SetFontObject("GameFontNormal")
     p.line = tipFrame(p)
     p.line:SetPoint("TOPLEFT", p.name, "BOTTOMLEFT", 0, -2)
     p.line:SetSize(K.OFFER_W - K.CARD_ICON - 40, 14)
@@ -159,7 +162,7 @@ local function buildHeads(p)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
         f.text:SetText(col.label)
-        f.text:SetTextColor(C.IDLE.r, C.IDLE.g, C.IDLE.b)
+        NS.Skin.Text(f.text, "dw.idle")
         NS.Window.AttachTooltip(f, function() return col.label, unpack(col.tip) end)
         p.heads[col.key] = f
     end
@@ -190,9 +193,12 @@ local function buildList(p)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
     p.scroll, p.content = scroll, content
+    local bar = rawget(scroll, "ScrollBar")
+    if bar then NS.Skin.ScrollBar(bar) end   -- the skin's corridor and knob (D2)
     p.rowPool = NS.Pool.New()
     p.empty = p:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     p.empty:SetPoint("TOP", p, "TOP", 0, -K.OFFER_HEAD_H - 20)
+    NS.Skin.Text(p.empty, "text.highlight")
 end
 
 local function build()
@@ -276,9 +282,9 @@ local function paintHeader(p, drop, now, warnAt)
     NS.WindowGroup.SetItem(p.item, drop.link, NS.WindowGroup.Where(drop))
     p.name.text:SetText(h.name)
     p.name.showItem = true   -- the real item tooltip (WindowGroup.ItemHover, DW-80)
-    local q = type(drop.facts) == "table" and drop.facts.quality
-    local qc = type(ITEM_QUALITY_COLORS) == "table" and ITEM_QUALITY_COLORS[q]
-    if qc then p.name.text:SetTextColor(qc.r, qc.g, qc.b) end
+    local q = type(drop.facts) == "table" and drop.facts.quality or nil
+    local r, g, b = NS.QualityColor(q)   -- the skin's q.* token, else the client's color (E4)
+    if r then p.name.text:SetTextColor(r, g, b) end
     p.line.text:SetText(h.text)
     setTone(p.line.text, h.tone == "warn" and "warn" or "muted")
     p.line.tipLines = h.tip

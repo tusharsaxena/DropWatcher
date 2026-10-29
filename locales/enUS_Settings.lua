@@ -222,6 +222,28 @@ L["Icon zoom"] = "Icon zoom"
 L["Crop each item icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most item icons."] =
     "Crop each item icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most item icons."
 
+L["Skin source"] = "Skin source"
+L["Where this addon's look comes from: the Ka0s skin chosen below, or EllesmereUI."] =
+    "Where this addon's look comes from: the Ka0s skin chosen below, or EllesmereUI."
+L["Skin"] = "Skin"
+L["The Ka0s skin this addon wears. Changes every window and panel right away."] =
+    "The Ka0s skin this addon wears. Changes every window and panel right away."
+L["Ignore settings panel"] = "Ignore settings panel"
+L["Keep this addon's settings panel in the game's own look. Its windows still wear the skin."] =
+    "Keep this addon's settings panel in the game's own look. Its windows still wear the skin."
+L["Ignore fonts"] = "Ignore fonts"
+L["Keep every font in this addon as the game draws it. The skin still colors the text."] =
+    "Keep every font in this addon as the game draws it. The skin still colors the text."
+L["Font"] = "Font"
+L["The font this addon's text uses, over the skin's own. Empty keeps the skin's."] =
+    "The font this addon's text uses, over the skin's own. Empty keeps the skin's."
+L["Texture"] = "Texture"
+L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."] =
+    "The texture this addon's bars use, over the skin's own. Empty keeps the skin's."
+L["Skin picker seen"] = "Skin picker seen"
+L["Whether the first-run skin picker was closed on this profile."] =
+    "Whether the first-run skin picker was closed on this profile."
+
 -- settings/ComposedRows.lua
 L["Border"] = "Border"
 L["Color by item quality"] = "Color by item quality"
@@ -233,6 +255,9 @@ L["The border's texture, from LibSharedMedia. Any border another addon registers
     "The border's texture, from LibSharedMedia. Any border another addon registers shows up here too."
 L["The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."] =
     "The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."
+L["Use the skin's border"] = "Use the skin's border"
+L["Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."] =
+    "Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."
 
 -- settings/Editors.lua
 L["Strength"] = "Strength"

@@ -135,7 +135,7 @@ end)
 
 test("layout: the column labels are gold on both full tables", function()
     local NS = shownTable()
-    local G = NS.Constants.GOLD
+    local G = { r = 1, g = 0.82, b = 0 }
     local function gold(label) return select(2, label.text:GetTextColor()) == G.g end
     assertTrue(gold(NS.WindowGroup.Drawn().pane.colHead.labels.item), "Drops")
     NS.Window.SelectTab("history")
@@ -183,7 +183,7 @@ end)
 
 test("rows: each row draws the header's chevron at its left, muted white, down while closed and up while open", function()
     local NS, drawn = shownTable()
-    local K, C = NS.Constants.WINDOW, NS.Constants
+    local K = NS.Constants.WINDOW
     local row = rowFor(drawn, 1)
     assertTrue(row.expander == nil, "the right-edge mark is gone")
     local ch = row.chevron
@@ -191,13 +191,12 @@ test("rows: each row draws the header's chevron at its left, muted white, down w
     assertEqual(ch.__points[1][1], "LEFT"); assertEqual(ch.__points[1][2], row)
     assertEqual(ch.__points[1][4], K.CHEVRON_X, "at the row's left edge, as the header's")
     local r, g, b, a = ch:GetVertexColor()
-    assertEqual(table.concat({ r, g, b, a }, ","), table.concat({ C.CHEVRON_ROW.r, C.CHEVRON_ROW.g,
-        C.CHEVRON_ROW.b, C.CHEVRON_ROW.a }, ","))
+    assertEqual(table.concat({ r, g, b, a }, ","), "1,1,1,0.55")
     assertTrue(r == 1 and g == 1 and b == 1 and a > 0.4 and a < 0.7, "white at about 55%")
     row:__fire("OnClick", "LeftButton")
     ch = rowFor(NS.WindowGroup.Drawn(), 1).chevron
     assertEqual(ch:GetTexture(), NS.Icon("chevron-up"), "open")
-    assertEqual(select(4, ch:GetVertexColor()), C.CHEVRON_ROW.a, "the same tint while open")
+    assertEqual(select(4, ch:GetVertexColor()), 0.55, "the same tint while open")
 end)
 
 test("rows: the Item cell starts after the chevron and a 4px gap; the chevron is no column", function()
@@ -231,7 +230,7 @@ end)
 
 test("headers: a group header's chevron is gold, as its text, collapsed or open", function()
     local NS, drawn = shownTable()
-    local G = NS.Constants.GOLD
+    local G = { r = 1, g = 0.82, b = 0 }
     local h = drawn.headers[1]
     local r, g, b = h.chevron:GetVertexColor()
     assertEqual(table.concat({ r, g, b }, ","), table.concat({ G.r, G.g, G.b }, ","))

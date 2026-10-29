@@ -505,11 +505,8 @@ function WC.Trade(drop)
     return c
 end
 
--- The reason's color after the word: the muted gray, so the word's tone reads first.
-local function hexOf(tone)
-    local c = C.TONE[tone]
-    return ("%02x%02x%02x"):format(floor(c.r * 255 + 0.5), floor(c.g * 255 + 0.5), floor(c.b * 255 + 0.5))
-end
+-- The reason's color after the word: the muted gray (the token behind C.TONE's `muted`), so the
+-- word's tone reads first. Read at each paint, so it follows a skin switch.
 WC.TRADE_REASON_TONE = "muted"
 
 --- A Trade cell as drawn: its word, then its reason in the muted gray (an escape, so the word keeps
@@ -518,7 +515,8 @@ WC.TRADE_REASON_TONE = "muted"
 --- @return string
 function WC.TradeText(c)
     if type(c.reason) ~= "string" or c.reason == "" then return c.text end
-    return ("%s |cff%s%s|r"):format(c.text, hexOf(WC.TRADE_REASON_TONE), c.reason)
+    local esc = NS.SkinEscape(C.TONE_TOKEN[WC.TRADE_REASON_TONE]) or ""
+    return ("%s %s%s|r"):format(c.text, esc, c.reason)
 end
 
 --- A Trade cell with its text as drawn (WC.TradeText), for a painter that sets a cell's text.
@@ -1015,7 +1013,7 @@ end
 
 local function gold(text)
     if text == "" then return text end
-    return NS.GroupRoster.Colored(text, C.GOLD.r, C.GOLD.g, C.GOLD.b)
+    return NS.GroupRoster.Colored(text, NS.Skin.Color("gtip.title"))   -- a header tooltip label: the tooltip gold
 end
 
 local function plainText(v)

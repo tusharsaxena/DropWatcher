@@ -120,11 +120,13 @@ local function newTip()
         NS.TipMarks.Hint(L["Expand it to see them."])
 end
 
---- Test mode's text color: Ka0s Loot History's bright red (feedback spec §1, FB-3).
-TB.TEST_TONE = { r = 1.00, g = 0.15, b = 0.15 }
+--- Test mode's text color, the skin's test-mode red (Ka0s Default: Ka0s Loot History's bright red,
+--- feedback spec §1, FB-3).
+TB.TEST_TOKEN = "sem.modeTest"
 
---- The simulator's text color (simulator spec §6): a cyan apart from every verdict tone.
-TB.SIM_TONE = { r = 0.35, g = 0.80, b = 1.00 }
+--- The simulator's text color (simulator spec §6): the simulation strip's cyan at full opacity, its
+--- rgb only (Ka0s Default 0.35, 0.80, 1.00), a cyan apart from every verdict tone.
+TB.SIM_TOKEN = "strip.sim"
 
 --- The gap between the title and a mode's text, as Ka0s Loot History sets it.
 TB.MODE_GAP = 10
@@ -171,9 +173,22 @@ local function iconButton(parent, icon, glyph, onClick)
     b.art:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -3, 3)
     b.glyph = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     b.glyph:SetPoint("CENTER", b, "CENTER", 0, 0)
+    -- The mark's art in the skin's bright icon tint (Ka0s Default white: the art untinted), the
+    -- glyph fallback in its highlight text.
+    NS.SkinPaint(b.art, function(t) t:SetVertexColor(NS.SkinColor("icon.hot")) end)
+    NS.Skin.Text(b.glyph, "text.highlight")
     setMark(b, icon, glyph)
     b:SetScript("OnClick", onClick)
     return b
+end
+
+-- The flat button's box from the skin (DW-G10, decision D1): composed, not the skin's Button, whose
+-- hover recolors the label, which carries a state tone here (WindowGroup.ToneButton). The fill and
+-- edge are the owner tokens `dw.btnBg` / `dw.btnBorder` (Ka0s Default: today's 0.12 fill and the
+-- shared window edge's inner line), repainted on a skin switch.
+local function paintTextButton(b)
+    b:SetBackdropColor(NS.SkinColor("dw.btnBg"))
+    b:SetBackdropBorderColor(NS.SkinColor("dw.btnBorder"))
 end
 
 --- A flat button: the skin's fill and inner line, a label kept centered and a mark beside it
@@ -185,8 +200,7 @@ function TB.TextButton(parent, width, icon, text, onClick)
     local S = NS.SKIN
     if b.SetBackdrop and S.bgFile then
         b:SetBackdrop({ bgFile = S.bgFile, edgeFile = S.edgeFile, edgeSize = S.edgeSize })
-        b:SetBackdropColor(0.12, 0.12, 0.14, 1)
-        b:SetBackdropBorderColor(unpack(S.innerBorder or S.border))
+        NS.SkinPaint(b, paintTextButton)
     end
     b.art = b:CreateTexture(nil, "ARTWORK")
     b.art:SetSize(12, 12)
@@ -194,6 +208,7 @@ function TB.TextButton(parent, width, icon, text, onClick)
     b.art:SetTexture(NS.Icon(icon))
     b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     b.label:SetPoint("CENTER", b, "CENTER", 7, 0)
+    NS.Skin.Font(b.label)   -- the skin's face; the color is the state's (WindowGroup.ToneButton)
     b.label:SetText(text)
     b:SetScript("OnClick", onClick)
     return b
@@ -234,25 +249,34 @@ local function buildBadge(bar)
     b.art:SetSize(12, 12)
     b.art:SetPoint("LEFT", b, "LEFT", 4, 0)
     b.art:SetTexture(NS.Icon("lock"))
-    b.art:SetVertexColor(1, 0.6, 0.2)
+    NS.SkinPaint(b.art, function(t) t:SetVertexColor(NS.SkinColor("dw.restricted")) end)
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.text:SetPoint("LEFT", b.art, "RIGHT", 4, 0)
-    b.text:SetTextColor(1, 0.6, 0.2)
+    NS.Skin.Text(b.text, "dw.restricted")
     NS.Window.AttachTooltip(b, badgeTooltip)
     b:Hide()
     return b
 end
 
+-- A mode word's color: its token's rgb at full opacity (the simulation strip's token is a wash at
+-- 0.12, and the word is text), in the skin's face.
+local function paintModeText(fs)
+    local r, g, b = NS.Skin.Color(fs.dwToken)
+    if r ~= nil then fs:SetTextColor(r, g, b) end
+end
+
 -- One mode's text beside the title, as Ka0s Loot History draws its TEST MODE: large text in its
--- tone, 10px right of the title, with no box or fill. A bare frame the size of the text carries it
--- so the words keep their tooltip.
-local function buildModeText(bar, title, word, tone, tip)
+-- tone (`token`), 10px right of the title, with no box or fill. A bare frame the size of the text
+-- carries it so the words keep their tooltip.
+local function buildModeText(bar, title, word, token, tip)
     local m = CreateFrame("Frame", nil, bar)
     m:SetPoint("LEFT", title, "RIGHT", TB.MODE_GAP, 0)
     m.text = m:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     m.text:SetPoint("LEFT", m, "LEFT", 0, 0)
     m.text:SetText(word)
-    m.text:SetTextColor(tone.r, tone.g, tone.b)
+    NS.Skin.Font(m.text)
+    m.text.dwToken = token
+    NS.SkinPaint(m.text, paintModeText)
     local w = m.text.GetStringWidth and m.text:GetStringWidth()
     if type(w) ~= "number" or w <= 0 then w = #word * 11 end   -- before the font has loaded
     m:SetSize(w, K.CONTROL_H)
@@ -267,6 +291,7 @@ local function buildNewChip(f, bar)
     f.newChip:SetPoint("LEFT", f.title, "RIGHT", 8, 0)
     f.newChip.text = f.newChip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.newChip.text:SetPoint("LEFT", f.newChip, "LEFT", 0, 0)
+    NS.Skin.Text(f.newChip.text, "text.highlight")
     NS.Window.AttachTooltip(f.newChip, newTip)
     f.newChip:Hide()
 end
@@ -313,8 +338,8 @@ function TB.Build(f, host)
     f.title:SetPoint("CENTER", bar, "CENTER", 0, 0)
     f.title:SetText(NS.BRAND)
 
-    f.testText = buildModeText(bar, f.title, L["TEST MODE"], TB.TEST_TONE, TB.TestTip)
-    f.simText = buildModeText(bar, f.title, L["SIMULATION"], TB.SIM_TONE, TB.SimTip)
+    f.testText = buildModeText(bar, f.title, L["TEST MODE"], TB.TEST_TOKEN, TB.TestTip)
+    f.simText = buildModeText(bar, f.title, L["SIMULATION"], TB.SIM_TOKEN, TB.SimTip)
     buildNewChip(f, bar)
     buildControls(f, bar)
 

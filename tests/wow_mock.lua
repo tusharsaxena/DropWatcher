@@ -132,6 +132,8 @@ local function decorateText(f)
         return c[1], c[2], c[3], c[4]
     end
     f.SetTexture = function(self, tex) self.__texture = tex; return self end
+    -- A color texture (a stripe, a wash, a rule; the skin's colors since DW-02), as given.
+    f.SetColorTexture = function(self, r, g, b, a) self.__colorTexture = { r, g, b, a }; return self end
     f.GetTexture = function(self) return self.__texture end
     -- A texture's crop (Window › Icons' zoom, feedback-21 G11); unset answers the whole texture.
     f.SetTexCoord = function(self, ...) self.__texCoord = { ... }; return self end
@@ -188,6 +190,9 @@ local function decorateGeometry(M, f)
         return function(self, _, layer, template)
             local r = M.__stubFrame()
             r.__objType = kind
+            -- The region answers its kind, as the client does: the skin library paints a FontString or a
+            -- Texture only once GetObjectType says it is one (LibKa0s-Skin-1.0, P.kind).
+            r.GetObjectType = function() return kind end
             -- The draw layer and the font template it was made with (a case reads `__template`).
             r.__layer, r.__template = layer, template
             self.__regions[#self.__regions + 1] = r

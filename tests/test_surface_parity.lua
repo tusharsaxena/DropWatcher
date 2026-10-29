@@ -193,3 +193,33 @@ end)
 test("parity: the Compat seam publishes the same members on both load paths", function()
     T.assertSurfaceParity(live.Compat, degraded.Compat, "NS.Compat")
 end)
+
+-- ── Skin (the owner's facade, and its host copy of the library's tokens) ─────────────────────
+
+test("parity: the degraded Skin facade answers every name the live facade carries", function()
+    -- core/SkinSetup.lua: live, NS.Skin is LibKa0s-Skin-1.0's `Skin:For("DropWatcher")`; without the
+    -- library it is the host's table, whose painting names are no-ops (Shell routes to NS.ApplySkin)
+    -- and whose Token / Color answer the host copy NS.SKIN_FALLBACK and the owner tokens' defaults.
+    -- A facade is per owner and built by `For`, not a major's lib-level surface, so this is the
+    -- two-table form, key for key, with nothing ignored: a vocabulary name the library adds fails
+    -- here until the stub answers it.
+    T.assertSurfaceParity(live.Skin, degraded.Skin, "Skin facade vs host stub")
+end)
+
+test("parity: each host-copy skin token is the live library's Ka0s Default value", function()
+    -- A copy is the thing that drifts, so every NS.SKIN_FALLBACK entry is held to
+    -- LibKa0s-Skin-1.0's resolved Ka0s Default here.
+    -- red under: a token added to the copy with a value of its own, or the library moving a value.
+    local want = T.LibStub("LibKa0s-Skin-1.0"):ResolveSkin("ka0s")
+    local n = 0
+    for name, c in pairs(degraded.SKIN_FALLBACK) do
+        n = n + 1
+        local w = want[name]
+        assertTrue(type(w) == "table", name .. " is not a Ka0s Default color token in the library")
+        for i = 1, 4 do
+            local a, b = c[i] or 1, w[i] or 1
+            assertTrue(math.abs(a - b) < 1e-6, ("%s[%d]: host copy %s, library %s"):format(name, i, a, b))
+        end
+    end
+    assertTrue(n > 0, "the host copy is empty, so this case asserts nothing")
+end)

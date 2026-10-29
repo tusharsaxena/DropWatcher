@@ -335,10 +335,10 @@ test("own drops: the name is cut before the mark: WindowRows.MarkedWidth", funct
     assertEqual(WR.MarkedWidth(20, 200, 25), 10, "never under 10")
 end)
 
--- The mark's color, as the mock reports it.
-local function isGold(NS, fs)
+-- The mark's color, as the mock reports it: Ka0s Default's gold, the pixel drawn before skins.
+local function isGold(_, fs)
     local r, g, b = fs:GetTextColor()
-    local G = NS.Constants.GOLD
+    local G = { r = 1, g = 0.82, b = 0 }
     return r == G.r and g == G.g and b == G.b
 end
 

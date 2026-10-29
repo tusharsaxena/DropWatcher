@@ -69,14 +69,32 @@ NS.SchemaRuntime.AddRows(MASTER_ROWS, 1)
 local AFTER_GROUP = {}
 if Helpers.MASTER_GROUP then AFTER_GROUP[Helpers.MASTER_GROUP] = MASTER_TAIL end
 
+-- The Skin tab (skinning-§3): the library's own entry, O.AppearanceTab, over the owner
+-- core/SkinSetup.lua registered: the skin source, the skins, the Font and texture overrides, the
+-- Scope, "Copy to every Ka0s addon..." and the note. `get` and `set` are that file's read and
+-- write seams, so a pick lands through NS.SchemaRuntime.Set like every other setting; the tab
+-- calls Skin:SetChoice first, so the live repaint is the library's and the rows' onChange finds
+-- nothing left to apply. Its key, "Appearance", is the group of settings/SchemaRows.lua's skin.*
+-- rows (all skipRender), so the entry takes that group's place in the strip, after Simulator and
+-- before Keybindings. The stub's AppearanceTab answers nil: no tab.
+local function appearanceTab()
+    return Helpers.AppearanceTab({
+        owner = NS.Skin and NS.Skin.owner, get = NS.SkinChoice, set = NS.WriteSkinChoice,
+    })
+end
+
 -- The General page's render, a tab click's included (`rerender`). Its last tab is Keybindings
 -- (options-ui-§20): the library's host tab over NS.BINDINGS (core/LauncherSetup.lua), with no
 -- `before`, so it follows every schema tab. The stub's KeybindingsTab answers nil: no tab.
 local function renderGeneral(c)
     Helpers.ClearScroll(c)
+    local tabs = {}
+    local function addTab(tab) if tab then tabs[#tabs + 1] = tab end end
+    addTab(appearanceTab())
+    addTab(Helpers.KeybindingsTab({ bindings = NS.BINDINGS }))
     Helpers.RenderTabbedSchema(c, "general", AFTER_GROUP, nil, {
         rerender = renderGeneral,
-        tabs     = { Helpers.KeybindingsTab({ bindings = NS.BINDINGS }) },
+        tabs     = tabs,
     })
 end
 

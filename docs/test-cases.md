@@ -23,7 +23,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_surface_parity.lua (22)
+### test_surface_parity.lua (24)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -47,6 +47,8 @@ Total.
 - parity: the Media seam publishes the same NS members on both paths
 - parity: the Compat seam carries every library member it wires
 - parity: the Compat seam publishes the same members on both load paths
+- parity: the degraded Skin facade answers every name the live facade carries
+- parity: each host-copy skin token is the live library's Ka0s Default value
 
 ### test_setup.lua (24)
 
@@ -178,6 +180,91 @@ Total.
 - editors: the preview's drop is the newest that fits its template, an upgrade for you first
 - editors: the preview's lines name who it goes to, the length and what is wrong
 - asks: TokenContext fills the tokens from a drop for who it goes to
+
+### test_skin_setup.lua (18)
+
+- Skin seam: the owner is the folder name, and NS.Skin is its facade
+- Skin seam: the read answers Ka0s Default before the profile store exists
+- Skin seam: every owner token is namespaced dw. and taken by the library
+- Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere its follow token's
+- Skin seam: the palette's Ka0s Default values are the owner tokens' defaults
+- Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch
+- Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Skin tab
+- Skin seam: the skin row's values are every registered skin, in the library's order
+- Skin seam: /dw set refuses a skin that is not registered and applies one that is, once
+- Skin seam: /dw set reaches an exception and an override, each its own half
+- Skin seam: the write seam writes every half through NS.SchemaRuntime.Set
+- Skin seam: the Skin tab sits after Simulator and before Keybindings, labeled Skin
+- Skin seam: one tab pick is one effective SetChoice, one repaint, and lands in the profile
+- Skin seam: the profile's skin, scope and overrides are applied right after AceDB exists
+- Skin seam: a profile switch, copy and reset each apply the incoming profile's skin
+- Skin seam: the window edge, dropdowns, search box and mode strips are built for the owner
+- Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
+- Skin seam: without the library the facade answers Ka0s Default, owner tokens included
+
+### test_skin_chrome.lua (10)
+
+- skin chrome: under Ka0s Default the window draws the pixels it drew before skins
+- skin chrome: a skin switch repaints every surface in the new skin's colors, with no reload
+- skin chrome: the tones a cell is painted in are the new skin's after a switch
+- skin chrome: the rows' font size holds across a skin switch
+- skin chrome: the verdict glyphs are the skin's monospace face, Ka0s Default's JetBrains Mono
+- skin chrome: the shown toast repaints its rows' tones on a skin switch
+- skin chrome: a toast on screen repaints once on a skin switch, its tones in the new skin's
+- skin chrome: the refusal red and the trade reason's gray are escapes of the skin's tokens
+- skin chrome: an item quality keeps the client's color unless the skin overrides it
+- skin chrome: without the library the window's own colors are Ka0s Default's
+
+### test_skin_literals.lua (3)
+
+- no color literal outside core/SkinSetup.lua and the named allow-list
+- every allow-list entry carries its reason
+- the gate is falsifiable: a planted literal of each shape is reported
+
+### test_skin_hud.lua (9)
+
+- skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black
+- skin HUD: while the companion is on the stored style and thickness are not read; off, they are
+- skin HUD: a skin switch restyles every item button; its None draws no edge; the color stays the player's
+- skin HUD: the glow's two colors are the player's under every skin (E6)
+- skin HUD: the companion is a composed row with a check, dimmed with Show border off, dimming style and size
+- skin HUD: without LibKa0s the stored picks draw and the companion's default changes nothing
+- migrate 10: every stored profile's icon border goes back on the skin once, its pick kept
+- migrate 10: it runs once; a player's later pick survives the next load
+- migrate 10: idempotent on a raw table, the companion seeded so no sentinel lands; without the library too
+
+### test_skin_picker.lua (17)
+
+- Skin picker: skin.pickerSeen defaults to false, a skip-render row of General's Skin tab
+- Skin picker: the spec names this owner, its seams, the Skin tab and the eye
+- Skin picker: an unseen profile shows it; a seen one does not
+- Skin picker: the login fuse shows it once a session, two seconds after OnEnable
+- Skin picker: the stand-down puts the fuse out; the stand-up lights it again
+- Skin picker: in combat a start waits for PLAYER_REGEN_ENABLED, once
+- Skin picker: a held start is dropped by HideSkinPicker
+- Skin picker: never while the addon is switched off or a perf capture holds it down
+- Skin picker: a new profile and a reset profile show it again
+- Skin picker: the player's close marks it seen; this addon's own hide does not
+- Skin picker: a pick previews, unsaved; Apply saves it and marks the picker seen
+- Skin picker: the close control puts the stored skin back, saves nothing, and marks it seen
+- Skin picker: the gear saves the pick and opens General on its Skin tab
+- Skin picker: the eye opens the window in test mode and leaves the picker up
+- Skin picker: the stand-down with a preview pending puts the stored skin back, unsaved, unseen
+- Skin picker: a profile switch with a preview pending wears the new profile's skin
+- Skin picker: degraded, nothing shows and nothing raises
+
+### test_skin_settings.lua (10)
+
+- skin settings: under a non-default skin the pages' own widgets paint, past the proxy
+- skin settings: under Ka0s Default the pages' own widgets paint like every skin's
+- skin settings: a release hands a painted widget back stock
+- skin settings: the Situations placeholder's undo rides the release chain and still parks the table
+- skin settings: the Situations cells follow a skin switch and the Ignore settings panel, live
+- skin settings: the Situations headers, labels and stripes stay Ka0s Default with the settings panel ignored
+- skin settings: the Profiles page paints the tree AceConfigDialog drew
+- skin settings: degraded, PaintAce and PaintAceTree paint nothing and a release still runs
+- skin tools: the debug console, perf panel, sim panel, test strip and toast are this owner's
+- skin tools: the live debug console is painted for this owner
 
 ### test_slash.lua (26)
 
@@ -1911,12 +1998,11 @@ Total.
 - debug: the trade timer's bag scan logs on change only, not on every scan
 - debug: the search box logs its text once, when it loses focus, never per keystroke
 
-### test_vendor_sync.lua (4)
+### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
-- libs/LibKa0s/Toast.lua, vendored alone, is the LibKa0s branch's file byte for byte
 
 ### test_locale.lua (6)
 
@@ -1994,12 +2080,18 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 12 |
-| test_surface_parity.lua | 22 |
+| test_surface_parity.lua | 24 |
 | test_setup.lua | 24 |
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 45 |
+| test_skin_setup.lua | 18 |
+| test_skin_chrome.lua | 10 |
+| test_skin_literals.lua | 3 |
+| test_skin_hud.lua | 9 |
+| test_skin_picker.lua | 17 |
+| test_skin_settings.lua | 10 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
 | test_window_shell.lua | 62 |
@@ -2072,7 +2164,7 @@ Total.
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
-| test_vendor_sync.lua | 4 |
+| test_vendor_sync.lua | 3 |
 | test_locale.lua | 6 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -2080,4 +2172,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1722** |
+| **Total** | **1790** |

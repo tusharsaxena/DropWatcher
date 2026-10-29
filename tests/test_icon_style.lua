@@ -110,6 +110,8 @@ end)
 test("icon style: Show border draws the swatch over the icon; Use class color the player's class with its alpha", function()
     local NS, _, m = T.enableAddon()
     local S, frames = NS.SchemaRuntime.Set, borderFrames(m)
+    -- The player's own thickness below: the skin's (DW-03) is tests/test_skin_hud.lua's.
+    assertTrue(S("icons.borderStyleFromSkin", false))
     assertTrue(S("icons.borderShow", false))
     local b = fakeButton()
     NS.IconStyle.Apply(b, EPIC)
@@ -138,6 +140,8 @@ test("icon style: a border style LibSharedMedia knows draws its texture", functi
     local LSM = m.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
     LSM.Fetch = function(_, kind, name) return kind == "border" and name == "Blizzard Tooltip" and "tex\\tooltip" or nil end
     NS.IconStyle.Apply(fakeButton(), EPIC)
+    -- The player's own style: while the skin companion is on (DW-03) the skin's is drawn instead.
+    assertTrue(NS.SchemaRuntime.Set("icons.borderStyleFromSkin", false))
     assertTrue(NS.SchemaRuntime.Set("icons.borderStyle", "Blizzard Tooltip"))
     assertEqual(frames[1].drawn.edgeFile, "tex\\tooltip")
     assertTrue(NS.SchemaRuntime.Set("icons.borderStyle", "Gone Addon's Border"))

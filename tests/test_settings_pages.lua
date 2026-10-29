@@ -14,7 +14,8 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 -- The pages after the landing page, and each page's strip, in order. Stated here rather than read
 -- from the rows, so a tab that moves is a named failure.
 local PAGES = {
-    { key = "general",    title = "General",    strip = { "Master controls", "Simulator", "Keybindings" } },
+    -- "Appearance" is the Skin tab's key (the library labels it "Skin"; tests/test_skin_setup.lua).
+    { key = "general",    title = "General",    strip = { "Master controls", "Simulator", "Appearance", "Keybindings" } },
     -- item 020 folded the Situations page into Drops as its first tab (DRO-L01).
     { key = "feed",       title = "Drops",      strip = { "Situations", "Quality", "Items", "Retention" } },
     { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Unwanted types" } },
