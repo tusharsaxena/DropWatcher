@@ -194,6 +194,7 @@ Kit.run{
         "test_skin_setup",
         "test_skin_chrome",
         "test_skin_literals",
+        "test_skin_hud",
         "test_slash",
         "test_window",
         "test_window_shell",

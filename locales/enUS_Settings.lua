@@ -255,6 +255,9 @@ L["The border's texture, from LibSharedMedia. Any border another addon registers
     "The border's texture, from LibSharedMedia. Any border another addon registers shows up here too."
 L["The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."] =
     "The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."
+L["Use the skin's border"] = "Use the skin's border"
+L["Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."] =
+    "Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."
 
 -- settings/Editors.lua
 L["Strength"] = "Strength"

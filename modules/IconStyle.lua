@@ -37,6 +37,15 @@ local _, NS = ...
 -- switch) calls Refresh, which moves the generation on and walks every item button made so far,
 -- pooled or not, shown or not, so each takes the new look now.
 --
+-- THE SKIN'S BORDER (skinning-§6; DW-03 of the 2026-10-29 skinning rollout). While the block's
+-- skin companion `icons.borderStyleFromSkin` is on (by default, X3, and after core/Database.lua's
+-- one-time step 10, O2), the style and the thickness are the skin's icon border family
+-- (`icon.borderStyle`, `icon.borderSize`, read through NS.Skin.Resolve), Ka0s Default's being the
+-- look above, Solid 2px. Only those two follow (X4): the color, its class and quality companions,
+-- Show border and the zoom stay the player's. A style of "None" draws no edge. A skin switch is a
+-- Refresh (the OnLooksChanged listener at the end of this file). The degraded facade answers no
+-- string token, so without the library the stored picks draw.
+--
 -- HEADLESS. The decision is recorded on the button (`iconZoom`, and `iconBorder`, the color drawn,
 -- nil for none) whatever the frame answers.
 
@@ -75,14 +84,36 @@ local function borderTexture(name)
     return path or IS.BORDER_FALLBACK
 end
 
+--- A border setting as drawn: the skin's token `kind` while `fromSkin` is on (or the stored value is
+--- the FROM_SKIN sentinel), else the stored value. A token the facade cannot answer (the degraded
+--- facade carries no string token) keeps the stored value, so nothing draws blank; a stored sentinel
+--- with no token answers the shipped default. ConsumableMaster's BB.Follow, the same ladder.
+--- @param kind string the token (`icon.borderStyle`, `icon.borderSize`)
+--- @param key string the Window › Icons key the stored value is read from
+--- @param fromSkin boolean|nil the companion
+function IS.Follow(kind, key, fromSkin)
+    local stored = setting(key)
+    local S = NS.Skin
+    local v = S and S.Resolve and S.Resolve(kind, stored, fromSkin)
+    if v == nil or v == (S and S.FROM_SKIN) then
+        if S and stored == S.FROM_SKIN then return NS.C.PROFILE.icons[key] end
+        return stored
+    end
+    return v
+end
+
 local function read()
     local zoom = tonumber(setting("zoom")) or 0
     if zoom < 0 then zoom = 0 elseif zoom > IS.ZOOM_MAX then zoom = IS.ZOOM_MAX end
     local c = { zoom = zoom, show = setting("borderShow") == true }
     if not c.show then return c end
+    local fromSkin = setting("borderStyleFromSkin") == true
+    local style = IS.Follow("icon.borderStyle", "borderStyle", fromSkin)
+    c.style = style
+    if style == "None" then c.show = false; return c end   -- the skin's "no edge"
     -- One backdrop table for every button: SetBackdrop keeps it and nothing here writes to it.
-    c.backdrop = { edgeFile = borderTexture(setting("borderStyle")),
-                   edgeSize = math.max(1, tonumber(setting("borderSize")) or 1) }
+    c.backdrop = { edgeFile = borderTexture(style),
+                   edgeSize = math.max(1, tonumber(IS.Follow("icon.borderSize", "borderSize", fromSkin)) or 1) }
     c.r, c.g, c.b, c.a = NS.ResolveColor(setting("borderColor"), setting("useClassColorBorder") == true, nil)
     c.quality = setting("borderQuality") == true
     return c
@@ -158,3 +189,7 @@ function IS.Refresh()
     cfg = nil
     for b in pairs(made) do IS.Apply(b, b.link) end
 end
+
+-- A skin switch: the border's style and thickness may be the skin's, so every item button made so
+-- far takes the new skin's now (after the library's repaint; the degraded facade never fires).
+if NS.Skin and NS.Skin.OnLooksChanged then NS.Skin.OnLooksChanged(function() IS.Refresh() end) end

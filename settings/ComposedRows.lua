@@ -8,7 +8,9 @@ local _, NS = ...
 --
 -- WINDOW › ICONS' BORDER (feedback-21 G11): Helpers.BorderGroup with its Show border toggle, under
 -- `icons.` (`borderShow`, `borderStyle`, `borderSize`, `borderColor`, `useClassColorBorder`), as
--- ConsumableMaster's settings/MacroBar.lua builds its button border, then the block's one extra
+-- ConsumableMaster's settings/MacroBar.lua builds its button border, then the composer's skin
+-- companion `icons.borderStyleFromSkin` (DW-03: `fromSkin = "icon"`, the skin's icon border style
+-- and thickness, on by default), then the block's one extra
 -- after the mandated four, never among them: `icons.borderQuality`, the item's quality color in
 -- place of the swatch (AuraMaster's dispel-colored border is the precedent). PLAYER-SCOPED: the
 -- icons are the player's own view of the loot, whoever looted it. Appended after SchemaRows' rows,
@@ -29,16 +31,27 @@ local I        = NS.C.PROFILE.icons
 local Check    = Settings.Checks
 
 local function borderOff() return NS.Setting("icons.borderShow") ~= true end
+-- The style and thickness rows are dimmed while Show border is off, and while the skin companion
+-- (`fromSkin = "icon"`, DW-03) draws them from the skin's icon border family: the composer marks both
+-- rows governed by the companion, and the DECORATE below keeps the two reasons in one predicate.
+local function styleOff()
+    return borderOff() or NS.Setting("icons.borderStyleFromSkin") == true
+end
 
 local BORDER = Helpers.BorderGroup{
     page = "window", group = L["Icons"], subgroup = L["Border"],
     show = true, prefix = "icons.",
+    -- THE SKIN COMPANION (skinning-§6, LibKa0s-Options compose minor 13): `icons.borderStyleFromSkin`
+    -- follows `icon.borderStyle` and `icon.borderSize` (Ka0s Default's are today's Solid 2px). Its
+    -- default is defaults/Profile.lua's TRUE (X3); the color is never the skin's (X4).
+    fromSkin = "icon",
     defaults = {
         borderShow          = I.borderShow,
         borderStyle         = I.borderStyle,
         borderSize          = I.borderSize,
         borderColor         = I.borderColor,
         useClassColorBorder = I.useClassColorBorder,
+        borderStyleFromSkin = I.borderStyleFromSkin,
     },
     classColor = { source = "player" },
     extra = { {
@@ -52,9 +65,12 @@ local BORDER = Helpers.BorderGroup{
 local DECORATE = {
     ["icons.borderShow"] = { validate = Check.isBool,
         tooltip = L["Draw a border around every item icon: the drop tables, the cards, the toast, the Offer panel and History."] },
-    ["icons.borderStyle"] = { validate = Check.nonEmptyString, disabledIf = borderOff,
+    ["icons.borderStyle"] = { validate = Check.nonEmptyString, disabledIf = styleOff,
         tooltip = L["The border's texture, from LibSharedMedia. Any border another addon registers shows up here too."] },
-    ["icons.borderSize"] = { validate = Check.inRange(1, 16), min = 1, disabledIf = borderOff },
+    ["icons.borderSize"] = { validate = Check.inRange(1, 16), min = 1, disabledIf = styleOff },
+    ["icons.borderStyleFromSkin"] = { validate = Check.isBool, disabledIf = borderOff,
+        label = L["Use the skin's border"],
+        tooltip = L["Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."] },
     ["icons.borderColor"] = { validate = Check.isColor,
         tooltip = L["The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."] },
     ["icons.useClassColorBorder"] = { validate = Check.isBool },

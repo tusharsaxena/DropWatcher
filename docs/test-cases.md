@@ -220,6 +220,18 @@ Total.
 - every allow-list entry carries its reason
 - the gate is falsifiable: a planted literal of each shape is reported
 
+### test_skin_hud.lua (9)
+
+- skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black
+- skin HUD: while the companion is on the stored style and thickness are not read; off, they are
+- skin HUD: a skin switch restyles every item button; its None draws no edge; the color stays the player's
+- skin HUD: the glow's two colors are the player's under every skin (E6)
+- skin HUD: the companion is a composed row with a check, dimmed with Show border off, dimming style and size
+- skin HUD: without LibKa0s the stored picks draw and the companion's default changes nothing
+- migrate 10: every stored profile's icon border goes back on the skin once, its pick kept
+- migrate 10: it runs once; a player's later pick survives the next load
+- migrate 10: idempotent on a raw table, the companion seeded so no sentinel lands; without the library too
+
 ### test_slash.lua (26)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
@@ -2043,6 +2055,7 @@ Total.
 | test_skin_setup.lua | 18 |
 | test_skin_chrome.lua | 9 |
 | test_skin_literals.lua | 3 |
+| test_skin_hud.lua | 9 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
 | test_window_shell.lua | 62 |
@@ -2123,4 +2136,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1753** |
+| **Total** | **1762** |

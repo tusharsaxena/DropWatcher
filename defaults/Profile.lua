@@ -184,6 +184,14 @@ NS.C = {
             borderColor         = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,                    -- the player's class color instead
             borderQuality       = false,                    -- the item's quality color instead
+            -- The border's skin companion (skinning-§6; the composer's `fromSkin = "icon"`, DW-03):
+            -- while on, the style and thickness are the skin's icon border family (`icon.borderStyle`,
+            -- `icon.borderSize`; Ka0s Default's are Solid 2px, the look above) and their two rows show
+            -- the skin's values. TRUE by default (the rollout's X3), so a new or reset profile follows
+            -- the skin exactly as a stored one does after core/Database.lua's one-time step 10 (O2).
+            -- Only style and thickness follow (X4): the color, its class and quality companions, Show
+            -- border and the zoom stay the player's.
+            borderStyleFromSkin = true,
         },
 
         -- The simulator (feedback-2 spec §8): the seconds an automatic run waits between steps.
