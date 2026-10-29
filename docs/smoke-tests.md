@@ -2505,9 +2505,10 @@ History and the toast. Settings › Window: the strip ends `Upgrade glow`, `Icon
 (Icon zoom, `0.10`), then **Border**: Show border (ticked) on a line of its own, Border style (Solid) |
 Border thickness (px) (2), Border color (black, opaque) | Use class color (unticked), then Color by item
 quality (unticked). Untick Show border → Border style, Border thickness and Color by item quality dim;
-Border color and Use class color do not. Hover each → its tooltip. (Amended by DW-03, 2026-10-29: the
-Border block gains **Use the skin's border**, ticked on a new profile, and while it is ticked Border
-style and Border thickness are dimmed; SKIN-3 and SKIN-14 check it.) Result: passed in the client, 2026-10-23 (the owner).
+Border color and Use class color do not. Hover each → its tooltip. Result: passed in the client, 2026-10-23 (the owner).
+Amended by DW-03, 2026-10-29, after that pass: the Border block gains **Use the skin's border**, ticked
+on a new profile, and while it is ticked Border style and Border thickness are dimmed; SKIN-3 and
+SKIN-14 check it. Result for the amendment: pending.
 
 **ICON-2. Icon zoom on every surface.** `/dw test`, expand a row, open your own drop's Offer panel,
 show a toast (Alerts › Toast › Show a toast, then `/dw test`), and open History beside it in turn. Drag
