@@ -578,7 +578,53 @@ local function simulation()
         { page = "general", group = L["Simulator"], validate = SC.ValidStepDelay })
 end
 
+-- ── General › Skin (skinning-§2/§3): the skin this addon wears ──────────────────────────────
+--
+-- Per addon, per profile. The tab is the library's O.AppearanceTab (settings/Panel.lua), which
+-- draws every row below as its own choice grids, check boxes and dropdowns, so each row carries
+-- `skipRender`; they stay schema rows so the defaults resolve, the global reset reaches them, and
+-- `/dw get|set skin.skin` validates against `values`. Their group is "Appearance", the library
+-- tab's key, so the tab takes the group's place in the strip: after Simulator, before Keybindings.
+--
+-- Each onChange moves ONLY its own half (core/SkinSetup.lua says why): the tab and another addon's
+-- "Copy to every Ka0s addon" call Skin:SetChoice before they write, so the write is a no-op, and a
+-- bare `/dw set` still repaints. Nothing here sends SettingsChanged.
+local SKIN_GROUP = "Appearance"
+
+local function isString(v) return type(v) == "string" end
+
+local function skin()
+    local at = { page = "general", group = SKIN_GROUP, skipRender = true }
+    pick("skin.source", P.skin.source, NS.SKIN_SOURCE_OPTIONS, L["Skin source"],
+        L["Where this addon's look comes from: the Ka0s skin chosen below, or EllesmereUI."],
+        with(at, { onChange = function(v) NS.ApplySkinChoice(v, nil) end }))
+    pick("skin.skin", P.skin.skin, NS.SKIN_OPTIONS, L["Skin"],
+        L["The Ka0s skin this addon wears. Changes every window and panel right away."],
+        with(at, { onChange = function(v) NS.ApplySkinChoice(nil, v) end }))
+    -- The Scope's two exceptions, drawn by the same tab as check boxes.
+    bool("skin.ignorePanel", P.skin.ignorePanel, L["Ignore settings panel"],
+        L["Keep this addon's settings panel in the game's own look. Its windows still wear the skin."],
+        with(at, { onChange = function(v) NS.ApplySkinIgnore(v, nil) end }))
+    bool("skin.ignoreFonts", P.skin.ignoreFonts, L["Ignore fonts"],
+        L["Keep every font in this addon as the game draws it. The skin still colors the text."],
+        with(at, { onChange = function(v) NS.ApplySkinIgnore(nil, v) end }))
+    -- The Font and texture section's two overrides, drawn by the same tab as dropdowns of
+    -- LibSharedMedia keys; "" is the skin's own. Free text rather than a `values` list: a media pack
+    -- may register its keys after this file loads, and `/dw set` takes any key.
+    add(with(at, { path = "skin.font", type = "string", default = P.skin.font, label = L["Font"],
+        tooltip = L["The font this addon's text uses, over the skin's own. Empty keeps the skin's."],
+        validate = isString, onChange = function(v) NS.ApplySkinOverride(v, nil) end }))
+    add(with(at, { path = "skin.texture", type = "string", default = P.skin.texture, label = L["Texture"],
+        tooltip = L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."],
+        validate = isString, onChange = function(v) NS.ApplySkinOverride(nil, v) end }))
+    -- The first-run skin picker's memory: set when the picker closes, so it shows once per
+    -- profile (O3). Drawn by nothing; a reset puts it back to false.
+    bool("skin.pickerSeen", P.skin.pickerSeen, L["Skin picker seen"],
+        L["Whether the first-run skin picker was closed on this profile."], at)
+end
+
 simulation()
+skin()
 situations()
 feed()
 comparison()

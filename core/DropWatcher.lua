@@ -515,11 +515,17 @@ end
 
 -- ── profiles ────────────────────────────────────────────────────────────────────────────────
 
--- The three profile events share one reaction: migrations, panel refresh, the latch re-read
--- (an incoming profile carries its own answer to `enabled`), auto-ask's and the toast's `enabled`
--- re-read (no row reaction runs on a switch) and the window's settings.
+-- The three profile events share one reaction: migrations, the incoming profile's skin, panel
+-- refresh, the latch re-read (an incoming profile carries its own answer to `enabled`), auto-ask's
+-- and the toast's `enabled` re-read (no row reaction runs on a switch) and the window's settings.
 local function reloadProfile(self)
     self:RunMigrations()
+    -- The new profile's skin, scope and overrides (core/SkinSetup.lua; skinning-§2: a switch, copy
+    -- or reset re-applies the choice), after its migrations and before anything rebuilds against
+    -- it. Skin:SetChoice repaints every recorded frame and fires OnLooksChanged whether or not the
+    -- window was ever built, and it is idempotent, so a profile that names the skin already worn
+    -- repaints nothing.
+    if NS.ApplySkinChoice then NS.ApplySkinChoice() end
     local S = self.Settings
     local H = S and S.Helpers
     if H and H.RefreshAll then H.RefreshAll() end
@@ -568,6 +574,11 @@ function DW:OnInitialize()
 
     -- Before anything reads the profile (savedvariables-§1).
     self:RunMigrations()
+    -- The skin the active profile names (core/SkinSetup.lua), right after the store exists and its
+    -- migrations ran: the owner registered at file load, before AceDB, and has worn Ka0s Default
+    -- since. Before the launcher, the window or any settings page is built, so the first paint is
+    -- already the profile's skin (skinning-§2).
+    if NS.ApplySkinChoice then NS.ApplySkinChoice() end
     -- The "Keep history for" confirmation's baseline: the stored window is the confirmed one.
     if NS.HistoryRetention then NS.HistoryRetention.Sync() end
 

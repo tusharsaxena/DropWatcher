@@ -1,4 +1,4 @@
-local _, NS = ...
+local addonName, NS = ...
 -- core/WidgetsSetup.lua — NS.MakeDropdown / NS.CloseMenu / NS.MakeTestStrip / NS.MakeSearchBox from
 -- LibKa0s-Widgets-1.0: the window's flat dropdowns (the filter bar's View, Quality and Content, the
 -- tab's Sort), its mode strips (LibKa0s#48: the amber test-mode strip and, from Widgets minor 14,
@@ -22,6 +22,12 @@ local _, NS = ...
 -- be open. NS.MakeTestStrip answers nil and the window draws no strip and reserves no room for one;
 -- the TEST MODE / SIMULATION word in the title bar then marks the mode. The title words mark a mode
 -- only where there is no strip, or while the window is minimized (the strip goes with the body).
+--
+-- THE SKIN OWNER (skinning-§1: every library factory that takes an owner is given one). Each
+-- factory below names this addon's folder as the widget's skin `owner` (LibKa0s-Widgets-1.0 minor
+-- 16): the library paints the dropdown and the menu it drops, the search box and the mode strips
+-- for the owner core/SkinSetup.lua registered, so they wear the player's skin and follow a switch.
+-- On Ka0s Default each is the widget it always was; without the Skin major the field is ignored.
 
 local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 
@@ -35,6 +41,7 @@ function NS.MakeDropdown(parent, width)
     return W.Dropdown(parent, width, {
         chevron = NS.Icon("chevron-down"),
         check   = NS.Icon("confirm"),
+        owner   = addonName,
     })
 end
 
@@ -48,7 +55,10 @@ end
 --- @return table|nil
 function NS.MakeSearchBox(parent, width, opts)
     if not W then return nil end
-    return W.SearchBox(parent, width, opts)
+    local o = {}
+    for k, v in pairs(opts or {}) do o[k] = v end
+    o.owner = addonName
+    return W.SearchBox(parent, width, o)
 end
 
 --- Whether the dropdown seam can build anything at all.
@@ -67,7 +77,7 @@ end
 --- @return table|nil
 function NS.MakeTestStrip(parent, text, kind)
     if not W then return nil end
-    return W.TestStrip(parent, { text = text, icon = NS.Icon("info"), kind = kind })
+    return W.TestStrip(parent, { text = text, icon = NS.Icon("info"), kind = kind, owner = addonName })
 end
 
 --- Close the shared popup menu behind every dropdown in the process, if one is open. Safe when none

@@ -65,6 +65,11 @@ Every module reads a setting through `NS.Setting(path)`.
 | `scale`, `alpha` | `1.0`, `1.0` | Master controls | the window's scale and alpha |
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
 | `sim.stepDelay` | `1` | Simulator | the seconds the simulator waits between steps as it plays, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7; the default was `2` until the owner's 2026-10-23 simulator feedback, and needs no migration because AceDB never stores a value equal to its default); read as each next step is set, so a change takes effect from the next step |
+| `skin.source` | `"ka0s"` | Skin (skipRender; the library's tab draws it) | where the look comes from: `ka0s` (the Ka0s skins) or `eui` (EllesmereUI's); applied through core/SkinSetup.lua, its onChange moving this half alone |
+| `skin.skin` | `"ka0s"` | Skin (skipRender) | the Ka0s skin worn, one of LibKa0s-Skin-1.0's registered keys (`/dw set` refuses another); `ka0s` is Ka0s Default, the look before skins |
+| `skin.ignorePanel`, `skin.ignoreFonts` | `true`, `false` | Skin › Scope (skipRender) | the two exceptions: the settings panel stays the client's; every font stays the game's (the skin still colors the text) |
+| `skin.font`, `skin.texture` | `""`, `""` | Skin › Font and texture (skipRender) | the overrides, each a LibSharedMedia key, `""` for the skin's own |
+| `skin.pickerSeen` | `false` | none (skipRender) | the first-run skin picker was closed on this profile, so it shows once per profile (the rollout's O3) |
 
 ### Drops › Situations (page key `feed`)
 

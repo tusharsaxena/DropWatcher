@@ -567,6 +567,15 @@ local PINNED_ROWS = {
     { "messages.transmogAsk", "bool", "false" },
     { "scale", "number", "1" },
     { "sim.stepDelay", "number", "1" },
+    -- The skinning rollout (DW-01) adds the seven skin.* keys, General's Skin tab: new rows, not a
+    -- layout move, so they join the pin with their defaults (defaults/Profile.lua's skin table).
+    { "skin.font", "string", "\"\"" },
+    { "skin.ignoreFonts", "bool", "false" },
+    { "skin.ignorePanel", "bool", "true" },
+    { "skin.pickerSeen", "bool", "false" },
+    { "skin.skin", "string", "\"ka0s\"" },
+    { "skin.source", "string", "\"ka0s\"" },
+    { "skin.texture", "string", "\"\"" },
     { "situations.delve.autoOpen", "bool", "false" },
     { "situations.delve.quality", "string", "\"global\"" },
     { "situations.delve.track", "bool", "false" },

@@ -23,7 +23,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_surface_parity.lua (22)
+### test_surface_parity.lua (24)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -47,6 +47,8 @@ Total.
 - parity: the Media seam publishes the same NS members on both paths
 - parity: the Compat seam carries every library member it wires
 - parity: the Compat seam publishes the same members on both load paths
+- parity: the degraded Skin facade answers every name the live facade carries
+- parity: each host-copy skin token is the live library's Ka0s Default value
 
 ### test_setup.lua (24)
 
@@ -178,6 +180,26 @@ Total.
 - editors: the preview's drop is the newest that fits its template, an upgrade for you first
 - editors: the preview's lines name who it goes to, the length and what is wrong
 - asks: TokenContext fills the tokens from a drop for who it goes to
+
+### test_skin_setup.lua (17)
+
+- Skin seam: the owner is the folder name, and NS.Skin is its facade
+- Skin seam: the read answers Ka0s Default before the profile store exists
+- Skin seam: every owner token is namespaced dw. and taken by the library
+- Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere its follow token's
+- Skin seam: the palette's Ka0s Default values are the owner tokens' defaults
+- Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Skin tab
+- Skin seam: the skin row's values are every registered skin, in the library's order
+- Skin seam: /dw set refuses a skin that is not registered and applies one that is, once
+- Skin seam: /dw set reaches an exception and an override, each its own half
+- Skin seam: the write seam writes every half through NS.SchemaRuntime.Set
+- Skin seam: the Skin tab sits after Simulator and before Keybindings, labeled Skin
+- Skin seam: one tab pick is one effective SetChoice, one repaint, and lands in the profile
+- Skin seam: the profile's skin, scope and overrides are applied right after AceDB exists
+- Skin seam: a profile switch, copy and reset each apply the incoming profile's skin
+- Skin seam: the window edge, dropdowns, search box and mode strips are built for the owner
+- Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
+- Skin seam: without the library the facade answers Ka0s Default, owner tokens included
 
 ### test_slash.lua (26)
 
@@ -1993,12 +2015,13 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 12 |
-| test_surface_parity.lua | 22 |
+| test_surface_parity.lua | 24 |
 | test_setup.lua | 24 |
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 45 |
+| test_skin_setup.lua | 17 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
 | test_window_shell.lua | 62 |
@@ -2079,4 +2102,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1721** |
+| **Total** | **1740** |
