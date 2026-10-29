@@ -175,6 +175,34 @@ test("skin settings: the Situations cells follow a skin switch and the Ignore se
     each(OWNER, "painted again")
 end)
 
+test("skin settings: the Situations headers, labels and stripes stay Ka0s Default with the settings panel ignored", function()
+    -- The table's own strings and stripes are painted by the page, not by the library, so they
+    -- ask the Scope themselves. red under: paintHeader / paintLabel / paintStripe reading
+    -- NS.SkinColor unconditionally (Obsidian's text.headingAlt on an ignored panel).
+    local NS = skinned("obsidian")
+    -- The panel is a plain stub, whose regions are the frame itself and record no paint; marked
+    -- as the mock's recording tree before the first render, the table it builds records.
+    local ctx = NS.addon.Settings.Helpers.__panelFor("feed")
+    ctx.panel.__dwTree = true
+    local t = open(NS, "feed").dwSituations
+    local function same(c, want) return c[1] == want[1] and c[2] == want[2] and c[3] == want[3] end
+    local function colorOf(fs) return { fs:GetTextColor() } end
+    local function headColor() return colorOf(t.headers[1]) end
+    local fb = NS.SKIN_FALLBACK
+    local live = { NS.Skin.Color("text.headingAlt") }
+    assertFalse(same(live, fb["text.headingAlt"]), "Obsidian's header color differs from Ka0s Default's")
+    assertTrue(same(headColor(), live), "a skinned panel draws the header in the skin's color")
+    NS.ApplySkinIgnore(true, nil)
+    assertTrue(same(headColor(), fb["text.headingAlt"]), "an ignored panel draws the header in Ka0s Default's")
+    local r = t.rows[1]
+    local want = r.label.dwActive and fb["text.bodyAlt"] or fb["text.disabled"]
+    assertTrue(same(colorOf(r.label), want), "and a label")
+    local stripe = t.rows[2].stripe.__colorTexture
+    assertTrue(same(stripe, fb["list.stripe"]) and stripe[4] == fb["list.stripe"][4], "and a stripe")
+    NS.ApplySkinIgnore(false, nil)
+    assertTrue(same(headColor(), live), "the skin's color comes back with the panel skinned again")
+end)
+
 -- ── the Profiles page ────────────────────────────────────────────────────────────────────────
 
 test("skin settings: the Profiles page paints the tree AceConfigDialog drew", function()

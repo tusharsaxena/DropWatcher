@@ -123,9 +123,12 @@ local SIT_ROW_H, SIT_HEAD_H, SIT_HEAD_Y = 28, 30, -6
 -- paint is recorded with NS.SkinPaint and follows a skin switch without a re-render): the headers in
 -- `text.headingAlt` (Loot History's header gold), a label in `text.bodyAlt` live and `text.disabled`
 -- inactive (its label grays), a stripe `list.stripe`. Ka0s Default: exactly the values typed before.
-local function paintHeader(fs) fs:SetTextColor(NS.SkinColor("text.headingAlt")) end
-local function paintLabel(fs) fs:SetTextColor(NS.SkinColor(fs.dwActive and "text.bodyAlt" or "text.disabled")) end
-local function paintStripe(t) t:SetColorTexture(NS.SkinColor("list.stripe")) end
+-- Read through NS.SkinPanelColor, so with the Scope's Ignore settings panel on they draw Ka0s
+-- Default's, as the table's own CheckBox and Dropdown cells go back stock (SetIgnore fires
+-- OnLooksChanged, so NS.SkinRepaint moves them live).
+local function paintHeader(fs) fs:SetTextColor(NS.SkinPanelColor("text.headingAlt")) end
+local function paintLabel(fs) fs:SetTextColor(NS.SkinPanelColor(fs.dwActive and "text.bodyAlt" or "text.disabled")) end
+local function paintStripe(t) t:SetColorTexture(NS.SkinPanelColor("list.stripe")) end
 
 local function situationEntries()
     return E.SituationRows(NS.SchemaRuntime.FindRow, NS.Setting, NS.WindowFooter.SituationLabel)

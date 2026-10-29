@@ -37,6 +37,8 @@ local addonName, NS = ...
 --                           so a literal that became a token keeps its arity on Ka0s Default.
 --   NS.SkinEscape(name)     a color token as a "|cffrrggbb" escape, rounded to the byte, so markup
 --                           written as a literal keeps its bytes on Ka0s Default.
+--   NS.SkinPanelColor(name) NS.SkinColor for a raw surface on the settings panel: Ka0s Default
+--   NS.SkinPanelIgnored()   while the Scope's Ignore settings panel is on (SkinPanelIgnored).
 --   NS.RefillPalette()      core/Constants.lua's C.TONE filled from the tokens C.TONE_TOKEN names, in
 --                           place, at load and first on every OnLooksChanged.
 --   NS.SkinPaint(t, fn)     a surface the addon paints itself from a token: painted now and again on
@@ -174,6 +176,24 @@ function NS.SkinColor(name)
     if r == nil then return nil end
     if a == nil or a == 1 then return r, g, b end
     return r, g, b, a
+end
+
+--- True while the Scope's Ignore settings panel is applied for this owner (`Skin:GetIgnore`), so
+--- a raw frame the settings pages paint themselves (the Situations table's headers, labels and
+--- stripes) stays as the client's panel does. False without the library or the member.
+function NS.SkinPanelIgnored()
+    if not Skin or type(Skin.GetIgnore) ~= "function" then return false end
+    return (Skin:GetIgnore(addonName)) == true
+end
+
+--- NS.SkinColor for a surface ON THE SETTINGS PANEL: the live skin's color while the panel is
+--- skinned, the Ka0s Default value (NS.SKIN_FALLBACK, same arity rule) while it is ignored. A
+--- token missing from the host copy answers the skin's, as NS.SkinColor would.
+function NS.SkinPanelColor(name)
+    local c = NS.SkinPanelIgnored() and NS.SKIN_FALLBACK[name]
+    if not c then return NS.SkinColor(name) end
+    if c[4] == nil or c[4] == 1 then return c[1], c[2], c[3] end
+    return c[1], c[2], c[3], c[4]
 end
 
 --- A color token as a "|cffrrggbb" escape, each channel rounded to the nearest byte, so markup a
