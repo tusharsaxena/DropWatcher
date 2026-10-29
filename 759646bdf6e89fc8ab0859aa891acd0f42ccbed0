@@ -1,0 +1,38 @@
+ka0s-review: DropWatcher skinning adoption (feat/2026-10-29-skinning-rollout), independent review 2026-10-29
+
+Verdict: no blockers; one major and seven minor findings. Gate on the reviewed HEAD 46d985b:
+1788 passed, 0 failed, 1 skipped; luacheck 0/0 in 202 files. Payload matches git archive v1.80.0.
+
+FIXED
+- [major] settings/PageEditors.lua: the Situations table's headers, labels and stripes took the skin's
+  colors even with Ignore settings panel on (the default). New NS.SkinPanelColor / NS.SkinPanelIgnored
+  in core/SkinSetup.lua answer NS.SKIN_FALLBACK's Ka0s Default value while Skin:GetIgnore reports the
+  panel ignored; paintHeader/paintLabel/paintStripe read it. Test in test_skin_settings.lua (red
+  before the fix). ddea50c DW-02.
+- [minor] tests/test_skin_chrome.lua: positive case for the toast's OnLooksChanged listener (a shown
+  toast composes once more on a switch, Me draws in the new dw.upgrade); checked red in a scratch
+  copy with the listener reduced to an immediate return. 85592ca DW-02.
+- [minor] docs/smoke-tests.md: ICON-1's DW-03 amendment moved after the 2026-10-23 result and marked
+  "Result for the amendment: pending". b7200ae DW-03.
+- [minor] docs/ARCHITECTURE.md: exceptions table gains the Edit message box's ChatFontNormal (D6) and
+  IconStyle's IS.SOLID_EDGE / IS.BORDER_FALLBACK (LSM key resolution). 759646b DW-05.
+- [minor] README badge: now 1790/1790 with docs/test-cases.md regenerated. The finding's premise is
+  declined in part: test-cases.md documents the convention (the badge counts the cases that run; a
+  declared skip is excluded), so 1788/1788 was already right by it; only the new count changed.
+
+DECLINED / RECORDED FOR THE OWNER
+- [minor] DW-RV (6920689) carries the interrupted session's trailer (session_01JV4dmMQQ4HwqVN5saduTPG).
+  Not reworded: that needs a rebase rewriting all ten branch commits and their SHAs, beyond this fix
+  pass. The trailer names the session that really made the commit. Owner call: accept it, or reword
+  before the push.
+- [minor] Unrecorded token calls (DECISIONS.md is frozen, so recorded here and for the execution
+  record): the countdown bar's track (modules/WindowGroup.lua:613) reads list.boxEdge (exact Ka0s
+  Default value .12) rather than D5's chart.track (alpha .06 would move a pixel) or a G11 owner
+  token; dw.offSpec follows sem.warband so Off-spec stays apart from Offer's sem.info in every skin.
+  Kept as is; both for the owner to ratify.
+- [minor] Ka0s Default visible changes without an owner ruling: Oxanium face on every window string,
+  the title band (D3; noTopBar=true reverts), the library scroll bars (D2). No code change; all three
+  are flagged in SKIN-2 and docs/ARCHITECTURE.md, and SKIN-2's in-client outcome is the ruling.
+
+Gate on the new HEAD: 1790 passed, 0 failed, 1 skipped (1791 total); luacheck 0 warnings / 0 errors
+in 202 files.
