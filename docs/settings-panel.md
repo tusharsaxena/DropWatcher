@@ -83,14 +83,19 @@ timeline.
 
 The library's own tab (skinning-§3), drawn by `O.AppearanceTab({ owner, get = NS.SkinChoice, set =
 NS.WriteSkinChoice })` (`settings/Panel.lua`) as a host tab after Simulator and before Keybindings.
-Its key is `Appearance`, the group of the seven `skipRender` rows `skin.source`, `skin.skin`,
-`skin.ignorePanel`, `skin.ignoreFonts`, `skin.font`, `skin.texture` and `skin.pickerSeen` (the
-first-run picker's memory, which the tab does not draw); its label is **Skin**. Its body is the
-library's: **Skin source** (*Ka0s skins*, or *EllesmereUI*, disabled with the failing conditions
-listed while EllesmereUI cannot skin this addon), **Look** (the nine skins three to a line with their
-swatches), **Font and texture** (a **Font** and a **Texture** dropdown, each listing the skin's own
-first), the Scope (**Ignore settings panel**, on for a new profile, and **Ignore fonts**), **Copy to
-every Ka0s addon…** and the note that skins change every visual element. A pick calls `Skin:SetChoice`
+Its key is `Appearance`, the group of the eight `skipRender` rows `skin.source`, `skin.skin`,
+`skin.ignorePanel`, `skin.ignoreFonts`, `skin.font`, `skin.texture`, `skin.outline` and
+`skin.pickerSeen` (the first-run picker's memory, which the tab does not draw); its label is
+**Skin**. Its body is the library's (LibKa0s v1.82.0): **Skin source** (*Ka0s skins*, or
+*EllesmereUI*, disabled with the failing conditions listed while EllesmereUI cannot skin this addon),
+**Look** (the note first, then the nine skins three to a line with their swatches), **Font and
+texture** (a **Font** and a **Texture** dropdown, each listing the skin's own first; under them
+**Reset font** and **Reset texture**; under those the **Font outline**, *All text* by default,
+*HUD text only* or *Off*, `skin.outline`, grayed while Ignore fonts is on), the Scope (**Ignore
+settings panel**, on for a new profile, and **Ignore fonts**) and, under **Other Ka0s addons**,
+**Copy to every Ka0s addon…**, which carries the outline too. Picking another skin gives the Font and
+Texture overrides back to that skin's own. The window, the cards and the toast are window text, so
+*HUD text only* takes their outline. A pick calls `Skin:SetChoice`
 first (the live repaint, no reload), then writes through the seam, so `/dw get|set skin.*` reaches the
 same values and every reset puts them back on Ka0s Default. Leaving EllesmereUI after it painted this
 session asks for a reload (the library's popup). In combat the tab refuses every change. Without the

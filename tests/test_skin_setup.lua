@@ -145,7 +145,7 @@ end)
 -- ── the keys and the rows ────────────────────────────────────────────────────────────────────
 
 local PATHS = { "skin.source", "skin.skin", "skin.ignorePanel", "skin.ignoreFonts", "skin.font",
-                "skin.texture", "skin.pickerSeen" }
+                "skin.texture", "skin.outline", "skin.pickerSeen" }
 
 test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Skin tab", function()
     -- red under: a default other than today's look, or a row that renders itself on top of the
@@ -158,6 +158,7 @@ test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of G
     assertEqual(d.ignoreFonts, false)
     assertEqual(d.font, "")
     assertEqual(d.texture, "")
+    assertEqual(d.outline, "all")
     assertEqual(d.pickerSeen, false)
     for _, path in ipairs(PATHS) do
         local row = NS.SchemaRuntime.FindRow(path)

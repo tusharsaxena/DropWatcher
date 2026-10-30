@@ -202,6 +202,18 @@ Total.
 - Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
 - Skin seam: without the library the facade answers Ka0s Default, owner tokens included
 
+### test_skin_outline.lua (9)
+
+- outline: a fresh profile stores All text, the library's default
+- outline: the schema row offers the library's three modes, in its order, on the Skin tab
+- outline: the write seam stores media.outline, and leaves it alone when it is nil
+- outline: another addon's copy reaches the store through WriteChoice
+- outline: the row's write applies the mode live
+- outline: /dw set refuses a mode the library does not know
+- outline: the stored mode is applied right after AceDB exists
+- outline: a profile switch and a reset apply the incoming profile's mode
+- outline: without the skin engine the apply is a quiet no-op and the store still takes it
+
 ### test_skin_chrome.lua (11)
 
 - skin chrome: under Ka0s Default the window draws the pixels it drew before skins
@@ -2089,6 +2101,7 @@ Total.
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 45 |
 | test_skin_setup.lua | 18 |
+| test_skin_outline.lua | 9 |
 | test_skin_chrome.lua | 11 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
@@ -2174,4 +2187,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1792** |
+| **Total** | **1801** |

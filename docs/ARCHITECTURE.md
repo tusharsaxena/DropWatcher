@@ -277,11 +277,12 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
 - **The choice.** The player picks on Settings → General → **Skin**, the library's own tab
   (`O.AppearanceTab` over `NS.SkinChoice` / `NS.WriteSkinChoice`, `settings/Panel.lua`): the skin
   source (the Ka0s skins, or EllesmereUI's when it can skin this addon), the skin, the Font and
-  texture overrides and the Scope (Ignore settings panel, Ignore fonts). The seven `skin.*` rows are
+  texture overrides, the Font outline (`skin.outline`, LibKa0s v1.82.0: all text, HUD text only or
+  off, applied with `Skin:SetOutline`) and the Scope (Ignore settings panel, Ignore fonts). The eight `skin.*` rows are
   `skipRender` rows of the one seam, so `/dw get|set` reaches the same values, and a pick calls
   `Skin:SetChoice` first: the repaint is live, with no reload. A profile switch, copy or reset applies
-  the incoming profile's skin, scope and overrides (`reloadProfile`). `tests/test_skin_setup.lua` and
-  `tests/test_skin_settings.lua` pin the seam and the rows.
+  the incoming profile's skin, scope, overrides and outline (`reloadProfile`). `tests/test_skin_setup.lua`,
+  `tests/test_skin_outline.lua` and `tests/test_skin_settings.lua` pin the seam and the rows.
 - **The HUD.** Drop Watcher's HUD is the item icon's border (Window › Icons). While **Use the skin's
   border** (`icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`, on by default) is on,
   the border's style and thickness are the skin's icon border family (`icon.borderStyle`,

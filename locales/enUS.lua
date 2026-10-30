@@ -403,6 +403,9 @@ L["Refused by the feed"] = "Refused by the feed"
 -- core/SkinSetup.lua: the Skin tab's source values and the reload line
 L["Ka0s skins"] = "Ka0s skins"
 L["EllesmereUI"] = "EllesmereUI"
+L["All text"] = "All text"
+L["HUD text only"] = "HUD text only"
+L["Off"] = "Off"
 L["Reload your interface (/reload) to finish changing the skin."] =
     "Reload your interface (/reload) to finish changing the skin."
 

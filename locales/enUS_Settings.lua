@@ -22,7 +22,6 @@ L["A fresh tab lists only the drops that are an upgrade for you. With none ticke
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
-L["Off"] = "Off"
 L["Absolute"] = "Absolute"
 L["Relative to my gear"] = "Relative to my gear"
 L["Automatic"] = "Automatic"
@@ -240,6 +239,9 @@ L["The font this addon's text uses, over the skin's own. Empty keeps the skin's.
 L["Texture"] = "Texture"
 L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."] =
     "The texture this addon's bars use, over the skin's own. Empty keeps the skin's."
+L["Font outline"] = "Font outline"
+L["Where the skin outlines this addon's text: all of it, its HUD text only, or nowhere. The window, the cards and the toast are window text."] =
+    "Where the skin outlines this addon's text: all of it, its HUD text only, or nowhere. The window, the cards and the toast are window text."
 L["Skin picker seen"] = "Skin picker seen"
 L["Whether the first-run skin picker was closed on this profile."] =
     "Whether the first-run skin picker was closed on this profile."

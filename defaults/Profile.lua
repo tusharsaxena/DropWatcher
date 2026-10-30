@@ -205,7 +205,9 @@ NS.C = {
         -- (EllesmereUI's); "ka0s"/"ka0s" is Ka0s Default, the look the addon drew before skins. The
         -- Scope's two exceptions: a new profile leaves the settings panel the client's and skins
         -- the fonts (LootHistory's defaults). `font` and `texture` are the Skin tab's overrides, an
-        -- LSM key each, "" for the skin's own. `pickerSeen`: the first-run skin picker was closed
+        -- LSM key each, "" for the skin's own. `outline` (LibKa0s v1.82.0, Skin minor 9, ruling
+        -- D-06): the Font outline, "all" text, "hud" text only or "off"; the window, the cards and
+        -- the toast are window text, so "hud" takes their outline. `pickerSeen`: the first-run skin picker was closed
         -- on this profile; false on every profile, old and new, so every player sees it once (the
         -- rollout's O3). New keys with defaults, so AceDB merges them into every existing profile
         -- and no migration is owed.
@@ -216,6 +218,7 @@ NS.C = {
             ignoreFonts = false,
             font        = "",
             texture     = "",
+            outline     = "all",
             pickerSeen  = false,
         },
     },
