@@ -8,6 +8,7 @@ The bare command opens the settings panel.
 |---|---|---|---|
 | `help` | reserved | yes | the library's index |
 | `config` | reserved | yes | `DW:OpenSettings` |
+| `skin` | reserved (LibKa0s v1.82.0, ruling D-16) | no | `NS.RunSkinVerb` (`core/SkinSetup.lua`): `O.SkinVerb` with the first-run spec, so the skin picker opens whatever `skin.pickerSeen` says; in combat the library's gray line on every call, `Another Ka0s addon's skin picker is open…` while another's is up, and without LibKa0s `/dw skin is unavailable: the LibKa0s library did not load.` |
 | `enable` / `disable` | reserved | yes | `runEnabled`, writing `enabled` through the seam |
 | `version` | reserved | yes | the library |
 | `list` / `get` / `set` / `reset` / `resetall` | reserved | yes | the library over the schema seam; `reset` takes a path, `resetall` asks first |

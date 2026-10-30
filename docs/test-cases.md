@@ -267,6 +267,15 @@ Total.
 - Skin picker: a profile switch with a preview pending wears the new profile's skin
 - Skin picker: degraded, nothing shows and nothing raises
 
+### test_skin_verb.lua (6)
+
+- skin verb: the row sits right after config, with the library's help words
+- skin verb: /dw skin shows the library's picker on a profile that has closed it
+- skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec
+- skin verb: in combat every call prints the library's gray line and shows nothing
+- skin verb: refused while the addon is disabled, and the picker is never asked
+- skin verb: without LibKa0s the verb prints the library-absent line
+
 ### test_skin_settings.lua (10)
 
 - skin settings: under a non-default skin the pages' own widgets paint, past the proxy
@@ -2106,6 +2115,7 @@ Total.
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
 | test_skin_picker.lua | 17 |
+| test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
@@ -2187,4 +2197,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1801** |
+| **Total** | **1807** |

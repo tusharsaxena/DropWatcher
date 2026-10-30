@@ -148,8 +148,8 @@ go with its drop. The payloads and consumers below are the code's.
 
 ## Slash Commands
 
-`/dw`, alias `/dropwatcher`. The reserved verbs (`help config enable disable version list get set
-reset resetall profile debug diagnostics perf`) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
+`/dw`, alias `/dropwatcher`. The reserved verbs (`help config skin enable disable version list get set
+reset resetall profile debug diagnostics perf`; `skin`, LibKa0s v1.82.0's `O.SkinVerb`, is refused while disabled) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
 `test` and the feature verbs of design spec §12.3 (`scan clear history mine compact situation offer
 add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master

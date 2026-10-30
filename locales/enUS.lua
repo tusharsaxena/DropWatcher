@@ -45,6 +45,7 @@ L["Measure performance — `/dw perf` opens the step panel"] = "Measure performa
 L["Open the Drops tab, where your own drops are listed"] = "Open the Drops tab, where your own drops are listed"
 L["Open the History tab"] = "Open the History tab"
 L["Open the Ka0s Drop Watcher settings panel"] = "Open the Ka0s Drop Watcher settings panel"
+L["Choose a skin: open the skin picker"] = "Choose a skin: open the skin picker"
 L["Open the Offer panel for a bag item — `/dw offer <item link>`"] = "Open the Offer panel for a bag item — `/dw offer <item link>`"
 L["Open/close the debug window — `/dw debug on|off` toggles logging"] = "Open/close the debug window — `/dw debug on|off` toggles logging"
 L["Print a setting's current value — `/dw get <path>`"] = "Print a setting's current value — `/dw get <path>`"

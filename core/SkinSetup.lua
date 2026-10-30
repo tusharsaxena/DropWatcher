@@ -62,6 +62,8 @@ local addonName, NS = ...
 --                           held through combat. NS.HideSkinPicker() takes it down unmarked;
 --   NS.SkinPickerSpec()     the spec it hands O.SkinPicker; NS.ArmSkinPicker(on) the login fuse;
 --                           NS.SkinPickerCombatEnd() the held start's combat edge.
+--   NS.RunSkinVerb()        the reserved `/dw skin` verb's act (LibKa0s v1.82.0, O.SkinVerb): the
+--                           picker on demand, whatever `skin.pickerSeen` says.
 --
 -- ── WHERE IT LOADS ───────────────────────────────────────────────────────────────────────────
 --
@@ -477,6 +479,25 @@ function NS.MaybeShowSkinPicker()
     end
     pickerHeld = false
     return O.SkinPicker(NS.SkinPickerSpec())
+end
+
+--- The reserved `/dw skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, ruling D-16):
+--- O.SkinVerb with the spec the first-run start builds, so it shows the picker a new profile shows
+--- whatever skin.pickerSeen says. The library prints its own lines (combat on every call, queued,
+--- unavailable); without LibKa0s the stub answers nil, "absent" and this prints the library-absent
+--- line. The dispatcher refuses the verb while the addon is disabled. Answers the picker's frame, or
+--- nil and the reason.
+function NS.RunSkinVerb()
+    local O = options()
+    local win, why
+    if O and type(O.SkinVerb) == "function" then win, why = O.SkinVerb(NS.SkinPickerSpec()) end
+    if win == nil and (why == nil or why == "absent") then
+        why = "absent"
+        if NS.Print then
+            NS.Print(NS.L["%s is unavailable: the LibKa0s library did not load."]:format(NS.SLASH .. " skin"))
+        end
+    end
+    return win, why
 end
 
 --- The PLAYER_REGEN_ENABLED edge (DW.OnCombatEnd): a start held through combat shows now.
