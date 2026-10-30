@@ -32,7 +32,7 @@ passed.
 | INSPECT-1..5 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26); a looter who left keeps their read (feedback-21 H2) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
 | ASK-1..12 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2); the Offer button toggles the Offer panel (ASK-12, feedback-21 H4) |
-| SIT-1..6 | Situations | Where the addon is active (DW-13); the Situations table's Loot rule column fits in every skin (SIT-6, DW-02) |
+| SIT-1..7 | Situations | Where the addon is active (DW-13); the Situations table's Loot rule column fits in every skin (SIT-6, DW-02); a fresh profile's Situations defaults (SIT-7, DW-06) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
@@ -2141,6 +2141,15 @@ overlapping the next ("Follower dungeon" clear of its Track box). Open a Loot ru
 Quality one → each list reads in full. Repeat under **Obsidian** and **Glass** with **Ignore settings
 panel** unticked, and under Ka0s Default with it ticked. Result:
 
+**SIT-7. The owner's Situations defaults (DW-06; image-64).** Settings › Profiles → create a new
+profile and switch to it (or log in a character that has never had one). Settings › Drops › Situations
+→ Auto-open the window is ticked, and the table reads: Mythic+, Dungeon, Follower dungeon, Raid,
+Delve, Scenario and Solo with Track and Auto-open ticked; Raid Finder with Track ticked and
+Auto-open unticked; PvP and Open world group with neither, their row dimmed. Quality is `Use global`
+on every line. Loot rule is `Personal loot` on every line but PvP, which reads `Legacy loot`
+(Follower dungeon now reads Personal). Switch back to your own profile → every cell you had set is
+as you left it. Result:
+
 ## Quality
 
 The gate's decision is headless-tested (`test_quality_gate`); these checks confirm it on real loot.
@@ -3228,7 +3237,7 @@ D3). No pixel of an item's quality color moved under Ka0s Default (its `q.*` tok
 client's own), and Drop Watcher never asked for the retired stock look, so no stock-look row moved.
 
 Owed by the skin fonts and feedback run (2026-10-30, LibKa0s v1.82.0; Ka0sAddonsCommonTasks
-`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..30 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04) and TOAST-8 (DW-05). Their `Result:` lines are empty until
+`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..30 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04), TOAST-8 (DW-05) and SIT-7 (DW-06). Their `Result:` lines are empty until
 the owner runs them; an agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off

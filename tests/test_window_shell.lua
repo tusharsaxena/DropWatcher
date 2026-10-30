@@ -718,7 +718,9 @@ test("shell: the not-tracking situation tooltip points at Settings > Drops > Sit
 end)
 
 test("shell: the live footer reads the client, and its Sort follows the active tab", function()
-    local NS = shown()
+    local NS = T.enableAddon()
+    NS.db.profile.situations.solo.track = false   -- Solo is tracked by default (DW-06); this reads an untracked one
+    NS.ShowWindow()
     local segs, sort = NS.WindowFooter.Parts()
     assertEqual(textOf(segs.situation.text), "Not tracking in Solo · change in settings")
     assertEqual(textOf(segs.inspect.text), "Inspect: no group")
@@ -959,8 +961,9 @@ test("shell: no auto-open for a test drop outside test mode, outside an auto-ope
     announce(NS, drop({ id = 2 }))
     assertFalse(NS.IsWindowShown())
     local solo = T.enableAddon()
+    solo.db.profile.situations.solo.autoOpen = false   -- Solo auto-opens by default (DW-06)
     announce(solo, drop({ id = 3 }))
-    assertFalse(solo.IsWindowShown(), "solo is not an auto-open situation")
+    assertFalse(solo.IsWindowShown(), "solo, tracked with its auto-open off, is not an auto-open situation")
 end)
 
 -- ── reasons everywhere ──────────────────────────────────────────────────────────────────────

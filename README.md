@@ -69,7 +69,7 @@ The look is yours to pick: Settings → General → Skin offers nine skins (or E
 ## How the loot watching works
 
 - Drop Watcher reads your group's loot lines as they come in, along with the boss-loot and loot-history events, and merges the reports of one item into one drop.
-- Drops you don't care about stop there. Where you are (dungeons, keys and raids are watched by default), the minimum quality and the filters decide that before anyone is inspected.
+- Drops you don't care about stop there. Where you are (keys, dungeons, follower dungeons, raids, delves, scenarios and solo play are watched by default), the minimum quality and the filters decide that before anyone is inspected.
 - Each drop is compared with what you wear in that slot, and with what the looter wears once their gear has been inspected. Inspects go one at a time and never in combat.
 - The trade estimate looks at the bind type, the four-hour trade window and the game's rule that a looter can only trade an item that isn't an upgrade for them by item level.
 - Your own drops get an exact countdown read from the item's tooltip, and a list of who in the group would gain from them.

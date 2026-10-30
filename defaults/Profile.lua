@@ -48,18 +48,19 @@ NS.C = {
         locked     = false,      -- Lock frame: the window cannot be dragged or resized
         autoOpen   = true,       -- master auto-open: false keeps every situation from opening the window
 
-        -- Where Drop Watcher is active (design spec §6.1), keyed like C.SITUATIONS.
+        -- Where Drop Watcher is active (design spec §6.1), keyed like C.SITUATIONS. The owner's defaults
+        -- since DW-06: follower dungeons, delves, scenarios and solo tracked and auto-opening too.
         situations = {
             mythicPlus      = situation(true, true),
             dungeon         = situation(true, true),
-            followerDungeon = situation(false, false),
+            followerDungeon = situation(true, true),
             raidLFR         = situation(true, false),
             raid            = situation(true, true),
-            delve           = situation(false, false),
-            scenario        = situation(false, false),
+            delve           = situation(true, true),
+            scenario        = situation(true, true),
             pvp             = situation(false, false),
             openWorldGroup  = situation(false, false),
-            solo            = situation(false, false),
+            solo            = situation(true, true),
         },
 
         -- The feed's gates and the filter bar's seeds (design spec §6.2, §6.3, §11.1).
@@ -94,12 +95,13 @@ NS.C = {
             undesired       = {},
         },
 
-        -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2), the
+        -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2; follower
+        -- dungeons `personal` since DW-06, the owner's default), the
         -- owner's override once changed (§7.3); `raid` is the conservative `personal` until smoke
         -- check TRADE-3 confirms it.
         trade = {
             rules = {
-                mythicPlus = "personal", dungeon = "personal", followerDungeon = "legacy",
+                mythicPlus = "personal", dungeon = "personal", followerDungeon = "personal",
                 raidLFR = "personal", raid = "personal", delve = "personal", scenario = "personal",
                 pvp = "legacy", openWorldGroup = "personal", solo = "personal",
             },

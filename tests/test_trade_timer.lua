@@ -21,9 +21,11 @@ local function ring(ilvl, bindType)
         subClassID = 0, bindType = bindType or 1, stats = {} }
 end
 
--- An enabled instance wearing two 600 rings, so a 590 ring is a downgrade you may trade.
+-- An enabled instance wearing two 600 rings, so a 590 ring is a downgrade you may trade. The window
+-- stays hidden until a test shows it: Solo auto-opens by default (DW-06), so its auto-open is off here.
 local function setup()
     local NS, _, m = T.enableAddon()
+    NS.db.profile.situations.solo.autoOpen = false
     m.addItem(link(100), ring(600))
     m.addItem(link(101), ring(600))
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)

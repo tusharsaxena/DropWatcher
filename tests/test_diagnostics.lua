@@ -138,6 +138,7 @@ end)
 
 test("diagnostics: the trade section shows the timers, the ticker and each entry", function()
     local NS, _, m = T.enableAddon()
+    NS.db.profile.situations.solo.autoOpen = false   -- the window stays hidden: the slow ticker
     assertTrue(report(NS):find("trade: no scan yet", 1, true) ~= nil)
     local band = m.addItem("|cnIQ4:|Hitem:2001::::::::90:::::|h[Band]|h|r", { name = "Band", quality = 4,
         ilvl = 1, equipLoc = "INVTYPE_FINGER", classID = 4, subClassID = 0, bindType = 1, stats = {} })

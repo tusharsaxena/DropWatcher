@@ -168,10 +168,10 @@ end)
 test("constants: every situation key is listed once, in order, with the spec §6.1 defaults", function()
     local c, d = C(), D().situations
     local want = {
-        { "mythicPlus", true, true }, { "dungeon", true, true }, { "followerDungeon", false, false },
-        { "raidLFR", true, false }, { "raid", true, true }, { "delve", false, false },
-        { "scenario", false, false }, { "pvp", false, false }, { "openWorldGroup", false, false },
-        { "solo", false, false },
+        { "mythicPlus", true, true }, { "dungeon", true, true }, { "followerDungeon", true, true },
+        { "raidLFR", true, false }, { "raid", true, true }, { "delve", true, true },
+        { "scenario", true, true }, { "pvp", false, false }, { "openWorldGroup", false, false },
+        { "solo", true, true },
     }
     assertEqual(#c.SITUATIONS, #want)
     assertEqual(#keysOf(d), #want)
@@ -225,7 +225,7 @@ test("constants: the trade rules are the spec §7.2 table, and every situation h
     end
     assertEqual(#keysOf(rules), #c.SITUATIONS)
     assertEqual(rules.raid, "personal")
-    assertEqual(rules.followerDungeon, "legacy")
+    assertEqual(rules.followerDungeon, "personal")
     assertEqual(rules.pvp, "legacy")
     assertEqual(rules.mythicPlus, "personal")
 end)

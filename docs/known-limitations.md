@@ -83,7 +83,7 @@ the code reads every case the design leaves open, module by module, is in
   drops are spare for their looters whatever you wear; the M7 band around your own level left a
   group naked of content you outgear, and nothing read as Interesting), each random burst has a
   line of yours and a member's plain loot line, a simulation tracks the situation it simulates
-  whatever its row says (the delve and the open world are untracked by default), and every step
+  whatever its row says (PvP and the open-world group are untracked by default), and every step
   prints its line. So a simulation does not exercise a situation's tracking switch.
 - **A simulated member's spec** stays unknown: the inspect broker reads the spec after it has
   cleared its own inspect (its flight ends first), and the simulator lets the inspect data go on

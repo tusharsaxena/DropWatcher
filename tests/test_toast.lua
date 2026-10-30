@@ -381,6 +381,7 @@ end)
 
 test("toast edge: a Core without a close mark draws none; Ask takes its corner, a right-click still closes", function()
     local NS, m = enabled({ drop() })
+    NS.db.profile.situations.solo.autoOpen = false   -- only the toast is under test: no window opens
     m.LibStub("LibKa0s-Core-1.0").MakeCloseButton = nil
     added(NS, 1)
     local f = NS.Toast.Frame()

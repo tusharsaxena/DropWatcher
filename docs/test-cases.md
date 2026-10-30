@@ -1180,7 +1180,7 @@ Total.
 - trade rules: a warbound or account-bound drop is no warbound
 - trade rules: a bonus roll is no bonusRoll, and warbound wins over it
 - trade rules: a BoE or BoU drop is yes boe, in any situation and past the window
-- trade rules: the legacy rule is no legacy (follower dungeons and PvP)
+- trade rules: the legacy rule is no legacy (PvP by default)
 - trade rules: the group rule (ilvlRule none) is likely groupLoot without inspect
 - trade rules: personal, the looter's evaluation known and not an upgrade, is likely notUpgrade
 - trade rules: personal, an upgrade for the looter, is no upgradeForLooter

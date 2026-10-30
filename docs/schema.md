@@ -81,14 +81,17 @@ from feedback-24 until item 020, which made it the Drops page's first tab. The r
 | Key | Default | Column | What it is |
 |---|---|---|---|
 | `autoOpen` | `true` | (the row above the table) | master auto-open: `false` keeps every situation from opening the window |
-| `situations.<key>.track` | per design spec §6.1 | Track | loot is watched in that situation |
-| `situations.<key>.autoOpen` | per design spec §6.1 | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
+| `situations.<key>.track` | per situation (below; the owner's defaults since DW-06) | Track | loot is watched in that situation |
+| `situations.<key>.autoOpen` | per situation (below; the owner's defaults since DW-06) | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
 | `situations.<key>.quality` | `"global"` | Quality | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
-| `trade.rules.<key>` | per design spec §7.2 (`personal`; `legacy` for follower dungeons and PvP) | Loot rule | the rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded; dimmed while the situation is untracked |
+| `trade.rules.<key>` | `personal`; `legacy` for PvP (follower dungeons were `legacy` too, design spec §7.2, until DW-06) | Loot rule | the rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded; dimmed while the situation is untracked |
 
 `<key>` is each of `mythicPlus`, `dungeon`, `followerDungeon`, `raidLFR`, `raid`, `delve`,
 `scenario`, `pvp`, `openWorldGroup` and `solo`; `track` and `autoOpen` default on for Mythic+,
-dungeons and raids, `track` alone for Raid Finder, and off elsewhere. The four per-situation rows
+dungeons, follower dungeons, raids, delves, scenarios and solo, `track` alone for Raid Finder, and off
+for PvP and the open-world group (the owner's defaults since DW-06; design spec §6.1 had follower
+dungeons, delves, scenarios and solo off). They are AceDB defaults, so a profile that never changed a
+cell takes them and a stored choice stays, with no migration. The four per-situation rows
 are `skipRender` with no subsection (since DW-H0, feedback-8 spec §0; the loot rule since
 feedback-24): the Situations table draws them, one line per situation (`settings/PageEditors.lua`
 `SituationTable`, docs/settings-panel.md), and writes through the seam, so the CLI, the Defaults

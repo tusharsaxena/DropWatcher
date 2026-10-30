@@ -123,7 +123,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     local S = NS.SchemaRuntime
     S.Set("trade.rules.dungeon", "group")
     S.Set("feed.minIlvlMode", "absolute")
-    S.Set("situations.delve.track", true)
+    S.Set("situations.openWorldGroup.track", true)   -- off its default (untracked)
     S.Set("situations.raid.quality", "dynamicSlot")
     S.Set("messages.oneAsk", false)
     S.Set("messages.announceChannel", "RAID")
@@ -132,7 +132,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     assertEqual(cfg.rules.dungeon, "group")
     assertEqual(cfg.rules.pvp, "legacy", "an untouched situation keeps its default rule")
     assertEqual(cfg.minIlvlMode, "absolute")
-    assertTrue(NS.Situations.IsTracking("delve"))
+    assertTrue(NS.Situations.IsTracking("openWorldGroup"))
     assertEqual(NS.Situations.QualityOverride("raid"), "dynamicSlot")
     assertTrue(NS.Situations.QualityOverride("dungeon") == nil, "`global` means the feed's own mode")
     local a = NS.Asks.Settings()
@@ -201,8 +201,8 @@ test("rows: `/dw set` reaches a hand-written row", function()
     local NS = T.enableAddon()
     NS.addon:OnSlashCommand("set feed.quality.floor 3")
     assertEqual(NS.addon.db.profile.feed.quality.floor, 3)
-    NS.addon:OnSlashCommand("set situations.solo.track true")
-    assertEqual(NS.addon.db.profile.situations.solo.track, true)
+    NS.addon:OnSlashCommand("set situations.solo.track false")   -- off its default (tracked, DW-06)
+    assertEqual(NS.addon.db.profile.situations.solo.track, false)
 end)
 
 test("rows: degraded, the hand-written rows still read, write and refuse", function()
@@ -589,15 +589,15 @@ local PINNED_ROWS = {
     { "skin.skin", "string", "\"ka0s\"" },
     { "skin.source", "string", "\"ka0s\"" },
     { "skin.texture", "string", "\"\"" },
-    { "situations.delve.autoOpen", "bool", "false" },
+    { "situations.delve.autoOpen", "bool", "true" },
     { "situations.delve.quality", "string", "\"global\"" },
-    { "situations.delve.track", "bool", "false" },
+    { "situations.delve.track", "bool", "true" },
     { "situations.dungeon.autoOpen", "bool", "true" },
     { "situations.dungeon.quality", "string", "\"global\"" },
     { "situations.dungeon.track", "bool", "true" },
-    { "situations.followerDungeon.autoOpen", "bool", "false" },
+    { "situations.followerDungeon.autoOpen", "bool", "true" },
     { "situations.followerDungeon.quality", "string", "\"global\"" },
-    { "situations.followerDungeon.track", "bool", "false" },
+    { "situations.followerDungeon.track", "bool", "true" },
     { "situations.mythicPlus.autoOpen", "bool", "true" },
     { "situations.mythicPlus.quality", "string", "\"global\"" },
     { "situations.mythicPlus.track", "bool", "true" },
@@ -613,12 +613,12 @@ local PINNED_ROWS = {
     { "situations.raidLFR.autoOpen", "bool", "false" },
     { "situations.raidLFR.quality", "string", "\"global\"" },
     { "situations.raidLFR.track", "bool", "true" },
-    { "situations.scenario.autoOpen", "bool", "false" },
+    { "situations.scenario.autoOpen", "bool", "true" },
     { "situations.scenario.quality", "string", "\"global\"" },
-    { "situations.scenario.track", "bool", "false" },
-    { "situations.solo.autoOpen", "bool", "false" },
+    { "situations.scenario.track", "bool", "true" },
+    { "situations.solo.autoOpen", "bool", "true" },
     { "situations.solo.quality", "string", "\"global\"" },
-    { "situations.solo.track", "bool", "false" },
+    { "situations.solo.track", "bool", "true" },
     { "state.debugConsole", "bool", "false" },
     { "state.testMode", "bool", "nil" },
     { "toast.duration", "number", "8" },
@@ -629,7 +629,7 @@ local PINNED_ROWS = {
     { "toast.sound", "bool", "false" },
     { "trade.rules.delve", "string", "\"personal\"" },
     { "trade.rules.dungeon", "string", "\"personal\"" },
-    { "trade.rules.followerDungeon", "string", "\"legacy\"" },
+    { "trade.rules.followerDungeon", "string", "\"personal\"" },
     { "trade.rules.mythicPlus", "string", "\"personal\"" },
     { "trade.rules.openWorldGroup", "string", "\"personal\"" },
     { "trade.rules.pvp", "string", "\"legacy\"" },
