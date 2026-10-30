@@ -63,8 +63,8 @@ spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and pass
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load; the item-020 guard,
 every stored path with its type and default pinned so a layout change cannot move one; Alerts › Upgrade
-glow, feedback-21: every glow row and its default (H6: both pixel, `pixelFrequency` 0.1, the colors
-`C.TONE.glowMain` `#FFF468` and `C.TONE.glowOffSpec` `#3FC7EB`, apart from the verdicts' tones), the
+glow, feedback-21: every glow row and its default (both proc since DW-03, D-18; `pixelFrequency` 0.1,
+H6; the colors `C.TONE.glowMain` `#19FF19` and `C.TONE.glowOffSpec` `#3FC7EB`, apart from the verdicts' tones), the
 main | off-spec alternation on every line, the two swatches on one line and their Use class color
 companions on the next (off, player-scoped; the pinned options-ui-§17 deviation), the refused values and colors, a style's knobs dimmed
 for another style and the style while its glow is off, the color pair never, the

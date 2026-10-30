@@ -249,9 +249,10 @@ test("glow: both glows have every knob's row on Alerts › Upgrade glow, with th
         assertEqual(cc.classColorSource, "player", "the player's class, whoever looted the drop")
         assertEqual(S.FindRow(base .. "color").classColorSource, "player")
     end
-    -- feedback-21 H6, the owner's screenshot: both pixel borders, #FFF468 and #3FC7EB, opaque.
-    assertEqual(NS.Setting("glow.main.type"), "pixel")
-    assertEqual(NS.Setting("glow.offSpec.type"), "pixel")
+    -- DW-03 (owner ruling D-18, image-39; was feedback-21 H6's two pixel borders and #FFF468): both
+    -- Proc (flipbook), the main spec #19FF19 and the off-spec #3FC7EB, opaque.
+    assertEqual(NS.Setting("glow.main.type"), "proc")
+    assertEqual(NS.Setting("glow.offSpec.type"), "proc")
     local main, off = NS.Setting("glow.main.color"), NS.Setting("glow.offSpec.color")
     assertTrue(main.r == TONE.glowMain.r and main.g == TONE.glowMain.g and main.b == TONE.glowMain.b and main.a == 1,
         "main is its own token, opaque")
@@ -259,7 +260,7 @@ test("glow: both glows have every knob's row on Alerts › Upgrade glow, with th
         and off.a == 1, "off-spec is its own token, opaque")
     local function byte(v) return math.floor(v * 255 + 0.5) end
     local function hex(c) return string.format("%02X%02X%02X", byte(c.r), byte(c.g), byte(c.b)) end
-    assertEqual(hex(TONE.glowMain), "FFF468"); assertEqual(hex(TONE.glowOffSpec), "3FC7EB")
+    assertEqual(hex(TONE.glowMain), "19FF19"); assertEqual(hex(TONE.glowOffSpec), "3FC7EB")
     assertTrue(TONE.glowMain ~= TONE.good and TONE.glowOffSpec ~= TONE.offspec, "no longer the verdicts' tones")
 end)
 
@@ -324,7 +325,8 @@ test("glow: a knob is dimmed while its glow is in another style, the style while
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
     local function dim(path) return S.FindRow(path).disabledIf() == true end
-    -- both pixel by default (feedback-21 H6); main set to proc here
+    -- both proc by default (DW-03, D-18); the off-spec set to pixel and main to proc here
+    assertTrue(S.Set("glow.offSpec.type", "pixel"))
     assertTrue(S.Set("glow.main.type", "proc"))
     assertFalse(dim("glow.main.procDuration")); assertTrue(dim("glow.main.pixelLines"))
     assertFalse(dim("glow.offSpec.pixelLines")); assertTrue(dim("glow.offSpec.procDuration"))
@@ -520,7 +522,7 @@ local PINNED_ROWS = {
     { "glow.main.autocastParticles", "number", "4" },
     { "glow.main.autocastScale", "number", "1" },
     { "glow.main.buttonFrequency", "number", "0.25" },
-    { "glow.main.color", "color", "{[\"a\"]=1,[\"b\"]=0.4078431372549,[\"g\"]=0.95686274509804,[\"r\"]=1}" },
+    { "glow.main.color", "color", "{[\"a\"]=1,[\"b\"]=0.098039215686275,[\"g\"]=1,[\"r\"]=0.098039215686275}" },
     { "glow.main.enabled", "bool", "true" },
     { "glow.main.pixelBorder", "bool", "true" },
     { "glow.main.pixelFrequency", "number", "0.1" },
@@ -529,7 +531,8 @@ local PINNED_ROWS = {
     { "glow.main.pixelThickness", "number", "1" },
     { "glow.main.procDuration", "number", "1" },
     { "glow.main.procStartAnim", "bool", "true" },
-    { "glow.main.type", "string", "\"pixel\"" },
+    -- DW-03 (owner ruling D-18): both glows default to Proc, the main spec to #19FF19.
+    { "glow.main.type", "string", "\"proc\"" },
     { "glow.main.useClassColor", "bool", "false" },
     { "glow.main.xOffset", "number", "0" },
     { "glow.main.yOffset", "number", "0" },
@@ -546,7 +549,7 @@ local PINNED_ROWS = {
     { "glow.offSpec.pixelThickness", "number", "1" },
     { "glow.offSpec.procDuration", "number", "1" },
     { "glow.offSpec.procStartAnim", "bool", "true" },
-    { "glow.offSpec.type", "string", "\"pixel\"" },
+    { "glow.offSpec.type", "string", "\"proc\"" },
     { "glow.offSpec.useClassColor", "bool", "false" },
     { "glow.offSpec.xOffset", "number", "0" },
     { "glow.offSpec.yOffset", "number", "0" },

@@ -138,7 +138,7 @@ test("Skin seam: C.TONE is filled from its tokens, and refilled in place by a sk
         local t, r, g, b = C.TONE[key], NS.Skin.Color(token)
         sameColor(key .. " (obsidian)", { t.r, t.g, t.b }, { r, g, b })
     end
-    assertTrue(C.TONE.statCrit.r == 1 and C.TONE.glowMain.g == 244 / 255,
+    assertTrue(C.TONE.statCrit.r == 1 and C.TONE.glowMain.r == 25 / 255,
         "the stat names' and the glows' colors are not the skin's (E5, E6)")
 end)
 

@@ -174,8 +174,8 @@ an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (Li
 | Key | Default | Style | What it is |
 |---|---|---|---|
 | `glow.<g>.enabled` | `true`, `true` | all | the glow on or off |
-| `glow.<g>.type` | `"pixel"`, `"pixel"` | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
-| `glow.<g>.color` | `C.TONE.glowMain`, `#FFF468` (`{ r = 1, g = 244/255, b = 104/255, a = 1 }`), and `C.TONE.glowOffSpec`, `#3FC7EB` (`{ r = 63/255, g = 199/255, b = 235/255, a = 1 }`), tokens of their own (feedback-21 H6) | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape); its alpha applies under Use class color too |
+| `glow.<g>.type` | `"proc"`, `"proc"` (DW-03, owner ruling D-18; `"pixel"` until then, and a profile that never chose follows the new default through AceDB, no migration) | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
+| `glow.<g>.color` | `C.TONE.glowMain`, `#19FF19` (`{ r = 25/255, g = 1, b = 25/255, a = 1 }`; DW-03, D-18, `#FFF468` until then), and `C.TONE.glowOffSpec`, `#3FC7EB` (`{ r = 63/255, g = 199/255, b = 235/255, a = 1 }`), tokens of their own (feedback-21 H6) | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape); its alpha applies under Use class color too |
 | `glow.<g>.useClassColor` | `false`, `false` | all | Use class color: the glow in the player's class color instead of the swatch, the swatch's alpha kept (player-scoped, options-ui-§17) |
 | `glow.<g>.pixelLines` | `8` | pixel | how many lines, 1 to 20 |
 | `glow.<g>.pixelFrequency` | `0.1` | pixel | how fast they run, 0.05 to 2 by 0.05 |

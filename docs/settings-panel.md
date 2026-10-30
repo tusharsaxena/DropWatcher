@@ -295,8 +295,8 @@ the detail card's header (never the toast, History, the Offer panel or the Repla
 side by side, the main spec's in the left column and the off-spec's in the right on every line,
 each knob a main | off-spec pair. **Effect:** Main spec glow and Off-spec glow (both on), each
 glow's Style (Button (rotating rays), Proc (flipbook), Pixel border or Auto cast sparkles; both
-Pixel border by default, feedback-21 H6), then Main spec color | Off-spec color (color swatches
-with alpha; `#FFF468` and `#3FC7EB`, opaque) and below them **Use class color (main spec)** | **Use
+Proc (flipbook) by default since DW-03, owner ruling D-18, Pixel border until then), then Main spec
+color | Off-spec color (color swatches with alpha; `#19FF19` and `#3FC7EB`, opaque) and below them **Use class color (main spec)** | **Use
 class color (off-spec)** (off; the player's class color in place of the swatch above, its alpha
 kept). Each companion sits below its swatch, not immediately to its right: a documented
 options-ui-§17 deviation, the owner's choice (main spec left, off-spec right on every row;

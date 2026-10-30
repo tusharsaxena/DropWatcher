@@ -210,10 +210,10 @@ local FIXED_TONE = {
     statHaste   = { r = 1.00, g = 0.88, b = 0.45 },
     statMastery = { r = 0.74, g = 0.58, b = 1.00 },
     statVers    = { r = 0.45, g = 0.75, b = 1.00 },
-    -- The upgrade glows' default colors (feedback-21 H6, from the owner's screenshot): the main
-    -- spec's #FFF468 and the off-spec's #3FC7EB, their own tokens so the glows part from the
-    -- verdicts' `good` and `offspec`, each channel the hex byte over 255.
-    glowMain    = { r = 255 / 255, g = 244 / 255, b = 104 / 255 },
+    -- The upgrade glows' default colors: the main spec's #19FF19 (DW-03, owner ruling D-18, image-39;
+    -- #FFF468 from feedback-21 H6 until then) and the off-spec's #3FC7EB, their own tokens so the
+    -- glows part from the verdicts' `good` and `offspec`, each channel the hex byte over 255.
+    glowMain    = { r = 25 / 255,  g = 255 / 255, b = 25 / 255 },
     glowOffSpec = { r = 63 / 255,  g = 199 / 255, b = 235 / 255 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end

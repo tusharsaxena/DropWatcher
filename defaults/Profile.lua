@@ -163,11 +163,13 @@ NS.C = {
 
         -- The upgrade glow on a drop's icon (feedback-21): `main` for an upgrade for your current
         -- spec, `offSpec` for one only another of your specs gains from, each with its own style.
-        -- Both pixel borders, in their own colors (feedback-21 H6, the owner's screenshot): the
-        -- main spec's yellow #FFF468, the off-spec's blue #3FC7EB.
+        -- Both Proc (flipbook), in their own colors (DW-03, owner ruling D-18, image-39; two pixel
+        -- borders and the main spec's #FFF468 from feedback-21 H6 until then): the main spec's green
+        -- #19FF19, the off-spec's blue #3FC7EB. AceDB's defaults carry a profile that never chose a
+        -- style or a color onto these; a stored choice stays, so no migration is owed.
         glow = {
-            main    = glow(true, "pixel", TONE.glowMain),
-            offSpec = glow(true, "pixel", TONE.glowOffSpec),
+            main    = glow(true, "proc", TONE.glowMain),
+            offSpec = glow(true, "proc", TONE.glowOffSpec),
         },
 
         -- Every item icon's look (feedback-21 G11, Window › Icons; modules/IconStyle.lua). The

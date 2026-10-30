@@ -149,7 +149,8 @@ local CHANNELS = choices{
 local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
 -- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them, in the order
--- the Upgrade glow tab's style subsections read (the default, Pixel border, first; feedback-24).
+-- the Upgrade glow tab's style subsections read (Pixel border first, feedback-24; the default is
+-- Proc since DW-03, D-18, and the order did not move).
 local GLOW_STYLES = choices{
     "pixel", L["Pixel border"], "autocast", L["Auto cast sparkles"], "button", L["Button (rotating rays)"],
     "proc", L["Proc (flipbook)"],

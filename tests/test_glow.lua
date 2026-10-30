@@ -109,7 +109,9 @@ test("glow: each style starts with the knob table's arguments, under the addon's
     local NS, _, m = T.enableAddon()
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     local b = button(m)
-    -- main: proc here (both default to pixel, feedback-21 H6), its own #FFF468, opaque
+    -- main: proc (both default to proc since DW-03, D-18), its own #19FF19, opaque; the off-spec
+    -- set to pixel here, so the style change is driven
+    assertTrue(S("glow.offSpec.type", "pixel"))
     assertTrue(S("glow.main.type", "proc"))
     G.Apply(b, drop())
     local c = lib.calls[1]
@@ -178,6 +180,7 @@ test("glow: Use class color draws in the player's class color with the swatch's 
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     local b = button(m)
     assertTrue(S("glow.main.type", "proc"))
+    assertTrue(S("glow.offSpec.type", "pixel"))   -- its color is a positional argument (c[3])
     assertTrue(S("glow.main.color", { r = 1, g = 0, b = 0, a = 0.5 }))
     G.Apply(b, drop())
     local c = lib.calls[1][3].color
@@ -205,6 +208,7 @@ test("glow: Use class color with a class that has no color falls through to the 
     local NS, _, m = T.enableAddon()
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     m.__context.classToken = "NOPE"
+    assertTrue(S("glow.offSpec.type", "pixel"))
     assertTrue(S("glow.offSpec.useClassColor", true))
     G.Apply(button(m), drop({ me = offSpec() }))
     local c, tone = lib.calls[1], NS.Constants.TONE.glowOffSpec
