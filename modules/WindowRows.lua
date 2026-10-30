@@ -28,7 +28,8 @@ local addonName, NS = ...
 -- block's color, the player's class color while Use class color is on, and the skin's plain color
 -- while the swatch is at its default, so a fresh profile looks as it did before the block. A verdict,
 -- an item's quality and a looter's class keep their own colors. The glyphs (the monospace face) keep
--- their face and flags and take the size, as before.
+-- their face and flags and take the size, as before; a glyph drawn in the `plain` tone takes the
+-- block's color too, as a text does.
 -- NewMark and PlaceMark draw a gold mark after a cell's text that is never cut (feedback-7 spec §2:
 -- ` [YOU]` after your own name on every looter text): the text is cut first.
 
