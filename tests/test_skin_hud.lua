@@ -192,16 +192,41 @@ test("migrate 10: it runs once; a player's later pick survives the next load", f
     assertEqual(NS.addon.db.profile.icons.borderStyle, "Blizzard Tooltip")
 end)
 
-test("migrate 10: idempotent on a raw table, the companion seeded so no sentinel lands; without the library too", function()
+test("migrate 10: idempotent on a raw table, the companion set so no sentinel lands; without the library too", function()
     local NS = T.newAddon()
     local raw = { icons = { borderStyle = "Solid" } }
     NS.ResetIconBorderToSkin(raw); NS.ResetIconBorderToSkin(raw)
     assertEqual(raw.icons.borderStyleFromSkin, true)
     assertEqual(raw.icons.borderStyle, "Solid", "never the FROM_SKIN sentinel in an LSM key")
+    -- The case the companion matters for: nothing stored, the companion absent (AceDB strips a
+    -- value equal to its default). red under: a reset that names the pick without companions.
+    local empty = { icons = {} }
+    NS.ResetIconBorderToSkin(empty)
+    assertEqual(empty.icons.borderStyleFromSkin, true, "the absent companion is set")
+    assertNil(empty.icons.borderStyle, "the pick is left alone, never the sentinel")
     NS.ResetIconBorderToSkin(nil); NS.ResetIconBorderToSkin({}); NS.ResetIconBorderToSkin(3)
     local D = T.newAddon{ skip = NO_LIBKA0S }
     local bare = { icons = {} }
     D.ResetIconBorderToSkin(bare)
     assertEqual(bare.icons.borderStyleFromSkin, true, "set directly, as ResetToSkin would")
     assertEqual(#NS.HUD_SKIN_KEYS, 1); assertEqual(NS.HUD_SKIN_KEYS[1], "borderStyle", "X4: the style alone")
+end)
+
+test("migrate 10: the library sets the companion itself (ResetToSkin's companions, LibKa0s v1.81.0)", function()
+    -- R-6 / LK-07: Skin minor 8's `{ companions = true }` sets every listed pick's companion,
+    -- stored or not, so the step hands the raw table over unseeded.
+    -- red under: the retired seeding of `borderStyleFromSkin = false` before a plain reset.
+    local NS, _, m = T.newAddon()
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    local real, seen = Skin.ResetToSkin, {}
+    Skin.ResetToSkin = function(profile, keys, opts)
+        seen.companion = profile.borderStyleFromSkin
+        seen.opts = opts
+        return real(profile, keys, opts)
+    end
+    local ok, err = pcall(NS.ResetIconBorderToSkin, { icons = {} })
+    Skin.ResetToSkin = real
+    assertTrue(ok, tostring(err))
+    assertNil(seen.companion, "handed over unseeded")
+    assertTrue(type(seen.opts) == "table" and seen.opts.companions == true, "companions = true")
 end)

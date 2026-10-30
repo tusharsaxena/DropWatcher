@@ -76,8 +76,8 @@ test("tip marks: a non-wrapping line and its text; names in class and quality co
     assertEqual(TM.Text(line), "Seta wears 283"); assertEqual(TM.Text("plain"), "plain")
     assertEqual(TM.ClassName("Seta", "MAGE"), "|cff40c7ebSeta|r")
     assertEqual(TM.ClassName("Seta", nil), "Seta", "no class: plain")
-    m.ITEM_QUALITY_COLORS = { [4] = { r = 0.64, g = 0.21, b = 0.93 } }
-    assertEqual(TM.ItemName("Treads", 4), "|cffa336edTreads|r", "the quality's color")
+    m.ITEM_QUALITY_COLORS = { [4] = { r = 0xa3 / 255, g = 0x35 / 255, b = 0xee / 255 } }
+    assertEqual(TM.ItemName("Treads", 4), "|cffa335eeTreads|r", "the quality's color")
     m.ITEM_QUALITY_COLORS = nil
     assertEqual(TM.ItemName("Treads", 4, "|cffa335ee|Hitem:1::|h[Treads]|h|r"), "|cffa335eeTreads|r",
         "else the link's own color")
@@ -275,11 +275,11 @@ end)
 test("grid: a member's rows, the name on the first, the arrow on the item it replaces, empty for a slot worn empty", function()
     local NS, _, m = T.newAddon()
     local TM = NS.TipMarks
-    m.ITEM_QUALITY_COLORS = { [4] = { r = 0.64, g = 0.21, b = 0.93 } }
+    m.ITEM_QUALITY_COLORS = { [4] = { r = 0xa3 / 255, g = 0x35 / 255, b = 0xee / 255 } }
     local a, b = { link = "|cffa335ee|Hitem:1::|h[High]|h|r", ilvl = 308 }, { name = "Low", quality = 4, ilvl = 291.6 }
     local rows = TM.GearRows("Seta", { a, b }, 0, TM.ArrowCell("upgrade", 5))
     assertEqual(#rows, 2)
-    assertEqual(T.tipText(TM.Grid(rows)), "Seta  308  |cffa335eeHigh|r\n292  |cffa336edLow|r  ▲5", "the lower one")
+    assertEqual(T.tipText(TM.Grid(rows)), "Seta  308  |cffa335eeHigh|r\n292  |cffa335eeLow|r  ▲5", "the lower one")
     rows = TM.GearRows("Seta", { a, b }, 0, TM.ArrowCell("upgrade", 5), { link = a.link })
     assertEqual(rows[1][4].glyph, "▲", "the judged item, when named"); assertEqual(rows[2][4], "")
     rows = TM.GearRows("Seta", { a }, 1, TM.ArrowCell("upgrade"))
@@ -392,7 +392,7 @@ end
 
 test("details: one grid row per upgrade, ranked by gain, every part colored, the gain unsigned", function()
     local NS, _, m = T.newAddon()
-    m.ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 }, [4] = { r = 0.64, g = 0.21, b = 0.93 } }
+    m.ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0x70 / 255, b = 0xdd / 255 }, [4] = { r = 0xa3 / 255, g = 0x35 / 255, b = 0xee / 255 } }
     local c = NS.MineCells.Details(own({
         a = cand("Seta", "PRIEST", { verdict = "upgrade", ilvlDelta = 4.4, baseline = { ilvl = 283, name = "Loop", quality = 3 } }),
         b = cand("Butterz", "MAGE", { verdict = "upgrade", ilvlDelta = 11, baseline = { ilvl = 276, name = "Band", quality = 4 } }),
@@ -401,9 +401,9 @@ test("details: one grid row per upgrade, ranked by gain, every part colored, the
     assertEqual(#c.tip, 2, "the title and the grid; a downgrade is not listed")
     local g = c.tip[2].grid
     assertEqual(#g, 2, "a row per upgrade")
-    assertEqual(g[1][1], "|cff40c7ebButterz|r"); assertEqual(g[1][2], "276"); assertEqual(g[1][3], "|cffa336edBand|r")
+    assertEqual(g[1][1], "|cff40c7ebButterz|r"); assertEqual(g[1][2], "276"); assertEqual(g[1][3], "|cffa335eeBand|r")
     assertEqual(g[1][4].glyph, "▲"); assertEqual(g[1][4].text, "11"); assertEqual(g[1][4].tone, "good")
-    assertEqual(T.tipText({ grid = { g[2] } }), "|cffffffffSeta|r  283  |cff0070deLoop|r  ▲4", "rounded, no sign")
+    assertEqual(T.tipText({ grid = { g[2] } }), "|cffffffffSeta|r  283  |cff0070ddLoop|r  ▲4", "rounded, no sign")
     local bare = NS.MineCells.Details(own({ a = cand("Seta", "PRIEST", { verdict = "upgrade", ilvlDelta = 9 }) }))
     assertEqual(T.tipText(bare.tip[2]), "|cffffffffSeta|r  empty  ▲9", "nothing worn there: empty")
     local none = NS.MineCells.Details(own({ a = cand("Kael", "ROGUE", { verdict = "downgrade", ilvlDelta = -2 }) }))

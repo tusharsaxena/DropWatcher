@@ -216,21 +216,19 @@ NS.HUD_SKIN_KEYS = { "borderStyle" }
 --- LibKa0s-Skin-1.0's `ResetToSkin` turns the companion on and leaves the stored pick where it was,
 --- so turning the companion off later brings the player's own style straight back; the stamp the
 --- runner writes after it is what keeps that later "off" from being stomped at the next login.
---- ResetToSkin decides by the companion's PRESENCE, and AceDB strips a value equal to its default
---- from the stored table, so a missing companion is seeded false first: the reset then always lands
---- on the companion, never the FROM_SKIN sentinel in the LSM key. A profile that never stored `icons`
---- keeps the defaults, whose companion is already TRUE (X3). Without the library the companion is
---- set directly, which is what ResetToSkin would do. Idempotent.
+--- AceDB strips a value equal to its default from the stored table, so the companion may be absent;
+--- `{ companions = true }` (Skin minor 8, LibKa0s v1.81.0) sets every listed pick's companion,
+--- stored or not, so the reset always lands on the companion, never the FROM_SKIN sentinel in the
+--- LSM key. A profile that never stored `icons` keeps the defaults, whose companion is already TRUE
+--- (X3). Without the library the companion is set directly, which is what ResetToSkin does.
+--- Idempotent.
 --- @param profile table a raw stored profile
 function NS.ResetIconBorderToSkin(profile)
     local icons = type(profile) == "table" and profile.icons
     if type(icons) ~= "table" then return end
-    for _, key in ipairs(NS.HUD_SKIN_KEYS) do
-        if icons[key .. "FromSkin"] == nil then icons[key .. "FromSkin"] = false end
-    end
     local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
     if Skin and type(Skin.ResetToSkin) == "function" then
-        Skin.ResetToSkin(icons, NS.HUD_SKIN_KEYS)
+        Skin.ResetToSkin(icons, NS.HUD_SKIN_KEYS, { companions = true })
     else
         for _, key in ipairs(NS.HUD_SKIN_KEYS) do icons[key .. "FromSkin"] = true end
     end

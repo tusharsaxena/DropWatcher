@@ -211,17 +211,49 @@ test("skin chrome: the refusal red and the trade reason's gray are escapes of th
     assertEqual(NS.WindowCells.TradeText({ text = "No", reason = "x" }), "No " .. NS.SkinEscape("text.muted") .. "x|r")
 end)
 
-test("skin chrome: an item quality keeps the client's color unless the skin overrides it", function()
-    -- E4, X1: Ka0s Default's q.* tokens are the client's colors rounded to two places, so the client's
-    -- own is drawn where no skin overrides; a skin that sets its own q.* draws that.
+test("skin chrome: an item quality is the skin's q.* token, the client's own color under Ka0s Default", function()
+    -- E4, X1, R-8: since LibKa0s v1.81.0 (SkinDefs minor 16) Ka0s Default's q.* tokens are the
+    -- client's colors byte for byte, so the token is drawn as it stands; a skin that sets its own
+    -- q.* draws that. The mock's table holds the old rounded epic to prove the token wins.
+    -- red under: the retired "token equals the rounded default, so draw the client's" ladder.
     local NS, _, m = T.bootAddon()
-    m.ITEM_QUALITY_COLORS = { [4] = { r = 163 / 255, g = 53 / 255, b = 238 / 255 } }
+    m.ITEM_QUALITY_COLORS = { [4] = { r = 0.64, g = 0.21, b = 0.93 } }
     local r, g, b = NS.QualityColor(4)
-    near("epic (ka0s)", { r, g, b }, { 163 / 255, 53 / 255, 238 / 255 })
+    near("epic (ka0s)", { r, g, b }, { 0xa3 / 255, 0x35 / 255, 0xee / 255 })
     toSwitch(m)
     r, g, b = NS.QualityColor(4)
     near("epic (switched)", { r, g, b }, token(NS, "q.epic"))
+    m.ITEM_QUALITY_COLORS = { [7] = { r = 0, g = 0.8, b = 1 } }
+    r, g, b = NS.QualityColor(7)
+    near("heirloom: no q.* token, the client's color", { r, g, b }, { 0, 0.8, 1 })
     m.ITEM_QUALITY_COLORS = nil
+end)
+
+test("skin chrome: the main window's resize grip takes the skin's icon.grip, live, like the tool windows'", function()
+    -- red under: the main window's MakeResizable without opts.owner (Core minor 14), so its grip
+    -- keeps the client's art under a skin that tints the tool windows' grips.
+    local _, f, m = shown()
+    local grip = f.resizeGrip
+    assertTrue(grip ~= nil, "the window has the library's grip")
+    -- The kit's Button answers GetNormalTexture with itself, not a Texture, so the grip's art is
+    -- stood in by one of the kit's Textures; the paint reads the getter at each skin switch. That
+    -- Texture keeps the vertex color, not the desaturation, so the tint is what is compared.
+    local art = grip:CreateTexture()
+    assertEqual(art:GetObjectType(), "Texture")
+    grip.GetNormalTexture = function() return art end
+    assertTrue(art.__vertex == nil, "Ka0s Default's icon.grip is false: the client's art, never tinted")
+    local Skin = skinOf(m)
+    local GRIP = "dw-grip"
+    if not Skin:GetSkin(GRIP) then
+        local tokens = {}
+        for name, v in pairs(Skin:ResolveSkin(Skin.DEFAULT)) do tokens[name] = v end
+        tokens["icon.grip"] = { 0.2, 0.4, 0.6, 1 }
+        Skin:RegisterSkin({ key = GRIP, label = "Grip (test)", tokens = tokens })
+    end
+    Skin:SetChoice(OWNER, "ka0s", GRIP)
+    near("grip tint", art.__vertex, { 0.2, 0.4, 0.6 })
+    Skin:SetChoice(OWNER, "ka0s", Skin.DEFAULT)
+    near("grip untinted", art.__vertex, { 1, 1, 1 })
 end)
 
 test("skin chrome: without the library the window's own colors are Ka0s Default's", function()

@@ -96,8 +96,9 @@ same values and every reset puts them back on Ka0s Default. Leaving EllesmereUI 
 session asks for a reload (the library's popup). In combat the tab refuses every change. Without the
 library there is no tab.
 
-**The first-run skin picker** (LibKa0s OptionsSkinPicker, the rollout's O3): a small window, **Choose a
-skin for Ka0s Drop Watcher**, with a dropdown of the skins, an eye, a gear, and **Apply** (with **Apply
+**The first-run skin picker** (LibKa0s OptionsSkinPicker, the rollout's O3): a small window titled **Choose a
+skin**, with **Ka0s Drop Watcher** on its own line above a dropdown of the skins (the window widens
+so the name is never cut off; LibKa0s v1.81.0, OptionsSkinPicker minor 2), an eye, a gear, and **Apply** (with **Apply
 to all Ka0s addons** while another Ka0s addon that uses skins is loaded). `NS.MaybeShowSkinPicker`
 (`core/SkinSetup.lua`) shows it while the profile's `skin.pickerSeen` is false: two seconds after
 login, at a stand-up when the session started stood down, and after every profile switch, copy or

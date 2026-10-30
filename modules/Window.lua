@@ -1,4 +1,4 @@
-local _, NS = ...
+local addonName, NS = ...
 -- modules/Window.lua — the main window's shell (design spec §11.1, boards 01 and 06): frame, skin,
 -- title bar (centered gold title, restriction badge, compact's Scan group icon, minimize, close), the tab strip and
 -- its lazily built panes, the filter bar's host, the footer's host, the mode strips (the library's
@@ -504,6 +504,9 @@ local function makeResizable(f)
     local minW, minH, maxW, maxH = NS.WindowCompact.Bounds(NS.WindowCompact.Mode())
     NS.MakeResizable(f, {
         minWidth = minW, minHeight = minH, maxWidth = maxW, maxHeight = maxH,
+        -- The owner's icon.grip tints the grip's art, live (Core minor 14): the tool windows' grips
+        -- and this one wear one skin; under Ka0s Default and WoW Default it is the client's art.
+        owner        = addonName,
         canResize    = function() return not isLocked() and not isMinimized() end,
         -- The anchor is saved with the size: sizing from the corner moves the frame's anchor, and a
         -- later ApplySettings re-anchors the stored size at the stored point.
