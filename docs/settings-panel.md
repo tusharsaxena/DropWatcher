@@ -304,6 +304,12 @@ options-ui-§17 deviation, the owner's choice (main spec left, off-spec right on
 first), then one subsection per style, in the order and the words the Style dropdown lists them
 (feedback-24): **Pixel border** (lines, frequency, line length with 0 Automatic, thickness, dark
 border), **Auto cast sparkles** (particles, frequency, scale), **Button (rotating rays)**
-(frequency), **Proc (flipbook)** (duration in seconds, start animation). A glow's Style is dimmed while it is off; a knob also while its glow is in a style the
-knob does not apply to. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
+(frequency), **Proc (flipbook)** (duration in seconds, start animation). A style's subsection is
+drawn only while either glow's Style selects it (DW-04, owner ruling D-17: `shownWhen = { any = ... }`
+on both rows of every pair, LibKa0s OptionsSwitch minor 1), so the defaults (both Proc) draw Effect,
+Offset and Proc (flipbook) alone, and two styles chosen draw both their subsections; a Style change
+re-renders the tab on the next frame. It follows the Style alone: a glow turned off still opens its
+style's subsection. Offset serves three styles and is always drawn. A glow's Style is dimmed while it
+is off; a drawn knob also while its glow is in a style the knob does not apply to (the other glow's
+column of a shown subsection). A hidden row is still a schema row, which `/dw set` and Defaults reach. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
 (`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#alerts--upgrade-glow-feedback-21).

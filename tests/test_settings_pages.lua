@@ -878,3 +878,75 @@ test("asks: TokenContext fills the tokens from a drop for who it goes to", funct
     assertEqual(ctx.gain, -13)
     assertEqual(NS.Asks.TokenContext("announce", nil, nil).player, nil, "no drop, no recipient")
 end)
+
+-- ── Alerts › Upgrade glow: the style sections (DW-04) ───────────────────────────────────────
+
+-- The Upgrade glow tab drawn, with its headings in order. Answers the ctx, the drawn widgets and the
+-- headings joined with "|".
+local function glowTab(NS, m)
+    local ctx = open(NS, m, "alerts")
+    local drawn = tab(m, ctx, "Upgrade glow")
+    local heads = {}
+    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
+    return ctx, drawn, table.concat(heads, "|")
+end
+
+-- Write a style, let the library's next-frame re-render run (the selector's watcher), and answer
+-- what the tab draws now: no tab click, so a page that did not re-render itself fails here.
+local function restyle(NS, m, ctx, path, style)
+    assertTrue(NS.SchemaRuntime.Set(path, style))
+    local before = #gui(m).__created
+    m.__fireTimers()
+    local drawn = created(m, before)
+    assertTrue(#drawn > 0, path .. ": the tab re-rendered itself on the next frame")
+    assertEqual(ctx.activeTab, "Upgrade glow")
+    local heads = {}
+    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
+    return drawn, table.concat(heads, "|")
+end
+
+test("glow sections: only the styles a style dropdown selects are drawn, Proc alone by default (DW-04)", function()
+    -- image-40/41, owner ruling D-17: a style's section shows while EITHER glow's style selects it
+    -- (shownWhen = { any = ... }, LibKa0s OptionsSwitch minor 1); the Offset rows serve three styles
+    -- and stay, dimmed as before when neither glow uses them.
+    -- red under: the knob rows with no shownWhen (all four sections drawn, dimmed).
+    local NS, _, m = T.enableAddon()
+    local _, drawn, heads = glowTab(NS, m)
+    assertEqual(heads, "Effect|Offset|Proc (flipbook)", "both glows on Proc, the default (DW-03)")
+    assertTrue(find(drawn, "Slider", "Main spec duration (seconds)") ~= nil)
+    assertTrue(find(drawn, "Slider", "Main spec lines") == nil, "the Pixel border section is not drawn")
+end)
+
+test("glow sections: two styles chosen draw both sections; a re-pick re-renders the tab (DW-04)", function()
+    local NS, _, m = T.enableAddon()
+    local ctx = glowTab(NS, m)
+    local drawn, heads = restyle(NS, m, ctx, "glow.offSpec.type", "pixel")
+    assertEqual(heads, "Effect|Offset|Pixel border|Proc (flipbook)", "Proc for main, Pixel border for off-spec")
+    -- Within a shown section the other glow's column stays dimmed (knobOff, unchanged).
+    local mainLines, offLines = find(drawn, "Slider", "Main spec lines"), find(drawn, "Slider", "Off-spec lines")
+    assertTrue(mainLines ~= nil and offLines ~= nil, "both columns of the pair are drawn")
+    assertTrue(mainLines.disabled == true, "main is on Proc: its Pixel border column is dimmed")
+    assertFalse(offLines.disabled == true, "the off-spec column is live")
+    _, heads = restyle(NS, m, ctx, "glow.main.type", "button")
+    assertEqual(heads, "Effect|Offset|Pixel border|Button (rotating rays)")
+    _, heads = restyle(NS, m, ctx, "glow.offSpec.type", "button")
+    assertEqual(heads, "Effect|Offset|Button (rotating rays)", "both on Button")
+    drawn, heads = restyle(NS, m, ctx, "glow.main.type", "autocast")
+    assertEqual(heads, "Effect|Offset|Auto cast sparkles|Button (rotating rays)")
+    assertTrue(find(drawn, "Slider", "Main spec particles") ~= nil)
+end)
+
+test("glow sections: a glow turned off still opens its style's section, dimmed (DW-04)", function()
+    -- D-17: hiding follows the style alone, never the on/off check box.
+    local NS, _, m = T.enableAddon()
+    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.type", "pixel"))
+    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
+    local _, drawn, heads = glowTab(NS, m)
+    assertEqual(heads, "Effect|Offset|Pixel border|Proc (flipbook)")
+    local off = find(drawn, "Slider", "Off-spec lines")
+    assertTrue(off ~= nil and off.disabled == true, "the off glow's section shows, dimmed")
+    -- The hidden rows stay in the schema: /dw set and Defaults still reach them.
+    assertTrue(NS.SchemaRuntime.Set("glow.main.buttonFrequency", 0.5))
+    assertEqual(NS.Setting("glow.main.buttonFrequency"), 0.5)
+end)
+

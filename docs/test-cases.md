@@ -133,7 +133,7 @@ Total.
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 
-### test_settings_pages.lua (46)
+### test_settings_pages.lua (49)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -181,6 +181,9 @@ Total.
 - editors: the preview's drop is the newest that fits its template, an upgrade for you first
 - editors: the preview's lines name who it goes to, the length and what is wrong
 - asks: TokenContext fills the tokens from a drop for who it goes to
+- glow sections: only the styles a style dropdown selects are drawn, Proc alone by default (DW-04)
+- glow sections: two styles chosen draw both sections; a re-pick re-renders the tab (DW-04)
+- glow sections: a glow turned off still opens its style's section, dimmed (DW-04)
 
 ### test_skin_setup.lua (18)
 
@@ -2111,7 +2114,7 @@ Total.
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
-| test_settings_pages.lua | 46 |
+| test_settings_pages.lua | 49 |
 | test_skin_setup.lua | 18 |
 | test_skin_outline.lua | 9 |
 | test_skin_chrome.lua | 11 |
@@ -2200,4 +2203,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1810** |
+| **Total** | **1813** |

@@ -544,11 +544,25 @@ local function glow()
         bool("glow." .. key .. ".useClassColor", G[key].useClassColor, CLASS_COLOR[key][1], CLASS_COLOR[key][2],
             with(at, { classColorSource = "player", startsLine = i == 1 or nil }))
     end
+    -- A style's section is drawn only while EITHER glow's style selects it (DW-04, owner ruling D-17,
+    -- image-40/41; LibKa0s OptionsSwitch minor 1's `shownWhen = { any = ... }`): both rows of every
+    -- main | off-spec pair carry the same OR switch, so the pairing never breaks. It follows the
+    -- style alone, never the on/off box: a glow turned off still opens its section, dimmed by
+    -- knobOff, which also keeps dimming the column whose glow is in the other style. The Offset
+    -- rows serve three styles and are not one style's section (D-17 names the four), so they keep
+    -- the dimming alone. The hidden rows stay schema rows: `/dw set` and Defaults still reach them.
+    local function chosen(styles)
+        local list = {}
+        for style in pairs(styles) do list[#list + 1] = style end
+        table.sort(list)
+        return { any = { { path = "glow.main.type", equals = list }, { path = "glow.offSpec.type", equals = list } } }
+    end
     for _, knob in ipairs(GLOW_KNOBS) do
+        local switch = knob.heading ~= L["Offset"] and chosen(knob.styles) or nil
         for i, key in ipairs(GLOWS) do
             local path = "glow." .. key .. "." .. knob.key
             local extra = with(at, { subgroup = knob.heading, disabledIf = knobOff(key, knob.styles),
-                                     zeroText = knob.zeroText })
+                                     zeroText = knob.zeroText, shownWhen = switch })
             if knob.kind == "bool" then
                 bool(path, G[key][knob.key], knob.labels[i], knob.tip, extra)
             else
